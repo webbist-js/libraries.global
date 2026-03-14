@@ -1,0 +1,95 @@
+import { themes as prismThemes } from "prism-react-renderer"
+import type { Config } from "@docusaurus/types"
+import type * as Preset from "@docusaurus/preset-classic"
+
+const url = process.env.DOCUSAURUS_URL ?? "https://libraries.global"
+const baseUrl = process.env.DOCUSAURUS_BASE_URL ?? "/"
+
+const config: Config = {
+  plugins: [
+    [
+      require.resolve("@easyops-cn/docusaurus-search-local"),
+      {
+        hashed: true,
+        indexDocs: true,
+        indexBlog: false,
+        docsRouteBasePath: "/",
+      },
+    ],
+  ],
+  organizationName: "libraries-global",
+  projectName: "libraries-global",
+  title: "Libraries Global",
+  tagline: "Enterprise-grade Strapi v5 + Next.js",
+  url,
+  baseUrl,
+  onBrokenLinks: "warn",
+  favicon: undefined,
+  markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: "warn",
+    },
+  },
+
+  i18n: {
+    defaultLocale: "en",
+    locales: ["en"],
+  },
+
+  presets: [
+    [
+      "classic",
+      {
+        docs: {
+          sidebarPath: "./sidebars.ts",
+          editUrl:
+            "https://github.com/libraries-global/libraries.global/edit/main/apps/docs/",
+          lastVersion: "3.1.1",
+          versions: {
+            current: {
+              label: "Current",
+              path: "latest",
+            },
+            "3.1.1": {
+              label: "3.1.1",
+              path: "",
+            },
+          },
+        },
+        blog: false,
+        theme: {
+          customCss: "./src/css/custom.css",
+        },
+      } satisfies Preset.Options,
+    ],
+  ],
+
+  themeConfig: {
+    navbar: {
+      title: "Strapi Next Starter",
+      items: [
+        {
+          type: "docSidebar",
+          sidebarId: "docs",
+          position: "left",
+          label: "Docs",
+        },
+        {
+          type: "docsVersionDropdown",
+          position: "right",
+        },
+      ],
+    },
+    footer: {
+      style: "dark",
+      copyright: `Copyright © ${new Date().getFullYear()} Libraries Global. Built with Docusaurus.`,
+    },
+    prism: {
+      theme: prismThemes.oneLight,
+      darkTheme: prismThemes.oneDark,
+      additionalLanguages: ["bash", "json", "typescript"],
+    },
+  } satisfies Preset.ThemeConfig,
+}
+
+export default config
