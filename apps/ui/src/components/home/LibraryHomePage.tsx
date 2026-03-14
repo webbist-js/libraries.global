@@ -1,4 +1,4 @@
-import { ArrowUpRight, Search } from "lucide-react"
+import { Search } from "lucide-react"
 import type { Locale } from "next-intl"
 
 import { Container } from "@/components/elementary/Container"
@@ -8,108 +8,36 @@ import { Link } from "@/lib/navigation"
 const NAV_ITEMS = [
   { href: "/#explore", label: "Global Map", active: true },
   { href: "/#search", label: "Find Your Library" },
-  { href: "/#impact", label: "Impact Data" },
   { href: "/#about", label: "About" },
 ]
-
-const METRICS = [
-  { label: "Total Global Visitors Today", value: "1,245,890", width: "76%" },
-  { label: "Digital Loans Today", value: "45,672", width: "34%" },
-  { label: "New Libraries Joined", value: "12", width: "8%" },
-]
-
-const CATEGORY_TAGS = ["Public", "Academic", "Community"]
 
 const HOMEPAGE_COPY = {
   cs: {
     brand: "libraries.global",
-    currentLocation: "Poland",
     headline: "The World's Knowledge, Reimagined.",
     inputPlaceholder: "Search for a library, city, or country.",
     intro:
       "A prototype experience for a global library index. Spin the network, follow the flows, and pressure-test the visual direction before the CMS arrives.",
     label: "Global Library Explorer",
-    statsTitle: "Library Insights",
   },
   en: {
     brand: "libraries.global",
-    currentLocation: "Poland",
     headline: "The World's Knowledge, Reimagined.",
     inputPlaceholder: "Search for a library, city, or country.",
     intro:
       "A prototype experience for a global library index. Spin the network, follow the flows, and pressure-test the visual direction before the CMS arrives.",
     label: "Global Library Explorer",
-    statsTitle: "Library Insights",
   },
 } satisfies Record<
   Locale,
   {
     brand: string
-    currentLocation: string
     headline: string
     inputPlaceholder: string
     intro: string
     label: string
-    statsTitle: string
   }
 >
-
-function CountryClusterMap() {
-  const nodes = [
-    { delay: "0ms", x: 64, y: 52 },
-    { delay: "120ms", x: 101, y: 36 },
-    { delay: "240ms", x: 149, y: 58 },
-    { delay: "360ms", x: 86, y: 82 },
-    { delay: "480ms", x: 120, y: 92 },
-    { delay: "600ms", x: 154, y: 84 },
-    { delay: "720ms", x: 74, y: 112 },
-    { delay: "840ms", x: 116, y: 122 },
-    { delay: "960ms", x: 146, y: 116 },
-  ]
-
-  return (
-    <svg
-      aria-hidden
-      className="h-auto w-full"
-      viewBox="0 0 220 170"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <defs>
-        <linearGradient id="country-fill" x1="52" x2="170" y1="28" y2="140">
-          <stop offset="0" stopColor="#5D84FF" stopOpacity="0.48" />
-          <stop offset="1" stopColor="#9ED6FF" stopOpacity="0.16" />
-        </linearGradient>
-      </defs>
-
-      <path
-        d="M66 28 110 18l40 12 14 28-6 34 9 22-18 28-42 12-35-16-18-22-25-9 8-31-9-25 17-16 33-5Z"
-        fill="url(#country-fill)"
-        stroke="rgba(148, 203, 255, 0.45)"
-        strokeWidth="2"
-      />
-
-      {nodes.map((node) => (
-        <circle
-          key={`${node.x}-${node.y}`}
-          className="animate-pulse"
-          cx={node.x}
-          cy={node.y}
-          fill="#DFF6FF"
-          r="5"
-          style={{ animationDelay: node.delay, transformOrigin: "center" }}
-        />
-      ))}
-
-      <path
-        d="M64 52 101 36 149 58 154 84 116 122 74 112 64 52Z"
-        fill="none"
-        opacity="0.5"
-        stroke="#B9E7FF"
-        strokeWidth="1"
-      />
-    </svg>
-  )
-}
 
 export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
   const copy = HOMEPAGE_COPY[locale] ?? HOMEPAGE_COPY.en
@@ -193,77 +121,6 @@ export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
                 </div>
               </div>
             </div>
-
-            <aside
-              className="relative z-30 mt-[470px] ml-auto w-full max-w-[340px] rounded-[32px] border border-[#6a93dc] bg-[linear-gradient(180deg,rgba(29,44,68,0.86)_0%,rgba(11,19,34,0.84)_100%)] p-5 shadow-[0_28px_100px_rgba(10,24,48,0.44)] backdrop-blur-xl sm:mt-[520px] lg:absolute lg:top-[430px] lg:right-6 lg:mt-0"
-              id="impact"
-            >
-              <h2 className="text-[1.85rem] leading-none font-semibold text-white">
-                {copy.statsTitle}
-              </h2>
-
-              <div className="mt-6 space-y-5">
-                {METRICS.map((metric) => (
-                  <div key={metric.label}>
-                    <div className="flex items-center justify-between gap-4">
-                      <p className="text-sm text-white/72">{metric.label}</p>
-                      <ArrowUpRight
-                        className="size-4 text-[#79e08a]"
-                        strokeWidth={2}
-                      />
-                    </div>
-                    <div className="mt-1 text-[2.1rem] leading-none font-semibold text-white">
-                      {metric.value}
-                    </div>
-                    <div className="mt-3 h-2 rounded-full bg-white/10">
-                      <div
-                        className="h-full rounded-full bg-[linear-gradient(90deg,#5e8cff_0%,#7dc8ff_100%)]"
-                        style={{ width: metric.width }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="my-6 h-px bg-white/10" />
-
-              <div className="grid gap-6">
-                <div>
-                  <p className="text-sm text-white/56">Current Location</p>
-                  <p className="mt-1 text-[2rem] leading-none font-medium text-white">
-                    {copy.currentLocation}
-                  </p>
-                </div>
-
-                <div className="mx-auto w-[68%]">
-                  <CountryClusterMap />
-                </div>
-
-                <div>
-                  <p className="text-sm text-white/56">Total Libraries</p>
-                  <p className="mt-1 text-3xl font-semibold text-white">
-                    1,368
-                  </p>
-                  <p className="text-sm text-white/46">
-                    Libraries indexed in this view
-                  </p>
-                </div>
-
-                <div>
-                  <p className="mb-3 text-sm text-white/56">Top Categories</p>
-                  <div className="flex flex-wrap gap-2">
-                    {CATEGORY_TAGS.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-sm text-white/76"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </aside>
           </Container>
         </section>
       </main>

@@ -140,17 +140,47 @@ export function latLngToVector3(
   )
 }
 
-function createArcCurve(start: Hub, end: Hub, height: number) {
+function createArcCurve(
+  start: Hub,
+  end: Hub,
+  height: number,
+  spreadSeed: number
+) {
   const startPoint = latLngToVector3(start.lat, start.lng, EARTH_RADIUS + 0.035)
   const endPoint = latLngToVector3(end.lat, end.lng, EARTH_RADIUS + 0.035)
-  const controlPoint = startPoint
-    .clone()
-    .add(endPoint)
-    .multiplyScalar(0.5)
-    .normalize()
-    .multiplyScalar(EARTH_RADIUS * height)
+  const midDirection = startPoint.clone().add(endPoint).normalize()
+  const planeNormal = startPoint.clone().cross(endPoint).normalize()
+  const lateralDirection = planeNormal.clone().cross(midDirection).normalize()
+  const random = createSeededRandom(spreadSeed * 97 + 31)
+  const distanceFactor = THREE.MathUtils.clamp(
+    startPoint.distanceTo(endPoint) / (EARTH_RADIUS * 2.2),
+    0.35,
+    1.1
+  )
+  const lateralSign = random() > 0.5 ? 1 : -1
+  const lateralOffset =
+    EARTH_RADIUS * (0.08 + random() * 0.14) * distanceFactor * lateralSign
 
-  return new THREE.CatmullRomCurve3([startPoint, controlPoint, endPoint])
+  const controlPointA = startPoint
+    .clone()
+    .lerp(endPoint, 0.28)
+    .normalize()
+    .multiplyScalar(EARTH_RADIUS * (height * 0.94))
+    .add(lateralDirection.clone().multiplyScalar(lateralOffset * 0.7))
+
+  const controlPointB = startPoint
+    .clone()
+    .lerp(endPoint, 0.72)
+    .normalize()
+    .multiplyScalar(EARTH_RADIUS * (height * 1.02))
+    .add(lateralDirection.clone().multiplyScalar(lateralOffset))
+
+  return new THREE.CatmullRomCurve3([
+    startPoint,
+    controlPointA,
+    controlPointB,
+    endPoint,
+  ])
 }
 
 function createKnowledgeLights() {
@@ -168,8 +198,8 @@ function createKnowledgeLights() {
 
       lights.push({
         phase: hub.phase + index * 0.42,
-        position: latLngToVector3(lat, lng, EARTH_RADIUS + 0.018),
-        size: 0.028 + random() * 0.022,
+        position: latLngToVector3(lat, lng, EARTH_RADIUS + 0.011),
+        size: 0.018 + random() * 0.015,
       })
     }
   })
@@ -179,8 +209,8 @@ function createKnowledgeLights() {
 
 export const HUB_MARKERS: GlobeLight[] = HUBS.map((hub) => ({
   phase: hub.phase,
-  position: latLngToVector3(hub.lat, hub.lng, EARTH_RADIUS + 0.028),
-  size: 0.048 + hub.importance * 0.028,
+  position: latLngToVector3(hub.lat, hub.lng, EARTH_RADIUS + 0.014),
+  size: 0.03 + hub.importance * 0.016,
 }))
 
 export const KNOWLEDGE_LIGHTS = createKnowledgeLights()
@@ -190,7 +220,8 @@ export const ARC_ROUTES: ArcRoute[] = CONNECTIONS.map(
     const curve = createArcCurve(
       HUBS[startIndex]!,
       HUBS[endIndex]!,
-      1.04 + (index % 4) * 0.03
+      1.04 + (index % 4) * 0.03,
+      index
     )
     const color = ["#c8e0ff", "#e0eeff", "#a0c8ee"][index % 3]!
 
