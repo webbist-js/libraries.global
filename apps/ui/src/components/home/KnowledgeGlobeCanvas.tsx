@@ -26,14 +26,57 @@ import { cn } from "@/lib/styles"
 
 const LAND_DOT_VERTEX_SHADER = `
   attribute float intensity;
-  attribute float phase;
   attribute float size;
 
   uniform float uSizeScale;
-  uniform float uTime;
 
   varying float vIntensity;
-  varying float vPulse;
+
+  void main() {
+    vec3 direction = normalize(position);
+    vec3 staticPosition = position + direction * (0.0018 + intensity * 0.0022);
+    vec4 mvPosition = modelViewMatrix * vec4(staticPosition, 1.0);
+
+    vIntensity = intensity;
+    float sizeFactor = 0.34 + intensity * 0.18;
+    gl_PointSize =
+      size *
+      uSizeScale *
+      sizeFactor *
+      (122.0 / -mvPosition.z) *
+      0.62;
+    gl_Position = projectionMatrix * mvPosition;
+  }
+`
+
+const LAND_DOT_FRAGMENT_SHADER = `
+  uniform vec3 uBaseColor;
+  uniform vec3 uHighlightColor;
+
+  varying float vIntensity;
+
+  void main() {
+    float distanceToCenter = distance(gl_PointCoord, vec2(0.5));
+    float halo = smoothstep(0.38, 0.1, distanceToCenter);
+    float core = smoothstep(0.12, 0.0, distanceToCenter);
+    float alpha = (halo * 0.2 + core * 0.9) * (0.34 + vIntensity * 0.28);
+    vec3 color = mix(uBaseColor, uHighlightColor, core * 0.2 + vIntensity * 0.18);
+
+    if (alpha < 0.01) discard;
+
+    gl_FragColor = vec4(color, alpha);
+  }
+`
+
+const HOTSPOT_VERTEX_SHADER = `
+  attribute float activity;
+  attribute float phase;
+  attribute float size;
+
+  uniform float uTime;
+
+  varying float vActivity;
+  varying float vGlow;
   varying float vWave;
 
   vec2 hash(vec2 p) {
@@ -60,62 +103,57 @@ const LAND_DOT_VERTEX_SHADER = `
 
   void main() {
     vec3 direction = normalize(position);
-    vec2 noisePosBase =
-      position.xy * 0.82 + vec2(uTime * 0.22, uTime * 0.16);
-    float baseNoise = 0.5 + 0.5 * perlinNoise(noisePosBase);
-    float driftingNoise =
+    float longitude = atan(direction.z, direction.x);
+    float latitude = asin(direction.y);
+    float busyField = smoothstep(0.18, 0.92, activity);
+    float localNoise =
       0.5 +
       0.5 *
-        perlinNoise(position.yz * 0.64 - vec2(uTime * 0.15, -uTime * 0.11));
-    float vNoise = clamp(baseNoise * 0.76 + driftingNoise * 0.24, 0.0, 1.0);
+        perlinNoise(position.xy * 1.25 + vec2(uTime * 0.18, -uTime * 0.14));
+    float sweep =
+      0.5 + 0.5 * sin(longitude * 2.4 - uTime * 0.64 + localNoise * 1.5);
+    float latitudeBand =
+      0.5 + 0.5 * sin(latitude * 2.0 + uTime * 0.16 + localNoise * 1.2);
+    float wave = clamp(localNoise * 0.55 + sweep * 0.28 + latitudeBand * 0.17, 0.0, 1.0);
+    float pulse =
+      0.5 + 0.5 * sin(uTime * 1.15 + phase * 1.4 + localNoise * 2.0);
+    float baseField = smoothstep(0.48, 0.82, wave);
+    float glow = clamp(baseField * 0.55 + busyField * (0.22 + pulse * 0.78), 0.0, 1.0);
 
-    float outwardFactor = smoothstep(0.56, 0.86, vNoise);
-    vec3 radialDisplacement = direction * outwardFactor * 0.02;
-    vec3 animatedPosition = position + radialDisplacement;
+    vec3 animatedPosition = position + direction * (0.004 + baseField * 0.006 + busyField * 0.01);
     vec4 mvPosition = modelViewMatrix * vec4(animatedPosition, 1.0);
 
-    vIntensity = intensity;
-    vPulse = outwardFactor;
-    vWave = vNoise;
+    vActivity = busyField;
+    vGlow = glow;
+    vWave = wave;
 
-    float sizeFactor = 0.28 + (0.52 * vNoise) + (outwardFactor * 1.25);
-    gl_PointSize =
-      size *
-      uSizeScale *
-      sizeFactor *
-      (122.0 / -mvPosition.z) *
-      0.6;
+    float hotspotSize = size * (0.18 + baseField * 0.55 + busyField * 0.65 + glow * 1.15);
+    gl_PointSize = hotspotSize * (124.0 / -mvPosition.z) * 0.58;
     gl_Position = projectionMatrix * mvPosition;
   }
 `
 
-const LAND_DOT_FRAGMENT_SHADER = `
-  uniform vec3 uBaseColor;
-  uniform vec3 uHighlightColor;
-
-  varying float vIntensity;
-  varying float vPulse;
+const HOTSPOT_FRAGMENT_SHADER = `
+  varying float vActivity;
+  varying float vGlow;
   varying float vWave;
 
   void main() {
     float distanceToCenter = distance(gl_PointCoord, vec2(0.5));
-    float halo = smoothstep(0.32, 0.08, distanceToCenter);
-    float core = smoothstep(0.085, 0.0, distanceToCenter);
-    float glowIntensity = smoothstep(0.6, 0.85, vWave);
-    float noiseAlphaFactor = smoothstep(0.42, 0.7, vWave);
-
+    float halo = smoothstep(0.44, 0.08, distanceToCenter);
+    float core = smoothstep(0.14, 0.0, distanceToCenter);
+    float baseGlow = smoothstep(0.5, 0.82, vWave);
     float alpha =
-      (halo * 0.26 + core * 0.95) * max(0.04, noiseAlphaFactor);
-    vec3 baseComponent = vec3(0.92 + vIntensity * 0.16) * (1.0 - glowIntensity);
-    vec3 glowComponent =
-      mix(uBaseColor, uHighlightColor, glowIntensity) *
-      glowIntensity *
-      2.2;
-    vec3 color = baseComponent + glowComponent;
+      halo * (baseGlow * 0.08 + vActivity * 0.1) +
+      core * (baseGlow * 0.22 + vGlow * 0.5);
 
-    alpha *= 0.22 + vPulse * 0.95;
-    if (alpha < 0.01) discard;
+    if (alpha < 0.02) discard;
 
+    vec3 color = mix(
+      vec3(0.52, 0.84, 1.0),
+      vec3(1.0),
+      core * 0.55 + vGlow * 0.28 + vActivity * 0.12
+    );
     gl_FragColor = vec4(color, alpha);
   }
 `
@@ -198,6 +236,18 @@ const RENDERED_ARC_ROUTES = ARC_ROUTES.map((route) => ({
       : route.curve.getPoints(GLOBE_QUALITY.routePoints),
   route,
 }))
+const ACTIVITY_SOURCES = [
+  ...HUB_MARKERS.map((light) => ({
+    position: light.position,
+    radius: 0.46 + light.size * 4.8,
+    weight: 0.42 + light.size * 5.6,
+  })),
+  ...KNOWLEDGE_LIGHTS.map((light) => ({
+    position: light.position,
+    radius: 0.2 + light.size * 4.2,
+    weight: 0.05 + light.size * 2.8,
+  })),
+]
 
 function createSeededRandom(seed: number) {
   return () => {
@@ -238,6 +288,7 @@ function createLandDotsGeometry(maskImage: HTMLImageElement | null) {
   const sizes: number[] = []
   const intensities: number[] = []
   const phases: number[] = []
+  const activities: number[] = []
   const latitudeStep = 0.5 / FIXED_GLOBE_SETTINGS.landDotDensity
   const random = createSeededRandom(37)
 
@@ -270,11 +321,21 @@ function createLandDotsGeometry(maskImage: HTMLImageElement | null) {
         jitteredLng,
         EARTH_RADIUS + 0.0055 + random() * 0.0075
       )
+      let activityScore = 0
+
+      ACTIVITY_SOURCES.forEach((source) => {
+        const distance = point.distanceTo(source.position)
+        const influence = Math.max(0, 1 - distance / source.radius)
+
+        activityScore += influence * influence * source.weight
+      })
+      const activity = 1 - Math.exp(-activityScore * 0.65)
 
       positions.push(point.x, point.y, point.z)
       sizes.push(0.78 + random() * 0.42)
       intensities.push(0.5 + random() * 0.5)
       phases.push(random() * Math.PI * 2)
+      activities.push(activity)
     }
   }
 
@@ -289,6 +350,10 @@ function createLandDotsGeometry(maskImage: HTMLImageElement | null) {
     new THREE.Float32BufferAttribute(intensities, 1)
   )
   geometry.setAttribute("phase", new THREE.Float32BufferAttribute(phases, 1))
+  geometry.setAttribute(
+    "activity",
+    new THREE.Float32BufferAttribute(activities, 1)
+  )
   geometry.computeBoundingSphere()
 
   return geometry
@@ -296,7 +361,7 @@ function createLandDotsGeometry(maskImage: HTMLImageElement | null) {
 
 function DotGlobe() {
   const maskTexture = useTexture("/images/globe/earth-specular.jpg")
-  const materialRef = useRef<THREE.ShaderMaterial>(null)
+  const hotspotMaterialRef = useRef<THREE.ShaderMaterial>(null)
   const geometry = useMemo(() => {
     const image =
       typeof HTMLImageElement !== "undefined" &&
@@ -311,7 +376,6 @@ function DotGlobe() {
       uBaseColor: { value: new THREE.Color("#d7ebff") },
       uHighlightColor: { value: new THREE.Color("#ffffff") },
       uSizeScale: { value: FIXED_GLOBE_SETTINGS.landDotSize },
-      uTime: { value: 0 },
     }),
     []
   )
@@ -323,24 +387,37 @@ function DotGlobe() {
   }, [geometry])
 
   useFrame(({ clock }) => {
-    const timeUniform = materialRef.current?.uniforms.uTime
+    const hotspotTimeUniform = hotspotMaterialRef.current?.uniforms.uTime
 
-    if (timeUniform != null) {
-      timeUniform.value = clock.elapsedTime
+    if (hotspotTimeUniform != null) {
+      hotspotTimeUniform.value = clock.elapsedTime
     }
   })
 
   return (
-    <points geometry={geometry}>
-      <shaderMaterial
-        ref={materialRef}
-        depthWrite={false}
-        fragmentShader={LAND_DOT_FRAGMENT_SHADER}
-        transparent
-        uniforms={uniforms}
-        vertexShader={LAND_DOT_VERTEX_SHADER}
-      />
-    </points>
+    <>
+      <points geometry={geometry}>
+        <shaderMaterial
+          depthWrite={false}
+          fragmentShader={LAND_DOT_FRAGMENT_SHADER}
+          transparent
+          uniforms={uniforms}
+          vertexShader={LAND_DOT_VERTEX_SHADER}
+        />
+      </points>
+
+      <points geometry={geometry}>
+        <shaderMaterial
+          ref={hotspotMaterialRef}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          fragmentShader={HOTSPOT_FRAGMENT_SHADER}
+          transparent
+          uniforms={{ uTime: { value: 0 } }}
+          vertexShader={HOTSPOT_VERTEX_SHADER}
+        />
+      </points>
+    </>
   )
 }
 
@@ -445,21 +522,21 @@ function KnowledgeNode({
   const outerHaloRef = useRef<THREE.Mesh>(null)
   const pulseRef = useRef<THREE.Mesh>(null)
   const glowIntensity = FIXED_GLOBE_SETTINGS.nodeGlow
-  const haloBaseScale = light.size * (prominent ? 1.1 : 0.76)
-  const outerHaloBaseScale = light.size * (prominent ? 1.8 : 1.12)
-  const pulseBaseScale = light.size * (prominent ? 0.26 : 0.17)
+  const haloBaseScale = light.size * (prominent ? 1.28 : 0.9)
+  const outerHaloBaseScale = light.size * (prominent ? 2.4 : 1.48)
+  const pulseBaseScale = light.size * (prominent ? 0.32 : 0.19)
 
   const uniforms = useMemo(
     () => ({
       uColor: { value: new THREE.Color(prominent ? "#6bf4ff" : "#5cb8ff") },
-      uOpacity: { value: 0.065 * glowIntensity },
+      uOpacity: { value: 0.11 * glowIntensity },
     }),
     [glowIntensity, prominent]
   )
   const outerUniforms = useMemo(
     () => ({
       uColor: { value: new THREE.Color(prominent ? "#8ff6ff" : "#69c4ff") },
-      uOpacity: { value: 0.04 * glowIntensity },
+      uOpacity: { value: 0.075 * glowIntensity },
     }),
     [glowIntensity, prominent]
   )
@@ -471,30 +548,30 @@ function KnowledgeNode({
 
     if (haloRef.current != null) {
       haloRef.current.scale.setScalar(
-        haloBaseScale * (0.88 + pulse * (prominent ? 0.38 : 0.2))
+        haloBaseScale * (0.92 + pulse * (prominent ? 0.48 : 0.24))
       )
       const mat = haloRef.current.material as THREE.ShaderMaterial
       if (mat.uniforms?.uOpacity != null) {
         mat.uniforms.uOpacity.value =
-          (0.035 + pulse * (prominent ? 0.08 : 0.03)) * glowIntensity
+          (0.05 + pulse * (prominent ? 0.11 : 0.04)) * glowIntensity
       }
     }
 
     if (outerHaloRef.current != null) {
       outerHaloRef.current.scale.setScalar(
-        outerHaloBaseScale * (0.92 + pulse * (prominent ? 0.55 : 0.26))
+        outerHaloBaseScale * (1 + pulse * (prominent ? 0.7 : 0.34))
       )
       const mat = outerHaloRef.current.material as THREE.ShaderMaterial
       if (mat.uniforms?.uOpacity != null) {
         mat.uniforms.uOpacity.value =
-          (0.018 + pulse * (prominent ? 0.05 : 0.018)) * glowIntensity
+          (0.034 + pulse * (prominent ? 0.085 : 0.03)) * glowIntensity
       }
     }
 
     if (pulseRef.current != null) {
-      pulseRef.current.scale.setScalar(pulseBaseScale * (0.86 + pulse * 0.22))
+      pulseRef.current.scale.setScalar(pulseBaseScale * (0.92 + pulse * 0.26))
       ;(pulseRef.current.material as THREE.MeshBasicMaterial).opacity =
-        (0.52 + pulse * 0.22) * glowIntensity
+        (0.8 + pulse * 0.38) * glowIntensity
     }
   })
 
@@ -525,7 +602,7 @@ function KnowledgeNode({
       <mesh geometry={NODE_PULSE_GEOMETRY} ref={pulseRef}>
         <meshBasicMaterial
           color="#ffffff"
-          opacity={0.38 * glowIntensity}
+          opacity={0.5 * glowIntensity}
           toneMapped={false}
           transparent
         />
@@ -666,9 +743,9 @@ function GlobeScene() {
 
       <EffectComposer enableNormalPass={false} multisampling={0}>
         <Bloom
-          intensity={FIXED_GLOBE_SETTINGS.bloomIntensity}
-          luminanceSmoothing={0.72}
-          luminanceThreshold={0.72}
+          intensity={0.26}
+          luminanceSmoothing={0.8}
+          luminanceThreshold={0.6}
           mipmapBlur
         />
       </EffectComposer>
