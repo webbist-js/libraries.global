@@ -34,7 +34,7 @@ export type GlobeQualityTuning = {
 export const FIXED_GLOBE_SETTINGS: GlobeSettings = {
   ambientLight: 0.28,
   arcOpacity: 0.05,
-  atmosphereOpacity: 1.6,
+  atmosphereOpacity: 1.45,
   autoRotateSpeed: 0.22,
   bloomIntensity: 0.2,
   cameraFov: 22,
@@ -46,7 +46,7 @@ export const FIXED_GLOBE_SETTINGS: GlobeSettings = {
   globeYaw: -54.5,
   landDotDensity: 0.65,
   landDotSize: 1.4,
-  nodeGlow: 1.6,
+  nodeGlow: 1.45,
   pointLight: 3.6,
   qualityProfile: "balanced",
   starCount: 1200,

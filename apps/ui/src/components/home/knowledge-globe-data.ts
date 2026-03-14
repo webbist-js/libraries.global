@@ -68,32 +68,43 @@ const HUBS: Hub[] = [
   },
 ]
 
+// Curated to reduce parallel London fan-out and give the globe cleaner composition.
 const CONNECTIONS = [
-  [0, 1],
-  [0, 2],
-  [0, 5],
-  [0, 6],
-  [0, 7],
-  [0, 9],
-  [1, 2],
-  [1, 3],
-  [1, 4],
-  [1, 5],
-  [1, 6],
-  [1, 8],
-  [1, 11],
-  [2, 3],
-  [2, 5],
-  [2, 8],
-  [2, 10],
-  [3, 6],
-  [4, 6],
-  [4, 11],
-  [5, 6],
-  [5, 7],
-  [6, 7],
-  [6, 9],
-  [8, 11],
+  [0, 1], // Warsaw → London
+  [0, 2], // Warsaw → New York
+  [0, 6], // Warsaw → Singapore
+  [0, 7], // Warsaw → Tokyo
+  [0, 9], // Warsaw → Sydney
+
+  [1, 2], // London → New York
+  [1, 3], // London → Lagos
+  [1, 8], // London → Sao Paulo
+  [1, 11], // London → Cape Town
+
+  [2, 3], // New York → Lagos
+  [2, 5], // New York → Delhi
+  [2, 8], // New York → Sao Paulo
+  [2, 10], // New York → Mexico City
+
+  [3, 6], // Lagos → Singapore
+  [4, 6], // Nairobi → Singapore
+  [4, 11], // Nairobi → Cape Town
+
+  [5, 6], // Delhi → Singapore
+  [5, 7], // Delhi → Tokyo
+  [6, 7], // Singapore → Tokyo
+  [6, 9], // Singapore → Sydney
+
+  [8, 11], // Sao Paulo → Cape Town
+
+  // Trans-Pacific — gives the Pacific-facing side activity when the globe rotates.
+  [7, 2], // Tokyo → New York
+  [7, 10], // Tokyo → Mexico City
+  [9, 10], // Sydney → Mexico City
+  [9, 2], // Sydney → New York
+
+  // South Atlantic crossing — fills the gap between South America and Africa.
+  [8, 3], // Sao Paulo → Lagos
 ] as const
 
 export type GlobeLight = {
@@ -104,7 +115,7 @@ export type GlobeLight = {
 
 export type ArcRoute = {
   color: string
-  curve: THREE.CatmullRomCurve3
+  curve: THREE.Curve<THREE.Vector3>
   linePoints: THREE.Vector3[]
   phase: number
 }
@@ -140,47 +151,66 @@ export function latLngToVector3(
   )
 }
 
-function createArcCurve(
-  start: Hub,
-  end: Hub,
-  height: number,
-  spreadSeed: number
-) {
-  const startPoint = latLngToVector3(start.lat, start.lng, EARTH_RADIUS + 0.035)
-  const endPoint = latLngToVector3(end.lat, end.lng, EARTH_RADIUS + 0.035)
-  const midDirection = startPoint.clone().add(endPoint).normalize()
-  const planeNormal = startPoint.clone().cross(endPoint).normalize()
-  const lateralDirection = planeNormal.clone().cross(midDirection).normalize()
+function createArcCurve(start: Hub, end: Hub, spreadSeed: number) {
+  const startPoint = latLngToVector3(start.lat, start.lng, EARTH_RADIUS + 0.03)
+  const endPoint = latLngToVector3(end.lat, end.lng, EARTH_RADIUS + 0.03)
+
+  // Direction from globe centre through the arc midpoint.
+  const midpointDirection = startPoint.clone().add(endPoint).normalize()
+
+  // Lateral axis perpendicular to the arc plane — used for visual separation
+  // of routes that would otherwise overlap.
+  let planeNormal = startPoint.clone().cross(endPoint)
+  if (planeNormal.lengthSq() < 1e-6) {
+    planeNormal = new THREE.Vector3(0, 1, 0)
+  } else {
+    planeNormal.normalize()
+  }
+
+  const lateralDirection = planeNormal
+    .clone()
+    .cross(midpointDirection)
+    .normalize()
+
   const random = createSeededRandom(spreadSeed * 97 + 31)
+
+  const chordLength = startPoint.distanceTo(endPoint)
   const distanceFactor = THREE.MathUtils.clamp(
-    startPoint.distanceTo(endPoint) / (EARTH_RADIUS * 2.2),
-    0.35,
-    1.1
+    chordLength / (EARTH_RADIUS * 2.15),
+    0.22,
+    1
   )
-  const lateralSign = random() > 0.5 ? 1 : -1
+
+  // For a QuadraticBezierCurve3 the arc peak only reaches ~half the distance
+  // to the control point, so the control point must be pushed 2× the desired
+  // visible lift above the surface. Range: 1.30 (short) → 1.65 (long) gives
+  // a visible peak of ~0.5–1.0 units above the globe for a flight-path look.
+  const arcHeightMultiplier = 1.3 + distanceFactor * 0.35
+
+  // Small lateral nudge so adjacent routes don't stack on top of each other.
   const lateralOffset =
-    EARTH_RADIUS * (0.08 + random() * 0.14) * distanceFactor * lateralSign
+    EARTH_RADIUS * (0.008 + random() * 0.018) * (0.3 + distanceFactor * 0.45)
+  const lateralSign = spreadSeed % 2 === 0 ? 1 : -1
 
-  const controlPointA = startPoint
+  // Keep transatlantic routes flatter.
+  const isAtlantic =
+    (start.name === "London" && end.name === "New York") ||
+    (start.name === "New York" && end.name === "London") ||
+    (start.name === "Warsaw" && end.name === "New York") ||
+    (start.name === "New York" && end.name === "Warsaw")
+
+  const arcHeight =
+    EARTH_RADIUS * (arcHeightMultiplier + (isAtlantic ? -0.08 : 0))
+
+  // Single quadratic bezier control point: pushed outward along the midpoint
+  // direction to form the arc, plus a tiny lateral nudge for separation.
+  // QuadraticBezierCurve3 guarantees smooth tangents at both endpoints.
+  const controlPoint = midpointDirection
     .clone()
-    .lerp(endPoint, 0.28)
-    .normalize()
-    .multiplyScalar(EARTH_RADIUS * (height * 0.94))
-    .add(lateralDirection.clone().multiplyScalar(lateralOffset * 0.7))
+    .multiplyScalar(arcHeight)
+    .add(lateralDirection.clone().multiplyScalar(lateralOffset * lateralSign))
 
-  const controlPointB = startPoint
-    .clone()
-    .lerp(endPoint, 0.72)
-    .normalize()
-    .multiplyScalar(EARTH_RADIUS * (height * 1.02))
-    .add(lateralDirection.clone().multiplyScalar(lateralOffset))
-
-  return new THREE.CatmullRomCurve3([
-    startPoint,
-    controlPointA,
-    controlPointB,
-    endPoint,
-  ])
+  return new THREE.QuadraticBezierCurve3(startPoint, controlPoint, endPoint)
 }
 
 function createKnowledgeLights() {
@@ -217,18 +247,14 @@ export const KNOWLEDGE_LIGHTS = createKnowledgeLights()
 
 export const ARC_ROUTES: ArcRoute[] = CONNECTIONS.map(
   ([startIndex, endIndex], index) => {
-    const curve = createArcCurve(
-      HUBS[startIndex]!,
-      HUBS[endIndex]!,
-      1.04 + (index % 4) * 0.03,
-      index
-    )
-    const color = ["#c8e0ff", "#e0eeff", "#a0c8ee"][index % 3]!
+    const curve = createArcCurve(HUBS[startIndex]!, HUBS[endIndex]!, index)
+
+    const color = ["#c8e0ff", "#d9ebff", "#b8d7f6"][index % 3]!
 
     return {
       color,
       curve,
-      linePoints: curve.getPoints(44),
+      linePoints: curve.getPoints(190),
       phase: index * 0.09,
     }
   }
