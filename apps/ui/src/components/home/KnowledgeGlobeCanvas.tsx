@@ -242,7 +242,11 @@ const HOTSPOT_FRAGMENT_SHADER = `
   }
 `
 
-const ATMOSPHERE_VERTEX_SHADER = `
+// GitHub-style halo: intensity = pow(max(0, c - dot(N, V)), p)
+// Rendered BackSide so Three.js flips normals — fragments near the limb
+// have near-zero dot product, producing the rim glow. The inner sphere gives
+// a crisp terminator edge; the outer sphere gives the wide ambient halo.
+const HALO_VERTEX_SHADER = `
   varying vec3 vNormal;
   varying vec3 vViewPosition;
 
@@ -254,39 +258,24 @@ const ATMOSPHERE_VERTEX_SHADER = `
   }
 `
 
-const ATMOSPHERE_FRAGMENT_SHADER = `
+const HALO_FRAGMENT_SHADER = `
   uniform vec3 uColor;
-  uniform vec3 uScatterColor;
-  uniform float uCenterOpacity;
-  uniform float uEdgeOpacity;
-  uniform float uEdgePower;
-  uniform float uScatterStrength;
-  uniform float uScatterWidth;
+  uniform float uC;
+  uniform float uP;
+  uniform float uOpacity;
 
   varying vec3 vNormal;
   varying vec3 vViewPosition;
 
   void main() {
-    vec3 normal = normalize(vNormal);
-    vec3 viewDirection = normalize(vViewPosition);
-    float viewDot = abs(dot(viewDirection, normal));
-    float edgeFactor = pow(max(0.0, 1.0 - viewDot), uEdgePower);
-    float scatter =
-      pow(max(0.0, 1.0 - viewDot), uEdgePower * 0.58 + uScatterWidth) *
-      uScatterStrength;
-    float wrap = smoothstep(0.22, 1.0, edgeFactor) * uScatterStrength * 0.55;
-    float alpha = mix(uCenterOpacity, uEdgeOpacity, edgeFactor);
-
-    alpha += scatter * uEdgeOpacity * 0.8;
-    alpha += wrap * uEdgeOpacity * 0.35;
-
-    vec3 color = mix(
-      uColor,
-      uScatterColor,
-      clamp(edgeFactor * 0.34 + scatter * 0.8 + wrap * 0.22, 0.0, 1.0)
-    );
-
-    gl_FragColor = vec4(color, alpha);
+    vec3 normal   = normalize(vNormal);
+    vec3 viewDir  = normalize(vViewPosition);
+    float fresnel = dot(normal, viewDir);
+    // pow(max(0, c - fresnel), p): 0 where surface faces camera, glows at limb
+    float intensity = pow(max(0.0, uC - fresnel), uP);
+    float alpha = intensity * uOpacity;
+    if (alpha < 0.001) discard;
+    gl_FragColor = vec4(uColor * intensity, alpha);
   }
 `
 
@@ -697,51 +686,24 @@ function DotGlobe() {
 }
 
 function GlobeShell() {
-  const atmosphereUniforms = useMemo(
+  // Inner rim: thin bright terminator line at the globe edge.
+  const rimUniforms = useMemo(
     () => ({
-      uCenterOpacity: { value: 0 },
-      uColor: { value: new THREE.Color("#4a7193") },
-      uEdgeOpacity: { value: 0.022 * FIXED_GLOBE_SETTINGS.atmosphereOpacity },
-      uEdgePower: { value: 0.65 },
-      uScatterColor: { value: new THREE.Color("#8ec8ff") },
-      uScatterStrength: { value: 0.62 },
-      uScatterWidth: { value: 0.44 },
+      uC: { value: 0.64 },
+      uP: { value: 7 },
+      uColor: { value: new THREE.Color("#7ec8f0") },
+      uOpacity: { value: 0.38 * FIXED_GLOBE_SETTINGS.atmosphereOpacity },
     }),
     []
   )
-  const outerAtmosphereUniforms = useMemo(
+
+  // Outer halo: soft ambient glow just beyond the rim.
+  const haloUniforms = useMemo(
     () => ({
-      uCenterOpacity: { value: 0 },
-      uColor: { value: new THREE.Color("#5f84a9") },
-      uEdgeOpacity: { value: 0.018 * FIXED_GLOBE_SETTINGS.atmosphereOpacity },
-      uEdgePower: { value: 0.55 },
-      uScatterColor: { value: new THREE.Color("#a5deff") },
-      uScatterStrength: { value: 0.54 },
-      uScatterWidth: { value: 0.58 },
-    }),
-    []
-  )
-  const farAtmosphereUniforms = useMemo(
-    () => ({
-      uCenterOpacity: { value: 0 },
-      uColor: { value: new THREE.Color("#88b5dc") },
-      uEdgeOpacity: { value: 0.013 },
-      uEdgePower: { value: 0.48 },
-      uScatterColor: { value: new THREE.Color("#b8e7ff") },
-      uScatterStrength: { value: 0.38 },
-      uScatterWidth: { value: 0.78 },
-    }),
-    []
-  )
-  const hazeUniforms = useMemo(
-    () => ({
-      uCenterOpacity: { value: 0 },
-      uColor: { value: new THREE.Color("#7ea9cf") },
-      uEdgeOpacity: { value: 0.009 },
-      uEdgePower: { value: 0.42 },
-      uScatterColor: { value: new THREE.Color("#d3eeff") },
-      uScatterStrength: { value: 0.26 },
-      uScatterWidth: { value: 1.02 },
+      uC: { value: 0.68 },
+      uP: { value: 4.5 },
+      uColor: { value: new THREE.Color("#112040") },
+      uOpacity: { value: 0.22 * FIXED_GLOBE_SETTINGS.atmosphereOpacity },
     }),
     []
   )
@@ -775,7 +737,8 @@ function GlobeShell() {
         />
       </mesh>
 
-      <mesh scale={1.016}>
+      {/* Inner rim — tight Fresnel glow at the very edge of the globe */}
+      <mesh scale={1.014}>
         <sphereGeometry
           args={[
             EARTH_RADIUS,
@@ -786,16 +749,17 @@ function GlobeShell() {
         <shaderMaterial
           blending={THREE.AdditiveBlending}
           depthWrite={false}
-          fragmentShader={ATMOSPHERE_FRAGMENT_SHADER}
+          fragmentShader={HALO_FRAGMENT_SHADER}
           side={THREE.BackSide}
           toneMapped={false}
           transparent
-          uniforms={atmosphereUniforms}
-          vertexShader={ATMOSPHERE_VERTEX_SHADER}
+          uniforms={rimUniforms}
+          vertexShader={HALO_VERTEX_SHADER}
         />
       </mesh>
 
-      <mesh scale={1.03}>
+      {/* Outer halo — soft ambient glow just beyond the rim */}
+      <mesh scale={1.08}>
         <sphereGeometry
           args={[
             EARTH_RADIUS,
@@ -806,52 +770,12 @@ function GlobeShell() {
         <shaderMaterial
           blending={THREE.AdditiveBlending}
           depthWrite={false}
-          fragmentShader={ATMOSPHERE_FRAGMENT_SHADER}
+          fragmentShader={HALO_FRAGMENT_SHADER}
           side={THREE.BackSide}
           toneMapped={false}
           transparent
-          uniforms={outerAtmosphereUniforms}
-          vertexShader={ATMOSPHERE_VERTEX_SHADER}
-        />
-      </mesh>
-
-      <mesh scale={1.048}>
-        <sphereGeometry
-          args={[
-            EARTH_RADIUS,
-            GLOBE_QUALITY.atmosphereSegments,
-            GLOBE_QUALITY.atmosphereSegments,
-          ]}
-        />
-        <shaderMaterial
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-          fragmentShader={ATMOSPHERE_FRAGMENT_SHADER}
-          side={THREE.BackSide}
-          toneMapped={false}
-          transparent
-          uniforms={farAtmosphereUniforms}
-          vertexShader={ATMOSPHERE_VERTEX_SHADER}
-        />
-      </mesh>
-
-      <mesh scale={1.072}>
-        <sphereGeometry
-          args={[
-            EARTH_RADIUS,
-            GLOBE_QUALITY.atmosphereSegments,
-            GLOBE_QUALITY.atmosphereSegments,
-          ]}
-        />
-        <shaderMaterial
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-          fragmentShader={ATMOSPHERE_FRAGMENT_SHADER}
-          side={THREE.BackSide}
-          toneMapped={false}
-          transparent
-          uniforms={hazeUniforms}
-          vertexShader={ATMOSPHERE_VERTEX_SHADER}
+          uniforms={haloUniforms}
+          vertexShader={HALO_VERTEX_SHADER}
         />
       </mesh>
     </>
