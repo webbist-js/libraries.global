@@ -168,6 +168,7 @@ const CONNECTIONS = [
   // ── Singapore ────────────────────────────────────────────────────────────────
   [5, 7], // → Tokyo (5400 km)
   [5, 8], // → Melbourne (6300 km)
+  [5, 11], // → Seattle (12800 km trans-Pacific)
   [5, 13], // → Mexico City (16500 km — circles the globe)
 
   // ── Beijing ──────────────────────────────────────────────────────────────────
@@ -177,6 +178,7 @@ const CONNECTIONS = [
   // ── Tokyo ────────────────────────────────────────────────────────────────────
   [7, 8], // → Melbourne (8800 km)
   [7, 11], // → Seattle (8300 km trans-Pacific)
+  [7, 13], // → Mexico City (11300 km trans-Pacific)
 
   // ── Melbourne ────────────────────────────────────────────────────────────────
   [8, 11], // → Seattle
