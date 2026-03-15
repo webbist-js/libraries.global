@@ -12,99 +12,194 @@ type Hub = {
 }
 
 const HUBS: Hub[] = [
-  { name: "Warsaw", lat: 52.2298, lng: 21.0122, importance: 1, phase: 0.15 },
-  { name: "London", lat: 51.5072, lng: -0.1276, importance: 0.92, phase: 0.58 },
+  // ── Europe (3 nodes spread across the continent) ─────────────────────────────
   {
-    name: "New York",
-    lat: 40.7128,
-    lng: -74.006,
-    importance: 0.94,
-    phase: 1.1,
+    name: "British Library",
+    lat: 51.5295,
+    lng: -0.1268,
+    importance: 0.95,
+    phase: 0.15,
   },
-  { name: "Lagos", lat: 6.5244, lng: 3.3792, importance: 0.72, phase: 1.82 },
   {
-    name: "Nairobi",
-    lat: -1.2921,
-    lng: 36.8219,
-    importance: 0.68,
-    phase: 2.35,
+    name: "Bibliothèque Nationale de France",
+    lat: 48.8339,
+    lng: 2.3769,
+    importance: 0.92,
+    phase: 0.72,
   },
-  { name: "Delhi", lat: 28.6139, lng: 77.209, importance: 0.9, phase: 2.9 },
   {
-    name: "Singapore",
-    lat: 1.3521,
-    lng: 103.8198,
+    name: "Austrian National Library",
+    lat: 48.2066,
+    lng: 16.3667,
     importance: 0.88,
-    phase: 3.4,
+    phase: 1.3,
   },
-  { name: "Tokyo", lat: 35.6764, lng: 139.65, importance: 0.9, phase: 3.92 },
+  // ── North Africa ─────────────────────────────────────────────────────────────
   {
-    name: "Sao Paulo",
-    lat: -23.5505,
-    lng: -46.6333,
+    name: "Bibliotheca Alexandrina",
+    lat: 31.2089,
+    lng: 29.908,
+    importance: 0.9,
+    phase: 1.88,
+  },
+  // ── Middle East ──────────────────────────────────────────────────────────────
+  {
+    name: "Qatar National Library",
+    lat: 25.3169,
+    lng: 51.4398,
+    importance: 0.85,
+    phase: 2.46,
+  },
+  // ── Southeast Asia ───────────────────────────────────────────────────────────
+  {
+    name: "National Library of Singapore",
+    lat: 1.2966,
+    lng: 103.8547,
     importance: 0.82,
-    phase: 4.45,
+    phase: 3.04,
+  },
+  // ── East Asia ────────────────────────────────────────────────────────────────
+  {
+    name: "National Library of China",
+    lat: 39.9389,
+    lng: 116.3124,
+    importance: 0.88,
+    phase: 3.62,
   },
   {
-    name: "Sydney",
-    lat: -33.8688,
-    lng: 151.2093,
-    importance: 0.76,
-    phase: 5.08,
+    name: "National Diet Library",
+    lat: 35.6826,
+    lng: 139.7469,
+    importance: 0.88,
+    phase: 4.2,
+  },
+  // ── Oceania ──────────────────────────────────────────────────────────────────
+  {
+    name: "State Library of Victoria",
+    lat: -37.8122,
+    lng: 144.9644,
+    importance: 0.82,
+    phase: 4.78,
+  },
+  // ── Southern Africa ──────────────────────────────────────────────────────────
+  {
+    name: "National Library of South Africa",
+    lat: -33.9278,
+    lng: 18.4629,
+    importance: 0.78,
+    phase: 5.36,
+  },
+  // ── North America — East Coast ───────────────────────────────────────────────
+  {
+    name: "Library of Congress",
+    lat: 38.8892,
+    lng: -77.0046,
+    importance: 1,
+    phase: 5.94,
+  },
+  // ── North America — West Coast ───────────────────────────────────────────────
+  {
+    name: "Seattle Public Library",
+    lat: 47.6062,
+    lng: -122.3321,
+    importance: 0.8,
+    phase: 0.38,
+  },
+  // ── Canada ───────────────────────────────────────────────────────────────────
+  {
+    name: "Library and Archives Canada",
+    lat: 45.4255,
+    lng: -75.7005,
+    importance: 0.78,
+    phase: 0.96,
+  },
+  // ── Central America ──────────────────────────────────────────────────────────
+  {
+    name: "Jose Vasconcelos Library",
+    lat: 19.4448,
+    lng: -99.1421,
+    importance: 0.78,
+    phase: 1.54,
+  },
+  // ── South America ────────────────────────────────────────────────────────────
+  {
+    name: "Real Gabinete Português de Leitura",
+    lat: -22.9068,
+    lng: -43.1813,
+    importance: 0.8,
+    phase: 2.12,
   },
   {
-    name: "Mexico City",
-    lat: 19.4326,
-    lng: -99.1332,
-    importance: 0.76,
-    phase: 5.58,
-  },
-  {
-    name: "Cape Town",
-    lat: -33.9249,
-    lng: 18.4241,
-    importance: 0.72,
-    phase: 6.12,
+    name: "El Ateneo Grand Splendid",
+    lat: -34.5988,
+    lng: -58.3931,
+    importance: 0.82,
+    phase: 2.7,
   },
 ]
 
-// Curated to reduce parallel London fan-out and give the globe cleaner composition.
+// Each library has 3–5 connections to varied destinations — mix of regional,
+// cross-continental, and trans-ocean arcs to give the globe full coverage.
 const CONNECTIONS = [
-  [0, 1], // Warsaw → London
-  [0, 2], // Warsaw → New York
-  [0, 6], // Warsaw → Singapore
-  [0, 7], // Warsaw → Tokyo
-  [0, 9], // Warsaw → Sydney
+  // ── British Library (London) ─────────────────────────────────────────────────
+  [0, 3], // → Alexandrina (Egypt, 3400 km)
+  [0, 4], // → Qatar (5200 km)
+  [0, 7], // → Tokyo (9600 km)
+  [0, 10], // → Library of Congress (5600 km)
 
-  [1, 2], // London → New York
-  [1, 3], // London → Lagos
-  [1, 8], // London → Sao Paulo
-  [1, 11], // London → Cape Town
+  // ── BnF Paris ────────────────────────────────────────────────────────────────
+  [1, 5], // → Singapore (10700 km)
+  [1, 9], // → Cape Town (9200 km)
+  [1, 14], // → Rio de Janeiro (9200 km)
 
-  [2, 3], // New York → Lagos
-  [2, 5], // New York → Delhi
-  [2, 8], // New York → Sao Paulo
-  [2, 10], // New York → Mexico City
+  // ── Austrian National Library (Vienna) ──────────────────────────────────────
+  [2, 6], // → Beijing (6200 km)
+  [2, 10], // → Library of Congress (8600 km)
+  [2, 14], // → Rio de Janeiro (10000 km)
 
-  [3, 6], // Lagos → Singapore
-  [4, 6], // Nairobi → Singapore
-  [4, 11], // Nairobi → Cape Town
+  // ── Bibliotheca Alexandrina (Egypt) ─────────────────────────────────────────
+  [3, 9], // → Cape Town (7200 km)
 
-  [5, 6], // Delhi → Singapore
-  [5, 7], // Delhi → Tokyo
-  [6, 7], // Singapore → Tokyo
-  [6, 9], // Singapore → Sydney
+  // ── Qatar National Library ───────────────────────────────────────────────────
+  [4, 5], // → Singapore (5600 km)
+  [4, 6], // → Beijing (4900 km)
+  [4, 9], // → Cape Town (6500 km)
 
-  [8, 11], // Sao Paulo → Cape Town
+  // ── Singapore ────────────────────────────────────────────────────────────────
+  [5, 7], // → Tokyo (5400 km)
+  [5, 8], // → Melbourne (6300 km)
+  [5, 13], // → Mexico City (16500 km — circles the globe)
 
-  // Trans-Pacific — gives the Pacific-facing side activity when the globe rotates.
-  [7, 2], // Tokyo → New York
-  [7, 10], // Tokyo → Mexico City
-  [9, 10], // Sydney → Mexico City
-  [9, 2], // Sydney → New York
+  // ── Beijing ──────────────────────────────────────────────────────────────────
+  [6, 11], // → Seattle (8500 km trans-Pacific)
+  [6, 12], // → Ottawa (10200 km polar arc)
 
-  // South Atlantic crossing — fills the gap between South America and Africa.
-  [8, 3], // Sao Paulo → Lagos
+  // ── Tokyo ────────────────────────────────────────────────────────────────────
+  [7, 8], // → Melbourne (8800 km)
+  [7, 11], // → Seattle (8300 km trans-Pacific)
+
+  // ── Melbourne ────────────────────────────────────────────────────────────────
+  [8, 11], // → Seattle
+  [8, 15], // → Buenos Aires
+
+  // ── Cape Town ────────────────────────────────────────────────────────────────
+  [9, 15], // → Buenos Aires (South Atlantic)
+
+  // ── Library of Congress (DC) ─────────────────────────────────────────────────
+  [10, 11], // → Seattle (4100 km)
+  [10, 13], // → Mexico City (3350 km)
+
+  // ── Seattle ──────────────────────────────────────────────────────────────────
+  [11, 13], // → Mexico City (2700 km)
+
+  // ── Ottawa ───────────────────────────────────────────────────────────────────
+  [12, 15], // → Buenos Aires (9800 km)
+
+  // ── Mexico City ──────────────────────────────────────────────────────────────
+  [13, 14], // → Rio de Janeiro (7500 km)
+
+  // ── Rio de Janeiro ───────────────────────────────────────────────────────────
+  [14, 3], // → Alexandrina (8900 km trans-Atlantic to Africa)
 ] as const
 
 export type GlobeLight = {
@@ -183,9 +278,9 @@ function createArcCurve(start: Hub, end: Hub, spreadSeed: number) {
 
   // For a QuadraticBezierCurve3 the arc peak only reaches ~half the distance
   // to the control point, so the control point must be pushed 2× the desired
-  // visible lift above the surface. Range: 1.30 (short) → 1.65 (long) gives
-  // a visible peak of ~0.5–1.0 units above the globe for a flight-path look.
-  const arcHeightMultiplier = 1.3 + distanceFactor * 0.35
+  // Shallower arcs that hug the globe surface more closely, matching the
+  // reference image aesthetic. Range: 1.14 (short) → 1.38 (long).
+  const arcHeightMultiplier = 1.14 + distanceFactor * 0.24
 
   // Small lateral nudge so adjacent routes don't stack on top of each other.
   const lateralOffset =
@@ -200,7 +295,7 @@ function createArcCurve(start: Hub, end: Hub, spreadSeed: number) {
     (start.name === "New York" && end.name === "Warsaw")
 
   const arcHeight =
-    EARTH_RADIUS * (arcHeightMultiplier + (isAtlantic ? -0.08 : 0))
+    EARTH_RADIUS * (arcHeightMultiplier + (isAtlantic ? -0.04 : 0))
 
   // Single quadratic bezier control point: pushed outward along the midpoint
   // direction to form the arc, plus a tiny lateral nudge for separation.
@@ -249,7 +344,16 @@ export const ARC_ROUTES: ArcRoute[] = CONNECTIONS.map(
   ([startIndex, endIndex], index) => {
     const curve = createArcCurve(HUBS[startIndex]!, HUBS[endIndex]!, index)
 
-    const color = ["#c8e0ff", "#d9ebff", "#b8d7f6"][index % 3]!
+    // Pure white / silver-blue palette — no warm tones, matches the
+    // reference image's cool monochromatic style.
+    const color = [
+      "#e8f4ff", // near-white cool
+      "#c8e0ff", // light blue
+      "#f0f8ff", // almost white
+      "#b8d0f0", // steel blue
+      "#d8ecff", // pale sky
+      "#a8c8e8", // muted blue
+    ][index % 6]!
 
     return {
       color,

@@ -1005,6 +1005,7 @@ function KnowledgeNode({
 
 function ArcPulse({ route }: { readonly route: ArcRoute }) {
   const pulseRef = useRef<THREE.Mesh>(null)
+  const glowRef = useRef<THREE.Mesh>(null)
   const worldPulsePosition = useMemo(() => new THREE.Vector3(), [])
   const worldCenter = useMemo(() => new THREE.Vector3(), [])
   const worldScale = useMemo(() => new THREE.Vector3(), [])
@@ -1012,10 +1013,18 @@ function ArcPulse({ route }: { readonly route: ArcRoute }) {
   const centerOffset = useMemo(() => new THREE.Vector3(), [])
   const closestPoint = useMemo(() => new THREE.Vector3(), [])
 
+  // Derive a brighter version of the arc colour for the pulse dot.
+  const pulseColor = useMemo(
+    () => new THREE.Color(route.color).multiplyScalar(1.6),
+    [route.color]
+  )
+  const glowColor = useMemo(
+    () => new THREE.Color(route.color).multiplyScalar(0.9),
+    [route.color]
+  )
+
   useFrame(({ camera, clock }) => {
-    if (pulseRef.current == null) {
-      return
-    }
+    if (pulseRef.current == null) return
 
     const progress = (clock.elapsedTime * 0.06 + route.phase) % 1
     const point = route.curve.getPointAt(progress)
@@ -1023,7 +1032,10 @@ function ArcPulse({ route }: { readonly route: ArcRoute }) {
       0.6 + 0.4 * Math.sin(clock.elapsedTime * 1.2 + route.phase * 10)
 
     pulseRef.current.position.copy(point)
-    pulseRef.current.scale.setScalar(0.0072 * (0.84 + pulse * 0.24))
+    pulseRef.current.scale.setScalar(0.011 * (0.84 + pulse * 0.28))
+    glowRef.current?.position.copy(point)
+    glowRef.current?.scale.setScalar(0.028 * (0.8 + pulse * 0.3))
+
     pulseRef.current.getWorldPosition(worldPulsePosition)
     pulseRef.current.parent?.getWorldPosition(worldCenter)
     pulseRef.current.parent?.getWorldScale(worldScale)
@@ -1039,21 +1051,40 @@ function ArcPulse({ route }: { readonly route: ArcRoute }) {
     )
 
     ;(pulseRef.current.material as THREE.MeshBasicMaterial).opacity =
-      0.15 * visibility
+      0.92 * visibility
+    if (glowRef.current) {
+      ;(glowRef.current.material as THREE.MeshBasicMaterial).opacity =
+        0.22 * visibility
+    }
   })
 
   return (
-    <mesh geometry={ARC_PULSE_GEOMETRY} ref={pulseRef}>
-      <meshBasicMaterial
-        blending={THREE.AdditiveBlending}
-        color="#7fdfff"
-        depthTest={false}
-        depthWrite={false}
-        opacity={0.15}
-        toneMapped={false}
-        transparent
-      />
-    </mesh>
+    <>
+      {/* Soft outer glow disc */}
+      <mesh geometry={ARC_PULSE_GEOMETRY} ref={glowRef}>
+        <meshBasicMaterial
+          blending={THREE.AdditiveBlending}
+          color={glowColor}
+          depthTest={false}
+          depthWrite={false}
+          opacity={0.22}
+          toneMapped={false}
+          transparent
+        />
+      </mesh>
+      {/* Bright core dot */}
+      <mesh geometry={ARC_PULSE_GEOMETRY} ref={pulseRef}>
+        <meshBasicMaterial
+          blending={THREE.AdditiveBlending}
+          color={pulseColor}
+          depthTest={false}
+          depthWrite={false}
+          opacity={0.92}
+          toneMapped={false}
+          transparent
+        />
+      </mesh>
+    </>
   )
 }
 
@@ -1155,7 +1186,7 @@ function KnowledgeArc({
     })
 
     const averageVisibility = visibilityTotal / ARC_VISIBILITY_SAMPLES.length
-    const lineOpacity = THREE.MathUtils.lerp(0.04, 0.34, averageVisibility)
+    const lineOpacity = THREE.MathUtils.lerp(0.06, 0.82, averageVisibility)
     const ghostOpacity = lineOpacity * 0.16
 
     if (lineRef.current != null) {
@@ -1175,6 +1206,151 @@ function KnowledgeArc({
       <primitive object={line} ref={lineRef} />
       <ArcPulse route={route} />
     </group>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Satellites — thin orbital ring lines with glowing nodes that orbit
+// independently of the globe's rotation.
+// ---------------------------------------------------------------------------
+
+const SATELLITE_CONFIGS = [
+  {
+    color: "#e8f4ff", // cool white
+    inclination: 26,
+    orbitRadius: EARTH_RADIUS * 1.36,
+    nodePhase: 0.14,
+    speed: 0.009,
+  },
+  {
+    color: "#c8e0ff", // light blue
+    inclination: -44,
+    orbitRadius: EARTH_RADIUS * 1.54,
+    nodePhase: 0.68,
+    speed: 0.006,
+  },
+  {
+    color: "#f0f8ff", // almost white
+    inclination: 62,
+    orbitRadius: EARTH_RADIUS * 1.24,
+    nodePhase: 0.38,
+    speed: 0.011,
+  },
+  {
+    color: "#b8d0f0", // steel blue
+    inclination: -16,
+    orbitRadius: EARTH_RADIUS * 1.44,
+    nodePhase: 0.82,
+    speed: 0.007,
+  },
+  {
+    color: "#d8ecff", // pale sky
+    inclination: 38,
+    orbitRadius: EARTH_RADIUS * 1.62,
+    nodePhase: 0.51,
+    speed: 0.005,
+  },
+  {
+    color: "#a8c8e8", // muted blue
+    inclination: -55,
+    orbitRadius: EARTH_RADIUS * 1.32,
+    nodePhase: 0.22,
+    speed: 0.008,
+  },
+  {
+    color: "#e8f4ff", // cool white
+    inclination: 75,
+    orbitRadius: EARTH_RADIUS * 1.48,
+    nodePhase: 0.61,
+    speed: 0.006,
+  },
+  {
+    color: "#c8e0ff", // light blue
+    inclination: -30,
+    orbitRadius: EARTH_RADIUS * 1.7,
+    nodePhase: 0.35,
+    speed: 0.004,
+  },
+  {
+    color: "#f0f8ff", // almost white
+    inclination: 50,
+    orbitRadius: EARTH_RADIUS * 1.28,
+    nodePhase: 0.76,
+    speed: 0.01,
+  },
+  {
+    color: "#b8d0f0", // steel blue
+    inclination: -70,
+    orbitRadius: EARTH_RADIUS * 1.58,
+    nodePhase: 0.42,
+    speed: 0.007,
+  },
+  {
+    color: "#d8ecff", // pale sky
+    inclination: 15,
+    orbitRadius: EARTH_RADIUS * 1.4,
+    nodePhase: 0.88,
+    speed: 0.009,
+  },
+  {
+    color: "#a8c8e8", // muted blue
+    inclination: -85,
+    orbitRadius: EARTH_RADIUS * 1.66,
+    nodePhase: 0.55,
+    speed: 0.005,
+  },
+] as const
+
+function SatelliteOrbit({
+  color,
+  inclination,
+  orbitRadius,
+  nodePhase,
+  speed,
+}: {
+  readonly color: string
+  readonly inclination: number
+  readonly orbitRadius: number
+  readonly nodePhase: number
+  readonly speed: number
+}) {
+  const nodeRef = useRef<THREE.Mesh>(null)
+
+  useFrame(({ clock }) => {
+    if (nodeRef.current == null) return
+    const a = ((clock.elapsedTime * speed + nodePhase) % 1) * Math.PI * 2
+    nodeRef.current.position.set(
+      Math.cos(a) * orbitRadius,
+      0,
+      Math.sin(a) * orbitRadius
+    )
+  })
+
+  return (
+    <group rotation={[THREE.MathUtils.degToRad(inclination), 0, 0]}>
+      {/* Tiny bright dot — bloom turns it into a glowing satellite spark */}
+      <mesh ref={nodeRef}>
+        <sphereGeometry args={[0.008, 6, 6]} />
+        <meshBasicMaterial
+          blending={THREE.AdditiveBlending}
+          color={color}
+          depthWrite={false}
+          opacity={1}
+          toneMapped={false}
+          transparent
+        />
+      </mesh>
+    </group>
+  )
+}
+
+function Satellites() {
+  return (
+    <>
+      {SATELLITE_CONFIGS.map((cfg) => (
+        <SatelliteOrbit key={`${cfg.color}-${cfg.inclination}`} {...cfg} />
+      ))}
+    </>
   )
 }
 
@@ -1264,6 +1440,9 @@ function GlobeScene() {
         position={[-0.02, FIXED_GLOBE_SETTINGS.globeY, 0]}
         scale={FIXED_GLOBE_SETTINGS.globeScale}
       >
+        {/* Satellites orbit in world space, outside the globe's rotation */}
+        <Satellites />
+
         <group
           rotation={[
             THREE.MathUtils.degToRad(FIXED_GLOBE_SETTINGS.globePitch),
@@ -1310,11 +1489,11 @@ function GlobeScene() {
 
       <EffectComposer enableNormalPass={false} multisampling={0}>
         <Bloom
-          intensity={1.1}
+          intensity={1.6}
           luminanceSmoothing={0.76}
-          luminanceThreshold={0.18}
+          luminanceThreshold={0.12}
           mipmapBlur
-          radius={0.72}
+          radius={0.78}
         />
       </EffectComposer>
     </>
@@ -1328,6 +1507,15 @@ export function KnowledgeGlobeCanvas({
 }) {
   return (
     <div className={cn("relative h-full w-full", className)}>
+      {/* Ambient canvas glow — soft radial blue light emanating from the globe */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 75% 65% at 62% 48%, rgba(18,72,148,0.22) 0%, rgba(8,28,72,0.10) 42%, transparent 68%)",
+        }}
+      />
       <Canvas
         camera={{
           fov: FIXED_GLOBE_SETTINGS.cameraFov,
