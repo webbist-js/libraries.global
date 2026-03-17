@@ -1,4 +1,3 @@
-import { ROOT_PAGE_PATH } from "@repo/shared-data"
 import type { Locale } from "next-intl"
 import { use } from "react"
 
@@ -6,7 +5,10 @@ import LibraryHomePage from "@/components/home/LibraryHomePage"
 import StrapiPageView from "@/components/layouts/StrapiPageView"
 import { createFallbackPath, debugStaticParams } from "@/lib/build"
 import { isDevelopment } from "@/lib/general-helpers"
-import { getMetadataFromStrapi } from "@/lib/metadata"
+import {
+  getMetadataFromStrapi,
+  getSingleTypeMetadataFromStrapi,
+} from "@/lib/metadata"
 import { fetchAllPages } from "@/lib/strapi-api/content/server"
 
 function isHomepageRoute(rest?: string[]) {
@@ -82,16 +84,15 @@ export async function generateMetadata(
   const isHomepage = isHomepageRoute(params.rest)
 
   if (isHomepage) {
-    return {
-      description:
-        "Explore a prototype for libraries.global with a cinematic globe, linked knowledge flows, and a future-facing world library index.",
-      title: "Global Library Explorer",
-    }
+    return getSingleTypeMetadataFromStrapi({
+      locale,
+      uid: "api::homepage.homepage",
+    })
   }
 
-  const fullPath = ROOT_PAGE_PATH + (params.rest ?? []).join("/")
+  const slug = (params.rest ?? []).join("/")
 
-  return getMetadataFromStrapi({ fullPath, locale })
+  return getMetadataFromStrapi({ slug, locale })
 }
 
 export default function StaticStrapiPage(

@@ -57,23 +57,7 @@ Full workflow: [Page Builder docs](../../docs/page-builder.md#adding-new-compone
 
 ## Page Hierarchy
 
-Pages use parent-child relations. `fullPath` is auto-generated via internal jobs.
-
-**Key files:**
-
-| File                                            | Purpose                          |
-| ----------------------------------------------- | -------------------------------- |
-| `src/api/page/content-types/page/lifecycles.ts` | Triggers on publish              |
-| `src/utils/hierarchy/index.ts`                  | Job processing logic             |
-| `src/api/internal-job/services/internal-job.ts` | Job queue service                |
-| `src/utils/constants.ts`                        | `PAGES_HIERARCHY_ENABLED` toggle |
-
-**Admin endpoints:**
-
-- `POST /api/internal-job/fullpaths/recalculate/all` — Process fullpath jobs
-- `POST /api/internal-job/redirects/create/all` — Create redirect records
-
-See [Pages Hierarchy docs](../../docs/pages-hierarchy.md) for content editor workflow.
+The original starter-kit hierarchy/fullpath job queue has been removed from this project. Treat any remaining hierarchy documentation as historical reference unless it is updated alongside the current page model.
 
 ## Related Documentation
 

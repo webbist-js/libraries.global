@@ -22,70 +22,9 @@ Every page from collections above has required `slug` field, which is used to id
 
 The `fullPath` field is automatically generated and contains the full path of the page, including all parent slugs. It is main identifier used to render the page from the URL (frontend finds pages using `fullPath` filter).
 
-The `fullPath` is generated from the `slug` and the `parent` relation field. Automatic generation of `fullPath` can be disabled on the code level (by setting `PAGES_HIERARCHY_ENABLED` to `false` in the Strapi codebase).
+The original starter-kit used a background job queue to recalculate `fullPath` values and create redirects. That Internal Jobs content type has been removed from this project.
 
-Because the `fullPath` is generated automatically, it should never be edited manually. If you need to change the `fullPath`, change the `slug` or the `parent` relation field instead. Change in `fullPath` means, that the page has different URL address and old URL should redirect to the new URL. This is done automatically be creating redirect (`api::redirect.redirect`) records. These two operations are always linked together and should never be done separately. Creating redirects makes sense only when new website is already live! During development, the `fullPath` can be changed (recalculated) without creating redirects.
-
-When the `fullPath` of a page is changed (because its `slug` or `parent` was changed), a redirect from the old `fullPath` to the new `fullPath` is automatically created. This is done using internal jobs (see below) and requires manual triggering of the jobs in the admin panel. Any other change (e.g. in `children` relation) doesn't affect this process.
-
-### How it works
-
-1. Every time the published page changes the `slug` or `parent` relation field a new internal job (`api::internal-job.internal-job`) is created to regenerate the `fullPath` field. It has `type` set to `RECALCULATE_FULLPATH` and `status` set to `PENDING` (see "Internal Jobs" content type in admin panel).
-
-2. The `fullPath` is not updated immediately, but after the job is processed. This is done to avoid performance issues and cascading updates of the `fullPath` field for all child pages within lifecycle hooks. To trigger the recalculation of the `fullPath` of all pending jobs, click the "Recalculate all fullpaths" button in the admin panel. This will update the `fullPath` field for all pending pages and their children. All pages will be **published** during this update, so after triggering, related pages will be live with new `fullPath` values. The recalculation is done in the background, so it may take some time depending on the number of pages and their hierarchy.
-
-3. During the recalculation, the script create `CREATE_REDIRECT` internal jobs for all pages that have changed `fullPath` and save them in the "Internal Jobs" content type. To trigger them, click the "Create all redirects" button in the admin panel. This will create redirects (`api::redirect.redirect`) for all included jobs and save them in the "Redirect" content type. Redirects are locale-aware and their `oldPath` and `newPath` fields include locale prefix.
-
-### Workflow example
-
-We want to change the slug of a page from `page-a` to `page-b` in `en` locale. This page has a child page with slug `page-child`.
-
-1. Update the `slug` field of the page to `page-b`.
-
-2. Go to "Internal Jobs" content type and click the "Recalculate all fullpaths" button. Wait until the job is processed.
-
-3. Go to "Internal Jobs" content type and click the "Create all redirects" button. Wait until the job is processed.
-
-4. Verify that the page has new `fullPath` and its child page (`page-child`) has updated `fullPath` as well.
-
-5. Verify that 2 redirects are created in the "Redirect" collection for the page and its children. Their `source` and `destination` URLs should be correct and also include locale prefix:
-   - `/en/page-a` -> `/en/page-b`
-
-   - `/en/page-a/page-child` -> `/en/page-b/page-child`
-
-### Recommendations
-
-- Always maintain correct `parent` relations between pages to ensure proper hierarchy and URL structure.
-
-- Always trigger these jobs in sequence: first "Recalculate all fullpaths" and after it's done, "Create all redirects". This way you ensure that all pages have correct `fullPath` and all necessary redirects are created.
-
-- Always do these operations during low traffic times, as they may affect performance and user experience.
-
-- Do one change at a time (e.g. change slug of one page, trigger jobs, verify results, then change slug of another page, etc.). This way you can easily track changes and avoid mistakes.
-
-### Caveats
-
-- Until the `RECALCULATE_FULLPATH` job is processed, the `fullPath` field of the page is not updated and still contains the old value. This means that the page is still accessible from the old URL until the job is processed.
-
-- Algorithm deletes jobs once they are processed, so you can't re-trigger them. If you need to re-trigger the job, you must change the `slug` or `parent` field again to create a new job.
-
-- Once the `CREATE_REDIRECT` job is processed, any other change will produce a new `RECALCULATE_FULLPATH` job and then after submitting the `CREATE_REDIRECT` job, a new redirect will be created with the latest values.
-
-- Strapi handles every locale separately - page in `en` locale can have different `slug` or even different `parent` relation. That means that changing the `slug` in one locale creates jobs only for that locale. If you want to change the `slug` in multiple locales, you must manually do same change for every required locale (it isn't a bug).
-  - Based on this, the redirects are also created separately for each touched locale and the locale is embedded into `source` and `destination` URLs.
-
-- Unrelevant jobs are automatically deleted:
-  - slug `a` changed to `b`, then to `c` before processing - only job for `c` is kept. The redirect from `a` to `c` is created.
-
-  - slug `a` changed to `b`, then back to `a` before processing - no job is kept, no redirect is created.
-
-- Jobs can be manually deleted from admin panel if they were created by mistake.
-
-- During development or before going live, we should only recalculate `fullPath` without creating redirects. In this case we should manually delete `CREATE_REDIRECT` jobs from admin panel.
-
-- Try to avoid having many pending jobs at the same time. Process them as soon as possible to avoid confusion.
-
-- You can't change `/` slug from admin panel. The change requires update on the code level.
+If this document still mentions manual fullpath recalculation or redirect jobs elsewhere in your branch, treat that guidance as legacy starter-kit behavior rather than the current implementation.
 
 ## Related Documentation
 

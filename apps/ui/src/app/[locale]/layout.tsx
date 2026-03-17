@@ -9,8 +9,8 @@ import { setRequestLocale } from "next-intl/server"
 import { ErrorBoundary } from "@/components/elementary/ErrorBoundary"
 import StrapiPreviewListener from "@/components/elementary/StrapiPreviewListener"
 import { TailwindIndicator } from "@/components/elementary/TailwindIndicator"
-import StrapiFooter from "@/components/page-builder/single-types/footer/StrapiFooter"
-import StrapiNavbar from "@/components/page-builder/single-types/navbar/StrapiNavbar"
+import GlobalFooter from "@/components/global/GlobalFooter"
+import StrapiNavbar from "@/components/global/StrapiNavbar"
 import { ClientProviders } from "@/components/providers/ClientProviders"
 import { ServerProviders } from "@/components/providers/ServerProviders"
 import TrackingScripts from "@/components/providers/TrackingScripts"
@@ -18,6 +18,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { debugStaticParams } from "@/lib/build"
 import { fontRoboto } from "@/lib/fonts"
 import { routing } from "@/lib/navigation"
+import { fetchFooter } from "@/lib/strapi-api/content/server"
 import { cn } from "@/lib/styles"
 
 export function generateStaticParams() {
@@ -39,6 +40,7 @@ export default async function RootLayout({
   params,
 }: LayoutProps<"/[locale]">) {
   const { locale } = (await params) as { locale: Locale }
+  const footer = (await fetchFooter(locale))?.data
 
   // Enable static rendering
   // https://next-intl-docs.vercel.app/docs/getting-started/app-router/with-i18n-routing#static-rendering
@@ -113,7 +115,7 @@ export default async function RootLayout({
 
               <div className="strapi-layout-footer">
                 <ErrorBoundary hideFallback>
-                  <StrapiFooter locale={locale} />
+                  <GlobalFooter locale={locale} footer={footer} />
                 </ErrorBoundary>
               </div>
             </div>

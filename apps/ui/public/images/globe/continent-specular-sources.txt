@@ -1,0 +1,16 @@
+Derived continent specular masks generated from Wikimedia Commons locator SVGs.
+
+Europe:
+https://commons.wikimedia.org/wiki/Special:Redirect/file/EuropeLocation.svg
+
+Africa:
+https://commons.wikimedia.org/wiki/Special:Redirect/file/AfricaLocation.svg
+
+Americas:
+https://commons.wikimedia.org/wiki/Special:Redirect/file/AmericaLocation.svg
+
+Asia:
+https://commons.wikimedia.org/wiki/Special:Redirect/file/AsiaLocation.svg
+
+Oceania:
+https://commons.wikimedia.org/wiki/Special:Redirect/file/OceaniaLocation.svg

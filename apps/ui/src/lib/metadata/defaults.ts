@@ -24,7 +24,7 @@ export function getDefaultMetadata(siteUrl: string, t: TranslateFn) {
 
 export function getDefaultOgMeta(
   locale: Locale | undefined,
-  fullPath: string | undefined,
+  slug: string | undefined,
   t: TranslateFn
 ): Metadata["openGraph"] {
   return {
@@ -34,7 +34,7 @@ export function getDefaultOgMeta(
     title: t("og.title"),
     description: t("og.description"),
     images: [t("og.image")],
-    url: [routing.defaultLocale !== locale ? locale : null, fullPath ?? ""]
+    url: [routing.defaultLocale !== locale ? locale : null, slug ?? ""]
       .filter(Boolean)
       .join("/"),
   }

@@ -5,10 +5,8 @@ import { isDevelopment } from "@/lib/general-helpers"
 import type {
   APIResponse,
   APIResponseCollection,
-  APIResponseWithBreadcrumbs,
   AppLocalizedParams,
   DynamicZonePopulateParams,
-  PageLocalization,
 } from "@/types/api"
 import type { AppError, CustomFetchOptions } from "@/types/general"
 
@@ -17,6 +15,7 @@ import type { AppError, CustomFetchOptions } from "@/types/general"
 export const API_ENDPOINTS: Partial<Record<UID.ContentType, string>> = {
   "api::page.page": "/pages",
   "api::footer.footer": "/footer",
+  "api::homepage.homepage": "/homepage",
   "api::navbar.navbar": "/navbar",
   "api::subscriber.subscriber": "/subscribers",
 } as const
@@ -217,49 +216,6 @@ export default abstract class BaseStrapiClient {
     return {
       data: response.data.pop() ?? null,
       meta: {},
-    }
-  }
-
-  /**
-   * Fetches a single entity by full path
-   */
-  public async fetchOneByFullPath<
-    TContentTypeUID extends UID.ContentType,
-    TParams extends AppLocalizedParams<FindMany<TContentTypeUID>>,
-  >(
-    uid: TContentTypeUID,
-    fullPath: string | null,
-    params?: TParams,
-    requestInit?: RequestInit,
-    options?: CustomFetchOptions
-  ): Promise<
-    APIResponseWithBreadcrumbs<
-      Result<TContentTypeUID, DynamicZonePopulateParams<TParams>> &
-        PageLocalization
-    >
-  > {
-    const slugFilter =
-      fullPath && fullPath.length > 0 ? { $eq: fullPath } : { $null: true }
-    const mergedParams = {
-      ...params,
-      sort: { publishedAt: "desc" },
-      filters: { ...params?.filters, fullPath: slugFilter },
-      pagination: {
-        page: 1,
-        pageSize: 1,
-      },
-    }
-    const path = this.getStrapiApiPathByUId(uid)
-
-    const response: APIResponseCollection<Result<TContentTypeUID, TParams>> =
-      await this.fetchAPI(path, mergedParams, requestInit, options)
-
-    // return last published entry
-    return {
-      // @ts-expect-error localizations field is not in the response type
-      // @dominik-juriga
-      data: response.data.pop() ?? null,
-      meta: response.meta,
     }
   }
 

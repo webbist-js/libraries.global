@@ -64,9 +64,9 @@ async function generateLocalizedSitemap(
    */
   return Object.entries(pageEntities).reduce((acc, [uid, pages]) => {
     pages.forEach((page) => {
-      if (page.fullPath) {
+      if (page.slug) {
         acc.push({
-          url: createPublicFullPath(page.fullPath, String(page.locale)),
+          url: createPublicFullPath(page.slug, String(page.locale)),
           lastModified: page.updatedAt ?? page.createdAt ?? undefined,
           changeFrequency:
             entityChangeFrequency[uid as PageEntityUID] ?? "monthly",

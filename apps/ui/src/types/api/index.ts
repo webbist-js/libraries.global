@@ -65,11 +65,6 @@ export type StrapiImageMedia = {
   provider_metadata?: string
 }
 
-export interface APIResponseWithBreadcrumbs<T> {
-  data: T | null
-  meta: APIResponseCollectionMetadata & { breadcrumbs?: BreadCrumb[] }
-}
-
 export type AppLocalizedParams<T> = T & {
   // In fetch functions we can pass the Locale to get the correct data
   // Locale is meant to be frontend locale, that is mapped to the Strapi locale
@@ -78,15 +73,10 @@ export type AppLocalizedParams<T> = T & {
   populateDynamicZone?: T extends { populate?: infer P } ? P : never
 }
 
-export type BreadCrumb = {
-  title: string
-  fullPath: string
-}
-
 export type StrapiLocalization = {
   id: number
   documentId: string
-  fullPath: string
+  slug: string
   locale: Locale
 }
 

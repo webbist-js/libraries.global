@@ -1,39 +1,46 @@
 import "server-only"
 
-import type { UID } from "@repo/strapi-types"
+import type { Data, UID } from "@repo/strapi-types"
 import { draftMode } from "next/headers"
 import type { Locale } from "next-intl"
 
+import type { HomepageContinentSummary } from "@/components/home/homepage.types"
 import { logNonBlockingError } from "@/lib/logging"
 import { PublicStrapiClient } from "@/lib/strapi-api"
+import type {
+  APIResponse,
+  APIResponseCollection,
+  StrapiLocalization,
+} from "@/types/api"
 import type { CustomFetchOptions } from "@/types/general"
 
-// ------ Common populate objects
-
-// Populate object for "seo-utilities.seo.json" component
-const seoPopulate = {
-  populate: {
-    metaImage: true,
-    twitter: { populate: { images: true } },
-    og: { populate: { image: true } },
-  },
+type PopulatedPageData = Data.ContentType<"api::page.page"> & {
+  localizations?: StrapiLocalization[]
+  seo?: Data.Component<"shared.seo"> | null
 }
 
-// Populate object for "utilities.link" component
-const linkPopulate = {
-  populate: {
-    page: { fields: ["fullPath"] as ["fullPath"] },
-    decorations: { populate: { leftIcon: true, rightIcon: true } },
-  },
+type PopulatedHomepageData = Data.ContentType<"api::homepage.homepage"> & {
+  featuredLibraries?: Data.ContentType<"api::library.library">[]
+  featuredServices?: Data.ContentType<"api::service.service">[]
+  localizations?: StrapiLocalization[]
+  seo?: Data.Component<"shared.seo"> | null
 }
 
-// Populate object for "utilities.basic-image" component
-const basicImagePopulate = { populate: { media: true } }
+type PopulatedNavbarData = Data.ContentType<"api::navbar.navbar"> & {
+  links?: Data.Component<"utilities.link">[]
+  logoImage?: Data.Component<"utilities.image-with-link"> | null
+}
+
+type PopulatedFooterData = Data.ContentType<"api::footer.footer"> & {
+  links?: Data.Component<"utilities.link">[]
+  socialLinks?: Data.Component<"shared.social">[]
+  sections?: Data.Component<"elements.footer-item">[]
+}
 
 // ------ Page fetching functions
 
 export async function fetchPage(
-  fullPath: string,
+  slug: string,
   locale: Locale,
   requestInit?: RequestInit,
   options?: CustomFetchOptions
@@ -41,21 +48,19 @@ export async function fetchPage(
   const dm = await draftMode()
 
   try {
-    return await PublicStrapiClient.fetchOneByFullPath(
+    return (await PublicStrapiClient.fetchOneBySlug(
       "api::page.page",
-      fullPath,
+      slug,
       {
         locale,
         status: dm.isEnabled ? "draft" : "published",
-        populate: { seo: seoPopulate },
-        populateDynamicZone: { content: true },
       },
       requestInit,
       options
-    )
+    )) as APIResponse<PopulatedPageData>
   } catch (e: unknown) {
     logNonBlockingError({
-      message: `Error fetching page '${fullPath}' for locale '${locale}'`,
+      message: `Error fetching page '${slug}' for locale '${locale}'`,
       error: {
         error: e instanceof Error ? e.message : String(e),
         stack: e instanceof Error ? e.stack : undefined,
@@ -72,7 +77,7 @@ export async function fetchAllPages(
   try {
     return await PublicStrapiClient.fetchAll(uid, {
       locale,
-      fields: ["fullPath", "locale", "updatedAt", "createdAt", "slug"],
+      fields: ["slug", "locale", "updatedAt", "createdAt"],
       populate: {},
       status: "published",
     })
@@ -94,20 +99,60 @@ export async function fetchAllPages(
 export async function fetchSeo(
   // eslint-disable-next-line @typescript-eslint/default-param-last
   uid: Extract<UID.ContentType, "api::page.page"> = "api::page.page",
-  fullPath: string | null,
+  slug: string | null,
   locale: Locale
 ) {
   try {
-    return await PublicStrapiClient.fetchOneByFullPath(uid, fullPath, {
+    return (await PublicStrapiClient.fetchOneBySlug(uid, slug, {
       locale,
-      populate: {
-        seo: seoPopulate,
-        localizations: true,
-      },
-    })
+    })) as APIResponse<PopulatedPageData>
   } catch (e: unknown) {
     logNonBlockingError({
-      message: `Error fetching SEO for '${uid}' with fullPath '${fullPath}' for locale '${locale}'`,
+      message: `Error fetching SEO for '${uid}' with slug '${slug}' for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+  }
+}
+
+// ------ Homepage fetching functions
+
+export async function fetchHomepage(locale: Locale) {
+  const dm = await draftMode()
+
+  try {
+    return (await PublicStrapiClient.fetchOne(
+      "api::homepage.homepage",
+      undefined,
+      {
+        locale,
+        status: dm.isEnabled ? "draft" : "published",
+      }
+    )) as APIResponse<PopulatedHomepageData>
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching homepage for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+  }
+}
+
+export async function fetchHomepageContinents(locale: Locale) {
+  const dm = await draftMode()
+
+  try {
+    return (await PublicStrapiClient.fetchAPI("/homepage/continents", {
+      locale,
+      status: dm.isEnabled ? "draft" : "published",
+    })) as APIResponseCollection<HomepageContinentSummary>
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching homepage continents for locale '${locale}'`,
       error: {
         error: e instanceof Error ? e.message : String(e),
         stack: e instanceof Error ? e.stack : undefined,
@@ -120,18 +165,9 @@ export async function fetchSeo(
 
 export async function fetchNavbar(locale: Locale) {
   try {
-    return await PublicStrapiClient.fetchOne("api::navbar.navbar", undefined, {
+    return (await PublicStrapiClient.fetchOne("api::navbar.navbar", undefined, {
       locale,
-      populate: {
-        links: linkPopulate,
-        logoImage: {
-          populate: {
-            image: basicImagePopulate,
-            link: linkPopulate,
-          },
-        },
-      },
-    })
+    })) as APIResponse<PopulatedNavbarData>
   } catch (e: unknown) {
     logNonBlockingError({
       message: `Error fetching navbar for locale '${locale}'`,
@@ -147,16 +183,9 @@ export async function fetchNavbar(locale: Locale) {
 
 export async function fetchFooter(locale: Locale) {
   try {
-    return await PublicStrapiClient.fetchOne("api::footer.footer", undefined, {
+    return (await PublicStrapiClient.fetchOne("api::footer.footer", undefined, {
       locale,
-      populate: {
-        sections: { populate: { links: linkPopulate } },
-        logoImage: {
-          populate: { image: basicImagePopulate, link: linkPopulate },
-        },
-        links: linkPopulate,
-      },
-    })
+    })) as APIResponse<PopulatedFooterData>
   } catch (e: unknown) {
     logNonBlockingError({
       message: `Error fetching footer for locale '${locale}'`,

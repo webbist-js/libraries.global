@@ -7,7 +7,6 @@ import "@repo/design-system/styles.css"
 
 // eslint-disable-next-line import-x/order
 import { defaultCkEditorConfig, simpleCkEditorConfig } from "./ckeditor/configs"
-import InternalJobs from "./extensions/InternalJobs"
 
 export default {
   config: {
@@ -16,12 +15,7 @@ export default {
       cs,
     },
   },
-  async bootstrap(app: StrapiApp) {
-    app.getPlugin("content-manager").injectComponent("listView", "actions", {
-      name: "InternalJobs",
-      Component: InternalJobs,
-    })
-
+  async bootstrap(_app: StrapiApp) {
     const adminPanelConfigEnv = process.env.ADMIN_PANEL_CONFIG_API_AUTH_TOKEN
     if (adminPanelConfigEnv) {
       /**

@@ -1,0 +1,36 @@
+{
+  "collectionName": "components_shared_socials",
+  "info": {
+    "displayName": "Social",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "platform": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "facebook",
+        "instagram",
+        "x",
+        "linkedin",
+        "youtube",
+        "tiktok",
+        "whatsapp",
+        "telegram",
+        "wechat",
+        "threads",
+        "bluesky",
+        "mastodon",
+        "pinterest"
+      ]
+    },
+    "label": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string",
+      "required": true
+    }
+  }
+}

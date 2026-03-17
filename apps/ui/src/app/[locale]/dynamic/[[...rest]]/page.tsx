@@ -1,4 +1,3 @@
-import { ROOT_PAGE_PATH } from "@repo/shared-data"
 import type { Locale } from "next-intl"
 import { use } from "react"
 
@@ -14,9 +13,9 @@ export async function generateMetadata(
   const params = await props.params
   const locale = params.locale as Locale
 
-  const fullPath = ROOT_PAGE_PATH + (params.rest ?? []).join("/")
+  const slug = (params.rest ?? []).join("/")
 
-  return getMetadataFromStrapi({ fullPath, locale })
+  return getMetadataFromStrapi({ slug, locale })
 }
 
 export default function DynamicStrapiPage(

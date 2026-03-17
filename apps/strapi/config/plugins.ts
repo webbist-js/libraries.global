@@ -15,6 +15,14 @@ export default ({ env }) => {
       enabled: true,
     },
 
+    seo: {
+      enabled: true,
+    },
+
+    "strapi-location-picker": {
+      enabled: true,
+    },
+
     "users-permissions": {
       config: {
         jwt: {

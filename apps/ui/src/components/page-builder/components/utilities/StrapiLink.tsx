@@ -12,7 +12,7 @@ export interface StrapiLinkProps {
   readonly hideWhenMissing?: boolean
 }
 
-const getStrapiLinkHref = (
+export const getStrapiLinkHref = (
   component?: Data.Component<"utilities.link"> | null
 ) => {
   // Add more when needed
@@ -20,7 +20,7 @@ const getStrapiLinkHref = (
     case "external":
       return component.href
     case "page":
-      return component.page?.fullPath ?? "#"
+      return component.page?.slug ?? "#"
 
     default:
       return

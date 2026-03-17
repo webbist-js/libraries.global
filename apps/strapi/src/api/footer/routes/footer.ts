@@ -4,4 +4,10 @@
 
 import { factories } from "@strapi/strapi"
 
-export default factories.createCoreRouter("api::footer.footer")
+export default factories.createCoreRouter("api::footer.footer", {
+  config: {
+    find: {
+      middlewares: ["api::footer.populate-footer"],
+    },
+  },
+})

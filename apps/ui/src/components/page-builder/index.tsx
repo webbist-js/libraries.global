@@ -1,7 +1,5 @@
 import type { UID } from "@repo/strapi-types"
 
-import StrapiContactForm from "@/components/page-builder/components/forms/StrapiContactForm"
-import StrapiNewsletterForm from "@/components/page-builder/components/forms/StrapiNewsletterForm"
 import StrapiCkEditorContent from "@/components/page-builder/components/utilities/StrapiCkEditorContent"
 import StrapiTipTapEditorContent from "@/components/page-builder/components/utilities/StrapiTipTapEditorContent"
 
@@ -20,10 +18,6 @@ export const PageContentComponents: Partial<
   "utilities.ck-editor-content": StrapiCkEditorContent,
   "utilities.ck-editor-text": StrapiCkEditorContent,
   "utilities.tip-tap-rich-text": StrapiTipTapEditorContent,
-
-  // Forms
-  "forms.contact-form": StrapiContactForm,
-  "forms.newsletter-form": StrapiNewsletterForm,
 
   // Add more components here
 }

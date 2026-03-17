@@ -8,38 +8,52 @@ import { routing } from "@/lib/navigation"
 import type { StrapiLocalization } from "@/types/api"
 import type { NextMetadataTwitterCard, SocialMetadata } from "@/types/general"
 
+const OPEN_GRAPH_TYPES = [
+  "article",
+  "book",
+  "music.song",
+  "music.album",
+  "music.playlist",
+  "music.radio_station",
+  "profile",
+  "website",
+  "video.tv_show",
+  "video.other",
+  "video.movie",
+  "video.episode",
+] as const
+
+type NextMetadataOpenGraphType = (typeof OPEN_GRAPH_TYPES)[number]
+
+function getOpenGraphType(
+  value?: string | null
+): NextMetadataOpenGraphType | undefined {
+  return OPEN_GRAPH_TYPES.find((type) => type === value)
+}
+
 export const preprocessSocialMetadata = (
-  seo: Data.Component<"seo-utilities.seo"> | null | undefined,
+  seo: Data.Component<"shared.seo"> | null | undefined,
   canonicalUrl?: string
 ): SocialMetadata => {
-  const twitterSeo = seo?.twitter
-  const ogSeo = seo?.og
-
-  const card = ["summary", "summary_large_image", "player", "app"].includes(
-    String(twitterSeo?.card)
-  )
-    ? (String(twitterSeo?.card) as NextMetadataTwitterCard)
+  const ogSeo = seo?.openGraph
+  const ogImage = ogSeo?.ogImage ?? seo?.metaImage
+  const twitterImages = ogImage ? [ogImage] : undefined
+  const card: NextMetadataTwitterCard = ogImage
+    ? "summary_large_image"
     : "summary"
-
-  const ogImage = ogSeo?.image ?? seo?.metaImage
-  const twitterImages =
-    twitterSeo?.images ?? (seo?.metaImage ? [seo?.metaImage] : undefined)
 
   return {
     twitter: {
       card,
-      title: twitterSeo?.title ?? seo?.metaTitle ?? undefined,
-      description: twitterSeo?.description ?? seo?.metaDescription ?? undefined,
-      siteId: twitterSeo?.siteId ?? undefined,
-      creator: twitterSeo?.creator ?? undefined,
-      creatorId: twitterSeo?.creatorId ?? undefined,
+      title: ogSeo?.ogTitle ?? seo?.metaTitle ?? undefined,
+      description: ogSeo?.ogDescription ?? seo?.metaDescription ?? undefined,
       images: twitterImages?.map((img) => img?.url),
     },
     openGraph: {
-      siteName: ogSeo?.siteName ?? undefined,
-      title: ogSeo?.title ?? seo?.metaTitle ?? undefined,
-      description: ogSeo?.description ?? seo?.metaDescription ?? undefined,
-      url: ogSeo?.url ?? canonicalUrl ?? undefined,
+      type: getOpenGraphType(ogSeo?.ogType),
+      title: ogSeo?.ogTitle ?? seo?.metaTitle ?? undefined,
+      description: ogSeo?.ogDescription ?? seo?.metaDescription ?? undefined,
+      url: ogSeo?.ogUrl ?? canonicalUrl ?? undefined,
       images: ogImage
         ? [
             {
@@ -74,16 +88,16 @@ export const getMetaRobots = (
 
 export const getMetaAlternates = ({
   seo,
-  fullPath,
+  slug,
   locale,
   localizations,
 }: {
-  seo: Data.Component<"seo-utilities.seo"> | null | undefined
-  fullPath: string | null
+  seo: Data.Component<"shared.seo"> | null | undefined
+  slug: string | null
   locale: Locale
   localizations?: StrapiLocalization[]
 }) => {
-  const canonicalUrl = seo?.canonicalUrl ?? fullPath ?? ""
+  const canonicalUrl = seo?.canonicalURL ?? slug ?? ""
 
   const languages = Array.isArray(localizations)
     ? {

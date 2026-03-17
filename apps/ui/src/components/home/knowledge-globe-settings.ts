@@ -35,7 +35,7 @@ export const FIXED_GLOBE_SETTINGS: GlobeSettings = {
   ambientLight: 0.28,
   arcOpacity: 0.05,
   atmosphereOpacity: 1.45,
-  autoRotateSpeed: 0.22,
+  autoRotateSpeed: 0.1,
   bloomIntensity: 0.2,
   cameraFov: 22,
   cameraZ: 11.6,

@@ -12,7 +12,7 @@ async function fetchAllPages(locale: Locale) {
   try {
     return await PublicStrapiClient.fetchAll("api::page.page", {
       locale,
-      populate: { content: true },
+      fields: ["documentId", "slug", "title"],
       status: "published",
     })
   } catch (e: unknown) {
