@@ -105,8 +105,8 @@ export default async function RootLayout({
                 </ErrorBoundary>
               </div>
 
-              <div className="strapi-page-slot flex-1">
-                <div>{children}</div>
+              <div className="strapi-page-slot flex flex-1 flex-col">
+                {children}
               </div>
 
               <TailwindIndicator />

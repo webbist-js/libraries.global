@@ -15,6 +15,52 @@ export default ({ env }) => {
       enabled: true,
     },
 
+    meilisearch: {
+      enabled: true,
+      config: {
+        host: env("MEILISEARCH_HOST", "http://localhost:7700"),
+        apiKey: env("MEILISEARCH_ADMIN_API_KEY", ""),
+        library: {
+          settings: {
+            searchableAttributes: [
+              "name",
+              "shortName",
+              "summary",
+              "city",
+              "district",
+              "country_name",
+              "region_name",
+            ],
+            filterableAttributes: [
+              "libraryType",
+              "operationalStatus",
+              "continent_slug",
+              "country_slug",
+              "region_slug",
+              "featured",
+            ],
+            sortableAttributes: ["name"],
+          },
+          // Flatten nested relations so they are searchable/filterable
+          transformEntry({ entry }: { entry: Record<string, unknown> }) {
+            const continent = entry.continent as Record<string, unknown> | null
+            const country = entry.country as Record<string, unknown> | null
+            const region = entry.region as Record<string, unknown> | null
+
+            return {
+              ...entry,
+              continent_slug: continent?.slug ?? null,
+              continent_name: continent?.name ?? null,
+              country_slug: country?.slug ?? null,
+              country_name: country?.name ?? null,
+              region_slug: region?.slug ?? null,
+              region_name: region?.name ?? null,
+            }
+          },
+        },
+      },
+    },
+
     seo: {
       enabled: true,
     },

@@ -1,7 +1,9 @@
 import type { Core } from "@strapi/strapi"
 
+import { OPENING_TIMES_FIELD_NAME } from "./customFields/openingTimes/shared"
 import { registerPopulatePageMiddleware } from "./documentMiddlewares/page"
 import { registerAdminUserSubscriber } from "./lifeCycles/adminUser"
+import { registerEntityRefSubscriber } from "./lifeCycles/entityRef"
 import { registerUserSubscriber } from "./lifeCycles/user"
 import { getPopulateDynamicZoneConfig } from "./populateDynamicZone"
 
@@ -12,7 +14,12 @@ export default {
    *
    * This gives you an opportunity to extend code.
    */
-  register() {},
+  register({ strapi }: { strapi: Core.Strapi }) {
+    strapi.customFields.register({
+      name: OPENING_TIMES_FIELD_NAME,
+      type: "json",
+    })
+  },
 
   /**
    * An asynchronous bootstrap function that runs before
@@ -24,6 +31,7 @@ export default {
   bootstrap({ strapi }: { strapi: Core.Strapi }) {
     registerAdminUserSubscriber({ strapi })
     registerUserSubscriber({ strapi })
+    registerEntityRefSubscriber({ strapi })
 
     // Generate dynamic zone populate configuration at startup to avoid doing it on the fly during requests.
     getPopulateDynamicZoneConfig()

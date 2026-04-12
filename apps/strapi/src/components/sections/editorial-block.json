@@ -1,0 +1,43 @@
+{
+  "collectionName": "components_sections_editorial_blocks",
+  "info": {
+    "displayName": "Editorial Block",
+    "description": "A rich editorial content section with optional image and CTAs"
+  },
+  "options": {},
+  "attributes": {
+    "eyebrow": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "body": {
+      "type": "blocks"
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "imagePosition": {
+      "type": "enumeration",
+      "enum": ["left", "right"],
+      "default": "right"
+    },
+    "primaryCtaLabel": {
+      "type": "string"
+    },
+    "primaryCtaUrl": {
+      "type": "string"
+    },
+    "secondaryCtaLabel": {
+      "type": "string"
+    },
+    "secondaryCtaUrl": {
+      "type": "string"
+    }
+  }
+}

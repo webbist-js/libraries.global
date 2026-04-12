@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_sections_quick_links",
+  "info": {
+    "displayName": "Quick Links",
+    "icon": "link",
+    "description": "Editor-curated navigation shortcut strip. Add a heading and one or more links."
+  },
+  "options": {},
+  "attributes": {
+    "heading": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "links": {
+      "type": "component",
+      "component": "shared.quick-link",
+      "repeatable": true,
+      "pluginOptions": { "i18n": { "localized": true } }
+    }
+  }
+}

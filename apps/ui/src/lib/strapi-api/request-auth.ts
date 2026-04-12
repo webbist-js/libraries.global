@@ -9,6 +9,18 @@ const ALLOWED_STRAPI_ENDPOINTS: Record<string, string[]> = {
     "api/navbar",
     "api/users/me",
     "api/auth/local",
+    // Map exploration — public content types (read-only, published only)
+    "api/continents",
+    "api/countries",
+    "api/regions",
+    "api/libraries",
+    "api/areas",
+    // Custom map-pins endpoints (centroid / boundary URL only)
+    "api/continents/map-pins",
+    "api/libraries/map-pins",
+    "api/regions/map-pins",
+    "api/countries/map-pins",
+    "api/areas/map-pins",
   ],
   POST: [
     "api/subscribers",

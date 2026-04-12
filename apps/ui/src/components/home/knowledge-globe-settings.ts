@@ -31,7 +31,7 @@ export type GlobeQualityTuning = {
   wireframeSegments: number
 }
 
-export const FIXED_GLOBE_SETTINGS: GlobeSettings = {
+export const GLOBE_SETTINGS: GlobeSettings = {
   ambientLight: 0.28,
   arcOpacity: 0.05,
   atmosphereOpacity: 1.45,

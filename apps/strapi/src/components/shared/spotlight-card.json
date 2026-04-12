@@ -1,0 +1,44 @@
+{
+  "collectionName": "components_shared_spotlight_cards",
+  "info": {
+    "displayName": "Spotlight Card",
+    "icon": "star",
+    "description": "Curated archive or collection spotlight — richer than a library card, lighter than an editorial block. Used for country/region collections sections."
+  },
+  "options": {},
+  "attributes": {
+    "eyebrow": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "title": {
+      "type": "string",
+      "required": true,
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "summary": {
+      "type": "text",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "ctaLabel": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "ctaUrl": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "theme": {
+      "type": "enumeration",
+      "enum": ["default", "heritage", "digital", "science", "archive"],
+      "default": "default",
+      "pluginOptions": { "i18n": { "localized": false } }
+    }
+  }
+}

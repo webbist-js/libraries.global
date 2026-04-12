@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes"
 import type React from "react"
 import { z } from "zod"
 
+import { NavigationProgress } from "@/components/global/NavigationProgress"
 import { useTranslatedZod } from "@/hooks/useTranslatedZod"
 import { setupLibraries } from "@/lib/general-helpers"
 
@@ -21,13 +22,18 @@ export function ClientProviders({
   useTranslatedZod(z)
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      forcedTheme="light"
-    >
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </ThemeProvider>
+    <>
+      <NavigationProgress />
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        forcedTheme="light"
+      >
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      </ThemeProvider>
+    </>
   )
 }

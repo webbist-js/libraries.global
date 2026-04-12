@@ -1,0 +1,30 @@
+{
+  "collectionName": "components_shared_quick_links",
+  "info": {
+    "displayName": "Quick Link",
+    "icon": "link",
+    "description": "Editor-curated navigation shortcut for command-center strip sections."
+  },
+  "options": {},
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true,
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "href": {
+      "type": "string",
+      "required": true,
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "icon": {
+      "type": "customField",
+      "customField": "plugin::strapi-plugin-iconhub.iconhub",
+      "options": { "storeIconData": true }
+    },
+    "description": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    }
+  }
+}

@@ -16,11 +16,12 @@
     "summary": {
       "type": "text"
     },
-    "image": {
-      "type": "media",
-      "multiple": false,
-      "required": false,
-      "allowedTypes": ["images"]
+    "icon": {
+      "type": "customField",
+      "customField": "plugin::strapi-plugin-iconhub.iconhub",
+      "options": {
+        "storeIconData": true
+      }
     },
     "ctaLabel": {
       "type": "string"

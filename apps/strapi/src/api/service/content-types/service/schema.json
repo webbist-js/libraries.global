@@ -64,6 +64,9 @@
     "icon": {
       "type": "customField",
       "customField": "plugin::strapi-plugin-iconhub.iconhub",
+      "options": {
+        "storeIconData": true
+      },
       "pluginOptions": {
         "i18n": {
           "localized": false

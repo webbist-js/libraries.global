@@ -481,7 +481,12 @@ export interface ApiAccessibilityAccessibility
       }> &
       Schema.Attribute.DefaultTo<false>
     icon: Schema.Attribute.JSON &
-      Schema.Attribute.CustomField<"plugin::strapi-plugin-iconhub.iconhub"> &
+      Schema.Attribute.CustomField<
+        "plugin::strapi-plugin-iconhub.iconhub",
+        {
+          storeIconData: true
+        }
+      > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
@@ -570,7 +575,12 @@ export interface ApiAmenityAmenity extends Struct.CollectionTypeSchema {
       }> &
       Schema.Attribute.DefaultTo<false>
     icon: Schema.Attribute.JSON &
-      Schema.Attribute.CustomField<"plugin::strapi-plugin-iconhub.iconhub"> &
+      Schema.Attribute.CustomField<
+        "plugin::strapi-plugin-iconhub.iconhub",
+        {
+          storeIconData: true
+        }
+      > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
@@ -607,6 +617,110 @@ export interface ApiAmenityAmenity extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface ApiAreaArea extends Struct.CollectionTypeSchema {
+  collectionName: "areas"
+  info: {
+    description: "Sub-regional administrative division \u2014 borough, district, municipality, canton, arrondissement, etc. Sits below Region in the geographic hierarchy."
+    displayName: "Area"
+    pluralName: "areas"
+    singularName: "area"
+  }
+  options: {
+    draftAndPublish: true
+  }
+  pluginOptions: {
+    i18n: {
+      localized: true
+    }
+  }
+  attributes: {
+    boundaryUrl: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    country: Schema.Attribute.Relation<"manyToOne", "api::country.country"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    entityRef: Schema.Attribute.String &
+      Schema.Attribute.Unique &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    libraries: Schema.Attribute.Relation<"oneToMany", "api::library.library"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    locale: Schema.Attribute.String
+    localizations: Schema.Attribute.Relation<"oneToMany", "api::area.area">
+    mapConfig: Schema.Attribute.Component<"shared.map-config", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    publishedAt: Schema.Attribute.DateTime
+    region: Schema.Attribute.Relation<"manyToOne", "api::region.region"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    seo: Schema.Attribute.Component<"shared.seo", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    shortName: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    slug: Schema.Attribute.UID<"name"> &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    summary: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    typeLabel: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface ApiContinentContinent extends Struct.CollectionTypeSchema {
   collectionName: "continents"
   info: {
@@ -624,6 +738,12 @@ export interface ApiContinentContinent extends Struct.CollectionTypeSchema {
     }
   }
   attributes: {
+    boundaryUrl: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     code: Schema.Attribute.String &
       Schema.Attribute.Unique &
       Schema.Attribute.SetPluginOptions<{
@@ -646,11 +766,35 @@ export interface ApiContinentContinent extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
+    featuredCountries: Schema.Attribute.Relation<
+      "manyToMany",
+      "api::country.country"
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    featuredLibraries: Schema.Attribute.Relation<
+      "manyToMany",
+      "api::library.library"
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     locale: Schema.Attribute.String
     localizations: Schema.Attribute.Relation<
       "oneToMany",
       "api::continent.continent"
     >
+    mapConfig: Schema.Attribute.Component<"shared.map-config", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     name: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
@@ -659,8 +803,41 @@ export interface ApiContinentContinent extends Struct.CollectionTypeSchema {
         }
       }>
     publishedAt: Schema.Attribute.DateTime
+    sections: Schema.Attribute.DynamicZone<
+      [
+        "sections.editorial-block",
+        "sections.cta-banner",
+        "sections.quick-links",
+      ]
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    seo: Schema.Attribute.Component<"shared.seo", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    serviceHighlights: Schema.Attribute.Component<
+      "shared.highlight-card",
+      true
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     slug: Schema.Attribute.UID<"name"> &
       Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    sourceAttribution: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
@@ -695,7 +872,25 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
     }
   }
   attributes: {
+    accessibilityNote: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    boundaryUrl: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     capitalCity: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    collections: Schema.Attribute.Component<"shared.spotlight-card", true> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true
@@ -720,7 +915,6 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
         }
       }>
     entityRef: Schema.Attribute.String &
-      Schema.Attribute.Required &
       Schema.Attribute.Unique &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -734,6 +928,27 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
+        }
+      }>
+    featuredRegions: Schema.Attribute.Relation<
+      "manyToMany",
+      "api::region.region"
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    heroImage: Schema.Attribute.Media<"images"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    heroTagline: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
         }
       }>
     iso2: Schema.Attribute.String &
@@ -761,11 +976,26 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
       "oneToMany",
       "api::country.country"
     >
+    mapConfig: Schema.Attribute.Component<"shared.map-config", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     name: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true
+        }
+      }>
+    nationalLibrary: Schema.Attribute.Relation<
+      "manyToOne",
+      "api::library.library"
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
         }
       }>
     publishedAt: Schema.Attribute.DateTime
@@ -782,6 +1012,18 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
         }
       }> &
       Schema.Attribute.DefaultTo<"Region">
+    sections: Schema.Attribute.DynamicZone<
+      [
+        "sections.editorial-block",
+        "sections.cta-banner",
+        "sections.quick-links",
+      ]
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     seo: Schema.Attribute.Component<"shared.seo", false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -805,6 +1047,12 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
       }>
     slug: Schema.Attribute.UID<"name"> &
       Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    sourceAttribution: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
@@ -1007,6 +1255,12 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    area: Schema.Attribute.Relation<"manyToOne", "api::area.area"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     bookingUrl: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1175,6 +1429,13 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
         }
       }>
     openedYear: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    openingTimes: Schema.Attribute.JSON &
+      Schema.Attribute.CustomField<"global::opening-times"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
@@ -1471,6 +1732,33 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
     }
   }
   attributes: {
+    areas: Schema.Attribute.Relation<"oneToMany", "api::area.area"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    boundaryUrl: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    collections: Schema.Attribute.Component<"shared.spotlight-card", true> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    continent: Schema.Attribute.Relation<
+      "manyToOne",
+      "api::continent.continent"
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     country: Schema.Attribute.Relation<"manyToOne", "api::country.country"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1487,7 +1775,6 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
         }
       }>
     entityRef: Schema.Attribute.String &
-      Schema.Attribute.Required &
       Schema.Attribute.Unique &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1503,6 +1790,18 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    heroImage: Schema.Attribute.Media<"images"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    heroTagline: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     libraries: Schema.Attribute.Relation<"oneToMany", "api::library.library"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1511,6 +1810,12 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
       }>
     locale: Schema.Attribute.String
     localizations: Schema.Attribute.Relation<"oneToMany", "api::region.region">
+    mapConfig: Schema.Attribute.Component<"shared.map-config", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     name: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
@@ -1519,7 +1824,28 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
         }
       }>
     publishedAt: Schema.Attribute.DateTime
+    sections: Schema.Attribute.DynamicZone<
+      [
+        "sections.editorial-block",
+        "sections.cta-banner",
+        "sections.quick-links",
+      ]
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     seo: Schema.Attribute.Component<"shared.seo", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    serviceHighlights: Schema.Attribute.Component<
+      "shared.highlight-card",
+      true
+    > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true
@@ -1533,6 +1859,12 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
       }>
     slug: Schema.Attribute.UID<"name"> &
       Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    sourceAttribution: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
@@ -1609,7 +1941,12 @@ export interface ApiServiceService extends Struct.CollectionTypeSchema {
       }> &
       Schema.Attribute.DefaultTo<false>
     icon: Schema.Attribute.JSON &
-      Schema.Attribute.CustomField<"plugin::strapi-plugin-iconhub.iconhub"> &
+      Schema.Attribute.CustomField<
+        "plugin::strapi-plugin-iconhub.iconhub",
+        {
+          storeIconData: true
+        }
+      > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
@@ -2191,6 +2528,7 @@ declare module "@strapi/strapi" {
       "admin::user": AdminUser
       "api::accessibility.accessibility": ApiAccessibilityAccessibility
       "api::amenity.amenity": ApiAmenityAmenity
+      "api::area.area": ApiAreaArea
       "api::continent.continent": ApiContinentContinent
       "api::country.country": ApiCountryCountry
       "api::footer.footer": ApiFooterFooter

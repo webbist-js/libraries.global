@@ -36,6 +36,63 @@ export interface FormsNewsletterForm extends Struct.ComponentSchema {
   }
 }
 
+export interface SectionsCtaBanner extends Struct.ComponentSchema {
+  collectionName: "components_sections_cta_banners"
+  info: {
+    description: "A full-width call-to-action banner section"
+    displayName: "CTA Banner"
+  }
+  attributes: {
+    ctaLabel: Schema.Attribute.String
+    ctaUrl: Schema.Attribute.String
+    subtitle: Schema.Attribute.Text
+    title: Schema.Attribute.String & Schema.Attribute.Required
+  }
+}
+
+export interface SectionsEditorialBlock extends Struct.ComponentSchema {
+  collectionName: "components_sections_editorial_blocks"
+  info: {
+    description: "A rich editorial content section with optional image and CTAs"
+    displayName: "Editorial Block"
+  }
+  attributes: {
+    body: Schema.Attribute.Blocks
+    eyebrow: Schema.Attribute.String
+    image: Schema.Attribute.Media<"images">
+    imagePosition: Schema.Attribute.Enumeration<["left", "right"]> &
+      Schema.Attribute.DefaultTo<"right">
+    primaryCtaLabel: Schema.Attribute.String
+    primaryCtaUrl: Schema.Attribute.String
+    secondaryCtaLabel: Schema.Attribute.String
+    secondaryCtaUrl: Schema.Attribute.String
+    title: Schema.Attribute.String & Schema.Attribute.Required
+  }
+}
+
+export interface SectionsQuickLinks extends Struct.ComponentSchema {
+  collectionName: "components_sections_quick_links"
+  info: {
+    description: "Editor-curated navigation shortcut strip. Add a heading and one or more links."
+    displayName: "Quick Links"
+    icon: "link"
+  }
+  attributes: {
+    heading: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    links: Schema.Attribute.Component<"shared.quick-link", true> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+  }
+}
+
 export interface SharedHighlightCard extends Struct.ComponentSchema {
   collectionName: "components_shared_highlight_cards"
   info: {
@@ -46,9 +103,63 @@ export interface SharedHighlightCard extends Struct.ComponentSchema {
     ctaLabel: Schema.Attribute.String
     ctaUrl: Schema.Attribute.String
     eyebrow: Schema.Attribute.String
-    image: Schema.Attribute.Media<"images">
+    icon: Schema.Attribute.JSON &
+      Schema.Attribute.CustomField<
+        "plugin::strapi-plugin-iconhub.iconhub",
+        {
+          storeIconData: true
+        }
+      >
     summary: Schema.Attribute.Text
     title: Schema.Attribute.String & Schema.Attribute.Required
+  }
+}
+
+export interface SharedMapConfig extends Struct.ComponentSchema {
+  collectionName: "components_shared_map_configs"
+  info: {
+    description: "Editorial hints for in-page map sections \u2014 center coordinates, default zoom level, optional bounding box for fit-bounds behaviour."
+    displayName: "Map Config"
+    icon: "earth"
+  }
+  attributes: {
+    boundingBoxNE: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    boundingBoxSW: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    centerLat: Schema.Attribute.Decimal &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    centerLng: Schema.Attribute.Decimal &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    defaultZoom: Schema.Attribute.Integer &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    mapStyle: Schema.Attribute.Enumeration<["standard", "satellite", "topo"]> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.DefaultTo<"standard">
   }
 }
 
@@ -72,6 +183,44 @@ export interface SharedOpenGraph extends Struct.ComponentSchema {
       }>
     ogType: Schema.Attribute.String
     ogUrl: Schema.Attribute.String
+  }
+}
+
+export interface SharedQuickLink extends Struct.ComponentSchema {
+  collectionName: "components_shared_quick_links"
+  info: {
+    description: "Editor-curated navigation shortcut for command-center strip sections."
+    displayName: "Quick Link"
+    icon: "link"
+  }
+  attributes: {
+    description: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    href: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    icon: Schema.Attribute.JSON &
+      Schema.Attribute.CustomField<
+        "plugin::strapi-plugin-iconhub.iconhub",
+        {
+          storeIconData: true
+        }
+      >
+    label: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
   }
 }
 
@@ -130,6 +279,101 @@ export interface SharedSocial extends Struct.ComponentSchema {
     > &
       Schema.Attribute.Required
     url: Schema.Attribute.String & Schema.Attribute.Required
+  }
+}
+
+export interface SharedSpotlightCard extends Struct.ComponentSchema {
+  collectionName: "components_shared_spotlight_cards"
+  info: {
+    description: "Curated archive or collection spotlight \u2014 richer than a library card, lighter than an editorial block. Used for country/region collections sections."
+    displayName: "Spotlight Card"
+    icon: "star"
+  }
+  attributes: {
+    ctaLabel: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    ctaUrl: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    eyebrow: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    image: Schema.Attribute.Media<"images">
+    summary: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    theme: Schema.Attribute.Enumeration<
+      ["default", "heritage", "digital", "science", "archive"]
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.DefaultTo<"default">
+    title: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+  }
+}
+
+export interface SharedStatCard extends Struct.ComponentSchema {
+  collectionName: "components_shared_stat_cards"
+  info: {
+    description: "Hero metric card \u2014 e.g. '1,200+ Libraries'. Set isComputed:true for stats the API layer should attempt to replace with a live count."
+    displayName: "Stat Card"
+    icon: "hashtag"
+  }
+  attributes: {
+    icon: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    isComputed: Schema.Attribute.Boolean &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.DefaultTo<false>
+    label: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    note: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    value: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
   }
 }
 
@@ -286,10 +530,17 @@ declare module "@strapi/strapi" {
       "elements.footer-item": ElementsFooterItem
       "forms.contact-form": FormsContactForm
       "forms.newsletter-form": FormsNewsletterForm
+      "sections.cta-banner": SectionsCtaBanner
+      "sections.editorial-block": SectionsEditorialBlock
+      "sections.quick-links": SectionsQuickLinks
       "shared.highlight-card": SharedHighlightCard
+      "shared.map-config": SharedMapConfig
       "shared.open-graph": SharedOpenGraph
+      "shared.quick-link": SharedQuickLink
       "shared.seo": SharedSeo
       "shared.social": SharedSocial
+      "shared.spotlight-card": SharedSpotlightCard
+      "shared.stat-card": SharedStatCard
       "utilities.accordions": UtilitiesAccordions
       "utilities.basic-image": UtilitiesBasicImage
       "utilities.ck-editor-content": UtilitiesCkEditorContent

@@ -5,9 +5,9 @@ import sharp from "sharp"
 
 const globeDir = path.resolve("apps/ui/public/images/globe")
 const OUTPUT_SIZE = 1536
-const DOT_GRID_PADDING = 18
-const DOT_GRID_STEP = 18
-const DOT_JITTER = 5
+const DOT_GRID_PADDING = 20
+const DOT_GRID_STEP = 21
+const DOT_JITTER = 4
 const SVG_RENDER_DENSITY = 1200
 const BASE_DOT_COLOR = { b: 238, g: 216, r: 195 }
 const HIGHLIGHT_DOT_COLOR = { b: 255, g: 251, r: 247 }
@@ -269,17 +269,17 @@ async function createDotMap(specularBuffer, seed) {
       const alpha =
         data[(clampedY * info.width + clampedX) * info.channels + 3] / 255
 
-      if (alpha < 0.2 || random() < 0.08) {
+      if (alpha < 0.18 || random() < 0.05) {
         continue
       }
 
       const intensity = 0.48 + random() * 0.52
-      const coreRadius = 1.02 + intensity * 0.56
-      const haloRadius = coreRadius * (1.56 + random() * 0.14)
-      const glowRadius = coreRadius * (2.34 + random() * 0.24)
-      const glowOpacity = 0.034 + intensity * 0.022
-      const haloOpacity = 0.09 + intensity * 0.07
-      const coreOpacity = 0.74 + intensity * 0.12
+      const coreRadius = 1.18 + intensity * 0.66
+      const haloRadius = coreRadius * (1.64 + random() * 0.16)
+      const glowRadius = coreRadius * (2.4 + random() * 0.22)
+      const glowOpacity = 0.032 + intensity * 0.02
+      const haloOpacity = 0.086 + intensity * 0.064
+      const coreOpacity = 0.72 + intensity * 0.11
 
       glowDots.push(
         `<circle cx="${clampedX}" cy="${clampedY}" r="${glowRadius.toFixed(

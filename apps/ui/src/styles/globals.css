@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "@repo/design-system/theme.css";
 @import "@repo/design-system/custom-styles.css";
+@import "maplibre-gl/dist/maplibre-gl.css";
 
 @plugin "tailwindcss-animate";
 

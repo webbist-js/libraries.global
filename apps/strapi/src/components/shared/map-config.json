@@ -1,0 +1,37 @@
+{
+  "collectionName": "components_shared_map_configs",
+  "info": {
+    "displayName": "Map Config",
+    "icon": "earth",
+    "description": "Editorial hints for in-page map sections — center coordinates, default zoom level, optional bounding box for fit-bounds behaviour."
+  },
+  "options": {},
+  "attributes": {
+    "centerLat": {
+      "type": "decimal",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "centerLng": {
+      "type": "decimal",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "defaultZoom": {
+      "type": "integer",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "boundingBoxNE": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "boundingBoxSW": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "mapStyle": {
+      "type": "enumeration",
+      "enum": ["standard", "satellite", "topo"],
+      "default": "standard",
+      "pluginOptions": { "i18n": { "localized": false } }
+    }
+  }
+}

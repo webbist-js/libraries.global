@@ -51,6 +51,9 @@ export const env = createEnv({
     NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
     NEXT_PUBLIC_RECAPTCHA_SITE_KEY: z.string().optional(),
     NEXT_PUBLIC_PREVENT_UNUSED_FUNCTIONS_ERROR_LOGS: optionalZodBoolean(),
+    NEXT_PUBLIC_MAPBOX_TOKEN: z.string().optional(),
+    NEXT_PUBLIC_MEILISEARCH_HOST: z.string().optional(),
+    NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY: z.string().optional(),
   },
 
   shared: {
@@ -98,6 +101,10 @@ export const env = createEnv({
     NEXT_PUBLIC_RECAPTCHA_SITE_KEY: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
     NEXT_PUBLIC_PREVENT_UNUSED_FUNCTIONS_ERROR_LOGS:
       process.env.NEXT_PUBLIC_PREVENT_UNUSED_FUNCTIONS_ERROR_LOGS,
+    NEXT_PUBLIC_MAPBOX_TOKEN: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
+    NEXT_PUBLIC_MEILISEARCH_HOST: process.env.NEXT_PUBLIC_MEILISEARCH_HOST,
+    NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY:
+      process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY,
 
     // shared
     NODE_ENV: process.env.NODE_ENV,

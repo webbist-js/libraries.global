@@ -1,0 +1,33 @@
+{
+  "collectionName": "components_shared_stat_cards",
+  "info": {
+    "displayName": "Stat Card",
+    "icon": "hashtag",
+    "description": "Hero metric card — e.g. '1,200+ Libraries'. Set isComputed:true for stats the API layer should attempt to replace with a live count."
+  },
+  "options": {},
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true,
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "value": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "icon": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "note": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "isComputed": {
+      "type": "boolean",
+      "default": false,
+      "pluginOptions": { "i18n": { "localized": false } }
+    }
+  }
+}

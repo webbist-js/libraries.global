@@ -1,5 +1,6 @@
 import { setPluginConfig } from "@_sh/strapi-plugin-ckeditor"
 import type { StrapiApp } from "@strapi/strapi/admin"
+import type { ComponentType } from "react"
 
 // eslint-disable-next-line import-x/order
 import { cs } from "./cs"
@@ -7,6 +8,7 @@ import "@repo/design-system/styles.css"
 
 // eslint-disable-next-line import-x/order
 import { defaultCkEditorConfig, simpleCkEditorConfig } from "./ckeditor/configs"
+import { OPENING_TIMES_FIELD_NAME } from "../customFields/openingTimes/shared"
 
 export default {
   config: {
@@ -59,7 +61,31 @@ export default {
       }
     }
   },
-  register() {
+  register(app: StrapiApp) {
     setPluginConfig({ presets: [defaultCkEditorConfig, simpleCkEditorConfig] })
+
+    const getTranslation = (id: string) => `${OPENING_TIMES_FIELD_NAME}.${id}`
+
+    app.customFields.register({
+      name: OPENING_TIMES_FIELD_NAME,
+      type: "json",
+      intlLabel: {
+        id: getTranslation("label"),
+        defaultMessage: "Opening times",
+      },
+      intlDescription: {
+        id: getTranslation("description"),
+        defaultMessage: "Manage weekly opening hours with multiple timeframes.",
+      },
+      components: {
+        Input: async () => {
+          const component = await import("./custom-fields/opening-times/Input")
+
+          return {
+            default: component.default as unknown as ComponentType,
+          }
+        },
+      },
+    })
   },
 }
