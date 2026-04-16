@@ -48,10 +48,6 @@
       "type": "string",
       "pluginOptions": { "i18n": { "localized": true } }
     },
-    "description": {
-      "type": "blocks",
-      "pluginOptions": { "i18n": { "localized": true } }
-    },
     "heroImage": {
       "type": "media",
       "multiple": false,
@@ -59,17 +55,10 @@
       "allowedTypes": ["images"],
       "pluginOptions": { "i18n": { "localized": false } }
     },
-    "serviceHighlights": {
-      "type": "component",
-      "component": "shared.highlight-card",
-      "repeatable": true,
-      "pluginOptions": { "i18n": { "localized": true } }
-    },
-    "collections": {
-      "type": "component",
-      "component": "shared.spotlight-card",
-      "repeatable": true,
-      "pluginOptions": { "i18n": { "localized": true } }
+    "featured": {
+      "type": "boolean",
+      "default": false,
+      "pluginOptions": { "i18n": { "localized": false } }
     },
     "mapConfig": {
       "type": "component",

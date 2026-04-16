@@ -18,8 +18,6 @@ export default factories.createCoreController(
 
       const extendedPopulate: Record<string, unknown> = {
         heroImage: true,
-        serviceHighlights: true,
-        collections: { populate: { image: true } },
         mapConfig: true,
         nationalLibrary: {
           fields: [
@@ -38,9 +36,6 @@ export default factories.createCoreController(
             country: { fields: ["name", "slug"] },
             region: { fields: ["name", "slug"] },
           },
-        },
-        featuredRegions: {
-          fields: ["name", "slug", "summary", "typeLabel"],
         },
         sections: {
           on: {

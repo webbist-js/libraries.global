@@ -1,4 +1,3 @@
-import { Icon } from "@iconify/react"
 import Image from "next/image"
 import type { Locale } from "next-intl"
 
@@ -15,7 +14,6 @@ import type {
   ContinentEditorialBlock,
   ContinentCtaBanner,
   ContinentSection,
-  IconHubValue,
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 import { cn } from "@/lib/styles"
@@ -90,59 +88,6 @@ function CountryCard({
         {/* TODO: Add library count once aggregate API endpoint is available */}
       </div>
     </GlobalLink>
-  )
-}
-
-// ── Service highlight card ─────────────────────────────────────────────────
-
-function ServiceHighlightCard({
-  item,
-}: {
-  item: {
-    id?: unknown
-    eyebrow?: string | null
-    title?: string | null
-    summary?: string | null
-    icon?: IconHubValue | null
-    ctaLabel?: string | null
-    ctaUrl?: string | null
-  }
-}) {
-  const iconName = item.icon?.iconName ?? null
-
-  return (
-    <div
-      className={cn(homepagePanelClassName, "flex flex-col gap-3 px-5 py-5")}
-    >
-      {/* Icon badge */}
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-indigo-500/20 bg-indigo-500/10">
-        {iconName ? (
-          <Icon icon={iconName} className="size-5 text-indigo-300" />
-        ) : (
-          <Icon icon="mdi:star-outline" className="size-5 text-indigo-300/40" />
-        )}
-      </div>
-
-      {item.eyebrow ? (
-        <span className="text-[10px] font-semibold tracking-[0.14em] text-cyan-400/70 uppercase">
-          {item.eyebrow}
-        </span>
-      ) : null}
-      {item.title ? (
-        <h4 className="font-semibold text-white">{item.title}</h4>
-      ) : null}
-      {item.summary ? (
-        <p className="text-sm leading-6 text-white/50">{item.summary}</p>
-      ) : null}
-      {item.ctaLabel && item.ctaUrl ? (
-        <GlobalLink
-          href={item.ctaUrl}
-          className="mt-auto text-xs font-medium text-indigo-400 transition-colors hover:text-indigo-300"
-        >
-          {item.ctaLabel} →
-        </GlobalLink>
-      ) : null}
-    </div>
   )
 }
 
@@ -279,26 +224,11 @@ export function ContinentDetailPage({
     )
   }
 
-  // Determine which countries to feature in "Top Jurisdictions"
-  const topCountries =
-    (continent.featuredCountries?.length
-      ? continent.featuredCountries
-      : continent.countries
-    )?.slice(0, 6) ?? []
+  const topCountries = (continent.countries ?? []).slice(0, 6)
 
   const hasFeaturedLibraries =
     Array.isArray(continent.featuredLibraries) &&
     continent.featuredLibraries.length > 0
-
-  const hasServiceHighlights =
-    Array.isArray(continent.serviceHighlights) &&
-    continent.serviceHighlights.length > 0
-
-  const hasSections =
-    Array.isArray(continent.sections) && continent.sections.length > 0
-  const hasDescription =
-    Array.isArray(continent.description) &&
-    (continent.description as unknown[]).length > 0
 
   // Separate editorial blocks and CTA banners from sections
   // Cast to ContinentSection[] so the discriminated union type predicates work correctly
@@ -450,45 +380,6 @@ export function ContinentDetailPage({
           </section>
         ) : null}
 
-        {/* ── Service Highlights ────────────────────────────────────────────── */}
-        {hasServiceHighlights ? (
-          <section className="relative overflow-hidden border-t border-white/6 py-14 sm:py-18">
-            {/* Faint cyan gradient stripe to break this section from plain dark neighbours */}
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_100%,rgba(6,182,212,0.07),transparent_65%)]" />
-            <Container className="relative">
-              <div className="mb-8">
-                <p className="mb-1.5 text-[11px] font-semibold tracking-[0.16em] text-white/36 uppercase">
-                  Specialised Disciplines
-                </p>
-                <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                  What You&apos;ll Find
-                </h2>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {continent.serviceHighlights!.map((item, i) => (
-                  <ServiceHighlightCard
-                    key={((item as { id?: unknown }).id as string) ?? i}
-                    item={
-                      item as {
-                        id?: unknown
-                        eyebrow?: string | null
-                        title?: string | null
-                        summary?: string | null
-                        icon?: IconHubValue | null
-                        ctaLabel?: string | null
-                        ctaUrl?: string | null
-                      }
-                    }
-                  />
-                ))}
-              </div>
-            </Container>
-          </section>
-        ) : /* TODO: Populate serviceHighlights in Strapi for this continent
-             to show a "Specialised Disciplines" grid (Study Spaces, Digital Archives,
-             Rare Manuscripts, etc.) — uses the shared.highlight-card component */
-        null}
-
         {/* ── Interactive Cartography ────────────────────────────────────────── */}
         <section className="border-t border-white/6 py-14 sm:py-18">
           <Container>
@@ -514,23 +405,6 @@ export function ContinentDetailPage({
             <EditorialBlock section={section} />
           </div>
         ))}
-
-        {/* ── Description (fallback content) ────────────────────────────────── */}
-        {!hasSections && hasDescription ? (
-          <section className="border-t border-white/6 py-14 sm:py-18">
-            <Container>
-              <div className="mx-auto max-w-[65ch] text-white/65">
-                <StrapiBlocksContent
-                  blocks={
-                    continent.description as Parameters<
-                      typeof StrapiBlocksContent
-                    >[0]["blocks"]
-                  }
-                />
-              </div>
-            </Container>
-          </section>
-        ) : null}
 
         {/* ── CTA Banner sections (from dynamic zone) ────────────────────────── */}
         {ctaBanners.map((section) => (

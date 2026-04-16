@@ -72,7 +72,7 @@ export function LibraryTabNav({
     const sentinel = sentinelRef.current
     if (!sentinel) return
     const io = new IntersectionObserver(
-      ([entry]) => setIsStuck(entry.boundingClientRect.top < 0),
+      ([entry]) => entry && setIsStuck(entry.boundingClientRect.top < 0),
       { threshold: [0] }
     )
     io.observe(sentinel)

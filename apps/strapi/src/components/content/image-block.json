@@ -1,0 +1,23 @@
+{
+  "collectionName": "components_content_image_blocks",
+  "info": {
+    "displayName": "Image Block",
+    "description": "A single image with optional caption, for use within article body"
+  },
+  "options": {},
+  "attributes": {
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": ["images"]
+    },
+    "caption": {
+      "type": "string"
+    },
+    "fullWidth": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

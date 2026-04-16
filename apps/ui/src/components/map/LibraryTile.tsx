@@ -1,8 +1,7 @@
 "use client"
 
-import Link from "next/link"
-
 import { buildLibraryPath, type LibrarySearchHit } from "@/lib/meilisearch"
+import { Link } from "@/lib/navigation"
 import { cn } from "@/lib/styles"
 
 const STATUS_STYLES: Record<string, string> = {

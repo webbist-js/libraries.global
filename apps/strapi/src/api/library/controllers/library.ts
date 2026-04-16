@@ -43,11 +43,13 @@ export default factories.createCoreController(
           "operationalStatus",
           "city",
           "location",
+          "summary",
         ],
         populate: {
           continent: { fields: ["slug"] },
           country: { fields: ["slug"] },
           region: { fields: ["slug"] },
+          heroImage: { fields: ["url"] },
         } as never,
         locale,
         status,

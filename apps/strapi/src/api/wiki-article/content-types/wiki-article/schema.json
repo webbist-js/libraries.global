@@ -1,0 +1,85 @@
+{
+  "kind": "collectionType",
+  "collectionName": "wiki_articles",
+  "info": {
+    "singularName": "wiki-article",
+    "pluralName": "wiki-articles",
+    "displayName": "Wiki Article",
+    "description": "A knowledge hub reference article"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "title",
+      "required": true,
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "summary": {
+      "type": "text",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "body": {
+      "type": "dynamiczone",
+      "components": [
+        "content.rich-text",
+        "content.image-block",
+        "content.code-block",
+        "content.quote-block",
+        "content.callout"
+      ],
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "heroImage": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"],
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "category": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::wiki-category.wiki-category",
+      "inversedBy": "articles",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "author": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false,
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "priority": {
+      "type": "integer",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "relatedArticles": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::wiki-article.wiki-article",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "seo": {
+      "type": "component",
+      "component": "shared.seo",
+      "repeatable": false,
+      "pluginOptions": { "i18n": { "localized": true } }
+    }
+  }
+}

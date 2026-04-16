@@ -1,5 +1,70 @@
 import type { Schema, Struct } from "@strapi/strapi"
 
+export interface ContentCallout extends Struct.ComponentSchema {
+  collectionName: "components_content_callouts"
+  info: {
+    description: "An info, warning, tip, or note callout box"
+    displayName: "Callout"
+  }
+  attributes: {
+    body: Schema.Attribute.Text & Schema.Attribute.Required
+    title: Schema.Attribute.String
+    type: Schema.Attribute.Enumeration<["info", "warning", "tip", "note"]> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"info">
+  }
+}
+
+export interface ContentCodeBlock extends Struct.ComponentSchema {
+  collectionName: "components_content_code_blocks"
+  info: {
+    description: "A syntax-highlighted code snippet with optional filename label"
+    displayName: "Code Block"
+  }
+  attributes: {
+    code: Schema.Attribute.Text & Schema.Attribute.Required
+    filename: Schema.Attribute.String
+    language: Schema.Attribute.String & Schema.Attribute.DefaultTo<"plaintext">
+  }
+}
+
+export interface ContentImageBlock extends Struct.ComponentSchema {
+  collectionName: "components_content_image_blocks"
+  info: {
+    description: "A single image with optional caption, for use within article body"
+    displayName: "Image Block"
+  }
+  attributes: {
+    caption: Schema.Attribute.String
+    fullWidth: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
+    image: Schema.Attribute.Media<"images"> & Schema.Attribute.Required
+  }
+}
+
+export interface ContentQuoteBlock extends Struct.ComponentSchema {
+  collectionName: "components_content_quote_blocks"
+  info: {
+    description: "A pull quote with optional attribution and source"
+    displayName: "Quote Block"
+  }
+  attributes: {
+    attribution: Schema.Attribute.String
+    quote: Schema.Attribute.Text & Schema.Attribute.Required
+    source: Schema.Attribute.String
+  }
+}
+
+export interface ContentRichText extends Struct.ComponentSchema {
+  collectionName: "components_content_rich_texts"
+  info: {
+    description: "Freeform body text using Strapi blocks editor"
+    displayName: "Rich Text"
+  }
+  attributes: {
+    body: Schema.Attribute.Blocks
+  }
+}
+
 export interface ElementsFooterItem extends Struct.ComponentSchema {
   collectionName: "components_elements_footer_items"
   info: {
@@ -527,6 +592,11 @@ export interface UtilitiesTipTapRichText extends Struct.ComponentSchema {
 declare module "@strapi/strapi" {
   export module Public {
     export interface ComponentSchemas {
+      "content.callout": ContentCallout
+      "content.code-block": ContentCodeBlock
+      "content.image-block": ContentImageBlock
+      "content.quote-block": ContentQuoteBlock
+      "content.rich-text": ContentRichText
       "elements.footer-item": ElementsFooterItem
       "forms.contact-form": FormsContactForm
       "forms.newsletter-form": FormsNewsletterForm

@@ -97,8 +97,8 @@ export function LibraryDetailPage({
   const toTagItems = (
     items: {
       documentId?: string | null
-      id?: number | null
-      name: string
+      id?: string | number | null
+      name?: string | null
       icon?: unknown
       category?: unknown
       summary?: unknown
@@ -106,7 +106,7 @@ export function LibraryDetailPage({
   ) =>
     items.map((item) => ({
       id: item.documentId ?? item.id ?? Math.random(),
-      name: item.name,
+      name: item.name ?? "",
       category: (item.category as string | null | undefined) ?? null,
       icon: (item.icon as IconHubValue) ?? null,
       summary: (item.summary as string | null | undefined) ?? null,

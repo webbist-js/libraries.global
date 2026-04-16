@@ -1,0 +1,20 @@
+{
+  "collectionName": "components_content_quote_blocks",
+  "info": {
+    "displayName": "Quote Block",
+    "description": "A pull quote with optional attribution and source"
+  },
+  "options": {},
+  "attributes": {
+    "quote": {
+      "type": "text",
+      "required": true
+    },
+    "attribution": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    }
+  }
+}

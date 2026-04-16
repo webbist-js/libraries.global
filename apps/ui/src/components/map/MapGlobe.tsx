@@ -8,24 +8,17 @@ import { Bloom, EffectComposer } from "@react-three/postprocessing"
 import { Suspense, useEffect, useMemo, useRef, useState } from "react"
 import * as THREE from "three"
 
-import {
-  createLandDotsGeometry,
-  createLandGlowGeometry,
-} from "@/components/helpers/globe-geometry"
+import { createLandDotsGeometry } from "@/components/helpers/globe-geometry"
 import {
   HALO_FRAGMENT_SHADER,
   HALO_VERTEX_SHADER,
+  HOTSPOT_FRAGMENT_SHADER,
+  HOTSPOT_VERTEX_SHADER,
   LAND_DOT_FRAGMENT_SHADER,
   LAND_DOT_VERTEX_SHADER,
-  LAND_GLOW_FRAGMENT_SHADER,
-  LAND_GLOW_VERTEX_SHADER,
   WIREFRAME_FRAGMENT_SHADER,
   WIREFRAME_VERTEX_SHADER,
 } from "@/components/helpers/globe-shaders"
-import {
-  HUB_MARKERS,
-  KNOWLEDGE_LIGHTS,
-} from "@/components/home/knowledge-globe-data"
 import { GLOBE_SETTINGS } from "@/components/home/knowledge-globe-settings"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -88,20 +81,6 @@ const CAMERA_DISTANCE: Record<DrillLevel, number> = {
   country: RADIUS * 1.54,
   region: RADIUS * 1.36,
 }
-
-// Visual parity: activity sources (hubs) from homepage hero, scaled to RADIUS=1.8
-const ACTIVITY_SOURCES = [
-  ...HUB_MARKERS.map((light) => ({
-    position: light.position.clone().multiplyScalar(RADIUS / 3.2),
-    radius: (0.46 + light.size * 4.8) * (RADIUS / 3.2),
-    weight: 0.42 + light.size * 5.6,
-  })),
-  ...KNOWLEDGE_LIGHTS.map((light) => ({
-    position: light.position.clone().multiplyScalar(RADIUS / 3.2),
-    radius: (0.2 + light.size * 4.2) * (RADIUS / 3.2),
-    weight: 0.05 + light.size * 2.8,
-  })),
-]
 
 // Region marker shader — fixed pixel size to avoid explosion when zoomed
 const REGION_MARKER_VERT = `
@@ -322,15 +301,22 @@ function GlobeScene({
         maskImage: image,
         radius: RADIUS,
         density: GLOBE_SETTINGS.landDotDensity, // match homepage density (0.65)
-        activitySources: ACTIVITY_SOURCES,
+        activitySources: [],
       }),
     [image]
   )
 
-  // Thinned subset of land dots used for the atmospheric glow layer
-  const glowAuraGeo = useMemo(
-    () => createLandGlowGeometry(worldDotsGeo),
-    [worldDotsGeo]
+  // Noise layer — same geometry seeded with no activity sources so Perlin noise
+  // animates all dots uniformly (matching the homepage globe's breathing effect)
+  const noiseDotGeo = useMemo(
+    () =>
+      createLandDotsGeometry({
+        maskImage: image,
+        radius: RADIUS,
+        density: GLOBE_SETTINGS.landDotDensity,
+        activitySources: [],
+      }),
+    [image]
   )
 
   // ── Materials ──────────────────────────────────────────────────────────────
@@ -352,17 +338,13 @@ function GlobeScene({
     []
   )
 
-  // LAND_GLOW — blue shimmer clouds, same shader as homepage with compensated size
-  const landGlowMat = useMemo(
+  // HOTSPOT — Perlin-noise animated shimmer matching the homepage hero globe
+  const noiseDotMat = useMemo(
     () =>
       new THREE.ShaderMaterial({
-        vertexShader: LAND_GLOW_VERTEX_SHADER,
-        fragmentShader: LAND_GLOW_FRAGMENT_SHADER,
+        vertexShader: HOTSPOT_VERTEX_SHADER,
+        fragmentShader: HOTSPOT_FRAGMENT_SHADER,
         uniforms: {
-          uGlowColor: {
-            value: new THREE.Color("#76c9ff").multiplyScalar(1.18),
-          },
-          uSizeScale: { value: DOT_SIZE * 1.18 * MAP_DOT_SCALE },
           uTime: { value: 0 },
         },
         transparent: true,
@@ -549,7 +531,7 @@ function GlobeScene({
   // ── Refs ──────────────────────────────────────────────────────────────────
 
   const worldDotRef = useRef<THREE.Points>(null)
-  const landGlowRef = useRef<THREE.Points>(null)
+  const noiseDotRef = useRef<THREE.Points>(null)
   const neonRef = useRef<THREE.LineSegments>(null)
   const hoverNeonRef = useRef<THREE.LineSegments>(null)
   const regionRef = useRef<THREE.Points>(null)
@@ -606,7 +588,7 @@ function GlobeScene({
         if (m.uniforms.uTime) m.uniforms.uTime.value = t
       }
     }
-    setT(landGlowRef)
+    setT(noiseDotRef)
     setT(regionRef)
 
     // Opacity transitions
@@ -645,13 +627,8 @@ function GlobeScene({
     if (worldDotRef.current)
       (
         worldDotRef.current.material as THREE.ShaderMaterial
-      ).uniforms.uSizeScale.value =
+      ).uniforms.uSizeScale!.value =
         DOT_SIZE * 1.04 * MAP_DOT_SCALE * (0.6 + 0.4 * globalDimming.current)
-    if (landGlowRef.current)
-      (
-        landGlowRef.current.material as THREE.ShaderMaterial
-      ).uniforms.uSizeScale.value =
-        DOT_SIZE * 1.18 * MAP_DOT_SCALE * globalDimming.current
 
     // Camera animation
     if (isAnimating.current) {
@@ -1126,7 +1103,8 @@ function GlobeScene({
         material={worldDotMat}
         ref={worldDotRef}
       />
-      <points geometry={glowAuraGeo} material={landGlowMat} ref={landGlowRef} />
+      {/* Perlin-noise animated shimmer layer — same visual as homepage hero */}
+      <points geometry={noiseDotGeo} material={noiseDotMat} ref={noiseDotRef} />
 
       {/* ── Continent outlines ─────────────────────────────────────────────── */}
       {contOutlinePairs.map(({ slug, geo, mat }) => {

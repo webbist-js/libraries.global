@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { cn } from "@/lib/styles"
 
@@ -29,10 +29,20 @@ export default function FullMapPage({ locale: _locale }: FullMapPageProps) {
 
   // View mode: globe ↔ map
   const [viewMode, setViewMode] = useState<ViewMode>("globe")
-  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [mapVisible, setMapVisible] = useState(false)
   // Snapshot of drill state at point of opening map — used as MapLibre initial state
   const [mapDrillSnapshot, setMapDrillSnapshot] =
     useState<GlobeDrillState | null>(null)
+  // Ref so closeMap can read the latest snapshot without being recreated
+  const mapDrillSnapshotRef = useRef(mapDrillSnapshot)
+  mapDrillSnapshotRef.current = mapDrillSnapshot
+
+  // Ref so handleClose / auto-open effect can read viewMode without deps
+  const viewModeRef = useRef(viewMode)
+  viewModeRef.current = viewMode
+
+  const drillStateRef = useRef(drillState)
+  drillStateRef.current = drillState
 
   const panelOpen = drillState.level !== "world"
 
@@ -40,7 +50,6 @@ export default function FullMapPage({ locale: _locale }: FullMapPageProps) {
     (s: GlobeDrillState) => setDrillState(s),
     []
   )
-  const handleClose = useCallback(() => setDrillState({ level: "world" }), [])
 
   const handleFirstInteraction = useCallback(() => setSearchSettled(true), [])
   const handleLoadingChange = useCallback(
@@ -53,41 +62,63 @@ export default function FullMapPage({ locale: _locale }: FullMapPageProps) {
   // Also slide search to top when panel opens
   const effectiveSettled = searchSettled || panelOpen
 
-  // ── Transition: globe → map ─────────────────────────────────────────────────
+  // ── Transition: globe → map (shelf slides up) ─────────────────────────────
 
-  const openMap = useCallback(() => {
-    // Snapshot current drill state for MapLibre initialisation
-    setMapDrillSnapshot(drillState)
-
-    setIsTransitioning(true)
-    // Allow dark overlay to fade in, then swap views
-    const t1 = setTimeout(() => {
+  const openMap = useCallback(
+    (state?: GlobeDrillState) => {
+      setMapDrillSnapshot((prev) => state ?? prev ?? drillState)
       setViewMode("map")
-      const t2 = setTimeout(() => setIsTransitioning(false), 350)
+      // Defer the CSS translate so the element is in the DOM before animating
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setMapVisible(true))
+      })
+    },
+    [drillState]
+  )
 
-      return () => clearTimeout(t2)
-    }, 200)
+  // ── Transition: map → globe (shelf slides back down) ──────────────────────
+  // Accepts an optional targetState to land on after the shelf closes.
+  // Defaults to continent level (so the auto-open effect doesn't immediately re-fire).
 
-    return () => clearTimeout(t1)
-  }, [drillState])
-
-  // ── Transition: map → globe ─────────────────────────────────────────────────
-
-  const closeMap = useCallback(() => {
-    setIsTransitioning(true)
-    const t1 = setTimeout(() => {
+  const closeMap = useCallback((targetState?: GlobeDrillState) => {
+    setMapVisible(false)
+    const snapshot = mapDrillSnapshotRef.current
+    setDrillState(
+      targetState ??
+        (snapshot?.continent
+          ? { level: "continent", continent: snapshot.continent }
+          : { level: "world" })
+    )
+    // Unmount MapLibre after slide animation completes
+    const t = setTimeout(() => {
       setViewMode("globe")
-      // Unmount MapLibre after the transition completes (so re-open always gets fresh init)
-      const t2 = setTimeout(() => {
-        setIsTransitioning(false)
-        setMapDrillSnapshot(null)
-      }, 350)
+      setMapDrillSnapshot(null)
+    }, 520)
 
-      return () => clearTimeout(t2)
-    }, 200)
-
-    return () => clearTimeout(t1)
+    return () => clearTimeout(t)
   }, [])
+
+  const handleClose = useCallback(() => {
+    if (viewModeRef.current === "map") {
+      // Panel closed while map shelf is open — slide shelf down too
+      closeMap({ level: "world" })
+    } else {
+      setDrillState({ level: "world" })
+    }
+  }, [closeMap])
+
+  // ── Auto-open: slide map in when a country is selected on the globe ────────
+
+  useEffect(() => {
+    if (drillState.level !== "country") return
+    if (viewModeRef.current !== "globe") return
+
+    // Brief delay — lets the globe finish its camera animation to the country
+    const t = setTimeout(() => openMap(drillStateRef.current), 500)
+
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drillState.level, drillState.country?.slug])
 
   return (
     <div className="relative flex min-h-0 flex-1 overflow-hidden bg-[#02040a]">
@@ -102,15 +133,7 @@ export default function FullMapPage({ locale: _locale }: FullMapPageProps) {
       />
 
       {/* ── Globe view ──────────────────────────────────────────────────────── */}
-      <div
-        className={cn(
-          "absolute inset-0 transition-opacity duration-500",
-          viewMode === "map" && !isTransitioning
-            ? "pointer-events-none opacity-0"
-            : "opacity-100"
-        )}
-      >
-        {/* Globe fills the full area; info panel overlays on the left */}
+      <div className="absolute inset-0">
         <div className="relative h-full w-full">
           <MapGlobe
             drillState={drillState}
@@ -142,27 +165,23 @@ export default function FullMapPage({ locale: _locale }: FullMapPageProps) {
               <span className="text-[12px] text-white/50">{loadingMsg}</span>
             </div>
           )}
-
-          {/* Left floating info panel */}
-          <GlobeInfoPanel
-            state={drillState}
-            onDrillChange={handleDrillChange}
-            onClose={handleClose}
-            onOpenMap={panelOpen ? openMap : undefined}
-          />
         </div>
       </div>
 
-      {/* ── MapLibre full-screen view ────────────────────────────────────────── */}
+      {/* ── MapLibre shelf — slides up from the bottom ───────────────────────── */}
       {mapDrillSnapshot && (
         <div
           className={cn(
-            "absolute inset-0 flex flex-col transition-opacity duration-500",
-            viewMode === "globe" && !isTransitioning
-              ? "pointer-events-none opacity-0"
-              : "opacity-100"
+            "absolute inset-0 z-30 flex flex-col transition-transform duration-500 ease-out",
+            mapVisible ? "translate-y-0" : "translate-y-full"
           )}
+          style={{ boxShadow: "0 -8px 40px rgba(0,0,0,0.7)" }}
         >
+          {/* Drag handle hint */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center pt-2">
+            <div className="h-1 w-10 rounded-full bg-white/15" />
+          </div>
+
           <MapLibreFullView
             drillState={mapDrillSnapshot}
             onBackToGlobe={closeMap}
@@ -171,14 +190,17 @@ export default function FullMapPage({ locale: _locale }: FullMapPageProps) {
         </div>
       )}
 
-      {/* ── Transition overlay (dark crossfade) ─────────────────────────────── */}
-      <div
-        aria-hidden
-        className={cn(
-          "pointer-events-none absolute inset-0 z-50 bg-[#02040a] transition-opacity duration-200",
-          isTransitioning ? "opacity-90" : "opacity-0"
-        )}
-      />
+      {/* ── Info panel — floats above both globe and shelf ───────────────────── */}
+      {/* z-40 keeps it above the shelf (z-30) in both view modes */}
+      <div className="pointer-events-none absolute inset-0 z-40">
+        <GlobeInfoPanel
+          state={drillState}
+          onDrillChange={handleDrillChange}
+          onClose={handleClose}
+          onOpenMap={panelOpen && viewMode === "globe" ? openMap : undefined}
+          onBackToGlobe={viewMode === "map" ? closeMap : undefined}
+        />
+      </div>
     </div>
   )
 }

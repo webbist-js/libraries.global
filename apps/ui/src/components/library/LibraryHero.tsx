@@ -78,7 +78,7 @@ type TimeframeEntry = { startTime: string; endTime: string }
 type DayEntry = { day: string; enabled: boolean; timeframes: TimeframeEntry[] }
 
 const to12h = (time: string): string => {
-  const [h, m] = time.split(":").map(Number)
+  const [h = 0, m = 0] = time.split(":").map(Number)
   const suffix = h >= 12 ? "PM" : "AM"
   const hour = h % 12 || 12
 
@@ -86,7 +86,7 @@ const to12h = (time: string): string => {
 }
 
 const toMinutes = (time: string): number => {
-  const [h, m] = time.split(":").map(Number)
+  const [h = 0, m = 0] = time.split(":").map(Number)
 
   return h * 60 + m
 }
@@ -113,15 +113,15 @@ function getRealtimeStatus(openingTimes: unknown): RealtimeStatus {
   const dayMap = new Map(data.days.map((d) => [d.day, d]))
 
   // Check if currently within a timeframe today
-  const todayEntry = dayMap.get(DAY_KEYS[todayIndex])
+  const todayEntry = dayMap.get(DAY_KEYS[todayIndex] ?? "")
   if (todayEntry?.enabled && todayEntry.timeframes?.length) {
     for (const tf of todayEntry.timeframes) {
       if (
         currentMinutes >= toMinutes(tf.startTime) &&
         currentMinutes < toMinutes(tf.endTime)
       ) {
-        const first = todayEntry.timeframes[0]
-        const last = todayEntry.timeframes.at(-1)
+        const first = todayEntry.timeframes[0]!
+        const last = todayEntry.timeframes.at(-1)!
 
         return {
           isOpenNow: true,
@@ -146,14 +146,14 @@ function getRealtimeStatus(openingTimes: unknown): RealtimeStatus {
   // Look ahead up to 7 days for the next open day
   for (let offset = 1; offset <= 7; offset++) {
     const nextIndex = (todayIndex + offset) % 7
-    const nextEntry = dayMap.get(DAY_KEYS[nextIndex])
+    const nextEntry = dayMap.get(DAY_KEYS[nextIndex] ?? "")
     if (nextEntry?.enabled && nextEntry.timeframes?.length) {
       const label = offset === 1 ? "tomorrow" : DAY_LABELS[nextIndex]
 
       return {
         isOpenNow: false,
         hoursText: null,
-        nextOpenText: `Opens ${label} at ${to12h(nextEntry.timeframes[0].startTime)}`,
+        nextOpenText: `Opens ${label} at ${to12h(nextEntry.timeframes[0]!.startTime)}`,
       }
     }
   }

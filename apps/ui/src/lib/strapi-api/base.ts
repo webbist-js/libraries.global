@@ -22,6 +22,11 @@ export const API_ENDPOINTS: Partial<Record<UID.ContentType, string>> = {
   "api::continent.continent": "/continents",
   "api::country.country": "/countries",
   "api::region.region": "/regions",
+  "api::blog-article.blog-article": "/blog-articles",
+  "api::blog-landing.blog-landing": "/blog-landing",
+  "api::wiki-article.wiki-article": "/wiki-articles",
+  "api::wiki-category.wiki-category": "/wiki-categories",
+  "api::wiki-landing.wiki-landing": "/wiki-landing",
 } as const
 
 export default abstract class BaseStrapiClient {

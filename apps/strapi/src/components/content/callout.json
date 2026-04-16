@@ -1,0 +1,23 @@
+{
+  "collectionName": "components_content_callouts",
+  "info": {
+    "displayName": "Callout",
+    "description": "An info, warning, tip, or note callout box"
+  },
+  "options": {},
+  "attributes": {
+    "type": {
+      "type": "enumeration",
+      "enum": ["info", "warning", "tip", "note"],
+      "default": "info",
+      "required": true
+    },
+    "title": {
+      "type": "string"
+    },
+    "body": {
+      "type": "text",
+      "required": true
+    }
+  }
+}

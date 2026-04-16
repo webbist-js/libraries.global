@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_content_code_blocks",
+  "info": {
+    "displayName": "Code Block",
+    "description": "A syntax-highlighted code snippet with optional filename label"
+  },
+  "options": {},
+  "attributes": {
+    "code": {
+      "type": "text",
+      "required": true
+    },
+    "language": {
+      "type": "string",
+      "default": "plaintext"
+    },
+    "filename": {
+      "type": "string"
+    }
+  }
+}

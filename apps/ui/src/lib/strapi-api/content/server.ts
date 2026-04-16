@@ -317,9 +317,9 @@ export type QuickLink = {
 }
 
 export type SpotlightCard = {
-  id?: number | null
+  id?: string | number | null
   eyebrow?: string | null
-  title: string
+  title?: string | null
   summary?: string | null
   image?: { url?: string | null; alternativeText?: string | null } | null
   ctaLabel?: string | null
@@ -399,13 +399,6 @@ export type PopulatedContinentData =
       summary?: string | null
       capitalCity?: string | null
     }[]
-    featuredCountries?: {
-      name: string
-      slug: string
-      summary?: string | null
-      capitalCity?: string | null
-    }[]
-    serviceHighlights?: HighlightCard[]
     featuredLibraries?: PopulatedFeaturedLibraryData[]
     sections?: PageSection[]
   }
@@ -415,15 +408,9 @@ export type PopulatedContinentData =
 export type PopulatedCountryData = Data.ContentType<"api::country.country"> & {
   heroImage?: Data.ContentType<"plugin::upload.file"> | null
   heroTagline?: string | null
-  accessibilityNote?: string | null
+  featured?: boolean | null
   continent?: { name: string; slug: string; code?: string | null } | null
   regions?: {
-    name: string
-    slug: string
-    summary?: string | null
-    typeLabel?: string | null
-  }[]
-  featuredRegions?: {
     name: string
     slug: string
     summary?: string | null
@@ -438,8 +425,6 @@ export type PopulatedCountryData = Data.ContentType<"api::country.country"> & {
     heroImage?: { url?: string | null; alternativeText?: string | null } | null
   } | null
   featuredLibraries?: PopulatedFeaturedLibraryData[]
-  serviceHighlights?: HighlightCard[]
-  collections?: SpotlightCard[]
   quickLinks?: QuickLink[]
   mapConfig?: MapConfig | null
   sections?: PageSection[]
@@ -459,6 +444,7 @@ export type AreaSummary = {
 export type PopulatedRegionData = Data.ContentType<"api::region.region"> & {
   heroImage?: Data.ContentType<"plugin::upload.file"> | null
   heroTagline?: string | null
+  featured?: boolean | null
   continent?: { name: string; slug: string; code?: string | null } | null
   country?: {
     name: string
@@ -469,13 +455,50 @@ export type PopulatedRegionData = Data.ContentType<"api::region.region"> & {
   } | null
   areas?: AreaSummary[]
   featuredLibraries?: PopulatedFeaturedLibraryData[]
-  serviceHighlights?: HighlightCard[]
-  collections?: SpotlightCard[]
   quickLinks?: QuickLink[]
   mapConfig?: MapConfig | null
   sections?: PageSection[]
   libraryCount?: number
   areaCount?: number
+}
+
+// ── Area ──────────────────────────────────────────────────────────────────────
+
+export type PopulatedAreaData = {
+  id: number
+  documentId: string
+  name: string
+  slug: string
+  shortName?: string | null
+  typeLabel?: string | null
+  summary?: string | null
+  mapConfig?: MapConfig | null
+  region?: {
+    name: string
+    slug: string
+    typeLabel?: string | null
+    country?: {
+      name: string
+      slug: string
+      regionTypeLabel?: string | null
+      continent?: { name: string; slug: string; code?: string | null } | null
+    } | null
+  } | null
+  country?: { name: string; slug: string } | null
+  libraries?: {
+    name: string
+    slug: string
+    summary?: string | null
+    libraryType?: string | null
+    operationalStatus?: string | null
+    heroImage?: { url?: string | null; alternativeText?: string | null } | null
+  }[]
+  libraryCount?: number
+  seo?: {
+    metaTitle?: string | null
+    metaDescription?: string | null
+    metaImage?: { url?: string | null } | null
+  } | null
 }
 
 export async function fetchContinent(slug: string, locale: Locale) {
@@ -617,6 +640,375 @@ export async function fetchRegion(slug: string, locale: Locale) {
         stack: e instanceof Error ? e.stack : undefined,
       },
     })
+  }
+}
+
+export async function fetchArea(slug: string, locale: Locale) {
+  const dm = await draftMode()
+  try {
+    return (await PublicStrapiClient.fetchAPI(
+      `/areas/detail/${encodeURIComponent(slug)}`,
+      {
+        locale,
+        status: dm.isEnabled ? "draft" : "published",
+      }
+    )) as APIResponse<PopulatedAreaData>
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching area '${slug}' for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+  }
+}
+
+export async function fetchAllAreaSlugs(locale: Locale) {
+  try {
+    const result = await PublicStrapiClient.fetchAPI("/areas/slugs", {
+      locale,
+      status: "published",
+    })
+
+    return result as {
+      data: {
+        slug: string
+        locale?: string | null
+        region?: { slug: string } | null
+        country?: { slug: string } | null
+      }[]
+    }
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching all area slugs for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return { data: [] }
+  }
+}
+
+// ------ Blog fetching functions
+
+export type MediaItem = {
+  url: string
+  alternativeText?: string | null
+  width?: number | null
+  height?: number | null
+}
+
+export type ContentRichText = {
+  __component: "content.rich-text"
+  id: number
+  body?: unknown
+}
+
+export type ContentImageBlock = {
+  __component: "content.image-block"
+  id: number
+  image?: MediaItem | null
+  caption?: string | null
+  fullWidth?: boolean | null
+}
+
+export type ContentCodeBlock = {
+  __component: "content.code-block"
+  id: number
+  code: string
+  language?: string | null
+  filename?: string | null
+}
+
+export type ContentQuoteBlock = {
+  __component: "content.quote-block"
+  id: number
+  quote: string
+  attribution?: string | null
+  source?: string | null
+}
+
+export type ContentCallout = {
+  __component: "content.callout"
+  id: number
+  type: "info" | "warning" | "tip" | "note"
+  title?: string | null
+  body: string
+}
+
+export type ArticleBodyBlock =
+  | ContentRichText
+  | ContentImageBlock
+  | ContentCodeBlock
+  | ContentQuoteBlock
+  | ContentCallout
+
+export type BlogArticleSummary = {
+  documentId: string
+  title?: string | null
+  slug?: string | null
+  summary?: string | null
+  category?: string | null
+  author?: string | null
+  featured?: boolean | null
+  publishedAt?: string | null
+  updatedAt?: string | null
+  heroImage?: MediaItem | null
+}
+
+export type BlogArticleDetail = BlogArticleSummary & {
+  body?: ArticleBodyBlock[] | null
+  seo?: LibrarySeoData | null
+}
+
+export type BlogLandingData = {
+  heroTitle?: string | null
+  heroText?: string | null
+  featuredArticle?: BlogArticleSummary | null
+  sections?: PageSection[] | null
+  seo?: LibrarySeoData | null
+}
+
+export async function fetchBlogLanding(locale: Locale) {
+  const dm = await draftMode()
+  try {
+    return (await PublicStrapiClient.fetchAPI("/blog-landing", {
+      locale,
+      status: dm.isEnabled ? "draft" : "published",
+    })) as APIResponse<BlogLandingData>
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching blog landing for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+  }
+}
+
+export async function fetchBlogArticle(slug: string, locale: Locale) {
+  const dm = await draftMode()
+  try {
+    return (await PublicStrapiClient.fetchAPI(
+      `/blog-articles/detail/${encodeURIComponent(slug)}`,
+      {
+        locale,
+        status: dm.isEnabled ? "draft" : "published",
+      }
+    )) as APIResponse<BlogArticleDetail>
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching blog article '${slug}' for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+  }
+}
+
+export async function fetchRecentBlogArticles(locale: Locale) {
+  const dm = await draftMode()
+  try {
+    return (await PublicStrapiClient.fetchAPI("/blog-articles", {
+      locale,
+      status: dm.isEnabled ? "draft" : "published",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      populate: { heroImage: true } as any,
+
+      fields: [
+        "title",
+        "slug",
+        "summary",
+        "category",
+        "author",
+        "featured",
+        "publishedAt",
+        "updatedAt",
+      ] as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sort: ["publishedAt:desc"] as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      pagination: { pageSize: 24 } as any,
+    })) as APIResponseCollection<BlogArticleSummary>
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching recent blog articles for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return { data: [] }
+  }
+}
+
+export async function fetchAllBlogArticleSlugs(locale: Locale) {
+  try {
+    return (await PublicStrapiClient.fetchAPI("/blog-articles/slugs", {
+      locale,
+      status: "published",
+    })) as { data: { slug: string; locale?: string | null }[] }
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching all blog article slugs for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return { data: [] }
+  }
+}
+
+// ------ Wiki fetching functions
+
+export type WikiCategorySummary = {
+  documentId: string
+  name?: string | null
+  slug?: string | null
+  description?: string | null
+  icon?: IconHubValue | null
+  order?: number | null
+}
+
+export type WikiArticleSummary = {
+  documentId: string
+  title?: string | null
+  slug?: string | null
+  summary?: string | null
+  author?: string | null
+  featured?: boolean | null
+  priority?: number | null
+  publishedAt?: string | null
+  updatedAt?: string | null
+  heroImage?: MediaItem | null
+  category?: WikiCategorySummary | null
+}
+
+export type WikiArticleDetail = WikiArticleSummary & {
+  body?: ArticleBodyBlock[] | null
+  relatedArticles?: WikiArticleSummary[] | null
+  seo?: LibrarySeoData | null
+}
+
+export type WikiLandingData = {
+  heroTitle?: string | null
+  heroText?: string | null
+  featuredArticle?: WikiArticleSummary | null
+  featuredCategories?: WikiCategorySummary[] | null
+  stats?: StatCard[] | null
+  sections?: PageSection[] | null
+  seo?: LibrarySeoData | null
+}
+
+export async function fetchWikiLanding(locale: Locale) {
+  const dm = await draftMode()
+  try {
+    return (await PublicStrapiClient.fetchAPI("/wiki-landing", {
+      locale,
+      status: dm.isEnabled ? "draft" : "published",
+    })) as APIResponse<WikiLandingData>
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching wiki landing for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+  }
+}
+
+export async function fetchWikiArticle(slug: string, locale: Locale) {
+  const dm = await draftMode()
+  try {
+    return (await PublicStrapiClient.fetchAPI(
+      `/wiki-articles/detail/${encodeURIComponent(slug)}`,
+      {
+        locale,
+        status: dm.isEnabled ? "draft" : "published",
+      }
+    )) as APIResponse<WikiArticleDetail>
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching wiki article '${slug}' for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+  }
+}
+
+export async function fetchPopularWikiArticles(locale: Locale) {
+  const dm = await draftMode()
+  try {
+    return (await PublicStrapiClient.fetchAPI("/wiki-articles", {
+      locale,
+      status: dm.isEnabled ? "draft" : "published",
+
+      populate: {
+        heroImage: true,
+        category: { fields: ["name", "slug"] },
+      } as any,
+
+      fields: [
+        "title",
+        "slug",
+        "summary",
+        "author",
+        "featured",
+        "priority",
+        "publishedAt",
+        "updatedAt",
+      ] as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sort: ["priority:asc", "publishedAt:desc"] as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      pagination: { pageSize: 12 } as any,
+    })) as APIResponseCollection<WikiArticleSummary>
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching popular wiki articles for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return { data: [] }
+  }
+}
+
+export async function fetchAllWikiArticleSlugs(locale: Locale) {
+  try {
+    return (await PublicStrapiClient.fetchAPI("/wiki-articles/slugs", {
+      locale,
+      status: "published",
+    })) as {
+      data: {
+        slug: string
+        locale?: string | null
+        category?: { slug?: string | null } | null
+      }[]
+    }
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching all wiki article slugs for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return { data: [] }
   }
 }
 

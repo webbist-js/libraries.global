@@ -23,8 +23,6 @@ export default factories.createCoreController(
       const extendedPopulate: Record<string, unknown> = {
         continent: { fields: ["name", "slug", "code"] },
         heroImage: true,
-        serviceHighlights: true,
-        collections: { populate: { image: true } },
         mapConfig: true,
         featuredLibraries: {
           populate: {

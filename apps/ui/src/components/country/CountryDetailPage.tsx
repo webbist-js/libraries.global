@@ -14,8 +14,6 @@ import type {
   EditorialBlock as EditorialBlockType,
   CtaBanner as CtaBannerType,
   PageSection,
-  IconHubValue,
-  SpotlightCard,
   QuickLink,
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
@@ -45,125 +43,6 @@ function StatCard({
         {value}
       </span>
       {note ? <span className="text-xs text-white/36">{note}</span> : null}
-    </div>
-  )
-}
-
-// ── Service highlight card ──────────────────────────────────────────────────
-
-function ServiceHighlightCard({
-  item,
-}: {
-  item: {
-    id?: unknown
-    eyebrow?: string | null
-    title?: string | null
-    summary?: string | null
-    icon?: IconHubValue | null
-    ctaLabel?: string | null
-    ctaUrl?: string | null
-  }
-}) {
-  const iconName = item.icon?.iconName ?? null
-
-  return (
-    <div
-      className={cn(homepagePanelClassName, "flex flex-col gap-3 px-5 py-5")}
-    >
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-indigo-500/20 bg-indigo-500/10">
-        {iconName ? (
-          <Icon icon={iconName} className="size-5 text-indigo-300" />
-        ) : (
-          <Icon icon="mdi:star-outline" className="size-5 text-indigo-300/40" />
-        )}
-      </div>
-      {item.eyebrow ? (
-        <span className="text-[10px] font-semibold tracking-[0.14em] text-cyan-400/70 uppercase">
-          {item.eyebrow}
-        </span>
-      ) : null}
-      {item.title ? (
-        <h4 className="font-semibold text-white">{item.title}</h4>
-      ) : null}
-      {item.summary ? (
-        <p className="text-sm leading-6 text-white/50">{item.summary}</p>
-      ) : null}
-      {item.ctaLabel && item.ctaUrl ? (
-        <GlobalLink
-          href={item.ctaUrl}
-          className="mt-auto text-xs font-medium text-indigo-400 transition-colors hover:text-indigo-300"
-        >
-          {item.ctaLabel} →
-        </GlobalLink>
-      ) : null}
-    </div>
-  )
-}
-
-// ── Spotlight card (collections) ────────────────────────────────────────────
-
-const themeAccent: Record<string, string> = {
-  heritage: "border-amber-500/20 bg-amber-500/8",
-  digital: "border-cyan-500/20 bg-cyan-500/8",
-  science: "border-emerald-500/20 bg-emerald-500/8",
-  archive: "border-purple-500/20 bg-purple-500/8",
-  default: "border-indigo-500/20 bg-indigo-500/8",
-}
-
-const themeEyebrowColor: Record<string, string> = {
-  heritage: "text-amber-400/70",
-  digital: "text-cyan-400/70",
-  science: "text-emerald-400/70",
-  archive: "text-purple-400/70",
-  default: "text-indigo-400/70",
-}
-
-function SpotlightCardItem({ card }: { card: SpotlightCard }) {
-  const theme = card.theme ?? "default"
-  const imageUrl = card.image?.url ? formatStrapiMediaUrl(card.image.url) : null
-
-  return (
-    <div
-      className={cn(
-        "group flex flex-col overflow-hidden rounded-2xl border transition-colors duration-300 hover:border-white/16",
-        themeAccent[theme] ?? themeAccent.default
-      )}
-    >
-      {imageUrl ? (
-        <div className="relative aspect-[16/9] overflow-hidden">
-          <Image
-            src={imageUrl}
-            alt={card.image?.alternativeText ?? card.title}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_50%,rgba(5,8,22,0.7))]" />
-        </div>
-      ) : null}
-      <div className="flex flex-1 flex-col gap-3 p-5">
-        {card.eyebrow ? (
-          <span
-            className={cn(
-              "text-[10px] font-semibold tracking-[0.14em] uppercase",
-              themeEyebrowColor[theme] ?? themeEyebrowColor.default
-            )}
-          >
-            {card.eyebrow}
-          </span>
-        ) : null}
-        <h4 className="font-semibold text-white">{card.title}</h4>
-        {card.summary ? (
-          <p className="text-sm leading-6 text-white/50">{card.summary}</p>
-        ) : null}
-        {card.ctaLabel && card.ctaUrl ? (
-          <GlobalLink
-            href={card.ctaUrl}
-            className="mt-auto text-xs font-medium text-white/50 transition-colors hover:text-white/80"
-          >
-            {card.ctaLabel} →
-          </GlobalLink>
-        ) : null}
-      </div>
     </div>
   )
 }
@@ -334,24 +213,13 @@ export function CountryDetailPage({
     (s): s is CtaBannerType => s.__component === "sections.cta-banner"
   )
 
-  const hasSections = typedSections.length > 0
-  const hasDescription =
-    Array.isArray((country as { description?: unknown }).description) &&
-    ((country as { description?: unknown[] }).description?.length ?? 0) > 0
   const hasFeaturedLibraries =
     Array.isArray(country.featuredLibraries) &&
     country.featuredLibraries.length > 0
-  const hasServiceHighlights =
-    Array.isArray(country.serviceHighlights) &&
-    country.serviceHighlights.length > 0
-  const hasCollections =
-    Array.isArray(country.collections) && country.collections.length > 0
   const hasQuickLinks =
     Array.isArray(country.quickLinks) && country.quickLinks.length > 0
   const hasRegions =
     Array.isArray(country.regions) && country.regions.length > 0
-  const hasFeaturedRegions =
-    Array.isArray(country.featuredRegions) && country.featuredRegions.length > 0
   const heroImageUrl = (
     country.heroImage as { url?: string | null } | null | undefined
   )?.url
@@ -361,10 +229,7 @@ export function CountryDetailPage({
   const continentName = country.continent?.name
   const continentHref = `/${continentSlug}`
 
-  // Regions to show in the browse grid — prefer featuredRegions, fall back to all regions
-  const browseRegions = hasFeaturedRegions
-    ? (country.featuredRegions ?? [])
-    : (country.regions ?? [])
+  const browseRegions = country.regions ?? []
 
   return (
     <div className="relative isolate flex min-h-screen w-full flex-col overflow-x-hidden bg-[#050816] text-white">
@@ -492,11 +357,9 @@ export function CountryDetailPage({
                     Browse by {country.regionTypeLabel ?? "Region"}
                   </h2>
                 </div>
-                {hasRegions &&
-                hasFeaturedRegions &&
-                country.regions!.length > browseRegions.length ? (
+                {hasRegions && browseRegions.length > 6 ? (
                   <span className="text-sm text-white/36">
-                    {country.regions!.length}{" "}
+                    {browseRegions.length}{" "}
                     {country.regionTypeLabel?.toLowerCase() ?? "regions"} total
                   </span>
                 ) : null}
@@ -528,65 +391,6 @@ export function CountryDetailPage({
                       ) : null}
                     </div>
                   </GlobalLink>
-                ))}
-              </div>
-            </Container>
-          </section>
-        ) : null}
-
-        {/* ── What You'll Find (service highlights) ───────────────────────────── */}
-        {hasServiceHighlights ? (
-          <section className="relative overflow-hidden border-t border-white/6 py-14 sm:py-18">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_100%,rgba(6,182,212,0.07),transparent_65%)]" />
-            <Container className="relative">
-              <div className="mb-8">
-                <p className="mb-1.5 text-[11px] font-semibold tracking-[0.16em] text-white/36 uppercase">
-                  Specialised Disciplines
-                </p>
-                <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                  What You&apos;ll Find
-                </h2>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {country.serviceHighlights!.map((item, i) => (
-                  <ServiceHighlightCard
-                    key={((item as { id?: unknown }).id as string) ?? i}
-                    item={
-                      item as {
-                        id?: unknown
-                        eyebrow?: string | null
-                        title?: string | null
-                        summary?: string | null
-                        icon?: IconHubValue | null
-                        ctaLabel?: string | null
-                        ctaUrl?: string | null
-                      }
-                    }
-                  />
-                ))}
-              </div>
-            </Container>
-          </section>
-        ) : null}
-
-        {/* ── Collections ────────────────────────────────────────────────────── */}
-        {hasCollections ? (
-          <section className="border-t border-white/6 py-14 sm:py-18">
-            <Container>
-              <div className="mb-8">
-                <p className="mb-1.5 text-[11px] font-semibold tracking-[0.16em] text-white/36 uppercase">
-                  Curated Collections
-                </p>
-                <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                  Notable Archives
-                </h2>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {country.collections!.map((card, i) => (
-                  <SpotlightCardItem
-                    key={((card as { id?: unknown }).id as string) ?? i}
-                    card={card}
-                  />
                 ))}
               </div>
             </Container>
@@ -648,27 +452,6 @@ export function CountryDetailPage({
             ) : null}
           </div>
         ))}
-
-        {/* ── Description (fallback) ──────────────────────────────────────────── */}
-        {!hasSections && hasDescription ? (
-          <section className="border-t border-white/6 py-14 sm:py-18">
-            <Container>
-              <div className="mx-auto max-w-[65ch] text-white/65">
-                <StrapiBlocksContent
-                  blocks={
-                    (
-                      country as {
-                        description: Parameters<
-                          typeof StrapiBlocksContent
-                        >[0]["blocks"]
-                      }
-                    ).description
-                  }
-                />
-              </div>
-            </Container>
-          </section>
-        ) : null}
 
         {/* ── Journey CTA (fallback if no CTA banner or dynamic sections) ─────── */}
         {ctaBanners.length === 0 && typedSections.length === 0 ? (

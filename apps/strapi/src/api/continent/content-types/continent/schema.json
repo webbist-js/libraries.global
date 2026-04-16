@@ -36,10 +36,6 @@
       "type": "text",
       "pluginOptions": { "i18n": { "localized": true } }
     },
-    "description": {
-      "type": "blocks",
-      "pluginOptions": { "i18n": { "localized": true } }
-    },
     "mapConfig": {
       "type": "component",
       "component": "shared.map-config",
@@ -54,22 +50,10 @@
       "type": "string",
       "pluginOptions": { "i18n": { "localized": false } }
     },
-    "serviceHighlights": {
-      "type": "component",
-      "component": "shared.highlight-card",
-      "repeatable": true,
-      "pluginOptions": { "i18n": { "localized": true } }
-    },
     "featuredLibraries": {
       "type": "relation",
       "relation": "manyToMany",
       "target": "api::library.library",
-      "pluginOptions": { "i18n": { "localized": false } }
-    },
-    "featuredCountries": {
-      "type": "relation",
-      "relation": "manyToMany",
-      "target": "api::country.country",
       "pluginOptions": { "i18n": { "localized": false } }
     },
     "sections": {

@@ -39,16 +39,8 @@ export default factories.createCoreController(
         countries: { fields: ["name", "slug", "summary", "capitalCity"] },
       }
 
-      // Extended populate — only fields added in the expanded schema.
-      // If Strapi hasn't restarted since the schema update these keys will
-      // simply be ignored rather than causing an error.
       const extendedPopulate: Record<string, unknown> = {
-        featuredCountries: {
-          fields: ["name", "slug", "summary", "capitalCity"],
-        },
-        // Components use nested populate object, not array
         mapConfig: true,
-        serviceHighlights: true, // icon is a customField — no nested populate needed
         featuredLibraries: {
           populate: {
             heroImage: true,

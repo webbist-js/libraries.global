@@ -1,0 +1,13 @@
+{
+  "collectionName": "components_content_rich_texts",
+  "info": {
+    "displayName": "Rich Text",
+    "description": "Freeform body text using Strapi blocks editor"
+  },
+  "options": {},
+  "attributes": {
+    "body": {
+      "type": "blocks"
+    }
+  }
+}

@@ -1,10 +1,10 @@
 "use client"
 
-import { Icon } from "@iconify/react"
 import { useEffect, useRef, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import type { MapConfig } from "@/lib/strapi-api/content/server"
+import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 import { cn } from "@/lib/styles"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -16,6 +16,11 @@ export interface LibraryMapPin {
   libraryType?: string | null
   operationalStatus?: string | null
   city?: string | null
+  summary?: string | null
+  /** Raw hero image URL from Strapi (may be /uploads/... or https://...) */
+  heroImage?: { url?: string | null } | null
+  /** Flattened hero image URL — populated after GeoJSON round-trip on pin click */
+  heroImageUrl?: string | null
   location: { lat: number; lng: number }
   continent?: { slug: string } | null
   country?: { slug: string } | null
@@ -70,6 +75,17 @@ function operationalLabel(status?: string | null): string {
     default:
       return "Unknown"
   }
+}
+
+const TYPE_LABELS: Record<string, string> = {
+  national: "National",
+  public: "Public",
+  academic: "Academic",
+  special: "Special",
+  government: "Government",
+  school: "School",
+  digital: "Digital",
+  preservation: "Preservation",
 }
 
 function buildLibraryHref(pin: LibraryMapPin): string | null {
@@ -325,6 +341,8 @@ export function InteractiveMap({
           libraryType: pin.libraryType ?? "",
           operationalStatus: pin.operationalStatus ?? "",
           city: pin.city ?? "",
+          summary: pin.summary ?? "",
+          heroImageUrl: pin.heroImage?.url ?? pin.heroImageUrl ?? "",
           continentSlug: pin.continent?.slug ?? "",
           countrySlug: pin.country?.slug ?? "",
           regionSlug: pin.region?.slug ?? "",
@@ -403,7 +421,7 @@ export function InteractiveMap({
       )
     })
 
-    // Pin click → side panel
+    // Pin click → side panel + center map
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     map.on("click", "library-pins", (e: any) => {
       const features = map.queryRenderedFeatures(e.point, {
@@ -416,6 +434,12 @@ export function InteractiveMap({
         number,
         number,
       ]
+      // Center the map on the selected pin
+      map.easeTo({
+        center: coords,
+        zoom: Math.max(map.getZoom(), 14),
+        duration: 500,
+      })
       setSelectedPinRef.current({
         documentId: p.documentId as string,
         name: p.name as string,
@@ -423,6 +447,8 @@ export function InteractiveMap({
         libraryType: (p.libraryType as string) || null,
         operationalStatus: (p.operationalStatus as string) || null,
         city: (p.city as string) || null,
+        summary: (p.summary as string) || null,
+        heroImageUrl: (p.heroImageUrl as string) || null,
         location: { lat: coords[1], lng: coords[0] },
         continent: p.continentSlug ? { slug: p.continentSlug as string } : null,
         country: p.countrySlug ? { slug: p.countrySlug as string } : null,
@@ -1045,6 +1071,7 @@ export function InteractiveMap({
   // ── Render ───────────────────────────────────────────────────────────────────
 
   const libraryHref = selectedPin ? buildLibraryHref(selectedPin) : null
+  const heroImageUrl = formatStrapiMediaUrl(selectedPin?.heroImageUrl) ?? null
 
   return (
     <div
@@ -1082,52 +1109,107 @@ export function InteractiveMap({
         </div>
       ) : null}
 
-      {/* Selected library panel */}
+      {/* Selected library panel — right side, matches GlobeInfoPanel aesthetic */}
       {selectedPin ? (
-        <div className="absolute right-12 bottom-3 left-3 z-10 rounded-xl border border-white/10 bg-[#050816]/90 p-4 backdrop-blur-md sm:right-12 sm:left-auto sm:w-72">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <p className="truncate text-sm font-semibold text-white">
-                {selectedPin.name}
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {selectedPin.libraryType ? (
-                  <span className="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-2 py-0.5 text-[10px] font-medium text-indigo-300">
-                    {selectedPin.libraryType}
-                  </span>
-                ) : null}
-                {selectedPin.operationalStatus ? (
-                  <span
-                    className={cn(
-                      "rounded-full border px-2 py-0.5 text-[10px] font-medium",
-                      selectedPin.operationalStatus === "open"
-                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-                        : "border-amber-500/30 bg-amber-500/10 text-amber-300"
-                    )}
-                  >
-                    {operationalLabel(selectedPin.operationalStatus)}
-                  </span>
-                ) : null}
+        <div className="absolute top-4 right-4 z-20 flex max-h-[calc(100%-2rem)] w-[360px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#050c1a]/92 shadow-2xl backdrop-blur-xl">
+          {/* Hero image */}
+          {heroImageUrl ? (
+            <div className="relative h-44 flex-shrink-0">
+              <img
+                src={heroImageUrl}
+                alt={selectedPin.name}
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#050c1a] via-[#050c1a]/30 to-transparent" />
+            </div>
+          ) : null}
+
+          {/* Content */}
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
+            {/* Header row */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="mb-1 text-[11px] tracking-widest text-cyan-400/60 uppercase">
+                  Library
+                </p>
+                <h3 className="text-xl leading-tight font-semibold text-white">
+                  {selectedPin.name}
+                </h3>
               </div>
-              {selectedPin.city ? (
-                <p className="text-[11px] text-white/40">{selectedPin.city}</p>
+              <button
+                onClick={() => setSelectedPin(null)}
+                className="mt-1 ml-2 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border border-white/10 text-white/40 transition-colors hover:border-white/25 hover:text-white/70"
+                aria-label="Close"
+              >
+                <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3">
+                  <path
+                    d="M1 1l10 10M11 1L1 11"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Badges */}
+            <div className="mt-2.5 flex flex-wrap gap-1.5">
+              {selectedPin.libraryType ? (
+                <span className="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-2.5 py-0.5 text-[11px] font-medium text-indigo-300">
+                  {TYPE_LABELS[selectedPin.libraryType] ??
+                    selectedPin.libraryType}
+                </span>
+              ) : null}
+              {selectedPin.operationalStatus ? (
+                <span
+                  className={cn(
+                    "rounded-full border px-2.5 py-0.5 text-[11px] font-medium",
+                    selectedPin.operationalStatus === "open"
+                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                      : "border-amber-500/30 bg-amber-500/10 text-amber-300"
+                  )}
+                >
+                  {operationalLabel(selectedPin.operationalStatus)}
+                </span>
               ) : null}
             </div>
-            <button
-              onClick={() => setSelectedPin(null)}
-              className="shrink-0 rounded-lg p-1 text-white/40 transition-colors hover:bg-white/8 hover:text-white/70"
-            >
-              <Icon icon="mdi:close" className="size-4" />
-            </button>
+
+            {/* City */}
+            {selectedPin.city ? (
+              <p className="mt-2 text-[12px] text-white/40">
+                {selectedPin.city}
+              </p>
+            ) : null}
+
+            {/* Summary */}
+            {selectedPin.summary ? (
+              <p className="mt-3 line-clamp-5 text-[13px] leading-relaxed text-white/60">
+                {selectedPin.summary}
+              </p>
+            ) : null}
+
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* CTA */}
+            {libraryHref ? (
+              <GlobalLink
+                href={libraryHref}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm font-medium text-cyan-300 transition-colors hover:border-cyan-400/50 hover:bg-cyan-500/18 hover:text-cyan-200"
+              >
+                Explore {selectedPin.name}
+                <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3">
+                  <path
+                    d="M2 2h8v8M2 10l8-8"
+                    stroke="currentColor"
+                    strokeWidth="1.3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </GlobalLink>
+            ) : null}
           </div>
-          {libraryHref ? (
-            <GlobalLink
-              href={libraryHref}
-              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/6 px-3 py-2 text-xs font-medium text-white/70 transition-colors hover:border-white/18 hover:bg-white/10 hover:text-white"
-            >
-              View Library <Icon icon="mdi:arrow-right" className="size-3" />
-            </GlobalLink>
-          ) : null}
         </div>
       ) : null}
     </div>
