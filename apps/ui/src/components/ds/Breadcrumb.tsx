@@ -8,6 +8,7 @@ export function Breadcrumb({
 }) {
   return (
     <nav
+      aria-label="Breadcrumb"
       style={{
         display: "flex",
         alignItems: "center",

@@ -21,6 +21,7 @@ export function Card({
         background: T.bg.surface,
         border: `1px solid ${T.border.line}`,
         borderRadius: "16px",
+        // hover: enables border-color transition; consumer adds hover class (e.g. className="hover:border-white/14")
         transition: hover ? "border-color 200ms" : undefined,
         ...style,
       }}

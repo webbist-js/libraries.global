@@ -7,7 +7,7 @@ export function MetaRow({
   readonly items: (string | null | undefined)[]
   readonly separator?: string
 }) {
-  const nonEmpty = items.filter(Boolean)
+  const nonEmpty = items.filter((x): x is string => x != null && x !== "")
   if (nonEmpty.length === 0) return null
 
   return (
