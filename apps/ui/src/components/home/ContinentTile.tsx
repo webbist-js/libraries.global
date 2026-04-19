@@ -1,10 +1,8 @@
 import type { Locale } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
-import ContinentGlobeBackdrop from "@/components/home/ContinentGlobeBackdrop"
-import { homepagePanelClassName } from "@/components/home/homepage.constants"
 import type { HomepageContinentSummary } from "@/components/home/homepage.types"
-import { cn } from "@/lib/styles"
+import { T } from "@/lib/design-tokens"
 
 export function ContinentTile({
   continent,
@@ -16,9 +14,7 @@ export function ContinentTile({
   const formattedCount = new Intl.NumberFormat(locale).format(
     continent.libraryCount
   )
-  const libraryLabel = `${formattedCount} ${
-    continent.libraryCount === 1 ? "Library" : "Libraries"
-  }`
+
   const continentHref =
     continent.slug ??
     continent.code?.trim().toLowerCase() ??
@@ -31,29 +27,35 @@ export function ContinentTile({
       aria-label={
         continent.name ? `Browse libraries in ${continent.name}` : undefined
       }
-      className={cn(
-        homepagePanelClassName,
-        "group relative block min-h-[18rem] overflow-visible px-6 pt-6 pb-7 transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-cyan-200/16 hover:bg-white/[0.05] hover:shadow-[0_30px_100px_rgba(6,16,40,0.38),inset_0_0_0_1px_rgba(177,233,255,0.06)] focus-visible:border-cyan-200/16 focus-visible:bg-white/[0.05] focus-visible:shadow-[0_30px_100px_rgba(6,16,40,0.38),inset_0_0_0_1px_rgba(177,233,255,0.06)] focus-visible:outline-none"
-      )}
+      className="group relative flex h-[200px] flex-col overflow-hidden rounded-2xl p-5 transition-all duration-500 hover:border-white/[0.14] hover:bg-[#0a1020] focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:outline-none sm:h-[220px] lg:h-[260px]"
+      style={{ background: T.bg.surface, border: `1px solid ${T.border.line}` }}
     >
-      <div className="pointer-events-none absolute inset-[-10%] rounded-[38px] bg-[radial-gradient(circle_at_50%_82%,rgba(84,171,255,0.18),transparent_42%),radial-gradient(circle_at_50%_26%,rgba(104,186,255,0.12),transparent_34%)] opacity-0 blur-3xl transition-opacity duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:opacity-100 group-focus-visible:opacity-100" />
-      <div className="pointer-events-none absolute inset-x-[-8%] bottom-[-8%] h-24 rounded-full bg-[radial-gradient(circle,rgba(84,171,255,0.26),transparent_68%)] opacity-0 blur-[42px] transition-opacity duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:opacity-100 group-focus-visible:opacity-100" />
+      {/* Subtle hover glow */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(84,171,255,0.06),transparent_65%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
-      <div className="absolute inset-0 overflow-hidden rounded-[inherit]">
-        <div className="pointer-events-none absolute inset-x-[14%] bottom-0 h-20 rounded-full bg-[radial-gradient(circle,rgba(84,171,255,0.16),transparent_70%)] opacity-0 blur-3xl transition-opacity duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:opacity-100 group-focus-visible:opacity-100" />
-        <ContinentGlobeBackdrop continent={continent} />
+      {/* Top row: continent code + count */}
+      <div className="relative flex items-start justify-between">
+        <span className="font-mono text-[10px] tracking-[0.22em] text-white/30 uppercase">
+          {continent.code ?? "—"}
+        </span>
+        <span className="font-mono text-[10px] tracking-[0.14em] text-white/22 tabular-nums">
+          {formattedCount}
+        </span>
       </div>
 
-      <div className="relative z-10 flex h-full flex-col justify-end">
-        <div className="space-y-2 text-center transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-1 group-focus-visible:-translate-y-1">
-          <h3 className="text-[clamp(1.85rem,3vw,2.35rem)] leading-none font-semibold tracking-[-0.05em] text-white transition-[text-shadow,color] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:text-cyan-50 group-hover:[text-shadow:0_0_24px_rgba(148,224,255,0.18)] group-focus-visible:text-cyan-50 group-focus-visible:[text-shadow:0_0_24px_rgba(148,224,255,0.18)]">
-            {continent.name}
-          </h3>
+      {/* Spacer */}
+      <div className="flex-1" />
 
-          <p className="text-base text-white/58 tabular-nums transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:text-cyan-100/78 group-focus-visible:text-cyan-100/78">
-            {libraryLabel}
-          </p>
-        </div>
+      {/* Bottom: continent name */}
+      <div className="relative">
+        <div className="mb-3 h-px bg-white/[0.06]" />
+        <h3 className="font-[family-name:var(--font-fraunces)] text-[1.55rem] leading-[1] font-semibold tracking-[-0.02em] text-white transition-colors duration-300 group-hover:text-white/90 sm:text-[1.7rem] lg:text-[1.9rem]">
+          {continent.name}
+        </h3>
+        <p className="mt-2 font-mono text-[10px] tracking-[0.14em] text-white/32 uppercase tabular-nums transition-colors duration-300 group-hover:text-cyan-400/60">
+          {formattedCount}{" "}
+          {continent.libraryCount === 1 ? "library" : "libraries"} →
+        </p>
       </div>
     </GlobalLink>
   )
