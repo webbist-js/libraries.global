@@ -5,6 +5,7 @@ import { useState } from "react"
 import { EmptyState } from "@/components/ds"
 import GlobalLink from "@/components/global/GlobalLink"
 import { formatDate } from "@/lib/article-helpers"
+import { T } from "@/lib/design-tokens"
 import type { BlogArticleSummary } from "@/lib/strapi-api/content/server"
 import { cn } from "@/lib/styles"
 
@@ -122,7 +123,13 @@ export default function BlogArticleList({
           </div>
 
           {/* Subscribe CTA */}
-          <div className="rounded-xl border border-white/[0.07] bg-[#060b19] p-5">
+          <div
+            className="rounded-xl p-5"
+            style={{
+              background: T.bg.surface,
+              border: `1px solid ${T.border.line}`,
+            }}
+          >
             <p className="mb-2 font-[family-name:var(--font-fraunces)] text-[1.1rem] leading-tight font-semibold text-white">
               Join the journal
             </p>

@@ -53,7 +53,8 @@ function FeaturedArticleCard({
   return (
     <GlobalLink
       href={`/blog/${article.slug}`}
-      className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-[#060b19]"
+      className="group relative overflow-hidden rounded-2xl"
+      style={{ background: T.bg.surface, border: `1px solid ${T.border.line}` }}
     >
       <div className="grid grid-cols-1 lg:grid-cols-[55fr_45fr]">
         {/* Left: image */}

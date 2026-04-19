@@ -190,7 +190,13 @@ export function BlogArticlePage({
               <aside className="hidden lg:block">
                 <div className="sticky top-8 space-y-8">
                   {/* Article metadata */}
-                  <div className="space-y-4 rounded-xl border border-white/[0.07] bg-[#060b19] p-5">
+                  <div
+                    className="space-y-4 rounded-xl p-5"
+                    style={{
+                      background: T.bg.surface,
+                      border: `1px solid ${T.border.line}`,
+                    }}
+                  >
                     <div>
                       <p className="mb-1 font-mono text-[9px] tracking-[0.2em] text-white/25 uppercase">
                         Published
@@ -253,7 +259,13 @@ export function BlogArticlePage({
           <section className="border-t border-white/[0.06] py-12">
             <Container>
               <div className="max-w-[700px]">
-                <div className="flex items-start gap-5 rounded-2xl border border-white/[0.07] bg-[#060b19] p-6 sm:p-8">
+                <div
+                  className="flex items-start gap-5 rounded-2xl p-6 sm:p-8"
+                  style={{
+                    background: T.bg.surface,
+                    border: `1px solid ${T.border.line}`,
+                  }}
+                >
                   <Avatar
                     initials={(article.author ?? "?").charAt(0)}
                     size="lg"
