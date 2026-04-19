@@ -3,15 +3,32 @@ import type { Locale } from "next-intl"
 
 import AppLink from "@/components/elementary/AppLink"
 import { Container } from "@/components/elementary/Container"
+import LocaleSwitcher from "@/components/elementary/LocaleSwitcher"
 import GlobalLink from "@/components/global/GlobalLink"
 import { StrapiBasicImage } from "@/components/page-builder/components/utilities/StrapiBasicImage"
 import { getStrapiLinkHref } from "@/components/page-builder/components/utilities/StrapiLink"
-import { cn } from "@/lib/styles"
+import { T } from "@/lib/design-tokens"
 
 type NavbarData = Data.ContentType<"api::navbar.navbar"> | null | undefined
 
-export function GlobalHeader({
-  locale: _locale,
+async function fetchLibraryCount(): Promise<number | null> {
+  try {
+    const res = await fetch(
+      `${process.env.STRAPI_URL ?? "http://127.0.0.1:1337"}/api/libraries?pagination[pageSize]=1&fields[0]=id&status=published`,
+      { next: { revalidate: 300 } }
+    )
+    const data = (await res.json()) as {
+      meta?: { pagination?: { total?: number } }
+    }
+
+    return data?.meta?.pagination?.total ?? null
+  } catch {
+    return null
+  }
+}
+
+export async function GlobalHeader({
+  locale,
   navbar,
 }: {
   readonly locale: Locale
@@ -19,60 +36,88 @@ export function GlobalHeader({
 }) {
   const links = Array.isArray(navbar?.links) ? navbar.links : []
   const logoHref = getStrapiLinkHref(navbar?.logoImage?.link) ?? "/"
+  const libraryCount = await fetchLibraryCount()
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-black/10 backdrop-blur-xl">
-      <Container className="flex h-18 items-center justify-between gap-6 py-3">
-        <div className="flex items-center gap-8">
+    <header
+      className="sticky top-0 z-40 backdrop-blur-xl"
+      style={{
+        borderBottom: `1px solid ${T.border.line}`,
+        background: "rgba(5,8,22,.92)",
+      }}
+    >
+      <Container className="flex h-14 items-center gap-4">
+        {/* Left: logo + live badge */}
+        <div className="flex shrink-0 items-center gap-3">
           <GlobalLink
             href={logoHref}
-            className="flex items-center gap-3 text-white"
+            className="flex items-center text-white"
             fallbackAs="div"
           >
             {navbar?.logoImage?.image ? (
               <StrapiBasicImage
                 component={navbar.logoImage.image}
-                forcedSizes={{ width: 150, height: 40 }}
-                className="h-auto max-h-10 w-auto"
+                forcedSizes={{ width: 150, height: 36 }}
+                className="h-auto max-h-9 w-auto"
                 hideWhenMissing
               />
             ) : (
-              <>
-                <span className="flex size-3 rounded-[4px] bg-cyan-400 shadow-[0_0_22px_rgba(34,211,238,0.8)]" />
-                <span className="text-sm font-semibold tracking-[0.02em] text-white/95 sm:text-base">
-                  Global Library Explorer
-                </span>
-              </>
+              <span
+                className="text-[1rem] leading-none font-semibold text-white"
+                style={{ fontFamily: T.font.serif }}
+              >
+                Libraries{" "}
+                <em className="font-normal text-white/68 italic">of the </em>
+                World
+              </span>
             )}
           </GlobalLink>
 
-          {links.length > 0 ? (
-            <nav className="hidden items-center gap-2 md:flex">
-              {links.map((link, index) => (
-                <GlobalLink
-                  key={link.id ?? link.page?.slug ?? link.href ?? index}
-                  href={getStrapiLinkHref(link)}
-                  className={cn(
-                    "rounded-full px-3 py-2 text-sm text-white/68 transition-colors hover:text-white",
-                    index === 0 &&
-                      "bg-white/6 text-cyan-200 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
-                  )}
-                >
-                  {link.label}
-                </GlobalLink>
-              ))}
-            </nav>
+          {libraryCount != null ? (
+            <div className="hidden items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-[10px] tracking-[0.1em] text-white/38 uppercase sm:flex">
+              <span className="size-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.9)]" />
+              LIVE INDEX · {libraryCount.toLocaleString("en-US")}
+            </div>
           ) : null}
         </div>
 
-        <AppLink
-          href="/auth/signin"
-          variant="outline"
-          size="sm"
-          className="border-white/14 bg-white/95 text-slate-950 shadow-[0_14px_40px_rgba(0,0,0,0.18)] hover:bg-white"
-        >
-          Sign in
-        </AppLink>
+        {/* Center: nav */}
+        {links.length > 0 ? (
+          <nav className="hidden flex-1 items-center justify-center gap-0.5 md:flex">
+            {links.map((link, index) => (
+              <GlobalLink
+                key={link.id ?? link.page?.slug ?? link.href ?? index}
+                href={getStrapiLinkHref(link)}
+                className="rounded-md px-3.5 py-2 text-sm text-white/55 transition-colors hover:text-white/90"
+              >
+                {link.label}
+              </GlobalLink>
+            ))}
+          </nav>
+        ) : (
+          <div className="flex-1" />
+        )}
+
+        {/* Right: locale + sign in + contribute */}
+        <div className="flex shrink-0 items-center gap-1">
+          <LocaleSwitcher
+            locale={locale}
+            triggerClassName="h-8 w-auto gap-1 border-transparent bg-transparent px-2.5 text-xs font-semibold uppercase tracking-wider text-white/45 hover:text-white/75"
+          />
+          <GlobalLink
+            href="/auth/signin"
+            className="px-3 py-2 text-sm text-white/55 transition-colors hover:text-white/85"
+          >
+            Sign in
+          </GlobalLink>
+          <AppLink
+            href="/contribute"
+            size="sm"
+            className="ml-1 rounded-full border-0 bg-white px-4 py-2 text-[13px] font-semibold text-slate-950 shadow-[0_2px_16px_rgba(255,255,255,0.12)] transition-all hover:bg-white/90"
+          >
+            Contribute
+          </AppLink>
+        </div>
       </Container>
     </header>
   )
