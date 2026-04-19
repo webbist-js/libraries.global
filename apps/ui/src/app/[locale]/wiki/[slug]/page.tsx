@@ -8,6 +8,7 @@ import {
   fetchAllWikiArticleSlugs,
   fetchNavbar,
   fetchWikiArticle,
+  fetchWikiNavigation,
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
@@ -67,6 +68,14 @@ export default function WikiArticleRoute(props: {
 
   const article = use(fetchWikiArticle(slug, locale))?.data ?? null
   const navbar = use(fetchNavbar(locale))?.data
+  const navCategories = use(fetchWikiNavigation(locale))?.data ?? []
 
-  return <WikiArticlePage article={article} navbar={navbar} locale={locale} />
+  return (
+    <WikiArticlePage
+      article={article}
+      navCategories={navCategories}
+      navbar={navbar}
+      locale={locale}
+    />
+  )
 }

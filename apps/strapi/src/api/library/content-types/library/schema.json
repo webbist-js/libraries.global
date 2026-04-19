@@ -219,7 +219,7 @@
     },
     "location": {
       "type": "customField",
-      "customField": "plugin::strapi-location-picker.location-picker",
+      "customField": "global::location-picker",
       "pluginOptions": {
         "i18n": {
           "localized": false

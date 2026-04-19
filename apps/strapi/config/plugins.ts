@@ -65,10 +65,6 @@ export default ({ env }) => {
       enabled: true,
     },
 
-    "strapi-location-picker": {
-      enabled: true,
-    },
-
     "users-permissions": {
       config: {
         jwt: {

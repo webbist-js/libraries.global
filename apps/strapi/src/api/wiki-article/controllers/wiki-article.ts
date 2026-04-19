@@ -24,6 +24,18 @@ export default factories.createCoreController(
         .documents("api::wiki-article.wiki-article")
         .findMany({
           filters: { slug: { $eq: slug } } as Record<string, unknown>,
+          fields: [
+            "title",
+            "slug",
+            "summary",
+            "author",
+            "featured",
+            "priority",
+            "publishedAt",
+            "updatedAt",
+            "githubPath",
+            "articleStatus",
+          ],
           locale,
           status,
           populate: {

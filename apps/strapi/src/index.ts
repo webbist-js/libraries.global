@@ -1,5 +1,6 @@
 import type { Core } from "@strapi/strapi"
 
+import { LOCATION_PICKER_FIELD_NAME } from "./customFields/locationPicker/shared"
 import { OPENING_TIMES_FIELD_NAME } from "./customFields/openingTimes/shared"
 import { registerPopulatePageMiddleware } from "./documentMiddlewares/page"
 import { registerAdminUserSubscriber } from "./lifeCycles/adminUser"
@@ -15,6 +16,10 @@ export default {
    * This gives you an opportunity to extend code.
    */
   register({ strapi }: { strapi: Core.Strapi }) {
+    strapi.customFields.register({
+      name: LOCATION_PICKER_FIELD_NAME,
+      type: "json",
+    })
     strapi.customFields.register({
       name: OPENING_TIMES_FIELD_NAME,
       type: "json",

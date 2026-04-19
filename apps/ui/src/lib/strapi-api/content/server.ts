@@ -396,7 +396,6 @@ export type PopulatedContinentData =
     countries?: {
       name: string
       slug: string
-      summary?: string | null
       capitalCity?: string | null
     }[]
     featuredLibraries?: PopulatedFeaturedLibraryData[]
@@ -753,6 +752,9 @@ export type BlogArticleSummary = {
   summary?: string | null
   category?: string | null
   author?: string | null
+  authorBio?: string | null
+  authorAvatar?: MediaItem | null
+  tags?: string[] | null
   featured?: boolean | null
   publishedAt?: string | null
   updatedAt?: string | null
@@ -765,6 +767,7 @@ export type BlogArticleDetail = BlogArticleSummary & {
 }
 
 export type BlogLandingData = {
+  heroEyebrow?: string | null
   heroTitle?: string | null
   heroText?: string | null
   featuredArticle?: BlogArticleSummary | null
@@ -876,6 +879,31 @@ export type WikiCategorySummary = {
   description?: string | null
   icon?: IconHubValue | null
   order?: number | null
+  tagLabel?: string | null
+  subTopics?: unknown | null
+}
+
+export type WikiArticleStatus =
+  | "stable"
+  | "beta"
+  | "experimental"
+  | "draft"
+  | "deprecated"
+
+export type WikiNavArticle = {
+  documentId: string
+  title?: string | null
+  slug?: string | null
+  priority?: number | null
+  articleStatus?: WikiArticleStatus | null
+}
+
+export type WikiNavCategory = {
+  documentId: string
+  name?: string | null
+  slug?: string | null
+  order?: number | null
+  articles?: WikiNavArticle[]
 }
 
 export type WikiArticleSummary = {
@@ -890,21 +918,24 @@ export type WikiArticleSummary = {
   updatedAt?: string | null
   heroImage?: MediaItem | null
   category?: WikiCategorySummary | null
+  articleStatus?: WikiArticleStatus | null
 }
 
 export type WikiArticleDetail = WikiArticleSummary & {
+  githubPath?: string | null
   body?: ArticleBodyBlock[] | null
   relatedArticles?: WikiArticleSummary[] | null
   seo?: LibrarySeoData | null
 }
 
 export type WikiLandingData = {
+  heroEyebrow?: string | null
   heroTitle?: string | null
   heroText?: string | null
+  version?: string | null
+  quickStartCards?: WikiArticleSummary[] | null
   featuredArticle?: WikiArticleSummary | null
   featuredCategories?: WikiCategorySummary[] | null
-  stats?: StatCard[] | null
-  sections?: PageSection[] | null
   seo?: LibrarySeoData | null
 }
 
@@ -1002,6 +1033,25 @@ export async function fetchAllWikiArticleSlugs(locale: Locale) {
   } catch (e: unknown) {
     logNonBlockingError({
       message: `Error fetching all wiki article slugs for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return { data: [] }
+  }
+}
+
+export async function fetchWikiNavigation(locale: Locale) {
+  try {
+    return (await PublicStrapiClient.fetchAPI("/wiki-categories/nav", {
+      locale,
+      status: "published",
+    })) as { data: WikiNavCategory[] }
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching wiki navigation for locale '${locale}'`,
       error: {
         error: e instanceof Error ? e.message : String(e),
         stack: e instanceof Error ? e.stack : undefined,

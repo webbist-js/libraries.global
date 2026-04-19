@@ -15,6 +15,12 @@ export default factories.createCoreController(
           locale,
           status,
           populate: {
+            quickStartCards: {
+              fields: ["title", "slug", "summary"],
+              populate: {
+                category: { fields: ["name", "slug"] },
+              },
+            },
             featuredArticle: {
               populate: {
                 heroImage: true,
@@ -22,14 +28,14 @@ export default factories.createCoreController(
               },
             },
             featuredCategories: {
-              fields: ["name", "slug", "description"],
-            },
-            stats: true,
-            sections: {
-              on: {
-                "sections.editorial-block": { populate: { image: true } },
-                "sections.cta-banner": true,
-              },
+              fields: [
+                "name",
+                "slug",
+                "description",
+                "tagLabel",
+                "subTopics",
+                "order",
+              ],
             },
             seo: {
               populate: {

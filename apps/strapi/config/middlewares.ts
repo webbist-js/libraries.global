@@ -10,9 +10,11 @@ export default [
           "script-src": [
             "'self'",
             "unsafe-inline",
+            "https://unpkg.com",
             "https://maps.googleapis.com",
             "https://*.basemaps.cartocdn.com",
           ],
+          "style-src": ["'self'", "'unsafe-inline'", "https://unpkg.com"],
           "media-src": [
             "'self'",
             "blob:",
@@ -24,6 +26,7 @@ export default [
             "https://*.tile.openstreetmap.org",
             "*.amazonaws.com",
           ],
+          "frame-src": ["'self'", "https://www.openstreetmap.org"],
           "img-src": [
             "'self'",
             "blob:",

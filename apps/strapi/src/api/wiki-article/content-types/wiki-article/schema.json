@@ -75,6 +75,16 @@
       "target": "api::wiki-article.wiki-article",
       "pluginOptions": { "i18n": { "localized": false } }
     },
+    "articleStatus": {
+      "type": "enumeration",
+      "enum": ["stable", "beta", "experimental", "draft", "deprecated"],
+      "default": "stable",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "githubPath": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
     "seo": {
       "type": "component",
       "component": "shared.seo",

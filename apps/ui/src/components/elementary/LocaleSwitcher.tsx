@@ -20,14 +20,29 @@ const localeTranslation = {
   en: "English",
 }
 
-function LocaleSwitcher({ locale }: { locale: Locale }) {
+function LocaleSwitcher({
+  locale,
+  triggerClassName,
+}: {
+  locale: Locale
+  triggerClassName?: string
+}) {
   return (
     <UseSearchParamsWrapper>
-      <SuspensedLocaleSwitcher locale={locale} />
+      <SuspensedLocaleSwitcher
+        locale={locale}
+        triggerClassName={triggerClassName}
+      />
     </UseSearchParamsWrapper>
   )
 }
-function SuspensedLocaleSwitcher({ locale }: { locale: Locale }) {
+function SuspensedLocaleSwitcher({
+  locale,
+  triggerClassName,
+}: {
+  locale: Locale
+  triggerClassName?: string
+}) {
   // prevent the locale switch from blocking the UI thread
   const [, startTransition] = useTransition()
 
@@ -49,17 +64,27 @@ function SuspensedLocaleSwitcher({ locale }: { locale: Locale }) {
 
   return (
     <Select value={locale} onValueChange={handleLocaleChange}>
-      <SelectTrigger className="w-18 font-bold uppercase">
+      <SelectTrigger className={triggerClassName ?? "w-18 font-bold uppercase"}>
         <SelectValue>{locale}</SelectValue>
       </SelectTrigger>
-      <SelectContent position="popper">
+      <SelectContent
+        position="popper"
+        className="border-white/10 bg-[#0c1120] text-white shadow-xl shadow-black/40"
+      >
         {routing.locales.map((locale, index) => (
           <React.Fragment key={locale}>
-            <SelectItem key={locale} value={locale}>
+            <SelectItem
+              key={locale}
+              value={locale}
+              className="text-white/60 focus:bg-white/8 focus:text-white data-[state=checked]:text-white"
+            >
               {localeTranslation[locale]}
             </SelectItem>
             {index < routing.locales.length - 1 && (
-              <SelectSeparator key={`${locale}-separator`} />
+              <SelectSeparator
+                key={`${locale}-separator`}
+                className="bg-white/8"
+              />
             )}
           </React.Fragment>
         ))}

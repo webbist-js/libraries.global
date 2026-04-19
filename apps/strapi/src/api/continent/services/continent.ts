@@ -4,8 +4,13 @@ const HOMEPAGE_CONTINENT_ORDER = [
   "europe",
   "asia",
   "africa",
-  "americas",
+  "north-america",
+  "south-america",
   "oceania",
+  // Legacy / alternate slugs still map correctly via the lookup
+  "americas",
+  "na",
+  "sa",
 ] as const
 const HOMEPAGE_CONTINENT_ORDER_SET = new Set<string>(HOMEPAGE_CONTINENT_ORDER)
 

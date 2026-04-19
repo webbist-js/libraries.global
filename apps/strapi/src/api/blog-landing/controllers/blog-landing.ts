@@ -16,7 +16,9 @@ export default factories.createCoreController(
           locale,
           status,
           populate: {
-            featuredArticle: { populate: { heroImage: true } },
+            featuredArticle: {
+              populate: { heroImage: true, authorAvatar: true },
+            },
             sections: {
               on: {
                 "sections.editorial-block": { populate: { image: true } },

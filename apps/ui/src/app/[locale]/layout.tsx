@@ -10,13 +10,12 @@ import { ErrorBoundary } from "@/components/elementary/ErrorBoundary"
 import StrapiPreviewListener from "@/components/elementary/StrapiPreviewListener"
 import { TailwindIndicator } from "@/components/elementary/TailwindIndicator"
 import GlobalFooter from "@/components/global/GlobalFooter"
-import StrapiNavbar from "@/components/global/StrapiNavbar"
 import { ClientProviders } from "@/components/providers/ClientProviders"
 import { ServerProviders } from "@/components/providers/ServerProviders"
 import TrackingScripts from "@/components/providers/TrackingScripts"
 import { Toaster } from "@/components/ui/sonner"
 import { debugStaticParams } from "@/lib/build"
-import { fontRoboto } from "@/lib/fonts"
+import { fontFraunces, fontJetBrainsMono, fontRoboto } from "@/lib/fonts"
 import { routing } from "@/lib/navigation"
 import { fetchFooter } from "@/lib/strapi-api/content/server"
 import { cn } from "@/lib/styles"
@@ -91,7 +90,9 @@ export default async function RootLayout({
       <body
         className={cn(
           "min-h-screen bg-gray-100 font-sans antialiased",
-          fontRoboto.variable
+          fontRoboto.variable,
+          fontFraunces.variable,
+          fontJetBrainsMono.variable
         )}
       >
         <TrackingScripts />
@@ -99,12 +100,6 @@ export default async function RootLayout({
           <StrapiPreviewListener />
           <ClientProviders>
             <div className="relative flex min-h-screen flex-col">
-              <div className="strapi-layout-header">
-                <ErrorBoundary showErrorMessage>
-                  <StrapiNavbar locale={locale} />
-                </ErrorBoundary>
-              </div>
-
               <div className="strapi-page-slot flex flex-1 flex-col">
                 {children}
               </div>

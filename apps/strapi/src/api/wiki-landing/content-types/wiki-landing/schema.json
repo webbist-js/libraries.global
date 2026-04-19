@@ -16,6 +16,20 @@
     }
   },
   "attributes": {
+    "heroEyebrow": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "version": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "quickStartCards": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::wiki-article.wiki-article",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
     "heroTitle": {
       "type": "string",
       "pluginOptions": { "i18n": { "localized": true } }
@@ -35,17 +49,6 @@
       "relation": "manyToMany",
       "target": "api::wiki-category.wiki-category",
       "pluginOptions": { "i18n": { "localized": false } }
-    },
-    "stats": {
-      "type": "component",
-      "component": "shared.stat-card",
-      "repeatable": true,
-      "pluginOptions": { "i18n": { "localized": true } }
-    },
-    "sections": {
-      "type": "dynamiczone",
-      "components": ["sections.editorial-block", "sections.cta-banner"],
-      "pluginOptions": { "i18n": { "localized": true } }
     },
     "seo": {
       "type": "component",

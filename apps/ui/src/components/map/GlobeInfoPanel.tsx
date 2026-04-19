@@ -413,72 +413,44 @@ export default function GlobeInfoPanel({
             </button>
           </div>
 
-          {/* Stats + View on Map */}
-          <div className="mx-4 mt-3 mb-3 flex items-center gap-4 rounded-lg border border-white/8 bg-white/4 px-4 py-3">
+          {/* Stats row */}
+          <div className="mx-4 mt-3 mb-3 flex items-center gap-5">
             {loading ? (
-              <div className="h-4 w-24 animate-pulse rounded bg-white/10" />
+              <div className="h-4 w-28 animate-pulse rounded bg-white/10" />
             ) : (
               <>
-                <div className="text-center">
-                  <p className="text-xl font-semibold text-white tabular-nums">
+                <div>
+                  <span className="text-lg font-semibold text-white tabular-nums">
                     {panelData?.libraryCount ?? "—"}
-                  </p>
-                  <p className="mt-0.5 text-[10px] tracking-wider text-white/40 uppercase">
-                    Libraries
-                  </p>
+                  </span>
+                  <span className="ml-1.5 text-[11px] text-white/40">
+                    {panelData?.libraryCount === 1 ? "library" : "libraries"}
+                  </span>
                 </div>
-                {panelData?.subItems && (
-                  <div className="text-center">
-                    <p className="text-xl font-semibold text-white tabular-nums">
-                      {panelData.subItems.length}
-                    </p>
-                    <p className="mt-0.5 text-[10px] tracking-wider text-white/40 uppercase">
-                      {panelData.subLabel}
-                    </p>
-                  </div>
+                {panelData?.subItems && panelData.subItems.length > 0 && (
+                  <>
+                    <span className="h-3.5 w-px bg-white/12" />
+                    <div>
+                      <span className="text-lg font-semibold text-white tabular-nums">
+                        {panelData.subItems.length}
+                      </span>
+                      <span className="ml-1.5 text-[11px] text-white/40">
+                        {panelData.subLabel?.toLowerCase()}
+                      </span>
+                    </div>
+                  </>
                 )}
                 {onOpenMap && (
                   <button
                     onClick={onOpenMap}
-                    className="ml-auto flex items-center gap-2 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-[12px] font-medium text-cyan-300 transition-colors hover:border-cyan-400/50 hover:bg-cyan-500/18 hover:text-cyan-200"
+                    className="ml-auto flex items-center gap-1.5 rounded-lg border border-white/12 bg-white/6 px-3 py-1.5 text-[12px] font-medium text-white/70 transition-colors hover:border-white/22 hover:bg-white/10 hover:text-white"
                   >
-                    <svg
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      className="h-3.5 w-3.5"
-                    >
-                      <rect
-                        x="1"
-                        y="1"
-                        width="6"
-                        height="6"
-                        rx="1"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                      />
-                      <rect
-                        x="9"
-                        y="1"
-                        width="6"
-                        height="6"
-                        rx="1"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                      />
-                      <rect
-                        x="1"
-                        y="9"
-                        width="6"
-                        height="6"
-                        rx="1"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                      />
+                    <svg viewBox="0 0 14 14" fill="none" className="h-3 w-3">
                       <path
-                        d="M9 12h6M12 9v6"
+                        d="M1 5l3-4 3 4 3-4 3 4v8l-3-2-3 2-3-2-3 2V5z"
                         stroke="currentColor"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
+                        strokeWidth="1.3"
+                        strokeLinejoin="round"
                       />
                     </svg>
                     View on Map
@@ -492,7 +464,7 @@ export default function GlobeInfoPanel({
           {!loading && panelData?.pageUrl && (
             <a
               href={panelData.pageUrl}
-              className="mx-4 mb-3 flex items-center justify-between rounded-xl border border-cyan-500/20 bg-cyan-500/8 px-4 py-3 transition-colors hover:border-cyan-400/40 hover:bg-cyan-500/14"
+              className="mx-4 mb-4 flex items-center justify-between rounded-xl border border-cyan-500/20 bg-cyan-500/8 px-4 py-3 transition-colors hover:border-cyan-400/40 hover:bg-cyan-500/14"
             >
               <span className="text-sm font-medium text-cyan-300">
                 Explore {entityName}
@@ -511,32 +483,6 @@ export default function GlobeInfoPanel({
                 />
               </svg>
             </a>
-          )}
-
-          {/* Hint text */}
-          {state.level === "continent" &&
-            countryFeaturesAvailable(state.continent?.slug) && (
-              <p className="mx-4 mb-2 text-[11px] text-white/30">
-                Click a country on the globe to explore further.
-              </p>
-            )}
-          {state.level === "continent" &&
-            !countryFeaturesAvailable(state.continent?.slug) && (
-              <p className="mx-4 mb-2 text-[11px] text-white/30">
-                Select a country below or click &ldquo;View on Map&rdquo; to
-                explore.
-              </p>
-            )}
-          {state.level === "country" && (
-            <p className="mx-4 mb-2 text-[11px] text-white/30">
-              Select a region below or click a marker on the globe to drill in
-              further.
-            </p>
-          )}
-          {state.level === "region" && (
-            <p className="mx-4 mb-2 text-[11px] text-white/30">
-              Click &ldquo;View on Map&rdquo; to explore areas and library pins.
-            </p>
           )}
 
           {/* Scrollable body */}
@@ -647,15 +593,11 @@ export default function GlobeInfoPanel({
             ) : (
               !loading &&
               panelData && (
-                <div className="py-8 text-center">
-                  <p className="text-sm text-white/30">
-                    No libraries recorded yet
+                <div className="rounded-xl border border-white/6 bg-white/3 py-8 text-center">
+                  <p className="text-sm text-white/35">No libraries yet</p>
+                  <p className="mt-1 text-[11px] text-white/20">
+                    Check back as we continue to grow the catalogue
                   </p>
-                  {entityName && (
-                    <p className="mt-1 text-[11px] text-white/20">
-                      for {entityName}
-                    </p>
-                  )}
                 </div>
               )
             )}
@@ -667,7 +609,7 @@ export default function GlobeInfoPanel({
 }
 
 // Continents that have a GeoJSON file with country boundaries
-function countryFeaturesAvailable(slug?: string) {
+function _countryFeaturesAvailable(slug?: string) {
   if (!slug) return false
 
   return ["europe"].includes(slug)

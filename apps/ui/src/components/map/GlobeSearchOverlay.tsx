@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 
+import { useRouter } from "@/lib/navigation"
 import { cn } from "@/lib/styles"
 
 import type { GlobeDrillState } from "./MapGlobe"
@@ -16,6 +17,8 @@ interface SearchResult {
   centroid?: { lat: number; lng: number }
   continentSlug?: string
   continentName?: string
+  countrySlug?: string
+  regionSlug?: string
 }
 
 // ── Filter state ───────────────────────────────────────────────────────────────
@@ -78,22 +81,30 @@ function useSearch(query: string) {
 
     setLoading(true)
 
-    // Fetch continents + countries matching query from Strapi
+    const q = encodeURIComponent(query)
+
+    // Fetch continents, countries, and libraries matching query from Strapi
     Promise.all([
       fetch(
-        `/api/public-proxy/api/continents?filters[name][$containsi]=${encodeURIComponent(query)}&fields[0]=name&fields[1]=slug&pagination[pageSize]=3&status=published`,
+        `/api/public-proxy/api/continents?filters[name][$containsi]=${q}&fields[0]=name&fields[1]=slug&pagination[pageSize]=3&status=published`,
         { signal: ctrl.signal }
       )
         .then((r) => r.json())
         .catch(() => ({ data: [] })),
       fetch(
-        `/api/public-proxy/api/countries?filters[name][$containsi]=${encodeURIComponent(query)}&fields[0]=name&fields[1]=slug&pagination[pageSize]=6&status=published&populate[continent][fields][0]=name&populate[continent][fields][1]=slug&populate[mapConfig]=true`,
+        `/api/public-proxy/api/countries?filters[name][$containsi]=${q}&fields[0]=name&fields[1]=slug&pagination[pageSize]=5&status=published&populate[continent][fields][0]=name&populate[continent][fields][1]=slug&populate[mapConfig]=true`,
+        { signal: ctrl.signal }
+      )
+        .then((r) => r.json())
+        .catch(() => ({ data: [] })),
+      fetch(
+        `/api/public-proxy/api/libraries?filters[name][$containsi]=${q}&fields[0]=name&fields[1]=slug&fields[2]=city&pagination[pageSize]=4&status=published&populate[continent][fields][0]=slug&populate[country][fields][0]=slug&populate[country][fields][1]=name&populate[region][fields][0]=slug`,
         { signal: ctrl.signal }
       )
         .then((r) => r.json())
         .catch(() => ({ data: [] })),
     ])
-      .then(([conts, countries]) => {
+      .then(([conts, countries, libraries]) => {
         const out: SearchResult[] = []
 
         for (const c of conts.data ?? []) {
@@ -121,6 +132,24 @@ function useSearch(query: string) {
               mc?.centerLat != null && mc?.centerLng != null
                 ? { lat: mc.centerLat, lng: mc.centerLng }
                 : undefined,
+          })
+        }
+
+        for (const lib of libraries.data ?? []) {
+          const slug = lib.slug ?? lib.attributes?.slug
+          const name = lib.name ?? lib.attributes?.name
+          const city = lib.city ?? lib.attributes?.city
+          const cont = lib.continent ?? lib.attributes?.continent
+          const country = lib.country ?? lib.attributes?.country
+          const region = lib.region ?? lib.attributes?.region
+          out.push({
+            type: "library",
+            slug,
+            name,
+            subtitle: [city, country?.name].filter(Boolean).join(", "),
+            continentSlug: cont?.slug,
+            countrySlug: country?.slug,
+            regionSlug: region?.slug,
           })
         }
 
@@ -177,12 +206,12 @@ function ResultRow({ r, onClick }: { r: SearchResult; onClick: () => void }) {
           "flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-[9px] font-bold uppercase",
           r.type === "continent"
             ? "bg-cyan-500/20 text-cyan-300"
-            : "bg-white/10 text-white/50"
+            : r.type === "library"
+              ? "bg-indigo-500/20 text-indigo-300"
+              : "bg-white/10 text-white/50"
         )}
       >
-        {r.type === "continent" ? "C" : ""}
-        {r.type === "country" ? "🌍" : ""}
-        {r.type === "library" ? "📚" : ""}
+        {r.type === "continent" ? "C" : r.type === "country" ? "Co" : "L"}
       </span>
       <span className="min-w-0">
         <span className="block text-sm leading-snug text-white/90">
@@ -222,6 +251,7 @@ export default function GlobeSearchOverlay({
   drillState: _drillState,
   onDrillChange,
 }: GlobeSearchOverlayProps) {
+  const router = useRouter()
   const [query, setQuery] = useState("")
   const [focused, setFocused] = useState(false)
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
@@ -268,6 +298,15 @@ export default function GlobeSearchOverlay({
           centroid: r.centroid ?? { lat: 0, lng: 0 },
         },
       })
+    } else if (
+      r.type === "library" &&
+      r.continentSlug &&
+      r.countrySlug &&
+      r.regionSlug
+    ) {
+      router.push(
+        `/${r.continentSlug}/${r.countrySlug}/${r.regionSlug}/${r.slug}`
+      )
     }
   }
 

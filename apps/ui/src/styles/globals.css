@@ -67,6 +67,18 @@
   }
 }
 
+/* Article drop cap — first letter of first paragraph in article prose */
+.article-drop-cap p:first-of-type::first-letter {
+  font-family: var(--font-fraunces);
+  font-size: 4.4rem;
+  font-weight: 600;
+  float: left;
+  line-height: 0.82;
+  margin-right: 0.08em;
+  margin-top: 0.07em;
+  color: white;
+}
+
 @keyframes scrollHorizontal {
   to {
     transform: translate(calc(-50% - 1.75rem));

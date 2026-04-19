@@ -53,6 +53,15 @@ function ResultItem({
   )
 }
 
+// ── Suggestion pills ──────────────────────────────────────────────────────────
+
+const SUGGESTIONS = [
+  "Alexandria's Musaeum",
+  "Sanskrit manuscripts",
+  "open after 22:00",
+  "rare maps · Europe",
+]
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function HeroSearchBox() {
@@ -121,79 +130,92 @@ export default function HeroSearchBox() {
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="relative mt-10 max-w-[560px]"
-      id="search"
-    >
-      <label className="sr-only" htmlFor="library-search">
-        Search libraries
-      </label>
+    <div className="mt-10 max-w-[560px]">
+      <div ref={containerRef} className="relative" id="search">
+        <label className="sr-only" htmlFor="library-search">
+          Search libraries
+        </label>
 
-      {/* Input row */}
-      <div
-        className={cn(
-          "flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-2.5 backdrop-blur-2xl transition-colors duration-300 focus-within:border-white/18",
-          open && "rounded-b-none border-b-white/5"
-        )}
-      >
-        <Search
+        {/* Input row */}
+        <div
           className={cn(
-            "size-4 shrink-0 transition-colors",
-            loading ? "text-indigo-400" : "text-white/36"
+            "flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-2.5 backdrop-blur-2xl transition-colors duration-300 focus-within:border-white/18",
+            open && "rounded-b-none border-b-white/5"
           )}
-          strokeWidth={1.8}
-        />
-        <input
-          autoComplete="off"
-          className="min-w-0 flex-1 bg-transparent py-1 text-[15px] text-white/90 outline-none placeholder:text-white/36"
-          id="library-search"
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => hits.length > 0 && setOpen(true)}
-          onKeyDown={handleKeyDown}
-          placeholder="Search for a library, city, or country..."
-          type="text"
-          value={query}
-        />
-        <button
-          className="shrink-0 rounded-xl bg-indigo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-400 focus-visible:ring-2 focus-visible:ring-indigo-400/50 focus-visible:outline-none"
-          onClick={() => {
-            setOpen(false)
-            navigateToMap()
-          }}
-          type="button"
         >
-          Search
-        </button>
-      </div>
-
-      {/* Dropdown */}
-      {open && (
-        <div className="absolute right-0 left-0 z-50 overflow-hidden rounded-b-2xl border border-t-0 border-white/10 bg-[#0a0f2a]/95 shadow-2xl backdrop-blur-2xl">
-          <div className="divide-y divide-white/[0.04]">
-            {hits.map((hit) => (
-              <ResultItem
-                key={hit.documentId}
-                hit={hit}
-                onSelect={() => {
-                  setOpen(false)
-                  setQuery("")
-                }}
-              />
-            ))}
-          </div>
+          <Search
+            className={cn(
+              "size-4 shrink-0 transition-colors",
+              loading ? "text-indigo-400" : "text-white/36"
+            )}
+            strokeWidth={1.8}
+          />
+          <input
+            autoComplete="off"
+            className="min-w-0 flex-1 bg-transparent py-1 text-[15px] text-white/90 outline-none placeholder:text-white/36"
+            id="library-search"
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => hits.length > 0 && setOpen(true)}
+            onKeyDown={handleKeyDown}
+            placeholder="Search for a library, city, or country..."
+            type="text"
+            value={query}
+          />
           <button
+            className="shrink-0 rounded-xl bg-indigo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-400 focus-visible:ring-2 focus-visible:ring-indigo-400/50 focus-visible:outline-none"
             onClick={() => {
               setOpen(false)
               navigateToMap()
             }}
-            className="flex w-full items-center gap-2 border-t border-white/[0.06] px-4 py-3 text-sm text-white/45 transition-colors hover:bg-white/[0.04] hover:text-white/70"
+            type="button"
           >
-            <Search className="size-3.5" strokeWidth={1.8} />
-            See all results for &ldquo;{query}&rdquo;
+            Search
           </button>
         </div>
-      )}
+
+        {/* Dropdown */}
+        {open && (
+          <div className="absolute right-0 left-0 z-50 overflow-hidden rounded-b-2xl border border-t-0 border-white/10 bg-[#0a0f2a]/95 shadow-2xl backdrop-blur-2xl">
+            <div className="divide-y divide-white/[0.04]">
+              {hits.map((hit) => (
+                <ResultItem
+                  key={hit.documentId}
+                  hit={hit}
+                  onSelect={() => {
+                    setOpen(false)
+                    setQuery("")
+                  }}
+                />
+              ))}
+            </div>
+            <button
+              onClick={() => {
+                setOpen(false)
+                navigateToMap()
+              }}
+              className="flex w-full items-center gap-2 border-t border-white/[0.06] px-4 py-3 text-sm text-white/45 transition-colors hover:bg-white/[0.04] hover:text-white/70"
+            >
+              <Search className="size-3.5" strokeWidth={1.8} />
+              See all results for &ldquo;{query}&rdquo;
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Suggestion pills */}
+      <div className="mt-3 flex flex-wrap gap-2">
+        {SUGGESTIONS.map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => setQuery(s)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/45 transition-colors hover:border-white/18 hover:bg-white/[0.07] hover:text-white/70"
+          >
+            <span className="font-mono text-[10px] text-white/25">try</span>
+            {s}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

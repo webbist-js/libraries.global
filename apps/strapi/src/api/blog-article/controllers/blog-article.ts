@@ -28,6 +28,7 @@ export default factories.createCoreController(
           status,
           populate: {
             heroImage: true,
+            authorAvatar: true,
             body: BODY_POPULATE,
             seo: {
               populate: {

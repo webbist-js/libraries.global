@@ -38,6 +38,14 @@
         "storeIconData": true
       }
     },
+    "tagLabel": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "subTopics": {
+      "type": "json",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
     "order": {
       "type": "integer",
       "pluginOptions": { "i18n": { "localized": false } }

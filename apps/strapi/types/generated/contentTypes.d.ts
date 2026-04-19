@@ -744,6 +744,18 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
+    authorAvatar: Schema.Attribute.Media<"images"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    authorBio: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     body: Schema.Attribute.DynamicZone<
       [
         "content.rich-text",
@@ -807,6 +819,12 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
+    tags: Schema.Attribute.JSON &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     title: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
@@ -847,6 +865,12 @@ export interface ApiBlogLandingBlogLanding extends Struct.SingleTypeSchema {
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
+        }
+      }>
+    heroEyebrow: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
         }
       }>
     heroText: Schema.Attribute.Text &
@@ -1269,6 +1293,36 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
     }
   }
   attributes: {
+    contentCtaHref: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    contentCtaLabel: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    contentEyebrow: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    contentText: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    contentTitle: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -1526,7 +1580,7 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
       "api::library.library"
     >
     location: Schema.Attribute.JSON &
-      Schema.Attribute.CustomField<"plugin::strapi-location-picker.location-picker"> &
+      Schema.Attribute.CustomField<"global::location-picker"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
@@ -2135,6 +2189,15 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
     }
   }
   attributes: {
+    articleStatus: Schema.Attribute.Enumeration<
+      ["stable", "beta", "experimental", "draft", "deprecated"]
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.DefaultTo<"stable">
     author: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -2174,6 +2237,12 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
         }
       }> &
       Schema.Attribute.DefaultTo<false>
+    githubPath: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     heroImage: Schema.Attribute.Media<"images"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -2302,6 +2371,18 @@ export interface ApiWikiCategoryWikiCategory
           localized: false
         }
       }>
+    subTopics: Schema.Attribute.JSON &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    tagLabel: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -2346,6 +2427,12 @@ export interface ApiWikiLandingWikiLanding extends Struct.SingleTypeSchema {
           localized: false
         }
       }>
+    heroEyebrow: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     heroText: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -2364,12 +2451,13 @@ export interface ApiWikiLandingWikiLanding extends Struct.SingleTypeSchema {
       "api::wiki-landing.wiki-landing"
     >
     publishedAt: Schema.Attribute.DateTime
-    sections: Schema.Attribute.DynamicZone<
-      ["sections.editorial-block", "sections.cta-banner"]
+    quickStartCards: Schema.Attribute.Relation<
+      "manyToMany",
+      "api::wiki-article.wiki-article"
     > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
-          localized: true
+          localized: false
         }
       }>
     seo: Schema.Attribute.Component<"shared.seo", false> &
@@ -2378,15 +2466,15 @@ export interface ApiWikiLandingWikiLanding extends Struct.SingleTypeSchema {
           localized: true
         }
       }>
-    stats: Schema.Attribute.Component<"shared.stat-card", true> &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true
-        }
-      }>
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+    version: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
   }
 }
 

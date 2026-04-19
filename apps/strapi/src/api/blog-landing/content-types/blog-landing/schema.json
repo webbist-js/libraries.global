@@ -16,6 +16,10 @@
     }
   },
   "attributes": {
+    "heroEyebrow": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
     "heroTitle": {
       "type": "string",
       "pluginOptions": { "i18n": { "localized": true } }

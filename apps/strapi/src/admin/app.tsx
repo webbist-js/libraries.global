@@ -8,6 +8,7 @@ import "@repo/design-system/styles.css"
 
 // eslint-disable-next-line import-x/order
 import { defaultCkEditorConfig, simpleCkEditorConfig } from "./ckeditor/configs"
+import { LOCATION_PICKER_FIELD_NAME } from "../customFields/locationPicker/shared"
 import { OPENING_TIMES_FIELD_NAME } from "../customFields/openingTimes/shared"
 
 export default {
@@ -63,6 +64,31 @@ export default {
   },
   register(app: StrapiApp) {
     setPluginConfig({ presets: [defaultCkEditorConfig, simpleCkEditorConfig] })
+
+    // ── Location Picker ────────────────────────────────────────────────────
+    app.customFields.register({
+      name: LOCATION_PICKER_FIELD_NAME,
+      type: "json",
+      intlLabel: {
+        id: `${LOCATION_PICKER_FIELD_NAME}.label`,
+        defaultMessage: "Location",
+      },
+      intlDescription: {
+        id: `${LOCATION_PICKER_FIELD_NAME}.description`,
+        defaultMessage:
+          "Search for an address or enter coordinates to pin a location on the map.",
+      },
+      components: {
+        Input: async () => {
+          const component =
+            await import("./custom-fields/location-picker/Input")
+
+          return {
+            default: component.default as unknown as ComponentType,
+          }
+        },
+      },
+    })
 
     const getTranslation = (id: string) => `${OPENING_TIMES_FIELD_NAME}.${id}`
 

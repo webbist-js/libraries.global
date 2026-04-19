@@ -36,7 +36,7 @@ export default factories.createCoreController(
 
       // Base populate — always safe (fields exist in original schema)
       const basePopulate: Record<string, unknown> = {
-        countries: { fields: ["name", "slug", "summary", "capitalCity"] },
+        countries: { fields: ["name", "slug", "capitalCity"] },
       }
 
       const extendedPopulate: Record<string, unknown> = {
