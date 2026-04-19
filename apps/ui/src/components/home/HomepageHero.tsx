@@ -1,45 +1,114 @@
 import { ArrowDown } from "lucide-react"
 
+import { Eyebrow, SectionHeader, StatBlock } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
+import GlobeParallaxWrapper from "@/components/home/GlobeParallaxWrapper"
 import HeroSearchBox from "@/components/home/HeroSearchBox"
 import KnowledgeGlobeCanvas from "@/components/home/KnowledgeGlobeCanvas"
+import { T } from "@/lib/design-tokens"
+
+// Render title with optional *italic* word syntax from CMS
+function RichTitle({ text }: { text: string }) {
+  // Split on *...* patterns and render italics
+  const parts = text.split(/(\*[^*]+\*)/g)
+
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith("*") && part.endsWith("*")) {
+          return (
+            <em key={i} style={{ fontStyle: "italic", color: T.ink.dim }}>
+              {part.slice(1, -1)}
+            </em>
+          )
+        }
+
+        return <span key={i}>{part}</span>
+      })}
+    </>
+  )
+}
+
+const STATS = [
+  {
+    label: "LIBRARIES INDEXED",
+    sub: "Across countries & territories",
+  },
+  {
+    label: "COLLECTIONS",
+    value: null, // TODO: add when collections feature ships
+    sub: "Items catalogued",
+  },
+  {
+    label: "LANGUAGES",
+    value: null, // TODO: fetch distinct language count from Strapi
+    sub: "Living, liturgical, extinct",
+  },
+  {
+    label: "CONTRIBUTORS",
+    value: null, // TODO: add when auth and user contributions ship
+    sub: "Librarians, scholars, researchers",
+  },
+] as const
+
+function formatCount(n: number | null | undefined): string {
+  if (n == null) return "—"
+
+  return n.toLocaleString("en-US")
+}
 
 export function HomepageHero({
   heroEyebrow,
   heroTitle,
   heroText,
+  libraryCount,
 }: {
   readonly heroEyebrow?: string | null
   readonly heroTitle?: string | null
   readonly heroText?: string | null
+  readonly libraryCount?: number | null
 }) {
+  const statValues = [
+    formatCount(libraryCount),
+    "—", // Collections TODO
+    "—", // Languages TODO
+    "—", // Contributors TODO
+  ]
+
   return (
     <section
-      className="relative h-[calc(100svh-4.5rem)] overflow-hidden"
+      className="relative flex h-[calc(100svh-4.5rem)] flex-col overflow-hidden"
       id="explore"
     >
+      {/* Outer div handles X-centering; inner GlobeParallaxWrapper handles Y on scroll */}
       <div className="absolute inset-y-0 left-1/2 z-0 h-full w-screen -translate-x-1/2">
-        <KnowledgeGlobeCanvas />
+        <GlobeParallaxWrapper>
+          <KnowledgeGlobeCanvas />
+        </GlobeParallaxWrapper>
       </div>
 
-      <Container className="relative z-20 box-border grid h-full grid-rows-[1fr_auto] pt-6 pb-6 sm:pt-8 sm:pb-8">
-        <div className="flex min-h-0 items-center">
-          <div className="max-w-[760px] pb-4 sm:pb-8">
-            {heroEyebrow ? (
-              <div className="mb-6 inline-flex items-center rounded-full border border-white/12 bg-white/5 px-4 py-2 text-xs tracking-[0.24em] text-white/60 uppercase backdrop-blur-sm">
-                {heroEyebrow}
-              </div>
-            ) : null}
+      <Container className="relative z-20 box-border grid flex-1 grid-rows-[1fr_auto] pt-6 pb-0 sm:pt-8">
+        <div className="flex min-h-0 items-start pt-[7vh] sm:pt-[5vh]">
+          <div className="max-w-[800px] pb-4 sm:pb-8">
+            {/* Coordinate / project eyebrow */}
+            <div className="mb-5 space-y-2">
+              <p className="font-mono text-[11px] tracking-[0.22em] text-white/35 uppercase">
+                PROJECT · 001&nbsp;&nbsp;51.5308° N&nbsp;&nbsp;0.1238° W
+              </p>
+              <Eyebrow>
+                {heroEyebrow ?? "THE WORLD'S LIBRARY INDEX · V.2026"}
+              </Eyebrow>
+            </div>
 
             {heroTitle ? (
-              <h1 className="max-w-[10ch] text-[clamp(3.6rem,9vw,7.8rem)] leading-[0.92] font-semibold tracking-[-0.06em] text-white [text-shadow:0_0_28px_rgba(174,226,255,0.22)]">
-                {heroTitle}
-              </h1>
+              <SectionHeader as="h1">
+                <RichTitle text={heroTitle} />
+              </SectionHeader>
             ) : null}
 
             {heroText ? (
-              <p className="mt-6 max-w-[48ch] text-base leading-7 text-white/68 sm:text-lg md:text-xl">
+              <p className="mt-6 max-w-[48ch] text-base leading-7 text-white/60 sm:text-lg">
                 {heroText}
               </p>
             ) : null}
@@ -58,6 +127,27 @@ export function HomepageHero({
           </GlobalLink>
         </div>
       </Container>
+
+      {/* Stats bar — pinned to hero bottom */}
+      <div className="relative z-20 border-t border-white/8 bg-[#050816]/60 backdrop-blur-md">
+        <Container>
+          <div className="grid grid-cols-2 divide-x divide-white/8 lg:grid-cols-4">
+            {STATS.map((stat, i) => (
+              <div
+                key={stat.label}
+                className="flex flex-col gap-1 px-5 py-5 sm:px-6 sm:py-6"
+              >
+                <StatBlock
+                  value={statValues[i] ?? "—"}
+                  label={stat.label}
+                  size="lg"
+                />
+                <p className="text-[11px] text-white/35">{stat.sub}</p>
+              </div>
+            ))}
+          </div>
+        </Container>
+      </div>
     </section>
   )
 }
