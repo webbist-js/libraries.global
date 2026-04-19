@@ -1,206 +1,120 @@
 import Image from "next/image"
 import type { Locale } from "next-intl"
 
-import {
-  BlogArticleCard,
-  BlogArticleCardWide,
-} from "@/components/blog/BlogArticleCard"
+import { PageShell } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
+import { T } from "@/lib/design-tokens"
 import type {
   BlogArticleSummary,
   BlogLandingData,
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
-import { cn } from "@/lib/styles"
+
+import BlogArticleList from "./BlogArticleList"
 
 type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
 
-const CATEGORIES = [
-  "All",
-  "Research",
-  "Tech",
-  "Culture",
-  "Editorial",
-  "Preservation",
-  "Ethics",
-] as const
+// Parse *italic* word syntax from CMS title strings
+function RichTitle({ text }: { readonly text: string }) {
+  const parts = text.split(/(\*[^*]+\*)/g)
 
-// ── Featured hero article ──────────────────────────────────────────────────────
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith("*") && part.endsWith("*")) {
+          return (
+            <em key={i} style={{ fontStyle: "italic", color: T.ink.dim }}>
+              {part.slice(1, -1)}
+            </em>
+          )
+        }
 
-function FeaturedHero({
+        return <span key={i}>{part}</span>
+      })}
+    </>
+  )
+}
+
+// ── Featured article — horizontal editorial card ──────────────────────────────
+
+function FeaturedArticleCard({
   article,
-  landing,
 }: {
-  article: BlogArticleSummary
-  landing: BlogLandingData
+  readonly article: BlogArticleSummary
 }) {
+  if (!article.slug) return null
   const imgUrl = article.heroImage?.url
     ? formatStrapiMediaUrl(article.heroImage.url)
     : null
+  const initial = (article.author ?? "?").charAt(0).toUpperCase()
 
   return (
-    <section className="relative isolate flex min-h-[72vh] flex-col justify-end overflow-hidden">
-      {/* Background image */}
-      {imgUrl ? (
-        <div className="absolute inset-0">
-          <Image
-            src={imgUrl}
-            alt={article.heroImage?.alternativeText ?? article.title ?? ""}
-            fill
-            priority
-            className="object-cover"
-          />
+    <GlobalLink
+      href={`/blog/${article.slug}`}
+      className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-[#060b19]"
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-[55fr_45fr]">
+        {/* Left: image */}
+        <div className="relative aspect-[4/3] overflow-hidden lg:aspect-auto lg:min-h-[440px]">
+          {imgUrl ? (
+            <Image
+              src={imgUrl}
+              alt={article.heroImage?.alternativeText ?? article.title ?? ""}
+              fill
+              priority
+              className="object-cover opacity-70 transition-transform duration-700 group-hover:scale-[1.03]"
+            />
+          ) : (
+            <div className="h-full w-full bg-[radial-gradient(circle_at_30%_50%,rgba(40,80,180,0.3),transparent_60%),linear-gradient(145deg,#0d1830,#060b19)]" />
+          )}
+          {/* Gradient bleed into text panel on large screens */}
+          <div className="absolute inset-0 hidden lg:block lg:bg-[linear-gradient(90deg,transparent_55%,rgba(6,11,25,0.85)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_40%,rgba(6,11,25,0.9)_100%)] lg:hidden" />
         </div>
-      ) : (
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(79,70,229,0.22),transparent_70%)]" />
-      )}
 
-      {/* Gradient overlays */}
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,8,22,0.4)_0%,rgba(5,8,22,0.0)_30%,rgba(5,8,22,0.0)_40%,rgba(5,8,22,0.85)_80%,rgba(5,8,22,1)_100%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,8,22,0.6)_0%,transparent_60%)]" />
+        {/* Right: text */}
+        <div className="flex flex-col justify-end p-8 lg:p-12">
+          {article.category ? (
+            <p className="mb-5 font-mono text-[10px] tracking-[0.22em] text-white/30 uppercase">
+              — {article.category}
+            </p>
+          ) : null}
 
-      <Container className="relative pt-32 pb-14 sm:pb-20">
-        <div className="max-w-2xl space-y-5">
-          {/* Eyebrow */}
-          <div className="flex items-center gap-3">
-            {article.category ? (
-              <span className="inline-flex items-center rounded-full border border-indigo-400/30 bg-indigo-500/12 px-3 py-1 text-[10px] font-semibold tracking-[0.12em] text-indigo-300 uppercase">
-                {article.category}
-              </span>
-            ) : null}
-            <span className="text-[10px] font-medium tracking-[0.12em] text-white/36 uppercase">
-              Featured
-            </span>
-          </div>
-
-          {/* Title */}
-          <h1 className="text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] font-bold tracking-tight text-white">
+          <h2 className="mb-5 font-[family-name:var(--font-fraunces)] text-[2.1rem] leading-[1.06] font-semibold tracking-[-0.02em] text-white italic sm:text-[2.6rem]">
             {article.title}
-          </h1>
+          </h2>
 
-          {/* Summary */}
           {article.summary ? (
-            <p className="max-w-xl text-base leading-7 text-white/60">
+            <p className="mb-7 line-clamp-3 text-[13px] leading-7 text-white/42">
               {article.summary}
             </p>
           ) : null}
 
-          {/* CTA */}
-          {article.slug ? (
-            <div className="flex items-center gap-4 pt-1">
-              <GlobalLink
-                href={`/blog/${article.slug}`}
-                className="inline-flex items-center gap-2 rounded-2xl bg-indigo-500 px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_24px_rgba(99,102,241,0.35)] transition-colors hover:bg-indigo-400"
-              >
-                Read article
-              </GlobalLink>
+          <div className="mb-6 flex items-center gap-3">
+            <div className="flex size-7 flex-none items-center justify-center rounded-full bg-white/10">
+              <span className="font-mono text-[11px] text-white/50">
+                {initial}
+              </span>
             </div>
-          ) : null}
+            {article.author ? (
+              <span className="text-[12px] text-white/40">
+                {article.author}
+              </span>
+            ) : null}
+          </div>
+
+          <span className="text-sm font-medium text-cyan-400/75 transition-colors group-hover:text-cyan-300">
+            Read article →
+          </span>
         </div>
-      </Container>
-    </section>
-  )
-}
-
-// ── Category filter ────────────────────────────────────────────────────────────
-
-function CategoryFilters({
-  active,
-  counts,
-}: {
-  active: string
-  counts?: Record<string, number>
-}) {
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      {CATEGORIES.map((cat) => (
-        <button
-          key={cat}
-          className={cn(
-            "rounded-full border px-4 py-1.5 text-xs font-medium transition-all duration-200",
-            active === cat
-              ? "border-indigo-400/40 bg-indigo-500/16 text-indigo-200"
-              : "border-white/10 bg-white/4 text-white/50 hover:border-white/20 hover:bg-white/8 hover:text-white/75"
-          )}
-        >
-          {cat}
-        </button>
-      ))}
-    </div>
-  )
-}
-
-// ── Article list section ───────────────────────────────────────────────────────
-
-function ArticleGrid({
-  articles,
-  locale,
-  featuredSlug,
-}: {
-  articles: BlogArticleSummary[]
-  locale: Locale
-  featuredSlug?: string | null
-}) {
-  // Exclude the featured hero article from the main grid
-  const rest = articles.filter((a) => a.slug !== featuredSlug)
-
-  if (rest.length === 0) return null
-
-  const [primary, ...secondary] = rest
-
-  return (
-    <div className="space-y-4">
-      {/* Large first article */}
-      {primary ? <BlogArticleCard article={primary} locale={locale} /> : null}
-
-      {/* Secondary grid */}
-      {secondary.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {secondary.map((article) => (
-            <BlogArticleCard
-              key={article.documentId}
-              article={article}
-              locale={locale}
-            />
-          ))}
-        </div>
-      ) : null}
-    </div>
-  )
-}
-
-// ── Sidebar recent ─────────────────────────────────────────────────────────────
-
-function SidebarRecent({
-  articles,
-  locale,
-}: {
-  articles: BlogArticleSummary[]
-  locale: Locale
-}) {
-  if (articles.length === 0) return null
-
-  return (
-    <div className="space-y-3">
-      <p className="text-[10px] font-semibold tracking-[0.14em] text-white/36 uppercase">
-        Latest
-      </p>
-      <div className="space-y-3">
-        {articles.slice(0, 5).map((article) => (
-          <BlogArticleCardWide
-            key={article.documentId}
-            article={article}
-            locale={locale}
-          />
-        ))}
       </div>
-    </div>
+    </GlobalLink>
   )
 }
 
-// ── Main page ──────────────────────────────────────────────────────────────────
+// ── Main page ─────────────────────────────────────────────────────────────────
 
 export function BlogLandingPage({
   landing,
@@ -214,75 +128,117 @@ export function BlogLandingPage({
   readonly locale: Locale
 }) {
   const featuredArticle = landing?.featuredArticle ?? articles[0] ?? null
-  const featuredSlug = featuredArticle?.slug
+
+  // Derive stats from articles
+  const totalCount = articles.length
+  const authorCount = new Set(
+    articles.filter((a) => a.author).map((a) => a.author)
+  ).size
+  const categoryCount = new Set(
+    articles.filter((a) => a.category).map((a) => a.category)
+  ).size
+
+  const heroTitle = landing?.heroTitle ?? "Field *notes* from the stacks."
 
   return (
-    <div className="relative isolate flex min-h-screen w-full flex-col overflow-x-hidden bg-[#050816] text-white">
-      {/* Ambient background */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_85%,rgba(92,149,255,0.07),transparent_40%),radial-gradient(circle_at_85%_15%,rgba(103,221,255,0.05),transparent_35%)]" />
-
+    <PageShell className="flex flex-col">
       <GlobalHeader locale={locale} navbar={navbar} />
 
       <main className="relative z-10 flex-1">
-        {/* Hero */}
-        {featuredArticle ? (
-          <FeaturedHero article={featuredArticle} landing={landing ?? {}} />
-        ) : (
-          <section className="relative isolate flex min-h-[40vh] flex-col justify-end overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(79,70,229,0.18),transparent_70%)]" />
-            <Container className="relative pt-32 pb-14 sm:pb-20">
-              <p className="mb-2 text-[11px] font-semibold tracking-[0.16em] text-indigo-400/70 uppercase">
-                The Library Blog
-              </p>
-              <h1 className="text-[clamp(2.5rem,6vw,5rem)] leading-[1.0] font-bold tracking-tight text-white">
-                {landing?.heroTitle ?? "Editorial"}
-              </h1>
-              {landing?.heroText ? (
-                <p className="mt-4 max-w-xl text-base text-white/55">
-                  {landing.heroText}
-                </p>
-              ) : null}
-            </Container>
-          </section>
-        )}
-
-        {/* Articles section */}
-        <section className="border-t border-white/6 py-14 sm:py-18">
+        {/* ── Hero ──────────────────────────────────────────────────────── */}
+        <section className="border-b border-white/6 py-20 sm:py-28">
           <Container>
-            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="grid grid-cols-1 gap-14 lg:grid-cols-[1fr_280px] lg:items-end lg:gap-20">
+              {/* Left: big title */}
               <div>
-                <p className="mb-1 text-[11px] font-semibold tracking-[0.16em] text-white/36 uppercase">
-                  All Articles
+                <p className="mb-6 font-mono text-[11px] tracking-[0.22em] text-white/30 uppercase">
+                  {landing?.heroEyebrow ?? "THE LIBRARY JOURNAL"}
                 </p>
-                <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                  Latest Stories
-                </h2>
-              </div>
-            </div>
-
-            <div className="mb-8">
-              <CategoryFilters active="All" />
-            </div>
-
-            <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
-              {/* Main grid */}
-              <div className="lg:col-span-2">
-                <ArticleGrid
-                  articles={articles}
-                  locale={locale}
-                  featuredSlug={featuredSlug}
-                />
+                <h1 className="font-[family-name:var(--font-fraunces)] text-[clamp(4rem,10vw,8rem)] leading-[0.9] font-semibold tracking-[-0.025em] text-white">
+                  <RichTitle text={heroTitle} />
+                </h1>
               </div>
 
-              {/* Sidebar */}
-              <div className="lg:col-span-1">
-                <SidebarRecent articles={articles} locale={locale} />
+              {/* Right: description + stats */}
+              <div className="lg:pb-4">
+                {landing?.heroText ? (
+                  <p className="mb-8 text-[13px] leading-7 text-white/45">
+                    {landing.heroText}
+                  </p>
+                ) : null}
+
+                {totalCount > 0 ? (
+                  <div className="flex items-baseline gap-4">
+                    <div>
+                      <p className="font-[family-name:var(--font-fraunces)] text-[2.6rem] leading-none font-light text-white tabular-nums">
+                        {totalCount}
+                      </p>
+                      <p className="mt-1.5 font-mono text-[9px] tracking-[0.2em] text-white/28 uppercase">
+                        Articles
+                      </p>
+                    </div>
+
+                    {authorCount > 1 ? (
+                      <>
+                        <span className="pb-2 text-white/18">·</span>
+                        <div>
+                          <p className="font-[family-name:var(--font-fraunces)] text-[2.6rem] leading-none font-light text-white tabular-nums">
+                            {authorCount}
+                          </p>
+                          <p className="mt-1.5 font-mono text-[9px] tracking-[0.2em] text-white/28 uppercase">
+                            Writers
+                          </p>
+                        </div>
+                      </>
+                    ) : null}
+
+                    {categoryCount > 1 ? (
+                      <>
+                        <span className="pb-2 text-white/18">·</span>
+                        <div>
+                          <p className="font-[family-name:var(--font-fraunces)] text-[2.6rem] leading-none font-light text-white tabular-nums">
+                            {categoryCount}
+                          </p>
+                          <p className="mt-1.5 font-mono text-[9px] tracking-[0.2em] text-white/28 uppercase">
+                            Topics
+                          </p>
+                        </div>
+                      </>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
             </div>
           </Container>
         </section>
+
+        {/* ── Featured article ───────────────────────────────────────────── */}
+        {featuredArticle ? (
+          <section className="border-b border-white/6 py-12 sm:py-16">
+            <Container>
+              <p className="mb-6 font-mono text-[10px] tracking-[0.22em] text-white/28 uppercase">
+                — Featured this issue
+              </p>
+              <FeaturedArticleCard article={featuredArticle} />
+            </Container>
+          </section>
+        ) : null}
+
+        {/* ── Latest dispatches ─────────────────────────────────────────── */}
+        {articles.length > 0 ? (
+          <section className="py-14 sm:py-20">
+            <Container>
+              <div className="mb-10">
+                <h2 className="font-[family-name:var(--font-fraunces)] text-[2.4rem] leading-[1.05] font-semibold tracking-[-0.02em] text-white sm:text-[3rem]">
+                  Latest <em className="text-white/60 italic">dispatches</em>
+                </h2>
+              </div>
+              <BlogArticleList articles={articles} />
+            </Container>
+          </section>
+        ) : null}
       </main>
-    </div>
+    </PageShell>
   )
 }
 

@@ -3,36 +3,25 @@ import type { Locale } from "next-intl"
 
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
 import { BlogArticleCard } from "@/components/blog/BlogArticleCard"
+import { Avatar, Breadcrumb, MetaRow, PageShell, Pager } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
+import {
+  estimateReadingTime,
+  extractHeadings,
+  formatDate,
+} from "@/lib/article-helpers"
+import { T } from "@/lib/design-tokens"
 import type {
   BlogArticleDetail,
   BlogArticleSummary,
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
-import { cn } from "@/lib/styles"
 
 type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
 
-const categoryColors: Record<string, string> = {
-  Research: "text-indigo-300 border-indigo-400/30 bg-indigo-500/10",
-  Tech: "text-cyan-300 border-cyan-400/30 bg-cyan-500/10",
-  Culture: "text-amber-300 border-amber-400/30 bg-amber-500/10",
-  Editorial: "text-purple-300 border-purple-400/30 bg-purple-500/10",
-  Preservation: "text-emerald-300 border-emerald-400/30 bg-emerald-500/10",
-  Ethics: "text-rose-300 border-rose-400/30 bg-rose-500/10",
-}
-
-function formatDate(dateStr?: string | null) {
-  if (!dateStr) return null
-
-  return new Date(dateStr).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })
-}
+// ── Main page ─────────────────────────────────────────────────────────────────
 
 export function BlogArticlePage({
   article,
@@ -47,12 +36,12 @@ export function BlogArticlePage({
 }) {
   if (!article) {
     return (
-      <div className="relative isolate flex min-h-screen w-full flex-col bg-[#050816] text-white">
+      <PageShell className="flex flex-col">
         <GlobalHeader locale={locale} navbar={navbar} />
         <main className="flex flex-1 items-center justify-center">
           <p className="text-white/40">Article not found.</p>
         </main>
-      </div>
+      </PageShell>
     )
   }
 
@@ -60,67 +49,58 @@ export function BlogArticlePage({
     ? formatStrapiMediaUrl(article.heroImage.url)
     : null
 
-  const categoryClass = article.category
-    ? (categoryColors[article.category] ??
-      "text-white/50 border-white/16 bg-white/6")
-    : null
+  const readingTime = estimateReadingTime(article.body)
+  const publishedDate = formatDate(article.publishedAt ?? article.updatedAt)
+  const headings = extractHeadings(article.body)
+  const relatedCards =
+    related?.filter((a) => a.slug !== article.slug).slice(0, 3) ?? []
+  const tags = Array.isArray(article.tags) ? article.tags : []
 
   return (
-    <div className="relative isolate flex min-h-screen w-full flex-col overflow-x-hidden bg-[#050816] text-white">
-      {/* Ambient background */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(92,149,255,0.08),transparent_34%),radial-gradient(circle_at_75%_60%,rgba(103,221,255,0.06),transparent_28%)]" />
-
+    <PageShell className="flex flex-col">
       <GlobalHeader locale={locale} navbar={navbar} />
 
       <main className="relative z-10 flex-1">
-        {/* Article header */}
-        <section className="border-b border-white/6 py-14 sm:py-20">
-          <Container>
-            <div className="mx-auto max-w-3xl">
-              {/* Breadcrumb */}
-              <div className="mb-6 flex items-center gap-1.5 text-xs text-white/36">
-                <GlobalLink
-                  href="/blog"
-                  className="transition-colors hover:text-white/65"
-                >
-                  Blog
-                </GlobalLink>
-                <span className="text-white/20">›</span>
-                {article.category ? (
-                  <span className="text-white/50">{article.category}</span>
-                ) : null}
-              </div>
+        {/* ── Hero — full-bleed image with title overlay ─────────────────── */}
+        <section className="relative isolate flex min-h-[52vh] flex-col justify-end overflow-hidden">
+          {/* Background */}
+          {imgUrl ? (
+            <div className="absolute inset-0">
+              <Image
+                src={imgUrl}
+                alt={article.heroImage?.alternativeText ?? article.title ?? ""}
+                fill
+                priority
+                className="object-cover"
+              />
+            </div>
+          ) : (
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_40%,rgba(80,140,80,0.18),transparent_55%),radial-gradient(circle_at_80%_60%,rgba(160,120,40,0.14),transparent_45%),linear-gradient(135deg,#0d1408,#100c04,#050816)]" />
+          )}
+          {/* Overlay gradients */}
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,8,22,0.25)_0%,rgba(5,8,22,0.1)_30%,rgba(5,8,22,0.7)_68%,rgba(5,8,22,0.97)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,8,22,0.5)_0%,transparent_60%)]" />
 
-              {/* Category + meta row */}
-              <div className="mb-5 flex flex-wrap items-center gap-3">
-                {article.category && categoryClass ? (
-                  <span
-                    className={cn(
-                      "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-[0.1em] uppercase",
-                      categoryClass
-                    )}
-                  >
-                    {article.category}
-                  </span>
-                ) : null}
-                {article.author ? (
-                  <span className="text-xs text-white/40">
-                    {article.author}
-                  </span>
-                ) : null}
-                <span className="text-xs text-white/28">
-                  {formatDate(article.publishedAt ?? article.updatedAt)}
-                </span>
+          {/* Overlaid text content */}
+          <Container className="relative z-10 pt-40 pb-12">
+            <div className="max-w-[720px]">
+              {/* Breadcrumb */}
+              <div className="mb-5">
+                <Breadcrumb
+                  items={[
+                    { label: "Blog", href: "/blog" },
+                    { label: article.title ?? "" },
+                  ]}
+                />
               </div>
 
               {/* Title */}
-              <h1 className="text-[clamp(1.75rem,4vw,3rem)] leading-[1.1] font-bold tracking-tight text-white">
+              <h1 className="font-[family-name:var(--font-fraunces)] text-[clamp(2.2rem,5vw,4rem)] leading-[1.02] font-semibold tracking-[-0.02em] text-white italic">
                 {article.title}
               </h1>
 
-              {/* Summary */}
               {article.summary ? (
-                <p className="mt-5 text-lg leading-8 text-white/55">
+                <p className="mt-5 max-w-[54ch] text-[15px] leading-7 text-white/52">
                   {article.summary}
                 </p>
               ) : null}
@@ -128,56 +108,220 @@ export function BlogArticlePage({
           </Container>
         </section>
 
-        {/* Hero image */}
-        {imgUrl ? (
-          <div className="relative aspect-[21/9] w-full overflow-hidden">
-            <Image
-              src={imgUrl}
-              alt={article.heroImage?.alternativeText ?? article.title ?? ""}
-              fill
-              priority
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,8,22,0.2)_0%,transparent_30%,transparent_70%,rgba(5,8,22,0.4)_100%)]" />
-          </div>
-        ) : null}
-
-        {/* Article body */}
-        <section className="py-14 sm:py-18">
+        {/* ── Author + meta row ─────────────────────────────────────────── */}
+        <div
+          className="border-b border-white/[0.06] backdrop-blur-sm"
+          style={{ background: `${T.bg.space}cc` }}
+        >
           <Container>
-            <div className="mx-auto max-w-3xl">
-              <ArticleBodyBlocks blocks={article.body} />
+            <div className="flex flex-wrap items-center gap-5 py-5">
+              <div className="flex items-center gap-3">
+                <Avatar
+                  initials={(article.author ?? "?").charAt(0)}
+                  size="md"
+                />
+                {article.author ? (
+                  <div>
+                    <p className="text-[13px] font-medium text-white/75">
+                      {article.author}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="ml-auto">
+                <MetaRow
+                  items={[
+                    readingTime ? `${readingTime} min read` : null,
+                    formatDate(article.publishedAt ?? article.updatedAt),
+                    article.author ?? null,
+                  ]}
+                />
+              </div>
+            </div>
+          </Container>
+        </div>
+
+        {/* ── Article body ──────────────────────────────────────────────── */}
+        <section className="py-14 sm:py-20">
+          <Container>
+            <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_240px]">
+              {/* Prose */}
+              <article className="max-w-[700px] min-w-0">
+                <div className="article-drop-cap">
+                  <ArticleBodyBlocks blocks={article.body} />
+                </div>
+
+                {/* Tags */}
+                {tags.length > 0 ? (
+                  <div className="mt-14 flex flex-wrap gap-2 border-t border-white/6 pt-8">
+                    {tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 font-mono text-[10px] tracking-[0.1em] text-white/38 uppercase"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+
+                {/* Back link */}
+                <div className="mt-10 border-t border-white/6 pt-6">
+                  <GlobalLink
+                    href="/blog"
+                    className="inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.1em] text-white/35 uppercase transition-colors hover:text-white/60"
+                  >
+                    <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3">
+                      <path
+                        d="M10 3L5 8l5 5"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    Back to journal
+                  </GlobalLink>
+                </div>
+              </article>
+
+              {/* Right sidebar */}
+              <aside className="hidden lg:block">
+                <div className="sticky top-8 space-y-8">
+                  {/* Article metadata */}
+                  <div className="space-y-4 rounded-xl border border-white/[0.07] bg-[#060b19] p-5">
+                    <div>
+                      <p className="mb-1 font-mono text-[9px] tracking-[0.2em] text-white/25 uppercase">
+                        Published
+                      </p>
+                      <p className="text-[13px] text-white/60">
+                        {publishedDate}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="mb-1 font-mono text-[9px] tracking-[0.2em] text-white/25 uppercase">
+                        Reading time
+                      </p>
+                      <p className="text-[13px] text-white/60">
+                        {readingTime} min
+                      </p>
+                    </div>
+                    {article.category ? (
+                      <div>
+                        <p className="mb-1 font-mono text-[9px] tracking-[0.2em] text-white/25 uppercase">
+                          Category
+                        </p>
+                        <p className="text-[13px] text-white/60">
+                          {article.category}
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {/* TOC */}
+                  {headings.length > 0 ? (
+                    <div>
+                      <p className="mb-4 font-mono text-[9px] tracking-[0.2em] text-white/25 uppercase">
+                        In this article
+                      </p>
+                      <nav className="space-y-2">
+                        {headings.map((h) => (
+                          <a
+                            key={h.id}
+                            href={`#${h.id}`}
+                            className="block text-[12px] leading-snug text-white/38 transition-colors hover:text-white/70"
+                            style={{
+                              paddingLeft:
+                                h.level > 2 ? `${(h.level - 2) * 12}px` : "0",
+                            }}
+                          >
+                            {h.text}
+                          </a>
+                        ))}
+                      </nav>
+                    </div>
+                  ) : null}
+                </div>
+              </aside>
             </div>
           </Container>
         </section>
 
-        {/* Related articles */}
-        {related && related.length > 0 ? (
-          <section className="border-t border-white/6 py-14 sm:py-18">
+        {/* ── Author bio ────────────────────────────────────────────────── */}
+        {article.author ? (
+          <section className="border-t border-white/[0.06] py-12">
             <Container>
-              <div className="mb-8">
-                <p className="mb-1 text-[11px] font-semibold tracking-[0.16em] text-white/36 uppercase">
+              <div className="max-w-[700px]">
+                <div className="flex items-start gap-5 rounded-2xl border border-white/[0.07] bg-[#060b19] p-6 sm:p-8">
+                  <Avatar
+                    initials={(article.author ?? "?").charAt(0)}
+                    size="lg"
+                  />
+                  <div className="min-w-0">
+                    <p className="mb-0.5 font-mono text-[9px] tracking-[0.2em] text-white/25 uppercase">
+                      Written by
+                    </p>
+                    <p className="mb-2 text-[15px] font-medium text-white">
+                      {article.author}
+                    </p>
+                    {article.authorBio ? (
+                      <p className="text-[13px] leading-6 text-white/45">
+                        {article.authorBio}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            </Container>
+          </section>
+        ) : null}
+
+        {/* ── More from the journal ─────────────────────────────────────── */}
+        {relatedCards.length > 0 ? (
+          <section className="border-t border-white/[0.06] py-14 sm:py-20">
+            <Container>
+              <div className="mb-10">
+                <p className="mb-4 font-mono text-[11px] tracking-[0.22em] text-white/30 uppercase">
                   Continue reading
                 </p>
-                <h2 className="text-2xl font-bold tracking-tight text-white">
-                  More articles
+                <h2 className="font-[family-name:var(--font-fraunces)] text-[2.2rem] leading-[1.05] font-semibold tracking-[-0.02em] text-white sm:text-[2.8rem]">
+                  More from{" "}
+                  <em className="text-white/60 italic">the journal</em>
                 </h2>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {related.slice(0, 3).map((a) => (
-                  <BlogArticleCard
-                    key={a.documentId}
-                    article={a}
-                    locale={locale}
-                  />
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {relatedCards.map((a, i) => (
+                  <BlogArticleCard key={a.documentId} article={a} index={i} />
                 ))}
+              </div>
+
+              <div className="mt-10">
+                <Pager
+                  prev={
+                    relatedCards[0]?.slug
+                      ? {
+                          label: relatedCards[0].title ?? "",
+                          href: `/blog/${relatedCards[0].slug}`,
+                        }
+                      : undefined
+                  }
+                  next={
+                    relatedCards[1]?.slug
+                      ? {
+                          label: relatedCards[1].title ?? "",
+                          href: `/blog/${relatedCards[1].slug}`,
+                        }
+                      : undefined
+                  }
+                />
               </div>
             </Container>
           </section>
         ) : null}
       </main>
-    </div>
+    </PageShell>
   )
 }
 
