@@ -1,212 +1,925 @@
-import Image from "next/image"
 import type { Locale } from "next-intl"
 
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
-import { Container } from "@/components/elementary/Container"
+import {
+  Badge,
+  Breadcrumb,
+  MetaRow,
+  PageShell,
+  type BadgeColor,
+} from "@/components/ds"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
-import { homepagePanelClassName } from "@/components/home/homepage.constants"
+import {
+  countWords,
+  estimateReadingTime,
+  extractHeadings,
+  formatRelativeDate,
+} from "@/lib/article-helpers"
+import { T } from "@/lib/design-tokens"
 import type {
   WikiArticleDetail,
-  WikiArticleSummary,
+  WikiArticleStatus,
+  WikiNavCategory,
 } from "@/lib/strapi-api/content/server"
-import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
-import { cn } from "@/lib/styles"
+
+import { WikiProgressBar } from "./WikiProgressBar"
 
 type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
 
-function formatDate(dateStr?: string | null) {
-  if (!dateStr) return null
+// ── Status badge config ──────────────────────────────────────────────────────
 
-  return new Date(dateStr).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })
+const STATUS_TO_BADGE_COLOR: Record<WikiArticleStatus, BadgeColor> = {
+  stable: "ok",
+  beta: "warn",
+  experimental: "ember",
+  draft: "dim",
+  deprecated: "danger",
 }
 
-// ── Related article card ───────────────────────────────────────────────────────
+const STATUS_LABELS: Record<WikiArticleStatus, string> = {
+  stable: "Stable",
+  beta: "Beta",
+  experimental: "Experimental",
+  draft: "Draft",
+  deprecated: "Deprecated",
+}
 
-function RelatedArticleCard({ article }: { article: WikiArticleSummary }) {
-  if (!article.slug) return null
-
-  const imgUrl = article.heroImage?.url
-    ? formatStrapiMediaUrl(article.heroImage.url)
-    : null
+function StatusBadge({ status }: { status?: WikiArticleStatus | null }) {
+  if (!status) return null
 
   return (
-    <GlobalLink
-      href={`/wiki/${article.slug}`}
-      className={cn(
-        homepagePanelClassName,
-        "group flex flex-col overflow-hidden transition-[border-color,box-shadow,background-color] duration-500 hover:border-cyan-200/16 hover:bg-white/[0.07]"
-      )}
-    >
-      {imgUrl ? (
-        <div className="relative aspect-video overflow-hidden">
-          <Image
-            src={imgUrl}
-            alt={article.heroImage?.alternativeText ?? article.title ?? ""}
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-          />
-        </div>
-      ) : (
-        <div className="aspect-video bg-white/4" />
-      )}
-      <div className="flex flex-col gap-2 p-4">
-        {article.category?.name ? (
-          <p className="text-[10px] font-semibold tracking-[0.12em] text-cyan-300/70 uppercase">
-            {article.category.name}
-          </p>
-        ) : null}
-        <h4 className="text-sm leading-snug font-semibold text-white transition-colors group-hover:text-cyan-50">
-          {article.title}
-        </h4>
-        {article.summary ? (
-          <p className="line-clamp-2 text-xs leading-5 text-white/45">
-            {article.summary}
-          </p>
-        ) : null}
-      </div>
-    </GlobalLink>
+    <Badge
+      label={STATUS_LABELS[status] ?? status}
+      color={STATUS_TO_BADGE_COLOR[status] ?? "dim"}
+      dot
+    />
   )
 }
 
-// ── Main page ──────────────────────────────────────────────────────────────────
+// ── Nav status badge (sidebar) ───────────────────────────────────────────────
+
+// Keep NavStatusBadge as-is — it's a compact sidebar variant that intentionally
+// differs from the shared Badge component (smaller padding, abbreviated labels).
+const STATUS_CONFIG_NAV: Record<
+  WikiArticleStatus,
+  { label: string; color: string; border: string; bg: string; dot: string }
+> = {
+  stable: {
+    label: "Stable",
+    color: T.accent.ok,
+    border: "rgba(142,240,179,.3)",
+    bg: "rgba(142,240,179,.1)",
+    dot: T.accent.ok,
+  },
+  beta: {
+    label: "Beta",
+    color: T.accent.warn,
+    border: "rgba(255,207,122,.3)",
+    bg: "rgba(255,207,122,.1)",
+    dot: T.accent.warn,
+  },
+  experimental: {
+    label: "Experimental",
+    color: T.accent.ember,
+    border: "rgba(255,184,138,.3)",
+    bg: "rgba(255,184,138,.1)",
+    dot: T.accent.ember,
+  },
+  draft: {
+    label: "Draft",
+    color: T.ink.low,
+    border: T.border.line,
+    bg: "rgba(255,255,255,.03)",
+    dot: T.ink.faint,
+  },
+  deprecated: {
+    label: "Deprecated",
+    color: T.accent.danger,
+    border: "rgba(255,138,138,.3)",
+    bg: "rgba(255,138,138,.1)",
+    dot: T.accent.danger,
+  },
+}
+
+function NavStatusBadge({ status }: { status?: WikiArticleStatus | null }) {
+  if (!status || status === "stable") return null
+  const cfg = STATUS_CONFIG_NAV[status]
+  if (!cfg) return null
+
+  return (
+    <span
+      style={{
+        fontFamily: T.font.mono,
+        fontSize: "9px",
+        padding: "1px 5px",
+        borderRadius: "3px",
+        background: cfg.bg,
+        color: cfg.color,
+        letterSpacing: ".08em",
+        flexShrink: 0,
+      }}
+    >
+      {status === "beta"
+        ? "Beta"
+        : status === "experimental"
+          ? "Exp"
+          : status === "deprecated"
+            ? "Dep"
+            : "Draft"}
+    </span>
+  )
+}
+
+// ── Left sidebar navigation ──────────────────────────────────────────────────
+
+function WikiLeftNav({
+  navCategories,
+  currentSlug,
+}: {
+  readonly navCategories: WikiNavCategory[]
+  readonly currentSlug?: string | null
+}) {
+  return (
+    <nav style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+      {/* Back link */}
+      <GlobalLink
+        href="/wiki"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          fontFamily: T.font.mono,
+          fontSize: "10px",
+          letterSpacing: ".14em",
+          color: T.ink.faint,
+          textTransform: "uppercase",
+          marginBottom: "16px",
+          textDecoration: "none",
+          transition: "color 200ms",
+        }}
+      >
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M10 3L5 8l5 5"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        Knowledge Hub
+      </GlobalLink>
+
+      {/* Category groups */}
+      {navCategories.map((cat, catIdx) => (
+        <div key={cat.documentId} style={{ marginBottom: "18px" }}>
+          {/* Group header */}
+          <div
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "10px",
+              letterSpacing: ".22em",
+              textTransform: "uppercase",
+              color: T.ink.low,
+              margin: "0 0 8px",
+              padding: "0 10px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <span style={{ color: T.ink.faint }}>
+              {String(catIdx + 1).padStart(2, "0")}
+            </span>
+            {cat.name}
+          </div>
+
+          {/* Articles list */}
+          {cat.articles && cat.articles.length > 0 ? (
+            <ul
+              style={{
+                listStyle: "none",
+                padding: 0,
+                margin: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: "1px",
+                borderLeft: `1px solid ${T.border.line}`,
+                marginLeft: "10px",
+              }}
+            >
+              {cat.articles.map((article) => {
+                const isActive = article.slug === currentSlug
+
+                return (
+                  <li key={article.documentId}>
+                    <GlobalLink
+                      href={`/wiki/${article.slug}`}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: isActive ? "6px 12px 6px 11px" : "6px 12px",
+                        fontSize: "13px",
+                        color: isActive ? T.ink.base : T.ink.dim,
+                        background: isActive
+                          ? "rgba(127,223,255,.1)"
+                          : "transparent",
+                        borderLeft: isActive
+                          ? `2px solid ${T.accent.aurora}`
+                          : "2px solid transparent",
+                        borderRadius: "0 6px 6px 0",
+                        marginLeft: "6px",
+                        textDecoration: "none",
+                        transition: "color 200ms, background 200ms",
+                        gap: "6px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          flex: 1,
+                          minWidth: 0,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {article.title}
+                      </span>
+                      <NavStatusBadge status={article.articleStatus} />
+                    </GlobalLink>
+                  </li>
+                )
+              })}
+            </ul>
+          ) : null}
+        </div>
+      ))}
+    </nav>
+  )
+}
+
+// ── Right sidebar TOC + meta ─────────────────────────────────────────────────
+
+function WikiRightPanel({
+  headings,
+  article,
+  wordCount,
+}: {
+  readonly headings: { text: string; level: number; id: string }[]
+  readonly article: WikiArticleDetail
+  readonly wordCount: number
+}) {
+  const status = article.articleStatus
+  const statusCfg = status
+    ? (STATUS_CONFIG_NAV[status] ?? STATUS_CONFIG_NAV.stable)
+    : STATUS_CONFIG_NAV.stable
+  const editedAgo = formatRelativeDate(article.updatedAt)
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      {/* TOC */}
+      {headings.length > 0 ? (
+        <div>
+          <h6
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "10px",
+              letterSpacing: ".22em",
+              textTransform: "uppercase",
+              color: T.ink.low,
+              margin: "0 0 14px",
+            }}
+          >
+            On this page
+          </h6>
+          <ul
+            style={{
+              listStyle: "none",
+              padding: 0,
+              margin: "0 0 0 0",
+              display: "flex",
+              flexDirection: "column",
+              gap: "2px",
+              borderLeft: `1px solid ${T.border.line}`,
+            }}
+          >
+            {headings.map((h) => (
+              <li
+                key={h.id}
+                style={{
+                  padding: h.level > 2 ? "4px 10px 4px 22px" : "4px 10px",
+                  fontSize: h.level > 2 ? "12px" : "12.5px",
+                  color: T.ink.low,
+                  borderLeft: "1px solid transparent",
+                  marginLeft: "-1px",
+                  lineHeight: 1.4,
+                }}
+              >
+                <a
+                  href={`#${h.id}`}
+                  style={{
+                    color: "inherit",
+                    textDecoration: "none",
+                    display: "block",
+                    transition: "color 200ms",
+                  }}
+                >
+                  {h.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {/* Meta box */}
+      <div
+        style={{
+          fontFamily: T.font.mono,
+          fontSize: "10px",
+          color: T.ink.faint,
+          letterSpacing: ".12em",
+          lineHeight: 1.8,
+          padding: "12px",
+          border: `1px solid ${T.border.line}`,
+          borderRadius: "10px",
+          background: "rgba(255,255,255,.02)",
+        }}
+      >
+        {[
+          {
+            k: "Status",
+            v: (
+              <span
+                style={{
+                  color: statusCfg.color,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                }}
+              >
+                <span
+                  style={{
+                    width: "5px",
+                    height: "5px",
+                    borderRadius: "50%",
+                    background: statusCfg.dot,
+                    display: "inline-block",
+                  }}
+                />
+                {statusCfg.label}
+              </span>
+            ),
+          },
+          editedAgo
+            ? {
+                k: "Edited",
+                v: <span style={{ color: T.ink.base }}>{editedAgo}</span>,
+              }
+            : null,
+          article.author
+            ? {
+                k: "Author",
+                v: <span style={{ color: T.ink.base }}>{article.author}</span>,
+              }
+            : null,
+          wordCount > 0
+            ? {
+                k: "Words",
+                v: (
+                  <span style={{ color: T.ink.base }}>
+                    {wordCount.toLocaleString()}
+                  </span>
+                ),
+              }
+            : null,
+        ]
+          .filter(Boolean)
+          .map((row) => (
+            <div
+              key={row!.k}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                padding: "3px 0",
+                borderBottom: `1px dashed ${T.border.line}`,
+              }}
+            >
+              <span style={{ color: T.ink.low }}>{row!.k}</span>
+              {row!.v}
+            </div>
+          ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Main page ────────────────────────────────────────────────────────────────
 
 export function WikiArticlePage({
   article,
+  navCategories,
   navbar,
   locale,
 }: {
   readonly article: WikiArticleDetail | null
+  readonly navCategories: WikiNavCategory[]
   readonly navbar?: NavbarData
   readonly locale: Locale
 }) {
   if (!article) {
     return (
-      <div className="relative isolate flex min-h-screen w-full flex-col bg-[#050816] text-white">
+      <PageShell>
         <GlobalHeader locale={locale} navbar={navbar} />
-        <main className="flex flex-1 items-center justify-center">
-          <p className="text-white/40">Article not found.</p>
+        <main
+          style={{
+            display: "flex",
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "80px 32px",
+          }}
+        >
+          <p
+            style={{
+              color: T.ink.faint,
+              fontFamily: T.font.mono,
+              fontSize: "13px",
+            }}
+          >
+            Article not found.
+          </p>
         </main>
-      </div>
+      </PageShell>
     )
   }
 
-  const imgUrl = article.heroImage?.url
-    ? formatStrapiMediaUrl(article.heroImage.url)
+  const readingTime = estimateReadingTime(article.body)
+  const headings = extractHeadings(article.body)
+  const wordCount = countWords(article.body)
+  const editedAgo = formatRelativeDate(article.updatedAt)
+
+  const githubEditUrl = article.githubPath
+    ? `https://github.com/libraries-global/libraries.global/edit/main/${article.githubPath}`
     : null
 
-  const related = article.relatedArticles ?? []
+  // Split title: put last 2+ words in italic Fraunces (matching design aesthetic)
+  const titleWords = (article.title ?? "").split(" ")
+  const breakAt = Math.max(titleWords.length - 2, 1)
+  const titleMain = titleWords.slice(0, breakAt).join(" ")
+  const titleItalic = titleWords.slice(breakAt).join(" ")
 
   return (
-    <div className="relative isolate flex min-h-screen w-full flex-col overflow-x-hidden bg-[#050816] text-white">
-      {/* Ambient background */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(92,149,255,0.08),transparent_34%),radial-gradient(circle_at_75%_60%,rgba(103,221,255,0.06),transparent_28%)]" />
-
+    <PageShell>
+      <WikiProgressBar />
       <GlobalHeader locale={locale} navbar={navbar} />
 
-      <main className="relative z-10 flex-1">
-        {/* Article header */}
-        <section className="border-b border-white/6 py-14 sm:py-20">
-          <Container>
-            <div className="mx-auto max-w-3xl">
-              {/* Breadcrumb */}
-              <div className="mb-6 flex flex-wrap items-center gap-1.5 text-xs text-white/36">
-                <GlobalLink
-                  href="/wiki"
-                  className="transition-colors hover:text-white/65"
-                >
-                  Wiki
-                </GlobalLink>
-                {article.category?.name ? (
-                  <>
-                    <span className="text-white/20">›</span>
-                    <GlobalLink
-                      href={`/wiki?category=${article.category.slug}`}
-                      className="transition-colors hover:text-white/65"
-                    >
-                      {article.category.name}
-                    </GlobalLink>
-                  </>
+      {/* ── Three-column shell ─────────────────────────────────────────── */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "280px minmax(0,1fr) 240px",
+          maxWidth: "1480px",
+          margin: "0 auto",
+          padding: "0 0",
+        }}
+        className="doc-shell-grid"
+      >
+        {/* ── LEFT SIDEBAR ──────────────────────────────────────────────── */}
+        <aside
+          style={{
+            borderRight: `1px solid ${T.border.line}`,
+          }}
+          className="doc-sidebar-col"
+        >
+          <div
+            style={{
+              position: "sticky",
+              top: "56px",
+              height: "calc(100vh - 56px)",
+              overflowY: "auto",
+              padding: "28px 16px 28px 20px",
+            }}
+          >
+            {/* Inline search (decorative ⌘K trigger) */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 12px",
+                borderRadius: "10px",
+                border: `1px solid ${T.border.line}`,
+                background: "rgba(255,255,255,.02)",
+                marginBottom: "18px",
+              }}
+            >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                style={{ color: T.ink.low, flexShrink: 0 }}
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
+              </svg>
+              <span
+                style={{
+                  flex: 1,
+                  fontFamily: T.font.mono,
+                  fontSize: "12px",
+                  color: T.ink.faint,
+                }}
+              >
+                Filter docs…
+              </span>
+              <span
+                style={{
+                  fontFamily: T.font.mono,
+                  fontSize: "10px",
+                  color: T.ink.faint,
+                  padding: "3px 6px",
+                  border: `1px solid ${T.border.line}`,
+                  borderRadius: "4px",
+                }}
+              >
+                ⌘K
+              </span>
+            </div>
+
+            <WikiLeftNav
+              navCategories={navCategories}
+              currentSlug={article.slug}
+            />
+          </div>
+        </aside>
+
+        {/* ── MAIN CONTENT ──────────────────────────────────────────────── */}
+        <article style={{ minWidth: 0, padding: "40px 48px 80px" }}>
+          <div style={{ maxWidth: "720px", margin: "0 auto" }}>
+            {/* Breadcrumb */}
+            <div style={{ marginBottom: "24px" }}>
+              <Breadcrumb
+                items={[
+                  { label: "Wiki", href: "/wiki" },
+                  ...(article.category
+                    ? [
+                        {
+                          label: article.category.name ?? "",
+                          href: `/wiki?category=${article.category.slug}`,
+                        },
+                      ]
+                    : []),
+                  { label: article.title ?? "" },
+                ]}
+              />
+            </div>
+
+            {/* ── Article header ─────────────────────────────────────────── */}
+            <header
+              style={{
+                paddingBottom: "24px",
+                borderBottom: `1px solid ${T.border.line}`,
+                marginBottom: "32px",
+              }}
+            >
+              {/* Kicker: type tag + status tag + meta */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  marginBottom: "16px",
+                  flexWrap: "wrap",
+                }}
+              >
+                {article.category?.tagLabel ? (
+                  <Badge label={article.category.tagLabel} color="aurora" />
                 ) : null}
+
+                <StatusBadge status={article.articleStatus} />
+
+                <MetaRow
+                  items={[
+                    readingTime > 0 ? `~ ${readingTime} min read` : null,
+                    editedAgo ? `Last edited ${editedAgo}` : null,
+                    article.author ?? null,
+                  ]}
+                />
               </div>
 
-              {/* Category eyebrow */}
-              {article.category?.name ? (
-                <p className="mb-3 text-[10px] font-semibold tracking-[0.16em] text-cyan-400/70 uppercase">
-                  {article.category.name}
-                </p>
-              ) : null}
-
               {/* Title */}
-              <h1 className="text-[clamp(1.75rem,4vw,3rem)] leading-[1.1] font-bold tracking-tight text-white">
-                {article.title}
+              <h1
+                style={{
+                  fontFamily: T.font.serif,
+                  fontWeight: 400,
+                  fontSize: "clamp(40px,5.6vw,72px)",
+                  lineHeight: 0.98,
+                  letterSpacing: "-.032em",
+                  margin: "0 0 18px",
+                  textWrap: "balance",
+                  color: T.ink.base,
+                }}
+              >
+                {titleMain}{" "}
+                <em
+                  style={{
+                    fontStyle: "italic",
+                    fontWeight: 300,
+                    color: T.ink.low,
+                  }}
+                >
+                  {titleItalic}
+                </em>
               </h1>
 
-              {/* Summary */}
+              {/* Summary / dek */}
               {article.summary ? (
-                <p className="mt-5 text-lg leading-8 text-white/55">
+                <p
+                  style={{
+                    fontSize: "17px",
+                    lineHeight: 1.55,
+                    color: T.ink.dim,
+                    fontWeight: 300,
+                    maxWidth: "60ch",
+                    margin: 0,
+                  }}
+                >
                   {article.summary}
                 </p>
               ) : null}
 
-              {/* Meta row */}
-              <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-white/6 pt-5 text-xs text-white/30">
+              {/* Toolbar: author avatar + actions */}
+              <div
+                style={{
+                  marginTop: "24px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "16px",
+                }}
+              >
+                {/* Author avatar */}
                 {article.author ? (
-                  <span className="text-white/45">{article.author}</span>
-                ) : null}
-                {article.updatedAt ? (
-                  <span>Updated: {formatDate(article.updatedAt)}</span>
-                ) : null}
-              </div>
-            </div>
-          </Container>
-        </section>
-
-        {/* Hero image */}
-        {imgUrl ? (
-          <div className="relative aspect-[21/9] w-full overflow-hidden">
-            <Image
-              src={imgUrl}
-              alt={article.heroImage?.alternativeText ?? article.title ?? ""}
-              fill
-              priority
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,8,22,0.2)_0%,transparent_30%,transparent_70%,rgba(5,8,22,0.4)_100%)]" />
-          </div>
-        ) : null}
-
-        {/* Article body + sidebar */}
-        <section className="py-14 sm:py-18">
-          <Container>
-            <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_280px]">
-              {/* Body */}
-              <div className="min-w-0">
-                <ArticleBodyBlocks blocks={article.body} />
-              </div>
-
-              {/* Sidebar — related articles */}
-              {related.length > 0 ? (
-                <aside className="space-y-4">
-                  <p className="text-[10px] font-semibold tracking-[0.14em] text-white/36 uppercase">
-                    Related articles
-                  </p>
-                  <div className="space-y-3">
-                    {related.slice(0, 4).map((r) => (
-                      <RelatedArticleCard key={r.documentId} article={r} />
-                    ))}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: "30px",
+                        height: "30px",
+                        borderRadius: "50%",
+                        background: `linear-gradient(135deg,${T.accent.aurora},${T.accent.violet})`,
+                        display: "grid",
+                        placeItems: "center",
+                        color: "#0a0f2a",
+                        fontFamily: T.font.serif,
+                        fontSize: "11px",
+                        fontWeight: 500,
+                        border: `2px solid ${T.bg.void}`,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {article.author.slice(0, 2).toUpperCase()}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: T.font.mono,
+                        fontSize: "11px",
+                        color: T.ink.low,
+                      }}
+                    >
+                      {article.author}
+                    </span>
                   </div>
-                </aside>
+                ) : (
+                  <div />
+                )}
+
+                {/* Action buttons */}
+                <div style={{ display: "flex", gap: "6px" }}>
+                  {githubEditUrl ? (
+                    <a
+                      href={githubEditUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        padding: "6px 10px",
+                        borderRadius: "8px",
+                        border: `1px solid ${T.border.line}`,
+                        background: "rgba(255,255,255,.02)",
+                        fontFamily: T.font.mono,
+                        fontSize: "11px",
+                        color: T.ink.dim,
+                        letterSpacing: ".06em",
+                        textDecoration: "none",
+                        transition: "border-color 200ms, color 200ms",
+                      }}
+                    >
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                      Edit on GitHub
+                    </a>
+                  ) : null}
+                  <button
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "6px 10px",
+                      borderRadius: "8px",
+                      border: `1px solid ${T.border.line}`,
+                      background: "rgba(255,255,255,.02)",
+                      fontFamily: T.font.mono,
+                      fontSize: "11px",
+                      color: T.ink.dim,
+                      letterSpacing: ".06em",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Report issue
+                  </button>
+                </div>
+              </div>
+            </header>
+
+            {/* ── Article body ─────────────────────────────────────────── */}
+            <div className="article-drop-cap">
+              <ArticleBodyBlocks blocks={article.body} />
+            </div>
+
+            {/* ── Footer ───────────────────────────────────────────────── */}
+            <div
+              style={{
+                marginTop: "40px",
+                paddingTop: "24px",
+                borderTop: `1px solid ${T.border.line}`,
+                display: "flex",
+                justifyContent: "space-between",
+                gap: "24px",
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              {/* Feedback */}
+              <div
+                style={{
+                  fontSize: "13px",
+                  color: T.ink.low,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                }}
+              >
+                <span>Was this page helpful?</span>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  {["↑ Yes", "↓ No"].map((label) => (
+                    <button
+                      key={label}
+                      style={{
+                        padding: "6px 10px",
+                        borderRadius: "6px",
+                        border: `1px solid ${T.border.line}`,
+                        background: "transparent",
+                        color: T.ink.dim,
+                        fontFamily: T.font.mono,
+                        fontSize: "12px",
+                        cursor: "pointer",
+                        transition: "border-color 200ms, color 200ms",
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Last edited meta */}
+              {editedAgo ? (
+                <div
+                  style={{
+                    fontFamily: T.font.mono,
+                    fontSize: "11px",
+                    color: T.ink.faint,
+                    letterSpacing: ".06em",
+                  }}
+                >
+                  Last edited {editedAgo}
+                  {article.author ? ` · by ${article.author}` : ""}
+                </div>
               ) : null}
             </div>
-          </Container>
-        </section>
-      </main>
-    </div>
+
+            {/* ── Prev / Next pager ───────────────────────────────────── */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "16px",
+                marginTop: "32px",
+              }}
+            >
+              <GlobalLink
+                href="/wiki"
+                style={{
+                  padding: "18px",
+                  border: `1px solid ${T.border.line}`,
+                  borderRadius: "12px",
+                  background: "rgba(255,255,255,.02)",
+                  textDecoration: "none",
+                  transition: "border-color 200ms, background 200ms",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: T.font.mono,
+                    fontSize: "10px",
+                    letterSpacing: ".2em",
+                    textTransform: "uppercase",
+                    color: T.ink.low,
+                    marginBottom: "6px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  ← Back
+                </div>
+                <div
+                  style={{
+                    fontFamily: T.font.serif,
+                    fontSize: "17px",
+                    color: T.ink.base,
+                    letterSpacing: "-.02em",
+                    lineHeight: 1.25,
+                  }}
+                >
+                  All docs
+                </div>
+              </GlobalLink>
+              <div />
+            </div>
+          </div>
+        </article>
+
+        {/* ── RIGHT SIDEBAR ─────────────────────────────────────────────── */}
+        <aside
+          style={{ borderLeft: `1px solid ${T.border.line}` }}
+          className="doc-outline-col"
+        >
+          <div
+            style={{
+              position: "sticky",
+              top: "56px",
+              height: "calc(100vh - 56px)",
+              overflowY: "auto",
+              padding: "44px 16px 28px 20px",
+            }}
+          >
+            <WikiRightPanel
+              headings={headings}
+              article={article}
+              wordCount={wordCount}
+            />
+          </div>
+        </aside>
+      </div>
+
+      {/* Responsive overrides */}
+      <style>{`
+        @media (max-width: 1200px) {
+          .doc-shell-grid { grid-template-columns: 240px minmax(0,1fr) !important; }
+          .doc-outline-col { display: none !important; }
+        }
+        @media (max-width: 900px) {
+          .doc-shell-grid { grid-template-columns: minmax(0,1fr) !important; }
+          .doc-sidebar-col { display: none !important; }
+          article { padding: 32px 24px 60px !important; }
+        }
+      `}</style>
+    </PageShell>
   )
 }
 
