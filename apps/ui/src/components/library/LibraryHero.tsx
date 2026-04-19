@@ -197,24 +197,17 @@ export function LibraryHero({
     : (realtime?.nextOpenText ?? null)
 
   const ctaLinks = [
-    library.bookingUrl && {
-      href: library.bookingUrl,
-      label: "Book a Seat",
-      primary: true,
-    },
     library.virtualTourUrl && {
       href: library.virtualTourUrl,
       label: "Virtual Tour",
       primary: false,
     },
-    library.planVisitUrl &&
-      !library.bookingUrl && {
-        href: library.planVisitUrl,
-        label: "Plan Your Visit",
-        primary: false,
-      },
-    !library.bookingUrl &&
-      !library.planVisitUrl &&
+    library.planVisitUrl && {
+      href: library.planVisitUrl,
+      label: "Plan Your Visit",
+      primary: false,
+    },
+    !library.planVisitUrl &&
       library.website && {
         href: library.website,
         label: "Visit Website",
@@ -237,10 +230,10 @@ export function LibraryHero({
         ) : (
           <div className="h-full w-full bg-[linear-gradient(180deg,rgba(12,18,40,1),rgba(5,8,22,1))]" />
         )}
-        {/* Heavy dark overlay — image reads as atmosphere, not subject */}
-        <div className="absolute inset-0 bg-[#050816]/55" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,8,22,0.1)_0%,rgba(5,8,22,0.35)_50%,rgba(5,8,22,0.92)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,8,22,0.55)_0%,transparent_70%)]" />
+        {/* Dark overlay — lighter at the bottom so the image is visible behind the tab bar */}
+        <div className="absolute inset-0 bg-[#050816]/38" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,8,22,0.2)_0%,rgba(5,8,22,0.38)_45%,rgba(5,8,22,0.62)_78%,rgba(5,8,22,0.62)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,8,22,0.62)_0%,transparent_68%)]" />
       </div>
 
       <Container className="py-10 sm:py-14">

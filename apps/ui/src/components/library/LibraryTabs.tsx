@@ -10,6 +10,7 @@ import {
 } from "react"
 
 import { Container } from "@/components/elementary/Container"
+import { T } from "@/lib/design-tokens"
 import { cn } from "@/lib/styles"
 
 // ── Context ───────────────────────────────────────────────────────────────────
@@ -89,9 +90,10 @@ export function LibraryTabNav({
         className={cn(
           "sticky top-0 z-20 transition-colors duration-200",
           isStuck
-            ? "border-b border-white/8 bg-[#050816]/95 backdrop-blur-md"
-            : "border-b border-white/[0.07] bg-[#050816]/50 backdrop-blur-sm"
+            ? "border-b border-white/8 backdrop-blur-md"
+            : "border-b border-white/10 bg-transparent"
         )}
+        style={isStuck ? { background: `${T.bg.space}f2` } : undefined}
       >
         <Container>
           <nav
@@ -112,7 +114,7 @@ export function LibraryTabNav({
                   "after:absolute after:right-0 after:bottom-0 after:left-0 after:h-[2px] after:transition-opacity after:duration-150",
                   activeTab === tab.id
                     ? "text-white after:bg-blue-400 after:opacity-100"
-                    : "text-white/46 after:opacity-0 hover:text-white/70"
+                    : "text-white/60 after:opacity-0 hover:text-white/85"
                 )}
               >
                 {tab.label}
