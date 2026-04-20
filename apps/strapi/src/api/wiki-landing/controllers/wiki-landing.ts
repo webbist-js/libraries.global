@@ -19,23 +19,8 @@ export default factories.createCoreController(
               fields: ["title", "slug", "summary"],
               populate: {
                 category: { fields: ["name", "slug"] },
+                section: { fields: ["name", "slug"] },
               },
-            },
-            featuredArticle: {
-              populate: {
-                heroImage: true,
-                category: { fields: ["name", "slug"] },
-              },
-            },
-            featuredCategories: {
-              fields: [
-                "name",
-                "slug",
-                "description",
-                "tagLabel",
-                "subTopics",
-                "order",
-              ],
             },
             seo: {
               populate: {

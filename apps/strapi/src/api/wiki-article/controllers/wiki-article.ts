@@ -33,19 +33,20 @@ export default factories.createCoreController(
             "priority",
             "publishedAt",
             "updatedAt",
-            "githubPath",
             "articleStatus",
           ],
           locale,
           status,
           populate: {
             heroImage: true,
+            section: { fields: ["name", "slug"] },
             category: { fields: ["name", "slug"] },
             body: BODY_POPULATE,
             relatedArticles: {
               fields: ["title", "slug", "summary"],
               populate: {
                 heroImage: true,
+                section: { fields: ["name", "slug"] },
                 category: { fields: ["name", "slug"] },
               },
             },
@@ -71,7 +72,10 @@ export default factories.createCoreController(
         .documents("api::wiki-article.wiki-article")
         .findMany({
           fields: ["slug", "locale"],
-          populate: { category: { fields: ["slug"] } },
+          populate: {
+            category: { fields: ["slug"] },
+            section: { fields: ["slug"] },
+          },
           locale,
           status,
         })

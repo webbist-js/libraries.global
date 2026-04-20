@@ -1,13 +1,10 @@
 "use client"
 
-import { useState } from "react"
-
 import { EmptyState } from "@/components/ds"
 import GlobalLink from "@/components/global/GlobalLink"
 import { formatDate } from "@/lib/article-helpers"
 import { T } from "@/lib/design-tokens"
 import type { BlogArticleSummary } from "@/lib/strapi-api/content/server"
-import { cn } from "@/lib/styles"
 
 import { BlogArticleCard } from "./BlogArticleCard"
 
@@ -29,9 +26,9 @@ function SidebarArticleRow({
         {String(index + 1).padStart(2, "0")}
       </span>
       <div className="min-w-0">
-        {article.category ? (
+        {(article.section?.name ?? article.category?.name) ? (
           <p className="mb-1 font-mono text-[9px] tracking-[0.18em] text-white/25 uppercase">
-            {article.category}
+            {article.section?.name ?? article.category?.name}
           </p>
         ) : null}
         <h4 className="line-clamp-2 text-[13px] leading-snug font-medium text-white/55 transition-colors group-hover:text-white">
@@ -50,53 +47,17 @@ export default function BlogArticleList({
 }: {
   readonly articles: BlogArticleSummary[]
 }) {
-  // Derive category list
-  const seen = new Set<string>()
-  const categories: string[] = ["All"]
-  for (const a of articles) {
-    if (a.category && !seen.has(a.category)) {
-      seen.add(a.category)
-      categories.push(a.category)
-    }
-  }
-
-  const [activeCategory, setActiveCategory] = useState("All")
-
-  const filtered = articles.filter(
-    (a) => activeCategory === "All" || a.category === activeCategory
-  )
-
   const sidebarArticles = articles.slice(0, 6)
 
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_260px]">
       {/* Main articles area */}
       <div>
-        {/* Category filter tabs */}
-        {categories.length > 1 ? (
-          <div className="mb-8 flex flex-wrap items-center gap-1.5 border-b border-white/6 pb-5">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={cn(
-                  "rounded-full px-4 py-1.5 font-mono text-[11px] tracking-[0.12em] uppercase transition-all duration-200",
-                  activeCategory === cat
-                    ? "bg-white text-[#050816]"
-                    : "text-white/40 hover:text-white/65"
-                )}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        ) : null}
-
-        {filtered.length === 0 ? (
-          <EmptyState message="No articles in this category." />
+        {articles.length === 0 ? (
+          <EmptyState message="No articles found." />
         ) : (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            {filtered.map((article, i) => (
+            {articles.map((article, i) => (
               <BlogArticleCard
                 key={article.documentId}
                 article={article}

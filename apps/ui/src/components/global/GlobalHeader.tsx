@@ -2,7 +2,6 @@ import type { Data } from "@repo/strapi-types"
 import type { Locale } from "next-intl"
 
 import AppLink from "@/components/elementary/AppLink"
-import { Container } from "@/components/elementary/Container"
 import LocaleSwitcher from "@/components/elementary/LocaleSwitcher"
 import GlobalLink from "@/components/global/GlobalLink"
 import { StrapiBasicImage } from "@/components/page-builder/components/utilities/StrapiBasicImage"
@@ -40,13 +39,10 @@ export async function GlobalHeader({
 
   return (
     <header
-      className="sticky top-0 z-40 backdrop-blur-xl"
-      style={{
-        borderBottom: `1px solid ${T.border.line}`,
-        background: "rgba(5,8,22,.92)",
-      }}
+      data-global-header=""
+      className="global-header sticky top-0 z-[60] w-full border-b border-white/[0.08] bg-[rgba(5,8,22,.80)] backdrop-blur-xl"
     >
-      <Container className="flex h-14 items-center gap-4">
+      <div className="flex h-14 w-full items-center gap-4 px-6 md:px-10">
         {/* Left: logo + live badge */}
         <div className="flex shrink-0 items-center gap-3">
           <GlobalLink
@@ -118,7 +114,7 @@ export async function GlobalHeader({
             Contribute
           </AppLink>
         </div>
-      </Container>
+      </div>
     </header>
   )
 }

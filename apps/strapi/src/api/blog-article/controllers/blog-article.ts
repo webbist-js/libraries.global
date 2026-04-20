@@ -29,6 +29,23 @@ export default factories.createCoreController(
           populate: {
             heroImage: true,
             authorAvatar: true,
+            section: { fields: ["name", "slug"] },
+            category: { fields: ["name", "slug"] },
+            relatedArticles: {
+              fields: [
+                "title",
+                "slug",
+                "summary",
+                "author",
+                "authorTitle",
+                "publishedAt",
+              ],
+              populate: {
+                heroImage: true,
+                authorAvatar: true,
+                category: { fields: ["name", "slug"] },
+              },
+            } as Record<string, unknown>,
             body: BODY_POPULATE,
             seo: {
               populate: {
@@ -39,7 +56,42 @@ export default factories.createCoreController(
           },
         })
 
-      ctx.body = { data: results[0] ?? null, meta: {} }
+      const article = results[0] ?? null
+
+      // If no curated related articles, fall back to 3 recent posts
+      if (
+        article &&
+        (!article.relatedArticles ||
+          (article.relatedArticles as unknown[]).length === 0)
+      ) {
+        const fallback = await strapi
+          .documents("api::blog-article.blog-article")
+          .findMany({
+            filters: { slug: { $ne: slug } } as Record<string, unknown>,
+            fields: [
+              "title",
+              "slug",
+              "summary",
+              "author",
+              "authorTitle",
+              "publishedAt",
+            ],
+            populate: {
+              heroImage: true,
+              authorAvatar: true,
+              section: { fields: ["name", "slug"] },
+              category: { fields: ["name", "slug"] },
+            } as Record<string, unknown>,
+            status: "published",
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            sort: ["publishedAt:desc"] as any,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            pagination: { pageSize: 3 } as any,
+          })
+        ;(article as Record<string, unknown>).relatedArticles = fallback
+      }
+
+      ctx.body = { data: article, meta: {} }
     },
 
     // ── /blog-articles/slugs ──────────────────────────────────────────────────

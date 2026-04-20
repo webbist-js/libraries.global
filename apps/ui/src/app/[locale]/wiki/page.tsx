@@ -8,6 +8,7 @@ import {
   fetchPopularWikiArticles,
   fetchWikiLanding,
   fetchWikiNavigation,
+  fetchWikiSections,
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
@@ -52,12 +53,14 @@ export default function WikiPage(props: {
   const articles = use(fetchPopularWikiArticles(locale))?.data ?? []
   const navbar = use(fetchNavbar(locale))?.data
   const navCategories = use(fetchWikiNavigation(locale))?.data ?? []
+  const wikiSections = use(fetchWikiSections(locale))?.data ?? []
 
   return (
     <WikiLandingPage
       landing={landing}
       articles={articles}
       navCategories={navCategories}
+      wikiSections={wikiSections}
       navbar={navbar}
       locale={locale}
     />

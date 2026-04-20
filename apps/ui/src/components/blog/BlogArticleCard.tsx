@@ -64,8 +64,8 @@ export function BlogArticleCard({
         <div className="mb-3 h-px bg-white/[0.06]" />
 
         <div className="mb-3 flex items-center gap-2">
-          {article.category ? (
-            <Badge label={article.category} color="dim" />
+          {article.category?.name ? (
+            <Badge label={article.category.name} color="dim" />
           ) : null}
           {date ? (
             <span className="ml-auto font-mono text-[10px] text-white/20">

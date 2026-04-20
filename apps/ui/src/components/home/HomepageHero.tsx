@@ -1,6 +1,6 @@
 import { ArrowDown } from "lucide-react"
 
-import { Eyebrow, SectionHeader, StatBlock } from "@/components/ds"
+import { StatBlock } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
 import GlobeParallaxWrapper from "@/components/home/GlobeParallaxWrapper"
@@ -92,19 +92,47 @@ export function HomepageHero({
         <div className="flex min-h-0 items-start pt-[7vh] sm:pt-[5vh]">
           <div className="max-w-[800px] pb-4 sm:pb-8">
             {/* Coordinate / project eyebrow */}
-            <div className="mb-5 space-y-2">
+            <div className="mb-6 space-y-2">
               <p className="font-mono text-[11px] tracking-[0.22em] text-white/35 uppercase">
                 PROJECT · 001&nbsp;&nbsp;51.5308° N&nbsp;&nbsp;0.1238° W
               </p>
-              <Eyebrow>
-                {heroEyebrow ?? "THE WORLD'S LIBRARY INDEX · V.2026"}
-              </Eyebrow>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "5px 11px",
+                  borderRadius: "999px",
+                  fontSize: "10px",
+                  border: `1px solid ${T.border.line}`,
+                  background: "rgba(255,255,255,.03)",
+                  fontFamily: T.font.mono,
+                  letterSpacing: ".22em",
+                  color: T.ink.dim,
+                  textTransform: "uppercase",
+                }}
+              >
+                <span>★</span>
+                <span>
+                  {heroEyebrow ?? "AN ATLAS OF HUMAN KNOWLEDGE · V.2026"}
+                </span>
+              </div>
             </div>
 
             {heroTitle ? (
-              <SectionHeader as="h1">
+              <h1
+                style={{
+                  fontFamily: T.font.serif,
+                  fontWeight: 400,
+                  fontSize: "clamp(56px,8.4vw,128px)",
+                  lineHeight: 0.92,
+                  letterSpacing: "-.045em",
+                  margin: 0,
+                  color: T.ink.base,
+                }}
+              >
                 <RichTitle text={heroTitle} />
-              </SectionHeader>
+              </h1>
             ) : null}
 
             {heroText ? (

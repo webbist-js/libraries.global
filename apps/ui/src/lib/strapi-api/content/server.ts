@@ -745,13 +745,27 @@ export type ArticleBodyBlock =
   | ContentQuoteBlock
   | ContentCallout
 
+export type CategorySummary = {
+  documentId: string
+  name: string
+  slug: string
+}
+
+export type BlogSection = {
+  documentId: string
+  name: string
+  slug: string
+}
+
 export type BlogArticleSummary = {
   documentId: string
   title?: string | null
   slug?: string | null
   summary?: string | null
-  category?: string | null
+  category?: CategorySummary | null
+  section?: BlogSection | null
   author?: string | null
+  authorTitle?: string | null
   authorBio?: string | null
   authorAvatar?: MediaItem | null
   tags?: string[] | null
@@ -763,6 +777,7 @@ export type BlogArticleSummary = {
 
 export type BlogArticleDetail = BlogArticleSummary & {
   body?: ArticleBodyBlock[] | null
+  relatedArticles?: BlogArticleSummary[] | null
   seo?: LibrarySeoData | null
 }
 
@@ -820,14 +835,17 @@ export async function fetchRecentBlogArticles(locale: Locale) {
     return (await PublicStrapiClient.fetchAPI("/blog-articles", {
       locale,
       status: dm.isEnabled ? "draft" : "published",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      populate: { heroImage: true } as any,
+
+      populate: {
+        heroImage: true,
+        section: { fields: ["name", "slug"] },
+        category: { fields: ["name", "slug"] },
+      } as any,
 
       fields: [
         "title",
         "slug",
         "summary",
-        "category",
         "author",
         "featured",
         "publishedAt",
@@ -880,7 +898,19 @@ export type WikiCategorySummary = {
   icon?: IconHubValue | null
   order?: number | null
   tagLabel?: string | null
-  subTopics?: unknown | null
+}
+
+export type WikiSection = {
+  documentId: string
+  name: string
+  label?: string | null
+  slug: string
+  description?: string | null
+  order?: number | null
+}
+
+export type WikiSectionNav = WikiSection & {
+  articles: WikiNavArticle[]
 }
 
 export type WikiArticleStatus =
@@ -896,6 +926,7 @@ export type WikiNavArticle = {
   slug?: string | null
   priority?: number | null
   articleStatus?: WikiArticleStatus | null
+  category?: CategorySummary | null
 }
 
 export type WikiNavCategory = {
@@ -917,12 +948,12 @@ export type WikiArticleSummary = {
   publishedAt?: string | null
   updatedAt?: string | null
   heroImage?: MediaItem | null
-  category?: WikiCategorySummary | null
+  section?: WikiSection | null
+  category?: CategorySummary | null
   articleStatus?: WikiArticleStatus | null
 }
 
 export type WikiArticleDetail = WikiArticleSummary & {
-  githubPath?: string | null
   body?: ArticleBodyBlock[] | null
   relatedArticles?: WikiArticleSummary[] | null
   seo?: LibrarySeoData | null
@@ -934,8 +965,6 @@ export type WikiLandingData = {
   heroText?: string | null
   version?: string | null
   quickStartCards?: WikiArticleSummary[] | null
-  featuredArticle?: WikiArticleSummary | null
-  featuredCategories?: WikiCategorySummary[] | null
   seo?: LibrarySeoData | null
 }
 
@@ -987,6 +1016,7 @@ export async function fetchPopularWikiArticles(locale: Locale) {
 
       populate: {
         heroImage: true,
+        section: { fields: ["name", "slug"] },
         category: { fields: ["name", "slug"] },
       } as any,
 
@@ -1028,6 +1058,7 @@ export async function fetchAllWikiArticleSlugs(locale: Locale) {
         slug: string
         locale?: string | null
         category?: { slug?: string | null } | null
+        section?: { slug?: string | null } | null
       }[]
     }
   } catch (e: unknown) {
@@ -1045,13 +1076,30 @@ export async function fetchAllWikiArticleSlugs(locale: Locale) {
 
 export async function fetchWikiNavigation(locale: Locale) {
   try {
-    return (await PublicStrapiClient.fetchAPI("/wiki-categories/nav", {
+    return (await PublicStrapiClient.fetchAPI("/categories/nav", {
       locale,
-      status: "published",
     })) as { data: WikiNavCategory[] }
   } catch (e: unknown) {
     logNonBlockingError({
       message: `Error fetching wiki navigation for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return { data: [] }
+  }
+}
+
+export async function fetchWikiSections(locale: Locale) {
+  try {
+    return (await PublicStrapiClient.fetchAPI("/wiki-sections/nav", {
+      locale,
+    })) as { data: WikiSectionNav[] }
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching wiki sections for locale '${locale}'`,
       error: {
         error: e instanceof Error ? e.message : String(e),
         stack: e instanceof Error ? e.stack : undefined,

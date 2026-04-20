@@ -55,7 +55,8 @@ function FeaturedArticleCard({ article }: { article: BlogArticleSummary }) {
         <div className="mb-4 h-px bg-white/8" />
         <div className="mb-3 flex items-center gap-3">
           <span className="font-mono text-[10px] tracking-[0.18em] text-white/35 uppercase">
-            —&nbsp;{article.category ?? "FEATURE"}
+            —&nbsp;
+            {article.category?.name ?? article.section?.name ?? "FEATURE"}
           </span>
         </div>
         <h3 className="mb-3 font-[family-name:var(--font-fraunces)] text-[1.7rem] leading-[1.12] font-semibold tracking-[-0.02em] text-white transition-colors group-hover:text-white/90 sm:text-[1.9rem]">
@@ -101,7 +102,7 @@ export function BlogCard({ article }: { article: BlogArticleSummary }) {
       <div className="flex flex-1 flex-col p-5">
         <div className="mb-3 h-px bg-white/8" />
         <p className="mb-2 font-mono text-[10px] tracking-[0.18em] text-white/35 uppercase">
-          —&nbsp;{article.category ?? "ARTICLE"}
+          —&nbsp;{article.category?.name ?? article.section?.name ?? "ARTICLE"}
         </p>
         <h3 className="flex-1 font-[family-name:var(--font-fraunces)] text-[1.15rem] leading-[1.2] font-semibold tracking-[-0.01em] text-white transition-colors group-hover:text-white/90">
           {article.title}

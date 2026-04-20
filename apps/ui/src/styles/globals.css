@@ -5,6 +5,30 @@
 
 @plugin "tailwindcss-animate";
 
+/* ── Transparent-until-scroll global header ─────────────────────────────────
+   When a page contains [data-transparent-header] (e.g. blog article hero),
+   the sticky header starts fully transparent and fades in over the first 160px
+   of scroll. Pure CSS — no hydration flash, no effect on other pages.
+   Requires: background/border set via CSS classes (not inline styles).        */
+@keyframes header-reveal {
+  from {
+    background: transparent;
+    backdrop-filter: none;
+    border-bottom-color: transparent;
+  }
+  to {
+    background: rgba(5, 8, 22, 0.92);
+    backdrop-filter: blur(24px);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+:has([data-transparent-header]) .global-header {
+  animation: header-reveal linear both;
+  animation-timeline: scroll(root);
+  animation-range: 0px 160px;
+}
+
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still

@@ -20,7 +20,6 @@ import { T } from "@/lib/design-tokens"
 import type {
   WikiArticleDetail,
   WikiArticleStatus,
-  WikiNavCategory,
 } from "@/lib/strapi-api/content/server"
 
 import { WikiProgressBar } from "./WikiProgressBar"
@@ -134,10 +133,10 @@ function NavStatusBadge({ status }: { status?: WikiArticleStatus | null }) {
 // ── Left sidebar navigation ──────────────────────────────────────────────────
 
 function WikiLeftNav({
-  navCategories,
+  navSections,
   currentSlug,
 }: {
-  readonly navCategories: WikiNavCategory[]
+  readonly navSections: WikiSectionNav[]
   readonly currentSlug?: string | null
 }) {
   return (
@@ -172,8 +171,8 @@ function WikiLeftNav({
       </GlobalLink>
 
       {/* Category groups */}
-      {navCategories.map((cat, catIdx) => (
-        <div key={cat.documentId} style={{ marginBottom: "18px" }}>
+      {navSections.map((section, catIdx) => (
+        <div key={section.documentId} style={{ marginBottom: "18px" }}>
           {/* Group header */}
           <div
             style={{
@@ -192,11 +191,11 @@ function WikiLeftNav({
             <span style={{ color: T.ink.faint }}>
               {String(catIdx + 1).padStart(2, "0")}
             </span>
-            {cat.name}
+            {section.name}
           </div>
 
           {/* Articles list */}
-          {cat.articles && cat.articles.length > 0 ? (
+          {section.articles && section.articles.length > 0 ? (
             <ul
               style={{
                 listStyle: "none",
@@ -209,7 +208,7 @@ function WikiLeftNav({
                 marginLeft: "10px",
               }}
             >
-              {cat.articles.map((article) => {
+              {section.articles.map((article) => {
                 const isActive = article.slug === currentSlug
 
                 return (
@@ -420,12 +419,12 @@ function WikiRightPanel({
 
 export function WikiArticlePage({
   article,
-  navCategories,
+  navSections,
   navbar,
   locale,
 }: {
   readonly article: WikiArticleDetail | null
-  readonly navCategories: WikiNavCategory[]
+  readonly navSections: WikiSectionNav[]
   readonly navbar?: NavbarData
   readonly locale: Locale
 }) {
@@ -460,10 +459,6 @@ export function WikiArticlePage({
   const headings = extractHeadings(article.body)
   const wordCount = countWords(article.body)
   const editedAgo = formatRelativeDate(article.updatedAt)
-
-  const githubEditUrl = article.githubPath
-    ? `https://github.com/libraries-global/libraries.global/edit/main/${article.githubPath}`
-    : null
 
   // Split title: put last 2+ words in italic Fraunces (matching design aesthetic)
   const titleWords = (article.title ?? "").split(" ")
@@ -552,10 +547,7 @@ export function WikiArticlePage({
               </span>
             </div>
 
-            <WikiLeftNav
-              navCategories={navCategories}
-              currentSlug={article.slug}
-            />
+            <WikiLeftNav navSections={navSections} currentSlug={article.slug} />
           </div>
         </aside>
 
@@ -567,11 +559,11 @@ export function WikiArticlePage({
               <Breadcrumb
                 items={[
                   { label: "Wiki", href: "/wiki" },
-                  ...(article.category
+                  ...(article.section
                     ? [
                         {
-                          label: article.category.name ?? "",
-                          href: `/wiki?category=${article.category.slug}`,
+                          label: article.section.name,
+                          href: `/wiki?section=${article.section.slug}`,
                         },
                       ]
                     : []),
@@ -598,8 +590,8 @@ export function WikiArticlePage({
                   flexWrap: "wrap",
                 }}
               >
-                {article.category?.tagLabel ? (
-                  <Badge label={article.category.tagLabel} color="aurora" />
+                {article.category?.name ? (
+                  <Badge label={article.category.name} color="aurora" />
                 ) : null}
 
                 <StatusBadge status={article.articleStatus} />
@@ -708,41 +700,6 @@ export function WikiArticlePage({
 
                 {/* Action buttons */}
                 <div style={{ display: "flex", gap: "6px" }}>
-                  {githubEditUrl ? (
-                    <a
-                      href={githubEditUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        padding: "6px 10px",
-                        borderRadius: "8px",
-                        border: `1px solid ${T.border.line}`,
-                        background: "rgba(255,255,255,.02)",
-                        fontFamily: T.font.mono,
-                        fontSize: "11px",
-                        color: T.ink.dim,
-                        letterSpacing: ".06em",
-                        textDecoration: "none",
-                        transition: "border-color 200ms, color 200ms",
-                      }}
-                    >
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
-                      Edit on GitHub
-                    </a>
-                  ) : null}
                   <button
                     style={{
                       display: "inline-flex",

@@ -15,23 +15,23 @@ export function PageShell({
     <div
       style={{
         position: "relative",
+        isolation: "isolate", // creates stacking context so aurora/grain z-indexes are local
         minHeight: "100vh",
         background: T.bg.void,
         color: T.ink.base,
-        overflowX: "hidden",
         fontFamily: T.font.sans,
         WebkitFontSmoothing: "antialiased",
         ...style,
       }}
       className={className}
     >
-      {/* Aurora field */}
+      {/* Aurora field — negative z-index so all content (even non-positioned) renders above it */}
       <div
         aria-hidden="true"
         style={{
           position: "fixed",
           inset: 0,
-          zIndex: 0,
+          zIndex: -2,
           pointerEvents: "none",
           background: AURORA_BG,
         }}
@@ -42,15 +42,15 @@ export function PageShell({
         style={{
           position: "fixed",
           inset: 0,
-          zIndex: 1,
+          zIndex: -1,
           pointerEvents: "none",
           opacity: 0.35,
           mixBlendMode: "screen",
           backgroundImage: GRAIN_SVG,
         }}
       />
-      {/* Content */}
-      <div style={{ position: "relative", zIndex: 2 }}>{children}</div>
+      {/* Content — display:contents passes layout through to PageShell */}
+      <div style={{ display: "contents" }}>{children}</div>
     </div>
   )
 }

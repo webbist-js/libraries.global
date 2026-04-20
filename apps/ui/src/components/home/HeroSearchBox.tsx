@@ -162,7 +162,7 @@ export default function HeroSearchBox() {
             value={query}
           />
           <button
-            className="shrink-0 rounded-xl bg-indigo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-400 focus-visible:ring-2 focus-visible:ring-indigo-400/50 focus-visible:outline-none"
+            className="shrink-0 rounded-xl bg-white px-4 py-2 text-sm font-medium text-[#030511] transition-colors hover:bg-white/90 focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
             onClick={() => {
               setOpen(false)
               navigateToMap()

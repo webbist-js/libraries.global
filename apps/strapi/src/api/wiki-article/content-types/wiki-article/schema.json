@@ -49,11 +49,18 @@
       "allowedTypes": ["images"],
       "pluginOptions": { "i18n": { "localized": false } }
     },
+    "section": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::wiki-section.wiki-section",
+      "inversedBy": "articles",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
     "category": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "api::wiki-category.wiki-category",
-      "inversedBy": "articles",
+      "target": "api::category.category",
+      "inversedBy": "wikiArticles",
       "pluginOptions": { "i18n": { "localized": false } }
     },
     "author": {
@@ -79,10 +86,6 @@
       "type": "enumeration",
       "enum": ["stable", "beta", "experimental", "draft", "deprecated"],
       "default": "stable",
-      "pluginOptions": { "i18n": { "localized": false } }
-    },
-    "githubPath": {
-      "type": "string",
       "pluginOptions": { "i18n": { "localized": false } }
     },
     "seo": {

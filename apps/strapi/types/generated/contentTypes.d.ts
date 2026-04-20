@@ -756,6 +756,12 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
+    authorTitle: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     body: Schema.Attribute.DynamicZone<
       [
         "content.rich-text",
@@ -770,9 +776,7 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
-    category: Schema.Attribute.Enumeration<
-      ["Research", "Tech", "Culture", "Editorial", "Preservation", "Ethics"]
-    > &
+    category: Schema.Attribute.Relation<"manyToOne", "api::category.category"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
@@ -800,6 +804,25 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
       "api::blog-article.blog-article"
     >
     publishedAt: Schema.Attribute.DateTime
+    relatedArticles: Schema.Attribute.Relation<
+      "manyToMany",
+      "api::blog-article.blog-article"
+    > &
+      Schema.Attribute.Configurable &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    section: Schema.Attribute.Relation<
+      "manyToOne",
+      "api::blog-section.blog-section"
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     seo: Schema.Attribute.Component<"shared.seo", false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -912,6 +935,135 @@ export interface ApiBlogLandingBlogLanding extends Struct.SingleTypeSchema {
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+  }
+}
+
+export interface ApiBlogSectionBlogSection extends Struct.CollectionTypeSchema {
+  collectionName: "blog_sections"
+  info: {
+    description: "A named section / topic grouping for blog articles"
+    displayName: "Blog Section"
+    pluralName: "blog-sections"
+    singularName: "blog-section"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    i18n: {
+      localized: false
+    }
+  }
+  attributes: {
+    articles: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::blog-article.blog-article"
+    >
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    description: Schema.Attribute.Text
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::blog-section.blog-section"
+    > &
+      Schema.Attribute.Private
+    name: Schema.Attribute.String & Schema.Attribute.Required
+    publishedAt: Schema.Attribute.DateTime
+    slug: Schema.Attribute.UID<"name"> & Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface ApiCategoryCategory extends Struct.CollectionTypeSchema {
+  collectionName: "categories"
+  info: {
+    description: "A content category shared across wiki and blog articles"
+    displayName: "Category"
+    pluralName: "categories"
+    singularName: "category"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    i18n: {
+      localized: true
+    }
+  }
+  attributes: {
+    blogArticles: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::blog-article.blog-article"
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    description: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    icon: Schema.Attribute.JSON &
+      Schema.Attribute.CustomField<
+        "plugin::strapi-plugin-iconhub.iconhub",
+        {
+          storeIconData: true
+        }
+      >
+    locale: Schema.Attribute.String
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::category.category"
+    >
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    order: Schema.Attribute.Integer &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    publishedAt: Schema.Attribute.DateTime
+    slug: Schema.Attribute.UID<"name"> &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    tagLabel: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    wikiArticles: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::wiki-article.wiki-article"
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
   }
 }
 
@@ -2218,10 +2370,7 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
-    category: Schema.Attribute.Relation<
-      "manyToOne",
-      "api::wiki-category.wiki-category"
-    > &
+    category: Schema.Attribute.Relation<"manyToOne", "api::category.category"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
@@ -2237,12 +2386,6 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
         }
       }> &
       Schema.Attribute.DefaultTo<false>
-    githubPath: Schema.Attribute.String &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: false
-        }
-      }>
     heroImage: Schema.Attribute.Media<"images"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -2264,6 +2407,15 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
     relatedArticles: Schema.Attribute.Relation<
       "manyToMany",
       "api::wiki-article.wiki-article"
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    section: Schema.Attribute.Relation<
+      "manyToOne",
+      "api::wiki-section.wiki-section"
     > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -2302,93 +2454,6 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
   }
 }
 
-export interface ApiWikiCategoryWikiCategory
-  extends Struct.CollectionTypeSchema {
-  collectionName: "wiki_categories"
-  info: {
-    description: "A navigable directory section within the knowledge hub"
-    displayName: "Wiki Category"
-    pluralName: "wiki-categories"
-    singularName: "wiki-category"
-  }
-  options: {
-    draftAndPublish: false
-  }
-  pluginOptions: {
-    i18n: {
-      localized: true
-    }
-  }
-  attributes: {
-    articles: Schema.Attribute.Relation<
-      "oneToMany",
-      "api::wiki-article.wiki-article"
-    > &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: false
-        }
-      }>
-    createdAt: Schema.Attribute.DateTime
-    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
-      Schema.Attribute.Private
-    description: Schema.Attribute.Text &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true
-        }
-      }>
-    icon: Schema.Attribute.JSON &
-      Schema.Attribute.CustomField<
-        "plugin::strapi-plugin-iconhub.iconhub",
-        {
-          storeIconData: true
-        }
-      >
-    locale: Schema.Attribute.String
-    localizations: Schema.Attribute.Relation<
-      "oneToMany",
-      "api::wiki-category.wiki-category"
-    >
-    name: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true
-        }
-      }>
-    order: Schema.Attribute.Integer &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: false
-        }
-      }>
-    publishedAt: Schema.Attribute.DateTime
-    slug: Schema.Attribute.UID<"name"> &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: false
-        }
-      }>
-    subTopics: Schema.Attribute.JSON &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true
-        }
-      }>
-    tagLabel: Schema.Attribute.String &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: false
-        }
-      }>
-    updatedAt: Schema.Attribute.DateTime
-    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
-      Schema.Attribute.Private
-  }
-}
-
 export interface ApiWikiLandingWikiLanding extends Struct.SingleTypeSchema {
   collectionName: "wiki_landing"
   info: {
@@ -2409,24 +2474,6 @@ export interface ApiWikiLandingWikiLanding extends Struct.SingleTypeSchema {
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
-    featuredArticle: Schema.Attribute.Relation<
-      "oneToOne",
-      "api::wiki-article.wiki-article"
-    > &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: false
-        }
-      }>
-    featuredCategories: Schema.Attribute.Relation<
-      "manyToMany",
-      "api::wiki-category.wiki-category"
-    > &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: false
-        }
-      }>
     heroEyebrow: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -2475,6 +2522,43 @@ export interface ApiWikiLandingWikiLanding extends Struct.SingleTypeSchema {
           localized: false
         }
       }>
+  }
+}
+
+export interface ApiWikiSectionWikiSection extends Struct.CollectionTypeSchema {
+  collectionName: "wiki_sections"
+  info: {
+    description: "A top-level section grouping wiki articles"
+    displayName: "Wiki Section"
+    pluralName: "wiki-sections"
+    singularName: "wiki-section"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  attributes: {
+    articles: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::wiki-article.wiki-article"
+    >
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    description: Schema.Attribute.Text
+    label: Schema.Attribute.String
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::wiki-section.wiki-section"
+    > &
+      Schema.Attribute.Private
+    name: Schema.Attribute.String & Schema.Attribute.Required
+    order: Schema.Attribute.Integer
+    publishedAt: Schema.Attribute.DateTime
+    slug: Schema.Attribute.UID<"name"> & Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
   }
 }
 
@@ -2994,6 +3078,8 @@ declare module "@strapi/strapi" {
       "api::area.area": ApiAreaArea
       "api::blog-article.blog-article": ApiBlogArticleBlogArticle
       "api::blog-landing.blog-landing": ApiBlogLandingBlogLanding
+      "api::blog-section.blog-section": ApiBlogSectionBlogSection
+      "api::category.category": ApiCategoryCategory
       "api::continent.continent": ApiContinentContinent
       "api::country.country": ApiCountryCountry
       "api::footer.footer": ApiFooterFooter
@@ -3006,8 +3092,8 @@ declare module "@strapi/strapi" {
       "api::service.service": ApiServiceService
       "api::subscriber.subscriber": ApiSubscriberSubscriber
       "api::wiki-article.wiki-article": ApiWikiArticleWikiArticle
-      "api::wiki-category.wiki-category": ApiWikiCategoryWikiCategory
       "api::wiki-landing.wiki-landing": ApiWikiLandingWikiLanding
+      "api::wiki-section.wiki-section": ApiWikiSectionWikiSection
       "plugin::content-releases.release": PluginContentReleasesRelease
       "plugin::content-releases.release-action": PluginContentReleasesReleaseAction
       "plugin::i18n.locale": PluginI18NLocale

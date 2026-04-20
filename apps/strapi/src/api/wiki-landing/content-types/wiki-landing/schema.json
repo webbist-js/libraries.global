@@ -38,18 +38,6 @@
       "type": "text",
       "pluginOptions": { "i18n": { "localized": true } }
     },
-    "featuredArticle": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::wiki-article.wiki-article",
-      "pluginOptions": { "i18n": { "localized": false } }
-    },
-    "featuredCategories": {
-      "type": "relation",
-      "relation": "manyToMany",
-      "target": "api::wiki-category.wiki-category",
-      "pluginOptions": { "i18n": { "localized": false } }
-    },
     "seo": {
       "type": "component",
       "component": "shared.seo",

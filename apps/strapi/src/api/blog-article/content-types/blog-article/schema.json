@@ -49,14 +49,35 @@
       "allowedTypes": ["images"],
       "pluginOptions": { "i18n": { "localized": false } }
     },
+    "section": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::blog-section.blog-section",
+      "inversedBy": "articles",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
     "category": {
-      "type": "enumeration",
-      "enum": ["Research", "Tech", "Culture", "Editorial", "Preservation", "Ethics"],
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::category.category",
+      "inversedBy": "blogArticles",
       "pluginOptions": { "i18n": { "localized": false } }
     },
     "author": {
       "type": "string",
       "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "authorTitle": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "relatedArticles": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::blog-article.blog-article",
+      "configurable": true,
+      "private": false,
+      "pluginOptions": { "i18n": { "localized": false } }
     },
     "featured": {
       "type": "boolean",

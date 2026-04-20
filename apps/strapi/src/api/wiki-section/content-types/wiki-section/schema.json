@@ -1,0 +1,40 @@
+{
+  "kind": "collectionType",
+  "collectionName": "wiki_sections",
+  "info": {
+    "singularName": "wiki-section",
+    "pluralName": "wiki-sections",
+    "displayName": "Wiki Section",
+    "description": "A top-level section grouping wiki articles"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "label": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "order": {
+      "type": "integer"
+    },
+    "articles": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::wiki-article.wiki-article",
+      "mappedBy": "section"
+    }
+  }
+}
