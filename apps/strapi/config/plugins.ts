@@ -85,6 +85,11 @@ export default ({ env }) => {
     email: {
       config: prepareEmailConfig(env),
     },
+
+    "content-moderation": {
+      enabled: true,
+      resolve: "./src/plugins/content-moderation",
+    },
   }
 }
 
