@@ -32,6 +32,7 @@
     "@notum-cz/strapi-plugin-tiptap-editor": "^1.0.1",
     "@repo/design-system": "workspace:*",
     "@repo/shared-data": "workspace:*",
+    "@strapi-community/plugin-better-auth": "1.0.0-alpha.2",
     "@strapi-community/plugin-seo": "^2.1.1",
     "@strapi/database": "5.40.0",
     "@strapi/design-system": "2.2.0",
