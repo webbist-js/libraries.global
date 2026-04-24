@@ -2,156 +2,31 @@
 
 import { useEffect, useRef, useState } from "react"
 
-import GlobalLink from "@/components/global/GlobalLink"
 import type { MapConfig } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 import { cn } from "@/lib/styles"
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+import { LibraryPinPanel } from "./LibraryPinPanel"
+import {
+  fetchMapPins,
+  GEO_LAYERS,
+  GEO_SOURCES,
+  LIBRARY_LAYERS,
+  LIBRARY_SOURCES,
+  parseBounds,
+} from "./map.helpers"
+import type {
+  BreadcrumbEntry,
+  GeoMapPin,
+  LibraryDetails,
+  LibraryMapPin,
+  MapDrillLevel,
+} from "./map.types"
 
-export interface LibraryMapPin {
-  documentId: string
-  name: string
-  slug: string
-  libraryType?: string | null
-  operationalStatus?: string | null
-  city?: string | null
-  summary?: string | null
-  /** Raw hero image URL from Strapi (may be /uploads/... or https://...) */
-  heroImage?: { url?: string | null } | null
-  /** Flattened hero image URL — populated after GeoJSON round-trip on pin click */
-  heroImageUrl?: string | null
-  location: { lat: number; lng: number }
-  continent?: { slug: string } | null
-  country?: { slug: string } | null
-  region?: { slug: string } | null
-}
+// Re-export types that external consumers depend on
+export type { LibraryMapPin, GeoMapPin, MapDrillLevel }
 
-export interface GeoMapPin {
-  documentId: string
-  name: string
-  slug: string
-  /** Centroid — optional when boundaryUrl is present */
-  lat?: number | null
-  lng?: number | null
-  boundingBoxNE?: string | null
-  boundingBoxSW?: string | null
-  /** URL to a static GeoJSON file in public/boundaries/ */
-  boundaryUrl?: string | null
-  continent?: { slug: string } | null
-  country?: { slug: string } | null
-  region?: { slug: string } | null
-}
-
-export type MapDrillLevel = "continent" | "country" | "region" | "area"
-
-interface BreadcrumbEntry {
-  label: string
-  level: MapDrillLevel
-  areaSlug?: string
-  regionSlug?: string
-  countrySlug?: string
-  continentSlug?: string
-  /** Bounding box of the level being entered — used to re-fit viewport on back */
-  boundingBoxNE?: string | null
-  boundingBoxSW?: string | null
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function operationalLabel(status?: string | null): string {
-  switch (status) {
-    case "open":
-      return "Open"
-    case "temporarily_closed":
-      return "Temporarily Closed"
-    case "permanently_closed":
-      return "Permanently Closed"
-    case "seasonal":
-      return "Seasonal"
-    case "appointment_only":
-      return "By Appointment"
-
-    default:
-      return "Unknown"
-  }
-}
-
-const TYPE_LABELS: Record<string, string> = {
-  national: "National",
-  public: "Public",
-  academic: "Academic",
-  special: "Special",
-  government: "Government",
-  school: "School",
-  digital: "Digital",
-  preservation: "Preservation",
-}
-
-function buildLibraryHref(pin: LibraryMapPin): string | null {
-  const c = pin.continent?.slug
-  const co = pin.country?.slug
-  const r = pin.region?.slug
-  const s = pin.slug
-  if (c && co && r && s) return `/${c}/${co}/${r}/${s}`
-
-  return null
-}
-
-async function fetchMapPins<T>(
-  path: string,
-  params: Record<string, string>
-): Promise<T[]> {
-  const query = new URLSearchParams(params)
-  try {
-    const res = await fetch(`/api/public-proxy/api/${path}?${query}`)
-    if (!res.ok) return []
-    const json = (await res.json()) as { data?: T[] }
-
-    return json.data ?? []
-  } catch {
-    return []
-  }
-}
-
-function parseBounds(
-  ne: string | null | undefined,
-  sw: string | null | undefined
-) {
-  if (!ne || !sw) return null
-  const neParts = ne.split(",").map(Number)
-  const swParts = sw.split(",").map(Number)
-  const neLat = neParts[0],
-    neLng = neParts[1]
-  const swLat = swParts[0],
-    swLng = swParts[1]
-  if (
-    neLat === undefined ||
-    neLng === undefined ||
-    swLat === undefined ||
-    swLng === undefined ||
-    Number.isNaN(neLat) ||
-    Number.isNaN(neLng) ||
-    Number.isNaN(swLat) ||
-    Number.isNaN(swLng)
-  )
-    return null
-
-  return { neLat, neLng, swLat, swLng } as const
-}
-
-// ── Layer ID constants ────────────────────────────────────────────────────────
-
-const LIBRARY_LAYERS = [
-  "library-clusters",
-  "library-cluster-count",
-  "library-pins",
-] as const
-const LIBRARY_SOURCES = ["libraries"] as const
-const GEO_LAYERS = ["geo-fills", "geo-outlines"] as const
-const GEO_SOURCES = ["geo-areas"] as const
-
-// ── Component ─────────────────────────────────────────────────────────────────
+// ── Component props ───────────────────────────────────────────────────────────
 
 export interface InteractiveMapProps {
   mapConfig?: MapConfig | null
@@ -166,6 +41,8 @@ export interface InteractiveMapProps {
   /** Fill the parent container instead of using a fixed pixel height. */
   fill?: boolean
 }
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export function InteractiveMap({
   mapConfig,
@@ -184,13 +61,15 @@ export function InteractiveMap({
   // HTML label/dot markers for geo-level items
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const geoMarkersRef = useRef<any[]>([])
-  // Generation counter — incremented each time renderGeoPins is called so stale
-  // event-handler closures from previous renders exit early.
+  // Generation counter — incremented each time renderGeoBoundaries is called so
+  // stale event-handler closures from previous renders exit early.
   const geoGenRef = useRef(0)
 
   const [mapReady, setMapReady] = useState(false)
   const [loading, setLoading] = useState(false)
   const [selectedPin, setSelectedPin] = useState<LibraryMapPin | null>(null)
+  const [selectedPinDetails, setSelectedPinDetails] =
+    useState<LibraryDetails | null>(null)
   const [breadcrumb, setBreadcrumb] = useState<BreadcrumbEntry[]>([])
 
   // Ref-stable view state so event handlers don't go stale
@@ -200,12 +79,7 @@ export function InteractiveMap({
     regionSlug?: string
     countrySlug?: string
     continentSlug?: string
-  }>({
-    mode: initialMode,
-    regionSlug,
-    countrySlug,
-    continentSlug,
-  })
+  }>({ mode: initialMode, regionSlug, countrySlug, continentSlug })
 
   // Stable callback refs
   const setSelectedPinRef = useRef(setSelectedPin)
@@ -215,11 +89,10 @@ export function InteractiveMap({
   const setLoadingRef = useRef(setLoading)
   setLoadingRef.current = setLoading
 
-  // ── Map initialisation ──────────────────────────────────────────────────────
+  // ── Map initialisation ────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!containerRef.current) return
-
     let alive = true
 
     import("maplibre-gl").then(({ default: maplibregl }) => {
@@ -233,7 +106,7 @@ export function InteractiveMap({
 
       const map = new maplibregl.Map({
         container: containerRef.current,
-        // CARTO Dark Matter No Labels — free, no API key, native maplibre-gl, no CORS issues
+        // CARTO Dark Matter No Labels — free, no API key, no CORS issues
         style:
           "https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json",
         center: [centerLng, centerLat],
@@ -247,7 +120,6 @@ export function InteractiveMap({
       )
       mapRef.current = map
 
-      // Fit to bounding box if provided
       if (mapConfig?.boundingBoxNE && mapConfig?.boundingBoxSW) {
         const b = parseBounds(mapConfig.boundingBoxNE, mapConfig.boundingBoxSW)
         if (b) {
@@ -275,7 +147,42 @@ export function InteractiveMap({
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Clear helpers ───────────────────────────────────────────────────────────
+  // ── Secondary detail fetch on pin select ──────────────────────────────────
+
+  useEffect(() => {
+    if (!selectedPin) {
+      setSelectedPinDetails(null)
+
+      return
+    }
+    const p = new URLSearchParams({
+      "filters[slug][$eq]": selectedPin.slug,
+      status: "published",
+      "fields[0]": "foundedYear",
+      "fields[1]": "district",
+      "fields[2]": "featured",
+      "fields[3]": "openingTimes",
+      "populate[country][fields][0]": "name",
+      "populate[region][fields][0]": "name",
+    })
+    fetch(`/api/public-proxy/api/libraries?${p}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const lib = data?.data?.[0]
+        if (!lib) return
+        setSelectedPinDetails({
+          foundedYear: lib.foundedYear ?? null,
+          district: lib.district ?? null,
+          featured: lib.featured ?? null,
+          openingTimes: lib.openingTimes ?? null,
+          countryName: lib.country?.name ?? null,
+          regionName: lib.region?.name ?? null,
+        })
+      })
+      .catch(() => setSelectedPinDetails(null))
+  }, [selectedPin?.slug]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Layer management helpers ──────────────────────────────────────────────
 
   function clearLibraryLayers() {
     const map = mapRef.current
@@ -294,7 +201,7 @@ export function InteractiveMap({
     geoMarkersRef.current = []
   }
 
-  // ── Zoom to a geo-pin bounds / centroid ─────────────────────────────────────
+  // ── Zoom to a geo-pin bounds / centroid ───────────────────────────────────
 
   function zoomToPin(pin: GeoMapPin, fallbackZoom: number) {
     const map = mapRef.current
@@ -317,7 +224,7 @@ export function InteractiveMap({
     }
   }
 
-  // ── Library pins (GeoJSON clustered circles) ─────────────────────────────────
+  // ── Library pins (GeoJSON clustered circles) ──────────────────────────────
 
   function renderLibraryPins(pins: LibraryMapPin[]) {
     const map = mapRef.current
@@ -358,7 +265,6 @@ export function InteractiveMap({
       clusterRadius: 40,
     })
 
-    // Cluster circles
     map.addLayer({
       id: "library-clusters",
       type: "circle",
@@ -373,7 +279,6 @@ export function InteractiveMap({
       },
     })
 
-    // Cluster count label
     map.addLayer({
       id: "library-cluster-count",
       type: "symbol",
@@ -386,7 +291,6 @@ export function InteractiveMap({
       paint: { "text-color": "#ffffff" },
     })
 
-    // Individual pin circles
     map.addLayer({
       id: "library-pins",
       type: "circle",
@@ -412,6 +316,7 @@ export function InteractiveMap({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(map.getSource("libraries") as any).getClusterExpansionZoom(
         clusterId,
+
         (_err: unknown, zoom: number) => {
           map.easeTo({
             center: (features[0].geometry as any).coordinates,
@@ -421,7 +326,7 @@ export function InteractiveMap({
       )
     })
 
-    // Pin click → side panel + center map
+    // Pin click → side panel + centre map
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     map.on("click", "library-pins", (e: any) => {
       const features = map.queryRenderedFeatures(e.point, {
@@ -434,7 +339,6 @@ export function InteractiveMap({
         number,
         number,
       ]
-      // Center the map on the selected pin
       map.easeTo({
         center: coords,
         zoom: Math.max(map.getZoom(), 14),
@@ -470,11 +374,12 @@ export function InteractiveMap({
     })
   }
 
-  // ── Geo-level boundaries (countries / regions) ───────────────────────────────
-  // Items with boundaryUrl → fetch GeoJSON at runtime, render fill + outline layers
-  // Items without boundary but with centroid → fallback dot marker
+  // ── Geo-level boundaries (countries / regions / areas) ────────────────────
+  // Items with boundaryUrl → fetch GeoJSON, render fill + outline layers.
+  // Items without boundary but with centroid → fallback dot marker.
 
   async function renderGeoBoundaries(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     maplibregl: any,
     pins: GeoMapPin[],
     type: "region" | "country" | "area"
@@ -490,7 +395,7 @@ export function InteractiveMap({
       type === "country" ? "#22d3ee" : type === "region" ? "#f59e0b" : "#a78bfa"
     const fallbackZoom = type === "country" ? 6 : type === "region" ? 9 : 11
 
-    // ── Shared drill-down handler ─────────────────────────────────────────────
+    // ── Shared drill-down handler ───────────────────────────────────────────
 
     function drillInto(pin: GeoMapPin) {
       zoomToPin(pin, fallbackZoom)
@@ -548,7 +453,6 @@ export function InteractiveMap({
             boundingBoxSW: pin.boundingBoxSW ?? null,
           },
         ])
-        // Check for areas before falling back to library pins
         fetchMapPins<GeoMapPin>("areas/map-pins", {
           regionSlug: pin.slug,
           locale,
@@ -599,18 +503,16 @@ export function InteractiveMap({
       }
     }
 
-    // ── Boundary fill + outline layers ────────────────────────────────────────
+    // ── Boundary fill + outline layers ─────────────────────────────────────
 
     const withBoundaryUrl = pins.filter((p) => p.boundaryUrl)
 
     if (withBoundaryUrl.length > 0) {
-      // Deduplicate URLs — multiple pins may share the same GeoJSON file
       const uniqueUrls = [
         ...new Set(withBoundaryUrl.map((p) => p.boundaryUrl!)),
       ]
       const pinBySlug = new Map(withBoundaryUrl.map((p) => [p.slug, p]))
 
-      // Fetch all unique boundary files in parallel
       const fetched = await Promise.all(
         uniqueUrls.map(async (url) => {
           try {
@@ -629,15 +531,12 @@ export function InteractiveMap({
         })
       )
 
-      // Guard: exit if a newer renderGeoBoundaries call has started
       if (geoGenRef.current !== gen) return
 
-      // Build name → pin map as fallback (normalised lowercase for loose matching)
       const pinByName = new Map(
         withBoundaryUrl.map((p) => [p.name.toLowerCase(), p])
       )
 
-      // Combine features whose slug (or name) matches one of our pins
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const combinedFeatures: any[] = []
       for (const collection of fetched) {
@@ -646,7 +545,6 @@ export function InteractiveMap({
           const slug = feature.properties?.slug as string | undefined
           const featureName =
             (feature.properties?.name as string | undefined) ?? ""
-          // Try slug match first, fall back to name match
           const pin =
             (slug && pinBySlug.get(slug)) ??
             pinByName.get(featureName.toLowerCase()) ??
@@ -670,14 +568,12 @@ export function InteractiveMap({
         }
       }
 
-      const featureCollection = {
-        type: "FeatureCollection" as const,
-        features: combinedFeatures,
-      }
-
       map.addSource("geo-areas", {
         type: "geojson",
-        data: featureCollection,
+        data: {
+          type: "FeatureCollection" as const,
+          features: combinedFeatures,
+        },
         generateId: true,
       })
 
@@ -712,7 +608,6 @@ export function InteractiveMap({
         },
       })
 
-      // Hover state tracking (generation-guarded)
       let hoveredId: number | null = null
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -744,7 +639,6 @@ export function InteractiveMap({
         map.getCanvas().style.cursor = ""
       })
 
-      // Click on boundary → drill down
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       map.on("click", "geo-fills", (e: any) => {
         if (geoGenRef.current !== gen || !e.features?.length) return
@@ -774,8 +668,8 @@ export function InteractiveMap({
       })
     }
 
-    // ── HTML label markers for all items with centroids ───────────────────────
-    // Boundary items get a text-only label; items without boundaries get a dot + label.
+    // ── HTML label markers ─────────────────────────────────────────────────
+    // Boundary items get a text-only label; items without boundaries get dot + label.
 
     const markers = pins
       .filter((p) => p.lat != null && p.lng != null)
@@ -784,7 +678,6 @@ export function InteractiveMap({
         const wrap = document.createElement("div")
 
         if (hasBoundary) {
-          // Text-only label — not a click target (boundary fill handles clicks)
           wrap.style.cssText = "pointer-events:none;padding:2px 0;"
           const label = document.createElement("span")
           label.style.cssText =
@@ -792,7 +685,6 @@ export function InteractiveMap({
           label.textContent = pin.name ?? ""
           wrap.append(label)
         } else {
-          // Dot + label marker — clickable fallback
           wrap.style.cssText =
             "display:flex;flex-direction:column;align-items:center;cursor:pointer;"
           const dot = document.createElement("div")
@@ -820,11 +712,10 @@ export function InteractiveMap({
     geoMarkersRef.current = markers
   }
 
-  // ── Load initial data once map is ready ─────────────────────────────────────
+  // ── Load initial data once map is ready ───────────────────────────────────
 
   useEffect(() => {
     if (!mapReady) return
-
     const {
       mode,
       regionSlug: rs,
@@ -893,7 +784,7 @@ export function InteractiveMap({
     })
   }, [mapReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Back navigation ─────────────────────────────────────────────────────────
+  // ── Back navigation ───────────────────────────────────────────────────────
 
   function handleBack() {
     const newCrumb = breadcrumb.slice(0, -1)
@@ -904,7 +795,6 @@ export function InteractiveMap({
     const status = "published"
     const prev = newCrumb.at(-1)
 
-    /** Zoom map to prev entry's bbox, or fall back to mapConfig bbox */
     function applyZoom(entry: BreadcrumbEntry | undefined) {
       const map = mapRef.current
       if (!map) return
@@ -1068,9 +958,8 @@ export function InteractiveMap({
     })
   }
 
-  // ── Render ───────────────────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────────────────
 
-  const libraryHref = selectedPin ? buildLibraryHref(selectedPin) : null
   const heroImageUrl = formatStrapiMediaUrl(selectedPin?.heroImageUrl) ?? null
 
   return (
@@ -1111,103 +1000,15 @@ export function InteractiveMap({
 
       {/* Selected library panel */}
       {selectedPin ? (
-        <div className="absolute top-4 right-4 z-20 flex max-h-[calc(100%-2rem)] w-[340px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#050c1a]/95 shadow-2xl backdrop-blur-xl">
-          {/* Hero image with close button overlaid */}
-          <div className="relative flex-shrink-0">
-            {heroImageUrl ? (
-              <div className="relative h-40">
-                <img
-                  src={heroImageUrl}
-                  alt={selectedPin.name}
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#050c1a] via-[#050c1a]/20 to-transparent" />
-              </div>
-            ) : null}
-            {/* Close button — always in top-right corner */}
-            <button
-              onClick={() => setSelectedPin(null)}
-              className={cn(
-                "absolute top-3 right-3 flex h-7 w-7 items-center justify-center rounded-full border transition-colors",
-                heroImageUrl
-                  ? "border-white/20 bg-black/50 text-white/70 backdrop-blur-sm hover:border-white/40 hover:text-white"
-                  : "border-white/10 bg-white/6 text-white/40 hover:border-white/25 hover:text-white/70"
-              )}
-              aria-label="Close"
-            >
-              <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3">
-                <path
-                  d="M1 1l10 10M11 1L1 11"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4 pt-3">
-            {/* Name + badges */}
-            <h3 className="text-lg leading-tight font-semibold text-white">
-              {selectedPin.name}
-            </h3>
-
-            <div className="mt-2 flex flex-wrap items-center gap-1.5">
-              {selectedPin.libraryType ? (
-                <span className="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-2.5 py-0.5 text-[11px] font-medium text-indigo-300">
-                  {TYPE_LABELS[selectedPin.libraryType] ??
-                    selectedPin.libraryType}
-                </span>
-              ) : null}
-              {selectedPin.operationalStatus ? (
-                <span
-                  className={cn(
-                    "rounded-full border px-2.5 py-0.5 text-[11px] font-medium",
-                    selectedPin.operationalStatus === "open"
-                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-                      : "border-amber-500/30 bg-amber-500/10 text-amber-300"
-                  )}
-                >
-                  {operationalLabel(selectedPin.operationalStatus)}
-                </span>
-              ) : null}
-              {selectedPin.city ? (
-                <span className="text-[11px] text-white/35">
-                  {selectedPin.city}
-                </span>
-              ) : null}
-            </div>
-
-            {/* Summary */}
-            {selectedPin.summary ? (
-              <p className="mt-3 line-clamp-4 text-[13px] leading-relaxed text-white/55">
-                {selectedPin.summary}
-              </p>
-            ) : null}
-
-            <div className="flex-1" />
-
-            {/* CTA */}
-            {libraryHref ? (
-              <GlobalLink
-                href={libraryHref}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-500/25 bg-cyan-500/8 px-4 py-2.5 text-sm font-medium text-cyan-300 transition-colors hover:border-cyan-400/45 hover:bg-cyan-500/15 hover:text-cyan-200"
-              >
-                Explore {selectedPin.name}
-                <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3">
-                  <path
-                    d="M2 2h8v8M2 10l8-8"
-                    stroke="currentColor"
-                    strokeWidth="1.3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </GlobalLink>
-            ) : null}
-          </div>
-        </div>
+        <LibraryPinPanel
+          pin={selectedPin}
+          details={selectedPinDetails}
+          heroImageUrl={heroImageUrl}
+          onClose={() => {
+            setSelectedPin(null)
+            setSelectedPinDetails(null)
+          }}
+        />
       ) : null}
     </div>
   )

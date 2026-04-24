@@ -1200,6 +1200,12 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    budget: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     capitalCity: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1218,6 +1224,12 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+    employees: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     entityRef: Schema.Attribute.String &
       Schema.Attribute.Unique &
       Schema.Attribute.SetPluginOptions<{
@@ -1267,6 +1279,12 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    languages: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     libraries: Schema.Attribute.Relation<"oneToMany", "api::library.library"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1300,11 +1318,23 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    population: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     publishedAt: Schema.Attribute.DateTime
     regions: Schema.Attribute.Relation<"oneToMany", "api::region.region"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
+        }
+      }>
+    regionsSectionLabel: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
         }
       }>
     regionTypeLabel: Schema.Attribute.String &
@@ -1357,9 +1387,27 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
+    systemDescription: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+    visitsPerYear: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    volunteers: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
   }
 }
 
@@ -1578,6 +1626,12 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    architect: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     area: Schema.Attribute.Relation<"manyToOne", "api::area.area"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1588,6 +1642,12 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
+        }
+      }>
+    buildingInfo: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
         }
       }>
     catalogueUrl: Schema.Attribute.String &
@@ -1602,6 +1662,12 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
+    classificationSystem: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     closedYear: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1612,6 +1678,15 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true
+        }
+      }>
+    collectionStats: Schema.Attribute.Component<
+      "library.collection-stat",
+      true
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
         }
       }>
     contentUpdatedAt: Schema.Attribute.DateTime &
@@ -1695,7 +1770,25 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    iiifEndpoint: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    languagesServed: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     lastVerifiedAt: Schema.Attribute.DateTime &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    libraryStats: Schema.Attribute.Component<"library.library-stat", true> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
@@ -1886,6 +1979,12 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
+        }
+      }>
+    transitInfo: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
         }
       }>
     updatedAt: Schema.Attribute.DateTime

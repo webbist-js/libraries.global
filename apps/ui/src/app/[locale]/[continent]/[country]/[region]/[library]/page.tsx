@@ -8,6 +8,7 @@ import { isDevelopment } from "@/lib/general-helpers"
 import {
   fetchAllLibraries,
   fetchLibrary,
+  fetchNearbyLibraries,
   fetchNavbar,
 } from "@/lib/strapi-api/content/server"
 
@@ -91,6 +92,16 @@ export default function LibraryRoutePage(props: {
   }
 
   const navbar = use(fetchNavbar(locale))?.data
+  const nearbyLibraries = use(
+    fetchNearbyLibraries(librarySlug, library.region?.slug)
+  )
 
-  return <LibraryDetailPage library={library} navbar={navbar} locale={locale} />
+  return (
+    <LibraryDetailPage
+      library={library}
+      navbar={navbar}
+      locale={locale}
+      nearbyLibraries={nearbyLibraries}
+    />
+  )
 }

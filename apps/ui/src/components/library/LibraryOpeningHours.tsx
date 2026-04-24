@@ -1,9 +1,9 @@
 "use client"
 
-import { Icon } from "@iconify/react"
 import { useState } from "react"
 
 import { homepagePanelClassName } from "@/components/home/homepage.constants"
+import { T } from "@/lib/design-tokens"
 import { cn } from "@/lib/styles"
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -29,53 +29,10 @@ const DAY_LABELS: Record<DayKey, string> = {
   sunday: "Sunday",
 }
 
-const STAFFING_CONFIG: Record<
-  string,
-  {
-    label: string
-    bar: string
-    barText: string
-    pill: string
-    pillText: string
-  }
-> = {
-  staffed: {
-    label: "Staffed",
-    bar: "bg-emerald-500/20 border border-emerald-500/30",
-    barText: "text-emerald-200",
-    pill: "bg-emerald-500/20 border border-emerald-500/30",
-    pillText: "text-emerald-200",
-  },
-  unstaffed: {
-    label: "Unstaffed",
-    bar: "bg-white/6 border border-white/10",
-    barText: "text-white/50",
-    pill: "bg-white/6 border border-white/10",
-    pillText: "text-white/50",
-  },
-  self_service: {
-    label: "Self-Service",
-    bar: "bg-violet-500/15 border border-violet-500/25",
-    barText: "text-violet-200",
-    pill: "bg-violet-500/15 border border-violet-500/25",
-    pillText: "text-violet-200",
-  },
-  restricted: {
-    label: "Restricted",
-    bar: "bg-red-500/15 border border-red-500/25",
-    barText: "text-red-200",
-    pill: "bg-red-500/15 border border-red-500/25",
-    pillText: "text-red-200",
-  },
-}
-
-const DEFAULT_STAFFING_CONFIG = {
-  label: "Open",
-  bar: "bg-indigo-500/15 border border-indigo-500/25",
-  barText: "text-indigo-200",
-  pill: "bg-indigo-500/15 border border-indigo-500/25",
-  pillText: "text-indigo-200",
-}
+// Fixed day scale: 07:00 – 22:00 (for proportional bar rendering)
+const SCALE_START = 7 * 60 // 420 min
+const SCALE_END = 22 * 60 // 1320 min
+const SCALE_TOTAL = SCALE_END - SCALE_START // 900 min
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -96,7 +53,7 @@ interface OpeningTimesValue {
   days: OpeningTimesDay[]
 }
 
-// ── Time helpers ──────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function timeToMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number)
@@ -118,135 +75,174 @@ function getTodayKey(): DayKey {
   return DAY_ORDER[index === 0 ? 6 : index - 1] as DayKey
 }
 
-function getStaffingConfig(staffing?: string | null) {
-  if (!staffing) return DEFAULT_STAFFING_CONFIG
+function getWeekNumber(): number {
+  const now = new Date()
+  const start = new Date(now.getFullYear(), 0, 1)
 
-  return STAFFING_CONFIG[staffing] ?? DEFAULT_STAFFING_CONFIG
+  return Math.ceil(
+    ((now.getTime() - start.getTime()) / 86400000 + start.getDay() + 1) / 7
+  )
 }
 
-// ── Timeline segment builder ──────────────────────────────────────────────────
+// ── Compact proportional bar ──────────────────────────────────────────────────
 
-type BarSegment =
-  | { type: "gap"; flex: number }
-  | { type: "timeframe"; flex: number; tf: OpeningTimeframe }
+function DayBar({ timeframes }: { timeframes: OpeningTimeframe[] }) {
+  return (
+    <div
+      style={{
+        position: "relative",
+        height: "6px",
+        borderRadius: "999px",
+        background: "rgba(255,255,255,.08)",
+        overflow: "hidden",
+      }}
+    >
+      {timeframes.map((tf, i) => {
+        const start = Math.max(timeToMinutes(tf.startTime), SCALE_START)
+        const end = Math.min(timeToMinutes(tf.endTime), SCALE_END)
+        if (end <= start) return null
+        const left = ((start - SCALE_START) / SCALE_TOTAL) * 100
+        const width = ((end - start) / SCALE_TOTAL) * 100
 
-function buildBarSegments(timeframes: OpeningTimeframe[]): BarSegment[] {
-  const dayStart = timeToMinutes(timeframes[0]!.startTime)
-  const dayEnd = timeToMinutes(timeframes.at(-1)!.endTime)
-  const total = dayEnd - dayStart
-  if (total <= 0) return []
-
-  const segments: BarSegment[] = []
-  let cursor = dayStart
-
-  for (const tf of timeframes) {
-    const tfStart = timeToMinutes(tf.startTime)
-    const tfEnd = timeToMinutes(tf.endTime)
-
-    if (tfStart > cursor) {
-      segments.push({ type: "gap", flex: (tfStart - cursor) / total })
-    }
-
-    segments.push({ type: "timeframe", flex: (tfEnd - tfStart) / total, tf })
-    cursor = tfEnd
-  }
-
-  return segments
+        return (
+          <div
+            key={i}
+            style={{
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              left: `${left}%`,
+              width: `${width}%`,
+              borderRadius: "999px",
+              background: "rgba(110,231,183,.7)",
+            }}
+          />
+        )
+      })}
+    </div>
+  )
 }
 
 // ── Expanded breakdown ────────────────────────────────────────────────────────
 
-function TimeframeBreakdown({
-  timeframes,
-}: {
-  timeframes: OpeningTimeframe[]
-}) {
-  const segments = buildBarSegments(timeframes)
+function ExpandedBreakdown({ timeframes }: { timeframes: OpeningTimeframe[] }) {
   const dayStart = timeframes[0]!.startTime
   const dayEnd = timeframes.at(-1)!.endTime
 
   return (
-    <div className="mt-3 space-y-3.5 border-t border-white/8 pt-3.5">
-      {/* Proportional timeline bar */}
-      <div className="space-y-2">
-        <div className="flex items-stretch gap-0">
-          {/* Left end-cap */}
-          <div className="w-0.5 shrink-0 self-stretch rounded-full bg-white/20" />
+    <div
+      style={{
+        marginTop: "12px",
+        paddingTop: "12px",
+        borderTop: `1px solid ${T.border.line}`,
+      }}
+    >
+      {/* Full bar */}
+      <div style={{ marginBottom: "8px" }}>
+        <div
+          style={{
+            position: "relative",
+            height: "28px",
+            borderRadius: "8px",
+            background: "rgba(255,255,255,.04)",
+            overflow: "hidden",
+            display: "flex",
+          }}
+        >
+          {timeframes.map((tf, i) => {
+            const start = Math.max(timeToMinutes(tf.startTime), SCALE_START)
+            const end = Math.min(timeToMinutes(tf.endTime), SCALE_END)
+            if (end <= start) return null
+            const left = ((start - SCALE_START) / SCALE_TOTAL) * 100
+            const width = ((end - start) / SCALE_TOTAL) * 100
+            const isStaffed = tf.staffing === "staffed" || !tf.staffing
 
-          {/* Segments */}
-          <div className="flex flex-1 items-stretch gap-1 px-1.5">
-            {segments.map((seg, i) =>
-              seg.type === "gap" ? (
-                <div
-                  key={i}
-                  style={{ flex: seg.flex }}
-                  className="min-w-[6px] rounded-lg bg-white/4"
-                />
-              ) : (
-                <div
-                  key={i}
-                  style={{ flex: seg.flex }}
-                  className={cn(
-                    "flex min-w-0 items-center justify-center rounded-xl px-2 py-3",
-                    getStaffingConfig(seg.tf.staffing).bar
-                  )}
+            return (
+              <div
+                key={i}
+                style={{
+                  position: "absolute",
+                  top: "4px",
+                  bottom: "4px",
+                  left: `${left}%`,
+                  width: `${width}%`,
+                  borderRadius: "4px",
+                  background: isStaffed
+                    ? "rgba(52,211,153,.25)"
+                    : "rgba(99,102,241,.22)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 600,
+                    color: isStaffed
+                      ? "rgba(110,231,183,.9)"
+                      : "rgba(165,180,252,.9)",
+                    overflow: "hidden",
+                    whiteSpace: "nowrap",
+                  }}
                 >
-                  <span
-                    className={cn(
-                      "truncate text-xs font-medium",
-                      getStaffingConfig(seg.tf.staffing).barText
-                    )}
-                  >
-                    {getStaffingConfig(seg.tf.staffing).label}
-                  </span>
-                </div>
-              )
-            )}
-          </div>
-
-          {/* Right end-cap */}
-          <div className="w-0.5 shrink-0 self-stretch rounded-full bg-white/20" />
+                  {tf.staffing
+                    ? tf.staffing.charAt(0).toUpperCase() +
+                      tf.staffing.slice(1).replace("_", " ")
+                    : "Staffed"}
+                </span>
+              </div>
+            )
+          })}
         </div>
-
-        {/* Start / end time labels */}
-        <div className="flex justify-between px-1">
-          <span className="text-xs font-medium text-white/50">
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: "4px",
+          }}
+        >
+          <span style={{ fontSize: "11px", color: T.ink.faint }}>
             {to12h(dayStart)}
           </span>
-          <span className="text-xs font-medium text-white/50">
+          <span style={{ fontSize: "11px", color: T.ink.faint }}>
             {to12h(dayEnd)}
           </span>
         </div>
       </div>
 
-      {/* Per-timeframe summary list */}
-      <div className="space-y-1.5">
+      {/* Per-slot list */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
         {timeframes.map((tf, i) => {
-          const config = getStaffingConfig(tf.staffing)
-          const isPrimary = i === 0 || tf.staffing === "staffed"
+          const isStaffed = tf.staffing === "staffed" || !tf.staffing
+          const label = tf.staffing
+            ? tf.staffing.charAt(0).toUpperCase() +
+              tf.staffing.slice(1).replace("_", " ")
+            : "Staffed"
 
-          return isPrimary ? (
+          return (
             <div
               key={i}
-              className={cn(
-                "flex items-center justify-between rounded-xl px-4 py-2.5",
-                config.pill
-              )}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                padding: "6px 12px",
+                borderRadius: "8px",
+                background: isStaffed
+                  ? "rgba(52,211,153,.08)"
+                  : "rgba(99,102,241,.06)",
+              }}
             >
-              <span className={cn("text-xs font-semibold", config.pillText)}>
-                {config.label}
+              <span
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: isStaffed ? "#6ee7b7" : "#a5b4fc",
+                }}
+              >
+                {label}
               </span>
-              <span className={cn("text-xs font-medium", config.pillText)}>
-                {to12h(tf.startTime)} – {to12h(tf.endTime)}
-              </span>
-            </div>
-          ) : (
-            <div
-              key={i}
-              className="flex items-center justify-between px-4 py-0.5"
-            >
-              <span className="text-xs text-white/40">{config.label}</span>
-              <span className="text-xs text-white/40">
+              <span style={{ fontSize: "12px", color: T.ink.low }}>
                 {to12h(tf.startTime)} – {to12h(tf.endTime)}
               </span>
             </div>
@@ -261,19 +257,52 @@ function TimeframeBreakdown({
 
 export function LibraryOpeningHours({
   openingTimes,
+  alwaysExpanded = false,
 }: {
   readonly openingTimes?: OpeningTimesValue | null
+  readonly alwaysExpanded?: boolean
 }) {
   const todayKey = getTodayKey()
   const [expandedDay, setExpandedDay] = useState<DayKey | null>(todayKey)
+  const weekNumber = getWeekNumber()
 
   if (!openingTimes?.days?.length) {
     return (
       <div className={cn(homepagePanelClassName, "p-5 sm:p-6")}>
-        <h2 className="text-[11px] font-medium tracking-[0.18em] text-white/40 uppercase">
-          Opening Hours
-        </h2>
-        <p className="mt-4 text-sm text-white/40 italic">
+        {/* Title */}
+        <div style={{ marginBottom: "20px" }}>
+          <h2
+            style={{
+              fontFamily: T.font.serif,
+              fontWeight: 400,
+              fontSize: "26px",
+              color: T.ink.base,
+              margin: 0,
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+            }}
+          >
+            Opening hours
+            <span
+              style={{
+                fontFamily: T.font.mono,
+                fontSize: "10px",
+                letterSpacing: ".16em",
+                color: T.accent.aurora,
+                textTransform: "uppercase",
+                border: `1px solid rgba(127,223,255,.25)`,
+                borderRadius: "6px",
+                padding: "3px 8px",
+              }}
+            >
+              § WEEK {weekNumber}
+            </span>
+          </h2>
+        </div>
+        <p
+          style={{ fontSize: "14px", color: T.ink.faint, fontStyle: "italic" }}
+        >
           Opening hours not yet available.
         </p>
       </div>
@@ -284,30 +313,56 @@ export function LibraryOpeningHours({
 
   return (
     <div className={cn(homepagePanelClassName, "p-5 sm:p-6")}>
-      <div className="mb-4 flex items-center gap-2">
-        <Icon icon="mdi:clock-outline" className="size-4 text-white/40" />
-        <h2 className="text-[11px] font-medium tracking-[0.18em] text-white/40 uppercase">
-          Opening Hours
+      {/* Title */}
+      <div style={{ marginBottom: "20px" }}>
+        <h2
+          style={{
+            fontFamily: T.font.serif,
+            fontWeight: 400,
+            fontSize: "26px",
+            color: T.ink.base,
+            margin: 0,
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+          }}
+        >
+          Opening hours
+          <span
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "10px",
+              letterSpacing: ".16em",
+              color: T.accent.aurora,
+              textTransform: "uppercase",
+              border: `1px solid rgba(127,223,255,.25)`,
+              borderRadius: "6px",
+              padding: "3px 8px",
+            }}
+          >
+            § WEEK {weekNumber}
+          </span>
         </h2>
       </div>
 
-      <div className="space-y-1">
+      {/* Day rows */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: alwaysExpanded ? "8px" : "2px",
+        }}
+      >
         {DAY_ORDER.map((day) => {
           const dayData = daysByKey.get(day)
           const isToday = day === todayKey
           const isOpen =
             dayData?.enabled === true && (dayData.timeframes?.length ?? 0) > 0
-          const isExpanded = expandedDay === day
+          const isExpanded = alwaysExpanded ? isOpen : expandedDay === day
 
-          const toggleExpand = () => {
-            if (!isOpen) return
-            setExpandedDay(isExpanded ? null : day)
-          }
-
-          // Summary: first start to last end
           const firstTf = dayData?.timeframes?.[0]
           const lastTf = dayData?.timeframes?.at(-1)
-          const daySummary =
+          const timeRange =
             isOpen && firstTf && lastTf
               ? `${firstTf.startTime} – ${lastTf.endTime}`
               : null
@@ -315,65 +370,112 @@ export function LibraryOpeningHours({
           return (
             <div
               key={day}
-              className={cn(
-                "rounded-xl transition-colors duration-150",
-                isToday ? "bg-white/6" : "",
-                isExpanded && !isToday ? "bg-white/4" : "",
-                isOpen ? "cursor-pointer hover:bg-white/8" : ""
-              )}
-              onClick={toggleExpand}
-              role={isOpen ? "button" : undefined}
-              aria-expanded={isOpen ? isExpanded : undefined}
+              onClick={() => {
+                if (alwaysExpanded || !isOpen) return
+                setExpandedDay(isExpanded ? null : day)
+              }}
+              role={!alwaysExpanded && isOpen ? "button" : undefined}
+              aria-expanded={!alwaysExpanded && isOpen ? isExpanded : undefined}
+              style={{
+                borderRadius: "12px",
+                padding: alwaysExpanded ? "14px 16px" : "10px 12px",
+                background: isToday
+                  ? "rgba(255,255,255,.05)"
+                  : isExpanded
+                    ? "rgba(255,255,255,.03)"
+                    : "transparent",
+                cursor: !alwaysExpanded && isOpen ? "pointer" : "default",
+                transition: "background 150ms",
+                border:
+                  alwaysExpanded && isToday
+                    ? "1px solid rgba(127,223,255,.18)"
+                    : alwaysExpanded
+                      ? "1px solid rgba(255,255,255,.06)"
+                      : "none",
+              }}
+              className={
+                !alwaysExpanded && isOpen ? "hover:bg-white/[0.04]" : ""
+              }
             >
-              {/* Header row */}
-              <div className="flex items-center justify-between gap-2 px-3 py-2.5 text-sm">
-                <div className="flex items-center gap-2">
+              {/* Main row */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: alwaysExpanded
+                    ? "150px 1fr auto"
+                    : "130px 1fr auto",
+                  alignItems: "center",
+                  gap: "12px",
+                }}
+              >
+                {/* Day name + TODAY badge */}
+                <div>
                   <span
-                    className={cn(
-                      "font-medium",
-                      isToday ? "text-white" : "text-white/56"
-                    )}
+                    style={{
+                      fontSize: alwaysExpanded ? "16px" : "15px",
+                      fontWeight: isToday ? 600 : 400,
+                      color: isToday ? T.ink.base : "rgba(255,255,255,.7)",
+                    }}
                   >
                     {DAY_LABELS[day]}
                   </span>
                   {isToday ? (
-                    <span className="text-[10px] font-semibold tracking-[0.1em] text-emerald-400 uppercase">
+                    <span
+                      style={{
+                        display: "inline-block",
+                        marginLeft: "8px",
+                        padding: "1px 7px",
+                        borderRadius: "5px",
+                        background: "rgba(127,223,255,.15)",
+                        border: "1px solid rgba(127,223,255,.3)",
+                        fontFamily: T.font.mono,
+                        fontSize: "9px",
+                        letterSpacing: ".14em",
+                        color: T.accent.aurora,
+                        textTransform: "uppercase",
+                        verticalAlign: "middle",
+                      }}
+                    >
                       Today
                     </span>
                   ) : null}
                 </div>
 
-                <div className="flex items-center gap-2">
-                  {isOpen ? (
-                    <span
-                      className={cn(
-                        "font-medium",
-                        isToday ? "text-white" : "text-white/70"
-                      )}
-                    >
-                      {daySummary}
-                    </span>
-                  ) : (
-                    <span className="text-white/28">Closed</span>
-                  )}
+                {/* Proportional bar (only for open days) */}
+                {isOpen && dayData?.timeframes ? (
+                  <DayBar timeframes={dayData.timeframes} />
+                ) : (
+                  <div />
+                )}
 
-                  {isOpen ? (
-                    <Icon
-                      icon={isExpanded ? "mdi:chevron-up" : "mdi:chevron-down"}
-                      className={cn(
-                        "size-4 shrink-0 transition-transform duration-200",
-                        isToday ? "text-white/50" : "text-white/28"
-                      )}
-                    />
-                  ) : null}
-                </div>
+                {/* Time range or Closed */}
+                {isOpen ? (
+                  <span
+                    style={{
+                      fontFamily: T.font.mono,
+                      fontSize: "13px",
+                      color: isToday ? T.ink.base : "rgba(255,255,255,.6)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {timeRange}
+                  </span>
+                ) : (
+                  <span
+                    style={{
+                      fontFamily: T.font.mono,
+                      fontSize: "13px",
+                      color: "rgba(248,113,113,.6)",
+                    }}
+                  >
+                    Closed
+                  </span>
+                )}
               </div>
 
-              {/* Expanded breakdown */}
-              {isExpanded && isOpen ? (
-                <div className="px-3 pb-3.5">
-                  <TimeframeBreakdown timeframes={dayData!.timeframes} />
-                </div>
+              {/* Expanded detail */}
+              {isExpanded && isOpen && dayData?.timeframes ? (
+                <ExpandedBreakdown timeframes={dayData.timeframes} />
               ) : null}
             </div>
           )

@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react"
 import type { ReactNode } from "react"
 
 import { homepagePanelClassName } from "@/components/home/homepage.constants"
+import { T } from "@/lib/design-tokens"
 import { cn } from "@/lib/styles"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -60,15 +61,41 @@ export function LibraryTagPanel({
 
   return (
     <div className={cn(homepagePanelClassName, "p-5 sm:p-6", className)}>
-      {/* Header */}
-      <div className="mb-5 flex items-center gap-2">
-        <Icon icon={headerIcon} className="size-4 text-white/40" />
-        <h2 className="text-[11px] font-medium tracking-[0.18em] text-white/40 uppercase">
+      {/* Header — rule pattern */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          marginBottom: "20px",
+        }}
+      >
+        <Icon icon={headerIcon} className="size-3.5 shrink-0 text-white/30" />
+        <span
+          style={{
+            fontFamily: T.font.mono,
+            fontSize: "10px",
+            letterSpacing: ".22em",
+            textTransform: "uppercase",
+            color: T.ink.faint,
+            flexShrink: 0,
+          }}
+        >
           {title}
-        </h2>
-        <span className="ml-auto rounded-full bg-white/6 px-2 py-0.5 text-[10px] text-white/30">
-          {items.length}
         </span>
+        <div style={{ flex: 1, height: "1px", background: T.border.line }} />
+        {items.length > 0 ? (
+          <span
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "10px",
+              color: "rgba(255,255,255,.28)",
+              flexShrink: 0,
+            }}
+          >
+            {items.length}
+          </span>
+        ) : null}
       </div>
 
       {/* Groups */}

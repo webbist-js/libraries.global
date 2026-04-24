@@ -1,195 +1,74 @@
-import { Icon } from "@iconify/react"
 import Image from "next/image"
 import type { Locale } from "next-intl"
 
+import {
+  Breadcrumb,
+  CtaBannerSection,
+  EditorialSection,
+  Eyebrow,
+  HeroInlineTabNav,
+  HeroStat,
+  HeroStatsGrid,
+  HeroTitle,
+  LocationContributeCTA,
+  LocationGridBrowser,
+  MapSectionHeader,
+  SectionHeader,
+} from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import FeaturedLibraryCards from "@/components/home/FeaturedLibraryCards"
-import { homepagePanelClassName } from "@/components/home/homepage.constants"
-import StrapiBlocksContent from "@/components/library/StrapiBlocksContent"
 import { InteractiveMap } from "@/components/map/InteractiveMap"
+import { T } from "@/lib/design-tokens"
 import type {
   PopulatedCountryData,
   EditorialBlock as EditorialBlockType,
   CtaBanner as CtaBannerType,
   PageSection,
-  QuickLink,
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
-import { cn } from "@/lib/styles"
+import { auroraCtaLg } from "@/lib/styles"
 
 type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
 
-// ── Stat card ───────────────────────────────────────────────────────────────
+// ── Country fact row ─────────────────────────────────────────────────────────
 
-function StatCard({
-  label,
-  value,
-  note,
-}: {
-  label: string
-  value: string | number
-  note?: string
-}) {
+function FactRow({ label, value }: { label: string; value: string }) {
   return (
     <div
-      className={cn(homepagePanelClassName, "flex flex-col gap-1 px-5 py-4")}
+      style={{
+        display: "grid",
+        gridTemplateColumns: "110px 1fr",
+        gap: "12px",
+        padding: "8px 0",
+        borderBottom: `1px dashed ${T.border.line}`,
+        fontSize: "13px",
+      }}
     >
-      <span className="text-[10px] font-semibold tracking-[0.14em] text-white/36 uppercase">
+      <dt
+        style={{
+          fontFamily: T.font.mono,
+          fontSize: "10px",
+          color: T.ink.low,
+          letterSpacing: ".14em",
+          textTransform: "uppercase",
+          paddingTop: "2px",
+        }}
+      >
         {label}
-      </span>
-      <span className="text-2xl font-bold tracking-tight text-white tabular-nums">
+      </dt>
+      <dd
+        style={{
+          color: T.ink.base,
+          fontSize: "13.5px",
+          lineHeight: "1.5",
+          margin: 0,
+        }}
+      >
         {value}
-      </span>
-      {note ? <span className="text-xs text-white/36">{note}</span> : null}
+      </dd>
     </div>
-  )
-}
-
-// ── Quick link card ─────────────────────────────────────────────────────────
-
-function QuickLinkCard({ link }: { link: QuickLink }) {
-  const iconName = link.icon?.iconName ?? null
-
-  return (
-    <GlobalLink
-      href={link.href}
-      className={cn(
-        homepagePanelClassName,
-        "group flex items-start gap-4 px-5 py-4 transition-[border-color,background-color] duration-300 hover:border-cyan-200/16 hover:bg-white/[0.07]"
-      )}
-    >
-      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/6 transition-colors duration-300 group-hover:border-cyan-400/20 group-hover:bg-cyan-500/10">
-        {iconName ? (
-          <Icon
-            icon={iconName}
-            className="size-4 text-white/60 transition-colors group-hover:text-cyan-300"
-          />
-        ) : (
-          <Icon
-            icon="mdi:arrow-right"
-            className="size-4 text-white/30 transition-colors group-hover:text-cyan-300"
-          />
-        )}
-      </div>
-      <div className="flex flex-col gap-0.5">
-        <span className="text-sm font-medium text-white/80 transition-colors group-hover:text-white">
-          {link.label}
-        </span>
-        {link.description ? (
-          <span className="text-xs leading-5 text-white/40">
-            {link.description}
-          </span>
-        ) : null}
-      </div>
-    </GlobalLink>
-  )
-}
-
-// ── Editorial block ─────────────────────────────────────────────────────────
-
-function EditorialBlock({ section }: { section: EditorialBlockType }) {
-  const imageUrl = section.image?.url
-    ? formatStrapiMediaUrl(section.image.url)
-    : null
-  const isImageLeft = section.imagePosition === "left"
-
-  return (
-    <section className="py-16 sm:py-20">
-      <Container>
-        <div
-          className={cn(
-            "grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-center",
-            isImageLeft && imageUrl ? "lg:[&>*:first-child]:order-2" : ""
-          )}
-        >
-          <div className="flex flex-col gap-5">
-            {section.eyebrow ? (
-              <span className="text-[11px] font-semibold tracking-[0.16em] text-cyan-400/70 uppercase">
-                {section.eyebrow}
-              </span>
-            ) : null}
-            <h2 className="text-[clamp(1.8rem,4vw,3rem)] leading-[1.05] font-bold tracking-[-0.03em] text-white">
-              {section.title}
-            </h2>
-            {Array.isArray(section.body) && section.body.length > 0 ? (
-              <div className="max-w-[52ch] text-white/60">
-                <StrapiBlocksContent
-                  blocks={
-                    section.body as Parameters<
-                      typeof StrapiBlocksContent
-                    >[0]["blocks"]
-                  }
-                />
-              </div>
-            ) : null}
-            {(section.primaryCtaLabel && section.primaryCtaUrl) ||
-            (section.secondaryCtaLabel && section.secondaryCtaUrl) ? (
-              <div className="flex flex-wrap gap-3 pt-2">
-                {section.primaryCtaLabel && section.primaryCtaUrl ? (
-                  <GlobalLink
-                    href={section.primaryCtaUrl}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-indigo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_4px_24px_rgba(99,102,241,0.35)] transition-colors hover:bg-indigo-400"
-                  >
-                    {section.primaryCtaLabel}
-                  </GlobalLink>
-                ) : null}
-                {section.secondaryCtaLabel && section.secondaryCtaUrl ? (
-                  <GlobalLink
-                    href={section.secondaryCtaUrl}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-white/12 bg-white/8 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/14"
-                  >
-                    {section.secondaryCtaLabel}
-                  </GlobalLink>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-          {imageUrl ? (
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/8">
-              <Image
-                src={imageUrl}
-                alt={section.image?.alternativeText ?? section.title}
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,8,22,0.05),rgba(5,8,22,0.3))]" />
-            </div>
-          ) : null}
-        </div>
-      </Container>
-    </section>
-  )
-}
-
-// ── CTA banner section ──────────────────────────────────────────────────────
-
-function CtaBannerSection({ section }: { section: CtaBannerType }) {
-  return (
-    <section className="relative overflow-hidden py-20 sm:py-28">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_100%,rgba(79,70,229,0.18),transparent_70%)]" />
-      <Container>
-        <div className="flex flex-col items-center gap-6 text-center">
-          <h2 className="text-[clamp(2.5rem,6vw,5rem)] leading-[0.95] font-bold tracking-[-0.04em] text-white">
-            {section.title}
-          </h2>
-          {section.subtitle ? (
-            <p className="max-w-[42ch] text-base leading-7 text-white/55">
-              {section.subtitle}
-            </p>
-          ) : null}
-          {section.ctaLabel && section.ctaUrl ? (
-            <GlobalLink
-              href={section.ctaUrl}
-              className="mt-2 inline-flex items-center gap-2 rounded-2xl bg-indigo-500 px-7 py-3 text-sm font-semibold text-white shadow-[0_4px_32px_rgba(99,102,241,0.4)] transition-colors hover:bg-indigo-400"
-            >
-              {section.ctaLabel}
-            </GlobalLink>
-          ) : null}
-        </div>
-      </Container>
-    </section>
   )
 }
 
@@ -216,8 +95,6 @@ export function CountryDetailPage({
   const hasFeaturedLibraries =
     Array.isArray(country.featuredLibraries) &&
     country.featuredLibraries.length > 0
-  const hasQuickLinks =
-    Array.isArray(country.quickLinks) && country.quickLinks.length > 0
   const hasRegions =
     Array.isArray(country.regions) && country.regions.length > 0
   const heroImageUrl = (
@@ -230,18 +107,33 @@ export function CountryDetailPage({
   const continentHref = `/${continentSlug}`
 
   const browseRegions = country.regions ?? []
+  const regionLabel = country.regionTypeLabel ?? "Regions"
+
+  const breadcrumbItems = [
+    { label: "Atlas", href: "/" },
+    ...(continentName ? [{ label: continentName, href: continentHref }] : []),
+    { label: country.name ?? "" },
+  ]
+
+  const tabs = [
+    { id: "overview", label: "Overview" },
+    { id: "institutions", label: "Libraries" },
+    { id: "regions", label: regionLabel },
+    { id: "map", label: "Map" },
+  ] as const
 
   return (
-    <div className="relative isolate flex min-h-screen w-full flex-col overflow-x-hidden bg-[#050816] text-white">
-      {/* Ambient gradients */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_12%,rgba(92,149,255,0.09),transparent_38%),radial-gradient(circle_at_82%_70%,rgba(103,221,255,0.06),transparent_30%)]" />
-
+    <div className="relative isolate flex min-h-screen w-full flex-col bg-[#050816] text-white">
       <GlobalHeader locale={locale} navbar={navbar} />
 
       <main className="relative z-10 flex-1">
         {/* ── Hero ───────────────────────────────────────────────────────────── */}
-        <section className="relative isolate flex min-h-[52vh] flex-col justify-end overflow-hidden">
-          {/* Background image or gradient */}
+        <section
+          id="overview"
+          data-transparent-header=""
+          className="relative isolate -mt-14 overflow-hidden pt-[110px]"
+          style={{ minHeight: "560px" }}
+        >
           {heroImageUrl ? (
             <Image
               src={heroImageUrl}
@@ -251,187 +143,254 @@ export function CountryDetailPage({
               className="-z-20 object-cover object-bottom"
             />
           ) : null}
-          <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(5,8,22,0.55)_0%,rgba(5,8,22,0.92)_60%,rgba(5,8,22,1)_100%)]" />
+          <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(3,5,17,.2)_0%,rgba(3,5,17,.4)_50%,#030511_100%)]" />
           {!heroImageUrl ? (
             <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_60%_at_10%_20%,rgba(79,70,229,0.18),transparent_60%)]" />
           ) : null}
 
-          <Container className="pt-20 pb-8 sm:pt-24 sm:pb-10">
-            {/* Breadcrumb */}
-            <div className="mb-4 flex items-center gap-1.5 text-xs text-white/36">
-              <GlobalLink
-                href="/"
-                className="transition-colors hover:text-white/60"
-              >
-                Global
-              </GlobalLink>
-              <span>/</span>
-              {continentName && (
-                <>
-                  <GlobalLink
-                    href={continentHref}
-                    className="transition-colors hover:text-white/60"
+          <Container>
+            <div className="grid grid-cols-1 gap-10 pt-[70px] pb-14 lg:[grid-template-columns:1.3fr_1fr] lg:gap-14">
+              {/* Left column */}
+              <div>
+                <Breadcrumb items={breadcrumbItems} />
+
+                {country.iso2 ? (
+                  <div className="mt-6">
+                    <div
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "6px 12px",
+                        borderRadius: "999px",
+                        border: `1px solid ${T.border.hi}`,
+                        background: "rgba(8,12,30,.6)",
+                        backdropFilter: "blur(8px)",
+                        fontFamily: T.font.mono,
+                        fontSize: "11px",
+                        letterSpacing: ".14em",
+                        color: T.ink.dim,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      <span>{country.iso2}</span>
+                    </div>
+                  </div>
+                ) : null}
+
+                <div style={{ marginTop: "18px" }}>
+                  <HeroTitle>{country.name}</HeroTitle>
+                </div>
+
+                {country.heroTagline ? (
+                  <p
+                    style={{
+                      fontFamily: T.font.serif,
+                      fontWeight: 300,
+                      fontSize: "22px",
+                      lineHeight: "1.45",
+                      color: T.ink.dim,
+                      maxWidth: "52ch",
+                      margin: "10px 0 0",
+                      letterSpacing: "-.01em",
+                    }}
                   >
-                    {continentName}
-                  </GlobalLink>
-                  <span>/</span>
-                </>
-              )}
-              <span className="text-white/60">{country.name}</span>
-            </div>
+                    {country.heroTagline}
+                  </p>
+                ) : country.summary ? (
+                  <p
+                    style={{
+                      fontFamily: T.font.serif,
+                      fontWeight: 300,
+                      fontSize: "20px",
+                      lineHeight: "1.5",
+                      color: T.ink.dim,
+                      maxWidth: "52ch",
+                      margin: "10px 0 0",
+                      letterSpacing: "-.01em",
+                    }}
+                  >
+                    {country.summary}
+                  </p>
+                ) : null}
+              </div>
 
-            <div className="flex flex-col gap-3">
-              <h1 className="text-[clamp(3rem,8vw,6rem)] leading-[0.92] font-bold tracking-[-0.04em] text-white">
-                {country.name}
-              </h1>
-
-              {country.heroTagline ? (
-                <p className="max-w-[48ch] text-lg leading-[1.5] font-light text-white/70">
-                  {country.heroTagline}
-                </p>
-              ) : country.summary ? (
-                <p className="max-w-[52ch] text-base leading-7 text-white/55">
-                  {country.summary}
-                </p>
-              ) : null}
-            </div>
-
-            {/* Stats row */}
-            <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {country.iso2 ? (
-                <StatCard label="ISO Code" value={country.iso2} />
-              ) : null}
-              {country.capitalCity ? (
-                <StatCard label="Capital" value={country.capitalCity} />
-              ) : null}
-              <StatCard
-                label="Libraries"
-                value={
-                  typeof country.libraryCount === "number" &&
-                  country.libraryCount > 0
-                    ? new Intl.NumberFormat().format(country.libraryCount)
-                    : "—"
-                }
-              />
-              <StatCard
-                label="Regions"
-                value={
-                  typeof country.regionCount === "number" &&
-                  country.regionCount > 0
-                    ? new Intl.NumberFormat().format(country.regionCount)
-                    : "—"
-                }
-              />
+              {/* Right column: stats + tabs */}
+              <div style={{ paddingBottom: "14px" }}>
+                <HeroStatsGrid>
+                  <HeroStat
+                    label="Libraries"
+                    value={
+                      typeof country.libraryCount === "number" &&
+                      country.libraryCount > 0
+                        ? new Intl.NumberFormat().format(country.libraryCount)
+                        : "—"
+                    }
+                    note="Open to the public"
+                  />
+                  <HeroStat
+                    label="Pillar Institutions"
+                    value={
+                      hasFeaturedLibraries
+                        ? country.featuredLibraries!.length
+                        : "—"
+                    }
+                    note="Legal-deposit status"
+                  />
+                  <HeroStat
+                    label={regionLabel}
+                    value={
+                      typeof country.regionCount === "number" &&
+                      country.regionCount > 0
+                        ? country.regionCount
+                        : "—"
+                    }
+                  />
+                  <HeroStat
+                    label={country.capitalCity ? "Capital" : "ISO Code"}
+                    value={country.capitalCity ?? country.iso2 ?? "—"}
+                  />
+                </HeroStatsGrid>
+                <HeroInlineTabNav tabs={tabs} />
+              </div>
             </div>
           </Container>
         </section>
 
         {/* ── Pillar Institutions ─────────────────────────────────────────────── */}
         {hasFeaturedLibraries ? (
-          <section className="relative overflow-hidden border-t border-white/6 py-14 sm:py-18">
+          <section
+            id="institutions"
+            className="relative overflow-hidden border-b border-white/6 py-[70px]"
+          >
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_55%_at_50%_0%,rgba(79,70,229,0.18),transparent_60%)]" />
             <Container className="relative">
-              <div className="mb-8">
-                <p className="mb-1.5 text-[11px] font-semibold tracking-[0.16em] text-indigo-400/80 uppercase">
-                  Archive Starts
-                </p>
-                <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                  Pillar Institutions
-                </h2>
+              <div style={{ marginBottom: "22px" }}>
+                <Eyebrow index={1} bar>
+                  Pillar institutions
+                </Eyebrow>
               </div>
-              <FeaturedLibraryCards libraries={country.featuredLibraries} />
+              <SectionHeader italic="institutions." as="h2">
+                Pillar
+              </SectionHeader>
+
+              <div className="mt-8 grid grid-cols-1 gap-10 lg:[grid-template-columns:1.1fr_.9fr]">
+                <FeaturedLibraryCards libraries={country.featuredLibraries} />
+
+                {/* Side facts */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "16px",
+                  }}
+                >
+                  <div
+                    style={{
+                      border: `1px solid ${T.border.line}`,
+                      borderRadius: "18px",
+                      padding: "22px 24px",
+                      background: "rgba(255,255,255,.02)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontFamily: T.font.mono,
+                        fontSize: "10px",
+                        letterSpacing: ".22em",
+                        textTransform: "uppercase",
+                        color: T.ink.low,
+                        marginBottom: "14px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                      }}
+                    >
+                      Country facts
+                      <span
+                        style={{
+                          flex: 1,
+                          height: "1px",
+                          background: T.border.line,
+                          display: "inline-block",
+                        }}
+                      />
+                    </div>
+                    <dl style={{ display: "grid", gap: "0", margin: 0 }}>
+                      {country.iso2 ? (
+                        <FactRow label="ISO" value={country.iso2} />
+                      ) : null}
+                      {country.capitalCity ? (
+                        <FactRow label="Capital" value={country.capitalCity} />
+                      ) : null}
+                      {typeof country.libraryCount === "number" &&
+                      country.libraryCount > 0 ? (
+                        <FactRow
+                          label="Libraries"
+                          value={new Intl.NumberFormat().format(
+                            country.libraryCount
+                          )}
+                        />
+                      ) : null}
+                      {typeof country.regionCount === "number" &&
+                      country.regionCount > 0 ? (
+                        <FactRow
+                          label={regionLabel}
+                          value={String(country.regionCount)}
+                        />
+                      ) : null}
+                    </dl>
+                  </div>
+                </div>
+              </div>
             </Container>
           </section>
         ) : null}
 
         {/* ── Browse by Region ────────────────────────────────────────────────── */}
-        {browseRegions.length > 0 ? (
-          <section className="border-t border-white/6 py-14 sm:py-18">
+        {hasRegions ? (
+          <section id="regions" className="py-[70px]">
             <Container>
-              <div className="mb-8 flex items-end justify-between">
-                <div>
-                  <p className="mb-1.5 text-[11px] font-semibold tracking-[0.16em] text-white/36 uppercase">
-                    Explore Within
-                  </p>
-                  <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                    Browse by {country.regionTypeLabel ?? "Region"}
-                  </h2>
-                </div>
-                {hasRegions && browseRegions.length > 6 ? (
-                  <span className="text-sm text-white/36">
-                    {browseRegions.length}{" "}
-                    {country.regionTypeLabel?.toLowerCase() ?? "regions"} total
-                  </span>
-                ) : null}
+              <div style={{ marginBottom: "22px" }}>
+                <Eyebrow index={2} bar>
+                  Browse by region
+                </Eyebrow>
               </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {browseRegions.map((region, i) => (
-                  <GlobalLink
-                    key={region.slug ?? i}
-                    href={`/${continentSlug}/${slug}/${region.slug}`}
-                    className={cn(
-                      homepagePanelClassName,
-                      "group relative flex min-h-[9rem] flex-col justify-end overflow-hidden px-5 py-5 transition-[border-color,background-color] duration-500 hover:border-cyan-200/16 hover:bg-white/[0.07]"
-                    )}
-                  >
-                    <div className="pointer-events-none absolute inset-[-10%] rounded-[38px] bg-[radial-gradient(circle_at_50%_80%,rgba(84,171,255,0.14),transparent_55%)] opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100" />
-                    <div className="relative z-10 space-y-1">
-                      <h3 className="font-semibold text-white transition-colors group-hover:text-cyan-50">
-                        {region.name}
-                      </h3>
-                      {region.typeLabel ? (
-                        <p className="text-xs text-white/36">
-                          {region.typeLabel}
-                        </p>
-                      ) : null}
-                      {region.summary ? (
-                        <p className="line-clamp-2 text-sm leading-6 text-white/50">
-                          {region.summary}
-                        </p>
-                      ) : null}
-                    </div>
-                  </GlobalLink>
-                ))}
-              </div>
-            </Container>
-          </section>
-        ) : null}
-
-        {/* ── Quick Links ────────────────────────────────────────────────────── */}
-        {hasQuickLinks ? (
-          <section className="border-t border-white/6 py-14 sm:py-18">
-            <Container>
-              <div className="mb-8">
-                <p className="mb-1.5 text-[11px] font-semibold tracking-[0.16em] text-white/36 uppercase">
-                  Navigate
+              <div className="mb-[26px] flex flex-wrap items-end justify-between gap-6">
+                <SectionHeader italic="boroughs." as="h2">
+                  Counties &amp;
+                </SectionHeader>
+                <p
+                  style={{
+                    color: T.ink.dim,
+                    fontSize: "14px",
+                    lineHeight: "1.7",
+                    fontWeight: 300,
+                    maxWidth: "52ch",
+                    margin: 0,
+                  }}
+                >
+                  Every library is cross-filed by {regionLabel.toLowerCase()},{" "}
+                  unitary authority, and administrative area.
                 </p>
-                <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                  Quick Links
-                </h2>
               </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {country.quickLinks!.map((link, i) => (
-                  <QuickLinkCard
-                    key={((link as { id?: unknown }).id as string) ?? i}
-                    link={link}
-                  />
-                ))}
-              </div>
+              <LocationGridBrowser
+                rankPrefix="R"
+                items={browseRegions.map((region) => ({
+                  slug: region.slug ?? "",
+                  name: region.name ?? "",
+                  subtitle: region.summary ?? null,
+                  href: `/${continentSlug}/${slug}/${region.slug}`,
+                }))}
+              />
             </Container>
           </section>
         ) : null}
 
         {/* ── Interactive Map ───────────────────────────────────────────────── */}
-        <section className="border-t border-white/6 py-14 sm:py-18">
+        <section id="map" className="border-t border-white/6 py-[70px]">
           <Container>
-            <div className="mb-6">
-              <p className="mb-1.5 text-[11px] font-semibold tracking-[0.16em] text-white/36 uppercase">
-                Explore the Map
-              </p>
-              <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                {country.name ? `Libraries in ${country.name}` : "Map View"}
-              </h2>
-            </div>
+            <MapSectionHeader locationName={country.name ?? "this country"} />
             <InteractiveMap
               mapConfig={country.mapConfig}
               mode="country"
@@ -442,26 +401,29 @@ export function CountryDetailPage({
           </Container>
         </section>
 
-        {/* ── Dynamic zone sections (in CMS order) ────────────────────────────── */}
+        <LocationContributeCTA
+          locationName={country.name ?? undefined}
+          entityType="country"
+        />
+
+        {/* ── Dynamic zone sections ────────────────────────────────────────────── */}
         {typedSections.map((section) => (
           <div key={section.id} className="border-t border-white/6">
             {section.__component === "sections.editorial-block" ? (
-              <EditorialBlock section={section as EditorialBlockType} />
+              <EditorialSection section={section as EditorialBlockType} />
             ) : section.__component === "sections.cta-banner" ? (
               <CtaBannerSection section={section as CtaBannerType} />
             ) : null}
           </div>
         ))}
 
-        {/* ── Journey CTA (fallback if no CTA banner or dynamic sections) ─────── */}
+        {/* ── Journey CTA fallback ─────────── */}
         {ctaBanners.length === 0 && typedSections.length === 0 ? (
           <section className="relative overflow-hidden border-t border-white/6 py-24 sm:py-32">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_100%,rgba(79,70,229,0.18),transparent_70%)]" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_100%,rgba(127,223,255,0.07),transparent_70%)]" />
             <Container>
               <div className="flex flex-col items-center gap-6 text-center">
-                <p className="text-[11px] font-semibold tracking-[0.16em] text-white/36 uppercase">
-                  Start Exploring
-                </p>
+                <Eyebrow>Archive Starts</Eyebrow>
                 <h2 className="text-[clamp(2.5rem,6vw,5.5rem)] leading-[0.93] font-bold tracking-[-0.045em] text-white">
                   Discover {country.name}
                 </h2>
@@ -472,7 +434,7 @@ export function CountryDetailPage({
                 {browseRegions[0] ? (
                   <GlobalLink
                     href={`/${continentSlug}/${slug}/${browseRegions[0].slug}`}
-                    className="mt-2 inline-flex items-center gap-2 rounded-2xl bg-indigo-500 px-8 py-3.5 text-sm font-semibold text-white shadow-[0_4px_32px_rgba(99,102,241,0.4)] transition-colors hover:bg-indigo-400"
+                    className={auroraCtaLg}
                   >
                     Browse {browseRegions[0].name}
                   </GlobalLink>

@@ -132,6 +132,38 @@
       "component": "shared.seo",
       "repeatable": false,
       "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "population": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "languages": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "systemDescription": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "budget": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "employees": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "volunteers": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "visitsPerYear": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "regionsSectionLabel": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
     }
   }
 }

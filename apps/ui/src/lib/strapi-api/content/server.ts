@@ -219,6 +219,7 @@ export type PopulatedLibraryData = Data.ContentType<"api::library.library"> & {
   continent?: Data.ContentType<"api::continent.continent"> | null
   country?: Data.ContentType<"api::country.country"> | null
   region?: Data.ContentType<"api::region.region"> | null
+  area?: Data.ContentType<"api::area.area"> | null
   services?: Data.ContentType<"api::service.service">[]
   amenities?: Data.ContentType<"api::amenity.amenity">[]
   accessibility?: Data.ContentType<"api::accessibility.accessibility">[]
@@ -240,6 +241,7 @@ export async function fetchLibrary(slug: string, locale: Locale) {
           continent: true,
           country: true,
           region: true,
+          area: true,
           services: { fields: ["name", "summary", "category", "icon"] },
           amenities: { fields: ["name", "summary", "category", "icon"] },
           accessibility: { fields: ["name", "summary", "category", "icon"] },
@@ -255,6 +257,45 @@ export async function fetchLibrary(slug: string, locale: Locale) {
         stack: e instanceof Error ? e.stack : undefined,
       },
     })
+  }
+}
+
+export async function fetchNearbyLibraries(
+  currentSlug: string,
+  regionSlug?: string | null,
+  limit = 3
+): Promise<PopulatedLibraryData[]> {
+  if (!regionSlug) return []
+  try {
+    const result = (await PublicStrapiClient.fetchAll("api::library.library", {
+      status: "published",
+      filters: {
+        slug: { $ne: currentSlug },
+        region: { slug: { $eq: regionSlug } },
+      },
+      fields: ["name", "slug", "summary", "libraryType", "city"],
+      populate: {
+        heroImage: true,
+        continent: { fields: ["slug"] },
+        country: { fields: ["slug"] },
+        region: { fields: ["slug", "name"] },
+      },
+      pagination: { pageSize: limit, page: 1 },
+    } as unknown as Parameters<typeof PublicStrapiClient.fetchAll>[1])) as {
+      data: PopulatedLibraryData[]
+    }
+
+    return result.data ?? []
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching nearby libraries for region '${regionSlug}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return []
   }
 }
 

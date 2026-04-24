@@ -101,6 +101,32 @@ export interface FormsNewsletterForm extends Struct.ComponentSchema {
   }
 }
 
+export interface LibraryCollectionStat extends Struct.ComponentSchema {
+  collectionName: "components_library_collection_stats"
+  info: {
+    displayName: "Collection Stat"
+    icon: "chart-line"
+  }
+  attributes: {
+    category: Schema.Attribute.String & Schema.Attribute.Required
+    description: Schema.Attribute.String
+    value: Schema.Attribute.String & Schema.Attribute.Required
+  }
+}
+
+export interface LibraryLibraryStat extends Struct.ComponentSchema {
+  collectionName: "components_library_library_stats"
+  info: {
+    displayName: "Library Stat"
+    icon: "chart-bar"
+  }
+  attributes: {
+    label: Schema.Attribute.String & Schema.Attribute.Required
+    note: Schema.Attribute.String
+    value: Schema.Attribute.String & Schema.Attribute.Required
+  }
+}
+
 export interface SectionsCtaBanner extends Struct.ComponentSchema {
   collectionName: "components_sections_cta_banners"
   info: {
@@ -600,6 +626,8 @@ declare module "@strapi/strapi" {
       "elements.footer-item": ElementsFooterItem
       "forms.contact-form": FormsContactForm
       "forms.newsletter-form": FormsNewsletterForm
+      "library.collection-stat": LibraryCollectionStat
+      "library.library-stat": LibraryLibraryStat
       "sections.cta-banner": SectionsCtaBanner
       "sections.editorial-block": SectionsEditorialBlock
       "sections.quick-links": SectionsQuickLinks

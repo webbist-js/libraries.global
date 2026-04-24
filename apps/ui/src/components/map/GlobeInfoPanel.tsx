@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 
+import { T } from "@/lib/design-tokens"
 import { cn } from "@/lib/styles"
 
 import type { GlobeDrillState } from "./MapGlobe"
@@ -15,20 +16,37 @@ interface LibraryPin {
   city?: string | null
   libraryType?: string | null
   operationalStatus?: string | null
+  featured?: boolean | null
 }
 
 interface SubItem {
   name: string
   slug: string
   centroid?: { lat: number; lng: number }
+  boundaryUrl?: string | null
+}
+
+interface CountryFacts {
+  summary?: string | null
+  capitalCity?: string | null
+  population?: string | null
+  languages?: string | null
+  heroImageUrl?: string | null
+  systemDescription?: string | null
+  budget?: string | null
+  employees?: string | null
+  volunteers?: string | null
+  visitsPerYear?: string | null
+  iso2?: string | null
 }
 
 interface PanelData {
   libraryCount: number
   libraries: LibraryPin[]
   subItems?: SubItem[]
-  subLabel?: string // "Countries" | "Regions"
+  subLabel?: string
   pageUrl?: string
+  countryFacts?: CountryFacts
 }
 
 // ── Fetch helpers ──────────────────────────────────────────────────────────────
@@ -43,6 +61,7 @@ async function fetchPanelData(state: GlobeDrillState): Promise<PanelData> {
     "fields[2]": "libraryType",
     "fields[3]": "operationalStatus",
     "fields[4]": "city",
+    "fields[5]": "featured",
   })
 
   if (state.region?.slug) {
@@ -82,6 +101,7 @@ async function fetchPanelData(state: GlobeDrillState): Promise<PanelData> {
       status: "published",
       "fields[0]": "name",
       "fields[1]": "slug",
+      "fields[2]": "boundaryUrl",
       "sort[0]": "name:asc",
       "pagination[pageSize]": "60",
       "populate[mapConfig][fields][0]": "centerLat",
@@ -92,7 +112,35 @@ async function fetchPanelData(state: GlobeDrillState): Promise<PanelData> {
       .catch(() => null)
   }
 
-  const [libData, subData] = await Promise.all([libFetch, subFetch])
+  // ── Country details fetch (summary, capital, population, languages, image) ──
+  let countryDetailFetch: Promise<any> = Promise.resolve(null)
+  if (state.level === "country" && state.country?.slug) {
+    const p = new URLSearchParams({
+      "filters[slug][$eq]": state.country.slug,
+      status: "published",
+      "fields[0]": "name",
+      "fields[1]": "summary",
+      "fields[2]": "capitalCity",
+      "fields[3]": "population",
+      "fields[4]": "languages",
+      "fields[5]": "systemDescription",
+      "fields[6]": "budget",
+      "fields[7]": "employees",
+      "fields[8]": "volunteers",
+      "fields[9]": "visitsPerYear",
+      "fields[10]": "iso2",
+      "populate[heroImage][fields][0]": "url",
+    })
+    countryDetailFetch = fetch(`/api/public-proxy/api/countries?${p}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null)
+  }
+
+  const [libData, subData, countryDetail] = await Promise.all([
+    libFetch,
+    subFetch,
+    countryDetailFetch,
+  ])
 
   const total =
     libData.meta?.pagination?.total ??
@@ -110,10 +158,13 @@ async function fetchPanelData(state: GlobeDrillState): Promise<PanelData> {
       const slug = item.slug ?? item.attributes?.slug
       const name = item.name ?? item.attributes?.name
       const mc = item.mapConfig ?? item.attributes?.mapConfig
+      const boundaryUrl =
+        item.boundaryUrl ?? item.attributes?.boundaryUrl ?? null
 
       return {
         slug,
         name,
+        boundaryUrl,
         centroid:
           mc?.centerLat != null && mc?.centerLng != null
             ? { lat: mc.centerLat as number, lng: mc.centerLng as number }
@@ -121,6 +172,33 @@ async function fetchPanelData(state: GlobeDrillState): Promise<PanelData> {
       }
     })
     result.subLabel = state.level === "continent" ? "Countries" : "Regions"
+  }
+
+  // Country facts
+  if (countryDetail?.data?.length) {
+    const cd = countryDetail.data[0]
+    const imgUrl =
+      cd?.heroImage?.url ??
+      cd?.attributes?.heroImage?.data?.attributes?.url ??
+      null
+    result.countryFacts = {
+      summary: cd?.summary ?? cd?.attributes?.summary ?? null,
+      capitalCity: cd?.capitalCity ?? cd?.attributes?.capitalCity ?? null,
+      population: cd?.population ?? cd?.attributes?.population ?? null,
+      languages: cd?.languages ?? cd?.attributes?.languages ?? null,
+      heroImageUrl: imgUrl
+        ? imgUrl.startsWith("http")
+          ? imgUrl
+          : `${process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://127.0.0.1:1337"}${imgUrl}`
+        : null,
+      systemDescription:
+        cd?.systemDescription ?? cd?.attributes?.systemDescription ?? null,
+      budget: cd?.budget ?? cd?.attributes?.budget ?? null,
+      employees: cd?.employees ?? cd?.attributes?.employees ?? null,
+      volunteers: cd?.volunteers ?? cd?.attributes?.volunteers ?? null,
+      visitsPerYear: cd?.visitsPerYear ?? cd?.attributes?.visitsPerYear ?? null,
+      iso2: cd?.iso2 ?? cd?.attributes?.iso2 ?? null,
+    }
   }
 
   // Page URL for linking to the entity's detail page
@@ -154,38 +232,36 @@ function Breadcrumb({
   ]
   if (state.continent) {
     crumbs.push({
-      label: state.continent.name,
+      label: state.continent.name.toUpperCase(),
       onClick:
         state.level !== "continent" ? () => onNavigate("continent") : undefined,
     })
   }
   if (state.country) {
     crumbs.push({
-      label: state.country.name,
+      label: state.country.name.toUpperCase(),
       onClick:
         state.level !== "country" ? () => onNavigate("country") : undefined,
     })
   }
   if (state.region) {
-    crumbs.push({ label: state.region.name })
+    crumbs.push({ label: state.region.name.toUpperCase() })
   }
 
   return (
-    <nav className="mb-4 flex flex-wrap items-center gap-1 text-[11px] text-white/40">
+    <nav className="flex flex-wrap items-center gap-1 text-[11px] tracking-widest">
       {crumbs.map((c, i) => (
         <span key={i} className="flex items-center gap-1">
-          {i > 0 && <span className="text-white/20">›</span>}
+          {i > 0 && <span className="text-white/30">›</span>}
           {c.onClick ? (
             <button
               onClick={c.onClick}
-              className="underline decoration-white/20 underline-offset-2 transition-colors hover:text-white/70"
+              className="text-white/45 transition-colors hover:text-white/80"
             >
               {c.label}
             </button>
           ) : (
-            <span className={i === crumbs.length - 1 ? "text-white/70" : ""}>
-              {c.label}
-            </span>
+            <span className="font-semibold text-white/90">{c.label}</span>
           )}
         </span>
       ))}
@@ -193,42 +269,168 @@ function Breadcrumb({
   )
 }
 
-// ── Library type badge ─────────────────────────────────────────────────────────
+// ── Stat block ────────────────────────────────────────────────────────────────
 
-const TYPE_LABELS: Record<string, string> = {
-  national: "National",
-  public: "Public",
-  academic: "Academic",
-  special: "Special",
-  government: "Government",
-  school: "School",
-  digital: "Digital",
-  preservation: "Preservation",
+function StatBlock({
+  value,
+  label,
+}: {
+  value: string | number
+  label: string
+}) {
+  return (
+    <div className="flex flex-1 flex-col items-center gap-1 py-1">
+      <span
+        style={{
+          fontFamily: T.font.serif,
+          fontSize: "38px",
+          lineHeight: 1,
+          color: T.ink.base,
+        }}
+      >
+        {value}
+      </span>
+      <span
+        style={{
+          fontFamily: T.font.mono,
+          fontSize: "9.5px",
+          letterSpacing: ".2em",
+          color: "rgba(255,255,255,.38)",
+          textTransform: "uppercase",
+        }}
+      >
+        {label}
+      </span>
+    </div>
+  )
 }
 
-function TypeBadge({ type }: { type?: string | null }) {
-  if (!type) return null
+function StatDivider() {
+  return (
+    <div
+      style={{
+        width: "1px",
+        alignSelf: "stretch",
+        background: "rgba(255,255,255,.09)",
+        flexShrink: 0,
+      }}
+    />
+  )
+}
+
+// ── Library type badge ─────────────────────────────────────────────────────────
+
+function TypeBadge({
+  type,
+  featured,
+}: {
+  type?: string | null
+  featured?: boolean | null
+}) {
+  if (!type && !featured) return null
 
   return (
-    <span className="inline-block rounded-sm bg-white/8 px-1.5 py-0.5 text-[10px] leading-none text-white/50">
-      {TYPE_LABELS[type] ?? type}
+    <span className="flex items-center gap-1">
+      {featured && (
+        <span
+          style={{
+            fontFamily: T.font.mono,
+            fontSize: "9px",
+            letterSpacing: ".14em",
+            textTransform: "uppercase",
+            padding: "2px 6px",
+            borderRadius: "4px",
+            border: "1px solid rgba(127,223,255,.3)",
+            color: T.accent.aurora,
+            background: "rgba(127,223,255,.08)",
+          }}
+        >
+          Pillar
+        </span>
+      )}
+      {type && (
+        <span
+          style={{
+            fontFamily: T.font.mono,
+            fontSize: "9px",
+            letterSpacing: ".12em",
+            textTransform: "uppercase",
+            padding: "2px 6px",
+            borderRadius: "4px",
+            background: "rgba(255,255,255,.07)",
+            color: "rgba(255,255,255,.45)",
+          }}
+        >
+          {type}
+        </span>
+      )}
     </span>
   )
 }
 
-// ── Sub-item row (country or region) ──────────────────────────────────────────
+// ── Region row ────────────────────────────────────────────────────────────────
 
-function SubItemRow({ item, onClick }: { item: SubItem; onClick: () => void }) {
+function RegionRow({ item, onClick }: { item: SubItem; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="group flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm text-white/65 transition-colors hover:bg-white/6 hover:text-white/90"
+      className="group flex w-full items-center gap-3 rounded-xl border border-white/6 bg-white/3 px-3 py-3 text-left transition-colors hover:border-white/12 hover:bg-white/6"
     >
-      <span className="flex-1 leading-snug">{item.name}</span>
+      {/* Boundary SVG thumbnail */}
+      <div
+        style={{
+          width: "40px",
+          height: "40px",
+          borderRadius: "8px",
+          flexShrink: 0,
+          background: "rgba(255,255,255,.04)",
+          border: "1px solid rgba(255,255,255,.08)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "hidden",
+        }}
+      >
+        {item.boundaryUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={item.boundaryUrl}
+            alt=""
+            aria-hidden
+            style={{
+              width: "32px",
+              height: "32px",
+              objectFit: "contain",
+              filter: "invert(1) brightness(0.55)",
+            }}
+          />
+        ) : (
+          <svg
+            viewBox="0 0 20 20"
+            fill="none"
+            style={{ width: "16px", height: "16px", opacity: 0.25 }}
+          >
+            <rect
+              x="3"
+              y="3"
+              width="14"
+              height="14"
+              rx="2"
+              stroke="white"
+              strokeWidth="1.5"
+            />
+          </svg>
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[14px] leading-snug font-medium text-white/85 transition-colors group-hover:text-white">
+          {item.name}
+        </p>
+      </div>
       <svg
         viewBox="0 0 12 12"
         fill="none"
-        className="h-2.5 w-2.5 flex-shrink-0 text-white/20 transition-colors group-hover:text-white/50"
+        className="h-3 w-3 flex-shrink-0 text-white/25 transition-colors group-hover:text-white/55"
       >
         <path
           d="M2 6h8M6 2l4 4-4 4"
@@ -239,6 +441,116 @@ function SubItemRow({ item, onClick }: { item: SubItem; onClick: () => void }) {
         />
       </svg>
     </button>
+  )
+}
+
+// ── Country Facts card ─────────────────────────────────────────────────────────
+
+function FactRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "baseline",
+        gap: "12px",
+        padding: "8px 0",
+        borderBottom: "1px solid rgba(255,255,255,.05)",
+      }}
+    >
+      <span
+        style={{
+          fontFamily: T.font.mono,
+          fontSize: "9.5px",
+          letterSpacing: ".18em",
+          textTransform: "uppercase",
+          color: "rgba(255,255,255,.35)",
+          flexShrink: 0,
+          width: "64px",
+        }}
+      >
+        {label}
+      </span>
+      <span style={{ fontSize: "14px", color: T.ink.base, lineHeight: 1.4 }}>
+        {value}
+      </span>
+    </div>
+  )
+}
+
+function CountryFactsCard({ facts }: { facts: CountryFacts }) {
+  const rows: { label: string; value: string }[] = []
+  if (facts.capitalCity)
+    rows.push({ label: "Capital", value: facts.capitalCity })
+  if (facts.population) rows.push({ label: "Pop.", value: facts.population })
+  if (facts.languages) rows.push({ label: "Langs", value: facts.languages })
+  if (facts.visitsPerYear)
+    rows.push({ label: "Visits / yr", value: facts.visitsPerYear })
+  if (facts.employees) rows.push({ label: "Staff", value: facts.employees })
+  if (facts.volunteers)
+    rows.push({ label: "Volunteers", value: facts.volunteers })
+  if (facts.budget) rows.push({ label: "Budget", value: facts.budget })
+  if (facts.iso2) rows.push({ label: "ISO", value: facts.iso2 })
+  if (!rows.length) return null
+
+  return (
+    <div
+      style={{
+        borderRadius: "14px",
+        border: "1px solid rgba(255,255,255,.08)",
+        background: "rgba(255,255,255,.025)",
+        padding: "14px 16px",
+      }}
+    >
+      <p
+        style={{
+          fontFamily: T.font.mono,
+          fontSize: "10px",
+          letterSpacing: ".2em",
+          textTransform: "uppercase",
+          color: "rgba(255,255,255,.35)",
+          marginBottom: "4px",
+        }}
+      >
+        Country Facts
+      </p>
+      <div>
+        {rows.map((r) => (
+          <FactRow key={r.label} label={r.label} value={r.value} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Section header ─────────────────────────────────────────────────────────────
+
+function SectionHeader({ label, meta }: { label: string; meta?: string }) {
+  return (
+    <div className="mb-2 flex items-center justify-between">
+      <span
+        style={{
+          fontFamily: T.font.mono,
+          fontSize: "10px",
+          letterSpacing: ".2em",
+          textTransform: "uppercase",
+          color: "rgba(255,255,255,.35)",
+        }}
+      >
+        {label}
+      </span>
+      {meta && (
+        <span
+          style={{
+            fontFamily: T.font.mono,
+            fontSize: "10px",
+            letterSpacing: ".1em",
+            color: "rgba(255,255,255,.25)",
+          }}
+        >
+          {meta}
+        </span>
+      )}
+    </div>
   )
 }
 
@@ -303,23 +615,17 @@ export default function GlobeInfoPanel({
     switch (level) {
       case "world":
         onClose()
-
         break
-
       case "continent":
         onDrillChange({ level: "continent", continent: state.continent })
-
         break
-
       case "country":
         onDrillChange({
           level: "country",
           continent: state.continent,
           country: state.country,
         })
-
         break
-
       // No default
     }
   }
@@ -351,7 +657,10 @@ export default function GlobeInfoPanel({
     })
   }
 
-  const hasSubItems = !!panelData?.subItems?.length
+  const heroImageUrl = panelData?.countryFacts?.heroImageUrl ?? null
+  const summary = panelData?.countryFacts?.summary ?? null
+  const countryFacts = panelData?.countryFacts ?? null
+  const pillarCount = panelData?.libraries.filter((l) => l.featured).length ?? 0
 
   return (
     <div
@@ -363,7 +672,7 @@ export default function GlobeInfoPanel({
       )}
       style={{ maxHeight: "calc(100% - 2rem)" }}
     >
-      {/* Back to Globe button — shown when viewing from map mode */}
+      {/* Back to Globe button */}
       {onBackToGlobe && (
         <button
           onClick={onBackToGlobe}
@@ -383,117 +692,269 @@ export default function GlobeInfoPanel({
       )}
 
       {/* Main panel */}
-      <div className="flex min-h-0 w-[420px] flex-1 flex-col rounded-2xl border border-white/10 bg-[#050c1a]/92 shadow-2xl backdrop-blur-xl">
-        {/* Content */}
-        <div className="relative flex h-full min-h-0 flex-col">
-          {/* Header */}
-          <div className="flex items-start justify-between p-4 pb-0">
-            <div className="min-w-0 flex-1">
-              <Breadcrumb state={state} onNavigate={handleNavigate} />
-              <p className="mb-1 text-[11px] tracking-widest text-cyan-400/60 uppercase">
-                {levelLabel}
-              </p>
-              <h2 className="truncate text-2xl leading-tight font-semibold text-white">
-                {entityName}
-              </h2>
-            </div>
-            <button
-              onClick={onClose}
-              className="mt-1 ml-3 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border border-white/10 text-white/40 transition-colors hover:border-white/25 hover:text-white/70"
-              aria-label="Close panel"
-            >
-              <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3">
-                <path
-                  d="M1 1l10 10M11 1L1 11"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-          </div>
+      <div
+        className="flex min-h-0 w-[340px] flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 shadow-2xl"
+        style={{ background: "#070d1e" }}
+      >
+        {/* ── Hero image header ─────────────────────────────────────── */}
+        <div
+          style={{
+            position: "relative",
+            height: heroImageUrl ? "140px" : "0px",
+            flexShrink: 0,
+            overflow: "hidden",
+            transition: "height 300ms ease",
+          }}
+        >
+          {heroImageUrl && (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={heroImageUrl}
+                alt={entityName}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background:
+                    "linear-gradient(180deg, rgba(7,13,30,.25) 0%, rgba(7,13,30,.7) 70%, #070d1e 100%)",
+                }}
+              />
+              {/* Breadcrumb overlaid on image */}
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "12px",
+                  left: "16px",
+                  right: "48px",
+                }}
+              >
+                <Breadcrumb state={state} onNavigate={handleNavigate} />
+              </div>
+            </>
+          )}
+          {/* Close button always in top-right */}
+          <button
+            onClick={onClose}
+            style={{
+              position: "absolute",
+              top: "12px",
+              right: "12px",
+            }}
+            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white/50 backdrop-blur-md transition-colors hover:border-white/30 hover:text-white/80"
+            aria-label="Close panel"
+          >
+            <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3">
+              <path
+                d="M1 1l10 10M11 1L1 11"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        </div>
 
-          {/* Stats row */}
-          <div className="mx-4 mt-3 mb-3 flex items-center gap-5">
-            {loading ? (
-              <div className="h-4 w-28 animate-pulse rounded bg-white/10" />
-            ) : (
-              <>
-                <div>
-                  <span className="text-lg font-semibold text-white tabular-nums">
-                    {panelData?.libraryCount ?? "—"}
-                  </span>
-                  <span className="ml-1.5 text-[11px] text-white/40">
-                    {panelData?.libraryCount === 1 ? "library" : "libraries"}
-                  </span>
-                </div>
-                {panelData?.subItems && panelData.subItems.length > 0 && (
-                  <>
-                    <span className="h-3.5 w-px bg-white/12" />
-                    <div>
-                      <span className="text-lg font-semibold text-white tabular-nums">
-                        {panelData.subItems.length}
-                      </span>
-                      <span className="ml-1.5 text-[11px] text-white/40">
-                        {panelData.subLabel?.toLowerCase()}
-                      </span>
-                    </div>
-                  </>
-                )}
-                {onOpenMap && (
-                  <button
-                    onClick={onOpenMap}
-                    className="ml-auto flex items-center gap-1.5 rounded-lg border border-white/12 bg-white/6 px-3 py-1.5 text-[12px] font-medium text-white/70 transition-colors hover:border-white/22 hover:bg-white/10 hover:text-white"
-                  >
-                    <svg viewBox="0 0 14 14" fill="none" className="h-3 w-3">
-                      <path
-                        d="M1 5l3-4 3 4 3-4 3 4v8l-3-2-3 2-3-2-3 2V5z"
-                        stroke="currentColor"
-                        strokeWidth="1.3"
-                        strokeLinejoin="round"
+        {/* ── Scrollable body ───────────────────────────────────────── */}
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          {/* Header block */}
+          <div style={{ padding: "16px 16px 0" }}>
+            {/* Breadcrumb (when no hero image) */}
+            {!heroImageUrl && (
+              <div className="mb-3 flex items-center justify-between">
+                <Breadcrumb state={state} onNavigate={handleNavigate} />
+                <button
+                  onClick={onClose}
+                  className="ml-3 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border border-white/10 text-white/40 transition-colors hover:border-white/25 hover:text-white/70"
+                  aria-label="Close panel"
+                >
+                  <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3">
+                    <path
+                      d="M1 1l10 10M11 1L1 11"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+            )}
+
+            {/* Level label + system description */}
+            <p
+              style={{
+                fontFamily: T.font.mono,
+                fontSize: "10px",
+                letterSpacing: ".2em",
+                textTransform: "uppercase",
+                color: T.accent.aurora,
+                marginBottom: "6px",
+                opacity: 0.7,
+              }}
+            >
+              {levelLabel}
+              {countryFacts?.systemDescription
+                ? ` · ${countryFacts.systemDescription}`
+                : ""}
+            </p>
+
+            {/* Entity name */}
+            <h2
+              style={{
+                fontFamily: T.font.serif,
+                fontWeight: 400,
+                fontSize: "38px",
+                lineHeight: 1.05,
+                color: T.ink.base,
+                letterSpacing: "-.02em",
+                margin: "0 0 10px",
+              }}
+            >
+              {entityName}.
+            </h2>
+
+            {/* Summary */}
+            {summary ? (
+              <p
+                style={{
+                  fontSize: "13.5px",
+                  lineHeight: "1.55",
+                  color: "rgba(255,255,255,.55)",
+                  marginBottom: "16px",
+                }}
+              >
+                {summary}
+              </p>
+            ) : null}
+
+            {/* Stats row */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "stretch",
+                marginBottom: "14px",
+                borderRadius: "14px",
+                border: "1px solid rgba(255,255,255,.07)",
+                background: "rgba(255,255,255,.03)",
+                overflow: "hidden",
+              }}
+            >
+              {loading ? (
+                <div
+                  className="h-16 w-full animate-pulse"
+                  style={{ background: "rgba(255,255,255,.04)" }}
+                />
+              ) : (
+                <>
+                  <StatBlock
+                    value={panelData?.libraryCount ?? "—"}
+                    label={
+                      panelData?.libraryCount === 1 ? "Library" : "Libraries"
+                    }
+                  />
+                  {panelData?.subItems && panelData.subItems.length > 0 && (
+                    <>
+                      <StatDivider />
+                      <StatBlock
+                        value={panelData.subItems.length}
+                        label={panelData.subLabel ?? "Areas"}
                       />
-                    </svg>
-                    View on Map
-                  </button>
-                )}
-              </>
+                    </>
+                  )}
+                  {pillarCount > 0 && (
+                    <>
+                      <StatDivider />
+                      <StatBlock value={pillarCount} label="Pillars" />
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Explore CTA */}
+            {!loading && panelData?.pageUrl && (
+              <a
+                href={panelData.pageUrl}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "13px 16px",
+                  borderRadius: "14px",
+                  border: "1px solid rgba(127,223,255,.25)",
+                  background: "rgba(127,223,255,.07)",
+                  marginBottom: "20px",
+                  transition: "background 150ms, border-color 150ms",
+                }}
+                className="hover:border-[rgba(127,223,255,.45)] hover:bg-[rgba(127,223,255,.12)]"
+              >
+                <span
+                  style={{
+                    fontFamily: T.font.sans,
+                    fontWeight: 500,
+                    fontSize: "14px",
+                    color: T.accent.aurora,
+                  }}
+                >
+                  Explore {entityName}
+                </span>
+                <span
+                  style={{
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "8px",
+                    border: "1px solid rgba(127,223,255,.25)",
+                    background: "rgba(127,223,255,.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <svg
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    style={{ width: "12px", height: "12px" }}
+                  >
+                    <path
+                      d="M2 10L10 2M10 2H4M10 2v6"
+                      stroke={T.accent.aurora}
+                      strokeWidth="1.3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+              </a>
+            )}
+
+            {/* View on Map secondary link */}
+            {onOpenMap && !loading && (
+              <button
+                onClick={onOpenMap}
+                style={{ display: "none" }} // hidden — kept for future use
+              />
             )}
           </div>
 
-          {/* Page link — prominent CTA */}
-          {!loading && panelData?.pageUrl && (
-            <a
-              href={panelData.pageUrl}
-              className="mx-4 mb-4 flex items-center justify-between rounded-xl border border-cyan-500/20 bg-cyan-500/8 px-4 py-3 transition-colors hover:border-cyan-400/40 hover:bg-cyan-500/14"
-            >
-              <span className="text-sm font-medium text-cyan-300">
-                Explore {entityName}
-              </span>
-              <svg
-                viewBox="0 0 12 12"
-                fill="none"
-                className="h-3 w-3 text-cyan-400/70"
-              >
-                <path
-                  d="M2 2h8v8M2 10l8-8"
-                  stroke="currentColor"
-                  strokeWidth="1.3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </a>
-          )}
-
-          {/* Scrollable body */}
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4">
-            {/* ── Sub-items (Countries / Regions) ─────────────────────────── */}
-            {loading && hasSubItems === false && (
-              <div className="space-y-1.5">
-                {Array.from({ length: 5 }).map((_, i) => (
+          {/* ── Scrollable list content ───────────────────────────── */}
+          <div
+            style={{
+              padding: "0 16px 16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "20px",
+            }}
+          >
+            {/* Sub-items (Regions / Countries) */}
+            {loading && !panelData?.subItems?.length && (
+              <div className="space-y-2">
+                {Array.from({ length: 4 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-9 animate-pulse rounded-md bg-white/4"
+                    className="h-[58px] animate-pulse rounded-xl bg-white/4"
                   />
                 ))}
               </div>
@@ -503,12 +964,13 @@ export default function GlobeInfoPanel({
               panelData?.subItems &&
               panelData.subItems.length > 0 && (
                 <div>
-                  <p className="mb-1.5 text-[10px] tracking-widest text-white/35 uppercase">
-                    {panelData.subLabel}
-                  </p>
-                  <div className="space-y-0.5">
+                  <SectionHeader
+                    label={panelData.subLabel ?? "Areas"}
+                    meta={String(panelData.subItems.length).padStart(2, "0")}
+                  />
+                  <div className="flex flex-col gap-2">
                     {panelData.subItems.map((item) => (
-                      <SubItemRow
+                      <RegionRow
                         key={item.slug}
                         item={item}
                         onClick={() =>
@@ -522,13 +984,17 @@ export default function GlobeInfoPanel({
                 </div>
               )}
 
-            {/* ── Library list ────────────────────────────────────────────── */}
-            {(panelData?.libraryCount ?? 0) > 0 || loading ? (
+            {/* Libraries */}
+            {(loading || (panelData?.libraryCount ?? 0) > 0) && (
               <div>
-                {(panelData?.libraryCount ?? 0) > 0 && (
-                  <p className="mb-1.5 text-[10px] tracking-widest text-white/35 uppercase">
-                    Libraries
-                  </p>
+                {!loading && (panelData?.libraryCount ?? 0) > 0 && (
+                  <SectionHeader
+                    label="Libraries"
+                    meta={String(panelData!.libraryCount).padStart(
+                      Math.max(2, String(panelData!.libraryCount).length),
+                      "0"
+                    )}
+                  />
                 )}
 
                 {loading && (
@@ -543,31 +1009,41 @@ export default function GlobeInfoPanel({
                 )}
 
                 {!loading && panelData && panelData.libraries.length > 0 && (
-                  <ul className="space-y-1.5">
+                  <ul className="flex flex-col gap-0.5">
                     {panelData.libraries.map((lib) => (
                       <li key={lib.documentId}>
                         <a
                           href={`/en/library/${lib.slug}`}
-                          className="group flex items-start gap-3 rounded-lg border border-transparent bg-white/4 px-3 py-2.5 transition-colors hover:border-white/10 hover:bg-white/8"
+                          className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-white/5"
                         >
-                          <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-cyan-400/60 transition-colors group-hover:bg-cyan-400" />
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-sm leading-snug text-white/80 transition-colors group-hover:text-white">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[14px] leading-snug font-medium text-white/85 transition-colors group-hover:text-white">
                               {lib.name}
-                            </span>
-                            <span className="mt-0.5 flex items-center gap-1.5">
+                            </p>
+                            <div className="mt-1 flex items-center gap-1.5">
                               {lib.city && (
-                                <span className="text-[11px] text-white/35">
+                                <span
+                                  style={{
+                                    fontFamily: T.font.mono,
+                                    fontSize: "10px",
+                                    letterSpacing: ".1em",
+                                    textTransform: "uppercase",
+                                    color: "rgba(255,255,255,.3)",
+                                  }}
+                                >
                                   {lib.city}
                                 </span>
                               )}
-                              <TypeBadge type={lib.libraryType} />
-                            </span>
-                          </span>
+                              <TypeBadge
+                                type={lib.libraryType}
+                                featured={lib.featured}
+                              />
+                            </div>
+                          </div>
                           <svg
                             viewBox="0 0 12 12"
                             fill="none"
-                            className="mt-1 h-3 w-3 flex-shrink-0 text-white/20 transition-colors group-hover:text-white/50"
+                            className="h-3 w-3 flex-shrink-0 text-white/20 transition-colors group-hover:text-white/50"
                           >
                             <path
                               d="M2 6h8M6 2l4 4-4 4"
@@ -582,24 +1058,44 @@ export default function GlobeInfoPanel({
                     ))}
 
                     {panelData.libraryCount > panelData.libraries.length && (
-                      <li className="pt-1 text-center text-[11px] text-white/30">
+                      <li className="pt-1 text-center text-[11px] text-white/25">
                         +{panelData.libraryCount - panelData.libraries.length}{" "}
-                        more · use &ldquo;View on Map&rdquo; to see all
+                        more libraries
                       </li>
                     )}
                   </ul>
                 )}
               </div>
-            ) : (
-              !loading &&
-              panelData && (
-                <div className="rounded-xl border border-white/6 bg-white/3 py-8 text-center">
-                  <p className="text-sm text-white/35">No libraries yet</p>
-                  <p className="mt-1 text-[11px] text-white/20">
-                    Check back as we continue to grow the catalogue
-                  </p>
-                </div>
-              )
+            )}
+
+            {!loading && panelData && panelData.libraryCount === 0 && (
+              <div
+                style={{
+                  borderRadius: "14px",
+                  border: "1px solid rgba(255,255,255,.06)",
+                  background: "rgba(255,255,255,.02)",
+                  padding: "32px 16px",
+                  textAlign: "center",
+                }}
+              >
+                <p style={{ fontSize: "14px", color: "rgba(255,255,255,.3)" }}>
+                  No libraries yet
+                </p>
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "rgba(255,255,255,.18)",
+                    marginTop: "4px",
+                  }}
+                >
+                  Check back as we grow the catalogue
+                </p>
+              </div>
+            )}
+
+            {/* Country Facts */}
+            {!loading && countryFacts && (
+              <CountryFactsCard facts={countryFacts} />
             )}
           </div>
         </div>

@@ -3,27 +3,21 @@
 import { Icon } from "@iconify/react"
 
 import { homepagePanelClassName } from "@/components/home/homepage.constants"
+import { WidgetTitle } from "@/components/library/LibraryInfoCards"
 import StrapiBlocksContent from "@/components/library/StrapiBlocksContent"
 import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
 import { cn } from "@/lib/styles"
 
 function ContentSection({
-  icon,
   title,
   children,
 }: {
-  readonly icon: string
   readonly title: string
   readonly children: React.ReactNode
 }) {
   return (
     <div className={cn(homepagePanelClassName, "p-5 sm:p-6")}>
-      <div className="mb-4 flex items-center gap-2">
-        <Icon icon={icon} className="size-4 text-white/40" />
-        <h2 className="text-[11px] font-medium tracking-[0.18em] text-white/40 uppercase">
-          {title}
-        </h2>
-      </div>
+      <WidgetTitle>{title}</WidgetTitle>
       {children}
     </div>
   )
@@ -57,7 +51,7 @@ export function LibraryContent({
   return (
     <div className="space-y-4">
       {hasDescription ? (
-        <ContentSection icon="mdi:text-box-outline" title="About">
+        <ContentSection title="About">
           <StrapiBlocksContent
             blocks={
               library.description as Parameters<
@@ -69,10 +63,7 @@ export function LibraryContent({
       ) : null}
 
       {hasVisitNotes || hasAdmission ? (
-        <ContentSection
-          icon="mdi:information-outline"
-          title="Visitor Information"
-        >
+        <ContentSection title="Visitor Information">
           {hasAdmission ? (
             <p className="mb-4 rounded-lg border border-white/8 bg-white/4 px-4 py-3 text-sm leading-6 text-white/72">
               <Icon

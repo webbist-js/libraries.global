@@ -2,56 +2,12 @@
 
 import Image from "next/image"
 
+import { HeroTitle, MetaRow } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
+import { T } from "@/lib/design-tokens"
 import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
-import { cn } from "@/lib/styles"
-
-// ── Status config ────────────────────────────────────────────────────────────
-
-const STATUS_CONFIG = {
-  open_now: {
-    label: "Open Now",
-    dot: "bg-emerald-400",
-    badge: "border-emerald-500/30 bg-emerald-500/15 text-emerald-300",
-  },
-  closed: {
-    label: "Closed",
-    dot: "bg-white/30",
-    badge: "border-white/10 bg-white/[0.06] text-white/50",
-  },
-  temporarily_closed: {
-    label: "Temporarily Closed",
-    dot: "bg-amber-400",
-    badge: "border-amber-500/30 bg-amber-500/15 text-amber-300",
-  },
-  permanently_closed: {
-    label: "Permanently Closed",
-    dot: "bg-red-400",
-    badge: "border-red-500/30 bg-red-500/15 text-red-300",
-  },
-  seasonal: {
-    label: "Seasonal",
-    dot: "bg-sky-400",
-    badge: "border-sky-500/30 bg-sky-500/15 text-sky-300",
-  },
-  appointment_only: {
-    label: "By Appointment",
-    dot: "bg-violet-400",
-    badge: "border-violet-500/30 bg-violet-500/15 text-violet-300",
-  },
-  planned: {
-    label: "Planned",
-    dot: "bg-blue-400",
-    badge: "border-blue-500/30 bg-blue-500/15 text-blue-300",
-  },
-  unknown: {
-    label: "Status Unknown",
-    dot: "bg-white/30",
-    badge: "border-white/10 bg-white/6 text-white/40",
-  },
-} as const
 
 // ── Real-time open/closed logic ───────────────────────────────────────────────
 
@@ -77,12 +33,10 @@ const DAY_LABELS = [
 type TimeframeEntry = { startTime: string; endTime: string }
 type DayEntry = { day: string; enabled: boolean; timeframes: TimeframeEntry[] }
 
-const to12h = (time: string): string => {
+const to24h = (time: string): string => {
   const [h = 0, m = 0] = time.split(":").map(Number)
-  const suffix = h >= 12 ? "PM" : "AM"
-  const hour = h % 12 || 12
 
-  return `${hour}:${m.toString().padStart(2, "0")} ${suffix}`
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
 }
 
 const toMinutes = (time: string): number => {
@@ -93,8 +47,8 @@ const toMinutes = (time: string): number => {
 
 type RealtimeStatus = {
   isOpenNow: boolean
-  hoursText: string | null // "9:00 AM — 5:00 PM" when open
-  nextOpenText: string | null // "Opens tomorrow at 9:00 AM" when closed
+  hoursText: string | null
+  nextOpenText: string | null
 }
 
 function getRealtimeStatus(openingTimes: unknown): RealtimeStatus {
@@ -109,10 +63,8 @@ function getRealtimeStatus(openingTimes: unknown): RealtimeStatus {
   const now = new Date()
   const todayIndex = now.getDay()
   const currentMinutes = now.getHours() * 60 + now.getMinutes()
-
   const dayMap = new Map(data.days.map((d) => [d.day, d]))
 
-  // Check if currently within a timeframe today
   const todayEntry = dayMap.get(DAY_KEYS[todayIndex] ?? "")
   if (todayEntry?.enabled && todayEntry.timeframes?.length) {
     for (const tf of todayEntry.timeframes) {
@@ -125,25 +77,22 @@ function getRealtimeStatus(openingTimes: unknown): RealtimeStatus {
 
         return {
           isOpenNow: true,
-          hoursText: `${to12h(first.startTime)} — ${to12h(last.endTime)}`,
+          hoursText: `${to24h(first.startTime)} – ${to24h(last.endTime)}`,
           nextOpenText: null,
         }
       }
     }
-
-    // Closed now — check if a later timeframe opens today
     for (const tf of todayEntry.timeframes) {
       if (toMinutes(tf.startTime) > currentMinutes) {
         return {
           isOpenNow: false,
           hoursText: null,
-          nextOpenText: `Opens today at ${to12h(tf.startTime)}`,
+          nextOpenText: `Opens today at ${to24h(tf.startTime)}`,
         }
       }
     }
   }
 
-  // Look ahead up to 7 days for the next open day
   for (let offset = 1; offset <= 7; offset++) {
     const nextIndex = (todayIndex + offset) % 7
     const nextEntry = dayMap.get(DAY_KEYS[nextIndex] ?? "")
@@ -153,7 +102,7 @@ function getRealtimeStatus(openingTimes: unknown): RealtimeStatus {
       return {
         isOpenNow: false,
         hoursText: null,
-        nextOpenText: `Opens ${label} at ${to12h(nextEntry.timeframes[0]!.startTime)}`,
+        nextOpenText: `Opens ${label} at ${to24h(nextEntry.timeframes[0]!.startTime)}`,
       }
     }
   }
@@ -165,17 +114,13 @@ function getRealtimeStatus(openingTimes: unknown): RealtimeStatus {
 
 export function LibraryHero({
   library,
-  tabNav,
   breadcrumb,
 }: {
   readonly library: PopulatedLibraryData
-  readonly tabNav?: React.ReactNode
   readonly breadcrumb?: React.ReactNode
 }) {
   const imageUrl = formatStrapiMediaUrl(library.heroImage?.url)
 
-  // operationalStatus is the library's structural state (open / temporarily_closed / etc.)
-  // Only when it's "open" do we check real-time opening hours for a live open/closed badge.
   const operationalStatus = library.operationalStatus as
     | string
     | null
@@ -185,39 +130,51 @@ export function LibraryHero({
     ? getRealtimeStatus(library.openingTimes)
     : null
 
-  const statusKey = isGenerallyOpen
-    ? realtime?.isOpenNow
-      ? "open_now"
-      : "closed"
-    : ((operationalStatus ?? "unknown") as keyof typeof STATUS_CONFIG)
-  const status = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.unknown
-
+  const isOpenNow = isGenerallyOpen && (realtime?.isOpenNow ?? false)
   const statusSubtext = realtime?.isOpenNow
     ? realtime.hoursText
     : (realtime?.nextOpenText ?? null)
 
-  const ctaLinks = [
-    library.virtualTourUrl && {
-      href: library.virtualTourUrl,
-      label: "Virtual Tour",
-      primary: false,
-    },
-    library.planVisitUrl && {
-      href: library.planVisitUrl,
-      label: "Plan Your Visit",
-      primary: false,
-    },
-    !library.planVisitUrl &&
-      library.website && {
-        href: library.website,
-        label: "Visit Website",
-        primary: true,
-      },
-  ].filter(Boolean) as { href: string; label: string; primary: boolean }[]
+  // Meta strip items: city · postcode · coords
+  const locationCoords =
+    library.location != null &&
+    typeof library.location === "object" &&
+    !Array.isArray(library.location)
+      ? (library.location as { lat?: unknown; lng?: unknown })
+      : null
+  const hasCoords = locationCoords?.lat != null && locationCoords?.lng != null
+
+  const cityPostcode = [library.city, library.postalCode]
+    .filter(Boolean)
+    .join(" · ")
+  const coordsText = hasCoords
+    ? `${Number(locationCoords!.lat).toFixed(4)}° N ${Math.abs(Number(locationCoords!.lng)).toFixed(4)}° W`
+    : null
+
+  const metaItems = [cityPostcode || null, coordsText].filter(
+    Boolean
+  ) as string[]
+
+  // Type tags shown beside the status chip
+  const typeTags = [
+    library.libraryType,
+    library.foundedYear ? `Est. ${library.foundedYear}` : null,
+  ].filter(Boolean) as string[]
+
+  // Primary CTA
+  const primaryCta = library.planVisitUrl
+    ? { href: library.planVisitUrl, label: "Plan your visit →" }
+    : library.website
+      ? { href: library.website, label: "Visit website →" }
+      : null
 
   return (
-    <section className="relative isolate flex min-h-[65vh] flex-col justify-end overflow-hidden">
-      {/* Background image */}
+    <section
+      data-transparent-header=""
+      className="relative isolate -mt-14 flex flex-col overflow-hidden"
+      style={{ minHeight: "640px" }}
+    >
+      {/* Background */}
       <div className="absolute inset-0 -z-10">
         {imageUrl ? (
           <Image
@@ -230,74 +187,153 @@ export function LibraryHero({
         ) : (
           <div className="h-full w-full bg-[linear-gradient(180deg,rgba(12,18,40,1),rgba(5,8,22,1))]" />
         )}
-        {/* Dark overlay — lighter at the bottom so the image is visible behind the tab bar */}
-        <div className="absolute inset-0 bg-[#050816]/38" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,8,22,0.2)_0%,rgba(5,8,22,0.38)_45%,rgba(5,8,22,0.62)_78%,rgba(5,8,22,0.62)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,8,22,0.62)_0%,transparent_68%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,5,17,.3)_0%,rgba(3,5,17,.55)_55%,#030511_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,8,22,.62)_0%,transparent_68%)]" />
       </div>
 
-      <Container className="py-10 sm:py-14">
-        <div className="flex flex-col gap-5">
-          {/* Breadcrumb */}
-          {breadcrumb ? <div>{breadcrumb}</div> : null}
+      <Container className="flex flex-1 flex-col gap-5 pt-[110px] pb-14">
+        {/* Breadcrumb */}
+        {breadcrumb ? <div>{breadcrumb}</div> : null}
 
-          {/* Status + hours */}
-          <div className="flex items-center gap-3">
+        {/* Status + type chip row */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            flexWrap: "wrap",
+          }}
+        >
+          {/* Open/closed chip */}
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "6px 12px",
+              borderRadius: "999px",
+              fontFamily: T.font.mono,
+              fontSize: "10px",
+              letterSpacing: ".22em",
+              textTransform: "uppercase",
+              border: isOpenNow
+                ? "1px solid rgba(110,231,183,.35)"
+                : "1px solid rgba(255,255,255,.1)",
+              background: isOpenNow
+                ? "rgba(110,231,183,.08)"
+                : "rgba(255,255,255,.04)",
+              color: isOpenNow ? "#6ee7b7" : T.ink.low,
+            }}
+          >
+            {isOpenNow ? (
+              <span
+                style={{
+                  width: "6px",
+                  height: "6px",
+                  borderRadius: "50%",
+                  background: "#6ee7b7",
+                  boxShadow: "0 0 10px #6ee7b7",
+                  flexShrink: 0,
+                  animation: "pulse 2.4s ease-in-out infinite",
+                }}
+              />
+            ) : null}
+            {isOpenNow ? "Open Now" : "Closed"}
+          </span>
+
+          {/* Hours sub-text */}
+          {statusSubtext ? (
             <span
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-[0.12em] uppercase",
-                status.badge
-              )}
+              style={{
+                fontFamily: T.font.mono,
+                fontSize: "12px",
+                color: T.ink.dim,
+                letterSpacing: ".08em",
+              }}
             >
-              <span className={cn("size-1.5 rounded-full", status.dot)} />
-              {status.label}
+              <strong style={{ color: T.ink.base, fontWeight: 500 }}>
+                {isOpenNow && realtime?.hoursText
+                  ? realtime.hoursText
+                  : statusSubtext}
+              </strong>
             </span>
-            {statusSubtext ? (
-              <span className="text-sm text-white/50">{statusSubtext}</span>
-            ) : null}
-          </div>
+          ) : null}
 
-          {/* Title */}
-          <h1 className="text-[clamp(3rem,7.5vw,6rem)] leading-[0.92] font-bold tracking-[-0.04em] text-white [text-shadow:0_2px_32px_rgba(0,0,0,0.5)]">
-            {library.name}
-          </h1>
+          {/* Type tags */}
+          {typeTags.length > 0 ? (
+            <span
+              style={{
+                fontFamily: T.font.mono,
+                fontSize: "11px",
+                color: T.ink.faint,
+                letterSpacing: ".1em",
+                textTransform: "uppercase",
+              }}
+            >
+              · {typeTags.join(" · ")}
+            </span>
+          ) : null}
+        </div>
 
-          {/* Summary + CTAs row */}
-          <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-end sm:justify-between">
-            {library.summary ? (
-              <p className="max-w-[46ch] text-[15px] leading-7 text-white/60 sm:text-base">
-                {library.summary}
-              </p>
-            ) : (
-              <span />
-            )}
+        {/* Title */}
+        <HeroTitle>{library.name}</HeroTitle>
 
-            {ctaLinks.length > 0 ? (
-              <div className="flex shrink-0 flex-wrap items-center gap-2.5">
-                {ctaLinks.map((cta) => (
-                  <GlobalLink
-                    key={cta.href}
-                    href={cta.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={cn(
-                      "inline-flex items-center gap-2 rounded-2xl px-5 py-2.5 text-sm font-semibold transition-all duration-200 focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:outline-none",
-                      cta.primary
-                        ? "bg-indigo-500 text-white shadow-[0_4px_24px_rgba(99,102,241,0.35)] hover:bg-indigo-400"
-                        : "border border-white/12 bg-white/8 text-white backdrop-blur-sm hover:bg-white/14"
-                    )}
-                  >
-                    {cta.label}
-                  </GlobalLink>
-                ))}
-              </div>
-            ) : null}
-          </div>
+        {/* Summary — serif light */}
+        {library.summary ? (
+          <p
+            style={{
+              fontFamily: T.font.serif,
+              fontWeight: 300,
+              fontSize: "22px",
+              lineHeight: "1.5",
+              color: T.ink.dim,
+              maxWidth: "58ch",
+              margin: 0,
+              letterSpacing: "-.01em",
+            }}
+          >
+            {library.summary}
+          </p>
+        ) : null}
+
+        {/* Bottom row: meta strip + CTA */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "24px",
+            flexWrap: "wrap",
+            paddingBottom: "0",
+          }}
+        >
+          {metaItems.length > 0 ? <MetaRow items={metaItems} /> : <span />}
+
+          {primaryCta ? (
+            <GlobalLink
+              href={primaryCta.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "12px 22px",
+                borderRadius: "14px",
+                background: T.ink.base,
+                color: "#0a0f2a",
+                fontWeight: 500,
+                fontSize: "14px",
+                flexShrink: 0,
+                transition: "background 200ms",
+              }}
+              className="hover:bg-white"
+            >
+              {primaryCta.label}
+            </GlobalLink>
+          ) : null}
         </div>
       </Container>
-
-      {/* Tab nav pinned to hero bottom — becomes sticky on scroll */}
-      {tabNav ? <div className="relative z-10">{tabNav}</div> : null}
     </section>
   )
 }
