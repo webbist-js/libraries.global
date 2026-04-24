@@ -43,6 +43,7 @@
     "@strapi/provider-email-nodemailer": "5.40.0",
     "@strapi/strapi": "5.40.0",
     "@strapi/utils": "5.40.0",
+    "better-auth": "^1.4.18",
     "ckeditor5": "45.2.2",
     "jsonwebtoken": "9.0.3",
     "lodash": "^4.17.21",

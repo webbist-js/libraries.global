@@ -25,8 +25,6 @@ export const env = createEnv({
 
     NEXT_OUTPUT: z.string().optional(),
 
-    BETTER_AUTH_SECRET: z.string().optional(),
-
     SENTRY_AUTH_TOKEN: z.string().optional(),
     SENTRY_ORG: z.string().optional(),
     SENTRY_PROJECT: z.string().optional(),
@@ -54,6 +52,7 @@ export const env = createEnv({
     NEXT_PUBLIC_MAPBOX_TOKEN: z.string().optional(),
     NEXT_PUBLIC_MEILISEARCH_HOST: z.string().optional(),
     NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY: z.string().optional(),
+    NEXT_PUBLIC_STRAPI_URL: z.string().url().optional(),
   },
 
   shared: {
@@ -81,8 +80,6 @@ export const env = createEnv({
 
     NEXT_OUTPUT: process.env.NEXT_OUTPUT,
 
-    BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
-
     SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
     SENTRY_ORG: process.env.SENTRY_ORG,
     SENTRY_PROJECT: process.env.SENTRY_PROJECT,
@@ -105,6 +102,7 @@ export const env = createEnv({
     NEXT_PUBLIC_MEILISEARCH_HOST: process.env.NEXT_PUBLIC_MEILISEARCH_HOST,
     NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY:
       process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY,
+    NEXT_PUBLIC_STRAPI_URL: process.env.NEXT_PUBLIC_STRAPI_URL,
 
     // shared
     NODE_ENV: process.env.NODE_ENV,

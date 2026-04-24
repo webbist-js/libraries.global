@@ -78,6 +78,7 @@ export default ({ env }) => {
     sentry: {
       enabled: true,
       config: {
+        // Only set `dsn` property in production
         dsn: env("NODE_ENV") === "production" ? env("SENTRY_DSN") : null,
         sendMetadata: true,
       },
@@ -98,7 +99,7 @@ export default ({ env }) => {
         betterAuthOptions: {
           secret: env("BETTER_AUTH_SECRET"),
           baseURL: env("BETTER_AUTH_BASE_URL"),
-          trustedOrigins: [env("APP_PUBLIC_URL")],
+          trustedOrigins: [env("APP_PUBLIC_URL")].filter(Boolean) as string[],
           emailAndPassword: {
             enabled: true,
             sendResetPassword: async ({ user, token }) => {
@@ -144,7 +145,9 @@ export default ({ env }) => {
 }
 
 const localUploadConfig: Record<string, unknown> = {
-  sizeLimit: 250 * 1024 * 1024,
+  // Local provider setup
+  // https://docs.strapi.io/dev-docs/plugins/upload
+  sizeLimit: 250 * 1024 * 1024, // 256mb in bytes,
 }
 
 const prepareAwsS3Config = (env) => {
@@ -193,6 +196,9 @@ const prepareAwsS3Config = (env) => {
 const prepareEmailConfig = (env) => {
   const hasMailgunCreds = env("MAILGUN_API_KEY") && env("MAILGUN_DOMAIN")
   const hasMailtrapCreds = env("MAILTRAP_USER") && env("MAILTRAP_PASS")
+
+  // Mailgun has bigger priority
+  // Mailtrap is only for development/testing purposes
 
   if (hasMailgunCreds) {
     return {
