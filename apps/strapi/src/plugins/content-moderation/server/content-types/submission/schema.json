@@ -1,0 +1,65 @@
+{
+  "kind": "collectionType",
+  "collectionName": "cm_submissions",
+  "info": {
+    "singularName": "submission",
+    "pluralName": "submissions",
+    "displayName": "Submission"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": { "visible": true },
+    "content-type-builder": { "visible": false }
+  },
+  "attributes": {
+    "submissionType": {
+      "type": "enumeration",
+      "required": true,
+      "enum": ["correction", "new_library", "library_claim", "wiki_edit", "blog_submission"]
+    },
+    "status": {
+      "type": "enumeration",
+      "required": true,
+      "default": "pending",
+      "enum": ["pending", "approved", "rejected", "needs_info"]
+    },
+    "targetEntityType": {
+      "type": "enumeration",
+      "enum": ["library", "country", "region", "area", "wiki_article", "blog_article"]
+    },
+    "targetDocumentId": {
+      "type": "string"
+    },
+    "targetSlug": {
+      "type": "string"
+    },
+    "fields": {
+      "type": "json"
+    },
+    "note": {
+      "type": "text"
+    },
+    "reviewNote": {
+      "type": "text"
+    },
+    "submittedByUserId": {
+      "type": "string",
+      "required": true
+    },
+    "submittedByEmail": {
+      "type": "string",
+      "required": true
+    },
+    "submittedByName": {
+      "type": "string"
+    },
+    "reviewedByUserId": {
+      "type": "string"
+    },
+    "reviewedAt": {
+      "type": "datetime"
+    }
+  }
+}
