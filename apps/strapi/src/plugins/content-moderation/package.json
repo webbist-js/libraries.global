@@ -1,0 +1,15 @@
+{
+  "name": "content-moderation",
+  "version": "0.1.0",
+  "description": "Content moderation plugin for libraries.global — manages submission queue",
+  "strapi": {
+    "name": "content-moderation",
+    "displayName": "Content Moderation",
+    "description": "Review and approve user-submitted library data changes"
+  },
+  "main": "./strapi-server.js",
+  "exports": {
+    "./strapi-server": "./strapi-server.js",
+    "./strapi-admin": "./strapi-admin.js"
+  }
+}
