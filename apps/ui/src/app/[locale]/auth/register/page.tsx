@@ -1,19 +1,15 @@
 import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
-import { use } from "react"
 
-import { removeThisWhenYouNeedMe } from "@/lib/general-helpers"
+import { getEnvVar } from "@/lib/env-vars"
 
 import { RegisterForm } from "./_components/RegisterForm"
 
-export default function RegisterPage({
+export default async function RegisterPage({
   params,
 }: PageProps<"/[locale]/auth/register">) {
-  removeThisWhenYouNeedMe("RegisterPage")
-
-  const { locale } = use(params) as { locale: Locale }
-
+  const { locale } = (await params) as { locale: Locale }
   setRequestLocale(locale)
 
-  return <RegisterForm />
+  return <RegisterForm strapiUrl={getEnvVar("STRAPI_URL")} />
 }
