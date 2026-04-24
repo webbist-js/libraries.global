@@ -1,3 +1,5 @@
+import { magicLink } from "better-auth/plugins"
+
 export default ({ env }) => {
   const awsS3Config = prepareAwsS3Config(env)
   if (!awsS3Config) {
@@ -68,7 +70,7 @@ export default ({ env }) => {
     "users-permissions": {
       config: {
         jwt: {
-          expiresIn: "30d", // this value is synced with Better Auth session maxAge
+          expiresIn: "30d",
         },
       },
     },
@@ -76,7 +78,6 @@ export default ({ env }) => {
     sentry: {
       enabled: true,
       config: {
-        // Only set `dsn` property in production
         dsn: env("NODE_ENV") === "production" ? env("SENTRY_DSN") : null,
         sendMetadata: true,
       },
@@ -90,13 +91,60 @@ export default ({ env }) => {
       enabled: true,
       resolve: "./src/plugins/content-moderation",
     },
+
+    "better-auth": {
+      enabled: true,
+      config: {
+        betterAuthOptions: {
+          secret: env("BETTER_AUTH_SECRET"),
+          baseURL: env("BETTER_AUTH_BASE_URL"),
+          trustedOrigins: [env("APP_PUBLIC_URL")],
+          emailAndPassword: {
+            enabled: true,
+            sendResetPassword: async ({ user, token }) => {
+              const nextjsUrl = env("APP_PUBLIC_URL")
+              const resetUrl = `${nextjsUrl}/auth/reset-password?token=${encodeURIComponent(token)}`
+              await global.strapi.plugin("email").provider.send({
+                to: user.email,
+                subject: "Reset your libraries.global password",
+                html: `<p>Reset your libraries.global password: <a href="${resetUrl}">${resetUrl}</a></p>`,
+                text: `Reset your libraries.global password: ${resetUrl}`,
+              })
+            },
+          },
+          socialProviders: {
+            github: {
+              clientId: env("GITHUB_CLIENT_ID"),
+              clientSecret: env("GITHUB_CLIENT_SECRET"),
+            },
+            google: {
+              clientId: env("GOOGLE_CLIENT_ID"),
+              clientSecret: env("GOOGLE_CLIENT_SECRET"),
+            },
+          },
+          plugins: [
+            magicLink({
+              sendMagicLink: async ({ email, url }) => {
+                await global.strapi.plugin("email").provider.send({
+                  to: email,
+                  subject: "Your sign-in link — libraries.global",
+                  html: `<p>Sign in to libraries.global: <a href="${url}">${url}</a></p>`,
+                  text: `Sign in to libraries.global: ${url}`,
+                })
+              },
+            }),
+          ],
+          session: {
+            expiresIn: 60 * 60 * 24 * 30, // 30 days
+          },
+        },
+      },
+    },
   }
 }
 
 const localUploadConfig: Record<string, unknown> = {
-  // Local provider setup
-  // https://docs.strapi.io/dev-docs/plugins/upload
-  sizeLimit: 250 * 1024 * 1024, // 256mb in bytes,
+  sizeLimit: 250 * 1024 * 1024,
 }
 
 const prepareAwsS3Config = (env) => {
@@ -145,9 +193,6 @@ const prepareAwsS3Config = (env) => {
 const prepareEmailConfig = (env) => {
   const hasMailgunCreds = env("MAILGUN_API_KEY") && env("MAILGUN_DOMAIN")
   const hasMailtrapCreds = env("MAILTRAP_USER") && env("MAILTRAP_PASS")
-
-  // Mailgun has bigger priority
-  // Mailtrap is only for development/testing purposes
 
   if (hasMailgunCreds) {
     return {
