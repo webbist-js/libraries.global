@@ -1,31 +1,9 @@
-import type { BetterAuthClientPlugin } from "better-auth/client"
+import { magicLinkClient } from "better-auth/client/plugins"
 import { createAuthClient } from "better-auth/react"
 
-import { getEnvVar } from "@/lib/env-vars"
-import type { BetterAuthSessionWithStrapi } from "@/types/better-auth"
-
-import type { strapiAuthPlugin, strapiOAuthPlugin } from "./auth"
-
-const strapiAuthClientPlugin = {
-  id: "strapi-auth",
-  $InferServerPlugin: {} as typeof strapiAuthPlugin,
-} satisfies BetterAuthClientPlugin
-
-const strapiOAuthClientPlugin = {
-  id: "strapi-oauth",
-  $InferServerPlugin: {} as typeof strapiOAuthPlugin,
-} satisfies BetterAuthClientPlugin
+const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://127.0.0.1:1337"
 
 export const authClient = createAuthClient({
-  baseURL: getEnvVar("APP_PUBLIC_URL"),
-  plugins: [strapiAuthClientPlugin, strapiOAuthClientPlugin],
+  baseURL: `${strapiUrl}/api/better-auth`,
+  plugins: [magicLinkClient()],
 })
-
-export const getSessionCSR = async () => {
-  const session = await authClient.getSession()
-
-  return {
-    data: session.data as BetterAuthSessionWithStrapi | null,
-    error: session.error,
-  }
-}
