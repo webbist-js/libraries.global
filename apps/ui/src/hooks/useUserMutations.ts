@@ -2,6 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query"
 
+import { useCreateSubmission } from "@/hooks/useSubmissions"
 import { authClient } from "@/lib/auth-client"
 
 export function useUserMutations() {
@@ -81,6 +82,8 @@ export function useUserMutations() {
     },
   })
 
+  const claimLibraryMutation = useCreateSubmission()
+
   return {
     signInMutation,
     registerMutation,
@@ -88,6 +91,7 @@ export function useUserMutations() {
     forgotPasswordMutation,
     resetPasswordMutation,
     syncOauthStrapiMutation,
+    claimLibraryMutation,
   }
 }
 
