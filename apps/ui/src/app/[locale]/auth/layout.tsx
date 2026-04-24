@@ -6,12 +6,11 @@ export default async function AuthLayout({
   params,
 }: LayoutProps<"/[locale]/auth">) {
   const { locale } = (await params) as { locale: Locale }
-
   setRequestLocale(locale)
 
   return (
-    <section className="container grid items-center gap-6 pt-6 pb-8 md:py-10">
+    <div className="relative isolate flex min-h-screen w-full bg-[#050816] text-white">
       {children}
-    </section>
+    </div>
   )
 }
