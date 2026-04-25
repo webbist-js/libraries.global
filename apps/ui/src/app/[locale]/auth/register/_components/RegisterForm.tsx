@@ -56,7 +56,7 @@ const RegisterFormSchema = z
     }
   })
 
-export function RegisterForm({ strapiUrl }: { strapiUrl?: string }) {
+export function RegisterForm() {
   const { registerMutation } = useUserMutations()
 
   const {
@@ -179,7 +179,7 @@ export function RegisterForm({ strapiUrl }: { strapiUrl?: string }) {
           </p>
 
           {/* OAuth */}
-          <AuthOAuthButtons strapiUrl={strapiUrl} mode="register" />
+          <AuthOAuthButtons mode="register" />
 
           {/* Form */}
           <form

@@ -1,10 +1,10 @@
 // apps/ui/src/app/[locale]/auth/_components/AuthOAuthButtons.tsx
 "use client"
 
+import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
 
 interface AuthOAuthButtonsProps {
-  strapiUrl?: string
   mode: "signin" | "register"
 }
 
@@ -27,12 +27,12 @@ const oauthBtnStyle = {
   width: "100%",
 } as const
 
-export function AuthOAuthButtons({ strapiUrl, mode }: AuthOAuthButtonsProps) {
-  if (!strapiUrl) return null
-
-  const handleOAuth = (provider: string) => {
-    const connectUrl = new URL(`/api/connect/${provider}`, strapiUrl)
-    globalThis.location.href = connectUrl.toString()
+export function AuthOAuthButtons({ mode }: AuthOAuthButtonsProps) {
+  const handleOAuth = async (provider: "google" | "github") => {
+    await authClient.signIn.social({
+      provider,
+      callbackURL: "/",
+    })
   }
 
   return (

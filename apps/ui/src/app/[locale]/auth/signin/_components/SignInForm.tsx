@@ -43,15 +43,15 @@ const SignInFormSchema = z.object({
   password: z.string().min(1),
 })
 
-export function SignInForm({ strapiUrl }: { strapiUrl?: string }) {
+export function SignInForm() {
   return (
     <UseSearchParamsWrapper>
-      <SuspensedSignInForm strapiUrl={strapiUrl} />
+      <SuspensedSignInForm />
     </UseSearchParamsWrapper>
   )
 }
 
-function SuspensedSignInForm({ strapiUrl }: { strapiUrl?: string }) {
+function SuspensedSignInForm() {
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") ?? "/"
   const { signInMutation } = useUserMutations()
@@ -167,7 +167,7 @@ function SuspensedSignInForm({ strapiUrl }: { strapiUrl?: string }) {
           </p>
 
           {/* OAuth */}
-          <AuthOAuthButtons strapiUrl={strapiUrl} mode="signin" />
+          <AuthOAuthButtons mode="signin" />
 
           {/* Form */}
           <form
