@@ -82,25 +82,14 @@ export const formatStrapiAuthorizationHeader = (token?: string) => {
 }
 
 /**
- * Get user-permission token from the Better Auth session
+ * Get user-permission token from the Better Auth session.
  *
- * Uses `typeof window === "undefined"` to detect server vs client environment.
+ * Auth is now handled natively by Strapi's Better Auth plugin via session
+ * cookies — there is no separate Strapi JWT to forward. Returns undefined
+ * so callers fall back to the public API token.
  */
-const getStrapiUserTokenFromBetterAuth = async () => {
-  const isRSC = typeof window === "undefined"
-
-  if (isRSC) {
-    // Server side: Read session directly from cookies (no HTTP request)
-    const { headers } = await import("next/headers")
-    const { getSessionSSR } = await import("@/lib/auth")
-    const session = await getSessionSSR(await headers())
-
-    return session?.user?.strapiJWT
-  }
-
-  // Client side: Make HTTP request to /api/auth/session
-  const { getSessionCSR } = await import("@/lib/auth-client")
-  const { data: session } = await getSessionCSR()
-
-  return session?.user?.strapiJWT
+const getStrapiUserTokenFromBetterAuth = async (): Promise<
+  string | undefined
+> => {
+  return undefined
 }

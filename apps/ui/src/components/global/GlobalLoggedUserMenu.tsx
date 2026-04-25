@@ -10,13 +10,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import type { BetterAuthUser } from "@/lib/auth-server"
 import { Link } from "@/lib/navigation"
-import type { BetterAuthUserWithStrapi } from "@/types/better-auth"
 
 export function GlobalLoggedUserMenu({
   user,
 }: {
-  readonly user: BetterAuthUserWithStrapi
+  readonly user: BetterAuthUser
 }) {
   const t = useTranslations("navbar")
 
@@ -32,17 +32,15 @@ export function GlobalLoggedUserMenu({
         <DropdownMenuLabel>{t("account")}</DropdownMenuLabel>
         <DropdownMenuSeparator />
 
-        {(!user.provider || user.provider === "credentials") && (
-          <DropdownMenuItem>
-            <Link
-              href="/auth/change-password"
-              className="flex w-full items-center gap-1"
-            >
-              <UserRoundCogIcon className="mr-2 size-4" />
-              <span>{t("actions.changePassword")}</span>
-            </Link>
-          </DropdownMenuItem>
-        )}
+        <DropdownMenuItem>
+          <Link
+            href="/auth/change-password"
+            className="flex w-full items-center gap-1"
+          >
+            <UserRoundCogIcon className="mr-2 size-4" />
+            <span>{t("actions.changePassword")}</span>
+          </Link>
+        </DropdownMenuItem>
 
         <DropdownMenuItem>
           <Link href="/auth/signout" className="flex w-full items-center gap-1">

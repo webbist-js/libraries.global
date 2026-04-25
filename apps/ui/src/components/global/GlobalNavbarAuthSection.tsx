@@ -5,12 +5,12 @@ import { useTranslations } from "next-intl"
 import AppLink from "@/components/elementary/AppLink"
 import { GlobalLoggedUserMenu } from "@/components/global/GlobalLoggedUserMenu"
 import { authClient } from "@/lib/auth-client"
-import type { BetterAuthSessionWithStrapi } from "@/types/better-auth"
+import type { AuthSessionResult } from "@/lib/auth-server"
 
 export function GlobalNavbarAuthSection({
   sessionSSR,
 }: {
-  sessionSSR?: BetterAuthSessionWithStrapi | null
+  sessionSSR?: AuthSessionResult | null
 }) {
   const t = useTranslations("navbar")
 

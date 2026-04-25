@@ -8,7 +8,7 @@ import LocaleSwitcher from "@/components/elementary/LocaleSwitcher"
 import { GlobalNavbarAuthSection } from "@/components/global/GlobalNavbarAuthSection"
 import StrapiImageWithLink from "@/components/page-builder/components/utilities/StrapiImageWithLink"
 import StrapiLink from "@/components/page-builder/components/utilities/StrapiLink"
-import { getSessionSSR } from "@/lib/auth"
+import { getSessionSSR } from "@/lib/auth-server"
 import { fetchNavbar } from "@/lib/strapi-api/content/server"
 import { cn } from "@/lib/styles"
 

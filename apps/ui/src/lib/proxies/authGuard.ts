@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 
-import { getSessionSSR } from "@/lib/auth"
+import { getSessionSSR } from "@/lib/auth-server"
 import { routing } from "@/lib/navigation"
 
 const authPages = ["/auth/change-password", "/auth"]

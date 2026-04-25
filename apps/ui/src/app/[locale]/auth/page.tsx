@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { getSessionSSR } from "@/lib/auth"
+import { getSessionSSR } from "@/lib/auth-server"
 import { Link } from "@/lib/navigation"
 
 export default async function AuthPage({
