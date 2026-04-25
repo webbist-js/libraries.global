@@ -35,7 +35,6 @@ export function useUserMutations() {
     mutationFn: async (values: {
       currentPassword: string
       password: string
-      passwordConfirmation: string
     }) => {
       const result = await authClient.changePassword({
         currentPassword: values.currentPassword,
@@ -87,10 +86,10 @@ export function useUserMutations() {
 function unwrapBetterAuth<T>(result: {
   data: T | null
   error: unknown | null
-}): T {
+}): T | null {
   if (result.error) {
     throw result.error
   }
 
-  return result.data as T
+  return result.data
 }

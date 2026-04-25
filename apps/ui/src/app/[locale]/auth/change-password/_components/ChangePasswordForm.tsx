@@ -38,33 +38,36 @@ export function ChangePasswordForm() {
   })
 
   const onSubmit = async (data: z.infer<FormSchemaType>) => {
-    changePasswordMutation.mutate(data, {
-      onSuccess: () => {
-        toast.success(t("successfullyChanged"))
-        form.reset()
-        router.push("/")
-      },
-      onError: (error) => {
-        const errorMessage = error?.message
+    changePasswordMutation.mutate(
+      { currentPassword: data.currentPassword, password: data.password },
+      {
+        onSuccess: () => {
+          toast.success(t("successfullyChanged"))
+          form.reset()
+          router.push("/")
+        },
+        onError: (error) => {
+          const errorMessage = error?.message
 
-        // Try to match common errors to translated messages
-        const errorMap = {
-          "is invalid": t("errors.invalidCurrentPassword"),
-          "be different": t("errors.newPasswordSameAsCurrent"),
-        } as const
+          // Try to match common errors to translated messages
+          const errorMap = {
+            "is invalid": t("errors.invalidCurrentPassword"),
+            "be different": t("errors.newPasswordSameAsCurrent"),
+          } as const
 
-        const errorKey = Object.keys(errorMap).find(
-          (key): key is keyof typeof errorMap =>
-            errorMessage.includes(key) ?? false
-        )
+          const errorKey = Object.keys(errorMap).find(
+            (key): key is keyof typeof errorMap =>
+              errorMessage.includes(key) ?? false
+          )
 
-        const displayMessage = errorKey
-          ? errorMap[errorKey]
-          : (errorMessage ?? t("errors.unexpectedError"))
+          const displayMessage = errorKey
+            ? errorMap[errorKey]
+            : (errorMessage ?? t("errors.unexpectedError"))
 
-        toast.error(displayMessage)
-      },
-    })
+          toast.error(displayMessage)
+        },
+      }
+    )
   }
 
   return (
