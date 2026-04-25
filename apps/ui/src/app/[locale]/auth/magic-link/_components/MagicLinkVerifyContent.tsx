@@ -79,7 +79,13 @@ function SuspensedMagicLinkVerifyContent() {
             className="mb-2 text-base leading-relaxed"
             style={{ fontFamily: T.font.sans, color: T.ink.dim }}
           >
-            {decodeURIComponent(error)}
+            {(() => {
+              try {
+                return decodeURIComponent(error)
+              } catch {
+                return error
+              }
+            })()}
           </p>
 
           <p
