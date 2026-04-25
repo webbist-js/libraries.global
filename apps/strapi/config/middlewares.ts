@@ -63,7 +63,22 @@ export default [
       },
     },
   },
-  "strapi::cors",
+  {
+    name: "strapi::cors",
+    config: {
+      enabled: true,
+      headers: "*",
+      // Allow credentials (cookies) — required for Better Auth session cookies
+      credentials: true,
+      // Allow requests from the Next.js dev server and any ngrok tunnels
+      origin: [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        /\.ngrok-free\.app$/,
+        /\.ngrok\.io$/,
+      ],
+    },
+  },
   "strapi::poweredBy",
   "strapi::logger",
   "strapi::query",
