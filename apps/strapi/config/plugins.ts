@@ -93,8 +93,11 @@ export default ({ env }) => {
       resolve: "./src/plugins/content-moderation",
     },
 
-    "better-auth": {
+    // The plugin internally reads config from "plugin::strapi-better-auth.*"
+    // so the key here must be "strapi-better-auth", with resolve pointing at the package.
+    "strapi-better-auth": {
       enabled: true,
+      resolve: "./node_modules/@strapi-community/plugin-better-auth",
       config: {
         betterAuthOptions: {
           secret: env("BETTER_AUTH_SECRET"),

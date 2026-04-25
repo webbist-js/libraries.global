@@ -67,7 +67,15 @@ export default [
     name: "strapi::cors",
     config: {
       enabled: true,
-      headers: "*",
+      // Explicitly list headers — "*" is not reliably handled by all browsers in preflight
+      headers: [
+        "Content-Type",
+        "Authorization",
+        "Origin",
+        "Accept",
+        "X-Requested-With",
+        "cookie",
+      ],
       // Allow credentials (cookies) — required for Better Auth session cookies
       credentials: true,
       // Allow requests from the Next.js dev server and any ngrok tunnels
