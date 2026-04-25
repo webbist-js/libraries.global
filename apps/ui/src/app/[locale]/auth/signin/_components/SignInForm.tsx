@@ -40,6 +40,21 @@ const labelStyle = {
   marginBottom: "6px",
 }
 
+const tabBtnStyle = (active: boolean) => ({
+  flex: 1,
+  padding: "8px",
+  borderRadius: "8px",
+  border: "none",
+  background: active ? "rgba(255,255,255,.08)" : "transparent",
+  color: active ? T.ink.base : T.ink.faint,
+  fontFamily: T.font.mono,
+  fontSize: "9px",
+  letterSpacing: ".16em",
+  textTransform: "uppercase" as const,
+  cursor: "pointer",
+  transition: "background 150ms, color 150ms",
+})
+
 const PasswordFormSchema = z.object({
   email: z.string().min(1).email(),
   password: z.string().min(1),
@@ -80,7 +95,7 @@ function SuspensedSignInForm() {
         globalThis.location.href = callbackUrl
       },
       onError: (error) => {
-        const msg = (error as { message?: string })?.message ?? "Sign in failed"
+        const msg = error instanceof Error ? error.message : "Sign in failed"
         const display = msg.includes("identifier or password")
           ? "Incorrect email or password."
           : msg
@@ -107,21 +122,6 @@ function SuspensedSignInForm() {
     } finally {
       setMagicLinkPending(false)
     }
-  })
-
-  const tabBtnStyle = (active: boolean) => ({
-    flex: 1,
-    padding: "8px",
-    borderRadius: "8px",
-    border: "none",
-    background: active ? "rgba(255,255,255,.08)" : "transparent",
-    color: active ? T.ink.base : T.ink.faint,
-    fontFamily: T.font.mono,
-    fontSize: "9px",
-    letterSpacing: ".16em",
-    textTransform: "uppercase" as const,
-    cursor: "pointer",
-    transition: "background 150ms, color 150ms",
   })
 
   return (
@@ -400,7 +400,9 @@ function SuspensedSignInForm() {
 
               <button
                 type="submit"
-                disabled={magicLinkPending}
+                disabled={
+                  magicLinkPending || magicLinkForm.formState.isSubmitting
+                }
                 style={{
                   marginTop: "6px",
                   width: "100%",
@@ -418,7 +420,10 @@ function SuspensedSignInForm() {
                   justifyContent: "center",
                   gap: "6px",
                   transition: "opacity 150ms",
-                  opacity: magicLinkPending ? 0.6 : 1,
+                  opacity:
+                    magicLinkPending || magicLinkForm.formState.isSubmitting
+                      ? 0.6
+                      : 1,
                 }}
               >
                 {magicLinkPending ? "Sending link…" : "Send sign-in link →"}
