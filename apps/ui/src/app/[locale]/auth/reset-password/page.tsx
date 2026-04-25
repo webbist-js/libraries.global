@@ -12,9 +12,9 @@ export default function ResetPasswordPage({
   removeThisWhenYouNeedMe("ResetPasswordPage")
 
   const { locale } = use(params) as { locale: Locale }
-  const { code } = use(searchParams) as { code?: string }
+  const { token } = use(searchParams) as { token?: string }
 
   setRequestLocale(locale)
 
-  return <SetPasswordForm code={code} />
+  return <SetPasswordForm token={token} />
 }

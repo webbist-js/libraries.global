@@ -18,19 +18,19 @@ function ActivateAccount() {
   const [formToggled, setFormToggled] = useState(false)
   const params = useSearchParams()
 
-  const code = params.get("code") as string
+  const token = params.get("token") as string
   const name = params.get("name") as string
   const email = params.get("email") as string
 
   const title = [t("welcome"), name].join(", ")
 
   if (formToggled) {
-    return <SetPasswordForm code={code} accountActivation />
+    return <SetPasswordForm token={token} accountActivation />
   }
 
   return (
     <div className="flex w-full flex-col items-center justify-center gap-12">
-      {code == null ? (
+      {token == null ? (
         <div>
           <Alert variant="destructive">{t("invalidLink")}</Alert>
         </div>

@@ -23,21 +23,21 @@ import { PASSWORD_MIN_LENGTH } from "@/lib/constants"
 import { useRouter } from "@/lib/navigation"
 
 type Props = {
-  code?: string
+  token?: string
   accountActivation?: boolean
 }
 
-export function SetPasswordForm({ code, accountActivation = false }: Props) {
+export function SetPasswordForm({ token, accountActivation = false }: Props) {
   return (
     <UseSearchParamsWrapper>
       <SuspensedSetPasswordForm
-        code={code}
+        token={token}
         accountActivation={accountActivation}
       />
     </UseSearchParamsWrapper>
   )
 }
-function SuspensedSetPasswordForm({ code, accountActivation }: Props) {
+function SuspensedSetPasswordForm({ token, accountActivation }: Props) {
   const t = useTranslations(
     accountActivation ? "auth.accountActivation" : "auth.resetPassword"
   )
@@ -53,15 +53,14 @@ function SuspensedSetPasswordForm({ code, accountActivation }: Props) {
   const router = useRouter()
 
   const onSubmit = async (data: z.infer<FormSchemaType>) => {
-    if (!code) {
+    if (!token) {
       return toast.error(t("errors.incorrectCodeProvided"))
     }
 
     resetPasswordMutation.mutate(
       {
-        code,
+        token,
         password: data.password,
-        passwordConfirmation: data.passwordConfirmation,
       },
       {
         onSuccess: () => {

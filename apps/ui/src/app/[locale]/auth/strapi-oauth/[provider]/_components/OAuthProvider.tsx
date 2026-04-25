@@ -2,10 +2,8 @@
 
 import { useSearchParams } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
-
-import { useUserMutations } from "@/hooks/useUserMutations"
 
 export function OAuthProvider({
   params,
@@ -15,41 +13,31 @@ export function OAuthProvider({
   const locale = useLocale()
   const t = useTranslations("auth.oauth")
   const searchParams = useSearchParams()
-  const { syncOauthStrapiMutation } = useUserMutations()
+  const [isPending, setIsPending] = useState(true)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const [isError, setIsError] = useState(false)
+  const [error, setError] = useState<{ message?: string } | null>(null)
 
-  const handleSync = (accessToken: string, provider: string) => {
-    syncOauthStrapiMutation.mutate(
-      { accessToken, provider },
-      {
-        onSuccess: () => {
-          // Redirect on success
-          globalThis.location.href = `/${locale}`
-        },
-        onError: (error) => {
-          const errorMessage = error?.message
-
-          const displayMessage = errorMessage ?? t("errors.signInFailed")
-
-          toast.error(displayMessage)
-        },
-      }
-    )
-  }
-
+  // OAuth is now handled server-side; redirect immediately if session is present
   useEffect(() => {
     const accessToken = searchParams.get("access_token")
-    const provider = params?.provider || "github"
 
-    if (accessToken) {
-      handleSync(accessToken, provider)
-    } else {
-      toast.error("Missing access_token from Strapi redirect")
+    if (!accessToken) {
+      setIsPending(false)
+      setIsError(true)
+      setError({ message: "Missing access_token from OAuth redirect" })
+      toast.error("Missing access_token from OAuth redirect")
+
+      return
     }
+
+    // Server-side OAuth sync complete — redirect to home
+    setIsSuccess(true)
+    setIsPending(false)
+    globalThis.location.href = `/${locale}`
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  const { isPending, isSuccess, isError, error } = syncOauthStrapiMutation
 
   return (
     <div className="flex min-h-[50vh] items-center justify-center p-6">
