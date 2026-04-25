@@ -58,7 +58,7 @@ export default ({ strapi }: { strapi: any }) => ({
     ctx.body = { data: submissions }
   },
 
-  // PATCH /api/content-moderation/submissions/:id/status  (admin only)
+  // PATCH /api/content-moderation/submissions/:id/status  (authenticated; admin enforcement via route policy)
   async updateStatus(ctx: any) {
     const session = await strapi.betterAuth.api.getSession({
       headers: ctx.request.headers,
