@@ -1,17 +1,15 @@
 import type { Locale } from "next-intl"
-import { getTranslations, setRequestLocale } from "next-intl/server"
+import { setRequestLocale } from "next-intl/server"
+import { use } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 
-export default async function MagicLinkSentPage({
+export default function MagicLinkSentPage({
   params,
-}: {
-  params: Promise<{ locale: string }>
-}) {
-  const { locale } = (await params) as { locale: Locale }
+}: PageProps<"/[locale]/auth/magic-link-sent">) {
+  const { locale } = use(params) as { locale: Locale }
   setRequestLocale(locale)
-  await getTranslations("Auth")
 
   return (
     <div
