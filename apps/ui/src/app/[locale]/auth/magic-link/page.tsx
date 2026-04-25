@@ -2,6 +2,8 @@ import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 import { use } from "react"
 
+import { T } from "@/lib/design-tokens"
+
 import { MagicLinkVerifyContent } from "./_components/MagicLinkVerifyContent"
 
 export default function MagicLinkPage({
@@ -13,7 +15,7 @@ export default function MagicLinkPage({
   return (
     <div
       className="flex flex-1 flex-col items-center justify-center px-6 py-16"
-      style={{ background: "#050816" }}
+      style={{ background: T.bg.space }}
     >
       <MagicLinkVerifyContent />
     </div>
