@@ -1,10 +1,13 @@
 export default ({ strapi }: { strapi: any }) => ({
   // POST /api/content-moderation/submissions
   async create(ctx: any) {
-    const user = ctx.state?.user
-    if (!user) {
+    const session = await strapi.betterAuth.api.getSession({
+      headers: ctx.request.headers,
+    })
+    if (!session?.user) {
       return ctx.unauthorized("You must be signed in to submit.")
     }
+    const { user } = session
 
     const {
       submissionType,
@@ -29,9 +32,9 @@ export default ({ strapi }: { strapi: any }) => ({
         targetSlug,
         fields,
         note,
-        submittedByUserId: String(user.id),
+        submittedByUserId: user.id,
         submittedByEmail: user.email,
-        submittedByName: user.username ?? user.email,
+        submittedByName: user.name,
       })
 
     ctx.body = { data: submission }
@@ -39,30 +42,31 @@ export default ({ strapi }: { strapi: any }) => ({
 
   // GET /api/content-moderation/submissions/my
   async findMine(ctx: any) {
-    const user = ctx.state?.user
-    if (!user) {
+    const session = await strapi.betterAuth.api.getSession({
+      headers: ctx.request.headers,
+    })
+    if (!session?.user) {
       return ctx.unauthorized("You must be signed in.")
     }
+    const { user } = session
 
     const submissions = await strapi
       .plugin("content-moderation")
       .service("submission")
-      .findByUser(String(user.id))
+      .findByUser(user.id)
 
     ctx.body = { data: submissions }
   },
 
   // PATCH /api/content-moderation/submissions/:id/status  (admin only)
   async updateStatus(ctx: any) {
-    const user = ctx.state?.user
-    if (
-      !user?.roles?.some(
-        (r: any) =>
-          r.code === "strapi-editor" || r.code === "strapi-super-admin"
-      )
-    ) {
-      return ctx.forbidden("Moderator access required.")
+    const session = await strapi.betterAuth.api.getSession({
+      headers: ctx.request.headers,
+    })
+    if (!session?.user) {
+      return ctx.unauthorized("You must be signed in.")
     }
+    const { user } = session
 
     const { id } = ctx.params
     const { status, reviewNote } = ctx.request.body as {
@@ -73,7 +77,7 @@ export default ({ strapi }: { strapi: any }) => ({
     const updated = await strapi
       .plugin("content-moderation")
       .service("submission")
-      .updateStatus(id, status, String(user.id), reviewNote)
+      .updateStatus(id, status, user.id, reviewNote)
 
     ctx.body = { data: updated }
   },
