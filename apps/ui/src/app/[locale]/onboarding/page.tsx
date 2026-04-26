@@ -2,6 +2,7 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { getSessionSSR } from "@/lib/auth-server"
+import type { UserProfile } from "@/lib/types/profile"
 
 export default async function OnboardingPage() {
   const session = await getSessionSSR(await headers())
@@ -42,7 +43,7 @@ export default async function OnboardingPage() {
           email: session.user.email,
           image: session.user.image ?? null,
         }}
-        initialProfile={profile as any}
+        initialProfile={profile as UserProfile | null}
       />
     </div>
   )

@@ -111,9 +111,10 @@ export async function POST(req: Request) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Cookie: (await headers()).get("cookie") ?? "",
+        "X-Service-Secret": SECRET,
       },
       body: JSON.stringify({
+        baUserId: session.user.id,
         submissionType: "library_claim",
         targetEntityType: "library",
         targetSlug: libraryEntityRef,
