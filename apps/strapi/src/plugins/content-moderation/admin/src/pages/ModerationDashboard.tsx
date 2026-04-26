@@ -39,7 +39,7 @@ function LibraryClaimPanel({ sub }: { sub: Submission }) {
   const methodColor =
     fields.verificationMethod === "email_domain"
       ? "#8ef0b3"
-      : sub.verificationMethod === "vouching"
+      : fields.verificationMethod === "vouching"
         ? "#ffcf7a"
         : "#a390ff"
 
@@ -82,7 +82,7 @@ function LibraryClaimPanel({ sub }: { sub: Submission }) {
         <div>
           <span style={{ color: "#888" }}>Verification: </span>
           <span style={{ color: methodColor, fontWeight: 600 }}>
-            {sub.verificationMethod ?? "—"}
+            {String(fields.verificationMethod ?? "—")}
           </span>
         </div>
         <div>
