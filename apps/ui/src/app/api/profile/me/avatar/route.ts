@@ -47,7 +47,13 @@ export async function POST(req: Request) {
     id: number
     url: string
   }[]
-  const { id, url } = uploaded[0]
+  const first = uploaded[0]
+  if (!first)
+    return NextResponse.json(
+      { error: "Upload returned no file" },
+      { status: 500 }
+    )
+  const { id, url } = first
 
   // Update profile with new avatar
   const profileRes = await fetch(`${STRAPI}/api/auth-bridge/upsert-profile`, {
