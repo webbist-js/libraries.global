@@ -1,0 +1,15 @@
+{
+  "name": "topics",
+  "version": "0.1.0",
+  "description": "Topics plugin for libraries.global — manages curated interest topics",
+  "strapi": {
+    "name": "topics",
+    "displayName": "Topics",
+    "description": "Manage approved topics for user interest profiles"
+  },
+  "main": "./strapi-server.js",
+  "exports": {
+    "./strapi-server": "./strapi-server.js",
+    "./strapi-admin": "./strapi-admin.js"
+  }
+}
