@@ -14,18 +14,22 @@ export async function GET(req: Request) {
   const body: Record<string, unknown> = { q, limit: 20 }
   if (filter) body.filter = filter
 
-  const res = await fetch(`${MEILI_HOST}/indexes/library/search`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(MEILI_KEY ? { Authorization: `Bearer ${MEILI_KEY}` } : {}),
-    },
-    body: JSON.stringify(body),
-    next: { revalidate: 0 },
-  })
+  try {
+    const res = await fetch(`${MEILI_HOST}/indexes/library/search`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(MEILI_KEY ? { Authorization: `Bearer ${MEILI_KEY}` } : {}),
+      },
+      body: JSON.stringify(body),
+      next: { revalidate: 0 },
+    })
 
-  if (!res.ok) return NextResponse.json({ hits: [] })
-  const json = (await res.json()) as { hits: unknown[] }
+    if (!res.ok) return NextResponse.json({ hits: [] })
+    const json = (await res.json()) as { hits: unknown[] }
 
-  return NextResponse.json({ hits: json.hits })
+    return NextResponse.json({ hits: json.hits })
+  } catch {
+    return NextResponse.json({ hits: [] })
+  }
 }

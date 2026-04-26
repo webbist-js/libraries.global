@@ -26,12 +26,17 @@ export async function POST(req: Request) {
       { status: 500 }
     )
 
-  const body = (await req.json()) as {
+  let body: {
     libraryEntityRef: string
     libraryName: string
     libraryWebsite?: string
     role?: string
     department?: string
+  }
+  try {
+    body = (await req.json()) as typeof body
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
   }
 
   const { libraryEntityRef, libraryName, libraryWebsite, role, department } =

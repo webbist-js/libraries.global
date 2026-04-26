@@ -49,9 +49,10 @@ export function LibraryClaimSearch({
     boxSizing: "border-box" as const,
   }
 
-  const search = async (q: string) => {
+  const search = async (q: string, slugOverride?: string) => {
     setQuery(q)
-    if (!q.trim() && !countrySlug) {
+    const activeSlug = slugOverride !== undefined ? slugOverride : countrySlug
+    if (!q.trim() && !activeSlug) {
       setHits([])
 
       return
@@ -59,7 +60,7 @@ export function LibraryClaimSearch({
     setSearching(true)
     try {
       const params = new URLSearchParams({ q })
-      if (countrySlug) params.set("country_slug", countrySlug)
+      if (activeSlug) params.set("country_slug", activeSlug)
       const res = await fetch(`/api/libraries/search?${params}`)
       const json = (await res.json()) as { hits: LibraryHit[] }
       setHits(json.hits)
@@ -158,8 +159,9 @@ export function LibraryClaimSearch({
           style={{ ...inputStyle, cursor: "pointer" }}
           value={countrySlug}
           onChange={(e) => {
-            setCountrySlug(e.target.value)
-            void search(query)
+            const slug = e.target.value
+            setCountrySlug(slug)
+            void search(query, slug)
           }}
         >
           <option value="" style={{ background: "#070b1e" }}>
