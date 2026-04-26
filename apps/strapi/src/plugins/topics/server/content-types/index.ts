@@ -1,3 +1,3 @@
-import topic from "./topic/schema.json"
+import topicSchema from "./topic/schema.json"
 
-export default { topic }
+export default { topic: { schema: topicSchema } }
