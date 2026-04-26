@@ -1,5 +1,3 @@
-import { magicLink } from "better-auth/plugins"
-
 export default ({ env }) => {
   const awsS3Config = prepareAwsS3Config(env)
   if (!awsS3Config) {
@@ -93,56 +91,9 @@ export default ({ env }) => {
       resolve: "./src/plugins/content-moderation",
     },
 
-    // The plugin internally reads config from "plugin::strapi-better-auth.*"
-    // so the key here must be "strapi-better-auth", with resolve pointing at the package.
-    "strapi-better-auth": {
+    topics: {
       enabled: true,
-      resolve: "./node_modules/@strapi-community/plugin-better-auth",
-      config: {
-        betterAuthOptions: {
-          secret: env("BETTER_AUTH_SECRET"),
-          baseURL: env("BETTER_AUTH_BASE_URL"),
-          trustedOrigins: [env("APP_PUBLIC_URL")].filter(Boolean) as string[],
-          emailAndPassword: {
-            enabled: true,
-            sendResetPassword: async ({ user, token }) => {
-              const nextjsUrl = env("APP_PUBLIC_URL")
-              const resetUrl = `${nextjsUrl}/auth/reset-password?token=${encodeURIComponent(token)}`
-              await global.strapi.plugin("email").provider.send({
-                to: user.email,
-                subject: "Reset your libraries.global password",
-                html: `<p>Reset your libraries.global password: <a href="${resetUrl}">${resetUrl}</a></p>`,
-                text: `Reset your libraries.global password: ${resetUrl}`,
-              })
-            },
-          },
-          socialProviders: {
-            github: {
-              clientId: env("GITHUB_CLIENT_ID"),
-              clientSecret: env("GITHUB_CLIENT_SECRET"),
-            },
-            google: {
-              clientId: env("GOOGLE_CLIENT_ID"),
-              clientSecret: env("GOOGLE_CLIENT_SECRET"),
-            },
-          },
-          plugins: [
-            magicLink({
-              sendMagicLink: async ({ email, url }) => {
-                await global.strapi.plugin("email").provider.send({
-                  to: email,
-                  subject: "Your sign-in link — libraries.global",
-                  html: `<p>Sign in to libraries.global: <a href="${url}">${url}</a></p>`,
-                  text: `Sign in to libraries.global: ${url}`,
-                })
-              },
-            }),
-          ],
-          session: {
-            expiresIn: 60 * 60 * 24 * 30, // 30 days
-          },
-        },
-      },
+      resolve: "./src/plugins/topics",
     },
   }
 }
