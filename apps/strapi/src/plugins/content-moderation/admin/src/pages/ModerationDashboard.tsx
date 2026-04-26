@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "#ffcf7a",
@@ -161,26 +161,28 @@ export function ModerationDashboard() {
   const [typeFilter, setTypeFilter] = useState("all")
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
-  const load = (status: string) => {
+  const load = useCallback((status: string) => {
     setLoading(true)
-    fetch(`/api/content-moderation/submissions?status=${status}`, {
-      headers: { "Content-Type": "application/json" },
-    })
+    fetch(
+      `/api/content-moderation/submissions?status=${encodeURIComponent(status)}`,
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    )
       .then((r) => r.json())
-      .then((json) => setSubmissions((json.data as Submission[]) ?? []))
+      .then((json: unknown) => {
+        const data = Array.isArray((json as { data?: unknown })?.data)
+          ? (json as { data: Submission[] }).data
+          : []
+        setSubmissions(data)
+      })
       .catch(console.error)
       .finally(() => setLoading(false))
-  }
+  }, [])
 
   useEffect(() => {
-    fetch(`/api/content-moderation/submissions?status=${statusFilter}`, {
-      headers: { "Content-Type": "application/json" },
-    })
-      .then((r) => r.json())
-      .then((json) => setSubmissions((json.data as Submission[]) ?? []))
-      .catch(console.error)
-      .finally(() => setLoading(false))
-  }, [statusFilter])
+    load(statusFilter)
+  }, [statusFilter, load])
 
   const filtered =
     typeFilter === "all"
@@ -192,15 +194,27 @@ export function ModerationDashboard() {
     status: string,
     reviewNote?: string
   ) => {
-    await fetch(`/api/content-moderation/submissions/${id}/status`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status, reviewNote }),
-    })
-    load(statusFilter)
+    try {
+      const res = await fetch(
+        `/api/content-moderation/submissions/${id}/status`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status, reviewNote }),
+        }
+      )
+      if (!res.ok) throw new Error(`Server error: ${res.status}`)
+      load(statusFilter)
+    } catch (err) {
+      console.error(err)
+      globalThis.alert("Failed to update submission status. Please try again.")
+    }
   }
 
-  const allTypes = Array.from(new Set(submissions.map((s) => s.submissionType)))
+  const allTypes = useMemo(
+    () => Array.from(new Set(submissions.map((s) => s.submissionType))),
+    [submissions]
+  )
 
   return (
     <div
@@ -246,7 +260,7 @@ export function ModerationDashboard() {
               fontWeight: 500,
             }}
           >
-            {s.replace("_", " ")}
+            {s.replaceAll("_", " ")}
           </button>
         ))}
       </div>
