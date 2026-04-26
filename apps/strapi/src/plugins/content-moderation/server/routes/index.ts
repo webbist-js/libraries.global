@@ -1,5 +1,14 @@
 export default [
   {
+    method: "GET",
+    path: "/submissions",
+    handler: "submission.findAll",
+    config: {
+      auth: { scope: [] },
+      policies: [],
+    },
+  },
+  {
     method: "POST",
     path: "/submissions",
     handler: "submission.create",

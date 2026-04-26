@@ -1,4 +1,14 @@
 export default ({ strapi }: { strapi: any }) => ({
+  // GET /api/content-moderation/submissions?status=pending
+  async findAll(ctx: any) {
+    const { status } = ctx.query as { status?: string }
+    const submissions = await strapi
+      .plugin("content-moderation")
+      .service("submission")
+      .findAll(status)
+    ctx.body = { data: submissions }
+  },
+
   // POST /api/content-moderation/submissions
   async create(ctx: any) {
     const session = await strapi.betterAuth.api.getSession({
@@ -8,7 +18,6 @@ export default ({ strapi }: { strapi: any }) => ({
       return ctx.unauthorized("You must be signed in to submit.")
     }
     const { user } = session
-
     const {
       submissionType,
       targetEntityType,
@@ -16,6 +25,7 @@ export default ({ strapi }: { strapi: any }) => ({
       targetSlug,
       fields,
       note,
+      verificationMethod,
     } = ctx.request.body as Record<string, unknown>
 
     if (!submissionType) {
@@ -32,6 +42,7 @@ export default ({ strapi }: { strapi: any }) => ({
         targetSlug,
         fields,
         note,
+        verificationMethod,
         submittedByUserId: user.id,
         submittedByEmail: user.email,
         submittedByName: user.name,
@@ -58,7 +69,7 @@ export default ({ strapi }: { strapi: any }) => ({
     ctx.body = { data: submissions }
   },
 
-  // PATCH /api/content-moderation/submissions/:id/status  (authenticated; admin enforcement via route policy)
+  // PATCH /api/content-moderation/submissions/:id/status
   async updateStatus(ctx: any) {
     const session = await strapi.betterAuth.api.getSession({
       headers: ctx.request.headers,
@@ -67,7 +78,6 @@ export default ({ strapi }: { strapi: any }) => ({
       return ctx.unauthorized("You must be signed in.")
     }
     const { user } = session
-
     const { id } = ctx.params
     const { status, reviewNote } = ctx.request.body as {
       status: string
