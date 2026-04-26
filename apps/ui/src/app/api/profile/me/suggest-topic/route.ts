@@ -16,9 +16,17 @@ export async function POST(req: Request) {
       { status: 500 }
     )
 
-  const { name } = (await req.json()) as { name?: string }
+  let body: { name?: string }
+  try {
+    body = (await req.json()) as { name?: string }
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
+  }
+  const { name } = body
   if (!name?.trim() || name.trim().length < 2)
     return NextResponse.json({ error: "Topic name too short" }, { status: 400 })
+  if (name.trim().length > 100)
+    return NextResponse.json({ error: "Topic name too long" }, { status: 400 })
 
   // Check for duplicates
   const topicRes = await fetch(`${STRAPI}/api/topics/approved`, {
@@ -43,10 +51,11 @@ export async function POST(req: Request) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Cookie: (await headers()).get("cookie") ?? "",
+      "X-Service-Secret": SECRET,
     },
     body: JSON.stringify({
       submissionType: "topic_suggestion",
+      baUserId: session.user.id,
       fields: { name: name.trim(), suggestedByEmail: session.user.email },
       note: `Topic suggestion: "${name.trim()}"`,
     }),

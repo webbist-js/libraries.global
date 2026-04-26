@@ -102,12 +102,17 @@ export function PublicProfileSection({
     const username = form.username.trim()
     if (!username || username === profile?.username) return
     const t = setTimeout(async () => {
-      const res = await fetch(
-        `/api/profile/check-username?username=${encodeURIComponent(username)}`
-      )
-      const json = (await res.json()) as { available: boolean }
-      setCheckedUsername(username)
-      setCheckedResult(json.available ? "available" : "taken")
+      try {
+        const res = await fetch(
+          `/api/profile/check-username?username=${encodeURIComponent(username)}`
+        )
+        const json = (await res.json()) as { available: boolean }
+        setCheckedUsername(username)
+        setCheckedResult(json.available ? "available" : "taken")
+      } catch {
+        setCheckedUsername(null)
+        setCheckedResult(null)
+      }
     }, 400)
 
     return () => clearTimeout(t)

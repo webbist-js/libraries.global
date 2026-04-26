@@ -46,14 +46,24 @@ export function AvatarUpload({
       if (!res.ok) {
         toast.error(json.error ?? "Upload failed")
         setPreview(currentUrl ?? null)
+        URL.revokeObjectURL(localUrl)
 
         return
       }
-      onUpload(json.url!)
+      if (!json.url) {
+        toast.error("Upload failed")
+        setPreview(currentUrl ?? null)
+        URL.revokeObjectURL(localUrl)
+
+        return
+      }
+      onUpload(json.url)
+      URL.revokeObjectURL(localUrl)
       toast.success("Avatar updated")
     } catch {
       toast.error("Upload failed")
       setPreview(currentUrl ?? null)
+      URL.revokeObjectURL(localUrl)
     } finally {
       setUploading(false)
     }

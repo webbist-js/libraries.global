@@ -37,7 +37,12 @@ export async function PUT(req: Request) {
   if (!session?.user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const body = (await req.json()) as Record<string, unknown>
+  let body: Record<string, unknown>
+  try {
+    body = (await req.json()) as Record<string, unknown>
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
+  }
   const allowed = [
     "username",
     "firstName",
@@ -51,8 +56,6 @@ export async function PUT(req: Request) {
     "claimedLibraryName",
     "claimedLibraryRole",
     "claimedLibraryDepartment",
-    "affiliationVerificationStatus",
-    "affiliationVerificationMethod",
     "city",
     "country",
     "timezone",
@@ -81,12 +84,12 @@ export async function PUT(req: Request) {
     headers: { "Content-Type": "application/json", "X-Service-Secret": SECRET },
     body: JSON.stringify(data),
   })
-  const json = await res.json()
   if (!res.ok)
     return NextResponse.json(
       { error: "Failed to update profile" },
       { status: 500 }
     )
+  const json = await res.json()
 
   return NextResponse.json(json)
 }
