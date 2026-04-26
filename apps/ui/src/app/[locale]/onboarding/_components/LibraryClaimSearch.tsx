@@ -168,7 +168,7 @@ export function LibraryClaimSearch({
           {COUNTRIES.map((c) => (
             <option
               key={c.code}
-              value={c.code.toLowerCase()}
+              value={c.slug}
               style={{ background: "#070b1e" }}
             >
               {c.name}
