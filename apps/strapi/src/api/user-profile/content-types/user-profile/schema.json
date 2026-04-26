@@ -1,0 +1,83 @@
+{
+  "kind": "collectionType",
+  "collectionName": "user_profiles",
+  "info": {
+    "singularName": "user-profile",
+    "pluralName": "user-profiles",
+    "displayName": "User Profile"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "baUserId": { "type": "string", "unique": true, "required": true },
+    "username": { "type": "string", "unique": true },
+    "firstName": { "type": "string" },
+    "lastName": { "type": "string" },
+    "bio": { "type": "text" },
+    "pronouns": {
+      "type": "enumeration",
+      "enum": ["he_him", "she_her", "they_them", "other", "prefer_not_to_say"]
+    },
+    "affiliation": { "type": "string" },
+    "affiliationType": {
+      "type": "enumeration",
+      "enum": [
+        "reader",
+        "librarian",
+        "researcher",
+        "archivist",
+        "educator",
+        "other"
+      ]
+    },
+    "role": { "type": "string" },
+    "claimedLibraryEntityRef": { "type": "string" },
+    "claimedLibraryName": { "type": "string" },
+    "claimedLibraryRole": { "type": "string" },
+    "claimedLibraryDepartment": { "type": "string" },
+    "affiliationVerificationStatus": {
+      "type": "enumeration",
+      "enum": ["unclaimed", "pending", "verified", "rejected"],
+      "default": "unclaimed"
+    },
+    "affiliationVerificationMethod": {
+      "type": "enumeration",
+      "enum": ["email_domain", "vouching", "contact_us"]
+    },
+    "city": { "type": "string" },
+    "country": { "type": "string" },
+    "timezone": { "type": "string" },
+    "website": { "type": "string" },
+    "orcid": { "type": "string" },
+    "mastodon": { "type": "string" },
+    "linkedin": { "type": "string" },
+    "avatarUrl": { "type": "string" },
+    "avatarStrapiId": { "type": "string" },
+    "profileVisibility": {
+      "type": "enumeration",
+      "enum": ["public", "limited", "private"],
+      "default": "public"
+    },
+    "isVerifiedLibrarian": { "type": "boolean", "default": false },
+    "contributorNumber": { "type": "integer" },
+    "languages": {
+      "type": "json",
+      "default": []
+    },
+    "interests": {
+      "type": "json",
+      "default": []
+    },
+    "notifPrefs": {
+      "type": "json",
+      "default": {
+        "weeklyDigest": true,
+        "editsReviewed": true,
+        "newFollowers": false,
+        "editorialMessages": true,
+        "soundOn": false,
+        "marketing": false
+      }
+    }
+  }
+}
