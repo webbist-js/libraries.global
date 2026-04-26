@@ -6,9 +6,7 @@
     "pluralName": "submissions",
     "displayName": "Submission"
   },
-  "options": {
-    "draftAndPublish": false
-  },
+  "options": { "draftAndPublish": false },
   "pluginOptions": {
     "content-manager": { "visible": true },
     "content-type-builder": { "visible": false }
@@ -17,7 +15,14 @@
     "submissionType": {
       "type": "enumeration",
       "required": true,
-      "enum": ["correction", "new_library", "library_claim", "wiki_edit", "blog_submission"]
+      "enum": [
+        "correction",
+        "new_library",
+        "library_claim",
+        "wiki_edit",
+        "blog_submission",
+        "topic_suggestion"
+      ]
     },
     "status": {
       "type": "enumeration",
@@ -27,39 +32,29 @@
     },
     "targetEntityType": {
       "type": "enumeration",
-      "enum": ["library", "country", "region", "area", "wiki_article", "blog_article"]
+      "enum": [
+        "library",
+        "country",
+        "region",
+        "area",
+        "wiki_article",
+        "blog_article",
+        "user_profile"
+      ]
     },
-    "targetDocumentId": {
-      "type": "string"
+    "targetDocumentId": { "type": "string" },
+    "targetSlug": { "type": "string" },
+    "fields": { "type": "json" },
+    "note": { "type": "text" },
+    "reviewNote": { "type": "text" },
+    "verificationMethod": {
+      "type": "enumeration",
+      "enum": ["email_domain", "vouching", "contact_us"]
     },
-    "targetSlug": {
-      "type": "string"
-    },
-    "fields": {
-      "type": "json"
-    },
-    "note": {
-      "type": "text"
-    },
-    "reviewNote": {
-      "type": "text"
-    },
-    "submittedByUserId": {
-      "type": "string",
-      "required": true
-    },
-    "submittedByEmail": {
-      "type": "string",
-      "required": true
-    },
-    "submittedByName": {
-      "type": "string"
-    },
-    "reviewedByUserId": {
-      "type": "string"
-    },
-    "reviewedAt": {
-      "type": "datetime"
-    }
+    "submittedByUserId": { "type": "string", "required": true },
+    "submittedByEmail": { "type": "string", "required": true },
+    "submittedByName": { "type": "string" },
+    "reviewedByUserId": { "type": "string" },
+    "reviewedAt": { "type": "datetime" }
   }
 }
