@@ -1,6 +1,12 @@
 export default ({ strapi }: { strapi: any }) => ({
   // GET /api/content-moderation/submissions?status=pending
   async findAll(ctx: any) {
+    const session = await strapi.betterAuth.api.getSession({
+      headers: ctx.request.headers,
+    })
+    if (!session?.user) {
+      return ctx.unauthorized("You must be signed in.")
+    }
     const { status } = ctx.query as { status?: string }
     const submissions = await strapi
       .plugin("content-moderation")
