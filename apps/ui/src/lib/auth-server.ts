@@ -2,20 +2,24 @@ import "server-only"
 
 import type { ReadonlyHeaders } from "next/dist/server/web/spec-extension/adapters/headers"
 
+import { auth } from "./auth"
+
+export type { Session } from "./auth"
+
 export type BetterAuthUser = {
   id: string
   email: string
   name: string
   emailVerified: boolean
   image?: string | null
-  createdAt: string
-  updatedAt: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 export type BetterAuthSession = {
   id: string
   userId: string
-  expiresAt: string
+  expiresAt: Date
   token: string
   ipAddress?: string | null
   userAgent?: string | null
@@ -27,27 +31,18 @@ export type AuthSessionResult = {
 } | null
 
 /**
- * Retrieve the current Better Auth session from Strapi's auth endpoint.
- * Forwards the incoming request's cookie so the session cookie is included.
- * Must only be called from Server Components or Route Handlers.
+ * Retrieve the current Better Auth session from the Next.js auth handler.
+ * Returns null (never throws) so pages degrade gracefully when session is
+ * unavailable, expired, or BA encounters a transient DB error.
  */
 export async function getSessionSSR(
   headers: ReadonlyHeaders
 ): Promise<AuthSessionResult> {
-  const strapiUrl = process.env.STRAPI_URL
-  if (!strapiUrl) return null
-
   try {
-    const res = await fetch(`${strapiUrl}/api/better-auth/get-session`, {
-      headers: { cookie: headers.get("cookie") ?? "" },
-      cache: "no-store",
+    const session = await auth.api.getSession({
+      headers: headers as unknown as Headers,
     })
-    if (!res.ok) return null
-    const data = await res.json()
-    // Better Auth returns null when no session
-    if (!data || !data.user) return null
-
-    return data as AuthSessionResult
+    return session as AuthSessionResult
   } catch {
     return null
   }

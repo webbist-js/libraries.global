@@ -1,0 +1,294 @@
+import GlobalLink from "@/components/global/GlobalLink"
+import { T } from "@/lib/design-tokens"
+import type { UserProfile } from "@/lib/types/profile"
+
+function getInitials(p: UserProfile): string {
+  const first = p.firstName?.[0] ?? ""
+  const last = p.lastName?.[0] ?? ""
+  return (first + last).toUpperCase() || p.username.slice(0, 2).toUpperCase()
+}
+
+export function ProfileHero({
+  profile,
+  isOwnProfile,
+}: {
+  profile: UserProfile
+  isOwnProfile: boolean
+}) {
+  const initials = getInitials(profile)
+  const displayName = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || profile.username
+  const [first, ...lastParts] = displayName.split(" ")
+  const last = lastParts.join(" ")
+
+  const joinedYear = new Date(profile.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" }).toUpperCase()
+
+  return (
+    <div
+      className="relative w-full"
+      style={{ background: "#030511", borderBottom: `1px solid ${T.border.line}` }}
+    >
+      {/* Subtle radial glow */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{ background: "radial-gradient(ellipse 60% 80% at 60% 30%, rgba(127,223,255,0.04), transparent 65%)" }}
+      />
+
+      <div className="relative z-10 mx-auto max-w-5xl px-6 py-10 md:px-10">
+        {/* Breadcrumb */}
+        <div
+          style={{
+            fontFamily: T.font.mono,
+            fontSize: "9px",
+            letterSpacing: ".18em",
+            textTransform: "uppercase",
+            color: T.ink.faint,
+            display: "flex",
+            gap: "10px",
+            marginBottom: "16px",
+          }}
+        >
+          <GlobalLink href="/" style={{ color: T.ink.faint, textDecoration: "none" }}>Atlas</GlobalLink>
+          <span>·</span>
+          <span>Contributors</span>
+          <span>·</span>
+          <span style={{ color: T.ink.dim }}>{displayName}</span>
+        </div>
+
+        {/* Location / verified chip */}
+        {(profile.city || profile.country || profile.isVerifiedLibrarian) && (
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "4px 12px",
+              borderRadius: "999px",
+              border: `1px solid ${T.border.line}`,
+              background: "rgba(255,255,255,0.03)",
+              fontFamily: T.font.mono,
+              fontSize: "9px",
+              letterSpacing: ".14em",
+              textTransform: "uppercase",
+              color: T.ink.dim,
+              marginBottom: "18px",
+            }}
+          >
+            {profile.city && <span>{profile.city}</span>}
+            {profile.country && <><span>·</span><span>{profile.country}</span></>}
+            {profile.isVerifiedLibrarian && (
+              <>
+                <span>·</span>
+                <span style={{ color: T.accent.aurora }}>Verified Librarian</span>
+              </>
+            )}
+          </div>
+        )}
+
+        <div className="flex items-start gap-8">
+          {/* Avatar */}
+          <div className="shrink-0">
+            <div
+              style={{
+                width: "96px",
+                height: "96px",
+                borderRadius: "50%",
+                border: `2px solid rgba(127,223,255,0.25)`,
+                background: "rgba(127,223,255,0.12)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: T.font.mono,
+                fontSize: "28px",
+                fontWeight: 600,
+                color: T.accent.aurora,
+                position: "relative",
+                overflow: "hidden",
+              }}
+            >
+              {profile.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profile.avatarUrl} alt={displayName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                initials
+              )}
+            </div>
+            {profile.isVerifiedLibrarian && (
+              <div
+                style={{
+                  marginTop: "-18px",
+                  marginLeft: "68px",
+                  width: "22px",
+                  height: "22px",
+                  borderRadius: "50%",
+                  background: T.accent.aurora,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: "2px solid #030511",
+                  position: "relative",
+                  zIndex: 1,
+                }}
+              >
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 6l3 3 5-5" stroke="#030511" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            )}
+          </div>
+
+          {/* Main content */}
+          <div className="flex-1 min-w-0">
+            {/* Name */}
+            <h1
+              style={{
+                fontFamily: T.font.serif,
+                fontSize: "clamp(2.4rem, 5vw, 3.8rem)",
+                fontWeight: 700,
+                lineHeight: 0.94,
+                letterSpacing: "-0.03em",
+                color: T.ink.base,
+                margin: "0 0 10px",
+              }}
+            >
+              {first}{" "}
+              {last && (
+                <em style={{ fontStyle: "italic", fontWeight: 400 }}>{last}.</em>
+              )}
+            </h1>
+
+            {/* Meta row */}
+            <div
+              style={{
+                fontFamily: T.font.mono,
+                fontSize: "10px",
+                letterSpacing: ".12em",
+                textTransform: "uppercase",
+                color: T.ink.faint,
+                display: "flex",
+                gap: "10px",
+                marginBottom: "14px",
+                flexWrap: "wrap",
+              }}
+            >
+              <span>@{profile.username}</span>
+              {profile.contributorNumber && (
+                <><span>·</span><span>Contributor #{String(profile.contributorNumber).padStart(6, "0")}</span></>
+              )}
+              <span>·</span>
+              <span>Joined {joinedYear}</span>
+            </div>
+
+            {/* Bio */}
+            {profile.bio && (
+              <p
+                style={{
+                  fontSize: "14px",
+                  lineHeight: "1.65",
+                  color: T.ink.dim,
+                  maxWidth: "52ch",
+                  margin: "0 0 14px",
+                  fontWeight: 300,
+                }}
+              >
+                {profile.bio}
+              </p>
+            )}
+
+            {/* Affiliation + website */}
+            <div style={{ display: "flex", gap: "20px", alignItems: "center", flexWrap: "wrap" }}>
+              {profile.affiliation && (
+                <span
+                  style={{
+                    fontFamily: T.font.mono,
+                    fontSize: "10px",
+                    letterSpacing: ".08em",
+                    color: T.ink.base,
+                    fontWeight: 500,
+                  }}
+                >
+                  {profile.affiliation}
+                </span>
+              )}
+              {profile.role && (
+                <span
+                  style={{
+                    fontFamily: T.font.mono,
+                    fontSize: "10px",
+                    letterSpacing: ".08em",
+                    color: T.ink.faint,
+                  }}
+                >
+                  {profile.role}
+                </span>
+              )}
+              {profile.website && (
+                <a
+                  href={profile.website.startsWith("http") ? profile.website : `https://${profile.website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontFamily: T.font.mono,
+                    fontSize: "10px",
+                    letterSpacing: ".06em",
+                    color: T.accent.aurora,
+                    textDecoration: "none",
+                  }}
+                >
+                  {profile.website.replace(/^https?:\/\//, "")} ↗
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* Action buttons (shown to other users) */}
+          {!isOwnProfile && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", flexShrink: 0 }}>
+              {/* TODO: Follow button — requires Follow relation */}
+              <button
+                type="button"
+                style={{
+                  padding: "8px 18px",
+                  borderRadius: "8px",
+                  border: `1px solid rgba(127,223,255,0.35)`,
+                  background: "rgba(127,223,255,0.08)",
+                  color: T.accent.aurora,
+                  fontFamily: T.font.sans,
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  cursor: "not-allowed",
+                  opacity: 0.5,
+                }}
+                disabled
+                title="Following — coming soon"
+              >
+                + Follow
+              </button>
+            </div>
+          )}
+
+          {/* Own profile — edit link */}
+          {isOwnProfile && (
+            <GlobalLink
+              href="/settings"
+              style={{
+                padding: "8px 18px",
+                borderRadius: "8px",
+                border: `1px solid ${T.border.hi}`,
+                background: "rgba(255,255,255,0.04)",
+                color: T.ink.dim,
+                fontFamily: T.font.mono,
+                fontSize: "10px",
+                letterSpacing: ".12em",
+                textTransform: "uppercase",
+                textDecoration: "none",
+                flexShrink: 0,
+              }}
+            >
+              Edit profile
+            </GlobalLink>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}

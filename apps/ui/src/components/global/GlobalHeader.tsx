@@ -1,12 +1,15 @@
 import type { Data } from "@repo/strapi-types"
 import type { Locale } from "next-intl"
+import { headers } from "next/headers"
 
 import AppLink from "@/components/elementary/AppLink"
 import LocaleSwitcher from "@/components/elementary/LocaleSwitcher"
 import GlobalLink from "@/components/global/GlobalLink"
+import { GlobalNavbarAuthSection } from "@/components/global/GlobalNavbarAuthSection"
 import { StrapiBasicImage } from "@/components/page-builder/components/utilities/StrapiBasicImage"
 import { getStrapiLinkHref } from "@/components/page-builder/components/utilities/StrapiLink"
 import { T } from "@/lib/design-tokens"
+import { getSessionSSR } from "@/lib/auth-server"
 
 type NavbarData = Data.ContentType<"api::navbar.navbar"> | null | undefined
 
@@ -35,7 +38,10 @@ export async function GlobalHeader({
 }) {
   const links = Array.isArray(navbar?.links) ? navbar.links : []
   const logoHref = getStrapiLinkHref(navbar?.logoImage?.link) ?? "/"
-  const libraryCount = await fetchLibraryCount()
+  const [libraryCount, sessionSSR] = await Promise.all([
+    fetchLibraryCount(),
+    getSessionSSR(await headers()),
+  ])
 
   return (
     <header
@@ -100,12 +106,7 @@ export async function GlobalHeader({
             locale={locale}
             triggerClassName="h-8 w-auto gap-1 border-transparent bg-transparent px-2.5 text-xs font-semibold uppercase tracking-wider text-white/45 hover:text-white/75"
           />
-          <GlobalLink
-            href="/auth/signin"
-            className="px-3 py-2 text-sm text-white/55 transition-colors hover:text-white/85"
-          >
-            Sign in
-          </GlobalLink>
+          <GlobalNavbarAuthSection sessionSSR={sessionSSR} />
           <AppLink
             href="/contribute"
             size="sm"

@@ -2423,6 +2423,86 @@ export interface ApiSubscriberSubscriber extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
+  collectionName: "user_profiles"
+  info: {
+    displayName: "User Profile"
+    pluralName: "user-profiles"
+    singularName: "user-profile"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  attributes: {
+    affiliation: Schema.Attribute.String
+    affiliationType: Schema.Attribute.Enumeration<
+      ["reader", "librarian", "researcher", "archivist", "educator", "other"]
+    >
+    affiliationVerificationMethod: Schema.Attribute.Enumeration<
+      ["email_domain", "vouching", "contact_us"]
+    >
+    affiliationVerificationStatus: Schema.Attribute.Enumeration<
+      ["unclaimed", "pending", "verified", "rejected"]
+    > &
+      Schema.Attribute.DefaultTo<"unclaimed">
+    avatarStrapiId: Schema.Attribute.String
+    avatarUrl: Schema.Attribute.String
+    baUserId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique
+    bio: Schema.Attribute.Text
+    city: Schema.Attribute.String
+    claimedLibraryDepartment: Schema.Attribute.String
+    claimedLibraryEntityRef: Schema.Attribute.String
+    claimedLibraryName: Schema.Attribute.String
+    claimedLibraryRole: Schema.Attribute.String
+    contributorNumber: Schema.Attribute.Integer
+    country: Schema.Attribute.String
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    firstName: Schema.Attribute.String
+    interests: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>
+    isVerifiedLibrarian: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>
+    languages: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>
+    lastName: Schema.Attribute.String
+    linkedin: Schema.Attribute.String
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::user-profile.user-profile"
+    > &
+      Schema.Attribute.Private
+    mastodon: Schema.Attribute.String
+    notifPrefs: Schema.Attribute.JSON &
+      Schema.Attribute.DefaultTo<{
+        editorialMessages: true
+        editsReviewed: true
+        marketing: false
+        newFollowers: false
+        soundOn: false
+        weeklyDigest: true
+      }>
+    orcid: Schema.Attribute.String
+    profileVisibility: Schema.Attribute.Enumeration<
+      ["public", "limited", "private"]
+    > &
+      Schema.Attribute.DefaultTo<"public">
+    pronouns: Schema.Attribute.Enumeration<
+      ["he_him", "she_her", "they_them", "other", "prefer_not_to_say"]
+    >
+    publishedAt: Schema.Attribute.DateTime
+    role: Schema.Attribute.String
+    timezone: Schema.Attribute.String
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    username: Schema.Attribute.String & Schema.Attribute.Unique
+    website: Schema.Attribute.String
+  }
+}
+
 export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
   collectionName: "wiki_articles"
   info: {
@@ -3190,6 +3270,7 @@ declare module "@strapi/strapi" {
       "api::region.region": ApiRegionRegion
       "api::service.service": ApiServiceService
       "api::subscriber.subscriber": ApiSubscriberSubscriber
+      "api::user-profile.user-profile": ApiUserProfileUserProfile
       "api::wiki-article.wiki-article": ApiWikiArticleWikiArticle
       "api::wiki-landing.wiki-landing": ApiWikiLandingWikiLanding
       "api::wiki-section.wiki-section": ApiWikiSectionWikiSection

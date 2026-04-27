@@ -2,10 +2,10 @@
 
 import { useTranslations } from "next-intl"
 
-import AppLink from "@/components/elementary/AppLink"
 import { GlobalLoggedUserMenu } from "@/components/global/GlobalLoggedUserMenu"
 import { authClient } from "@/lib/auth-client"
 import type { AuthSessionResult } from "@/lib/auth-server"
+import { Link } from "@/lib/navigation"
 
 export function GlobalNavbarAuthSection({
   sessionSSR,
@@ -18,15 +18,18 @@ export function GlobalNavbarAuthSection({
   const session = error || data ? data : sessionSSR
 
   return (
-    <div className="hidden flex-1 items-center justify-end space-x-4 lg:flex">
+    <>
       {session?.user ? (
-        <nav className="flex items-center space-x-1">
-          <GlobalLoggedUserMenu user={session.user} />
-        </nav>
+        <GlobalLoggedUserMenu user={session.user} />
       ) : (
-        <AppLink href="/auth/signin">{t("actions.signIn")}</AppLink>
+        <Link
+          href="/auth/signin"
+          className="px-3 py-2 text-sm text-white/55 transition-colors hover:text-white/85"
+        >
+          {t("actions.signIn")}
+        </Link>
       )}
-    </div>
+    </>
   )
 }
 

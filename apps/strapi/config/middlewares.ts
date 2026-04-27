@@ -66,7 +66,6 @@ export default [
   {
     name: "strapi::cors",
     config: {
-      enabled: true,
       // Explicitly list headers — "*" is not reliably handled by all browsers in preflight
       headers: [
         "Content-Type",

@@ -40,28 +40,9 @@ const labelStyle = {
   marginBottom: "6px",
 }
 
-const tabBtnStyle = (active: boolean) => ({
-  flex: 1,
-  padding: "8px",
-  borderRadius: "8px",
-  border: "none",
-  background: active ? "rgba(255,255,255,.08)" : "transparent",
-  color: active ? T.ink.base : T.ink.faint,
-  fontFamily: T.font.mono,
-  fontSize: "9px",
-  letterSpacing: ".16em",
-  textTransform: "uppercase" as const,
-  cursor: "pointer",
-  transition: "background 150ms, color 150ms",
-})
-
 const PasswordFormSchema = z.object({
   email: z.string().min(1).email(),
   password: z.string().min(1),
-})
-
-const MagicLinkFormSchema = z.object({
-  email: z.string().min(1).email(),
 })
 
 export function SignInForm() {
@@ -76,20 +57,15 @@ function SuspensedSignInForm() {
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") ?? "/"
   const { signInMutation } = useUserMutations()
-  const [tab, setTab] = useState<"password" | "magic">("password")
-  const [magicLinkPending, setMagicLinkPending] = useState(false)
+  const [magicEmail, setMagicEmail] = useState("")
+  const [magicPending, setMagicPending] = useState(false)
 
-  const passwordForm = useForm<z.infer<typeof PasswordFormSchema>>({
+  const form = useForm<z.infer<typeof PasswordFormSchema>>({
     resolver: zodResolver(PasswordFormSchema),
     defaultValues: { email: "", password: "" },
   })
 
-  const magicLinkForm = useForm<z.infer<typeof MagicLinkFormSchema>>({
-    resolver: zodResolver(MagicLinkFormSchema),
-    defaultValues: { email: "" },
-  })
-
-  const onPasswordSubmit = passwordForm.handleSubmit(async (values) => {
+  const onSubmit = form.handleSubmit(async (values) => {
     signInMutation.mutate(values, {
       onSuccess: () => {
         globalThis.location.href = callbackUrl
@@ -102,26 +78,6 @@ function SuspensedSignInForm() {
         toast.error(display)
       },
     })
-  })
-
-  const onMagicLinkSubmit = magicLinkForm.handleSubmit(async (values) => {
-    setMagicLinkPending(true)
-    try {
-      const result = await authClient.signIn.magicLink({
-        email: values.email,
-        callbackURL: callbackUrl,
-      })
-      if (result.error) {
-        toast.error(result.error.message ?? "Failed to send magic link")
-
-        return
-      }
-      globalThis.location.href = "/auth/magic-link-sent"
-    } catch {
-      toast.error("Failed to send magic link. Please try again.")
-    } finally {
-      setMagicLinkPending(false)
-    }
   })
 
   return (
@@ -213,223 +169,208 @@ function SuspensedSignInForm() {
           {/* OAuth */}
           <AuthOAuthButtons mode="signin" />
 
-          {/* Tab switcher */}
+          {/* Email / password form */}
+          <form
+            onSubmit={onSubmit}
+            style={{ display: "flex", flexDirection: "column", gap: "14px" }}
+          >
+            <div>
+              <label style={labelStyle} htmlFor="email">
+                <span>Email address</span>
+                <span style={{ color: T.accent.aurora, fontSize: "9px" }}>
+                  *
+                </span>
+              </label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@library.org"
+                style={inputStyle}
+                className="focus:border-[rgba(127,223,255,.4)] focus:bg-[rgba(127,223,255,.03)]"
+                {...form.register("email")}
+              />
+              {form.formState.errors.email && (
+                <p
+                  style={{
+                    fontSize: "11px",
+                    color: T.accent.danger,
+                    marginTop: "4px",
+                  }}
+                >
+                  {form.formState.errors.email.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label style={labelStyle} htmlFor="password">
+                <span>Password</span>
+                <GlobalLink
+                  href="/auth/forgot-password"
+                  style={{
+                    fontFamily: T.font.mono,
+                    fontSize: "9px",
+                    letterSpacing: ".12em",
+                    textTransform: "uppercase",
+                    color: T.ink.faint,
+                    textDecoration: "none",
+                  }}
+                  className="transition-colors hover:text-[#7fdfff]"
+                >
+                  Forgot?
+                </GlobalLink>
+              </label>
+              <input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                placeholder="••••••••••"
+                style={inputStyle}
+                className="focus:border-[rgba(127,223,255,.4)] focus:bg-[rgba(127,223,255,.03)]"
+                {...form.register("password")}
+              />
+              {form.formState.errors.password && (
+                <p
+                  style={{
+                    fontSize: "11px",
+                    color: T.accent.danger,
+                    marginTop: "4px",
+                  }}
+                >
+                  {form.formState.errors.password.message}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={
+                signInMutation.isPending || form.formState.isSubmitting
+              }
+              style={{
+                marginTop: "6px",
+                width: "100%",
+                padding: "13px",
+                borderRadius: "10px",
+                background: T.ink.base,
+                color: "#030511",
+                fontFamily: T.font.sans,
+                fontWeight: 600,
+                fontSize: "14px",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+                transition: "opacity 150ms",
+                opacity:
+                  signInMutation.isPending || form.formState.isSubmitting
+                    ? 0.6
+                    : 1,
+              }}
+            >
+              {signInMutation.isPending ? "Signing in…" : "Sign in →"}
+            </button>
+          </form>
+
+          {/* Magic link divider */}
           <div
             style={{
               display: "flex",
-              gap: "4px",
-              padding: "4px",
-              borderRadius: "10px",
-              background: "rgba(255,255,255,.04)",
-              border: `1px solid ${T.border.line}`,
-              marginBottom: "16px",
+              alignItems: "center",
+              gap: "12px",
+              margin: "20px 0 16px",
             }}
           >
-            <button
-              type="button"
-              style={tabBtnStyle(tab === "password")}
-              onClick={() => setTab("password")}
+            <span
+              style={{
+                flex: 1,
+                height: "1px",
+                background: T.border.line,
+                display: "block",
+              }}
+            />
+            <span
+              style={{
+                fontFamily: T.font.mono,
+                fontSize: "9px",
+                letterSpacing: ".2em",
+                textTransform: "uppercase",
+                color: T.ink.faint,
+              }}
             >
-              Password
-            </button>
-            <button
-              type="button"
-              style={tabBtnStyle(tab === "magic")}
-              onClick={() => setTab("magic")}
-            >
-              Magic Link
-            </button>
+              or use a magic link
+            </span>
+            <span
+              style={{
+                flex: 1,
+                height: "1px",
+                background: T.border.line,
+                display: "block",
+              }}
+            />
           </div>
 
-          {/* Password tab */}
-          {tab === "password" && (
-            <form
-              onSubmit={onPasswordSubmit}
-              style={{ display: "flex", flexDirection: "column", gap: "14px" }}
-            >
-              <div>
-                <label style={labelStyle} htmlFor="email">
-                  <span>Email address</span>
-                  <span style={{ color: T.accent.aurora, fontSize: "9px" }}>
-                    *
-                  </span>
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="you@library.org"
-                  style={inputStyle}
-                  className="focus:border-[rgba(127,223,255,.4)] focus:bg-[rgba(127,223,255,.03)]"
-                  {...passwordForm.register("email")}
-                />
-                {passwordForm.formState.errors.email && (
-                  <p
-                    style={{
-                      fontSize: "11px",
-                      color: T.accent.danger,
-                      marginTop: "4px",
-                    }}
-                  >
-                    {passwordForm.formState.errors.email.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label style={labelStyle} htmlFor="password">
-                  <span>Password</span>
-                  <GlobalLink
-                    href="/auth/forgot-password"
-                    style={{
-                      fontFamily: T.font.mono,
-                      fontSize: "9px",
-                      letterSpacing: ".12em",
-                      textTransform: "uppercase",
-                      color: T.ink.faint,
-                      textDecoration: "none",
-                    }}
-                    className="transition-colors hover:text-[#7fdfff]"
-                  >
-                    Forgot?
-                  </GlobalLink>
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder="••••••••••"
-                  style={inputStyle}
-                  className="focus:border-[rgba(127,223,255,.4)] focus:bg-[rgba(127,223,255,.03)]"
-                  {...passwordForm.register("password")}
-                />
-                {passwordForm.formState.errors.password && (
-                  <p
-                    style={{
-                      fontSize: "11px",
-                      color: T.accent.danger,
-                      marginTop: "4px",
-                    }}
-                  >
-                    {passwordForm.formState.errors.password.message}
-                  </p>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                disabled={
-                  signInMutation.isPending ||
-                  passwordForm.formState.isSubmitting
+          {/* Magic link form */}
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault()
+              if (!magicEmail) return
+              setMagicPending(true)
+              try {
+                const result = await authClient.signIn.magicLink({
+                  email: magicEmail,
+                  callbackURL: callbackUrl,
+                })
+                if (result?.error) {
+                  toast.error(result.error.message ?? "Failed to send magic link")
+                } else {
+                  globalThis.location.href = "/auth/magic-link-sent"
                 }
-                style={{
-                  marginTop: "6px",
-                  width: "100%",
-                  padding: "13px",
-                  borderRadius: "10px",
-                  background: T.ink.base,
-                  color: "#030511",
-                  fontFamily: T.font.sans,
-                  fontWeight: 600,
-                  fontSize: "14px",
-                  border: "none",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "6px",
-                  transition: "opacity 150ms",
-                  opacity:
-                    signInMutation.isPending ||
-                    passwordForm.formState.isSubmitting
-                      ? 0.6
-                      : 1,
-                }}
-              >
-                {signInMutation.isPending ? "Signing in…" : "Sign in →"}
-              </button>
-            </form>
-          )}
-
-          {/* Magic link tab */}
-          {tab === "magic" && (
-            <form
-              onSubmit={onMagicLinkSubmit}
-              style={{ display: "flex", flexDirection: "column", gap: "14px" }}
+              } catch {
+                toast.error("Failed to send magic link. Please try again.")
+              } finally {
+                setMagicPending(false)
+              }
+            }}
+            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+          >
+            <input
+              type="email"
+              placeholder="you@library.org"
+              value={magicEmail}
+              onChange={(e) => setMagicEmail(e.target.value)}
+              required
+              style={inputStyle}
+              className="focus:border-[rgba(127,223,255,.4)] focus:bg-[rgba(127,223,255,.03)]"
+            />
+            <button
+              type="submit"
+              disabled={magicPending || !magicEmail}
+              style={{
+                width: "100%",
+                padding: "13px",
+                borderRadius: "10px",
+                background: "transparent",
+                color: T.accent.aurora,
+                fontFamily: T.font.sans,
+                fontWeight: 500,
+                fontSize: "14px",
+                border: `1px solid rgba(127,223,255,.35)`,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+                transition: "opacity 150ms, background 150ms",
+                opacity: magicPending || !magicEmail ? 0.5 : 1,
+              }}
             >
-              <div>
-                <label style={labelStyle} htmlFor="magic-email">
-                  <span>Email address</span>
-                  <span style={{ color: T.accent.aurora, fontSize: "9px" }}>
-                    *
-                  </span>
-                </label>
-                <input
-                  id="magic-email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="you@library.org"
-                  style={inputStyle}
-                  className="focus:border-[rgba(127,223,255,.4)] focus:bg-[rgba(127,223,255,.03)]"
-                  {...magicLinkForm.register("email")}
-                />
-                {magicLinkForm.formState.errors.email && (
-                  <p
-                    style={{
-                      fontSize: "11px",
-                      color: T.accent.danger,
-                      marginTop: "4px",
-                    }}
-                  >
-                    {magicLinkForm.formState.errors.email.message}
-                  </p>
-                )}
-              </div>
-
-              <p
-                style={{
-                  fontSize: "12px",
-                  color: T.ink.faint,
-                  lineHeight: "1.6",
-                  margin: "0",
-                }}
-              >
-                We&apos;ll send a one-time sign-in link to your inbox. No
-                password required.
-              </p>
-
-              <button
-                type="submit"
-                disabled={
-                  magicLinkPending || magicLinkForm.formState.isSubmitting
-                }
-                style={{
-                  marginTop: "6px",
-                  width: "100%",
-                  padding: "13px",
-                  borderRadius: "10px",
-                  background: T.ink.base,
-                  color: "#030511",
-                  fontFamily: T.font.sans,
-                  fontWeight: 600,
-                  fontSize: "14px",
-                  border: "none",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "6px",
-                  transition: "opacity 150ms",
-                  opacity:
-                    magicLinkPending || magicLinkForm.formState.isSubmitting
-                      ? 0.6
-                      : 1,
-                }}
-              >
-                {magicLinkPending ? "Sending link…" : "Send sign-in link →"}
-              </button>
-            </form>
-          )}
+              {magicPending ? "Sending…" : "Send magic link →"}
+            </button>
+          </form>
 
           <p
             style={{

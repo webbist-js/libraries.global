@@ -48,7 +48,7 @@ export function useUserMutations() {
 
   const forgotPasswordMutation = useMutation({
     mutationFn: async (values: { email: string }) => {
-      const result = await authClient.forgetPassword({
+      const result = await authClient.requestPasswordReset({
         email: values.email,
         redirectTo: "/auth/reset-password",
       })

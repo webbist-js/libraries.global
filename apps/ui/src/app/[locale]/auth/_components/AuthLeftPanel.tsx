@@ -268,71 +268,18 @@ export function AuthLeftPanel({ mode }: AuthLeftPanelProps) {
         </div>
       </div>
 
-      {/* Bottom mode switcher */}
+      {/* Bottom decoration */}
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
           position: "relative",
           zIndex: 10,
+          fontFamily: T.font.mono,
+          fontSize: "10px",
+          letterSpacing: ".12em",
+          color: T.ink.ghost,
         }}
       >
-        <a
-          href="../signin"
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "11px",
-            letterSpacing: ".12em",
-            textTransform: "uppercase",
-            color: mode === "signin" ? T.ink.base : T.ink.faint,
-            textDecoration: "none",
-            padding: "8px 14px",
-            borderRadius: "999px",
-            border:
-              mode === "signin"
-                ? `1px solid ${T.border.hi}`
-                : "1px solid transparent",
-            background:
-              mode === "signin" ? "rgba(255,255,255,.06)" : "transparent",
-            transition: "all 200ms",
-          }}
-        >
-          Sign in
-        </a>
-        <a
-          href="../register"
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "11px",
-            letterSpacing: ".12em",
-            textTransform: "uppercase",
-            color: mode === "register" ? T.ink.base : T.ink.faint,
-            textDecoration: "none",
-            padding: "8px 14px",
-            borderRadius: "999px",
-            border:
-              mode === "register"
-                ? `1px solid ${T.border.hi}`
-                : "1px solid transparent",
-            background:
-              mode === "register" ? "rgba(255,255,255,.06)" : "transparent",
-            transition: "all 200ms",
-          }}
-        >
-          Register
-        </a>
-        <span
-          style={{
-            marginLeft: "auto",
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".12em",
-            color: T.ink.ghost,
-          }}
-        >
-          01 — 00
-        </span>
+        01 — 00
       </div>
     </div>
   )
