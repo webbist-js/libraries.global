@@ -17,7 +17,6 @@ export default {
     if (!email || !provider)
       return ctx.badRequest("Missing required fields: email, provider")
 
-    // Find or create Strapi users-permissions user
     let user = await strapi
       .query("plugin::users-permissions.user")
       .findOne({ where: { email } })
@@ -39,7 +38,6 @@ export default {
       })
     }
 
-    // Auto-create user-profile if baUserId provided and profile doesn't exist
     if (baUserId) {
       const existing = await strapi
         .query("api::user-profile.user-profile")
@@ -48,13 +46,11 @@ export default {
         const nameParts = (name ?? "").trim().split(/\s+/)
         const firstName = nameParts[0] ?? ""
         const lastName = nameParts.slice(1).join(" ") || ""
-        // Auto-generate username from email local part + random suffix
         const baseUsername = email
           .split("@")[0]
           .replaceAll(/[^a-z0-9_]/gi, "")
           .toLowerCase()
         const suffix = Math.floor(Math.random() * 9000 + 1000)
-        // Count existing profiles for contributor number
         const count = await strapi
           .query("api::user-profile.user-profile")
           .count()
@@ -96,10 +92,10 @@ export default {
     }
     if (!baUserId) return ctx.badRequest("Missing baUserId")
 
-    // Only user-controlled settings fields. Trust-level fields
-    // (isVerifiedLibrarian, contributorRole) are written exclusively by
-    // the moderation service on claim approval.
-    const allowedFields = [
+    // Scalar fields the user is allowed to set directly.
+    // Trust-level fields (isVerifiedLibrarian, contributorRole) are written
+    // exclusively by the moderation service on claim approval.
+    const scalarFields = [
       "username",
       "firstName",
       "lastName",
@@ -107,7 +103,7 @@ export default {
       "pronouns",
       "affiliation",
       "affiliationType",
-      "role",
+      "jobTitle",
       "city",
       "country",
       "timezone",
@@ -115,33 +111,62 @@ export default {
       "orcid",
       "mastodon",
       "linkedin",
-      "avatarUrl",
-      "avatarStrapiId",
       "profileVisibility",
       "notifPrefs",
-      "languages",
-      "interests",
     ]
+
     const data: Record<string, unknown> = {}
-    for (const key of allowedFields) {
-      if (key in fields) data[key] = fields[key]
+    for (const key of scalarFields) {
+      if (key in fields) data[key] = fields[key] === "" ? null : fields[key]
+    }
+
+    // languages: passed as [{ code, proficiency }] — Document Service writes
+    // repeatable components directly from the array.
+    if ("languages" in fields) {
+      data.languages = Array.isArray(fields.languages) ? fields.languages : []
+    }
+
+    // interests: passed as string[] of topic documentIds — translate to
+    // Document Service relation set syntax.
+    if ("interests" in fields) {
+      const ids = Array.isArray(fields.interests)
+        ? (fields.interests as string[])
+        : []
+      data.interests = { set: ids.map((documentId) => ({ documentId })) }
+    }
+
+    // avatarFileId: integer ID of an already-uploaded Strapi file.
+    // Passed by the avatar upload route after a successful /api/upload call.
+    if ("avatarFileId" in fields && fields.avatarFileId != null) {
+      data.avatar = Number(fields.avatarFileId)
     }
 
     const existing = await strapi
       .query("api::user-profile.user-profile")
       .findOne({ where: { baUserId } })
 
-    await (!existing
-      ? strapi
-          .query("api::user-profile.user-profile")
-          .create({ data: { baUserId, ...data } })
+    // Create path uses db.query; update path uses Document Service so that
+    // repeatable components + relation sets are handled correctly in Strapi v5.
+    await (existing
+      ? strapi.documents("api::user-profile.user-profile").update({
+          documentId: existing.documentId,
+          data,
+        })
       : strapi
           .query("api::user-profile.user-profile")
-          .update({ where: { baUserId }, data }))
+          .create({ data: { baUserId, ...data } }))
 
     const updated = await strapi
       .query("api::user-profile.user-profile")
-      .findOne({ where: { baUserId } })
+      .findOne({
+        where: { baUserId },
+        populate: {
+          avatar: true,
+          languages: true,
+          interests: true,
+          followedLibraries: true,
+        },
+      })
     const { baUserId: _id, ...safe } = updated
 
     return ctx.send({ data: safe })
@@ -195,8 +220,6 @@ export default {
       .findOne({ where: { baUserId } })
 
     if (profile) {
-      // Anonymise personal data but retain the record so contribution refs don't break.
-      // Username becomes deleted-{contributorNumber} to free the handle.
       const anonUsername = `deleted-${profile.contributorNumber ?? profile.id}`
       await strapi.query("api::user-profile.user-profile").update({
         where: { baUserId },
@@ -208,7 +231,7 @@ export default {
           pronouns: null,
           affiliation: null,
           affiliationType: null,
-          role: null,
+          jobTitle: null,
           city: null,
           country: null,
           timezone: null,
@@ -216,15 +239,13 @@ export default {
           orcid: null,
           mastodon: null,
           linkedin: null,
-          avatarUrl: null,
-          avatarStrapiId: null,
+          avatar: null,
           profileVisibility: "private",
-          baUserId: `deleted-${baUserId}`, // free the key so re-registration is possible
+          baUserId: `deleted-${baUserId}`,
         },
       })
     }
 
-    // Also remove the Strapi users-permissions user tied to this BA user
     const upUser = email
       ? await strapi
           .query("plugin::users-permissions.user")
@@ -259,7 +280,6 @@ export default {
     if (!baUserId || !entityRef)
       return ctx.badRequest("Missing baUserId or entityRef")
 
-    // Find the library by entityRef
     const library = await strapi.db
       .query("api::library.library")
       .findOne({ where: { entityRef } })
@@ -275,11 +295,8 @@ export default {
     }
     await strapi
       .documents("api::library-affiliation.library-affiliation")
-      .create({
-        data: affiliationData as any,
-      })
+      .create({ data: affiliationData as any })
 
-    // Mark the profile as verified
     const profile = await strapi.db
       .query("api::user-profile.user-profile")
       .findOne({ where: { baUserId } })
@@ -337,10 +354,7 @@ export default {
 
     const affiliations = await strapi.db
       .query("api::library-affiliation.library-affiliation")
-      .findMany({
-        where: { baUserId },
-        populate: { library: true },
-      })
+      .findMany({ where: { baUserId }, populate: { library: true } })
 
     const match = affiliations.find(
       (a: any) => a.library?.entityRef === entityRef
@@ -401,7 +415,6 @@ export default {
       .findOne({ where: { baUserId } })
     if (!profile) return ctx.notFound("Profile not found")
 
-    // Resolve library integer id from documentId (strapi.db.query uses integer PKs)
     const library = await strapi.db
       .query("api::library.library")
       .findOne({ where: { documentId: libraryDocumentId } })
