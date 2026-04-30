@@ -19,6 +19,8 @@ export type LeaderboardEntry = {
 
 export type Standing = {
   globalRank: number | null
+  countryRank: number | null
+  country: string | null
   tier: TierInfo
   streak: number
   totalPoints: number
@@ -116,11 +118,14 @@ export default ({ strapi }: { strapi: any }) => ({
       pointsThisMonth: number
       tier: string
       streak: number
+      country: string | null
     } | null
 
     if (!profile) {
       return {
         globalRank: null,
+        countryRank: null,
+        country: null,
         tier: computeTier(0),
         streak: 0,
         totalPoints: 0,
@@ -161,8 +166,14 @@ export default ({ strapi }: { strapi: any }) => ({
       Curator: "You've reached the top tier. Thank you for your dedication.",
     }
 
+    const countryRank = profile.country
+      ? await (this as any).getCountryRank(baUserId, profile.country)
+      : null
+
     return {
       globalRank,
+      countryRank,
+      country: profile.country ?? null,
       tier,
       streak: profile.streak ?? 0,
       totalPoints: profile.points ?? 0,
@@ -173,5 +184,25 @@ export default ({ strapi }: { strapi: any }) => ({
       })),
       suggestedAction: suggestedActions[tier.name] ?? "Keep contributing!",
     }
+  },
+
+  async getCountryRank(
+    baUserId: string,
+    country: string
+  ): Promise<number | null> {
+    if (!country) return null
+
+    const profile = await strapi.db
+      .query("api::user-profile.user-profile")
+      .findOne({ where: { baUserId } })
+    if (!profile) return null
+
+    const result = (await strapi.db.connection
+      .count({ count: "*" })
+      .from("user_profiles")
+      .where("country", country)
+      .where("points", ">", profile.points ?? 0)) as { count: string }[]
+
+    return Number(result[0]?.count ?? 0) + 1
   },
 })
