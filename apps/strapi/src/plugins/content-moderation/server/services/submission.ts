@@ -362,6 +362,17 @@ export default ({ strapi }: { strapi: any }) => ({
       }
     }
 
+    // Invalidate quick wins for the submitter after approval
+    if (status === "approved" && submission?.submittedByUserId) {
+      try {
+        await strapi
+          .service("api::user-profile.quick-wins")
+          .computeAndSave(submission.submittedByUserId)
+      } catch (err) {
+        strapi.log.warn("[quick-wins] Post-approval recompute failed:", err)
+      }
+    }
+
     return updated
   },
 

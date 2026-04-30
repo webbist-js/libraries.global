@@ -54,5 +54,11 @@ export default {
       handler: "auth-bridge.getUserAffiliations",
       config: { auth: false, policies: [], middlewares: [] },
     },
+    {
+      method: "POST",
+      path: "/auth-bridge/compute-quick-wins",
+      handler: "auth-bridge.computeQuickWins",
+      config: { auth: false, policies: [], middlewares: [] },
+    },
   ],
 }

@@ -177,6 +177,16 @@ export default {
           .query("api::user-profile.user-profile")
           .create({ data: { baUserId, ...data } }))
 
+    // Recompute quick wins if personalisation fields changed
+    if (baUserId && ("country" in data || "languages" in data)) {
+      strapi
+        .service("api::user-profile.quick-wins")
+        .computeAndSave(baUserId)
+        .catch((err: unknown) =>
+          strapi.log.warn("[quick-wins] upsertProfile recompute failed:", err)
+        )
+    }
+
     const updated = await strapi
       .query("api::user-profile.user-profile")
       .findOne({
@@ -452,5 +462,28 @@ export default {
     })
 
     return ctx.send({ following: action === "follow" })
+  },
+
+  async computeQuickWins(ctx: any) {
+    const serviceSecret = ctx.request.header["x-service-secret"]
+    if (
+      !process.env.STRAPI_BRIDGE_SECRET ||
+      serviceSecret !== process.env.STRAPI_BRIDGE_SECRET
+    ) {
+      return ctx.unauthorized("Invalid or missing service secret")
+    }
+
+    const { baUserId } = ctx.request.body as { baUserId?: string }
+    if (!baUserId) return ctx.badRequest("Missing baUserId")
+
+    try {
+      await strapi
+        .service("api::user-profile.quick-wins")
+        .computeAndSave(baUserId)
+    } catch (err) {
+      strapi.log.warn("[quick-wins] computeAndSave failed:", err)
+    }
+
+    return ctx.send({ ok: true })
   },
 }
