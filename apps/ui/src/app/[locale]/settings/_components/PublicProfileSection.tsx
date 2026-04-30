@@ -65,7 +65,7 @@ export function PublicProfileSection({
     bio: profile?.bio ?? "",
     affiliation: profile?.affiliation ?? "",
     affiliationType: profile?.affiliationType ?? "",
-    role: profile?.role ?? "",
+    jobTitle: profile?.jobTitle ?? "",
     city: profile?.city ?? "",
     country: profile?.country ?? "",
     timezone: profile?.timezone ?? "",
@@ -77,8 +77,8 @@ export function PublicProfileSection({
       | "public"
       | "limited"
       | "private",
-    interests: profile?.interests ?? [],
-    avatarUrl: profile?.avatarUrl ?? "",
+    interests: profile?.interests?.map((i) => i.documentId) ?? [],
+    avatarUrl: profile?.avatar?.url ?? "",
   })
 
   const [checkedUsername, setCheckedUsername] = useState<string | null>(null)
@@ -142,15 +142,15 @@ export function PublicProfileSection({
 
       return
     }
-    const payload: Partial<UserProfile> = {
+    const payload: Record<string, unknown> = {
       firstName: form.firstName,
       lastName: form.lastName,
       username: form.username,
-      pronouns: form.pronouns as UserProfile["pronouns"],
+      pronouns: form.pronouns,
       bio: form.bio,
       affiliation: form.affiliation,
-      affiliationType: form.affiliationType as UserProfile["affiliationType"],
-      role: form.role,
+      affiliationType: form.affiliationType,
+      jobTitle: form.jobTitle,
       city: form.city,
       country: form.country,
       timezone: form.timezone,
@@ -173,7 +173,7 @@ export function PublicProfileSection({
       bio: profile?.bio ?? "",
       affiliation: profile?.affiliation ?? "",
       affiliationType: profile?.affiliationType ?? "",
-      role: profile?.role ?? "",
+      jobTitle: profile?.jobTitle ?? "",
       city: profile?.city ?? "",
       country: profile?.country ?? "",
       timezone: profile?.timezone ?? "",
@@ -182,8 +182,8 @@ export function PublicProfileSection({
       mastodon: profile?.mastodon ?? "",
       linkedin: profile?.linkedin ?? "",
       profileVisibility: profile?.profileVisibility ?? "public",
-      interests: profile?.interests ?? [],
-      avatarUrl: profile?.avatarUrl ?? "",
+      interests: profile?.interests?.map((i) => i.documentId) ?? [],
+      avatarUrl: profile?.avatar?.url ?? "",
     })
     setCheckedUsername(null)
     setCheckedResult(null)
@@ -396,7 +396,7 @@ export function PublicProfileSection({
             <input
               style={inputStyle}
               type="text"
-              {...field("role")}
+              {...field("jobTitle")}
               className="focus:border-[rgba(127,223,255,.4)]"
               placeholder="Senior curator"
             />
