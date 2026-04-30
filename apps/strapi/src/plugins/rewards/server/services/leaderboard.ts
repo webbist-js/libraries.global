@@ -38,7 +38,7 @@ function periodStart(period: Period): Date | null {
   }
 
   // month
-  return new Date(now.getFullYear(), now.getMonth(), 1)
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
 }
 
 export default ({ strapi }: { strapi: any }) => ({
