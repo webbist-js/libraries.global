@@ -3,6 +3,7 @@ import { headers } from "next/headers"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 
+import { ContributeCommunitySection } from "./_components/ContributeCommunitySection"
 import { ContributeGuidelinesSection } from "./_components/ContributeGuidelinesSection"
 import { ContributeHeroSection } from "./_components/ContributeHeroSection"
 import { ContributePathCards } from "./_components/ContributePathCards"
@@ -117,6 +118,7 @@ export default async function ContributePage() {
         isVerifiedLibrarian={roleData.isVerifiedLibrarian}
       />
       <ContributeGuidelinesSection />
+      <ContributeCommunitySection />
     </div>
   )
 }
