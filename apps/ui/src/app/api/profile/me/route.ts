@@ -9,15 +9,25 @@ const API_TOKEN = process.env.STRAPI_REST_READONLY_API_KEY
 
 async function getStrapiProfile(baUserId: string) {
   try {
+    const params = new URLSearchParams({
+      "filters[baUserId][$eq]": baUserId,
+      "populate[avatar]": "*",
+      "populate[languages]": "*",
+      "populate[interests][fields][0]": "name",
+      "populate[interests][fields][1]": "slug",
+      "populate[interests][fields][2]": "status",
+      "populate[followedLibraries][fields][0]": "name",
+      "populate[followedLibraries][fields][1]": "slug",
+      "populate[followedLibraries][fields][2]": "libraryType",
+    })
     const res = await fetch(
-      `${STRAPI}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(baUserId)}`,
+      `${STRAPI}/api/user-profiles?${params.toString()}`,
       {
         cache: "no-store",
         headers: API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {},
       }
     )
     if (!res.ok) return null
-    // Strapi v5: fields are flat on the object, no `attributes` wrapper
     const json = (await res.json()) as { data?: Record<string, unknown>[] }
 
     return json.data?.[0] ?? null
@@ -48,6 +58,7 @@ export async function PUT(req: Request) {
   } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
   }
+
   const allowed = [
     "username",
     "firstName",
@@ -56,7 +67,7 @@ export async function PUT(req: Request) {
     "pronouns",
     "affiliation",
     "affiliationType",
-    "role",
+    "jobTitle",
     "city",
     "country",
     "timezone",
@@ -64,17 +75,15 @@ export async function PUT(req: Request) {
     "orcid",
     "mastodon",
     "linkedin",
-    "avatarUrl",
-    "avatarStrapiId",
     "profileVisibility",
     "notifPrefs",
     "languages",
     "interests",
+    "avatarFileId",
   ]
   const data: Record<string, unknown> = { baUserId: session.user.id }
   for (const key of allowed) {
     if (key in body) {
-      // Convert empty strings to null so Strapi enum fields don't get invalid values
       data[key] = body[key] === "" ? null : body[key]
     }
   }
@@ -110,7 +119,6 @@ export async function DELETE() {
       { status: 500 }
     )
 
-  // 1. Anonymise the Strapi profile (removes personal data, frees the baUserId key)
   const anonymiseRes = await fetch(`${STRAPI}/api/auth-bridge/delete-profile`, {
     method: "POST",
     headers: {
@@ -129,11 +137,9 @@ export async function DELETE() {
     )
   }
 
-  // 2. Delete the Better Auth user (cascades sessions + accounts)
   try {
     await auth.api.deleteUser({ headers: await headers() })
   } catch (err) {
-    // BA deleteUser may throw if already deleted — treat as success
     console.warn("[deleteUser] BA deletion error (non-fatal):", err)
   }
 
