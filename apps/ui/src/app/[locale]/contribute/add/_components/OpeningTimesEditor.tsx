@@ -6,40 +6,56 @@ import { useMemo } from "react"
 import { T } from "@/lib/design-tokens"
 
 // ---------------------------------------------------------------------------
-// Types
+// Types — canonical format matching the global::opening-times custom field
 // ---------------------------------------------------------------------------
 
-export interface TimeSlot {
-  from: string
-  to: string
-}
-
-export interface DaySchedule {
-  closed: boolean
-  byAppointment: boolean
-  slots: TimeSlot[]
-  note: string
-}
-
-export type OpeningTimesData = Record<string, DaySchedule>
-
-export const DAYS = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
+export const DAY_ORDER = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
 ] as const
 
+export type OpeningTimesDayKey = (typeof DAY_ORDER)[number]
+
+export const DAY_LABELS: Record<OpeningTimesDayKey, string> = {
+  monday: "Monday",
+  tuesday: "Tuesday",
+  wednesday: "Wednesday",
+  thursday: "Thursday",
+  friday: "Friday",
+  saturday: "Saturday",
+  sunday: "Sunday",
+}
+
+export type OpeningTimesStaffing = "staffed" | "volunteer" | "self_service"
+
+export interface OpeningTimeframe {
+  id: string
+  startTime: string
+  endTime: string
+  staffing: OpeningTimesStaffing
+}
+
+export interface OpeningTimesDay {
+  day: OpeningTimesDayKey
+  enabled: boolean
+  timeframes: OpeningTimeframe[]
+}
+
+export interface OpeningTimesData {
+  version: number
+  days: OpeningTimesDay[]
+}
+
 export function emptyOpeningTimes(): OpeningTimesData {
-  return Object.fromEntries(
-    DAYS.map((d) => [
-      d,
-      { closed: true, byAppointment: false, slots: [], note: "" },
-    ])
-  )
+  return {
+    version: 1,
+    days: DAY_ORDER.map((day) => ({ day, enabled: false, timeframes: [] })),
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -73,7 +89,6 @@ function toMins(t: string): number {
   return (h ?? 0) * 60 + (m ?? 0)
 }
 
-// Snap minutes to nearest 15-min boundary
 function snapTo15(mins: number): number {
   return Math.round(mins / 15) * 15
 }
@@ -86,25 +101,32 @@ function minsToTime(totalMins: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
 }
 
-function hasInvalidRange(slot: TimeSlot): boolean {
-  if (!slot.from || !slot.to) return false
+function makeId(): string {
+  const crypto = globalThis.crypto as { randomUUID?: () => string } | undefined
+  if (typeof crypto?.randomUUID === "function") return crypto.randomUUID()
 
-  return toMins(slot.from) >= toMins(slot.to)
+  return `tf-${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
-function overlappingIndices(slots: TimeSlot[]): Set<number> {
+function hasInvalidRange(tf: OpeningTimeframe): boolean {
+  if (!tf.startTime || !tf.endTime) return false
+
+  return toMins(tf.startTime) >= toMins(tf.endTime)
+}
+
+function overlappingIndices(timeframes: OpeningTimeframe[]): Set<number> {
   const bad = new Set<number>()
-  for (let i = 0; i < slots.length; i++) {
-    for (let j = i + 1; j < slots.length; j++) {
-      const a = slots[i]!
-      const b = slots[j]!
+  for (let i = 0; i < timeframes.length; i++) {
+    for (let j = i + 1; j < timeframes.length; j++) {
+      const a = timeframes[i]!
+      const b = timeframes[j]!
       if (
-        a.from &&
-        a.to &&
-        b.from &&
-        b.to &&
-        toMins(a.from) < toMins(b.to) &&
-        toMins(b.from) < toMins(a.to)
+        a.startTime &&
+        a.endTime &&
+        b.startTime &&
+        b.endTime &&
+        toMins(a.startTime) < toMins(b.endTime) &&
+        toMins(b.startTime) < toMins(a.endTime)
       ) {
         bad.add(i)
         bad.add(j)
@@ -155,7 +177,7 @@ function selectStyle(hasError: boolean): React.CSSProperties {
 }
 
 // ---------------------------------------------------------------------------
-// Day open/close toggle — trailing icon, no layout shift
+// Day open/close toggle
 // ---------------------------------------------------------------------------
 
 function DayToggle({
@@ -202,7 +224,6 @@ function DayToggle({
       >
         {open ? "Open" : "Closed"}
       </span>
-      {/* Trailing icon: × when open (click to close), + when closed (click to open) */}
       <span
         style={{
           fontSize: "14px",
@@ -221,60 +242,6 @@ function DayToggle({
 }
 
 // ---------------------------------------------------------------------------
-// By-appointment mini toggle
-// ---------------------------------------------------------------------------
-
-function ApptToggle({
-  checked,
-  onChange,
-}: {
-  checked: boolean
-  onChange: (v: boolean) => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!checked)}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "6px",
-        background: "none",
-        border: `1px solid ${checked ? T.accent.violet + "44" : "rgba(255,255,255,0.08)"}`,
-        borderRadius: "6px",
-        padding: "4px 9px 4px 10px",
-        cursor: "pointer",
-        transition: "border-color 0.15s, background 0.15s",
-      }}
-    >
-      <span
-        style={{
-          ...monoSm,
-          fontSize: "9px",
-          color: checked ? T.accent.violet : "rgba(244,247,255,0.28)",
-          transition: "color 0.15s",
-          userSelect: "none",
-        }}
-      >
-        By appointment
-      </span>
-      <span
-        style={{
-          fontSize: "14px",
-          lineHeight: 1,
-          color: checked ? T.accent.violet : "rgba(244,247,255,0.30)",
-          opacity: checked ? 0.7 : 0.5,
-          fontWeight: 300,
-          marginTop: "-1px",
-        }}
-      >
-        {checked ? "×" : "+"}
-      </span>
-    </button>
-  )
-}
-
-// ---------------------------------------------------------------------------
 // Copy-day selector
 // ---------------------------------------------------------------------------
 
@@ -282,12 +249,18 @@ function CopyDaySelect({
   sourceDay,
   onCopy,
 }: {
-  sourceDay: string
-  onCopy: (targets: string[]) => void
+  sourceDay: OpeningTimesDayKey
+  onCopy: (targets: OpeningTimesDayKey[]) => void
 }) {
-  const otherDays = DAYS.filter((d) => d !== sourceDay)
-  const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-  const weekend = ["Saturday", "Sunday"]
+  const otherDays = DAY_ORDER.filter((d) => d !== sourceDay)
+  const weekdays: OpeningTimesDayKey[] = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+  ]
+  const weekend: OpeningTimesDayKey[] = ["saturday", "sunday"]
 
   return (
     <select
@@ -299,19 +272,16 @@ function CopyDaySelect({
           case "weekdays":
             onCopy(weekdays)
             break
-
           case "weekend":
             onCopy(weekend)
             break
-
           case "all":
             onCopy(otherDays)
             break
 
           default:
-            onCopy([val])
+            onCopy([val as OpeningTimesDayKey])
         }
-        // reset
         e.target.value = ""
       }}
       style={{
@@ -358,7 +328,7 @@ function CopyDaySelect({
           value={d}
           style={{ background: "#0d1020", color: T.ink.base }}
         >
-          {d}
+          {DAY_LABELS[d]}
         </option>
       ))}
     </select>
@@ -366,32 +336,30 @@ function CopyDaySelect({
 }
 
 // ---------------------------------------------------------------------------
-// Time slot row — sequential constraints
+// Time slot (timeframe) row
 // ---------------------------------------------------------------------------
 
-function TimeSlotRow({
-  slot,
+function TimeframeRow({
+  timeframe,
   index,
   isOverlapping,
   minFrom,
-  onFromChange,
-  onToChange,
+  onStartTimeChange,
+  onEndTimeChange,
   onRemove,
 }: {
-  slot: TimeSlot
+  timeframe: OpeningTimeframe
   index: number
   isOverlapping: boolean
-  /** Minimum allowed "from" time — end of the previous slot */
   minFrom?: string
-  onFromChange: (v: string) => void
-  onToChange: (v: string) => void
+  onStartTimeChange: (v: string) => void
+  onEndTimeChange: (v: string) => void
   onRemove: () => void
 }) {
-  const invalidRange = hasInvalidRange(slot)
+  const invalidRange = hasInvalidRange(timeframe)
   const hasError = isOverlapping || invalidRange
   const minFromMins = minFrom ? toMins(minFrom) : 0
-  // "to" must be at least "from + 15min"
-  const minToMins = slot.from ? toMins(slot.from) + 15 : 15
+  const minToMins = timeframe.startTime ? toMins(timeframe.startTime) + 15 : 15
 
   return (
     <div
@@ -402,14 +370,14 @@ function TimeSlotRow({
         flexWrap: "wrap",
       }}
     >
-      {/* From */}
+      {/* Start time */}
       <select
-        value={slot.from}
-        onChange={(e) => onFromChange(e.target.value)}
+        value={timeframe.startTime}
+        onChange={(e) => onStartTimeChange(e.target.value)}
         style={selectStyle(hasError)}
         aria-label={`Slot ${index + 1} open from`}
       >
-        {!slot.from && <option value="">From…</option>}
+        {!timeframe.startTime && <option value="">From…</option>}
         {FROM_OPTIONS.map((t) => (
           <option key={t} value={t} disabled={toMins(t) < minFromMins}>
             {t}
@@ -419,14 +387,14 @@ function TimeSlotRow({
 
       <span style={{ ...monoSm, fontSize: "9px" }}>to</span>
 
-      {/* To */}
+      {/* End time */}
       <select
-        value={slot.to}
-        onChange={(e) => onToChange(e.target.value)}
+        value={timeframe.endTime}
+        onChange={(e) => onEndTimeChange(e.target.value)}
         style={selectStyle(hasError)}
         aria-label={`Slot ${index + 1} close at`}
       >
-        {!slot.to && <option value="">Until…</option>}
+        {!timeframe.endTime && <option value="">Until…</option>}
         {TO_OPTIONS.map((t) => (
           <option key={t} value={t} disabled={toMins(t) < minToMins}>
             {displayTime(t)}
@@ -434,7 +402,6 @@ function TimeSlotRow({
         ))}
       </select>
 
-      {/* Error */}
       {hasError && (
         <span
           style={{
@@ -454,7 +421,6 @@ function TimeSlotRow({
         </span>
       )}
 
-      {/* Remove */}
       <button
         type="button"
         onClick={onRemove}
@@ -496,10 +462,13 @@ interface OpeningTimesEditorProps {
 
 function patchDay(
   data: OpeningTimesData,
-  day: string,
-  patch: Partial<DaySchedule>
+  dayKey: OpeningTimesDayKey,
+  patch: Partial<OpeningTimesDay>
 ): OpeningTimesData {
-  return { ...data, [day]: { ...data[day]!, ...patch } }
+  return {
+    ...data,
+    days: data.days.map((d) => (d.day === dayKey ? { ...d, ...patch } : d)),
+  }
 }
 
 export function OpeningTimesEditor({
@@ -508,59 +477,89 @@ export function OpeningTimesEditor({
 }: OpeningTimesEditorProps) {
   const overlapMap = useMemo(() => {
     const map: Record<string, Set<number>> = {}
-    for (const day of DAYS) {
-      map[day] = overlappingIndices(value[day]?.slots ?? [])
+    for (const day of value.days) {
+      map[day.day] = overlappingIndices(day.timeframes)
     }
 
     return map
   }, [value])
 
-  const addSlot = (day: string) => {
-    const slots = value[day]?.slots ?? []
-    const lastTo = slots.length > 0 ? slots.at(-1)!.to : ""
-    // Start at the end of the last slot (sequential), default 09:00
-    const fromMins = lastTo ? toMins(lastTo) : toMins("09:00")
-    const fromDefault = minsToTime(snapTo15(fromMins))
-    // End 1h after start, snapped to 15-min
-    const toDefault = minsToTime(Math.min(snapTo15(fromMins + 60), 1440))
+  const addTimeframe = (dayKey: OpeningTimesDayKey) => {
+    const day = value.days.find((d) => d.day === dayKey)
+    const timeframes = day?.timeframes ?? []
+    const lastEnd = timeframes.length > 0 ? timeframes.at(-1)!.endTime : ""
+    const fromMins = lastEnd ? toMins(lastEnd) : toMins("09:00")
+    const startTime = minsToTime(snapTo15(fromMins))
+    const endTime = minsToTime(Math.min(snapTo15(fromMins + 60), 1440))
+
     onChange(
-      patchDay(value, day, {
-        slots: [...slots, { from: fromDefault, to: toDefault }],
+      patchDay(value, dayKey, {
+        timeframes: [
+          ...timeframes,
+          { id: makeId(), startTime, endTime, staffing: "staffed" },
+        ],
       })
     )
   }
 
-  const updateSlot = (day: string, i: number, patch: Partial<TimeSlot>) => {
-    const slots = value[day]!.slots.map((s, idx) =>
-      idx === i ? { ...s, ...patch } : s
+  const updateTimeframe = (
+    dayKey: OpeningTimesDayKey,
+    i: number,
+    patch: Partial<Pick<OpeningTimeframe, "startTime" | "endTime">>
+  ) => {
+    const day = value.days.find((d) => d.day === dayKey)
+    if (!day) return
+
+    const timeframes = day.timeframes.map((tf, idx) =>
+      idx === i ? { ...tf, ...patch } : tf
     )
-    // When changing "from", auto-advance "to" if it would become invalid
-    if (patch.from !== undefined) {
-      const updated = slots[i]!
-      if (updated.to && toMins(updated.from) >= toMins(updated.to)) {
-        slots[i] = {
+
+    // Auto-advance endTime if startTime change makes range invalid
+    if (patch.startTime !== undefined) {
+      const updated = timeframes[i]!
+      if (
+        updated.endTime &&
+        toMins(updated.startTime) >= toMins(updated.endTime)
+      ) {
+        timeframes[i] = {
           ...updated,
-          to: minsToTime(Math.min(snapTo15(toMins(updated.from) + 60), 1440)),
+          endTime: minsToTime(
+            Math.min(snapTo15(toMins(updated.startTime) + 60), 1440)
+          ),
         }
       }
     }
-    onChange(patchDay(value, day, { slots }))
+
+    onChange(patchDay(value, dayKey, { timeframes }))
   }
 
-  const removeSlot = (day: string, i: number) => {
+  const removeTimeframe = (dayKey: OpeningTimesDayKey, i: number) => {
+    const day = value.days.find((d) => d.day === dayKey)
+    if (!day) return
     onChange(
-      patchDay(value, day, {
-        slots: value[day]!.slots.filter((_, idx) => idx !== i),
+      patchDay(value, dayKey, {
+        timeframes: day.timeframes.filter((_, idx) => idx !== i),
       })
     )
   }
 
-  const copyDayTo = (sourceDay: string, targets: string[]) => {
-    const source = value[sourceDay]!
-    const updated = { ...value }
-    targets.forEach((d) => {
-      updated[d] = { ...source, slots: source.slots.map((s) => ({ ...s })) }
-    })
+  const copyDayTo = (
+    sourceKey: OpeningTimesDayKey,
+    targets: OpeningTimesDayKey[]
+  ) => {
+    const source = value.days.find((d) => d.day === sourceKey)
+    if (!source) return
+
+    let updated = value
+    for (const target of targets) {
+      updated = patchDay(updated, target, {
+        enabled: source.enabled,
+        timeframes: source.timeframes.map((tf) => ({
+          ...tf,
+          id: makeId(),
+        })),
+      })
+    }
     onChange(updated)
   }
 
@@ -572,30 +571,24 @@ export function OpeningTimesEditor({
         overflow: "hidden",
       }}
     >
-      {DAYS.map((day, dayIdx) => {
-        const schedule = value[day] ?? {
-          closed: true,
-          byAppointment: false,
-          slots: [],
-          note: "",
-        }
-        const badIndices = overlapMap[day] ?? new Set<number>()
+      {value.days.map((day, dayIdx) => {
+        const badIndices = overlapMap[day.day] ?? new Set<number>()
         const isEven = dayIdx % 2 === 0
 
         return (
           <div
-            key={day}
+            key={day.day}
             style={{
               padding: "14px 18px 16px",
               background: isEven
                 ? "rgba(255,255,255,0.012)"
                 : "rgba(255,255,255,0.004)",
               borderTop: dayIdx > 0 ? `1px solid ${T.border.line}` : undefined,
-              opacity: schedule.closed ? 0.55 : 1,
+              opacity: day.enabled ? 1 : 0.55,
               transition: "opacity 0.15s",
             }}
           >
-            {/* Row: day label + toggles + copy */}
+            {/* Row: day label + toggle + copy */}
             <div
               style={{
                 display: "flex",
@@ -610,47 +603,37 @@ export function OpeningTimesEditor({
                   fontSize: "11px",
                   letterSpacing: ".13em",
                   textTransform: "uppercase",
-                  color: schedule.closed ? T.ink.faint : T.ink.base,
+                  color: day.enabled ? T.ink.base : T.ink.faint,
                   width: "82px",
                   flexShrink: 0,
                   transition: "color 0.15s",
                 }}
               >
-                {day}
+                {DAY_LABELS[day.day]}
               </span>
 
               <DayToggle
-                open={!schedule.closed}
+                open={day.enabled}
                 onChange={(open) =>
                   onChange(
-                    patchDay(value, day, {
-                      closed: !open,
-                      slots: !open ? [] : schedule.slots,
+                    patchDay(value, day.day, {
+                      enabled: open,
+                      timeframes: open ? day.timeframes : [],
                     })
                   )
                 }
               />
 
-              {!schedule.closed && (
-                <ApptToggle
-                  checked={schedule.byAppointment}
-                  onChange={(v) =>
-                    onChange(patchDay(value, day, { byAppointment: v }))
-                  }
-                />
-              )}
-
-              {/* Copy-to selector — any open day with slots */}
-              {!schedule.closed && schedule.slots.length > 0 && (
+              {day.enabled && day.timeframes.length > 0 && (
                 <CopyDaySelect
-                  sourceDay={day}
-                  onCopy={(targets) => copyDayTo(day, targets)}
+                  sourceDay={day.day}
+                  onCopy={(targets) => copyDayTo(day.day, targets)}
                 />
               )}
             </div>
 
-            {/* Time slots */}
-            {!schedule.closed && !schedule.byAppointment && (
+            {/* Timeframes */}
+            {day.enabled && (
               <div
                 style={{
                   marginTop: "10px",
@@ -660,27 +643,31 @@ export function OpeningTimesEditor({
                   gap: "7px",
                 }}
               >
-                {schedule.slots.map((slot, i) => {
-                  // minFrom for slot i = end of slot i-1 (sequential)
-                  const prevTo = i > 0 ? schedule.slots[i - 1]!.to : undefined
+                {day.timeframes.map((tf, i) => {
+                  const prevEnd =
+                    i > 0 ? day.timeframes[i - 1]!.endTime : undefined
 
                   return (
-                    <TimeSlotRow
-                      key={i}
-                      slot={slot}
+                    <TimeframeRow
+                      key={tf.id}
+                      timeframe={tf}
                       index={i}
                       isOverlapping={badIndices.has(i)}
-                      minFrom={prevTo}
-                      onFromChange={(v) => updateSlot(day, i, { from: v })}
-                      onToChange={(v) => updateSlot(day, i, { to: v })}
-                      onRemove={() => removeSlot(day, i)}
+                      minFrom={prevEnd}
+                      onStartTimeChange={(v) =>
+                        updateTimeframe(day.day, i, { startTime: v })
+                      }
+                      onEndTimeChange={(v) =>
+                        updateTimeframe(day.day, i, { endTime: v })
+                      }
+                      onRemove={() => removeTimeframe(day.day, i)}
                     />
                   )
                 })}
 
                 <button
                   type="button"
-                  onClick={() => addSlot(day)}
+                  onClick={() => addTimeframe(day.day)}
                   style={{
                     alignSelf: "flex-start",
                     ...monoSm,
@@ -696,33 +683,6 @@ export function OpeningTimesEditor({
                 >
                   + Add time slot
                 </button>
-              </div>
-            )}
-
-            {/* Note */}
-            {!schedule.closed && (
-              <div style={{ marginTop: "10px", paddingLeft: "98px" }}>
-                <input
-                  type="text"
-                  value={schedule.note}
-                  onChange={(e) =>
-                    onChange(patchDay(value, day, { note: e.target.value }))
-                  }
-                  placeholder="Note — e.g. 'Reading rooms close 30 min earlier'"
-                  style={{
-                    padding: "7px 11px",
-                    borderRadius: "7px",
-                    border: "1px solid rgba(255,255,255,0.10)",
-                    background: "rgba(255,255,255,0.03)",
-                    color: T.ink.dim,
-                    fontSize: "12px",
-                    fontFamily: T.font.sans,
-                    outline: "none",
-                    width: "100%",
-                    maxWidth: "440px",
-                    boxSizing: "border-box",
-                  }}
-                />
               </div>
             )}
           </div>

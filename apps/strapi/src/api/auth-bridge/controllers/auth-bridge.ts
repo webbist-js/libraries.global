@@ -139,10 +139,10 @@ export default {
       } else {
         try {
           const topics = await strapi
-            .documents("plugin::topics.topic")
+            .documents("api::topic.topic" as any)
             .findMany({
               filters: { documentId: { $in: ids } } as any,
-              fields: ["documentId", "name", "slug"],
+              fields: ["documentId", "name", "slug"] as any,
               limit: ids.length,
             })
           data.interests = (topics ?? []).map((t: any) => ({

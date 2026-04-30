@@ -155,7 +155,7 @@ export function WizardCompletionSidebar({
                 <span
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "11px",
+                    fontSize: "13px",
                     letterSpacing: ".06em",
                     color: check.done ? T.ink.base : T.ink.dim,
                     display: "block",
@@ -167,11 +167,11 @@ export function WizardCompletionSidebar({
                 <span
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "9px",
-                    letterSpacing: ".08em",
+                    fontSize: "11px",
+                    letterSpacing: ".06em",
                     color: T.ink.faint,
                     display: "block",
-                    marginTop: "1px",
+                    marginTop: "2px",
                   }}
                 >
                   {check.detail}
@@ -185,11 +185,11 @@ export function WizardCompletionSidebar({
         <p
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
-            letterSpacing: ".08em",
+            fontSize: "11px",
+            letterSpacing: ".06em",
             color: T.ink.faint,
             margin: "14px 0 0",
-            lineHeight: 1.5,
+            lineHeight: 1.6,
             borderTop: `1px solid ${T.border.line}`,
             paddingTop: "10px",
           }}

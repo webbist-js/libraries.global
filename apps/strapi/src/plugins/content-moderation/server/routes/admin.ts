@@ -15,4 +15,12 @@ export default [
       policies: ["admin::isAuthenticatedAdmin"],
     },
   },
+  {
+    method: "GET",
+    path: "/relation-labels",
+    handler: "submission.relationLabels",
+    config: {
+      policies: ["admin::isAuthenticatedAdmin"],
+    },
+  },
 ]

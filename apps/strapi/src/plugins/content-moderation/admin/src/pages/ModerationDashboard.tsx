@@ -87,6 +87,18 @@ function IconLoader() {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+interface UploadedImage {
+  strapiId: number
+  url: string
+  isHero: boolean
+}
+
+interface SocialLink {
+  platform: string
+  url: string
+  label?: string
+}
+
 type Submission = {
   documentId: string
   submissionType: string
@@ -179,6 +191,8 @@ const FIELD_GROUPS: { label: string; keys: string[] }[] = [
       "bookingUrl",
       "membershipUrl",
       "virtualTourUrl",
+      "virtualTourEmbed",
+      "donationUrl",
       "iiifEndpoint",
     ],
   },
@@ -189,6 +203,7 @@ const FIELD_GROUPS: { label: string; keys: string[] }[] = [
       "transitInfo",
       "languagesServed",
       "accessibilityNotes",
+      "visitNotes",
     ],
   },
   {
@@ -216,6 +231,31 @@ const FIELD_GROUPS: { label: string; keys: string[] }[] = [
     keys: ["imageUrl", "imageNote", "imageCredit"],
   },
 ]
+
+// Fields that have dedicated render paths and must not appear in "Other"
+const EXCLUDE_FROM_OTHER = new Set([
+  "continentDocumentId",
+  "countryDocumentId",
+  "regionDocumentId",
+  "areaDocumentId",
+  "uploadedImages",
+  "socialLinks",
+  "services",
+  "amenities",
+  "accessibility",
+  "openingTimes",
+  "source",
+  "sourceUrl",
+])
+
+const EVIDENCE_TYPE_LABELS: Record<string, string> = {
+  institutional_url: "Institutional URL",
+  on_site_photo: "On-site Photo",
+  press_release: "Press Release",
+  personal_communication: "Personal Communication",
+  my_institutional_affiliation: "My Institutional Affiliation",
+  other: "Other",
+}
 
 function renderValue(v: unknown): { text: string; isUrl: boolean } {
   if (v === null || v === undefined || v === "")
@@ -321,7 +361,7 @@ function StatusBadge({ status }: { status: string }) {
         color: colors.text,
       }}
     >
-      {status.replace("_", " ")}
+      {status.replaceAll("_", " ")}
     </span>
   )
 }
@@ -503,6 +543,243 @@ function LibraryClaimPanel({ sub }: { sub: Submission }) {
   )
 }
 
+// ── RelationTagsDisplay ───────────────────────────────────────────────────────
+
+function RelationTagsDisplay({ type, ids }: { type: string; ids: unknown }) {
+  const { get } = useFetchClient()
+  const [labels, setLabels] = useState<Record<string, string>>({})
+  const idArr = Array.isArray(ids) ? (ids as string[]) : []
+
+  useEffect(() => {
+    if (idArr.length === 0) return
+    get(`/content-moderation/relation-labels?type=${encodeURIComponent(type)}`)
+      .then(({ data }) => {
+        const map = (data as { data?: Record<string, string> })?.data ?? {}
+        setLabels(map)
+      })
+      .catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type])
+
+  if (idArr.length === 0) return <span style={fieldValueEmptyStyle}>—</span>
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "4px",
+        marginTop: "4px",
+      }}
+    >
+      {idArr.map((id) => (
+        <span
+          key={id}
+          style={{
+            padding: "2px 9px",
+            borderRadius: "100px",
+            background: "#f0f0ff",
+            border: "1px solid #c4c4ff",
+            fontSize: "11px",
+            color: "#4945ff",
+            fontWeight: 500,
+          }}
+        >
+          {labels[id] ?? `${id.slice(0, 8)}…`}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+// ── PhotosPanel ───────────────────────────────────────────────────────────────
+
+/** Strip the origin so images load relative to the current Strapi admin host. */
+function toRelativeUrl(url: string): string {
+  try {
+    return new URL(url).pathname
+  } catch {
+    return url
+  }
+}
+
+function PhotosPanel({ images }: { images: UploadedImage[] }) {
+  if (images.length === 0) return null
+
+  return (
+    <div>
+      <p style={sectionHeaderStyle}>Photos</p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+        {images.map((img, i) => (
+          <div
+            key={img.strapiId ?? i}
+            style={{ position: "relative", flexShrink: 0 }}
+          >
+            <a
+              href={toRelativeUrl(img.url)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src={toRelativeUrl(img.url)}
+                alt=""
+                style={{
+                  width: "120px",
+                  height: "80px",
+                  objectFit: "cover",
+                  borderRadius: "6px",
+                  border: "1px solid #dcdce4",
+                  display: "block",
+                }}
+              />
+            </a>
+            {img.isHero && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: "4px",
+                  left: "4px",
+                  background: "#4945ff",
+                  color: "#fff",
+                  fontSize: "9px",
+                  fontWeight: 700,
+                  letterSpacing: "0.06em",
+                  padding: "2px 6px",
+                  borderRadius: "4px",
+                  textTransform: "uppercase",
+                }}
+              >
+                Hero
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── SocialLinksPanel ──────────────────────────────────────────────────────────
+
+function SocialLinksPanel({ links }: { links: SocialLink[] }) {
+  const active = links.filter((l) => l.url)
+  if (active.length === 0) return null
+
+  return (
+    <div>
+      <p style={sectionHeaderStyle}>Social Links</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+        {active.map((l, i) => (
+          <div
+            key={i}
+            style={{ display: "flex", alignItems: "center", gap: "8px" }}
+          >
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: 600,
+                color: "#666687",
+                textTransform: "capitalize",
+                minWidth: "80px",
+              }}
+            >
+              {l.platform}
+            </span>
+            <a
+              href={l.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: "#4945ff",
+                fontSize: "13px",
+                wordBreak: "break-all",
+              }}
+            >
+              {l.url}
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── OpeningTimesPanel ─────────────────────────────────────────────────────────
+
+interface CanonicalTimeframe {
+  startTime?: string
+  endTime?: string
+}
+
+interface CanonicalDay {
+  day: string
+  enabled: boolean
+  timeframes: CanonicalTimeframe[]
+}
+
+interface CanonicalOpeningTimes {
+  days: CanonicalDay[]
+}
+
+function normaliseOpeningTimes(data: unknown): CanonicalDay[] | null {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return null
+  const record = data as Record<string, unknown>
+  if (!Array.isArray(record.days)) return null
+
+  return (record as CanonicalOpeningTimes).days
+}
+
+function OpeningTimesPanel({ data }: { data: unknown }) {
+  const days = normaliseOpeningTimes(data)
+  if (!days) return null
+
+  return (
+    <div>
+      <p style={sectionHeaderStyle}>Opening Times</p>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap: "6px 16px",
+        }}
+      >
+        {days.map((day) => {
+          const label = day.day.charAt(0).toUpperCase() + day.day.slice(1)
+
+          let hoursText = "Closed"
+          if (day.enabled) {
+            hoursText =
+              day.timeframes.length > 0
+                ? day.timeframes
+                    .map((tf) => `${tf.startTime ?? "?"}–${tf.endTime ?? "?"}`)
+                    .join(", ")
+                : "Open"
+          }
+
+          return (
+            <div
+              key={day.day}
+              style={{ padding: "6px 0", borderBottom: "1px solid #f6f6f9" }}
+            >
+              <div style={fieldLabelStyle}>{label}</div>
+              <div
+                style={{
+                  ...fieldValueStyle,
+                  fontSize: "12px",
+                  color: day.enabled ? "#32324d" : "#c0c0cf",
+                  fontWeight: day.enabled ? 500 : 400,
+                }}
+              >
+                {hoursText}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ── FieldsPanel ───────────────────────────────────────────────────────────────
 
 function FieldsPanel({ sub }: { sub: Submission }) {
@@ -511,8 +788,15 @@ function FieldsPanel({ sub }: { sub: Submission }) {
 
   const allUsedKeys = new Set(FIELD_GROUPS.flatMap((g) => g.keys))
   const ungrouped = Object.entries(fields).filter(
-    ([k]) => !allUsedKeys.has(k) && k !== "openingTimes"
+    ([k]) => !allUsedKeys.has(k) && !EXCLUDE_FROM_OTHER.has(k)
   )
+
+  const uploadedImages = Array.isArray(fields.uploadedImages)
+    ? (fields.uploadedImages as UploadedImage[])
+    : []
+  const socialLinks = Array.isArray(fields.socialLinks)
+    ? (fields.socialLinks as SocialLink[])
+    : []
 
   return (
     <div
@@ -604,7 +888,9 @@ function FieldsPanel({ sub }: { sub: Submission }) {
                     borderBottom: "1px solid #f6f6f9",
                   }}
                 >
-                  <div style={fieldLabelStyle}>{k}</div>
+                  <div style={fieldLabelStyle}>
+                    {k.replaceAll(/([A-Z])/g, " $1").toLowerCase()}
+                  </div>
                   <div style={fieldValueStyle}>
                     {isUrl ? (
                       <a
@@ -626,36 +912,113 @@ function FieldsPanel({ sub }: { sub: Submission }) {
         </div>
       )}
 
-      {/* Evidence */}
+      {/* Services, Amenities, Accessibility — resolved from Strapi */}
+      {(["services", "amenities", "accessibility"] as const).map((key) => {
+        const ids = fields[key]
+        if (!Array.isArray(ids) || ids.length === 0) return null
+
+        return (
+          <div key={key}>
+            <p style={sectionHeaderStyle}>
+              {key.charAt(0).toUpperCase() + key.slice(1)}
+            </p>
+            <RelationTagsDisplay type={key} ids={ids} />
+          </div>
+        )
+      })}
+
+      {/* Uploaded photos */}
+      <PhotosPanel images={uploadedImages} />
+
+      {/* Social links */}
+      <SocialLinksPanel links={socialLinks} />
+
+      {/* Opening times */}
+      <OpeningTimesPanel data={fields.openingTimes} />
+
+      {/* Sources */}
       {sub.evidenceUrl && (
         <div>
-          <p style={sectionHeaderStyle}>Evidence</p>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <p style={sectionHeaderStyle}>Sources</p>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: "8px 20px",
+            }}
+          >
             {sub.evidenceType && (
-              <span
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  color: "#666687",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.04em",
-                }}
+              <div
+                style={{ padding: "6px 0", borderBottom: "1px solid #f6f6f9" }}
               >
-                {sub.evidenceType}
-              </span>
+                <div style={fieldLabelStyle}>Evidence type</div>
+                <div style={fieldValueStyle}>
+                  {EVIDENCE_TYPE_LABELS[sub.evidenceType] ?? sub.evidenceType}
+                </div>
+              </div>
             )}
-            <a
-              href={sub.evidenceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                color: "#4945ff",
-                fontSize: "13px",
-                wordBreak: "break-all",
-              }}
+            <div
+              style={{ padding: "6px 0", borderBottom: "1px solid #f6f6f9" }}
             >
-              {sub.evidenceUrl}
-            </a>
+              <div style={fieldLabelStyle}>Evidence URL</div>
+              <div style={fieldValueStyle}>
+                <a
+                  href={sub.evidenceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: "#4945ff",
+                    fontSize: "13px",
+                    wordBreak: "break-all",
+                  }}
+                >
+                  {sub.evidenceUrl.length > 50
+                    ? sub.evidenceUrl.slice(0, 50) + "…"
+                    : sub.evidenceUrl}
+                </a>
+              </div>
+            </div>
+            {(fields.source || fields.sourceUrl) && (
+              <>
+                {fields.source && (
+                  <div
+                    style={{
+                      padding: "6px 0",
+                      borderBottom: "1px solid #f6f6f9",
+                    }}
+                  >
+                    <div style={fieldLabelStyle}>Source</div>
+                    <div style={fieldValueStyle}>{String(fields.source)}</div>
+                  </div>
+                )}
+                {fields.sourceUrl && (
+                  <div
+                    style={{
+                      padding: "6px 0",
+                      borderBottom: "1px solid #f6f6f9",
+                    }}
+                  >
+                    <div style={fieldLabelStyle}>Source URL</div>
+                    <div style={fieldValueStyle}>
+                      <a
+                        href={String(fields.sourceUrl)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "#4945ff",
+                          fontSize: "13px",
+                          wordBreak: "break-all",
+                        }}
+                      >
+                        {String(fields.sourceUrl).length > 50
+                          ? String(fields.sourceUrl).slice(0, 50) + "…"
+                          : String(fields.sourceUrl)}
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       )}

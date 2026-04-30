@@ -127,6 +127,21 @@ export interface LibraryLibraryStat extends Struct.ComponentSchema {
   }
 }
 
+export interface ProfileLanguageEntry extends Struct.ComponentSchema {
+  collectionName: "components_profile_language_entries"
+  info: {
+    displayName: "Language Entry"
+    icon: "earth"
+  }
+  attributes: {
+    code: Schema.Attribute.String & Schema.Attribute.Required
+    proficiency: Schema.Attribute.Enumeration<
+      ["native", "fluent", "conversational"]
+    > &
+      Schema.Attribute.Required
+  }
+}
+
 export interface SectionsCtaBanner extends Struct.ComponentSchema {
   collectionName: "components_sections_cta_banners"
   info: {
@@ -628,6 +643,7 @@ declare module "@strapi/strapi" {
       "forms.newsletter-form": FormsNewsletterForm
       "library.collection-stat": LibraryCollectionStat
       "library.library-stat": LibraryLibraryStat
+      "profile.language-entry": ProfileLanguageEntry
       "sections.cta-banner": SectionsCtaBanner
       "sections.editorial-block": SectionsEditorialBlock
       "sections.quick-links": SectionsQuickLinks

@@ -2482,8 +2482,7 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     affiliationType: Schema.Attribute.Enumeration<
       ["reader", "librarian", "researcher", "archivist", "educator", "other"]
     >
-    avatarStrapiId: Schema.Attribute.String
-    avatarUrl: Schema.Attribute.String
+    avatar: Schema.Attribute.Media<"images">
     baUserId: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.Unique
@@ -2499,7 +2498,7 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
         "editorial_board",
       ]
     > &
-      Schema.Attribute.DefaultTo<"contributor">
+      Schema.Attribute.DefaultTo<"reader">
     country: Schema.Attribute.String
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
@@ -2509,10 +2508,11 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
       "manyToMany",
       "api::library.library"
     >
-    interests: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>
+    interests: Schema.Attribute.JSON
     isVerifiedLibrarian: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>
-    languages: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>
+    jobTitle: Schema.Attribute.String
+    languages: Schema.Attribute.Component<"profile.language-entry", true>
     lastActivityDate: Schema.Attribute.String
     lastName: Schema.Attribute.String
     linkedin: Schema.Attribute.String
@@ -2543,7 +2543,6 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
       ["he_him", "she_her", "they_them", "other", "prefer_not_to_say"]
     >
     publishedAt: Schema.Attribute.DateTime
-    role: Schema.Attribute.String
     streak: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
     tier: Schema.Attribute.String & Schema.Attribute.DefaultTo<"Reader">
     timezone: Schema.Attribute.String

@@ -70,6 +70,45 @@ export default ({ strapi }: { strapi: any }) => ({
     ctx.body = { data: submissions }
   },
 
+  // GET /content-moderation/relation-labels?type=services  (admin route only)
+  // Resolves a relation type to a {documentId → name} map using the Document Service API.
+  async relationLabels(ctx: any) {
+    const { type } = ctx.query as { type?: string }
+
+    const UID_MAP: Record<string, string> = {
+      services: "api::service.service",
+      amenities: "api::amenity.amenity",
+      accessibility: "api::accessibility.accessibility",
+    }
+
+    const uid = type ? UID_MAP[type] : undefined
+    if (!uid) {
+      return ctx.badRequest(
+        `Unknown relation type. Must be one of: ${Object.keys(UID_MAP).join(", ")}`
+      )
+    }
+
+    try {
+      const results = await strapi.documents(uid).findMany({
+        fields: ["documentId", "name"],
+        pagination: { limit: 500 },
+        status: "published",
+      })
+
+      const labels: Record<string, string> = {}
+      for (const item of results ?? []) {
+        if (item.documentId && item.name) {
+          labels[item.documentId] = item.name
+        }
+      }
+
+      ctx.body = { data: labels }
+    } catch (err) {
+      strapi.log.error("[content-moderation] relationLabels error", err)
+      ctx.body = { data: {} }
+    }
+  },
+
   // PUT  /content-moderation/submissions/:id/status   (admin route only)
   async updateStatus(ctx: any) {
     const { id } = ctx.params

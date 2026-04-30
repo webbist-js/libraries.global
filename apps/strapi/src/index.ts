@@ -8,6 +8,51 @@ import { registerEntityRefSubscriber } from "./lifeCycles/entityRef"
 import { registerUserSubscriber } from "./lifeCycles/user"
 import { getPopulateDynamicZoneConfig } from "./populateDynamicZone"
 
+const SEED_TOPICS = [
+  "Rare Books",
+  "Manuscripts",
+  "Digital Libraries",
+  "Open Access",
+  "Archival Science",
+  "Cataloguing",
+  "Library History",
+  "Conservation",
+  "Information Science",
+  "Academic Libraries",
+  "Public Libraries",
+  "National Libraries",
+  "Special Collections",
+  "Interlibrary Loan",
+  "Reference Services",
+  "Library Architecture",
+  "Metadata",
+  "Linked Data",
+  "Library Law",
+  "Accessibility",
+  "Indigenous Knowledge",
+  "Children's Libraries",
+  "Mobile Libraries",
+  "Prison Libraries",
+  "Hospital Libraries",
+]
+
+async function seedTopics(strapi: Core.Strapi) {
+  for (const name of SEED_TOPICS) {
+    const existing = await strapi
+      .documents("api::topic.topic" as any)
+      .findFirst({ filters: { name } } as any)
+    if (!existing) {
+      const slug = name
+        .toLowerCase()
+        .replaceAll(/[^a-z0-9]+/g, "-")
+        .replaceAll(/^-|-$/g, "")
+      await strapi
+        .documents("api::topic.topic" as any)
+        .create({ data: { name, slug, status: "approved" } })
+    }
+  }
+}
+
 export default {
   /**
    * An asynchronous register function that runs before
@@ -33,7 +78,7 @@ export default {
    * This gives you an opportunity to set up your data model,
    * run jobs, or perform some special logic.
    */
-  bootstrap({ strapi }: { strapi: Core.Strapi }) {
+  async bootstrap({ strapi }: { strapi: Core.Strapi }) {
     registerAdminUserSubscriber({ strapi })
     registerUserSubscriber({ strapi })
     registerEntityRefSubscriber({ strapi })
@@ -43,5 +88,8 @@ export default {
 
     // Register Documents API middleware for dynamic zone population
     registerPopulatePageMiddleware({ strapi })
+
+    // Seed approved topics (idempotent — skips existing names)
+    await seedTopics(strapi)
   },
 }
