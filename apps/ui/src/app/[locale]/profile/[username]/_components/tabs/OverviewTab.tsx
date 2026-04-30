@@ -391,7 +391,7 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
+          gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
           gap: "1px",
           border: `1px solid ${T.border.line}`,
           borderRadius: "12px",
@@ -411,6 +411,16 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
         />
         <StatCell label="Reputation" value="—" sub="Reputation score / 10" />
         <StatCell label="Streak" value="—" sub="Current consecutive days" />
+        {profile.tier != null && <StatCell label="Tier" value={profile.tier} />}
+        {profile.points != null && (
+          <StatCell
+            label="Total points"
+            value={profile.points.toLocaleString()}
+          />
+        )}
+        {(profile.streak ?? 0) > 0 && (
+          <StatCell label="Day streak" value={String(profile.streak)} />
+        )}
       </div>
 
       {/* Two-column layout */}
