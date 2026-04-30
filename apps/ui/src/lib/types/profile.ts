@@ -45,6 +45,10 @@ export type UserProfile = {
   interests?: string[]
   notifPrefs: NotifPrefs
   followedLibraries?: FollowedLibrary[]
+  points?: number | null
+  pointsThisMonth?: number | null
+  tier?: string | null
+  streak?: number | null
   createdAt: string
   updatedAt: string
 }
