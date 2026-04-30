@@ -12,7 +12,6 @@ export default factories.createCoreController(
           populate: {
             avatar: true,
             languages: true,
-            interests: true,
             followedLibraries: true,
           },
         })

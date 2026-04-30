@@ -50,9 +50,7 @@
       "repeatable": true
     },
     "interests": {
-      "type": "relation",
-      "relation": "manyToMany",
-      "target": "plugin::topics.topic"
+      "type": "json"
     },
     "notifPrefs": {
       "type": "json",

@@ -126,13 +126,34 @@ export default {
       data.languages = Array.isArray(fields.languages) ? fields.languages : []
     }
 
-    // interests: passed as string[] of topic documentIds — translate to
-    // Document Service relation set syntax.
+    // interests: passed as string[] of topic documentIds — look up each topic
+    // to get its name/slug, then store the full objects as JSON.
+    // (JSON field avoids a cross-plugin manyToMany relation that Strapi v5 does
+    // not reliably resolve at metadata-load time.)
     if ("interests" in fields) {
       const ids = Array.isArray(fields.interests)
         ? (fields.interests as string[])
         : []
-      data.interests = { set: ids.map((documentId) => ({ documentId })) }
+      if (ids.length === 0) {
+        data.interests = []
+      } else {
+        try {
+          const topics = await strapi
+            .documents("plugin::topics.topic")
+            .findMany({
+              filters: { documentId: { $in: ids } } as any,
+              fields: ["documentId", "name", "slug"],
+              limit: ids.length,
+            })
+          data.interests = (topics ?? []).map((t: any) => ({
+            documentId: t.documentId,
+            name: t.name,
+            slug: t.slug,
+          }))
+        } catch {
+          data.interests = []
+        }
+      }
     }
 
     // avatarFileId: integer ID of an already-uploaded Strapi file.
@@ -163,7 +184,6 @@ export default {
         populate: {
           avatar: true,
           languages: true,
-          interests: true,
           followedLibraries: true,
         },
       })
