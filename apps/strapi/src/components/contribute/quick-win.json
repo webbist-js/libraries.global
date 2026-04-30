@@ -1,0 +1,32 @@
+{
+  "collectionName": "components_contribute_quick_wins",
+  "info": {
+    "displayName": "Quick Win",
+    "icon": "star"
+  },
+  "options": {},
+  "attributes": {
+    "winId": { "type": "string", "required": true },
+    "type": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "add_library",
+        "add_nearby_library",
+        "verify_hours",
+        "add_hero_image",
+        "translate_wiki"
+      ]
+    },
+    "title": { "type": "string", "required": true },
+    "description": { "type": "text", "required": true },
+    "points": { "type": "integer", "required": true },
+    "estimatedMinutes": { "type": "integer", "required": true },
+    "rewardLabel": { "type": "string", "required": true },
+    "actionUrl": { "type": "string", "required": true },
+    "targetEntityRef": { "type": "string" },
+    "targetSlug": { "type": "string" },
+    "computedForCountry": { "type": "string" },
+    "computedForLanguage": { "type": "string" }
+  }
+}

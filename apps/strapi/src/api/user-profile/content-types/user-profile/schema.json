@@ -77,6 +77,14 @@
     "pointsThisMonth": { "type": "integer", "default": 0 },
     "tier": { "type": "string", "default": "Reader" },
     "streak": { "type": "integer", "default": 0 },
-    "lastActivityDate": { "type": "string" }
+    "lastActivityDate": { "type": "string" },
+    "quickWins": {
+      "type": "component",
+      "component": "contribute.quick-win",
+      "repeatable": true
+    },
+    "quickWinsComputedAt": {
+      "type": "datetime"
+    }
   }
 }
