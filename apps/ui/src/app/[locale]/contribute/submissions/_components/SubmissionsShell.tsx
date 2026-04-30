@@ -7,6 +7,7 @@ import { useMySubmissions, type Submission } from "@/hooks/useSubmissions"
 import { T } from "@/lib/design-tokens"
 
 import { SubmissionCard } from "./SubmissionCard"
+import { ContributeNavBar } from "../../_components/ContributeNavBar"
 
 const TABS = [
   { id: "all", label: "ALL" },
@@ -217,6 +218,8 @@ export function SubmissionsShell() {
           </p>
         </div>
       </section>
+
+      <ContributeNavBar />
 
       {/* ── Content ────────────────────────────────────────────────────── */}
       <div

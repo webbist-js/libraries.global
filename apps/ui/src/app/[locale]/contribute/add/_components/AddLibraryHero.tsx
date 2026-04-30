@@ -26,11 +26,12 @@ export function AddLibraryHero({
 
   return (
     <section
+      data-transparent-header=""
+      className="-mt-14 overflow-hidden"
       style={{
         position: "relative",
         background: T.bg.void,
         borderBottom: `1px solid ${T.border.line}`,
-        overflow: "hidden",
       }}
     >
       <DotHeroCanvas />

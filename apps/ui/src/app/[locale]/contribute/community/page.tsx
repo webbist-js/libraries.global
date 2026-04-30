@@ -5,6 +5,7 @@ import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 
 import type { LeaderboardEntry } from "../_components/ContributeCommunitySection"
+import { ContributeNavBar } from "../_components/ContributeNavBar"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const API_TOKEN = process.env.STRAPI_REST_READONLY_API_KEY
@@ -127,7 +128,7 @@ export default async function CommunityPage({
         color: T.ink.base,
       }}
     >
-      <div className="mx-auto w-full max-w-5xl px-6 py-20 md:px-10">
+      <div className="mx-auto w-full max-w-5xl px-6 pt-20 pb-10 md:px-10">
         {/* Breadcrumb */}
         <div
           style={{
@@ -187,7 +188,11 @@ export default async function CommunityPage({
             earned for every approved contribution.
           </p>
         </div>
+      </div>
 
+      <ContributeNavBar />
+
+      <div className="mx-auto w-full max-w-5xl px-6 pt-10 pb-20 md:px-10">
         {/* Period tabs */}
         <div
           style={{

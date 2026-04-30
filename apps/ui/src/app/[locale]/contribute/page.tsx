@@ -6,6 +6,7 @@ import { T } from "@/lib/design-tokens"
 import { ContributeCommunitySection } from "./_components/ContributeCommunitySection"
 import { ContributeGuidelinesSection } from "./_components/ContributeGuidelinesSection"
 import { ContributeHeroSection } from "./_components/ContributeHeroSection"
+import { ContributeNavBar } from "./_components/ContributeNavBar"
 import { ContributePathCards } from "./_components/ContributePathCards"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
@@ -113,6 +114,7 @@ export default async function ContributePage() {
       style={{ background: T.bg.void, minHeight: "100vh", color: T.ink.base }}
     >
       <ContributeHeroSection stats={heroStats} isSignedIn={!!session?.user} />
+      <ContributeNavBar />
       <ContributePathCards
         isSignedIn={!!session?.user}
         isVerifiedLibrarian={roleData.isVerifiedLibrarian}

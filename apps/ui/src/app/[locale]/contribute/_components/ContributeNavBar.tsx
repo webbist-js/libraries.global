@@ -7,9 +7,9 @@ import { T } from "@/lib/design-tokens"
 const NAV_ITEMS = [
   { href: "/contribute", label: "Hub" },
   { href: "/contribute/community", label: "Community" },
-  { href: "/contribute/add", label: "Add Library" },
-  { href: "/contribute/edit", label: "Edit" },
-  { href: "/contribute/submissions", label: "My Submissions" },
+  { href: "/contribute/add", label: "Add to the index" },
+  { href: "/contribute/edit", label: "Edit the index" },
+  { href: "/contribute/submissions", label: "My submissions" },
 ] as const
 
 export function ContributeNavBar() {

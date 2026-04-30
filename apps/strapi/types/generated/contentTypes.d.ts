@@ -2513,6 +2513,7 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     isVerifiedLibrarian: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>
     languages: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>
+    lastActivityDate: Schema.Attribute.String
     lastName: Schema.Attribute.String
     linkedin: Schema.Attribute.String
     locale: Schema.Attribute.String & Schema.Attribute.Private
@@ -2532,6 +2533,8 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
         weeklyDigest: true
       }>
     orcid: Schema.Attribute.String
+    points: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
+    pointsThisMonth: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
     profileVisibility: Schema.Attribute.Enumeration<
       ["public", "limited", "private"]
     > &
@@ -2541,6 +2544,8 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     >
     publishedAt: Schema.Attribute.DateTime
     role: Schema.Attribute.String
+    streak: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
+    tier: Schema.Attribute.String & Schema.Attribute.DefaultTo<"Reader">
     timezone: Schema.Attribute.String
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &

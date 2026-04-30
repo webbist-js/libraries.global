@@ -12,8 +12,6 @@ export default async function AddLibraryPage() {
 
   return (
     <div
-      data-transparent-header=""
-      className="-mt-14"
       style={{ background: T.bg.void, minHeight: "100vh", color: T.ink.base }}
     >
       <AddLibraryWizard

@@ -8,6 +8,8 @@ import { DotHeroCanvas } from "@/components/ui/DotHeroCanvas"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 
+import { ContributeNavBar } from "../../_components/ContributeNavBar"
+
 interface LibraryResult {
   documentId: string
   slug: string
@@ -171,6 +173,8 @@ export function EditLibrarySearch() {
           </p>
         </div>
       </section>
+
+      <ContributeNavBar />
 
       {/* Search content */}
       <div

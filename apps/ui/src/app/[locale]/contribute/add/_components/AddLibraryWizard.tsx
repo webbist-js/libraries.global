@@ -30,6 +30,7 @@ import {
 } from "./OpeningTimesEditor"
 import { WizardCompletionSidebar } from "./WizardCompletionSidebar"
 import { WizardStepNav } from "./WizardStepNav"
+import { ContributeNavBar } from "../../_components/ContributeNavBar"
 
 // ── FormData type ─────────────────────────────────────────────────────────────
 
@@ -2335,6 +2336,8 @@ export function AddLibraryWizard({
         lastSavedAt={lastSavedAt}
         libraryName={isEditMode ? formData.name || undefined : undefined}
       />
+
+      <ContributeNavBar />
 
       <div
         style={{
