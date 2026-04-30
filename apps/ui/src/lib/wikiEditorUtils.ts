@@ -77,11 +77,13 @@ export type WikiDraftBlock =
   | WikiQuoteDraftBlock
   | WikiCalloutDraftBlock
 
+export type WikiDraftApiBlock = Record<string, unknown>
+
 export type WikiDraftData = {
   targetSlug: string
   locale: string
   title?: string
-  body: WikiDraftBlock[]
+  body: WikiDraftApiBlock[] // API wire format, not in-memory editor format
   editSummary?: string
   isTranslation?: boolean
 }
@@ -97,8 +99,18 @@ export function extractTextFromBlocks(blocks: StrapiBlockNode[]): string {
       if (!("children" in node)) return ""
 
       return node.children
-        .map((child) => ("text" in child ? child.text : ""))
-        .join("")
+        .map((child) => {
+          if ("text" in child) return child.text
+          // list-item: unwrap one level
+          if ("children" in child) {
+            return (child as { children: { text?: string }[] }).children
+              .map((c) => c.text ?? "")
+              .join("")
+          }
+
+          return ""
+        })
+        .join("\n")
     })
     .join("\n\n")
 }
@@ -187,7 +199,7 @@ export function articleBodyToWikiDraft(
  */
 export function wikiDraftToApiPayload(
   blocks: WikiDraftBlock[]
-): Record<string, unknown>[] {
+): WikiDraftApiBlock[] {
   return blocks.map((block): Record<string, unknown> => {
     if (block.__component === "content.rich-text") {
       const strapiBlocks =
