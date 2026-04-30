@@ -1,35 +1,12 @@
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
+import {
+  type LeaderboardEntry,
+  getDisplayName,
+  getInitials,
+} from "@/lib/types/leaderboard"
 
-export type LeaderboardEntry = {
-  rank: number
-  baUserId: string
-  username: string | null
-  firstName: string | null
-  lastName: string | null
-  avatarUrl: string | null
-  country: string | null
-  contributorRole: string | null
-  periodPoints: number
-  totalPoints: number
-  tier: string
-}
-
-function getInitials(entry: LeaderboardEntry): string {
-  const first = entry.firstName?.[0] ?? ""
-  const last = entry.lastName?.[0] ?? ""
-
-  return (
-    (first + last).toUpperCase() ||
-    (entry.username?.slice(0, 2).toUpperCase() ?? "??")
-  )
-}
-
-function getDisplayName(entry: LeaderboardEntry): string {
-  const full = [entry.firstName, entry.lastName].filter(Boolean).join(" ")
-
-  return full || entry.username || `User ${entry.baUserId.slice(0, 6)}`
-}
+export type { LeaderboardEntry }
 
 const TIER_COLORS: Record<string, string> = {
   Reader: T.ink.faint,

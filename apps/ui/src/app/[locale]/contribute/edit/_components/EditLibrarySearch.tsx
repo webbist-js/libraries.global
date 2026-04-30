@@ -4,7 +4,7 @@ import { Icon } from "@iconify/react"
 import { useRouter } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
 
-import { DotHeroCanvas } from "@/components/ui/DotHeroCanvas"
+import { ContributeHeroShell } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 
@@ -92,26 +92,7 @@ export function EditLibrarySearch() {
   return (
     <>
       {/* Hero */}
-      <section
-        data-transparent-header=""
-        style={{
-          position: "relative",
-          background: T.bg.void,
-          borderBottom: `1px solid ${T.border.line}`,
-          overflow: "hidden",
-          minHeight: "300px",
-        }}
-        className="-mt-14"
-      >
-        <DotHeroCanvas />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(to bottom, rgba(3,5,17,0) 0%, rgba(3,5,17,0.6) 100%)",
-          }}
-        />
+      <ContributeHeroShell minHeight="300px">
         <div
           className="relative z-10 mx-auto w-full max-w-[900px]"
           style={{ padding: "112px 24px 40px" }}
@@ -172,7 +153,7 @@ export function EditLibrarySearch() {
             edited — select one to open the wizard.
           </p>
         </div>
-      </section>
+      </ContributeHeroShell>
 
       <ContributeNavBar />
 

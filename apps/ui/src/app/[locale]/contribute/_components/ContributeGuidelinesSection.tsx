@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react"
 
+import { Badge, type BadgeColor } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
 
 const GUIDELINES = [
@@ -22,6 +23,10 @@ const GUIDELINES = [
 ]
 
 type RoleChipVariant = "faint" | "aurora" | "ok" | "violet" | "gold"
+
+function variantToBadgeColor(v: RoleChipVariant): BadgeColor {
+  return v === "faint" ? "dim" : v
+}
 
 interface RoleRow {
   role: string
@@ -62,25 +67,6 @@ const ROLE_ROWS: RoleRow[] = [
     ],
   },
 ]
-
-function chipColor(variant: RoleChipVariant): {
-  color: string
-  background: string
-} {
-  switch (variant) {
-    case "aurora":
-      return { color: T.accent.aurora, background: "rgba(127,223,255,0.10)" }
-    case "ok":
-      return { color: T.accent.ok, background: "rgba(142,240,179,0.10)" }
-    case "violet":
-      return { color: T.accent.violet, background: "rgba(163,144,255,0.10)" }
-    case "gold":
-      return { color: T.accent.gold, background: "rgba(232,201,138,0.10)" }
-
-    default:
-      return { color: T.ink.faint, background: "rgba(255,255,255,0.06)" }
-  }
-}
 
 export function ContributeGuidelinesSection() {
   return (
@@ -188,82 +174,54 @@ export function ContributeGuidelinesSection() {
             </h2>
 
             <div style={{ display: "flex", flexDirection: "column" }}>
-              {ROLE_ROWS.map((row) => {
-                const badgeColors = chipColor(row.badge.variant)
-
-                return (
+              {ROLE_ROWS.map((row) => (
+                <div
+                  key={row.role}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "14px 0",
+                    borderBottom: `1px solid ${T.border.line}`,
+                    gap: "12px",
+                  }}
+                >
+                  {/* Role name + badge */}
                   <div
-                    key={row.role}
                     style={{
                       display: "flex",
-                      justifyContent: "space-between",
                       alignItems: "center",
-                      padding: "14px 0",
-                      borderBottom: `1px solid ${T.border.line}`,
-                      gap: "12px",
+                      gap: "8px",
+                      flexWrap: "wrap",
                     }}
                   >
-                    {/* Role name + badge */}
-                    <div
+                    <span
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        flexWrap: "wrap",
+                        fontFamily: T.font.sans,
+                        fontSize: "16px",
+                        color: T.ink.base,
                       }}
                     >
-                      <span
-                        style={{
-                          fontFamily: T.font.sans,
-                          fontSize: "16px",
-                          color: T.ink.base,
-                        }}
-                      >
-                        {row.role}
-                      </span>
-                      <span
-                        style={{
-                          padding: "3px 9px",
-                          borderRadius: "4px",
-                          fontFamily: T.font.mono,
-                          fontSize: "10px",
-                          letterSpacing: ".12em",
-                          textTransform: "uppercase",
-                          background: badgeColors.background,
-                          color: badgeColors.color,
-                        }}
-                      >
-                        {row.badge.label}
-                      </span>
-                    </div>
-
-                    {/* Action chips */}
-                    <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
-                      {row.actions.map((action) => {
-                        const actionColors = chipColor(action.variant)
-
-                        return (
-                          <span
-                            key={action.label}
-                            style={{
-                              padding: "4px 10px",
-                              borderRadius: "4px",
-                              fontFamily: T.font.mono,
-                              fontSize: "10px",
-                              letterSpacing: ".12em",
-                              textTransform: "uppercase",
-                              background: actionColors.background,
-                              color: actionColors.color,
-                            }}
-                          >
-                            {action.label}
-                          </span>
-                        )
-                      })}
-                    </div>
+                      {row.role}
+                    </span>
+                    <Badge
+                      label={row.badge.label}
+                      color={variantToBadgeColor(row.badge.variant)}
+                    />
                   </div>
-                )
-              })}
+
+                  {/* Action chips */}
+                  <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
+                    {row.actions.map((action) => (
+                      <Badge
+                        key={action.label}
+                        label={action.label}
+                        color={variantToBadgeColor(action.variant)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

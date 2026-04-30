@@ -1,4 +1,5 @@
 export { Avatar } from "./Avatar"
+export { ContributeHeroShell } from "./ContributeHeroShell"
 export { Badge } from "./Badge"
 export type { BadgeColor } from "./Badge"
 export { Breadcrumb } from "./Breadcrumb"

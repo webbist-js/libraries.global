@@ -1,4 +1,4 @@
-import { DotHeroCanvas } from "@/components/ui/DotHeroCanvas"
+import { ContributeHeroShell } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 
@@ -72,28 +72,10 @@ export function ContributeHeroSection({
       ]
 
   return (
-    <section
-      data-transparent-header=""
-      className="relative -mt-14 overflow-hidden"
-      style={{
-        background: "#030511",
-        minHeight: "520px",
-        borderBottom: `1px solid ${T.border.line}`,
-      }}
+    <ContributeHeroShell
+      minHeight="520px"
+      overlay="radial-gradient(ellipse 60% 80% at 70% 30%, rgba(127,223,255,0.05) 0%, transparent 55%), linear-gradient(to bottom, rgba(3,5,17,0) 0%, rgba(3,5,17,0.72) 100%)"
     >
-      <DotHeroCanvas />
-
-      {/* Overlay */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse 60% 80% at 70% 30%, rgba(127,223,255,0.05) 0%, transparent 55%), linear-gradient(to bottom, rgba(3,5,17,0) 0%, rgba(3,5,17,0.72) 100%)",
-        }}
-      />
-
-      {/* Content */}
       <div className="relative z-10 mx-auto w-full max-w-5xl px-6 pt-36 pb-14 md:px-10">
         {/* Eyebrow */}
         <p
@@ -267,6 +249,6 @@ export function ContributeHeroSection({
           ))}
         </div>
       </div>
-    </section>
+    </ContributeHeroShell>
   )
 }

@@ -4,7 +4,7 @@ import { Icon } from "@iconify/react"
 
 import { T } from "@/lib/design-tokens"
 
-import type { FormData } from "./AddLibraryWizard"
+import type { FormData } from "./wizard.types"
 
 // One check per step — mirrors calcScore exactly.
 const STEP_CHECKS = (f: FormData) => [
@@ -42,7 +42,7 @@ const STEP_CHECKS = (f: FormData) => [
     step: 6,
     label: "Imagery",
     detail: "Hero image URL",
-    done: !!f.imageUrl,
+    done: f.uploadedImages.length > 0,
   },
   {
     step: 7,

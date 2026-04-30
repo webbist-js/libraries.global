@@ -1,6 +1,6 @@
 "use client"
 
-import { DotHeroCanvas } from "@/components/ui/DotHeroCanvas"
+import { ContributeHeroShell } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 
@@ -25,27 +25,7 @@ export function AddLibraryHero({
   const isEditMode = !!libraryName
 
   return (
-    <section
-      data-transparent-header=""
-      className="-mt-14 overflow-hidden"
-      style={{
-        position: "relative",
-        background: T.bg.void,
-        borderBottom: `1px solid ${T.border.line}`,
-      }}
-    >
-      <DotHeroCanvas />
-
-      {/* Fade overlay — blend into page */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(to bottom, rgba(3,5,17,0) 0%, rgba(3,5,17,0.6) 100%)",
-        }}
-      />
-
+    <ContributeHeroShell>
       <div
         className="relative z-10 mx-auto w-full max-w-[1200px]"
         style={{ padding: "96px 24px 36px" }}
@@ -173,6 +153,6 @@ export function AddLibraryHero({
             : "Seven steps, granular but forgiving. Drafts save automatically; submit only when you\u2019re ready for editorial review."}
         </p>
       </div>
-    </section>
+    </ContributeHeroShell>
   )
 }

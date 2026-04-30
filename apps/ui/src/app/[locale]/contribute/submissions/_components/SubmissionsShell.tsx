@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 
-import { DotHeroCanvas } from "@/components/ui/DotHeroCanvas"
+import { ContributeHeroShell } from "@/components/ds"
 import { useMySubmissions, type Submission } from "@/hooks/useSubmissions"
 import { T } from "@/lib/design-tokens"
 
@@ -117,28 +117,10 @@ export function SubmissionsShell() {
   return (
     <>
       {/* ── Hero ───────────────────────────────────────────────────────── */}
-      <section
-        data-transparent-header=""
-        className="relative -mt-14 overflow-hidden"
-        style={{
-          background: "#030511",
-          minHeight: "340px",
-          borderBottom: `1px solid ${T.border.line}`,
-        }}
+      <ContributeHeroShell
+        minHeight="340px"
+        overlay="radial-gradient(ellipse 70% 90% at 30% 40%, rgba(127,223,255,0.04) 0%, transparent 60%), linear-gradient(to bottom, rgba(3,5,17,0) 0%, rgba(3,5,17,0.80) 100%)"
       >
-        <DotHeroCanvas />
-
-        {/* Overlay */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 70% 90% at 30% 40%, rgba(127,223,255,0.04) 0%, transparent 60%), linear-gradient(to bottom, rgba(3,5,17,0) 0%, rgba(3,5,17,0.80) 100%)",
-          }}
-        />
-
-        {/* Content */}
         <div className="relative z-10 mx-auto w-full max-w-5xl px-6 pt-32 pb-12 md:px-10">
           {/* Eyebrow row */}
           <div
@@ -217,7 +199,7 @@ export function SubmissionsShell() {
             published. Editorial board comments live alongside each one.
           </p>
         </div>
-      </section>
+      </ContributeHeroShell>
 
       <ContributeNavBar />
 
