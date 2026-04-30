@@ -26,7 +26,7 @@
 
 ### Out of scope (v1)
 
-- Adding new image blocks (v1 only supports editing `caption` and `fullWidth` on existing image blocks; the image itself is read-only. Binary upload and new image insertion are v2 enhancements.)
+- Conflict resolution if two editors submitted changes to the same article concurrently (last-approved-wins; no history access in Strapi)
 - Per-block inline reviewer comments (v1 shows comment thread at submission level only)
 - Translation/locale editing (v1 edits `en` locale only)
 - Markdown import/export
@@ -124,10 +124,8 @@ type WikiDraftBlock =
   | {
       __component: "content.image-block"
       id?: number
-      // v1: image itself is read-only (retains original Strapi media reference via id)
-      // Only caption and fullWidth are editable
-      strapiImageId?: number // original Strapi media record id — passed through on approval
-      imageUrl?: string // display-only: used to render the image in the editor
+      strapiImageId?: number // Strapi media record integer id (set after upload or from original)
+      imageUrl?: string // display-only URL for preview (resolved from Strapi after upload)
       caption?: string
       fullWidth?: boolean
     }
@@ -135,101 +133,101 @@ type WikiDraftBlock =
 
 **`rich-text` editor note:** The `body` field is a Strapi Blocks AST (complex JSON). In the frontend editor, we display a `<textarea>` containing the plain text extracted from the AST. On save, we reconstruct a minimal Strapi Blocks array: one `paragraph` node per non-empty line. This covers 95% of wiki editing needs. The original formatting (bold, links, headings) is preserved if the editor did not modify the block — we only re-serialise blocks the editor touched.
 
-**`image-block` editor note:** v1 does not allow replacing or adding images. Existing `image-block` entries in an article are shown with a read-only preview; the editor may only change `caption` and `fullWidth`. The `strapiImageId` (original Strapi media record integer id) is carried through in `draftData` unchanged so the approval side-effect can pass `{ image: { id: strapiImageId } }` directly to the Strapi documents API.
+**`image-block` editor note:** Editors may upload images via the Strapi `/api/upload` endpoint (requires session + `wiki_editor` role — same auth pattern as avatar uploads). The upload returns a Strapi media record with an integer `id` and URL; both are stored in the `image-block` draftData entry. The approval side-effect passes `{ image: { id: strapiImageId } }` directly to the Strapi documents API. Existing image blocks retain their original `strapiImageId` unchanged unless the editor replaces the image.
 
 ---
 
 ## Frontend Surfaces
 
-### 1. Wiki Editor — `/contribute/wiki/[slug]` (edit) + `/contribute/wiki/new` (new)
+### 1. Wiki Editor — edit mode toggle on the wiki article page
 
-**Layout:** Three-column — matches the existing `WikiArticlePage` grid (`280px | flex-1 | 240px`) but repurposed for editing:
+The editor is **not** a separate route. The existing `/wiki/[sectionSlug]/[slug]` article page gains an edit mode. When a `wiki_editor` or `editorial_board` user is signed in, an "Edit" button appears in the article header toolbar (alongside the existing "Report issue" button). Clicking it activates edit mode (`?edit=true` appended to URL); the article body switches in-place from rendered blocks to `WikiBlockCard` editors. The left nav and page chrome remain unchanged.
 
-```
-[Left: Article nav (reused)]  [Center: Block editor]  [Right: Submission metadata]
-```
+**`WikiArticlePage` architecture change:**
 
-**Center — Block editor (`WikiBlockEditor` client component):**
+Convert to a client component that accepts an `initialEditMode: boolean` prop (derived from `?edit=true` server-side). Manages `editMode` state. When true, renders `WikiBlockEditor` in place of `ArticleBodyBlocks`.
 
-- Loads the current published article body on mount (pre-fills blocks)
-- On load: checks for an existing `draft` submission via `GET /api/content-moderation/submissions/draft/wiki_edit?targetSlug={slug}` — if found, shows "Resume draft · saved {time}" banner and pre-fills from `draftData`
+**`WikiBlockEditor` (client component):**
+
+- Initialises block state from `article.body` (live published body)
+- On mount: checks `GET /api/contribute/wiki/[slug]` for an existing draft — if found, shows "Resume draft · saved {time}" banner
 - Block list rendered top-to-bottom; each block is a `WikiBlockCard`
-- Between blocks: a `+` button opens a small type-picker popover (4 options: rich-text, code-block, quote-block, callout — image-block excluded in v1)
-- Each block has: up/down reorder arrows, a delete button, the block-type editor
-- **Auto-save:** 1500ms debounce after any change — `PATCH /api/content-moderation/submissions/:id/draft` (or `POST /api/content-moderation/submissions` with `asDraft: true` for first save). Shows "DRAFT SAVED · HH:MM" mono label in top-right.
+- Between blocks: a `+` button opens a type-picker (4 options: rich-text, code-block, quote-block, callout)
+- Each block has up/down reorder arrows and a delete button
+- **Auto-save:** 1500ms debounce — `PATCH /api/contribute/wiki/[slug]` (or `POST` for first save). Shows "DRAFT SAVED · HH:MM" mono label in article toolbar.
 
 **Per-block editors (`WikiBlockCard`):**
 
-| Block type            | Editor UI                                                                                                                                                                            |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `content.rich-text`   | Full-width `<textarea>` (auto-resize); placeholder "Write in plain text. Basic formatting preserved if block was untouched."                                                         |
-| `content.code-block`  | Monospace `<textarea>` + language `<select>` (plaintext/js/ts/python/bash/json/css/html/other) + optional filename text input                                                        |
-| `content.quote-block` | Quote `<textarea>` + attribution text input + source text input                                                                                                                      |
-| `content.callout`     | Type selector chips (info/warning/tip/note) + optional title input + body `<textarea>`                                                                                               |
-| `content.image-block` | Read-only image preview (existing image, cannot be replaced in v1) + caption text input + full-width toggle. Cannot be added as a new block in v1 (excluded from block type picker). |
+| Block type            | Editor UI                                                                                                                                |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `content.rich-text`   | Full-width `<textarea>` (auto-resize). Placeholder: "Write in plain text. Basic formatting preserved if block was untouched."            |
+| `content.code-block`  | Monospace `<textarea>` + language `<select>` (plaintext/js/ts/python/bash/json/css/html/other) + optional filename input                 |
+| `content.quote-block` | Quote `<textarea>` + attribution input + source input                                                                                    |
+| `content.callout`     | Type chips (info/warning/tip/note) + optional title input + body `<textarea>`                                                            |
+| `content.image-block` | Image preview + "Replace image" file input (proxied upload to Strapi `/api/upload`) + alt text input + caption input + full-width toggle |
 
-Each `WikiBlockCard` is visually styled to match the rendered block appearance (same colour treatment as `ArticleBodyBlocks`), but with inputs in place of rendered content. The card has a subtle left border that matches the block type's accent colour.
+Each `WikiBlockCard` is visually styled to match the rendered block style but with inputs in place of content. Active editing state: subtle aurora left border.
 
-**Right sidebar — `WikiEditorSidebar`:**
+**Edit-mode right sidebar (replaces TOC in edit mode):**
 
 ```
-ARTICLE INFO
-  Section:     [select]
-  Status:      [select]
-
 YOUR DRAFT
-  Saved:       2 min ago
-  Status:      DRAFT / OPEN FOR REVIEW
-  Edit summary: [textarea, 240 char max]
+  Saved:        2 min ago
+  Status:       DRAFT
+
+ARTICLE META
+  Status:       [select: stable/beta/experimental/draft/deprecated]
+  Edit summary: [textarea, 240 char max — required to submit]
 
 LIVE VERSION
-  Published:   3 days ago
-  Status:      ● Stable
-  [View live article ↗]
+  Published:    3 days ago
+  [Exit editor ×]
 ```
 
-Mono labels, low-contrast, same card treatment as WikiArticlePage's right panel.
-
-**Bottom bar — `WikiEditorBottomBar`:**
+**Edit-mode bottom action bar (fixed to viewport bottom):**
 
 ```
-[DISCARD DRAFT]          [SAVE DRAFT]    [PREVIEW]    [SUBMIT FOR REVIEW →]
+[DISCARD DRAFT]    [SAVE DRAFT]    [PREVIEW]    [SUBMIT FOR REVIEW →]
 ```
 
-- **Discard:** confirms, deletes draft submission, navigates to article
-- **Save draft:** manual save (same auto-save logic but immediate)
-- **Preview:** opens a modal rendering `draftData.body` through `ArticleBodyBlocks` — shows the article as it would look
-- **Submit for review:** calls `PATCH /api/content-moderation/submissions/:id/finalize` → sets `status: pending`. Navigates to `/contribute/submissions` with success toast.
-
-**New article page (`/contribute/wiki/new`):**
-
-Same layout, but with extra fields at the top: Title (text input), Slug (auto-generated from title, editable), Summary (textarea), Section (select). Body starts with one empty `rich-text` block.
+- **Discard:** confirm → delete draft submission, exit edit mode
+- **Save draft:** immediate manual save
+- **Preview:** modal rendering `draftData.body` through `ArticleBodyBlocks`
+- **Submit for review:** `PATCH /api/contribute/wiki/[slug]/finalize` → `status: pending`. Toast success, exit edit mode.
 
 ---
 
-### 2. Wiki Editor tab in `ContributeBottomNav`
+### 2. New article — `/contribute/wiki/new`
 
-Add `WIKI EDITOR` as the 4th tab (between `EDIT (DIFF)` and `MY SUBMISSIONS`). Tab link: `/contribute/wiki`. On `/contribute/wiki` there is a search/picker to find an article to edit, or a "New article" CTA (shown only to `wiki_editor`/`editorial_board`). Tab is always visible but clicking while lacking the role shows the locked state with a tooltip.
-
-**`/contribute/wiki` landing page** (`WikiEditorHub`):
-
-- Heading: "Edit the _project docs._" (serif, matching hub style)
-- Search bar: finds wiki articles by title (MeiliSearch or simple Strapi title search)
-- Result list: article title, section, status badge, last edited date, "Edit →" link
-- "Write a new article" CTA button (role-gated, aurora style)
-- If role is insufficient: the entire page shows a locked state with role requirement message
+Separate page (no existing article to load). Same three-column wiki layout. Extra header fields: Title (input), Slug (auto-from-title, editable), Summary (textarea), Section (select). Body starts with one empty `rich-text` block. Same auto-save and submit flow as edit mode.
 
 ---
 
-### 3. Next.js API routes (new)
+### 3. Wiki Editor tab in `ContributeBottomNav`
 
-| Route                         | Method | Purpose                                                      |
-| ----------------------------- | ------ | ------------------------------------------------------------ |
-| `/api/contribute/wiki/[slug]` | GET    | Load article + any existing draft for this slug; checks role |
-| `/api/contribute/wiki/[slug]` | POST   | Create initial draft submission for this article             |
-| `/api/contribute/wiki/new`    | POST   | Create initial draft for a new article                       |
+Add `WIKI EDITOR` as the 4th tab (between `EDIT (DIFF)` and `MY SUBMISSIONS`). Tab link: `/contribute/wiki`.
 
-All routes: session-required + `contributorRole` check. Proxy to Strapi content-moderation endpoints with `X-Service-Secret` + `X-Ba-User-*` headers (existing pattern).
+**`/contribute/wiki` hub page** (`WikiEditorHub`):
+
+- Heading: "Edit the _project docs._"
+- Article list with search (title, section, status badge, last edited, "Edit →" links to `/wiki/[sectionSlug]/[slug]?edit=true`)
+- "Write a new article" CTA → `/contribute/wiki/new` (role-gated)
+- If role insufficient: locked state with role requirement message (no redirect)
+
+---
+
+### 4. Next.js API routes (new)
+
+| Route                                  | Method | Purpose                                                      |
+| -------------------------------------- | ------ | ------------------------------------------------------------ |
+| `/api/contribute/wiki/[slug]`          | GET    | Load existing draft for this slug (role-checked)             |
+| `/api/contribute/wiki/[slug]`          | POST   | Create initial draft submission for this article             |
+| `/api/contribute/wiki/[slug]`          | PATCH  | Save draft data (proxies to content-moderation saveDraft)    |
+| `/api/contribute/wiki/[slug]/finalize` | PATCH  | Promote draft to pending (submit for review)                 |
+| `/api/contribute/wiki/new`             | POST   | Create initial draft for a new article                       |
+| `/api/upload`                          | POST   | Proxy image upload to Strapi `/api/upload` with session auth |
+
+All routes: session-required + `contributorRole` check. Note: `/api/upload` may already exist for avatar uploads — verify and reuse if so.
 
 ---
 
@@ -327,10 +325,10 @@ async function applyWikiEdit(strapi, submission) {
             }
           : {}),
       },
-      status: "draft", // leave as draft; editorial board publishes from admin
+      status: "published", // publish immediately on approval
     })
   } else {
-    // Update existing wiki article's draft
+    // Update and publish existing wiki article
     await strapi.documents("api::wiki-article.wiki-article").update({
       documentId: draftData.targetDocumentId,
       data: {
@@ -343,9 +341,10 @@ async function applyWikiEdit(strapi, submission) {
           : {}),
         ...(draftData.body !== undefined ? { body: draftData.body } : {}),
       },
-      status: "draft",
+      status: "published", // publish immediately on approval
     })
   }
+  // Admin may revert to draft in Strapi Content Manager after publishing if needed.
 }
 ```
 
@@ -442,30 +441,31 @@ The panel is rendered inside `ModerationDashboard.tsx` when `submission.submissi
 
 ```
 apps/ui/src/app/[locale]/contribute/wiki/
-  page.tsx                                     — WikiEditorHub (article picker + new CTA)
+  page.tsx                                     — WikiEditorHub (article list + new CTA, role gate)
   new/
     page.tsx                                   — New article page (RSC auth + role gate)
     _components/
-      NewArticleEditor.tsx                     — client, extends WikiBlockEditor for new articles
-  [slug]/
-    page.tsx                                   — Edit article page (RSC, loads article + draft)
-    _components/
-      WikiEditorShell.tsx                      — client orchestrator
-      WikiBlockEditor.tsx                      — block list manager (add/remove/reorder)
-      WikiBlockCard.tsx                        — single block editor (dispatches to sub-editors)
-      blocks/
-        RichTextBlockEditor.tsx
-        CodeBlockEditor.tsx
-        QuoteBlockEditor.tsx
-        CalloutBlockEditor.tsx
-        ImageBlockEditor.tsx
-      WikiEditorSidebar.tsx                    — right sidebar (article meta + draft status)
-      WikiEditorBottomBar.tsx                  — save/preview/submit actions
-      WikiPreviewModal.tsx                     — renders draftData.body via ArticleBodyBlocks
+      NewArticleShell.tsx                      — client, same editor for new articles + header fields
+
+apps/ui/src/components/wiki/
+  WikiBlockEditor.tsx                          — block list manager (add/remove/reorder); used in
+                                                 both WikiArticlePage edit mode and new article page
+  WikiBlockCard.tsx                            — single block editor (dispatches to sub-editors)
+  blocks/
+    RichTextBlockEditor.tsx
+    CodeBlockEditor.tsx
+    QuoteBlockEditor.tsx
+    CalloutBlockEditor.tsx
+    ImageBlockEditor.tsx
+  WikiEditorSidebar.tsx                        — right sidebar (article meta + draft status)
+  WikiEditorBottomBar.tsx                      — save/preview/submit actions (fixed bottom bar)
+  WikiPreviewModal.tsx                         — renders draftData.body via ArticleBodyBlocks
 
 apps/ui/src/app/api/contribute/wiki/
-  [slug]/route.ts                              — GET article + draft, POST create draft
+  [slug]/route.ts                              — GET draft, POST create draft, PATCH save draft
+  [slug]/finalize/route.ts                     — PATCH promote draft to pending
   new/route.ts                                 — POST create new article draft
+apps/ui/src/app/api/upload/route.ts            — POST proxy to Strapi /api/upload (check if exists)
 ```
 
 ### New Strapi files
@@ -481,8 +481,8 @@ apps/strapi/src/plugins/content-moderation/admin/src/components/
 
 ```
 apps/strapi/src/plugins/content-moderation/server/services/submission.ts
-  — add applyWikiEdit side-effect in updateStatus()
-  — add points award + quick-wins invalidation
+  — add applyWikiEdit side-effect in updateStatus() (publishes on approval)
+  — add points award + quick-wins invalidation on approval
 
 apps/strapi/src/plugins/content-moderation/admin/src/pages/ModerationDashboard.tsx
   — render WikiEditDiffPanel for wiki_edit submissions
@@ -491,12 +491,20 @@ apps/strapi/src/plugins/content-moderation/package.json
   — add "diff": "^5.2.0"
 
 apps/strapi/src/api/user-profile/services/quick-wins.ts
-  — add ruleEditWiki rule
-  — add "edit_wiki" to QuickWin type union
+  — add ruleEditWiki rule + "edit_wiki" to QuickWin type union
   — add rule to computeForUser Promise.all
 
+apps/ui/src/components/wiki/WikiArticlePage.tsx
+  — convert to client component with editMode state
+  — render WikiBlockEditor when editMode is true
+  — show "Edit" button in header toolbar for wiki_editor / editorial_board users
+
+apps/ui/src/app/[locale]/wiki/[sectionSlug]/[slug]/page.tsx
+  — pass initialEditMode (from searchParams.edit === "true") to WikiArticlePage
+  — pass session/profile data for role check
+
 apps/ui/src/app/[locale]/contribute/_components/ContributeBottomNav.tsx
-  — add WIKI EDITOR tab (4th position)
+  — add WIKI EDITOR tab (4th position, between EDIT (DIFF) and MY SUBMISSIONS)
 
 apps/ui/src/components/library/QuickWinCard.tsx
   — add edit_wiki to ICON_MAP and CTA_LABEL
@@ -542,15 +550,14 @@ When a `wiki_editor` visits `/contribute/wiki` for the first time (no prior subm
 
 ## Approval Flow Summary
 
-1. Editor opens `/contribute/wiki/[slug]`
-2. Article body pre-loaded; editor makes changes
-3. Auto-save creates/updates `cm_submissions` record with `status: draft`, `draftData: { body, originalBody, editSummary, targetDocumentId }`
+1. Editor clicks "Edit" on a wiki article page at `/wiki/[sectionSlug]/[slug]?edit=true`
+2. `WikiBlockEditor` initialises from live article body; editor makes changes
+3. Auto-save creates/updates `cm_submissions` (`status: draft`, `draftData: { body, originalBody, editSummary, targetDocumentId }`)
 4. Editor clicks "Submit for review" → `PATCH /finalize` → `status: pending`
 5. Submission appears in Moderation Dashboard queue
-6. Editorial board member opens submission → `WikiEditDiffPanel` renders rendered diff
+6. Editorial board member opens submission → `WikiEditDiffPanel` renders editorial-style diff
 7. Board member clicks "Approve" → `status: approved`
-8. `applyWikiEdit()` runs: writes `draftData.body` to wiki article as Strapi draft
-9. 15 pts awarded to contributor
-10. Quick-wins cache invalidated for contributor
-11. Board member opens Strapi Content Manager → publishes the draft
-12. Submission shows as `approved` in contributor's My Submissions dashboard
+8. `applyWikiEdit()` runs: writes `draftData.body` to wiki article and **publishes immediately**
+9. 15 pts awarded to contributor; quick-wins cache invalidated
+10. Article is live; contributor sees `approved` status in My Submissions dashboard
+11. Admin may revert to draft in Strapi Content Manager if needed
