@@ -410,16 +410,17 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
           sub="Added from scratch"
         />
         <StatCell label="Reputation" value="—" sub="Reputation score / 10" />
-        <StatCell label="Streak" value="—" sub="Current consecutive days" />
+        {(profile.streak ?? 0) > 0 ? (
+          <StatCell label="Day streak" value={String(profile.streak)} />
+        ) : (
+          <StatCell label="Streak" value="—" sub="Current consecutive days" />
+        )}
         {profile.tier != null && <StatCell label="Tier" value={profile.tier} />}
         {profile.points != null && (
           <StatCell
             label="Total points"
             value={profile.points.toLocaleString()}
           />
-        )}
-        {(profile.streak ?? 0) > 0 && (
-          <StatCell label="Day streak" value={String(profile.streak)} />
         )}
       </div>
 
