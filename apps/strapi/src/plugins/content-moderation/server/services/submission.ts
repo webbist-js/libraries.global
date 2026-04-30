@@ -293,6 +293,75 @@ export default ({ strapi }: { strapi: any }) => ({
       }
     }
 
+    // Award points for new_library approval — non-fatal
+    if (status === "approved" && submission?.submissionType === "new_library") {
+      try {
+        await strapi
+          .plugin("rewards")
+          .service("points")
+          .award(submission.submittedByUserId, "new_library_approved", 50, {
+            submissionId: documentId,
+            libraryName: String(
+              (submission.fields as Record<string, unknown>)?.name ?? ""
+            ),
+          })
+      } catch (err) {
+        strapi.log.warn("[content-moderation] rewards.award failed:", err)
+      }
+    }
+
+    // Award points for library_edit approval (minor: 1–3 fields, major: 4+)
+    if (
+      status === "approved" &&
+      submission?.submissionType === "library_edit"
+    ) {
+      try {
+        const fields = (submission.fields ?? {}) as Record<string, unknown>
+        const fieldCount = Object.keys(fields).filter(
+          (k) =>
+            fields[k] !== null && fields[k] !== undefined && fields[k] !== ""
+        ).length
+        const action =
+          fieldCount >= 4 ? "edit_accepted_major" : "edit_accepted_minor"
+        const pts = fieldCount >= 4 ? 15 : 5
+
+        await strapi
+          .plugin("rewards")
+          .service("points")
+          .award(submission.submittedByUserId, action, pts, {
+            submissionId: documentId,
+            fieldCount,
+          })
+      } catch (err) {
+        strapi.log.warn(
+          "[content-moderation] rewards.award (edit) failed:",
+          err
+        )
+      }
+    }
+
+    // Award points for wiki_edit approval
+    if (status === "approved" && submission?.submissionType === "wiki_edit") {
+      try {
+        const fields = (submission.fields ?? {}) as Record<string, unknown>
+        const isTranslation = fields.isTranslation === true
+        await strapi
+          .plugin("rewards")
+          .service("points")
+          .award(
+            submission.submittedByUserId,
+            isTranslation ? "wiki_translated" : "edit_accepted_minor",
+            isTranslation ? 15 : 5,
+            { submissionId: documentId }
+          )
+      } catch (err) {
+        strapi.log.warn(
+          "[content-moderation] rewards.award (wiki) failed:",
+          err
+        )
+      }
+    }
+
     return updated
   },
 
