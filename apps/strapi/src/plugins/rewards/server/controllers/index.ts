@@ -1,1 +1,3 @@
-export default {}
+import rewards from "./rewards"
+
+export default { rewards }
