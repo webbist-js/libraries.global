@@ -11,6 +11,7 @@ const ICON_MAP: Record<QuickWinType, { icon: string; color: string }> = {
   verify_hours: { icon: "mdi:text-box-outline", color: T.accent.aurora },
   add_hero_image: { icon: "mdi:image-outline", color: T.accent.violet },
   translate_wiki: { icon: "mdi:translate", color: T.accent.ok },
+  edit_wiki: { icon: "mdi:pencil-outline", color: T.accent.aurora },
 }
 
 const CTA_LABEL: Record<QuickWinType, string> = {
@@ -19,6 +20,7 @@ const CTA_LABEL: Record<QuickWinType, string> = {
   verify_hours: "VERIFY →",
   add_hero_image: "ATTACH →",
   translate_wiki: "OPEN →",
+  edit_wiki: "EDIT →",
 }
 
 export function QuickWinCard({ win }: { readonly win: QuickWin }) {

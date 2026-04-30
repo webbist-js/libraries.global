@@ -93,6 +93,7 @@ export type QuickWinType =
   | "verify_hours"
   | "add_hero_image"
   | "translate_wiki"
+  | "edit_wiki"
 
 export type QuickWin = {
   winId: string
