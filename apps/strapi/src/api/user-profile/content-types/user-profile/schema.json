@@ -21,16 +21,9 @@
     "affiliation": { "type": "string" },
     "affiliationType": {
       "type": "enumeration",
-      "enum": [
-        "reader",
-        "librarian",
-        "researcher",
-        "archivist",
-        "educator",
-        "other"
-      ]
+      "enum": ["reader", "librarian", "researcher", "archivist", "educator", "other"]
     },
-    "role": { "type": "string" },
+    "jobTitle": { "type": "string" },
     "city": { "type": "string" },
     "country": { "type": "string" },
     "timezone": { "type": "string" },
@@ -38,8 +31,12 @@
     "orcid": { "type": "string" },
     "mastodon": { "type": "string" },
     "linkedin": { "type": "string" },
-    "avatarUrl": { "type": "string" },
-    "avatarStrapiId": { "type": "string" },
+    "avatar": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
     "profileVisibility": {
       "type": "enumeration",
       "enum": ["public", "limited", "private"],
@@ -48,12 +45,14 @@
     "isVerifiedLibrarian": { "type": "boolean", "default": false },
     "contributorNumber": { "type": "integer" },
     "languages": {
-      "type": "json",
-      "default": []
+      "type": "component",
+      "component": "profile.language-entry",
+      "repeatable": true
     },
     "interests": {
-      "type": "json",
-      "default": []
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "plugin::topics.topic"
     },
     "notifPrefs": {
       "type": "json",
@@ -69,7 +68,7 @@
     "contributorRole": {
       "type": "enumeration",
       "enum": ["reader", "contributor", "verified_librarian", "wiki_editor", "editorial_board"],
-      "default": "contributor"
+      "default": "reader"
     },
     "followedLibraries": {
       "type": "relation",

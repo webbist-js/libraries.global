@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_profile_language_entries",
+  "info": {
+    "displayName": "Language Entry",
+    "icon": "earth"
+  },
+  "options": {},
+  "attributes": {
+    "code": {
+      "type": "string",
+      "required": true
+    },
+    "proficiency": {
+      "type": "enumeration",
+      "enum": ["native", "fluent", "conversational"],
+      "required": true
+    }
+  }
+}
