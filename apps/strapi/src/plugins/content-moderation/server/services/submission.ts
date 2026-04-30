@@ -286,7 +286,7 @@ export default ({ strapi }: { strapi: any }) => ({
     ) {
       const fields = (submission.fields ?? {}) as Record<string, unknown>
       if (fields.topicDocumentId) {
-        await strapi.documents("plugin::topics.topic").update({
+        await strapi.documents("api::topic.topic").update({
           documentId: fields.topicDocumentId as string,
           data: { status: "approved" },
         })

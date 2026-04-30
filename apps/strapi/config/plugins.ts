@@ -92,8 +92,7 @@ export default ({ env }) => {
     },
 
     topics: {
-      enabled: true,
-      resolve: "./src/plugins/topics",
+      enabled: false,
     },
 
     rewards: {

@@ -1,0 +1,22 @@
+{
+  "kind": "collectionType",
+  "collectionName": "topics_topics",
+  "info": {
+    "singularName": "topic",
+    "pluralName": "topics",
+    "displayName": "Topic"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "name": { "type": "string", "required": true, "unique": true },
+    "slug": { "type": "uid", "targetField": "name", "required": true },
+    "status": {
+      "type": "enumeration",
+      "enum": ["approved", "pending", "rejected"],
+      "default": "pending"
+    },
+    "suggestedByUserId": { "type": "string" },
+    "suggestedByEmail": { "type": "string" }
+  }
+}
