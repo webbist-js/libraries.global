@@ -6,6 +6,7 @@ type QuickWin = {
     | "verify_hours"
     | "add_hero_image"
     | "translate_wiki"
+    | "edit_wiki"
   title: string
   description: string
   points: number
@@ -45,14 +46,21 @@ export default ({ strapi }: { strapi: any }) => ({
 
     if (!profile) return []
 
-    const [libraryWins, nearbyWins, hoursWins, imageWins, wikiWins] =
-      await Promise.all([
-        (this as any).ruleAddLibrary(profile),
-        (this as any).ruleAddNearbyLibrary(profile),
-        (this as any).ruleVerifyHours(profile),
-        (this as any).ruleAddHeroImage(profile),
-        (this as any).ruleTranslateWiki(profile),
-      ])
+    const [
+      libraryWins,
+      nearbyWins,
+      hoursWins,
+      imageWins,
+      wikiWins,
+      editWikiWins,
+    ] = await Promise.all([
+      (this as any).ruleAddLibrary(profile),
+      (this as any).ruleAddNearbyLibrary(profile),
+      (this as any).ruleVerifyHours(profile),
+      (this as any).ruleAddHeroImage(profile),
+      (this as any).ruleTranslateWiki(profile),
+      (this as any).ruleEditWiki(profile),
+    ])
 
     const all: QuickWin[] = [
       ...libraryWins,
@@ -60,6 +68,7 @@ export default ({ strapi }: { strapi: any }) => ({
       ...hoursWins,
       ...imageWins,
       ...wikiWins,
+      ...editWikiWins,
     ]
 
     // Deduplicate by winId
@@ -303,5 +312,37 @@ export default ({ strapi }: { strapi: any }) => ({
     }
 
     return wins
+  },
+
+  async ruleEditWiki(profile: any): Promise<QuickWin[]> {
+    try {
+      // Find published wiki articles that haven't been edited recently
+      const articles = await strapi.db
+        .query("api::wiki-article.wiki-article")
+        .findMany({
+          where: {
+            publishedAt: { $ne: null },
+            locale: "en",
+          },
+          limit: 3,
+          orderBy: { updatedAt: "asc" },
+          select: ["id", "documentId", "title", "slug", "updatedAt"],
+        })
+
+      return articles.map((article: any) => ({
+        winId: `edit_wiki-${article.slug}`,
+        type: "edit_wiki" as const,
+        title: `Improve a wiki article`,
+        description: `"${article.title}" could use your expertise. Fix errors, add context, or improve clarity.`,
+        points: 10,
+        estimatedMinutes: 5,
+        rewardLabel: "EDITOR",
+        actionUrl: `/wiki/${article.slug}?edit=true`,
+        targetSlug: article.slug,
+      }))
+    } catch {
+      // wiki-article content type may not exist — skip silently
+      return []
+    }
   },
 })
