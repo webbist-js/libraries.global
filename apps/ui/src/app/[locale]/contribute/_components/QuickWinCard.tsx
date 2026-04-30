@@ -33,7 +33,7 @@ export function QuickWinCard({ win }: { readonly win: QuickWin }) {
         flexDirection: "column",
         gap: "12px",
         height: "100%",
-        cursor: "pointer",
+        cursor: "default",
       }}
     >
       {/* Top row: icon + meta */}
