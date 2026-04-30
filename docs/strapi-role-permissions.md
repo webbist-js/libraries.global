@@ -34,6 +34,7 @@ The following custom routes are hardcoded with `auth: false` in their route defi
 | Health                          | `find`                                                                                             |
 | Library                         | `mapPins`                                                                                          |
 | Region                          | `detail`, `mapPins`, `slugs`                                                                       |
+| **rewards (plugin)**            | `leaderboard`, `myStanding`, `myHistory`, `howItWorks` — public routes with internal validation    |
 | Wiki-article                    | `detail`, `slugs`                                                                                  |
 | Wiki-section                    | `nav`                                                                                              |
 | User-profile                    | `findByUsername`                                                                                   |
@@ -226,6 +227,13 @@ Wiki editors save working drafts via these actions. Final publication still requ
 
 Controls access to the Strapi admin panel itself. Completely separate from users-permissions.
 
+### Rewards plugin
+
+| Permission UID           | Display name                    | Who should have it |
+| ------------------------ | ------------------------------- | ------------------ |
+| `plugins::rewards.read`  | View rewards data               | Editors, admins    |
+| `plugins::rewards.award` | Manually award or deduct points | Admins only        |
+
 ---
 
 ### Admin Role: Moderator
@@ -237,6 +245,7 @@ Triages the submission queue. Cannot directly edit or publish content.
 | Plugin             | Permissions to check                                      |
 | ------------------ | --------------------------------------------------------- |
 | content-moderation | `Access the moderation queue`, `Update submission status` |
+| rewards            | `View rewards data`                                       |
 | Users permissions  | Roles → `read`; Users → `read`                            |
 
 > Moderators need to see which role a user holds to triage claims correctly. They cannot change roles.
@@ -259,6 +268,7 @@ Full editorial control plus moderation.
 | Plugin             | Permissions to check                                      |
 | ------------------ | --------------------------------------------------------- |
 | content-moderation | `Access the moderation queue`, `Update submission status` |
+| rewards            | `View rewards data`, `Manually award or deduct points`    |
 | Users permissions  | Roles → `read`, `update`; Users → `read`, `update`        |
 
 > Editors need role update access to promote users to Verified Librarian when approving library claims (until the content-moderation service handles this automatically).
@@ -351,3 +361,5 @@ The auth-bridge `upsertProfile` endpoint only accepts user-controlled settings f
 - `isVerifiedLibrarian`
 
 If you need to update these for a user, do it through the claim approval flow in `content-moderation/server/services/submission.ts`, not by expanding the `upsertProfile` allowlist.
+
+**Plugin-only fields (never writable by upsertProfile):** `points`, `pointsThisMonth`, `tier`, `streak`, `lastActivityDate` — written exclusively by the `rewards` plugin service. See `docs/community-and-points-system.md`.
