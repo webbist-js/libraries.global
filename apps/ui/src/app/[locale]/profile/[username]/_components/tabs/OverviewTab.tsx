@@ -371,7 +371,7 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
     profile.affiliation
       ? { label: "Affiliation", value: profile.affiliation }
       : null,
-    profile.role ? { label: "Role", value: profile.role } : null,
+    profile.jobTitle ? { label: "Role", value: profile.jobTitle } : null,
     { label: "Member since", value: `${memberSince} (${memberYears} yrs)` },
     profile.languages?.length
       ? {
@@ -380,7 +380,13 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
         }
       : null,
     profile.interests?.length
-      ? { label: "Interests", value: profile.interests.slice(0, 3).join(" · ") }
+      ? {
+          label: "Interests",
+          value: profile.interests
+            .map((i) => i.name)
+            .slice(0, 3)
+            .join(" · "),
+        }
       : null,
     profile.timezone ? { label: "Timezone", value: profile.timezone } : null,
   ].filter(Boolean) as { label: string; value: string }[]

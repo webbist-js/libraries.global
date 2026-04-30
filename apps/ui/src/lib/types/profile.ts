@@ -6,6 +6,18 @@ export type FollowedLibrary = {
   libraryType?: string | null
 }
 
+export type AvatarMedia = {
+  id: number
+  url: string
+  formats?: Record<string, { url: string }>
+}
+
+export type InterestTopic = {
+  documentId: string
+  name: string
+  slug: string
+}
+
 export type UserProfile = {
   id: number
   username: string
@@ -28,7 +40,7 @@ export type UserProfile = {
     | "educator"
     | "other"
     | null
-  role?: string | null
+  jobTitle?: string | null
   city?: string | null
   country?: string | null
   timezone?: string | null
@@ -36,13 +48,12 @@ export type UserProfile = {
   orcid?: string | null
   mastodon?: string | null
   linkedin?: string | null
-  avatarUrl?: string | null
-  avatarStrapiId?: string | null
+  avatar?: AvatarMedia | null
   profileVisibility: "public" | "limited" | "private"
   isVerifiedLibrarian: boolean
   contributorNumber?: number | null
   languages?: LanguageEntry[]
-  interests?: string[]
+  interests?: InterestTopic[]
   notifPrefs: NotifPrefs
   followedLibraries?: FollowedLibrary[]
   points?: number | null

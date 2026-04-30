@@ -147,9 +147,9 @@ export function ProfileHero({
                   overflow: "hidden",
                 }}
               >
-                {profile.avatarUrl ? (
+                {profile.avatar?.url ? (
                   <img
-                    src={profile.avatarUrl}
+                    src={profile.avatar.url}
                     alt={displayName}
                     style={{
                       width: "100%",
@@ -286,7 +286,7 @@ export function ProfileHero({
                   {profile.affiliation}
                 </span>
               )}
-              {profile.role && (
+              {profile.jobTitle && (
                 <span
                   style={{
                     fontFamily: T.font.mono,
@@ -295,7 +295,7 @@ export function ProfileHero({
                     color: T.ink.dim,
                   }}
                 >
-                  {profile.role}
+                  {profile.jobTitle}
                 </span>
               )}
               {profile.website && (
