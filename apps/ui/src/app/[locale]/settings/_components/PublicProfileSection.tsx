@@ -106,9 +106,15 @@ export function PublicProfileSection({
         const res = await fetch(
           `/api/profile/check-username?username=${encodeURIComponent(username)}`
         )
-        const json = (await res.json()) as { available: boolean }
+        const json = (await res.json()) as { available: boolean | null }
         setCheckedUsername(username)
-        setCheckedResult(json.available ? "available" : "taken")
+        setCheckedResult(
+          json.available === true
+            ? "available"
+            : json.available === false
+              ? "taken"
+              : null
+        )
       } catch {
         setCheckedUsername(null)
         setCheckedResult(null)

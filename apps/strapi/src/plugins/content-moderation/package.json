@@ -3,13 +3,40 @@
   "version": "0.1.0",
   "description": "Content moderation plugin for libraries.global — manages submission queue",
   "strapi": {
+    "kind": "plugin",
     "name": "content-moderation",
     "displayName": "Content Moderation",
     "description": "Review and approve user-submitted library data changes"
   },
-  "main": "./strapi-server.js",
+  "scripts": {
+    "build": "strapi-plugin build",
+    "watch": "strapi-plugin watch"
+  },
+  "main": "./dist/server/index.js",
   "exports": {
-    "./strapi-server": "./strapi-server.js",
-    "./strapi-admin": "./strapi-admin.js"
-  }
+    "./package.json": "./package.json",
+    "./strapi-admin": {
+      "source": "./strapi-admin.tsx",
+      "import": "./dist/admin/index.mjs",
+      "require": "./dist/admin/index.js",
+      "default": "./dist/admin/index.js"
+    },
+    "./strapi-server": {
+      "source": "./strapi-server.ts",
+      "import": "./dist/server/index.mjs",
+      "require": "./dist/server/index.js",
+      "default": "./dist/server/index.js"
+    }
+  },
+  "peerDependencies": {
+    "react": "^17.0.0 || ^18.0.0",
+    "react-dom": "^17.0.0 || ^18.0.0",
+    "@strapi/strapi": "^5.0.0",
+    "@strapi/design-system": "^2.0.0"
+  },
+  "files": [
+    "dist",
+    "strapi-admin.tsx",
+    "strapi-server.ts"
+  ]
 }

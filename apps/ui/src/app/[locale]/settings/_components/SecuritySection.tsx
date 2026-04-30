@@ -4,8 +4,8 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import GlobalLink from "@/components/global/GlobalLink"
-import { T } from "@/lib/design-tokens"
 import type { BetterAuthUser } from "@/lib/auth-server"
+import { T } from "@/lib/design-tokens"
 
 type SessionEntry = {
   id: string
@@ -15,7 +15,11 @@ type SessionEntry = {
   createdAt: string
 }
 
-export function SecuritySection({ sessionUser }: { sessionUser: BetterAuthUser }) {
+export function SecuritySection({
+  sessionUser,
+}: {
+  sessionUser: BetterAuthUser
+}) {
   const [sessions, setSessions] = useState<SessionEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [revoking, setRevoking] = useState<string | null>(null)
@@ -50,16 +54,28 @@ export function SecuritySection({ sessionUser }: { sessionUser: BetterAuthUser }
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({}),
     })
-    if (res.ok) { setSessions([]); toast.success("All other sessions signed out") }
-    else toast.error("Failed to sign out sessions")
+    if (res.ok) {
+      setSessions([])
+      toast.success("All other sessions signed out")
+    } else toast.error("Failed to sign out sessions")
   }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div>
-        <h2 style={{ margin: "0 0 6px", fontSize: "16px", fontWeight: 600, color: T.ink.base }}>Security</h2>
+        <h2
+          style={{
+            margin: "0 0 6px",
+            fontSize: "16px",
+            fontWeight: 600,
+            color: T.ink.base,
+          }}
+        >
+          Security
+        </h2>
         <p style={{ margin: 0, fontSize: "13px", color: T.ink.faint }}>
-          Protect access to your account and review where you&apos;re currently signed in.
+          Protect access to your account and review where you&apos;re currently
+          signed in.
         </p>
       </div>
 
@@ -71,15 +87,38 @@ export function SecuritySection({ sessionUser }: { sessionUser: BetterAuthUser }
           overflow: "hidden",
         }}
       >
-        <div style={{ padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div
+          style={{
+            padding: "14px 20px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
           <div>
-            <p style={{ margin: 0, fontSize: "13px", color: T.ink.base }}>Two-factor authentication</p>
-            <p style={{ margin: "2px 0 0", fontSize: "12px", color: T.ink.faint }}>
+            <p style={{ margin: 0, fontSize: "13px", color: T.ink.base }}>
+              Two-factor authentication
+            </p>
+            <p
+              style={{
+                margin: "2px 0 0",
+                fontSize: "12px",
+                color: T.ink.faint,
+              }}
+            >
               {/* TODO: enable when BA twoFactor plugin is installed */}
               Requires a code from your authenticator app on sign in.
             </p>
           </div>
-          <span style={{ fontFamily: T.font.mono, fontSize: "9px", letterSpacing: ".14em", color: T.ink.faint, textTransform: "uppercase" }}>
+          <span
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "9px",
+              letterSpacing: ".14em",
+              color: T.ink.faint,
+              textTransform: "uppercase",
+            }}
+          >
             Coming soon
           </span>
         </div>
@@ -93,13 +132,46 @@ export function SecuritySection({ sessionUser }: { sessionUser: BetterAuthUser }
           overflow: "hidden",
         }}
       >
-        <div style={{ padding: "16px 20px", background: "rgba(255,255,255,0.02)", borderBottom: `1px solid ${T.border.line}` }}>
-          <h3 style={{ margin: 0, fontSize: "14px", fontWeight: 600, color: T.ink.base }}>Active sessions</h3>
+        <div
+          style={{
+            padding: "16px 20px",
+            background: "rgba(255,255,255,0.02)",
+            borderBottom: `1px solid ${T.border.line}`,
+          }}
+        >
+          <h3
+            style={{
+              margin: 0,
+              fontSize: "14px",
+              fontWeight: 600,
+              color: T.ink.base,
+            }}
+          >
+            Active sessions
+          </h3>
         </div>
         {loading ? (
-          <div style={{ padding: "20px", textAlign: "center", color: T.ink.faint, fontSize: "13px" }}>Loading…</div>
+          <div
+            style={{
+              padding: "20px",
+              textAlign: "center",
+              color: T.ink.faint,
+              fontSize: "13px",
+            }}
+          >
+            Loading…
+          </div>
         ) : sessions.length === 0 ? (
-          <div style={{ padding: "20px", textAlign: "center", color: T.ink.faint, fontSize: "13px" }}>No sessions found</div>
+          <div
+            style={{
+              padding: "20px",
+              textAlign: "center",
+              color: T.ink.faint,
+              fontSize: "13px",
+            }}
+          >
+            No sessions found
+          </div>
         ) : (
           sessions.map((s, i) => (
             <div
@@ -109,7 +181,10 @@ export function SecuritySection({ sessionUser }: { sessionUser: BetterAuthUser }
                 display: "flex",
                 alignItems: "center",
                 gap: "12px",
-                borderBottom: i < sessions.length - 1 ? `1px solid ${T.border.line}` : "none",
+                borderBottom:
+                  i < sessions.length - 1
+                    ? `1px solid ${T.border.line}`
+                    : "none",
               }}
             >
               <div
@@ -131,11 +206,28 @@ export function SecuritySection({ sessionUser }: { sessionUser: BetterAuthUser }
                 {s.userAgent?.includes("Mobile") ? "M" : "D"}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontSize: "12px", color: T.ink.base, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "12px",
+                    color: T.ink.base,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
                   {s.userAgent ?? "Unknown device"}
                 </p>
-                <p style={{ margin: "2px 0 0", fontSize: "11px", color: T.ink.faint, fontFamily: T.font.mono }}>
-                  {s.ipAddress ?? "—"} · {new Date(s.createdAt).toLocaleDateString()}
+                <p
+                  style={{
+                    margin: "2px 0 0",
+                    fontSize: "11px",
+                    color: T.ink.faint,
+                    fontFamily: T.font.mono,
+                  }}
+                >
+                  {s.ipAddress ?? "—"} ·{" "}
+                  {new Date(s.createdAt).toLocaleDateString()}
                 </p>
               </div>
               <button
@@ -160,7 +252,14 @@ export function SecuritySection({ sessionUser }: { sessionUser: BetterAuthUser }
             </div>
           ))
         )}
-        <div style={{ padding: "14px 20px", borderTop: `1px solid ${T.border.line}`, display: "flex", gap: "10px" }}>
+        <div
+          style={{
+            padding: "14px 20px",
+            borderTop: `1px solid ${T.border.line}`,
+            display: "flex",
+            gap: "10px",
+          }}
+        >
           <button
             type="button"
             onClick={revokeAll}

@@ -1,38 +1,13 @@
-export default [
-  {
-    method: "GET",
-    path: "/submissions",
-    handler: "submission.findAll",
-    config: {
-      auth: { scope: [] },
-      policies: [],
-    },
+import admin from "./admin"
+import contentApi from "./content-api"
+
+export default {
+  admin: {
+    type: "admin",
+    routes: admin,
   },
-  {
-    method: "POST",
-    path: "/submissions",
-    handler: "submission.create",
-    config: {
-      auth: { scope: [] },
-      policies: [],
-    },
+  "content-api": {
+    type: "content-api",
+    routes: contentApi,
   },
-  {
-    method: "GET",
-    path: "/submissions/my",
-    handler: "submission.findMine",
-    config: {
-      auth: { scope: [] },
-      policies: [],
-    },
-  },
-  {
-    method: "PATCH",
-    path: "/submissions/:id/status",
-    handler: "submission.updateStatus",
-    config: {
-      auth: { scope: [] },
-      policies: [],
-    },
-  },
-]
+}

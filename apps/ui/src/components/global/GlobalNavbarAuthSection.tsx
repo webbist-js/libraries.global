@@ -9,8 +9,13 @@ import { Link } from "@/lib/navigation"
 
 export function GlobalNavbarAuthSection({
   sessionSSR,
+  profileSnippet,
 }: {
   sessionSSR?: AuthSessionResult | null
+  profileSnippet?: {
+    avatarUrl?: string | null
+    username?: string | null
+  } | null
 }) {
   const t = useTranslations("navbar")
 
@@ -20,7 +25,10 @@ export function GlobalNavbarAuthSection({
   return (
     <>
       {session?.user ? (
-        <GlobalLoggedUserMenu user={session.user} />
+        <GlobalLoggedUserMenu
+          user={session.user}
+          profileSnippet={profileSnippet}
+        />
       ) : (
         <Link
           href="/auth/signin"

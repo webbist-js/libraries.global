@@ -9,6 +9,9 @@ import { T } from "@/lib/design-tokens"
 import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
+import { LibraryClaimButton } from "./LibraryClaimButton"
+import { LibraryFollowButton } from "./LibraryFollowButton"
+
 // ── Real-time open/closed logic ───────────────────────────────────────────────
 
 const DAY_KEYS = [
@@ -296,7 +299,7 @@ export function LibraryHero({
           </p>
         ) : null}
 
-        {/* Bottom row: meta strip + CTA */}
+        {/* Bottom row: meta strip + CTAs */}
         <div
           style={{
             display: "flex",
@@ -309,29 +312,54 @@ export function LibraryHero({
         >
           {metaItems.length > 0 ? <MetaRow items={metaItems} /> : <span />}
 
-          {primaryCta ? (
-            <GlobalLink
-              href={primaryCta.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "12px 22px",
-                borderRadius: "14px",
-                background: T.ink.base,
-                color: "#0a0f2a",
-                fontWeight: 500,
-                fontSize: "14px",
-                flexShrink: 0,
-                transition: "background 200ms",
-              }}
-              className="hover:bg-white"
-            >
-              {primaryCta.label}
-            </GlobalLink>
-          ) : null}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              flexWrap: "wrap",
+            }}
+          >
+            {/* Follow button */}
+            {library.documentId && (
+              <LibraryFollowButton
+                libraryDocumentId={library.documentId as string}
+                libraryName={library.name ?? "this library"}
+              />
+            )}
+
+            {/* Claim button */}
+            <LibraryClaimButton
+              libraryDocumentId={library.documentId ?? ""}
+              librarySlug={library.slug ?? ""}
+              libraryName={library.name ?? "this library"}
+            />
+
+            {/* Primary CTA */}
+            {primaryCta ? (
+              <GlobalLink
+                href={primaryCta.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "12px 22px",
+                  borderRadius: "14px",
+                  background: T.ink.base,
+                  color: "#0a0f2a",
+                  fontWeight: 500,
+                  fontSize: "14px",
+                  flexShrink: 0,
+                  transition: "background 200ms",
+                }}
+                className="hover:bg-white"
+              >
+                {primaryCta.label}
+              </GlobalLink>
+            ) : null}
+          </div>
         </div>
       </Container>
     </section>

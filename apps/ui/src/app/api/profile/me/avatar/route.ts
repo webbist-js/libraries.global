@@ -37,12 +37,14 @@ export async function POST(req: Request) {
   if (!allowed.includes(file.type))
     return NextResponse.json({ error: "Invalid file type" }, { status: 400 })
 
-  // Forward to Strapi upload
+  // Forward to Strapi upload — API token required by Strapi upload plugin
+  const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
   const strapiForm = new FormData()
   strapiForm.append("files", file, file.name)
 
   const uploadRes = await fetch(`${STRAPI}/api/upload`, {
     method: "POST",
+    headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
     body: strapiForm,
   })
   if (!uploadRes.ok)

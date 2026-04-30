@@ -47,6 +47,26 @@ export async function POST(req: Request) {
       { status: 400 }
     )
 
+  // Block duplicate claims — check if user already has an affiliation for this library
+  const existingRes = await fetch(
+    `${STRAPI}/api/auth-bridge/claim-status?baUserId=${encodeURIComponent(session.user.id)}&entityRef=${encodeURIComponent(libraryEntityRef)}`,
+    { headers: { "X-Service-Secret": SECRET }, cache: "no-store" }
+  )
+  if (existingRes.ok) {
+    const existingJson = (await existingRes.json()) as {
+      claimedLibraryEntityRef: string | null
+    }
+    if (existingJson.claimedLibraryEntityRef) {
+      return NextResponse.json(
+        {
+          error: "already_claimed",
+          message: "You have already claimed this library.",
+        },
+        { status: 409 }
+      )
+    }
+  }
+
   // Check email domain vs library website domain
   const emailDomain = session.user.email.split("@")[1]?.toLowerCase() ?? ""
   const libraryDomain = libraryWebsite ? extractDomain(libraryWebsite) : ""
@@ -56,8 +76,8 @@ export async function POST(req: Request) {
     emailDomain === libraryDomain
 
   if (domainMatch) {
-    // Auto-verify via upsert-profile
-    const res = await fetch(`${STRAPI}/api/auth-bridge/upsert-profile`, {
+    // Auto-verify: create affiliation record + mark profile verified
+    const res = await fetch(`${STRAPI}/api/auth-bridge/create-affiliation`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -65,51 +85,33 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         baUserId: session.user.id,
-        claimedLibraryEntityRef: libraryEntityRef,
-        claimedLibraryName: libraryName,
-        claimedLibraryRole: role ?? "",
-        claimedLibraryDepartment: department ?? "",
-        affiliationVerificationStatus: "verified",
-        affiliationVerificationMethod: "email_domain",
-        isVerifiedLibrarian: true,
+        entityRef: libraryEntityRef,
+        role: role ?? "",
+        department: department ?? "",
+        verificationMethod: "email_domain",
       }),
     })
     if (!res.ok)
       return NextResponse.json(
-        { error: "Failed to update profile" },
+        { error: "Failed to create affiliation" },
         { status: 500 }
       )
 
     return NextResponse.json({ status: "verified", method: "email_domain" })
   }
 
-  // Check if there are verified librarians at this library (for vouching)
-  const vouchCheckRes = await fetch(
-    `${STRAPI}/api/user-profiles?filters[claimedLibraryEntityRef][$eq]=${encodeURIComponent(libraryEntityRef)}&filters[isVerifiedLibrarian][$eq]=true&fields[0]=id`,
-    { next: { revalidate: 0 } }
-  )
+  // Check if there are existing verified librarians at this library (for vouching)
   let verificationMethod = "contact_us"
-  if (vouchCheckRes.ok) {
-    const vouchJson = (await vouchCheckRes.json()) as { data: unknown[] }
-    if (vouchJson.data.length > 0) verificationMethod = "vouching"
+  const vouchRes = await fetch(
+    `${STRAPI}/api/auth-bridge/affiliation-count?entityRef=${encodeURIComponent(libraryEntityRef)}`,
+    { headers: { "X-Service-Secret": SECRET }, cache: "no-store" }
+  )
+  if (vouchRes.ok) {
+    const vouchJson = (await vouchRes.json()) as { count: number }
+    if (vouchJson.count > 0) verificationMethod = "vouching"
   }
 
-  // Update profile to pending
-  await fetch(`${STRAPI}/api/auth-bridge/upsert-profile`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Service-Secret": SECRET },
-    body: JSON.stringify({
-      baUserId: session.user.id,
-      claimedLibraryEntityRef: libraryEntityRef,
-      claimedLibraryName: libraryName,
-      claimedLibraryRole: role ?? "",
-      claimedLibraryDepartment: department ?? "",
-      affiliationVerificationStatus: "pending",
-      affiliationVerificationMethod: verificationMethod,
-    }),
-  })
-
-  // Create moderation submission
+  // Create moderation submission — affiliation will be created on approval
   const submissionRes = await fetch(
     `${STRAPI}/api/content-moderation/submissions`,
     {
@@ -117,9 +119,11 @@ export async function POST(req: Request) {
       headers: {
         "Content-Type": "application/json",
         "X-Service-Secret": SECRET,
+        "X-Ba-User-Id": session.user.id,
+        "X-Ba-User-Email": session.user.email,
+        "X-Ba-User-Name": session.user.name ?? "",
       },
       body: JSON.stringify({
-        baUserId: session.user.id,
         submissionType: "library_claim",
         targetEntityType: "library",
         targetSlug: libraryEntityRef,

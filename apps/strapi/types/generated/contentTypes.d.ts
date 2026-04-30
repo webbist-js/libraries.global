@@ -1581,6 +1581,50 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
   }
 }
 
+export interface ApiLibraryAffiliationLibraryAffiliation
+  extends Struct.CollectionTypeSchema {
+  collectionName: "library_affiliations"
+  info: {
+    displayName: "Library Affiliation"
+    pluralName: "library-affiliations"
+    singularName: "library-affiliation"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    baUserId: Schema.Attribute.String & Schema.Attribute.Required
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    department: Schema.Attribute.String
+    library: Schema.Attribute.Relation<"manyToOne", "api::library.library">
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::library-affiliation.library-affiliation"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    role: Schema.Attribute.String
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    verificationMethod: Schema.Attribute.Enumeration<
+      ["email_domain", "vouching", "contact_us"]
+    > &
+      Schema.Attribute.DefaultTo<"contact_us">
+  }
+}
+
 export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
   collectionName: "libraries"
   info: {
@@ -2438,13 +2482,6 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     affiliationType: Schema.Attribute.Enumeration<
       ["reader", "librarian", "researcher", "archivist", "educator", "other"]
     >
-    affiliationVerificationMethod: Schema.Attribute.Enumeration<
-      ["email_domain", "vouching", "contact_us"]
-    >
-    affiliationVerificationStatus: Schema.Attribute.Enumeration<
-      ["unclaimed", "pending", "verified", "rejected"]
-    > &
-      Schema.Attribute.DefaultTo<"unclaimed">
     avatarStrapiId: Schema.Attribute.String
     avatarUrl: Schema.Attribute.String
     baUserId: Schema.Attribute.String &
@@ -2452,16 +2489,26 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
       Schema.Attribute.Unique
     bio: Schema.Attribute.Text
     city: Schema.Attribute.String
-    claimedLibraryDepartment: Schema.Attribute.String
-    claimedLibraryEntityRef: Schema.Attribute.String
-    claimedLibraryName: Schema.Attribute.String
-    claimedLibraryRole: Schema.Attribute.String
     contributorNumber: Schema.Attribute.Integer
+    contributorRole: Schema.Attribute.Enumeration<
+      [
+        "reader",
+        "contributor",
+        "verified_librarian",
+        "wiki_editor",
+        "editorial_board",
+      ]
+    > &
+      Schema.Attribute.DefaultTo<"contributor">
     country: Schema.Attribute.String
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
     firstName: Schema.Attribute.String
+    followedLibraries: Schema.Attribute.Relation<
+      "manyToMany",
+      "api::library.library"
+    >
     interests: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>
     isVerifiedLibrarian: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>
@@ -2738,6 +2785,98 @@ export interface ApiWikiSectionWikiSection extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+  }
+}
+
+export interface PluginContentModerationSubmission
+  extends Struct.CollectionTypeSchema {
+  collectionName: "cm_submissions"
+  info: {
+    displayName: "Submission"
+    pluralName: "submissions"
+    singularName: "submission"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: true
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    draftData: Schema.Attribute.JSON
+    editSummary: Schema.Attribute.String
+    evidenceType: Schema.Attribute.Enumeration<
+      [
+        "institutional_url",
+        "on_site_photo",
+        "press_release",
+        "personal_communication",
+        "my_institutional_affiliation",
+        "other",
+      ]
+    >
+    evidenceUrl: Schema.Attribute.String
+    fields: Schema.Attribute.JSON
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::content-moderation.submission"
+    > &
+      Schema.Attribute.Private
+    note: Schema.Attribute.Text
+    publishedAt: Schema.Attribute.DateTime
+    reviewedAt: Schema.Attribute.DateTime
+    reviewedByUserId: Schema.Attribute.String
+    reviewerAssignedTo: Schema.Attribute.String
+    reviewNote: Schema.Attribute.Text
+    status: Schema.Attribute.Enumeration<
+      ["draft", "pending", "approved", "rejected", "needs_info"]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"draft">
+    stepCompleted: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
+    submissionType: Schema.Attribute.Enumeration<
+      [
+        "correction",
+        "new_library",
+        "library_claim",
+        "library_edit",
+        "wiki_edit",
+        "blog_submission",
+        "topic_suggestion",
+      ]
+    > &
+      Schema.Attribute.Required
+    submittedByEmail: Schema.Attribute.String & Schema.Attribute.Required
+    submittedByName: Schema.Attribute.String
+    submittedByUserId: Schema.Attribute.String & Schema.Attribute.Required
+    targetDocumentId: Schema.Attribute.String
+    targetEntityType: Schema.Attribute.Enumeration<
+      [
+        "library",
+        "country",
+        "region",
+        "area",
+        "wiki_article",
+        "blog_article",
+        "user_profile",
+      ]
+    >
+    targetSlug: Schema.Attribute.String
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    verificationMethod: Schema.Attribute.Enumeration<
+      ["email_domain", "vouching", "contact_us"]
+    >
   }
 }
 
@@ -3263,6 +3402,7 @@ declare module "@strapi/strapi" {
       "api::country.country": ApiCountryCountry
       "api::footer.footer": ApiFooterFooter
       "api::homepage.homepage": ApiHomepageHomepage
+      "api::library-affiliation.library-affiliation": ApiLibraryAffiliationLibraryAffiliation
       "api::library.library": ApiLibraryLibrary
       "api::navbar.navbar": ApiNavbarNavbar
       "api::page.page": ApiPagePage
@@ -3274,6 +3414,7 @@ declare module "@strapi/strapi" {
       "api::wiki-article.wiki-article": ApiWikiArticleWikiArticle
       "api::wiki-landing.wiki-landing": ApiWikiLandingWikiLanding
       "api::wiki-section.wiki-section": ApiWikiSectionWikiSection
+      "plugin::content-moderation.submission": PluginContentModerationSubmission
       "plugin::content-releases.release": PluginContentReleasesRelease
       "plugin::content-releases.release-action": PluginContentReleasesReleaseAction
       "plugin::i18n.locale": PluginI18NLocale

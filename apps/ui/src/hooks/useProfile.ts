@@ -17,18 +17,26 @@ export function useProfile() {
         body: JSON.stringify(data),
       })
       const json = (await res.json()) as { error?: string }
-      if (!res.ok) { toast.error(json.error ?? "Failed to save profile"); return false }
+      if (!res.ok) {
+        toast.error(json.error ?? "Failed to save profile")
+
+        return false
+      }
       toast.success("Profile saved")
+
       return true
     } catch {
       toast.error("Failed to save profile")
+
       return false
     } finally {
       setSaving(false)
     }
   }
 
-  async function updateNotifications(prefs: Partial<NotifPrefs>): Promise<boolean> {
+  async function updateNotifications(
+    prefs: Partial<NotifPrefs>
+  ): Promise<boolean> {
     setSaving(true)
     try {
       const res = await fetch("/api/profile/me/notifications", {
@@ -37,10 +45,16 @@ export function useProfile() {
         body: JSON.stringify(prefs),
       })
       const json = (await res.json()) as { error?: string }
-      if (!res.ok) { toast.error(json.error ?? "Failed to save notifications"); return false }
+      if (!res.ok) {
+        toast.error(json.error ?? "Failed to save notifications")
+
+        return false
+      }
+
       return true
     } catch {
       toast.error("Failed to save notifications")
+
       return false
     } finally {
       setSaving(false)

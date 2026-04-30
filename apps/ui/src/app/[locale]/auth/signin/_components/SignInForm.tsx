@@ -245,9 +245,7 @@ function SuspensedSignInForm() {
 
             <button
               type="submit"
-              disabled={
-                signInMutation.isPending || form.formState.isSubmitting
-              }
+              disabled={signInMutation.isPending || form.formState.isSubmitting}
               style={{
                 marginTop: "6px",
                 width: "100%",
@@ -325,7 +323,9 @@ function SuspensedSignInForm() {
                   callbackURL: callbackUrl,
                 })
                 if (result?.error) {
-                  toast.error(result.error.message ?? "Failed to send magic link")
+                  toast.error(
+                    result.error.message ?? "Failed to send magic link"
+                  )
                 } else {
                   globalThis.location.href = "/auth/magic-link-sent"
                 }

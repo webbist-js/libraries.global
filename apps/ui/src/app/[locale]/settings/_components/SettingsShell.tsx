@@ -1,10 +1,11 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useRouter } from "next/navigation"
+import { useEffect, useRef, useState } from "react"
 
 import type { BetterAuthUser } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
+import { Link } from "@/lib/navigation"
 import type { UserProfile } from "@/lib/types/profile"
 
 import { ConnectionsSection } from "./ConnectionsSection"
@@ -50,16 +51,37 @@ const SIDEBAR_ITEMS = [
 type SectionId = (typeof SIDEBAR_ITEMS)[number]["id"]
 
 export function SettingsShell({
-  activeSection,
   profile,
   sessionUser,
 }: {
-  activeSection: string
   profile: UserProfile | null
   sessionUser: BetterAuthUser
 }) {
-  const router = useRouter()
-  const section = activeSection as SectionId
+  const [activeSection, setActiveSection] = useState<SectionId>("profile")
+  const observerRef = useRef<IntersectionObserver | null>(null)
+
+  useEffect(() => {
+    const sections = SIDEBAR_ITEMS.map((item) =>
+      document.getElementById(item.id)
+    ).filter(Boolean) as HTMLElement[]
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        // Pick the topmost intersecting section
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+        if (visible[0]) {
+          setActiveSection(visible[0].target.id as SectionId)
+        }
+      },
+      { rootMargin: "-20% 0px -60% 0px", threshold: 0 }
+    )
+
+    sections.forEach((el) => observerRef.current!.observe(el))
+
+    return () => observerRef.current?.disconnect()
+  }, [])
 
   const displayName = profile?.firstName
     ? `${profile.firstName}${profile.lastName ? ` ${profile.lastName}` : ""}`
@@ -72,8 +94,13 @@ export function SettingsShell({
     >
       {/* ── Hero ─────────────────────────────────────────────────────── */}
       <section
-        className="relative overflow-hidden"
-        style={{ height: "260px", borderBottom: `1px solid ${T.border.line}` }}
+        data-transparent-header=""
+        className="relative -mt-14 overflow-hidden"
+        style={{
+          background: "#030511",
+          height: "316px",
+          borderBottom: `1px solid ${T.border.line}`,
+        }}
       >
         <SettingsDotHero />
 
@@ -87,87 +114,147 @@ export function SettingsShell({
           }}
         />
 
-        {/* Hero content */}
-        <div className="relative z-10 flex h-full flex-col justify-end px-8 pb-8 md:px-12">
-          {/* Eyebrow */}
-          <p
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".22em",
-              textTransform: "uppercase",
-              color: T.ink.faint,
-              margin: "0 0 10px",
-            }}
-          >
-            § Account settings
-          </p>
-
-          {/* Title */}
-          <h1
-            style={{
-              fontFamily: T.font.serif,
-              fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)",
-              fontWeight: 700,
-              letterSpacing: "-0.03em",
-              lineHeight: 1.05,
-              color: T.ink.base,
-              margin: "0 0 10px",
-            }}
-          >
-            Welcome back,{" "}
-            <em
-              style={{ fontStyle: "italic", fontWeight: 400, color: T.ink.dim }}
+        {/* Hero content — constrained to match body container */}
+        <div className="relative z-10 flex h-full flex-col justify-end pb-8">
+          <div className="mx-auto w-full max-w-6xl px-6 md:px-10">
+            {/* Eyebrow */}
+            <p
+              style={{
+                fontFamily: T.font.mono,
+                fontSize: "10px",
+                letterSpacing: ".22em",
+                textTransform: "uppercase",
+                color: T.ink.faint,
+                margin: "0 0 10px",
+              }}
             >
-              {displayName}.
-            </em>
-          </h1>
+              § Account settings
+            </p>
 
-          <p
-            style={{
-              fontSize: "14px",
-              color: T.ink.faint,
-              margin: 0,
-              maxWidth: "52ch",
-            }}
-          >
-            Manage your profile, notifications, security, and data. Changes save
-            automatically unless otherwise noted.
-          </p>
+            {/* Title */}
+            <h1
+              style={{
+                fontFamily: T.font.serif,
+                fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)",
+                fontWeight: 700,
+                letterSpacing: "-0.03em",
+                lineHeight: 1.05,
+                color: T.ink.base,
+                margin: "0 0 10px",
+              }}
+            >
+              Welcome back,{" "}
+              <em
+                style={{
+                  fontStyle: "italic",
+                  fontWeight: 400,
+                  color: T.ink.dim,
+                }}
+              >
+                {displayName}.
+              </em>
+            </h1>
+
+            <p
+              style={{
+                fontSize: "14px",
+                color: T.ink.faint,
+                margin: "0 0 16px",
+                maxWidth: "52ch",
+              }}
+            >
+              Manage your profile, notifications, security, and data. Changes
+              save automatically unless otherwise noted.
+            </p>
+
+            {profile?.username && (
+              <Link
+                href={`/profile/${profile.username}`}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  fontSize: "12px",
+                  color: T.accent.aurora,
+                  textDecoration: "none",
+                  fontFamily: T.font.mono,
+                  letterSpacing: ".08em",
+                  opacity: 0.85,
+                }}
+              >
+                <Icon icon="mdi:arrow-top-right" width={13} height={13} />
+                View public profile
+              </Link>
+            )}
+          </div>
         </div>
       </section>
 
       {/* ── Body: sidebar + content ───────────────────────────────────── */}
       <div className="mx-auto w-full max-w-6xl px-6 py-10 md:px-10">
         <div className="flex gap-8">
-          {/* Sidebar nav */}
+          {/* Sticky sidebar nav */}
           <nav
-            className="sticky"
+            className="sticky hidden md:flex"
             style={{
               top: "80px",
               width: "200px",
               flexShrink: 0,
               alignSelf: "flex-start",
-              display: "flex",
               flexDirection: "column",
               gap: "2px",
             }}
           >
+            {/* Link to public profile */}
+            {profile?.username && (
+              <Link
+                href={`/profile/${profile.username}`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "9px",
+                  padding: "8px 12px",
+                  borderRadius: "8px",
+                  background: "transparent",
+                  color: T.accent.aurora,
+                  fontFamily: T.font.sans,
+                  fontSize: "13px",
+                  textDecoration: "none",
+                  marginBottom: "8px",
+                  borderBottom: `1px solid ${T.border.line}`,
+                  paddingBottom: "14px",
+                  marginLeft: "-2px",
+                }}
+              >
+                <Icon
+                  icon="mdi:account-box-outline"
+                  width={15}
+                  height={15}
+                  style={{ flexShrink: 0 }}
+                />
+                View profile
+                <Icon
+                  icon="mdi:arrow-top-right"
+                  width={11}
+                  height={11}
+                  style={{ marginLeft: "auto", opacity: 0.6 }}
+                />
+              </Link>
+            )}
+
             {SIDEBAR_ITEMS.map((item) => {
-              const active = section === item.id
+              const active = activeSection === item.id
 
               return (
-                <button
+                <a
                   key={item.id}
-                  type="button"
-                  onClick={() => router.push(`/settings?section=${item.id}`)}
+                  href={`#${item.id}`}
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: "9px",
                     padding: "8px 12px",
                     borderRadius: "8px",
-                    border: "none",
                     background: active
                       ? "rgba(255,255,255,0.06)"
                       : "transparent",
@@ -180,8 +267,7 @@ export function SettingsShell({
                         : T.ink.dim,
                     fontFamily: T.font.sans,
                     fontSize: "13px",
-                    textAlign: "left",
-                    cursor: "pointer",
+                    textDecoration: "none",
                     transition: "background 150ms, color 150ms",
                     width: "100%",
                   }}
@@ -193,29 +279,34 @@ export function SettingsShell({
                     style={{ flexShrink: 0, opacity: active ? 1 : 0.6 }}
                   />
                   {item.label}
-                </button>
+                </a>
               )
             })}
           </nav>
 
-          {/* Content */}
-          <div className="min-w-0 flex-1">
-            {section === "profile" && (
+          {/* All sections rendered simultaneously, scrollable */}
+          <div
+            className="min-w-0 flex-1"
+            style={{ display: "flex", flexDirection: "column", gap: "48px" }}
+          >
+            <section id="profile">
               <PublicProfileSection
                 profile={profile}
                 sessionUser={sessionUser}
               />
-            )}
-            {section === "notifications" && (
+            </section>
+            <section id="notifications">
               <NotificationsSection profile={profile} />
-            )}
-            {section === "security" && (
+            </section>
+            <section id="security">
               <SecuritySection sessionUser={sessionUser} />
-            )}
-            {section === "connections" && <ConnectionsSection />}
-            {section === "danger" && (
+            </section>
+            <section id="connections">
+              <ConnectionsSection />
+            </section>
+            <section id="danger">
               <DangerZoneSection sessionUser={sessionUser} />
-            )}
+            </section>
           </div>
         </div>
       </div>

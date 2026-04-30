@@ -14,11 +14,21 @@ export function ContributionsTab() {
         background: "rgba(255,255,255,0.02)",
       }}
     >
-      <p style={{ fontFamily: T.font.mono, fontSize: "10px", letterSpacing: ".18em", textTransform: "uppercase", color: T.ink.faint, margin: "0 0 8px" }}>
+      <p
+        style={{
+          fontFamily: T.font.mono,
+          fontSize: "10px",
+          letterSpacing: ".18em",
+          textTransform: "uppercase",
+          color: T.ink.faint,
+          margin: "0 0 8px",
+        }}
+      >
         Contributions
       </p>
       <p style={{ fontSize: "14px", color: T.ink.faint, margin: 0 }}>
-        Contribution history will appear here once the submission system is built.
+        Contribution history will appear here once the submission system is
+        built.
       </p>
     </div>
   )

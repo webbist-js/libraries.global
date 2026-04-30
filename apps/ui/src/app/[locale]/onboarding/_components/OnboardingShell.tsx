@@ -263,8 +263,14 @@ export function OnboardingShell({
         const res = await fetch(
           `/api/profile/check-username?username=${encodeURIComponent(u)}`
         )
-        const json = (await res.json()) as { available: boolean }
-        setUsernameStatus(json.available ? "available" : "taken")
+        const json = (await res.json()) as { available: boolean | null }
+        setUsernameStatus(
+          json.available === true
+            ? "available"
+            : json.available === false
+              ? "taken"
+              : "idle"
+        )
       } catch {
         setUsernameStatus("idle")
       }

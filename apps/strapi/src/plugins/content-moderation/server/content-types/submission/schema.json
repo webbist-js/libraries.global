@@ -19,6 +19,7 @@
         "correction",
         "new_library",
         "library_claim",
+        "library_edit",
         "wiki_edit",
         "blog_submission",
         "topic_suggestion"
@@ -27,8 +28,8 @@
     "status": {
       "type": "enumeration",
       "required": true,
-      "default": "pending",
-      "enum": ["pending", "approved", "rejected", "needs_info"]
+      "default": "draft",
+      "enum": ["draft", "pending", "approved", "rejected", "needs_info"]
     },
     "targetEntityType": {
       "type": "enumeration",
@@ -55,6 +56,22 @@
     "submittedByEmail": { "type": "string", "required": true },
     "submittedByName": { "type": "string" },
     "reviewedByUserId": { "type": "string" },
-    "reviewedAt": { "type": "datetime" }
+    "reviewedAt": { "type": "datetime" },
+    "draftData": { "type": "json" },
+    "stepCompleted": { "type": "integer", "default": 0 },
+    "editSummary": { "type": "string" },
+    "evidenceType": {
+      "type": "enumeration",
+      "enum": [
+        "institutional_url",
+        "on_site_photo",
+        "press_release",
+        "personal_communication",
+        "my_institutional_affiliation",
+        "other"
+      ]
+    },
+    "evidenceUrl": { "type": "string" },
+    "reviewerAssignedTo": { "type": "string" }
   }
 }

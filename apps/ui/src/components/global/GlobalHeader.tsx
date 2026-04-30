@@ -1,6 +1,6 @@
 import type { Data } from "@repo/strapi-types"
-import type { Locale } from "next-intl"
 import { headers } from "next/headers"
+import type { Locale } from "next-intl"
 
 import AppLink from "@/components/elementary/AppLink"
 import LocaleSwitcher from "@/components/elementary/LocaleSwitcher"
@@ -8,10 +8,34 @@ import GlobalLink from "@/components/global/GlobalLink"
 import { GlobalNavbarAuthSection } from "@/components/global/GlobalNavbarAuthSection"
 import { StrapiBasicImage } from "@/components/page-builder/components/utilities/StrapiBasicImage"
 import { getStrapiLinkHref } from "@/components/page-builder/components/utilities/StrapiLink"
-import { T } from "@/lib/design-tokens"
 import { getSessionSSR } from "@/lib/auth-server"
+import { T } from "@/lib/design-tokens"
 
 type NavbarData = Data.ContentType<"api::navbar.navbar"> | null | undefined
+
+type ProfileSnippet = { avatarUrl?: string | null; username?: string | null }
+
+async function fetchProfileSnippet(
+  baUserId: string
+): Promise<ProfileSnippet | null> {
+  const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
+  const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
+  try {
+    const res = await fetch(
+      `${strapiUrl}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(baUserId)}&fields[0]=avatarUrl&fields[1]=username`,
+      {
+        next: { revalidate: 30 },
+        headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
+      }
+    )
+    if (!res.ok) return null
+    const json = (await res.json()) as { data?: ProfileSnippet[] }
+
+    return json.data?.[0] ?? null
+  } catch {
+    return null
+  }
+}
 
 async function fetchLibraryCount(): Promise<number | null> {
   try {
@@ -42,6 +66,9 @@ export async function GlobalHeader({
     fetchLibraryCount(),
     getSessionSSR(await headers()),
   ])
+  const profileSnippet = sessionSSR?.user
+    ? await fetchProfileSnippet(sessionSSR.user.id)
+    : null
 
   return (
     <header
@@ -106,7 +133,10 @@ export async function GlobalHeader({
             locale={locale}
             triggerClassName="h-8 w-auto gap-1 border-transparent bg-transparent px-2.5 text-xs font-semibold uppercase tracking-wider text-white/45 hover:text-white/75"
           />
-          <GlobalNavbarAuthSection sessionSSR={sessionSSR} />
+          <GlobalNavbarAuthSection
+            sessionSSR={sessionSSR}
+            profileSnippet={profileSnippet}
+          />
           <AppLink
             href="/contribute"
             size="sm"

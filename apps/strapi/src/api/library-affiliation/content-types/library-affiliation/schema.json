@@ -1,0 +1,29 @@
+{
+  "kind": "collectionType",
+  "collectionName": "library_affiliations",
+  "info": {
+    "singularName": "library-affiliation",
+    "pluralName": "library-affiliations",
+    "displayName": "Library Affiliation"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": false },
+    "content-type-builder": { "visible": false }
+  },
+  "attributes": {
+    "baUserId": { "type": "string", "required": true },
+    "library": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::library.library"
+    },
+    "role": { "type": "string" },
+    "department": { "type": "string" },
+    "verificationMethod": {
+      "type": "enumeration",
+      "enum": ["email_domain", "vouching", "contact_us"],
+      "default": "contact_us"
+    }
+  }
+}

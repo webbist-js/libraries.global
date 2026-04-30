@@ -14,7 +14,16 @@ export function ActivityTab() {
         background: "rgba(255,255,255,0.02)",
       }}
     >
-      <p style={{ fontFamily: T.font.mono, fontSize: "10px", letterSpacing: ".18em", textTransform: "uppercase", color: T.ink.faint, margin: "0 0 8px" }}>
+      <p
+        style={{
+          fontFamily: T.font.mono,
+          fontSize: "10px",
+          letterSpacing: ".18em",
+          textTransform: "uppercase",
+          color: T.ink.faint,
+          margin: "0 0 8px",
+        }}
+      >
         Activity
       </p>
       <p style={{ fontSize: "14px", color: T.ink.faint, margin: 0 }}>

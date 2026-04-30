@@ -1,7 +1,6 @@
 import "server-only"
 
-import nodemailer from "nodemailer"
-import type { Transporter } from "nodemailer"
+import nodemailer, { type Transporter } from "nodemailer"
 
 function createTransporter(): Transporter | null {
   if (process.env.MAILTRAP_USER && process.env.MAILTRAP_PASS) {
@@ -29,6 +28,7 @@ function createTransporter(): Transporter | null {
   console.warn(
     "⚠️  No email provider configured. Email content will be logged to console."
   )
+
   return null
 }
 
@@ -41,6 +41,7 @@ export async function sendMagicLinkEmail(
 
   if (!transporter) {
     console.log(`[email] Magic link for ${to}: ${magicUrl}`)
+
     return
   }
 
@@ -62,6 +63,7 @@ export async function sendResetPasswordEmail(
 
   if (!transporter) {
     console.log(`[email] Password reset link for ${to}: ${resetUrl}`)
+
     return
   }
 

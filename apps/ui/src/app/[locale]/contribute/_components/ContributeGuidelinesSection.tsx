@@ -198,7 +198,7 @@ export function ContributeGuidelinesSection() {
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      padding: "10px 0",
+                      padding: "14px 0",
                       borderBottom: `1px solid ${T.border.line}`,
                       gap: "12px",
                     }}
@@ -215,7 +215,7 @@ export function ContributeGuidelinesSection() {
                       <span
                         style={{
                           fontFamily: T.font.sans,
-                          fontSize: "13px",
+                          fontSize: "16px",
                           color: T.ink.base,
                         }}
                       >
@@ -223,10 +223,10 @@ export function ContributeGuidelinesSection() {
                       </span>
                       <span
                         style={{
-                          padding: "2px 7px",
+                          padding: "3px 9px",
                           borderRadius: "4px",
                           fontFamily: T.font.mono,
-                          fontSize: "7px",
+                          fontSize: "10px",
                           letterSpacing: ".12em",
                           textTransform: "uppercase",
                           background: badgeColors.background,
@@ -246,10 +246,10 @@ export function ContributeGuidelinesSection() {
                           <span
                             key={action.label}
                             style={{
-                              padding: "2px 8px",
+                              padding: "4px 10px",
                               borderRadius: "4px",
                               fontFamily: T.font.mono,
-                              fontSize: "7px",
+                              fontSize: "10px",
                               letterSpacing: ".12em",
                               textTransform: "uppercase",
                               background: actionColors.background,

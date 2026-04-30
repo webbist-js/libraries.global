@@ -1,3 +1,11 @@
+export type FollowedLibrary = {
+  id: number
+  documentId: string
+  name: string
+  slug: string
+  libraryType?: string | null
+}
+
 export type UserProfile = {
   id: number
   username: string
@@ -21,21 +29,6 @@ export type UserProfile = {
     | "other"
     | null
   role?: string | null
-  claimedLibraryEntityRef?: string | null
-  claimedLibraryName?: string | null
-  claimedLibraryRole?: string | null
-  claimedLibraryDepartment?: string | null
-  affiliationVerificationStatus?:
-    | "unclaimed"
-    | "pending"
-    | "verified"
-    | "rejected"
-    | null
-  affiliationVerificationMethod?:
-    | "email_domain"
-    | "vouching"
-    | "contact_us"
-    | null
   city?: string | null
   country?: string | null
   timezone?: string | null
@@ -51,6 +44,7 @@ export type UserProfile = {
   languages?: LanguageEntry[]
   interests?: string[]
   notifPrefs: NotifPrefs
+  followedLibraries?: FollowedLibrary[]
   createdAt: string
   updatedAt: string
 }

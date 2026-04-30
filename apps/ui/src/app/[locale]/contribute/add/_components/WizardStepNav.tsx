@@ -5,6 +5,7 @@ import { Icon } from "@iconify/react"
 import { T } from "@/lib/design-tokens"
 
 const STEPS = [
+  { n: 0, label: "Find existing", sub: "Search · Verify" },
   { n: 1, label: "Basics", sub: "Name · Type · Status" },
   { n: 2, label: "Location", sub: "Address · Coordinates" },
   { n: 3, label: "Visit", sub: "Hours · Admission" },
@@ -59,6 +60,14 @@ export function WizardStepNav({
                   icon="mdi:check-circle"
                   style={{ color: T.accent.aurora, fontSize: "16px" }}
                 />
+              ) : step.n === 0 ? (
+                <Icon
+                  icon="mdi:magnify"
+                  style={{
+                    color: isActive ? T.accent.aurora : T.ink.faint,
+                    fontSize: "16px",
+                  }}
+                />
               ) : (
                 <div
                   style={{
@@ -84,7 +93,7 @@ export function WizardStepNav({
               <div
                 style={{
                   fontFamily: T.font.sans,
-                  fontSize: "12px",
+                  fontSize: "13px",
                   color: isActive ? T.ink.base : T.ink.dim,
                   fontWeight: isActive ? 600 : 400,
                   lineHeight: 1.3,
@@ -95,7 +104,7 @@ export function WizardStepNav({
               <div
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "8px",
+                  fontSize: "10px",
                   letterSpacing: ".1em",
                   textTransform: "uppercase",
                   color: T.ink.faint,

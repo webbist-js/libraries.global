@@ -12,6 +12,7 @@ export interface LibrarySearchHit {
   documentId: string
   name: string
   slug: string
+  entityRef?: string | null
   shortName?: string | null
   summary?: string | null
   libraryType?: string | null

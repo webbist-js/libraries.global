@@ -31,6 +31,7 @@ async function syncUserToStrapi(user: {
     console.warn(
       "[auth] STRAPI_BRIDGE_SECRET not set — skipping Strapi user sync"
     )
+
     return
   }
 
@@ -63,6 +64,9 @@ export const auth = betterAuth({
   baseURL: process.env.APP_PUBLIC_URL ?? "http://localhost:3000",
   trustedOrigins: [process.env.APP_PUBLIC_URL ?? "http://localhost:3000"],
   database: pool,
+  user: {
+    deleteUser: { enabled: true },
+  },
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, token }) => {
@@ -98,7 +102,11 @@ export const auth = betterAuth({
         after: async (user) => {
           // Sync every new BA user to Strapi's up_users table.
           // Fires for email/password registration and all OAuth providers.
-          await syncUserToStrapi({ id: user.id, email: user.email, name: user.name })
+          await syncUserToStrapi({
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          })
         },
       },
     },
@@ -107,8 +115,10 @@ export const auth = betterAuth({
 
 // Run BA table migrations on module load so tables exist before any
 // getSession call — not just when the /api/auth/* route handler is first hit.
+/* eslint-disable sonarjs/void-use, unicorn/prefer-top-level-await */
 void auth.$context
   .then((ctx) => ctx.runMigrations())
   .catch((err) => console.error("[better-auth] migration error:", err))
+/* eslint-enable sonarjs/void-use, unicorn/prefer-top-level-await */
 
 export type Session = typeof auth.$Infer.Session

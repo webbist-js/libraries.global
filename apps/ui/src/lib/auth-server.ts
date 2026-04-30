@@ -42,6 +42,7 @@ export async function getSessionSSR(
     const session = await auth.api.getSession({
       headers: headers as unknown as Headers,
     })
+
     return session as AuthSessionResult
   } catch {
     return null

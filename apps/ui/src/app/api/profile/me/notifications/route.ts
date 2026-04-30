@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
+const API_TOKEN = process.env.STRAPI_REST_READONLY_API_KEY
 
 export async function GET() {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -13,13 +14,15 @@ export async function GET() {
 
   const res = await fetch(
     `${STRAPI}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(session.user.id)}`,
-    { next: { revalidate: 0 } }
+    {
+      cache: "no-store",
+      headers: API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {},
+    }
   )
   if (!res.ok) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  const json = (await res.json()) as {
-    data?: { attributes?: { notifPrefs?: unknown } }[]
-  }
-  const prefs = json.data?.[0]?.attributes?.notifPrefs ?? {}
+  // Strapi v5: fields are flat on the object, no `attributes` wrapper
+  const json = (await res.json()) as { data?: { notifPrefs?: unknown }[] }
+  const prefs = json.data?.[0]?.notifPrefs ?? {}
 
   return NextResponse.json({ data: prefs })
 }

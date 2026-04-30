@@ -13,11 +13,21 @@ export function CollectionsTab() {
         background: "rgba(255,255,255,0.02)",
       }}
     >
-      <p style={{ fontFamily: T.font.mono, fontSize: "10px", letterSpacing: ".18em", textTransform: "uppercase", color: T.ink.faint, margin: "0 0 8px" }}>
+      <p
+        style={{
+          fontFamily: T.font.mono,
+          fontSize: "10px",
+          letterSpacing: ".18em",
+          textTransform: "uppercase",
+          color: T.ink.faint,
+          margin: "0 0 8px",
+        }}
+      >
         Collections — coming next
       </p>
       <p style={{ fontSize: "14px", color: T.ink.faint, margin: 0 }}>
-        Curated reading lists, exhibitions, and cross-library indexes will appear here.
+        Curated reading lists, exhibitions, and cross-library indexes will
+        appear here.
       </p>
     </div>
   )

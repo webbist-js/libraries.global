@@ -35,7 +35,10 @@ export function AuthOAuthButtons({ mode }: AuthOAuthButtonsProps) {
   const handleOAuth = async (provider: "google") => {
     setLoading(provider)
     try {
-      const result = await authClient.signIn.social({ provider, callbackURL: "/" })
+      const result = await authClient.signIn.social({
+        provider,
+        callbackURL: "/",
+      })
       if (result?.error) {
         toast.error(result.error.message ?? `${provider} sign-in failed`)
         setLoading(null)
@@ -107,7 +110,9 @@ export function AuthOAuthButtons({ mode }: AuthOAuthButtonsProps) {
             color: T.ink.faint,
           }}
         >
-          {mode === "signin" ? "or sign in with email" : "or register with email"}
+          {mode === "signin"
+            ? "or sign in with email"
+            : "or register with email"}
         </span>
         <span
           style={{

@@ -11,22 +11,22 @@ import { SettingsShell } from "./_components/SettingsShell"
 
 async function fetchOwnProfile(baUserId: string): Promise<UserProfile | null> {
   const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
+  const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
   try {
     const res = await fetch(
       `${strapiUrl}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(baUserId)}`,
-      { cache: "no-store" }
+      {
+        cache: "no-store",
+        headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
+      }
     )
     if (!res.ok) return null
-    const json = (await res.json()) as {
-      data?: { id: number; attributes?: Record<string, unknown> }[]
-    }
+    // Strapi v5: fields are flat on the object, no `attributes` wrapper
+    const json = (await res.json()) as { data?: UserProfile[] }
     const row = json.data?.[0]
     if (!row) return null
 
-    return {
-      id: row.id,
-      ...(row.attributes as Omit<UserProfile, "id">),
-    } as UserProfile
+    return row
   } catch {
     return null
   }
@@ -34,16 +34,10 @@ async function fetchOwnProfile(baUserId: string): Promise<UserProfile | null> {
 
 export default async function SettingsPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ section?: string }>
 }) {
-  const [{ locale }, { section = "profile" }, hdrs] = await Promise.all([
-    params,
-    searchParams,
-    headers(),
-  ])
+  const [{ locale }, hdrs] = await Promise.all([params, headers()])
 
   const [session, navbarResult] = await Promise.all([
     getSessionSSR(hdrs),
@@ -57,11 +51,7 @@ export default async function SettingsPage({
   return (
     <>
       <GlobalHeader locale={locale as Locale} navbar={navbarResult?.data} />
-      <SettingsShell
-        activeSection={section}
-        profile={profile}
-        sessionUser={session.user}
-      />
+      <SettingsShell profile={profile} sessionUser={session.user} />
     </>
   )
 }

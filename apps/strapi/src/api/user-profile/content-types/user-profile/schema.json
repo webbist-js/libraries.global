@@ -31,19 +31,6 @@
       ]
     },
     "role": { "type": "string" },
-    "claimedLibraryEntityRef": { "type": "string" },
-    "claimedLibraryName": { "type": "string" },
-    "claimedLibraryRole": { "type": "string" },
-    "claimedLibraryDepartment": { "type": "string" },
-    "affiliationVerificationStatus": {
-      "type": "enumeration",
-      "enum": ["unclaimed", "pending", "verified", "rejected"],
-      "default": "unclaimed"
-    },
-    "affiliationVerificationMethod": {
-      "type": "enumeration",
-      "enum": ["email_domain", "vouching", "contact_us"]
-    },
     "city": { "type": "string" },
     "country": { "type": "string" },
     "timezone": { "type": "string" },
@@ -78,6 +65,16 @@
         "soundOn": false,
         "marketing": false
       }
+    },
+    "contributorRole": {
+      "type": "enumeration",
+      "enum": ["reader", "contributor", "verified_librarian", "wiki_editor", "editorial_board"],
+      "default": "contributor"
+    },
+    "followedLibraries": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::library.library"
     }
   }
 }

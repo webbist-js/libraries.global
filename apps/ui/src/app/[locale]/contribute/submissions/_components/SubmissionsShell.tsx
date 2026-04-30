@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 
+import { DotHeroCanvas } from "@/components/ui/DotHeroCanvas"
 import { useMySubmissions, type Submission } from "@/hooks/useSubmissions"
 import { T } from "@/lib/design-tokens"
 
@@ -9,6 +10,7 @@ import { SubmissionCard } from "./SubmissionCard"
 
 const TABS = [
   { id: "all", label: "ALL" },
+  { id: "draft", label: "DRAFTS" },
   { id: "pending", label: "UNDER REVIEW" },
   { id: "needs_info", label: "CHANGES REQUESTED" },
   { id: "approved", label: "APPROVED" },
@@ -39,8 +41,9 @@ function SkeletonCards() {
           style={{
             background: "rgba(255,255,255,0.04)",
             borderRadius: "12px",
-            height: "100px",
+            height: "120px",
             marginBottom: "12px",
+            animation: "pulse 2s cubic-bezier(.4,0,.6,1) infinite",
           }}
         />
       ))}
@@ -72,11 +75,11 @@ function EmptyState({ filter }: { filter: string }) {
       <div
         style={{
           fontFamily: T.font.mono,
-          fontSize: "9px",
+          fontSize: "10px",
           letterSpacing: ".18em",
           textTransform: "uppercase",
           color: T.ink.faint,
-          marginBottom: "12px",
+          marginBottom: "14px",
         }}
       >
         {label}
@@ -84,10 +87,11 @@ function EmptyState({ filter }: { filter: string }) {
       <p
         style={{
           fontFamily: T.font.sans,
-          fontSize: "13px",
+          fontSize: "14px",
           color: T.ink.dim,
-          maxWidth: "320px",
-          lineHeight: 1.6,
+          maxWidth: "360px",
+          lineHeight: 1.65,
+          margin: 0,
         }}
       >
         {description}
@@ -110,143 +114,189 @@ export function SubmissionsShell() {
   const filtered = filterSubmissions(submissions, activeFilter)
 
   return (
-    <div
-      style={{
-        maxWidth: "760px",
-        margin: "0 auto",
-        padding: "32px 20px 40px",
-      }}
-    >
-      {/* Breadcrumb + auto-refresh row */}
-      <div
+    <>
+      {/* ── Hero ───────────────────────────────────────────────────────── */}
+      <section
+        data-transparent-header=""
+        className="relative -mt-14 overflow-hidden"
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "24px",
-        }}
-      >
-        <span
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "9px",
-            letterSpacing: ".18em",
-            textTransform: "uppercase",
-            color: T.ink.faint,
-          }}
-        >
-          CONTRIBUTE / MY SUBMISSIONS
-        </span>
-        <span
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "9px",
-            letterSpacing: ".12em",
-            textTransform: "uppercase",
-            color: T.ink.faint,
-          }}
-        >
-          AUTO-REFRESH · 60S
-        </span>
-      </div>
-
-      {/* Page heading */}
-      <h1
-        style={{
-          fontFamily: T.font.serif,
-          fontWeight: 700,
-          fontSize: "clamp(1.8rem, 4vw, 3rem)",
-          color: T.ink.base,
-          margin: "0 0 12px",
-          lineHeight: 1.15,
-        }}
-      >
-        Your <em style={{ fontStyle: "italic" }}>contributions</em>, in flight.
-      </h1>
-      <p
-        style={{
-          fontFamily: T.font.sans,
-          fontSize: "14px",
-          color: T.ink.dim,
-          lineHeight: 1.65,
-          margin: "0 0 32px",
-          maxWidth: "560px",
-        }}
-      >
-        Drafts, things under review, requests for changes, and recently
-        published. Editorial board comments live alongside each one.
-      </p>
-
-      {/* Filter tabs */}
-      <div
-        style={{
-          display: "flex",
-          gap: "0",
-          overflowX: "auto",
+          background: "#030511",
+          minHeight: "340px",
           borderBottom: `1px solid ${T.border.line}`,
-          marginBottom: "24px",
-          scrollbarWidth: "none",
         }}
       >
-        {TABS.map((tab) => {
-          const isActive = activeFilter === tab.id
-          const count = countForTab(submissions, tab.id)
+        <DotHeroCanvas />
 
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveFilter(tab.id)}
+        {/* Overlay */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 90% at 30% 40%, rgba(127,223,255,0.04) 0%, transparent 60%), linear-gradient(to bottom, rgba(3,5,17,0) 0%, rgba(3,5,17,0.80) 100%)",
+          }}
+        />
+
+        {/* Content */}
+        <div className="relative z-10 mx-auto w-full max-w-5xl px-6 pt-32 pb-12 md:px-10">
+          {/* Eyebrow row */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: "20px",
+            }}
+          >
+            <p
               style={{
-                background: "none",
-                border: "none",
-                borderBottom: isActive
-                  ? `2px solid ${T.accent.aurora}`
-                  : "2px solid transparent",
-                padding: "8px 16px 10px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                whiteSpace: "nowrap",
                 fontFamily: T.font.mono,
-                fontSize: "9px",
-                letterSpacing: ".16em",
+                fontSize: "10px",
+                letterSpacing: ".20em",
                 textTransform: "uppercase",
-                color: isActive ? T.ink.base : T.ink.faint,
-                transition: "color .15s, border-color .15s",
+                color: T.accent.aurora,
+                opacity: 0.7,
+                margin: 0,
               }}
             >
-              {tab.label}
-              <span
+              Contribute / My Submissions
+            </p>
+            <span
+              style={{
+                fontFamily: T.font.mono,
+                fontSize: "10px",
+                letterSpacing: ".14em",
+                textTransform: "uppercase",
+                color: T.ink.faint,
+              }}
+            >
+              Auto-refresh · 60s
+            </span>
+          </div>
+
+          {/* H1 */}
+          <h1
+            style={{
+              fontFamily: T.font.serif,
+              fontSize: "clamp(2.8rem, 6vw, 5rem)",
+              fontWeight: 700,
+              letterSpacing: "-0.03em",
+              lineHeight: 0.95,
+              color: T.ink.base,
+              margin: "0 0 18px",
+            }}
+          >
+            Your{" "}
+            <em
+              style={{
+                fontStyle: "italic",
+                fontWeight: 400,
+                color: "rgba(244,247,255,0.55)",
+              }}
+            >
+              contributions
+            </em>
+            ,
+            <br />
+            in flight.
+          </h1>
+
+          {/* Subtitle */}
+          <p
+            style={{
+              fontFamily: T.font.sans,
+              fontSize: "15px",
+              color: T.ink.dim,
+              lineHeight: 1.65,
+              margin: 0,
+              maxWidth: "52ch",
+            }}
+          >
+            Drafts, things under review, requests for changes, and recently
+            published. Editorial board comments live alongside each one.
+          </p>
+        </div>
+      </section>
+
+      {/* ── Content ────────────────────────────────────────────────────── */}
+      <div
+        style={{
+          maxWidth: "900px",
+          margin: "0 auto",
+          padding: "40px 24px 60px",
+        }}
+      >
+        {/* Filter tabs */}
+        <div
+          style={{
+            display: "flex",
+            gap: "0",
+            overflowX: "auto",
+            borderBottom: `1px solid ${T.border.line}`,
+            marginBottom: "28px",
+            scrollbarWidth: "none",
+          }}
+        >
+          {TABS.map((tab) => {
+            const isActive = activeFilter === tab.id
+            const count = countForTab(submissions, tab.id)
+
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveFilter(tab.id)}
                 style={{
+                  background: "none",
+                  border: "none",
+                  borderBottom: isActive
+                    ? `2px solid ${T.accent.aurora}`
+                    : "2px solid transparent",
+                  padding: "10px 18px 12px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "7px",
+                  whiteSpace: "nowrap",
                   fontFamily: T.font.mono,
-                  fontSize: "8px",
-                  letterSpacing: ".08em",
-                  background: isActive
-                    ? "rgba(127,223,255,0.12)"
-                    : "rgba(255,255,255,0.06)",
-                  color: isActive ? T.accent.aurora : T.ink.faint,
-                  borderRadius: "4px",
-                  padding: "1px 5px",
-                  lineHeight: 1.5,
+                  fontSize: "10px",
+                  letterSpacing: ".16em",
+                  textTransform: "uppercase",
+                  color: isActive ? T.ink.base : T.ink.faint,
+                  transition: "color .15s, border-color .15s",
                 }}
               >
-                {count}
-              </span>
-            </button>
-          )
-        })}
-      </div>
+                {tab.label}
+                <span
+                  style={{
+                    fontFamily: T.font.mono,
+                    fontSize: "9px",
+                    letterSpacing: ".06em",
+                    background: isActive
+                      ? "rgba(127,223,255,0.12)"
+                      : "rgba(255,255,255,0.06)",
+                    color: isActive ? T.accent.aurora : T.ink.faint,
+                    borderRadius: "4px",
+                    padding: "1px 6px",
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
 
-      {/* Content */}
-      {isLoading ? (
-        <SkeletonCards />
-      ) : filtered.length === 0 ? (
-        <EmptyState filter={activeFilter} />
-      ) : (
-        <SubmissionList submissions={filtered} />
-      )}
-    </div>
+        {/* Content */}
+        {isLoading ? (
+          <SkeletonCards />
+        ) : filtered.length === 0 ? (
+          <EmptyState filter={activeFilter} />
+        ) : (
+          <SubmissionList submissions={filtered} />
+        )}
+      </div>
+    </>
   )
 }
 
@@ -257,20 +307,20 @@ function SubmissionList({ submissions }: { submissions: Submission[] }) {
 
   return (
     <div>
-      {visible.map((sub) => (
-        <SubmissionCard key={sub.documentId} submission={sub} />
+      {visible.map((sub, i) => (
+        <SubmissionCard key={sub.documentId} submission={sub} index={i} />
       ))}
       {remaining > 0 && (
         <button
           onClick={() => setVisibleCount((c) => c + 9)}
           style={{
-            padding: "10px 20px",
+            padding: "12px 24px",
             borderRadius: "8px",
             border: `1px solid ${T.border.line}`,
             background: "transparent",
             color: T.ink.faint,
             fontFamily: T.font.mono,
-            fontSize: "10px",
+            fontSize: "11px",
             letterSpacing: ".12em",
             cursor: "pointer",
             width: "100%",

@@ -8,7 +8,7 @@ const dynamicPrefix = "dynamic"
 /**
  * Ignores requests to certain paths, allowing them to be handled by other middleware or routes.
  */
-const ignoredPaths = ["/api", "/dev", "/auth"]
+const ignoredPaths = ["/api", "/dev", "/auth", "/profile", "/contribute"]
 
 /**
  * Removes the locale prefix from the pathname if present, returning the path without the locale segment.
