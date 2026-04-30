@@ -204,7 +204,7 @@ export function SubmissionsShell() {
       {/* ── Content ────────────────────────────────────────────────────── */}
       <div
         style={{
-          maxWidth: "900px",
+          maxWidth: "1296px",
           margin: "0 auto",
           padding: "40px 24px 60px",
         }}

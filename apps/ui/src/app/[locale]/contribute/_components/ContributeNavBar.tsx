@@ -27,7 +27,7 @@ export function ContributeNavBar() {
       }}
     >
       <div
-        className="mx-auto w-full max-w-5xl px-6 md:px-10"
+        className="mx-auto w-full max-w-[1296px] px-6 md:px-10"
         style={{ display: "flex", gap: "0", overflowX: "auto" }}
       >
         {NAV_ITEMS.map(({ href, label }) => {

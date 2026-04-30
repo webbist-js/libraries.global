@@ -76,7 +76,7 @@ export function ContributeGuidelinesSection() {
         background: T.bg.space,
       }}
     >
-      <div className="mx-auto w-full max-w-5xl px-6 py-14 md:px-10">
+      <div className="mx-auto w-full max-w-[1296px] px-6 py-14 md:px-10">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
           {/* Left — guidelines */}
           <div>

@@ -116,7 +116,7 @@ export function SettingsShell({
 
         {/* Hero content — constrained to match body container */}
         <div className="relative z-10 flex h-full flex-col justify-end pb-8">
-          <div className="mx-auto w-full max-w-6xl px-6 md:px-10">
+          <div className="mx-auto w-full max-w-[1296px] px-6 md:px-10">
             {/* Eyebrow */}
             <p
               style={{
@@ -191,7 +191,7 @@ export function SettingsShell({
       </section>
 
       {/* ── Body: sidebar + content ───────────────────────────────────── */}
-      <div className="mx-auto w-full max-w-6xl px-6 py-10 md:px-10">
+      <div className="mx-auto w-full max-w-[1296px] px-6 py-10 md:px-10">
         <div className="flex gap-8">
           {/* Sticky sidebar nav */}
           <nav

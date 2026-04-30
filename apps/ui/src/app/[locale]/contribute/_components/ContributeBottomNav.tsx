@@ -39,7 +39,7 @@ export function ContributeBottomNav() {
       }}
     >
       <div
-        className="mx-auto w-full max-w-6xl"
+        className="mx-auto w-full max-w-[1296px]"
         style={{ display: "flex", alignItems: "stretch" }}
       >
         {TABS.map((tab) => {

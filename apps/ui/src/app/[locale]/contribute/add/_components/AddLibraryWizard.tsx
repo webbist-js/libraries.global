@@ -223,7 +223,7 @@ export function AddLibraryWizard({
           gridTemplateColumns: "220px 1fr 260px",
           gap: "0",
           minHeight: "calc(100vh - 260px)",
-          maxWidth: "1200px",
+          maxWidth: "1296px",
           margin: "0 auto",
           padding: "48px 24px 80px",
         }}

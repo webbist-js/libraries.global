@@ -115,7 +115,7 @@ export function ContributePathCards({
   return (
     <section
       style={{ background: T.bg.void }}
-      className="mx-auto w-full max-w-5xl px-6 py-14 md:px-10"
+      className="mx-auto w-full max-w-[1296px] px-6 py-14 md:px-10"
     >
       {/* Section heading */}
       <div

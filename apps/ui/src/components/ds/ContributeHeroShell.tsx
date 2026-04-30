@@ -42,7 +42,7 @@ export function ContributeHeroShell({
         style={{ background: overlay }}
       />
 
-      <div className="relative z-10 mx-auto w-full max-w-5xl px-6 pt-28 pb-10 md:px-10">
+      <div className="relative z-10 mx-auto w-full max-w-[1296px] px-6 pt-28 pb-10 md:px-10">
         {children}
       </div>
     </section>

@@ -6,7 +6,7 @@ import { QuickWinsCarousel } from "./QuickWinsCarousel"
 export function QuickWinsSection({ wins }: { readonly wins: QuickWin[] }) {
   return (
     <section style={{ padding: "48px 0 0" }}>
-      <div className="mx-auto w-full max-w-5xl px-6 md:px-10">
+      <div className="mx-auto w-full max-w-[1296px] px-6 md:px-10">
         {/* Section heading */}
         <div style={{ marginBottom: "28px" }}>
           <h2

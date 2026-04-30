@@ -28,7 +28,7 @@ export function ProfileTabNav({
         background: "#050816",
       }}
     >
-      <div className="mx-auto max-w-5xl px-6 md:px-10">
+      <div className="mx-auto max-w-[1296px] px-6 md:px-10">
         <div style={{ display: "flex", gap: "0", overflowX: "auto" }}>
           {TABS.map((tab) => {
             const active = activeTab === tab.id

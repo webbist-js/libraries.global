@@ -148,7 +148,7 @@ export default async function CommunityPage({
 
       <ContributeNavBar />
 
-      <div className="mx-auto w-full max-w-5xl px-6 pt-10 pb-20 md:px-10">
+      <div className="mx-auto w-full max-w-[1296px] px-6 pt-10 pb-20 md:px-10">
         {/* Period tabs */}
         <div
           style={{

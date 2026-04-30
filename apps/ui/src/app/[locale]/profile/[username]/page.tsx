@@ -100,7 +100,7 @@ export default async function ProfilePage({
       >
         <ProfileHero profile={profile} isOwnProfile={isOwnProfile} />
         <ProfileTabNav username={username} activeTab={tab} />
-        <main className="mx-auto w-full max-w-5xl px-6 py-8 md:px-10">
+        <main className="mx-auto w-full max-w-[1296px] px-6 py-8 md:px-10">
           {TAB_CONTENT[tab] ?? TAB_CONTENT.overview}
         </main>
       </div>

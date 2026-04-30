@@ -262,7 +262,7 @@ export default async function ContributePage() {
     >
       <ContributeHeroSection stats={heroStats} isSignedIn={!!session?.user} />
       {session?.user && standingWithName && (
-        <div className="mx-auto w-full max-w-5xl px-6 py-8 md:px-10">
+        <div className="mx-auto w-full max-w-[1296px] px-6 py-8 md:px-10">
           <WelcomeBackWidget standing={standingWithName} />
         </div>
       )}

@@ -52,7 +52,7 @@ export function ProfileHero({
       />
 
       {/* Hero content */}
-      <div className="relative z-10 mx-auto w-full max-w-5xl px-6 pt-24 pb-10 md:px-10">
+      <div className="relative z-10 mx-auto w-full max-w-[1296px] px-6 pt-24 pb-10 md:px-10">
         {/* Breadcrumb */}
         <div
           style={{

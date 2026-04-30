@@ -47,7 +47,7 @@ export async function ContributeCommunitySection() {
         padding: "60px 0",
       }}
     >
-      <div className="mx-auto w-full max-w-5xl px-6 md:px-10">
+      <div className="mx-auto w-full max-w-[1296px] px-6 md:px-10">
         {/* Header */}
         <div
           style={{
