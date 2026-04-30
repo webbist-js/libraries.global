@@ -3122,6 +3122,98 @@ export interface PluginReviewWorkflowsWorkflowStage
   }
 }
 
+export interface PluginRewardsBadgeAward extends Struct.CollectionTypeSchema {
+  collectionName: "rw_badge_awards"
+  info: {
+    displayName: "Badge Award"
+    pluralName: "badge-awards"
+    singularName: "badge-award"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: true
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    awardedAt: Schema.Attribute.DateTime & Schema.Attribute.Required
+    badgeId: Schema.Attribute.String & Schema.Attribute.Required
+    baUserId: Schema.Attribute.String & Schema.Attribute.Required
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::rewards.badge-award"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginRewardsPointEvent extends Struct.CollectionTypeSchema {
+  collectionName: "rw_point_events"
+  info: {
+    displayName: "Point Event"
+    pluralName: "point-events"
+    singularName: "point-event"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: true
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    action: Schema.Attribute.Enumeration<
+      [
+        "new_library_approved",
+        "edit_accepted_minor",
+        "edit_accepted_major",
+        "photo_licensed_cc",
+        "hours_verified",
+        "status_verified",
+        "wiki_translated",
+        "daily_streak",
+        "manual_award",
+        "manual_deduct",
+      ]
+    > &
+      Schema.Attribute.Required
+    awardedAt: Schema.Attribute.DateTime & Schema.Attribute.Required
+    baUserId: Schema.Attribute.String & Schema.Attribute.Required
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::rewards.point-event"
+    > &
+      Schema.Attribute.Private
+    metadata: Schema.Attribute.JSON
+    points: Schema.Attribute.Integer & Schema.Attribute.Required
+    publishedAt: Schema.Attribute.DateTime
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface PluginUploadFile extends Struct.CollectionTypeSchema {
   collectionName: "files"
   info: {
@@ -3425,6 +3517,8 @@ declare module "@strapi/strapi" {
       "plugin::i18n.locale": PluginI18NLocale
       "plugin::review-workflows.workflow": PluginReviewWorkflowsWorkflow
       "plugin::review-workflows.workflow-stage": PluginReviewWorkflowsWorkflowStage
+      "plugin::rewards.badge-award": PluginRewardsBadgeAward
+      "plugin::rewards.point-event": PluginRewardsPointEvent
       "plugin::upload.file": PluginUploadFile
       "plugin::upload.folder": PluginUploadFolder
       "plugin::users-permissions.permission": PluginUsersPermissionsPermission

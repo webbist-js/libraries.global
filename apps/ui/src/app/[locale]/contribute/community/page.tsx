@@ -1,6 +1,6 @@
 import { headers } from "next/headers"
 
-import { Breadcrumb } from "@/components/ds"
+import { Breadcrumb, ContributeHeroShell } from "@/components/ds"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 import type { LeaderboardEntry } from "@/lib/types/leaderboard"
@@ -102,7 +102,10 @@ export default async function CommunityPage({
     <div
       style={{ minHeight: "100vh", background: T.bg.space, color: T.ink.base }}
     >
-      <div className="mx-auto w-full max-w-5xl px-6 pt-20 pb-10 md:px-10">
+      <ContributeHeroShell
+        minHeight="340px"
+        overlay="radial-gradient(ellipse 80% 60% at 60% 40%, rgba(127,223,255,0.06) 0%, rgba(3,5,17,0) 70%), linear-gradient(to bottom, rgba(3,5,17,0) 0%, rgba(3,5,17,0.5) 100%)"
+      >
         <div style={{ marginBottom: "32px" }}>
           <Breadcrumb
             items={[
@@ -113,7 +116,7 @@ export default async function CommunityPage({
           />
         </div>
 
-        <div style={{ marginBottom: "40px" }}>
+        <div>
           <h1
             style={{
               fontFamily: T.font.serif,
@@ -141,7 +144,7 @@ export default async function CommunityPage({
             earned for every approved contribution.
           </p>
         </div>
-      </div>
+      </ContributeHeroShell>
 
       <ContributeNavBar />
 

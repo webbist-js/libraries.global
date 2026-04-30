@@ -92,67 +92,62 @@ export function EditLibrarySearch() {
   return (
     <>
       {/* Hero */}
-      <ContributeHeroShell minHeight="300px">
-        <div
-          className="relative z-10 mx-auto w-full max-w-[900px]"
-          style={{ padding: "112px 24px 40px" }}
+      <ContributeHeroShell minHeight="340px">
+        <p
+          style={{
+            fontFamily: T.font.mono,
+            fontSize: "10px",
+            letterSpacing: ".20em",
+            textTransform: "uppercase",
+            color: T.ink.faint,
+            margin: "0 0 20px",
+          }}
         >
-          <p
+          <Link
+            href="/contribute"
+            style={{ color: T.ink.faint, textDecoration: "none" }}
+            className="transition-colors hover:text-white/60"
+          >
+            Contribute
+          </Link>
+          <span style={{ margin: "0 8px", opacity: 0.4 }}>/</span>
+          <span style={{ color: T.ink.low }}>Edit a library</span>
+        </p>
+        <h1
+          style={{
+            fontFamily: T.font.serif,
+            fontWeight: 700,
+            fontSize: "clamp(2.4rem, 5vw, 3.8rem)",
+            letterSpacing: "-0.03em",
+            lineHeight: 0.95,
+            color: T.ink.base,
+            margin: "0 0 16px",
+          }}
+        >
+          Find a library{" "}
+          <em
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".20em",
-              textTransform: "uppercase",
-              color: T.ink.faint,
-              margin: "0 0 20px",
+              fontStyle: "italic",
+              fontWeight: 400,
+              color: T.accent.aurora,
             }}
           >
-            <Link
-              href="/contribute"
-              style={{ color: T.ink.faint, textDecoration: "none" }}
-              className="transition-colors hover:text-white/60"
-            >
-              Contribute
-            </Link>
-            <span style={{ margin: "0 8px", opacity: 0.4 }}>/</span>
-            <span style={{ color: T.ink.low }}>Edit a library</span>
-          </p>
-          <h1
-            style={{
-              fontFamily: T.font.serif,
-              fontWeight: 700,
-              fontSize: "clamp(2.4rem, 5vw, 3.8rem)",
-              letterSpacing: "-0.03em",
-              lineHeight: 0.95,
-              color: T.ink.base,
-              margin: "0 0 16px",
-            }}
-          >
-            Find a library{" "}
-            <em
-              style={{
-                fontStyle: "italic",
-                fontWeight: 400,
-                color: T.accent.aurora,
-              }}
-            >
-              to edit.
-            </em>
-          </h1>
-          <p
-            style={{
-              fontFamily: T.font.sans,
-              fontSize: "14px",
-              color: T.ink.dim,
-              maxWidth: "48ch",
-              lineHeight: 1.65,
-              margin: 0,
-            }}
-          >
-            Search by name or city. Only libraries you&apos;ve claimed can be
-            edited — select one to open the wizard.
-          </p>
-        </div>
+            to edit.
+          </em>
+        </h1>
+        <p
+          style={{
+            fontFamily: T.font.sans,
+            fontSize: "14px",
+            color: T.ink.dim,
+            maxWidth: "48ch",
+            lineHeight: 1.65,
+            margin: 0,
+          }}
+        >
+          Search by name or city. Only libraries you&apos;ve claimed can be
+          edited — select one to open the wizard.
+        </p>
       </ContributeHeroShell>
 
       <ContributeNavBar />

@@ -121,84 +121,82 @@ export function SubmissionsShell() {
         minHeight="340px"
         overlay="radial-gradient(ellipse 70% 90% at 30% 40%, rgba(127,223,255,0.04) 0%, transparent 60%), linear-gradient(to bottom, rgba(3,5,17,0) 0%, rgba(3,5,17,0.80) 100%)"
       >
-        <div className="relative z-10 mx-auto w-full max-w-5xl px-6 pt-32 pb-12 md:px-10">
-          {/* Eyebrow row */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "20px",
-            }}
-          >
-            <p
-              style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".20em",
-                textTransform: "uppercase",
-                color: T.accent.aurora,
-                opacity: 0.7,
-                margin: 0,
-              }}
-            >
-              Contribute / My Submissions
-            </p>
-            <span
-              style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".14em",
-                textTransform: "uppercase",
-                color: T.ink.faint,
-              }}
-            >
-              Auto-refresh · 60s
-            </span>
-          </div>
-
-          {/* H1 */}
-          <h1
-            style={{
-              fontFamily: T.font.serif,
-              fontSize: "clamp(2.8rem, 6vw, 5rem)",
-              fontWeight: 700,
-              letterSpacing: "-0.03em",
-              lineHeight: 0.95,
-              color: T.ink.base,
-              margin: "0 0 18px",
-            }}
-          >
-            Your{" "}
-            <em
-              style={{
-                fontStyle: "italic",
-                fontWeight: 400,
-                color: "rgba(244,247,255,0.55)",
-              }}
-            >
-              contributions
-            </em>
-            ,
-            <br />
-            in flight.
-          </h1>
-
-          {/* Subtitle */}
+        {/* Eyebrow row */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "20px",
+          }}
+        >
           <p
             style={{
-              fontFamily: T.font.sans,
-              fontSize: "15px",
-              color: T.ink.dim,
-              lineHeight: 1.65,
+              fontFamily: T.font.mono,
+              fontSize: "10px",
+              letterSpacing: ".20em",
+              textTransform: "uppercase",
+              color: T.accent.aurora,
+              opacity: 0.7,
               margin: 0,
-              maxWidth: "52ch",
             }}
           >
-            Drafts, things under review, requests for changes, and recently
-            published. Editorial board comments live alongside each one.
+            Contribute / My Submissions
           </p>
+          <span
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "10px",
+              letterSpacing: ".14em",
+              textTransform: "uppercase",
+              color: T.ink.faint,
+            }}
+          >
+            Auto-refresh · 60s
+          </span>
         </div>
+
+        {/* H1 */}
+        <h1
+          style={{
+            fontFamily: T.font.serif,
+            fontSize: "clamp(2.8rem, 6vw, 5rem)",
+            fontWeight: 700,
+            letterSpacing: "-0.03em",
+            lineHeight: 0.95,
+            color: T.ink.base,
+            margin: "0 0 18px",
+          }}
+        >
+          Your{" "}
+          <em
+            style={{
+              fontStyle: "italic",
+              fontWeight: 400,
+              color: "rgba(244,247,255,0.55)",
+            }}
+          >
+            contributions
+          </em>
+          ,
+          <br />
+          in flight.
+        </h1>
+
+        {/* Subtitle */}
+        <p
+          style={{
+            fontFamily: T.font.sans,
+            fontSize: "15px",
+            color: T.ink.dim,
+            lineHeight: 1.65,
+            margin: 0,
+            maxWidth: "52ch",
+          }}
+        >
+          Drafts, things under review, requests for changes, and recently
+          published. Editorial board comments live alongside each one.
+        </p>
       </ContributeHeroShell>
 
       <ContributeNavBar />

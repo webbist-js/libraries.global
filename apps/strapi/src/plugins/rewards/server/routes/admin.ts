@@ -25,5 +25,13 @@ export default {
         policies: ["admin::isAuthenticatedAdmin"],
       },
     },
+    {
+      method: "GET",
+      path: "/chart-data",
+      handler: "rewards.adminChartData",
+      config: {
+        policies: ["admin::isAuthenticatedAdmin"],
+      },
+    },
   ],
 }

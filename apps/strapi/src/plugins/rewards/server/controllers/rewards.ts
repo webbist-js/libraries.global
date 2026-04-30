@@ -194,6 +194,55 @@ export default ({ strapi }: { strapi: any }) => ({
     return ctx.send({ ok: true })
   },
 
+  async adminChartData(ctx: any) {
+    const days = 30
+    const now = new Date()
+
+    // Build daily buckets for the last N days
+    const dailyPoints: { date: string; points: number }[] = []
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now)
+      d.setUTCDate(d.getUTCDate() - i)
+      const dateStr = d.toISOString().slice(0, 10)
+      const dayStart = new Date(dateStr + "T00:00:00.000Z")
+      const dayEnd = new Date(dateStr + "T23:59:59.999Z")
+
+      const rows = (await strapi.db.connection
+        .select(strapi.db.connection.raw("COALESCE(SUM(points), 0) as total"))
+        .from("rw_point_events")
+        .where("awarded_at", ">=", dayStart.toISOString())
+        .where("awarded_at", "<=", dayEnd.toISOString())) as {
+        total: string | number
+      }[]
+
+      dailyPoints.push({ date: dateStr, points: Number(rows[0]?.total ?? 0) })
+    }
+
+    // Action breakdown (all time)
+    const actionRows = (await strapi.db.connection
+      .select("action")
+      .count("* as count")
+      .sum("points as total_points")
+      .from("rw_point_events")
+      .groupBy("action")
+      .orderBy("count", "desc")) as {
+      action: string
+      count: string | number
+      total_points: string | number
+    }[]
+
+    return ctx.send({
+      data: {
+        dailyPoints,
+        actionBreakdown: actionRows.map((r) => ({
+          action: r.action,
+          count: Number(r.count),
+          totalPoints: Number(r.total_points),
+        })),
+      },
+    })
+  },
+
   async adminStats(ctx: any) {
     const now = new Date()
     const monthStart = new Date(

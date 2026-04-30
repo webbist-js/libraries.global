@@ -24,8 +24,8 @@ export default {
   config: { default: {}, validator() {} },
   contentTypes,
   controllers,
-  middlewares: [],
-  policies: [],
+  middlewares: {},
+  policies: {},
   routes,
   services,
 }

@@ -6,7 +6,7 @@
   "types": "./types",
   "scripts": {
     "build": "pnpm run build:plugins && strapi build",
-    "build:plugins": "cd src/plugins/content-moderation && pnpm exec strapi-plugin build && cd - && cd src/plugins/topics && pnpm exec strapi-plugin build && cd -",
+    "build:plugins": "cd src/plugins/content-moderation && pnpm exec strapi-plugin build && cd - && cd src/plugins/topics && pnpm exec strapi-plugin build && cd - && cd src/plugins/rewards && pnpm exec strapi-plugin build && cd -",
     "config:dump": "strapi configuration:dump -f dump.json",
     "config:restore": "strapi configuration:restore -f dump.json",
     "dev": "pnpm run run:db && pnpm run develop",

@@ -106,17 +106,36 @@ export default ({ strapi }: { strapi: any }) => ({
       },
     })
 
-    // Read current profile totals
-    const profile = await strapi.db
+    // Read current profile totals — create a minimal one if it doesn't exist yet
+    let profile = await strapi.db
       .query("api::user-profile.user-profile")
       .findOne({ where: { baUserId } })
 
     if (!profile) {
       strapi.log.warn(
-        `[rewards] No user-profile found for baUserId ${baUserId}`
+        `[rewards] No user-profile found for baUserId ${baUserId} — creating minimal record`
       )
+      try {
+        const count = await strapi.db
+          .query("api::user-profile.user-profile")
+          .count()
+        profile = await strapi.db
+          .query("api::user-profile.user-profile")
+          .create({
+            data: {
+              baUserId,
+              username: `contributor${count + 1}`,
+              contributorNumber: count + 1,
+            },
+          })
+      } catch (createErr) {
+        strapi.log.error(
+          `[rewards] Failed to create fallback profile for baUserId ${baUserId}:`,
+          createErr
+        )
 
-      return
+        return
+      }
     }
 
     const today = now.toISOString().slice(0, 10)
