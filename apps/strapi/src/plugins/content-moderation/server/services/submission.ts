@@ -293,6 +293,11 @@ export default ({ strapi }: { strapi: any }) => ({
       }
     }
 
+    // ── wiki_edit approval ─────────────────────────────────────────────
+    if (status === "approved" && submission?.submissionType === "wiki_edit") {
+      await (this as any).applyWikiEdit(submission)
+    }
+
     // Award points for new_library approval — non-fatal
     if (status === "approved" && submission?.submissionType === "new_library") {
       try {
@@ -449,5 +454,31 @@ export default ({ strapi }: { strapi: any }) => ({
       })
 
     return results[0] ?? null
+  },
+
+  async applyWikiEdit(submission: any): Promise<void> {
+    try {
+      const draftData = submission.draftData ?? {}
+      const slug: string | undefined = draftData.targetSlug
+      if (!slug) return
+
+      const article = await strapi.db
+        .query("api::wiki-article.wiki-article")
+        .findOne({ where: { slug, locale: draftData.locale ?? "en" } })
+      if (!article) return
+
+      const updateData: Record<string, unknown> = {}
+      if (draftData.title) updateData.title = draftData.title
+      if (Array.isArray(draftData.body)) updateData.body = draftData.body
+
+      await strapi.documents("api::wiki-article.wiki-article" as any).update({
+        documentId: article.documentId,
+        locale: draftData.locale ?? "en",
+        status: "published",
+        data: updateData,
+      })
+    } catch (err) {
+      strapi.log.error("[content-moderation] applyWikiEdit failed", err)
+    }
   },
 })
