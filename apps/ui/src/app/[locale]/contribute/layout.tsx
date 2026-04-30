@@ -3,6 +3,8 @@ import type { Locale } from "next-intl"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { fetchNavbar } from "@/lib/strapi-api/content/server"
 
+import { ContributeNavBar } from "./_components/ContributeNavBar"
+
 export default async function ContributeLayout({
   children,
   params,
@@ -16,7 +18,10 @@ export default async function ContributeLayout({
   return (
     <>
       <GlobalHeader locale={locale as Locale} navbar={navbarResult?.data} />
-      <div style={{ background: "#030511" }}>{children}</div>
+      <div style={{ background: "#030511" }}>
+        <ContributeNavBar />
+        {children}
+      </div>
     </>
   )
 }
