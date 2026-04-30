@@ -70,7 +70,7 @@ export function OnboardingIdentity({
     pronouns: initialProfile?.pronouns ?? "",
     city: initialProfile?.city ?? "",
     country: initialProfile?.country ?? "",
-    avatarUrl: initialProfile?.avatarUrl ?? "",
+    avatarUrl: initialProfile?.avatar?.url ?? "",
   })
   const [usernameStatus, setUsernameStatus] = useState<
     "idle" | "checking" | "available" | "taken"

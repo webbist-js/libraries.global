@@ -40,11 +40,11 @@ export function OnboardingInterests({
 }: {
   initialProfile: UserProfile | null
   saving: boolean
-  onNext: (data: Partial<UserProfile>) => void
+  onNext: (data: Record<string, unknown>) => void
   onSkip: () => void
 }) {
   const [interests, setInterests] = useState<string[]>(
-    initialProfile?.interests ?? []
+    initialProfile?.interests?.map((i) => i.documentId) ?? []
   )
   const [languages, setLanguages] = useState<LanguageEntry[]>(
     (initialProfile?.languages as LanguageEntry[] | undefined) ?? []

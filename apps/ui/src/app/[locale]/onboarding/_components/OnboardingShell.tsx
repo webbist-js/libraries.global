@@ -244,7 +244,7 @@ export function OnboardingShell({
   const [city, setCity] = useState(initialProfile?.city ?? "")
   const [country, setCountry] = useState(initialProfile?.country ?? "")
   const [timezone, setTimezone] = useState(initialProfile?.timezone ?? "")
-  const [avatarUrl, setAvatarUrl] = useState(initialProfile?.avatarUrl ?? "")
+  const [avatarUrl, setAvatarUrl] = useState(initialProfile?.avatar?.url ?? "")
 
   const [usernameStatus, setUsernameStatus] = useState<
     "idle" | "checking" | "available" | "taken"
@@ -293,7 +293,7 @@ export function OnboardingShell({
 
   // ── Interests & languages state ──────────────────────────────────
   const [interests, setInterests] = useState<string[]>(
-    initialProfile?.interests ?? []
+    initialProfile?.interests?.map((i) => i.documentId) ?? []
   )
   const [languages, setLanguages] = useState<LanguageEntry[]>(
     (initialProfile?.languages as LanguageEntry[] | undefined) ?? []
