@@ -462,18 +462,28 @@ export default ({ strapi }: { strapi: any }) => ({
       const slug: string | undefined = draftData.targetSlug
       if (!slug) return
 
+      const locale = (draftData.locale as string | undefined) ?? "en"
+
       const article = await strapi.db
         .query("api::wiki-article.wiki-article")
-        .findOne({ where: { slug, locale: draftData.locale ?? "en" } })
+        .findOne({ where: { slug } })
       if (!article) return
 
       const updateData: Record<string, unknown> = {}
       if (draftData.title) updateData.title = draftData.title
       if (Array.isArray(draftData.body)) updateData.body = draftData.body
 
+      if (Object.keys(updateData).length === 0) {
+        strapi.log.warn(
+          "[content-moderation] applyWikiEdit: draftData has no title or body, skipping update"
+        )
+
+        return
+      }
+
       await strapi.documents("api::wiki-article.wiki-article" as any).update({
         documentId: article.documentId,
-        locale: draftData.locale ?? "en",
+        locale,
         status: "published",
         data: updateData,
       })
