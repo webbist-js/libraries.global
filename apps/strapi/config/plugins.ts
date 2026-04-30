@@ -95,6 +95,11 @@ export default ({ env }) => {
       enabled: true,
       resolve: "./src/plugins/topics",
     },
+
+    rewards: {
+      enabled: true,
+      resolve: "./src/plugins/rewards",
+    },
   }
 }
 
