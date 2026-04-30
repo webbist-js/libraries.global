@@ -7,7 +7,15 @@ export default factories.createCoreController(
       const { username } = ctx.params as { username: string }
       const profile = await strapi
         .query("api::user-profile.user-profile")
-        .findOne({ where: { username }, populate: { followedLibraries: true } })
+        .findOne({
+          where: { username },
+          populate: {
+            avatar: true,
+            languages: true,
+            interests: true,
+            followedLibraries: true,
+          },
+        })
       if (!profile) return ctx.notFound("Profile not found")
 
       // Private profiles are not publicly visible
