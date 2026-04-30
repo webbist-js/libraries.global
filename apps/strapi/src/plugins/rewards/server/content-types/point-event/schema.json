@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "rw_point_events",
+  "info": {
+    "singularName": "point-event",
+    "pluralName": "point-events",
+    "displayName": "Point Event"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": true },
+    "content-type-builder": { "visible": false }
+  },
+  "attributes": {
+    "baUserId": { "type": "string", "required": true },
+    "action": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "new_library_approved",
+        "edit_accepted_minor",
+        "edit_accepted_major",
+        "photo_licensed_cc",
+        "hours_verified",
+        "status_verified",
+        "wiki_translated",
+        "daily_streak",
+        "manual_award",
+        "manual_deduct"
+      ]
+    },
+    "points": { "type": "integer", "required": true },
+    "metadata": { "type": "json" },
+    "awardedAt": { "type": "datetime", "required": true }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "kind": "collectionType",
+  "collectionName": "rw_badge_awards",
+  "info": {
+    "singularName": "badge-award",
+    "pluralName": "badge-awards",
+    "displayName": "Badge Award"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": true },
+    "content-type-builder": { "visible": false }
+  },
+  "attributes": {
+    "baUserId": { "type": "string", "required": true },
+    "badgeId": { "type": "string", "required": true },
+    "awardedAt": { "type": "datetime", "required": true }
+  }
+}
