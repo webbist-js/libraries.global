@@ -75,6 +75,11 @@
       "type": "relation",
       "relation": "manyToMany",
       "target": "api::library.library"
-    }
+    },
+    "points": { "type": "integer", "default": 0 },
+    "pointsThisMonth": { "type": "integer", "default": 0 },
+    "tier": { "type": "string", "default": "Reader" },
+    "streak": { "type": "integer", "default": 0 },
+    "lastActivityDate": { "type": "string" }
   }
 }
