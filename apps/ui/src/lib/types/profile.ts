@@ -86,3 +86,46 @@ export type Topic = {
   slug: string
   status: "approved" | "pending" | "rejected"
 }
+
+export type QuickWinType =
+  | "add_library"
+  | "add_nearby_library"
+  | "verify_hours"
+  | "add_hero_image"
+  | "translate_wiki"
+
+export type QuickWin = {
+  winId: string
+  type: QuickWinType
+  title: string
+  description: string
+  points: number
+  estimatedMinutes: number
+  rewardLabel: string
+  actionUrl: string
+  targetEntityRef?: string
+  targetSlug?: string
+  computedForCountry?: string
+  computedForLanguage?: string
+}
+
+export type TierInfo = {
+  level: number
+  name: string
+  nextName: string | null
+  nextThreshold: number | null
+  progressPercent: number
+}
+
+export type ContributingStanding = {
+  firstName: string
+  streak: number
+  globalRank: number | null
+  countryRank: number | null
+  country: string | null
+  tier: TierInfo
+  totalPoints: number
+  pointsToNext: number | null
+  nextTierName: string | null
+  pendingSubmissions: number
+}
