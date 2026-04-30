@@ -37,7 +37,7 @@ export async function POST(req: Request) {
   if (!allowed.includes(file.type))
     return NextResponse.json({ error: "Invalid file type" }, { status: 400 })
 
-  // Forward to Strapi upload — API token required by Strapi upload plugin
+  // Upload file to Strapi media library
   const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
   const strapiForm = new FormData()
   strapiForm.append("files", file, file.name)
@@ -50,26 +50,24 @@ export async function POST(req: Request) {
   if (!uploadRes.ok)
     return NextResponse.json({ error: "Upload failed" }, { status: 500 })
 
-  const uploaded = (await uploadRes.json()) as {
-    id: number
-    url: string
-  }[]
+  const uploaded = (await uploadRes.json()) as { id: number; url: string }[]
   const first = uploaded[0]
   if (!first)
     return NextResponse.json(
       { error: "Upload returned no file" },
       { status: 500 }
     )
-  const { id, url } = first
 
-  // Update profile with new avatar
+  const { id, url } = first
+  const absoluteUrl = url.startsWith("http") ? url : `${STRAPI}${url}`
+
+  // Connect the uploaded file to the user's profile avatar media field
   const profileRes = await fetch(`${STRAPI}/api/auth-bridge/upsert-profile`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-Service-Secret": SECRET },
     body: JSON.stringify({
       baUserId: session.user.id,
-      avatarUrl: url.startsWith("http") ? url : `${STRAPI}${url}`,
-      avatarStrapiId: String(id),
+      avatarFileId: id,
     }),
   })
   if (!profileRes.ok)
@@ -78,7 +76,5 @@ export async function POST(req: Request) {
       { status: 500 }
     )
 
-  return NextResponse.json({
-    url: url.startsWith("http") ? url : `${STRAPI}${url}`,
-  })
+  return NextResponse.json({ url: absoluteUrl })
 }
