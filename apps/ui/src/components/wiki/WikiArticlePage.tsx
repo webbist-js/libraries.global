@@ -1,10 +1,5 @@
-"use client"
-
-import { useSearchParams } from "next/navigation"
 import type { Locale } from "next-intl"
-import { useEffect, useState } from "react"
 
-import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
 import {
   Badge,
   Breadcrumb,
@@ -14,8 +9,6 @@ import {
 } from "@/components/ds"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
-import { WikiBlockEditor } from "@/components/wiki/editor/WikiBlockEditor"
-import { WikiEditorSidebar } from "@/components/wiki/editor/WikiEditorSidebar"
 import {
   countWords,
   estimateReadingTime,
@@ -29,6 +22,10 @@ import type {
   WikiSectionNav,
 } from "@/lib/strapi-api/content/server"
 
+import { WikiArticleEditBody } from "./editor/WikiArticleEditBody"
+import { WikiArticleEditProvider } from "./editor/WikiArticleEditContext"
+import { WikiArticleEditSidebarPanel } from "./editor/WikiArticleEditSidebarPanel"
+import { WikiArticleEditToggle } from "./editor/WikiArticleEditToggle"
 import { WikiProgressBar } from "./WikiProgressBar"
 
 type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
@@ -435,50 +432,6 @@ export function WikiArticlePage({
   readonly navbar?: NavbarData
   readonly locale: Locale
 }) {
-  // ALL hooks first — before any conditional returns
-  const searchParams = useSearchParams()
-  const [editMode, setEditMode] = useState(false)
-  const [canEdit, setCanEdit] = useState(false)
-  const [submissionId, setSubmissionId] = useState<number | undefined>(
-    undefined
-  )
-  const [editSummary, setEditSummary] = useState("")
-
-  useEffect(() => {
-    fetch("/api/profile/me")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (!data) return
-        const profile = data.data as Record<string, unknown> | undefined
-        const role = profile?.contributorRole as string | undefined
-        if (role === "wiki_editor" || role === "editorial_board") {
-          setCanEdit(true)
-          if (searchParams.get("edit") === "true") setEditMode(true)
-        }
-      })
-      .catch(() => {})
-  }, [searchParams])
-
-  useEffect(() => {
-    if (!editMode || !article?.slug) return
-    fetch(`/api/contribute/wiki/${article.slug}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data?.submissionId) setSubmissionId(data.submissionId as number)
-      })
-      .catch(() => {})
-  }, [editMode, article])
-
-  async function handleFinalize() {
-    if (!submissionId) return
-    const res = await fetch(`/api/contribute/wiki/${article!.slug}/finalize`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ submissionId }),
-    })
-    if (!res.ok) throw new Error("Finalize failed")
-  }
-
   if (!article) {
     return (
       <PageShell>
@@ -523,441 +476,408 @@ export function WikiArticlePage({
       <GlobalHeader locale={locale} navbar={navbar} />
 
       {/* ── Three-column shell ─────────────────────────────────────────── */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "280px minmax(0,1fr) 240px",
-          maxWidth: "1480px",
-          margin: "0 auto",
-          padding: "0 0",
-        }}
-        className="doc-shell-grid"
-      >
-        {/* ── LEFT SIDEBAR ──────────────────────────────────────────────── */}
-        <aside
+      <WikiArticleEditProvider slug={article.slug ?? ""}>
+        <div
           style={{
-            borderRight: `1px solid ${T.border.line}`,
+            display: "grid",
+            gridTemplateColumns: "280px minmax(0,1fr) 240px",
+            maxWidth: "1480px",
+            margin: "0 auto",
+            padding: "0 0",
           }}
-          className="doc-sidebar-col"
+          className="doc-shell-grid"
         >
-          <div
+          {/* ── LEFT SIDEBAR ──────────────────────────────────────────────── */}
+          <aside
             style={{
-              position: "sticky",
-              top: "56px",
-              height: "calc(100vh - 56px)",
-              overflowY: "auto",
-              padding: "28px 16px 28px 20px",
+              borderRight: `1px solid ${T.border.line}`,
             }}
+            className="doc-sidebar-col"
           >
-            {/* Inline search (decorative ⌘K trigger) */}
             <div
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "8px 12px",
-                borderRadius: "10px",
-                border: `1px solid ${T.border.line}`,
-                background: "rgba(255,255,255,.02)",
-                marginBottom: "18px",
+                position: "sticky",
+                top: "56px",
+                height: "calc(100vh - 56px)",
+                overflowY: "auto",
+                padding: "28px 16px 28px 20px",
               }}
             >
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                style={{ color: T.ink.low, flexShrink: 0 }}
-              >
-                <circle cx="11" cy="11" r="7" />
-                <path d="m20 20-3.5-3.5" />
-              </svg>
-              <span
-                style={{
-                  flex: 1,
-                  fontFamily: T.font.mono,
-                  fontSize: "12px",
-                  color: T.ink.faint,
-                }}
-              >
-                Filter docs…
-              </span>
-              <span
-                style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  color: T.ink.faint,
-                  padding: "3px 6px",
-                  border: `1px solid ${T.border.line}`,
-                  borderRadius: "4px",
-                }}
-              >
-                ⌘K
-              </span>
-            </div>
-
-            <WikiLeftNav navSections={navSections} currentSlug={article.slug} />
-          </div>
-        </aside>
-
-        {/* ── MAIN CONTENT ──────────────────────────────────────────────── */}
-        <article style={{ minWidth: 0, padding: "40px 48px 80px" }}>
-          <div style={{ maxWidth: "720px", margin: "0 auto" }}>
-            {/* Breadcrumb */}
-            <div style={{ marginBottom: "24px" }}>
-              <Breadcrumb
-                items={[
-                  { label: "Wiki", href: "/wiki" },
-                  ...(article.section
-                    ? [
-                        {
-                          label: article.section.name,
-                          href: `/wiki?section=${article.section.slug}`,
-                        },
-                      ]
-                    : []),
-                  { label: article.title ?? "" },
-                ]}
-              />
-            </div>
-
-            {/* ── Article header ─────────────────────────────────────────── */}
-            <header
-              style={{
-                paddingBottom: "24px",
-                borderBottom: `1px solid ${T.border.line}`,
-                marginBottom: "32px",
-              }}
-            >
-              {/* Kicker: type tag + status tag + meta */}
+              {/* Inline search (decorative ⌘K trigger) */}
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "12px",
-                  marginBottom: "16px",
-                  flexWrap: "wrap",
+                  gap: "8px",
+                  padding: "8px 12px",
+                  borderRadius: "10px",
+                  border: `1px solid ${T.border.line}`,
+                  background: "rgba(255,255,255,.02)",
+                  marginBottom: "18px",
                 }}
               >
-                {article.category?.name ? (
-                  <Badge label={article.category.name} color="aurora" />
-                ) : null}
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  style={{ color: T.ink.low, flexShrink: 0 }}
+                >
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.5-3.5" />
+                </svg>
+                <span
+                  style={{
+                    flex: 1,
+                    fontFamily: T.font.mono,
+                    fontSize: "12px",
+                    color: T.ink.faint,
+                  }}
+                >
+                  Filter docs…
+                </span>
+                <span
+                  style={{
+                    fontFamily: T.font.mono,
+                    fontSize: "10px",
+                    color: T.ink.faint,
+                    padding: "3px 6px",
+                    border: `1px solid ${T.border.line}`,
+                    borderRadius: "4px",
+                  }}
+                >
+                  ⌘K
+                </span>
+              </div>
 
-                <StatusBadge status={article.articleStatus} />
+              <WikiLeftNav
+                navSections={navSections}
+                currentSlug={article.slug}
+              />
+            </div>
+          </aside>
 
-                <MetaRow
+          {/* ── MAIN CONTENT ──────────────────────────────────────────────── */}
+          <article style={{ minWidth: 0, padding: "40px 48px 80px" }}>
+            <div style={{ maxWidth: "720px", margin: "0 auto" }}>
+              {/* Breadcrumb */}
+              <div style={{ marginBottom: "24px" }}>
+                <Breadcrumb
                   items={[
-                    readingTime > 0 ? `~ ${readingTime} min read` : null,
-                    editedAgo ? `Last edited ${editedAgo}` : null,
-                    article.author ?? null,
+                    { label: "Wiki", href: "/wiki" },
+                    ...(article.section
+                      ? [
+                          {
+                            label: article.section.name,
+                            href: `/wiki?section=${article.section.slug}`,
+                          },
+                        ]
+                      : []),
+                    { label: article.title ?? "" },
                   ]}
                 />
               </div>
 
-              {/* Title */}
-              <h1
+              {/* ── Article header ─────────────────────────────────────────── */}
+              <header
                 style={{
-                  fontFamily: T.font.serif,
-                  fontWeight: 400,
-                  fontSize: "clamp(40px,5.6vw,72px)",
-                  lineHeight: 0.98,
-                  letterSpacing: "-.032em",
-                  margin: "0 0 18px",
-                  textWrap: "balance",
-                  color: T.ink.base,
+                  paddingBottom: "24px",
+                  borderBottom: `1px solid ${T.border.line}`,
+                  marginBottom: "32px",
                 }}
               >
-                {titleMain}{" "}
-                <em
+                {/* Kicker: type tag + status tag + meta */}
+                <div
                   style={{
-                    fontStyle: "italic",
-                    fontWeight: 300,
-                    color: T.ink.low,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    marginBottom: "16px",
+                    flexWrap: "wrap",
                   }}
                 >
-                  {titleItalic}
-                </em>
-              </h1>
+                  {article.category?.name ? (
+                    <Badge label={article.category.name} color="aurora" />
+                  ) : null}
 
-              {/* Summary / dek */}
-              {article.summary ? (
-                <p
+                  <StatusBadge status={article.articleStatus} />
+
+                  <MetaRow
+                    items={[
+                      readingTime > 0 ? `~ ${readingTime} min read` : null,
+                      editedAgo ? `Last edited ${editedAgo}` : null,
+                      article.author ?? null,
+                    ]}
+                  />
+                </div>
+
+                {/* Title */}
+                <h1
                   style={{
-                    fontSize: "17px",
-                    lineHeight: 1.55,
-                    color: T.ink.dim,
-                    fontWeight: 300,
-                    maxWidth: "60ch",
-                    margin: 0,
+                    fontFamily: T.font.serif,
+                    fontWeight: 400,
+                    fontSize: "clamp(40px,5.6vw,72px)",
+                    lineHeight: 0.98,
+                    letterSpacing: "-.032em",
+                    margin: "0 0 18px",
+                    textWrap: "balance",
+                    color: T.ink.base,
                   }}
                 >
-                  {article.summary}
-                </p>
-              ) : null}
-
-              {/* Toolbar: author avatar + actions */}
-              <div
-                style={{
-                  marginTop: "24px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                  gap: "16px",
-                }}
-              >
-                {/* Author avatar */}
-                {article.author ? (
-                  <div
+                  {titleMain}{" "}
+                  <em
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
+                      fontStyle: "italic",
+                      fontWeight: 300,
+                      color: T.ink.low,
                     }}
                   >
-                    <span
-                      style={{
-                        width: "30px",
-                        height: "30px",
-                        borderRadius: "50%",
-                        background: `linear-gradient(135deg,${T.accent.aurora},${T.accent.violet})`,
-                        display: "grid",
-                        placeItems: "center",
-                        color: "#0a0f2a",
-                        fontFamily: T.font.serif,
-                        fontSize: "11px",
-                        fontWeight: 500,
-                        border: `2px solid ${T.bg.void}`,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {article.author.slice(0, 2).toUpperCase()}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: T.font.mono,
-                        fontSize: "11px",
-                        color: T.ink.low,
-                      }}
-                    >
-                      {article.author}
-                    </span>
-                  </div>
-                ) : (
-                  <div />
-                )}
+                    {titleItalic}
+                  </em>
+                </h1>
 
-                {/* Action buttons */}
-                <div style={{ display: "flex", gap: "6px" }}>
-                  {canEdit && (
+                {/* Summary / dek */}
+                {article.summary ? (
+                  <p
+                    style={{
+                      fontSize: "17px",
+                      lineHeight: 1.55,
+                      color: T.ink.dim,
+                      fontWeight: 300,
+                      maxWidth: "60ch",
+                      margin: 0,
+                    }}
+                  >
+                    {article.summary}
+                  </p>
+                ) : null}
+
+                {/* Toolbar: author avatar + actions */}
+                <div
+                  style={{
+                    marginTop: "24px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: "16px",
+                  }}
+                >
+                  {/* Author avatar */}
+                  {article.author ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: "30px",
+                          height: "30px",
+                          borderRadius: "50%",
+                          background: `linear-gradient(135deg,${T.accent.aurora},${T.accent.violet})`,
+                          display: "grid",
+                          placeItems: "center",
+                          color: "#0a0f2a",
+                          fontFamily: T.font.serif,
+                          fontSize: "11px",
+                          fontWeight: 500,
+                          border: `2px solid ${T.bg.void}`,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {article.author.slice(0, 2).toUpperCase()}
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: T.font.mono,
+                          fontSize: "11px",
+                          color: T.ink.low,
+                        }}
+                      >
+                        {article.author}
+                      </span>
+                    </div>
+                  ) : (
+                    <div />
+                  )}
+
+                  {/* Action buttons */}
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <WikiArticleEditToggle />
                     <button
-                      onClick={() => setEditMode((v) => !v)}
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
                         gap: "6px",
                         padding: "6px 10px",
                         borderRadius: "8px",
-                        border: `1px solid ${editMode ? "rgba(127,223,255,.3)" : T.border.line}`,
-                        background: editMode
-                          ? "rgba(127,223,255,.08)"
-                          : "rgba(255,255,255,.02)",
+                        border: `1px solid ${T.border.line}`,
+                        background: "rgba(255,255,255,.02)",
                         fontFamily: T.font.mono,
                         fontSize: "11px",
-                        color: editMode ? T.accent.aurora : T.ink.dim,
+                        color: T.ink.dim,
                         letterSpacing: ".06em",
                         cursor: "pointer",
                       }}
                     >
-                      {editMode ? "Exit edit" : "Edit"}
+                      Report issue
                     </button>
-                  )}
-                  <button
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      padding: "6px 10px",
-                      borderRadius: "8px",
-                      border: `1px solid ${T.border.line}`,
-                      background: "rgba(255,255,255,.02)",
-                      fontFamily: T.font.mono,
-                      fontSize: "11px",
-                      color: T.ink.dim,
-                      letterSpacing: ".06em",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Report issue
-                  </button>
+                  </div>
                 </div>
-              </div>
-            </header>
+              </header>
 
-            {/* ── Article body ─────────────────────────────────────────── */}
-            {editMode ? (
-              <WikiBlockEditor
+              {/* ── Article body ─────────────────────────────────────────── */}
+              <WikiArticleEditBody
                 slug={article.slug ?? ""}
                 locale={locale}
                 body={article.body as Record<string, unknown>[]}
-                existingSubmissionId={submissionId}
-                onSubmissionIdChange={setSubmissionId}
-                editSummary={editSummary}
-                onEditSummaryChange={setEditSummary}
               />
-            ) : (
-              <div className="article-drop-cap">
-                <ArticleBodyBlocks blocks={article.body} />
-              </div>
-            )}
 
-            {/* ── Footer ───────────────────────────────────────────────── */}
-            <div
-              style={{
-                marginTop: "40px",
-                paddingTop: "24px",
-                borderTop: `1px solid ${T.border.line}`,
-                display: "flex",
-                justifyContent: "space-between",
-                gap: "24px",
-                alignItems: "center",
-                flexWrap: "wrap",
-              }}
-            >
-              {/* Feedback */}
+              {/* ── Footer ───────────────────────────────────────────────── */}
               <div
                 style={{
-                  fontSize: "13px",
-                  color: T.ink.low,
+                  marginTop: "40px",
+                  paddingTop: "24px",
+                  borderTop: `1px solid ${T.border.line}`,
                   display: "flex",
+                  justifyContent: "space-between",
+                  gap: "24px",
                   alignItems: "center",
-                  gap: "12px",
+                  flexWrap: "wrap",
                 }}
               >
-                <span>Was this page helpful?</span>
-                <div style={{ display: "flex", gap: "6px" }}>
-                  {["↑ Yes", "↓ No"].map((label) => (
-                    <button
-                      key={label}
-                      style={{
-                        padding: "6px 10px",
-                        borderRadius: "6px",
-                        border: `1px solid ${T.border.line}`,
-                        background: "transparent",
-                        color: T.ink.dim,
-                        fontFamily: T.font.mono,
-                        fontSize: "12px",
-                        cursor: "pointer",
-                        transition: "border-color 200ms, color 200ms",
-                      }}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Last edited meta */}
-              {editedAgo ? (
+                {/* Feedback */}
                 <div
                   style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "11px",
-                    color: T.ink.faint,
-                    letterSpacing: ".06em",
-                  }}
-                >
-                  Last edited {editedAgo}
-                  {article.author ? ` · by ${article.author}` : ""}
-                </div>
-              ) : null}
-            </div>
-
-            {/* ── Prev / Next pager ───────────────────────────────────── */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "16px",
-                marginTop: "32px",
-              }}
-            >
-              <GlobalLink
-                href="/wiki"
-                style={{
-                  padding: "18px",
-                  border: `1px solid ${T.border.line}`,
-                  borderRadius: "12px",
-                  background: "rgba(255,255,255,.02)",
-                  textDecoration: "none",
-                  transition: "border-color 200ms, background 200ms",
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".2em",
-                    textTransform: "uppercase",
+                    fontSize: "13px",
                     color: T.ink.low,
-                    marginBottom: "6px",
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px",
+                    gap: "12px",
                   }}
                 >
-                  ← Back
+                  <span>Was this page helpful?</span>
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    {["↑ Yes", "↓ No"].map((label) => (
+                      <button
+                        key={label}
+                        style={{
+                          padding: "6px 10px",
+                          borderRadius: "6px",
+                          border: `1px solid ${T.border.line}`,
+                          background: "transparent",
+                          color: T.ink.dim,
+                          fontFamily: T.font.mono,
+                          fontSize: "12px",
+                          cursor: "pointer",
+                          transition: "border-color 200ms, color 200ms",
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div
+
+                {/* Last edited meta */}
+                {editedAgo ? (
+                  <div
+                    style={{
+                      fontFamily: T.font.mono,
+                      fontSize: "11px",
+                      color: T.ink.faint,
+                      letterSpacing: ".06em",
+                    }}
+                  >
+                    Last edited {editedAgo}
+                    {article.author ? ` · by ${article.author}` : ""}
+                  </div>
+                ) : null}
+              </div>
+
+              {/* ── Prev / Next pager ───────────────────────────────────── */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "16px",
+                  marginTop: "32px",
+                }}
+              >
+                <GlobalLink
+                  href="/wiki"
                   style={{
-                    fontFamily: T.font.serif,
-                    fontSize: "17px",
-                    color: T.ink.base,
-                    letterSpacing: "-.02em",
-                    lineHeight: 1.25,
+                    padding: "18px",
+                    border: `1px solid ${T.border.line}`,
+                    borderRadius: "12px",
+                    background: "rgba(255,255,255,.02)",
+                    textDecoration: "none",
+                    transition: "border-color 200ms, background 200ms",
                   }}
                 >
-                  All docs
-                </div>
-              </GlobalLink>
-              <div />
+                  <div
+                    style={{
+                      fontFamily: T.font.mono,
+                      fontSize: "10px",
+                      letterSpacing: ".2em",
+                      textTransform: "uppercase",
+                      color: T.ink.low,
+                      marginBottom: "6px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    ← Back
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: T.font.serif,
+                      fontSize: "17px",
+                      color: T.ink.base,
+                      letterSpacing: "-.02em",
+                      lineHeight: 1.25,
+                    }}
+                  >
+                    All docs
+                  </div>
+                </GlobalLink>
+                <div />
+              </div>
             </div>
-          </div>
-        </article>
+          </article>
 
-        {/* ── RIGHT SIDEBAR ─────────────────────────────────────────────── */}
-        <aside
-          style={{ borderLeft: `1px solid ${T.border.line}` }}
-          className="doc-outline-col"
-        >
-          <div
-            style={{
-              position: "sticky",
-              top: "56px",
-              height: "calc(100vh - 56px)",
-              overflowY: "auto",
-              padding: "44px 16px 28px 20px",
-            }}
+          {/* ── RIGHT SIDEBAR ─────────────────────────────────────────────── */}
+          <aside
+            style={{ borderLeft: `1px solid ${T.border.line}` }}
+            className="doc-outline-col"
           >
-            {editMode && (
-              <WikiEditorSidebar
-                submissionId={submissionId}
-                onSubmit={handleFinalize}
+            <div
+              style={{
+                position: "sticky",
+                top: "56px",
+                height: "calc(100vh - 56px)",
+                overflowY: "auto",
+                padding: "44px 16px 28px 20px",
+              }}
+            >
+              <WikiArticleEditSidebarPanel />
+              <WikiRightPanel
+                headings={headings}
+                article={article}
+                wordCount={wordCount}
               />
-            )}
-            <WikiRightPanel
-              headings={headings}
-              article={article}
-              wordCount={wordCount}
-            />
-          </div>
-        </aside>
-      </div>
+            </div>
+          </aside>
+        </div>
 
-      {/* Responsive overrides */}
-      <style>{`
+        {/* Responsive overrides */}
+        <style>{`
         @media (max-width: 1200px) {
           .doc-shell-grid { grid-template-columns: 240px minmax(0,1fr) !important; }
           .doc-outline-col { display: none !important; }
@@ -968,6 +888,7 @@ export function WikiArticlePage({
           article { padding: 32px 24px 60px !important; }
         }
       `}</style>
+      </WikiArticleEditProvider>
     </PageShell>
   )
 }
