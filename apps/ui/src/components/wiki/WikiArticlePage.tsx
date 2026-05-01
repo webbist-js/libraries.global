@@ -26,6 +26,7 @@ import { T } from "@/lib/design-tokens"
 import type {
   WikiArticleDetail,
   WikiArticleStatus,
+  WikiSectionNav,
 } from "@/lib/strapi-api/content/server"
 
 import { WikiProgressBar } from "./WikiProgressBar"
@@ -448,7 +449,8 @@ export function WikiArticlePage({
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!data) return
-        const role = data.role as string | undefined
+        const profile = data.data as Record<string, unknown> | undefined
+        const role = profile?.contributorRole as string | undefined
         if (role === "wiki_editor" || role === "editorial_board") {
           setCanEdit(true)
           if (searchParams.get("edit") === "true") setEditMode(true)
@@ -465,7 +467,7 @@ export function WikiArticlePage({
         if (data?.submissionId) setSubmissionId(data.submissionId as number)
       })
       .catch(() => {})
-  }, [editMode, article?.slug])
+  }, [editMode, article])
 
   async function handleFinalize() {
     if (!submissionId) return
@@ -797,7 +799,7 @@ export function WikiArticlePage({
             {/* ── Article body ─────────────────────────────────────────── */}
             {editMode ? (
               <WikiBlockEditor
-                slug={article.slug}
+                slug={article.slug ?? ""}
                 locale={locale}
                 body={article.body as Record<string, unknown>[]}
                 existingSubmissionId={submissionId}
