@@ -1,4 +1,8 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import type { Locale } from "next-intl"
+import { useSearchParams } from "next/navigation"
 
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
 import {
@@ -23,6 +27,8 @@ import type {
 } from "@/lib/strapi-api/content/server"
 
 import { WikiProgressBar } from "./WikiProgressBar"
+import { WikiBlockEditor } from "@/components/wiki/editor/WikiBlockEditor"
+import { WikiEditorSidebar } from "@/components/wiki/editor/WikiEditorSidebar"
 
 type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
 
@@ -428,6 +434,47 @@ export function WikiArticlePage({
   readonly navbar?: NavbarData
   readonly locale: Locale
 }) {
+  // ALL hooks first — before any conditional returns
+  const searchParams = useSearchParams()
+  const [editMode, setEditMode] = useState(false)
+  const [canEdit, setCanEdit] = useState(false)
+  const [submissionId, setSubmissionId] = useState<number | undefined>(undefined)
+  const [editSummary, setEditSummary] = useState("")
+
+  useEffect(() => {
+    fetch("/api/profile/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) return
+        const role = data.role as string | undefined
+        if (role === "wiki_editor" || role === "editorial_board") {
+          setCanEdit(true)
+          if (searchParams.get("edit") === "true") setEditMode(true)
+        }
+      })
+      .catch(() => {})
+  }, [searchParams])
+
+  useEffect(() => {
+    if (!editMode || !article?.slug) return
+    fetch(`/api/contribute/wiki/${article.slug}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.submissionId) setSubmissionId(data.submissionId as number)
+      })
+      .catch(() => {})
+  }, [editMode, article?.slug])
+
+  async function handleFinalize() {
+    if (!submissionId) return
+    const res = await fetch(`/api/contribute/wiki/${article!.slug}/finalize`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ submissionId }),
+    })
+    if (!res.ok) throw new Error("Finalize failed")
+  }
+
   if (!article) {
     return (
       <PageShell>
@@ -700,6 +747,27 @@ export function WikiArticlePage({
 
                 {/* Action buttons */}
                 <div style={{ display: "flex", gap: "6px" }}>
+                  {canEdit && (
+                    <button
+                      onClick={() => setEditMode((v) => !v)}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        padding: "6px 10px",
+                        borderRadius: "8px",
+                        border: `1px solid ${editMode ? "rgba(127,223,255,.3)" : T.border.line}`,
+                        background: editMode ? "rgba(127,223,255,.08)" : "rgba(255,255,255,.02)",
+                        fontFamily: T.font.mono,
+                        fontSize: "11px",
+                        color: editMode ? T.accent.aurora : T.ink.dim,
+                        letterSpacing: ".06em",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {editMode ? "Exit edit" : "Edit"}
+                    </button>
+                  )}
                   <button
                     style={{
                       display: "inline-flex",
@@ -723,9 +791,21 @@ export function WikiArticlePage({
             </header>
 
             {/* ── Article body ─────────────────────────────────────────── */}
-            <div className="article-drop-cap">
-              <ArticleBodyBlocks blocks={article.body} />
-            </div>
+            {editMode ? (
+              <WikiBlockEditor
+                slug={article.slug}
+                locale={locale}
+                body={article.body as Record<string, unknown>[]}
+                existingSubmissionId={submissionId}
+                onSubmissionIdChange={setSubmissionId}
+                editSummary={editSummary}
+                onEditSummaryChange={setEditSummary}
+              />
+            ) : (
+              <div className="article-drop-cap">
+                <ArticleBodyBlocks blocks={article.body} />
+              </div>
+            )}
 
             {/* ── Footer ───────────────────────────────────────────────── */}
             <div
@@ -855,6 +935,12 @@ export function WikiArticlePage({
               padding: "44px 16px 28px 20px",
             }}
           >
+            {editMode && (
+              <WikiEditorSidebar
+                submissionId={submissionId}
+                onSubmit={handleFinalize}
+              />
+            )}
             <WikiRightPanel
               headings={headings}
               article={article}

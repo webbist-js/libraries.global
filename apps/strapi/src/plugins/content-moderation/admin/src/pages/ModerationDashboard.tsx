@@ -2,6 +2,8 @@ import { Box, Button, Flex, Tabs, Typography } from "@strapi/design-system"
 import { useFetchClient } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
+import { WikiEditDiffPanel } from "../components/WikiEditDiffPanel"
+
 // ── Inline SVG icons ──────────────────────────────────────────────────────────
 
 function IconCheck() {
@@ -107,6 +109,7 @@ type Submission = {
   targetSlug?: string
   targetDocumentId?: string
   fields?: Record<string, unknown>
+  draftData?: Record<string, unknown> | null
   note?: string
   reviewNote?: string
   submittedByEmail: string
@@ -1267,6 +1270,8 @@ function SubmissionCard({
         >
           {sub.submissionType === "library_claim" ? (
             <LibraryClaimPanel sub={sub} />
+          ) : sub.submissionType === "wiki_edit" ? (
+            <WikiEditDiffPanel sub={sub} />
           ) : (
             <FieldsPanel sub={sub} />
           )}
