@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import type { Locale } from "next-intl"
 import { useSearchParams } from "next/navigation"
+import type { Locale } from "next-intl"
+import { useEffect, useState } from "react"
 
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
 import {
@@ -14,6 +14,8 @@ import {
 } from "@/components/ds"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
+import { WikiBlockEditor } from "@/components/wiki/editor/WikiBlockEditor"
+import { WikiEditorSidebar } from "@/components/wiki/editor/WikiEditorSidebar"
 import {
   countWords,
   estimateReadingTime,
@@ -27,8 +29,6 @@ import type {
 } from "@/lib/strapi-api/content/server"
 
 import { WikiProgressBar } from "./WikiProgressBar"
-import { WikiBlockEditor } from "@/components/wiki/editor/WikiBlockEditor"
-import { WikiEditorSidebar } from "@/components/wiki/editor/WikiEditorSidebar"
 
 type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
 
@@ -438,7 +438,9 @@ export function WikiArticlePage({
   const searchParams = useSearchParams()
   const [editMode, setEditMode] = useState(false)
   const [canEdit, setCanEdit] = useState(false)
-  const [submissionId, setSubmissionId] = useState<number | undefined>(undefined)
+  const [submissionId, setSubmissionId] = useState<number | undefined>(
+    undefined
+  )
   const [editSummary, setEditSummary] = useState("")
 
   useEffect(() => {
@@ -757,7 +759,9 @@ export function WikiArticlePage({
                         padding: "6px 10px",
                         borderRadius: "8px",
                         border: `1px solid ${editMode ? "rgba(127,223,255,.3)" : T.border.line}`,
-                        background: editMode ? "rgba(127,223,255,.08)" : "rgba(255,255,255,.02)",
+                        background: editMode
+                          ? "rgba(127,223,255,.08)"
+                          : "rgba(255,255,255,.02)",
                         fontFamily: T.font.mono,
                         fontSize: "11px",
                         color: editMode ? T.accent.aurora : T.ink.dim,
