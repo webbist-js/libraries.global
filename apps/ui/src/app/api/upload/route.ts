@@ -2,7 +2,7 @@ import { headers } from "next/headers"
 
 import { auth } from "@/lib/auth"
 
-const STRAPI = process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://127.0.0.1:1337"
+const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const STRAPI_API_KEY = process.env.STRAPI_REST_READONLY_API_KEY ?? ""
 const WIKI_EDITOR_ROLES = new Set(["wiki_editor", "editorial_board"])
 
@@ -39,6 +39,10 @@ export async function POST(req: Request) {
       { error: "File too large (max 5 MB)" },
       { status: 400 }
     )
+  }
+
+  if (!STRAPI_API_KEY) {
+    return Response.json({ error: "Upload not configured" }, { status: 503 })
   }
 
   const upload = new FormData()

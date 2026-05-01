@@ -1,8 +1,9 @@
 import { headers } from "next/headers"
 
+import { userHeaders } from "@/app/api/submissions/route"
 import { auth } from "@/lib/auth"
 
-const STRAPI = process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://127.0.0.1:1337"
+const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const WIKI_EDITOR_ROLES = new Set(["wiki_editor", "editorial_board"])
 
 export async function POST(req: Request) {
@@ -17,14 +18,27 @@ export async function POST(req: Request) {
     return Response.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  const { submissionId } = await req.json()
-  const jwt = (session.user as Record<string, unknown>).strapiJWT as string
+  let submissionId: unknown
+  try {
+    const body = await req.json()
+    submissionId = body.submissionId
+  } catch {
+    return Response.json({ error: "Invalid request body" }, { status: 400 })
+  }
+
+  if (
+    typeof submissionId !== "number" ||
+    !Number.isInteger(submissionId) ||
+    submissionId <= 0
+  ) {
+    return Response.json({ error: "Invalid submissionId" }, { status: 400 })
+  }
 
   const res = await fetch(
     `${STRAPI}/api/content-moderation/submissions/${submissionId}/finalize`,
     {
       method: "PATCH",
-      headers: { Authorization: `Bearer ${jwt}` },
+      headers: { ...userHeaders(session.user) },
     }
   )
 

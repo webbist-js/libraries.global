@@ -1,20 +1,10 @@
 import { headers } from "next/headers"
 
+import { userHeaders } from "@/app/api/submissions/route"
 import { auth } from "@/lib/auth"
 
-const STRAPI = process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://127.0.0.1:1337"
+const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const WIKI_EDITOR_ROLES = new Set(["wiki_editor", "editorial_board"])
-
-async function getEditorSession() {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session?.user) return null
-  const role = (session.user as Record<string, unknown>).contributorRole as
-    | string
-    | undefined
-  if (!role || !WIKI_EDITOR_ROLES.has(role)) return null
-
-  return session
-}
 
 // GET /api/contribute/wiki/[slug] — fetch existing draft for this slug
 export async function GET(
@@ -22,13 +12,20 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params
-  const session = await getEditorSession()
-  if (!session) return Response.json({ error: "Forbidden" }, { status: 403 })
+  const session = await auth.api.getSession({ headers: await headers() })
+  if (!session?.user)
+    return Response.json({ error: "Unauthorized" }, { status: 401 })
+  if (
+    !WIKI_EDITOR_ROLES.has(
+      (session.user as Record<string, unknown>).contributorRole as string
+    )
+  ) {
+    return Response.json({ error: "Forbidden" }, { status: 403 })
+  }
 
-  const jwt = (session.user as Record<string, unknown>).strapiJWT as string
   const res = await fetch(
     `${STRAPI}/api/content-moderation/submissions/draft/wiki_edit?targetSlug=${encodeURIComponent(slug)}`,
-    { headers: { Authorization: `Bearer ${jwt}` }, cache: "no-store" }
+    { headers: { ...userHeaders(session.user) }, cache: "no-store" }
   )
   if (!res.ok) return Response.json({ draft: null })
   const data = await res.json()
@@ -42,17 +39,29 @@ export async function POST(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params
-  const session = await getEditorSession()
-  if (!session) return Response.json({ error: "Forbidden" }, { status: 403 })
+  const session = await auth.api.getSession({ headers: await headers() })
+  if (!session?.user)
+    return Response.json({ error: "Unauthorized" }, { status: 401 })
+  if (
+    !WIKI_EDITOR_ROLES.has(
+      (session.user as Record<string, unknown>).contributorRole as string
+    )
+  ) {
+    return Response.json({ error: "Forbidden" }, { status: 403 })
+  }
 
-  const body = await req.json()
-  const jwt = (session.user as Record<string, unknown>).strapiJWT as string
+  let body: { draftData?: unknown }
+  try {
+    body = await req.json()
+  } catch {
+    return Response.json({ error: "Invalid request body" }, { status: 400 })
+  }
 
   const res = await fetch(`${STRAPI}/api/content-moderation/submissions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${jwt}`,
+      ...userHeaders(session.user),
     },
     body: JSON.stringify({
       submissionType: "wiki_edit",
@@ -73,19 +82,40 @@ export async function PATCH(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug: _slug } = await params
-  const session = await getEditorSession()
-  if (!session) return Response.json({ error: "Forbidden" }, { status: 403 })
+  const session = await auth.api.getSession({ headers: await headers() })
+  if (!session?.user)
+    return Response.json({ error: "Unauthorized" }, { status: 401 })
+  if (
+    !WIKI_EDITOR_ROLES.has(
+      (session.user as Record<string, unknown>).contributorRole as string
+    )
+  ) {
+    return Response.json({ error: "Forbidden" }, { status: 403 })
+  }
 
-  const body = await req.json()
-  const jwt = (session.user as Record<string, unknown>).strapiJWT as string
+  let body: { submissionId?: unknown; draftData?: unknown }
+  try {
+    body = await req.json()
+  } catch {
+    return Response.json({ error: "Invalid request body" }, { status: 400 })
+  }
+
+  const { submissionId } = body
+  if (
+    typeof submissionId !== "number" ||
+    !Number.isInteger(submissionId) ||
+    submissionId <= 0
+  ) {
+    return Response.json({ error: "Invalid submissionId" }, { status: 400 })
+  }
 
   const res = await fetch(
-    `${STRAPI}/api/content-moderation/submissions/${body.submissionId}/draft`,
+    `${STRAPI}/api/content-moderation/submissions/${submissionId}/draft`,
     {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${jwt}`,
+        ...userHeaders(session.user),
       },
       body: JSON.stringify({ draftData: body.draftData }),
     }
