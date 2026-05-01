@@ -82,6 +82,7 @@ export function WikiBlockCard({
               padding: "2px",
             }}
             title="Move up"
+            aria-label="Move block up"
           >
             <Icon icon="mdi:chevron-up" width={14} />
           </button>
@@ -96,6 +97,7 @@ export function WikiBlockCard({
               padding: "2px",
             }}
             title="Move down"
+            aria-label="Move block down"
           >
             <Icon icon="mdi:chevron-down" width={14} />
           </button>
@@ -110,6 +112,7 @@ export function WikiBlockCard({
               marginLeft: "4px",
             }}
             title="Delete block"
+            aria-label="Delete block"
           >
             <Icon icon="mdi:trash-can-outline" width={14} />
           </button>

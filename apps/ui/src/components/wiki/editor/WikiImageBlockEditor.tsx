@@ -24,8 +24,13 @@ export function WikiImageBlockEditor({
       fd.append("files", file)
       const res = await fetch("/api/upload", { method: "POST", body: fd })
       if (!res.ok) {
-        const d = await res.json()
-        throw new Error(d.error ?? "Upload failed")
+        let message = "Upload failed"
+        try {
+          message = (await res.json()).error ?? message
+        } catch {
+          /* non-JSON error body */
+        }
+        throw new Error(message)
       }
       const { id, url } = await res.json()
       onChange({ ...block, imageId: id, previewUrl: url })
@@ -33,6 +38,7 @@ export function WikiImageBlockEditor({
       setError((err as Error).message)
     } finally {
       setUploading(false)
+      if (inputRef.current) inputRef.current.value = ""
     }
   }
 

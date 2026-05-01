@@ -21,8 +21,8 @@ export function WikiCalloutBlockEditor({
   readonly block: WikiCalloutDraftBlock
   readonly onChange: (updated: WikiCalloutDraftBlock) => void
 }) {
-  const activeType = (CALLOUT_TYPES.find((t) => t.value === block.type) ??
-    CALLOUT_TYPES[0])!
+  const activeType =
+    CALLOUT_TYPES.find((t) => t.value === block.type) ?? CALLOUT_TYPES[0]!
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
