@@ -37,10 +37,10 @@ export default async function OnboardingPage() {
     <div
       style={{
         minHeight: "100vh",
-        background: "#030511",
+        background: "var(--t-bg-void)",
         display: "flex",
         flexDirection: "column",
-        color: "#f4f7ff",
+        color: "var(--t-ink-base)",
         fontFamily: "Roboto, sans-serif",
       }}
     >

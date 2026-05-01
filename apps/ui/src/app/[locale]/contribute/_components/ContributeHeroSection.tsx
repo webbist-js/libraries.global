@@ -1,4 +1,4 @@
-import { ContributeHeroShell } from "@/components/ds"
+import { Breadcrumb, ContributeHeroShell } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 
@@ -74,8 +74,15 @@ export function ContributeHeroSection({
   return (
     <ContributeHeroShell
       minHeight="520px"
-      overlay="radial-gradient(ellipse 60% 80% at 70% 30%, rgba(127,223,255,0.05) 0%, transparent 55%), linear-gradient(to bottom, rgba(3,5,17,0) 0%, rgba(3,5,17,0.72) 100%)"
+      overlay="radial-gradient(ellipse 60% 80% at 70% 30%, var(--t-aurora-soft) 0%, transparent 55%), linear-gradient(to bottom, transparent 0%, var(--t-bg-space) 100%)"
     >
+      {/* Breadcrumb */}
+      <div style={{ marginBottom: "20px" }}>
+        <Breadcrumb
+          items={[{ label: "Home", href: "/" }, { label: "Contribute" }]}
+        />
+      </div>
+
       {/* Eyebrow */}
       <p
         style={{
@@ -109,7 +116,7 @@ export function ContributeHeroSection({
           style={{
             fontStyle: "italic",
             fontWeight: 400,
-            color: "rgba(244,247,255,0.55)",
+            color: T.ink.dim,
           }}
         >
           reading rooms.
@@ -149,8 +156,8 @@ export function ContributeHeroSection({
             gap: "6px",
             padding: "10px 22px",
             borderRadius: "8px",
-            border: `1px solid rgba(127,223,255,0.35)`,
-            background: "rgba(127,223,255,0.1)",
+            border: "1px solid var(--t-aurora-edge)",
+            background: "var(--t-aurora-soft)",
             color: T.accent.aurora,
             fontFamily: T.font.mono,
             fontSize: "10px",
@@ -171,7 +178,7 @@ export function ContributeHeroSection({
             padding: "10px 22px",
             borderRadius: "8px",
             border: `1px solid ${T.border.hi}`,
-            background: "rgba(255,255,255,0.04)",
+            background: T.bg.surface,
             color: T.ink.dim,
             fontFamily: T.font.mono,
             fontSize: "10px",
@@ -190,10 +197,10 @@ export function ContributeHeroSection({
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(4, 1fr)",
-          border: "1px solid rgba(255,255,255,0.07)",
+          border: `1px solid ${T.border.line}`,
           borderRadius: "14px",
           overflow: "hidden",
-          background: "rgba(255,255,255,0.04)",
+          background: T.bg.deep,
           backdropFilter: "blur(8px)",
         }}
       >
@@ -204,7 +211,7 @@ export function ContributeHeroSection({
               padding: "20px 22px 18px",
               borderRight:
                 i < statCells.length - 1
-                  ? "1px solid rgba(255,255,255,0.06)"
+                  ? `1px solid ${T.border.line}`
                   : undefined,
               display: "flex",
               flexDirection: "column",
@@ -217,7 +224,7 @@ export function ContributeHeroSection({
                 fontSize: "7px",
                 letterSpacing: ".2em",
                 textTransform: "uppercase",
-                color: "rgba(244,247,255,0.28)",
+                color: T.ink.faint,
               }}
             >
               {stat.label}
@@ -238,7 +245,7 @@ export function ContributeHeroSection({
               style={{
                 fontFamily: T.font.sans,
                 fontSize: "11px",
-                color: "rgba(244,247,255,0.40)",
+                color: T.ink.low,
                 marginTop: "2px",
               }}
             >

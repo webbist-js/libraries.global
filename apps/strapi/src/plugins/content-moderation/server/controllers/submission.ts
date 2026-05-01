@@ -57,6 +57,20 @@ export default ({ strapi }: { strapi: any }) => ({
     ctx.body = { data: submission }
   },
 
+  // GET /api/content-moderation/submissions/by-username/:username  (content-api route)
+  // Returns public (non-draft) submissions for a given profile username.
+  async findByUsername(ctx: any) {
+    const { username } = ctx.params as { username: string }
+    if (!username) return ctx.badRequest("Missing username")
+
+    const submissions = await strapi
+      .plugin("content-moderation")
+      .service("submission")
+      .findPublicByUsername(username)
+
+    ctx.body = { data: submissions }
+  },
+
   // GET /api/content-moderation/submissions/my  (content-api route)
   async findMine(ctx: any) {
     const user = await resolveUser(strapi, ctx)

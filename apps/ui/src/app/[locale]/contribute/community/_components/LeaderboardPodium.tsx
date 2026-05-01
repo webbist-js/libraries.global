@@ -38,9 +38,7 @@ export function LeaderboardPodium({
             borderRadius: "12px",
             border: `1px solid ${entry.rank === 1 ? T.accent.gold + "40" : T.border.line}`,
             background:
-              entry.rank === 1
-                ? "rgba(232,201,138,0.04)"
-                : "rgba(255,255,255,0.015)",
+              entry.rank === 1 ? "rgba(232,201,138,0.04)" : T.bg.surface,
             textAlign: "center",
             position: "relative",
           }}
@@ -100,7 +98,7 @@ export function LeaderboardPodium({
             style={{
               margin: "0 0 10px",
               fontFamily: T.font.mono,
-              fontSize: "8px",
+              fontSize: "10px",
               letterSpacing: ".10em",
               textTransform: "uppercase",
               color: TIER_COLORS[entry.tier] ?? T.ink.faint,
@@ -124,7 +122,7 @@ export function LeaderboardPodium({
             <span
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "8px",
+                fontSize: "10px",
                 letterSpacing: ".12em",
                 textTransform: "uppercase",
                 color: T.ink.faint,

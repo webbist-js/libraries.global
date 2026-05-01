@@ -19,7 +19,7 @@ export function ContributeNavBar() {
     <nav
       style={{
         borderBottom: `1px solid ${T.border.line}`,
-        background: "rgba(3,5,17,0.92)",
+        background: "var(--t-header-bg)",
         backdropFilter: "blur(12px)",
         position: "sticky",
         top: "56px",

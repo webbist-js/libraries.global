@@ -71,10 +71,11 @@ export default function LibraryResultsPanel({
   return (
     <div
       className={cn(
-        "flex flex-col border-t border-white/8 bg-[#060b19] transition-all duration-300",
+        "flex flex-col border-t border-white/8 transition-all duration-300",
         expanded ? "h-72" : "h-[180px]",
         className
       )}
+      style={{ background: "var(--t-bg-surface)" }}
     >
       {/* Panel header */}
       <div className="flex flex-shrink-0 items-center justify-between px-4 py-2.5">

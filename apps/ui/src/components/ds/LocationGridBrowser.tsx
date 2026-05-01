@@ -27,7 +27,7 @@ export function LocationGridBrowser({
         border: `1px solid ${T.border.line}`,
         borderRadius: "20px",
         overflow: "hidden",
-        background: "rgba(255,255,255,.01)",
+        background: T.bg.surface,
       }}
       className="grid grid-cols-2 lg:grid-cols-4"
     >

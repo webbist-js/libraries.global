@@ -19,7 +19,7 @@ const inputStyle = {
   padding: "10px 14px",
   borderRadius: "8px",
   border: `1px solid ${T.border.hi}`,
-  background: "rgba(255,255,255,0.04)",
+  background: T.bg.surface,
   color: T.ink.base,
   fontSize: "13px",
   fontFamily: "Roboto, sans-serif",
@@ -204,7 +204,7 @@ export function OnboardingIdentity({
             <option
               key={p.value}
               value={p.value}
-              style={{ background: "#070b1e" }}
+              style={{ background: "var(--t-bg-deep)" }}
             >
               {p.label}
             </option>
@@ -273,7 +273,7 @@ export function OnboardingIdentity({
             borderRadius: "8px",
             border: "none",
             background: T.ink.base,
-            color: "#030511",
+            color: T.bg.void,
             fontSize: "13px",
             fontFamily: "Roboto, sans-serif",
             fontWeight: 600,

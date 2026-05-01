@@ -32,7 +32,7 @@ export function BlogArticleCard({
     <GlobalLink
       href={`/blog/${article.slug}`}
       className={cn(
-        "group flex flex-col overflow-hidden rounded-2xl transition-[border-color] duration-300 hover:border-white/[0.14]",
+        "group flex flex-col overflow-hidden rounded-2xl transition-[border-color] duration-300 hover:border-(--t-border-hi)",
         className
       )}
       style={{ background: T.bg.surface, border: `1px solid ${T.border.line}` }}
@@ -61,31 +61,31 @@ export function BlogArticleCard({
 
       {/* Content */}
       <div className="flex flex-1 flex-col p-5">
-        <div className="mb-3 h-px bg-white/[0.06]" />
+        <div className="mb-3 h-px bg-(--t-border-line)" />
 
         <div className="mb-3 flex items-center gap-2">
           {article.category?.name ? (
             <Badge label={article.category.name} color="dim" />
           ) : null}
           {date ? (
-            <span className="ml-auto font-mono text-[10px] text-white/20">
+            <span className="ml-auto font-mono text-[10px] text-(--t-ink-faint)">
               {date}
             </span>
           ) : null}
         </div>
 
-        <h3 className="mb-3 flex-1 font-[family-name:var(--font-fraunces)] text-[1.2rem] leading-[1.15] font-semibold tracking-[-0.01em] text-white transition-colors group-hover:text-white/90">
+        <h3 className="mb-3 flex-1 font-[family-name:var(--font-fraunces)] text-[1.2rem] leading-[1.15] font-semibold tracking-[-0.01em] text-(--t-ink-base) transition-colors group-hover:text-(--t-ink-dim)">
           {article.title}
         </h3>
 
         {article.summary ? (
-          <p className="mb-4 line-clamp-2 text-[13px] leading-6 text-white/38">
+          <p className="mb-4 line-clamp-2 text-[13px] leading-6 text-(--t-ink-low)">
             {article.summary}
           </p>
         ) : null}
 
         {article.author ? (
-          <p className="mt-auto font-mono text-[10px] tracking-[0.1em] text-white/25 uppercase">
+          <p className="mt-auto font-mono text-[10px] tracking-[0.1em] text-(--t-ink-faint) uppercase">
             {article.author}
           </p>
         ) : null}

@@ -18,7 +18,7 @@ const oauthBtnStyle = {
   padding: "10px 14px",
   borderRadius: "10px",
   border: `1px solid ${T.border.hi}`,
-  background: "rgba(255,255,255,.04)",
+  background: T.bg.surface,
   color: T.ink.dim,
   fontSize: "13px",
   fontFamily: T.font.sans,
@@ -58,7 +58,7 @@ export function AuthOAuthButtons({ mode }: AuthOAuthButtonsProps) {
           type="button"
           disabled={loading !== null}
           style={{ ...oauthBtnStyle, opacity: loading ? 0.6 : 1 }}
-          className="hover:border-[rgba(255,255,255,.24)] hover:bg-[rgba(255,255,255,.08)]"
+          className="hover:border-(--t-border-hi) hover:bg-(--t-bg-deep)"
           onClick={() => handleOAuth("google")}
         >
           {/* Google icon */}

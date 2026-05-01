@@ -135,7 +135,7 @@ export function SecuritySection({
         <div
           style={{
             padding: "16px 20px",
-            background: "rgba(255,255,255,0.02)",
+            background: T.bg.surface,
             borderBottom: `1px solid ${T.border.line}`,
           }}
         >
@@ -192,7 +192,7 @@ export function SecuritySection({
                   width: "32px",
                   height: "32px",
                   borderRadius: "8px",
-                  background: "rgba(255,255,255,0.06)",
+                  background: T.bg.deep,
                   border: `1px solid ${T.border.line}`,
                   display: "flex",
                   alignItems: "center",

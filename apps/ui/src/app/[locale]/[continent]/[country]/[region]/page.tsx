@@ -70,10 +70,13 @@ export default function RegionPage(props: {
 
   if (!regionData) {
     return (
-      <div className="relative isolate flex min-h-screen w-full flex-col bg-[#050816] text-white">
+      <div
+        className="relative isolate flex min-h-screen w-full flex-col"
+        style={{ background: "var(--t-bg-space)", color: "var(--t-ink-base)" }}
+      >
         <GlobalHeader locale={locale} navbar={navbar} />
         <main className="flex flex-1 items-center justify-center">
-          <p className="text-white/40">Region not found.</p>
+          <p className="text-(--t-ink-faint)">Region not found.</p>
         </main>
       </div>
     )

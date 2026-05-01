@@ -10,25 +10,25 @@ const calloutStyles = {
     border: "border-blue-500/30",
     bg: "bg-blue-500/8",
     bar: "bg-blue-400",
-    label: "text-blue-300",
+    label: "text-blue-600 dark:text-blue-300",
   },
   warning: {
     border: "border-amber-500/30",
     bg: "bg-amber-500/8",
     bar: "bg-amber-400",
-    label: "text-amber-300",
+    label: "text-amber-700 dark:text-amber-300",
   },
   tip: {
     border: "border-emerald-500/30",
     bg: "bg-emerald-500/8",
     bar: "bg-emerald-400",
-    label: "text-emerald-300",
+    label: "text-emerald-700 dark:text-emerald-300",
   },
   note: {
-    border: "border-white/16",
-    bg: "bg-white/4",
-    bar: "bg-white/30",
-    label: "text-white/50",
+    border: "border-(--t-border-hi)",
+    bg: "bg-(--t-bg-deep)",
+    bar: "bg-(--t-ink-dim)",
+    label: "text-(--t-ink-low)",
   },
 }
 
@@ -52,7 +52,7 @@ export function ArticleBodyBlocks({
                     typeof StrapiBlocksContent
                   >[0]["blocks"]
                 }
-                className="text-base leading-7 text-white/70"
+                className="text-base leading-7 text-(--t-ink-dim)"
               />
             )
 
@@ -79,7 +79,7 @@ export function ArticleBodyBlocks({
                   />
                 </div>
                 {block.caption ? (
-                  <figcaption className="mt-3 text-center text-xs text-white/36">
+                  <figcaption className="mt-3 text-center text-xs text-(--t-ink-faint)">
                     {block.caption}
                   </figcaption>
                 ) : null}
@@ -91,23 +91,23 @@ export function ArticleBodyBlocks({
             return (
               <div
                 key={block.id}
-                className="overflow-hidden rounded-2xl border border-white/8 bg-white/4"
+                className="overflow-hidden rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep)"
               >
                 {block.filename || block.language ? (
-                  <div className="flex items-center gap-3 border-b border-white/8 px-5 py-3">
+                  <div className="flex items-center gap-3 border-b border-(--t-border-line) px-5 py-3">
                     {block.filename ? (
-                      <span className="text-xs text-white/50">
+                      <span className="text-xs text-(--t-ink-low)">
                         {block.filename}
                       </span>
                     ) : null}
                     {block.language && block.language !== "plaintext" ? (
-                      <span className="ml-auto rounded-full border border-white/10 bg-white/6 px-2 py-0.5 text-[10px] font-medium tracking-wide text-white/40 uppercase">
+                      <span className="ml-auto rounded-full border border-(--t-border-line) bg-(--t-bg-surface) px-2 py-0.5 text-[10px] font-medium tracking-wide text-(--t-ink-faint) uppercase">
                         {block.language}
                       </span>
                     ) : null}
                   </div>
                 ) : null}
-                <pre className="overflow-x-auto p-5 font-mono text-sm leading-6 text-white/75">
+                <pre className="overflow-x-auto p-5 font-mono text-sm leading-6 text-(--t-ink-dim)">
                   <code>{block.code}</code>
                 </pre>
               </div>
@@ -117,15 +117,15 @@ export function ArticleBodyBlocks({
             return (
               <blockquote
                 key={block.id}
-                className="relative border-l-2 border-indigo-400/50 py-1 pl-6"
+                className="relative border-l-2 border-(--t-accent-aurora) py-1 pl-6"
               >
-                <p className="text-lg leading-8 text-white/75 italic">
+                <p className="text-lg leading-8 text-(--t-ink-dim) italic">
                   {block.quote}
                 </p>
                 {block.attribution || block.source ? (
-                  <footer className="mt-3 text-sm text-white/36">
+                  <footer className="mt-3 text-sm text-(--t-ink-faint)">
                     {block.attribution ? (
-                      <span className="font-medium text-white/50">
+                      <span className="font-medium text-(--t-ink-low)">
                         {block.attribution}
                       </span>
                     ) : null}
@@ -175,7 +175,7 @@ export function ArticleBodyBlocks({
                       {block.type}
                     </p>
                   )}
-                  <p className="text-sm leading-6 text-white/65">
+                  <p className="text-sm leading-6 text-(--t-ink-dim)">
                     {block.body}
                   </p>
                 </div>

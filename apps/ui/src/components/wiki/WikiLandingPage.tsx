@@ -167,7 +167,7 @@ export function WikiLandingPage({
                   style={{
                     padding: "3px 7px",
                     borderRadius: "5px",
-                    background: "rgba(255,255,255,.06)",
+                    background: T.bg.deep,
                     border: `1px solid ${T.border.hi}`,
                     fontSize: "10px",
                     color: T.ink.dim,
@@ -412,9 +412,9 @@ export function WikiLandingPage({
         @media (max-width: 640px) {
           .domains-grid { grid-template-columns: 1fr !important; }
         }
-        .qpath-card:hover { border-color: rgba(255,255,255,.16) !important; transform: translateY(-3px); }
+        .qpath-card:hover { border-color: var(--t-border-hi) !important; transform: translateY(-3px); }
         .qpath-card:hover .qpath-bar { opacity: 1 !important; }
-        .clog-row:hover { background: rgba(255,255,255,.025); }
+        .clog-row:hover { background: var(--t-bg-surface); }
         .clog-row:last-child { border-bottom: none !important; }
       `}</style>
     </PageShell>

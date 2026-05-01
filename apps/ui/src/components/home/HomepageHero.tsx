@@ -80,6 +80,7 @@ export function HomepageHero({
     <section
       className="relative flex h-[calc(100svh-4.5rem)] flex-col overflow-hidden"
       id="explore"
+      style={{ background: T.bg.void }}
     >
       {/* Outer div handles X-centering; inner GlobeParallaxWrapper handles Y on scroll */}
       <div className="absolute inset-y-0 left-1/2 z-0 h-full w-screen -translate-x-1/2">
@@ -157,7 +158,10 @@ export function HomepageHero({
       </Container>
 
       {/* Stats bar — pinned to hero bottom */}
-      <div className="relative z-20 border-t border-white/8 bg-[#050816]/60 backdrop-blur-md">
+      <div
+        className="relative z-20 border-t border-white/8 backdrop-blur-md"
+        style={{ background: "rgba(3,5,17,0.60)" }}
+      >
         <Container>
           <div className="grid grid-cols-2 divide-x divide-white/8 lg:grid-cols-4">
             {STATS.map((stat, i) => (

@@ -23,9 +23,9 @@ export function LocationTabBar({ tabs, activeTabId }: LocationTabBarProps) {
 
   return (
     <div
-      className="sticky top-14 z-40 w-full border-b border-white/10 backdrop-blur-md"
+      className="sticky top-14 z-40 w-full border-b border-(--t-border-line) backdrop-blur-md"
       style={{
-        background: "rgba(5, 8, 22, 0.8)",
+        background: "var(--t-header-bg)",
       }}
     >
       <div className="mx-auto flex h-14 max-w-[1400px] items-center px-4 md:px-8">
@@ -40,8 +40,8 @@ export function LocationTabBar({ tabs, activeTabId }: LocationTabBarProps) {
                 className={cn(
                   "flex items-center rounded-full px-4 py-1.5 font-mono text-[11px] tracking-[0.12em] whitespace-nowrap uppercase transition-all duration-200",
                   isActive
-                    ? "bg-white text-[#050816]"
-                    : "border border-white/5 text-white/40 hover:bg-white/[0.04] hover:text-white/70"
+                    ? "bg-(--t-ink-base) text-(--t-bg-void)"
+                    : "border border-(--t-border-line) text-(--t-ink-faint) hover:bg-(--t-bg-surface) hover:text-(--t-ink-dim)"
                 )}
               >
                 {tab.label}

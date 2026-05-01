@@ -28,7 +28,7 @@ export function ArticleShareButtons({
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Share on X / Twitter"
-        className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] text-white/50 transition-colors hover:border-white/25 hover:text-white/90"
+        className="flex h-8 w-8 items-center justify-center rounded-full border border-(--t-border-line) bg-(--t-bg-surface) text-(--t-ink-faint) transition-colors hover:border-(--t-border-hi) hover:text-(--t-ink-base)"
       >
         <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -39,7 +39,7 @@ export function ArticleShareButtons({
         type="button"
         onClick={copyLink}
         aria-label="Copy link"
-        className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] text-white/50 transition-colors hover:border-white/25 hover:text-white/90"
+        className="flex h-8 w-8 items-center justify-center rounded-full border border-(--t-border-line) bg-(--t-bg-surface) text-(--t-ink-faint) transition-colors hover:border-(--t-border-hi) hover:text-(--t-ink-base)"
       >
         {copied ? (
           <svg

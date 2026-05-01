@@ -36,7 +36,7 @@ function Toggle({
         height: "24px",
         borderRadius: "999px",
         border: "none",
-        background: value ? T.accent.aurora : "rgba(255,255,255,0.12)",
+        background: value ? T.accent.aurora : T.border.hi,
         cursor: "pointer",
         position: "relative",
         flexShrink: 0,
@@ -121,7 +121,7 @@ function SectionCard({
         style={{
           padding: "16px 20px",
           borderBottom: `1px solid ${T.border.line}`,
-          background: "rgba(255,255,255,0.02)",
+          background: T.bg.surface,
         }}
       >
         <h3

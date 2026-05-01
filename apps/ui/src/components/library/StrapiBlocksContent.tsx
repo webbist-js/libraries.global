@@ -38,7 +38,7 @@ function renderInlineNode(node: BlockInlineNode, index: number) {
     content = (
       <code
         key={index}
-        className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-sm"
+        className="rounded border border-(--t-border-line) bg-(--t-bg-surface) px-1.5 py-0.5 font-mono text-sm"
       >
         {content}
       </code>
@@ -64,7 +64,7 @@ export function StrapiBlocksContent({
         switch (block.type) {
           case "paragraph":
             return (
-              <p key={blockIndex} className="leading-7 text-white/72">
+              <p key={blockIndex} className="leading-7 text-(--t-ink-dim)">
                 {block.children.map(renderInlineNode)}
               </p>
             )
@@ -87,7 +87,10 @@ export function StrapiBlocksContent({
             }[block.level]
 
             return (
-              <Tag key={blockIndex} className={cn(sizeClass, "text-white")}>
+              <Tag
+                key={blockIndex}
+                className={cn(sizeClass, "text-(--t-ink-base)")}
+              >
                 {block.children.map(renderInlineNode)}
               </Tag>
             )
@@ -97,7 +100,7 @@ export function StrapiBlocksContent({
             return block.format === "ordered" ? (
               <ol
                 key={blockIndex}
-                className="list-decimal space-y-1.5 pl-5 text-white/72"
+                className="list-decimal space-y-1.5 pl-5 text-(--t-ink-dim)"
               >
                 {block.children.map((item, i) => (
                   <li key={i}>{item.children.map(renderInlineNode)}</li>
@@ -106,7 +109,7 @@ export function StrapiBlocksContent({
             ) : (
               <ul
                 key={blockIndex}
-                className="list-disc space-y-1.5 pl-5 text-white/72"
+                className="list-disc space-y-1.5 pl-5 text-(--t-ink-dim)"
               >
                 {block.children.map((item, i) => (
                   <li key={i}>{item.children.map(renderInlineNode)}</li>
@@ -118,7 +121,7 @@ export function StrapiBlocksContent({
             return (
               <blockquote
                 key={blockIndex}
-                className="border-l-2 border-white/20 pl-4 text-white/60 italic"
+                className="border-l-2 border-(--t-border-hi) pl-4 text-(--t-ink-low) italic"
               >
                 {block.children.map(renderInlineNode)}
               </blockquote>
@@ -128,7 +131,7 @@ export function StrapiBlocksContent({
             return (
               <pre
                 key={blockIndex}
-                className="overflow-x-auto rounded-xl bg-white/5 p-4 font-mono text-sm text-white/80"
+                className="overflow-x-auto rounded-xl bg-(--t-bg-deep) p-4 font-mono text-sm text-(--t-ink-dim)"
               >
                 <code>{block.children[0].text}</code>
               </pre>

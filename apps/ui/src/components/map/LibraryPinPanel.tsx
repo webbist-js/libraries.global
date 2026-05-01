@@ -159,7 +159,7 @@ export function LibraryPinPanel({
     <div
       className="absolute top-4 right-4 z-20 flex max-h-[calc(100%-2rem)] w-[340px] flex-col overflow-hidden rounded-2xl shadow-2xl"
       style={{
-        background: "#070d1e",
+        background: "var(--t-bg-deep)",
         border: "1px solid rgba(255,255,255,.09)",
       }}
     >
@@ -180,7 +180,7 @@ export function LibraryPinPanel({
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(180deg, rgba(7,13,30,.15) 0%, rgba(7,13,30,.6) 65%, #070d1e 100%)",
+                  "linear-gradient(180deg, rgba(7,13,30,.15) 0%, rgba(7,13,30,.6) 65%, var(--t-bg-deep) 100%)",
               }}
             />
 

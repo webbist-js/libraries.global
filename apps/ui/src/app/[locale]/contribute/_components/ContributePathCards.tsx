@@ -6,6 +6,7 @@ import { Link } from "@/lib/navigation"
 interface ContributePathCardsProps {
   isSignedIn: boolean
   isVerifiedLibrarian: boolean
+  isWikiEditor: boolean
 }
 
 type RoleBadge = "ANY ROLE" | "WIKI EDITOR" | "EDITORIAL BOARD"
@@ -91,17 +92,22 @@ const PATH_CARDS: PathCard[] = [
 function isCardLocked(
   card: PathCard,
   isSignedIn: boolean,
-  isVerifiedLibrarian: boolean
+  isWikiEditor: boolean
 ): boolean {
   if (card.requiresRole === "any") return !isSignedIn
-  if (card.requiresRole === "wikiEditor") return !isVerifiedLibrarian
+  if (card.requiresRole === "wikiEditor") return !isWikiEditor
 
   // editorialBoard — always locked (invite-only)
   return true
 }
 
-function roleLabel(isSignedIn: boolean, isVerifiedLibrarian: boolean): string {
+function roleLabel(
+  isSignedIn: boolean,
+  isVerifiedLibrarian: boolean,
+  isWikiEditor: boolean
+): string {
   if (!isSignedIn) return "Sign in to contribute"
+  if (isWikiEditor) return "Paths gated by your role · Wiki Editor"
   if (isVerifiedLibrarian)
     return "Paths gated by your role · Verified Librarian"
 
@@ -111,6 +117,7 @@ function roleLabel(isSignedIn: boolean, isVerifiedLibrarian: boolean): string {
 export function ContributePathCards({
   isSignedIn,
   isVerifiedLibrarian,
+  isWikiEditor,
 }: ContributePathCardsProps) {
   return (
     <section
@@ -152,7 +159,7 @@ export function ContributePathCards({
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "8px",
+            fontSize: "10px",
             letterSpacing: ".14em",
             textTransform: "uppercase",
             color: T.ink.faint,
@@ -162,7 +169,7 @@ export function ContributePathCards({
             paddingTop: "6px",
           }}
         >
-          {roleLabel(isSignedIn, isVerifiedLibrarian)}
+          {roleLabel(isSignedIn, isVerifiedLibrarian, isWikiEditor)}
         </span>
       </div>
 
@@ -177,7 +184,7 @@ export function ContributePathCards({
           padding: "14px 20px",
           borderRadius: "12px",
           border: `1px solid ${T.border.line}`,
-          background: "rgba(255,255,255,0.02)",
+          background: T.bg.surface,
           textDecoration: "none",
           marginBottom: "16px",
           transition: "background .15s",
@@ -236,18 +243,18 @@ export function ContributePathCards({
       {/* 2×2 grid */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {PATH_CARDS.map((card) => {
-          const locked = isCardLocked(card, isSignedIn, isVerifiedLibrarian)
-          const dimText = locked ? "rgba(244,247,255,0.30)" : T.ink.base
-          const dimBody = locked ? "rgba(244,247,255,0.28)" : T.ink.dim
+          const locked = isCardLocked(card, isSignedIn, isWikiEditor)
+          const dimText = locked ? T.ink.faint : T.ink.base
+          const dimBody = locked ? T.ink.faint : T.ink.dim
 
           return (
             <div
               key={card.pathId}
               style={{
-                border: `1px solid ${locked ? "rgba(255,255,255,0.05)" : T.border.line}`,
+                border: `1px solid ${T.border.line}`,
                 borderRadius: "16px",
                 padding: "28px 28px 24px",
-                background: `${card.cardGlow}, rgba(255,255,255,0.02)`,
+                background: `${card.cardGlow}, ${T.bg.surface}`,
                 display: "flex",
                 flexDirection: "column",
                 gap: "0",
@@ -268,7 +275,7 @@ export function ContributePathCards({
                 <span
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "8px",
+                    fontSize: "10px",
                     letterSpacing: ".18em",
                     textTransform: "uppercase",
                     color: T.ink.faint,
@@ -280,7 +287,7 @@ export function ContributePathCards({
                   style={{
                     padding: "3px 10px",
                     borderRadius: "999px",
-                    border: `1px solid ${locked ? "rgba(255,255,255,0.10)" : card.accentColor + "55"}`,
+                    border: `1px solid ${locked ? T.border.line : card.accentColor + "55"}`,
                     fontFamily: T.font.mono,
                     fontSize: "7px",
                     letterSpacing: ".14em",
@@ -312,7 +319,7 @@ export function ContributePathCards({
                   style={{
                     fontStyle: "italic",
                     fontWeight: 400,
-                    color: locked ? "rgba(244,247,255,0.22)" : card.accentColor,
+                    color: locked ? T.ink.ghost : card.accentColor,
                   }}
                 >
                   {card.headingItalic}
@@ -333,7 +340,7 @@ export function ContributePathCards({
                 {locked && (
                   <em
                     style={{
-                      color: "rgba(244,247,255,0.20)",
+                      color: T.ink.ghost,
                       fontStyle: "italic",
                     }}
                   >
@@ -346,7 +353,7 @@ export function ContributePathCards({
               {/* Dashed separator */}
               <div
                 style={{
-                  borderTop: "1px dashed rgba(255,255,255,0.08)",
+                  borderTop: `1px dashed ${T.border.line}`,
                   marginBottom: "18px",
                 }}
               />
@@ -366,7 +373,7 @@ export function ContributePathCards({
                     fontSize: "9px",
                     letterSpacing: ".12em",
                     textTransform: "uppercase",
-                    color: locked ? "rgba(244,247,255,0.18)" : T.ink.faint,
+                    color: locked ? T.ink.ghost : T.ink.faint,
                   }}
                 >
                   {locked ? card.lockedMeta : card.meta}
@@ -378,7 +385,7 @@ export function ContributePathCards({
                       fontFamily: T.font.serif,
                       fontStyle: "italic",
                       fontSize: "15px",
-                      color: "rgba(244,247,255,0.20)",
+                      color: T.ink.ghost,
                       letterSpacing: "-0.01em",
                     }}
                   >

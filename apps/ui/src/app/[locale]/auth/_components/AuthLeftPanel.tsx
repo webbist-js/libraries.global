@@ -70,7 +70,7 @@ export function AuthLeftPanel({ mode }: AuthLeftPanelProps) {
   return (
     <div
       className="relative hidden flex-col justify-between overflow-hidden p-12 lg:flex"
-      style={{ width: "52%", background: "#030511" }}
+      style={{ width: "52%", background: "var(--t-bg-void)" }}
     >
       {/* Radial globe glow */}
       <div
@@ -204,7 +204,7 @@ export function AuthLeftPanel({ mode }: AuthLeftPanelProps) {
             border: `1px solid ${T.border.line}`,
             borderRadius: "16px",
             padding: "20px 22px",
-            background: "rgba(255,255,255,.02)",
+            background: T.bg.surface,
             maxWidth: "360px",
           }}
         >

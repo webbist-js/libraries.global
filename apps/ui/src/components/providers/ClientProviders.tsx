@@ -24,12 +24,7 @@ export function ClientProviders({
   return (
     <>
       <NavigationProgress />
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        forcedTheme="light"
-      >
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
         <QueryClientProvider client={queryClient}>
           {children}
         </QueryClientProvider>

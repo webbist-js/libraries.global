@@ -1,13 +1,6 @@
 "use client"
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
+import { createContext, useContext, useMemo, useState } from "react"
 
 import { Container } from "@/components/elementary/Container"
 import { T } from "@/lib/design-tokens"
@@ -80,102 +73,77 @@ export function LibraryTabNav({
       })
     : null
 
-  // Detect when the nav has become sticky so we can swap to a solid background.
-  const sentinelRef = useRef<HTMLDivElement>(null)
-  const [isStuck, setIsStuck] = useState(false)
-
-  useEffect(() => {
-    const sentinel = sentinelRef.current
-    if (!sentinel) return
-    const io = new IntersectionObserver(
-      ([entry]) => entry && setIsStuck(entry.boundingClientRect.top < 0),
-      { threshold: [0] }
-    )
-    io.observe(sentinel)
-
-    return () => io.disconnect()
-  }, [])
-
   return (
-    <>
-      {/* Sentinel — placed at the natural position of the nav */}
-      <div ref={sentinelRef} aria-hidden className="h-px" />
+    <div
+      className="sticky top-14 z-30 border-t border-b border-(--t-border-line) backdrop-blur-md"
+      style={{ background: "var(--t-header-bg)" }}
+    >
+      <Container>
+        <div className="flex items-center">
+          <nav
+            role="tablist"
+            aria-label="Library sections"
+            className="flex items-center gap-6"
+          >
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                aria-controls={`tab-${tab.id}`}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "relative shrink-0 py-4 text-[13px] whitespace-nowrap transition-colors duration-150",
+                  "after:absolute after:right-0 after:bottom-[-1px] after:left-0 after:h-[2px] after:transition-opacity after:duration-150",
+                  activeTab === tab.id
+                    ? "text-(--t-ink-base) after:bg-(--t-accent-aurora) after:opacity-100"
+                    : "text-(--t-ink-low) after:opacity-0 hover:text-(--t-ink-dim)"
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
 
-      <div
-        className="sticky top-14 z-30 border-t border-b border-white/8 backdrop-blur-md transition-colors duration-200"
-        style={{ background: isStuck ? "rgba(5,8,22,1)" : "rgba(5,8,22,.85)" }}
-      >
-        <Container>
-          <div className="flex items-center">
-            <nav
-              role="tablist"
-              aria-label="Library sections"
-              className="flex items-center gap-6"
-            >
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === tab.id}
-                  aria-controls={`tab-${tab.id}`}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={cn(
-                    "relative shrink-0 py-4 text-[13px] whitespace-nowrap transition-colors duration-150",
-                    "after:absolute after:right-0 after:bottom-[-1px] after:left-0 after:h-[2px] after:transition-opacity after:duration-150",
-                    activeTab === tab.id
-                      ? "text-white after:bg-[#7fdfff] after:opacity-100"
-                      : "text-white/50 after:opacity-0 hover:text-white/80"
-                  )}
+          <div className="flex-1" />
+
+          {/* Right side: last verified + entity ref */}
+          {(lastVerifiedLabel ?? entityRef) ? (
+            <div className="flex shrink-0 items-center gap-3 pl-6">
+              {entityRef ? (
+                <span
+                  style={{
+                    fontFamily: T.font.mono,
+                    fontSize: "11px",
+                    letterSpacing: ".12em",
+                    color: T.ink.ghost,
+                  }}
                 >
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
-
-            <div className="flex-1" />
-
-            {/* Right side: last verified + entity ref */}
-            {(lastVerifiedLabel ?? entityRef) ? (
-              <div className="flex shrink-0 items-center gap-3 pl-6">
-                {entityRef ? (
-                  <span
-                    style={{
-                      fontFamily: T.font.mono,
-                      fontSize: "11px",
-                      letterSpacing: ".12em",
-                      color: "rgba(255,255,255,.22)",
-                    }}
-                  >
-                    {entityRef}
-                  </span>
-                ) : null}
-                {entityRef && lastVerifiedLabel ? (
-                  <span
-                    style={{ color: "rgba(255,255,255,.12)", fontSize: "11px" }}
-                  >
-                    ·
-                  </span>
-                ) : null}
-                {lastVerifiedLabel ? (
-                  <span
-                    style={{
-                      fontFamily: T.font.mono,
-                      fontSize: "11px",
-                      letterSpacing: ".1em",
-                      color: "rgba(255,255,255,.3)",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Last verified {lastVerifiedLabel}
-                  </span>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-        </Container>
-      </div>
-    </>
+                  {entityRef}
+                </span>
+              ) : null}
+              {entityRef && lastVerifiedLabel ? (
+                <span style={{ color: T.ink.ghost, fontSize: "11px" }}>·</span>
+              ) : null}
+              {lastVerifiedLabel ? (
+                <span
+                  style={{
+                    fontFamily: T.font.mono,
+                    fontSize: "11px",
+                    letterSpacing: ".1em",
+                    color: T.ink.faint,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Last verified {lastVerifiedLabel}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </Container>
+    </div>
   )
 }
 

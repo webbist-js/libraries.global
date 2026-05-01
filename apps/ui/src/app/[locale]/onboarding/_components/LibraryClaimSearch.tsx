@@ -41,7 +41,7 @@ export function LibraryClaimSearch({
     padding: "10px 14px",
     borderRadius: "8px",
     border: `1px solid ${T.border.hi}`,
-    background: "rgba(255,255,255,0.04)",
+    background: T.bg.surface,
     color: T.ink.base,
     fontSize: "13px",
     fontFamily: "Roboto, sans-serif",
@@ -164,14 +164,14 @@ export function LibraryClaimSearch({
             void search(query, slug)
           }}
         >
-          <option value="" style={{ background: "#070b1e" }}>
+          <option value="" style={{ background: "var(--t-bg-deep)" }}>
             All countries
           </option>
           {COUNTRIES.map((c) => (
             <option
               key={c.code}
               value={c.slug}
-              style={{ background: "#070b1e" }}
+              style={{ background: "var(--t-bg-deep)" }}
             >
               {c.name}
             </option>
@@ -244,7 +244,7 @@ export function LibraryClaimSearch({
                 cursor: "pointer",
                 textAlign: "left",
               }}
-              className="hover:bg-white/[0.04]"
+              className="hover:bg-(--t-bg-deep)"
             >
               <strong style={{ color: T.ink.base }}>{hit.name}</strong>
               {(hit.city || hit.country_name) && (

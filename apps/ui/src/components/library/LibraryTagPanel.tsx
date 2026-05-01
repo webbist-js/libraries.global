@@ -70,7 +70,10 @@ export function LibraryTagPanel({
           marginBottom: "20px",
         }}
       >
-        <Icon icon={headerIcon} className="size-3.5 shrink-0 text-white/30" />
+        <Icon
+          icon={headerIcon}
+          className="size-3.5 shrink-0 text-(--t-ink-faint)"
+        />
         <span
           style={{
             fontFamily: T.font.mono,
@@ -89,7 +92,7 @@ export function LibraryTagPanel({
             style={{
               fontFamily: T.font.mono,
               fontSize: "10px",
-              color: "rgba(255,255,255,.28)",
+              color: T.ink.faint,
               flexShrink: 0,
             }}
           >
@@ -104,7 +107,7 @@ export function LibraryTagPanel({
           {Array.from(grouped.entries()).map(([category, groupItems]) => (
             <div key={category}>
               {!isSingleGroup ? (
-                <p className="mb-2.5 text-[10px] font-semibold tracking-[0.14em] text-white/28 uppercase">
+                <p className="mb-2.5 text-[10px] font-semibold tracking-[0.14em] text-(--t-ink-faint) uppercase">
                   {category}
                 </p>
               ) : null}
@@ -118,17 +121,17 @@ export function LibraryTagPanel({
                       key={item.id}
                       title={item.summary ?? undefined}
                       className={cn(
-                        "group inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-white/[0.04] px-3 py-1.5 transition-colors duration-150 hover:border-white/14 hover:bg-white/8",
+                        "group inline-flex items-center gap-1.5 rounded-full border border-(--t-border-line) bg-(--t-bg-surface) px-3 py-1.5 transition-colors duration-150 hover:border-(--t-border-hi) hover:bg-(--t-bg-deep)",
                         item.summary ? "cursor-default" : ""
                       )}
                     >
                       {iconString ? (
                         <Icon
                           icon={iconString}
-                          className="size-3.5 shrink-0 text-white/40 transition-colors duration-150 group-hover:text-white/60"
+                          className="size-3.5 shrink-0 text-(--t-ink-faint) transition-colors duration-150 group-hover:text-(--t-ink-dim)"
                         />
                       ) : null}
-                      <span className="text-xs text-white/65 transition-colors duration-150 group-hover:text-white/80">
+                      <span className="text-xs text-(--t-ink-dim) transition-colors duration-150 group-hover:text-(--t-ink-base)">
                         {item.name}
                       </span>
                     </div>
@@ -143,7 +146,9 @@ export function LibraryTagPanel({
       {children ? (
         <div
           className={cn(
-            items.length > 0 ? "mt-5 border-t border-white/6 pt-5" : ""
+            items.length > 0
+              ? "mt-5 border-t border-(--t-border-line) pt-5"
+              : ""
           )}
         >
           {children}

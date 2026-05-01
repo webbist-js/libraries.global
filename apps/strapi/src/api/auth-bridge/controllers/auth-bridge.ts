@@ -113,6 +113,7 @@ export default {
       "linkedin",
       "profileVisibility",
       "notifPrefs",
+      "theme",
     ]
 
     const data: Record<string, unknown> = {}
@@ -412,15 +413,33 @@ export default {
     const { baUserId } = ctx.query as { baUserId?: string }
     if (!baUserId) return ctx.badRequest("Missing baUserId")
 
-    const affiliations = await strapi.db
-      .query("api::library-affiliation.library-affiliation")
-      .findMany({ where: { baUserId }, populate: { library: true } })
+    const affiliations = await strapi
+      .documents("api::library-affiliation.library-affiliation")
+      .findMany({
+        filters: { baUserId } as any,
+        populate: {
+          library: {
+            populate: { heroImage: { fields: ["url"] } },
+          },
+        } as any,
+      })
 
     const entityRefs = affiliations
       .map((a: any) => a.library?.entityRef)
       .filter(Boolean) as string[]
 
-    return ctx.send({ entityRefs })
+    const libraries = affiliations
+      .filter((a: any) => a.library)
+      .map((a: any) => ({
+        entityRef: a.library.entityRef ?? null,
+        documentId: a.library.documentId ?? null,
+        name: a.library.name ?? null,
+        slug: a.library.slug ?? null,
+        libraryType: a.library.libraryType ?? null,
+        heroImageUrl: a.library.heroImage?.url ?? null,
+      }))
+
+    return ctx.send({ entityRefs, libraries })
   },
 
   async toggleFollow(ctx: any) {

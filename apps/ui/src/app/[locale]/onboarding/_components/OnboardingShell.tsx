@@ -37,7 +37,7 @@ const input: React.CSSProperties = {
   padding: "10px 14px",
   borderRadius: "8px",
   border: `1px solid ${T.border.hi}`,
-  background: "rgba(255,255,255,0.04)",
+  background: T.bg.surface,
   color: T.ink.base,
   fontSize: "13px",
   fontFamily: T.font.sans,
@@ -178,7 +178,7 @@ function SectionHeading({
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "8px",
+              fontSize: "10px",
               letterSpacing: ".18em",
               textTransform: "uppercase",
               color: T.accent.aurora,
@@ -191,7 +191,7 @@ function SectionHeading({
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "8px",
+              fontSize: "10px",
               letterSpacing: ".18em",
               textTransform: "uppercase",
               color: T.ink.faint,
@@ -379,7 +379,7 @@ export function OnboardingShell({
     <div
       style={{
         minHeight: "100vh",
-        background: "#030511",
+        background: T.bg.void,
         display: "flex",
         flexDirection: "column",
       }}
@@ -466,7 +466,7 @@ export function OnboardingShell({
               padding: "7px 16px",
               borderRadius: "7px",
               border: `1px solid ${T.border.hi}`,
-              background: "rgba(255,255,255,0.05)",
+              background: T.bg.deep,
               color: T.ink.dim,
               fontSize: "12px",
               fontFamily: T.font.sans,
@@ -494,7 +494,7 @@ export function OnboardingShell({
             justifyContent: "space-between",
             padding: "48px 40px",
             borderRight: `1px solid ${T.border.line}`,
-            background: "#030511",
+            background: T.bg.void,
             overflow: "hidden",
           }}
         >
@@ -843,7 +843,7 @@ export function OnboardingShell({
                       <option
                         key={p.value}
                         value={p.value}
-                        style={{ background: "#070b1e" }}
+                        style={{ background: T.bg.deep }}
                       >
                         {p.label}
                       </option>
@@ -957,7 +957,7 @@ export function OnboardingShell({
                         border: `1px solid ${active ? "rgba(127,223,255,0.4)" : T.border.line}`,
                         background: active
                           ? "rgba(127,223,255,0.06)"
-                          : "rgba(255,255,255,0.02)",
+                          : T.bg.surface,
                         cursor: "pointer",
                         textAlign: "left",
                         display: "flex",
@@ -1017,7 +1017,7 @@ export function OnboardingShell({
                               icon="mdi:check"
                               width={9}
                               height={9}
-                              style={{ color: "#030511" }}
+                              style={{ color: T.bg.void }}
                             />
                           )}
                         </div>
@@ -1237,7 +1237,7 @@ export function OnboardingShell({
                     padding: "8px 12px",
                     borderRadius: "6px",
                     border: `1px solid ${T.border.hi}`,
-                    background: "rgba(255,255,255,0.04)",
+                    background: T.bg.surface,
                     color: T.ink.base,
                     fontSize: "13px",
                     fontFamily: T.font.sans,
@@ -1246,7 +1246,7 @@ export function OnboardingShell({
                   value={addingLang}
                   onChange={(e) => setAddingLang(e.target.value)}
                 >
-                  <option value="" style={{ background: "#070b1e" }}>
+                  <option value="" style={{ background: T.bg.deep }}>
                     + Add a language
                   </option>
                   {LANGUAGE_OPTIONS.filter(
@@ -1255,7 +1255,7 @@ export function OnboardingShell({
                     <option
                       key={l.code}
                       value={l.code}
-                      style={{ background: "#070b1e" }}
+                      style={{ background: T.bg.deep }}
                     >
                       {l.name}
                     </option>
@@ -1266,7 +1266,7 @@ export function OnboardingShell({
                     padding: "8px 12px",
                     borderRadius: "6px",
                     border: `1px solid ${T.border.hi}`,
-                    background: "rgba(255,255,255,0.04)",
+                    background: T.bg.surface,
                     color: T.ink.base,
                     fontSize: "13px",
                     fontFamily: T.font.sans,
@@ -1278,7 +1278,7 @@ export function OnboardingShell({
                   }
                 >
                   {PROFICIENCY.map((p) => (
-                    <option key={p} value={p} style={{ background: "#070b1e" }}>
+                    <option key={p} value={p} style={{ background: T.bg.deep }}>
                       {p}
                     </option>
                   ))}
@@ -1291,7 +1291,7 @@ export function OnboardingShell({
                     padding: "8px 14px",
                     borderRadius: "6px",
                     border: `1px solid ${T.border.hi}`,
-                    background: "rgba(255,255,255,0.05)",
+                    background: T.bg.deep,
                     color: T.ink.dim,
                     fontSize: "12px",
                     cursor: addingLang ? "pointer" : "not-allowed",
@@ -1420,7 +1420,7 @@ export function OnboardingShell({
               </Link>
               . You can edit or delete your profile at any time from{" "}
               <Link
-                href="/settings"
+                href="/profile/settings"
                 style={{ color: T.ink.faint, textDecoration: "underline" }}
               >
                 Settings

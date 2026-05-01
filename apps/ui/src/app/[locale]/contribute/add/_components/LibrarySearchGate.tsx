@@ -72,10 +72,7 @@ function ResultCard({
         padding: "14px 18px",
         borderRadius: "10px",
         border: `1px solid ${score === "high" ? T.accent.warn + "40" : T.border.line}`,
-        background:
-          score === "high"
-            ? "rgba(255,207,122,0.04)"
-            : "rgba(255,255,255,0.02)",
+        background: score === "high" ? "rgba(255,207,122,0.04)" : T.bg.surface,
         display: "flex",
         alignItems: "flex-start",
         justifyContent: "space-between",
@@ -350,7 +347,7 @@ export function LibrarySearchGate({
               padding: "10px 14px",
               borderRadius: "8px",
               border: `1px solid ${T.border.hi}`,
-              background: "rgba(255,255,255,0.03)",
+              background: T.bg.surface,
               color: T.ink.base,
               fontSize: "14px",
               fontFamily: T.font.sans,
@@ -383,7 +380,7 @@ export function LibrarySearchGate({
               padding: "10px 14px",
               borderRadius: "8px",
               border: `1px solid ${T.border.hi}`,
-              background: "rgba(255,255,255,0.03)",
+              background: T.bg.surface,
               color: T.ink.base,
               fontSize: "14px",
               fontFamily: T.font.sans,
@@ -556,9 +553,7 @@ export function LibrarySearchGate({
             border: canProceed
               ? `1px solid rgba(127,223,255,0.35)`
               : `1px solid ${T.border.line}`,
-            background: canProceed
-              ? "rgba(127,223,255,0.10)"
-              : "rgba(255,255,255,0.03)",
+            background: canProceed ? "rgba(127,223,255,0.10)" : T.bg.surface,
             color: canProceed ? T.accent.aurora : T.ink.faint,
             fontFamily: T.font.mono,
             fontSize: "10px",

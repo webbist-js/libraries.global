@@ -15,7 +15,7 @@ export default async function NotFound() {
       </div>
       <p>{t("solution")}</p>
       <Link
-        className="rounded-xl bg-gray-900 px-4 py-2 text-white transition-colors duration-500 hover:bg-gray-700"
+        className="rounded-xl border border-(--t-border-line) bg-(--t-bg-deep) px-4 py-2 text-(--t-ink-base) transition-colors duration-500 hover:bg-(--t-bg-surface)"
         href="/"
       >
         {t("redirect")}

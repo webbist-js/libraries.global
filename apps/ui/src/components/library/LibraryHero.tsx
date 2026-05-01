@@ -2,7 +2,6 @@
 
 import Image from "next/image"
 
-import { HeroTitle, MetaRow } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
@@ -190,8 +189,14 @@ export function LibraryHero({
         ) : (
           <div className="h-full w-full bg-[linear-gradient(180deg,rgba(12,18,40,1),rgba(5,8,22,1))]" />
         )}
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,5,17,.3)_0%,rgba(3,5,17,.55)_55%,#030511_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,8,22,.62)_0%,transparent_68%)]" />
+        <div
+          className="absolute inset-0"
+          style={{ background: "var(--library-hero-main-overlay)" }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{ background: "var(--library-hero-side-overlay)" }}
+        />
       </div>
 
       <Container className="flex flex-1 flex-col gap-5 pt-[110px] pb-14">
@@ -225,7 +230,7 @@ export function LibraryHero({
               background: isOpenNow
                 ? "rgba(110,231,183,.08)"
                 : "rgba(255,255,255,.04)",
-              color: isOpenNow ? "#6ee7b7" : T.ink.low,
+              color: isOpenNow ? "#6ee7b7" : "rgba(255,255,255,.48)",
             }}
           >
             {isOpenNow ? (
@@ -250,11 +255,11 @@ export function LibraryHero({
               style={{
                 fontFamily: T.font.mono,
                 fontSize: "12px",
-                color: T.ink.dim,
+                color: "rgba(255,255,255,.65)",
                 letterSpacing: ".08em",
               }}
             >
-              <strong style={{ color: T.ink.base, fontWeight: 500 }}>
+              <strong style={{ color: "#ffffff", fontWeight: 500 }}>
                 {isOpenNow && realtime?.hoursText
                   ? realtime.hoursText
                   : statusSubtext}
@@ -268,7 +273,7 @@ export function LibraryHero({
               style={{
                 fontFamily: T.font.mono,
                 fontSize: "11px",
-                color: T.ink.faint,
+                color: "rgba(255,255,255,.40)",
                 letterSpacing: ".1em",
                 textTransform: "uppercase",
               }}
@@ -279,7 +284,20 @@ export function LibraryHero({
         </div>
 
         {/* Title */}
-        <HeroTitle>{library.name}</HeroTitle>
+        <h1
+          style={{
+            fontFamily: T.font.serif,
+            fontWeight: 400,
+            fontSize: "clamp(56px,8.4vw,128px)",
+            lineHeight: 0.92,
+            letterSpacing: "-.045em",
+            margin: 0,
+            color: "#ffffff",
+            textWrap: "balance",
+          }}
+        >
+          {library.name}
+        </h1>
 
         {/* Summary — serif light */}
         {library.summary ? (
@@ -289,7 +307,7 @@ export function LibraryHero({
               fontWeight: 300,
               fontSize: "22px",
               lineHeight: "1.5",
-              color: T.ink.dim,
+              color: "rgba(255,255,255,.72)",
               maxWidth: "58ch",
               margin: 0,
               letterSpacing: "-.01em",
@@ -310,7 +328,34 @@ export function LibraryHero({
             paddingBottom: "0",
           }}
         >
-          {metaItems.length > 0 ? <MetaRow items={metaItems} /> : <span />}
+          {metaItems.length > 0 ? (
+            <p
+              style={{
+                fontFamily: T.font.mono,
+                fontSize: "12.5px",
+                color: "rgba(255,255,255,.48)",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                flexWrap: "wrap",
+                margin: 0,
+              }}
+            >
+              {metaItems.map((item, i) => (
+                <span
+                  key={i}
+                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                >
+                  {i > 0 && (
+                    <span style={{ color: "rgba(255,255,255,.18)" }}>·</span>
+                  )}
+                  {item}
+                </span>
+              ))}
+            </p>
+          ) : (
+            <span />
+          )}
 
           <div
             style={{
@@ -333,6 +378,7 @@ export function LibraryHero({
               libraryDocumentId={library.documentId ?? ""}
               librarySlug={library.slug ?? ""}
               libraryName={library.name ?? "this library"}
+              libraryEntityRef={library.entityRef ?? undefined}
             />
 
             {/* Primary CTA */}
@@ -347,7 +393,7 @@ export function LibraryHero({
                   gap: "8px",
                   padding: "12px 22px",
                   borderRadius: "14px",
-                  background: T.ink.base,
+                  background: "#ffffff",
                   color: "#0a0f2a",
                   fontWeight: 500,
                   fontSize: "14px",

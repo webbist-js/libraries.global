@@ -107,7 +107,7 @@ function WikiSectionFeedInner({
                 fontSize: "15px",
                 border: `1px solid ${T.border.line}`,
                 borderRadius: "18px",
-                background: "rgba(255,255,255,.02)",
+                background: T.bg.surface,
               }}
             >
               No articles found matching your criteria.
@@ -145,7 +145,9 @@ export function WikiSectionFeed({
   return (
     <Suspense
       fallback={
-        <div className="p-8 text-center text-white/50">Loading articles...</div>
+        <div className="p-8 text-center text-(--t-ink-low)">
+          Loading articles...
+        </div>
       }
     >
       <WikiSectionFeedInner section={section} articles={articles} />

@@ -93,7 +93,7 @@ const STATUS_CONFIG_NAV: Record<
     label: "Draft",
     color: T.ink.low,
     border: T.border.line,
-    bg: "rgba(255,255,255,.03)",
+    bg: "var(--t-bg-deep)",
     dot: T.ink.faint,
   },
   deprecated: {
@@ -227,7 +227,7 @@ function WikiLeftNav({
                         fontSize: "13px",
                         color: isActive ? T.ink.base : T.ink.dim,
                         background: isActive
-                          ? "rgba(127,223,255,.1)"
+                          ? "var(--t-aurora-soft)"
                           : "transparent",
                         borderLeft: isActive
                           ? `2px solid ${T.accent.aurora}`
@@ -348,7 +348,7 @@ function WikiRightPanel({
           padding: "12px",
           border: `1px solid ${T.border.line}`,
           borderRadius: "10px",
-          background: "rgba(255,255,255,.02)",
+          background: "var(--t-bg-deep)",
         }}
       >
         {[
@@ -512,7 +512,7 @@ export function WikiArticlePage({
                   padding: "8px 12px",
                   borderRadius: "10px",
                   border: `1px solid ${T.border.line}`,
-                  background: "rgba(255,255,255,.02)",
+                  background: "var(--t-bg-deep)",
                   marginBottom: "18px",
                 }}
               >
@@ -717,7 +717,7 @@ export function WikiArticlePage({
                         padding: "6px 10px",
                         borderRadius: "8px",
                         border: `1px solid ${T.border.line}`,
-                        background: "rgba(255,255,255,.02)",
+                        background: "var(--t-bg-deep)",
                         fontFamily: T.font.mono,
                         fontSize: "11px",
                         color: T.ink.dim,
@@ -815,7 +815,7 @@ export function WikiArticlePage({
                     padding: "18px",
                     border: `1px solid ${T.border.line}`,
                     borderRadius: "12px",
-                    background: "rgba(255,255,255,.02)",
+                    background: "var(--t-bg-deep)",
                     textDecoration: "none",
                     transition: "border-color 200ms, background 200ms",
                   }}

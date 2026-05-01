@@ -1,8 +1,11 @@
 import { headers } from "next/headers"
 
+import { LibraryCard } from "@/components/ds/LibraryCard"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
+import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 import type {
+  ClaimedLibrary,
   ContributingStanding,
   QuickWin,
   TierInfo,
@@ -71,24 +74,28 @@ async function fetchMySubmissionStats(
 
 async function fetchProfileRole(
   baUserId: string
-): Promise<{ isVerifiedLibrarian: boolean }> {
+): Promise<{ isVerifiedLibrarian: boolean; isWikiEditor: boolean }> {
   const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
   try {
     const res = await fetch(
-      `${STRAPI}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(baUserId)}&fields[0]=isVerifiedLibrarian`,
+      `${STRAPI}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(baUserId)}&fields[0]=isVerifiedLibrarian&fields[1]=contributorRole`,
       {
         cache: "no-store",
         headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
       }
     )
-    if (!res.ok) return { isVerifiedLibrarian: false }
+    if (!res.ok) return { isVerifiedLibrarian: false, isWikiEditor: false }
     const json = (await res.json()) as {
-      data?: { isVerifiedLibrarian?: boolean }[]
+      data?: { isVerifiedLibrarian?: boolean; contributorRole?: string }[]
     }
+    const profile = json.data?.[0]
 
-    return { isVerifiedLibrarian: json.data?.[0]?.isVerifiedLibrarian ?? false }
+    return {
+      isVerifiedLibrarian: profile?.isVerifiedLibrarian ?? false,
+      isWikiEditor: profile?.contributorRole === "wiki_editor",
+    }
   } catch {
-    return { isVerifiedLibrarian: false }
+    return { isVerifiedLibrarian: false, isWikiEditor: false }
   }
 }
 
@@ -197,6 +204,25 @@ async function fetchQuickWins(baUserId: string): Promise<QuickWin[]> {
   }
 }
 
+async function fetchClaimedLibraries(
+  baUserId: string
+): Promise<ClaimedLibrary[]> {
+  const secret = process.env.STRAPI_BRIDGE_SECRET
+  if (!secret) return []
+  try {
+    const res = await fetch(
+      `${STRAPI}/api/auth-bridge/user-affiliations?baUserId=${encodeURIComponent(baUserId)}`,
+      { headers: { "X-Service-Secret": secret }, cache: "no-store" }
+    )
+    if (!res.ok) return []
+    const json = (await res.json()) as { libraries?: ClaimedLibrary[] }
+
+    return json.libraries ?? []
+  } catch {
+    return []
+  }
+}
+
 async function fetchFirstName(baUserId: string): Promise<string> {
   const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
   const strapi = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
@@ -227,17 +253,21 @@ export default async function ContributePage() {
     standing,
     quickWins,
     firstName,
+    claimedLibraries,
   ] = await Promise.all([
     fetchLibraryCount(),
     session?.user
       ? fetchProfileRole(session.user.id)
-      : Promise.resolve({ isVerifiedLibrarian: false }),
+      : Promise.resolve({ isVerifiedLibrarian: false, isWikiEditor: false }),
     session?.user
       ? fetchMySubmissionStats(session.user.id)
       : Promise.resolve(null),
     session?.user ? fetchStanding(session.user.id) : Promise.resolve(null),
     session?.user ? fetchQuickWins(session.user.id) : Promise.resolve([]),
     session?.user ? fetchFirstName(session.user.id) : Promise.resolve(""),
+    session?.user
+      ? fetchClaimedLibraries(session.user.id)
+      : Promise.resolve([] as ClaimedLibrary[]),
   ])
 
   const heroStats = {
@@ -261,6 +291,7 @@ export default async function ContributePage() {
       style={{ background: T.bg.void, minHeight: "100vh", color: T.ink.base }}
     >
       <ContributeHeroSection stats={heroStats} isSignedIn={!!session?.user} />
+      <ContributeNavBar />
       {session?.user && standingWithName && (
         <div className="mx-auto w-full max-w-[1296px] px-6 py-8 md:px-10">
           <WelcomeBackWidget standing={standingWithName} />
@@ -269,10 +300,55 @@ export default async function ContributePage() {
       {session?.user && quickWins.length > 0 && (
         <QuickWinsSection wins={quickWins} />
       )}
-      <ContributeNavBar />
+      {session?.user && claimedLibraries.length > 0 && (
+        <div className="mx-auto w-full max-w-[1296px] px-6 pt-10 pb-2 md:px-10">
+          <h2
+            style={{
+              fontFamily: T.font.serif,
+              fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)",
+              fontWeight: 700,
+              letterSpacing: "-0.03em",
+              lineHeight: 1,
+              color: T.ink.base,
+              margin: "0 0 16px",
+            }}
+          >
+            Your{" "}
+            <em
+              style={{
+                fontStyle: "italic",
+                fontWeight: 400,
+                color: T.accent.aurora,
+              }}
+            >
+              libraries.
+            </em>
+          </h2>
+        </div>
+      )}
+      {session?.user && claimedLibraries.length > 0 && (
+        <div className="mx-auto w-full max-w-[1296px] px-6 pb-6 md:px-10">
+          <div className="flex snap-x snap-mandatory gap-px overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:hidden">
+            {claimedLibraries.map((lib, index) => (
+              <LibraryCard
+                key={lib.entityRef ?? lib.documentId ?? index}
+                documentId={lib.documentId ?? lib.slug ?? String(index)}
+                slug={lib.slug}
+                name={lib.name ?? ""}
+                libraryType={lib.libraryType}
+                heroImageUrl={formatStrapiMediaUrl(lib.heroImageUrl) ?? null}
+                href={`/contribute/edit/${lib.slug ?? ""}`}
+                index={index}
+                variant="featured"
+              />
+            ))}
+          </div>
+        </div>
+      )}
       <ContributePathCards
         isSignedIn={!!session?.user}
         isVerifiedLibrarian={roleData.isVerifiedLibrarian}
+        isWikiEditor={roleData.isWikiEditor}
       />
       <ContributeGuidelinesSection />
       <ContributeCommunitySection />

@@ -115,8 +115,8 @@ const STATUS_CONFIG: Record<
   draft: {
     label: "DRAFT",
     color: T.ink.faint,
-    bg: "rgba(255,255,255,0.05)",
-    border: "rgba(255,255,255,0.12)",
+    bg: T.bg.deep,
+    border: T.border.line,
   },
   pending: {
     label: "UNDER REVIEW",
@@ -210,7 +210,7 @@ function getPipelineLineColor({
   if (isRejected && index <= 1) return T.accent.danger
   if (index <= stageIndex) return T.accent.aurora
 
-  return "rgba(255,255,255,0.09)"
+  return T.border.line
 }
 
 function getPipelineDotStyles({
@@ -247,8 +247,8 @@ function getPipelineDotStyles({
   }
 
   return {
-    background: "rgba(255,255,255,0.07)",
-    border: "rgba(255,255,255,0.14)",
+    background: T.bg.surface,
+    border: T.border.line,
     boxShadow: "none",
   }
 }
@@ -648,7 +648,7 @@ export function SubmissionCard({
         border: `1px solid ${T.border.line}`,
         borderRadius: "14px",
         padding: "20px 24px",
-        background: "rgba(255,255,255,0.012)",
+        background: T.bg.surface,
         marginBottom: "12px",
         animation: `sub-fade-in 0.35s ease both`,
         animationDelay: `${index * 55}ms`,

@@ -161,8 +161,8 @@ function selectStyle(hasError: boolean): React.CSSProperties {
     WebkitAppearance: "none" as const,
     padding: "7px 30px 7px 11px",
     borderRadius: "7px",
-    border: `1px solid ${hasError ? T.accent.danger + "80" : "rgba(255,255,255,0.14)"}`,
-    background: hasError ? "rgba(255,138,138,0.06)" : "rgba(255,255,255,0.05)",
+    border: `1px solid ${hasError ? T.accent.danger + "80" : T.border.line}`,
+    background: hasError ? "rgba(255,138,138,0.06)" : T.bg.deep,
     color: T.ink.base,
     fontSize: "13px",
     fontFamily: T.font.mono,
@@ -197,7 +197,7 @@ function DayToggle({
         alignItems: "center",
         gap: "7px",
         background: "none",
-        border: `1px solid ${open ? "rgba(127,223,255,0.22)" : "rgba(255,255,255,0.10)"}`,
+        border: `1px solid ${open ? "rgba(127,223,255,0.22)" : T.border.line}`,
         borderRadius: "6px",
         padding: "4px 9px 4px 10px",
         cursor: "pointer",
@@ -429,7 +429,7 @@ function TimeframeRow({
           background: "none",
           border: "none",
           cursor: "pointer",
-          color: "rgba(255,255,255,0.22)",
+          color: T.ink.ghost,
           fontSize: "18px",
           lineHeight: 1,
           padding: "0 2px",
@@ -442,7 +442,7 @@ function TimeframeRow({
         }
         onMouseLeave={(e) =>
           ((e.currentTarget as HTMLButtonElement).style.color =
-            "rgba(255,255,255,0.22)")
+            "var(--t-ink-ghost)")
         }
       >
         ×
@@ -580,9 +580,7 @@ export function OpeningTimesEditor({
             key={day.day}
             style={{
               padding: "14px 18px 16px",
-              background: isEven
-                ? "rgba(255,255,255,0.012)"
-                : "rgba(255,255,255,0.004)",
+              background: isEven ? T.bg.surface : "transparent",
               borderTop: dayIdx > 0 ? `1px solid ${T.border.line}` : undefined,
               opacity: day.enabled ? 1 : 0.55,
               transition: "opacity 0.15s",

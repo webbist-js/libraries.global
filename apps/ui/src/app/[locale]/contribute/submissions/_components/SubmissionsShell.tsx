@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react"
 
-import { ContributeHeroShell } from "@/components/ds"
 import { useMySubmissions, type Submission } from "@/hooks/useSubmissions"
 import { T } from "@/lib/design-tokens"
 
 import { SubmissionCard } from "./SubmissionCard"
 import { ContributeNavBar } from "../../_components/ContributeNavBar"
+import { ContributeSubpageHero } from "../../_components/ContributeSubpageHero"
 
 const TABS = [
   { id: "all", label: "ALL" },
@@ -40,7 +40,7 @@ function SkeletonCards() {
         <div
           key={i}
           style={{
-            background: "rgba(255,255,255,0.04)",
+            background: T.bg.surface,
             borderRadius: "12px",
             height: "120px",
             marginBottom: "12px",
@@ -117,32 +117,9 @@ export function SubmissionsShell() {
   return (
     <>
       {/* ── Hero ───────────────────────────────────────────────────────── */}
-      <ContributeHeroShell
-        minHeight="340px"
-        overlay="radial-gradient(ellipse 70% 90% at 30% 40%, rgba(127,223,255,0.04) 0%, transparent 60%), linear-gradient(to bottom, rgba(3,5,17,0) 0%, rgba(3,5,17,0.80) 100%)"
-      >
-        {/* Eyebrow row */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "20px",
-          }}
-        >
-          <p
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".20em",
-              textTransform: "uppercase",
-              color: T.accent.aurora,
-              opacity: 0.7,
-              margin: 0,
-            }}
-          >
-            Contribute / My Submissions
-          </p>
+      <ContributeSubpageHero
+        section="My Submissions"
+        badge={
           <span
             style={{
               fontFamily: T.font.mono,
@@ -154,50 +131,19 @@ export function SubmissionsShell() {
           >
             Auto-refresh · 60s
           </span>
-        </div>
-
-        {/* H1 */}
-        <h1
-          style={{
-            fontFamily: T.font.serif,
-            fontSize: "clamp(2.8rem, 6vw, 5rem)",
-            fontWeight: 700,
-            letterSpacing: "-0.03em",
-            lineHeight: 0.95,
-            color: T.ink.base,
-            margin: "0 0 18px",
-          }}
-        >
-          Your{" "}
-          <em
-            style={{
-              fontStyle: "italic",
-              fontWeight: 400,
-              color: "rgba(244,247,255,0.55)",
-            }}
-          >
-            contributions
-          </em>
-          ,
-          <br />
-          in flight.
-        </h1>
-
-        {/* Subtitle */}
-        <p
-          style={{
-            fontFamily: T.font.sans,
-            fontSize: "15px",
-            color: T.ink.dim,
-            lineHeight: 1.65,
-            margin: 0,
-            maxWidth: "52ch",
-          }}
-        >
-          Drafts, things under review, requests for changes, and recently
-          published. Editorial board comments live alongside each one.
-        </p>
-      </ContributeHeroShell>
+        }
+        heading="Your"
+        headingItalic="contributions,"
+        accentColor={T.ink.dim}
+        headingAfter={
+          <>
+            <br />
+            in flight.
+          </>
+        }
+        body="Drafts, things under review, requests for changes, and recently published. Editorial board comments live alongside each one."
+        minHeight="340px"
+      />
 
       <ContributeNavBar />
 
@@ -254,9 +200,7 @@ export function SubmissionsShell() {
                     fontFamily: T.font.mono,
                     fontSize: "9px",
                     letterSpacing: ".06em",
-                    background: isActive
-                      ? "rgba(127,223,255,0.12)"
-                      : "rgba(255,255,255,0.06)",
+                    background: isActive ? "rgba(127,223,255,0.12)" : T.bg.deep,
                     color: isActive ? T.accent.aurora : T.ink.faint,
                     borderRadius: "4px",
                     padding: "1px 6px",

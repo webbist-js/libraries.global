@@ -44,29 +44,29 @@ export function FeaturedArticleCard({
         {/* Right: text */}
         <div className="flex flex-col justify-end p-8 lg:p-12">
           {article.category?.name ? (
-            <p className="mb-5 font-mono text-[10px] tracking-[0.22em] text-white/30 uppercase">
+            <p className="mb-5 font-mono text-[10px] tracking-[0.22em] text-(--t-ink-faint) uppercase">
               — {article.category.name}
             </p>
           ) : null}
 
-          <h2 className="mb-5 font-[family-name:var(--font-fraunces)] text-[2.1rem] leading-[1.06] font-semibold tracking-[-0.02em] text-white italic sm:text-[2.6rem]">
+          <h2 className="mb-5 font-[family-name:var(--font-fraunces)] text-[2.1rem] leading-[1.06] font-semibold tracking-[-0.02em] text-(--t-ink-base) italic sm:text-[2.6rem]">
             {article.title}
           </h2>
 
           {article.summary ? (
-            <p className="mb-7 line-clamp-3 text-[13px] leading-7 text-white/42">
+            <p className="mb-7 line-clamp-3 text-[13px] leading-7 text-(--t-ink-low)">
               {article.summary}
             </p>
           ) : null}
 
           <div className="mb-6 flex items-center gap-3">
-            <div className="flex size-7 flex-none items-center justify-center rounded-full bg-white/10">
-              <span className="font-mono text-[11px] text-white/50">
+            <div className="flex size-7 flex-none items-center justify-center rounded-full bg-(--t-bg-surface)">
+              <span className="font-mono text-[11px] text-(--t-ink-low)">
                 {initial}
               </span>
             </div>
             {article.author ? (
-              <span className="text-[12px] text-white/40">
+              <span className="text-[12px] text-(--t-ink-faint)">
                 {article.author}
               </span>
             ) : null}

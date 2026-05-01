@@ -68,9 +68,9 @@ export function LibraryFollowButton({
           gap: "6px",
           padding: "9px 16px",
           borderRadius: "10px",
-          border: `1px solid ${T.border.line}`,
-          background: "rgba(255,255,255,0.03)",
-          color: T.ink.faint,
+          border: `1px solid rgba(255,255,255,.14)`,
+          background: `rgba(255,255,255,.07)`,
+          color: "rgba(255,255,255,.40)",
           fontFamily: T.font.mono,
           fontSize: "10px",
           letterSpacing: ".1em",
@@ -100,11 +100,11 @@ export function LibraryFollowButton({
         borderRadius: "10px",
         border: isFollowing
           ? `1px solid rgba(255,100,100,0.4)`
-          : `1px solid ${T.border.hi}`,
+          : `1px solid rgba(255,255,255,.22)`,
         background: isFollowing
           ? "rgba(255,100,100,0.08)"
-          : "rgba(255,255,255,0.04)",
-        color: isFollowing ? "#ff8a8a" : T.ink.dim,
+          : "rgba(255,255,255,.07)",
+        color: isFollowing ? "#ff8a8a" : "rgba(255,255,255,.80)",
         fontFamily: T.font.mono,
         fontSize: "10px",
         letterSpacing: ".1em",

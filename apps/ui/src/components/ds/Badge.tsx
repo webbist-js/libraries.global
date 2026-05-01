@@ -49,7 +49,7 @@ const COLOR_MAP: Record<
     border: "rgba(255,138,138,.3)",
     bg: "rgba(255,138,138,.08)",
   },
-  dim: { text: T.ink.low, border: T.border.line, bg: "rgba(255,255,255,.03)" },
+  dim: { text: T.ink.low, border: T.border.line, bg: T.bg.surface },
 }
 
 export function Badge({

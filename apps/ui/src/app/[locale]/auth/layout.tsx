@@ -1,6 +1,8 @@
 import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 
+import { T } from "@/lib/design-tokens"
+
 export default async function AuthLayout({
   children,
   params,
@@ -9,7 +11,10 @@ export default async function AuthLayout({
   setRequestLocale(locale)
 
   return (
-    <div className="relative isolate flex min-h-screen w-full bg-[#050816] text-white">
+    <div
+      className="relative isolate flex min-h-screen w-full"
+      style={{ background: T.bg.space, color: T.ink.base }}
+    >
       {children}
     </div>
   )

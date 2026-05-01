@@ -33,7 +33,7 @@ export function ProfileHero({
       data-transparent-header=""
       className="relative -mt-14 overflow-hidden"
       style={{
-        background: "#030511",
+        background: T.bg.void,
         borderBottom: `1px solid ${T.border.line}`,
         minHeight: "320px",
       }}
@@ -47,7 +47,7 @@ export function ProfileHero({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 70% 90% at 70% 40%, rgba(127,223,255,0.05) 0%, transparent 60%), linear-gradient(to bottom, rgba(3,5,17,0) 0%, rgba(3,5,17,0.75) 100%)",
+            "radial-gradient(ellipse 70% 90% at 70% 40%, var(--t-aurora-soft) 0%, transparent 60%), linear-gradient(to bottom, transparent 0%, var(--t-bg-space) 100%)",
         }}
       />
 
@@ -88,7 +88,7 @@ export function ProfileHero({
               padding: "4px 12px",
               borderRadius: "999px",
               border: `1px solid ${T.border.line}`,
-              background: "rgba(255,255,255,0.03)",
+              background: T.bg.surface,
               fontFamily: T.font.mono,
               fontSize: "9px",
               letterSpacing: ".14em",
@@ -118,15 +118,14 @@ export function ProfileHero({
         <div className="flex items-start gap-8">
           {/* Avatar */}
           <div className="shrink-0">
-            {/* Gradient ring wrapper */}
+            {/* Conic-gradient ring wrapper */}
             <div
               style={{
-                width: "92px",
-                height: "92px",
+                width: "120px",
+                height: "120px",
                 borderRadius: "50%",
-                padding: "2px",
-                background:
-                  "linear-gradient(135deg, rgba(127,223,255,0.85) 0%, rgba(163,144,255,0.85) 100%)",
+                padding: "3px",
+                background: `conic-gradient(from 180deg at 50% 50%, ${T.accent.aurora}, ${T.accent.violet}, ${T.accent.gold}, ${T.accent.aurora})`,
                 flexShrink: 0,
               }}
             >
@@ -135,14 +134,16 @@ export function ProfileHero({
                   width: "100%",
                   height: "100%",
                   borderRadius: "50%",
-                  background: "rgba(10,14,34,0.95)",
+                  background:
+                    "linear-gradient(135deg, rgba(20,28,64,0.97), rgba(8,12,36,0.99))",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontFamily: T.font.mono,
-                  fontSize: "26px",
-                  fontWeight: 600,
-                  color: T.accent.aurora,
+                  fontFamily: T.font.serif,
+                  fontSize: "42px",
+                  fontWeight: 400,
+                  color: T.ink.base,
+                  letterSpacing: "-0.02em",
                   position: "relative",
                   overflow: "hidden",
                 }}
@@ -165,25 +166,30 @@ export function ProfileHero({
             {profile.isVerifiedLibrarian && (
               <div
                 style={{
-                  marginTop: "-18px",
-                  marginLeft: "66px",
-                  width: "22px",
-                  height: "22px",
+                  marginTop: "-22px",
+                  marginLeft: "86px",
+                  width: "30px",
+                  height: "30px",
                   borderRadius: "50%",
                   background: T.accent.aurora,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  border: "2px solid #030511",
+                  border: `3px solid ${T.bg.void}`,
                   position: "relative",
                   zIndex: 1,
                 }}
               >
-                <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--t-bg-void)"
+                  strokeWidth="2.5"
+                >
                   <path
-                    d="M2 6l3 3 5-5"
-                    stroke="#030511"
-                    strokeWidth="1.8"
+                    d="m5 13 4 4L19 7"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
@@ -198,10 +204,10 @@ export function ProfileHero({
             <h1
               style={{
                 fontFamily: T.font.serif,
-                fontSize: "clamp(2rem, 4.5vw, 3.4rem)",
-                fontWeight: 700,
-                lineHeight: 0.94,
-                letterSpacing: "-0.03em",
+                fontSize: "clamp(2.5rem, 5.5vw, 4.25rem)",
+                fontWeight: 400,
+                lineHeight: 0.92,
+                letterSpacing: "-0.035em",
                 color: T.ink.base,
                 margin: "0 0 10px",
               }}
@@ -252,12 +258,14 @@ export function ProfileHero({
             {profile.bio && (
               <p
                 style={{
-                  fontSize: "14px",
-                  lineHeight: "1.65",
-                  color: T.ink.base,
-                  maxWidth: "52ch",
+                  fontFamily: T.font.serif,
+                  fontSize: "17px",
+                  lineHeight: "1.5",
+                  color: T.ink.dim,
+                  maxWidth: "60ch",
                   margin: "0 0 14px",
                   fontWeight: 300,
+                  letterSpacing: "-0.005em",
                 }}
               >
                 {profile.bio}
@@ -334,11 +342,14 @@ export function ProfileHero({
               <button
                 type="button"
                 style={{
-                  padding: "8px 18px",
-                  borderRadius: "8px",
-                  border: `1px solid rgba(127,223,255,0.35)`,
-                  background: "rgba(127,223,255,0.08)",
-                  color: T.accent.aurora,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "10px 18px",
+                  borderRadius: "10px",
+                  border: "none",
+                  background: T.ink.base,
+                  color: T.bg.void,
                   fontFamily: T.font.sans,
                   fontSize: "13px",
                   fontWeight: 500,
@@ -348,28 +359,54 @@ export function ProfileHero({
                 disabled
                 title="Following — coming soon"
               >
-                + Follow
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                >
+                  <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+                </svg>
+                Follow
               </button>
             </div>
           )}
 
           {isOwnProfile && (
             <GlobalLink
-              href="/settings"
+              href="/profile/settings"
               style={{
-                padding: "8px 18px",
-                borderRadius: "8px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "10px 18px",
+                borderRadius: "10px",
                 border: `1px solid ${T.border.hi}`,
-                background: "rgba(255,255,255,0.04)",
+                background: T.bg.surface,
                 color: T.ink.dim,
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".12em",
-                textTransform: "uppercase",
+                fontFamily: T.font.sans,
+                fontSize: "13px",
+                fontWeight: 400,
                 textDecoration: "none",
                 flexShrink: 0,
               }}
             >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              >
+                <path
+                  d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
               Edit profile
             </GlobalLink>
           )}

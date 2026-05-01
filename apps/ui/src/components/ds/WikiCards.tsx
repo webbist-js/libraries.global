@@ -61,7 +61,7 @@ export function QuickPathCard({
         padding: "22px",
         border: `1px solid ${T.border.line}`,
         borderRadius: "16px",
-        background: "rgba(255,255,255,.02)",
+        background: T.bg.surface,
         cursor: "pointer",
         display: "flex",
         flexDirection: "column",

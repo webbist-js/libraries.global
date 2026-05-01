@@ -13,13 +13,13 @@ import { Link } from "@/lib/navigation"
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/)
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  if (parts.length === 1) return (parts[0] ?? "").slice(0, 2).toUpperCase()
 
-  return (parts[0][0] + parts.at(-1)[0]).toUpperCase()
+  return ((parts[0]?.[0] ?? "") + (parts.at(-1)?.[0] ?? "")).toUpperCase()
 }
 
 function getFirstName(name: string): string {
-  return name.trim().split(/\s+/)[0]
+  return name.trim().split(/\s+/)[0] ?? ""
 }
 
 function Avatar({
@@ -53,8 +53,8 @@ function Avatar({
         width: size,
         height: size,
         borderRadius: "50%",
-        background: "rgba(127,223,255,0.15)",
-        border: "1px solid rgba(127,223,255,0.25)",
+        background: "var(--t-aurora-soft)",
+        border: "1px solid var(--t-aurora-edge)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -100,16 +100,16 @@ export function GlobalLoggedUserMenu({
             gap: "8px",
             padding: "3px 12px 3px 3px",
             borderRadius: "999px",
-            border: "1px solid rgba(255,255,255,0.10)",
-            background: "rgba(255,255,255,0.04)",
+            border: `1px solid ${T.border.line}`,
+            background: T.bg.deep,
             cursor: "pointer",
             transition: "background 150ms, border-color 150ms",
             fontFamily: T.font.mono,
             fontSize: "12px",
             letterSpacing: "0.05em",
-            color: "rgba(255,255,255,0.75)",
+            color: T.ink.dim,
           }}
-          className="hover:border-white/20 hover:bg-white/[0.07]"
+          className="hover:border-(--t-border-hi) hover:bg-(--t-bg-surface)"
         >
           <Avatar src={avatarSrc} initials={initials} size={28} />
           <span>{username ? `@${username}` : firstName}</span>
@@ -120,11 +120,10 @@ export function GlobalLoggedUserMenu({
         align="end"
         style={{
           width: "220px",
-          background: "rgba(6,9,26,0.97)",
-          border: "1px solid rgba(255,255,255,0.09)",
+          background: T.bg.deep,
+          border: `1px solid ${T.border.line}`,
           backdropFilter: "blur(20px)",
-          boxShadow:
-            "0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)",
+          boxShadow: "0 16px 48px rgba(0,0,0,0.2), 0 1px 0 rgba(0,0,0,0.06)",
           borderRadius: "12px",
           padding: "6px",
         }}
@@ -137,7 +136,7 @@ export function GlobalLoggedUserMenu({
             gap: "12px",
             padding: "10px 10px 12px",
             marginBottom: "4px",
-            borderBottom: "1px solid rgba(255,255,255,0.07)",
+            borderBottom: `1px solid ${T.border.line}`,
           }}
         >
           <Avatar src={avatarSrc} initials={initials} size={38} />
@@ -148,7 +147,7 @@ export function GlobalLoggedUserMenu({
                 fontFamily: T.font.sans,
                 fontSize: "13px",
                 fontWeight: 600,
-                color: "rgba(255,255,255,0.92)",
+                color: T.ink.base,
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
@@ -176,7 +175,7 @@ export function GlobalLoggedUserMenu({
                   fontFamily: T.font.mono,
                   fontSize: "10px",
                   letterSpacing: "0.04em",
-                  color: "rgba(255,255,255,0.32)",
+                  color: T.ink.faint,
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
@@ -190,11 +189,11 @@ export function GlobalLoggedUserMenu({
 
         <DropdownMenuItem
           asChild
-          className="cursor-pointer rounded-lg focus:bg-white/[0.06]"
+          className="cursor-pointer rounded-lg focus:bg-(--t-aurora-soft)"
         >
           <Link
-            href="/profile"
-            className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-white/65 hover:text-white"
+            href={username ? `/profile/${username}` : "/profile"}
+            className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-(--t-ink-dim) hover:text-(--t-ink-base)"
           >
             <Icon
               icon="mdi:account-circle-outline"
@@ -208,11 +207,11 @@ export function GlobalLoggedUserMenu({
 
         <DropdownMenuItem
           asChild
-          className="cursor-pointer rounded-lg focus:bg-white/[0.06]"
+          className="cursor-pointer rounded-lg focus:bg-(--t-aurora-soft)"
         >
           <Link
-            href="/settings"
-            className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-white/65 hover:text-white"
+            href="/profile/settings"
+            className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-(--t-ink-dim) hover:text-(--t-ink-base)"
           >
             <Icon
               icon="mdi:cog-outline"
@@ -225,16 +224,16 @@ export function GlobalLoggedUserMenu({
         </DropdownMenuItem>
 
         <DropdownMenuSeparator
-          style={{ margin: "4px 0", background: "rgba(255,255,255,0.07)" }}
+          style={{ margin: "4px 0", background: T.border.line }}
         />
 
         <DropdownMenuItem
           asChild
-          className="cursor-pointer rounded-lg focus:bg-white/[0.06]"
+          className="cursor-pointer rounded-lg focus:bg-(--t-aurora-soft)"
         >
           <Link
             href="/auth/signout"
-            className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-white/40 hover:text-white/70"
+            className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-(--t-ink-faint) hover:text-(--t-ink-dim)"
           >
             <Icon
               icon="mdi:logout"

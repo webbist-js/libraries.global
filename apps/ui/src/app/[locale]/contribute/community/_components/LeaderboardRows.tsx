@@ -35,7 +35,7 @@ export function LeaderboardRows({ entries }: { entries: LeaderboardEntry[] }) {
             padding: "12px 20px",
             borderBottom:
               i < entries.length - 1 ? `1px solid ${T.border.line}` : "none",
-            background: "rgba(255,255,255,0.012)",
+            background: T.bg.surface,
           }}
         >
           <span
@@ -97,7 +97,7 @@ export function LeaderboardRows({ entries }: { entries: LeaderboardEntry[] }) {
               style={{
                 margin: 0,
                 fontFamily: T.font.mono,
-                fontSize: "8px",
+                fontSize: "10px",
                 letterSpacing: ".10em",
                 textTransform: "uppercase",
                 color: TIER_COLORS[entry.tier] ?? T.ink.faint,

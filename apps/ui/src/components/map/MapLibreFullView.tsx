@@ -48,6 +48,7 @@ export default function MapLibreFullView({
         regionSlug={drillState.region?.slug}
         mapConfig={mapConfig}
         fill
+        hideBreadcrumb
         className="min-h-0 flex-1"
       />
     </div>

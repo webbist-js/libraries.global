@@ -53,23 +53,22 @@ function FactRow({
   return (
     <div
       style={{
-        display: "flex",
-        justifyContent: "space-between",
+        display: "grid",
+        gridTemplateColumns: "155px 1fr",
         alignItems: "baseline",
-        gap: "20px",
+        gap: "16px",
         paddingTop: "11px",
         paddingBottom: "11px",
-        borderBottom: `1px dashed rgba(255,255,255,.07)`,
+        borderBottom: `1px dashed var(--t-border-line)`,
       }}
     >
       <span
         style={{
           fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".16em",
+          fontSize: "11px",
+          letterSpacing: ".14em",
           textTransform: "uppercase",
-          color: "rgba(255,255,255,.38)",
-          flexShrink: 0,
+          color: T.ink.low,
         }}
       >
         {label}
@@ -78,7 +77,6 @@ function FactRow({
         style={{
           fontSize: "14.5px",
           color: T.ink.base,
-          textAlign: "right",
           lineHeight: 1.4,
         }}
       >
@@ -113,16 +111,18 @@ function ActionLink({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.025] px-4 py-3.5 text-[14px] text-white/65 transition-colors hover:border-white/14 hover:bg-white/[0.05] hover:text-white/90"
+      className="group flex items-center gap-3 rounded-xl border border-(--t-border-line) bg-(--t-bg-surface) px-4 py-3.5 text-[14px] text-(--t-ink-dim) transition-colors hover:border-(--t-border-hi) hover:bg-(--t-bg-deep) hover:text-(--t-ink-base)"
     >
-      <Icon
-        icon={icon}
-        className="size-[18px] shrink-0 text-[#7fdfff] opacity-70 transition-opacity group-hover:opacity-100"
-      />
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-(--t-border-line) bg-(--t-bg-deep) transition-colors group-hover:border-(--t-aurora-edge) group-hover:bg-(--t-aurora-soft)">
+        <Icon
+          icon={icon}
+          className="size-[16px] text-(--t-accent-aurora) opacity-70 transition-opacity group-hover:opacity-100"
+        />
+      </span>
       <span className="flex-1">{label}</span>
       <Icon
         icon="mdi:arrow-right"
-        className="size-4 shrink-0 text-white/28 transition-colors group-hover:text-white/55"
+        className="size-4 shrink-0 text-(--t-ink-ghost) transition-colors group-hover:text-(--t-ink-faint)"
       />
     </GlobalLink>
   )
@@ -182,7 +182,7 @@ export function LibraryInfoCards({
               library.openedYear !== library.foundedYear ? (
                 <span
                   style={{
-                    color: "rgba(255,255,255,.42)",
+                    color: T.ink.faint,
                     marginLeft: "6px",
                     fontSize: "13px",
                   }}
@@ -224,7 +224,7 @@ export function LibraryInfoCards({
         </div>
 
         {quickLinks.length > 0 ? (
-          <div className="mt-5 space-y-2">
+          <div className="mt-5 grid grid-cols-2 gap-2">
             {quickLinks.map((link) => (
               <ActionLink key={link.href} label={link.label} href={link.href} />
             ))}
@@ -268,7 +268,7 @@ export function LibraryInfoCards({
               href={mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-white hover:underline"
+              className="hover:text-(--t-accent-aurora) hover:underline"
             >
               {fullAddress}
             </GlobalLink>
@@ -282,7 +282,7 @@ export function LibraryInfoCards({
         <FactRow label="Phone">
           <GlobalLink
             href={`tel:${library.phone}`}
-            className="hover:text-white hover:underline"
+            className="hover:text-(--t-accent-aurora) hover:underline"
           >
             {library.phone}
           </GlobalLink>
@@ -293,7 +293,7 @@ export function LibraryInfoCards({
         <FactRow label="Email">
           <GlobalLink
             href={`mailto:${library.email}`}
-            className="block truncate hover:text-white hover:underline"
+            className="block truncate hover:text-(--t-accent-aurora) hover:underline"
           >
             {library.email}
           </GlobalLink>
@@ -306,7 +306,7 @@ export function LibraryInfoCards({
             href={library.website}
             target="_blank"
             rel="noopener noreferrer"
-            className="block truncate hover:text-white hover:underline"
+            className="block truncate hover:text-(--t-accent-aurora) hover:underline"
           >
             {library.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
           </GlobalLink>

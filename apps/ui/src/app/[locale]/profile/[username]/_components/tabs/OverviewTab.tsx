@@ -1,10 +1,15 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 
+import type { PublicSubmission } from "@/app/api/profile/[username]/contributions/route"
+import { LibraryCard } from "@/components/ds/LibraryCard"
+import { BADGE_CATALOG, BADGE_VARIANT_STYLES } from "@/lib/badges"
 import { T } from "@/lib/design-tokens"
-import type { FollowedLibrary, UserProfile } from "@/lib/types/profile"
+import { Link } from "@/lib/navigation"
+import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
+import type { UserProfile } from "@/lib/types/profile"
 
 // ── Seeded pseudo-random heatmap ──────────────────────────────────────────────
 
@@ -29,7 +34,7 @@ function generateHeatmap(username: string): number[] {
 }
 
 function heatColor(v: number): string {
-  if (v === 0) return "rgba(255,255,255,0.05)"
+  if (v === 0) return T.bg.deep
   if (v <= 3) return "rgba(127,223,255,0.16)"
   if (v <= 8) return "rgba(127,223,255,0.38)"
   if (v <= 14) return "rgba(127,223,255,0.62)"
@@ -52,7 +57,7 @@ function StatCell({
     <div
       style={{
         padding: "20px 22px",
-        background: "rgba(255,255,255,0.02)",
+        background: T.bg.surface,
         display: "flex",
         flexDirection: "column",
         gap: "4px",
@@ -61,8 +66,8 @@ function StatCell({
       <span
         style={{
           fontFamily: T.font.mono,
-          fontSize: "8px",
-          letterSpacing: ".2em",
+          fontSize: "10px",
+          letterSpacing: ".12em",
           textTransform: "uppercase",
           color: T.ink.faint,
           marginBottom: "2px",
@@ -74,7 +79,7 @@ function StatCell({
         <span
           style={{
             fontFamily: T.font.serif,
-            fontSize: "34px",
+            fontSize: "36px",
             fontWeight: 400,
             letterSpacing: "-0.03em",
             color: T.ink.base,
@@ -88,9 +93,9 @@ function StatCell({
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "11px",
             color: T.ink.faint,
-            letterSpacing: ".06em",
+            letterSpacing: ".04em",
             marginTop: "2px",
           }}
         >
@@ -101,217 +106,94 @@ function StatCell({
   )
 }
 
-const CONTRIB_TYPES = {
-  ADDED: {
+const CONTRIB_TYPE_META: Record<
+  string,
+  { color: string; bg: string; border: string; icon: string; label: string }
+> = {
+  new_library: {
     color: T.accent.ok,
     bg: "rgba(142,240,179,0.1)",
     border: "rgba(142,240,179,0.25)",
+    icon: "mdi:book-plus-outline",
+    label: "Added",
   },
-  EDITED: {
+  library_edit: {
     color: T.accent.aurora,
     bg: "rgba(127,223,255,0.1)",
     border: "rgba(127,223,255,0.25)",
+    icon: "mdi:pencil-outline",
+    label: "Edited",
   },
-  FLAGGED: {
+  correction: {
     color: T.accent.gold,
     bg: "rgba(232,201,138,0.1)",
     border: "rgba(232,201,138,0.25)",
+    icon: "mdi:flag-outline",
+    label: "Correction",
   },
-  REVIEWED: {
-    color: T.ink.dim,
-    bg: "rgba(255,255,255,0.06)",
-    border: "rgba(255,255,255,0.1)",
-  },
-  PHOTO: {
+  wiki_edit: {
     color: T.accent.violet,
     bg: "rgba(163,144,255,0.1)",
     border: "rgba(163,144,255,0.25)",
+    icon: "mdi:book-edit-outline",
+    label: "Wiki",
   },
-} as const
-
-const PLACEHOLDER_CONTRIBS = [
-  {
-    type: "ADDED" as const,
-    title: "Bibliothèque Méjanes · Aix-en-Provence",
-    sub: "FR · Public · 320,000 items · Fully verified",
-    time: "2H AGO",
-    rep: "+18 REP",
+  library_claim: {
+    color: T.accent.gold,
+    bg: "rgba(232,201,138,0.1)",
+    border: "rgba(232,201,138,0.25)",
+    icon: "mdi:shield-check-outline",
+    label: "Claimed",
   },
-  {
-    type: "EDITED" as const,
-    title: "Hours for British Library · Reading-room closures",
-    sub: "GB · National · Peer-reviewed",
-    time: "Yesterday",
-    rep: "+3 REP",
+  default: {
+    color: T.ink.dim,
+    bg: T.bg.deep,
+    border: T.border.line,
+    icon: "mdi:message-text-outline",
+    label: "Other",
   },
-  {
-    type: "FLAGGED" as const,
-    title: "Duplicate entry · National Library of Wales",
-    sub: "GB-WLS · Merged by editor",
-    time: "2 days ago",
-    rep: "+5 REP",
-  },
-  {
-    type: "REVIEWED" as const,
-    title: "Translation · Biblioteca Apostolica Vaticana FR",
-    sub: "VA · Approved by editorial board",
-    time: "4 days ago",
-    rep: "+12 REP",
-  },
-  {
-    type: "PHOTO" as const,
-    title: "Photography added for Bibliothèque Mazarine",
-    sub: "FR · 6 images · IIIF endpoint",
-    time: "1 week ago",
-    rep: "+8 REP",
-  },
-]
-
-const CONTRIB_ICONS = {
-  ADDED: "mdi:book-plus-outline",
-  EDITED: "mdi:pencil-outline",
-  FLAGGED: "mdi:flag-outline",
-  REVIEWED: "mdi:message-text-outline",
-  PHOTO: "mdi:camera-outline",
 }
 
-const LIBRARY_TYPE_GRADIENT: Record<string, string> = {
-  National: "linear-gradient(135deg, #0a1a2d 0%, #0d0d2e 100%)",
-  Public: "linear-gradient(135deg, #0a1f1a 0%, #071428 100%)",
-  Academic: "linear-gradient(135deg, #1a1a0d 0%, #0d1a2e 100%)",
-  University: "linear-gradient(135deg, #1a1a0d 0%, #0d1a2e 100%)",
-  Parliamentary: "linear-gradient(135deg, #1a0a0d 0%, #0d0a1a 100%)",
-  Monastic: "linear-gradient(135deg, #1a0a2d 0%, #2d1a0a 100%)",
-  Archive: "linear-gradient(135deg, #1a100a 0%, #0d1a1a 100%)",
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const h = Math.floor(diff / 3_600_000)
+  if (h < 1) return "Just now"
+  if (h < 24) return `${h}h ago`
+  const d = Math.floor(diff / 86_400_000)
+  if (d === 1) return "Yesterday"
+  if (d < 7) return `${d} days ago`
+  if (d < 30) return `${Math.floor(d / 7)}w ago`
+
+  return `${Math.floor(d / 30)}mo ago`
 }
 
-function libraryGradient(type?: string | null): string {
-  return (
-    LIBRARY_TYPE_GRADIENT[type ?? ""] ??
-    "linear-gradient(135deg, #0a0d1a 0%, #0d0a2e 100%)"
-  )
+function approxPoints(type: string): number | null {
+  if (type === "new_library") return 50
+  if (type === "library_edit") return 10
+  if (type === "wiki_edit") return 5
+
+  return null
 }
 
-function FollowingLibrariesGrid({
-  libraries,
-}: {
-  libraries: FollowedLibrary[]
-}) {
-  if (libraries.length === 0) {
-    return (
-      <div
-        style={{
-          padding: "32px",
-          textAlign: "center",
-          border: `1px solid ${T.border.line}`,
-          borderRadius: "10px",
-        }}
-      >
-        <p
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "9px",
-            letterSpacing: ".14em",
-            textTransform: "uppercase",
-            color: T.ink.faint,
-            margin: 0,
-          }}
-        >
-          No libraries followed yet
-        </p>
-      </div>
-    )
-  }
+const CONTRIB_FALLBACK = CONTRIB_TYPE_META.default!
 
-  return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(3, 1fr)",
-        gap: "12px",
-      }}
-    >
-      {libraries.slice(0, 6).map((lib) => (
-        <div
-          key={lib.documentId}
-          style={{
-            borderRadius: "10px",
-            border: `1px solid ${T.border.line}`,
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              height: "80px",
-              background: libraryGradient(lib.libraryType),
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              position: "relative",
-            }}
-          >
-            {lib.libraryType && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "8px",
-                  left: "8px",
-                  fontFamily: T.font.mono,
-                  fontSize: "7px",
-                  letterSpacing: ".12em",
-                  textTransform: "uppercase",
-                  color: T.ink.dim,
-                  padding: "2px 6px",
-                  borderRadius: "4px",
-                  background: "rgba(0,0,0,0.4)",
-                }}
-              >
-                {lib.libraryType}
-              </div>
-            )}
-            <Icon
-              icon="mdi:domain"
-              width={28}
-              height={28}
-              style={{ color: "rgba(255,255,255,0.12)" }}
-            />
-          </div>
-          <div style={{ padding: "10px 12px" }}>
-            <p
-              style={{
-                fontFamily: T.font.sans,
-                fontSize: "12px",
-                fontWeight: 500,
-                color: T.ink.base,
-                margin: 0,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {lib.name}
-            </p>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-const BADGE_ICONS = [
-  { icon: "mdi:pencil", earned: true },
-  { icon: "mdi:star-outline", earned: true },
-  { icon: "mdi:map-outline", earned: true },
-  { icon: "mdi:translate", earned: true },
-  { icon: "mdi:book-outline", earned: true },
-  { icon: "mdi:lightning-bolt", earned: true },
-  { icon: "mdi:check-circle-outline", earned: false },
-  { icon: "mdi:lock-outline", earned: false },
-]
+// Badge widget shows up to 8 badges from the catalog (earned first)
+const BADGE_WIDGET_COUNT = 8
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export function OverviewTab({ profile }: { profile: UserProfile }) {
+  const [recentContribs, setRecentContribs] = useState<PublicSubmission[]>([])
+
+  useEffect(() => {
+    fetch(`/api/profile/${encodeURIComponent(profile.username)}/contributions`)
+      .then((r) => r.json())
+      .then((json: { data?: PublicSubmission[] }) => {
+        setRecentContribs((json.data ?? []).slice(0, 5))
+      })
+      .catch(() => {})
+  }, [profile.username])
+
   const heat = generateHeatmap(profile.username)
   const joinedDate = new Date(profile.createdAt)
   const memberSince = joinedDate.toLocaleDateString("en-US", {
@@ -397,10 +279,10 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
           gap: "1px",
           border: `1px solid ${T.border.line}`,
-          borderRadius: "12px",
+          borderRadius: "18px",
           overflow: "hidden",
           background: T.border.line,
         }}
@@ -438,9 +320,9 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
           <div
             style={{
               border: `1px solid ${T.border.line}`,
-              borderRadius: "12px",
-              padding: "20px",
-              background: "rgba(255,255,255,0.02)",
+              borderRadius: "16px",
+              padding: "24px 26px",
+              background: T.bg.surface,
             }}
           >
             <div
@@ -465,7 +347,7 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
               <span
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "8px",
+                  fontSize: "10px",
                   letterSpacing: ".18em",
                   textTransform: "uppercase",
                   color: T.accent.aurora,
@@ -478,7 +360,7 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
             <p
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "8px",
+                fontSize: "10px",
                 letterSpacing: ".14em",
                 textTransform: "uppercase",
                 color: T.ink.faint,
@@ -505,9 +387,10 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
                     <div
                       key={`${col}-${row}`}
                       title={v > 0 ? `${v} contributions` : "No contributions"}
+                      className="transition-transform duration-100 hover:scale-125"
                       style={{
                         aspectRatio: "1",
-                        borderRadius: "2px",
+                        borderRadius: "3px",
                         background: heatColor(v),
                         cursor: "default",
                       }}
@@ -528,7 +411,7 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
               <span
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "8px",
+                  fontSize: "10px",
                   letterSpacing: ".1em",
                   color: T.ink.faint,
                 }}
@@ -541,7 +424,7 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
                 <span
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "8px",
+                    fontSize: "10px",
                     color: T.ink.faint,
                   }}
                 >
@@ -561,7 +444,7 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
                 <span
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "8px",
+                    fontSize: "10px",
                     color: T.ink.faint,
                   }}
                 >
@@ -575,9 +458,9 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
           <div
             style={{
               border: `1px solid ${T.border.line}`,
-              borderRadius: "12px",
+              borderRadius: "16px",
               overflow: "hidden",
-              background: "rgba(255,255,255,0.02)",
+              background: T.bg.surface,
             }}
           >
             <div
@@ -599,149 +482,183 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
               >
                 Recent contributions
               </p>
-              <span
+              <Link
+                href={`/profile/${profile.username}/contributions`}
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "8px",
+                  fontSize: "10px",
                   letterSpacing: ".12em",
                   textTransform: "uppercase",
                   color: T.accent.aurora,
                   opacity: 0.7,
-                  cursor: "default",
+                  textDecoration: "none",
                 }}
               >
-                See all —
-              </span>
+                See all →
+              </Link>
             </div>
 
-            <div>
-              {PLACEHOLDER_CONTRIBS.map((item, i) => {
-                const t = CONTRIB_TYPES[item.type]
+            {recentContribs.length === 0 ? (
+              <div
+                style={{
+                  padding: "24px 20px",
+                  borderTop: `1px solid ${T.border.line}`,
+                  textAlign: "center",
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: T.font.mono,
+                    fontSize: "9px",
+                    letterSpacing: ".12em",
+                    textTransform: "uppercase",
+                    color: T.ink.faint,
+                    margin: 0,
+                  }}
+                >
+                  No contributions yet
+                </p>
+              </div>
+            ) : (
+              <div>
+                {recentContribs.map((item) => {
+                  const t =
+                    CONTRIB_TYPE_META[item.submissionType] ?? CONTRIB_FALLBACK
+                  const pts = approxPoints(item.submissionType)
 
-                return (
-                  <div
-                    key={i}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "14px",
-                      padding: "12px 20px",
-                      borderTop: `1px solid ${T.border.line}`,
-                    }}
-                  >
-                    {/* Icon */}
+                  return (
                     <div
+                      key={item.documentId}
                       style={{
-                        width: "32px",
-                        height: "32px",
-                        borderRadius: "8px",
-                        border: `1px solid ${t.border}`,
-                        background: t.bg,
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
+                        gap: "14px",
+                        padding: "12px 20px",
+                        borderTop: `1px solid ${T.border.line}`,
                       }}
                     >
-                      <Icon
-                        icon={CONTRIB_ICONS[item.type]}
-                        width={15}
-                        height={15}
-                        style={{ color: t.color }}
-                      />
-                    </div>
-
-                    {/* Content */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                      {/* Icon */}
                       <div
                         style={{
+                          width: "40px",
+                          height: "40px",
+                          borderRadius: "10px",
+                          border: `1px solid ${t.border}`,
+                          background: t.bg,
                           display: "flex",
                           alignItems: "center",
-                          gap: "8px",
-                          marginBottom: "3px",
+                          justifyContent: "center",
+                          flexShrink: 0,
                         }}
                       >
-                        <span
+                        <Icon
+                          icon={t.icon}
+                          width={17}
+                          height={17}
+                          style={{ color: t.color }}
+                        />
+                      </div>
+
+                      {/* Content */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            marginBottom: "3px",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontFamily: T.font.mono,
+                              fontSize: "7px",
+                              letterSpacing: ".14em",
+                              textTransform: "uppercase",
+                              color: t.color,
+                              padding: "1px 6px",
+                              borderRadius: "4px",
+                              border: `1px solid ${t.border}`,
+                              background: t.bg,
+                            }}
+                          >
+                            {t.label}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: "12px",
+                              color: T.ink.base,
+                              fontWeight: 500,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {item.targetLabel ??
+                              item.targetSlug ??
+                              item.submissionType}
+                          </span>
+                        </div>
+                        {item.editSummary && (
+                          <p
+                            style={{
+                              fontFamily: T.font.mono,
+                              fontSize: "9px",
+                              letterSpacing: ".06em",
+                              color: T.ink.faint,
+                              margin: 0,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {item.editSummary}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Right: time + points */}
+                      <div style={{ flexShrink: 0, textAlign: "right" }}>
+                        <p
                           style={{
                             fontFamily: T.font.mono,
-                            fontSize: "7px",
-                            letterSpacing: ".14em",
+                            fontSize: "9px",
+                            color: T.ink.faint,
+                            margin: "0 0 2px",
                             textTransform: "uppercase",
-                            color: t.color,
-                            padding: "1px 6px",
-                            borderRadius: "4px",
-                            border: `1px solid ${t.border}`,
-                            background: t.bg,
+                            letterSpacing: ".06em",
                           }}
                         >
-                          {item.type}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: "12px",
-                            color: T.ink.base,
-                            fontWeight: 500,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {item.title}
-                        </span>
+                          {relativeTime(item.createdAt)}
+                        </p>
+                        {item.status === "approved" && pts !== null && (
+                          <p
+                            style={{
+                              fontFamily: T.font.mono,
+                              fontSize: "9px",
+                              color: T.accent.ok,
+                              margin: 0,
+                              fontWeight: 600,
+                            }}
+                          >
+                            +{pts} pts
+                          </p>
+                        )}
                       </div>
-                      <p
-                        style={{
-                          fontFamily: T.font.mono,
-                          fontSize: "9px",
-                          letterSpacing: ".06em",
-                          color: T.ink.faint,
-                          margin: 0,
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        {item.sub}
-                      </p>
                     </div>
-
-                    {/* Right: time + rep */}
-                    <div style={{ flexShrink: 0, textAlign: "right" }}>
-                      <p
-                        style={{
-                          fontFamily: T.font.mono,
-                          fontSize: "9px",
-                          color: T.ink.faint,
-                          margin: "0 0 2px",
-                          textTransform: "uppercase",
-                          letterSpacing: ".06em",
-                        }}
-                      >
-                        {item.time}
-                      </p>
-                      <p
-                        style={{
-                          fontFamily: T.font.mono,
-                          fontSize: "9px",
-                          color: T.accent.ok,
-                          margin: 0,
-                          fontWeight: 600,
-                        }}
-                      >
-                        {item.rep}
-                      </p>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           {/* Following libraries */}
           <div
             style={{
               border: `1px solid ${T.border.line}`,
-              borderRadius: "12px",
-              padding: "18px 20px 20px",
-              background: "rgba(255,255,255,0.02)",
+              borderRadius: "16px",
+              padding: "20px 22px 22px",
+              background: T.bg.surface,
             }}
           >
             <div
@@ -766,7 +683,7 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
               <span
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "8px",
+                  fontSize: "10px",
                   letterSpacing: ".12em",
                   textTransform: "uppercase",
                   color: T.accent.aurora,
@@ -778,10 +695,201 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
               </span>
             </div>
 
-            <FollowingLibrariesGrid
-              libraries={profile.followedLibraries ?? []}
-            />
+            {(profile.followedLibraries ?? []).length === 0 ? (
+              <div
+                style={{
+                  padding: "32px",
+                  textAlign: "center",
+                  border: `1px solid ${T.border.line}`,
+                  borderRadius: "10px",
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: T.font.mono,
+                    fontSize: "9px",
+                    letterSpacing: ".14em",
+                    textTransform: "uppercase",
+                    color: T.ink.faint,
+                    margin: 0,
+                  }}
+                >
+                  No libraries followed yet
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+                {(profile.followedLibraries ?? [])
+                  .slice(0, 6)
+                  .map((lib, index) => (
+                    <LibraryCard
+                      key={lib.documentId ?? lib.slug ?? String(index)}
+                      documentId={lib.documentId ?? lib.slug ?? String(index)}
+                      slug={lib.slug}
+                      name={lib.name ?? ""}
+                      libraryType={lib.libraryType}
+                      heroImageUrl={
+                        formatStrapiMediaUrl(lib.heroImageUrl) ?? null
+                      }
+                      href={lib.slug ? `/library/${lib.slug}` : null}
+                      index={index}
+                      variant="compact"
+                    />
+                  ))}
+              </div>
+            )}
           </div>
+
+          {/* Claimed libraries */}
+          {(profile.claimedLibraries ?? []).length > 0 && (
+            <div
+              style={{
+                border: `1px solid ${T.border.line}`,
+                borderRadius: "16px",
+                padding: "20px 22px 22px",
+                background: T.bg.surface,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: "16px",
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: T.font.serif,
+                    fontSize: "16px",
+                    fontWeight: 600,
+                    color: T.ink.base,
+                    margin: 0,
+                  }}
+                >
+                  Claimed libraries
+                </p>
+                <span
+                  style={{
+                    fontFamily: T.font.mono,
+                    fontSize: "9px",
+                    letterSpacing: ".12em",
+                    textTransform: "uppercase",
+                    color: T.ink.faint,
+                  }}
+                >
+                  {profile.claimedLibraries!.length} managed
+                </span>
+              </div>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: "6px" }}
+              >
+                {profile.claimedLibraries!.map((lib) => (
+                  <Link
+                    key={lib.entityRef ?? lib.documentId}
+                    href={lib.slug ? `/library/${lib.slug}` : "#"}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "12px 16px",
+                      border: `1px solid ${T.border.line}`,
+                      borderRadius: "10px",
+                      background: T.bg.surface,
+                      textDecoration: "none",
+                      transition: "background 150ms, border-color 150ms",
+                    }}
+                    onMouseEnter={(e) => {
+                      const el = e.currentTarget as HTMLAnchorElement
+                      el.style.background = "rgba(127,223,255,0.04)"
+                      el.style.borderColor = "rgba(127,223,255,0.22)"
+                    }}
+                    onMouseLeave={(e) => {
+                      const el = e.currentTarget as HTMLAnchorElement
+                      el.style.background = "var(--t-bg-surface)"
+                      el.style.borderColor = T.border.line
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "4px",
+                        minWidth: 0,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: T.font.sans,
+                          fontSize: "13px",
+                          fontWeight: 500,
+                          color: T.ink.base,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {lib.name}
+                      </span>
+                      {lib.entityRef && (
+                        <span
+                          style={{
+                            fontFamily: T.font.mono,
+                            fontSize: "9px",
+                            letterSpacing: ".10em",
+                            textTransform: "uppercase",
+                            color: T.ink.faint,
+                          }}
+                        >
+                          {lib.entityRef}
+                        </span>
+                      )}
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        flexShrink: 0,
+                        marginLeft: "12px",
+                      }}
+                    >
+                      {lib.libraryType && (
+                        <span
+                          style={{
+                            fontFamily: T.font.mono,
+                            fontSize: "9px",
+                            letterSpacing: ".10em",
+                            textTransform: "uppercase",
+                            color: T.ink.faint,
+                            border: `1px solid ${T.border.line}`,
+                            borderRadius: "5px",
+                            padding: "3px 8px",
+                          }}
+                        >
+                          {lib.libraryType}
+                        </span>
+                      )}
+                      <span
+                        style={{
+                          fontFamily: T.font.mono,
+                          fontSize: "9px",
+                          letterSpacing: ".10em",
+                          textTransform: "uppercase",
+                          color: T.accent.ok,
+                          border: `1px solid ${T.accent.ok}30`,
+                          borderRadius: "5px",
+                          padding: "3px 8px",
+                        }}
+                      >
+                        Manager
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right sidebar */}
@@ -791,43 +899,43 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
             <div
               style={{
                 border: `1px solid ${T.border.line}`,
-                borderRadius: "12px",
-                padding: "16px 18px",
-                background: "rgba(255,255,255,0.02)",
+                borderRadius: "16px",
+                padding: "18px 20px",
+                background: T.bg.surface,
               }}
             >
               <p
                 style={{
                   fontFamily: T.font.serif,
-                  fontSize: "14px",
-                  fontWeight: 600,
+                  fontSize: "15px",
+                  fontWeight: 400,
                   color: T.ink.base,
                   margin: "0 0 14px",
+                  letterSpacing: "-0.015em",
                 }}
               >
                 Facts
               </p>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                }}
-              >
-                {facts.map((f) => (
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {facts.map((f, i) => (
                   <div
                     key={f.label}
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "90px 1fr",
+                      gridTemplateColumns: "100px 1fr",
                       gap: "10px",
+                      padding: "8px 0",
+                      borderBottom:
+                        i < facts.length - 1
+                          ? `1px dashed ${T.border.line}`
+                          : undefined,
                     }}
                   >
                     <span
                       style={{
                         fontFamily: T.font.mono,
-                        fontSize: "8px",
-                        letterSpacing: ".12em",
+                        fontSize: "9px",
+                        letterSpacing: ".14em",
                         textTransform: "uppercase",
                         color: T.ink.faint,
                         paddingTop: "1px",
@@ -837,7 +945,7 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
                     </span>
                     <span
                       style={{
-                        fontSize: "11px",
+                        fontSize: "12px",
                         color: T.ink.base,
                         lineHeight: "1.5",
                       }}
@@ -854,9 +962,9 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
           <div
             style={{
               border: `1px solid ${T.border.line}`,
-              borderRadius: "12px",
-              padding: "16px 18px",
-              background: "rgba(255,255,255,0.02)",
+              borderRadius: "16px",
+              padding: "18px 20px",
+              background: T.bg.surface,
             }}
           >
             <div
@@ -870,10 +978,11 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
               <p
                 style={{
                   fontFamily: T.font.serif,
-                  fontSize: "14px",
-                  fontWeight: 600,
+                  fontSize: "15px",
+                  fontWeight: 400,
                   color: T.ink.base,
                   margin: 0,
+                  letterSpacing: "-0.015em",
                 }}
               >
                 Badges earned
@@ -881,11 +990,12 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
               <span
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "8px",
+                  fontSize: "9px",
                   color: T.ink.faint,
+                  letterSpacing: ".12em",
                 }}
               >
-                — of 28
+                {(profile.earnedBadges ?? []).length} of {BADGE_CATALOG.length}
               </span>
             </div>
             <div
@@ -895,31 +1005,51 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
                 gap: "8px",
               }}
             >
-              {BADGE_ICONS.map((b, i) => (
-                <div
-                  key={i}
-                  style={{
-                    aspectRatio: "1",
-                    borderRadius: "10px",
-                    border: `1px solid ${b.earned ? T.border.hi : T.border.line}`,
-                    background: b.earned
-                      ? "rgba(255,255,255,0.05)"
-                      : "rgba(255,255,255,0.02)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Icon
-                    icon={b.earned ? b.icon : "mdi:lock-outline"}
-                    width={18}
-                    height={18}
-                    style={{
-                      color: b.earned ? T.ink.dim : "rgba(255,255,255,0.12)",
-                    }}
-                  />
-                </div>
-              ))}
+              {(() => {
+                const earnedSet = new Set(
+                  (profile.earnedBadges ?? []).map((b) => b.badgeId)
+                )
+                const displayed = [
+                  ...BADGE_CATALOG.filter((b) => earnedSet.has(b.id)),
+                  ...BADGE_CATALOG.filter((b) => !earnedSet.has(b.id)),
+                ].slice(0, BADGE_WIDGET_COUNT)
+
+                return displayed.map((b) => {
+                  const earned = earnedSet.has(b.id)
+                  const vs = earned
+                    ? BADGE_VARIANT_STYLES[b.variant]
+                    : {
+                        border: T.border.line,
+                        bg: T.bg.surface,
+                        color: T.ink.ghost,
+                      }
+
+                  return (
+                    <div
+                      key={b.id}
+                      title={b.name}
+                      className="transition-transform duration-150 hover:-translate-y-0.5"
+                      style={{
+                        aspectRatio: "1",
+                        borderRadius: "12px",
+                        border: `1px solid ${vs.border}`,
+                        background: vs.bg,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        opacity: earned ? 1 : 0.35,
+                      }}
+                    >
+                      <Icon
+                        icon={earned ? b.icon : "mdi:lock-outline"}
+                        width={18}
+                        height={18}
+                        style={{ color: vs.color }}
+                      />
+                    </div>
+                  )
+                })
+              })()}
             </div>
           </div>
 
@@ -928,18 +1058,19 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
             <div
               style={{
                 border: `1px solid ${T.border.line}`,
-                borderRadius: "12px",
-                padding: "16px 18px",
-                background: "rgba(255,255,255,0.02)",
+                borderRadius: "16px",
+                padding: "18px 20px",
+                background: T.bg.surface,
               }}
             >
               <p
                 style={{
                   fontFamily: T.font.serif,
-                  fontSize: "14px",
-                  fontWeight: 600,
+                  fontSize: "15px",
+                  fontWeight: 400,
                   color: T.ink.base,
                   margin: "0 0 12px",
+                  letterSpacing: "-0.015em",
                 }}
               >
                 Links
@@ -964,8 +1095,7 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
                       transition: "background 150ms",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background =
-                        "rgba(255,255,255,0.04)"
+                      e.currentTarget.style.background = "var(--t-bg-surface)"
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = "transparent"

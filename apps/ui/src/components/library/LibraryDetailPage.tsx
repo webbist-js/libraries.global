@@ -3,6 +3,7 @@ import type { Locale } from "next-intl"
 import { Breadcrumb, LocationContributeCTA } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
+import LibraryContactPanel from "@/components/library/LibraryContactPanel"
 import LibraryContent from "@/components/library/LibraryContent"
 import LibraryExploreNearby from "@/components/library/LibraryExploreNearby"
 import LibraryHero from "@/components/library/LibraryHero"
@@ -18,6 +19,7 @@ import {
 import LibraryTagPanel from "@/components/library/LibraryTagPanel"
 import LibraryVirtualTour from "@/components/library/LibraryVirtualTour"
 import StrapiBlocksContent from "@/components/library/StrapiBlocksContent"
+import { T } from "@/lib/design-tokens"
 import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
 
 type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
@@ -75,10 +77,13 @@ export function LibraryDetailPage({
 }: LibraryDetailPageProps) {
   if (!library) {
     return (
-      <div className="relative isolate flex min-h-screen w-full flex-col bg-[#050816] text-white">
+      <div
+        className="relative isolate flex min-h-screen w-full flex-col"
+        style={{ background: T.bg.space, color: T.ink.base }}
+      >
         <GlobalHeader locale={locale} navbar={navbar} />
         <main className="flex flex-1 items-center justify-center">
-          <p className="text-white/40">Library not found.</p>
+          <p className="text-(--t-ink-faint)">Library not found.</p>
         </main>
       </div>
     )
@@ -119,7 +124,10 @@ export function LibraryDetailPage({
   const lastVerifiedAt = library.lastVerifiedAt as string | null | undefined
 
   return (
-    <div className="relative isolate flex min-h-screen w-full flex-col bg-[#050816] text-white">
+    <div
+      className="relative isolate flex min-h-screen w-full flex-col"
+      style={{ background: T.bg.space, color: T.ink.base }}
+    >
       <GlobalHeader locale={locale} navbar={navbar} />
 
       <main className="relative z-10 flex-1">
@@ -155,7 +163,7 @@ export function LibraryDetailPage({
                   ) : null}
                 </div>
 
-                {/* Right: opening hours compact preview */}
+                {/* Right: opening hours + contact & location */}
                 <div className="space-y-6">
                   <LibraryOpeningHours
                     openingTimes={
@@ -164,6 +172,7 @@ export function LibraryDetailPage({
                       >[0]["openingTimes"]
                     }
                   />
+                  <LibraryContactPanel library={library} />
                 </div>
               </div>
             </Container>
@@ -221,12 +230,12 @@ export function LibraryDetailPage({
 
               {/* TODO: integrate IIIF viewer when iiifEndpoint is set */}
               {(library as Record<string, unknown>).iiifEndpoint ? (
-                <p className="text-sm text-white/40 italic">
+                <p className="text-sm text-(--t-ink-faint) italic">
                   {/* TODO: render IIIF viewer for digital collection browsing */}
                   Digital collection available — IIIF viewer coming soon.
                 </p>
               ) : (
-                <p className="text-sm text-white/40 italic">
+                <p className="text-sm text-(--t-ink-faint) italic">
                   Collection details not yet available for this library.
                 </p>
               )}
@@ -291,7 +300,7 @@ export function LibraryDetailPage({
                   regionName={library.region?.name}
                 />
               ) : (
-                <p className="text-sm text-white/40 italic">
+                <p className="text-sm text-(--t-ink-faint) italic">
                   No other libraries found in this region yet.
                 </p>
               )}

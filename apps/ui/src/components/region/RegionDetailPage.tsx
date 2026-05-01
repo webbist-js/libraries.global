@@ -20,6 +20,7 @@ import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import FeaturedLibraryCards from "@/components/home/FeaturedLibraryCards"
 import { homepagePanelClassName } from "@/components/home/homepage.constants"
+import { LocationTabBar } from "@/components/location/LocationTabBar"
 import { InteractiveMap } from "@/components/map/InteractiveMap"
 import { T } from "@/lib/design-tokens"
 import type {
@@ -47,25 +48,25 @@ function QuickLinkCard({ link }: { link: QuickLink }) {
         "group flex items-start gap-4 px-5 py-4 transition-[border-color,background-color] duration-300 hover:border-cyan-200/16 hover:bg-white/[0.07]"
       )}
     >
-      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/6 transition-colors duration-300 group-hover:border-cyan-400/20 group-hover:bg-cyan-500/10">
+      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-(--t-border-line) bg-(--t-bg-surface) transition-colors duration-300 group-hover:border-(--t-aurora-edge) group-hover:bg-(--t-aurora-soft)">
         {iconName ? (
           <Icon
             icon={iconName}
-            className="size-4 text-white/60 transition-colors group-hover:text-cyan-300"
+            className="size-4 text-(--t-ink-dim) transition-colors group-hover:text-(--t-accent-aurora)"
           />
         ) : (
           <Icon
             icon="mdi:arrow-right"
-            className="size-4 text-white/30 transition-colors group-hover:text-cyan-300"
+            className="size-4 text-(--t-ink-faint) transition-colors group-hover:text-(--t-accent-aurora)"
           />
         )}
       </div>
       <div className="flex flex-col gap-0.5">
-        <span className="text-sm font-medium text-white/80 transition-colors group-hover:text-white">
+        <span className="text-sm font-medium text-(--t-ink-dim) transition-colors group-hover:text-(--t-ink-base)">
           {link.label}
         </span>
         {link.description ? (
-          <span className="text-xs leading-5 text-white/40">
+          <span className="text-xs leading-5 text-(--t-ink-faint)">
             {link.description}
           </span>
         ) : null}
@@ -127,7 +128,10 @@ export function RegionDetailPage({
   ] as const
 
   return (
-    <div className="relative isolate flex min-h-screen w-full flex-col bg-[#050816] text-white">
+    <div
+      className="relative isolate flex min-h-screen w-full flex-col"
+      style={{ background: T.bg.space, color: T.ink.base }}
+    >
       <GlobalHeader locale={locale} navbar={navbar} />
 
       <main className="relative z-10 flex-1">
@@ -136,6 +140,7 @@ export function RegionDetailPage({
           id="overview"
           data-transparent-header=""
           className="relative isolate -mt-14 flex min-h-[60vh] flex-col overflow-hidden pt-28"
+          style={{ background: "#030511" }}
         >
           {heroImageUrl ? (
             <Image
@@ -222,11 +227,13 @@ export function RegionDetailPage({
           </Container>
         </section>
 
+        <LocationTabBar tabs={[...tabs]} />
+
         {/* ── Pillar Institutions ───────────────────────────────────────────── */}
         {hasFeaturedLibraries ? (
           <section
             id="institutions"
-            className="relative overflow-hidden border-t border-white/6 py-16 sm:py-20"
+            className="relative overflow-hidden border-t border-(--t-border-line) py-16 sm:py-20"
           >
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_55%_at_50%_0%,rgba(79,70,229,0.18),transparent_60%)]" />
             <Container className="relative">
@@ -234,7 +241,7 @@ export function RegionDetailPage({
                 <Eyebrow index={1} bar>
                   Archive Starts
                 </Eyebrow>
-                <h2 className="font-serif text-3xl font-normal tracking-tight text-white sm:text-4xl">
+                <h2 className="font-serif text-3xl font-normal tracking-tight text-(--t-ink-base) sm:text-4xl">
                   Pillar Institutions
                 </h2>
               </div>
@@ -291,7 +298,10 @@ export function RegionDetailPage({
         ) : null}
 
         {/* ── Interactive Map ───────────────────────────────────────────────── */}
-        <section id="map" className="border-t border-white/6 py-[70px]">
+        <section
+          id="map"
+          className="border-t border-(--t-border-line) py-[70px]"
+        >
           <Container>
             <MapSectionHeader locationName={region.name ?? "this region"} />
             <InteractiveMap
@@ -312,11 +322,11 @@ export function RegionDetailPage({
 
         {/* ── Quick Links ───────────────────────────────────────────────────── */}
         {hasQuickLinks ? (
-          <section className="border-t border-white/6 py-14 sm:py-18">
+          <section className="border-t border-(--t-border-line) py-14 sm:py-18">
             <Container>
               <div className="mb-8">
                 <Eyebrow>Navigate</Eyebrow>
-                <h2 className="font-serif text-3xl font-normal tracking-tight text-white sm:text-4xl">
+                <h2 className="font-serif text-3xl font-normal tracking-tight text-(--t-ink-base) sm:text-4xl">
                   Quick Links
                 </h2>
               </div>
@@ -334,7 +344,7 @@ export function RegionDetailPage({
 
         {/* ── Dynamic zone sections ─────────────────────────────────────────── */}
         {typedSections.map((section) => (
-          <div key={section.id} className="border-t border-white/6">
+          <div key={section.id} className="border-t border-(--t-border-line)">
             {section.__component === "sections.editorial-block" ? (
               <EditorialSection section={section as EditorialBlockType} />
             ) : section.__component === "sections.cta-banner" ? (
@@ -345,15 +355,15 @@ export function RegionDetailPage({
 
         {/* ── Journey CTA fallback ──────────────────────────────────────────── */}
         {ctaBanners.length === 0 && typedSections.length === 0 ? (
-          <section className="relative overflow-hidden border-t border-white/6 py-24 sm:py-32">
+          <section className="relative overflow-hidden border-t border-(--t-border-line) py-24 sm:py-32">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_100%,rgba(127,223,255,0.07),transparent_70%)]" />
             <Container>
               <div className="flex flex-col items-center gap-6 text-center">
                 <Eyebrow>Start Exploring</Eyebrow>
-                <h2 className="text-[clamp(2.5rem,6vw,5.5rem)] leading-[0.93] font-bold tracking-[-0.045em] text-white">
+                <h2 className="text-[clamp(2.5rem,6vw,5.5rem)] leading-[0.93] font-bold tracking-[-0.045em] text-(--t-ink-base)">
                   Discover {region.name}
                 </h2>
-                <p className="max-w-[40ch] text-base leading-7 text-white/50">
+                <p className="max-w-[40ch] text-base leading-7 text-(--t-ink-dim)">
                   Explore the libraries and cultural institutions across{" "}
                   {region.name}.
                 </p>

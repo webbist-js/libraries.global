@@ -93,7 +93,7 @@ function DayBar({ timeframes }: { timeframes: OpeningTimeframe[] }) {
         position: "relative",
         height: "6px",
         borderRadius: "999px",
-        background: "rgba(255,255,255,.08)",
+        background: T.border.line,
         overflow: "hidden",
       }}
     >
@@ -144,7 +144,7 @@ function ExpandedBreakdown({ timeframes }: { timeframes: OpeningTimeframe[] }) {
             position: "relative",
             height: "28px",
             borderRadius: "8px",
-            background: "rgba(255,255,255,.04)",
+            background: T.bg.surface,
             overflow: "hidden",
             display: "flex",
           }}
@@ -291,7 +291,7 @@ export function LibraryOpeningHours({
                 letterSpacing: ".16em",
                 color: T.accent.aurora,
                 textTransform: "uppercase",
-                border: `1px solid rgba(127,223,255,.25)`,
+                border: `1px solid var(--t-aurora-edge)`,
                 borderRadius: "6px",
                 padding: "3px 8px",
               }}
@@ -335,7 +335,7 @@ export function LibraryOpeningHours({
               letterSpacing: ".16em",
               color: T.accent.aurora,
               textTransform: "uppercase",
-              border: `1px solid rgba(127,223,255,.25)`,
+              border: `1px solid var(--t-aurora-edge)`,
               borderRadius: "6px",
               padding: "3px 8px",
             }}
@@ -380,21 +380,21 @@ export function LibraryOpeningHours({
                 borderRadius: "12px",
                 padding: alwaysExpanded ? "14px 16px" : "10px 12px",
                 background: isToday
-                  ? "rgba(255,255,255,.05)"
+                  ? T.bg.surface
                   : isExpanded
-                    ? "rgba(255,255,255,.03)"
+                    ? T.bg.deep
                     : "transparent",
                 cursor: !alwaysExpanded && isOpen ? "pointer" : "default",
                 transition: "background 150ms",
                 border:
                   alwaysExpanded && isToday
-                    ? "1px solid rgba(127,223,255,.18)"
+                    ? "1px solid var(--t-aurora-edge)"
                     : alwaysExpanded
-                      ? "1px solid rgba(255,255,255,.06)"
+                      ? `1px solid ${T.border.line}`
                       : "none",
               }}
               className={
-                !alwaysExpanded && isOpen ? "hover:bg-white/[0.04]" : ""
+                !alwaysExpanded && isOpen ? "hover:bg-(--t-bg-deep)" : ""
               }
             >
               {/* Main row */}
@@ -414,7 +414,7 @@ export function LibraryOpeningHours({
                     style={{
                       fontSize: alwaysExpanded ? "16px" : "15px",
                       fontWeight: isToday ? 600 : 400,
-                      color: isToday ? T.ink.base : "rgba(255,255,255,.7)",
+                      color: isToday ? T.ink.base : T.ink.dim,
                     }}
                   >
                     {DAY_LABELS[day]}
@@ -426,8 +426,8 @@ export function LibraryOpeningHours({
                         marginLeft: "8px",
                         padding: "1px 7px",
                         borderRadius: "5px",
-                        background: "rgba(127,223,255,.15)",
-                        border: "1px solid rgba(127,223,255,.3)",
+                        background: "var(--t-aurora-soft)",
+                        border: "1px solid var(--t-aurora-edge)",
                         fontFamily: T.font.mono,
                         fontSize: "9px",
                         letterSpacing: ".14em",
@@ -454,7 +454,7 @@ export function LibraryOpeningHours({
                     style={{
                       fontFamily: T.font.mono,
                       fontSize: "13px",
-                      color: isToday ? T.ink.base : "rgba(255,255,255,.6)",
+                      color: isToday ? T.ink.base : T.ink.dim,
                       whiteSpace: "nowrap",
                     }}
                   >

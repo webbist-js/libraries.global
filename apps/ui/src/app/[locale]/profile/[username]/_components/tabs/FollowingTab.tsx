@@ -1,31 +1,147 @@
 import { Icon } from "@iconify/react"
+import Link from "next/link"
 
+import { LibraryCard } from "@/components/ds/LibraryCard"
 import { T } from "@/lib/design-tokens"
+import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 import type { FollowedLibrary } from "@/lib/types/profile"
 
-const LIBRARY_TYPE_GRADIENT: Record<string, string> = {
-  National: "linear-gradient(135deg, #0a1a2d 0%, #0d0d2e 100%)",
-  Public: "linear-gradient(135deg, #0a1f1a 0%, #071428 100%)",
-  Academic: "linear-gradient(135deg, #1a1a0d 0%, #0d1a2e 100%)",
-  University: "linear-gradient(135deg, #1a1a0d 0%, #0d1a2e 100%)",
-  Parliamentary: "linear-gradient(135deg, #1a0a0d 0%, #0d0a1a 100%)",
-  Monastic: "linear-gradient(135deg, #1a0a2d 0%, #2d1a0a 100%)",
-  Archive: "linear-gradient(135deg, #1a100a 0%, #0d1a1a 100%)",
+// ── Followed-user card ─────────────────────────────────────────────────────────
+
+interface FollowedUser {
+  username: string
+  displayName: string
+  avatarUrl?: string | null
+  bio?: string | null
 }
 
-function libraryGradient(type?: string | null): string {
+function UserFollowCard({ user }: { user: FollowedUser }) {
+  const initials = user.displayName
+    .split(" ")
+    .map((p) => p[0] ?? "")
+    .join("")
+    .toUpperCase()
+    .slice(0, 2)
+
   return (
-    LIBRARY_TYPE_GRADIENT[type ?? ""] ??
-    "linear-gradient(135deg, #0a0d1a 0%, #0d0a2e 100%)"
+    <Link href={`/profile/${user.username}`} style={{ textDecoration: "none" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          padding: "14px 16px",
+          border: `1px solid ${T.border.line}`,
+          borderRadius: "12px",
+          background: T.bg.surface,
+          transition: "background 150ms, border-color 150ms",
+          cursor: "pointer",
+        }}
+      >
+        {/* Avatar */}
+        <div
+          style={{
+            width: "40px",
+            height: "40px",
+            borderRadius: "50%",
+            background: user.avatarUrl
+              ? "transparent"
+              : "rgba(127,223,255,0.12)",
+            border: `1px solid ${T.border.line}`,
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden",
+          }}
+        >
+          {user.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={user.avatarUrl}
+              alt={user.displayName}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : (
+            <span
+              style={{
+                fontFamily: T.font.mono,
+                fontSize: "11px",
+                fontWeight: 600,
+                color: T.accent.aurora,
+              }}
+            >
+              {initials || "?"}
+            </span>
+          )}
+        </div>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p
+            style={{
+              fontFamily: T.font.sans,
+              fontSize: "13px",
+              fontWeight: 500,
+              color: T.ink.base,
+              margin: "0 0 2px",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {user.displayName}
+          </p>
+          <p
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "10px",
+              letterSpacing: ".06em",
+              color: T.ink.faint,
+              margin: 0,
+            }}
+          >
+            @{user.username}
+          </p>
+          {user.bio && (
+            <p
+              style={{
+                fontFamily: T.font.sans,
+                fontSize: "12px",
+                color: T.ink.dim,
+                margin: "4px 0 0",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {user.bio}
+            </p>
+          )}
+        </div>
+
+        <Icon
+          icon="mdi:chevron-right"
+          width={16}
+          style={{ color: T.ink.faint, flexShrink: 0 }}
+        />
+      </div>
+    </Link>
   )
 }
 
+// ── Main component ─────────────────────────────────────────────────────────────
+
 export function FollowingTab({
   followedLibraries,
+  followedUsers = [],
 }: {
   followedLibraries: FollowedLibrary[]
+  followedUsers?: FollowedUser[]
 }) {
-  if (followedLibraries.length === 0) {
+  const hasLibraries = followedLibraries.length > 0
+  const hasUsers = followedUsers.length > 0
+
+  if (!hasLibraries && !hasUsers) {
     return (
       <div
         style={{
@@ -33,7 +149,7 @@ export function FollowingTab({
           borderRadius: "12px",
           padding: "48px",
           textAlign: "center",
-          background: "rgba(255,255,255,0.02)",
+          background: T.bg.surface,
         }}
       >
         <p
@@ -46,120 +162,167 @@ export function FollowingTab({
             margin: "0 0 8px",
           }}
         >
-          Following · Libraries
+          Following
         </p>
         <p style={{ fontSize: "14px", color: T.ink.faint, margin: 0 }}>
-          Libraries you follow will appear here.
+          Libraries and people followed will appear here.
         </p>
       </div>
     )
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <p
+    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+      {/* ── Libraries ──────────────────────────────────────────────── */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div
           style={{
-            fontFamily: T.font.serif,
-            fontSize: "18px",
-            fontWeight: 600,
-            color: T.ink.base,
-            margin: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
-          Following
-        </p>
-        <span
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "9px",
-            letterSpacing: ".14em",
-            textTransform: "uppercase",
-            color: T.ink.faint,
-          }}
-        >
-          {followedLibraries.length}{" "}
-          {followedLibraries.length === 1 ? "library" : "libraries"}
-        </span>
-      </div>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-          gap: "12px",
-        }}
-      >
-        {followedLibraries.map((lib) => (
-          <div
-            key={lib.documentId}
+          <p
             style={{
-              borderRadius: "10px",
-              border: `1px solid ${T.border.line}`,
-              overflow: "hidden",
-              background: "rgba(255,255,255,0.02)",
+              fontFamily: T.font.serif,
+              fontSize: "18px",
+              fontWeight: 600,
+              color: T.ink.base,
+              margin: 0,
             }}
           >
-            <div
+            Libraries
+          </p>
+          <span
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "9px",
+              letterSpacing: ".14em",
+              textTransform: "uppercase",
+              color: T.ink.faint,
+            }}
+          >
+            {followedLibraries.length}{" "}
+            {followedLibraries.length === 1 ? "library" : "libraries"}
+          </span>
+        </div>
+
+        {hasLibraries ? (
+          <div className="flex snap-x snap-mandatory gap-px overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:hidden">
+            {followedLibraries.map((lib, index) => (
+              <LibraryCard
+                key={lib.documentId ?? lib.slug ?? lib.name}
+                documentId={lib.documentId ?? lib.slug ?? lib.name}
+                slug={lib.slug}
+                name={lib.name ?? ""}
+                libraryType={lib.libraryType}
+                heroImageUrl={formatStrapiMediaUrl(lib.heroImageUrl) ?? null}
+                href={lib.slug ? `/library/${lib.slug}` : null}
+                index={index}
+                variant="featured"
+              />
+            ))}
+          </div>
+        ) : (
+          <div
+            style={{
+              border: `1px solid ${T.border.line}`,
+              borderRadius: "10px",
+              padding: "28px",
+              textAlign: "center",
+              background: T.bg.surface,
+            }}
+          >
+            <p
               style={{
-                height: "90px",
-                background: libraryGradient(lib.libraryType),
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                position: "relative",
+                fontFamily: T.font.sans,
+                fontSize: "13px",
+                color: T.ink.faint,
+                margin: 0,
               }}
             >
-              {lib.libraryType && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "8px",
-                    left: "8px",
-                    fontFamily: T.font.mono,
-                    fontSize: "7px",
-                    letterSpacing: ".12em",
-                    textTransform: "uppercase",
-                    color: T.ink.dim,
-                    padding: "2px 6px",
-                    borderRadius: "4px",
-                    background: "rgba(0,0,0,0.4)",
-                  }}
-                >
-                  {lib.libraryType}
-                </div>
-              )}
-              <Icon
-                icon="mdi:domain"
-                width={30}
-                height={30}
-                style={{ color: "rgba(255,255,255,0.1)" }}
-              />
-            </div>
-            <div style={{ padding: "12px 14px" }}>
-              <p
-                style={{
-                  fontFamily: T.font.sans,
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  color: T.ink.base,
-                  margin: 0,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {lib.name}
-              </p>
-            </div>
+              No libraries followed yet.
+            </p>
           </div>
-        ))}
+        )}
+      </div>
+
+      {/* ── People ─────────────────────────────────────────────────── */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <p
+            style={{
+              fontFamily: T.font.serif,
+              fontSize: "18px",
+              fontWeight: 600,
+              color: T.ink.base,
+              margin: 0,
+            }}
+          >
+            People
+          </p>
+          {hasUsers && (
+            <span
+              style={{
+                fontFamily: T.font.mono,
+                fontSize: "9px",
+                letterSpacing: ".14em",
+                textTransform: "uppercase",
+                color: T.ink.faint,
+              }}
+            >
+              {followedUsers.length}{" "}
+              {followedUsers.length === 1 ? "person" : "people"}
+            </span>
+          )}
+        </div>
+
+        {hasUsers ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {followedUsers.map((user) => (
+              <UserFollowCard key={user.username} user={user} />
+            ))}
+          </div>
+        ) : (
+          <div
+            style={{
+              border: `1px solid ${T.border.line}`,
+              borderRadius: "10px",
+              padding: "28px",
+              textAlign: "center",
+              background: T.bg.surface,
+            }}
+          >
+            <p
+              style={{
+                fontFamily: T.font.mono,
+                fontSize: "9px",
+                letterSpacing: ".14em",
+                textTransform: "uppercase",
+                color: T.ink.faint,
+                margin: "0 0 6px",
+              }}
+            >
+              Coming soon
+            </p>
+            <p
+              style={{
+                fontFamily: T.font.sans,
+                fontSize: "13px",
+                color: T.ink.faint,
+                margin: 0,
+              }}
+            >
+              Following other contributors will appear here.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

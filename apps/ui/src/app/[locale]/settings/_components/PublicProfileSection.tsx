@@ -19,7 +19,7 @@ const inputStyle = {
   padding: "10px 14px",
   borderRadius: "8px",
   border: `1px solid ${T.border.hi}`,
-  background: "rgba(255,255,255,0.04)",
+  background: T.bg.surface,
   color: T.ink.base,
   fontSize: "13px",
   fontFamily: T.font.sans,
@@ -202,7 +202,7 @@ export function PublicProfileSection({
         style={{
           padding: "20px 24px",
           borderBottom: `1px solid ${T.border.line}`,
-          background: "rgba(255,255,255,0.02)",
+          background: T.bg.surface,
         }}
       >
         <h2
@@ -345,7 +345,7 @@ export function PublicProfileSection({
               <option
                 key={p.value}
                 value={p.value}
-                style={{ background: "#070b1e" }}
+                style={{ background: "var(--t-bg-deep)" }}
               >
                 {p.label}
               </option>
@@ -531,7 +531,7 @@ export function PublicProfileSection({
               borderRadius: "8px",
               border: "none",
               background: T.ink.base,
-              color: "#030511",
+              color: T.bg.void,
               fontSize: "13px",
               fontFamily: T.font.sans,
               fontWeight: 600,

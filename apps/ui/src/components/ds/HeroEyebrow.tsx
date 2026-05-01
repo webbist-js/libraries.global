@@ -28,7 +28,7 @@ export function HeroEyebrow({
         borderRadius: "999px",
         fontSize: "10px",
         border: `1px solid ${T.border.line}`,
-        background: "rgba(255,255,255,.03)",
+        background: T.bg.surface,
         fontFamily: T.font.mono,
         letterSpacing: ".22em",
         color: T.ink.dim,

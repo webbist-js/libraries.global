@@ -5,7 +5,9 @@ import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import { homepagePanelClassName } from "@/components/home/homepage.constants"
+import { LocationTabBar } from "@/components/location/LocationTabBar"
 import { InteractiveMap } from "@/components/map/InteractiveMap"
+import { T } from "@/lib/design-tokens"
 import type { PopulatedAreaData } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 import { cn } from "@/lib/styles"
@@ -19,10 +21,10 @@ function StatCard({ label, value }: { label: string; value: string | number }) {
     <div
       className={cn(homepagePanelClassName, "flex flex-col gap-1 px-5 py-4")}
     >
-      <span className="text-[10px] font-semibold tracking-[0.14em] text-white/36 uppercase">
+      <span className="text-[10px] font-semibold tracking-[0.14em] text-(--t-ink-faint) uppercase">
         {label}
       </span>
-      <span className="text-2xl font-bold tracking-tight text-white tabular-nums">
+      <span className="text-2xl font-bold tracking-tight text-(--t-ink-base) tabular-nums">
         {value}
       </span>
     </div>
@@ -71,11 +73,11 @@ function LibraryCard({
             {library.libraryType}
           </p>
         ) : null}
-        <h3 className="font-semibold text-white transition-colors group-hover:text-cyan-50">
+        <h3 className="font-semibold text-(--t-ink-base) transition-colors group-hover:text-(--t-ink-dim)">
           {library.name}
         </h3>
         {library.summary ? (
-          <p className="line-clamp-2 text-sm leading-6 text-white/50">
+          <p className="line-clamp-2 text-sm leading-6 text-(--t-ink-low)">
             {library.summary}
           </p>
         ) : null}
@@ -105,10 +107,13 @@ export function AreaDetailPage({
 }) {
   if (!area) {
     return (
-      <div className="relative isolate flex min-h-screen w-full flex-col bg-[#050816] text-white">
+      <div
+        className="relative isolate flex min-h-screen w-full flex-col"
+        style={{ background: T.bg.space, color: T.ink.base }}
+      >
         <GlobalHeader locale={locale} navbar={navbar} />
         <main className="flex flex-1 items-center justify-center">
-          <p className="text-white/40">Area not found.</p>
+          <p className="text-(--t-ink-faint)">Area not found.</p>
         </main>
       </div>
     )
@@ -124,19 +129,32 @@ export function AreaDetailPage({
   const continentName = area.region?.country?.continent?.name
   const continentHref = `/${continentSlug}`
 
+  const tabs = [
+    { id: "overview", label: "Overview" },
+    { id: "map", label: "Map" },
+    ...(hasLibraries ? [{ id: "libraries", label: "Libraries" }] : []),
+  ]
+
   return (
-    <div className="relative isolate flex min-h-screen w-full flex-col overflow-x-hidden bg-[#050816] text-white">
+    <div
+      className="relative isolate flex min-h-screen w-full flex-col"
+      style={{ background: T.bg.space, color: T.ink.base }}
+    >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_12%,rgba(92,149,255,0.09),transparent_38%),radial-gradient(circle_at_82%_70%,rgba(103,221,255,0.06),transparent_30%)]" />
 
       <GlobalHeader locale={locale} navbar={navbar} />
 
       <main className="relative z-10 flex-1">
         {/* ── Hero ──────────────────────────────────────────────────────────── */}
-        <section className="relative isolate flex min-h-[42vh] flex-col justify-end overflow-hidden">
+        <section
+          id="overview"
+          data-transparent-header=""
+          className="relative isolate -mt-14 flex min-h-[52vh] flex-col justify-end overflow-hidden"
+        >
           <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(5,8,22,0.45)_0%,rgba(5,8,22,0.92)_65%,rgba(5,8,22,1)_100%)]" />
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_60%_at_10%_20%,rgba(79,70,229,0.16),transparent_60%)]" />
 
-          <Container className="pt-20 pb-8 sm:pt-24 sm:pb-10">
+          <Container className="pb-8 sm:pb-10">
             {/* Breadcrumb */}
             <div className="mb-4 flex flex-wrap items-center gap-1.5 text-xs text-white/36">
               <GlobalLink
@@ -212,14 +230,19 @@ export function AreaDetailPage({
           </Container>
         </section>
 
+        <LocationTabBar tabs={tabs} />
+
         {/* ── Interactive Map ───────────────────────────────────────────────── */}
-        <section className="border-t border-white/6 py-14 sm:py-18">
+        <section
+          id="map"
+          className="border-t border-(--t-border-line) py-14 sm:py-18"
+        >
           <Container>
             <div className="mb-6">
-              <p className="mb-1.5 text-[11px] font-semibold tracking-[0.16em] text-white/36 uppercase">
+              <p className="mb-1.5 text-[11px] font-semibold tracking-[0.16em] text-(--t-ink-faint) uppercase">
                 Spatial View
               </p>
-              <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+              <h2 className="text-2xl font-bold tracking-tight text-(--t-ink-base) sm:text-3xl">
                 {area.name ? `Libraries in ${area.name}` : "Map View"}
               </h2>
             </div>
@@ -236,13 +259,16 @@ export function AreaDetailPage({
 
         {/* ── Libraries in this area ────────────────────────────────────────── */}
         {hasLibraries ? (
-          <section className="border-t border-white/6 py-14 sm:py-18">
+          <section
+            id="libraries"
+            className="border-t border-(--t-border-line) py-14 sm:py-18"
+          >
             <Container>
               <div className="mb-8">
-                <p className="mb-1.5 text-[11px] font-semibold tracking-[0.16em] text-white/36 uppercase">
+                <p className="mb-1.5 text-[11px] font-semibold tracking-[0.16em] text-(--t-ink-faint) uppercase">
                   Browse
                 </p>
-                <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                <h2 className="text-2xl font-bold tracking-tight text-(--t-ink-base) sm:text-3xl">
                   Libraries in {area.name}
                 </h2>
               </div>
@@ -260,23 +286,23 @@ export function AreaDetailPage({
         ) : null}
 
         {/* ── Fallback CTA ──────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden border-t border-white/6 py-24 sm:py-32">
+        <section className="relative overflow-hidden border-t border-(--t-border-line) py-24 sm:py-32">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_100%,rgba(79,70,229,0.18),transparent_70%)]" />
           <Container>
             <div className="flex flex-col items-center gap-6 text-center">
-              <p className="text-[11px] font-semibold tracking-[0.16em] text-white/36 uppercase">
+              <p className="text-[11px] font-semibold tracking-[0.16em] text-(--t-ink-faint) uppercase">
                 Start Exploring
               </p>
-              <h2 className="text-[clamp(2.5rem,6vw,5.5rem)] leading-[0.93] font-bold tracking-[-0.045em] text-white">
+              <h2 className="text-[clamp(2.5rem,6vw,5.5rem)] leading-[0.93] font-bold tracking-[-0.045em] text-(--t-ink-base)">
                 Discover {area.name}
               </h2>
-              <p className="max-w-[40ch] text-base leading-7 text-white/50">
+              <p className="max-w-[40ch] text-base leading-7 text-(--t-ink-dim)">
                 Explore the libraries and cultural institutions across{" "}
                 {area.name}.
               </p>
               <GlobalLink
                 href={regionHref}
-                className="mt-2 inline-flex items-center gap-2 rounded-2xl border border-white/12 bg-white/8 px-7 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/14"
+                className="mt-2 inline-flex items-center gap-2 rounded-2xl border border-(--t-border-hi) bg-(--t-bg-surface) px-7 py-3 text-sm font-semibold text-(--t-ink-dim) transition-colors hover:bg-(--t-bg-deep) hover:text-(--t-ink-base)"
               >
                 Back to {regionName ?? "Region"}
               </GlobalLink>

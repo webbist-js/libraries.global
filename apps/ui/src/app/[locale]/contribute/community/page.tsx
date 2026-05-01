@@ -1,11 +1,11 @@
 import { headers } from "next/headers"
 
-import { Breadcrumb, ContributeHeroShell } from "@/components/ds"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 import type { LeaderboardEntry } from "@/lib/types/leaderboard"
 
 import { ContributeNavBar } from "../_components/ContributeNavBar"
+import { ContributeSubpageHero } from "../_components/ContributeSubpageHero"
 import { LeaderboardPodium } from "./_components/LeaderboardPodium"
 import { LeaderboardRows } from "./_components/LeaderboardRows"
 import { LeaderboardSidebar } from "./_components/LeaderboardSidebar"
@@ -100,51 +100,16 @@ export default async function CommunityPage({
 
   return (
     <div
-      style={{ minHeight: "100vh", background: T.bg.space, color: T.ink.base }}
+      style={{ minHeight: "100vh", background: T.bg.void, color: T.ink.base }}
     >
-      <ContributeHeroShell
+      <ContributeSubpageHero
+        section="Community"
+        heading="The community,"
+        headingItalic="in numbers."
+        accentColor={T.ink.dim}
+        body="Contributors who keep the atlas accurate and growing. Points are earned for every approved contribution."
         minHeight="340px"
-        overlay="radial-gradient(ellipse 80% 60% at 60% 40%, rgba(127,223,255,0.06) 0%, rgba(3,5,17,0) 70%), linear-gradient(to bottom, rgba(3,5,17,0) 0%, rgba(3,5,17,0.5) 100%)"
-      >
-        <div style={{ marginBottom: "32px" }}>
-          <Breadcrumb
-            items={[
-              { href: "/", label: "Atlas" },
-              { href: "/contribute", label: "Contribute" },
-              { label: "Community" },
-            ]}
-          />
-        </div>
-
-        <div>
-          <h1
-            style={{
-              fontFamily: T.font.serif,
-              fontSize: "clamp(2.4rem, 6vw, 4.2rem)",
-              fontWeight: 700,
-              lineHeight: 0.92,
-              letterSpacing: "-0.04em",
-              color: T.ink.base,
-              margin: "0 0 14px",
-            }}
-          >
-            The community,{" "}
-            <em
-              style={{
-                fontStyle: "italic",
-                fontWeight: 400,
-                color: "rgba(244,247,255,0.55)",
-              }}
-            >
-              in numbers.
-            </em>
-          </h1>
-          <p style={{ fontSize: "15px", color: T.ink.faint, maxWidth: "52ch" }}>
-            Contributors who keep the atlas accurate and growing. Points are
-            earned for every approved contribution.
-          </p>
-        </div>
-      </ContributeHeroShell>
+      />
 
       <ContributeNavBar />
 

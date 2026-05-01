@@ -24,21 +24,21 @@ function CountryCard({
       href={`/${continentSlug}/${country.slug}`}
       className={cn(
         homepagePanelClassName,
-        "group flex items-center gap-3 px-4 py-3.5 transition-[border-color,background-color] duration-300 hover:border-white/20 hover:bg-white/[0.07]"
+        "group flex items-center gap-3 px-4 py-3.5 transition-[border-color,background-color] duration-300 hover:border-(--t-border-hi) hover:bg-(--t-bg-surface)"
       )}
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-white transition-colors group-hover:text-cyan-50">
+        <p className="truncate text-sm font-semibold text-(--t-ink-base) transition-colors group-hover:text-(--t-accent-aurora)">
           {country.name}
         </p>
         {country.capitalCity ? (
-          <p className="truncate text-xs text-white/40">
+          <p className="truncate text-xs text-(--t-ink-faint)">
             {country.capitalCity}
           </p>
         ) : null}
       </div>
 
-      <span className="flex-shrink-0 text-xs text-white/20 transition-colors group-hover:text-white/50">
+      <span className="flex-shrink-0 text-xs text-(--t-ink-faint) transition-colors group-hover:text-(--t-ink-dim)">
         →
       </span>
     </GlobalLink>
@@ -76,13 +76,13 @@ export function CountryBrowser({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={`Search ${countries.length} countries…`}
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white transition-[border-color,background-color] duration-200 outline-none placeholder:text-white/30 focus:border-white/25 focus:bg-white/[0.08]"
+            className="w-full rounded-xl border border-(--t-border-line) bg-(--t-bg-surface) px-4 py-2.5 text-sm text-(--t-ink-base) transition-[border-color,background-color] duration-200 outline-none placeholder:text-(--t-ink-faint) focus:border-(--t-border-hi) focus:bg-(--t-bg-deep)"
           />
           {query ? (
             <button
               onClick={() => setQuery("")}
               aria-label="Clear search"
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-lg text-white/30 transition-colors hover:text-white/60"
+              className="absolute top-1/2 right-3 -translate-y-1/2 text-lg text-(--t-ink-faint) transition-colors hover:text-(--t-ink-dim)"
             >
               ×
             </button>
@@ -91,7 +91,7 @@ export function CountryBrowser({
       ) : null}
 
       {filtered.length === 0 ? (
-        <p className="py-8 text-center text-sm text-white/30">
+        <p className="py-8 text-center text-sm text-(--t-ink-faint)">
           No countries match &ldquo;{query}&rdquo;
         </p>
       ) : (
@@ -107,7 +107,7 @@ export function CountryBrowser({
       )}
 
       {query && filtered.length > 0 ? (
-        <p className="mt-4 text-xs text-white/30">
+        <p className="mt-4 text-xs text-(--t-ink-faint)">
           {filtered.length} of {countries.length} countries
         </p>
       ) : null}

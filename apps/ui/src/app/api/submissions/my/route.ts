@@ -19,9 +19,14 @@ export async function GET() {
       { status: 500 }
     )
 
-  const res = await fetch(`${STRAPI}/api/content-moderation/submissions/my`, {
-    headers: userHeaders(session.user),
-  })
+  let res: Response
+  try {
+    res = await fetch(`${STRAPI}/api/content-moderation/submissions/my`, {
+      headers: userHeaders(session.user),
+    })
+  } catch {
+    return NextResponse.json({ data: [], meta: {} })
+  }
 
   const json = await res.json()
 

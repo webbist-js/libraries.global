@@ -45,7 +45,7 @@ export function BlogLandingPage({
 
       <main className="relative z-10 flex-1">
         {/* ── Hero ──────────────────────────────────────────────────────── */}
-        <section className="border-b border-white/6 py-20 sm:py-28">
+        <section className="border-b border-(--t-border-line) py-20 sm:py-28">
           <Container>
             <div className="grid grid-cols-1 gap-14 lg:grid-cols-[1fr_280px] lg:items-end lg:gap-20">
               {/* Left: big title */}
@@ -60,7 +60,7 @@ export function BlogLandingPage({
               {/* Right: description + stats */}
               <div className="lg:pb-4">
                 {landing?.heroText ? (
-                  <p className="mb-8 text-[13px] leading-7 text-white/45">
+                  <p className="mb-8 text-[13px] leading-7 text-(--t-ink-low)">
                     {landing.heroText}
                   </p>
                 ) : null}
@@ -68,22 +68,22 @@ export function BlogLandingPage({
                 {totalCount > 0 ? (
                   <div className="flex items-baseline gap-4">
                     <div>
-                      <p className="font-[family-name:var(--font-fraunces)] text-[2.6rem] leading-none font-light text-white tabular-nums">
+                      <p className="font-[family-name:var(--font-fraunces)] text-[2.6rem] leading-none font-light text-(--t-ink-base) tabular-nums">
                         {totalCount}
                       </p>
-                      <p className="mt-1.5 font-mono text-[9px] tracking-[0.2em] text-white/28 uppercase">
+                      <p className="mt-1.5 font-mono text-[9px] tracking-[0.2em] text-(--t-ink-faint) uppercase">
                         Articles
                       </p>
                     </div>
 
                     {authorCount > 1 ? (
                       <>
-                        <span className="pb-2 text-white/18">·</span>
+                        <span className="pb-2 text-(--t-ink-ghost)">·</span>
                         <div>
-                          <p className="font-[family-name:var(--font-fraunces)] text-[2.6rem] leading-none font-light text-white tabular-nums">
+                          <p className="font-[family-name:var(--font-fraunces)] text-[2.6rem] leading-none font-light text-(--t-ink-base) tabular-nums">
                             {authorCount}
                           </p>
-                          <p className="mt-1.5 font-mono text-[9px] tracking-[0.2em] text-white/28 uppercase">
+                          <p className="mt-1.5 font-mono text-[9px] tracking-[0.2em] text-(--t-ink-faint) uppercase">
                             Writers
                           </p>
                         </div>
@@ -92,12 +92,12 @@ export function BlogLandingPage({
 
                     {categoryCount > 1 ? (
                       <>
-                        <span className="pb-2 text-white/18">·</span>
+                        <span className="pb-2 text-(--t-ink-ghost)">·</span>
                         <div>
-                          <p className="font-[family-name:var(--font-fraunces)] text-[2.6rem] leading-none font-light text-white tabular-nums">
+                          <p className="font-[family-name:var(--font-fraunces)] text-[2.6rem] leading-none font-light text-(--t-ink-base) tabular-nums">
                             {categoryCount}
                           </p>
-                          <p className="mt-1.5 font-mono text-[9px] tracking-[0.2em] text-white/28 uppercase">
+                          <p className="mt-1.5 font-mono text-[9px] tracking-[0.2em] text-(--t-ink-faint) uppercase">
                             Topics
                           </p>
                         </div>

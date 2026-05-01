@@ -149,7 +149,7 @@ export async function ContributeCommunitySection() {
                     i < entries.length - 1
                       ? `1px solid ${T.border.line}`
                       : "none",
-                  background: "rgba(255,255,255,0.015)",
+                  background: T.bg.surface,
                 }}
               >
                 {/* Rank */}
@@ -249,7 +249,7 @@ export async function ContributeCommunitySection() {
                     style={{
                       margin: 0,
                       fontFamily: T.font.mono,
-                      fontSize: "8px",
+                      fontSize: "10px",
                       letterSpacing: ".12em",
                       textTransform: "uppercase",
                       color: T.ink.faint,
@@ -275,7 +275,7 @@ export async function ContributeCommunitySection() {
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "8px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.ink.faint,
@@ -287,7 +287,7 @@ export async function ContributeCommunitySection() {
             href="/contribute/community"
             style={{
               fontFamily: T.font.mono,
-              fontSize: "8px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.accent.aurora,

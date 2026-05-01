@@ -1,66 +1,98 @@
 "use client"
 
+import { usePathname } from "next/navigation"
+
 import { T } from "@/lib/design-tokens"
-import { useRouter } from "@/lib/navigation"
+import { Link } from "@/lib/navigation"
 
 const TABS = [
-  { id: "overview", label: "Overview" },
-  { id: "contributions", label: "Contributions" },
-  { id: "following", label: "Following" },
-  { id: "collections", label: "Collections" },
-  { id: "badges", label: "Badges" },
-  { id: "activity", label: "Activity" },
+  { id: "overview", label: "Overview", path: "" },
+  { id: "contributions", label: "Contributions", path: "/contributions" },
+  { id: "following", label: "Following", path: "/following" },
+  { id: "collections", label: "Collections", path: "/collections" },
+  { id: "badges", label: "Badges", path: "/badges" },
+  { id: "activity", label: "Activity", path: "/activity" },
 ] as const
 
-export function ProfileTabNav({
-  username,
-  activeTab,
-}: {
-  username: string
-  activeTab: string
-}) {
-  const router = useRouter()
+export function ProfileTabNav({ username }: { username: string }) {
+  const pathname = usePathname()
+
+  function isActive(path: string) {
+    const base = `/profile/${username}`
+    if (path === "") return pathname === base || pathname === `${base}/`
+
+    return pathname.startsWith(`${base}${path}`)
+  }
 
   return (
     <div
       style={{
+        position: "sticky",
+        top: "56px",
+        zIndex: 30,
         borderBottom: `1px solid ${T.border.line}`,
-        background: "#050816",
+        borderTop: `1px solid ${T.border.line}`,
+        background: "var(--t-header-bg)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
       }}
     >
       <div className="mx-auto max-w-[1296px] px-6 md:px-10">
-        <div style={{ display: "flex", gap: "0", overflowX: "auto" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0",
+            overflowX: "auto",
+            scrollbarWidth: "none",
+          }}
+          className="[&::-webkit-scrollbar]:hidden"
+        >
           {TABS.map((tab) => {
-            const active = activeTab === tab.id
+            const active = isActive(tab.path)
+            const href = `/profile/${username}${tab.path}`
 
             return (
-              <button
+              <Link
                 key={tab.id}
-                type="button"
-                onClick={() =>
-                  router.push(`/profile/${username}?tab=${tab.id}`)
-                }
+                href={href}
                 style={{
-                  padding: "14px 18px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  padding: "14px 16px",
                   fontFamily: T.font.mono,
                   fontSize: "10px",
                   letterSpacing: ".14em",
                   textTransform: "uppercase",
                   color: active ? T.ink.base : T.ink.faint,
-                  background: "transparent",
-                  border: "none",
                   borderBottom: active
                     ? `2px solid ${T.accent.aurora}`
                     : "2px solid transparent",
-                  cursor: "pointer",
                   whiteSpace: "nowrap",
                   transition: "color 150ms",
+                  textDecoration: "none",
                 }}
               >
                 {tab.label}
-              </button>
+              </Link>
             )
           })}
+
+          <div style={{ flex: 1 }} />
+
+          <span
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "9px",
+              letterSpacing: ".18em",
+              textTransform: "uppercase",
+              color: T.ink.faint,
+              whiteSpace: "nowrap",
+              paddingLeft: "16px",
+            }}
+          >
+            Profile · Public
+          </span>
         </div>
       </div>
     </div>

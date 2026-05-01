@@ -61,10 +61,8 @@ export function VisibilityCards({
               flex: layout === "horizontal" ? "1 1 0" : undefined,
               padding: "16px 18px",
               borderRadius: "10px",
-              border: `1px solid ${selected ? "rgba(127,223,255,0.45)" : T.border.line}`,
-              background: selected
-                ? "rgba(127,223,255,0.05)"
-                : "rgba(255,255,255,0.02)",
+              border: `1px solid ${selected ? "var(--t-aurora-edge)" : T.border.line}`,
+              background: selected ? "var(--t-aurora-soft)" : T.bg.surface,
               cursor: "pointer",
               textAlign: "left",
               transition: "border-color 150ms, background 150ms",

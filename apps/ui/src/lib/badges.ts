@@ -1,126 +1,100 @@
+// Badge catalog — must stay in sync with
+// apps/strapi/src/plugins/rewards/server/services/badges.ts
+
 export type BadgeRarity = "COMMON" | "UNCOMMON" | "RARE" | "STATUS"
+
+export type BadgeVariant = "aurora" | "violet" | "gold" | "ember"
 
 export type BadgeDefinition = {
   id: string
   name: string
   description: string
   rarity: BadgeRarity
-  icon: string // lucide icon name
-  // TODO: earned condition — requires contribution data
-  // earnedWhen: (stats: ContributorStats) => boolean
+  /** Iconify icon id (mdi:*) */
+  icon: string
+  variant: BadgeVariant
 }
 
 export const BADGE_CATALOG: BadgeDefinition[] = [
   {
-    id: "first-edit",
-    name: "First edit",
-    description: "Made your first contribution to the index.",
-    rarity: "COMMON",
-    icon: "Pencil",
-  },
-  {
-    id: "centurion",
-    name: "Centurion",
-    description: "Logged 100 approved edits across the index.",
+    id: "verifier",
+    name: "Verifier",
+    description: "Verified opening hours or operational status 10 times.",
     rarity: "UNCOMMON",
-    icon: "Star",
+    icon: "mdi:check-decagram-outline",
+    variant: "aurora",
   },
   {
-    id: "cartographer",
-    name: "Cartographer",
-    description: "Mapped libraries on every continent.",
+    id: "indexer",
+    name: "Indexer",
+    description: "Had 10 new library submissions approved.",
     rarity: "RARE",
-    icon: "Map",
+    icon: "mdi:book-plus-outline",
+    variant: "violet",
   },
   {
-    id: "polyglot",
-    name: "Polyglot",
-    description: "Translated content into three or more languages.",
+    id: "photographer",
+    name: "Photographer",
+    description: "Had 5 CC-licensed photos accepted.",
     rarity: "UNCOMMON",
-    icon: "Languages",
+    icon: "mdi:camera-outline",
+    variant: "aurora",
   },
   {
-    id: "rare-books",
-    name: "Rare Books",
-    description: "Documented 25+ rare-books collections.",
+    id: "translator",
+    name: "Translator",
+    description: "Had 3 wiki page translations approved.",
     rarity: "UNCOMMON",
-    icon: "BookOpen",
+    icon: "mdi:translate",
+    variant: "aurora",
   },
   {
-    id: "streak-100",
-    name: "Streak 100",
-    description: "Contributed for 100 consecutive days.",
+    id: "archivist",
+    name: "Archivist",
+    description: "Had 50 edits approved.",
     rarity: "RARE",
-    icon: "Zap",
+    icon: "mdi:archive-outline",
+    variant: "violet",
   },
   {
-    id: "verified-librarian",
-    name: "Verified librarian",
-    description: "Affiliation confirmed by an institution.",
-    rarity: "STATUS",
-    icon: "BadgeCheck",
-  },
-  {
-    id: "first-add",
-    name: "First add",
-    description: "Indexed a library not previously in the atlas.",
-    rarity: "COMMON",
-    icon: "Plus",
-  },
-  {
-    id: "marathoner",
-    name: "Marathoner",
-    description: "Maintain a 365-day streak.",
+    id: "streaker",
+    name: "Dedicated",
+    description: "Maintained a 30-day consecutive activity streak.",
     rarity: "RARE",
-    icon: "Clock",
-  },
-  {
-    id: "bibliophile-2000",
-    name: "Bibliophile 2,000",
-    description: "Reach 2,000 lifetime contributions.",
-    rarity: "UNCOMMON",
-    icon: "Diamond",
-  },
-  {
-    id: "editorial-board",
-    name: "Editorial board",
-    description: "Invited to the project's stewards by peer vote.",
-    rarity: "STATUS",
-    icon: "Users",
-  },
-  {
-    id: "globetrotter",
-    name: "Globetrotter",
-    description: "Contributed libraries in 75 different countries.",
-    rarity: "RARE",
-    icon: "Globe",
-  },
-  {
-    id: "mentor",
-    name: "Mentor",
-    description: "Onboarded 10 new contributors successfully.",
-    rarity: "UNCOMMON",
-    icon: "GraduationCap",
-  },
-  {
-    id: "legendary-10000",
-    name: "Legendary 10,000",
-    description: "Reach 10,000 lifetime contributions.",
-    rarity: "RARE",
-    icon: "Trophy",
-  },
-  {
-    id: "patron",
-    name: "Patron",
-    description: "Supported the project for a year.",
-    rarity: "STATUS",
-    icon: "Heart",
-  },
-  {
-    id: "atlas-complete",
-    name: "Atlas complete",
-    description: "Contributed to every continent.",
-    rarity: "RARE",
-    icon: "LayoutGrid",
+    icon: "mdi:lightning-bolt",
+    variant: "ember",
   },
 ]
+
+export const BADGE_VARIANT_STYLES: Record<
+  BadgeVariant,
+  { border: string; bg: string; color: string }
+> = {
+  aurora: {
+    border: "rgba(127,223,255,0.28)",
+    bg: "rgba(127,223,255,0.08)",
+    color: "var(--t-accent-aurora)",
+  },
+  violet: {
+    border: "rgba(163,144,255,0.28)",
+    bg: "rgba(163,144,255,0.08)",
+    color: "var(--t-accent-violet)",
+  },
+  gold: {
+    border: "rgba(232,201,138,0.28)",
+    bg: "rgba(232,201,138,0.08)",
+    color: "var(--t-accent-gold)",
+  },
+  ember: {
+    border: "rgba(255,184,138,0.28)",
+    bg: "rgba(255,184,138,0.08)",
+    color: "var(--t-accent-ember)",
+  },
+}
+
+export const RARITY_COLOR: Record<BadgeRarity, string> = {
+  COMMON: "var(--t-ink-low)",
+  UNCOMMON: "var(--t-accent-aurora)",
+  RARE: "var(--t-accent-violet)",
+  STATUS: "var(--t-accent-gold)",
+}

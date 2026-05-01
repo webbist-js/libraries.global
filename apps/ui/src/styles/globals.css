@@ -5,21 +5,133 @@
 
 @plugin "tailwindcss-animate";
 
+/* ── Design token CSS variables ─────────────────────────────────────────────
+   Dark is the default/canonical theme. Light overrides follow.             */
+
+:root {
+  /* backgrounds */
+  --t-bg-void:    #030511;
+  --t-bg-space:   #050816;
+  --t-bg-deep:    #070b1e;
+  --t-bg-surface: #060b19;
+
+  /* ink / text */
+  --t-ink-base:  #f4f7ff;
+  --t-ink-dim:   rgba(244,247,255,.72);
+  --t-ink-low:   rgba(244,247,255,.48);
+  --t-ink-faint: rgba(244,247,255,.30);
+  --t-ink-ghost: rgba(244,247,255,.14);
+
+  /* borders */
+  --t-border-line: rgba(255,255,255,.08);
+  --t-border-hi:   rgba(255,255,255,.16);
+
+  /* accents — dark-theme calibrated */
+  --t-accent-aurora:  #7fdfff;
+  --t-accent-violet:  #a390ff;
+  --t-accent-ember:   #ffb88a;
+  --t-accent-gold:    #e8c98a;
+  --t-accent-ok:      #8ef0b3;
+  --t-accent-warn:    #ffcf7a;
+  --t-accent-danger:  #ff8a8a;
+
+  /* header animation reference */
+  --t-header-bg: rgba(5,8,22,0.92);
+
+  /* aurora / danger tints — dark-mode defaults */
+  --t-aurora-soft: rgba(127,223,255,.08);
+  --t-aurora-edge: rgba(127,223,255,.20);
+  --t-danger-soft: rgba(255,138,138,.07);
+  --t-danger-edge: rgba(255,138,138,.25);
+
+  /* library hero image overlays */
+  --library-hero-main-overlay: linear-gradient(180deg, rgba(3,5,17,.30) 0%, rgba(3,5,17,.55) 55%, var(--t-bg-void) 100%);
+  --library-hero-side-overlay: linear-gradient(90deg, rgba(5,8,22,.62) 0%, transparent 68%);
+
+  /* library card (compact + featured) — image opacity + overlay gradient + border */
+  --lib-card-img-opacity: 0.45;
+  --lib-card-img-opacity-hover: 0.60;
+  --lib-card-overlay: linear-gradient(180deg, rgba(0,0,0,.18) 0%, rgba(0,0,0,.52) 50%, var(--t-bg-void) 100%);
+  --lib-card-border: rgba(22,22,38,.28);
+}
+
+/* ── Light theme overrides ─────────────────────────────────────────────────
+   Warm "parchment paper" palette — ink-on-paper feel.                       */
+:root.light, html[data-theme="light"], html.light {
+  /* backgrounds — warm paper */
+  --t-bg-void:    #fbf8f1;   /* main page bg — warm off-white */
+  --t-bg-space:   #f5f0e3;   /* deeper paper — cover band, footer */
+  --t-bg-deep:    #ffffff;   /* card surface */
+  --t-bg-surface: #fcfaf4;   /* nested surface — inputs, card-soft */
+
+  /* ink — very dark indigo, not pure black */
+  --t-ink-base:  #161626;
+  --t-ink-dim:   rgba(22,22,38,.72);
+  --t-ink-low:   rgba(22,22,38,.54);
+  --t-ink-faint: rgba(22,22,38,.36);
+  --t-ink-ghost: rgba(22,22,38,.18);
+
+  /* borders */
+  --t-border-line: rgba(22,22,38,.10);
+  --t-border-hi:   rgba(22,22,38,.18);
+
+  /* accents — calibrated for high contrast on warm paper */
+  --t-accent-aurora:  #1d6f8c;   /* deep teal */
+  --t-accent-violet:  #5a4cb3;
+  --t-accent-ember:   #b8542a;
+  --t-accent-gold:    #a87a23;
+  --t-accent-ok:      #1f8a5a;
+  --t-accent-warn:    #a87a23;
+  --t-accent-danger:  #b03434;
+
+  /* aurora tint — for active states, focus rings */
+  --t-aurora-soft: rgba(29,111,140,.10);
+  --t-aurora-edge: rgba(29,111,140,.32);
+
+  /* danger tint */
+  --t-danger-soft: rgba(176,52,52,.07);
+  --t-danger-edge: rgba(176,52,52,.30);
+
+  --t-header-bg: rgba(251,248,241,.88);
+
+  /* library hero — light mode: moderate vignette, fade to page bg at bottom */
+  --library-hero-main-overlay: linear-gradient(180deg, rgba(0,0,0,.38) 0%, rgba(0,0,0,.42) 55%, var(--t-bg-void) 100%);
+  --library-hero-side-overlay: linear-gradient(90deg, rgba(0,0,0,.50) 0%, transparent 65%);
+
+  /* library card — light mode: photo fully visible, gradient only for text contrast */
+  --lib-card-img-opacity: 0.88;
+  --lib-card-img-opacity-hover: 1;
+  --lib-card-overlay: linear-gradient(180deg, transparent 0%, transparent 30%, rgba(0,0,0,.52) 70%, var(--t-bg-void) 100%);
+  --lib-card-border: rgba(22,22,38,.28);
+}
+
 /* ── Transparent-until-scroll global header ─────────────────────────────────
-   When a page contains [data-transparent-header] (e.g. blog article hero),
+   When a page contains [data-transparent-header] (e.g. continent/hero pages),
    the sticky header starts fully transparent and fades in over the first 160px
    of scroll. Pure CSS — no hydration flash, no effect on other pages.
-   Requires: background/border set via CSS classes (not inline styles).        */
+
+   --header-opacity is registered so it can be animated via scroll timeline,
+   and in light mode we blend header tokens from dark-compatible (transparent)
+   to theme-appropriate (solid) so text stays readable over dark hero canvases. */
+
+@property --header-opacity {
+  syntax: '<number>';
+  initial-value: 1;
+  inherits: false;
+}
+
 @keyframes header-reveal {
   from {
     background: transparent;
     backdrop-filter: none;
     border-bottom-color: transparent;
+    --header-opacity: 0;
   }
   to {
-    background: rgba(5, 8, 22, 0.92);
+    background: var(--t-header-bg);
     backdrop-filter: blur(24px);
-    border-bottom-color: rgba(255, 255, 255, 0.08);
+    border-bottom-color: var(--t-border-line);
+    --header-opacity: 1;
   }
 }
 
@@ -27,6 +139,43 @@
   animation: header-reveal linear both;
   animation-timeline: scroll(root);
   animation-range: 0px 160px;
+}
+
+/* In light mode on hero pages, blend header ink tokens from dark-mode-like
+   (transparent/opacity=0) to light-mode (solid/opacity=1) as the user scrolls.
+   Scoped to :has([data-transparent-header]) so non-hero pages keep normal light
+   tokens. --header-opacity: 0 is set explicitly so the animation always starts
+   from the correct value (the @property initial-value: 1 default would otherwise
+   win over the animation's from-keyframe at scroll position 0).              */
+/* Stable chrome elements (LIVE INDEX badge, right-side controls) always use
+   the solid light-mode token values regardless of scroll state.               */
+html.light:has([data-transparent-header]) .global-header [data-header-stable],
+html[data-theme="light"]:has([data-transparent-header]) .global-header [data-header-stable] {
+  --t-ink-base:    #161626;
+  --t-ink-dim:     rgba(22,22,38,.72);
+  --t-ink-low:     rgba(22,22,38,.54);
+  --t-ink-faint:   rgba(22,22,38,.36);
+  --t-ink-ghost:   rgba(22,22,38,.18);
+  --t-border-line: rgba(22,22,38,.10);
+  --t-border-hi:   rgba(22,22,38,.18);
+  --t-bg-surface:  #fcfaf4;
+  --t-bg-deep:     #ffffff;
+  --t-bg-void:     #fbf8f1;
+}
+
+html.light:has([data-transparent-header]) .global-header,
+html[data-theme="light"]:has([data-transparent-header]) .global-header {
+  --header-opacity: 0;
+  --t-ink-base:    color-mix(in srgb, #f4f7ff              calc((1 - var(--header-opacity)) * 100%), #161626);
+  --t-ink-dim:     color-mix(in srgb, rgba(244,247,255,.72) calc((1 - var(--header-opacity)) * 100%), rgba(22,22,38,.72));
+  --t-ink-low:     color-mix(in srgb, rgba(244,247,255,.48) calc((1 - var(--header-opacity)) * 100%), rgba(22,22,38,.54));
+  --t-ink-faint:   color-mix(in srgb, rgba(244,247,255,.30) calc((1 - var(--header-opacity)) * 100%), rgba(22,22,38,.36));
+  --t-ink-ghost:   color-mix(in srgb, rgba(244,247,255,.14) calc((1 - var(--header-opacity)) * 100%), rgba(22,22,38,.18));
+  --t-border-line: color-mix(in srgb, rgba(255,255,255,.08) calc((1 - var(--header-opacity)) * 100%), rgba(22,22,38,.10));
+  --t-border-hi:   color-mix(in srgb, rgba(255,255,255,.16) calc((1 - var(--header-opacity)) * 100%), rgba(22,22,38,.18));
+  --t-bg-surface:  color-mix(in srgb, #060b19              calc((1 - var(--header-opacity)) * 100%), #fcfaf4);
+  --t-bg-deep:     color-mix(in srgb, #06091a              calc((1 - var(--header-opacity)) * 100%), #ffffff);
+  --t-bg-void:     color-mix(in srgb, #030511              calc((1 - var(--header-opacity)) * 100%), #fbf8f1);
 }
 
 /*
@@ -91,6 +240,15 @@
   }
 }
 
+/* Library card image — opacity controlled by CSS variable so it adapts to theme */
+.lib-card-img {
+  opacity: var(--lib-card-img-opacity);
+  transition: opacity 500ms;
+}
+.group:hover .lib-card-img {
+  opacity: var(--lib-card-img-opacity-hover);
+}
+
 /* Article drop cap — first letter of first paragraph in article prose */
 .article-drop-cap p:first-of-type::first-letter {
   font-family: var(--font-fraunces);
@@ -100,7 +258,7 @@
   line-height: 0.82;
   margin-right: 0.08em;
   margin-top: 0.07em;
-  color: white;
+  color: var(--t-ink-base);
 }
 
 @keyframes scrollHorizontal {
@@ -140,11 +298,24 @@
 }
 
 body:has([data-homepage="true"]) {
-  background: #050816;
-  color: #fff;
+  background: var(--t-bg-space);
+  color: var(--t-ink-base);
 }
 
 body:has([data-homepage="true"]) .strapi-layout-header,
 body:has([data-homepage="true"]) .strapi-layout-footer {
   display: none;
+}
+
+/* ── Settings section cards ─────────────────────────────────────────────────
+   In dark mode: subtle deep-bg card. In light mode: white card with shadow. */
+.settings-card {
+  background: var(--t-bg-deep);
+  border: 1px solid var(--t-border-line);
+  border-radius: 18px;
+  padding: 28px 30px;
+}
+html[data-theme="light"] .settings-card,
+html.light .settings-card {
+  box-shadow: 0 1px 0 rgba(22,22,38,.03), 0 18px 40px -28px rgba(22,22,38,.10);
 }

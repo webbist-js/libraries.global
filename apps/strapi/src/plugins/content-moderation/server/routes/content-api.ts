@@ -7,6 +7,12 @@ export default [
   },
   {
     method: "GET",
+    path: "/submissions/by-username/:username",
+    handler: "submission.findByUsername",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
     path: "/submissions/my",
     handler: "submission.findMine",
     config: { auth: false, policies: [] },

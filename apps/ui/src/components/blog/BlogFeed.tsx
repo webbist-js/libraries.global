@@ -92,9 +92,9 @@ export default function BlogFeed({
 
       {/* ── Featured article ───────────────────────────────────────────── */}
       {featuredArticle && activeSection === "All" && !searchQuery ? (
-        <section className="border-b border-white/6 py-12 sm:py-16">
+        <section className="border-b border-(--t-border-line) py-12 sm:py-16">
           <Container>
-            <p className="mb-6 font-mono text-[10px] tracking-[0.22em] text-white/28 uppercase">
+            <p className="mb-6 font-mono text-[10px] tracking-[0.22em] text-(--t-ink-faint) uppercase">
               — Featured this issue
             </p>
             <FeaturedArticleCard article={featuredArticle} />
@@ -105,8 +105,8 @@ export default function BlogFeed({
       <section className="py-14 sm:py-20">
         <Container>
           <div className="mb-10">
-            <h2 className="font-[family-name:var(--font-fraunces)] text-[2.4rem] leading-[1.05] font-semibold tracking-[-0.02em] text-white sm:text-[3rem]">
-              Latest <em className="text-white/60 italic">dispatches</em>
+            <h2 className="font-[family-name:var(--font-fraunces)] text-[2.4rem] leading-[1.05] font-semibold tracking-[-0.02em] text-(--t-ink-base) sm:text-[3rem]">
+              Latest <em className="text-(--t-ink-dim) italic">dispatches</em>
             </h2>
           </div>
           <BlogArticleList articles={processedArticles} />

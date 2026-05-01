@@ -155,7 +155,7 @@ export function WikiSectionLandingPage({
           .dhero-inner { grid-template-columns: 1fr !important; }
           .split-grid { grid-template-columns: 1fr !important; }
         }
-        .clog-row:hover { background: rgba(255,255,255,.025); }
+        .clog-row:hover { background: var(--t-bg-surface); }
         .clog-row:last-child { border-bottom: none !important; }
       `}</style>
     </PageShell>

@@ -42,7 +42,7 @@ export function LeaderboardSidebar({
           border: `1px solid ${T.border.line}`,
           borderRadius: "12px",
           padding: "20px",
-          background: "rgba(255,255,255,0.015)",
+          background: T.bg.surface,
         }}
       >
         <p
@@ -119,7 +119,7 @@ export function LeaderboardSidebar({
                   style={{
                     margin: 0,
                     fontFamily: T.font.mono,
-                    fontSize: "8px",
+                    fontSize: "10px",
                     letterSpacing: ".14em",
                     textTransform: "uppercase",
                     color: T.ink.faint,
@@ -147,7 +147,7 @@ export function LeaderboardSidebar({
                   style={{
                     margin: "0 0 4px",
                     fontFamily: T.font.mono,
-                    fontSize: "8px",
+                    fontSize: "10px",
                     letterSpacing: ".14em",
                     textTransform: "uppercase",
                     color: T.ink.faint,
@@ -159,7 +159,7 @@ export function LeaderboardSidebar({
                   style={{
                     height: "4px",
                     borderRadius: "2px",
-                    background: "rgba(255,255,255,0.08)",
+                    background: T.border.line,
                     overflow: "hidden",
                   }}
                 >
@@ -177,7 +177,7 @@ export function LeaderboardSidebar({
                   style={{
                     margin: "4px 0 0",
                     fontFamily: T.font.mono,
-                    fontSize: "8px",
+                    fontSize: "10px",
                     color: T.ink.faint,
                     textAlign: "right",
                   }}
@@ -213,7 +213,7 @@ export function LeaderboardSidebar({
           border: `1px solid ${T.border.line}`,
           borderRadius: "12px",
           padding: "20px",
-          background: "rgba(255,255,255,0.015)",
+          background: T.bg.surface,
         }}
       >
         <p

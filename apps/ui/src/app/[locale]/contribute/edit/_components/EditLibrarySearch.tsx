@@ -4,11 +4,11 @@ import { Icon } from "@iconify/react"
 import { useRouter } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
 
-import { ContributeHeroShell } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
-import { Link } from "@/lib/navigation"
+import type { ClaimedLibrary } from "@/lib/types/profile"
 
 import { ContributeNavBar } from "../../_components/ContributeNavBar"
+import { ContributeSubpageHero } from "../../_components/ContributeSubpageHero"
 
 interface LibraryResult {
   documentId: string
@@ -35,8 +35,18 @@ export function EditLibrarySearch() {
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<LibraryResult[]>([])
   const [loading, setLoading] = useState(false)
+  const [claimedLibraries, setClaimedLibraries] = useState<ClaimedLibrary[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
   const debouncedQuery = useDebounce(query, 300)
+
+  useEffect(() => {
+    fetch("/api/profile/me/affiliations")
+      .then((r) => r.json())
+      .then((json: { libraries?: ClaimedLibrary[] }) => {
+        setClaimedLibraries(json.libraries ?? [])
+      })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -89,73 +99,26 @@ export function EditLibrarySearch() {
     }
   }, [debouncedQuery])
 
+  const claimedEntityRefs = new Set(
+    claimedLibraries.map((l) => l.entityRef).filter(Boolean)
+  )
+
   return (
     <>
-      {/* Hero */}
-      <ContributeHeroShell minHeight="340px">
-        <p
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".20em",
-            textTransform: "uppercase",
-            color: T.ink.faint,
-            margin: "0 0 20px",
-          }}
-        >
-          <Link
-            href="/contribute"
-            style={{ color: T.ink.faint, textDecoration: "none" }}
-            className="transition-colors hover:text-white/60"
-          >
-            Contribute
-          </Link>
-          <span style={{ margin: "0 8px", opacity: 0.4 }}>/</span>
-          <span style={{ color: T.ink.low }}>Edit a library</span>
-        </p>
-        <h1
-          style={{
-            fontFamily: T.font.serif,
-            fontWeight: 700,
-            fontSize: "clamp(2.4rem, 5vw, 3.8rem)",
-            letterSpacing: "-0.03em",
-            lineHeight: 0.95,
-            color: T.ink.base,
-            margin: "0 0 16px",
-          }}
-        >
-          Find a library{" "}
-          <em
-            style={{
-              fontStyle: "italic",
-              fontWeight: 400,
-              color: T.accent.aurora,
-            }}
-          >
-            to edit.
-          </em>
-        </h1>
-        <p
-          style={{
-            fontFamily: T.font.sans,
-            fontSize: "14px",
-            color: T.ink.dim,
-            maxWidth: "48ch",
-            lineHeight: 1.65,
-            margin: 0,
-          }}
-        >
-          Search by name or city. Only libraries you&apos;ve claimed can be
-          edited — select one to open the wizard.
-        </p>
-      </ContributeHeroShell>
+      <ContributeSubpageHero
+        section="Edit a library"
+        heading="Find a library"
+        headingItalic="to edit."
+        body="Search by name or city. Only libraries you've claimed can be edited — select one to open the wizard."
+        minHeight="340px"
+      />
 
       <ContributeNavBar />
 
       {/* Search content */}
       <div
         style={{
-          background: T.bg.space,
+          background: T.bg.void,
           minHeight: "60vh",
         }}
       >
@@ -166,6 +129,136 @@ export function EditLibrarySearch() {
             padding: "48px 24px 80px",
           }}
         >
+          {/* Claimed libraries */}
+          {claimedLibraries.length > 0 && (
+            <div style={{ marginBottom: "32px" }}>
+              <p
+                style={{
+                  fontFamily: T.font.mono,
+                  fontSize: "9px",
+                  letterSpacing: ".16em",
+                  textTransform: "uppercase",
+                  color: T.ink.faint,
+                  margin: "0 0 10px",
+                }}
+              >
+                Your claimed libraries
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                }}
+              >
+                {claimedLibraries.map((lib) => (
+                  <button
+                    key={lib.entityRef ?? lib.documentId}
+                    onClick={() =>
+                      router.push(`/contribute/edit/${lib.slug ?? ""}`)
+                    }
+                    style={{
+                      padding: "14px 18px",
+                      border: `1px solid rgba(142,240,179,0.25)`,
+                      borderRadius: "10px",
+                      background: "rgba(142,240,179,0.03)",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      width: "100%",
+                      textAlign: "left",
+                      transition: "background 0.15s, border-color 0.15s",
+                    }}
+                    onMouseEnter={(e) => {
+                      const el = e.currentTarget as HTMLButtonElement
+                      el.style.background = "rgba(142,240,179,0.06)"
+                      el.style.borderColor = "rgba(142,240,179,0.4)"
+                    }}
+                    onMouseLeave={(e) => {
+                      const el = e.currentTarget as HTMLButtonElement
+                      el.style.background = "rgba(142,240,179,0.03)"
+                      el.style.borderColor = "rgba(142,240,179,0.25)"
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "4px",
+                        minWidth: 0,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: T.font.sans,
+                          fontSize: "14px",
+                          fontWeight: 500,
+                          color: T.ink.base,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {lib.name}
+                      </span>
+                      {lib.entityRef && (
+                        <span
+                          style={{
+                            fontFamily: T.font.mono,
+                            fontSize: "9px",
+                            letterSpacing: ".10em",
+                            textTransform: "uppercase",
+                            color: T.ink.faint,
+                          }}
+                        >
+                          {lib.entityRef}
+                        </span>
+                      )}
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        flexShrink: 0,
+                        marginLeft: "12px",
+                      }}
+                    >
+                      {lib.libraryType && (
+                        <span
+                          style={{
+                            fontFamily: T.font.mono,
+                            fontSize: "9px",
+                            letterSpacing: ".10em",
+                            textTransform: "uppercase",
+                            color: T.ink.faint,
+                            border: `1px solid ${T.border.line}`,
+                            borderRadius: "5px",
+                            padding: "3px 8px",
+                          }}
+                        >
+                          {lib.libraryType}
+                        </span>
+                      )}
+                      <span
+                        style={{
+                          fontFamily: T.font.mono,
+                          fontSize: "9px",
+                          letterSpacing: ".10em",
+                          textTransform: "uppercase",
+                          color: T.accent.ok,
+                        }}
+                      >
+                        Edit →
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Search input */}
           <div style={{ position: "relative", marginBottom: "20px" }}>
             <span
@@ -194,7 +287,7 @@ export function EditLibrarySearch() {
                 padding: "14px 18px 14px 46px",
                 border: `1px solid ${T.border.hi}`,
                 borderRadius: "12px",
-                background: "rgba(255,255,255,0.04)",
+                background: T.bg.surface,
                 color: T.ink.base,
                 fontSize: "15px",
                 fontFamily: T.font.sans,
@@ -237,109 +330,145 @@ export function EditLibrarySearch() {
               <div
                 style={{ display: "flex", flexDirection: "column", gap: "6px" }}
               >
-                {results.map((lib) => (
-                  <button
-                    key={lib.documentId}
-                    onClick={() => router.push(`/contribute/edit/${lib.slug}`)}
-                    style={{
-                      padding: "16px 20px",
-                      border: `1px solid ${T.border.line}`,
-                      borderRadius: "10px",
-                      background: "rgba(255,255,255,0.02)",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      width: "100%",
-                      textAlign: "left",
-                      transition: "background 0.15s, border-color 0.15s",
-                    }}
-                    onMouseEnter={(e) => {
-                      const el = e.currentTarget as HTMLButtonElement
-                      el.style.background = "rgba(127,223,255,0.04)"
-                      el.style.borderColor = "rgba(127,223,255,0.22)"
-                    }}
-                    onMouseLeave={(e) => {
-                      const el = e.currentTarget as HTMLButtonElement
-                      el.style.background = "rgba(255,255,255,0.02)"
-                      el.style.borderColor = T.border.line
-                    }}
-                  >
-                    {/* Left: name + meta */}
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "5px",
-                        minWidth: 0,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontFamily: T.font.sans,
-                          fontSize: "15px",
-                          fontWeight: 500,
-                          color: T.ink.base,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {lib.name}
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: T.font.mono,
-                          fontSize: "10px",
-                          letterSpacing: ".12em",
-                          textTransform: "uppercase",
-                          color: T.ink.faint,
-                        }}
-                      >
-                        {[lib.city, lib.entityRef].filter(Boolean).join(" · ")}
-                      </span>
-                    </div>
+                {results.map((lib) => {
+                  const isClaimed =
+                    lib.entityRef != null &&
+                    claimedEntityRefs.has(lib.entityRef)
 
-                    {/* Right: type chip + arrow */}
-                    <div
+                  return (
+                    <button
+                      key={lib.documentId}
+                      onClick={() => {
+                        if (isClaimed) {
+                          router.push(`/contribute/edit/${lib.slug}`)
+                        } else {
+                          router.push(
+                            `/contribute/claim?librarySlug=${encodeURIComponent(lib.slug)}&libraryName=${encodeURIComponent(lib.name)}&libraryDocumentId=${encodeURIComponent(lib.documentId)}${lib.entityRef ? `&libraryEntityRef=${encodeURIComponent(lib.entityRef)}` : ""}`
+                          )
+                        }
+                      }}
                       style={{
+                        padding: "16px 20px",
+                        border: `1px solid ${T.border.line}`,
+                        borderRadius: "10px",
+                        background: T.bg.surface,
+                        cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
-                        gap: "12px",
-                        flexShrink: 0,
-                        marginLeft: "16px",
+                        justifyContent: "space-between",
+                        width: "100%",
+                        textAlign: "left",
+                        transition: "background 0.15s, border-color 0.15s",
+                      }}
+                      onMouseEnter={(e) => {
+                        const el = e.currentTarget as HTMLButtonElement
+                        el.style.background = "rgba(127,223,255,0.04)"
+                        el.style.borderColor = "rgba(127,223,255,0.22)"
+                      }}
+                      onMouseLeave={(e) => {
+                        const el = e.currentTarget as HTMLButtonElement
+                        el.style.background = "var(--t-bg-surface)"
+                        el.style.borderColor = T.border.line
                       }}
                     >
-                      {lib.libraryType && (
+                      {/* Left: name + meta */}
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "5px",
+                          minWidth: 0,
+                        }}
+                      >
                         <span
                           style={{
-                            fontFamily: T.font.mono,
-                            fontSize: "9px",
-                            letterSpacing: ".12em",
-                            textTransform: "uppercase",
-                            color: T.ink.faint,
-                            border: `1px solid ${T.border.line}`,
-                            borderRadius: "6px",
-                            padding: "4px 9px",
+                            fontFamily: T.font.sans,
+                            fontSize: "15px",
+                            fontWeight: 500,
+                            color: T.ink.base,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
                           }}
                         >
-                          {lib.libraryType}
+                          {lib.name}
                         </span>
-                      )}
-                      <span
+                        <span
+                          style={{
+                            fontFamily: T.font.mono,
+                            fontSize: "10px",
+                            letterSpacing: ".12em",
+                            textTransform: "uppercase",
+                            color: T.ink.faint,
+                          }}
+                        >
+                          {[lib.city, lib.entityRef]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      </div>
+
+                      {/* Right: type chip + action */}
+                      <div
                         style={{
-                          fontFamily: T.font.mono,
-                          fontSize: "12px",
-                          color: T.accent.aurora,
-                          opacity: 0.7,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                          flexShrink: 0,
+                          marginLeft: "16px",
                         }}
                       >
-                        →
-                      </span>
-                    </div>
-                  </button>
-                ))}
+                        {lib.libraryType && (
+                          <span
+                            style={{
+                              fontFamily: T.font.mono,
+                              fontSize: "9px",
+                              letterSpacing: ".12em",
+                              textTransform: "uppercase",
+                              color: T.ink.faint,
+                              border: `1px solid ${T.border.line}`,
+                              borderRadius: "6px",
+                              padding: "4px 9px",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {lib.libraryType}
+                          </span>
+                        )}
+                        {isClaimed ? (
+                          <span
+                            style={{
+                              fontFamily: T.font.mono,
+                              fontSize: "9px",
+                              letterSpacing: ".10em",
+                              textTransform: "uppercase",
+                              color: T.accent.aurora,
+                              opacity: 0.85,
+                            }}
+                          >
+                            Edit →
+                          </span>
+                        ) : (
+                          <span
+                            style={{
+                              fontFamily: T.font.mono,
+                              fontSize: "9px",
+                              letterSpacing: ".10em",
+                              textTransform: "uppercase",
+                              color: T.ink.faint,
+                              border: `1px solid ${T.border.line}`,
+                              borderRadius: "6px",
+                              padding: "4px 9px",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            Claim to edit
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}

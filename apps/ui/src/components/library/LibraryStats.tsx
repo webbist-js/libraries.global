@@ -21,9 +21,9 @@ function StatCard({ stat }: { readonly stat: LibraryStatItem }) {
   return (
     <div
       style={{
-        border: `1px solid rgba(255,255,255,.09)`,
+        border: `1px solid ${T.border.line}`,
         borderRadius: "16px",
-        background: "rgba(255,255,255,.025)",
+        background: T.bg.surface,
         padding: "20px 18px",
       }}
     >
@@ -50,7 +50,7 @@ function StatCard({ stat }: { readonly stat: LibraryStatItem }) {
             fontSize: "10px",
             letterSpacing: ".22em",
             textTransform: "uppercase",
-            color: "rgba(255,255,255,.48)",
+            color: T.ink.low,
             marginBottom: "4px",
           }}
         >
@@ -63,7 +63,7 @@ function StatCard({ stat }: { readonly stat: LibraryStatItem }) {
         <div
           style={{
             fontSize: "13px",
-            color: "rgba(255,255,255,.34)",
+            color: T.ink.faint,
             lineHeight: 1.4,
           }}
         >

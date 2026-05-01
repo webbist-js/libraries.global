@@ -672,10 +672,21 @@ export default function GlobeInfoPanel({
       )}
       style={{ maxHeight: "calc(100% - 2rem)" }}
     >
-      {/* Back to Globe button */}
+      {/* Back / Exit button — label and action adapt to current drill level */}
       {onBackToGlobe && (
         <button
-          onClick={onBackToGlobe}
+          onClick={() => {
+            if (state.level === "region" && state.country) {
+              // Navigate to country level within the map shelf
+              onDrillChange({
+                level: "country",
+                continent: state.continent,
+                country: state.country,
+              })
+            } else {
+              onBackToGlobe()
+            }
+          }}
           className="flex flex-shrink-0 items-center gap-2 self-start rounded-full border border-white/15 bg-black/60 px-4 py-2 text-sm text-white/70 backdrop-blur-md transition-colors hover:border-white/30 hover:text-white"
         >
           <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5">
@@ -687,14 +698,16 @@ export default function GlobeInfoPanel({
               strokeLinejoin="round"
             />
           </svg>
-          Back to Globe
+          {state.level === "region" && state.country?.name
+            ? state.country.name
+            : "Back to Globe"}
         </button>
       )}
 
       {/* Main panel */}
       <div
         className="flex min-h-0 w-[340px] flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 shadow-2xl"
-        style={{ background: "#070d1e" }}
+        style={{ background: "var(--t-bg-deep)" }}
       >
         {/* ── Hero image header ─────────────────────────────────────── */}
         <div
@@ -719,7 +732,7 @@ export default function GlobeInfoPanel({
                   position: "absolute",
                   inset: 0,
                   background:
-                    "linear-gradient(180deg, rgba(7,13,30,.25) 0%, rgba(7,13,30,.7) 70%, #070d1e 100%)",
+                    "linear-gradient(180deg, rgba(7,13,30,.25) 0%, rgba(7,13,30,.7) 70%, var(--t-bg-deep) 100%)",
                 }}
               />
               {/* Breadcrumb overlaid on image */}

@@ -2,7 +2,7 @@
 
 export function LibraryVirtualTour({ url }: { readonly url: string }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+    <div className="overflow-hidden rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface)">
       <iframe
         src={url}
         title="Virtual tour"

@@ -136,7 +136,7 @@ export function WikiEditorSidebar({
                 : T.accent.aurora,
             background:
               !submissionId || submitState === "submitting"
-                ? "rgba(255,255,255,.04)"
+                ? T.bg.surface
                 : "rgba(127,223,255,.08)",
             border: `1px solid ${!submissionId || submitState === "submitting" ? T.border.line : "rgba(127,223,255,.25)"}`,
             borderRadius: "6px",

@@ -34,7 +34,7 @@ export function WikiLatestChanges({
               border: `1px solid ${T.border.line}`,
               borderRadius: "18px",
               overflow: "hidden",
-              background: "rgba(255,255,255,.02)",
+              background: T.bg.surface,
             }}
           >
             {/* Header */}
@@ -99,7 +99,7 @@ export function WikiLatestChanges({
                 border: `1px solid ${T.border.line}`,
                 borderRadius: "16px",
                 padding: "20px",
-                background: "rgba(255,255,255,.02)",
+                background: T.bg.surface,
               }}
             >
               <h4
@@ -149,7 +149,7 @@ export function WikiLatestChanges({
                 border: `1px solid ${T.border.line}`,
                 borderRadius: "16px",
                 padding: "20px",
-                background: "rgba(255,255,255,.02)",
+                background: T.bg.surface,
               }}
             >
               <h4

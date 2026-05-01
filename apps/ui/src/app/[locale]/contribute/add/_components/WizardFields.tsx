@@ -164,7 +164,7 @@ export function WizardSelect({
         <SelectContent
           style={{
             background: "rgba(6,9,26,0.98)",
-            border: "1px solid rgba(255,255,255,0.09)",
+            border: `1px solid ${T.border.line}`,
             backdropFilter: "blur(20px)",
             borderRadius: "8px",
             zIndex: 9999,

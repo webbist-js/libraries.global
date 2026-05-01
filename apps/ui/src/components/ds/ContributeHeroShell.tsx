@@ -21,7 +21,7 @@ interface ContributeHeroShellProps {
 export function ContributeHeroShell({
   children,
   minHeight,
-  overlay = "linear-gradient(to bottom, rgba(3,5,17,0) 0%, rgba(3,5,17,0.6) 100%)",
+  overlay = "linear-gradient(to bottom, transparent 0%, var(--t-bg-space) 100%)",
 }: ContributeHeroShellProps) {
   return (
     <section

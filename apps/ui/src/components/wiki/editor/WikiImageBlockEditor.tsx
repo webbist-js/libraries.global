@@ -88,7 +88,7 @@ export function WikiImageBlockEditor({
           style={{
             width: "100%",
             height: "80px",
-            background: "rgba(255,255,255,.03)",
+            background: T.bg.surface,
             border: `1px dashed ${T.border.hi}`,
             borderRadius: "6px",
             color: T.ink.low,
@@ -132,7 +132,7 @@ export function WikiImageBlockEditor({
         onChange={(e) => onChange({ ...block, caption: e.target.value })}
         placeholder="Caption (optional)"
         style={{
-          background: "rgba(255,255,255,.04)",
+          background: T.bg.surface,
           border: `1px solid ${T.border.line}`,
           borderRadius: "6px",
           color: T.ink.base,

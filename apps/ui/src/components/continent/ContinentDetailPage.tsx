@@ -17,7 +17,9 @@ import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import FeaturedLibraryCards from "@/components/home/FeaturedLibraryCards"
+import { LocationTabBar } from "@/components/location/LocationTabBar"
 import { InteractiveMap } from "@/components/map/InteractiveMap"
+import { T } from "@/lib/design-tokens"
 import type {
   PopulatedContinentData,
   ContinentEditorialBlock,
@@ -43,10 +45,13 @@ export function ContinentDetailPage({
 }) {
   if (!continent) {
     return (
-      <div className="relative isolate flex min-h-screen w-full flex-col bg-[#050816] text-white">
+      <div
+        className="relative isolate flex min-h-screen w-full flex-col"
+        style={{ background: T.bg.space, color: T.ink.base }}
+      >
         <GlobalHeader locale={locale} navbar={navbar} />
         <main className="flex flex-1 items-center justify-center">
-          <p className="text-white/40">Continent not found.</p>
+          <p className="text-(--t-ink-faint)">Continent not found.</p>
         </main>
       </div>
     )
@@ -75,7 +80,10 @@ export function ContinentDetailPage({
   ] as const
 
   return (
-    <div className="relative isolate flex min-h-screen w-full flex-col bg-[#050816] text-white">
+    <div
+      className="relative isolate flex min-h-screen w-full flex-col"
+      style={{ background: T.bg.space, color: T.ink.base }}
+    >
       <GlobalHeader locale={locale} navbar={navbar} />
 
       <main className="relative z-10 flex-1">
@@ -84,6 +92,7 @@ export function ContinentDetailPage({
           id="overview"
           data-transparent-header=""
           className="relative isolate -mt-14 flex min-h-[82vh] flex-col justify-end overflow-hidden pt-28"
+          style={{ background: "#030511" }}
         >
           <div
             aria-hidden
@@ -155,11 +164,13 @@ export function ContinentDetailPage({
           </Container>
         </section>
 
+        <LocationTabBar tabs={[...tabs]} />
+
         {/* ── Pillar Institutions ─────────────────────────────────────────── */}
         {hasFeaturedLibraries ? (
           <section
             id="institutions"
-            className="relative overflow-hidden border-b border-white/6 py-16 sm:py-20"
+            className="relative overflow-hidden border-b border-(--t-border-line) py-16 sm:py-20"
           >
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_55%_at_50%_0%,rgba(79,70,229,0.18),transparent_60%)]" />
             <Container className="relative">
@@ -167,7 +178,7 @@ export function ContinentDetailPage({
                 <Eyebrow index={1} bar>
                   Archive Starts
                 </Eyebrow>
-                <h2 className="font-serif text-3xl font-normal tracking-tight text-white sm:text-4xl">
+                <h2 className="font-serif text-3xl font-normal tracking-tight text-(--t-ink-base) sm:text-4xl">
                   Pillar Institutions
                 </h2>
               </div>
@@ -210,7 +221,10 @@ export function ContinentDetailPage({
         ) : null}
 
         {/* ── Interactive Cartography ─────────────────────────────────────── */}
-        <section id="map" className="border-t border-white/6 py-[70px]">
+        <section
+          id="map"
+          className="border-t border-(--t-border-line) py-[70px]"
+        >
           <Container>
             <MapSectionHeader
               locationName={continent.name ?? "the Continent"}
@@ -230,29 +244,29 @@ export function ContinentDetailPage({
 
         {/* ── Editorial sections ──────────────────────────────────────────── */}
         {editorialBlocks.map((section) => (
-          <div key={section.id} className="border-t border-white/6">
+          <div key={section.id} className="border-t border-(--t-border-line)">
             <EditorialSection section={section} />
           </div>
         ))}
 
         {/* ── CTA Banner sections ─────────────────────────────────────────── */}
         {ctaBanners.map((section) => (
-          <div key={section.id} className="border-t border-white/6">
+          <div key={section.id} className="border-t border-(--t-border-line)">
             <CtaBannerSection section={section} />
           </div>
         ))}
 
         {/* ── Journey CTA fallback ────────────────────────────────────────── */}
         {ctaBanners.length === 0 ? (
-          <section className="relative overflow-hidden border-t border-white/6 py-24 sm:py-32">
+          <section className="relative overflow-hidden border-t border-(--t-border-line) py-24 sm:py-32">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_100%,rgba(127,223,255,0.07),transparent_70%)]" />
             <Container>
               <div className="flex flex-col items-center gap-6 text-center">
                 <Eyebrow>Archive Starts</Eyebrow>
-                <h2 className="text-[clamp(2.5rem,6vw,5.5rem)] leading-[0.93] font-bold tracking-[-0.045em] text-white">
+                <h2 className="text-[clamp(2.5rem,6vw,5.5rem)] leading-[0.93] font-bold tracking-[-0.045em] text-(--t-ink-base)">
                   Your Journey Starts Now
                 </h2>
-                <p className="max-w-[40ch] text-base leading-7 text-white/50">
+                <p className="max-w-[40ch] text-base leading-7 text-(--t-ink-dim)">
                   Thousands of libraries across {continent.name} are waiting to
                   be explored.
                 </p>

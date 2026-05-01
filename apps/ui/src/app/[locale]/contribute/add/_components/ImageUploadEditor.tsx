@@ -79,7 +79,7 @@ export function ImageUploadEditor({
           padding: "28px 20px",
           borderRadius: "10px",
           border: `1.5px dashed ${uploading ? T.border.line : T.border.hi}`,
-          background: "rgba(255,255,255,0.02)",
+          background: T.bg.surface,
           color: uploading ? T.ink.faint : T.ink.dim,
           fontFamily: T.font.mono,
           fontSize: "10px",
@@ -170,7 +170,7 @@ export function ImageUploadEditor({
                     top: "6px",
                     left: "6px",
                     fontFamily: T.font.mono,
-                    fontSize: "8px",
+                    fontSize: "10px",
                     letterSpacing: ".12em",
                     textTransform: "uppercase",
                     color: T.bg.void,
@@ -203,7 +203,7 @@ export function ImageUploadEditor({
                     style={{
                       flex: 1,
                       fontFamily: T.font.mono,
-                      fontSize: "8px",
+                      fontSize: "10px",
                       letterSpacing: ".10em",
                       textTransform: "uppercase",
                       color: T.accent.aurora,
@@ -222,7 +222,7 @@ export function ImageUploadEditor({
                   onClick={() => remove(i)}
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "8px",
+                    fontSize: "10px",
                     letterSpacing: ".10em",
                     textTransform: "uppercase",
                     color: T.accent.danger,

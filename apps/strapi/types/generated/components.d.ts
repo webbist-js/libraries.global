@@ -65,6 +65,37 @@ export interface ContentRichText extends Struct.ComponentSchema {
   }
 }
 
+export interface ContributeQuickWin extends Struct.ComponentSchema {
+  collectionName: "components_contribute_quick_wins"
+  info: {
+    displayName: "Quick Win"
+    icon: "star"
+  }
+  attributes: {
+    actionUrl: Schema.Attribute.String & Schema.Attribute.Required
+    computedForCountry: Schema.Attribute.String
+    computedForLanguage: Schema.Attribute.String
+    description: Schema.Attribute.Text & Schema.Attribute.Required
+    estimatedMinutes: Schema.Attribute.Integer & Schema.Attribute.Required
+    points: Schema.Attribute.Integer & Schema.Attribute.Required
+    rewardLabel: Schema.Attribute.String & Schema.Attribute.Required
+    targetEntityRef: Schema.Attribute.String
+    targetSlug: Schema.Attribute.String
+    title: Schema.Attribute.String & Schema.Attribute.Required
+    type: Schema.Attribute.Enumeration<
+      [
+        "add_library",
+        "add_nearby_library",
+        "verify_hours",
+        "add_hero_image",
+        "translate_wiki",
+      ]
+    > &
+      Schema.Attribute.Required
+    winId: Schema.Attribute.String & Schema.Attribute.Required
+  }
+}
+
 export interface ElementsFooterItem extends Struct.ComponentSchema {
   collectionName: "components_elements_footer_items"
   info: {
@@ -638,6 +669,7 @@ declare module "@strapi/strapi" {
       "content.image-block": ContentImageBlock
       "content.quote-block": ContentQuoteBlock
       "content.rich-text": ContentRichText
+      "contribute.quick-win": ContributeQuickWin
       "elements.footer-item": ElementsFooterItem
       "forms.contact-form": FormsContactForm
       "forms.newsletter-form": FormsNewsletterForm

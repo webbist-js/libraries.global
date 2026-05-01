@@ -185,10 +185,16 @@ export function WorldMapCanvas({
     import("maplibre-gl").then(({ default: maplibregl }) => {
       if (!alive || !containerRef.current) return
 
+      const isLight =
+        document.documentElement.classList.contains("light") ||
+        document.documentElement.dataset.theme === "light"
+      const mapStyle = isLight
+        ? "https://basemaps.cartocdn.com/gl/voyager-nolabels-gl-style/style.json"
+        : "https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json"
+
       const map = new maplibregl.Map({
         container: containerRef.current,
-        style:
-          "https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json",
+        style: mapStyle,
         center: [10, 20],
         zoom: 2,
         minZoom: 1.5,

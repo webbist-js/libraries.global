@@ -40,6 +40,8 @@ export interface InteractiveMapProps {
   height?: number
   /** Fill the parent container instead of using a fixed pixel height. */
   fill?: boolean
+  /** Hide the internal breadcrumb back button (e.g. when parent provides its own nav). */
+  hideBreadcrumb?: boolean
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -54,6 +56,7 @@ export function InteractiveMap({
   className,
   height = 440,
   fill = false,
+  hideBreadcrumb = false,
 }: InteractiveMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -104,11 +107,16 @@ export function InteractiveMap({
         mapConfig?.defaultZoom ??
         (initialMode === "region" ? 9 : initialMode === "country" ? 5 : 3)
 
+      const isLight =
+        document.documentElement.classList.contains("light") ||
+        document.documentElement.dataset.theme === "light"
+      const mapStyle = isLight
+        ? "https://basemaps.cartocdn.com/gl/voyager-nolabels-gl-style/style.json"
+        : "https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json"
+
       const map = new maplibregl.Map({
         container: containerRef.current,
-        // CARTO Dark Matter No Labels — free, no API key, no CORS issues
-        style:
-          "https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json",
+        style: mapStyle,
         center: [centerLng, centerLat],
         zoom: defaultZoom,
         attributionControl: false,
@@ -965,11 +973,15 @@ export function InteractiveMap({
   return (
     <div
       className={cn(
-        "relative overflow-hidden bg-[#050816]",
+        "relative overflow-hidden",
         !fill && "rounded-2xl border border-white/8",
         className
       )}
-      style={fill ? { height: "100%" } : { height: `${height}px` }}
+      style={
+        fill
+          ? { height: "100%", background: "var(--t-bg-space)" }
+          : { height: `${height}px`, background: "var(--t-bg-space)" }
+      }
     >
       {/* Map canvas */}
       <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
@@ -987,7 +999,7 @@ export function InteractiveMap({
       ) : null}
 
       {/* Back button */}
-      {breadcrumb.length > 0 ? (
+      {breadcrumb.length > 0 && !hideBreadcrumb ? (
         <div className="absolute top-3 left-3 z-10">
           <button
             onClick={handleBack}

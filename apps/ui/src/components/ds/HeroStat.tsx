@@ -102,7 +102,7 @@ export function HeroInlineTabNav({
         padding: "3px",
         border: `1px solid ${T.border.line}`,
         borderRadius: "12px",
-        background: "rgba(255,255,255,.02)",
+        background: T.bg.surface,
         marginTop: "28px",
         width: "fit-content",
       }}
@@ -121,7 +121,7 @@ export function HeroInlineTabNav({
             transition: "color 200ms",
             whiteSpace: "nowrap",
           }}
-          className={i !== 0 ? "hover:text-white" : ""}
+          className={i !== 0 ? "hover:text-(--t-ink-base)" : ""}
         >
           {tab.label}
         </a>

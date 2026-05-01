@@ -58,7 +58,7 @@ export function OnboardingInterests({
     padding: "8px 12px",
     borderRadius: "6px",
     border: `1px solid ${T.border.hi}`,
-    background: "rgba(255,255,255,0.04)",
+    background: T.bg.surface,
     color: T.ink.base,
     fontSize: "13px",
     fontFamily: "Roboto, sans-serif",
@@ -178,7 +178,7 @@ export function OnboardingInterests({
             value={addingLang}
             onChange={(e) => setAddingLang(e.target.value)}
           >
-            <option value="" style={{ background: "#070b1e" }}>
+            <option value="" style={{ background: "var(--t-bg-deep)" }}>
               Add language…
             </option>
             {LANGUAGE_OPTIONS.filter(
@@ -187,7 +187,7 @@ export function OnboardingInterests({
               <option
                 key={l.code}
                 value={l.code}
-                style={{ background: "#070b1e" }}
+                style={{ background: "var(--t-bg-deep)" }}
               >
                 {l.name}
               </option>
@@ -199,7 +199,11 @@ export function OnboardingInterests({
             onChange={(e) => setAddingProf(e.target.value as typeof addingProf)}
           >
             {PROFICIENCY.map((p) => (
-              <option key={p} value={p} style={{ background: "#070b1e" }}>
+              <option
+                key={p}
+                value={p}
+                style={{ background: "var(--t-bg-deep)" }}
+              >
                 {p}
               </option>
             ))}
@@ -212,7 +216,7 @@ export function OnboardingInterests({
               padding: "8px 14px",
               borderRadius: "6px",
               border: `1px solid ${T.border.hi}`,
-              background: "rgba(255,255,255,0.05)",
+              background: T.bg.deep,
               color: T.ink.dim,
               fontSize: "12px",
               cursor: addingLang ? "pointer" : "not-allowed",
@@ -254,7 +258,7 @@ export function OnboardingInterests({
             borderRadius: "8px",
             border: "none",
             background: T.ink.base,
-            color: "#030511",
+            color: T.bg.void,
             fontSize: "13px",
             fontFamily: "Roboto, sans-serif",
             fontWeight: 600,

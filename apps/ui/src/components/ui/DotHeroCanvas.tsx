@@ -3,7 +3,10 @@
 import { useEffect, useRef } from "react"
 
 const SPACING = 26
-const AURORA = "127,223,255"
+const AURORA_DARK = "127,223,255"
+const AURORA_LIGHT = "29,111,140"
+const DOT_DARK = "180,205,235"
+const DOT_LIGHT = "22,22,38"
 
 interface Dot {
   x: number
@@ -37,8 +40,12 @@ function drawFrame(
   dots: Dot[],
   t: number,
   w: number,
-  h: number
+  h: number,
+  isLight: boolean
 ) {
+  const AURORA = isLight ? AURORA_LIGHT : AURORA_DARK
+  const DOT = isLight ? DOT_LIGHT : DOT_DARK
+
   ctx.clearRect(0, 0, w, h)
   for (const d of dots) {
     const s1 = Math.sin(d.x * d.px + t * d.pt)
@@ -47,13 +54,13 @@ function drawFrame(
     const v = Math.max(0, Math.min(1, 0.5 + 0.38 * s1 * s2 + 0.12 * s3))
 
     const r = 1 + v * 1.6
-    const alpha = 0.07 + v * 0.5
+    const alpha = isLight ? 0.05 + v * 0.35 : 0.07 + v * 0.5
     const isAurora = v > 0.6
 
     if (v > 0.63) {
       const glowR = r * 7
       const g = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, glowR)
-      const ga = ((v - 0.63) / 0.37) * 0.14
+      const ga = ((v - 0.63) / 0.37) * (isLight ? 0.08 : 0.14)
       g.addColorStop(0, `rgba(${AURORA},${ga.toFixed(3)})`)
       g.addColorStop(1, `rgba(${AURORA},0)`)
       ctx.beginPath()
@@ -66,7 +73,7 @@ function drawFrame(
     ctx.arc(d.x, d.y, r, 0, Math.PI * 2)
     ctx.fillStyle = isAurora
       ? `rgba(${AURORA},${alpha.toFixed(3)})`
-      : `rgba(180,205,235,${(alpha * 0.5).toFixed(3)})`
+      : `rgba(${DOT},${(alpha * 0.5).toFixed(3)})`
     ctx.fill()
   }
 }
@@ -96,7 +103,10 @@ export function DotHeroCanvas() {
 
     const tick = () => {
       t += 0.007
-      drawFrame(ctx, dots, t, canvas.width, canvas.height)
+      const isLight =
+        document.documentElement.classList.contains("light") ||
+        document.documentElement.dataset.theme === "light"
+      drawFrame(ctx, dots, t, canvas.width, canvas.height, isLight)
       raf = requestAnimationFrame(tick)
     }
     tick()

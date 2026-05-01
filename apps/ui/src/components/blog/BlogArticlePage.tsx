@@ -83,6 +83,7 @@ export function BlogArticlePage({
         <section
           data-transparent-header=""
           className="relative isolate -mt-14 flex min-h-[88vh] flex-col overflow-hidden"
+          style={{ background: "#030511" }}
         >
           {/* Background */}
           {imgUrl ? (
@@ -309,7 +310,7 @@ export function BlogArticlePage({
                 >
                   <GlobalLink
                     href="/blog"
-                    className="inline-flex items-center gap-2 transition-colors hover:text-white/60"
+                    className="inline-flex items-center gap-2 transition-colors hover:text-(--t-ink-dim)"
                     style={{
                       fontFamily: T.font.mono,
                       fontSize: "11px",
@@ -422,7 +423,7 @@ export function BlogArticlePage({
                           <a
                             key={h.id}
                             href={`#${h.id}`}
-                            className="block text-[12px] leading-snug transition-colors hover:text-white/70"
+                            className="block text-[12px] leading-snug transition-colors hover:text-(--t-ink-dim)"
                             style={{
                               color: T.ink.faint,
                               paddingLeft:

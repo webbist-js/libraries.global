@@ -28,5 +28,5 @@ export default async function OwnProfilePage() {
   }
 
   // Fallback: redirect to settings to complete profile
-  redirect("/settings")
+  redirect("/profile/settings")
 }

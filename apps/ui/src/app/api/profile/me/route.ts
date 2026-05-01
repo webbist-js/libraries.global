@@ -16,6 +16,7 @@ async function getStrapiProfile(baUserId: string) {
       "populate[followedLibraries][fields][0]": "name",
       "populate[followedLibraries][fields][1]": "slug",
       "populate[followedLibraries][fields][2]": "libraryType",
+      "populate[followedLibraries][populate][heroImage][fields][0]": "url",
     })
     const res = await fetch(
       `${STRAPI}/api/user-profiles?${params.toString()}`,
@@ -77,6 +78,7 @@ export async function PUT(req: Request) {
     "languages",
     "interests",
     "avatarFileId",
+    "theme",
   ]
   const data: Record<string, unknown> = { baUserId: session.user.id }
   for (const key of allowed) {
@@ -90,11 +92,19 @@ export async function PUT(req: Request) {
       { error: "Bridge not configured" },
       { status: 500 }
     )
-  const res = await fetch(`${STRAPI}/api/auth-bridge/upsert-profile`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Service-Secret": SECRET },
-    body: JSON.stringify(data),
-  })
+  let res: Response
+  try {
+    res = await fetch(`${STRAPI}/api/auth-bridge/upsert-profile`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Service-Secret": SECRET,
+      },
+      body: JSON.stringify(data),
+    })
+  } catch {
+    return NextResponse.json({ error: "CMS unavailable" }, { status: 503 })
+  }
   if (!res.ok)
     return NextResponse.json(
       { error: "Failed to update profile" },
@@ -103,6 +113,56 @@ export async function PUT(req: Request) {
   const json = await res.json()
 
   return NextResponse.json(json)
+}
+
+// PATCH — partial update (e.g. single-field saves like theme)
+export async function PATCH(req: Request) {
+  const session = await auth.api.getSession({ headers: await headers() })
+  if (!session?.user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  let body: Record<string, unknown>
+  try {
+    body = (await req.json()) as Record<string, unknown>
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
+  }
+
+  const patchAllowed = ["theme", "notifPrefs", "profileVisibility"]
+  const data: Record<string, unknown> = { baUserId: session.user.id }
+  for (const key of patchAllowed) {
+    if (key in body) data[key] = body[key]
+  }
+
+  if (Object.keys(data).length <= 1)
+    return NextResponse.json({ error: "No valid fields" }, { status: 400 })
+
+  if (!SECRET)
+    return NextResponse.json(
+      { error: "Bridge not configured" },
+      { status: 500 }
+    )
+
+  let res: Response
+  try {
+    res = await fetch(`${STRAPI}/api/auth-bridge/upsert-profile`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Service-Secret": SECRET,
+      },
+      body: JSON.stringify(data),
+    })
+  } catch {
+    return NextResponse.json({ error: "CMS unavailable" }, { status: 503 })
+  }
+  if (!res.ok)
+    return NextResponse.json(
+      { error: "Failed to update profile" },
+      { status: 500 }
+    )
+
+  return NextResponse.json({ ok: true })
 }
 
 export async function DELETE() {

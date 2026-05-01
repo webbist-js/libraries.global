@@ -42,9 +42,9 @@ function InfoCard({
   return (
     <div
       style={{
-        border: `1px solid rgba(255,255,255,.09)`,
+        border: `1px solid ${T.border.line}`,
         borderRadius: "14px",
-        background: "rgba(255,255,255,.02)",
+        background: T.bg.surface,
         padding: "16px",
       }}
     >
@@ -54,7 +54,7 @@ function InfoCard({
           fontSize: "10px",
           letterSpacing: ".16em",
           textTransform: "uppercase",
-          color: "rgba(255,255,255,.38)",
+          color: T.ink.low,
           marginBottom: "10px",
         }}
       >
@@ -131,7 +131,7 @@ export function LibraryContactPanel({
           target="_blank"
           rel="noopener noreferrer"
           style={{ color: T.ink.base, textDecoration: "none" }}
-          className="hover:text-white"
+          className="hover:text-(--t-accent-aurora)"
         >
           {fullAddressWithCountry.split("\n").map((line, i) => (
             <span key={i} style={{ display: "block" }}>
@@ -172,7 +172,7 @@ export function LibraryContactPanel({
         <GlobalLink
           href={`tel:${library.phone}`}
           style={{ color: T.ink.base, textDecoration: "none" }}
-          className="hover:text-white hover:underline"
+          className="hover:text-(--t-accent-aurora) hover:underline"
         >
           {library.phone}
         </GlobalLink>
@@ -191,7 +191,7 @@ export function LibraryContactPanel({
             textDecoration: "none",
             wordBreak: "break-all",
           }}
-          className="hover:text-white hover:underline"
+          className="hover:text-(--t-accent-aurora) hover:underline"
         >
           {library.email}
         </GlobalLink>
@@ -211,7 +211,7 @@ export function LibraryContactPanel({
           target="_blank"
           rel="noopener noreferrer"
           style={{ color: T.ink.base, textDecoration: "none" }}
-          className="hover:text-white"
+          className="hover:text-(--t-accent-aurora)"
         >
           {domain} →
         </GlobalLink>
@@ -254,7 +254,7 @@ export function LibraryContactPanel({
               letterSpacing: ".16em",
               color: T.accent.aurora,
               textTransform: "uppercase",
-              border: `1px solid rgba(127,223,255,.25)`,
+              border: `1px solid var(--t-aurora-edge)`,
               borderRadius: "6px",
               padding: "3px 8px",
             }}
@@ -310,12 +310,12 @@ export function LibraryContactPanel({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  background: "rgba(255,255,255,.02)",
+                  background: T.bg.surface,
                 }}
               >
                 <Icon
                   icon="mdi:map-outline"
-                  className="size-10 text-white/20"
+                  className="size-10 text-(--t-ink-ghost)"
                 />
               </div>
             )}

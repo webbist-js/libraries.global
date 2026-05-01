@@ -10,7 +10,7 @@ export function CollectionsTab() {
         borderRadius: "12px",
         padding: "48px",
         textAlign: "center",
-        background: "rgba(255,255,255,0.02)",
+        background: T.bg.surface,
       }}
     >
       <p

@@ -10,7 +10,7 @@ const triggerStyle = {
   padding: "10px 14px",
   borderRadius: "8px",
   border: `1px solid ${T.border.hi}`,
-  background: "rgba(255,255,255,0.04)",
+  background: T.bg.surface,
   color: T.ink.base,
   fontSize: "13px",
   fontFamily: T.font.sans,

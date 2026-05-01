@@ -277,7 +277,7 @@ export function WikiBlockEditor({
               letterSpacing: ".12em",
               textTransform: "uppercase",
               color: T.ink.low,
-              background: "rgba(255,255,255,.04)",
+              background: T.bg.surface,
               border: `1px solid ${T.border.line}`,
               borderRadius: "4px",
               padding: "4px 10px",
@@ -309,7 +309,7 @@ export function WikiBlockEditor({
           onChange={(e) => onEditSummaryChange(e.target.value)}
           placeholder="Briefly describe your changes\u2026"
           style={{
-            background: "rgba(255,255,255,.04)",
+            background: T.bg.surface,
             border: `1px solid ${T.border.line}`,
             borderRadius: "6px",
             color: T.ink.base,

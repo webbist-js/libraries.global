@@ -21,24 +21,24 @@ export function ContentSection({
       <Container>
         <div className="max-w-[52rem]">
           {eyebrow ? (
-            <p className="mb-5 font-mono text-[11px] tracking-[0.22em] text-white/35 uppercase">
+            <p className="mb-5 font-mono text-[11px] tracking-[0.22em] text-(--t-ink-faint) uppercase">
               § 02 — {eyebrow.toUpperCase()}
             </p>
           ) : null}
           {title ? (
-            <h2 className="mb-6 font-[family-name:var(--font-fraunces)] text-[2.4rem] leading-[1.08] font-semibold tracking-[-0.02em] text-white sm:text-[3.2rem]">
+            <h2 className="mb-6 font-[family-name:var(--font-fraunces)] text-[2.4rem] leading-[1.08] font-semibold tracking-[-0.02em] text-(--t-ink-base) sm:text-[3.2rem]">
               {title}
             </h2>
           ) : null}
           {text ? (
-            <p className="mb-8 max-w-[58ch] text-base leading-8 text-white/55 sm:text-lg">
+            <p className="mb-8 max-w-[58ch] text-base leading-8 text-(--t-ink-dim) sm:text-lg">
               {text}
             </p>
           ) : null}
           {ctaHref && ctaLabel ? (
             <GlobalLink
               href={ctaHref}
-              className="inline-flex items-center gap-2 text-sm font-medium text-cyan-400/80 underline-offset-4 transition-colors hover:text-cyan-300 hover:underline"
+              className="inline-flex items-center gap-2 text-sm font-medium text-(--t-accent-aurora) underline-offset-4 transition-colors hover:underline hover:opacity-80"
             >
               {ctaLabel} →
             </GlobalLink>

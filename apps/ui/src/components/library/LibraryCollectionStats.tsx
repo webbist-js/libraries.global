@@ -36,7 +36,7 @@ export function LibraryCollectionStats({
             key={i}
             style={{
               padding: "20px 16px",
-              background: "rgba(255,255,255,.015)",
+              background: T.bg.surface,
               borderRight:
                 i < stats.length - 1 ? `1px solid ${T.border.line}` : "none",
             }}

@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useEffect, useState } from "react"
 
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
@@ -23,8 +24,47 @@ export function LibraryClaimButton({
     ? `&libraryEntityRef=${encodeURIComponent(libraryEntityRef)}`
     : ""
   const { data: session, isPending: sessionPending } = authClient.useSession()
+  const [isClaimed, setIsClaimed] = useState<boolean | null>(null)
 
-  if (sessionPending) return null
+  useEffect(() => {
+    if (!session?.user || !libraryEntityRef) {
+      const id = setTimeout(() => setIsClaimed(false), 0)
+
+      return () => clearTimeout(id)
+    }
+    fetch("/api/profile/me/affiliations")
+      .then((r) => r.json())
+      .then((json: { entityRefs?: string[] }) => {
+        setIsClaimed((json.entityRefs ?? []).includes(libraryEntityRef))
+      })
+      .catch(() => setIsClaimed(false))
+  }, [session?.user, libraryEntityRef])
+
+  if (sessionPending || isClaimed === null) return null
+
+  if (isClaimed) {
+    return (
+      <Link
+        href={`/contribute/edit/${librarySlug}`}
+        style={{
+          fontFamily: T.font.mono,
+          fontSize: "10px",
+          letterSpacing: ".12em",
+          textTransform: "uppercase",
+          color: T.accent.ok,
+          textDecoration: "none",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "6px",
+          border: `1px solid ${T.accent.ok}40`,
+          borderRadius: "8px",
+          padding: "8px 14px",
+        }}
+      >
+        You manage this library
+      </Link>
+    )
+  }
 
   if (!session?.user) {
     return (
@@ -35,7 +75,7 @@ export function LibraryClaimButton({
           fontSize: "10px",
           letterSpacing: ".12em",
           textTransform: "uppercase",
-          color: T.ink.faint,
+          color: "rgba(255,255,255,.40)",
           textDecoration: "none",
           display: "inline-flex",
           alignItems: "center",

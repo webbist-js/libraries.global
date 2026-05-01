@@ -65,10 +65,10 @@ export function LibraryContent({
       {hasVisitNotes || hasAdmission ? (
         <ContentSection title="Visitor Information">
           {hasAdmission ? (
-            <p className="mb-4 rounded-lg border border-white/8 bg-white/4 px-4 py-3 text-sm leading-6 text-white/72">
+            <p className="mb-4 rounded-lg border border-(--t-border-line) bg-(--t-bg-surface) px-4 py-3 text-sm leading-6 text-(--t-ink-dim)">
               <Icon
                 icon="mdi:ticket-outline"
-                className="mr-1.5 inline size-3.5 align-text-top text-white/46"
+                className="mr-1.5 inline size-3.5 align-text-top text-(--t-ink-faint)"
               />
               {library.admissionInfo}
             </p>

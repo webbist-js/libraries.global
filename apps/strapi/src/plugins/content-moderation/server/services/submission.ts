@@ -438,6 +438,104 @@ export default ({ strapi }: { strapi: any }) => ({
     })
   },
 
+  async findPublicByUsername(username: string) {
+    // Resolve the profile to get baUserId
+    const profile = await strapi.db
+      .query("api::user-profile.user-profile")
+      .findOne({ where: { username } })
+    if (!profile?.baUserId) return []
+
+    const submissions = await strapi
+      .documents("plugin::content-moderation.submission")
+      .findMany({
+        filters: {
+          submittedByUserId: profile.baUserId,
+          status: { $ne: "draft" },
+        },
+        sort: { createdAt: "desc" },
+        limit: 200,
+      })
+
+    // Batch-resolve library names for library_edit / library_claim submissions
+    const libSlugs = new Set<string>()
+    for (const s of submissions) {
+      if (
+        (s.submissionType === "library_edit" ||
+          s.submissionType === "correction") &&
+        s.targetSlug
+      ) {
+        libSlugs.add(s.targetSlug)
+      }
+    }
+    const libNameMap: Record<string, string> = {}
+    if (libSlugs.size > 0) {
+      try {
+        const libs = await strapi.db.query("api::library.library").findMany({
+          where: { slug: { $in: [...libSlugs] } },
+          select: ["slug", "name"],
+        })
+        for (const lib of libs as { slug: string; name: string }[]) {
+          libNameMap[lib.slug] = lib.name
+        }
+      } catch {
+        // non-fatal
+      }
+    }
+
+    // Strip private fields and compute a human-readable targetLabel
+    return submissions.map((s: any) => {
+      let targetLabel: string | null = null
+      const f = (s.fields ?? {}) as Record<string, unknown>
+
+      switch (s.submissionType) {
+        case "new_library":
+          targetLabel = (f.name as string) ?? s.targetSlug ?? null
+          break
+        case "library_edit":
+        case "correction":
+          targetLabel =
+            (s.targetSlug ? libNameMap[s.targetSlug] : null) ??
+            s.targetSlug ??
+            null
+          break
+        case "library_claim":
+          targetLabel =
+            (f.libraryName as string) ??
+            (f.entityRef as string) ??
+            s.targetSlug ??
+            null
+          break
+        case "wiki_edit":
+          targetLabel = s.targetSlug
+            ? s.targetSlug
+                .split("-")
+                .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+                .join(" ")
+            : null
+          break
+        case "topic_suggestion":
+          targetLabel = (f.name as string) ?? s.targetSlug ?? null
+          break
+
+        default:
+          targetLabel = s.targetSlug ?? null
+      }
+
+      return {
+        documentId: s.documentId,
+        submissionType: s.submissionType,
+        status: s.status,
+        targetEntityType: s.targetEntityType ?? null,
+        targetSlug: s.targetSlug ?? null,
+        targetLabel,
+        editSummary: s.editSummary ?? null,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+        reviewedAt: s.reviewedAt ?? null,
+      }
+    })
+  },
+
   async findDraft(userId: string, submissionType: string, targetSlug?: string) {
     const filters: Record<string, unknown> = {
       submittedByUserId: userId,

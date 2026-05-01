@@ -69,21 +69,21 @@ function SuspensedLocaleSwitcher({
       </SelectTrigger>
       <SelectContent
         position="popper"
-        className="border-white/10 bg-[#0c1120] text-white shadow-xl shadow-black/40"
+        className="border-(--t-border-line) bg-(--t-bg-deep) text-(--t-ink-base) shadow-xl shadow-black/40"
       >
         {routing.locales.map((locale, index) => (
           <React.Fragment key={locale}>
             <SelectItem
               key={locale}
               value={locale}
-              className="text-white/60 focus:bg-white/8 focus:text-white data-[state=checked]:text-white"
+              className="text-(--t-ink-low) focus:bg-(--t-bg-surface) focus:text-(--t-ink-base) data-[state=checked]:text-(--t-ink-base)"
             >
               {localeTranslation[locale]}
             </SelectItem>
             {index < routing.locales.length - 1 && (
               <SelectSeparator
                 key={`${locale}-separator`}
-                className="bg-white/8"
+                className="bg-(--t-border-line)"
               />
             )}
           </React.Fragment>

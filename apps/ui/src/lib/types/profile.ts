@@ -4,6 +4,16 @@ export type FollowedLibrary = {
   name: string
   slug: string
   libraryType?: string | null
+  heroImageUrl?: string | null
+}
+
+export type ClaimedLibrary = {
+  entityRef: string | null
+  documentId: string | null
+  name: string | null
+  slug: string | null
+  libraryType: string | null
+  heroImageUrl?: string | null
 }
 
 export type AvatarMedia = {
@@ -56,10 +66,13 @@ export type UserProfile = {
   interests?: InterestTopic[]
   notifPrefs: NotifPrefs
   followedLibraries?: FollowedLibrary[]
+  claimedLibraries?: ClaimedLibrary[]
   points?: number | null
   pointsThisMonth?: number | null
   tier?: string | null
   streak?: number | null
+  theme?: "dark" | "light" | null
+  earnedBadges?: { badgeId: string; awardedAt: string }[]
   createdAt: string
   updatedAt: string
 }

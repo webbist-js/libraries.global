@@ -114,7 +114,7 @@ export function QuickWinCard({ win }: { readonly win: QuickWin }) {
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "8px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.ink.faint,
@@ -126,7 +126,7 @@ export function QuickWinCard({ win }: { readonly win: QuickWin }) {
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "8px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.ink.faint,

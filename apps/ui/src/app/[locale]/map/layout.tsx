@@ -2,6 +2,7 @@ import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 
 import GlobalHeader from "@/components/global/GlobalHeader"
+import { T } from "@/lib/design-tokens"
 import { fetchNavbar } from "@/lib/strapi-api/content/server"
 
 export default async function MapLayout({
@@ -14,9 +15,12 @@ export default async function MapLayout({
   const navbar = (await fetchNavbar(locale))?.data ?? null
 
   // h-dvh makes the height chain definite so flex children resolve percentage heights.
-  // bg-[#060b19] ensures the transparent GlobalHeader shows the dark map background.
+  // background: T.bg.surface ensures the transparent GlobalHeader shows the correct background.
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-[#060b19]">
+    <div
+      className="flex h-dvh flex-col overflow-hidden"
+      style={{ background: T.bg.surface }}
+    >
       <GlobalHeader locale={locale} navbar={navbar} />
       <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         {children}

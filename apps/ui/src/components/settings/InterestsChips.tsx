@@ -77,9 +77,7 @@ export function InterestsChips({
                 padding: "5px 12px",
                 borderRadius: "999px",
                 border: `1px solid ${active ? "rgba(127,223,255,0.5)" : T.border.line}`,
-                background: active
-                  ? "rgba(127,223,255,0.1)"
-                  : "rgba(255,255,255,0.03)",
+                background: active ? "rgba(127,223,255,0.1)" : T.bg.surface,
                 color: active ? T.accent.aurora : T.ink.dim,
                 fontSize: "12px",
                 fontFamily: T.font.mono,
@@ -111,7 +109,7 @@ export function InterestsChips({
             padding: "8px 12px",
             borderRadius: "6px",
             border: `1px solid ${T.border.line}`,
-            background: "rgba(255,255,255,0.03)",
+            background: T.bg.surface,
             color: T.ink.base,
             fontSize: "12px",
             fontFamily: T.font.sans,
@@ -126,7 +124,7 @@ export function InterestsChips({
             padding: "8px 14px",
             borderRadius: "6px",
             border: `1px solid ${T.border.line}`,
-            background: "rgba(255,255,255,0.05)",
+            background: T.bg.deep,
             color: T.ink.dim,
             fontSize: "12px",
             fontFamily: T.font.sans,

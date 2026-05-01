@@ -57,7 +57,7 @@ export function WikiCalloutBlockEditor({
         }
         placeholder="Title (optional)"
         style={{
-          background: "rgba(255,255,255,.04)",
+          background: T.bg.surface,
           border: `1px solid ${T.border.line}`,
           borderRadius: "6px",
           color: T.ink.base,

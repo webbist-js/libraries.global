@@ -1,31 +1,34 @@
 // apps/ui/src/lib/design-tokens.ts
+//
+// Token values reference CSS custom properties defined in globals.css.
+// This allows dark/light theming without touching every component.
 
 export const T = {
   bg: {
-    void: "#030511", // page root background
-    space: "#050816", // header blur base
-    deep: "#070b1e", // card/panel interior
-    surface: "#060b19", // elevated card (replaces both #060b19 and #0c1228)
+    void: "var(--t-bg-void)",
+    space: "var(--t-bg-space)",
+    deep: "var(--t-bg-deep)",
+    surface: "var(--t-bg-surface)",
   },
   ink: {
-    base: "#f4f7ff",
-    dim: "rgba(244,247,255,.72)",
-    low: "rgba(244,247,255,.48)",
-    faint: "rgba(244,247,255,.30)",
-    ghost: "rgba(244,247,255,.14)",
+    base: "var(--t-ink-base)",
+    dim: "var(--t-ink-dim)",
+    low: "var(--t-ink-low)",
+    faint: "var(--t-ink-faint)",
+    ghost: "var(--t-ink-ghost)",
   },
   border: {
-    line: "rgba(255,255,255,.08)",
-    hi: "rgba(255,255,255,.16)",
+    line: "var(--t-border-line)",
+    hi: "var(--t-border-hi)",
   },
   accent: {
-    aurora: "#7fdfff",
-    violet: "#a390ff",
-    ember: "#ffb88a",
-    gold: "#e8c98a",
-    ok: "#8ef0b3",
-    warn: "#ffcf7a",
-    danger: "#ff8a8a",
+    aurora: "var(--t-accent-aurora)",
+    violet: "var(--t-accent-violet)",
+    ember: "var(--t-accent-ember)",
+    gold: "var(--t-accent-gold)",
+    ok: "var(--t-accent-ok)",
+    warn: "var(--t-accent-warn)",
+    danger: "var(--t-accent-danger)",
   },
   font: {
     serif: "var(--font-fraunces), serif",
@@ -40,5 +43,5 @@ export const AURORA_BG = `
   radial-gradient(1200px 800px at 18% 14%, rgba(92,149,255,.14), transparent 50%),
   radial-gradient(900px 700px at 82% 66%, rgba(127,223,255,.08), transparent 55%),
   radial-gradient(700px 500px at 50% 110%, rgba(163,144,255,.08), transparent 50%),
-  linear-gradient(180deg, #04061a 0%, #050816 50%, #070b1e 100%)
+  var(--t-bg-space)
 `

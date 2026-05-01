@@ -111,7 +111,7 @@ export function EditSourcesSection({
           padding: "12px 16px",
           border: `1px solid ${T.border.line}`,
           borderRadius: "10px",
-          background: "rgba(255,255,255,0.03)",
+          background: T.bg.surface,
           color: T.ink.base,
           fontSize: "13px",
           fontFamily: T.font.sans,

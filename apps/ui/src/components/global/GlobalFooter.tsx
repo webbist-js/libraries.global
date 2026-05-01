@@ -2,7 +2,6 @@ import type { Data } from "@repo/strapi-types"
 import type { Locale } from "next-intl"
 import React from "react"
 
-import { Eyebrow } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
 import { getStrapiLinkHref } from "@/components/page-builder/components/utilities/StrapiLink"
@@ -24,7 +23,10 @@ export function GlobalFooter({
   return (
     <footer
       className="relative z-20"
-      style={{ borderTop: `1px solid ${T.border.line}`, background: "#07090f" }}
+      style={{
+        borderTop: `1px solid ${T.border.line}`,
+        background: T.bg.space,
+      }}
     >
       <Container className="py-14 sm:py-16">
         {/* Main grid: logo col + sections */}
@@ -36,22 +38,25 @@ export function GlobalFooter({
           <div className="space-y-4">
             {footer?.title ? (
               <h2
-                className="text-[1.6rem] leading-[1.1] font-semibold tracking-[-0.02em] text-white"
-                style={{ fontFamily: T.font.serif }}
+                className="text-[1.6rem] leading-[1.1] font-semibold tracking-[-0.02em]"
+                style={{ fontFamily: T.font.serif, color: T.ink.base }}
               >
                 {footer.title}
               </h2>
             ) : (
               <h2
-                className="text-[1.6rem] leading-[1.1] font-semibold tracking-[-0.02em] text-white"
-                style={{ fontFamily: T.font.serif }}
+                className="text-[1.6rem] leading-[1.1] font-semibold tracking-[-0.02em]"
+                style={{ fontFamily: T.font.serif, color: T.ink.base }}
               >
                 Libraries of the World
               </h2>
             )}
 
             {footer?.text ? (
-              <p className="max-w-[28ch] text-[14px] leading-6 text-white/45">
+              <p
+                className="max-w-[28ch] text-[14px] leading-6"
+                style={{ color: T.ink.low }}
+              >
                 {footer.text}
               </p>
             ) : null}
@@ -62,14 +67,26 @@ export function GlobalFooter({
             <div className="grid gap-10 sm:grid-cols-2 xl:grid-cols-3">
               {sections.map((section) => (
                 <div key={section.id ?? section.title} className="space-y-4">
-                  <Eyebrow>{section.title}</Eyebrow>
+                  <p
+                    style={{
+                      fontFamily: T.font.mono,
+                      fontSize: "10px",
+                      letterSpacing: ".22em",
+                      textTransform: "uppercase",
+                      color: T.ink.low,
+                      margin: 0,
+                    }}
+                  >
+                    {section.title}
+                  </p>
 
                   <div className="space-y-3">
                     {section.links?.map((link, index) => (
                       <GlobalLink
                         key={link.id ?? link.page?.slug ?? link.href ?? index}
                         href={getStrapiLinkHref(link)}
-                        className="block text-[15px] text-white/55 transition-colors hover:text-white/90"
+                        className="block text-[15px] transition-colors hover:text-(--t-ink-base)"
+                        style={{ color: T.ink.dim }}
                       >
                         {link.label}
                       </GlobalLink>
@@ -84,7 +101,10 @@ export function GlobalFooter({
         {/* Bottom bar */}
         <div className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
           {/* Left: copyright + tagline */}
-          <p className="font-mono text-[10px] tracking-[0.18em] text-white/28 uppercase">
+          <p
+            className="font-mono text-[10px] tracking-[0.18em] uppercase"
+            style={{ color: T.ink.low }}
+          >
             © {year} · Libraries of the World · Indexing the World&rsquo;s
             Libraries
           </p>
@@ -97,13 +117,17 @@ export function GlobalFooter({
                   key={link.id ?? link.page?.slug ?? link.href ?? index}
                 >
                   {index > 0 ? (
-                    <span className="font-mono text-[10px] text-white/18">
+                    <span
+                      className="font-mono text-[10px]"
+                      style={{ color: T.ink.ghost }}
+                    >
                       ·
                     </span>
                   ) : null}
                   <GlobalLink
                     href={getStrapiLinkHref(link)}
-                    className="font-mono text-[10px] tracking-[0.18em] text-white/28 uppercase transition-colors hover:text-white/55"
+                    className="font-mono text-[10px] tracking-[0.18em] uppercase transition-colors"
+                    style={{ color: T.ink.low }}
                   >
                     {link.label}
                   </GlobalLink>

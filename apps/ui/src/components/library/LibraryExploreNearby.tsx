@@ -39,7 +39,7 @@ function NearbyCard({ library }: { readonly library: NearbyLibrary }) {
         border: `1px solid ${T.border.line}`,
         borderRadius: "16px",
         overflow: "hidden",
-        background: "rgba(255,255,255,.015)",
+        background: T.bg.surface,
         transition: "background 250ms",
         textDecoration: "none",
       }}

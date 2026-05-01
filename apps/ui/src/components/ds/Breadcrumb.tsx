@@ -34,7 +34,7 @@ export function Breadcrumb({
                 textDecoration: "none",
                 transition: "color 150ms",
               }}
-              className="hover:text-[#f4f7ff]"
+              className="hover:text-(--t-ink-base)"
             >
               {item.label}
             </GlobalLink>

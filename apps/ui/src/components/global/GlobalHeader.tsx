@@ -73,14 +73,15 @@ export async function GlobalHeader({
   return (
     <header
       data-global-header=""
-      className="global-header sticky top-0 z-[60] w-full border-b border-white/[0.08] bg-[rgba(5,8,22,.80)] backdrop-blur-xl"
+      className="global-header sticky top-0 z-[60] w-full border-b border-(--t-border-line) backdrop-blur-xl"
+      style={{ background: "var(--t-header-bg)" }}
     >
       <div className="flex h-14 w-full items-center gap-4 px-6 md:px-10">
         {/* Left: logo + live badge */}
         <div className="flex shrink-0 items-center gap-3">
           <GlobalLink
             href={logoHref}
-            className="flex items-center text-white"
+            className="flex items-center text-(--t-ink-base)"
             fallbackAs="div"
           >
             {navbar?.logoImage?.image ? (
@@ -92,18 +93,23 @@ export async function GlobalHeader({
               />
             ) : (
               <span
-                className="text-[1rem] leading-none font-semibold text-white"
+                className="text-[1rem] leading-none font-semibold text-(--t-ink-base)"
                 style={{ fontFamily: T.font.serif }}
               >
                 Libraries{" "}
-                <em className="font-normal text-white/68 italic">of the </em>
+                <em className="font-normal text-(--t-ink-dim) italic">
+                  of the{" "}
+                </em>
                 World
               </span>
             )}
           </GlobalLink>
 
           {libraryCount != null ? (
-            <div className="hidden items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-[10px] tracking-[0.1em] text-white/38 uppercase sm:flex">
+            <div
+              data-header-stable=""
+              className="hidden items-center gap-1.5 rounded-full border border-(--t-border-line) bg-(--t-bg-deep) px-2.5 py-1 font-mono text-[10px] tracking-[0.1em] text-(--t-ink-faint) uppercase sm:flex"
+            >
               <span className="size-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.9)]" />
               LIVE INDEX · {libraryCount.toLocaleString("en-US")}
             </div>
@@ -117,7 +123,7 @@ export async function GlobalHeader({
               <GlobalLink
                 key={link.id ?? link.page?.slug ?? link.href ?? index}
                 href={getStrapiLinkHref(link)}
-                className="rounded-md px-3.5 py-2 text-sm text-white/55 transition-colors hover:text-white/90"
+                className="rounded-md px-3.5 py-2 text-sm text-(--t-ink-dim) transition-colors hover:text-(--t-ink-base)"
               >
                 {link.label}
               </GlobalLink>
@@ -128,10 +134,10 @@ export async function GlobalHeader({
         )}
 
         {/* Right: locale + sign in + contribute */}
-        <div className="flex shrink-0 items-center gap-1">
+        <div data-header-stable="" className="flex shrink-0 items-center gap-1">
           <LocaleSwitcher
             locale={locale}
-            triggerClassName="h-8 w-auto gap-1 border-transparent bg-transparent px-2.5 text-xs font-semibold uppercase tracking-wider text-white/45 hover:text-white/75"
+            triggerClassName="h-8 w-auto gap-1 border-transparent bg-transparent px-2.5 text-xs font-semibold uppercase tracking-wider text-(--t-ink-faint) hover:text-(--t-ink-dim)"
           />
           <GlobalNavbarAuthSection
             sessionSSR={sessionSSR}
@@ -140,7 +146,7 @@ export async function GlobalHeader({
           <AppLink
             href="/contribute"
             size="sm"
-            className="ml-1 rounded-full border-0 bg-white px-4 py-2 text-[13px] font-semibold text-slate-950 shadow-[0_2px_16px_rgba(255,255,255,0.12)] transition-all hover:bg-white/90"
+            className="ml-1 rounded-full border-0 bg-(--t-ink-base) px-4 py-2 text-[13px] font-semibold text-(--t-bg-void) shadow-[0_1px_12px_rgba(0,0,0,0.15)] transition-all hover:opacity-90"
           >
             Contribute
           </AppLink>

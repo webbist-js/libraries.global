@@ -122,7 +122,7 @@ export function AvatarUpload({
             padding: "6px 14px",
             borderRadius: "6px",
             border: `1px solid ${T.border.hi}`,
-            background: "rgba(255,255,255,0.05)",
+            background: T.bg.deep,
             color: T.ink.dim,
             fontSize: "12px",
             fontFamily: T.font.sans,

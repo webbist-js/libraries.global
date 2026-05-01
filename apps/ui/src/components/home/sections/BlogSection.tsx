@@ -21,7 +21,7 @@ function ArticleImage({
     return (
       <div
         className={cn(
-          "w-full bg-[#0a1020] bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.02)_0px,rgba(255,255,255,0.02)_1px,transparent_1px,transparent_8px)]",
+          "w-full bg-(--t-bg-deep) bg-[repeating-linear-gradient(45deg,rgba(127,127,127,0.04)_0px,rgba(127,127,127,0.04)_1px,transparent_1px,transparent_8px)]",
           className
         )}
       />
@@ -44,7 +44,7 @@ function FeaturedArticleCard({ article }: { article: BlogArticleSummary }) {
   return (
     <GlobalLink
       href={`/blog/${article.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-[#0c1228] transition-[border-color] duration-300 hover:border-white/16"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) transition-[border-color] duration-300 hover:border-(--t-border-hi)"
     >
       <ArticleImage
         url={imgUrl}
@@ -52,22 +52,22 @@ function FeaturedArticleCard({ article }: { article: BlogArticleSummary }) {
         className="aspect-[3/2]"
       />
       <div className="flex flex-1 flex-col p-6">
-        <div className="mb-4 h-px bg-white/8" />
+        <div className="mb-4 h-px bg-(--t-border-line)" />
         <div className="mb-3 flex items-center gap-3">
-          <span className="font-mono text-[10px] tracking-[0.18em] text-white/35 uppercase">
+          <span className="font-mono text-[10px] tracking-[0.18em] text-(--t-ink-faint) uppercase">
             —&nbsp;
             {article.category?.name ?? article.section?.name ?? "FEATURE"}
           </span>
         </div>
-        <h3 className="mb-3 font-[family-name:var(--font-fraunces)] text-[1.7rem] leading-[1.12] font-semibold tracking-[-0.02em] text-white transition-colors group-hover:text-white/90 sm:text-[1.9rem]">
+        <h3 className="mb-3 font-[family-name:var(--font-fraunces)] text-[1.7rem] leading-[1.12] font-semibold tracking-[-0.02em] text-(--t-ink-base) transition-colors group-hover:text-(--t-ink-dim) sm:text-[1.9rem]">
           {article.title}
         </h3>
         {article.summary ? (
-          <p className="mb-4 line-clamp-3 text-sm leading-6 text-white/45">
+          <p className="mb-4 line-clamp-3 text-sm leading-6 text-(--t-ink-low)">
             {article.summary}
           </p>
         ) : null}
-        <div className="mt-auto flex items-center gap-2 text-[11px] text-white/30">
+        <div className="mt-auto flex items-center gap-2 text-[11px] text-(--t-ink-faint)">
           <span>{date}</span>
           {article.author ? (
             <>
@@ -92,7 +92,7 @@ export function BlogCard({ article }: { article: BlogArticleSummary }) {
   return (
     <GlobalLink
       href={`/blog/${article.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-[#0c1228] transition-[border-color] duration-300 hover:border-white/16"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) transition-[border-color] duration-300 hover:border-(--t-border-hi)"
     >
       <ArticleImage
         url={imgUrl}
@@ -100,14 +100,14 @@ export function BlogCard({ article }: { article: BlogArticleSummary }) {
         className="aspect-[16/9]"
       />
       <div className="flex flex-1 flex-col p-5">
-        <div className="mb-3 h-px bg-white/8" />
-        <p className="mb-2 font-mono text-[10px] tracking-[0.18em] text-white/35 uppercase">
+        <div className="mb-3 h-px bg-(--t-border-line)" />
+        <p className="mb-2 font-mono text-[10px] tracking-[0.18em] text-(--t-ink-faint) uppercase">
           —&nbsp;{article.category?.name ?? article.section?.name ?? "ARTICLE"}
         </p>
-        <h3 className="flex-1 font-[family-name:var(--font-fraunces)] text-[1.15rem] leading-[1.2] font-semibold tracking-[-0.01em] text-white transition-colors group-hover:text-white/90">
+        <h3 className="flex-1 font-[family-name:var(--font-fraunces)] text-[1.15rem] leading-[1.2] font-semibold tracking-[-0.01em] text-(--t-ink-base) transition-colors group-hover:text-(--t-ink-dim)">
           {article.title}
         </h3>
-        <p className="mt-3 text-[11px] text-white/30">{date}</p>
+        <p className="mt-3 text-[11px] text-(--t-ink-faint)">{date}</p>
       </div>
     </GlobalLink>
   )
@@ -131,22 +131,22 @@ export function BlogSection({
         {/* Section header */}
         <div className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="max-w-[36rem]">
-            <p className="mb-4 font-mono text-[11px] tracking-[0.22em] text-white/35 uppercase">
+            <p className="mb-4 font-mono text-[11px] tracking-[0.22em] text-(--t-ink-faint) uppercase">
               § 03 — FIELD DISPATCHES
             </p>
-            <h2 className="font-[family-name:var(--font-fraunces)] text-[2.4rem] leading-[1.08] font-semibold tracking-[-0.02em] text-white sm:text-[3rem]">
+            <h2 className="font-[family-name:var(--font-fraunces)] text-[2.4rem] leading-[1.08] font-semibold tracking-[-0.02em] text-(--t-ink-base) sm:text-[3rem]">
               Stories from the{" "}
-              <em className="text-white/65 italic">journal.</em>
+              <em className="text-(--t-ink-dim) italic">journal.</em>
             </h2>
           </div>
           <div className="max-w-[26rem] sm:text-right">
-            <p className="mb-4 text-sm leading-7 text-white/45">
+            <p className="mb-4 text-sm leading-7 text-(--t-ink-low)">
               Reports, histories, and curator&rsquo;s notes from the hands doing
               the cataloguing.
             </p>
             <GlobalLink
               href="/blog"
-              className="text-sm text-cyan-400/80 underline-offset-4 transition-colors hover:text-cyan-300 hover:underline"
+              className="text-sm text-(--t-accent-aurora) underline-offset-4 transition-colors hover:underline hover:opacity-80"
             >
               Read the journal →
             </GlobalLink>

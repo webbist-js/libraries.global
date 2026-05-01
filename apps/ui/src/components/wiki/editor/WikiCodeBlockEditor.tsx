@@ -34,7 +34,7 @@ export function WikiCodeBlockEditor({
           }
           style={{
             flex: "0 0 140px",
-            background: "rgba(255,255,255,.04)",
+            background: T.bg.surface,
             border: `1px solid ${T.border.line}`,
             borderRadius: "6px",
             color: T.ink.base,
@@ -59,7 +59,7 @@ export function WikiCodeBlockEditor({
           placeholder="filename (optional)"
           style={{
             flex: 1,
-            background: "rgba(255,255,255,.04)",
+            background: T.bg.surface,
             border: `1px solid ${T.border.line}`,
             borderRadius: "6px",
             color: T.ink.base,

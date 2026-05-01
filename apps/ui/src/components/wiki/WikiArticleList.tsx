@@ -27,28 +27,28 @@ function ArticleRow({
       href={`/wiki/${article.slug}`}
       className="group flex items-start gap-5 py-5 transition-opacity duration-200 hover:opacity-80"
     >
-      <span className="mt-0.5 w-5 shrink-0 text-right text-sm font-bold text-white/20 tabular-nums">
+      <span className="mt-0.5 w-5 shrink-0 text-right text-sm font-bold text-(--t-ink-faint) tabular-nums">
         {String(index + 1).padStart(2, "0")}
       </span>
       <div className="flex-1 space-y-1">
-        <h4 className="text-sm leading-snug font-semibold text-white transition-colors group-hover:text-cyan-50">
+        <h4 className="text-sm leading-snug font-semibold text-(--t-ink-base) transition-colors group-hover:text-(--t-accent-aurora)">
           {article.title}
         </h4>
         {article.summary ? (
-          <p className="line-clamp-2 text-xs leading-5 text-white/45">
+          <p className="line-clamp-2 text-xs leading-5 text-(--t-ink-low)">
             {article.summary}
           </p>
         ) : null}
         <div className="flex items-center gap-3 pt-0.5">
           {article.updatedAt ? (
-            <span className="text-[10px] text-white/28">
+            <span className="text-[10px] text-(--t-ink-faint)">
               Updated: {formatDate(article.updatedAt, "short")}
             </span>
           ) : null}
           {article.author ? (
             <>
-              <span className="text-white/16">·</span>
-              <span className="text-[10px] text-white/28">
+              <span className="text-(--t-border-hi)">·</span>
+              <span className="text-[10px] text-(--t-ink-faint)">
                 {article.author}
               </span>
             </>
@@ -85,8 +85,8 @@ function WikiArticleListInner({
             className={cn(
               "rounded-full border px-4 py-1.5 text-xs font-medium transition-all duration-200",
               activeCategory === "All"
-                ? "border-cyan-400/40 bg-cyan-500/16 text-cyan-200"
-                : "border-white/10 bg-white/4 text-white/50 hover:border-white/20 hover:bg-white/8 hover:text-white/75"
+                ? "border-(--t-aurora-edge) bg-(--t-aurora-soft) text-(--t-accent-aurora)"
+                : "border-(--t-border-line) bg-(--t-bg-surface) text-(--t-ink-low) hover:border-(--t-border-hi) hover:bg-(--t-bg-deep) hover:text-(--t-ink-dim)"
             )}
           >
             All
@@ -98,8 +98,8 @@ function WikiArticleListInner({
               className={cn(
                 "rounded-full border px-4 py-1.5 text-xs font-medium transition-all duration-200",
                 activeCategory === cat.slug
-                  ? "border-cyan-400/40 bg-cyan-500/16 text-cyan-200"
-                  : "border-white/10 bg-white/4 text-white/50 hover:border-white/20 hover:bg-white/8 hover:text-white/75"
+                  ? "border-(--t-aurora-edge) bg-(--t-aurora-soft) text-(--t-accent-aurora)"
+                  : "border-(--t-border-line) bg-(--t-bg-surface) text-(--t-ink-low) hover:border-(--t-border-hi) hover:bg-(--t-bg-deep) hover:text-(--t-ink-dim)"
               )}
             >
               {cat.name}
@@ -111,7 +111,7 @@ function WikiArticleListInner({
       {/* Grid */}
       {filtered.length === 0 ? (
         <div className="py-16 text-center">
-          <p className="text-sm text-white/30">
+          <p className="text-sm text-(--t-ink-faint)">
             No articles in this category yet.
           </p>
         </div>
@@ -120,7 +120,7 @@ function WikiArticleListInner({
           {filtered.map((article, i) => (
             <div
               key={article.documentId}
-              className="border-b border-white/6 last:border-0 lg:[&:nth-last-child(-n+2)]:border-0"
+              className="border-b border-(--t-border-line) last:border-0 lg:[&:nth-last-child(-n+2)]:border-0"
             >
               <ArticleRow article={article} index={i} />
             </div>
@@ -145,8 +145,8 @@ export default function WikiArticleList({
       fallback={
         <div className="grid grid-cols-1 py-8 lg:grid-cols-2 lg:gap-x-12">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="border-b border-white/6 py-5">
-              <div className="h-4 w-3/4 animate-pulse rounded bg-white/6" />
+            <div key={i} className="border-b border-(--t-border-line) py-5">
+              <div className="h-4 w-3/4 animate-pulse rounded bg-(--t-bg-surface)" />
             </div>
           ))}
         </div>

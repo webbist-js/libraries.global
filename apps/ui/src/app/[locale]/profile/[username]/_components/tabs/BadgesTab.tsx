@@ -1,86 +1,91 @@
+"use client"
+
+import { Icon } from "@iconify/react"
+import { useEffect, useMemo, useState } from "react"
+
+import type { EarnedBadge } from "@/app/api/profile/[username]/badges/route"
 import {
   BADGE_CATALOG,
+  BADGE_VARIANT_STYLES,
+  RARITY_COLOR,
   type BadgeDefinition,
-  type BadgeRarity,
 } from "@/lib/badges"
 import { T } from "@/lib/design-tokens"
-
-const RARITY_COLORS: Record<BadgeRarity, string> = {
-  COMMON: "rgba(255,255,255,0.55)",
-  UNCOMMON: T.accent.aurora,
-  RARE: T.accent.violet,
-  STATUS: T.accent.gold,
-}
-
-function getEarnedBadgeIds(): Set<string> {
-  // Temporary fallback until contribution stats are wired into this tab.
-  return new Set()
-}
 
 function BadgeCard({
   badge,
   earned,
+  awardedAt,
 }: {
   badge: BadgeDefinition
   earned: boolean
+  awardedAt?: string
 }) {
+  const vs = earned
+    ? BADGE_VARIANT_STYLES[badge.variant]
+    : { border: T.border.line, bg: T.bg.surface, color: T.ink.ghost }
+
+  const awardedLabel = awardedAt
+    ? new Date(awardedAt).toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+      })
+    : null
+
   return (
     <div
+      className="transition-transform duration-150 hover:-translate-y-0.5"
       style={{
         padding: "20px",
-        borderRadius: "12px",
-        border: `1px solid ${
-          earned ? "rgba(127,223,255,0.18)" : T.border.line
-        }`,
-        background: earned
-          ? "rgba(127,223,255,0.04)"
-          : "rgba(255,255,255,0.02)",
-        opacity: earned ? 1 : 0.5,
+        borderRadius: "14px",
+        border: `1px solid ${vs.border}`,
+        background: earned ? vs.bg : T.bg.surface,
+        opacity: earned ? 1 : 0.45,
         display: "flex",
         flexDirection: "column",
-        gap: "10px",
+        gap: "12px",
       }}
     >
+      {/* Icon tile */}
       <div
         style={{
-          width: "40px",
-          height: "40px",
-          borderRadius: "10px",
-          background: earned
-            ? "rgba(127,223,255,0.12)"
-            : "rgba(255,255,255,0.04)",
-          border: `1px solid ${
-            earned ? "rgba(127,223,255,0.2)" : T.border.line
-          }`,
+          width: "48px",
+          height: "48px",
+          borderRadius: "12px",
+          background: earned ? vs.bg : T.bg.surface,
+          border: `1px solid ${vs.border}`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          color: earned ? RARITY_COLORS[badge.rarity] : T.ink.faint,
         }}
       >
-        <span style={{ fontFamily: T.font.mono, fontSize: "10px" }}>
-          {badge.icon.slice(0, 2).toUpperCase()}
-        </span>
+        <Icon
+          icon={badge.icon}
+          width={22}
+          height={22}
+          style={{ color: vs.color }}
+        />
       </div>
 
       <div>
         <p
           style={{
             margin: "0 0 4px",
-            fontSize: "13px",
-            fontWeight: 500,
+            fontFamily: T.font.serif,
+            fontSize: "15px",
+            fontWeight: 400,
+            letterSpacing: "-0.01em",
             color: earned ? T.ink.base : T.ink.dim,
           }}
         >
           {badge.name}
         </p>
-
         <p
           style={{
-            margin: "0 0 8px",
+            margin: "0 0 10px",
             fontSize: "12px",
             color: T.ink.faint,
-            lineHeight: "1.5",
+            lineHeight: "1.55",
           }}
         >
           {badge.description}
@@ -96,25 +101,24 @@ function BadgeCard({
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "8px",
+              fontSize: "10px",
               letterSpacing: ".18em",
               textTransform: "uppercase",
-              color: RARITY_COLORS[badge.rarity],
+              color: RARITY_COLOR[badge.rarity],
             }}
           >
             {badge.rarity}
           </span>
-
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "8px",
+              fontSize: "10px",
               letterSpacing: ".12em",
               textTransform: "uppercase",
-              color: T.ink.faint,
+              color: earned ? T.accent.ok : T.ink.faint,
             }}
           >
-            {earned ? "EARNED" : "LOCKED"}
+            {earned ? (awardedLabel ?? "Earned") : "Locked"}
           </span>
         </div>
       </div>
@@ -122,64 +126,92 @@ function BadgeCard({
   )
 }
 
-export function BadgesTab() {
-  const earnedBadgeIds = getEarnedBadgeIds()
+export function BadgesTab({ username }: { username: string }) {
+  const [earnedBadges, setEarnedBadges] = useState<EarnedBadge[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const earned = BADGE_CATALOG.filter((badge) => earnedBadgeIds.has(badge.id))
-  const locked = BADGE_CATALOG.filter((badge) => !earnedBadgeIds.has(badge.id))
+  useEffect(() => {
+    fetch(`/api/profile/${encodeURIComponent(username)}/badges`)
+      .then((r) => r.json())
+      .then((json: { data?: EarnedBadge[] }) => {
+        setEarnedBadges(json.data ?? [])
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [username])
+
+  const earnedMap = useMemo(
+    () => new Map(earnedBadges.map((b) => [b.badgeId, b.awardedAt])),
+    [earnedBadges]
+  )
+
+  const earnedCount = earnedBadges.length
+  const rareCount = useMemo(
+    () =>
+      BADGE_CATALOG.filter((b) => earnedMap.has(b.id) && b.rarity === "RARE")
+        .length,
+    [earnedMap]
+  )
+  const latest = useMemo(() => {
+    if (!earnedBadges.length) return null
+    const sorted = [...earnedBadges].sort(
+      (a, b) =>
+        new Date(b.awardedAt).getTime() - new Date(a.awardedAt).getTime()
+    )
+
+    return BADGE_CATALOG.find((b) => b.id === sorted[0]?.badgeId) ?? null
+  }, [earnedBadges])
 
   const stats = [
-    {
-      label: "Earned",
-      value: `${earned.length}/${BADGE_CATALOG.length}`,
-    },
-    {
-      label: "Rare badges",
-      value: String(earned.filter((badge) => badge.rarity === "RARE").length),
-    },
-    {
-      label: "Latest",
-      value: earned.at(-1)?.name ?? "—",
-    },
+    { label: "Earned", value: `${earnedCount} / ${BADGE_CATALOG.length}` },
+    { label: "Rare badges", value: String(rareCount) },
+    { label: "Latest", value: latest?.name ?? "—" },
     {
       label: "Next milestone",
-      value: "—",
+      value:
+        earnedCount < BADGE_CATALOG.length
+          ? (BADGE_CATALOG.find((b) => !earnedMap.has(b.id))?.name ?? "—")
+          : "Complete!",
     },
+  ]
+
+  const sorted = [
+    ...BADGE_CATALOG.filter((b) => earnedMap.has(b.id)),
+    ...BADGE_CATALOG.filter((b) => !earnedMap.has(b.id)),
   ]
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      {/* Stats strip */}
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(4, 1fr)",
           gap: "1px",
           border: `1px solid ${T.border.line}`,
-          borderRadius: "12px",
+          borderRadius: "18px",
           overflow: "hidden",
+          background: T.border.line,
         }}
       >
         {stats.map((stat) => (
           <div
             key={stat.label}
-            style={{
-              padding: "20px 24px",
-              background: "rgba(255,255,255,0.02)",
-            }}
+            style={{ padding: "20px 24px", background: T.bg.surface }}
           >
             <span
               style={{
                 fontFamily: T.font.serif,
-                fontSize: "28px",
+                fontSize: "26px",
                 fontWeight: 400,
                 letterSpacing: "-0.03em",
                 color: T.ink.base,
                 display: "block",
+                marginBottom: "4px",
               }}
             >
-              {stat.value}
+              {loading ? "—" : stat.value}
             </span>
-
             <span
               style={{
                 fontFamily: T.font.mono,
@@ -195,18 +227,20 @@ export function BadgesTab() {
         ))}
       </div>
 
+      {/* Badge grid */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
           gap: "12px",
         }}
       >
-        {[...earned, ...locked].map((badge) => (
+        {sorted.map((badge) => (
           <BadgeCard
             key={badge.id}
             badge={badge}
-            earned={earnedBadgeIds.has(badge.id)}
+            earned={earnedMap.has(badge.id)}
+            awardedAt={earnedMap.get(badge.id)}
           />
         ))}
       </div>

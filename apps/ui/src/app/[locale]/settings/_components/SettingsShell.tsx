@@ -8,6 +8,7 @@ import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 import type { UserProfile } from "@/lib/types/profile"
 
+import { AppearanceSection } from "./AppearanceSection"
 import { ConnectionsSection } from "./ConnectionsSection"
 import { DangerZoneSection } from "./DangerZoneSection"
 import { NotificationsSection } from "./NotificationsSection"
@@ -20,6 +21,12 @@ const SIDEBAR_ITEMS = [
     id: "profile",
     label: "Profile",
     icon: "mdi:account-circle-outline",
+    danger: false,
+  },
+  {
+    id: "appearance",
+    label: "Appearance",
+    icon: "mdi:palette-outline",
     danger: false,
   },
   {
@@ -97,7 +104,7 @@ export function SettingsShell({
         data-transparent-header=""
         className="relative -mt-14 overflow-hidden"
         style={{
-          background: "#030511",
+          background: T.bg.space,
           height: "316px",
           borderBottom: `1px solid ${T.border.line}`,
         }}
@@ -110,7 +117,7 @@ export function SettingsShell({
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(ellipse 80% 100% at 30% 60%, rgba(127,223,255,0.06) 0%, transparent 60%), linear-gradient(to bottom, rgba(3,5,17,0) 0%, rgba(3,5,17,0.7) 100%)",
+              "radial-gradient(ellipse 80% 100% at 30% 60%, var(--t-aurora-soft) 0%, transparent 60%), linear-gradient(to bottom, transparent 0%, var(--t-bg-space) 100%)",
           }}
         />
 
@@ -256,14 +263,17 @@ export function SettingsShell({
                     padding: "8px 12px",
                     borderRadius: "8px",
                     background: active
-                      ? "rgba(255,255,255,0.06)"
+                      ? item.danger
+                        ? "var(--t-danger-soft)"
+                        : "var(--t-aurora-soft)"
                       : "transparent",
+                    border: `1px solid ${active ? (item.danger ? "var(--t-danger-edge)" : "var(--t-aurora-edge)") : "transparent"}`,
                     color: item.danger
                       ? active
                         ? T.accent.danger
-                        : "rgba(255,100,100,0.5)"
+                        : "rgba(176,52,52,0.5)"
                       : active
-                        ? T.ink.base
+                        ? T.accent.aurora
                         : T.ink.dim,
                     fontFamily: T.font.sans,
                     fontSize: "13px",
@@ -287,25 +297,46 @@ export function SettingsShell({
           {/* All sections rendered simultaneously, scrollable */}
           <div
             className="min-w-0 flex-1"
-            style={{ display: "flex", flexDirection: "column", gap: "48px" }}
+            style={{ display: "flex", flexDirection: "column", gap: "20px" }}
           >
             <section id="profile">
-              <PublicProfileSection
-                profile={profile}
-                sessionUser={sessionUser}
-              />
+              <div className="settings-card">
+                <PublicProfileSection
+                  profile={profile}
+                  sessionUser={sessionUser}
+                />
+              </div>
+            </section>
+            <section id="appearance">
+              <div className="settings-card">
+                <AppearanceSection profile={profile} />
+              </div>
             </section>
             <section id="notifications">
-              <NotificationsSection profile={profile} />
+              <div className="settings-card">
+                <NotificationsSection profile={profile} />
+              </div>
             </section>
             <section id="security">
-              <SecuritySection sessionUser={sessionUser} />
+              <div className="settings-card">
+                <SecuritySection sessionUser={sessionUser} />
+              </div>
             </section>
             <section id="connections">
-              <ConnectionsSection />
+              <div className="settings-card">
+                <ConnectionsSection />
+              </div>
             </section>
             <section id="danger">
-              <DangerZoneSection sessionUser={sessionUser} />
+              <div
+                className="settings-card"
+                style={{
+                  borderColor: "var(--t-danger-edge)",
+                  background: `linear-gradient(180deg, var(--t-bg-deep) 0%, var(--t-danger-soft) 100%)`,
+                }}
+              >
+                <DangerZoneSection sessionUser={sessionUser} />
+              </div>
             </section>
           </div>
         </div>

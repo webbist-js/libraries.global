@@ -2467,6 +2467,38 @@ export interface ApiSubscriberSubscriber extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface ApiTopicTopic extends Struct.CollectionTypeSchema {
+  collectionName: "topics_topics"
+  info: {
+    displayName: "Topic"
+    pluralName: "topics"
+    singularName: "topic"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<"oneToMany", "api::topic.topic"> &
+      Schema.Attribute.Private
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique
+    publishedAt: Schema.Attribute.DateTime
+    slug: Schema.Attribute.UID<"name"> & Schema.Attribute.Required
+    status: Schema.Attribute.Enumeration<["approved", "pending", "rejected"]> &
+      Schema.Attribute.DefaultTo<"pending">
+    suggestedByEmail: Schema.Attribute.String
+    suggestedByUserId: Schema.Attribute.String
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
   collectionName: "user_profiles"
   info: {
@@ -2543,7 +2575,11 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
       ["he_him", "she_her", "they_them", "other", "prefer_not_to_say"]
     >
     publishedAt: Schema.Attribute.DateTime
+    quickWins: Schema.Attribute.Component<"contribute.quick-win", true>
+    quickWinsComputedAt: Schema.Attribute.DateTime
     streak: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
+    theme: Schema.Attribute.Enumeration<["dark", "light"]> &
+      Schema.Attribute.DefaultTo<"dark">
     tier: Schema.Attribute.String & Schema.Attribute.DefaultTo<"Reader">
     timezone: Schema.Attribute.String
     updatedAt: Schema.Attribute.DateTime
@@ -3506,6 +3542,7 @@ declare module "@strapi/strapi" {
       "api::region.region": ApiRegionRegion
       "api::service.service": ApiServiceService
       "api::subscriber.subscriber": ApiSubscriberSubscriber
+      "api::topic.topic": ApiTopicTopic
       "api::user-profile.user-profile": ApiUserProfileUserProfile
       "api::wiki-article.wiki-article": ApiWikiArticleWikiArticle
       "api::wiki-landing.wiki-landing": ApiWikiLandingWikiLanding

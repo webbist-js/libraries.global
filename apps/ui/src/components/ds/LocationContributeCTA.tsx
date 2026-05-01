@@ -1,15 +1,22 @@
-import { Container } from "@/components/elementary/Container"
-import GlobalLink from "@/components/global/GlobalLink"
+"use client"
+
+import { authClient } from "@/lib/auth-client"
+import { Link } from "@/lib/navigation"
 
 export interface LocationContributeCTAProps {
   locationName?: string
   entityType?: "continent" | "country" | "region" | "area" | "library"
+  /** Pass the library slug so the primary CTA can deep-link to the edit wizard. */
+  librarySlug?: string
 }
 
 export function LocationContributeCTA({
   locationName = "this area",
   entityType,
+  librarySlug,
 }: LocationContributeCTAProps) {
+  const { data: session } = authClient.useSession()
+  const isSignedIn = !!session?.user
   const isLibrary = entityType === "library"
 
   const heading = isLibrary
@@ -25,41 +32,51 @@ export function LocationContributeCTA({
     ? "Suggest a missing detail →"
     : "Submit a correction →"
 
+  // Resolve primary href based on auth state and entity context
+  const primaryHref = isSignedIn
+    ? isLibrary
+      ? librarySlug
+        ? `/contribute/edit/${librarySlug}`
+        : `/contribute/edit`
+      : `/contribute/add`
+    : `/auth/signin?callbackUrl=${encodeURIComponent(isLibrary ? (librarySlug ? `/contribute/edit/${librarySlug}` : `/contribute/edit`) : `/contribute/add`)}`
+
   return (
     <section className="py-14 sm:py-18">
-      <Container>
-        <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c1228] px-8 py-10 shadow-[0_32px_80px_rgba(0,0,0,0.4)] sm:px-12 sm:py-12">
-          {/* Subtle glow */}
-          <div className="pointer-events-none absolute right-0 bottom-0 h-[480px] w-[480px] translate-x-1/3 translate-y-1/3 rounded-full bg-[radial-gradient(circle,rgba(88,80,200,0.08),transparent_65%)]" />
+      <div className="mx-auto w-full max-w-[1296px] px-4 sm:px-6 lg:px-10">
+        <div className="relative overflow-hidden rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) px-8 py-10 shadow-[0_32px_80px_rgba(0,0,0,0.15)] sm:px-12 sm:py-12">
+          {/* Dark-mode: teal left + violet right */}
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_120%_at_-8%_50%,rgba(127,223,255,0.07),transparent_58%),radial-gradient(ellipse_65%_90%_at_108%_50%,rgba(163,148,255,0.13),transparent_55%)]" />
+          {/* Light-mode: sage left + amber right sweep */}
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,rgba(90,150,90,0.09)_0%,transparent_38%,rgba(210,170,70,0.10)_100%)]" />
 
           <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="max-w-[48ch]">
-              <h2 className="mb-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                {isLibrary ? heading : <>{heading}</>}
+              <h2 className="mb-3 font-serif text-3xl font-normal tracking-tight text-(--t-ink-base) sm:text-4xl">
+                {heading}
               </h2>
-              <p className="text-[15px] leading-relaxed text-white/60">
+              <p className="text-[15px] leading-relaxed text-(--t-ink-dim)">
                 {body}
               </p>
             </div>
 
             <div className="flex shrink-0 flex-wrap items-center gap-3">
-              {/* TODO: wire up /contribute routes with entity context */}
-              <GlobalLink
-                href="/contribute"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-slate-950 shadow-[0_4px_24px_rgba(255,255,255,0.14)] transition-all hover:bg-white/92 hover:shadow-[0_4px_32px_rgba(255,255,255,0.2)]"
+              <Link
+                href={primaryHref}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-(--t-ink-base) px-6 py-2.5 text-sm font-semibold text-(--t-bg-void) shadow-[0_4px_24px_rgba(0,0,0,0.14)] transition-all hover:opacity-90"
               >
                 {primaryLabel}
-              </GlobalLink>
-              <GlobalLink
-                href="/contribute/guide"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/16 bg-white/[0.05] px-6 py-2.5 text-sm font-medium text-white transition-all hover:bg-white/[0.09]"
+              </Link>
+              <Link
+                href="/wiki/contributing/how-to-contribute"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-surface) px-6 py-2.5 text-sm font-medium text-(--t-ink-dim) transition-all hover:bg-(--t-bg-deep) hover:text-(--t-ink-base)"
               >
                 {secondaryLabel}
-              </GlobalLink>
+              </Link>
             </div>
           </div>
         </div>
-      </Container>
+      </div>
     </section>
   )
 }

@@ -34,7 +34,7 @@ const selectStyle: React.CSSProperties = {
   padding: "10px 14px",
   borderRadius: "8px",
   border: `1px solid ${T.border.hi}`,
-  background: "rgba(255,255,255,0.03)",
+  background: T.bg.surface,
   color: T.ink.base,
   fontSize: "14px",
   fontFamily: "inherit",
@@ -52,7 +52,7 @@ const inputStyle: React.CSSProperties = {
   padding: "10px 14px",
   borderRadius: "8px",
   border: `1px solid ${T.border.hi}`,
-  background: "rgba(255,255,255,0.03)",
+  background: T.bg.surface,
   color: T.ink.base,
   fontSize: "14px",
   fontFamily: "inherit",
@@ -151,7 +151,7 @@ export function ClaimLibraryForm({
             <Link
               href="/contribute"
               style={{ color: T.ink.faint, textDecoration: "none" }}
-              className="transition-colors hover:text-white/60"
+              className="transition-colors hover:text-(--t-ink-base)"
             >
               Contribute
             </Link>
@@ -274,7 +274,7 @@ export function ClaimLibraryForm({
                     <option
                       key={o.value}
                       value={o.value}
-                      style={{ background: "#050816" }}
+                      style={{ background: "var(--t-bg-space)" }}
                     >
                       {o.label}
                     </option>

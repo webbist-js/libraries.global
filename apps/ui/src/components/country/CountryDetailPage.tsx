@@ -19,6 +19,7 @@ import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import FeaturedLibraryCards from "@/components/home/FeaturedLibraryCards"
+import { LocationTabBar } from "@/components/location/LocationTabBar"
 import { InteractiveMap } from "@/components/map/InteractiveMap"
 import { T } from "@/lib/design-tokens"
 import type {
@@ -123,7 +124,10 @@ export function CountryDetailPage({
   ] as const
 
   return (
-    <div className="relative isolate flex min-h-screen w-full flex-col bg-[#050816] text-white">
+    <div
+      className="relative isolate flex min-h-screen w-full flex-col"
+      style={{ background: T.bg.space, color: T.ink.base }}
+    >
       <GlobalHeader locale={locale} navbar={navbar} />
 
       <main className="relative z-10 flex-1">
@@ -132,7 +136,7 @@ export function CountryDetailPage({
           id="overview"
           data-transparent-header=""
           className="relative isolate -mt-14 overflow-hidden pt-[110px]"
-          style={{ minHeight: "560px" }}
+          style={{ minHeight: "560px", background: "#030511" }}
         >
           {heroImageUrl ? (
             <Image
@@ -143,7 +147,13 @@ export function CountryDetailPage({
               className="-z-20 object-cover object-bottom"
             />
           ) : null}
-          <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(3,5,17,.2)_0%,rgba(3,5,17,.4)_50%,#030511_100%)]" />
+          <div
+            className="absolute inset-0 -z-10"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(3,5,17,.2) 0%, rgba(3,5,17,.4) 50%, var(--t-bg-void) 100%)",
+            }}
+          />
           {!heroImageUrl ? (
             <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_60%_at_10%_20%,rgba(79,70,229,0.18),transparent_60%)]" />
           ) : null}
@@ -257,11 +267,13 @@ export function CountryDetailPage({
           </Container>
         </section>
 
+        <LocationTabBar tabs={[...tabs]} />
+
         {/* ── Pillar Institutions ─────────────────────────────────────────────── */}
         {hasFeaturedLibraries ? (
           <section
             id="institutions"
-            className="relative overflow-hidden border-b border-white/6 py-[70px]"
+            className="relative overflow-hidden border-b border-(--t-border-line) py-[70px]"
           >
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_55%_at_50%_0%,rgba(79,70,229,0.18),transparent_60%)]" />
             <Container className="relative">
@@ -290,7 +302,7 @@ export function CountryDetailPage({
                       border: `1px solid ${T.border.line}`,
                       borderRadius: "18px",
                       padding: "22px 24px",
-                      background: "rgba(255,255,255,.02)",
+                      background: T.bg.surface,
                     }}
                   >
                     <div
@@ -388,7 +400,10 @@ export function CountryDetailPage({
         ) : null}
 
         {/* ── Interactive Map ───────────────────────────────────────────────── */}
-        <section id="map" className="border-t border-white/6 py-[70px]">
+        <section
+          id="map"
+          className="border-t border-(--t-border-line) py-[70px]"
+        >
           <Container>
             <MapSectionHeader locationName={country.name ?? "this country"} />
             <InteractiveMap
@@ -408,7 +423,7 @@ export function CountryDetailPage({
 
         {/* ── Dynamic zone sections ────────────────────────────────────────────── */}
         {typedSections.map((section) => (
-          <div key={section.id} className="border-t border-white/6">
+          <div key={section.id} className="border-t border-(--t-border-line)">
             {section.__component === "sections.editorial-block" ? (
               <EditorialSection section={section as EditorialBlockType} />
             ) : section.__component === "sections.cta-banner" ? (
@@ -419,15 +434,15 @@ export function CountryDetailPage({
 
         {/* ── Journey CTA fallback ─────────── */}
         {ctaBanners.length === 0 && typedSections.length === 0 ? (
-          <section className="relative overflow-hidden border-t border-white/6 py-24 sm:py-32">
+          <section className="relative overflow-hidden border-t border-(--t-border-line) py-24 sm:py-32">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_100%,rgba(127,223,255,0.07),transparent_70%)]" />
             <Container>
               <div className="flex flex-col items-center gap-6 text-center">
                 <Eyebrow>Archive Starts</Eyebrow>
-                <h2 className="text-[clamp(2.5rem,6vw,5.5rem)] leading-[0.93] font-bold tracking-[-0.045em] text-white">
+                <h2 className="text-[clamp(2.5rem,6vw,5.5rem)] leading-[0.93] font-bold tracking-[-0.045em] text-(--t-ink-base)">
                   Discover {country.name}
                 </h2>
-                <p className="max-w-[40ch] text-base leading-7 text-white/50">
+                <p className="max-w-[40ch] text-base leading-7 text-(--t-ink-dim)">
                   Explore the libraries, archives and cultural institutions
                   across {country.name}.
                 </p>

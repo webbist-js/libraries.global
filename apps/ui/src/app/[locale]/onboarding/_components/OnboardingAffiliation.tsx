@@ -98,9 +98,7 @@ export function OnboardingAffiliation({
                 padding: "14px 18px",
                 borderRadius: "8px",
                 border: `1px solid ${active ? "rgba(127,223,255,0.4)" : T.border.line}`,
-                background: active
-                  ? "rgba(127,223,255,0.06)"
-                  : "rgba(255,255,255,0.02)",
+                background: active ? "rgba(127,223,255,0.06)" : T.bg.surface,
                 cursor: "pointer",
                 textAlign: "left",
                 transition: "border-color 150ms, background 150ms",
@@ -222,7 +220,7 @@ export function OnboardingAffiliation({
             borderRadius: "8px",
             border: "none",
             background: T.ink.base,
-            color: "#030511",
+            color: T.bg.void,
             fontSize: "13px",
             fontFamily: "Roboto, sans-serif",
             fontWeight: 600,

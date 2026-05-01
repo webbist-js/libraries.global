@@ -38,7 +38,7 @@ export function ServicesSection({
 
                 <div className="space-y-3">
                   <div className="space-y-1">
-                    <h3 className="text-xl font-semibold tracking-[-0.03em] text-white">
+                    <h3 className="text-xl font-semibold tracking-[-0.03em] text-(--t-ink-base)">
                       {service.name}
                     </h3>
                     {service.category ? (
@@ -49,7 +49,7 @@ export function ServicesSection({
                   </div>
 
                   {service.summary ? (
-                    <p className="text-sm leading-6 text-white/68">
+                    <p className="text-sm leading-6 text-(--t-ink-low)">
                       {service.summary}
                     </p>
                   ) : null}

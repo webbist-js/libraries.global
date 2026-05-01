@@ -68,6 +68,11 @@
       "enum": ["reader", "contributor", "verified_librarian", "wiki_editor", "editorial_board"],
       "default": "reader"
     },
+    "theme": {
+      "type": "enumeration",
+      "enum": ["dark", "light"],
+      "default": "dark"
+    },
     "followedLibraries": {
       "type": "relation",
       "relation": "manyToMany",

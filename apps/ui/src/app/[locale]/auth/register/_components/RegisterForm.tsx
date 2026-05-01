@@ -17,7 +17,7 @@ const inputStyle = {
   padding: "11px 14px",
   borderRadius: "10px",
   border: `1px solid ${T.border.hi}`,
-  background: "rgba(255,255,255,.04)",
+  background: T.bg.surface,
   color: T.ink.base,
   fontSize: "14px",
   fontFamily: T.font.sans,
@@ -98,7 +98,7 @@ export function RegisterForm() {
       {/* Right panel */}
       <div
         className="flex flex-1 flex-col justify-center px-8 py-12 lg:px-16"
-        style={{ background: "#050816" }}
+        style={{ background: "var(--t-bg-space)" }}
       >
         {/* Top nav */}
         <div className="mb-10 flex items-center justify-between">
@@ -115,7 +115,7 @@ export function RegisterForm() {
               alignItems: "center",
               gap: "6px",
             }}
-            className="transition-colors hover:text-white"
+            className="transition-colors hover:text-(--t-ink-base)"
           >
             ← Back to atlas
           </GlobalLink>
@@ -129,7 +129,7 @@ export function RegisterForm() {
               color: T.ink.faint,
               textDecoration: "none",
             }}
-            className="transition-colors hover:text-white"
+            className="transition-colors hover:text-(--t-ink-base)"
           >
             Have an account?{" "}
             <span style={{ color: T.accent.aurora }}>Sign in</span>
@@ -337,7 +337,7 @@ export function RegisterForm() {
                 padding: "13px",
                 borderRadius: "10px",
                 background: T.ink.base,
-                color: "#030511",
+                color: T.bg.void,
                 fontFamily: T.font.sans,
                 fontWeight: 600,
                 fontSize: "14px",

@@ -55,7 +55,7 @@ export function WikiBlockCard({
           alignItems: "center",
           justifyContent: "space-between",
           padding: "8px 12px",
-          background: "rgba(255,255,255,.03)",
+          background: T.bg.surface,
           borderBottom: `1px solid ${T.border.line}`,
         }}
       >
