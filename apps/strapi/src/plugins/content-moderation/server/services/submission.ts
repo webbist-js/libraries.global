@@ -438,25 +438,28 @@ export default ({ strapi }: { strapi: any }) => ({
     })
   },
 
-  async findPublicByUsername(username: string) {
-    // Resolve the profile to get baUserId
-    const profile = await strapi.db
-      .query("api::user-profile.user-profile")
-      .findOne({ where: { username } })
+  async findPublicByDocumentId(documentId: string) {
+    // Resolve the profile to get baUserId via Document Service
+    const profile = await strapi
+      .documents("api::user-profile.user-profile")
+      .findOne({ documentId, fields: ["baUserId"] as any })
     if (!profile?.baUserId) return []
 
+    return (this as any).findPublicByBaUserId(profile.baUserId)
+  },
+
+  async findPublicByBaUserId(baUserId: string) {
     const submissions = await strapi
       .documents("plugin::content-moderation.submission")
       .findMany({
         filters: {
-          submittedByUserId: profile.baUserId,
+          submittedByUserId: baUserId,
           status: { $ne: "draft" },
         },
         sort: { createdAt: "desc" },
         limit: 200,
       })
 
-    // Batch-resolve library names for library_edit / library_claim submissions
     const libSlugs = new Set<string>()
     for (const s of submissions) {
       if (
@@ -482,11 +485,9 @@ export default ({ strapi }: { strapi: any }) => ({
       }
     }
 
-    // Strip private fields and compute a human-readable targetLabel
     return submissions.map((s: any) => {
       let targetLabel: string | null = null
       const f = (s.fields ?? {}) as Record<string, unknown>
-
       switch (s.submissionType) {
         case "new_library":
           targetLabel = (f.name as string) ?? s.targetSlug ?? null
@@ -534,6 +535,21 @@ export default ({ strapi }: { strapi: any }) => ({
         reviewedAt: s.reviewedAt ?? null,
       }
     })
+  },
+
+  async findPublicByUsername(username: string) {
+    // Resolve the profile to get baUserId via Document Service
+    const results = await strapi
+      .documents("api::user-profile.user-profile")
+      .findMany({
+        filters: { username: { $eq: username } } as any,
+        fields: ["baUserId"] as any,
+        limit: 1,
+      })
+    const profile = results[0] ?? null
+    if (!profile?.baUserId) return []
+
+    return (this as any).findPublicByBaUserId(profile.baUserId)
   },
 
   async findDraft(userId: string, submissionType: string, targetSlug?: string) {

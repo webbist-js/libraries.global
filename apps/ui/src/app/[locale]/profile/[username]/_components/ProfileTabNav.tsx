@@ -14,7 +14,13 @@ const TABS = [
   { id: "activity", label: "Activity", path: "/activity" },
 ] as const
 
-export function ProfileTabNav({ username }: { username: string }) {
+export function ProfileTabNav({
+  username,
+  profileVisibility,
+}: {
+  username: string
+  profileVisibility: "public" | "limited" | "private"
+}) {
   const pathname = usePathname()
 
   function isActive(path: string) {
@@ -91,7 +97,12 @@ export function ProfileTabNav({ username }: { username: string }) {
               paddingLeft: "16px",
             }}
           >
-            Profile · Public
+            Profile ·{" "}
+            {profileVisibility === "private"
+              ? "Private"
+              : profileVisibility === "limited"
+                ? "Limited"
+                : "Public"}
           </span>
         </div>
       </div>

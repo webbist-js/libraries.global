@@ -7,7 +7,7 @@ import { getSessionSSR } from "@/lib/auth-server"
 import { fetchNavbar } from "@/lib/strapi-api/content/server"
 import type { UserProfile } from "@/lib/types/profile"
 
-import { SettingsShell } from "../../settings/_components/SettingsShell"
+import { SettingsShell } from "./_components/SettingsShell"
 
 async function fetchOwnProfile(baUserId: string): Promise<UserProfile | null> {
   const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"

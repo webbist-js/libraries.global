@@ -3,6 +3,8 @@ import { DotHeroCanvas } from "@/components/ui/DotHeroCanvas"
 import { T } from "@/lib/design-tokens"
 import type { UserProfile } from "@/lib/types/profile"
 
+import { ProfileFollowButton } from "./ProfileFollowButton"
+
 function getInitials(p: UserProfile): string {
   const first = p.firstName?.[0] ?? ""
   const last = p.lastName?.[0] ?? ""
@@ -13,9 +15,11 @@ function getInitials(p: UserProfile): string {
 export function ProfileHero({
   profile,
   isOwnProfile,
+  isSignedIn,
 }: {
   profile: UserProfile
   isOwnProfile: boolean
+  isSignedIn: boolean
 }) {
   const initials = getInitials(profile)
   const displayName =
@@ -53,6 +57,39 @@ export function ProfileHero({
 
       {/* Hero content */}
       <div className="relative z-10 mx-auto w-full max-w-[1296px] px-6 pt-24 pb-10 md:px-10">
+        {/* Private profile notice — only visible to the owner */}
+        {isOwnProfile && profile.profileVisibility === "private" && (
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "7px 14px",
+              borderRadius: "8px",
+              border: `1px solid rgba(255,138,138,0.25)`,
+              background: "rgba(255,138,138,0.08)",
+              fontFamily: T.font.mono,
+              fontSize: "9px",
+              letterSpacing: ".14em",
+              textTransform: "uppercase",
+              color: T.accent.danger,
+              marginBottom: "16px",
+            }}
+          >
+            <svg
+              width="11"
+              height="11"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0110 0v4" />
+            </svg>
+            Private profile — only visible to you
+          </div>
+        )}
         {/* Breadcrumb */}
         <div
           style={{
@@ -330,47 +367,12 @@ export function ProfileHero({
           </div>
 
           {/* Action buttons */}
-          {!isOwnProfile && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "8px",
-                flexShrink: 0,
-              }}
-            >
-              <button
-                type="button"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "10px 18px",
-                  borderRadius: "10px",
-                  border: "none",
-                  background: T.ink.base,
-                  color: T.bg.void,
-                  fontFamily: T.font.sans,
-                  fontSize: "13px",
-                  fontWeight: 500,
-                  cursor: "not-allowed",
-                  opacity: 0.5,
-                }}
-                disabled
-                title="Following — coming soon"
-              >
-                <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                >
-                  <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-                </svg>
-                Follow
-              </button>
+          {!isOwnProfile && profile.profileVisibility === "public" && (
+            <div style={{ flexShrink: 0 }}>
+              <ProfileFollowButton
+                targetUsername={profile.username}
+                isSignedIn={isSignedIn}
+              />
             </div>
           )}
 

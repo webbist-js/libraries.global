@@ -60,5 +60,17 @@ export default {
       handler: "auth-bridge.computeQuickWins",
       config: { auth: false, policies: [], middlewares: [] },
     },
+    {
+      method: "POST",
+      path: "/auth-bridge/toggle-follow-user",
+      handler: "auth-bridge.toggleFollowUser",
+      config: { auth: false, policies: [], middlewares: [] },
+    },
+    {
+      method: "GET",
+      path: "/auth-bridge/user-follow-status",
+      handler: "auth-bridge.userFollowStatus",
+      config: { auth: false, policies: [], middlewares: [] },
+    },
   ],
 }

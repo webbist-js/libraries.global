@@ -2,19 +2,59 @@ import { Card, Eyebrow, SectionHeader, StatBlock } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
 
-// TODO: Replace hardcoded values with real data when:
-// - UNMAPPED: computed from total libraries minus indexed libraries
-// - CONTRIBUTORS: available when auth/user system ships
-// - EDITS TODAY: available when edit tracking ships
-// - COUNTRIES: fetch from Strapi continent/country counts
-const CONTRIBUTE_STATS = [
-  { value: "76,440", label: "UNMAPPED" },
-  { value: "9,274", label: "CONTRIBUTORS" },
-  { value: "1,284", label: "EDITS TODAY" },
-  { value: "228", label: "COUNTRIES" },
-] as const
+// Rough estimate of the total number of significant libraries worldwide.
+// Used to compute the "UNMAPPED" stat: how many haven't been indexed yet.
+const LIBRARY_UNIVERSE_ESTIMATE = 320_000
 
-export function ContributeCTA() {
+const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
+
+async function fetchContributeStats() {
+  try {
+    const res = await fetch(
+      `${STRAPI}/api/content-moderation/submissions/stats`,
+      { next: { revalidate: 3600 } }
+    )
+    if (!res.ok) return null
+    const json = (await res.json()) as {
+      data: {
+        submissionsToday: number
+        indexedLibraries: number
+        totalContributors: number
+        totalCountries: number
+      }
+    }
+
+    return json.data
+  } catch {
+    return null
+  }
+}
+
+export async function ContributeCTA() {
+  const stats = await fetchContributeStats()
+  const unmapped = stats
+    ? Math.max(0, LIBRARY_UNIVERSE_ESTIMATE - stats.indexedLibraries)
+    : null
+
+  const displayStats = [
+    {
+      value: unmapped != null ? unmapped.toLocaleString() : "—",
+      label: "UNMAPPED",
+    },
+    {
+      value: stats ? stats.totalContributors.toLocaleString() : "—",
+      label: "CONTRIBUTORS",
+    },
+    {
+      value: stats ? stats.submissionsToday.toLocaleString() : "—",
+      label: "EDITS TODAY",
+    },
+    {
+      value: stats ? stats.totalCountries.toLocaleString() : "—",
+      label: "COUNTRIES",
+    },
+  ]
+
   return (
     <section className="py-16 sm:py-20">
       <Container>
@@ -36,10 +76,13 @@ export function ContributeCTA() {
                   </SectionHeader>
                 </div>
                 <p className="mb-8 max-w-[38ch] text-[15px] leading-7 text-(--t-ink-low)">
-                  There are 76,440 libraries not yet in the index. If you work
-                  at one, visit one, or steward one — claim its page and add its
-                  record. Every correction, photograph, and hours update
-                  compounds.
+                  There are{" "}
+                  {unmapped != null
+                    ? unmapped.toLocaleString()
+                    : "thousands of"}{" "}
+                  libraries not yet in the index. If you work at one, visit one,
+                  or steward one — claim its page and add its record. Every
+                  correction, photograph, and hours update compounds.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <GlobalLink
@@ -49,17 +92,17 @@ export function ContributeCTA() {
                     Claim a library →
                   </GlobalLink>
                   <GlobalLink
-                    href="/contribute/guide"
+                    href="/wiki"
                     className="inline-flex items-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-surface) px-7 py-3 text-sm font-medium text-(--t-ink-dim) transition-all hover:bg-(--t-bg-deep) hover:text-(--t-ink-base)"
                   >
-                    Read the contributor guide
+                    Browse the knowledge base
                   </GlobalLink>
                 </div>
               </div>
 
               {/* Right: stat grid */}
               <div className="grid grid-cols-2 gap-2.5 lg:w-[380px] lg:flex-none">
-                {CONTRIBUTE_STATS.map((stat) => (
+                {displayStats.map((stat) => (
                   <Card key={stat.label} style={{ padding: "24px" }}>
                     <StatBlock
                       value={stat.value}

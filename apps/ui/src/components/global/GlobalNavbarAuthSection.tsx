@@ -16,6 +16,7 @@ export function GlobalNavbarAuthSection({
   profileSnippet?: {
     avatarUrl?: string | null
     username?: string | null
+    isVerifiedLibrarian?: boolean | null
   } | null
 }) {
   const t = useTranslations("navbar")

@@ -34,7 +34,7 @@ export async function GET(
     `${STRAPI}/api/content-moderation/submissions/by-username/${encodeURIComponent(username)}`,
     {
       headers: { "X-Service-Secret": SECRET },
-      next: { revalidate: 60 },
+      cache: "no-store",
     }
   )
   if (!res.ok) return NextResponse.json({ data: [] })

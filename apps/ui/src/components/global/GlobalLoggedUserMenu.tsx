@@ -79,15 +79,16 @@ export function GlobalLoggedUserMenu({
   readonly profileSnippet?: {
     avatarUrl?: string | null
     username?: string | null
+    isVerifiedLibrarian?: boolean | null
   } | null
 }) {
   const initials = getInitials(user.name || user.email)
   const firstName = user.name
     ? getFirstName(user.name)
     : user.email.split("@")[0]
-  // Strapi avatarUrl takes priority over BA OAuth image
   const avatarSrc = profileSnippet?.avatarUrl ?? user.image ?? null
-  const username = profileSnippet?.username
+  const username = profileSnippet?.username ?? null
+  const isVerifiedLibrarian = profileSnippet?.isVerifiedLibrarian ?? false
 
   return (
     <DropdownMenu>
@@ -119,7 +120,7 @@ export function GlobalLoggedUserMenu({
       <DropdownMenuContent
         align="end"
         style={{
-          width: "220px",
+          width: "236px",
           background: T.bg.deep,
           border: `1px solid ${T.border.line}`,
           backdropFilter: "blur(20px)",
@@ -187,24 +188,128 @@ export function GlobalLoggedUserMenu({
           </div>
         </div>
 
-        <DropdownMenuItem
-          asChild
-          className="cursor-pointer rounded-lg focus:bg-(--t-aurora-soft)"
-        >
-          <Link
-            href={username ? `/profile/${username}` : "/profile"}
-            className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-(--t-ink-dim) hover:text-(--t-ink-base)"
-          >
-            <Icon
-              icon="mdi:account-circle-outline"
-              width={15}
-              height={15}
-              className="shrink-0 opacity-60"
-            />
-            <span>View profile</span>
-          </Link>
-        </DropdownMenuItem>
+        {username ? (
+          <>
+            {/* My profile */}
+            <DropdownMenuItem
+              asChild
+              className="cursor-pointer rounded-lg focus:bg-(--t-aurora-soft)"
+            >
+              <Link
+                href={`/profile/${username}`}
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-(--t-ink-dim) hover:text-(--t-ink-base)"
+              >
+                <Icon
+                  icon="mdi:account-circle-outline"
+                  width={15}
+                  height={15}
+                  className="shrink-0 opacity-60"
+                />
+                <span>My profile</span>
+              </Link>
+            </DropdownMenuItem>
 
+            {/* My contributions */}
+            <DropdownMenuItem
+              asChild
+              className="cursor-pointer rounded-lg focus:bg-(--t-aurora-soft)"
+            >
+              <Link
+                href={`/profile/${username}/contributions`}
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-(--t-ink-dim) hover:text-(--t-ink-base)"
+              >
+                <Icon
+                  icon="mdi:book-edit-outline"
+                  width={15}
+                  height={15}
+                  className="shrink-0 opacity-60"
+                />
+                <span>My contributions</span>
+              </Link>
+            </DropdownMenuItem>
+
+            {/* Badges & points */}
+            <DropdownMenuItem
+              asChild
+              className="cursor-pointer rounded-lg focus:bg-(--t-aurora-soft)"
+            >
+              <Link
+                href={`/profile/${username}/badges`}
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-(--t-ink-dim) hover:text-(--t-ink-base)"
+              >
+                <Icon
+                  icon="mdi:medal-outline"
+                  width={15}
+                  height={15}
+                  className="shrink-0 opacity-60"
+                />
+                <span>Badges & points</span>
+              </Link>
+            </DropdownMenuItem>
+
+            {/* Submissions — verified librarians only */}
+            {isVerifiedLibrarian && (
+              <DropdownMenuItem
+                asChild
+                className="cursor-pointer rounded-lg focus:bg-(--t-aurora-soft)"
+              >
+                <Link
+                  href="/contribute/submissions"
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-(--t-ink-dim) hover:text-(--t-ink-base)"
+                >
+                  <Icon
+                    icon="mdi:inbox-multiple-outline"
+                    width={15}
+                    height={15}
+                    className="shrink-0 opacity-60"
+                  />
+                  <span>My submissions</span>
+                  <span
+                    style={{
+                      marginLeft: "auto",
+                      fontFamily: T.font.mono,
+                      fontSize: "8px",
+                      letterSpacing: ".12em",
+                      textTransform: "uppercase",
+                      color: T.accent.aurora,
+                      background: "rgba(127,223,255,0.1)",
+                      border: "1px solid rgba(127,223,255,0.2)",
+                      borderRadius: "4px",
+                      padding: "1px 5px",
+                    }}
+                  >
+                    Librarian
+                  </span>
+                </Link>
+              </DropdownMenuItem>
+            )}
+          </>
+        ) : (
+          /* No profile yet — prompt to complete setup */
+          <DropdownMenuItem
+            asChild
+            className="cursor-pointer rounded-lg focus:bg-(--t-aurora-soft)"
+          >
+            <Link
+              href="/profile/settings"
+              className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-(--t-ink-dim) hover:text-(--t-ink-base)"
+            >
+              <Icon
+                icon="mdi:account-plus-outline"
+                width={15}
+                height={15}
+                className="shrink-0 opacity-60"
+              />
+              <span>Complete your profile</span>
+            </Link>
+          </DropdownMenuItem>
+        )}
+
+        <DropdownMenuSeparator
+          style={{ margin: "4px 0", background: T.border.line }}
+        />
+
+        {/* Settings */}
         <DropdownMenuItem
           asChild
           className="cursor-pointer rounded-lg focus:bg-(--t-aurora-soft)"
@@ -227,6 +332,7 @@ export function GlobalLoggedUserMenu({
           style={{ margin: "4px 0", background: T.border.line }}
         />
 
+        {/* Sign out */}
         <DropdownMenuItem
           asChild
           className="cursor-pointer rounded-lg focus:bg-(--t-aurora-soft)"

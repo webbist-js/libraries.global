@@ -4,43 +4,13 @@ import { Icon } from "@iconify/react"
 import { useEffect, useMemo, useState } from "react"
 
 import type { PublicSubmission } from "@/app/api/profile/[username]/contributions/route"
-import { LibraryCard } from "@/components/ds/LibraryCard"
 import { BADGE_CATALOG, BADGE_VARIANT_STYLES } from "@/lib/badges"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
-import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 import type { UserProfile } from "@/lib/types/profile"
 
-// ── Seeded pseudo-random heatmap ──────────────────────────────────────────────
-
-function seededRandom(base: number, i: number): number {
-  const x = Math.sin(base * 9301 + i * 49297 + 233720) * 10_000
-
-  return x - Math.floor(x)
-}
-
-function generateHeatmap(username: string): number[] {
-  let seed = 0
-  for (const c of username) seed += c.codePointAt(0) ?? 0
-
-  return Array.from({ length: 182 }, (_, i) => {
-    const r = seededRandom(seed, i)
-    if (r < 0.54) return 0
-    if (r < 0.71) return Math.ceil(r * 4)
-    if (r < 0.87) return Math.ceil(r * 9)
-
-    return Math.ceil(r * 18)
-  })
-}
-
-function heatColor(v: number): string {
-  if (v === 0) return T.bg.deep
-  if (v <= 3) return "rgba(127,223,255,0.16)"
-  if (v <= 8) return "rgba(127,223,255,0.38)"
-  if (v <= 14) return "rgba(127,223,255,0.62)"
-
-  return "rgba(127,223,255,0.88)"
-}
+import { ContributionHeatmap } from "../ContributionHeatmap"
+import { FollowedLibrariesGrid } from "../FollowedLibrariesGrid"
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -182,19 +152,20 @@ const BADGE_WIDGET_COUNT = 8
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export function OverviewTab({ profile }: { profile: UserProfile }) {
-  const [recentContribs, setRecentContribs] = useState<PublicSubmission[]>([])
+export function OverviewSection({ profile }: { profile: UserProfile }) {
+  const [allContribs, setAllContribs] = useState<PublicSubmission[]>([])
+  const [now] = useState<number>(() => Date.now())
 
   useEffect(() => {
     fetch(`/api/profile/${encodeURIComponent(profile.username)}/contributions`)
       .then((r) => r.json())
       .then((json: { data?: PublicSubmission[] }) => {
-        setRecentContribs((json.data ?? []).slice(0, 5))
+        setAllContribs(json.data ?? [])
       })
       .catch(() => {})
   }, [profile.username])
 
-  const heat = generateHeatmap(profile.username)
+  const recentContribs = useMemo(() => allContribs.slice(0, 5), [allContribs])
   const joinedDate = new Date(profile.createdAt)
   const memberSince = joinedDate.toLocaleDateString("en-US", {
     day: "numeric",
@@ -317,142 +288,7 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
         {/* Left column */}
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           {/* Activity heatmap */}
-          <div
-            style={{
-              border: `1px solid ${T.border.line}`,
-              borderRadius: "16px",
-              padding: "24px 26px",
-              background: T.bg.surface,
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "14px",
-              }}
-            >
-              <p
-                style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  color: T.ink.base,
-                  margin: 0,
-                }}
-              >
-                Activity
-              </p>
-              <span
-                style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".18em",
-                  textTransform: "uppercase",
-                  color: T.accent.aurora,
-                  opacity: 0.7,
-                }}
-              >
-                § Last 26 weeks
-              </span>
-            </div>
-            <p
-              style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".14em",
-                textTransform: "uppercase",
-                color: T.ink.faint,
-                margin: "0 0 10px",
-              }}
-            >
-              Daily contribution graph
-            </p>
-
-            {/* Grid: 26 columns (weeks) × 7 rows (days) */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(26, 1fr)",
-                gap: "3px",
-              }}
-            >
-              {Array.from({ length: 26 }, (_, col) =>
-                Array.from({ length: 7 }, (_, row) => {
-                  const idx = col * 7 + row
-                  const v = heat[idx] ?? 0
-
-                  return (
-                    <div
-                      key={`${col}-${row}`}
-                      title={v > 0 ? `${v} contributions` : "No contributions"}
-                      className="transition-transform duration-100 hover:scale-125"
-                      style={{
-                        aspectRatio: "1",
-                        borderRadius: "3px",
-                        background: heatColor(v),
-                        cursor: "default",
-                      }}
-                    />
-                  )
-                })
-              )}
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginTop: "10px",
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".1em",
-                  color: T.ink.faint,
-                }}
-              >
-                Mon – Sun, last 182 days
-              </span>
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "4px" }}
-              >
-                <span
-                  style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    color: T.ink.faint,
-                  }}
-                >
-                  Less
-                </span>
-                {[0, 2, 5, 10, 16].map((v, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width: "10px",
-                      height: "10px",
-                      borderRadius: "2px",
-                      background: heatColor(v),
-                    }}
-                  />
-                ))}
-                <span
-                  style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    color: T.ink.faint,
-                  }}
-                >
-                  More
-                </span>
-              </div>
-            </div>
-          </div>
+          <ContributionHeatmap submissions={allContribs} now={now} />
 
           {/* Recent contributions */}
           <div
@@ -661,83 +497,23 @@ export function OverviewTab({ profile }: { profile: UserProfile }) {
               background: T.bg.surface,
             }}
           >
-            <div
+            <p
               style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "16px",
+                fontFamily: T.font.serif,
+                fontSize: "16px",
+                fontWeight: 600,
+                color: T.ink.base,
+                margin: "0 0 16px",
               }}
             >
-              <p
-                style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  color: T.ink.base,
-                  margin: 0,
-                }}
-              >
-                Following libraries
-              </p>
-              <span
-                style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".12em",
-                  textTransform: "uppercase",
-                  color: T.accent.aurora,
-                  opacity: 0.7,
-                  cursor: "default",
-                }}
-              >
-                See all —
-              </span>
-            </div>
-
-            {(profile.followedLibraries ?? []).length === 0 ? (
-              <div
-                style={{
-                  padding: "32px",
-                  textAlign: "center",
-                  border: `1px solid ${T.border.line}`,
-                  borderRadius: "10px",
-                }}
-              >
-                <p
-                  style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "9px",
-                    letterSpacing: ".14em",
-                    textTransform: "uppercase",
-                    color: T.ink.faint,
-                    margin: 0,
-                  }}
-                >
-                  No libraries followed yet
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-                {(profile.followedLibraries ?? [])
-                  .slice(0, 6)
-                  .map((lib, index) => (
-                    <LibraryCard
-                      key={lib.documentId ?? lib.slug ?? String(index)}
-                      documentId={lib.documentId ?? lib.slug ?? String(index)}
-                      slug={lib.slug}
-                      name={lib.name ?? ""}
-                      libraryType={lib.libraryType}
-                      heroImageUrl={
-                        formatStrapiMediaUrl(lib.heroImageUrl) ?? null
-                      }
-                      href={lib.slug ? `/library/${lib.slug}` : null}
-                      index={index}
-                      variant="compact"
-                    />
-                  ))}
-              </div>
-            )}
+              Following libraries
+            </p>
+            <FollowedLibrariesGrid
+              libraries={profile.followedLibraries ?? []}
+              username={profile.username}
+              variant="compact"
+              max={6}
+            />
           </div>
 
           {/* Claimed libraries */}

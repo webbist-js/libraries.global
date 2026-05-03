@@ -37,17 +37,14 @@ const STATS = [
   },
   {
     label: "COLLECTIONS",
-    value: null, // TODO: add when collections feature ships
-    sub: "Items catalogued",
+    sub: "Items catalogued", // TODO: add when collections feature ships
   },
   {
     label: "LANGUAGES",
-    value: null, // TODO: fetch distinct language count from Strapi
     sub: "Living, liturgical, extinct",
   },
   {
     label: "CONTRIBUTORS",
-    value: null, // TODO: add when auth and user contributions ship
     sub: "Librarians, scholars, researchers",
   },
 ] as const
@@ -63,17 +60,21 @@ export function HomepageHero({
   heroTitle,
   heroText,
   libraryCount,
+  contributorCount,
+  languageCount,
 }: {
   readonly heroEyebrow?: string | null
   readonly heroTitle?: string | null
   readonly heroText?: string | null
   readonly libraryCount?: number | null
+  readonly contributorCount?: number | null
+  readonly languageCount?: number | null
 }) {
   const statValues = [
     formatCount(libraryCount),
-    "—", // Collections TODO
-    "—", // Languages TODO
-    "—", // Contributors TODO
+    "—", // Collections — future feature
+    formatCount(languageCount),
+    formatCount(contributorCount),
   ]
 
   return (
@@ -157,9 +158,9 @@ export function HomepageHero({
         </div>
       </Container>
 
-      {/* Stats bar — pinned to hero bottom */}
+      {/* Stats bar — absolutely pinned to hero bottom, never pushed by content */}
       <div
-        className="relative z-20 border-t border-white/8 backdrop-blur-md"
+        className="absolute right-0 bottom-0 left-0 z-20 border-t border-white/8 backdrop-blur-md"
         style={{ background: "rgba(3,5,17,0.60)" }}
       >
         <Container>

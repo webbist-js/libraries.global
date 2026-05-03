@@ -9,7 +9,7 @@ export async function GET(
   const { username } = await params
   const res = await fetch(
     `${STRAPI}/api/user-profiles/by-username/${encodeURIComponent(username)}`,
-    { next: { revalidate: 60 } }
+    { cache: "no-store" }
   )
   if (res.status === 404)
     return NextResponse.json({ error: "Not found" }, { status: 404 })

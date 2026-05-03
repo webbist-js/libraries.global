@@ -483,6 +483,84 @@ export default {
     return ctx.send({ following: action === "follow" })
   },
 
+  async toggleFollowUser(ctx: any) {
+    const serviceSecret = ctx.request.header["x-service-secret"]
+    if (
+      !process.env.STRAPI_BRIDGE_SECRET ||
+      serviceSecret !== process.env.STRAPI_BRIDGE_SECRET
+    ) {
+      return ctx.unauthorized("Invalid or missing service secret")
+    }
+
+    const { baUserId, targetUsername, action } = ctx.request.body as {
+      baUserId?: string
+      targetUsername?: string
+      action?: "follow" | "unfollow"
+    }
+    if (!baUserId || !targetUsername || !action)
+      return ctx.badRequest("Missing baUserId, targetUsername, or action")
+
+    const followerProfile = await strapi.db
+      .query("api::user-profile.user-profile")
+      .findOne({ where: { baUserId } })
+    if (!followerProfile) return ctx.notFound("Follower profile not found")
+
+    const targetResults = await strapi.db
+      .query("api::user-profile.user-profile")
+      .findMany({ where: { username: targetUsername }, limit: 1 })
+    const targetProfile = targetResults[0] ?? null
+    if (!targetProfile) return ctx.notFound("Target profile not found")
+
+    // Only public profiles can be followed
+    if (targetProfile.profileVisibility !== "public") {
+      return ctx.forbidden("This profile cannot be followed")
+    }
+
+    await strapi.db.query("api::user-profile.user-profile").update({
+      where: { id: followerProfile.id },
+      data: {
+        followedProfiles: {
+          [action === "follow" ? "connect" : "disconnect"]: [
+            { id: targetProfile.id },
+          ],
+        },
+      },
+    })
+
+    return ctx.send({ following: action === "follow" })
+  },
+
+  async userFollowStatus(ctx: any) {
+    const serviceSecret = ctx.request.header["x-service-secret"]
+    if (
+      !process.env.STRAPI_BRIDGE_SECRET ||
+      serviceSecret !== process.env.STRAPI_BRIDGE_SECRET
+    ) {
+      return ctx.unauthorized("Invalid or missing service secret")
+    }
+
+    const { baUserId, targetUsername } = ctx.query as {
+      baUserId?: string
+      targetUsername?: string
+    }
+    if (!baUserId || !targetUsername)
+      return ctx.badRequest("Missing baUserId or targetUsername")
+
+    const profile = await strapi.db
+      .query("api::user-profile.user-profile")
+      .findOne({
+        where: { baUserId },
+        populate: { followedProfiles: true },
+      })
+    if (!profile) return ctx.send({ following: false })
+
+    const following = (profile.followedProfiles ?? []).some(
+      (p: any) => p.username === targetUsername
+    )
+
+    return ctx.send({ following })
+  },
+
   async computeQuickWins(ctx: any) {
     const serviceSecret = ctx.request.header["x-service-secret"]
     if (

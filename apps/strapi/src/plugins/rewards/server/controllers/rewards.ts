@@ -243,6 +243,12 @@ export default ({ strapi }: { strapi: any }) => ({
     })
   },
 
+  async adminTakeSnapshot(ctx: any) {
+    await strapi.plugin("rewards").service("snapshot").takeWeeklySnapshot()
+
+    return ctx.send({ ok: true })
+  },
+
   async adminStats(ctx: any) {
     const now = new Date()
     const monthStart = new Date(

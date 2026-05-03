@@ -1,4 +1,5 @@
 import GlobalLink from "@/components/global/GlobalLink"
+import { BADGE_CATALOG } from "@/lib/badges"
 import { T } from "@/lib/design-tokens"
 
 type Standing = {
@@ -30,9 +31,11 @@ const POINT_ACTIONS = [
 export function LeaderboardSidebar({
   isSignedIn,
   standing,
+  profileUsername,
 }: {
   isSignedIn: boolean
   standing: Standing | null
+  profileUsername?: string | null
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -198,6 +201,80 @@ export function LeaderboardSidebar({
               >
                 {standing.suggestedAction}
               </p>
+            )}
+            {standing.recentBadges.length > 0 && (
+              <div style={{ marginTop: "8px" }}>
+                <p
+                  style={{
+                    margin: "0 0 8px",
+                    fontFamily: T.font.mono,
+                    fontSize: "10px",
+                    letterSpacing: ".14em",
+                    textTransform: "uppercase",
+                    color: T.ink.faint,
+                  }}
+                >
+                  Recent badges
+                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "6px",
+                  }}
+                >
+                  {standing.recentBadges.map((b) => {
+                    const def = BADGE_CATALOG.find((d) => d.id === b.badgeId)
+                    if (!def) return null
+
+                    return (
+                      <div
+                        key={b.badgeId}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <span style={{ fontSize: "12px", color: T.ink.dim }}>
+                          {def.name}
+                        </span>
+                        <span
+                          style={{
+                            fontFamily: T.font.mono,
+                            fontSize: "9px",
+                            color: T.ink.faint,
+                            letterSpacing: ".06em",
+                          }}
+                        >
+                          {new Date(b.awardedAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+            {profileUsername && (
+              <GlobalLink
+                href={`/profile/${profileUsername}/badges`}
+                style={{
+                  display: "inline-block",
+                  marginTop: "12px",
+                  fontFamily: T.font.mono,
+                  fontSize: "9px",
+                  letterSpacing: ".14em",
+                  textTransform: "uppercase",
+                  color: T.accent.aurora,
+                  textDecoration: "none",
+                  opacity: 0.85,
+                }}
+              >
+                View all your badges →
+              </GlobalLink>
             )}
           </div>
         ) : (

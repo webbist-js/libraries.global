@@ -19,7 +19,7 @@ export async function GET(
     `${STRAPI}/api/user-profiles/by-username/${encodeURIComponent(username)}/badges`,
     {
       headers: { "X-Service-Secret": SECRET },
-      next: { revalidate: 60 },
+      cache: "no-store",
     }
   )
   if (!res.ok) return NextResponse.json({ data: [] })

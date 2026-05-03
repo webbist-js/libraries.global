@@ -1,3 +1,4 @@
+import { useFetchClient } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -27,29 +28,19 @@ type ChartData = {
 
 // ── Fetcher ───────────────────────────────────────────────────────────────────
 
-async function adminFetch<T>(path: string): Promise<T | null> {
-  try {
-    const res = await fetch(`/rewards${path}`, {
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-    })
-    if (!res.ok) return null
-    const json = await res.json()
-
-    return (json.data ?? json) as T
-  } catch {
-    return null
-  }
-}
-
 function useAdminFetch<T>(path: string, deps: unknown[] = []) {
+  const { get } = useFetchClient()
   const [data, setData] = useState<T | null>(null)
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
     setLoading(true)
-    const result = await adminFetch<T>(path)
-    setData(result)
+    try {
+      const res = await get(`/rewards${path}`)
+      setData((res.data?.data ?? res.data) as T)
+    } catch {
+      setData(null)
+    }
     setLoading(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path, ...deps])
@@ -574,6 +565,7 @@ function ManualAwardWidget({
   prefillUserId: string
   onSuccess: () => void
 }) {
+  const { put } = useFetchClient()
   const [baUserId, setBaUserId] = useState(prefillUserId)
   const [mode, setMode] = useState<"award" | "deduct">("award")
   const [points, setPoints] = useState<number>(10)
@@ -590,29 +582,20 @@ function ManualAwardWidget({
     if (!baUserId || !reason || !points) return
     setStatus("loading")
     try {
-      const res = await fetch("/rewards/award", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          baUserId,
-          action: mode === "award" ? "manual_award" : "manual_deduct",
-          points,
-          reason,
-        }),
+      await put(`/rewards/award`, {
+        baUserId,
+        action: mode === "award" ? "manual_award" : "manual_deduct",
+        points,
+        reason,
       })
-      if (res.ok) {
-        setStatus("ok")
-        setBaUserId("")
-        setReason("")
-        setPoints(10)
-        setTimeout(() => {
-          setStatus("idle")
-          onSuccess()
-        }, 1800)
-      } else {
-        setStatus("err")
-      }
+      setStatus("ok")
+      setBaUserId("")
+      setReason("")
+      setPoints(10)
+      setTimeout(() => {
+        setStatus("idle")
+        onSuccess()
+      }, 1800)
     } catch {
       setStatus("err")
     }

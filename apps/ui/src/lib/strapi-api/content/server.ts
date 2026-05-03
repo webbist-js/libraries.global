@@ -263,8 +263,50 @@ export async function fetchLibrary(slug: string, locale: Locale) {
 export async function fetchNearbyLibraries(
   currentSlug: string,
   regionSlug?: string | null,
-  limit = 3
+  location?: { lat?: unknown; lng?: unknown } | null,
+  limit = 4
 ): Promise<PopulatedLibraryData[]> {
+  const lat = location?.lat != null ? Number(location.lat) : null
+  const lng = location?.lng != null ? Number(location.lng) : null
+  const hasCoords =
+    lat != null && lng != null && !Number.isNaN(lat) && !Number.isNaN(lng)
+
+  // Prefer geo search when coordinates are available
+  if (hasCoords) {
+    try {
+      const { searchNearbyLibraries } = await import("@/lib/meilisearch")
+      const result = await searchNearbyLibraries(
+        lat!,
+        lng!,
+        currentSlug,
+        50_000,
+        limit
+      )
+      if (result.hits.length > 0) {
+        return result.hits.map(
+          (hit) =>
+            ({
+              name: hit.name,
+              slug: hit.slug,
+              summary: hit.summary ?? null,
+              libraryType: hit.libraryType ?? null,
+              city: hit.city ?? null,
+              operationalStatus: hit.operationalStatus ?? null,
+              heroImage: hit.heroImage ?? null,
+              continent: hit.continent_slug
+                ? { slug: hit.continent_slug }
+                : null,
+              country: hit.country_slug ? { slug: hit.country_slug } : null,
+              region: hit.region_slug ? { slug: hit.region_slug } : null,
+            }) as unknown as PopulatedLibraryData
+        )
+      }
+    } catch {
+      // fall through to region-based fallback
+    }
+  }
+
+  // Fallback: same-region query via Strapi
   if (!regionSlug) return []
   try {
     const result = (await PublicStrapiClient.fetchAll("api::library.library", {
@@ -421,11 +463,6 @@ export type CtaBanner = {
 }
 
 export type PageSection = EditorialBlock | CtaBanner
-
-// Legacy aliases — continent detail page uses these names
-export type ContinentEditorialBlock = EditorialBlock
-export type ContinentCtaBanner = CtaBanner
-export type ContinentSection = PageSection
 
 // ── Continent ─────────────────────────────────────────────────────────────────
 

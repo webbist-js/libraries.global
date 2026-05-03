@@ -90,12 +90,21 @@ export default ({ strapi }: { strapi: any }) => ({
 
     const profileMap = new Map(profiles.map((p) => [p.baUserId, p]))
 
+    // Load previous week's rank map for delta computation
+    const prevRankMap: Map<string, number> = await strapi
+      .plugin("rewards")
+      .service("snapshot")
+      .getPreviousWeekRankMap()
+
     return rows.map((row, i) => {
       const profile = profileMap.get(row.ba_user_id)
+      const currentRank = offset + i + 1
+      const prevRank = prevRankMap.get(row.ba_user_id)
+      const rankChange = prevRank != null ? prevRank - currentRank : null
 
       return {
-        rank: offset + i + 1,
-        rankChange: null, // Future: compute by comparing previous period
+        rank: currentRank,
+        rankChange,
         baUserId: row.ba_user_id,
         username: profile?.username ?? null,
         firstName: profile?.firstName ?? null,

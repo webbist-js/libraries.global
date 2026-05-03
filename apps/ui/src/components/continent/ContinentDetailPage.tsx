@@ -21,10 +21,10 @@ import { LocationTabBar } from "@/components/location/LocationTabBar"
 import { InteractiveMap } from "@/components/map/InteractiveMap"
 import { T } from "@/lib/design-tokens"
 import type {
+  CtaBanner,
+  EditorialBlock,
+  PageSection,
   PopulatedContinentData,
-  ContinentEditorialBlock,
-  ContinentCtaBanner,
-  ContinentSection,
 } from "@/lib/strapi-api/content/server"
 import { auroraCtaLg } from "@/lib/styles"
 
@@ -63,13 +63,12 @@ export function ContinentDetailPage({
     Array.isArray(continent.featuredLibraries) &&
     continent.featuredLibraries.length > 0
 
-  const typedSections = (continent.sections ?? []) as ContinentSection[]
+  const typedSections = (continent.sections ?? []) as PageSection[]
   const editorialBlocks = typedSections.filter(
-    (s): s is ContinentEditorialBlock =>
-      s.__component === "sections.editorial-block"
+    (s): s is EditorialBlock => s.__component === "sections.editorial-block"
   )
   const ctaBanners = typedSections.filter(
-    (s): s is ContinentCtaBanner => s.__component === "sections.cta-banner"
+    (s): s is CtaBanner => s.__component === "sections.cta-banner"
   )
 
   const tabs = [

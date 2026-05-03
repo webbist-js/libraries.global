@@ -96,7 +96,7 @@ export default ({ strapi }: { strapi: any }) => ({
     const now = new Date()
 
     // Create the point-event record
-    await strapi.documents("plugin::rewards.point-event").create({
+    await strapi.db.query("plugin::rewards.point-event").create({
       data: {
         baUserId,
         action,

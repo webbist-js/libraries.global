@@ -85,8 +85,7 @@ export function GlobalFooter({
                       <GlobalLink
                         key={link.id ?? link.page?.slug ?? link.href ?? index}
                         href={getStrapiLinkHref(link)}
-                        className="block text-[15px] transition-colors hover:text-(--t-ink-base)"
-                        style={{ color: T.ink.dim }}
+                        className="block text-[15px] text-(--t-ink-base) opacity-80 transition-[opacity,color] hover:text-(--t-accent-aurora) hover:opacity-100"
                       >
                         {link.label}
                       </GlobalLink>
@@ -126,8 +125,7 @@ export function GlobalFooter({
                   ) : null}
                   <GlobalLink
                     href={getStrapiLinkHref(link)}
-                    className="font-mono text-[10px] tracking-[0.18em] uppercase transition-colors"
-                    style={{ color: T.ink.low }}
+                    className="font-mono text-[10px] tracking-[0.18em] text-(--t-ink-dim) uppercase transition-colors hover:text-(--t-ink-base)"
                   >
                     {link.label}
                   </GlobalLink>

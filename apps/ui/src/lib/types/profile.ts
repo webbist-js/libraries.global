@@ -7,6 +7,13 @@ export type FollowedLibrary = {
   heroImageUrl?: string | null
 }
 
+export type FollowedUser = {
+  username: string
+  displayName: string
+  avatarUrl?: string | null
+  bio?: string | null
+}
+
 export type ClaimedLibrary = {
   entityRef: string | null
   documentId: string | null
@@ -66,6 +73,7 @@ export type UserProfile = {
   interests?: InterestTopic[]
   notifPrefs: NotifPrefs
   followedLibraries?: FollowedLibrary[]
+  followedProfiles?: FollowedUser[]
   claimedLibraries?: ClaimedLibrary[]
   points?: number | null
   pointsThisMonth?: number | null

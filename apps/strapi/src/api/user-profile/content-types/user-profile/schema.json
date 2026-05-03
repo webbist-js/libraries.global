@@ -78,6 +78,11 @@
       "relation": "manyToMany",
       "target": "api::library.library"
     },
+    "followedProfiles": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::user-profile.user-profile"
+    },
     "points": { "type": "integer", "default": 0 },
     "pointsThisMonth": { "type": "integer", "default": 0 },
     "tier": { "type": "string", "default": "Reader" },

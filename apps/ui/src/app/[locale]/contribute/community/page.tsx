@@ -14,6 +14,24 @@ const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const API_TOKEN = process.env.STRAPI_REST_READONLY_API_KEY
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
 
+async function fetchProfileUsername(baUserId: string): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `${STRAPI}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(baUserId)}&fields[0]=username`,
+      {
+        cache: "no-store",
+        headers: API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {},
+      }
+    )
+    if (!res.ok) return null
+    const json = (await res.json()) as { data?: { username?: string }[] }
+
+    return json.data?.[0]?.username ?? null
+  } catch {
+    return null
+  }
+}
+
 type Period = "today" | "week" | "month" | "all"
 
 const PERIODS: { key: Period; label: string }[] = [
@@ -90,9 +108,12 @@ export default async function CommunityPage({
 
   const session = await getSessionSSR(await headers())
 
-  const [entries, standing] = await Promise.all([
+  const [entries, standing, profileUsername] = await Promise.all([
     fetchLeaderboard(period),
     session?.user ? fetchStanding(session.user.id) : Promise.resolve(null),
+    session?.user
+      ? fetchProfileUsername(session.user.id)
+      : Promise.resolve(null),
   ])
 
   const podium = entries.slice(0, 3)
@@ -182,6 +203,7 @@ export default async function CommunityPage({
           <LeaderboardSidebar
             isSignedIn={!!session?.user}
             standing={standing}
+            profileUsername={profileUsername}
           />
         </div>
       </div>

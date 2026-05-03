@@ -18,6 +18,7 @@ import type {
 } from "@/lib/strapi-api/content/server"
 
 import { WikiLatestChanges } from "./WikiLatestChanges"
+import { WikiSearchBar } from "./WikiSearchBar"
 
 type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
 
@@ -127,55 +128,7 @@ export function WikiLandingPage({
               ) : null}
 
               {/* Search bar */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "10px 14px",
-                  borderRadius: "12px",
-                  border: `1px solid ${T.border.hi}`,
-                  background: "rgba(8,12,30,.5)",
-                  fontFamily: T.font.mono,
-                  fontSize: "12px",
-                  color: T.ink.dim,
-                }}
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  style={{ color: T.ink.low, flexShrink: 0 }}
-                >
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="m20 20-3.5-3.5" />
-                </svg>
-                <span
-                  style={{
-                    flex: 1,
-                    color: T.ink.faint,
-                    fontSize: "13px",
-                    fontWeight: 400,
-                  }}
-                >
-                  Search docs, categories, articles…
-                </span>
-                <span
-                  style={{
-                    padding: "3px 7px",
-                    borderRadius: "5px",
-                    background: T.bg.deep,
-                    border: `1px solid ${T.border.hi}`,
-                    fontSize: "10px",
-                    color: T.ink.dim,
-                  }}
-                >
-                  ⌘K
-                </span>
-              </div>
+              <WikiSearchBar />
 
               {/* Stats row */}
               {totalArticles > 0 || totalSections > 0 ? (

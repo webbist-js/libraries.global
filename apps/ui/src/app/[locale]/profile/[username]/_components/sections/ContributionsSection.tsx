@@ -361,7 +361,7 @@ function ContributionRow({ sub }: { sub: PublicSubmission }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function ContributionsTab({ username }: { username: string }) {
+export function ContributionsSection({ username }: { username: string }) {
   const [submissions, setSubmissions] = useState<PublicSubmission[]>([])
   const [loading, setLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState<FilterId>("all")
@@ -484,7 +484,7 @@ export function ContributionsTab({ username }: { username: string }) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+          gridTemplateColumns: "repeat(4, 1fr)",
           gap: "1px",
           border: `1px solid ${T.border.line}`,
           borderRadius: "12px",

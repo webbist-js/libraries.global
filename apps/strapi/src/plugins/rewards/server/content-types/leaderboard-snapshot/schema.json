@@ -1,0 +1,24 @@
+{
+  "kind": "collectionType",
+  "collectionName": "rw_leaderboard_snapshots",
+  "info": {
+    "singularName": "leaderboard-snapshot",
+    "pluralName": "leaderboard-snapshots",
+    "displayName": "Leaderboard Snapshot"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": false },
+    "content-type-builder": { "visible": false }
+  },
+  "attributes": {
+    "period": { "type": "string", "required": true },
+    "periodType": {
+      "type": "enumeration",
+      "enum": ["weekly", "daily"],
+      "required": true
+    },
+    "entries": { "type": "json", "required": true },
+    "takenAt": { "type": "datetime", "required": true }
+  }
+}

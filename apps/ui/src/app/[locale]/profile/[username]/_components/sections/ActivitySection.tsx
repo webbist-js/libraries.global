@@ -6,6 +6,8 @@ import { useEffect, useMemo, useState } from "react"
 import type { PublicSubmission } from "@/app/api/profile/[username]/contributions/route"
 import { T } from "@/lib/design-tokens"
 
+import { ContributionHeatmap } from "../ContributionHeatmap"
+
 // ── Type icons ─────────────────────────────────────────────────────────────────
 
 const ACTIVITY_META: Record<
@@ -286,7 +288,7 @@ function StatPill({
 
 // ── Main ───────────────────────────────────────────────────────────────────────
 
-export function ActivityTab({ username }: { username: string }) {
+export function ActivitySection({ username }: { username: string }) {
   const [submissions, setSubmissions] = useState<PublicSubmission[]>([])
   const [loading, setLoading] = useState(true)
   const [now] = useState<number>(() => Date.now())
@@ -315,185 +317,185 @@ export function ActivityTab({ username }: { username: string }) {
 
   const grouped = useMemo(() => groupByDay(submissions), [submissions])
 
-  if (loading) {
-    return (
-      <div
-        style={{
-          border: `1px solid ${T.border.line}`,
-          borderRadius: "12px",
-          padding: "32px",
-        }}
-      >
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+      {/* Contribution heatmap */}
+      <ContributionHeatmap submissions={submissions} now={now} />
+
+      {loading ? (
+        /* Skeleton */
         <div
           style={{
-            display: "flex",
-            gap: "12px",
-            marginBottom: "24px",
-            flexWrap: "wrap",
+            border: `1px solid ${T.border.line}`,
+            borderRadius: "12px",
+            padding: "24px",
           }}
         >
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              style={{
-                flex: "1 1 130px",
-                height: "80px",
-                borderRadius: "12px",
-                background: T.bg.surface,
-              }}
-            />
-          ))}
-        </div>
-        {[0, 1, 2, 3, 4].map((i) => (
           <div
-            key={i}
             style={{
               display: "flex",
               gap: "12px",
-              alignItems: "center",
-              padding: "12px 0",
-              borderTop: i ? `1px solid ${T.border.line}` : undefined,
+              marginBottom: "20px",
+              flexWrap: "wrap",
             }}
           >
-            <div
-              style={{
-                width: "28px",
-                height: "28px",
-                borderRadius: "7px",
-                background: T.bg.surface,
-                flexShrink: 0,
-              }}
-            />
-            <div
-              style={{
-                height: "12px",
-                borderRadius: "4px",
-                background: T.bg.surface,
-                width: "55%",
-              }}
-            />
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                style={{
+                  flex: "1 1 130px",
+                  height: "80px",
+                  borderRadius: "12px",
+                  background: T.bg.surface,
+                }}
+              />
+            ))}
           </div>
-        ))}
-      </div>
-    )
-  }
-
-  if (submissions.length === 0) {
-    return (
-      <div
-        style={{
-          border: `1px solid ${T.border.line}`,
-          borderRadius: "12px",
-          padding: "48px",
-          textAlign: "center",
-          background: T.bg.surface,
-        }}
-      >
-        <p
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".18em",
-            textTransform: "uppercase",
-            color: T.ink.faint,
-            margin: "0 0 8px",
-          }}
-        >
-          No activity yet
-        </p>
-        <p style={{ fontSize: "13px", color: T.ink.faint, margin: 0 }}>
-          Library edits, additions, and wiki contributions will appear here.
-        </p>
-      </div>
-    )
-  }
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-      {/* Summary stats */}
-      <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-        <StatPill
-          icon="mdi:calendar-month-outline"
-          label="Last 30 days"
-          value={thirtyDayCount}
-          accent={T.accent.aurora}
-        />
-        <StatPill
-          icon="mdi:check-circle-outline"
-          label="Approved total"
-          value={approvedCount}
-          accent={T.accent.ok}
-        />
-        <StatPill
-          icon="mdi:history"
-          label="All time"
-          value={submissions.length}
-        />
-      </div>
-
-      {/* Timeline feed */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        {grouped.map((group) => (
-          <div
-            key={group.key}
-            style={{
-              border: `1px solid ${T.border.line}`,
-              borderRadius: "12px",
-              overflow: "hidden",
-              background: T.bg.surface,
-            }}
-          >
-            {/* Day header */}
+          {[0, 1, 2, 3, 4].map((i) => (
             <div
+              key={i}
               style={{
-                padding: "10px 20px",
-                background: T.bg.surface,
-                borderBottom: `1px solid ${T.border.line}`,
                 display: "flex",
+                gap: "12px",
                 alignItems: "center",
-                justifyContent: "space-between",
+                padding: "12px 0",
+                borderTop: i ? `1px solid ${T.border.line}` : undefined,
               }}
             >
-              <span
+              <div
                 style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "9px",
-                  letterSpacing: ".14em",
-                  textTransform: "uppercase",
-                  color: T.ink.faint,
+                  width: "28px",
+                  height: "28px",
+                  borderRadius: "7px",
+                  background: T.bg.surface,
+                  flexShrink: 0,
                 }}
-              >
-                {group.label}
-              </span>
-              <span
+              />
+              <div
                 style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "9px",
-                  color: T.ink.faint,
-                  opacity: 0.6,
+                  height: "12px",
+                  borderRadius: "4px",
+                  background: T.bg.surface,
+                  width: "55%",
                 }}
-              >
-                {group.items.length}{" "}
-                {group.items.length === 1 ? "event" : "events"}
-              </span>
+              />
             </div>
+          ))}
+        </div>
+      ) : submissions.length === 0 ? (
+        /* Empty state */
+        <div
+          style={{
+            border: `1px solid ${T.border.line}`,
+            borderRadius: "12px",
+            padding: "48px",
+            textAlign: "center",
+            background: T.bg.surface,
+          }}
+        >
+          <p
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "10px",
+              letterSpacing: ".18em",
+              textTransform: "uppercase",
+              color: T.ink.faint,
+              margin: "0 0 8px",
+            }}
+          >
+            No activity yet
+          </p>
+          <p style={{ fontSize: "13px", color: T.ink.faint, margin: 0 }}>
+            Library edits, additions, and wiki contributions will appear here.
+          </p>
+        </div>
+      ) : (
+        /* Stats + timeline */
+        <>
+          {/* Summary stats */}
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            <StatPill
+              icon="mdi:calendar-month-outline"
+              label="Last 30 days"
+              value={thirtyDayCount}
+              accent={T.accent.aurora}
+            />
+            <StatPill
+              icon="mdi:check-circle-outline"
+              label="Approved total"
+              value={approvedCount}
+              accent={T.accent.ok}
+            />
+            <StatPill
+              icon="mdi:history"
+              label="All time"
+              value={submissions.length}
+            />
+          </div>
 
-            {/* Rows */}
-            <div style={{ padding: "0 20px" }}>
-              {group.items.map((sub, i) => (
+          {/* Timeline feed */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {grouped.map((group) => (
+              <div
+                key={group.key}
+                style={{
+                  border: `1px solid ${T.border.line}`,
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  background: T.bg.surface,
+                }}
+              >
                 <div
-                  key={sub.documentId}
                   style={{
-                    borderTop: i > 0 ? `1px solid ${T.border.line}` : undefined,
+                    padding: "10px 20px",
+                    background: T.bg.surface,
+                    borderBottom: `1px solid ${T.border.line}`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
                   }}
                 >
-                  <ActivityRow sub={sub} />
+                  <span
+                    style={{
+                      fontFamily: T.font.mono,
+                      fontSize: "9px",
+                      letterSpacing: ".14em",
+                      textTransform: "uppercase",
+                      color: T.ink.faint,
+                    }}
+                  >
+                    {group.label}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: T.font.mono,
+                      fontSize: "9px",
+                      color: T.ink.faint,
+                      opacity: 0.6,
+                    }}
+                  >
+                    {group.items.length}{" "}
+                    {group.items.length === 1 ? "event" : "events"}
+                  </span>
                 </div>
-              ))}
-            </div>
+                <div style={{ padding: "0 20px" }}>
+                  {group.items.map((sub, i) => (
+                    <div
+                      key={sub.documentId}
+                      style={{
+                        borderTop:
+                          i > 0 ? `1px solid ${T.border.line}` : undefined,
+                      }}
+                    >
+                      <ActivityRow sub={sub} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      )}
     </div>
   )
 }

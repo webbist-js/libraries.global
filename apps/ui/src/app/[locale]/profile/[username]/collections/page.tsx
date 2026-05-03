@@ -1,5 +1,5 @@
-import { CollectionsTab } from "../_components/tabs/CollectionsTab"
+import { CollectionsSection } from "../_components/sections/CollectionsSection"
 
 export default function CollectionsPage() {
-  return <CollectionsTab />
+  return <CollectionsSection />
 }

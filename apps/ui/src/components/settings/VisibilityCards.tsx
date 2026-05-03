@@ -21,7 +21,7 @@ const OPTIONS: {
   {
     value: "limited",
     label: "Limited",
-    desc: "Only members of libraries you contribute to can see your full profile.",
+    desc: "Contact details and location visible only to members of libraries you're affiliated with.",
     icon: "mdi:help-circle-outline",
   },
   {

@@ -2,7 +2,7 @@ import { T } from "@/lib/design-tokens"
 
 // TODO: Implement when Collection content type is built.
 // Will show: curated reading lists, exhibitions, and cross-library indexes assembled by the user.
-export function CollectionsTab() {
+export function CollectionsSection() {
   return (
     <div
       style={{

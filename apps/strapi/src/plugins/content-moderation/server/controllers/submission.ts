@@ -10,6 +10,49 @@ export default ({ strapi }: { strapi: any }) => ({
     ctx.body = { data: submissions }
   },
 
+  // GET /api/content-moderation/submissions/stats  (content-api route, public)
+  // Returns aggregate counts for the homepage contribute CTA and hero stats bar.
+  async stats(ctx: any) {
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+
+    const [
+      submissionsToday,
+      indexedLibraries,
+      totalContributors,
+      totalCountries,
+      languageRow,
+    ] = await Promise.all([
+      strapi.db.query("plugin::content-moderation.submission").count({
+        where: { status: { $ne: "draft" }, createdAt: { $gte: todayStart } },
+      }),
+      strapi.db
+        .query("api::library.library")
+        .count({ where: { published_at: { $notNull: true }, locale: "en" } }),
+      strapi.db.query("api::user-profile.user-profile").count({}),
+      strapi.db
+        .query("api::country.country")
+        .count({ where: { published_at: { $notNull: true }, locale: "en" } }),
+      // Count distinct language codes across all contributor profiles
+      strapi.db.connection
+        .table("components_profile_language_entries")
+        .countDistinct("code as count")
+        .first() as Promise<{ count: string | number } | undefined>,
+    ])
+
+    const totalLanguages = Number((languageRow as any)?.count ?? 0)
+
+    ctx.body = {
+      data: {
+        submissionsToday,
+        indexedLibraries,
+        totalContributors,
+        totalCountries,
+        totalLanguages,
+      },
+    }
+  },
+
   // POST /api/content-moderation/submissions  (content-api route)
   async create(ctx: any) {
     const user = await resolveUser(strapi, ctx)
@@ -55,6 +98,20 @@ export default ({ strapi }: { strapi: any }) => ({
       })
 
     ctx.body = { data: submission }
+  },
+
+  // GET /api/content-moderation/submissions/by-document-id/:documentId  (content-api route)
+  // Returns public submissions for a given user-profile documentId.
+  async findByDocumentId(ctx: any) {
+    const { documentId } = ctx.params as { documentId: string }
+    if (!documentId) return ctx.badRequest("Missing documentId")
+
+    const submissions = await strapi
+      .plugin("content-moderation")
+      .service("submission")
+      .findPublicByDocumentId(documentId)
+
+    ctx.body = { data: submissions }
   },
 
   // GET /api/content-moderation/submissions/by-username/:username  (content-api route)

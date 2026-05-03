@@ -130,7 +130,6 @@ export function LibraryExploreNearby({
   readonly libraries: NearbyLibrary[]
   readonly regionName?: string | null
 }) {
-  // TODO: fetch real nearby data — currently populated by server via fetchNearbyLibraries
   if (!libraries.length) return null
 
   return (

@@ -1,4 +1,4 @@
-import { ContributionsTab } from "../_components/tabs/ContributionsTab"
+import { ContributionsSection } from "../_components/sections/ContributionsSection"
 
 export default async function ContributionsPage({
   params,
@@ -7,5 +7,5 @@ export default async function ContributionsPage({
 }) {
   const { username } = await params
 
-  return <ContributionsTab username={username} />
+  return <ContributionsSection username={username} />
 }

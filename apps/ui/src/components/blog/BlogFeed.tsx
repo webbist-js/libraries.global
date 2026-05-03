@@ -1,8 +1,9 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import { Container } from "@/components/elementary/Container"
+import { searchBlogArticles } from "@/lib/meilisearch"
 import type { BlogArticleSummary } from "@/lib/strapi-api/content/server"
 
 import BlogArticleList from "./BlogArticleList"
@@ -19,6 +20,8 @@ export default function BlogFeed({
   const [activeSection, setActiveSection] = useState("All")
   const [searchQuery, setSearchQuery] = useState("")
   const [sortOrder, setSortOrder] = useState("newest")
+  // null = not searching, string[] = ordered slug matches from MeiliSearch
+  const [searchSlugs, setSearchSlugs] = useState<string[] | null>(null)
 
   // Derive sections with counts
   const categoryStats = useMemo(() => {
@@ -32,51 +35,69 @@ export default function BlogFeed({
     return Object.entries(counts).map(([name, count]) => ({ name, count }))
   }, [articles])
 
+  // Debounced MeiliSearch for text query
+  useEffect(() => {
+    const t = setTimeout(async () => {
+      if (!searchQuery.trim()) {
+        setSearchSlugs(null)
+
+        return
+      }
+      try {
+        const res = await searchBlogArticles(searchQuery)
+        setSearchSlugs(res.hits.map((h) => h.slug))
+      } catch {
+        setSearchSlugs(null)
+      }
+    }, 250)
+
+    return () => clearTimeout(t)
+  }, [searchQuery])
+
   // Process articles (Filter + Sort)
   const processedArticles = useMemo(() => {
     let result = [...articles]
 
-    // Section Filter
+    // MeiliSearch text filter — reorder by relevance when active
+    if (searchSlugs !== null) {
+      const slugSet = new Set(searchSlugs)
+      result = searchSlugs
+        .map((slug) => result.find((a) => a.slug === slug))
+        .filter(Boolean) as BlogArticleSummary[]
+      // include any matched that MeiliSearch returned but aren't in local list
+      result = result.filter((a) => slugSet.has(a.slug ?? ""))
+    }
+
+    // Section filter
     if (activeSection !== "All") {
       result = result.filter((a) => a.section?.name === activeSection)
     }
 
-    // Search Filter
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase()
-      result = result.filter(
-        (a) =>
-          a.title?.toLowerCase().includes(q) ||
-          a.summary?.toLowerCase().includes(q) ||
-          a.author?.toLowerCase().includes(q)
-      )
+    // Sorting (skip when search active — MeiliSearch rank is more useful)
+    if (!searchQuery.trim()) {
+      result.sort((a, b) => {
+        if (sortOrder === "newest") {
+          return (
+            new Date(b.publishedAt || b.updatedAt || 0).getTime() -
+            new Date(a.publishedAt || a.updatedAt || 0).getTime()
+          )
+        }
+        if (sortOrder === "oldest") {
+          return (
+            new Date(a.publishedAt || a.updatedAt || 0).getTime() -
+            new Date(b.publishedAt || b.updatedAt || 0).getTime()
+          )
+        }
+        if (sortOrder === "title") {
+          return (a.title ?? "").localeCompare(b.title ?? "")
+        }
+
+        return 0
+      })
     }
 
-    // Sorting
-    result.sort((a, b) => {
-      if (sortOrder === "newest") {
-        const dateA = new Date(a.publishedAt || a.updatedAt || 0).getTime()
-        const dateB = new Date(b.publishedAt || b.updatedAt || 0).getTime()
-
-        return dateB - dateA
-      }
-
-      if (sortOrder === "oldest") {
-        const dateA = new Date(a.publishedAt || a.updatedAt || 0).getTime()
-        const dateB = new Date(b.publishedAt || b.updatedAt || 0).getTime()
-
-        return dateA - dateB
-      }
-
-      if (sortOrder === "title") {
-        return (a.title ?? "").localeCompare(b.title ?? "")
-      }
-
-      return 0
-    })
-
     return result
-  }, [articles, activeSection, searchQuery, sortOrder])
+  }, [articles, activeSection, searchQuery, searchSlugs, sortOrder])
 
   return (
     <>

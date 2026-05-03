@@ -1,3 +1,4 @@
+import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 import {
   type LeaderboardEntry,
@@ -31,8 +32,9 @@ export function LeaderboardPodium({
       }}
     >
       {entries.map((entry) => (
-        <div
+        <GlobalLink
           key={entry.baUserId}
+          href={entry.username ? `/profile/${entry.username}` : "#"}
           style={{
             padding: "20px 16px",
             borderRadius: "12px",
@@ -41,6 +43,9 @@ export function LeaderboardPodium({
               entry.rank === 1 ? "rgba(232,201,138,0.04)" : T.bg.surface,
             textAlign: "center",
             position: "relative",
+            display: "block",
+            textDecoration: "none",
+            transition: "border-color 150ms",
           }}
         >
           <div
@@ -132,7 +137,7 @@ export function LeaderboardPodium({
               pts
             </span>
           </div>
-        </div>
+        </GlobalLink>
       ))}
     </div>
   )

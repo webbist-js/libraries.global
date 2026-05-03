@@ -166,16 +166,16 @@ html[data-theme="light"]:has([data-transparent-header]) .global-header [data-hea
 html.light:has([data-transparent-header]) .global-header,
 html[data-theme="light"]:has([data-transparent-header]) .global-header {
   --header-opacity: 0;
-  --t-ink-base:    color-mix(in srgb, #f4f7ff              calc((1 - var(--header-opacity)) * 100%), #161626);
-  --t-ink-dim:     color-mix(in srgb, rgba(244,247,255,.72) calc((1 - var(--header-opacity)) * 100%), rgba(22,22,38,.72));
-  --t-ink-low:     color-mix(in srgb, rgba(244,247,255,.48) calc((1 - var(--header-opacity)) * 100%), rgba(22,22,38,.54));
-  --t-ink-faint:   color-mix(in srgb, rgba(244,247,255,.30) calc((1 - var(--header-opacity)) * 100%), rgba(22,22,38,.36));
-  --t-ink-ghost:   color-mix(in srgb, rgba(244,247,255,.14) calc((1 - var(--header-opacity)) * 100%), rgba(22,22,38,.18));
-  --t-border-line: color-mix(in srgb, rgba(255,255,255,.08) calc((1 - var(--header-opacity)) * 100%), rgba(22,22,38,.10));
-  --t-border-hi:   color-mix(in srgb, rgba(255,255,255,.16) calc((1 - var(--header-opacity)) * 100%), rgba(22,22,38,.18));
-  --t-bg-surface:  color-mix(in srgb, #060b19              calc((1 - var(--header-opacity)) * 100%), #fcfaf4);
-  --t-bg-deep:     color-mix(in srgb, #06091a              calc((1 - var(--header-opacity)) * 100%), #ffffff);
-  --t-bg-void:     color-mix(in srgb, #030511              calc((1 - var(--header-opacity)) * 100%), #fbf8f1);
+  /* In light mode, always keep dark ink so logo/nav text stays readable on the
+     warm-paper background from scroll=0. The background/blur fades in via the
+     shared header-reveal animation. */
+  --t-ink-base:    #161626;
+  --t-ink-dim:     rgba(22,22,38,.72);
+  --t-ink-low:     rgba(22,22,38,.54);
+  --t-ink-faint:   rgba(22,22,38,.36);
+  --t-ink-ghost:   rgba(22,22,38,.18);
+  --t-border-line: rgba(22,22,38,.10);
+  --t-border-hi:   rgba(22,22,38,.18);
 }
 
 /*

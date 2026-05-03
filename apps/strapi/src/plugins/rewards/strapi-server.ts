@@ -20,6 +20,25 @@ export default {
         pluginName: "rewards",
       },
     ])
+
+    // Weekly leaderboard snapshot — runs every Monday at 00:05 UTC.
+    // Captures the previous week's ranked list so rankChange deltas can be
+    // computed when the leaderboard is fetched.
+    strapi.cron.add({
+      "rewards-leaderboard-snapshot": {
+        task: async () => {
+          try {
+            await strapi
+              .plugin("rewards")
+              .service("snapshot")
+              .takeWeeklySnapshot()
+          } catch (err) {
+            strapi.log.error("[rewards] Leaderboard snapshot failed:", err)
+          }
+        },
+        options: { rule: "5 0 * * 1" }, // Monday 00:05 UTC
+      },
+    })
   },
   config: { default: {}, validator() {} },
   contentTypes,

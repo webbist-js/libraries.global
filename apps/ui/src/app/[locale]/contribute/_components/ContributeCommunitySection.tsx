@@ -8,15 +8,6 @@ import {
 
 export type { LeaderboardEntry }
 
-const TIER_COLORS: Record<string, string> = {
-  Reader: T.ink.faint,
-  Indexer: T.ink.dim,
-  Cartographer: T.accent.aurora,
-  Archivist: T.accent.violet,
-  Scholar: T.accent.gold,
-  Curator: T.accent.gold,
-}
-
 async function fetchTopFive(): Promise<LeaderboardEntry[]> {
   const strapi = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
   const token = process.env.STRAPI_REST_READONLY_API_KEY
@@ -44,258 +35,422 @@ export async function ContributeCommunitySection() {
     <section
       style={{
         borderTop: `1px solid ${T.border.line}`,
-        padding: "60px 0",
+        padding: "72px 0",
       }}
     >
       <div className="mx-auto w-full max-w-[1296px] px-6 md:px-10">
         {/* Header */}
         <div
-          style={{
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "space-between",
-            marginBottom: "32px",
-            flexWrap: "wrap",
-            gap: "12px",
-          }}
+          className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+          style={{ marginBottom: "40px" }}
         >
-          <div>
-            <p
-              style={{
-                fontFamily: T.font.mono,
-                fontSize: "9px",
-                letterSpacing: ".20em",
-                textTransform: "uppercase",
-                color: T.accent.aurora,
-                marginBottom: "8px",
-              }}
-            >
-              Community
-            </p>
+          <div style={{ maxWidth: "52ch" }}>
             <h2
               style={{
                 fontFamily: T.font.serif,
-                fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
-                fontWeight: 700,
-                letterSpacing: "-0.03em",
+                fontSize: "clamp(2.4rem, 5vw, 4rem)",
+                fontWeight: 400,
+                letterSpacing: "-0.02em",
                 color: T.ink.base,
-                lineHeight: 0.94,
-                margin: 0,
+                lineHeight: 1,
+                margin: "0 0 16px",
               }}
             >
-              The community.
+              The{" "}
+              <em style={{ fontStyle: "italic", color: T.accent.aurora }}>
+                community
+              </em>
+              .
             </h2>
             <p
               style={{
-                fontSize: "14px",
-                color: T.ink.faint,
-                marginTop: "10px",
-                maxWidth: "36ch",
+                fontSize: "15px",
+                lineHeight: 1.65,
+                color: T.ink.dim,
+                margin: 0,
               }}
             >
-              Contributors who shape the atlas, ranked by points this month.
+              Public recognition for the people doing the slow work. Points come
+              from accepted contributions, image licensing, translations, and
+              verifications.
             </p>
           </div>
 
-          <GlobalLink
-            href="/contribute/community"
+          <div
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "9px",
-              letterSpacing: ".16em",
-              textTransform: "uppercase",
-              color: T.accent.aurora,
-              textDecoration: "none",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
               flexShrink: 0,
+              paddingTop: "6px",
+              textAlign: "right",
             }}
           >
-            See full leaderboard →
-          </GlobalLink>
+            <span
+              style={{
+                fontFamily: T.font.mono,
+                fontSize: "10px",
+                letterSpacing: ".18em",
+                textTransform: "uppercase",
+                color: T.ink.faint,
+              }}
+            >
+              Top {entries.length} · This month
+            </span>
+          </div>
         </div>
 
-        {/* Leaderboard rows */}
-        {entries.length === 0 ? (
-          <p
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "11px",
-              color: T.ink.faint,
-              letterSpacing: ".08em",
-              textTransform: "uppercase",
-            }}
-          >
-            No contributions yet this month — be the first.
-          </p>
-        ) : (
+        {/* Two-column layout */}
+        <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[1fr_300px]">
+          {/* Left: leaderboard table */}
+          <div>
+            <div
+              style={{
+                border: `1px solid ${T.border.line}`,
+                borderRadius: "14px",
+                overflow: "hidden",
+              }}
+            >
+              {entries.length === 0 ? (
+                <p
+                  style={{
+                    padding: "32px 24px",
+                    fontFamily: T.font.mono,
+                    fontSize: "11px",
+                    color: T.ink.faint,
+                    letterSpacing: ".10em",
+                    textTransform: "uppercase",
+                    margin: 0,
+                  }}
+                >
+                  No contributions yet this month — be the first.
+                </p>
+              ) : (
+                entries.map((entry, i) => (
+                  <div
+                    key={entry.baUserId}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "18px",
+                      padding: "18px 24px",
+                      borderBottom:
+                        i < entries.length - 1
+                          ? `1px solid ${T.border.line}`
+                          : "none",
+                      background: T.bg.surface,
+                    }}
+                  >
+                    {/* Rank */}
+                    <span
+                      style={{
+                        fontFamily: T.font.mono,
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        color: i === 0 ? T.accent.gold : T.ink.dim,
+                        width: "20px",
+                        flexShrink: 0,
+                        textAlign: "center",
+                      }}
+                    >
+                      {entry.rank}
+                    </span>
+
+                    {/* Avatar */}
+                    <div
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "50%",
+                        background: "rgba(127,223,255,0.08)",
+                        border: "1px solid rgba(127,223,255,0.18)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontFamily: T.font.mono,
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        color: T.accent.aurora,
+                        flexShrink: 0,
+                        overflow: "hidden",
+                      }}
+                    >
+                      {entry.avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={entry.avatarUrl}
+                          alt={getDisplayName(entry)}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      ) : (
+                        getInitials(entry)
+                      )}
+                    </div>
+
+                    {/* Name + meta */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          marginBottom: "5px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: "14px",
+                            fontWeight: 600,
+                            color: T.ink.base,
+                            letterSpacing: "-0.01em",
+                          }}
+                        >
+                          {getDisplayName(entry)}
+                        </span>
+                        {(entry.contributorRole ||
+                          entry.tier ||
+                          entry.country) && (
+                          <span
+                            style={{
+                              fontFamily: T.font.mono,
+                              fontSize: "9px",
+                              letterSpacing: ".12em",
+                              textTransform: "uppercase",
+                              color: T.ink.dim,
+                              padding: "2px 8px",
+                              borderRadius: "4px",
+                              border: `1px solid ${T.border.line}`,
+                              background: "rgba(255,255,255,0.04)",
+                              flexShrink: 0,
+                            }}
+                          >
+                            {[
+                              entry.contributorRole ?? entry.tier,
+                              entry.country,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </span>
+                        )}
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: T.font.mono,
+                          fontSize: "10px",
+                          letterSpacing: ".10em",
+                          textTransform: "uppercase",
+                          color: T.ink.faint,
+                        }}
+                      >
+                        +{entry.periodPoints.toLocaleString()} pts · 30 days
+                      </div>
+                    </div>
+
+                    {/* Points */}
+                    <div
+                      style={{
+                        textAlign: "right",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontFamily: T.font.serif,
+                          fontSize: "clamp(22px, 2.2vw, 28px)",
+                          fontWeight: 400,
+                          letterSpacing: "-0.02em",
+                          color: T.ink.base,
+                          lineHeight: 1,
+                        }}
+                      >
+                        {entry.periodPoints.toLocaleString()}
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: T.font.mono,
+                          fontSize: "9px",
+                          letterSpacing: ".14em",
+                          textTransform: "uppercase",
+                          color: T.ink.faint,
+                          marginTop: "3px",
+                        }}
+                      >
+                        Points
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Footer under table */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginTop: "14px",
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: T.font.mono,
+                  fontSize: "10px",
+                  letterSpacing: ".14em",
+                  textTransform: "uppercase",
+                  color: T.ink.faint,
+                }}
+              >
+                Showing top {entries.length} · Global · This month
+              </span>
+              <GlobalLink
+                href="/contribute/community"
+                style={{
+                  fontFamily: T.font.mono,
+                  fontSize: "10px",
+                  letterSpacing: ".14em",
+                  textTransform: "uppercase",
+                  color: T.accent.aurora,
+                  textDecoration: "none",
+                }}
+              >
+                See full leaderboard →
+              </GlobalLink>
+            </div>
+          </div>
+
+          {/* Right: Where you stand */}
           <div
             style={{
               border: `1px solid ${T.border.line}`,
-              borderRadius: "12px",
-              overflow: "hidden",
+              borderRadius: "14px",
+              padding: "24px",
+              background: T.bg.surface,
             }}
           >
-            {entries.map((entry, i) => (
-              <div
-                key={entry.baUserId}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "16px",
-                  padding: "14px 20px",
-                  borderBottom:
-                    i < entries.length - 1
-                      ? `1px solid ${T.border.line}`
-                      : "none",
-                  background: T.bg.surface,
-                }}
-              >
-                {/* Rank */}
-                <span
-                  style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "11px",
-                    color: i === 0 ? T.accent.gold : T.ink.faint,
-                    letterSpacing: ".08em",
-                    width: "24px",
-                    flexShrink: 0,
-                    textAlign: "right",
-                  }}
-                >
-                  {entry.rank}
-                </span>
+            <h3
+              style={{
+                fontFamily: T.font.serif,
+                fontSize: "22px",
+                fontWeight: 400,
+                color: T.ink.base,
+                margin: "0 0 20px",
+                letterSpacing: "-0.01em",
+                lineHeight: 1.1,
+              }}
+            >
+              Where you stand
+            </h3>
 
-                {/* Avatar */}
+            <p
+              style={{
+                fontSize: "13px",
+                lineHeight: 1.65,
+                color: T.ink.faint,
+                margin: "0 0 24px",
+              }}
+            >
+              Earn points through accepted contributions, verified data, CC
+              photo uploads, and wiki translations. Every action moves you up
+              the board.
+            </p>
+
+            {/* Tier ladder (compact) */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "6px",
+                marginBottom: "24px",
+              }}
+            >
+              {[
+                { name: "Reader", min: 0, color: T.ink.faint },
+                { name: "Indexer", min: 100, color: T.ink.dim },
+                { name: "Cartographer", min: 500, color: T.accent.aurora },
+                { name: "Archivist", min: 1500, color: T.accent.violet },
+                { name: "Scholar", min: 4000, color: T.accent.gold },
+                { name: "Curator", min: 9000, color: T.accent.gold },
+              ].map((tier) => (
                 <div
+                  key={tier.name}
                   style={{
-                    width: "32px",
-                    height: "32px",
-                    borderRadius: "50%",
-                    background: "rgba(127,223,255,0.10)",
-                    border: "1px solid rgba(127,223,255,0.18)",
                     display: "flex",
+                    justifyContent: "space-between",
                     alignItems: "center",
-                    justifyContent: "center",
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    fontWeight: 600,
-                    color: T.accent.aurora,
-                    flexShrink: 0,
-                    overflow: "hidden",
                   }}
                 >
-                  {entry.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={entry.avatarUrl}
-                      alt={getDisplayName(entry)}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                    />
-                  ) : (
-                    getInitials(entry)
-                  )}
-                </div>
-
-                {/* Name + meta */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "13px",
-                      fontWeight: 500,
-                      color: T.ink.base,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {getDisplayName(entry)}
-                  </p>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontFamily: T.font.mono,
-                      fontSize: "9px",
-                      letterSpacing: ".10em",
-                      textTransform: "uppercase",
-                      color: TIER_COLORS[entry.tier] ?? T.ink.faint,
-                    }}
-                  >
-                    {entry.tier}
-                    {entry.country ? ` · ${entry.country}` : ""}
-                  </p>
-                </div>
-
-                {/* Points */}
-                <div style={{ textAlign: "right", flexShrink: 0 }}>
                   <span
                     style={{
-                      fontFamily: T.font.serif,
-                      fontSize: "20px",
-                      fontWeight: 400,
-                      letterSpacing: "-0.02em",
-                      color: T.ink.base,
-                    }}
-                  >
-                    {entry.periodPoints.toLocaleString()}
-                  </span>
-                  <p
-                    style={{
-                      margin: 0,
                       fontFamily: T.font.mono,
                       fontSize: "10px",
-                      letterSpacing: ".12em",
+                      letterSpacing: ".10em",
                       textTransform: "uppercase",
-                      color: T.ink.faint,
+                      color: tier.color,
                     }}
                   >
-                    pts · month
-                  </p>
+                    {tier.name}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: T.font.mono,
+                      fontSize: "10px",
+                      color: T.ink.faint,
+                      letterSpacing: ".06em",
+                    }}
+                  >
+                    {tier.min.toLocaleString()} pts
+                  </span>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
 
-        {/* Footer bar */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginTop: "16px",
-          }}
-        >
-          <span
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
-              color: T.ink.faint,
-            }}
-          >
-            Showing top {entries.length} · Global · This month
-          </span>
-          <GlobalLink
-            href="/contribute/community"
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
-              color: T.accent.aurora,
-              textDecoration: "none",
-            }}
-          >
-            Full leaderboard →
-          </GlobalLink>
+            {/* CTAs */}
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+            >
+              <GlobalLink
+                href="/contribute/community"
+                style={{
+                  display: "block",
+                  padding: "10px 16px",
+                  borderRadius: "8px",
+                  border: `1px solid ${T.border.line}`,
+                  background: "rgba(255,255,255,0.04)",
+                  fontFamily: T.font.mono,
+                  fontSize: "10px",
+                  letterSpacing: ".12em",
+                  textTransform: "uppercase",
+                  color: T.ink.base,
+                  textDecoration: "none",
+                  textAlign: "center",
+                }}
+              >
+                Open full board
+              </GlobalLink>
+              <GlobalLink
+                href="/contribute"
+                style={{
+                  display: "block",
+                  padding: "10px 16px",
+                  borderRadius: "8px",
+                  border: "1px solid rgba(127,223,255,0.35)",
+                  background: "rgba(127,223,255,0.10)",
+                  fontFamily: T.font.mono,
+                  fontSize: "10px",
+                  letterSpacing: ".12em",
+                  textTransform: "uppercase",
+                  color: T.accent.aurora,
+                  textDecoration: "none",
+                  textAlign: "center",
+                }}
+              >
+                Start contributing
+              </GlobalLink>
+            </div>
+          </div>
         </div>
       </div>
     </section>

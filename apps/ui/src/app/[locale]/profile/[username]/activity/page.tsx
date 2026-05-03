@@ -1,4 +1,4 @@
-import { ActivityTab } from "../_components/tabs/ActivityTab"
+import { ActivitySection } from "../_components/sections/ActivitySection"
 
 export default async function ActivityPage({
   params,
@@ -7,5 +7,5 @@ export default async function ActivityPage({
 }) {
   const { username } = await params
 
-  return <ActivityTab username={username} />
+  return <ActivitySection username={username} />
 }

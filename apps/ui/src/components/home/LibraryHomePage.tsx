@@ -21,11 +21,20 @@ export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
   const navbarPromise = fetchNavbar(locale)
   const footerPromise = fetchFooter(locale)
   const blogArticlesPromise = fetchRecentBlogArticles(locale)
+  const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
+
   const statsPromise = fetch(
-    `${process.env.STRAPI_URL ?? "http://127.0.0.1:1337"}/api/libraries?pagination[pageSize]=1&fields[0]=id&status=published`,
+    `${STRAPI}/api/libraries?pagination[pageSize]=1&fields[0]=id&status=published`,
     { next: { revalidate: 300 } }
   )
     .then((r) => r.json())
+    .catch(() => null)
+
+  const contributeStatsPromise = fetch(
+    `${STRAPI}/api/content-moderation/submissions/stats`,
+    { next: { revalidate: 3600 } }
+  )
+    .then((r) => (r.ok ? r.json() : null))
     .catch(() => null)
 
   const homepage = use(homepagePromise)?.data
@@ -34,8 +43,13 @@ export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
   const footer = use(footerPromise)?.data
   const blogArticles = use(blogArticlesPromise)?.data ?? []
   const stats = use(statsPromise)
+  const contributeStats = use(contributeStatsPromise)?.data ?? null
 
   const libraryCount: number | null = stats?.meta?.pagination?.total ?? null
+  const contributorCount: number | null =
+    contributeStats?.totalContributors ?? null
+  const languageCount: number | null =
+    contributeStats?.totalLanguages > 0 ? contributeStats.totalLanguages : null
 
   return (
     <PageShell className="relative isolate flex min-h-screen w-full flex-col overflow-hidden">
@@ -50,6 +64,8 @@ export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
             heroTitle={homepage?.heroTitle}
             heroText={homepage?.heroText}
             libraryCount={libraryCount}
+            contributorCount={contributorCount}
+            languageCount={languageCount}
           />
 
           <HomepageSections

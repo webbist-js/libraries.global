@@ -20,6 +20,51 @@ export default ({ env }) => {
       config: {
         host: env("MEILISEARCH_HOST", "http://localhost:7700"),
         apiKey: env("MEILISEARCH_ADMIN_API_KEY", ""),
+        "blog-article": {
+          settings: {
+            searchableAttributes: [
+              "title",
+              "summary",
+              "author",
+              "section_name",
+            ],
+            filterableAttributes: ["section_slug"],
+          },
+          transformEntry({ entry }: { entry: Record<string, unknown> }) {
+            const section = entry.section as Record<string, unknown> | null
+
+            return {
+              ...entry,
+              section_slug: section?.slug ?? null,
+              section_name: section?.name ?? null,
+            }
+          },
+        },
+
+        "wiki-article": {
+          settings: {
+            searchableAttributes: [
+              "title",
+              "summary",
+              "section_name",
+              "category_name",
+            ],
+            filterableAttributes: ["section_slug", "category_slug"],
+          },
+          transformEntry({ entry }: { entry: Record<string, unknown> }) {
+            const section = entry.section as Record<string, unknown> | null
+            const category = entry.category as Record<string, unknown> | null
+
+            return {
+              ...entry,
+              section_slug: section?.slug ?? null,
+              section_name: section?.name ?? null,
+              category_slug: category?.slug ?? null,
+              category_name: category?.name ?? null,
+            }
+          },
+        },
+
         library: {
           settings: {
             searchableAttributes: [
@@ -41,11 +86,18 @@ export default ({ env }) => {
             ],
             sortableAttributes: ["name"],
           },
-          // Flatten nested relations so they are searchable/filterable
+          // Flatten nested relations so they are searchable/filterable,
+          // and map the location custom field to MeiliSearch's _geo format.
           transformEntry({ entry }: { entry: Record<string, unknown> }) {
             const continent = entry.continent as Record<string, unknown> | null
             const country = entry.country as Record<string, unknown> | null
             const region = entry.region as Record<string, unknown> | null
+            const location = entry.location as {
+              lat?: unknown
+              lng?: unknown
+            } | null
+            const lat = location?.lat != null ? Number(location.lat) : null
+            const lng = location?.lng != null ? Number(location.lng) : null
 
             return {
               ...entry,
@@ -55,6 +107,13 @@ export default ({ env }) => {
               country_name: country?.name ?? null,
               region_slug: region?.slug ?? null,
               region_name: region?.name ?? null,
+              // _geo enables MeiliSearch geo radius filtering and distance sorting
+              ...(lat != null &&
+              lng != null &&
+              !Number.isNaN(lat) &&
+              !Number.isNaN(lng)
+                ? { _geo: { lat, lng } }
+                : {}),
             }
           },
         },

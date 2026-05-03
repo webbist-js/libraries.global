@@ -190,7 +190,11 @@ export function SettingsShell({
                 }}
               >
                 <Icon icon="mdi:arrow-top-right" width={13} height={13} />
-                View public profile
+                {profile?.profileVisibility === "private"
+                  ? "View private profile"
+                  : profile?.profileVisibility === "limited"
+                    ? "View limited profile"
+                    : "View public profile"}
               </Link>
             )}
           </div>

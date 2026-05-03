@@ -2540,6 +2540,10 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
       "manyToMany",
       "api::library.library"
     >
+    followedProfiles: Schema.Attribute.Relation<
+      "manyToMany",
+      "api::user-profile.user-profile"
+    >
     interests: Schema.Attribute.JSON
     isVerifiedLibrarian: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>

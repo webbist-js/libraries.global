@@ -153,7 +153,7 @@ function WikiLeftNav({
           alignItems: "center",
           gap: "6px",
           fontFamily: T.font.mono,
-          fontSize: "10px",
+          fontSize: "11px",
           letterSpacing: ".14em",
           color: T.ink.faint,
           textTransform: "uppercase",
@@ -181,7 +181,7 @@ function WikiLeftNav({
           <div
             style={{
               fontFamily: T.font.mono,
-              fontSize: "10px",
+              fontSize: "11px",
               letterSpacing: ".22em",
               textTransform: "uppercase",
               color: T.ink.low,
@@ -224,7 +224,7 @@ function WikiLeftNav({
                         justifyContent: "space-between",
                         alignItems: "center",
                         padding: isActive ? "6px 12px 6px 11px" : "6px 12px",
-                        fontSize: "13px",
+                        fontSize: "14px",
                         color: isActive ? T.ink.base : T.ink.dim,
                         background: isActive
                           ? "var(--t-aurora-soft)"
@@ -288,7 +288,7 @@ function WikiRightPanel({
           <h6
             style={{
               fontFamily: T.font.mono,
-              fontSize: "10px",
+              fontSize: "11px",
               letterSpacing: ".22em",
               textTransform: "uppercase",
               color: T.ink.low,

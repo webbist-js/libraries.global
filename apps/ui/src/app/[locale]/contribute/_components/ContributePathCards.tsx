@@ -46,9 +46,9 @@ const PATH_CARDS: PathCard[] = [
   {
     pathId: "PATH·02",
     role: "ANY ROLE",
-    accentColor: T.accent.aurora,
+    accentColor: T.accent.ember,
     cardGlow:
-      "radial-gradient(ellipse 55% 65% at 95% 10%, rgba(127,223,255,0.08) 0%, transparent 65%)",
+      "radial-gradient(ellipse 55% 65% at 95% 10%, rgba(255,184,138,0.09) 0%, transparent 65%)",
     heading: "Edit an ",
     headingItalic: "existing library.",
     body: "Refine a record that already exists — opening times, catalogue links, photography, descriptions. Changes shown side-by-side for moderators.",
@@ -77,7 +77,8 @@ const PATH_CARDS: PathCard[] = [
     pathId: "PATH·04",
     role: "EDITORIAL BOARD",
     accentColor: T.accent.gold,
-    cardGlow: "none",
+    cardGlow:
+      "radial-gradient(ellipse 50% 60% at 95% 5%, rgba(232,201,138,0.07) 0%, transparent 65%)",
     heading: "Triage the ",
     headingItalic: "review queue.",
     body: "For editorial staff. 218 pending records await approval, with rejection or change-requests routed back to contributors — curated at your rate.",

@@ -29,6 +29,8 @@ export interface LibrarySearchHit {
     url?: string | null
     formats?: Record<string, { url?: string }>
   } | null
+  _geo?: { lat: number; lng: number } | null
+  _geoDistance?: number
 }
 
 export interface LibrarySearchParams {
@@ -94,6 +96,92 @@ export async function searchLibraries(params: LibrarySearchParams = {}) {
       "region_slug",
       "region_name",
       "heroImage",
+    ],
+  })
+}
+
+// ── Blog search ───────────────────────────────────────────────────────────────
+
+export interface BlogArticleSearchHit {
+  id: number
+  documentId: string
+  slug: string
+  title?: string | null
+  section_slug?: string | null
+}
+
+export async function searchBlogArticles(query: string, limit = 30) {
+  return meiliClient.index("blog-article").search<BlogArticleSearchHit>(query, {
+    limit,
+    attributesToRetrieve: ["id", "documentId", "slug", "title", "section_slug"],
+  })
+}
+
+// ── Wiki search ────────────────────────────────────────────────────────────────
+
+export interface WikiArticleSearchHit {
+  id: number
+  documentId: string
+  slug: string
+  title?: string | null
+  summary?: string | null
+  section_slug?: string | null
+  section_name?: string | null
+  category_slug?: string | null
+}
+
+export async function searchWikiArticles(
+  query: string,
+  sectionSlug?: string | null,
+  limit = 30
+) {
+  return meiliClient.index("wiki-article").search<WikiArticleSearchHit>(query, {
+    filter: sectionSlug ? `section_slug = "${sectionSlug}"` : undefined,
+    limit,
+    attributesToRetrieve: [
+      "id",
+      "documentId",
+      "slug",
+      "title",
+      "summary",
+      "section_slug",
+      "section_name",
+    ],
+  })
+}
+
+// ── Geo search ────────────────────────────────────────────────────────────────
+
+export async function searchNearbyLibraries(
+  lat: number,
+  lng: number,
+  excludeSlug: string,
+  radiusMeters = 50_000,
+  limit = 4
+) {
+  const index = meiliClient.index("library")
+
+  return index.search<LibrarySearchHit>("", {
+    filter: [
+      `_geoRadius(${lat}, ${lng}, ${radiusMeters})`,
+      `slug != "${excludeSlug}"`,
+    ],
+    limit,
+    sort: [`_geoPoint(${lat}, ${lng}):asc`],
+    attributesToRetrieve: [
+      "id",
+      "documentId",
+      "name",
+      "slug",
+      "summary",
+      "libraryType",
+      "operationalStatus",
+      "city",
+      "continent_slug",
+      "country_slug",
+      "region_slug",
+      "heroImage",
+      "_geo",
     ],
   })
 }

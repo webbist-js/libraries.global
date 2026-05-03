@@ -13,7 +13,11 @@ import { T } from "@/lib/design-tokens"
 
 type NavbarData = Data.ContentType<"api::navbar.navbar"> | null | undefined
 
-type ProfileSnippet = { avatarUrl?: string | null; username?: string | null }
+type ProfileSnippet = {
+  avatarUrl?: string | null
+  username?: string | null
+  isVerifiedLibrarian?: boolean | null
+}
 
 async function fetchProfileSnippet(
   baUserId: string
@@ -21,17 +25,35 @@ async function fetchProfileSnippet(
   const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
   const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
   try {
+    const params = new URLSearchParams({
+      "filters[baUserId][$eq]": baUserId,
+      "fields[0]": "username",
+      "fields[1]": "isVerifiedLibrarian",
+      "populate[avatar][fields][0]": "url",
+    })
     const res = await fetch(
-      `${strapiUrl}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(baUserId)}&fields[0]=avatarUrl&fields[1]=username`,
+      `${strapiUrl}/api/user-profiles?${params.toString()}`,
       {
-        next: { revalidate: 30 },
+        cache: "no-store",
         headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
       }
     )
     if (!res.ok) return null
-    const json = (await res.json()) as { data?: ProfileSnippet[] }
+    const json = (await res.json()) as {
+      data?: {
+        username?: string | null
+        isVerifiedLibrarian?: boolean | null
+        avatar?: { url?: string | null } | null
+      }[]
+    }
+    const item = json.data?.[0]
+    if (!item) return null
 
-    return json.data?.[0] ?? null
+    return {
+      username: item.username ?? null,
+      isVerifiedLibrarian: item.isVerifiedLibrarian ?? null,
+      avatarUrl: item.avatar?.url ?? null,
+    }
   } catch {
     return null
   }

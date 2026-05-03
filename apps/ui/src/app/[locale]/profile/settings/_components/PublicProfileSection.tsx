@@ -11,7 +11,7 @@ import { VisibilityCards } from "@/components/settings/VisibilityCards"
 import { useProfile } from "@/hooks/useProfile"
 import type { BetterAuthUser } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
-import { Link } from "@/lib/navigation"
+import { Link, useRouter } from "@/lib/navigation"
 import type { UserProfile } from "@/lib/types/profile"
 
 const inputStyle = {
@@ -54,6 +54,7 @@ export function PublicProfileSection({
   sessionUser: BetterAuthUser
 }) {
   const { saving, updateProfile } = useProfile()
+  const router = useRouter()
   const isIncomplete = !profile?.firstName || !profile?.affiliationType
 
   const [form, setForm] = useState({
@@ -142,10 +143,12 @@ export function PublicProfileSection({
 
       return
     }
+    const newUsername = form.username.trim()
+    const usernameChanged = newUsername && newUsername !== profile?.username
     const payload: Record<string, unknown> = {
       firstName: form.firstName,
       lastName: form.lastName,
-      username: form.username,
+      username: newUsername,
       pronouns: form.pronouns,
       bio: form.bio,
       affiliation: form.affiliation,
@@ -161,7 +164,10 @@ export function PublicProfileSection({
       profileVisibility: form.profileVisibility,
       interests: form.interests,
     }
-    await updateProfile(payload)
+    const ok = await updateProfile(payload)
+    if (ok && usernameChanged) {
+      router.push(`/profile/${newUsername}`)
+    }
   }
 
   const handleDiscard = () => {
@@ -213,11 +219,14 @@ export function PublicProfileSection({
             color: T.ink.base,
           }}
         >
-          Public profile
+          Your profile
         </h2>
         <p style={{ margin: "4px 0 0", fontSize: "13px", color: T.ink.faint }}>
-          This is what other contributors see. Your email is never shown
-          publicly.
+          {form.profileVisibility === "private"
+            ? "Your profile is private — only visible to you. Your email is never shown."
+            : form.profileVisibility === "limited"
+              ? "Your profile is limited — contact details are hidden from others. Your email is never shown."
+              : "Visible to all contributors. Your email is never shown."}
         </p>
       </div>
 

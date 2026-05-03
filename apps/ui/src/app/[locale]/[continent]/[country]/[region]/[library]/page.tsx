@@ -93,7 +93,11 @@ export default function LibraryRoutePage(props: {
 
   const navbar = use(fetchNavbar(locale))?.data
   const nearbyLibraries = use(
-    fetchNearbyLibraries(librarySlug, library.region?.slug)
+    fetchNearbyLibraries(
+      librarySlug,
+      library.region?.slug,
+      library.location as { lat?: unknown; lng?: unknown } | null
+    )
   )
 
   return (
