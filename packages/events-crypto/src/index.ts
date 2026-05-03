@@ -32,7 +32,11 @@ export function decrypt(
 ): string {
   try {
     return _decrypt(blobJson, hexKey)
-  } catch {
+  } catch (err) {
+    // Re-throw programmer mistakes immediately — don't mask them with key fallback
+    if (err instanceof TypeError) throw err
+    if (err instanceof Error && err.message.startsWith("hexKey must be"))
+      throw err
     if (prevHexKey != null) return _decrypt(blobJson, prevHexKey)
     throw new Error("Decryption failed — wrong key or corrupted blob")
   }

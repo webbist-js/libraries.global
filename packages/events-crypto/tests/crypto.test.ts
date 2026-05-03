@@ -33,13 +33,19 @@ describe("encrypt / decrypt", () => {
 
   it("throws when key is wrong length on decrypt (no fallback)", () => {
     const blob = encrypt("hello", KEY)
-    // decrypt() wraps _decrypt errors with a generic message when no prevKey is supplied
-    expect(() => decrypt(blob, "aabb")).toThrow()
+    expect(() => decrypt(blob, "aabb")).toThrow(
+      "hexKey must be 64 hex characters (32 bytes)"
+    )
   })
 
   it("throws on malformed blob (missing fields)", () => {
-    // decrypt() wraps _decrypt errors; we just assert it throws
-    expect(() => decrypt(JSON.stringify({ iv: "x" }), KEY)).toThrow()
+    // decrypt() re-throws TypeError without wrapping
+    expect(() => decrypt(JSON.stringify({ iv: "x" }), KEY)).toThrow(TypeError)
+  })
+
+  it("re-throws blob shape error from decrypt without wrapping", () => {
+    // Valid JSON but missing required fields → TypeError is re-thrown
+    expect(() => decrypt(JSON.stringify({}), KEY)).toThrow(TypeError)
   })
 
   it("throws on malformed blob (not valid JSON)", () => {
