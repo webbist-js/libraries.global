@@ -42,9 +42,32 @@ export function startHealthServer(port: number): void {
 
     if (req.method === "POST" && req.url === "/test-credential") {
       let body = ""
-      for await (const chunk of req) body += chunk
-      const { credentialDocumentId } = JSON.parse(body) as {
-        credentialDocumentId: string
+      let bodySize = 0
+      const MAX_BODY = 65_536 // 64 KB
+      for await (const chunk of req) {
+        bodySize += (chunk as Buffer).length
+        if (bodySize > MAX_BODY) {
+          res.writeHead(413)
+          res.end(
+            JSON.stringify({ ok: false, error: "Request body too large" })
+          )
+
+          return
+        }
+        body += chunk
+      }
+
+      let credentialDocumentId: string
+      try {
+        const parsed = JSON.parse(body) as { credentialDocumentId?: string }
+        if (typeof parsed.credentialDocumentId !== "string")
+          throw new Error("Missing credentialDocumentId")
+        credentialDocumentId = parsed.credentialDocumentId
+      } catch {
+        res.writeHead(400)
+        res.end(JSON.stringify({ ok: false, error: "Invalid JSON body" }))
+
+        return
       }
 
       const row = await db("ev_event_credentials")
