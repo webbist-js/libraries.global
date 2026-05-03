@@ -158,6 +158,11 @@ export default ({ env }) => {
       enabled: true,
       resolve: "./src/plugins/rewards",
     },
+
+    events: {
+      enabled: true,
+      resolve: "./src/plugins/events",
+    },
   }
 }
 
