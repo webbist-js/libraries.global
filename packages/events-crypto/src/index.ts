@@ -2,7 +2,7 @@ import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto"
 
 const ALGO = "aes-256-gcm" as const
 
-interface Blob {
+interface CipherBlob {
   iv: string
   tag: string
   ct: string
@@ -10,6 +10,9 @@ interface Blob {
 
 export function encrypt(plaintext: string, hexKey: string): string {
   const key = Buffer.from(hexKey, "hex")
+  if (key.length !== 32) {
+    throw new Error("hexKey must be 64 hex characters (32 bytes)")
+  }
   const iv = randomBytes(12)
   const cipher = createCipheriv(ALGO, key, iv)
   const ct = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()])
@@ -19,7 +22,7 @@ export function encrypt(plaintext: string, hexKey: string): string {
     iv: iv.toString("base64"),
     tag: tag.toString("base64"),
     ct: ct.toString("base64"),
-  } satisfies Blob)
+  } satisfies CipherBlob)
 }
 
 export function decrypt(
@@ -36,8 +39,20 @@ export function decrypt(
 }
 
 function _decrypt(blobJson: string, hexKey: string): string {
-  const { iv, tag, ct } = JSON.parse(blobJson) as Blob
+  const { iv, tag, ct } = JSON.parse(blobJson) as CipherBlob
+  if (
+    typeof iv !== "string" ||
+    typeof tag !== "string" ||
+    typeof ct !== "string"
+  ) {
+    throw new TypeError(
+      "malformed blob: expected { iv, tag, ct } string fields"
+    )
+  }
   const key = Buffer.from(hexKey, "hex")
+  if (key.length !== 32) {
+    throw new Error("hexKey must be 64 hex characters (32 bytes)")
+  }
   const decipher = createDecipheriv(ALGO, key, Buffer.from(iv, "base64"))
   decipher.setAuthTag(Buffer.from(tag, "base64"))
 
