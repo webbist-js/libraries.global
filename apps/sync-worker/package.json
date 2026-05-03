@@ -12,16 +12,17 @@
   },
   "dependencies": {
     "@repo/events-crypto": "workspace:*",
+    "dotenv": "17.2.3",
+    "ical.js": "^2.0.1",
     "knex": "^3.1.0",
-    "pg": "^8.11.0",
-    "p-limit": "^6.1.0",
     "node-cron": "^3.0.3",
-    "ical.js": "^2.0.1"
+    "p-limit": "^6.1.0",
+    "pg": "^8.11.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "@types/pg": "^8.11.0",
     "@types/node-cron": "^3.0.11",
+    "@types/pg": "^8.11.0",
     "tsx": "^4.7.0",
     "typescript": "^5.0.0",
     "vitest": "^2.0.0"

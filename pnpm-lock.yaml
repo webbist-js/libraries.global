@@ -208,6 +208,9 @@ importers:
       '@repo/events-crypto':
         specifier: workspace:*
         version: link:../../packages/events-crypto
+      dotenv:
+        specifier: 17.2.3
+        version: 17.2.3
       ical.js:
         specifier: ^2.0.1
         version: 2.2.1
