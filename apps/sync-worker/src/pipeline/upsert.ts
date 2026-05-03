@@ -68,7 +68,7 @@ export async function upsertEvents(
          )
          .join(", ")}
        ON CONFLICT (source_provider, external_id) DO UPDATE SET
-         sync_hash = EXCLUDED.sync_hash,
+         sync_hash = CASE WHEN ev_events.sync_hash != EXCLUDED.sync_hash THEN EXCLUDED.sync_hash ELSE ev_events.sync_hash END,
          title = CASE WHEN ev_events.sync_hash != EXCLUDED.sync_hash THEN EXCLUDED.title ELSE ev_events.title END,
          description = CASE WHEN ev_events.sync_hash != EXCLUDED.sync_hash THEN EXCLUDED.description ELSE ev_events.description END,
          summary = CASE WHEN ev_events.sync_hash != EXCLUDED.sync_hash THEN EXCLUDED.summary ELSE ev_events.summary END,
