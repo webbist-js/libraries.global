@@ -4,6 +4,7 @@ import routes from "./server/routes"
 import services from "./server/services"
 
 export default {
+  pluginId: "events",
   register() {},
   bootstrap() {},
   config: { default: {}, validator() {} },

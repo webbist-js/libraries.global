@@ -66,6 +66,36 @@ export default ({ strapi }: { strapi: any }) => ({
     }
   },
 
+  async testRaw(ctx: any) {
+    const { provider, credentials } = ctx.request.body as {
+      provider: string
+      credentials: Record<string, string>
+    }
+    if (!provider || !credentials) {
+      ctx.status = 400
+      ctx.body = { ok: false, error: "provider and credentials are required" }
+
+      return
+    }
+    const workerUrl = process.env.WORKER_URL ?? "http://localhost:3100"
+    try {
+      const res = await fetch(`${workerUrl}/test-credential`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider, credentials }),
+        signal: AbortSignal.timeout(10_000),
+      })
+      if (!res.ok) {
+        ctx.body = { ok: false, error: `Worker returned ${res.status}` }
+
+        return
+      }
+      ctx.body = await res.json()
+    } catch (err: any) {
+      ctx.body = { ok: false, error: err.message ?? "Worker unreachable" }
+    }
+  },
+
   async listRuns(ctx: any) {
     const { limit = "20", page = "1" } = ctx.query as Record<string, string>
     const results = await strapi

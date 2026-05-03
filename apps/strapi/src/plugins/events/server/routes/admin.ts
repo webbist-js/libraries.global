@@ -32,6 +32,12 @@ export default [
     config: ADMIN_AUTH,
   },
   {
+    method: "POST",
+    path: "/admin/credentials/test-raw",
+    handler: "admin.testRaw",
+    config: ADMIN_AUTH,
+  },
+  {
     method: "GET",
     path: "/admin/runs",
     handler: "admin.listRuns",
