@@ -1,0 +1,19 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ev_sync_commands",
+  "info": {
+    "singularName": "sync-command",
+    "pluralName": "sync-commands",
+    "displayName": "Sync Command"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": false },
+    "content-type-builder": { "visible": false }
+  },
+  "attributes": {
+    "requestedAt": { "type": "datetime", "required": true },
+    "requestedByUserId": { "type": "string" },
+    "consumedAt": { "type": "datetime" }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ev_import_runs",
+  "info": {
+    "singularName": "import-run",
+    "pluralName": "import-runs",
+    "displayName": "Import Run"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": false },
+    "content-type-builder": { "visible": false }
+  },
+  "attributes": {
+    "runId": { "type": "string", "required": true },
+    "triggeredBy": {
+      "type": "enumeration",
+      "required": true,
+      "enum": ["cron", "manual"]
+    },
+    "triggeredByUserId": { "type": "string" },
+    "startedAt": { "type": "datetime", "required": true },
+    "completedAt": { "type": "datetime" },
+    "durationMs": { "type": "integer" },
+    "status": {
+      "type": "enumeration",
+      "required": true,
+      "enum": ["running", "success", "partial", "failed"],
+      "default": "running"
+    },
+    "credentialsTotal": { "type": "integer", "default": 0 },
+    "credentialsAttempted": { "type": "integer", "default": 0 },
+    "credentialsFailed": { "type": "integer", "default": 0 },
+    "eventsFetched": { "type": "integer", "default": 0 },
+    "eventsCreated": { "type": "integer", "default": 0 },
+    "eventsUpdated": { "type": "integer", "default": 0 },
+    "eventsUnchanged": { "type": "integer", "default": 0 },
+    "eventsExpiredPurged": { "type": "integer", "default": 0 },
+    "eventsPendingReview": { "type": "integer", "default": 0 },
+    "errorCount": { "type": "integer", "default": 0 },
+    "providerBreakdown": { "type": "json" },
+    "failedCredentials": { "type": "json" },
+    "notes": { "type": "text" }
+  }
+}

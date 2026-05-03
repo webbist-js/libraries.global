@@ -1,0 +1,81 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ev_events",
+  "info": {
+    "singularName": "event",
+    "pluralName": "events",
+    "displayName": "Event"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": false },
+    "content-type-builder": { "visible": false }
+  },
+  "attributes": {
+    "externalId": { "type": "string", "required": true },
+    "sourceProvider": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "eventbrite",
+        "ticketsource",
+        "meetup",
+        "ical",
+        "wegottickets",
+        "spydus",
+        "bibliocommons"
+      ]
+    },
+    "credentialId": { "type": "integer", "required": true },
+    "syncHash": { "type": "string", "required": true },
+    "library": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::library.library"
+    },
+    "libraryEntityRef": { "type": "string", "required": true },
+    "title": { "type": "string", "required": true },
+    "description": { "type": "text" },
+    "summary": { "type": "text" },
+    "url": { "type": "text", "required": true },
+    "imageUrl": { "type": "text" },
+    "startTime": { "type": "datetime", "required": true },
+    "endTime": { "type": "datetime" },
+    "allDay": { "type": "boolean", "default": false },
+    "timezone": { "type": "string", "required": true },
+    "eventType": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "talk",
+        "exhibition",
+        "storytime",
+        "book_club",
+        "workshop",
+        "tour",
+        "screening",
+        "reading_group",
+        "performance",
+        "drop_in",
+        "other"
+      ],
+      "default": "other"
+    },
+    "audience": { "type": "json" },
+    "tags": { "type": "json" },
+    "isFree": { "type": "boolean", "default": false },
+    "priceMin": { "type": "decimal" },
+    "priceMax": { "type": "decimal" },
+    "registrationUrl": { "type": "text" },
+    "capacity": { "type": "integer" },
+    "status": {
+      "type": "enumeration",
+      "required": true,
+      "enum": ["upcoming", "ongoing", "cancelled", "postponed"],
+      "default": "upcoming"
+    },
+    "pendingReview": { "type": "boolean", "default": false },
+    "importedAt": { "type": "datetime", "required": true },
+    "lastSeenAt": { "type": "datetime", "required": true }
+  }
+}

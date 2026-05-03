@@ -1,0 +1,32 @@
+{
+  "name": "events",
+  "version": "0.1.0",
+  "description": "Events aggregation plugin for libraries.global",
+  "strapi": {
+    "kind": "plugin",
+    "name": "events",
+    "displayName": "Events",
+    "description": "Aggregates library events from third-party providers"
+  },
+  "scripts": {
+    "build": "strapi-plugin build",
+    "watch": "strapi-plugin watch"
+  },
+  "main": "./dist/server/index.js",
+  "exports": {
+    "./package.json": "./package.json",
+    "./strapi-server": {
+      "source": "./strapi-server.ts",
+      "import": "./dist/server/index.mjs",
+      "require": "./dist/server/index.js",
+      "default": "./dist/server/index.js"
+    }
+  },
+  "peerDependencies": {
+    "@strapi/strapi": "^5.0.0"
+  },
+  "dependencies": {
+    "@repo/events-crypto": "workspace:*"
+  },
+  "files": ["dist", "strapi-server.ts"]
+}

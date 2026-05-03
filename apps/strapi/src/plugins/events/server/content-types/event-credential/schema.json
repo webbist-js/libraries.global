@@ -1,0 +1,49 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ev_event_credentials",
+  "info": {
+    "singularName": "event-credential",
+    "pluralName": "event-credentials",
+    "displayName": "Event Credential"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": false },
+    "content-type-builder": { "visible": false }
+  },
+  "attributes": {
+    "provider": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "eventbrite",
+        "ticketsource",
+        "meetup",
+        "ical",
+        "wegottickets",
+        "spydus",
+        "bibliocommons"
+      ]
+    },
+    "label": { "type": "string", "required": true },
+    "scope": {
+      "type": "enumeration",
+      "required": true,
+      "enum": ["library", "group"]
+    },
+    "libraries": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::library.library"
+    },
+    "isActive": { "type": "boolean", "required": true, "default": true },
+    "lastVerifiedAt": { "type": "datetime" },
+    "lastSyncAt": { "type": "datetime" },
+    "lastSyncStatus": {
+      "type": "enumeration",
+      "enum": ["ok", "partial", "error"]
+    },
+    "lastErrorMessage": { "type": "text" },
+    "credentialsEncrypted": { "type": "text", "required": true }
+  }
+}
