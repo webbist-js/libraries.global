@@ -1,5 +1,5 @@
 import { useFetchClient } from "@strapi/strapi/admin"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState, type CSSProperties } from "react"
 
 type WorkerStatus = "idle" | "running" | "offline"
 
@@ -16,7 +16,7 @@ type HealthData = {
   cronExpression?: string
 }
 
-const labelStyle: React.CSSProperties = {
+const labelStyle: CSSProperties = {
   fontSize: "11px",
   fontWeight: 600,
   color: "#666687",
@@ -25,7 +25,7 @@ const labelStyle: React.CSSProperties = {
   margin: "0 0 3px",
 }
 
-const valueStyle: React.CSSProperties = {
+const valueStyle: CSSProperties = {
   fontSize: "13px",
   color: "#32324d",
   fontWeight: 500,
@@ -42,7 +42,11 @@ function MetaRow({ label, value }: { label: string; value: string }) {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleString("en-GB", {
+  if (!iso) return "—"
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return "—"
+
+  return d.toLocaleString("en-GB", {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -77,8 +81,10 @@ export function WorkerHealth({
               : "idle"
         onStatusChange(s)
       }
-    } catch (err: any) {
-      setError(err?.message ?? "Failed to fetch worker health.")
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Failed to fetch worker health."
+      setError(message)
     } finally {
       setLoading(false)
     }
@@ -90,7 +96,7 @@ export function WorkerHealth({
   }, [])
 
   const isOffline =
-    !health || health.ok === false || health.status === "unreachable"
+    !health || (health.ok === false && health.status === "unreachable")
 
   const statusLabel = isOffline
     ? "Offline"
@@ -103,7 +109,11 @@ export function WorkerHealth({
     : health?.status === "running"
       ? "#0c75af"
       : "#1b7c3a"
-  const dotColor = isOffline ? "#d02b20" : "#1b7c3a"
+  const dotColor = isOffline
+    ? "#d02b20"
+    : health?.status === "running"
+      ? "#0c75af"
+      : "#1b7c3a"
 
   return (
     <div style={{ maxWidth: "600px" }}>
@@ -223,6 +233,7 @@ export function WorkerHealth({
             <div style={{ marginTop: "16px" }}>
               <button
                 onClick={() => void load()}
+                disabled={loading}
                 style={{
                   padding: "7px 14px",
                   fontSize: "12px",
@@ -230,8 +241,9 @@ export function WorkerHealth({
                   background: "#fff",
                   border: "1px solid #dcdce4",
                   borderRadius: "6px",
-                  cursor: "pointer",
+                  cursor: loading ? "not-allowed" : "pointer",
                   color: "#32324d",
+                  opacity: loading ? 0.5 : 1,
                 }}
               >
                 ↻ Refresh
