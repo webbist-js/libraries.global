@@ -360,13 +360,14 @@ export function CredentialForm({
     setSaveError(null)
     setTestResult(null)
     try {
+      const hasCredentials = Object.keys(credFields).length > 0
       const payload = {
         label: label.trim(),
         provider,
         scope,
         isActive,
         libraryDocumentIds: selectedLibraries.map((l) => l.documentId),
-        credentials: credFields,
+        ...(hasCredentials ? { credentials: credFields } : {}),
       }
 
       await (isEdit

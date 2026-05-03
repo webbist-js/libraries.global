@@ -4,9 +4,17 @@ import routes from "./server/routes"
 import services from "./server/services"
 
 export default {
-  pluginId: "events",
-  register() {},
-  bootstrap() {},
+  register({ strapi }: { strapi: any }) {},
+  async bootstrap({ strapi }: { strapi: any }) {
+    await strapi.service("admin::permission").actionProvider.registerMany([
+      {
+        section: "plugins",
+        displayName: "Access the events dashboard",
+        uid: "read",
+        pluginName: "events",
+      },
+    ])
+  },
   config: { default: {}, validator() {} },
   contentTypes,
   controllers,
