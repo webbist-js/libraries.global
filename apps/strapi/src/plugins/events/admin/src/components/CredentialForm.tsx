@@ -111,6 +111,12 @@ function LibrarySearch({
   const [searching, setSearching] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [])
+
   const search = useCallback(
     async (q: string) => {
       if (!q || q.length < 2) {
@@ -352,6 +358,7 @@ export function CredentialForm({
     }
     setSaving(true)
     setSaveError(null)
+    setTestResult(null)
     try {
       const payload = {
         label: label.trim(),
@@ -377,6 +384,7 @@ export function CredentialForm({
 
   const handleTest = async () => {
     setTestLoading(true)
+    setSaveError(null)
     setTestResult(null)
     try {
       let data: { ok: boolean; message?: string; error?: string }
@@ -414,7 +422,7 @@ export function CredentialForm({
         zIndex: 1000,
       }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onCancel()
+        if (e.target === e.currentTarget && !saving && !testLoading) onCancel()
       }}
     >
       <div
@@ -612,6 +620,7 @@ export function CredentialForm({
         >
           <button
             onClick={onCancel}
+            disabled={saving || testLoading}
             style={{
               padding: "8px 16px",
               fontSize: "13px",
@@ -620,7 +629,7 @@ export function CredentialForm({
               color: "#666687",
               border: "1px solid #dcdce4",
               borderRadius: "6px",
-              cursor: "pointer",
+              cursor: saving || testLoading ? "not-allowed" : "pointer",
             }}
           >
             Cancel
