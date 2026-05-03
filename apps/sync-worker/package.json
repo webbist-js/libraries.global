@@ -1,0 +1,29 @@
+{
+  "name": "@repo/sync-worker",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/events-crypto": "workspace:*",
+    "knex": "^3.1.0",
+    "pg": "^8.11.0",
+    "p-limit": "^6.1.0",
+    "node-cron": "^3.0.3",
+    "ical.js": "^2.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0",
+    "@types/node-cron": "^3.0.11",
+    "tsx": "^4.7.0",
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0"
+  }
+}
