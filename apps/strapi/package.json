@@ -45,6 +45,7 @@
     "@strapi/strapi": "5.43.0",
     "@strapi/utils": "5.43.0",
     "ckeditor5": "45.2.2",
+    "diff": "^9.0.0",
     "jsonwebtoken": "9.0.3",
     "lodash": "^4.17.21",
     "nodemailer": "^7.0.12",
