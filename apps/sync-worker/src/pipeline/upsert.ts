@@ -52,12 +52,49 @@ export async function upsertEvents(
 ): Promise<UpsertStats> {
   const stats: UpsertStats = { created: 0, updated: 0, unchanged: 0 }
 
-  // Process in chunks to avoid lock pressure
   for (let i = 0; i < events.length; i += CHUNK_SIZE) {
     const chunk = events.slice(i, i + CHUNK_SIZE)
     const rows = chunk.map(toRow)
 
-    const result = await db.raw(
+    // Step 1: Fetch existing hashes to classify rows before upsert
+    const pairs = rows.map(
+      (r) => [r.source_provider, r.external_id] as [unknown, unknown]
+    )
+    const placeholders = pairs.map(() => "(?, ?)").join(", ")
+    const bindings = pairs.flat() as Knex.RawBinding[]
+    const existing = (
+      await db.raw(
+        `SELECT source_provider, external_id, sync_hash FROM ev_events WHERE (source_provider, external_id) IN (${placeholders})`,
+        bindings
+      )
+    ).rows as {
+      source_provider: string
+      external_id: string
+      sync_hash: string
+    }[]
+
+    const existingMap = new Map(
+      existing.map((r) => [
+        `${r.source_provider}|${r.external_id}`,
+        r.sync_hash,
+      ])
+    )
+
+    // Step 2: Classify each row
+    for (const row of rows) {
+      const key = `${row.source_provider as string}|${row.external_id as string}`
+      const oldHash = existingMap.get(key)
+      if (oldHash === undefined) {
+        stats.created++
+      } else if (oldHash !== row.sync_hash) {
+        stats.updated++
+      } else {
+        stats.unchanged++
+      }
+    }
+
+    // Step 3: Upsert — unconditionally update all fields on conflict
+    await db.raw(
       `INSERT INTO ev_events (${Object.keys(rows[0]!).join(", ")})
        VALUES ${rows
          .map(
@@ -68,28 +105,18 @@ export async function upsertEvents(
          )
          .join(", ")}
        ON CONFLICT (source_provider, external_id) DO UPDATE SET
-         sync_hash = CASE WHEN ev_events.sync_hash != EXCLUDED.sync_hash THEN EXCLUDED.sync_hash ELSE ev_events.sync_hash END,
-         title = CASE WHEN ev_events.sync_hash != EXCLUDED.sync_hash THEN EXCLUDED.title ELSE ev_events.title END,
-         description = CASE WHEN ev_events.sync_hash != EXCLUDED.sync_hash THEN EXCLUDED.description ELSE ev_events.description END,
-         summary = CASE WHEN ev_events.sync_hash != EXCLUDED.sync_hash THEN EXCLUDED.summary ELSE ev_events.summary END,
-         start_time = CASE WHEN ev_events.sync_hash != EXCLUDED.sync_hash THEN EXCLUDED.start_time ELSE ev_events.start_time END,
-         end_time = CASE WHEN ev_events.sync_hash != EXCLUDED.sync_hash THEN EXCLUDED.end_time ELSE ev_events.end_time END,
-         status = CASE WHEN ev_events.sync_hash != EXCLUDED.sync_hash THEN EXCLUDED.status ELSE ev_events.status END,
-         image_url = CASE WHEN ev_events.sync_hash != EXCLUDED.sync_hash THEN EXCLUDED.image_url ELSE ev_events.image_url END,
+         sync_hash = EXCLUDED.sync_hash,
+         title = EXCLUDED.title,
+         description = EXCLUDED.description,
+         summary = EXCLUDED.summary,
+         start_time = EXCLUDED.start_time,
+         end_time = EXCLUDED.end_time,
+         status = EXCLUDED.status,
+         image_url = EXCLUDED.image_url,
          last_seen_at = NOW(),
-         updated_at = NOW()
-       RETURNING (xmax = 0) as inserted, (ev_events.sync_hash != EXCLUDED.sync_hash) as changed`,
+         updated_at = NOW()`,
       rows.flatMap((r) => Object.values(r)) as Knex.RawBinding[]
     )
-
-    for (const row of (result.rows as {
-      inserted: boolean
-      changed: boolean
-    }[]) ?? []) {
-      if (row.inserted) stats.created++
-      else if (row.changed) stats.updated++
-      else stats.unchanged++
-    }
   }
 
   return stats
