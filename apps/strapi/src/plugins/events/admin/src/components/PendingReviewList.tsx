@@ -1,6 +1,12 @@
 // apps/strapi/src/plugins/events/admin/src/components/PendingReviewList.tsx
 import { useFetchClient } from "@strapi/strapi/admin"
-import { type CSSProperties, useCallback, useEffect, useState } from "react"
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
 
 type PendingEvent = {
   documentId: string
@@ -115,6 +121,17 @@ export function PendingReviewList({
   )
   const [fadingOut, setFadingOut] = useState<Set<string>>(new Set())
 
+  const onCountChangeRef = useRef(onCountChange)
+  onCountChangeRef.current = onCountChange
+
+  const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set())
+
+  useEffect(() => {
+    return () => {
+      timersRef.current.forEach(clearTimeout)
+    }
+  }, [])
+
   const loadEvents = useCallback(async () => {
     setLoading(true)
     setError(null)
@@ -126,13 +143,13 @@ export function PendingReviewList({
           ? data
           : []
       setEvents(items as PendingEvent[])
-      onCountChange?.(items.length)
+      onCountChangeRef.current?.(items.length)
     } catch (err: any) {
       setError(err?.message ?? "Failed to load pending review queue.")
     } finally {
       setLoading(false)
     }
-  }, [get, onCountChange])
+  }, [get])
 
   useEffect(() => {
     void loadEvents()
@@ -142,15 +159,15 @@ export function PendingReviewList({
     documentId: string,
     action: "approve" | "discard"
   ) => {
+    setError(null)
     setActionLoading((prev) => ({ ...prev, [documentId]: true }))
     try {
       await patch(`/events/admin/pending-review/${documentId}`, { action })
-      // Fade out row, then remove
       setFadingOut((prev) => new Set(prev).add(documentId))
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         setEvents((prev) => {
           const updated = prev.filter((e) => e.documentId !== documentId)
-          onCountChange?.(updated.length)
+          onCountChangeRef.current?.(updated.length)
 
           return updated
         })
@@ -160,10 +177,17 @@ export function PendingReviewList({
 
           return next
         })
+        setActionLoading((prev) => {
+          const next = { ...prev }
+          delete next[documentId]
+
+          return next
+        })
+        timersRef.current.delete(timer)
       }, 350)
+      timersRef.current.add(timer)
     } catch (err: any) {
       setError(`Action failed: ${err?.message ?? "unknown error"}`)
-    } finally {
       setActionLoading((prev) => ({ ...prev, [documentId]: false }))
     }
   }
