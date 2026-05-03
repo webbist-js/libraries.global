@@ -49,10 +49,18 @@ export async function runSync(
     { fetched: number; created: number; updated: number; errors: number }
   > = {}
 
+  let all: Awaited<ReturnType<typeof loadCredentials>> | undefined
+  let valid:
+    | Awaited<ReturnType<typeof validateCredentials>>["valid"]
+    | undefined
+  let failed:
+    | Awaited<ReturnType<typeof validateCredentials>>["failed"]
+    | undefined
+
   try {
     // Step 1+2: load + validate
-    const all = await loadCredentials()
-    const { valid, failed } = await validateCredentials(all)
+    all = await loadCredentials()
+    ;({ valid, failed } = await validateCredentials(all))
     for (const f of failed) {
       failedCredentials.push({
         credentialId: f.credential.id,
@@ -67,18 +75,37 @@ export async function runSync(
     })
 
     // Steps 3-6 per credential, with concurrency limiting
+    // Pre-initialise provider breakdown entries to avoid race on first write
+    for (const cred of valid) {
+      providerBreakdown[cred.provider] ??= {
+        fetched: 0,
+        created: 0,
+        updated: 0,
+        errors: 0,
+      }
+    }
+
     await Promise.all(
       valid.map((cred) =>
         limit(async () => {
-          const pb = providerBreakdown[cred.provider] ?? {
-            fetched: 0,
-            created: 0,
-            updated: 0,
-            errors: 0,
-          }
-          providerBreakdown[cred.provider] = pb
+          const pb = providerBreakdown[cred.provider]!
           const provider = getProvider(cred.provider)
-          if (!provider) return
+          if (!provider) {
+            pb.errors++
+            errorCount++
+            failedCredentials.push({
+              credentialId: cred.id,
+              label: cred.label,
+              error: `Unknown provider "${cred.provider}"`,
+            })
+            await updateCredentialStatus(
+              cred.id,
+              "error",
+              `Unknown provider "${cred.provider}"`
+            )
+
+            return
+          }
 
           let rawEvents
           try {
@@ -209,18 +236,18 @@ export async function runSync(
       completedAt: new Date().toISOString(),
       durationMs: Date.now() - startedAt.getTime(),
       status: "failed",
-      credentialsTotal: 0,
-      credentialsAttempted: 0,
-      credentialsFailed: 0,
-      eventsFetched: 0,
-      eventsCreated: 0,
-      eventsUpdated: 0,
-      eventsUnchanged: 0,
+      credentialsTotal: all?.length ?? 0,
+      credentialsAttempted: valid?.length ?? 0,
+      credentialsFailed: failed?.length ?? 0,
+      eventsFetched: totalFetched,
+      eventsCreated: totalCreated,
+      eventsUpdated: totalUpdated,
+      eventsUnchanged: totalUnchanged,
       eventsExpiredPurged: 0,
-      eventsPendingReview: 0,
-      errorCount: 1,
-      providerBreakdown: {},
-      failedCredentials: [],
+      eventsPendingReview: totalPendingReview,
+      errorCount: errorCount + 1,
+      providerBreakdown,
+      failedCredentials,
     })
   }
 }
