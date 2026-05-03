@@ -55,6 +55,11 @@ export default ({ strapi }: { strapi: any }) => ({
         body: JSON.stringify({ credentialDocumentId: documentId }),
         signal: AbortSignal.timeout(10_000),
       })
+      if (!res.ok) {
+        ctx.body = { ok: false, error: `Worker returned ${res.status}` }
+
+        return
+      }
       ctx.body = await res.json()
     } catch (err: any) {
       ctx.body = { ok: false, error: err.message ?? "Worker unreachable" }

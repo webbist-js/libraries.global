@@ -106,6 +106,7 @@ export default ({ strapi }: { strapi: any }) => ({
       limit = "20",
       page = "1",
     } = ctx.query as Record<string, string>
+    // TODO: implement geographic filtering using _country/_continent (requires library entityRef lookup)
     const now = new Date().toISOString()
 
     const filters: Record<string, unknown> = {
@@ -161,30 +162,34 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   async stats(ctx: any) {
-    const db = strapi.db.connection
-    const now = new Date()
-    const weekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+    try {
+      const db = strapi.db.connection
+      const now = new Date()
+      const weekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
 
-    const [totalRow] = await db("ev_events")
-      .count("* as count")
-      .where("start_time", ">=", now)
-    const [weekRow] = await db("ev_events")
-      .count("* as count")
-      .where("start_time", ">=", now)
-      .where("start_time", "<=", weekLater)
-    const [freeRow] = await db("ev_events")
-      .count("* as count")
-      .where("start_time", ">=", now)
-      .where("is_free", true)
+      const [totalRow] = await db("ev_events")
+        .count("* as count")
+        .where("start_time", ">=", now)
+      const [weekRow] = await db("ev_events")
+        .count("* as count")
+        .where("start_time", ">=", now)
+        .where("start_time", "<=", weekLater)
+      const [freeRow] = await db("ev_events")
+        .count("* as count")
+        .where("start_time", ">=", now)
+        .where("is_free", true)
 
-    const total = Number((totalRow as any).count)
-    const totalThisWeek = Number((weekRow as any).count)
-    const freeCount = Number((freeRow as any).count)
+      const total = Number((totalRow as any).count)
+      const totalThisWeek = Number((weekRow as any).count)
+      const freeCount = Number((freeRow as any).count)
 
-    ctx.body = {
-      totalEvents: total,
-      totalThisWeek,
-      percentFree: total > 0 ? Math.round((freeCount / total) * 100) : 0,
+      ctx.body = {
+        totalEvents: total,
+        totalThisWeek,
+        percentFree: total > 0 ? Math.round((freeCount / total) * 100) : 0,
+      }
+    } catch {
+      ctx.body = { totalEvents: 0, totalThisWeek: 0, percentFree: 0 }
     }
   },
 })
