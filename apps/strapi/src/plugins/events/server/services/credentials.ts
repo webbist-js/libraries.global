@@ -113,6 +113,9 @@ export default ({ strapi }: { strapi: any }) => ({
         fields: ["credentialsEncrypted"],
       })
     if (!doc) throw new Error(`Credential ${documentId} not found`)
+    if (!doc.credentialsEncrypted) {
+      throw new Error(`Credential ${documentId} has no encrypted payload`)
+    }
 
     return decryptCredentials(doc.credentialsEncrypted as string)
   },
