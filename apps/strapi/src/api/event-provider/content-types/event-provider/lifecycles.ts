@@ -7,7 +7,7 @@ export default {
     const { libraryEntityRef } = event.result
     const libraries = await strapi.documents("api::library.library").findMany({
       filters: { entityRef: libraryEntityRef } as never,
-      limit: 1,
+      pagination: { pageSize: 1 },
     })
 
     if (libraries[0]) {

@@ -373,7 +373,7 @@ export default ({ strapi }: { strapi: any }) => ({
     const { documentId } = ctx.params as { documentId: string }
     const event = await strapi
       .documents("plugin::events.event")
-      .findOne({ documentId, status: "published" })
+      .findOne({ documentId })
     if (!event) return ctx.notFound()
     ctx.body = event
   },
@@ -382,7 +382,7 @@ export default ({ strapi }: { strapi: any }) => ({
     const { documentId } = ctx.params as { documentId: string }
     const source = await strapi
       .documents("plugin::events.event")
-      .findOne({ documentId, status: "published" })
+      .findOne({ documentId })
     if (!source) return ctx.notFound()
 
     const now = new Date().toISOString()
@@ -392,9 +392,8 @@ export default ({ strapi }: { strapi: any }) => ({
         startTime: { $gte: now },
         documentId: { $ne: documentId },
       } as never,
-      sort: "startTime:asc",
-      limit: 4,
-      status: "published",
+      sort: ["startTime:asc"],
+      pagination: { pageSize: 4 },
     })
     ctx.body = results
   },
@@ -407,11 +406,9 @@ export default ({ strapi }: { strapi: any }) => ({
     const events = await strapi.documents("plugin::events.event").findMany({
       filters: {
         startTime: { $gte: now, $lte: future },
-        status: "published",
-      } as never,
-      sort: "startTime:asc",
-      limit: 500,
-      status: "published",
+      },
+      sort: ["startTime:asc"],
+      pagination: { pageSize: 500 },
     })
 
     const ics = buildIcs(
@@ -446,11 +443,9 @@ export default ({ strapi }: { strapi: any }) => ({
       filters: {
         libraryEntityRef: entityRef,
         startTime: { $gte: now, $lte: future },
-        status: "published",
-      } as never,
-      sort: "startTime:asc",
-      limit: 200,
-      status: "published",
+      },
+      sort: ["startTime:asc"],
+      pagination: { pageSize: 200 },
     })
 
     const ics = buildIcs(

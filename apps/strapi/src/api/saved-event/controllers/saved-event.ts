@@ -11,7 +11,7 @@ export default factories.createCoreController(
       const results = await strapi
         .documents("api::saved-event.saved-event")
         .findMany({
-          filters: { user: userId } as never,
+          filters: { user: { id: userId } } as never,
         })
 
       ctx.body = results
@@ -28,11 +28,13 @@ export default factories.createCoreController(
       if (!eventDocumentId) return ctx.badRequest("eventDocumentId required")
 
       // Idempotent: return existing if already saved
-      const existing = await strapi
+      const existingResults = await strapi
         .documents("api::saved-event.saved-event")
-        .findFirst({
-          filters: { user: userId, eventDocumentId } as never,
+        .findMany({
+          filters: { user: { id: userId }, eventDocumentId } as never,
+          pagination: { pageSize: 1 },
         })
+      const existing = existingResults[0] ?? null
       if (existing) {
         ctx.body = existing
 

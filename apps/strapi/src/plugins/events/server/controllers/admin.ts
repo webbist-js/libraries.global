@@ -126,7 +126,7 @@ export default ({ strapi }: { strapi: any }) => ({
     await strapi.documents("plugin::events.sync-command").create({
       data: {
         requestedAt: new Date().toISOString(),
-        requestedByUserId: userId,
+        requestedByUserId: userId != null ? String(userId) : undefined,
       },
     })
     ctx.body = {
