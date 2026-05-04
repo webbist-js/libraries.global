@@ -21,6 +21,8 @@ const ALLOWED_STRAPI_ENDPOINTS: Record<string, string[]> = {
     "api/regions/map-pins",
     "api/countries/map-pins",
     "api/areas/map-pins",
+    // Events plugin — public feeds (ICS calendar + browsing)
+    "api/events",
   ],
   POST: [
     "api/subscribers",

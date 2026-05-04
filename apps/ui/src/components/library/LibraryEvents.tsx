@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
+import { CalendarSubscribeButton } from "@/components/events/CalendarSubscribeButton"
 import { T } from "@/lib/design-tokens"
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -254,9 +255,13 @@ const FILTER_TYPES = [
 
 interface LibraryEventsProps {
   readonly entityRef: string | null | undefined
+  readonly hasActiveFeed?: boolean
 }
 
-export function LibraryEvents({ entityRef }: LibraryEventsProps) {
+export function LibraryEvents({
+  entityRef,
+  hasActiveFeed,
+}: LibraryEventsProps) {
   const [events, setEvents] = useState<LibraryEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -344,6 +349,36 @@ export function LibraryEvents({ entityRef }: LibraryEventsProps) {
           >
             {events.length}
           </span>
+        ) : null}
+        {hasActiveFeed ? (
+          <span
+            className="inline-flex items-center gap-1.5"
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "9px",
+              letterSpacing: ".14em",
+              textTransform: "uppercase",
+              color: T.accent.ok,
+              background: "rgba(142,240,179,0.08)",
+              border: "1px solid rgba(142,240,179,0.2)",
+              borderRadius: "999px",
+              padding: "2px 8px",
+            }}
+          >
+            <span
+              className="size-1.5 rounded-full"
+              style={{ background: T.accent.ok }}
+            />
+            Live feed
+          </span>
+        ) : null}
+        {entityRef ? (
+          <div className="ml-auto">
+            <CalendarSubscribeButton
+              icsUrl={`/api/public-proxy/api/events/ics/library/${encodeURIComponent(entityRef)}.ics`}
+              label="Subscribe"
+            />
+          </div>
         ) : null}
       </div>
 

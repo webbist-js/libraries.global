@@ -3,6 +3,7 @@ import { Icon } from "@iconify/react"
 import Link from "next/link"
 
 import { Container } from "@/components/elementary/Container"
+import { CalendarSubscribeButton } from "@/components/events/CalendarSubscribeButton"
 import { EventJsonLd } from "@/components/events/EventJsonLd"
 import { EventTypeChip } from "@/components/events/EventTypeChip"
 import { PriceBadge } from "@/components/events/PriceBadge"
@@ -311,20 +312,10 @@ export function EventDetailPage({
                 <Icon icon="mdi:ticket-outline" className="size-4" />
                 {event.isFree ? "Register free" : "Get tickets"}
               </a>
-              {/* data: URI download — must be <a> */}
-              <a
-                href={`data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0AVERSION:2.0%0ABEGIN:VEVENT%0ASUMMARY:${encodeURIComponent(event.title)}%0ADTSTART:${new Date(event.startTime).toISOString().replaceAll(/[-:]/g, "").slice(0, 15)}Z%0AURL:${encodeURIComponent(event.url)}%0AEND:VEVENT%0AEND:VCALENDAR`}
-                download="event.ics"
-                className="inline-flex items-center gap-2 rounded-full border px-6 py-3 text-sm transition-colors duration-150 hover:border-(--t-border-hi) hover:text-(--t-ink-base)"
-                style={{
-                  borderColor: T.border.line,
-                  color: T.ink.dim,
-                  textDecoration: "none",
-                }}
-              >
-                <Icon icon="mdi:calendar-plus-outline" className="size-4" />
-                Add to calendar
-              </a>
+              <CalendarSubscribeButton
+                icsUrl="/api/public-proxy/api/events/ics/global.ics"
+                label="Add to calendar"
+              />
             </div>
           </div>
 

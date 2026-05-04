@@ -5,6 +5,7 @@ import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import LibraryContactPanel from "@/components/library/LibraryContactPanel"
 import LibraryContent from "@/components/library/LibraryContent"
+import { LibraryEvents } from "@/components/library/LibraryEvents"
 import LibraryExploreNearby from "@/components/library/LibraryExploreNearby"
 import LibraryHero from "@/components/library/LibraryHero"
 import LibraryInfoCards from "@/components/library/LibraryInfoCards"
@@ -240,7 +241,14 @@ export function LibraryDetailPage({
                 </p>
               )}
 
-              {/* TODO: add events listing once events content type is built */}
+              <LibraryEvents
+                entityRef={library.entityRef}
+                hasActiveFeed={
+                  (library as Record<string, unknown>).hasActiveFeed as
+                    | boolean
+                    | undefined
+                }
+              />
             </Container>
           </LibraryTabPanel>
 

@@ -88,6 +88,21 @@ const PATH_CARDS: PathCard[] = [
     ctaLabel: "locked",
     requiresRole: "editorialBoard",
   },
+  {
+    pathId: "PATH·05",
+    role: "ANY ROLE",
+    accentColor: T.accent.ok,
+    cardGlow:
+      "radial-gradient(ellipse 55% 65% at 5% 90%, rgba(142,240,179,0.09) 0%, transparent 65%)",
+    heading: "List your ",
+    headingItalic: "events.",
+    body: "Connect your Eventbrite, Meetup, or iCal feed and your library's programme will appear on libraries.global — reaching visitors worldwide.",
+    meta: "~ 3 MIN · FEED REVIEW",
+    lockedMeta: "~ 3 MIN · FEED REVIEW",
+    href: "/contribute/events",
+    ctaLabel: "connect feed →",
+    requiresRole: "any",
+  },
 ]
 
 function isCardLocked(
