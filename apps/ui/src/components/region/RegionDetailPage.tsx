@@ -16,6 +16,7 @@ import {
   SectionHeader,
 } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
+import { LocationEventsStrip } from "@/components/events/LocationEventsStrip"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import FeaturedLibraryCards from "@/components/home/FeaturedLibraryCards"
@@ -314,6 +315,18 @@ export function RegionDetailPage({
             />
           </Container>
         </section>
+
+        <div
+          className="border-t py-10 sm:py-14"
+          style={{ borderColor: T.border.line }}
+        >
+          <Container>
+            <LocationEventsStrip
+              regionSlug={slug}
+              locationLabel={region.name ?? ""}
+            />
+          </Container>
+        </div>
 
         <LocationContributeCTA
           locationName={region.name ?? undefined}
