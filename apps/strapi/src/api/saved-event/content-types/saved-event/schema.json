@@ -1,0 +1,19 @@
+{
+  "kind": "collectionType",
+  "collectionName": "saved_events",
+  "info": {
+    "singularName": "saved-event",
+    "pluralName": "saved-events",
+    "displayName": "Saved Event"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "eventDocumentId": { "type": "string", "required": true },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "savedEvents"
+    }
+  }
+}
