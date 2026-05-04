@@ -9,6 +9,8 @@ import { setRequestLocale } from "next-intl/server"
 import { ErrorBoundary } from "@/components/elementary/ErrorBoundary"
 import StrapiPreviewListener from "@/components/elementary/StrapiPreviewListener"
 import { TailwindIndicator } from "@/components/elementary/TailwindIndicator"
+import { EventModal } from "@/components/events/EventModal"
+import { EventModalProvider } from "@/components/events/EventModalContext"
 import GlobalFooter from "@/components/global/GlobalFooter"
 import { ClientProviders } from "@/components/providers/ClientProviders"
 import { ServerProviders } from "@/components/providers/ServerProviders"
@@ -99,21 +101,24 @@ export default async function RootLayout({
         <ServerProviders>
           <StrapiPreviewListener />
           <ClientProviders>
-            <div className="relative flex min-h-screen flex-col">
-              <div className="strapi-page-slot flex flex-1 flex-col">
-                {children}
+            <EventModalProvider>
+              <div className="relative flex min-h-screen flex-col">
+                <div className="strapi-page-slot flex flex-1 flex-col">
+                  {children}
+                </div>
+
+                <TailwindIndicator />
+
+                <Toaster />
+
+                <div className="strapi-layout-footer">
+                  <ErrorBoundary hideFallback>
+                    <GlobalFooter locale={locale} footer={footer} />
+                  </ErrorBoundary>
+                </div>
               </div>
-
-              <TailwindIndicator />
-
-              <Toaster />
-
-              <div className="strapi-layout-footer">
-                <ErrorBoundary hideFallback>
-                  <GlobalFooter locale={locale} footer={footer} />
-                </ErrorBoundary>
-              </div>
-            </div>
+              <EventModal />
+            </EventModalProvider>
           </ClientProviders>
         </ServerProviders>
       </body>
