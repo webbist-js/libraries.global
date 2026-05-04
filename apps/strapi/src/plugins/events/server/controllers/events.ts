@@ -105,8 +105,9 @@ export default ({ strapi }: { strapi: any }) => ({
       to,
       limit = "20",
       page = "1",
+      countryCode,
+      regionSlug,
     } = ctx.query as Record<string, string>
-    // TODO: implement geographic filtering using _country/_continent (requires library entityRef lookup)
     const now = new Date().toISOString()
 
     const filters: Record<string, unknown> = {
@@ -116,6 +117,8 @@ export default ({ strapi }: { strapi: any }) => ({
     if (to) (filters.startTime as any).$lte = to
     if (type) filters.eventType = type
     if (isFree != null) filters.isFree = isFree === "true"
+    if (countryCode) filters.countryCode = countryCode
+    if (regionSlug) filters.regionSlug = regionSlug
 
     const events = await strapi.documents("plugin::events.event").findMany({
       filters,
@@ -128,9 +131,12 @@ export default ({ strapi }: { strapi: any }) => ({
         "imageUrl",
         "startTime",
         "endTime",
+        "allDay",
         "timezone",
         "eventType",
         "isFree",
+        "priceMin",
+        "priceMax",
         "registrationUrl",
         "libraryEntityRef",
         "status",
@@ -179,6 +185,24 @@ export default ({ strapi }: { strapi: any }) => ({
         .where("start_time", ">=", now)
         .where("is_free", true)
 
+      // Peak day + hour: find the hour slot with most events upcoming
+      const peakRows = await db("ev_events")
+        .select(
+          db.raw("strftime('%w', start_time) as dow"),
+          db.raw("strftime('%H', start_time) as hour"),
+          db.raw("count(*) as cnt")
+        )
+        .where("start_time", ">=", now)
+        .groupByRaw("dow, hour")
+        .orderBy("cnt", "desc")
+        .limit(1)
+
+      const peak = peakRows[0] as any
+      const DOW_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+      const peakLabel = peak
+        ? `${DOW_LABELS[Number(peak.dow)] ?? ""} ${String(peak.hour).padStart(2, "0")}:00`
+        : null
+
       const total = Number((totalRow as any).count)
       const totalThisWeek = Number((weekRow as any).count)
       const freeCount = Number((freeRow as any).count)
@@ -187,9 +211,191 @@ export default ({ strapi }: { strapi: any }) => ({
         totalEvents: total,
         totalThisWeek,
         percentFree: total > 0 ? Math.round((freeCount / total) * 100) : 0,
+        peakSlot: peakLabel,
+        peakCount: peak ? Number(peak.cnt) : 0,
       }
     } catch {
-      ctx.body = { totalEvents: 0, totalThisWeek: 0, percentFree: 0 }
+      ctx.body = {
+        totalEvents: 0,
+        totalThisWeek: 0,
+        percentFree: 0,
+        peakSlot: null,
+        peakCount: 0,
+      }
     }
+  },
+
+  async providerBreakdown(ctx: any) {
+    try {
+      const db = strapi.db.connection
+      const now = new Date()
+
+      const rows = await db("ev_events")
+        .select("source_provider as provider")
+        .count("* as count")
+        .where("start_time", ">=", now)
+        .groupBy("source_provider")
+        .orderBy("count", "desc")
+
+      ctx.body = (rows as any[]).map((r) => ({
+        provider: r.provider as string,
+        count: Number(r.count),
+      }))
+    } catch {
+      ctx.body = []
+    }
+  },
+
+  async topLibraries(ctx: any) {
+    try {
+      const { limit = "10" } = ctx.query as Record<string, string>
+      const db = strapi.db.connection
+      const now = new Date()
+
+      const rows = await db("ev_events")
+        .select("library_entity_ref as entityRef")
+        .count("* as count")
+        .where("start_time", ">=", now)
+        .whereNotNull("library_entity_ref")
+        .groupBy("library_entity_ref")
+        .orderBy("count", "desc")
+        .limit(Number(limit))
+
+      // Enrich with library names
+      const refs = (rows as any[]).map((r) => r.entityRef as string)
+      const libraries = refs.length
+        ? await strapi.documents("api::library.library").findMany({
+            filters: { entityRef: { $in: refs } },
+            fields: ["name", "entityRef"],
+            pagination: { pageSize: refs.length },
+          })
+        : []
+
+      const nameMap = new Map(
+        (libraries as any[]).map((l: any) => [l.entityRef, l.name])
+      )
+
+      ctx.body = (rows as any[]).map((r) => ({
+        entityRef: r.entityRef as string,
+        name: (nameMap.get(r.entityRef) as string) ?? r.entityRef,
+        count: Number(r.count),
+      }))
+    } catch {
+      ctx.body = []
+    }
+  },
+
+  async categoryBreakdown(ctx: any) {
+    try {
+      const db = strapi.db.connection
+      const now = new Date()
+
+      const rows = await db("ev_events")
+        .select("event_type as type")
+        .count("* as count")
+        .where("start_time", ">=", now)
+        .groupBy("event_type")
+        .orderBy("count", "desc")
+
+      ctx.body = (rows as any[]).map((r) => ({
+        type: r.type as string,
+        count: Number(r.count),
+      }))
+    } catch {
+      ctx.body = []
+    }
+  },
+
+  async heatmap(ctx: any) {
+    try {
+      const db = strapi.db.connection
+      const now = new Date()
+      const fourWeeks = new Date(now.getTime() + 28 * 24 * 60 * 60 * 1000)
+
+      // Returns count per (dayOfWeek 0-6, hour 0-23) for next 4 weeks
+      const rows = await db("ev_events")
+        .select(
+          db.raw("strftime('%w', start_time) as dow"),
+          db.raw("CAST(strftime('%H', start_time) AS INTEGER) as hour"),
+          db.raw("count(*) as count")
+        )
+        .where("start_time", ">=", now)
+        .where("start_time", "<=", fourWeeks)
+        .groupByRaw("dow, hour")
+
+      ctx.body = (rows as any[]).map((r) => ({
+        dow: Number(r.dow),
+        hour: Number(r.hour),
+        count: Number(r.count),
+      }))
+    } catch {
+      ctx.body = []
+    }
+  },
+
+  async featured(ctx: any) {
+    // Returns the single most recently-imported upcoming event (best proxy for
+    // "featured" until an editorial flag is added to the schema)
+    const now = new Date()
+    const results = await strapi.documents("plugin::events.event").findMany({
+      filters: {
+        startTime: { $gte: now.toISOString() },
+        status: { $in: ["upcoming", "ongoing"] },
+        pendingReview: false,
+      },
+      sort: ["importedAt:desc"],
+      pagination: { pageSize: 1 },
+      fields: [
+        "title",
+        "description",
+        "summary",
+        "url",
+        "imageUrl",
+        "startTime",
+        "endTime",
+        "allDay",
+        "timezone",
+        "eventType",
+        "isFree",
+        "priceMin",
+        "priceMax",
+        "registrationUrl",
+        "status",
+        "tags",
+        "libraryEntityRef",
+        "sourceProvider",
+      ],
+    })
+    ctx.body = (results as any[])[0] ?? null
+  },
+
+  async event(ctx: any) {
+    const { documentId } = ctx.params as { documentId: string }
+    const event = await strapi
+      .documents("plugin::events.event")
+      .findOne({ documentId, status: "published" })
+    if (!event) return ctx.notFound()
+    ctx.body = event
+  },
+
+  async relatedEvents(ctx: any) {
+    const { documentId } = ctx.params as { documentId: string }
+    const source = await strapi
+      .documents("plugin::events.event")
+      .findOne({ documentId, status: "published" })
+    if (!source) return ctx.notFound()
+
+    const now = new Date().toISOString()
+    const results = await strapi.documents("plugin::events.event").findMany({
+      filters: {
+        libraryEntityRef: source.libraryEntityRef ?? "",
+        startTime: { $gte: now },
+        documentId: { $ne: documentId },
+      } as never,
+      sort: "startTime:asc",
+      limit: 4,
+      status: "published",
+    })
+    ctx.body = results
   },
 })

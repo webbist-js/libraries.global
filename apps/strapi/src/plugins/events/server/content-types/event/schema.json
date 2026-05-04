@@ -8,7 +8,7 @@
   },
   "options": { "draftAndPublish": false },
   "pluginOptions": {
-    "content-manager": { "visible": false },
+    "content-manager": { "visible": true },
     "content-type-builder": { "visible": false }
   },
   "attributes": {
@@ -18,12 +18,13 @@
       "required": true,
       "enum": [
         "eventbrite",
-        "ticketsource",
-        "meetup",
         "ical",
-        "wegottickets",
+        "custom_ical",
+        "aspen",
+        "solus",
         "spydus",
-        "bibliocommons"
+        "ticketsource",
+        "wegottickets"
       ]
     },
     "credentialId": { "type": "integer", "required": true },
@@ -76,6 +77,8 @@
     },
     "pendingReview": { "type": "boolean", "default": false },
     "importedAt": { "type": "datetime", "required": true },
-    "lastSeenAt": { "type": "datetime", "required": true }
+    "lastSeenAt": { "type": "datetime", "required": true },
+    "countryCode": { "type": "string" },
+    "regionSlug": { "type": "string" }
   }
 }
