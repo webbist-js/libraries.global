@@ -71,4 +71,16 @@ export default [
     handler: "events.relatedEvents",
     config: { auth: false },
   },
+  {
+    method: "GET",
+    path: "/ics/global.ics",
+    handler: "events.icsGlobal",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/ics/library/:entityRef.ics",
+    handler: "events.icsLibrary",
+    config: { auth: false },
+  },
 ]

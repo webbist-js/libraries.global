@@ -398,4 +398,80 @@ export default ({ strapi }: { strapi: any }) => ({
     })
     ctx.body = results
   },
+
+  async icsGlobal(ctx: any) {
+    const { buildIcs } = await import("../utils/ics")
+    const now = new Date().toISOString()
+    const future = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
+
+    const events = await strapi.documents("plugin::events.event").findMany({
+      filters: {
+        startTime: { $gte: now, $lte: future },
+        status: "published",
+      } as never,
+      sort: "startTime:asc",
+      limit: 500,
+      status: "published",
+    })
+
+    const ics = buildIcs(
+      (events as any[]).map((e: any) => ({
+        uid: e.documentId,
+        summary: e.title as string,
+        description: (e.description as string | null) ?? null,
+        dtstart: e.startTime as string,
+        dtend: (e.endTime as string | null) ?? null,
+        allDay: !!e.allDay,
+        url: (e.url as string | null) ?? null,
+        location: (e.libraryEntityRef as string | null) ?? null,
+      })),
+      "Libraries of the World — Events"
+    )
+
+    ctx.set("Content-Type", "text/calendar; charset=utf-8")
+    ctx.set(
+      "Content-Disposition",
+      'attachment; filename="libraries-events.ics"'
+    )
+    ctx.body = ics
+  },
+
+  async icsLibrary(ctx: any) {
+    const { buildIcs } = await import("../utils/ics")
+    const { entityRef } = ctx.params as { entityRef: string }
+    const now = new Date().toISOString()
+    const future = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
+
+    const events = await strapi.documents("plugin::events.event").findMany({
+      filters: {
+        libraryEntityRef: entityRef,
+        startTime: { $gte: now, $lte: future },
+        status: "published",
+      } as never,
+      sort: "startTime:asc",
+      limit: 200,
+      status: "published",
+    })
+
+    const ics = buildIcs(
+      (events as any[]).map((e: any) => ({
+        uid: e.documentId,
+        summary: e.title as string,
+        description: (e.description as string | null) ?? null,
+        dtstart: e.startTime as string,
+        dtend: (e.endTime as string | null) ?? null,
+        allDay: !!e.allDay,
+        url: (e.url as string | null) ?? null,
+        location: entityRef,
+      })),
+      `${entityRef} — Events`
+    )
+
+    ctx.set("Content-Type", "text/calendar; charset=utf-8")
+    ctx.set(
+      "Content-Disposition",
+      `attachment; filename="${entityRef}-events.ics"`
+    )
+    ctx.body = ics
+  },
 })

@@ -547,6 +547,15 @@
         }
       }
     },
+    "hasActiveFeed": {
+      "type": "boolean",
+      "default": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
     "seo": {
       "type": "component",
       "component": "shared.seo",

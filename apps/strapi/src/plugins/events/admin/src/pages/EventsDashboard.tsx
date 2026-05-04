@@ -2,6 +2,7 @@ import { Box, Button, Flex, Tabs, Typography } from "@strapi/design-system"
 import { useFetchClient } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useState } from "react"
 
+import { ProviderAnalytics } from "./ProviderAnalytics"
 import { CredentialList } from "../components/CredentialList"
 import { ImportRunList } from "../components/ImportRunList"
 import { PendingReviewList } from "../components/PendingReviewList"
@@ -142,6 +143,7 @@ export function EventsDashboard() {
               <WorkerDot status={workerStatus} />
             </span>
           </Tabs.Trigger>
+          <Tabs.Trigger value="providers">Provider Analytics</Tabs.Trigger>
         </Tabs.List>
 
         <Tabs.Content value="credentials">
@@ -165,6 +167,12 @@ export function EventsDashboard() {
         <Tabs.Content value="worker">
           <Box padding={6}>
             <WorkerHealth onStatusChange={setWorkerStatus} />
+          </Box>
+        </Tabs.Content>
+
+        <Tabs.Content value="providers">
+          <Box padding={6}>
+            <ProviderAnalytics />
           </Box>
         </Tabs.Content>
       </Tabs.Root>
