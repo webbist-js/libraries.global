@@ -122,6 +122,7 @@ export default ({ strapi }: { strapi: any }) => ({
     // Count with same filters using knex
     const countQuery = db("ev_events").count("* as total")
     countQuery.where("start_time", ">=", from ?? now)
+    countQuery.whereIn("status", ["upcoming", "ongoing"])
     if (to) countQuery.where("start_time", "<=", to)
     if (type) countQuery.where("event_type", type)
     if (isFree != null) countQuery.where("is_free", isFree === "true")
