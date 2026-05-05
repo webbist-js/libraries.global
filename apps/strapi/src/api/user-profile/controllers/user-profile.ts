@@ -40,7 +40,7 @@ export default factories.createCoreController(
 
       // Private profiles are not publicly visible (unless the owner is requesting)
       if (profile.profileVisibility === "private" && !isOwnerRequest) {
-        return ctx.notFound("Profile not found")
+        return ctx.forbidden("Profile is private")
       }
 
       // Fetch claimed library affiliations for this profile

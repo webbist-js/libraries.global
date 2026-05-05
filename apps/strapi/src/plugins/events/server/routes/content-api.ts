@@ -83,4 +83,10 @@ export default [
     handler: "events.icsLibrary",
     config: { auth: false },
   },
+  {
+    method: "POST",
+    path: "/credential-submit",
+    handler: "events.submitCredential",
+    config: { auth: false, policies: [] },
+  },
 ]

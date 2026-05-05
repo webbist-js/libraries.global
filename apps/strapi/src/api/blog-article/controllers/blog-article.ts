@@ -104,6 +104,7 @@ export default factories.createCoreController(
         .documents("api::blog-article.blog-article")
         .findMany({
           fields: ["slug", "locale"],
+          populate: { section: { fields: ["slug"] } },
           locale,
           status,
         })

@@ -57,18 +57,6 @@ export const homepageDefaultQuery = {
   },
 }
 
-export const navbarDefaultQuery = {
-  populate: {
-    links: linkPopulate,
-    logoImage: {
-      populate: {
-        image: basicImagePopulate,
-        link: linkPopulate,
-      },
-    },
-  },
-}
-
 export const footerDefaultQuery = {
   populate: {
     sections: { populate: { links: linkPopulate } },

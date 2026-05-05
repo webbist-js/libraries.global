@@ -21,23 +21,26 @@ Every request to Strapi is evaluated against exactly one of these — they never
 
 The following custom routes are hardcoded with `auth: false` in their route definitions. They are **always publicly accessible regardless of what you check in the permissions UI**. Do not waste time configuring these — leave their checkboxes unchecked.
 
-| Content type                    | Actions that are `auth: false`                                                                     |
-| ------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Admin-panel-config              | `find` (internal bootstrap — ignore entirely)                                                      |
-| Area                            | `detail`, `mapPins`, `slugs`                                                                       |
-| Auth-bridge                     | `followStatus`, `syncUser`, `toggleFollow`, `upsertProfile` (all four)                             |
-| Blog-article                    | `detail`, `slugs`                                                                                  |
-| Category                        | `nav`                                                                                              |
-| **content-moderation (plugin)** | `create`, `findMine`, `saveDraft`, `findDraft` — user validated internally via Better Auth session |
-| Continent                       | `detail`, `homepage`, `mapPins`, `slugs`                                                           |
-| Country                         | `detail`, `mapPins`, `slugs`                                                                       |
-| Health                          | `find`                                                                                             |
-| Library                         | `mapPins`                                                                                          |
-| Region                          | `detail`, `mapPins`, `slugs`                                                                       |
-| **rewards (plugin)**            | `leaderboard`, `myStanding`, `myHistory`, `howItWorks` — public routes with internal validation    |
-| Wiki-article                    | `detail`, `slugs`                                                                                  |
-| Wiki-section                    | `nav`                                                                                              |
-| User-profile                    | `findByUsername`                                                                                   |
+| Content type                    | Actions that are `auth: false`                                                                                                                                                                                                           |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Admin-panel-config              | `find` (internal bootstrap — ignore entirely)                                                                                                                                                                                            |
+| Area                            | `detail`, `mapPins`, `slugs`                                                                                                                                                                                                             |
+| Auth-bridge                     | **All routes** — `syncUser`, `upsertProfile`, `deleteProfile`, `followStatus`, `toggleFollow`, `createAffiliation`, `affiliationCount`, `claimStatus`, `getUserAffiliations`, `computeQuickWins`, `toggleFollowUser`, `userFollowStatus` |
+| Blog-article                    | `detail`, `slugs`                                                                                                                                                                                                                        |
+| Category                        | `nav`                                                                                                                                                                                                                                    |
+| **content-moderation (plugin)** | **All routes** — `create`, `stats`, `findByDocumentId`, `findByUsername`, `findMine`, `saveDraft`, `finalize`, `findDraft` — all `auth: false`, user validated internally via Better Auth session                                        |
+| Continent                       | `detail`, `homepage`, `mapPins`, `slugs`                                                                                                                                                                                                 |
+| Country                         | `detail`, `mapPins`, `slugs`                                                                                                                                                                                                             |
+| Health                          | `find`                                                                                                                                                                                                                                   |
+| Library                         | `mapPins`                                                                                                                                                                                                                                |
+| Region                          | `detail`, `mapPins`, `slugs`                                                                                                                                                                                                             |
+| **rewards (plugin)**            | `leaderboard`, `myStanding`, `myHistory`, `howItWorks` — public routes with internal validation                                                                                                                                          |
+| Wiki-article                    | `detail`, `slugs`                                                                                                                                                                                                                        |
+| Wiki-section                    | `nav`                                                                                                                                                                                                                                    |
+| User-profile                    | `findByUsername`, `findByDocumentId`, `findBadgesByUsername`, `findBadgesByDocumentId` — all four are hardcoded `auth: false`; only `update` and standard CRUD appear in the permissions panel                                           |
+| **events (plugin)**             | **All content-API routes** — `library`, `location`, `global`, `thisWeek`, `stats`, `providerBreakdown`, `topLibraries`, `categoryBreakdown`, `heatmap`, `featured`, `event`, `relatedEvents`, `icsGlobal`, `icsLibrary`                  |
+| **saved-event**                 | `find`, `create`, `delete` — all `auth: false`; auth enforced in controller via `ctx.state.user`                                                                                                                                         |
+| **topics (plugin)**             | `findApproved` — `auth: false`. `findAll` and `updateStatus` use `auth: { scope: [] }` — requires API token, not users-permissions                                                                                                       |
 
 When you open Area in the permissions UI and see `detail`, `mapPins`, `slugs` — leave them unchecked. They work regardless.
 
@@ -73,26 +76,30 @@ Grant `find` only for single types (they have no `findOne`). Grant `find` + `fin
 
 **Collection types** — `find` + `findOne`:
 
-| Content type                    | find | findOne | Notes                                                    |
-| ------------------------------- | ---- | ------- | -------------------------------------------------------- |
-| Accessibility                   | ✓    | ✓       |                                                          |
-| Amenity                         | ✓    | ✓       |                                                          |
-| Area                            | ✓    | ✓       | custom actions are `auth: false` — no need to grant them |
-| Blog-article                    | ✓    | ✓       | `detail`/`slugs` are `auth: false`                       |
-| Blog-section                    | ✓    | ✓       |                                                          |
-| Category                        | ✓    | ✓       | `nav` is `auth: false`                                   |
-| Continent                       | ✓    | ✓       | custom actions are `auth: false`                         |
-| Country                         | ✓    | ✓       | custom actions are `auth: false`                         |
-| Library                         | ✓    | ✓       | `mapPins` is `auth: false`                               |
-| Page                            | ✓    | ✓       |                                                          |
-| Redirect                        | ✓    | ✓       | read by Next.js middleware for redirect rules            |
-| Region                          | ✓    | ✓       | custom actions are `auth: false`                         |
-| Service                         | ✓    | ✓       |                                                          |
-| Subscriber                      | —    | —       | newsletter sign-up only — no SSR need                    |
-| User-profile                    | ✓    | ✓       | server-side profile reads by `baUserId` filter           |
-| Wiki-article                    | ✓    | ✓       | custom actions are `auth: false`                         |
-| Wiki-section                    | ✓    | ✓       | `nav` is `auth: false`                                   |
-| **content-moderation (plugin)** | —    | —       | all routes are `auth: false`, not token-gated            |
+| Content type                    | find | findOne | Notes                                                                                                                          |
+| ------------------------------- | ---- | ------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Accessibility                   | ✓    | ✓       |                                                                                                                                |
+| Amenity                         | ✓    | ✓       |                                                                                                                                |
+| Area                            | ✓    | ✓       | custom actions are `auth: false` — no need to grant them                                                                       |
+| Blog-article                    | ✓    | ✓       | `detail`/`slugs` are `auth: false`                                                                                             |
+| Blog-section                    | ✓    | ✓       |                                                                                                                                |
+| Category                        | ✓    | ✓       | `nav` is `auth: false`                                                                                                         |
+| Continent                       | ✓    | ✓       | custom actions are `auth: false`                                                                                               |
+| Country                         | ✓    | ✓       | custom actions are `auth: false`                                                                                               |
+| Library                         | ✓    | ✓       | `mapPins` is `auth: false`                                                                                                     |
+| Page                            | ✓    | ✓       |                                                                                                                                |
+| Redirect                        | ✓    | ✓       | read by Next.js middleware for redirect rules                                                                                  |
+| Region                          | ✓    | ✓       | custom actions are `auth: false`                                                                                               |
+| Service                         | ✓    | ✓       |                                                                                                                                |
+| Subscriber                      | —    | —       | newsletter sign-up only — no SSR need                                                                                          |
+| User-profile                    | ✓    | ✓       | server-side profile reads by `baUserId` filter                                                                                 |
+| Wiki-article                    | ✓    | ✓       | custom actions are `auth: false`                                                                                               |
+| Wiki-section                    | ✓    | ✓       | `nav` is `auth: false`                                                                                                         |
+| **content-moderation (plugin)** | —    | —       | all routes are `auth: false`, not token-gated                                                                                  |
+| **events (plugin)**             | —    | —       | all content-API routes are `auth: false`, not token-gated                                                                      |
+| **topics (plugin)**             | —    | —       | `findApproved` is `auth: false`; `findAll`/`updateStatus` use `auth: { scope: [] }` — token-gated but no explicit grant needed |
+| Saved-event                     | —    | —       | all routes are `auth: false`, controller enforces user session                                                                 |
+| Event-provider                  | ✓    | ✓       | `create` open to public (feed submission form); reads restricted                                                               |
 
 ---
 
@@ -173,9 +180,15 @@ Default role for all signed-in users.
 
 Content-moderation routes (`create`, `findMine`, `saveDraft`, `findDraft`) are `auth: false` and validate the user via Better Auth session internally. They do not appear in this UI and cannot be configured here.
 
+**Grant in addition to Public:**
+
+| Content type   | Action   | Reason                                  |
+| -------------- | -------- | --------------------------------------- |
+| `user-profile` | `update` | User updates their own profile settings |
+
 **Do not grant:**
 
-- `user-profile: update` or `create` — profile mutations go through auth-bridge
+- `user-profile: create` — profile created via auth-bridge on registration
 - `library: create/update`, `wiki-article: create/update` — go through the submission workflow
 - Redirect `find`/`findOne` — server-side only
 
@@ -211,13 +224,59 @@ The distinction between Authenticated and Verified Librarian is enforced in the 
 
 ### Role 4: Wiki Editor
 
-**All Authenticated permissions, plus:**
+**All Authenticated permissions, plus the following.**
 
-| Type           | Actions to check   |
-| -------------- | ------------------ |
-| `wiki-article` | `create`, `update` |
+Wiki editors never write directly to `wiki-article`. All edits are submitted via the content-moderation plugin and applied by the service on approval. The role only needs read access to wiki content and the ability to upload media.
 
-Wiki editors save working drafts via these actions. Final publication still requires a moderator to approve the submission in the queue.
+**User-profile:**
+
+`findByUsername`, `findByDocumentId`, `findBadgesByUsername`, and `findBadgesByDocumentId` are all hardcoded `auth: false` — they do not appear as checkboxes in the permissions panel and work regardless. The only user-profile permission to tick here is:
+
+| Action              | Check? | Reason                         |
+| ------------------- | ------ | ------------------------------ |
+| `update`            | ✓      | User updates their own profile |
+| `find` / `findOne`  | —      | Admin-level listing            |
+| `create` / `delete` | —      | Never for a user role          |
+
+> `update` should also be ticked on the base **Authenticated** role — every signed-in user needs it.
+
+**Wiki-article:**
+
+`detail` and `slugs` are both hardcoded `auth: false` — checkboxes have no effect. The permissions panel only controls standard CRUD:
+
+| Action            | Check? | Reason                                                      |
+| ----------------- | ------ | ----------------------------------------------------------- |
+| `find`            | ✓      | List articles                                               |
+| `findOne`         | ✓      | Fetch article                                               |
+| `create`/`update` | —      | Writes go through content-moderation plugin, not direct API |
+| `delete`          | —      | Admin only                                                  |
+| `detail`/`slugs`  | —      | `auth: false` — checkboxes do nothing here                  |
+
+**Wiki-section:**
+
+| Action                     | Check? |
+| -------------------------- | ------ |
+| `find`                     | ✓      |
+| `nav`                      | ✓      |
+| `findOne`                  | —      |
+| `create`/`update`/`delete` | —      |
+
+**Wiki-landing:** leave all unchecked (public reads via API token, writes are admin only).
+
+**Media Library (upload plugin):**
+
+| Action    | Check? | Reason                                              |
+| --------- | ------ | --------------------------------------------------- |
+| `upload`  | ✓      | Attach images to wiki articles via the editor       |
+| `find`    | ✓      | Browse previously uploaded media to avoid re-upload |
+| `findOne` | ✓      | Load specific media item                            |
+| `destroy` | —      | Admin only                                          |
+
+**Users-permissions — AUTH section:** Do not check anything here. AUTH actions (`register`, `callback`, `forgotPassword`, etc.) are unauthenticated flows that belong on the **Public** role. A wiki editor is already authenticated — these have no effect for this role.
+
+**Users-permissions — USER section:** `me` only (inherited from Authenticated).
+
+**Users-permissions — PERMISSIONS and ROLE sections:** all unchecked.
 
 ---
 
@@ -290,21 +349,25 @@ Full editorial control plus moderation.
 
 ## Full permission matrix
 
-| Action                          | Public | Authenticated | Verified Librarian | Wiki Editor | API Token | Moderator (admin) | Editor (admin) |
-| ------------------------------- | :----: | :-----------: | :----------------: | :---------: | :-------: | :---------------: | :------------: |
-| Browse atlas / read content     |   ✓    |       ✓       |         ✓          |      ✓      |     ✓     |       read        |   read+write   |
-| Subscribe (newsletter)          |   ✓    |       ✓       |         ✓          |      ✓      |     —     |         —         |       —        |
-| View public profiles            |   ✓    |       ✓       |         ✓          |      ✓      |     ✓     |         —         |       —        |
-| Submit correction / new library |   —    |       ✓       |         ✓          |      ✓      |     —     |         —         |       —        |
-| Submit library edit             |   —    |       ✓       |  ✓ (elevated UI)   |      ✓      |     —     |         —         |       —        |
-| Claim a library                 |   —    |       ✓       |         —          |      —      |     —     |         —         |       —        |
-| Follow / unfollow library       |   —    |       ✓       |         ✓          |      ✓      |     —     |         —         |       —        |
-| Save submission draft           |   —    |       ✓       |         ✓          |      ✓      |     —     |         —         |       —        |
-| Submit wiki edit                |   —    |       —       |         —          |      ✓      |     —     |         —         |       —        |
-| View moderation queue           |   —    |       —       |         —          |      —      |     —     |         ✓         |       ✓        |
-| Approve / reject submissions    |   —    |       —       |         —          |      —      |     —     |         ✓         |       ✓        |
-| Directly edit content in Strapi |   —    |       —       |         —          |      —      |     —     |         —         |       ✓        |
-| Publish / unpublish entries     |   —    |       —       |         —          |      —      |     —     |         —         |       ✓        |
+| Action                            | Public | Authenticated | Verified Librarian | Wiki Editor | API Token | Moderator (admin) | Editor (admin) |
+| --------------------------------- | :----: | :-----------: | :----------------: | :---------: | :-------: | :---------------: | :------------: |
+| Browse atlas / read content       |   ✓    |       ✓       |         ✓          |      ✓      |     ✓     |       read        |   read+write   |
+| Subscribe (newsletter)            |   ✓    |       ✓       |         ✓          |      ✓      |     —     |         —         |       —        |
+| View public profiles              |   ✓    |       ✓       |         ✓          |      ✓      |     ✓     |         —         |       —        |
+| Update own profile                |   —    |       ✓       |         ✓          |      ✓      |     —     |         —         |       —        |
+| Upload media                      |   —    |       —       |         —          |      ✓      |     —     |         —         |       ✓        |
+| Submit correction / new library   |   —    |       ✓       |         ✓          |      ✓      |     —     |         —         |       —        |
+| Submit library edit               |   —    |       ✓       |  ✓ (elevated UI)   |      ✓      |     —     |         —         |       —        |
+| Claim a library                   |   —    |       ✓       |         —          |      —      |     —     |         —         |       —        |
+| Follow / unfollow library         |   —    |       ✓       |         ✓          |      ✓      |     —     |         —         |       —        |
+| Save submission draft             |   —    |       ✓       |         ✓          |      ✓      |     —     |         —         |       —        |
+| Submit wiki edit (via moderation) |   —    |       —       |         —          |      ✓      |     —     |         —         |       —        |
+| Read wiki articles for editing    |   ✓    |       ✓       |         ✓          |      ✓      |     ✓     |         ✓         |       ✓        |
+| Write wiki-article directly       |   —    |       —       |         —          |      —      |     —     |         —         |       ✓        |
+| View moderation queue             |   —    |       —       |         —          |      —      |     —     |         ✓         |       ✓        |
+| Approve / reject submissions      |   —    |       —       |         —          |      —      |     —     |         ✓         |       ✓        |
+| Directly edit content in Strapi   |   —    |       —       |         —          |      —      |     —     |         —         |       ✓        |
+| Publish / unpublish entries       |   —    |       —       |         —          |      —      |     —     |         —         |       ✓        |
 
 ---
 

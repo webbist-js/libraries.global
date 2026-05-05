@@ -842,12 +842,6 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
-    tags: Schema.Attribute.JSON &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: false
-        }
-      }>
     title: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
@@ -1411,6 +1405,52 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface ApiEventProviderEventProvider
+  extends Struct.CollectionTypeSchema {
+  collectionName: "event_providers"
+  info: {
+    displayName: "Event Provider"
+    pluralName: "event-providers"
+    singularName: "event-provider"
+  }
+  options: {
+    draftAndPublish: true
+  }
+  attributes: {
+    apiKey: Schema.Attribute.Password
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    feedUrl: Schema.Attribute.String
+    lastImportAt: Schema.Attribute.DateTime
+    lastImportCount: Schema.Attribute.Integer
+    libraryEntityRef: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::event-provider.event-provider"
+    > &
+      Schema.Attribute.Private
+    notes: Schema.Attribute.Text
+    providerType: Schema.Attribute.Enumeration<
+      ["eventbrite", "meetup", "ticketmaster", "ical_feed", "json_api", "other"]
+    > &
+      Schema.Attribute.Required
+    publishedAt: Schema.Attribute.DateTime
+    status: Schema.Attribute.Enumeration<
+      ["pending", "active", "paused", "rejected"]
+    > &
+      Schema.Attribute.DefaultTo<"pending">
+    submittedByEmail: Schema.Attribute.Email
+    submittedByName: Schema.Attribute.String
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface ApiFooterFooter extends Struct.SingleTypeSchema {
   collectionName: "footers"
   info: {
@@ -1808,6 +1848,13 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    hasActiveFeed: Schema.Attribute.Boolean &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.DefaultTo<false>
     heroImage: Schema.Attribute.Media<"images"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -2061,47 +2108,6 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
   }
 }
 
-export interface ApiNavbarNavbar extends Struct.SingleTypeSchema {
-  collectionName: "navbars"
-  info: {
-    description: ""
-    displayName: "Navbar"
-    pluralName: "navbars"
-    singularName: "navbar"
-  }
-  options: {
-    draftAndPublish: false
-  }
-  pluginOptions: {
-    i18n: {
-      localized: true
-    }
-  }
-  attributes: {
-    createdAt: Schema.Attribute.DateTime
-    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
-      Schema.Attribute.Private
-    links: Schema.Attribute.Component<"utilities.link", true> &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true
-        }
-      }>
-    locale: Schema.Attribute.String
-    localizations: Schema.Attribute.Relation<"oneToMany", "api::navbar.navbar">
-    logoImage: Schema.Attribute.Component<"utilities.image-with-link", false> &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true
-        }
-      }>
-    publishedAt: Schema.Attribute.DateTime
-    updatedAt: Schema.Attribute.DateTime
-    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
-      Schema.Attribute.Private
-  }
-}
-
 export interface ApiPagePage extends Struct.CollectionTypeSchema {
   collectionName: "pages"
   info: {
@@ -2337,6 +2343,38 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+  }
+}
+
+export interface ApiSavedEventSavedEvent extends Struct.CollectionTypeSchema {
+  collectionName: "saved_events"
+  info: {
+    displayName: "Saved Event"
+    pluralName: "saved-events"
+    singularName: "saved-event"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    eventDocumentId: Schema.Attribute.String & Schema.Attribute.Required
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::saved-event.saved-event"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    user: Schema.Attribute.Relation<
+      "manyToOne",
+      "plugin::users-permissions.user"
+    >
   }
 }
 
@@ -3017,6 +3055,263 @@ export interface PluginContentReleasesReleaseAction
   }
 }
 
+export interface PluginEventsEvent extends Struct.CollectionTypeSchema {
+  collectionName: "ev_events"
+  info: {
+    displayName: "Event"
+    pluralName: "events"
+    singularName: "event"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: true
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    allDay: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
+    audience: Schema.Attribute.JSON
+    capacity: Schema.Attribute.Integer
+    countryCode: Schema.Attribute.String
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    credentialId: Schema.Attribute.Integer & Schema.Attribute.Required
+    description: Schema.Attribute.Text
+    endTime: Schema.Attribute.DateTime
+    eventType: Schema.Attribute.Enumeration<
+      [
+        "talk",
+        "exhibition",
+        "storytime",
+        "book_club",
+        "workshop",
+        "tour",
+        "screening",
+        "reading_group",
+        "performance",
+        "drop_in",
+        "other",
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"other">
+    externalId: Schema.Attribute.String & Schema.Attribute.Required
+    imageUrl: Schema.Attribute.Text
+    importedAt: Schema.Attribute.DateTime & Schema.Attribute.Required
+    isFree: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
+    lastSeenAt: Schema.Attribute.DateTime & Schema.Attribute.Required
+    library: Schema.Attribute.Relation<"manyToOne", "api::library.library">
+    libraryEntityRef: Schema.Attribute.String & Schema.Attribute.Required
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::events.event"
+    > &
+      Schema.Attribute.Private
+    pendingReview: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
+    priceMax: Schema.Attribute.Decimal
+    priceMin: Schema.Attribute.Decimal
+    publishedAt: Schema.Attribute.DateTime
+    regionSlug: Schema.Attribute.String
+    registrationUrl: Schema.Attribute.Text
+    sourceProvider: Schema.Attribute.Enumeration<
+      [
+        "eventbrite",
+        "ical",
+        "custom_ical",
+        "aspen",
+        "solus",
+        "spydus",
+        "ticketsource",
+        "wegottickets",
+      ]
+    > &
+      Schema.Attribute.Required
+    startTime: Schema.Attribute.DateTime & Schema.Attribute.Required
+    status: Schema.Attribute.Enumeration<
+      ["upcoming", "ongoing", "cancelled", "postponed"]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"upcoming">
+    summary: Schema.Attribute.Text
+    syncHash: Schema.Attribute.String & Schema.Attribute.Required
+    tags: Schema.Attribute.JSON
+    timezone: Schema.Attribute.String & Schema.Attribute.Required
+    title: Schema.Attribute.String & Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    url: Schema.Attribute.Text & Schema.Attribute.Required
+  }
+}
+
+export interface PluginEventsEventCredential
+  extends Struct.CollectionTypeSchema {
+  collectionName: "ev_event_credentials"
+  info: {
+    displayName: "Event Credential"
+    pluralName: "event-credentials"
+    singularName: "event-credential"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    credentialsEncrypted: Schema.Attribute.Text & Schema.Attribute.Required
+    isActive: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<true>
+    label: Schema.Attribute.String & Schema.Attribute.Required
+    lastErrorMessage: Schema.Attribute.Text
+    lastSyncAt: Schema.Attribute.DateTime
+    lastSyncStatus: Schema.Attribute.Enumeration<["ok", "partial", "error"]>
+    lastVerifiedAt: Schema.Attribute.DateTime
+    libraries: Schema.Attribute.Relation<"manyToMany", "api::library.library">
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::events.event-credential"
+    > &
+      Schema.Attribute.Private
+    provider: Schema.Attribute.Enumeration<
+      [
+        "eventbrite",
+        "ticketsource",
+        "meetup",
+        "ical",
+        "wegottickets",
+        "spydus",
+        "bibliocommons",
+      ]
+    > &
+      Schema.Attribute.Required
+    publishedAt: Schema.Attribute.DateTime
+    scope: Schema.Attribute.Enumeration<["library", "group"]> &
+      Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginEventsImportRun extends Struct.CollectionTypeSchema {
+  collectionName: "ev_import_runs"
+  info: {
+    displayName: "Import Run"
+    pluralName: "import-runs"
+    singularName: "import-run"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    completedAt: Schema.Attribute.DateTime
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    credentialsAttempted: Schema.Attribute.Integer &
+      Schema.Attribute.DefaultTo<0>
+    credentialsFailed: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
+    credentialsTotal: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
+    durationMs: Schema.Attribute.Integer
+    errorCount: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
+    eventsCreated: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
+    eventsExpiredPurged: Schema.Attribute.Integer &
+      Schema.Attribute.DefaultTo<0>
+    eventsFetched: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
+    eventsPendingReview: Schema.Attribute.Integer &
+      Schema.Attribute.DefaultTo<0>
+    eventsUnchanged: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
+    eventsUpdated: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
+    failedCredentials: Schema.Attribute.JSON
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::events.import-run"
+    > &
+      Schema.Attribute.Private
+    notes: Schema.Attribute.Text
+    providerBreakdown: Schema.Attribute.JSON
+    publishedAt: Schema.Attribute.DateTime
+    runId: Schema.Attribute.String & Schema.Attribute.Required
+    startedAt: Schema.Attribute.DateTime & Schema.Attribute.Required
+    status: Schema.Attribute.Enumeration<
+      ["running", "success", "partial", "failed"]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"running">
+    triggeredBy: Schema.Attribute.Enumeration<["cron", "manual"]> &
+      Schema.Attribute.Required
+    triggeredByUserId: Schema.Attribute.String
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginEventsSyncCommand extends Struct.CollectionTypeSchema {
+  collectionName: "ev_sync_commands"
+  info: {
+    displayName: "Sync Command"
+    pluralName: "sync-commands"
+    singularName: "sync-command"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    consumedAt: Schema.Attribute.DateTime
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::events.sync-command"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    requestedAt: Schema.Attribute.DateTime & Schema.Attribute.Required
+    requestedByUserId: Schema.Attribute.String
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface PluginI18NLocale extends Struct.CollectionTypeSchema {
   collectionName: "i18n_locale"
   info: {
@@ -3193,6 +3488,47 @@ export interface PluginRewardsBadgeAward extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginRewardsLeaderboardSnapshot
+  extends Struct.CollectionTypeSchema {
+  collectionName: "rw_leaderboard_snapshots"
+  info: {
+    displayName: "Leaderboard Snapshot"
+    pluralName: "leaderboard-snapshots"
+    singularName: "leaderboard-snapshot"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    entries: Schema.Attribute.JSON & Schema.Attribute.Required
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::rewards.leaderboard-snapshot"
+    > &
+      Schema.Attribute.Private
+    period: Schema.Attribute.String & Schema.Attribute.Required
+    periodType: Schema.Attribute.Enumeration<["weekly", "daily"]> &
+      Schema.Attribute.Required
+    publishedAt: Schema.Attribute.DateTime
+    takenAt: Schema.Attribute.DateTime & Schema.Attribute.Required
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -3536,14 +3872,15 @@ declare module "@strapi/strapi" {
       "api::category.category": ApiCategoryCategory
       "api::continent.continent": ApiContinentContinent
       "api::country.country": ApiCountryCountry
+      "api::event-provider.event-provider": ApiEventProviderEventProvider
       "api::footer.footer": ApiFooterFooter
       "api::homepage.homepage": ApiHomepageHomepage
       "api::library-affiliation.library-affiliation": ApiLibraryAffiliationLibraryAffiliation
       "api::library.library": ApiLibraryLibrary
-      "api::navbar.navbar": ApiNavbarNavbar
       "api::page.page": ApiPagePage
       "api::redirect.redirect": ApiRedirectRedirect
       "api::region.region": ApiRegionRegion
+      "api::saved-event.saved-event": ApiSavedEventSavedEvent
       "api::service.service": ApiServiceService
       "api::subscriber.subscriber": ApiSubscriberSubscriber
       "api::topic.topic": ApiTopicTopic
@@ -3554,10 +3891,15 @@ declare module "@strapi/strapi" {
       "plugin::content-moderation.submission": PluginContentModerationSubmission
       "plugin::content-releases.release": PluginContentReleasesRelease
       "plugin::content-releases.release-action": PluginContentReleasesReleaseAction
+      "plugin::events.event": PluginEventsEvent
+      "plugin::events.event-credential": PluginEventsEventCredential
+      "plugin::events.import-run": PluginEventsImportRun
+      "plugin::events.sync-command": PluginEventsSyncCommand
       "plugin::i18n.locale": PluginI18NLocale
       "plugin::review-workflows.workflow": PluginReviewWorkflowsWorkflow
       "plugin::review-workflows.workflow-stage": PluginReviewWorkflowsWorkflowStage
       "plugin::rewards.badge-award": PluginRewardsBadgeAward
+      "plugin::rewards.leaderboard-snapshot": PluginRewardsLeaderboardSnapshot
       "plugin::rewards.point-event": PluginRewardsPointEvent
       "plugin::upload.file": PluginUploadFile
       "plugin::upload.folder": PluginUploadFolder
