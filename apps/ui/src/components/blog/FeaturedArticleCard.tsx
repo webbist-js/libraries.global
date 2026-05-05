@@ -18,7 +18,7 @@ export function FeaturedArticleCard({
 
   return (
     <GlobalLink
-      href={`/blog/${article.slug}`}
+      href={`/blog/${article.section?.slug ?? "general"}/${article.slug}`}
       className="group relative overflow-hidden rounded-2xl"
       style={{ background: T.bg.surface, border: `1px solid ${T.border.line}` }}
     >

@@ -7,7 +7,6 @@ import { isDevelopment } from "@/lib/general-helpers"
 import {
   fetchAllBlogArticleSlugs,
   fetchBlogArticle,
-  fetchNavbar,
   fetchRecentBlogArticles,
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
@@ -24,13 +23,18 @@ export async function generateStaticParams({
   if (isDevelopment()) return []
   const result = await fetchAllBlogArticleSlugs(locale as Locale)
 
-  return result.data.map((a) => ({ slug: a.slug }))
+  return result.data
+    .filter((a) => a.slug)
+    .map((a) => ({
+      section: a.section?.slug ?? "general",
+      slug: a.slug as string,
+    }))
 }
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ locale: string; slug: string }>
+  params: Promise<{ locale: string; section: string; slug: string }>
 }): Promise<Metadata> {
   const { locale, slug } = await params
   const data = (await fetchBlogArticle(slug, locale as Locale))?.data
@@ -60,23 +64,18 @@ export async function generateMetadata({
 }
 
 export default function BlogArticleRoute(props: {
-  params: Promise<{ locale: string; slug: string }>
+  params: Promise<{ locale: string; section: string; slug: string }>
 }) {
-  const params = use(props.params)
-  const locale = params.locale as Locale
-  const slug = params.slug
+  const { locale: localeStr, slug } = use(props.params)
+  const locale = localeStr as Locale
 
   const article = use(fetchBlogArticle(slug, locale))?.data ?? null
   const related = use(fetchRecentBlogArticles(locale))?.data ?? []
-  const navbar = use(fetchNavbar(locale))?.data
-
-  const filteredRelated = related.filter((a) => a.slug !== slug)
 
   return (
     <BlogArticlePage
       article={article}
-      related={filteredRelated}
-      navbar={navbar}
+      related={related.filter((a) => a.slug !== slug)}
       locale={locale}
     />
   )

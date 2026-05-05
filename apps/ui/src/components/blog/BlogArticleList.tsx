@@ -19,7 +19,7 @@ function SidebarArticleRow({
 
   return (
     <GlobalLink
-      href={`/blog/${article.slug}`}
+      href={`/blog/${article.section?.slug ?? "general"}/${article.slug}`}
       className="group flex items-start gap-3 border-b border-(--t-border-line) py-4 last:border-0"
     >
       <span className="mt-0.5 flex-none font-mono text-[10px] text-(--t-ink-faint) tabular-nums">

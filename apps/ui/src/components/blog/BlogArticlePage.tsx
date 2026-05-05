@@ -21,25 +21,21 @@ import type {
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
-type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
-
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function BlogArticlePage({
   article,
   related,
-  navbar,
   locale,
 }: {
   readonly article: BlogArticleDetail | null
   readonly related?: BlogArticleSummary[]
-  readonly navbar?: NavbarData
   readonly locale: Locale
 }) {
   if (!article) {
     return (
       <PageShell className="flex flex-col">
-        <GlobalHeader locale={locale} navbar={navbar} />
+        <GlobalHeader locale={locale} />
         <main className="flex flex-1 items-center justify-center">
           <p style={{ color: T.ink.faint }}>Article not found.</p>
         </main>
@@ -63,7 +59,6 @@ export function BlogArticlePage({
         .toUpperCase()
     : null
   const headings = extractHeadings(article.body)
-  const tags = Array.isArray(article.tags) ? article.tags : []
 
   // Curated related articles take priority; fall back to prop from page.tsx
   const relatedCards: BlogArticleSummary[] = (
@@ -76,7 +71,7 @@ export function BlogArticlePage({
 
   return (
     <PageShell className="flex flex-col">
-      <GlobalHeader locale={locale} navbar={navbar} />
+      <GlobalHeader locale={locale} />
 
       <main className="relative z-10 flex-1">
         {/* ── Hero — full-bleed image, slides behind transparent header ── */}
@@ -275,33 +270,6 @@ export function BlogArticlePage({
                 <div className="article-drop-cap">
                   <ArticleBodyBlocks blocks={article.body} />
                 </div>
-
-                {/* Tags */}
-                {tags.length > 0 ? (
-                  <div
-                    className="mt-14 flex flex-wrap gap-2 border-t pt-8"
-                    style={{ borderColor: T.border.line }}
-                  >
-                    {tags.map((tag) => (
-                      <span
-                        key={tag}
-                        style={{
-                          borderRadius: "999px",
-                          border: `1px solid ${T.border.line}`,
-                          background: "rgba(255,255,255,.03)",
-                          padding: "4px 12px",
-                          fontFamily: T.font.mono,
-                          fontSize: "10px",
-                          letterSpacing: ".10em",
-                          textTransform: "uppercase",
-                          color: T.ink.faint,
-                        }}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                ) : null}
 
                 {/* Back link */}
                 <div

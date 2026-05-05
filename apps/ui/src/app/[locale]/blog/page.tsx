@@ -5,7 +5,7 @@ import { use } from "react"
 import BlogLandingPage from "@/components/blog/BlogLandingPage"
 import {
   fetchBlogLanding,
-  fetchNavbar,
+  fetchBlogSections,
   fetchRecentBlogArticles,
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
@@ -49,13 +49,13 @@ export default function BlogPage(props: {
 
   const landing = use(fetchBlogLanding(locale))?.data ?? null
   const articles = use(fetchRecentBlogArticles(locale))?.data ?? []
-  const navbar = use(fetchNavbar(locale))?.data
+  const sections = use(fetchBlogSections())?.data ?? []
 
   return (
     <BlogLandingPage
       landing={landing}
       articles={articles}
-      navbar={navbar}
+      sections={sections}
       locale={locale}
     />
   )

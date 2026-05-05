@@ -2,119 +2,201 @@ import type { Locale } from "next-intl"
 
 import { HeroEyebrow, HeroTitle, PageShell } from "@/components/ds"
 import { parseHeroText } from "@/components/ds/HeroTitle"
-import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
+import { DotHeroCanvas } from "@/components/ui/DotHeroCanvas"
+import { T } from "@/lib/design-tokens"
 import type {
   BlogArticleSummary,
   BlogLandingData,
+  BlogSection,
 } from "@/lib/strapi-api/content/server"
 
 import BlogFeed from "./BlogFeed"
-
-type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
+import { BlogSearchBar } from "./BlogSearchBar"
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function BlogLandingPage({
   landing,
   articles,
-  navbar,
+  sections,
   locale,
 }: {
   readonly landing: BlogLandingData | null
   readonly articles: BlogArticleSummary[]
-  readonly navbar?: NavbarData
+  readonly sections: BlogSection[]
   readonly locale: Locale
 }) {
   const featuredArticle = landing?.featuredArticle ?? articles[0] ?? null
-
-  // Derive stats from articles
   const totalCount = articles.length
-  const authorCount = new Set(
-    articles.filter((a) => a.author).map((a) => a.author)
-  ).size
-  const categoryCount = new Set(
-    articles.filter((a) => a.section?.name).map((a) => a.section?.name)
-  ).size
 
   const heroTitle = landing?.heroTitle ?? "Field *notes* from the stacks."
 
   return (
     <PageShell className="flex flex-col">
-      <GlobalHeader locale={locale} navbar={navbar} />
+      <GlobalHeader locale={locale} />
 
       <main className="relative z-10 flex-1">
         {/* ── Hero ──────────────────────────────────────────────────────── */}
-        <section className="border-b border-(--t-border-line) py-20 sm:py-28">
-          <Container>
-            <div className="grid grid-cols-1 gap-14 lg:grid-cols-[1fr_280px] lg:items-end lg:gap-20">
-              {/* Left: big title */}
+        <section
+          style={{
+            position: "relative",
+            padding: "130px 0 60px",
+            overflow: "hidden",
+          }}
+        >
+          <DotHeroCanvas variant="journal" />
+          {/* Vignette */}
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "radial-gradient(ellipse 110% 90% at 50% 50%, transparent 25%, var(--t-bg-space) 80%)",
+              pointerEvents: "none",
+            }}
+          />
+
+          <div
+            style={{
+              maxWidth: "1296px",
+              margin: "0 auto",
+              padding: "0 24px",
+              position: "relative",
+              zIndex: 10,
+            }}
+          >
+            <div
+              style={{
+                position: "relative",
+                display: "grid",
+                gridTemplateColumns: "1.3fr 0.9fr",
+                gap: "56px",
+                alignItems: "end",
+              }}
+              className="bhero-inner"
+            >
+              {/* Left: eyebrow + title */}
               <div>
-                <HeroEyebrow>
+                <HeroEyebrow icon="✦">
                   {landing?.heroEyebrow ?? "THE LIBRARY JOURNAL · EST. 2026"}
                 </HeroEyebrow>
 
                 <HeroTitle>{parseHeroText(heroTitle)}</HeroTitle>
               </div>
 
-              {/* Right: description + stats */}
-              <div className="lg:pb-4">
+              {/* Right: description + search + stats */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "20px",
+                  paddingBottom: "24px",
+                }}
+              >
                 {landing?.heroText ? (
-                  <p className="mb-8 text-[13px] leading-7 text-(--t-ink-low)">
+                  <p
+                    style={{
+                      fontSize: "15px",
+                      lineHeight: 1.68,
+                      color: T.ink.dim,
+                      fontWeight: 300,
+                      maxWidth: "48ch",
+                      margin: 0,
+                    }}
+                  >
                     {landing.heroText}
                   </p>
                 ) : null}
 
+                {/* Search bar */}
+                <BlogSearchBar />
+
+                {/* Stats row */}
                 {totalCount > 0 ? (
-                  <div className="flex items-baseline gap-4">
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "24px",
+                      paddingTop: "14px",
+                      borderTop: `1px solid ${T.border.line}`,
+                      fontFamily: T.font.mono,
+                    }}
+                  >
                     <div>
-                      <p className="font-[family-name:var(--font-fraunces)] text-[2.6rem] leading-none font-light text-(--t-ink-base) tabular-nums">
+                      <b
+                        style={{
+                          display: "block",
+                          fontFamily: T.font.serif,
+                          fontSize: "22px",
+                          color: T.ink.base,
+                          letterSpacing: "-.02em",
+                          fontWeight: 400,
+                        }}
+                      >
                         {totalCount}
-                      </p>
-                      <p className="mt-1.5 font-mono text-[9px] tracking-[0.2em] text-(--t-ink-faint) uppercase">
-                        Articles
-                      </p>
+                      </b>
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          color: T.ink.low,
+                          letterSpacing: ".12em",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        articles
+                      </span>
                     </div>
-
-                    {authorCount > 1 ? (
-                      <>
-                        <span className="pb-2 text-(--t-ink-ghost)">·</span>
-                        <div>
-                          <p className="font-[family-name:var(--font-fraunces)] text-[2.6rem] leading-none font-light text-(--t-ink-base) tabular-nums">
-                            {authorCount}
-                          </p>
-                          <p className="mt-1.5 font-mono text-[9px] tracking-[0.2em] text-(--t-ink-faint) uppercase">
-                            Writers
-                          </p>
-                        </div>
-                      </>
-                    ) : null}
-
-                    {categoryCount > 1 ? (
-                      <>
-                        <span className="pb-2 text-(--t-ink-ghost)">·</span>
-                        <div>
-                          <p className="font-[family-name:var(--font-fraunces)] text-[2.6rem] leading-none font-light text-(--t-ink-base) tabular-nums">
-                            {categoryCount}
-                          </p>
-                          <p className="mt-1.5 font-mono text-[9px] tracking-[0.2em] text-(--t-ink-faint) uppercase">
-                            Topics
-                          </p>
-                        </div>
-                      </>
+                    {sections.length > 0 ? (
+                      <div>
+                        <b
+                          style={{
+                            display: "block",
+                            fontFamily: T.font.serif,
+                            fontSize: "22px",
+                            color: T.ink.base,
+                            letterSpacing: "-.02em",
+                            fontWeight: 400,
+                          }}
+                        >
+                          {sections.length}
+                        </b>
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            color: T.ink.low,
+                            letterSpacing: ".12em",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          sections
+                        </span>
+                      </div>
                     ) : null}
                   </div>
                 ) : null}
               </div>
             </div>
-          </Container>
+          </div>
         </section>
 
         {/* ── Feed (Sticky Filters + List) ─────────────────────────────── */}
         {articles.length > 0 && (
-          <BlogFeed articles={articles} featuredArticle={featuredArticle} />
+          <BlogFeed
+            articles={articles}
+            featuredArticle={featuredArticle}
+            sections={sections}
+          />
         )}
       </main>
+
+      {/* Responsive overrides */}
+      <style>{`
+        @media (max-width: 960px) {
+          .bhero-inner { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </PageShell>
   )
 }
