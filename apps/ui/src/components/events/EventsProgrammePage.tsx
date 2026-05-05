@@ -50,6 +50,9 @@ export function EventsProgrammePage({ data }: EventsProgrammePageProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Derive topCountryName from country breakdown
+  // TODO: topCountryName is used in the hero stat label ("In [Country]") but
+  // shows the country with the most events globally, not the user's locale.
+  // Consider using IP geolocation or browser locale as a more personalised fallback.
   const topCountryName = data.countryBreakdown[0]
     ? getCountryName(data.countryBreakdown[0].countryCode)
     : null
@@ -60,6 +63,10 @@ export function EventsProgrammePage({ data }: EventsProgrammePageProps) {
       <EventsHero stats={data.stats} topCountryName={topCountryName} />
 
       {/* Featured carousel */}
+      {/* TODO: Featured events are returned by /api/events/featured?count=6.
+          The Strapi `featured` flag needs to be set manually on event records in
+          the admin panel. Until events are seeded and flagged, this section will
+          not render. */}
       {data.featured.length > 0 && (
         <FeaturedEventsCarousel events={data.featured} />
       )}
@@ -145,10 +152,18 @@ export function EventsProgrammePage({ data }: EventsProgrammePageProps) {
       <SectionDivider />
 
       {/* Analytics: The shape of the programme */}
+      {/* TODO: All analytics charts (volume, categories, heatmap, providers)
+          render empty/hidden when Strapi returns no event data. They will
+          populate automatically once events are synced via the sync-worker. */}
       <Container className="py-8 sm:py-10">
         <div style={{ marginBottom: "32px" }}>
           <SectionHeader italic="programme.">The shape of the</SectionHeader>
         </div>
+
+        {/* TODO: The design shows a "Where the shares are spent" geographic
+            bubble/cluster map section here between the featured card and the
+            analytics charts. This was not included in the implementation plan
+            and requires a separate MapLibre or D3 visualisation. */}
 
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
           {/* Daily volume chart */}

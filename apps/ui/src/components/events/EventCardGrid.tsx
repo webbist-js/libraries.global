@@ -98,6 +98,11 @@ function DateScrollPicker({
 
 // ── EventCardGrid ──────────────────────────────────────────────────────────────
 
+// TODO: When dateScope is "this-week" or "this-month", the fetch still uses a
+// single selectedDate day window (from 00:00 to 23:59). Consider expanding
+// `to` to cover the full week/month range so the result count matches the
+// scope label shown in the sidebar.
+
 const PAGE_SIZE = 20
 
 interface EventCardGridProps {
@@ -153,6 +158,10 @@ export function EventCardGrid({
       limit: String(PAGE_SIZE),
       page: String(filters.page),
     })
+    // TODO: The API currently only accepts a single `type` filter. When
+    // multiple eventTypes are selected the API call silently ignores them and
+    // only the first is sent. Either extend the Strapi global handler to accept
+    // comma-separated types, or move type filtering fully client-side.
     if (filters.eventTypes.length === 1)
       params.set("type", filters.eventTypes[0]!)
     if (filters.priceScope === "free") params.set("isFree", "true")
@@ -172,7 +181,11 @@ export function EventCardGrid({
       })
   }, [selectedDate, filters])
 
-  // Client-side filters (search, timeOfDay, ageGroup, libraryDirect)
+  // Client-side filters (search, timeOfDay, libraryDirect)
+  // TODO: ageGroup filtering is not yet implemented. GridEvent doesn't carry an
+  // ageGroup field — the Strapi ev_events table and the /global API response
+  // would need to expose it (e.g. as tags or a dedicated column) before
+  // client-side filtering here can work.
   const filtered = applyClientFilters(response.events, filters)
 
   const totalPages = Math.ceil(response.total / PAGE_SIZE)

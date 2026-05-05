@@ -53,6 +53,10 @@ export function EventCard({ event }: EventCardProps) {
     .join(" · ")
     .toUpperCase()
 
+  // TODO: /events/[documentId] individual event detail page does not exist yet.
+  // The card title should link there once the route is built. For now it points
+  // to a 404. Consider temporarily linking to `event.url` (the external source)
+  // until the detail page is implemented.
   return (
     <a
       href={`/events/${event.documentId}`}

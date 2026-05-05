@@ -66,6 +66,10 @@ export function EventsGeoFilterBar({
   countryBreakdown,
 }: EventsGeoFilterBarProps) {
   const [selectedContinent, setSelectedContinent] = useState("")
+  // TODO: selectedContinent is local state and doesn't sync when filters.countryCode
+  // is set externally (e.g. from EventsBrowseElsewhere). If a user clicks a
+  // country in the Browse section, the continent dropdown stays on "All".
+  // Fix: derive selectedContinent from filters.countryCode using getContinent().
 
   // Build country options for the selected continent
   const continentCountries = useMemo(() => {
@@ -187,6 +191,9 @@ export function EventsGeoFilterBar({
           Free
         </Pill>
 
+        {/* TODO: "New" pill is currently static — it just resets the page.
+            Wire it to a real "recently added" filter once the Strapi /global
+            handler supports a `newerThan` or `sortBy=createdAt` param. */}
         <Pill active={false} onClick={() => onChange({ ...filters, page: 1 })}>
           New
         </Pill>

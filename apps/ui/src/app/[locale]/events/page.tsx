@@ -8,6 +8,9 @@ import GlobalHeader from "@/components/global/GlobalHeader"
 import { T } from "@/lib/design-tokens"
 
 export const dynamic = "force-dynamic"
+// TODO: All stats (totalEvents, totalThisWeek, totalThisMonth, percentFree)
+// will show 0 until Strapi is running AND the sync-worker has populated the
+// ev_events table. Run the sync-worker against a real provider feed to seed data.
 
 export const metadata: Metadata = {
   title: "Programme — Libraries of the World",

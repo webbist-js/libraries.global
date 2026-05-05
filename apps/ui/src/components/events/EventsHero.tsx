@@ -27,6 +27,10 @@ interface EventsHeroProps {
   readonly topCountryName?: string | null
 }
 
+// TODO: The design shows provider pill chips (Eventbrite, TicketSource…) and
+// scope-filter pills (GLOBAL / CONTINENT / NEAR ME, ALL / FREE / PAID, date range
+// shortcuts) below the hero descriptor. These were not in the implementation plan.
+// Stats will show 0 in dev until the sync-worker has seeded events into Strapi.
 export function EventsHero({ stats, topCountryName }: EventsHeroProps) {
   return (
     <section
