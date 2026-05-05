@@ -48,4 +48,4 @@ yarn-error.log*
 next-env.d.ts
 
 .claude/settings.local.json
-libraryOn-example/*
+.superpowers/brainstorm/*
