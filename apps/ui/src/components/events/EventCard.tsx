@@ -41,7 +41,7 @@ export function EventCard({ event }: EventCardProps) {
   const startTime = event.allDay ? "All day" : formatTime(event.startTime)
   const endTime = event.endTime ? formatTime(event.endTime) : null
   const duration = formatDuration(event.startTime, event.endTime)
-  const link = event.registrationUrl ?? event.url
+  const link = event.url
 
   // TODO: /events/[documentId] individual event detail page does not exist yet.
   // The card title should link there once the route is built. For now it points

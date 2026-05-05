@@ -67,7 +67,6 @@
     "isFree": { "type": "boolean", "default": false },
     "priceMin": { "type": "decimal" },
     "priceMax": { "type": "decimal" },
-    "registrationUrl": { "type": "text" },
     "capacity": { "type": "integer" },
     "status": {
       "type": "enumeration",

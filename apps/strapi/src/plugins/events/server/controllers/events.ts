@@ -33,7 +33,6 @@ export default ({ strapi }: { strapi: any }) => ({
         "isFree",
         "priceMin",
         "priceMax",
-        "registrationUrl",
         "status",
         "tags",
       ],
@@ -88,7 +87,6 @@ export default ({ strapi }: { strapi: any }) => ({
         "timezone",
         "eventType",
         "isFree",
-        "registrationUrl",
         "libraryEntityRef",
       ],
     })
@@ -148,7 +146,6 @@ export default ({ strapi }: { strapi: any }) => ({
         "isFree",
         "priceMin",
         "priceMax",
-        "registrationUrl",
         "status",
       ],
       populate: {
@@ -436,7 +433,6 @@ export default ({ strapi }: { strapi: any }) => ({
         "isFree",
         "priceMin",
         "priceMax",
-        "registrationUrl",
         "status",
         "tags",
         "libraryEntityRef",

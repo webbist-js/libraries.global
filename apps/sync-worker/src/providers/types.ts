@@ -47,6 +47,7 @@ export interface RawEvent {
   isFree: boolean
   priceMin?: number
   priceMax?: number
+  /** Booking/ticket URL — if present, used as the canonical action URL instead of url */
   registrationUrl?: string
   capacity?: number
   /** For group-scope credentials: venue name to match against library names */
@@ -76,7 +77,6 @@ export interface NormalizedEvent {
   isFree: boolean
   priceMin: number | null
   priceMax: number | null
-  registrationUrl: string | null
   capacity: number | null
   status: "upcoming" | "ongoing" | "cancelled" | "postponed"
   pendingReview: boolean

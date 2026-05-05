@@ -35,7 +35,6 @@ function toRow(e: NormalizedEvent): Record<string, unknown> {
     is_free: e.isFree,
     price_min: e.priceMin,
     price_max: e.priceMax,
-    registration_url: e.registrationUrl,
     capacity: e.capacity,
     status: e.status,
     pending_review: e.pendingReview,

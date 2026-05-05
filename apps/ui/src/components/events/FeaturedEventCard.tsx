@@ -130,7 +130,7 @@ function MetaCell({ label, value }: { label: string; value: string }) {
 
 export function FeaturedEventCard({ event }: { event: FeaturedEvent }) {
   const typeMeta = EVENT_TYPE_META[event.eventType] ?? EVENT_TYPE_META.other!
-  const linkUrl = event.registrationUrl ?? event.url
+  const linkUrl = event.url
   const { dowMonth, day, yearTime } = formatDateBlock(event.startTime)
   const dateLabel = getDateLabel(event.startTime)
   const priceLabel = formatPrice(event.isFree, event.priceMin, event.priceMax)
@@ -140,17 +140,6 @@ export function FeaturedEventCard({ event }: { event: FeaturedEvent }) {
   const providerColor =
     PROVIDER_COLORS[event.sourceProvider ?? ""] ?? T.accent.aurora
   const shortId = event.documentId.slice(-6).toUpperCase()
-
-  // Extract quote: first sentence of description, capped at 120 chars
-  const quote = event.description
-    ? (() => {
-        const first = event.description.split(/[.!?]/)[0]?.trim() ?? ""
-
-        return first.length > 10
-          ? `"${first.length > 120 ? first.slice(0, 117) + "…" : first}."`
-          : null
-      })()
-    : null
 
   // Library breadcrumb
   const libraryLabel = event.libraryName ?? event.libraryEntityRef ?? null
@@ -276,9 +265,9 @@ export function FeaturedEventCard({ event }: { event: FeaturedEvent }) {
             </div>
           </div>
 
-          {/* Tags — overlaid on image, bottom-left above quote */}
+          {/* Tags — overlaid on image, bottom-left */}
           {event.tags && event.tags.length > 0 ? (
-            <div className="absolute bottom-12 left-5 flex flex-wrap gap-1.5 sm:left-6">
+            <div className="absolute bottom-5 left-5 flex flex-wrap gap-1.5 sm:bottom-6 sm:left-6">
               {event.tags.slice(0, 3).map((tag) => (
                 <span
                   key={tag}
@@ -298,22 +287,6 @@ export function FeaturedEventCard({ event }: { event: FeaturedEvent }) {
                 </span>
               ))}
             </div>
-          ) : null}
-
-          {/* Quote — bottom-left */}
-          {quote ? (
-            <p
-              className="absolute right-0 bottom-0 left-0 px-5 pb-5 sm:px-6 sm:pb-6"
-              style={{
-                fontFamily: T.font.serif,
-                fontSize: "0.78rem",
-                fontStyle: "italic",
-                color: T.ink.faint,
-                lineHeight: 1.5,
-              }}
-            >
-              {quote}
-            </p>
           ) : null}
         </div>
 

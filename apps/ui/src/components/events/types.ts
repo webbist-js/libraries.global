@@ -53,7 +53,6 @@ export interface FeaturedEvent {
   isFree: boolean
   priceMin?: number | null
   priceMax?: number | null
-  registrationUrl?: string | null
   libraryEntityRef?: string | null
   libraryName?: string | null
   libraryCity?: string | null
@@ -74,7 +73,6 @@ export interface GridEvent {
   isFree: boolean
   priceMin?: number | null
   priceMax?: number | null
-  registrationUrl?: string | null
   libraryName?: string | null
   librarySlug?: string | null
   status: string
