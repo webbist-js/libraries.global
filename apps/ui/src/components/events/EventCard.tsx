@@ -5,7 +5,6 @@ import { EventTypeChip } from "@/components/events/EventTypeChip"
 import { PriceBadge } from "@/components/events/PriceBadge"
 import type { GridEvent } from "@/components/events/types"
 import { T } from "@/lib/design-tokens"
-import { getCountryName } from "@/lib/iso-continent"
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("en-GB", {
@@ -43,15 +42,6 @@ export function EventCard({ event }: EventCardProps) {
   const endTime = event.endTime ? formatTime(event.endTime) : null
   const duration = formatDuration(event.startTime, event.endTime)
   const link = event.registrationUrl ?? event.url
-
-  // Breadcrumb from geo fields
-  const countryLabel = event.countryCode
-    ? getCountryName(event.countryCode)
-    : null
-  const breadcrumb = [countryLabel, event.regionSlug?.replaceAll("-", " ")]
-    .filter(Boolean)
-    .join(" · ")
-    .toUpperCase()
 
   // TODO: /events/[documentId] individual event detail page does not exist yet.
   // The card title should link there once the route is built. For now it points
@@ -118,21 +108,6 @@ export function EventCard({ event }: EventCardProps) {
             gap: "8px",
           }}
         >
-          {breadcrumb ? (
-            <p
-              style={{
-                fontFamily: T.font.mono,
-                fontSize: "8px",
-                letterSpacing: ".18em",
-                textTransform: "uppercase",
-                color: T.ink.faint,
-                margin: 0,
-              }}
-            >
-              {breadcrumb}
-            </p>
-          ) : null}
-
           <h3
             style={{
               fontFamily: T.font.serif,

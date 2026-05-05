@@ -151,8 +151,6 @@ export default ({ strapi }: { strapi: any }) => ({
         "registrationUrl",
         "libraryEntityRef",
         "status",
-        "countryCode",
-        "regionSlug",
       ],
     })
 
@@ -414,7 +412,6 @@ export default ({ strapi }: { strapi: any }) => ({
         startTime: { $gte: now.toISOString() },
         status: { $in: ["upcoming", "ongoing"] },
         pendingReview: false,
-        featured: true,
       },
       sort: ["importedAt:desc"],
       pagination: { pageSize },

@@ -77,8 +77,6 @@ export interface GridEvent {
   registrationUrl?: string | null
   libraryEntityRef?: string | null
   status: string
-  countryCode?: string | null
-  regionSlug?: string | null
 }
 
 export interface GlobalEventsResponse {
