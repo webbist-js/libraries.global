@@ -256,7 +256,7 @@ export function PublicProfileSection({
               Complete your profile to connect with libraries and the community.
             </p>
             <Link
-              href="/onboarding"
+              href="/profile/onboarding"
               style={{
                 fontSize: "12px",
                 fontFamily: T.font.mono,

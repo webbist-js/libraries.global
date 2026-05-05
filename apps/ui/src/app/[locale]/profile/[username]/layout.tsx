@@ -5,10 +5,10 @@ import type { Locale } from "next-intl"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
-import { fetchNavbar } from "@/lib/strapi-api/content/server"
 import type { UserProfile } from "@/lib/types/profile"
 
 import { ProfileHero } from "./_components/ProfileHero"
+import { ProfilePrivatePage } from "./_components/ProfilePrivatePage"
 import { ProfileTabNav } from "./_components/ProfileTabNav"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
@@ -17,7 +17,7 @@ const BRIDGE_SECRET = process.env.STRAPI_BRIDGE_SECRET
 async function fetchProfile(
   username: string,
   opts?: { ownerBaUserId?: string; viewerBaUserId?: string }
-): Promise<UserProfile | null> {
+): Promise<UserProfile | "private" | null> {
   try {
     let url = `${STRAPI}/api/user-profiles/by-username/${encodeURIComponent(username)}`
     const reqHeaders: Record<string, string> = {}
@@ -30,6 +30,7 @@ async function fetchProfile(
       reqHeaders["X-Service-Secret"] = BRIDGE_SECRET
     }
     const res = await fetch(url, { cache: "no-store", headers: reqHeaders })
+    if (res.status === 403) return "private"
     if (!res.ok) return null
     const json = (await res.json()) as { data: UserProfile }
 
@@ -67,13 +68,12 @@ export default async function ProfileLayout({
 }) {
   const [{ locale, username }, hdrs] = await Promise.all([params, headers()])
 
-  const [publicProfile, session, navbarResult] = await Promise.all([
+  const [publicProfile, session] = await Promise.all([
     fetchProfile(username),
     getSessionSSR(hdrs),
-    fetchNavbar(locale as Locale),
   ])
 
-  let profile: UserProfile | null = publicProfile
+  let profile: UserProfile | "private" | null = publicProfile
   let isOwnProfile = false
 
   if (session?.user?.id) {
@@ -81,7 +81,7 @@ export default async function ProfileLayout({
     const ownProfile = await fetchOwnProfile(session.user.id)
     isOwnProfile = ownProfile?.username === username
 
-    if (!profile) {
+    if (profile === null || profile === "private") {
       // Private profile — owner can always view their own page
       if (isOwnProfile) {
         profile = await fetchProfile(username, {
@@ -94,7 +94,7 @@ export default async function ProfileLayout({
       const expanded = await fetchProfile(username, {
         viewerBaUserId: session.user.id,
       })
-      if (expanded) profile = expanded
+      if (expanded && expanded !== "private") profile = expanded
     } else if (profile.profileVisibility === "limited" && isOwnProfile) {
       // Owner viewing their own limited profile — get full data
       profile = await fetchProfile(username, {
@@ -103,11 +103,21 @@ export default async function ProfileLayout({
     }
   }
 
-  if (!profile) notFound()
+  if (profile === null) notFound()
+
+  // Private profile viewed by a non-owner — show dedicated page
+  if (profile === "private") {
+    return (
+      <>
+        <GlobalHeader locale={locale as Locale} />
+        <ProfilePrivatePage username={username} />
+      </>
+    )
+  }
 
   return (
     <>
-      <GlobalHeader locale={locale as Locale} navbar={navbarResult?.data} />
+      <GlobalHeader locale={locale as Locale} />
       <div
         className="relative isolate flex min-h-screen w-full flex-col"
         style={{ background: T.bg.space }}

@@ -365,7 +365,13 @@ export function OnboardingShell({
 
         return
       }
-      router.push(then === "profile" ? "/profile" : "/")
+      router.push(
+        then === "profile"
+          ? username
+            ? `/profile/${username}`
+            : "/profile"
+          : "/"
+      )
     } catch {
       toast.error("Failed to save")
     } finally {
@@ -376,109 +382,7 @@ export function OnboardingShell({
   // ── Render ───────────────────────────────────────────────────────
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: T.bg.void,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      {/* Top bar */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "14px 32px",
-          borderBottom: `1px solid ${T.border.line}`,
-          position: "sticky",
-          top: 0,
-          zIndex: 50,
-          background: "rgba(3,5,17,0.92)",
-          backdropFilter: "blur(12px)",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <Icon
-            icon="mdi:library"
-            width={18}
-            height={18}
-            style={{ color: T.accent.aurora }}
-          />
-          <span
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "11px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
-              color: T.ink.faint,
-            }}
-          >
-            Profile setup
-          </span>
-        </div>
-
-        {/* Progress segments */}
-        <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
-          {["Identity", "Affiliation", "Interests", "Links", "Visibility"].map(
-            (s, i) => (
-              <div
-                key={s}
-                title={s}
-                style={{
-                  width: "32px",
-                  height: "2px",
-                  borderRadius: "2px",
-                  background:
-                    i === 0
-                      ? T.accent.aurora
-                      : i < 4
-                        ? "rgba(127,223,255,0.25)"
-                        : T.border.line,
-                }}
-              />
-            )
-          )}
-        </div>
-
-        <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-          <button
-            type="button"
-            onClick={() => void handleSave("home")}
-            style={{
-              background: "none",
-              border: "none",
-              color: T.ink.faint,
-              fontSize: "12px",
-              cursor: "pointer",
-              fontFamily: T.font.sans,
-              fontWeight: 400,
-            }}
-          >
-            Skip for now
-          </button>
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => void handleSave("profile")}
-            style={{
-              padding: "7px 16px",
-              borderRadius: "7px",
-              border: `1px solid ${T.border.hi}`,
-              background: T.bg.deep,
-              color: T.ink.dim,
-              fontSize: "12px",
-              fontFamily: T.font.sans,
-              cursor: saving ? "not-allowed" : "pointer",
-              opacity: saving ? 0.6 : 1,
-            }}
-          >
-            Finish later
-          </button>
-        </div>
-      </div>
-
+    <>
       {/* Body: two-column layout */}
       <div style={{ flex: 1, display: "flex" }}>
         {/* ── Left sidebar (sticky) ── */}
@@ -488,8 +392,8 @@ export function OnboardingShell({
             width: "340px",
             flexShrink: 0,
             position: "sticky",
-            top: "49px",
-            height: "calc(100vh - 49px)",
+            top: "56px",
+            height: "calc(100vh - 56px)",
             flexDirection: "column",
             justifyContent: "space-between",
             padding: "48px 40px",
@@ -663,28 +567,64 @@ export function OnboardingShell({
             </div>
           </div>
 
-          {/* Bottom decoration */}
+          {/* Progress segments */}
           <div
             style={{
               position: "relative",
               zIndex: 1,
-              fontFamily: T.font.mono,
-              fontSize: "9px",
-              letterSpacing: ".12em",
-              color: T.ink.ghost,
+              display: "flex",
+              flexDirection: "column",
+              gap: "14px",
             }}
           >
-            01 — 00
+            <span
+              style={{
+                fontFamily: T.font.mono,
+                fontSize: "9px",
+                letterSpacing: ".16em",
+                textTransform: "uppercase",
+                color: T.ink.ghost,
+              }}
+            >
+              Profile setup
+            </span>
+            <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+              {[
+                "Identity",
+                "Affiliation",
+                "Interests",
+                "Links",
+                "Visibility",
+              ].map((s, i) => (
+                <div
+                  key={s}
+                  title={s}
+                  style={{
+                    flex: 1,
+                    height: "2px",
+                    borderRadius: "2px",
+                    background:
+                      i === 0
+                        ? T.accent.aurora
+                        : i < 4
+                          ? "rgba(127,223,255,0.25)"
+                          : T.border.line,
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
         {/* ── Right: scrollable form ── */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "0 0 120px" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <div
             style={{
-              maxWidth: "820px",
+              flex: 1,
+              maxWidth: "1080px",
               margin: "0 auto",
-              padding: "48px 40px 0",
+              width: "100%",
+              padding: "48px 56px 48px",
             }}
           >
             {/* Page heading */}
@@ -1428,72 +1368,74 @@ export function OnboardingShell({
               .
             </p>
           </div>
+
+          {/* ── Sticky footer bar ── */}
+          <div
+            style={{
+              position: "sticky",
+              bottom: 0,
+              zIndex: 40,
+              background: "var(--t-header-bg)",
+              backdropFilter: "blur(16px)",
+              borderTop: "1px solid var(--t-border-line)",
+              padding: "14px 56px",
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
+              gap: "12px",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => void handleSave("home")}
+              style={{
+                padding: "9px 20px",
+                borderRadius: "8px",
+                border: `1px solid ${T.border.hi}`,
+                background: "transparent",
+                color: T.ink.dim,
+                fontSize: "13px",
+                fontFamily: T.font.sans,
+                cursor: "pointer",
+              }}
+            >
+              Save &amp; finish later
+            </button>
+            <button
+              type="button"
+              disabled={saving || usernameStatus === "taken"}
+              onClick={() => void handleSave("profile")}
+              style={{
+                padding: "10px 24px",
+                borderRadius: "8px",
+                border: "1px solid rgba(127,223,255,0.35)",
+                background: "rgba(127,223,255,0.1)",
+                color: T.accent.aurora,
+                fontSize: "13px",
+                fontFamily: T.font.sans,
+                fontWeight: 600,
+                cursor:
+                  saving || usernameStatus === "taken"
+                    ? "not-allowed"
+                    : "pointer",
+                opacity: saving || usernameStatus === "taken" ? 0.6 : 1,
+                display: "flex",
+                alignItems: "center",
+                gap: "7px",
+              }}
+            >
+              {saving ? (
+                "Saving…"
+              ) : (
+                <>
+                  Enter your profile
+                  <Icon icon="mdi:arrow-right" width={14} height={14} />
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
-
-      {/* ── Sticky footer bar ── */}
-      <div
-        style={{
-          position: "sticky",
-          bottom: 0,
-          zIndex: 40,
-          background: "rgba(3,5,17,0.96)",
-          backdropFilter: "blur(16px)",
-          borderTop: `1px solid ${T.border.line}`,
-          padding: "14px 40px",
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-          gap: "12px",
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => void handleSave("home")}
-          style={{
-            padding: "9px 20px",
-            borderRadius: "8px",
-            border: `1px solid ${T.border.hi}`,
-            background: "transparent",
-            color: T.ink.dim,
-            fontSize: "13px",
-            fontFamily: T.font.sans,
-            cursor: "pointer",
-          }}
-        >
-          Save &amp; finish later
-        </button>
-        <button
-          type="button"
-          disabled={saving || usernameStatus === "taken"}
-          onClick={() => void handleSave("profile")}
-          style={{
-            padding: "10px 24px",
-            borderRadius: "8px",
-            border: "1px solid rgba(127,223,255,0.35)",
-            background: "rgba(127,223,255,0.1)",
-            color: T.accent.aurora,
-            fontSize: "13px",
-            fontFamily: T.font.sans,
-            fontWeight: 600,
-            cursor:
-              saving || usernameStatus === "taken" ? "not-allowed" : "pointer",
-            opacity: saving || usernameStatus === "taken" ? 0.6 : 1,
-            display: "flex",
-            alignItems: "center",
-            gap: "7px",
-          }}
-        >
-          {saving ? (
-            "Saving…"
-          ) : (
-            <>
-              Enter your profile
-              <Icon icon="mdi:arrow-right" width={14} height={14} />
-            </>
-          )}
-        </button>
-      </div>
-    </div>
+    </>
   )
 }

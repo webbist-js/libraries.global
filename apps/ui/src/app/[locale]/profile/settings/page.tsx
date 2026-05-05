@@ -4,7 +4,6 @@ import type { Locale } from "next-intl"
 
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { getSessionSSR } from "@/lib/auth-server"
-import { fetchNavbar } from "@/lib/strapi-api/content/server"
 import type { UserProfile } from "@/lib/types/profile"
 
 import { SettingsShell } from "./_components/SettingsShell"
@@ -38,10 +37,7 @@ export default async function ProfileSettingsPage({
 }) {
   const [{ locale }, hdrs] = await Promise.all([params, headers()])
 
-  const [session, navbarResult] = await Promise.all([
-    getSessionSSR(hdrs),
-    fetchNavbar(locale as Locale),
-  ])
+  const session = await getSessionSSR(hdrs)
 
   if (!session?.user) redirect("/auth/signin?callbackUrl=/profile/settings")
 
@@ -49,7 +45,7 @@ export default async function ProfileSettingsPage({
 
   return (
     <>
-      <GlobalHeader locale={locale as Locale} navbar={navbarResult?.data} />
+      <GlobalHeader locale={locale as Locale} />
       <SettingsShell profile={profile} sessionUser={session.user} />
     </>
   )

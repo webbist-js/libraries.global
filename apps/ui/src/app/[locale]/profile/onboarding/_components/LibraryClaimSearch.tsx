@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
+import { CONTINENT_COUNTRIES, CONTINENTS } from "@/lib/data/continents"
 import { COUNTRIES } from "@/lib/data/countries"
 import { T } from "@/lib/design-tokens"
 
@@ -19,6 +20,187 @@ type LibraryHit = {
 
 type ClaimResult = { status: "verified" | "pending"; method: string }
 
+// ── Inline searchable combobox for countries (returns slug, not code) ─────────
+
+function CountrySlugCombobox({
+  countries,
+  value,
+  onChange,
+  disabled,
+}: {
+  countries: { slug: string; name: string; code: string }[]
+  value: string
+  onChange: (slug: string) => void
+  disabled?: boolean
+}) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState("")
+  const containerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const selected = countries.find((c) => c.slug === value)
+  const filtered = query
+    ? countries.filter((c) =>
+        c.name.toLowerCase().includes(query.toLowerCase())
+      )
+    : countries
+
+  useEffect(() => {
+    if (open) inputRef.current?.focus()
+  }, [open])
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false)
+        setQuery("")
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [])
+
+  const triggerStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "10px 14px",
+    borderRadius: "8px",
+    border: `1px solid ${T.border.hi}`,
+    background: disabled ? T.bg.deep : T.bg.surface,
+    color: T.ink.base,
+    fontSize: "13px",
+    fontFamily: T.font.sans,
+    outline: "none",
+    boxSizing: "border-box",
+    cursor: disabled ? "not-allowed" : "pointer",
+    textAlign: "left",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    opacity: disabled ? 0.5 : 1,
+  }
+
+  return (
+    <div ref={containerRef} style={{ position: "relative" }}>
+      <button
+        type="button"
+        style={triggerStyle}
+        disabled={disabled}
+        onClick={() => !disabled && setOpen((o) => !o)}
+      >
+        <span style={{ color: selected ? T.ink.base : T.ink.faint }}>
+          {selected ? selected.name : "Select country…"}
+        </span>
+        <span style={{ color: T.ink.faint, fontSize: "10px" }}>▾</span>
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 4px)",
+            left: 0,
+            right: 0,
+            zIndex: 50,
+            background: "var(--t-bg-deep)",
+            border: `1px solid ${T.border.hi}`,
+            borderRadius: "8px",
+            overflow: "hidden",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+          }}
+        >
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Search countries…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "10px 14px",
+              border: "none",
+              borderBottom: `1px solid ${T.border.line}`,
+              background: "transparent",
+              color: T.ink.base,
+              fontSize: "13px",
+              fontFamily: T.font.sans,
+              outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+          <div style={{ maxHeight: "200px", overflowY: "auto" }}>
+            <button
+              type="button"
+              onClick={() => {
+                onChange("")
+                setOpen(false)
+                setQuery("")
+              }}
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "9px 14px",
+                background: !value ? "rgba(127,223,255,0.08)" : "transparent",
+                border: "none",
+                color: !value ? T.accent.aurora : T.ink.faint,
+                fontSize: "13px",
+                fontFamily: T.font.sans,
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              All countries
+            </button>
+            {filtered.length === 0 && (
+              <div
+                style={{
+                  padding: "12px 14px",
+                  color: T.ink.faint,
+                  fontSize: "13px",
+                }}
+              >
+                No results
+              </div>
+            )}
+            {filtered.map((c) => (
+              <button
+                key={c.code}
+                type="button"
+                onClick={() => {
+                  onChange(c.slug)
+                  setOpen(false)
+                  setQuery("")
+                }}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  padding: "9px 14px",
+                  background:
+                    c.slug === value ? "rgba(127,223,255,0.08)" : "transparent",
+                  border: "none",
+                  color: c.slug === value ? T.accent.aurora : T.ink.dim,
+                  fontSize: "13px",
+                  fontFamily: T.font.sans,
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+                className="hover:bg-white/[0.05]"
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Main component ─────────────────────────────────────────────────────────────
+
 export function LibraryClaimSearch({
   onClaimed,
 }: {
@@ -26,6 +208,7 @@ export function LibraryClaimSearch({
     result: ClaimResult & { libraryName: string; entityRef: string }
   ) => void
 }) {
+  const [continentSlug, setContinentSlug] = useState("")
   const [countrySlug, setCountrySlug] = useState("")
   const [query, setQuery] = useState("")
   const [hits, setHits] = useState<LibraryHit[]>([])
@@ -36,7 +219,16 @@ export function LibraryClaimSearch({
   const [claiming, setClaiming] = useState(false)
   const [claimResult, setClaimResult] = useState<ClaimResult | null>(null)
 
-  const inputStyle = {
+  // Countries filtered to the selected continent
+  const continentIsoCodes = continentSlug
+    ? (CONTINENT_COUNTRIES[continentSlug] ?? [])
+    : null
+
+  const filteredCountries = COUNTRIES.filter(
+    (c) => !continentIsoCodes || continentIsoCodes.includes(c.code)
+  )
+
+  const inputStyle: React.CSSProperties = {
     width: "100%",
     padding: "10px 14px",
     borderRadius: "8px",
@@ -44,15 +236,28 @@ export function LibraryClaimSearch({
     background: T.bg.surface,
     color: T.ink.base,
     fontSize: "13px",
-    fontFamily: "Roboto, sans-serif",
+    fontFamily: T.font.sans,
     outline: "none",
-    boxSizing: "border-box" as const,
+    boxSizing: "border-box",
   }
 
-  const search = async (q: string, slugOverride?: string) => {
+  const labelStyle: React.CSSProperties = {
+    fontFamily: T.font.mono,
+    fontSize: "9px",
+    letterSpacing: ".16em",
+    textTransform: "uppercase",
+    color: T.ink.faint,
+    display: "block",
+    marginBottom: "6px",
+  }
+
+  const search = async (
+    q: string,
+    cSlug: string = countrySlug,
+    ctSlug: string = continentSlug
+  ) => {
     setQuery(q)
-    const activeSlug = slugOverride !== undefined ? slugOverride : countrySlug
-    if (!q.trim() && !activeSlug) {
+    if (!q.trim() && !cSlug && !ctSlug) {
       setHits([])
 
       return
@@ -60,7 +265,8 @@ export function LibraryClaimSearch({
     setSearching(true)
     try {
       const params = new URLSearchParams({ q })
-      if (activeSlug) params.set("country_slug", activeSlug)
+      if (cSlug) params.set("country_slug", cSlug)
+      else if (ctSlug) params.set("continent_slug", ctSlug)
       const res = await fetch(`/api/libraries/search?${params}`)
       const json = (await res.json()) as { hits: LibraryHit[] }
       setHits(json.hits)
@@ -69,6 +275,17 @@ export function LibraryClaimSearch({
     } finally {
       setSearching(false)
     }
+  }
+
+  const handleContinentChange = (slug: string) => {
+    setContinentSlug(slug)
+    setCountrySlug("") // reset country when continent changes
+    void search(query, "", slug)
+  }
+
+  const handleCountryChange = (slug: string) => {
+    setCountrySlug(slug)
+    void search(query, slug, continentSlug)
   }
 
   const handleClaim = async () => {
@@ -140,60 +357,49 @@ export function LibraryClaimSearch({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-      {/* Country filter */}
-      <div>
-        <label
-          style={{
-            fontFamily: "JetBrains Mono, monospace",
-            fontSize: "9px",
-            letterSpacing: ".16em",
-            textTransform: "uppercase" as const,
-            color: T.ink.faint,
-            display: "block",
-            marginBottom: "6px",
-          }}
-        >
-          Filter by country
-        </label>
-        <select
-          style={{ ...inputStyle, cursor: "pointer" }}
-          value={countrySlug}
-          onChange={(e) => {
-            const slug = e.target.value
-            setCountrySlug(slug)
-            void search(query, slug)
-          }}
-        >
-          <option value="" style={{ background: "var(--t-bg-deep)" }}>
-            All countries
-          </option>
-          {COUNTRIES.map((c) => (
-            <option
-              key={c.code}
-              value={c.slug}
-              style={{ background: "var(--t-bg-deep)" }}
-            >
-              {c.name}
+      {/* Continent + country row */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "12px",
+        }}
+      >
+        <div>
+          <label style={labelStyle}>Continent</label>
+          <select
+            style={{ ...inputStyle, cursor: "pointer" }}
+            value={continentSlug}
+            onChange={(e) => handleContinentChange(e.target.value)}
+          >
+            <option value="" style={{ background: "var(--t-bg-deep)" }}>
+              All continents
             </option>
-          ))}
-        </select>
+            {CONTINENTS.map((c) => (
+              <option
+                key={c.slug}
+                value={c.slug}
+                style={{ background: "var(--t-bg-deep)" }}
+              >
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label style={labelStyle}>Country</label>
+          <CountrySlugCombobox
+            countries={filteredCountries}
+            value={countrySlug}
+            onChange={handleCountryChange}
+          />
+        </div>
       </div>
 
       {/* Library search */}
       <div>
-        <label
-          style={{
-            fontFamily: "JetBrains Mono, monospace",
-            fontSize: "9px",
-            letterSpacing: ".16em",
-            textTransform: "uppercase" as const,
-            color: T.ink.faint,
-            display: "block",
-            marginBottom: "6px",
-          }}
-        >
-          Search for your library
-        </label>
+        <label style={labelStyle}>Search for your library</label>
         <input
           style={inputStyle}
           type="text"
@@ -210,10 +416,22 @@ export function LibraryClaimSearch({
           style={{
             fontSize: "12px",
             color: T.ink.faint,
-            fontFamily: "JetBrains Mono, monospace",
+            fontFamily: T.font.mono,
           }}
         >
           Searching…
+        </p>
+      )}
+
+      {!searching && hits.length === 0 && query.trim() && (
+        <p
+          style={{
+            fontSize: "12px",
+            color: T.ink.faint,
+            fontFamily: T.font.mono,
+          }}
+        >
+          No libraries found — try a different name or broaden your filters.
         </p>
       )}
 
@@ -240,7 +458,7 @@ export function LibraryClaimSearch({
                   i < hits.length - 1 ? `1px solid ${T.border.line}` : "none",
                 color: T.ink.dim,
                 fontSize: "13px",
-                fontFamily: "Roboto, sans-serif",
+                fontFamily: T.font.sans,
                 cursor: "pointer",
                 textAlign: "left",
               }}
@@ -253,7 +471,7 @@ export function LibraryClaimSearch({
                     fontSize: "11px",
                     color: T.ink.faint,
                     marginLeft: "8px",
-                    fontFamily: "JetBrains Mono, monospace",
+                    fontFamily: T.font.mono,
                   }}
                 >
                   {[hit.city, hit.country_name].filter(Boolean).join(", ")}
@@ -295,7 +513,7 @@ export function LibraryClaimSearch({
                     margin: "2px 0 0",
                     fontSize: "11px",
                     color: T.ink.faint,
-                    fontFamily: "JetBrains Mono, monospace",
+                    fontFamily: T.font.mono,
                   }}
                 >
                   {[selected.city, selected.country_name]
@@ -320,19 +538,7 @@ export function LibraryClaimSearch({
           </div>
 
           <div>
-            <label
-              style={{
-                fontFamily: "JetBrains Mono, monospace",
-                fontSize: "9px",
-                letterSpacing: ".16em",
-                textTransform: "uppercase" as const,
-                color: T.ink.faint,
-                display: "block",
-                marginBottom: "6px",
-              }}
-            >
-              Your role
-            </label>
+            <label style={labelStyle}>Your role</label>
             <input
               style={inputStyle}
               type="text"
@@ -344,19 +550,7 @@ export function LibraryClaimSearch({
           </div>
 
           <div>
-            <label
-              style={{
-                fontFamily: "JetBrains Mono, monospace",
-                fontSize: "9px",
-                letterSpacing: ".16em",
-                textTransform: "uppercase" as const,
-                color: T.ink.faint,
-                display: "block",
-                marginBottom: "6px",
-              }}
-            >
-              Department (optional)
-            </label>
+            <label style={labelStyle}>Department (optional)</label>
             <input
               style={inputStyle}
               type="text"
@@ -378,7 +572,7 @@ export function LibraryClaimSearch({
               background: "rgba(127,223,255,0.1)",
               color: T.accent.aurora,
               fontSize: "13px",
-              fontFamily: "Roboto, sans-serif",
+              fontFamily: T.font.sans,
               fontWeight: 600,
               cursor: claiming ? "not-allowed" : "pointer",
               opacity: claiming ? 0.7 : 1,
