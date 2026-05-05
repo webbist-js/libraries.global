@@ -110,7 +110,10 @@ export default ({ strapi }: { strapi: any }) => ({
       status: { $in: ["upcoming", "ongoing"] },
     }
     if (to) (filters.startTime as any).$lte = to
-    if (type) filters.eventType = type
+    if (type) {
+      const types = type.split(",").filter(Boolean)
+      filters.eventType = types.length === 1 ? types[0] : { $in: types }
+    }
     if (isFree != null) filters.isFree = isFree === "true"
 
     // Count with same filters using knex
@@ -118,7 +121,11 @@ export default ({ strapi }: { strapi: any }) => ({
     countQuery.where("start_time", ">=", from ?? now)
     countQuery.whereIn("status", ["upcoming", "ongoing"])
     if (to) countQuery.where("start_time", "<=", to)
-    if (type) countQuery.where("event_type", type)
+    if (type) {
+      const types = type.split(",").filter(Boolean)
+      if (types.length === 1) countQuery.where("event_type", types[0])
+      else countQuery.whereIn("event_type", types)
+    }
     if (isFree != null) countQuery.where("is_free", isFree === "true")
     const [countRow] = await countQuery
     const total = Number((countRow as any).total)
@@ -137,6 +144,7 @@ export default ({ strapi }: { strapi: any }) => ({
         "allDay",
         "timezone",
         "eventType",
+        "sourceProvider",
         "isFree",
         "priceMin",
         "priceMax",

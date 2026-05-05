@@ -149,7 +149,13 @@ export function EventCardGrid({
   useEffect(() => {
     const from = new Date(selectedDate)
     from.setHours(0, 0, 0, 0)
+
     const to = new Date(selectedDate)
+    if (filters.dateScope === "this-week") {
+      to.setDate(to.getDate() + 6)
+    } else if (filters.dateScope === "this-month") {
+      to.setDate(to.getDate() + 29)
+    }
     to.setHours(23, 59, 59, 999)
 
     const params = new URLSearchParams({
@@ -158,12 +164,8 @@ export function EventCardGrid({
       limit: String(PAGE_SIZE),
       page: String(filters.page),
     })
-    // TODO: The API currently only accepts a single `type` filter. When
-    // multiple eventTypes are selected the API call silently ignores them and
-    // only the first is sent. Either extend the Strapi global handler to accept
-    // comma-separated types, or move type filtering fully client-side.
-    if (filters.eventTypes.length === 1)
-      params.set("type", filters.eventTypes[0]!)
+    if (filters.eventTypes.length > 0)
+      params.set("type", filters.eventTypes.join(","))
     if (filters.priceScope === "free") params.set("isFree", "true")
     if (filters.priceScope === "paid") params.set("isFree", "false")
     // TODO: countryCode/regionSlug filtering requires countryBreakdown to be
@@ -181,11 +183,6 @@ export function EventCardGrid({
       })
   }, [selectedDate, filters])
 
-  // Client-side filters (search, timeOfDay, libraryDirect)
-  // TODO: ageGroup filtering is not yet implemented. GridEvent doesn't carry an
-  // ageGroup field — the Strapi ev_events table and the /global API response
-  // would need to expose it (e.g. as tags or a dedicated column) before
-  // client-side filtering here can work.
   const filtered = applyClientFilters(response.events, filters)
 
   const totalPages = Math.ceil(response.total / PAGE_SIZE)
@@ -335,13 +332,7 @@ function applyClientFilters(
 
   if (filters.libraryDirect) {
     result = result.filter(
-      (e) =>
-        e.libraryName != null &&
-        DIRECT_PROVIDERS.has(
-          "sourceProvider" in e && typeof e.sourceProvider === "string"
-            ? e.sourceProvider
-            : ""
-        )
+      (e) => e.libraryName != null && DIRECT_PROVIDERS.has(e.sourceProvider)
     )
   }
 

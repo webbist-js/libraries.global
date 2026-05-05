@@ -28,7 +28,6 @@ const DEFAULT_FILTERS: FilterState = {
   eventTypes: [],
   search: "",
   timeOfDay: [],
-  ageGroup: [],
   libraryDirect: false,
   countryCode: "",
   regionSlug: "",

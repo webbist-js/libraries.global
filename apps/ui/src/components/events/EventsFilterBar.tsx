@@ -8,7 +8,6 @@ import { cn } from "@/lib/styles"
 export type DateScope = "today" | "tomorrow" | "this-week" | "this-month"
 export type PriceScope = "all" | "free" | "paid"
 export type TimeOfDay = "morning" | "afternoon" | "evening" | "night"
-export type AgeGroup = "family" | "teens" | "adults" | "all"
 
 export interface FilterState {
   dateScope: DateScope
@@ -16,7 +15,6 @@ export interface FilterState {
   eventTypes: string[] // multi-select; empty = all types
   search: string
   timeOfDay: TimeOfDay[]
-  ageGroup: AgeGroup[]
   libraryDirect: boolean
   countryCode: string
   regionSlug: string

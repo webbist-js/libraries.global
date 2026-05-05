@@ -70,6 +70,7 @@ export interface GridEvent {
   allDay: boolean
   timezone: string
   eventType: string
+  sourceProvider: string
   isFree: boolean
   priceMin?: number | null
   priceMax?: number | null

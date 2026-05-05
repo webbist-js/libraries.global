@@ -4,7 +4,6 @@ import { Icon } from "@iconify/react"
 
 import { FilterSidebarSection } from "@/components/ds"
 import type {
-  AgeGroup,
   DateScope,
   FilterState,
   PriceScope,
@@ -34,13 +33,6 @@ const TIME_SLOTS: { value: TimeOfDay; label: string; range: string }[] = [
   { value: "afternoon", label: "Afternoon", range: "12:00–18:00" },
   { value: "evening", label: "Evening", range: "18:00–22:00" },
   { value: "night", label: "Night", range: "22:00–06:00" },
-]
-
-const AGE_GROUPS: { value: AgeGroup; label: string; note: string }[] = [
-  { value: "all", label: "All ages", note: "" },
-  { value: "family", label: "Family", note: "Under 12s" },
-  { value: "teens", label: "Teens", note: "13–18" },
-  { value: "adults", label: "Adults", note: "18+" },
 ]
 
 // Event types from canonical EVENT_TYPE_META (excludes "other")
@@ -299,31 +291,8 @@ export function EventsSidebar({ filters, onChange }: EventsSidebarProps) {
 
       <div style={{ borderTop: `1px solid ${T.border.line}` }} />
 
-      {/* § 04 · Age */}
-      <FilterSidebarSection index={4} label="Age">
-        <div className="flex flex-col">
-          {AGE_GROUPS.map((ag) => (
-            <CheckRow
-              key={ag.value}
-              checked={filters.ageGroup.includes(ag.value)}
-              label={ag.label}
-              note={ag.note}
-              onChange={() =>
-                onChange({
-                  ...filters,
-                  ageGroup: toggleArr(filters.ageGroup, ag.value),
-                  page: 1,
-                })
-              }
-            />
-          ))}
-        </div>
-      </FilterSidebarSection>
-
-      <div style={{ borderTop: `1px solid ${T.border.line}` }} />
-
-      {/* § 05 · Price */}
-      <FilterSidebarSection index={5} label="Price">
+      {/* § 04 · Price */}
+      <FilterSidebarSection index={4} label="Price">
         <div className="flex flex-wrap gap-1.5">
           {PRICE_SCOPES.map((s) => (
             <PricePill
@@ -340,8 +309,8 @@ export function EventsSidebar({ filters, onChange }: EventsSidebarProps) {
 
       <div style={{ borderTop: `1px solid ${T.border.line}` }} />
 
-      {/* § 06 · Library direct */}
-      <FilterSidebarSection index={6} label="Source">
+      {/* § 05 · Library direct */}
+      <FilterSidebarSection index={5} label="Source">
         <label
           style={{
             display: "flex",
@@ -391,7 +360,6 @@ export function EventsSidebar({ filters, onChange }: EventsSidebarProps) {
             eventTypes: [],
             search: "",
             timeOfDay: [],
-            ageGroup: [],
             libraryDirect: false,
             countryCode: "",
             regionSlug: "",
