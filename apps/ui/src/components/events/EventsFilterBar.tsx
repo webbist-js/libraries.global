@@ -7,12 +7,20 @@ import { cn } from "@/lib/styles"
 
 export type DateScope = "today" | "tomorrow" | "this-week" | "this-month"
 export type PriceScope = "all" | "free" | "paid"
+export type TimeOfDay = "morning" | "afternoon" | "evening" | "night"
+export type AgeGroup = "family" | "teens" | "adults" | "all"
 
 export interface FilterState {
   dateScope: DateScope
   priceScope: PriceScope
-  eventType: string
+  eventTypes: string[] // multi-select; empty = all types
   search: string
+  timeOfDay: TimeOfDay[]
+  ageGroup: AgeGroup[]
+  libraryDirect: boolean
+  countryCode: string
+  regionSlug: string
+  page: number
 }
 
 interface EventsFilterBarProps {
@@ -151,8 +159,24 @@ export function EventsFilterBar({ filters, onChange }: EventsFilterBarProps) {
           {EVENT_TYPES.map((t) => (
             <Pill
               key={t.value}
-              active={filters.eventType === t.value}
-              onClick={() => onChange({ ...filters, eventType: t.value })}
+              active={
+                t.value === ""
+                  ? filters.eventTypes.length === 0
+                  : filters.eventTypes.includes(t.value)
+              }
+              onClick={() => {
+                if (t.value === "") {
+                  onChange({ ...filters, eventTypes: [] })
+                } else {
+                  const already = filters.eventTypes.includes(t.value)
+                  onChange({
+                    ...filters,
+                    eventTypes: already
+                      ? filters.eventTypes.filter((v) => v !== t.value)
+                      : [...filters.eventTypes, t.value],
+                  })
+                }
+              }}
             >
               {t.label}
             </Pill>
