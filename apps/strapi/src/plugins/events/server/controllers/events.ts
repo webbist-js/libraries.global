@@ -99,8 +99,6 @@ export default ({ strapi }: { strapi: any }) => ({
     const {
       type,
       isFree,
-      country: _country,
-      continent: _continent,
       from,
       to,
       limit = "20",
@@ -109,6 +107,7 @@ export default ({ strapi }: { strapi: any }) => ({
       regionSlug,
     } = ctx.query as Record<string, string>
     const now = new Date().toISOString()
+    const db = strapi.db.connection
 
     const filters: Record<string, unknown> = {
       startTime: { $gte: from ?? now },
@@ -119,6 +118,17 @@ export default ({ strapi }: { strapi: any }) => ({
     if (isFree != null) filters.isFree = isFree === "true"
     if (countryCode) filters.countryCode = countryCode
     if (regionSlug) filters.regionSlug = regionSlug
+
+    // Count with same filters using knex
+    const countQuery = db("ev_events").count("* as total")
+    countQuery.where("start_time", ">=", from ?? now)
+    if (to) countQuery.where("start_time", "<=", to)
+    if (type) countQuery.where("event_type", type)
+    if (isFree != null) countQuery.where("is_free", isFree === "true")
+    if (countryCode) countQuery.where("country_code", countryCode)
+    if (regionSlug) countQuery.where("region_slug", regionSlug)
+    const [countRow] = await countQuery
+    const total = Number((countRow as any).total)
 
     const events = await strapi.documents("plugin::events.event").findMany({
       filters,
@@ -140,9 +150,17 @@ export default ({ strapi }: { strapi: any }) => ({
         "registrationUrl",
         "libraryEntityRef",
         "status",
+        "countryCode",
+        "regionSlug",
       ],
     })
-    ctx.body = events
+
+    ctx.body = {
+      events: events as any[],
+      total,
+      page: Number(page),
+      pageSize: Number(limit),
+    }
   },
 
   async thisWeek(ctx: any) {
@@ -334,8 +352,8 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   async featured(ctx: any) {
-    // Returns the single most recently-imported upcoming event (best proxy for
-    // "featured" until an editorial flag is added to the schema)
+    const { count = "1" } = ctx.query as Record<string, string>
+    const pageSize = Math.min(Math.max(1, Number(count)), 12)
     const now = new Date()
     const results = await strapi.documents("plugin::events.event").findMany({
       filters: {
@@ -344,7 +362,7 @@ export default ({ strapi }: { strapi: any }) => ({
         pendingReview: false,
       },
       sort: ["importedAt:desc"],
-      pagination: { pageSize: 1 },
+      pagination: { pageSize },
       fields: [
         "title",
         "description",
@@ -366,7 +384,7 @@ export default ({ strapi }: { strapi: any }) => ({
         "sourceProvider",
       ],
     })
-    ctx.body = (results as any[])[0] ?? null
+    ctx.body = results as any[]
   },
 
   async event(ctx: any) {
@@ -431,6 +449,85 @@ export default ({ strapi }: { strapi: any }) => ({
       'attachment; filename="libraries-events.ics"'
     )
     ctx.body = ics
+  },
+
+  async submitCredential(ctx: any) {
+    const bridgeSecret = process.env.STRAPI_BRIDGE_SECRET
+    const provided = String(ctx.request.headers["x-service-secret"] ?? "")
+    if (!bridgeSecret || provided !== bridgeSecret) {
+      ctx.status = 403
+      ctx.body = { error: "Forbidden" }
+
+      return
+    }
+
+    const {
+      provider,
+      label,
+      libraryDocumentId,
+      credentials,
+      submittedByBaUserId,
+    } = ctx.request.body as {
+      provider: string
+      label: string
+      libraryDocumentId: string
+      credentials: Record<string, unknown>
+      submittedByBaUserId?: string
+    }
+
+    const VALID_PROVIDERS = [
+      "eventbrite",
+      "ticketsource",
+      "meetup",
+      "ical",
+      "wegottickets",
+      "spydus",
+      "bibliocommons",
+    ]
+    if (!VALID_PROVIDERS.includes(provider)) {
+      ctx.status = 400
+      ctx.body = { error: "Invalid provider" }
+
+      return
+    }
+    if (
+      !label?.trim() ||
+      !libraryDocumentId ||
+      !credentials ||
+      typeof credentials !== "object"
+    ) {
+      ctx.status = 400
+      ctx.body = { error: "Missing required fields" }
+
+      return
+    }
+
+    // Sanitize: only string values, bounded lengths
+    const sanitized: Record<string, string> = {}
+    for (const [k, v] of Object.entries(credentials)) {
+      if (typeof v === "string") {
+        sanitized[String(k).slice(0, 64)] = v.slice(0, 2048)
+      }
+    }
+
+    const result = await strapi
+      .plugin("events")
+      .service("credentials")
+      .create({
+        provider,
+        label: label.trim().slice(0, 200),
+        scope: "library",
+        isActive: false,
+        libraryDocumentIds: [libraryDocumentId],
+        credentials: sanitized,
+      })
+
+    strapi.log.info(
+      `[events] Credential submitted for library ${libraryDocumentId} by ${submittedByBaUserId ?? "unknown"} — pending review`
+    )
+
+    ctx.status = 201
+    ctx.body = { ok: true, documentId: (result as any).documentId ?? null }
   },
 
   async icsLibrary(ctx: any) {
