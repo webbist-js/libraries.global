@@ -7,7 +7,6 @@ import { use } from "react"
 import { EventDetailPage } from "@/components/events/EventDetailPage"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { T } from "@/lib/design-tokens"
-import { fetchNavbar } from "@/lib/strapi-api/content/server"
 
 export const revalidate = 300
 export const dynamicParams = true
@@ -72,7 +71,6 @@ export default function EventPage(props: {
   params: Promise<{ locale: string; documentId: string }>
 }) {
   const { locale, documentId } = use(props.params)
-  const navbar = use(fetchNavbar(locale as Locale))?.data
   const { event, related } = use(fetchEventData(documentId))
 
   if (!event) notFound()
@@ -84,7 +82,7 @@ export default function EventPage(props: {
       className="relative isolate flex min-h-screen w-full flex-col"
       style={{ background: T.bg.space, color: T.ink.base }}
     >
-      <GlobalHeader locale={locale as Locale} navbar={navbar} />
+      <GlobalHeader locale={locale as Locale} />
       <main className="relative z-10 flex-1 pt-4">
         <EventDetailPage
           event={event}

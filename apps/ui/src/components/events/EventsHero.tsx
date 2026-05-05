@@ -1,3 +1,4 @@
+import { DotHeroCanvas } from "@/components/ui/DotHeroCanvas"
 import { T } from "@/lib/design-tokens"
 
 interface ProviderCount {
@@ -37,18 +38,22 @@ export function EventsHero({ totalThisWeek, providers }: EventsHeroProps) {
       className="relative overflow-hidden"
       style={{ background: T.bg.space }}
     >
-      {/* Subtle aurora gradient */}
+      {/* Dot pulse canvas */}
+      <DotHeroCanvas variant="events" />
+
+      {/* Subtle aurora gradient over canvas */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background: `
-            radial-gradient(900px 600px at 10% 40%, rgba(127,223,255,0.07), transparent 55%),
-            radial-gradient(600px 400px at 80% 20%, rgba(163,144,255,0.05), transparent 50%)
+            radial-gradient(800px 500px at 15% 50%, rgba(127,223,255,0.06), transparent 55%),
+            radial-gradient(500px 350px at 85% 20%, rgba(163,144,255,0.04), transparent 50%)
           `,
         }}
       />
 
-      <div className="relative px-6 pt-24 pb-8 sm:px-10 sm:pt-28 lg:px-16">
+      {/* Content — contained */}
+      <div className="relative mx-auto max-w-5xl px-6 pt-24 pb-10 sm:px-10 sm:pt-28">
         {/* Breadcrumb */}
         <div
           className="mb-6 flex items-center gap-2"
@@ -89,7 +94,7 @@ export function EventsHero({ totalThisWeek, providers }: EventsHeroProps) {
               </span>
             </div>
 
-            {/* Main headline — "The week's" regular + "readings." italic */}
+            {/* Main headline */}
             <h1
               style={{
                 fontFamily: T.font.serif,

@@ -12,6 +12,7 @@ export interface FilterState {
   dateScope: DateScope
   priceScope: PriceScope
   eventType: string
+  search: string
 }
 
 interface EventsFilterBarProps {

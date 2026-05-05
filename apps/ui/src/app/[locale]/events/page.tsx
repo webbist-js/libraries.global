@@ -6,7 +6,6 @@ import { EventsProgrammePage } from "@/components/events/EventsProgrammePage"
 import type { EventsProgrammeData } from "@/components/events/types"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { T } from "@/lib/design-tokens"
-import { fetchNavbar } from "@/lib/strapi-api/content/server"
 
 export const dynamic = "force-dynamic"
 
@@ -57,7 +56,6 @@ export default function EventsPage(props: {
   params: Promise<{ locale: string }>
 }) {
   const { locale } = use(props.params)
-  const navbar = use(fetchNavbar(locale as Locale))?.data
   const data = use(fetchProgrammeData())
 
   return (
@@ -65,7 +63,7 @@ export default function EventsPage(props: {
       className="relative isolate flex min-h-screen w-full flex-col"
       style={{ background: T.bg.space, color: T.ink.base }}
     >
-      <GlobalHeader locale={locale as Locale} navbar={navbar} />
+      <GlobalHeader locale={locale as Locale} />
       <EventsProgrammePage data={data} />
     </div>
   )

@@ -1,7 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import type { FilterState } from "@/components/events/EventsFilterBar"
 import { EventTypeChip } from "@/components/events/EventTypeChip"
@@ -30,7 +30,7 @@ interface TimelineEvent {
 
 // ── Date Scroll Picker ─────────────────────────────────────────────────────────
 
-function buildDays(count = 14): Date[] {
+function buildDays(count = 7): Date[] {
   const days: Date[] = []
   const base = new Date()
   base.setHours(0, 0, 0, 0)
@@ -48,11 +48,13 @@ const DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 function DateScrollPicker({
   selected,
   onSelect,
+  count = 7,
 }: {
   selected: Date
   onSelect: (d: Date) => void
+  count?: number
 }) {
-  const days = buildDays(14)
+  const days = buildDays(count)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -243,19 +245,32 @@ interface EventTimelineProps {
 }
 
 export function EventTimeline({ filters }: EventTimelineProps) {
-  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+  const [manualDate, setManualDate] = useState<Date>(() => {
     const d = new Date()
     d.setHours(0, 0, 0, 0)
 
     return d
   })
+
+  // Derive selected date from dateScope; manual selection only applies for "this-week"/"this-month"
+  const selectedDate = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    if (filters.dateScope === "today") return today
+    if (filters.dateScope === "tomorrow") {
+      const d = new Date(today)
+      d.setDate(today.getDate() + 1)
+
+      return d
+    }
+
+    return manualDate
+  }, [filters.dateScope, manualDate])
+
   const [events, setEvents] = useState<TimelineEvent[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true)
-
     const from = new Date(selectedDate)
     from.setHours(0, 0, 0, 0)
     const to = new Date(selectedDate)
@@ -282,9 +297,19 @@ export function EventTimeline({ filters }: EventTimelineProps) {
       })
   }, [selectedDate, filters])
 
-  // Group by hour
+  // Apply client-side search filter
+  const q = filters.search.trim().toLowerCase()
+  const visible = q
+    ? events.filter(
+        (e) =>
+          e.title.toLowerCase().includes(q) ||
+          (e.libraryEntityRef ?? "").toLowerCase().includes(q)
+      )
+    : events
+
+  // Group by time
   const grouped = new Map<string, TimelineEvent[]>()
-  for (const e of events) {
+  for (const e of visible) {
     const key = e.allDay
       ? "All day"
       : new Date(e.startTime).toLocaleTimeString("en-GB", {
@@ -334,14 +359,27 @@ export function EventTimeline({ filters }: EventTimelineProps) {
               color: T.ink.ghost,
             }}
           >
-            {events.length} events
+            {visible.length !== events.length
+              ? `${visible.length} of ${events.length}`
+              : `${events.length}`}{" "}
+            events
           </span>
         )}
       </div>
 
-      {/* Date picker */}
+      {/* Date picker — show more days for wider scopes */}
       <div className="mb-6">
-        <DateScrollPicker selected={selectedDate} onSelect={setSelectedDate} />
+        <DateScrollPicker
+          selected={selectedDate}
+          onSelect={setManualDate}
+          count={
+            filters.dateScope === "this-month"
+              ? 30
+              : filters.dateScope === "this-week"
+                ? 14
+                : 7
+          }
+        />
       </div>
 
       {/* Timeline */}
@@ -359,7 +397,7 @@ export function EventTimeline({ filters }: EventTimelineProps) {
             Loading…
           </span>
         </div>
-      ) : events.length === 0 ? (
+      ) : visible.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-12">
           <Icon
             icon="mdi:calendar-blank-outline"
@@ -373,7 +411,9 @@ export function EventTimeline({ filters }: EventTimelineProps) {
               fontStyle: "italic",
             }}
           >
-            No events scheduled for this day
+            {q
+              ? `No events matching "${filters.search}"`
+              : "No events scheduled for this day"}
           </p>
         </div>
       ) : (

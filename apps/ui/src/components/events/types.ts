@@ -44,6 +44,8 @@ export interface FeaturedEvent {
   priceMax?: number | null
   registrationUrl?: string | null
   libraryEntityRef?: string | null
+  libraryName?: string | null
+  libraryCity?: string | null
   sourceProvider?: string | null
   tags?: string[] | null
 }
