@@ -149,13 +149,20 @@ export default ({ strapi }: { strapi: any }) => ({
         "priceMin",
         "priceMax",
         "registrationUrl",
-        "libraryEntityRef",
         "status",
       ],
+      populate: {
+        library: { fields: ["name", "slug"] },
+      },
     })
 
     ctx.body = {
-      events: events as any[],
+      events: (events as any[]).map((e) => ({
+        ...e,
+        libraryName: e.library?.name ?? null,
+        librarySlug: e.library?.slug ?? null,
+        library: undefined,
+      })),
       total,
       page: Number(page),
       pageSize: Number(limit),

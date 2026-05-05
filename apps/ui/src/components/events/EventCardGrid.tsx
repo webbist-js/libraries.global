@@ -319,7 +319,7 @@ function applyClientFilters(
     result = result.filter(
       (e) =>
         e.title.toLowerCase().includes(q) ||
-        (e.libraryEntityRef ?? "").toLowerCase().includes(q)
+        (e.libraryName ?? "").toLowerCase().includes(q)
     )
   }
 
@@ -336,7 +336,7 @@ function applyClientFilters(
   if (filters.libraryDirect) {
     result = result.filter(
       (e) =>
-        e.libraryEntityRef != null &&
+        e.libraryName != null &&
         DIRECT_PROVIDERS.has(
           "sourceProvider" in e && typeof e.sourceProvider === "string"
             ? e.sourceProvider

@@ -75,7 +75,8 @@ export interface GridEvent {
   priceMin?: number | null
   priceMax?: number | null
   registrationUrl?: string | null
-  libraryEntityRef?: string | null
+  libraryName?: string | null
+  librarySlug?: string | null
   status: string
 }
 

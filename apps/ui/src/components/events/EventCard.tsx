@@ -126,7 +126,7 @@ export function EventCard({ event }: EventCardProps) {
             {event.title}
           </h3>
 
-          {event.libraryEntityRef ? (
+          {event.libraryName ? (
             <p
               style={{
                 fontFamily: T.font.mono,
@@ -136,7 +136,7 @@ export function EventCard({ event }: EventCardProps) {
                 margin: 0,
               }}
             >
-              {event.libraryEntityRef}
+              {event.libraryName}
             </p>
           ) : null}
 
