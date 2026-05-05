@@ -1,35 +1,150 @@
+import { headers } from "next/headers"
+
+import { getSessionSSR } from "@/lib/auth-server"
+
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
-const API_TOKEN = process.env.STRAPI_REST_API_KEY // write-capable token
+const BRIDGE_SECRET = process.env.STRAPI_BRIDGE_SECRET
+const API_TOKEN = process.env.STRAPI_REST_READONLY_API_KEY
+
+const VALID_PROVIDERS = [
+  "eventbrite",
+  "ticketsource",
+  "meetup",
+  "ical",
+  "wegottickets",
+  "spydus",
+  "bibliocommons",
+] as const
+
+const PROVIDER_LABELS: Record<string, string> = {
+  eventbrite: "Eventbrite",
+  ticketsource: "TicketSource",
+  meetup: "Meetup",
+  ical: "iCal Feed",
+  wegottickets: "WeGotTickets",
+  spydus: "Spydus",
+  bibliocommons: "BiblioCommons",
+}
 
 export async function POST(req: Request) {
-  const body = (await req.json()) as {
-    libraryEntityRef: string
-    providerType: string
-    feedUrl?: string
-    notes?: string
-    submittedByName: string
-    submittedByEmail: string
+  // 1. Validate session
+  const hdrs = await headers()
+  const session = await getSessionSSR(hdrs)
+  if (!session?.user) {
+    return new Response("Unauthorized", { status: 401 })
   }
 
-  if (!body.libraryEntityRef || !body.providerType || !body.submittedByEmail) {
+  // 2. Parse body
+  let body: {
+    provider: string
+    libraryDocumentId: string
+    libraryEntityRef: string
+    libraryName: string
+    credentials: Record<string, unknown>
+  }
+  try {
+    body = (await req.json()) as typeof body
+  } catch {
+    return new Response("Invalid JSON", { status: 400 })
+  }
+
+  const {
+    provider,
+    libraryDocumentId,
+    libraryEntityRef,
+    libraryName,
+    credentials,
+  } = body
+
+  if (!VALID_PROVIDERS.includes(provider as (typeof VALID_PROVIDERS)[number])) {
+    return new Response("Invalid provider", { status: 400 })
+  }
+  if (
+    !libraryDocumentId ||
+    !libraryEntityRef ||
+    !credentials ||
+    typeof credentials !== "object" ||
+    Array.isArray(credentials)
+  ) {
     return new Response("Missing required fields", { status: 400 })
   }
 
-  const res = await fetch(`${STRAPI}/api/event-providers`, {
+  // 3. Verify verified librarian role (server-side re-check)
+  const profileRes = await fetch(
+    `${STRAPI}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(session.user.id)}&fields[0]=isVerifiedLibrarian`,
+    {
+      cache: "no-store",
+      headers: API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {},
+    }
+  )
+  if (!profileRes.ok) {
+    return new Response("Profile lookup failed", { status: 500 })
+  }
+  const profileData = (await profileRes.json()) as {
+    data?: { isVerifiedLibrarian?: boolean }[]
+  }
+  if (!profileData.data?.[0]?.isVerifiedLibrarian) {
+    return new Response("Forbidden: verified librarian role required", {
+      status: 403,
+    })
+  }
+
+  // 4. Verify user is affiliated with the submitted library
+  if (!BRIDGE_SECRET) {
+    return new Response("Service configuration error", { status: 500 })
+  }
+  const claimRes = await fetch(
+    `${STRAPI}/api/auth-bridge/claim-status?baUserId=${encodeURIComponent(session.user.id)}&entityRef=${encodeURIComponent(libraryEntityRef)}`,
+    {
+      cache: "no-store",
+      headers: { "X-Service-Secret": BRIDGE_SECRET },
+    }
+  )
+  if (!claimRes.ok) {
+    return new Response("Affiliation check failed", { status: 500 })
+  }
+  const claimData = (await claimRes.json()) as {
+    isVerifiedLibrarian?: boolean
+    claimedLibraryEntityRef?: string | null
+  }
+  if (!claimData.claimedLibraryEntityRef) {
+    return new Response("Forbidden: you are not affiliated with this library", {
+      status: 403,
+    })
+  }
+
+  // 5. Sanitize credentials — only string values, bounded length
+  const sanitized: Record<string, string> = {}
+  for (const [k, v] of Object.entries(credentials)) {
+    if (typeof v === "string" && v.trim()) {
+      sanitized[String(k).slice(0, 64)] = v.slice(0, 2048)
+    }
+  }
+  if (Object.keys(sanitized).length === 0) {
+    return new Response("No valid credential fields provided", { status: 400 })
+  }
+
+  // 6. Submit to Strapi events plugin — credential created with isActive: false
+  const label = `${(libraryName || "Library").slice(0, 100)} — ${PROVIDER_LABELS[provider] ?? provider}`
+
+  const submitRes = await fetch(`${STRAPI}/api/events/credential-submit`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {}),
+      "X-Service-Secret": BRIDGE_SECRET,
     },
     body: JSON.stringify({
-      data: {
-        ...body,
-        status: "pending",
-      },
+      provider,
+      label,
+      libraryDocumentId,
+      credentials: sanitized,
+      submittedByBaUserId: session.user.id,
     }),
   })
 
-  if (!res.ok) return new Response("Strapi error", { status: 500 })
+  if (!submitRes.ok) {
+    return new Response("Credential submission failed", { status: 500 })
+  }
 
   return new Response(null, { status: 201 })
 }
