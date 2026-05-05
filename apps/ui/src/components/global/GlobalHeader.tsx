@@ -1,4 +1,3 @@
-import type { Data } from "@repo/strapi-types"
 import { headers } from "next/headers"
 import type { Locale } from "next-intl"
 
@@ -6,12 +5,16 @@ import AppLink from "@/components/elementary/AppLink"
 import LocaleSwitcher from "@/components/elementary/LocaleSwitcher"
 import GlobalLink from "@/components/global/GlobalLink"
 import { GlobalNavbarAuthSection } from "@/components/global/GlobalNavbarAuthSection"
-import { StrapiBasicImage } from "@/components/page-builder/components/utilities/StrapiBasicImage"
-import { getStrapiLinkHref } from "@/components/page-builder/components/utilities/StrapiLink"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 
-type NavbarData = Data.ContentType<"api::navbar.navbar"> | null | undefined
+const NAV_LINKS: { label: string; href: string }[] = [
+  { label: "Atlas", href: "/" },
+  { label: "Map", href: "/map" },
+  { label: "Wiki", href: "/wiki" },
+  { label: "Journal", href: "/blog" },
+  { label: "Events", href: "/events" },
+]
 
 type ProfileSnippet = {
   avatarUrl?: string | null
@@ -75,15 +78,7 @@ async function fetchLibraryCount(): Promise<number | null> {
   }
 }
 
-export async function GlobalHeader({
-  locale,
-  navbar,
-}: {
-  readonly locale: Locale
-  readonly navbar: NavbarData
-}) {
-  const links = Array.isArray(navbar?.links) ? navbar.links : []
-  const logoHref = getStrapiLinkHref(navbar?.logoImage?.link) ?? "/"
+export async function GlobalHeader({ locale }: { readonly locale: Locale }) {
   const [libraryCount, sessionSSR] = await Promise.all([
     fetchLibraryCount(),
     getSessionSSR(await headers()),
@@ -102,29 +97,17 @@ export async function GlobalHeader({
         {/* Left: logo + live badge */}
         <div className="flex shrink-0 items-center gap-3">
           <GlobalLink
-            href={logoHref}
+            href="/"
             className="flex items-center text-(--t-ink-base)"
-            fallbackAs="div"
           >
-            {navbar?.logoImage?.image ? (
-              <StrapiBasicImage
-                component={navbar.logoImage.image}
-                forcedSizes={{ width: 150, height: 36 }}
-                className="h-auto max-h-9 w-auto"
-                hideWhenMissing
-              />
-            ) : (
-              <span
-                className="text-[1rem] leading-none font-semibold text-(--t-ink-base)"
-                style={{ fontFamily: T.font.serif }}
-              >
-                Libraries{" "}
-                <em className="font-normal text-(--t-ink-dim) italic">
-                  of the{" "}
-                </em>
-                World
-              </span>
-            )}
+            <span
+              className="text-[1rem] leading-none font-semibold text-(--t-ink-base)"
+              style={{ fontFamily: T.font.serif }}
+            >
+              Libraries{" "}
+              <em className="font-normal text-(--t-ink-dim) italic">of the </em>
+              World
+            </span>
           </GlobalLink>
 
           {libraryCount != null ? (
@@ -138,24 +121,20 @@ export async function GlobalHeader({
           ) : null}
         </div>
 
-        {/* Center: nav */}
-        {links.length > 0 ? (
-          <nav className="hidden flex-1 items-center justify-center gap-0.5 md:flex">
-            {links.map((link, index) => (
-              <GlobalLink
-                key={link.id ?? link.page?.slug ?? link.href ?? index}
-                href={getStrapiLinkHref(link)}
-                className="rounded-md px-3.5 py-2 text-sm text-(--t-ink-dim) transition-colors hover:text-(--t-ink-base)"
-              >
-                {link.label}
-              </GlobalLink>
-            ))}
-          </nav>
-        ) : (
-          <div className="flex-1" />
-        )}
+        {/* Center: hardcoded nav */}
+        <nav className="hidden flex-1 items-center justify-center gap-0.5 md:flex">
+          {NAV_LINKS.map((link) => (
+            <GlobalLink
+              key={link.href}
+              href={link.href}
+              className="rounded-md px-3.5 py-2 text-sm text-(--t-ink-dim) transition-colors hover:text-(--t-ink-base)"
+            >
+              {link.label}
+            </GlobalLink>
+          ))}
+        </nav>
 
-        {/* Right: locale + sign in + contribute */}
+        {/* Right: locale + auth + contribute */}
         <div data-header-stable="" className="flex shrink-0 items-center gap-1">
           <LocaleSwitcher
             locale={locale}

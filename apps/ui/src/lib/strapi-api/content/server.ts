@@ -35,11 +35,6 @@ type PopulatedHomepageData = Data.ContentType<"api::homepage.homepage"> & {
   seo?: Data.Component<"shared.seo"> | null
 }
 
-type PopulatedNavbarData = Data.ContentType<"api::navbar.navbar"> & {
-  links?: Data.Component<"utilities.link">[]
-  logoImage?: Data.Component<"utilities.image-with-link"> | null
-}
-
 type PopulatedFooterData = Data.ContentType<"api::footer.footer"> & {
   links?: Data.Component<"utilities.link">[]
   socialLinks?: Data.Component<"shared.social">[]
@@ -169,24 +164,6 @@ export async function fetchHomepageContinents(locale: Locale) {
   } catch (e: unknown) {
     logNonBlockingError({
       message: `Error fetching homepage continents for locale '${locale}'`,
-      error: {
-        error: e instanceof Error ? e.message : String(e),
-        stack: e instanceof Error ? e.stack : undefined,
-      },
-    })
-  }
-}
-
-// ------ Navbar fetching functions
-
-export async function fetchNavbar(locale: Locale) {
-  try {
-    return (await PublicStrapiClient.fetchOne("api::navbar.navbar", undefined, {
-      locale,
-    })) as APIResponse<PopulatedNavbarData>
-  } catch (e: unknown) {
-    logNonBlockingError({
-      message: `Error fetching navbar for locale '${locale}'`,
       error: {
         error: e instanceof Error ? e.message : String(e),
         stack: e instanceof Error ? e.stack : undefined,
@@ -846,7 +823,6 @@ export type BlogArticleSummary = {
   authorTitle?: string | null
   authorBio?: string | null
   authorAvatar?: MediaItem | null
-  tags?: string[] | null
   featured?: boolean | null
   publishedAt?: string | null
   updatedAt?: string | null
@@ -947,12 +923,92 @@ export async function fetchRecentBlogArticles(locale: Locale) {
   }
 }
 
+export async function fetchBlogArticlesBySection(
+  sectionSlug: string,
+  locale: Locale,
+  page = 1,
+  pageSize = 24
+) {
+  const dm = await draftMode()
+  try {
+    return (await PublicStrapiClient.fetchAPI("/blog-articles", {
+      locale,
+      status: dm.isEnabled ? "draft" : "published",
+      filters: { section: { slug: { $eq: sectionSlug } } } as any,
+      populate: {
+        heroImage: true,
+        section: { fields: ["name", "slug"] },
+        category: { fields: ["name", "slug"] },
+      } as any,
+      fields: [
+        "title",
+        "slug",
+        "summary",
+        "author",
+        "featured",
+        "publishedAt",
+        "updatedAt",
+      ] as any,
+      sort: ["publishedAt:desc"] as any,
+      pagination: { page, pageSize } as any,
+    })) as APIResponseCollection<BlogArticleSummary> & {
+      meta: {
+        pagination: {
+          page: number
+          pageSize: number
+          pageCount: number
+          total: number
+        }
+      }
+    }
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching blog articles for section '${sectionSlug}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return {
+      data: [],
+      meta: { pagination: { page: 1, pageSize, pageCount: 1, total: 0 } },
+    }
+  }
+}
+
+export async function fetchBlogSections() {
+  try {
+    return (await PublicStrapiClient.fetchAPI("/blog-sections", {
+      fields: ["name", "slug", "description"] as any,
+      sort: ["name:asc"] as any,
+      pagination: { pageSize: 50 } as any,
+    })) as APIResponseCollection<BlogSection>
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: "Error fetching blog sections",
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return { data: [] }
+  }
+}
+
 export async function fetchAllBlogArticleSlugs(locale: Locale) {
   try {
     return (await PublicStrapiClient.fetchAPI("/blog-articles/slugs", {
       locale,
       status: "published",
-    })) as { data: { slug: string; locale?: string | null }[] }
+    })) as {
+      data: {
+        slug: string
+        locale?: string | null
+        section?: { slug?: string | null } | null
+      }[]
+    }
   } catch (e: unknown) {
     logNonBlockingError({
       message: `Error fetching all blog article slugs for locale '${locale}'`,

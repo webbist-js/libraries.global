@@ -11,14 +11,12 @@ import {
   fetchFooter,
   fetchHomepage,
   fetchHomepageContinents,
-  fetchNavbar,
   fetchRecentBlogArticles,
 } from "@/lib/strapi-api/content/server"
 
 export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
   const homepagePromise = fetchHomepage(locale)
   const continentSummariesPromise = fetchHomepageContinents(locale)
-  const navbarPromise = fetchNavbar(locale)
   const footerPromise = fetchFooter(locale)
   const blogArticlesPromise = fetchRecentBlogArticles(locale)
   const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
@@ -39,7 +37,6 @@ export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
 
   const homepage = use(homepagePromise)?.data
   const continentSummaries = use(continentSummariesPromise)?.data ?? []
-  const navbar = use(navbarPromise)?.data
   const footer = use(footerPromise)?.data
   const blogArticles = use(blogArticlesPromise)?.data ?? []
   const stats = use(statsPromise)
@@ -56,7 +53,7 @@ export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
       <div data-homepage="true">
         <StrapiStructuredData structuredData={homepage?.seo?.structuredData} />
 
-        <GlobalHeader locale={locale} navbar={navbar} />
+        <GlobalHeader locale={locale} />
 
         <main className="relative z-10 flex-1">
           <HomepageHero

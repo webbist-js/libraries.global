@@ -43,7 +43,7 @@ function FeaturedArticleCard({ article }: { article: BlogArticleSummary }) {
 
   return (
     <GlobalLink
-      href={`/blog/${article.slug}`}
+      href={`/blog/${article.section?.slug ?? "general"}/${article.slug}`}
       className="group flex flex-col overflow-hidden rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) transition-[border-color] duration-300 hover:border-(--t-border-hi)"
     >
       <ArticleImage
@@ -91,7 +91,7 @@ export function BlogCard({ article }: { article: BlogArticleSummary }) {
 
   return (
     <GlobalLink
-      href={`/blog/${article.slug}`}
+      href={`/blog/${article.section?.slug ?? "general"}/${article.slug}`}
       className="group flex flex-col overflow-hidden rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) transition-[border-color] duration-300 hover:border-(--t-border-hi)"
     >
       <ArticleImage
