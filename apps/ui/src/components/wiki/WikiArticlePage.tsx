@@ -28,8 +28,6 @@ import { WikiArticleEditSidebarPanel } from "./editor/WikiArticleEditSidebarPane
 import { WikiArticleEditToggle } from "./editor/WikiArticleEditToggle"
 import { WikiProgressBar } from "./WikiProgressBar"
 
-type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
-
 // ── Status badge config ──────────────────────────────────────────────────────
 
 const STATUS_TO_BADGE_COLOR: Record<WikiArticleStatus, BadgeColor> = {
@@ -424,18 +422,16 @@ function WikiRightPanel({
 export function WikiArticlePage({
   article,
   navSections,
-  navbar,
   locale,
 }: {
   readonly article: WikiArticleDetail | null
   readonly navSections: WikiSectionNav[]
-  readonly navbar?: NavbarData
   readonly locale: Locale
 }) {
   if (!article) {
     return (
       <PageShell>
-        <GlobalHeader locale={locale} navbar={navbar} />
+        <GlobalHeader locale={locale} />
         <main
           style={{
             display: "flex",
@@ -473,7 +469,7 @@ export function WikiArticlePage({
   return (
     <PageShell>
       <WikiProgressBar />
-      <GlobalHeader locale={locale} navbar={navbar} />
+      <GlobalHeader locale={locale} />
 
       {/* ── Three-column shell ─────────────────────────────────────────── */}
       <WikiArticleEditProvider slug={article.slug ?? ""}>

@@ -6,7 +6,6 @@ import WikiArticlePage from "@/components/wiki/WikiArticlePage"
 import { isDevelopment } from "@/lib/general-helpers"
 import {
   fetchAllWikiArticleSlugs,
-  fetchNavbar,
   fetchWikiArticle,
   fetchWikiSections,
 } from "@/lib/strapi-api/content/server"
@@ -70,14 +69,12 @@ export default function WikiArticleRoute(props: {
   const slug = params.slug
 
   const article = use(fetchWikiArticle(slug, locale))?.data ?? null
-  const navbar = use(fetchNavbar(locale))?.data
   const navSections = use(fetchWikiSections(locale))?.data ?? []
 
   return (
     <WikiArticlePage
       article={article}
       navSections={navSections}
-      navbar={navbar}
       locale={locale}
     />
   )

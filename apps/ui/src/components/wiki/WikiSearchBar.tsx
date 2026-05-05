@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -16,6 +17,7 @@ export function WikiSearchBar() {
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
   // Debounced search
   useEffect(() => {
@@ -97,6 +99,12 @@ export function WikiSearchBar() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && query.trim()) {
+              router.push(`/wiki/search?q=${encodeURIComponent(query.trim())}`)
+              setOpen(false)
+            }
+          }}
           placeholder="Search docs, categories, articles…"
           style={{
             flex: 1,
@@ -206,6 +214,27 @@ export function WikiSearchBar() {
               )}
             </GlobalLink>
           ))}
+          {query.trim() && (
+            <GlobalLink
+              href={`/wiki/search?q=${encodeURIComponent(query.trim())}`}
+              onClick={() => setOpen(false)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "10px 14px",
+                borderTop: `1px solid ${T.border.line}`,
+                textDecoration: "none",
+                fontSize: "11px",
+                color: T.accent.aurora,
+                fontFamily: T.font.mono,
+                letterSpacing: ".06em",
+              }}
+              className="hover:bg-[rgba(127,223,255,.04)]"
+            >
+              View all results for &ldquo;{query}&rdquo; →
+            </GlobalLink>
+          )}
         </div>
       )}
     </div>

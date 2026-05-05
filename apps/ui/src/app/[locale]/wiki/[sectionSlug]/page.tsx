@@ -5,7 +5,7 @@ import { use } from "react"
 
 import WikiSectionLandingPage from "@/components/wiki/WikiSectionLandingPage"
 import { isDevelopment } from "@/lib/general-helpers"
-import { fetchNavbar, fetchWikiSections } from "@/lib/strapi-api/content/server"
+import { fetchWikiSections } from "@/lib/strapi-api/content/server"
 
 export const dynamic = "force-static"
 export const revalidate = 300
@@ -65,9 +65,11 @@ export default function WikiSectionRoute(props: {
     notFound()
   }
 
-  const navbar = use(fetchNavbar(locale))?.data
-
   return (
-    <WikiSectionLandingPage section={section} navbar={navbar} locale={locale} />
+    <WikiSectionLandingPage
+      section={section}
+      allSections={sections}
+      locale={locale}
+    />
   )
 }

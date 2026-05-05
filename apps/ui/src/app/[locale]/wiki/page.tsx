@@ -4,7 +4,6 @@ import { use } from "react"
 
 import WikiLandingPage from "@/components/wiki/WikiLandingPage"
 import {
-  fetchNavbar,
   fetchPopularWikiArticles,
   fetchWikiLanding,
   fetchWikiNavigation,
@@ -51,7 +50,6 @@ export default function WikiPage(props: {
 
   const landing = use(fetchWikiLanding(locale))?.data ?? null
   const articles = use(fetchPopularWikiArticles(locale))?.data ?? []
-  const navbar = use(fetchNavbar(locale))?.data
   const navCategories = use(fetchWikiNavigation(locale))?.data ?? []
   const wikiSections = use(fetchWikiSections(locale))?.data ?? []
 
@@ -61,7 +59,6 @@ export default function WikiPage(props: {
       articles={articles}
       navCategories={navCategories}
       wikiSections={wikiSections}
-      navbar={navbar}
       locale={locale}
     />
   )

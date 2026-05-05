@@ -18,7 +18,7 @@ export function WikiLatestChanges({
 
   return (
     <section style={{ padding: "40px 0 80px" }}>
-      <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 32px" }}>
+      <div style={{ maxWidth: "1296px", margin: "0 auto", padding: "0 24px" }}>
         <div
           style={{
             display: "grid",

@@ -1,31 +1,44 @@
 import type { Locale } from "next-intl"
 
-import { HeroEyebrow, HeroTitle, PageShell } from "@/components/ds"
+import {
+  HeroEyebrow,
+  HeroTitle,
+  PageShell,
+  StickySubNav,
+} from "@/components/ds"
 import { parseHeroText } from "@/components/ds/HeroTitle"
 import GlobalHeader from "@/components/global/GlobalHeader"
+import { DotHeroCanvas } from "@/components/ui/DotHeroCanvas"
 import { T } from "@/lib/design-tokens"
 import type { WikiSectionNav } from "@/lib/strapi-api/content/server"
 
 import { WikiLatestChanges } from "./WikiLatestChanges"
 import { WikiSectionFeed } from "./WikiSectionFeed"
 
-type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
-
 export function WikiSectionLandingPage({
   section,
-  navbar,
+  allSections = [],
   locale,
 }: {
   readonly section: WikiSectionNav
-  readonly navbar?: NavbarData
+  readonly allSections?: WikiSectionNav[]
   readonly locale: Locale
 }) {
   const articles = section.articles || []
   const totalArticles = articles.length
 
+  const sectionTabs = [
+    { id: "all", label: "All sections", href: "/wiki" as const },
+    ...allSections.map((s) => ({
+      id: s.slug,
+      label: s.name,
+      href: `/wiki/${s.slug}` as const,
+    })),
+  ]
+
   return (
     <PageShell>
-      <GlobalHeader locale={locale} navbar={navbar} />
+      <GlobalHeader locale={locale} />
 
       {/* ═══════════════ HERO ═══════════════ */}
       <section
@@ -35,24 +48,27 @@ export function WikiSectionLandingPage({
           overflow: "hidden",
         }}
       >
+        <DotHeroCanvas variant="knowledge" />
+        {/* Vignette */}
         <div
-          aria-hidden="true"
+          aria-hidden
           style={{
             position: "absolute",
             inset: 0,
-            opacity: 0.12,
-            backgroundImage: `linear-gradient(to right,${T.border.line} 1px,transparent 1px),linear-gradient(to bottom,${T.border.line} 1px,transparent 1px)`,
-            backgroundSize: "6.25% 80px",
-            maskImage:
-              "radial-gradient(ellipse at 80% 40%, black 10%, transparent 70%)",
-            WebkitMaskImage:
-              "radial-gradient(ellipse at 80% 40%, black 10%, transparent 70%)",
+            background:
+              "radial-gradient(ellipse 110% 90% at 50% 50%, transparent 25%, var(--t-bg-space) 80%)",
             pointerEvents: "none",
           }}
         />
 
         <div
-          style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 32px" }}
+          style={{
+            maxWidth: "1296px",
+            margin: "0 auto",
+            padding: "0 24px",
+            position: "relative",
+            zIndex: 10,
+          }}
         >
           <div
             style={{
@@ -135,6 +151,11 @@ export function WikiSectionLandingPage({
           </div>
         </div>
       </section>
+
+      {/* ═══════════════ SECTIONS SUBNAV ═══════════════ */}
+      {sectionTabs.length > 0 && (
+        <StickySubNav tabs={sectionTabs} activeId={section.slug} />
+      )}
 
       {/* ═══════════════ FEED (FILTER BAR + LISTING) ═══════════════ */}
       {articles.length > 0 ? (

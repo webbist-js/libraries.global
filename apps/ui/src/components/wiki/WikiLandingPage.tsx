@@ -6,9 +6,11 @@ import {
   PageShell,
   QuickPathCard,
   SectionDomainCard,
+  StickySubNav,
 } from "@/components/ds"
 import { parseHeroText } from "@/components/ds/HeroTitle"
 import GlobalHeader from "@/components/global/GlobalHeader"
+import { DotHeroCanvas } from "@/components/ui/DotHeroCanvas"
 import { T } from "@/lib/design-tokens"
 import type {
   WikiArticleSummary,
@@ -20,8 +22,6 @@ import type {
 import { WikiLatestChanges } from "./WikiLatestChanges"
 import { WikiSearchBar } from "./WikiSearchBar"
 
-type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
-
 // ── Main page ──────────────────────────────────────────────────────────────
 
 export function WikiLandingPage({
@@ -29,14 +29,12 @@ export function WikiLandingPage({
   articles,
   navCategories,
   wikiSections,
-  navbar,
   locale,
 }: {
   readonly landing: WikiLandingData | null
   readonly articles: WikiArticleSummary[]
   readonly navCategories: WikiNavCategory[]
   readonly wikiSections: WikiSectionNav[]
-  readonly navbar?: NavbarData
   readonly locale: Locale
 }) {
   const quickStartCards = Array.isArray(landing?.quickStartCards)
@@ -47,7 +45,7 @@ export function WikiLandingPage({
 
   return (
     <PageShell>
-      <GlobalHeader locale={locale} navbar={navbar} />
+      <GlobalHeader locale={locale} />
 
       {/* ═══════════════ HERO ═══════════════ */}
       <section
@@ -57,25 +55,27 @@ export function WikiLandingPage({
           overflow: "hidden",
         }}
       >
-        {/* Graticule grid */}
+        <DotHeroCanvas variant="knowledge" />
+        {/* Vignette */}
         <div
-          aria-hidden="true"
+          aria-hidden
           style={{
             position: "absolute",
             inset: 0,
-            opacity: 0.12,
-            backgroundImage: `linear-gradient(to right,${T.border.line} 1px,transparent 1px),linear-gradient(to bottom,${T.border.line} 1px,transparent 1px)`,
-            backgroundSize: "6.25% 80px",
-            maskImage:
-              "radial-gradient(ellipse at 80% 40%, black 10%, transparent 70%)",
-            WebkitMaskImage:
-              "radial-gradient(ellipse at 80% 40%, black 10%, transparent 70%)",
+            background:
+              "radial-gradient(ellipse 110% 90% at 50% 50%, transparent 25%, var(--t-bg-space) 80%)",
             pointerEvents: "none",
           }}
         />
 
         <div
-          style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 32px" }}
+          style={{
+            maxWidth: "1296px",
+            margin: "0 auto",
+            padding: "0 24px",
+            position: "relative",
+            zIndex: 10,
+          }}
         >
           <div
             style={{
@@ -200,11 +200,26 @@ export function WikiLandingPage({
         </div>
       </section>
 
+      {/* ═══════════════ SECTION SUBNAV ═══════════════ */}
+      {wikiSections.length > 0 ? (
+        <StickySubNav
+          tabs={[
+            { id: "all", label: "All sections", href: "/wiki" },
+            ...wikiSections.map((s) => ({
+              id: s.slug,
+              label: s.name,
+              href: `/wiki/${s.slug}`,
+            })),
+          ]}
+          activeId="all"
+        />
+      ) : null}
+
       {/* ═══════════════ QUICK-START PATHS ═══════════════ */}
       {quickStartCards.length > 0 ? (
         <section style={{ padding: "24px 0 10px" }}>
           <div
-            style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 32px" }}
+            style={{ maxWidth: "1296px", margin: "0 auto", padding: "0 24px" }}
           >
             <div
               style={{
@@ -248,7 +263,7 @@ export function WikiLandingPage({
       {/* ═══════════════ DOMAIN GRID ═══════════════ */}
       <section style={{ padding: "80px 0 40px" }}>
         <div
-          style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 32px" }}
+          style={{ maxWidth: "1296px", margin: "0 auto", padding: "0 24px" }}
         >
           {/* Section header */}
           <div
