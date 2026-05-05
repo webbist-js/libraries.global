@@ -30,7 +30,7 @@ export function FeaturedEventsCarousel({
   }
 
   return (
-    <section style={{ padding: "40px 0" }}>
+    <section style={{ padding: "40px 0", overflow: "hidden" }}>
       <div style={{ maxWidth: "1296px", margin: "0 auto", padding: "0 24px" }}>
         {/* Heading + controls */}
         <div
@@ -108,11 +108,9 @@ export function FeaturedEventsCarousel({
           ref={trackRef}
           style={{
             display: "flex",
-            gap: "24px",
             overflowX: "auto",
             scrollSnapType: "x mandatory",
             scrollbarWidth: "none",
-            paddingBottom: "4px",
           }}
           className="carousel-track"
         >
@@ -120,9 +118,9 @@ export function FeaturedEventsCarousel({
             <div
               key={event.documentId}
               style={{
-                minWidth: "min(100%, 780px)",
-                scrollSnapAlign: "start",
+                width: "100%",
                 flexShrink: 0,
+                scrollSnapAlign: "start",
               }}
             >
               <FeaturedEventCard event={event} />
