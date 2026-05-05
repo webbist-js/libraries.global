@@ -101,8 +101,6 @@ export default ({ strapi }: { strapi: any }) => ({
       to,
       limit = "20",
       page = "1",
-      countryCode,
-      regionSlug,
     } = ctx.query as Record<string, string>
     const now = new Date().toISOString()
     const db = strapi.db.connection
@@ -114,8 +112,6 @@ export default ({ strapi }: { strapi: any }) => ({
     if (to) (filters.startTime as any).$lte = to
     if (type) filters.eventType = type
     if (isFree != null) filters.isFree = isFree === "true"
-    if (countryCode) filters.countryCode = countryCode
-    if (regionSlug) filters.regionSlug = regionSlug
 
     // Count with same filters using knex
     const countQuery = db("ev_events").count("* as total")
@@ -124,8 +120,6 @@ export default ({ strapi }: { strapi: any }) => ({
     if (to) countQuery.where("start_time", "<=", to)
     if (type) countQuery.where("event_type", type)
     if (isFree != null) countQuery.where("is_free", isFree === "true")
-    if (countryCode) countQuery.where("country_code", countryCode)
-    if (regionSlug) countQuery.where("region_slug", regionSlug)
     const [countRow] = await countQuery
     const total = Number((countRow as any).total)
 
@@ -359,25 +353,10 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   async countryBreakdown(ctx: any) {
-    try {
-      const db = strapi.db.connection
-      const now = new Date()
-
-      const rows = await db("ev_events")
-        .select("country_code as countryCode")
-        .count("* as count")
-        .where("start_time", ">=", now)
-        .whereNotNull("country_code")
-        .groupBy("country_code")
-        .orderBy("count", "desc")
-
-      ctx.body = (rows as any[]).map((r) => ({
-        countryCode: r.countryCode as string,
-        count: Number(r.count),
-      }))
-    } catch {
-      ctx.body = []
-    }
+    // TODO: countryCode/regionSlug removed from event schema — this handler
+    // needs to derive country via the library relation join instead.
+    // Until then it returns empty so the UI falls back gracefully.
+    ctx.body = []
   },
 
   async heatmap(ctx: any) {

@@ -166,8 +166,8 @@ export function EventCardGrid({
       params.set("type", filters.eventTypes[0]!)
     if (filters.priceScope === "free") params.set("isFree", "true")
     if (filters.priceScope === "paid") params.set("isFree", "false")
-    if (filters.countryCode) params.set("countryCode", filters.countryCode)
-    if (filters.regionSlug) params.set("regionSlug", filters.regionSlug)
+    // TODO: countryCode/regionSlug filtering requires countryBreakdown to be
+    // reworked via the library relation join — removed from API for now.
 
     fetch(`/api/public-proxy/api/events/global?${params}`)
       .then((r) => r.json())
