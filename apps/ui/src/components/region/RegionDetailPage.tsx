@@ -7,7 +7,6 @@ import {
   CtaBannerSection,
   EditorialSection,
   Eyebrow,
-  HeroInlineTabNav,
   HeroStat,
   HeroStatsGrid,
   LocationContributeCTA,
@@ -33,8 +32,6 @@ import type {
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 import { cn } from "@/lib/styles"
-
-type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
 
 // ── Quick link card ──────────────────────────────────────────────────────────
 
@@ -80,14 +77,12 @@ function QuickLinkCard({ link }: { link: QuickLink }) {
 
 export function RegionDetailPage({
   region,
-  navbar,
   locale,
   slug,
   countrySlug,
   continentSlug,
 }: {
   region: PopulatedRegionData
-  navbar: NavbarData
   locale: Locale
   slug: string
   countrySlug: string
@@ -133,7 +128,7 @@ export function RegionDetailPage({
       className="relative isolate flex min-h-screen w-full flex-col"
       style={{ background: T.bg.space, color: T.ink.base }}
     >
-      <GlobalHeader locale={locale} navbar={navbar} />
+      <GlobalHeader locale={locale} />
 
       <main className="relative z-10 flex-1">
         {/* ── Hero ─────────────────────────────────────────────────────────── */}
@@ -222,7 +217,6 @@ export function RegionDetailPage({
                     }
                   />
                 </HeroStatsGrid>
-                <HeroInlineTabNav tabs={tabs} />
               </div>
             </div>
           </Container>

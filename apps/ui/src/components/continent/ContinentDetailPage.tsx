@@ -5,7 +5,6 @@ import {
   CtaBannerSection,
   EditorialSection,
   Eyebrow,
-  HeroInlineTabNav,
   HeroStat,
   HeroStatsGrid,
   LocationContributeCTA,
@@ -28,18 +27,14 @@ import type {
 } from "@/lib/strapi-api/content/server"
 import { auroraCtaLg } from "@/lib/styles"
 
-type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
-
 // ── Page ───────────────────────────────────────────────────────────────────
 
 export function ContinentDetailPage({
   continent,
-  navbar,
   locale,
   slug,
 }: {
   readonly continent: PopulatedContinentData | null
-  readonly navbar?: NavbarData
   readonly locale: Locale
   readonly slug: string
 }) {
@@ -49,7 +44,7 @@ export function ContinentDetailPage({
         className="relative isolate flex min-h-screen w-full flex-col"
         style={{ background: T.bg.space, color: T.ink.base }}
       >
-        <GlobalHeader locale={locale} navbar={navbar} />
+        <GlobalHeader locale={locale} />
         <main className="flex flex-1 items-center justify-center">
           <p className="text-(--t-ink-faint)">Continent not found.</p>
         </main>
@@ -83,7 +78,7 @@ export function ContinentDetailPage({
       className="relative isolate flex min-h-screen w-full flex-col"
       style={{ background: T.bg.space, color: T.ink.base }}
     >
-      <GlobalHeader locale={locale} navbar={navbar} />
+      <GlobalHeader locale={locale} />
 
       <main className="relative z-10 flex-1">
         {/* ── Hero ──────────────────────────────────────────────────────────── */}
@@ -157,7 +152,6 @@ export function ContinentDetailPage({
                     }
                   />
                 </HeroStatsGrid>
-                <HeroInlineTabNav tabs={tabs} />
               </div>
             </div>
           </Container>

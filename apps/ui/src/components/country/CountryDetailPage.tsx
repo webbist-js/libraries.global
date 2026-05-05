@@ -6,7 +6,6 @@ import {
   CtaBannerSection,
   EditorialSection,
   Eyebrow,
-  HeroInlineTabNav,
   HeroStat,
   HeroStatsGrid,
   HeroTitle,
@@ -31,8 +30,6 @@ import type {
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 import { auroraCtaLg } from "@/lib/styles"
-
-type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
 
 // ── Country fact row ─────────────────────────────────────────────────────────
 
@@ -78,13 +75,11 @@ function FactRow({ label, value }: { label: string; value: string }) {
 
 export function CountryDetailPage({
   country,
-  navbar,
   locale,
   slug,
   continentSlug,
 }: {
   country: PopulatedCountryData
-  navbar: NavbarData
   locale: Locale
   slug: string
   continentSlug: string
@@ -129,7 +124,7 @@ export function CountryDetailPage({
       className="relative isolate flex min-h-screen w-full flex-col"
       style={{ background: T.bg.space, color: T.ink.base }}
     >
-      <GlobalHeader locale={locale} navbar={navbar} />
+      <GlobalHeader locale={locale} />
 
       <main className="relative z-10 flex-1">
         {/* ── Hero ───────────────────────────────────────────────────────────── */}
@@ -262,7 +257,6 @@ export function CountryDetailPage({
                     value={country.capitalCity ?? country.iso2 ?? "—"}
                   />
                 </HeroStatsGrid>
-                <HeroInlineTabNav tabs={tabs} />
               </div>
             </div>
           </Container>

@@ -12,8 +12,6 @@ import type { PopulatedAreaData } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 import { cn } from "@/lib/styles"
 
-type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
-
 // ── Stat card ─────────────────────────────────────────────────────────────────
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
@@ -90,7 +88,6 @@ function LibraryCard({
 
 export function AreaDetailPage({
   area,
-  navbar,
   locale,
   slug,
   regionSlug,
@@ -98,7 +95,6 @@ export function AreaDetailPage({
   continentSlug,
 }: {
   readonly area: PopulatedAreaData | null
-  readonly navbar?: NavbarData
   readonly locale: Locale
   readonly slug: string
   readonly regionSlug: string
@@ -111,7 +107,7 @@ export function AreaDetailPage({
         className="relative isolate flex min-h-screen w-full flex-col"
         style={{ background: T.bg.space, color: T.ink.base }}
       >
-        <GlobalHeader locale={locale} navbar={navbar} />
+        <GlobalHeader locale={locale} />
         <main className="flex flex-1 items-center justify-center">
           <p className="text-(--t-ink-faint)">Area not found.</p>
         </main>
@@ -142,7 +138,7 @@ export function AreaDetailPage({
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_12%,rgba(92,149,255,0.09),transparent_38%),radial-gradient(circle_at_82%_70%,rgba(103,221,255,0.06),transparent_30%)]" />
 
-      <GlobalHeader locale={locale} navbar={navbar} />
+      <GlobalHeader locale={locale} />
 
       <main className="relative z-10 flex-1">
         {/* ── Hero ──────────────────────────────────────────────────────────── */}

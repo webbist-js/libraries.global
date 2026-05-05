@@ -9,7 +9,6 @@ import {
   fetchAllLibraries,
   fetchLibrary,
   fetchNearbyLibraries,
-  fetchNavbar,
 } from "@/lib/strapi-api/content/server"
 
 export const dynamic = "force-static"
@@ -91,7 +90,6 @@ export default function LibraryRoutePage(props: {
     notFound()
   }
 
-  const navbar = use(fetchNavbar(locale))?.data
   const nearbyLibraries = use(
     fetchNearbyLibraries(
       librarySlug,
@@ -103,7 +101,6 @@ export default function LibraryRoutePage(props: {
   return (
     <LibraryDetailPage
       library={library}
-      navbar={navbar}
       locale={locale}
       nearbyLibraries={nearbyLibraries}
     />

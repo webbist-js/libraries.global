@@ -8,7 +8,6 @@ import { isDevelopment } from "@/lib/general-helpers"
 import {
   fetchAllLibraries,
   fetchCountry,
-  fetchNavbar,
 } from "@/lib/strapi-api/content/server"
 
 export const dynamic = "force-static"
@@ -65,7 +64,6 @@ export default function CountryPage(props: {
   const slug = params.country
 
   const countryData = use(fetchCountry(slug, locale))?.data
-  const navbar = use(fetchNavbar(locale))?.data
 
   if (!countryData) {
     return (
@@ -73,7 +71,7 @@ export default function CountryPage(props: {
         className="relative isolate flex min-h-screen w-full flex-col"
         style={{ background: "var(--t-bg-space)", color: "var(--t-ink-base)" }}
       >
-        <GlobalHeader locale={locale} navbar={navbar} />
+        <GlobalHeader locale={locale} />
         <main className="flex flex-1 items-center justify-center">
           <p className="text-(--t-ink-faint)">Country not found.</p>
         </main>
@@ -84,7 +82,6 @@ export default function CountryPage(props: {
   return (
     <CountryDetailPage
       country={countryData}
-      navbar={navbar}
       locale={locale}
       slug={slug}
       continentSlug={continentSlug}

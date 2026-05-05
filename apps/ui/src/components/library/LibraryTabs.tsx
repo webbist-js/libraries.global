@@ -2,9 +2,8 @@
 
 import { createContext, useContext, useMemo, useState } from "react"
 
-import { Container } from "@/components/elementary/Container"
+import { StickySubNav } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
-import { cn } from "@/lib/styles"
 
 // ── Context ───────────────────────────────────────────────────────────────────
 
@@ -73,77 +72,56 @@ export function LibraryTabNav({
       })
     : null
 
-  return (
-    <div
-      className="sticky top-14 z-30 border-t border-b border-(--t-border-line) backdrop-blur-md"
-      style={{ background: "var(--t-header-bg)" }}
-    >
-      <Container>
-        <div className="flex items-center">
-          <nav
-            role="tablist"
-            aria-label="Library sections"
-            className="flex items-center gap-6"
+  const rightSlot =
+    entityRef || lastVerifiedLabel ? (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          paddingLeft: "16px",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {entityRef ? (
+          <span
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "9px",
+              letterSpacing: ".18em",
+              textTransform: "uppercase",
+              color: T.ink.ghost,
+            }}
           >
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={activeTab === tab.id}
-                aria-controls={`tab-${tab.id}`}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "relative shrink-0 py-4 text-[13px] whitespace-nowrap transition-colors duration-150",
-                  "after:absolute after:right-0 after:bottom-[-1px] after:left-0 after:h-[2px] after:transition-opacity after:duration-150",
-                  activeTab === tab.id
-                    ? "text-(--t-ink-base) after:bg-(--t-accent-aurora) after:opacity-100"
-                    : "text-(--t-ink-low) after:opacity-0 hover:text-(--t-ink-dim)"
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
+            {entityRef}
+          </span>
+        ) : null}
+        {entityRef && lastVerifiedLabel ? (
+          <span style={{ color: T.ink.ghost, fontSize: "9px" }}>·</span>
+        ) : null}
+        {lastVerifiedLabel ? (
+          <span
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "9px",
+              letterSpacing: ".18em",
+              textTransform: "uppercase",
+              color: T.ink.faint,
+            }}
+          >
+            Verified {lastVerifiedLabel}
+          </span>
+        ) : null}
+      </div>
+    ) : null
 
-          <div className="flex-1" />
-
-          {/* Right side: last verified + entity ref */}
-          {(lastVerifiedLabel ?? entityRef) ? (
-            <div className="flex shrink-0 items-center gap-3 pl-6">
-              {entityRef ? (
-                <span
-                  style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "11px",
-                    letterSpacing: ".12em",
-                    color: T.ink.ghost,
-                  }}
-                >
-                  {entityRef}
-                </span>
-              ) : null}
-              {entityRef && lastVerifiedLabel ? (
-                <span style={{ color: T.ink.ghost, fontSize: "11px" }}>·</span>
-              ) : null}
-              {lastVerifiedLabel ? (
-                <span
-                  style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "11px",
-                    letterSpacing: ".1em",
-                    color: T.ink.faint,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Last verified {lastVerifiedLabel}
-                </span>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
-      </Container>
-    </div>
+  return (
+    <StickySubNav
+      tabs={[...tabs]}
+      activeId={activeTab}
+      onTabClick={setActiveTab}
+      rightSlot={rightSlot}
+    />
   )
 }
 

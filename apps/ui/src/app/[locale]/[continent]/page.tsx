@@ -7,7 +7,6 @@ import { isDevelopment } from "@/lib/general-helpers"
 import {
   fetchAllContinents,
   fetchContinent,
-  fetchNavbar,
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
@@ -75,12 +74,10 @@ export default function ContinentPage(props: {
   const slug = params.continent
 
   const continentData = use(fetchContinent(slug, locale))?.data
-  const navbar = use(fetchNavbar(locale))?.data
 
   return (
     <ContinentDetailPage
       continent={continentData ?? null}
-      navbar={navbar}
       locale={locale}
       slug={slug}
     />

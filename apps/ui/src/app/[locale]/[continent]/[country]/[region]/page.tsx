@@ -5,11 +5,7 @@ import { use } from "react"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { RegionDetailPage } from "@/components/region/RegionDetailPage"
 import { isDevelopment } from "@/lib/general-helpers"
-import {
-  fetchAllRegions,
-  fetchNavbar,
-  fetchRegion,
-} from "@/lib/strapi-api/content/server"
+import { fetchAllRegions, fetchRegion } from "@/lib/strapi-api/content/server"
 
 export const dynamic = "force-static"
 export const revalidate = 300
@@ -66,7 +62,6 @@ export default function RegionPage(props: {
   const slug = params.region
 
   const regionData = use(fetchRegion(slug, locale))?.data
-  const navbar = use(fetchNavbar(locale))?.data
 
   if (!regionData) {
     return (
@@ -74,7 +69,7 @@ export default function RegionPage(props: {
         className="relative isolate flex min-h-screen w-full flex-col"
         style={{ background: "var(--t-bg-space)", color: "var(--t-ink-base)" }}
       >
-        <GlobalHeader locale={locale} navbar={navbar} />
+        <GlobalHeader locale={locale} />
         <main className="flex flex-1 items-center justify-center">
           <p className="text-(--t-ink-faint)">Region not found.</p>
         </main>
@@ -85,7 +80,6 @@ export default function RegionPage(props: {
   return (
     <RegionDetailPage
       region={regionData}
-      navbar={navbar}
       locale={locale}
       slug={slug}
       countrySlug={countrySlug}

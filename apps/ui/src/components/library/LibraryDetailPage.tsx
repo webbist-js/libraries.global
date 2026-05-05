@@ -23,8 +23,6 @@ import StrapiBlocksContent from "@/components/library/StrapiBlocksContent"
 import { T } from "@/lib/design-tokens"
 import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
 
-type NavbarData = Parameters<typeof GlobalHeader>[0]["navbar"]
-
 // The JSON shape returned by @arshiash80/strapi-plugin-iconhub
 type IconHubValue = {
   iconData?: string | null
@@ -33,7 +31,6 @@ type IconHubValue = {
 
 interface LibraryDetailPageProps {
   readonly library: PopulatedLibraryData | null
-  readonly navbar?: NavbarData
   readonly locale: Locale
   readonly nearbyLibraries?: PopulatedLibraryData[]
 }
@@ -72,7 +69,6 @@ function LocationBreadcrumb({ library }: { library: PopulatedLibraryData }) {
 
 export function LibraryDetailPage({
   library,
-  navbar,
   locale,
   nearbyLibraries = [],
 }: LibraryDetailPageProps) {
@@ -82,7 +78,7 @@ export function LibraryDetailPage({
         className="relative isolate flex min-h-screen w-full flex-col"
         style={{ background: T.bg.space, color: T.ink.base }}
       >
-        <GlobalHeader locale={locale} navbar={navbar} />
+        <GlobalHeader locale={locale} />
         <main className="flex flex-1 items-center justify-center">
           <p className="text-(--t-ink-faint)">Library not found.</p>
         </main>
@@ -129,7 +125,7 @@ export function LibraryDetailPage({
       className="relative isolate flex min-h-screen w-full flex-col"
       style={{ background: T.bg.space, color: T.ink.base }}
     >
-      <GlobalHeader locale={locale} navbar={navbar} />
+      <GlobalHeader locale={locale} />
 
       <main className="relative z-10 flex-1">
         <LibraryTabsProvider defaultTab="overview">
