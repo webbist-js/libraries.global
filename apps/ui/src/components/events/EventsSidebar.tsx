@@ -2,11 +2,15 @@
 
 import { Icon } from "@iconify/react"
 
+import { FilterSidebarSection } from "@/components/ds"
 import type {
+  AgeGroup,
   DateScope,
   FilterState,
   PriceScope,
+  TimeOfDay,
 } from "@/components/events/EventsFilterBar"
+import { EVENT_TYPE_META } from "@/components/events/EventTypeChip"
 import { T } from "@/lib/design-tokens"
 import { cn } from "@/lib/styles"
 
@@ -25,47 +29,26 @@ const PRICE_SCOPES: { value: PriceScope; label: string }[] = [
   { value: "paid", label: "Paid" },
 ]
 
-const EVENT_TYPES = [
-  { value: "", label: "All types" },
-  { value: "talk", label: "Talks" },
-  { value: "exhibition", label: "Exhibitions" },
-  { value: "workshop", label: "Workshops" },
-  { value: "storytime", label: "Storytime" },
-  { value: "book_club", label: "Book clubs" },
-  { value: "reading_group", label: "Reading groups" },
-  { value: "performance", label: "Performances" },
-  { value: "screening", label: "Screenings" },
-  { value: "tour", label: "Tours" },
-  { value: "drop_in", label: "Drop-ins" },
+const TIME_SLOTS: { value: TimeOfDay; label: string; range: string }[] = [
+  { value: "morning", label: "Morning", range: "06:00–12:00" },
+  { value: "afternoon", label: "Afternoon", range: "12:00–18:00" },
+  { value: "evening", label: "Evening", range: "18:00–22:00" },
+  { value: "night", label: "Night", range: "22:00–06:00" },
 ]
 
-// ── Sub-components ─────────────────────────────────────────────────────────────
+const AGE_GROUPS: { value: AgeGroup; label: string; note: string }[] = [
+  { value: "all", label: "All ages", note: "" },
+  { value: "family", label: "Family", note: "Under 12s" },
+  { value: "teens", label: "Teens", note: "13–18" },
+  { value: "adults", label: "Adults", note: "18+" },
+]
 
-function FilterSection({
-  label,
-  children,
-}: {
-  label: string
-  children: React.ReactNode
-}) {
-  return (
-    <div>
-      <p
-        style={{
-          fontFamily: T.font.mono,
-          fontSize: "9px",
-          letterSpacing: ".22em",
-          textTransform: "uppercase",
-          color: T.ink.ghost,
-          marginBottom: "8px",
-        }}
-      >
-        {label}
-      </p>
-      {children}
-    </div>
-  )
-}
+// Event types from canonical EVENT_TYPE_META (excludes "other")
+const EVENT_TYPE_OPTIONS = Object.entries(EVENT_TYPE_META)
+  .filter(([key]) => key !== "other")
+  .map(([key, meta]) => ({ value: key, label: meta.label, color: meta.color }))
+
+// ── Sub-components ─────────────────────────────────────────────────────────────
 
 function DateScopeButton({
   active,
@@ -132,30 +115,80 @@ function PricePill({
   )
 }
 
-function TypeChip({
-  active,
+function CheckRow({
+  checked,
   label,
-  onClick,
+  note,
+  color,
+  count,
+  onChange,
 }: {
-  active: boolean
+  checked: boolean
   label: string
-  onClick: () => void
+  note?: string
+  color?: string
+  count?: number
+  onChange: (v: boolean) => void
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="rounded-md border px-2.5 py-1 text-[10px] tracking-[.08em] uppercase transition-all duration-150"
+    <label
       style={{
-        fontFamily: T.font.mono,
-        background: active ? "rgba(127,223,255,0.08)" : "transparent",
-        borderColor: active ? "rgba(127,223,255,0.25)" : T.border.line,
-        color: active ? T.accent.aurora : T.ink.faint,
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        cursor: "pointer",
+        padding: "4px 0",
       }}
     >
-      {label}
-    </button>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        style={{ accentColor: T.accent.aurora, cursor: "pointer" }}
+      />
+      {color && (
+        <span
+          style={{
+            width: "8px",
+            height: "8px",
+            borderRadius: "2px",
+            background: color,
+            flexShrink: 0,
+          }}
+        />
+      )}
+      <span
+        style={{
+          fontFamily: T.font.mono,
+          fontSize: "11px",
+          color: T.ink.dim,
+          flex: 1,
+        }}
+      >
+        {label}
+        {note ? (
+          <span style={{ color: T.ink.ghost, marginLeft: "4px" }}>{note}</span>
+        ) : null}
+      </span>
+      {count !== undefined && (
+        <span
+          style={{
+            fontFamily: T.font.mono,
+            fontSize: "10px",
+            color: T.ink.ghost,
+          }}
+        >
+          {count}
+        </span>
+      )}
+    </label>
   )
+}
+
+// ── Toggle helper ──────────────────────────────────────────────────────────────
+
+function toggleArr<TVal>(arr: TVal[], val: TVal): TVal[] {
+  return arr.includes(val) ? arr.filter((v) => v !== val) : [...arr, val]
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
@@ -182,14 +215,16 @@ export function EventsSidebar({ filters, onChange }: EventsSidebarProps) {
           type="text"
           placeholder="Search events…"
           value={filters.search}
-          onChange={(e) => onChange({ ...filters, search: e.target.value })}
+          onChange={(e) =>
+            onChange({ ...filters, search: e.target.value, page: 1 })
+          }
           className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-(--t-ink-ghost)"
           style={{ color: T.ink.dim, fontFamily: T.font.mono }}
         />
         {filters.search ? (
           <button
             type="button"
-            onClick={() => onChange({ ...filters, search: "" })}
+            onClick={() => onChange({ ...filters, search: "", page: 1 })}
             style={{ color: T.ink.ghost }}
           >
             <Icon icon="mdi:close" className="size-3.5" />
@@ -197,8 +232,8 @@ export function EventsSidebar({ filters, onChange }: EventsSidebarProps) {
         ) : null}
       </div>
 
-      {/* Date scope */}
-      <FilterSection label="When">
+      {/* § 01 · When */}
+      <FilterSidebarSection index={1} label="When">
         <div className="flex flex-col gap-0.5">
           {DATE_SCOPES.map((s) => (
             <DateScopeButton
@@ -206,45 +241,179 @@ export function EventsSidebar({ filters, onChange }: EventsSidebarProps) {
               active={filters.dateScope === s.value}
               icon={s.icon}
               label={s.label}
-              onClick={() => onChange({ ...filters, dateScope: s.value })}
+              onClick={() =>
+                onChange({ ...filters, dateScope: s.value, page: 1 })
+              }
             />
           ))}
         </div>
-      </FilterSection>
+      </FilterSidebarSection>
 
-      {/* Divider */}
       <div style={{ borderTop: `1px solid ${T.border.line}` }} />
 
-      {/* Price */}
-      <FilterSection label="Price">
+      {/* § 02 · Category */}
+      <FilterSidebarSection index={2} label="Category">
+        <div className="flex flex-col">
+          {EVENT_TYPE_OPTIONS.map((t) => (
+            <CheckRow
+              key={t.value}
+              checked={filters.eventTypes.includes(t.value)}
+              label={t.label}
+              color={t.color}
+              onChange={(checked) =>
+                onChange({
+                  ...filters,
+                  eventTypes: checked
+                    ? [...filters.eventTypes, t.value]
+                    : filters.eventTypes.filter((v) => v !== t.value),
+                  page: 1,
+                })
+              }
+            />
+          ))}
+        </div>
+      </FilterSidebarSection>
+
+      <div style={{ borderTop: `1px solid ${T.border.line}` }} />
+
+      {/* § 03 · Time of day */}
+      <FilterSidebarSection index={3} label="Time of day">
+        <div className="flex flex-col">
+          {TIME_SLOTS.map((slot) => (
+            <CheckRow
+              key={slot.value}
+              checked={filters.timeOfDay.includes(slot.value)}
+              label={slot.label}
+              note={slot.range}
+              onChange={() =>
+                onChange({
+                  ...filters,
+                  timeOfDay: toggleArr(filters.timeOfDay, slot.value),
+                  page: 1,
+                })
+              }
+            />
+          ))}
+        </div>
+      </FilterSidebarSection>
+
+      <div style={{ borderTop: `1px solid ${T.border.line}` }} />
+
+      {/* § 04 · Age */}
+      <FilterSidebarSection index={4} label="Age">
+        <div className="flex flex-col">
+          {AGE_GROUPS.map((ag) => (
+            <CheckRow
+              key={ag.value}
+              checked={filters.ageGroup.includes(ag.value)}
+              label={ag.label}
+              note={ag.note}
+              onChange={() =>
+                onChange({
+                  ...filters,
+                  ageGroup: toggleArr(filters.ageGroup, ag.value),
+                  page: 1,
+                })
+              }
+            />
+          ))}
+        </div>
+      </FilterSidebarSection>
+
+      <div style={{ borderTop: `1px solid ${T.border.line}` }} />
+
+      {/* § 05 · Price */}
+      <FilterSidebarSection index={5} label="Price">
         <div className="flex flex-wrap gap-1.5">
           {PRICE_SCOPES.map((s) => (
             <PricePill
               key={s.value}
               active={filters.priceScope === s.value}
               label={s.label}
-              onClick={() => onChange({ ...filters, priceScope: s.value })}
+              onClick={() =>
+                onChange({ ...filters, priceScope: s.value, page: 1 })
+              }
             />
           ))}
         </div>
-      </FilterSection>
+      </FilterSidebarSection>
 
-      {/* Divider */}
       <div style={{ borderTop: `1px solid ${T.border.line}` }} />
 
-      {/* Event type */}
-      <FilterSection label="Type">
-        <div className="flex flex-wrap gap-1.5">
-          {EVENT_TYPES.map((t) => (
-            <TypeChip
-              key={t.value}
-              active={filters.eventType === t.value}
-              label={t.label}
-              onClick={() => onChange({ ...filters, eventType: t.value })}
-            />
-          ))}
-        </div>
-      </FilterSection>
+      {/* § 06 · Library direct */}
+      <FilterSidebarSection index={6} label="Source">
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            cursor: "pointer",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={filters.libraryDirect}
+            onChange={(e) =>
+              onChange({ ...filters, libraryDirect: e.target.checked, page: 1 })
+            }
+            style={{ accentColor: T.accent.aurora, cursor: "pointer" }}
+          />
+          <span
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "11px",
+              color: T.ink.dim,
+            }}
+          >
+            Library direct only
+          </span>
+        </label>
+        <p
+          style={{
+            fontFamily: T.font.mono,
+            fontSize: "9px",
+            color: T.ink.ghost,
+            marginTop: "4px",
+            lineHeight: 1.5,
+          }}
+        >
+          Excludes Eventbrite / TicketSource
+        </p>
+      </FilterSidebarSection>
+
+      {/* Reset */}
+      <button
+        type="button"
+        onClick={() =>
+          onChange({
+            dateScope: "today",
+            priceScope: "all",
+            eventTypes: [],
+            search: "",
+            timeOfDay: [],
+            ageGroup: [],
+            libraryDirect: false,
+            countryCode: "",
+            regionSlug: "",
+            page: 1,
+          })
+        }
+        style={{
+          fontFamily: T.font.mono,
+          fontSize: "10px",
+          letterSpacing: ".1em",
+          textTransform: "uppercase",
+          color: T.ink.ghost,
+          background: "transparent",
+          border: `1px solid ${T.border.line}`,
+          borderRadius: "8px",
+          padding: "8px",
+          cursor: "pointer",
+          transition: "color 150ms",
+        }}
+      >
+        Reset all filters
+      </button>
     </aside>
   )
 }
