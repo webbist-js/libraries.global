@@ -40,10 +40,7 @@ export function EventsProgrammePage({ data }: EventsProgrammePageProps) {
   return (
     <main className="relative z-10 flex-1">
       {/* Hero */}
-      <EventsHero
-        totalThisWeek={data.stats.totalThisWeek}
-        providers={data.providers}
-      />
+      <EventsHero stats={data.stats} />
 
       {/* Stats bar */}
       <EventsStatsBar stats={data.stats} />

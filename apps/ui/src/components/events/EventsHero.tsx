@@ -1,179 +1,133 @@
+import {
+  HeroEyebrow,
+  HeroStat,
+  HeroStatsGrid,
+  HeroTitle,
+  parseHeroText,
+} from "@/components/ds"
+import type { EventsStats } from "@/components/events/types"
 import { DotHeroCanvas } from "@/components/ui/DotHeroCanvas"
 import { T } from "@/lib/design-tokens"
 
-interface ProviderCount {
-  provider: string
-  count: number
-}
-
-interface EventsHeroProps {
-  readonly totalThisWeek: number
-  readonly providers: ProviderCount[]
-}
-
-const PROVIDER_LABELS: Record<string, string> = {
-  eventbrite: "Eventbrite",
-  ical: "iCal",
-  custom_ical: "iCal",
-  aspen: "Aspen",
-  solus: "Solus",
-  spydus: "Spydus",
-  ticketsource: "TicketSource",
-  wegottickets: "WeGotTickets",
-}
+const DESCRIPTOR =
+  "Author talks, exhibitions, classes, storytime, archive tours. Ingested live from Eventbrite, TicketSource, library calendars and direct partners. Filterable by anywhere, when, format and language."
 
 function formatCount(n: number): string {
+  if (n >= 1_000_000) {
+    return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`
+  }
+
   if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`
 
   return String(n)
 }
 
-export function EventsHero({ totalThisWeek, providers }: EventsHeroProps) {
-  const now = new Date()
-  const weekEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-  const weekRange = `${now.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – ${weekEnd.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
+interface EventsHeroProps {
+  readonly stats: EventsStats
+  readonly topCountryName?: string | null
+}
 
+export function EventsHero({ stats, topCountryName }: EventsHeroProps) {
   return (
-    <div
-      className="relative overflow-hidden"
-      style={{ background: T.bg.space }}
+    <section
+      className="-mt-14"
+      data-transparent-header=""
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        padding: "130px 0 60px",
+      }}
     >
-      {/* Dot pulse canvas */}
       <DotHeroCanvas variant="events" />
 
-      {/* Subtle aurora gradient over canvas */}
+      {/* Vignette */}
       <div
-        className="pointer-events-none absolute inset-0"
+        aria-hidden
         style={{
-          background: `
-            radial-gradient(800px 500px at 15% 50%, rgba(127,223,255,0.06), transparent 55%),
-            radial-gradient(500px 350px at 85% 20%, rgba(163,144,255,0.04), transparent 50%)
-          `,
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(ellipse 110% 90% at 50% 50%, transparent 25%, var(--t-bg-space) 80%)",
+          pointerEvents: "none",
         }}
       />
 
-      {/* Content — contained */}
-      <div className="relative mx-auto max-w-5xl px-6 pt-24 pb-10 sm:px-10 sm:pt-28">
-        {/* Breadcrumb */}
+      <div
+        style={{
+          maxWidth: "1296px",
+          margin: "0 auto",
+          padding: "0 24px",
+          position: "relative",
+          zIndex: 10,
+        }}
+      >
         <div
-          className="mb-6 flex items-center gap-2"
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".16em",
-            textTransform: "uppercase",
-            color: T.ink.faint,
+            display: "grid",
+            gridTemplateColumns: "1.3fr 0.9fr",
+            gap: "56px",
+            alignItems: "end",
           }}
+          className="events-hero-inner"
         >
-          <span>Directory</span>
-          <span style={{ color: T.ink.ghost }}>/</span>
-          <span>Global</span>
-          <span style={{ color: T.ink.ghost }}>/</span>
-          <span style={{ color: T.ink.low }}>Programme</span>
-        </div>
+          {/* Left */}
+          <div>
+            <HeroEyebrow>The Programme</HeroEyebrow>
 
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-          {/* Left: headline + descriptor */}
-          <div className="max-w-2xl">
-            {/* Live pill */}
-            <div className="mb-5 inline-flex items-center gap-2">
-              <span
-                className="inline-block size-1.5 rounded-full"
-                style={{ background: T.accent.ok }}
-              />
-              <span
-                style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".18em",
-                  textTransform: "uppercase",
-                  color: T.accent.ok,
-                }}
-              >
-                {formatCount(totalThisWeek)} events this week
-              </span>
-            </div>
-
-            {/* Main headline */}
-            <h1
-              style={{
-                fontFamily: T.font.serif,
-                fontSize: "clamp(3rem, 8vw, 5.5rem)",
-                lineHeight: 0.95,
-                letterSpacing: "-0.02em",
-                color: T.ink.base,
-                fontWeight: 400,
-                margin: 0,
-              }}
-            >
-              The week&rsquo;s{" "}
-              <em style={{ fontStyle: "italic", color: T.ink.dim }}>
-                readings.
-              </em>
-            </h1>
+            <HeroTitle>
+              {parseHeroText("Tonight, and the next two thousand *nights.*")}
+            </HeroTitle>
 
             <p
-              className="mt-5 max-w-xl text-sm leading-relaxed"
-              style={{ color: T.ink.low }}
+              style={{
+                fontSize: "15px",
+                lineHeight: 1.68,
+                color: T.ink.dim,
+                fontWeight: 300,
+                maxWidth: "52ch",
+                margin: "20px 0 0",
+              }}
             >
-              Talks, exhibitions, storytimes, classes, archive open days, and
-              book clubs — running this week at libraries worldwide. Aggregated
-              from Eventbrite, TicketSource, WeGotTickets, and direct library
-              iCal feeds.
+              {DESCRIPTOR}
             </p>
-
-            {/* Provider pill row */}
-            {providers.length > 0 ? (
-              <div className="mt-5 flex flex-wrap gap-2">
-                {providers.map((p) => (
-                  <span
-                    key={p.provider}
-                    className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1"
-                    style={{
-                      fontFamily: T.font.mono,
-                      fontSize: "10px",
-                      letterSpacing: ".12em",
-                      color: T.ink.dim,
-                      borderColor: T.border.line,
-                      background: "rgba(255,255,255,0.03)",
-                    }}
-                  >
-                    {PROVIDER_LABELS[p.provider] ?? p.provider}
-                    <span style={{ color: T.accent.aurora, fontWeight: 600 }}>
-                      {formatCount(p.count)}
-                    </span>
-                  </span>
-                ))}
-              </div>
-            ) : null}
           </div>
 
-          {/* Right: date range + timezone note */}
-          <div
-            className="shrink-0 space-y-1 text-right"
-            style={{ fontFamily: T.font.mono }}
-          >
-            <p
-              style={{
-                fontSize: "11px",
-                color: T.ink.faint,
-                letterSpacing: ".12em",
-              }}
-            >
-              {weekRange}
-            </p>
-            <p
-              style={{
-                fontSize: "10px",
-                color: T.ink.ghost,
-                letterSpacing: ".1em",
-              }}
-            >
-              All times local to each library
-            </p>
+          {/* Right: stats grid */}
+          <div style={{ paddingBottom: "8px" }}>
+            <HeroStatsGrid cols={2}>
+              <HeroStat
+                label="Events this week"
+                value={formatCount(stats.totalThisWeek)}
+              />
+              <HeroStat
+                label="This month"
+                value={formatCount(stats.totalThisMonth)}
+              />
+              {topCountryName ? (
+                <HeroStat
+                  label={`In ${topCountryName}`}
+                  value={formatCount(stats.totalEvents)}
+                />
+              ) : (
+                <HeroStat
+                  label="Total upcoming"
+                  value={formatCount(stats.totalEvents)}
+                />
+              )}
+              <HeroStat
+                label="Free or donation"
+                value={`${stats.percentFree}%`}
+              />
+            </HeroStatsGrid>
           </div>
         </div>
       </div>
-    </div>
+
+      <style>{`
+        @media (max-width: 900px) {
+          .events-hero-inner { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+    </section>
   )
 }
