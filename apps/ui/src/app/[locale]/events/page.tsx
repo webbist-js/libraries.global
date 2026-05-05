@@ -26,20 +26,31 @@ function eventsGet(path: string) {
 }
 
 async function fetchProgrammeData(): Promise<EventsProgrammeData> {
-  const [stats, providers, categories, topLibraries, heatmap, featured] =
-    await Promise.all([
-      eventsGet("/stats"),
-      eventsGet("/provider-breakdown"),
-      eventsGet("/category-breakdown"),
-      eventsGet("/top-libraries?limit=10"),
-      eventsGet("/heatmap"),
-      eventsGet("/featured"),
-    ])
+  const [
+    stats,
+    providers,
+    categories,
+    topLibraries,
+    heatmap,
+    featured,
+    countryBreakdown,
+    dailyVolume,
+  ] = await Promise.all([
+    eventsGet("/stats"),
+    eventsGet("/provider-breakdown"),
+    eventsGet("/category-breakdown"),
+    eventsGet("/top-libraries?limit=10"),
+    eventsGet("/heatmap"),
+    eventsGet("/featured?count=6"),
+    eventsGet("/country-breakdown"),
+    eventsGet("/daily-volume"),
+  ])
 
   return {
     stats: stats ?? {
       totalEvents: 0,
       totalThisWeek: 0,
+      totalThisMonth: 0,
       percentFree: 0,
       peakSlot: null,
       peakCount: 0,
@@ -48,7 +59,9 @@ async function fetchProgrammeData(): Promise<EventsProgrammeData> {
     categories: Array.isArray(categories) ? categories : [],
     topLibraries: Array.isArray(topLibraries) ? topLibraries : [],
     heatmap: Array.isArray(heatmap) ? heatmap : [],
-    featured: featured ?? null,
+    featured: Array.isArray(featured) ? featured : [],
+    countryBreakdown: Array.isArray(countryBreakdown) ? countryBreakdown : [],
+    dailyVolume: Array.isArray(dailyVolume) ? dailyVolume : [],
   }
 }
 

@@ -3,23 +3,36 @@
 import { Icon } from "@iconify/react"
 import { useState } from "react"
 
+import { SectionHeader } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import { AggregationExplainer } from "@/components/events/AggregationExplainer"
+import { EventCardGrid } from "@/components/events/EventCardGrid"
 import { EventCategoryBreakdown } from "@/components/events/EventCategoryBreakdown"
+import { EventsBrowseElsewhere } from "@/components/events/EventsBrowseElsewhere"
+import { EventsDailyVolumeChart } from "@/components/events/EventsDailyVolumeChart"
 import type { FilterState } from "@/components/events/EventsFilterBar"
+import { EventsGeoFilterBar } from "@/components/events/EventsGeoFilterBar"
 import { EventsHero } from "@/components/events/EventsHero"
 import { EventsSidebar } from "@/components/events/EventsSidebar"
-import { EventsStatsBar } from "@/components/events/EventsStatsBar"
-import { EventTimeline } from "@/components/events/EventTimeline"
-import { FeaturedEventCard } from "@/components/events/FeaturedEventCard"
+import { FeaturedEventsCarousel } from "@/components/events/FeaturedEventsCarousel"
 import { MostBookedLibraries } from "@/components/events/MostBookedLibraries"
 import { ProviderBreakdownBar } from "@/components/events/ProviderBreakdownBar"
 import { TimeOfDayHeatmap } from "@/components/events/TimeOfDayHeatmap"
 import type { EventsProgrammeData } from "@/components/events/types"
 import { T } from "@/lib/design-tokens"
+import { getCountryName } from "@/lib/iso-continent"
 
-interface EventsProgrammePageProps {
-  readonly data: EventsProgrammeData
+const DEFAULT_FILTERS: FilterState = {
+  dateScope: "today",
+  priceScope: "all",
+  eventTypes: [],
+  search: "",
+  timeOfDay: [],
+  ageGroup: [],
+  libraryDirect: false,
+  countryCode: "",
+  regionSlug: "",
+  page: 1,
 }
 
 function SectionDivider() {
@@ -28,31 +41,37 @@ function SectionDivider() {
   )
 }
 
+interface EventsProgrammePageProps {
+  readonly data: EventsProgrammeData
+}
+
 export function EventsProgrammePage({ data }: EventsProgrammePageProps) {
-  const [filters, setFilters] = useState<FilterState>({
-    dateScope: "today",
-    priceScope: "all",
-    eventType: "",
-    search: "",
-  })
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  // Derive topCountryName from country breakdown
+  const topCountryName = data.countryBreakdown[0]
+    ? getCountryName(data.countryBreakdown[0].countryCode)
+    : null
 
   return (
     <main className="relative z-10 flex-1">
       {/* Hero */}
-      <EventsHero stats={data.stats} />
+      <EventsHero stats={data.stats} topCountryName={topCountryName} />
 
-      {/* Stats bar */}
-      <EventsStatsBar stats={data.stats} />
-
-      {/* Featured event */}
-      {data.featured ? (
-        <Container className="py-8 sm:py-10">
-          <FeaturedEventCard event={data.featured} />
-        </Container>
-      ) : null}
+      {/* Featured carousel */}
+      {data.featured.length > 0 && (
+        <FeaturedEventsCarousel events={data.featured} />
+      )}
 
       <SectionDivider />
+
+      {/* Geo filter bar */}
+      <EventsGeoFilterBar
+        filters={filters}
+        onChange={setFilters}
+        countryBreakdown={data.countryBreakdown}
+      />
 
       {/* Timeline section — sidebar + main on desktop */}
       <Container className="py-8 sm:py-10">
@@ -94,7 +113,6 @@ export function EventsProgrammePage({ data }: EventsProgrammePageProps) {
           </button>
         </div>
 
-        {/* Mobile: collapsible sidebar */}
         {sidebarOpen && (
           <div
             className="mb-6 rounded-2xl border p-5 lg:hidden"
@@ -104,14 +122,12 @@ export function EventsProgrammePage({ data }: EventsProgrammePageProps) {
           </div>
         )}
 
-        {/* Desktop: 2-column layout */}
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[240px,1fr]">
-          {/* Sidebar — sticky on desktop */}
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[280px,1fr]">
           <div className="hidden lg:block">
             <div
               className="sticky rounded-2xl border p-5"
               style={{
-                top: "calc(3.5rem + 16px)", // below global header
+                top: "calc(3.5rem + 16px)",
                 borderColor: T.border.line,
                 background: T.bg.deep,
               }}
@@ -120,32 +136,52 @@ export function EventsProgrammePage({ data }: EventsProgrammePageProps) {
             </div>
           </div>
 
-          {/* Timeline */}
           <div>
-            <EventTimeline filters={filters} />
+            <EventCardGrid filters={filters} onFiltersChange={setFilters} />
           </div>
         </div>
       </Container>
 
       <SectionDivider />
 
-      {/* Analytics row: heatmap + category breakdown */}
+      {/* Analytics: The shape of the programme */}
       <Container className="py-8 sm:py-10">
+        <div style={{ marginBottom: "32px" }}>
+          <SectionHeader italic="programme.">The shape of the</SectionHeader>
+        </div>
+
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
-          <TimeOfDayHeatmap cells={data.heatmap} />
+          {/* Daily volume chart */}
+          {data.dailyVolume.length > 1 && (
+            <EventsDailyVolumeChart data={data.dailyVolume} />
+          )}
+
+          {/* Category breakdown */}
           <EventCategoryBreakdown categories={data.categories} />
+
+          {/* Heatmap */}
+          <TimeOfDayHeatmap cells={data.heatmap} />
+
+          {/* Provider breakdown */}
+          <ProviderBreakdownBar providers={data.providers} />
         </div>
       </Container>
 
       <SectionDivider />
 
-      {/* Sources row: provider breakdown + most active libraries */}
+      {/* Most active libraries */}
       <Container className="py-8 sm:py-10">
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
-          <ProviderBreakdownBar providers={data.providers} />
-          <MostBookedLibraries libraries={data.topLibraries} />
-        </div>
+        <MostBookedLibraries libraries={data.topLibraries} />
       </Container>
+
+      <SectionDivider />
+
+      {/* Browse elsewhere */}
+      <EventsBrowseElsewhere
+        countryBreakdown={data.countryBreakdown}
+        filters={filters}
+        onFiltersChange={setFilters}
+      />
 
       <SectionDivider />
 

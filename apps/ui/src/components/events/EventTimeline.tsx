@@ -281,7 +281,8 @@ export function EventTimeline({ filters }: EventTimelineProps) {
       to: to.toISOString(),
       limit: "100",
     })
-    if (filters.eventType) params.set("type", filters.eventType)
+    const firstType = filters.eventTypes?.[0]
+    if (firstType) params.set("type", firstType)
     if (filters.priceScope === "free") params.set("isFree", "true")
     if (filters.priceScope === "paid") params.set("isFree", "false")
 
