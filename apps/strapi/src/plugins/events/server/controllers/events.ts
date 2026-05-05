@@ -191,6 +191,7 @@ export default ({ strapi }: { strapi: any }) => ({
       const db = strapi.db.connection
       const now = new Date()
       const weekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+      const monthLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
 
       const [totalRow] = await db("ev_events")
         .count("* as count")
@@ -203,6 +204,11 @@ export default ({ strapi }: { strapi: any }) => ({
         .count("* as count")
         .where("start_time", ">=", now)
         .where("is_free", true)
+      const [monthRow] = await db("ev_events")
+        .count("* as count")
+        .where("start_time", ">=", now)
+        .where("start_time", "<=", monthLater)
+      const totalThisMonth = Number((monthRow as any).count)
 
       // Peak day + hour: find the hour slot with most events upcoming
       const peakRows = await db("ev_events")
@@ -229,6 +235,7 @@ export default ({ strapi }: { strapi: any }) => ({
       ctx.body = {
         totalEvents: total,
         totalThisWeek,
+        totalThisMonth,
         percentFree: total > 0 ? Math.round((freeCount / total) * 100) : 0,
         peakSlot: peakLabel,
         peakCount: peak ? Number(peak.cnt) : 0,
@@ -237,6 +244,7 @@ export default ({ strapi }: { strapi: any }) => ({
       ctx.body = {
         totalEvents: 0,
         totalThisWeek: 0,
+        totalThisMonth: 0,
         percentFree: 0,
         peakSlot: null,
         peakCount: 0,
@@ -318,6 +326,51 @@ export default ({ strapi }: { strapi: any }) => ({
 
       ctx.body = (rows as any[]).map((r) => ({
         type: r.type as string,
+        count: Number(r.count),
+      }))
+    } catch {
+      ctx.body = []
+    }
+  },
+
+  async dailyVolume(ctx: any) {
+    try {
+      const db = strapi.db.connection
+      const now = new Date()
+      const thirtyDays = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+
+      const rows = await db("ev_events")
+        .select(db.raw("DATE(start_time) as date"))
+        .count("* as count")
+        .where("start_time", ">=", now)
+        .where("start_time", "<=", thirtyDays)
+        .groupByRaw("DATE(start_time)")
+        .orderBy("date", "asc")
+
+      ctx.body = (rows as any[]).map((r) => ({
+        date: r.date as string,
+        count: Number(r.count),
+      }))
+    } catch {
+      ctx.body = []
+    }
+  },
+
+  async countryBreakdown(ctx: any) {
+    try {
+      const db = strapi.db.connection
+      const now = new Date()
+
+      const rows = await db("ev_events")
+        .select("country_code as countryCode")
+        .count("* as count")
+        .where("start_time", ">=", now)
+        .whereNotNull("country_code")
+        .groupBy("country_code")
+        .orderBy("count", "desc")
+
+      ctx.body = (rows as any[]).map((r) => ({
+        countryCode: r.countryCode as string,
         count: Number(r.count),
       }))
     } catch {

@@ -49,6 +49,18 @@ export default [
   },
   {
     method: "GET",
+    path: "/daily-volume",
+    handler: "events.dailyVolume",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
+    path: "/country-breakdown",
+    handler: "events.countryBreakdown",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
     path: "/heatmap",
     handler: "events.heatmap",
     config: { auth: false, policies: [] },
