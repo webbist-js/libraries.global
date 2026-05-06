@@ -1,51 +1,17 @@
-import { PanelCard } from "@/components/ds"
 import type { ProviderStat } from "@/components/events/types"
 import { T } from "@/lib/design-tokens"
 
-const PROVIDER_META: Record<
-  string,
-  { label: string; subtitle: string; color: string }
-> = {
-  eventbrite: {
-    label: "Eventbrite",
-    subtitle: "OAuth · v3 API",
-    color: "#f05537",
-  },
-  ical: {
-    label: "Direct ICS",
-    subtitle: "Library-owned feeds",
-    color: "#7fdfff",
-  },
-  custom_ical: {
-    label: "Direct ICS",
-    subtitle: "Library-owned feeds",
-    color: "#7fdfff",
-  },
-  ticketsource: {
-    label: "TicketSource",
-    subtitle: "UK · IE · API v2",
-    color: "#f6ad55",
-  },
-  wegottickets: {
-    label: "WeGotTickets",
-    subtitle: "UK · Partner feed",
-    color: "#d97706",
-  },
-  spydus: {
-    label: "Spydus",
-    subtitle: "LMS direct",
-    color: "#b45309",
-  },
-  solus: {
-    label: "Solus",
-    subtitle: "LMS direct",
-    color: "#7e22ce",
-  },
-  aspen: {
-    label: "Aspen",
-    subtitle: "LMS direct",
-    color: "#0c6fad",
-  },
+const PROVIDER_META: Record<string, { label: string; color: string }> = {
+  eventbrite: { label: "Eventbrite", color: "#f05537" },
+  ical: { label: "Library direct", color: "#7fdfff" },
+  custom_ical: { label: "Library direct", color: "#7fdfff" },
+  ticketsource: { label: "TicketSource", color: "#f6ad55" },
+  wegottickets: { label: "WeGotTickets", color: "#d97706" },
+  spydus: { label: "Spydus", color: "#7fdfff" },
+  solus: { label: "Solus", color: "#7fdfff" },
+  aspen: { label: "Aspen", color: "#7fdfff" },
+  meetup: { label: "Meetup", color: "#ff5757" },
+  eventfinda: { label: "Eventfinda", color: "#7fb069" },
 }
 
 function formatCount(n: number): string {
@@ -59,124 +25,126 @@ interface ProviderBreakdownBarProps {
 }
 
 export function ProviderBreakdownBar({ providers }: ProviderBreakdownBarProps) {
-  const total = providers.reduce((s, p) => s + p.count, 0)
   if (!providers.length) return null
 
-  const activeCount = providers.length
-
   return (
-    <PanelCard
-      index={4}
-      eyebrow="Source mix"
-      title="Where the"
-      italic="events come from."
-      action={
-        <span
+    <div
+      style={{
+        background: "rgba(255,255,255,.025)",
+        border: `1px solid ${T.border.line}`,
+        borderRadius: "16px",
+        padding: "20px 22px",
+        backdropFilter: "blur(8px)",
+      }}
+    >
+      {/* Panel header */}
+      <div style={{ marginBottom: "16px" }}>
+        <div
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
-            letterSpacing: ".14em",
+            fontSize: "9.5px",
+            letterSpacing: ".24em",
             textTransform: "uppercase",
-            color: T.ink.ghost,
-            border: `1px solid ${T.border.line}`,
-            borderRadius: "999px",
-            padding: "4px 10px",
+            color: T.ink.faint,
+            marginBottom: "4px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
           }}
         >
-          {activeCount} active
-        </span>
-      }
-    >
-      <div className="space-y-4">
-        {providers.map((p) => {
-          const pct = total > 0 ? (p.count / total) * 100 : 0
+          <span style={{ color: T.accent.aurora }}>§ B.04</span>
+          <span>Sources</span>
+        </div>
+        <h4
+          style={{
+            fontFamily: T.font.serif,
+            fontWeight: 400,
+            fontSize: "22px",
+            letterSpacing: "-.02em",
+            margin: 0,
+            lineHeight: 1.1,
+            color: T.ink.base,
+          }}
+        >
+          Where this{" "}
+          <em
+            style={{ fontStyle: "italic", color: T.ink.dim, fontWeight: 300 }}
+          >
+            comes from.
+          </em>
+        </h4>
+      </div>
+
+      {/* Provider rows */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+        {providers.map((p, i) => {
           const meta = PROVIDER_META[p.provider] ?? {
             label: p.provider,
-            subtitle: "",
             color: T.accent.aurora,
           }
+          const isLast = i === providers.length - 1
 
           return (
-            <div key={p.provider}>
-              {/* Name row */}
-              <div className="mb-2 flex items-start justify-between gap-4">
-                <div className="flex items-start gap-2.5">
-                  <span
-                    className="mt-1 size-2 shrink-0 rounded-full"
-                    style={{ background: meta.color }}
-                  />
-                  <div>
-                    <p
-                      style={{
-                        fontFamily: T.font.sans,
-                        fontSize: "13px",
-                        color: T.ink.base,
-                        lineHeight: 1.3,
-                        margin: 0,
-                      }}
-                    >
-                      {meta.label}
-                    </p>
-                    {meta.subtitle && (
-                      <p
-                        style={{
-                          fontFamily: T.font.mono,
-                          fontSize: "8px",
-                          letterSpacing: ".16em",
-                          textTransform: "uppercase",
-                          color: T.ink.ghost,
-                          margin: "2px 0 0",
-                        }}
-                      >
-                        {meta.subtitle}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div
-                  className="flex shrink-0 items-baseline gap-1.5"
-                  style={{ paddingTop: "1px" }}
-                >
-                  <span
-                    style={{
-                      fontFamily: T.font.serif,
-                      fontSize: "15px",
-                      color: T.ink.base,
-                      letterSpacing: "-0.01em",
-                    }}
-                  >
-                    {formatCount(p.count)}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: T.font.mono,
-                      fontSize: "9px",
-                      color: T.ink.ghost,
-                    }}
-                  >
-                    {pct.toFixed(1)}%
-                  </span>
-                </div>
-              </div>
-
-              {/* Bar */}
-              <div
-                className="h-px w-full overflow-hidden rounded-full"
-                style={{ background: "rgba(255,255,255,0.06)", height: "3px" }}
+            <div
+              key={p.provider}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "8px 0",
+                borderBottom: isLast ? "none" : `1px dashed ${T.border.line}`,
+              }}
+            >
+              <span
+                style={{
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
+                  background: meta.color,
+                  flexShrink: 0,
+                  display: "inline-block",
+                }}
+              />
+              <span
+                style={{
+                  fontFamily: T.font.mono,
+                  fontSize: "11px",
+                  color: T.ink.base,
+                  letterSpacing: ".04em",
+                  minWidth: "100px",
+                }}
               >
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${pct}%`,
-                    background: meta.color,
-                    opacity: 0.65,
-                  }}
-                />
-              </div>
+                {meta.label}
+              </span>
+              <span
+                style={{
+                  flex: 1,
+                  fontFamily: T.font.mono,
+                  fontSize: "10.5px",
+                  color: T.ink.low,
+                }}
+              >
+                {formatCount(p.count)} events
+              </span>
+              <span
+                style={{
+                  fontFamily: T.font.mono,
+                  fontSize: "9px",
+                  letterSpacing: ".18em",
+                  padding: "2px 7px",
+                  borderRadius: "4px",
+                  color: T.accent.ok,
+                  background: "rgba(110,231,183,.10)",
+                  border: "1px solid rgba(110,231,183,.32)",
+                  flexShrink: 0,
+                }}
+              >
+                OK
+              </span>
             </div>
           )
         })}
       </div>
-    </PanelCard>
+    </div>
   )
 }

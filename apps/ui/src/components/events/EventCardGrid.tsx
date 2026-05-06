@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { Icon } from "@iconify/react"
+import { useEffect, useRef, useState } from "react"
 
 import { IndexPager } from "@/components/ds"
 import { EventCard } from "@/components/events/EventCard"
@@ -8,100 +9,7 @@ import type { FilterState } from "@/components/events/EventsFilterBar"
 import type { GlobalEventsResponse, GridEvent } from "@/components/events/types"
 import { T } from "@/lib/design-tokens"
 
-// ── DateScrollPicker ────────────────────────────────────────────────────────────
-
-const DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
-
-function buildDays(count: number): Date[] {
-  const days: Date[] = []
-  const base = new Date()
-  base.setHours(0, 0, 0, 0)
-  for (let i = 0; i < count; i++) {
-    const d = new Date(base)
-    d.setDate(base.getDate() + i)
-    days.push(d)
-  }
-
-  return days
-}
-
-function DateScrollPicker({
-  selected,
-  onSelect,
-  count = 7,
-}: {
-  selected: Date
-  onSelect: (d: Date) => void
-  count?: number
-}) {
-  const days = buildDays(count)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  return (
-    <div className="flex gap-1.5 overflow-x-auto pb-1">
-      {days.map((d) => {
-        const isToday = d.getTime() === today.getTime()
-        const isSelected = d.getTime() === selected.getTime()
-
-        return (
-          <button
-            key={d.toISOString()}
-            type="button"
-            onClick={() => onSelect(d)}
-            className="flex shrink-0 flex-col items-center rounded-xl px-3 py-2.5 transition-all duration-150"
-            style={{
-              background: isSelected
-                ? "rgba(127,223,255,0.12)"
-                : isToday
-                  ? "rgba(255,255,255,0.04)"
-                  : "transparent",
-              border: isSelected
-                ? "1px solid rgba(127,223,255,0.3)"
-                : `1px solid ${T.border.line}`,
-              minWidth: "44px",
-            }}
-          >
-            <span
-              style={{
-                fontFamily: T.font.mono,
-                fontSize: "9px",
-                letterSpacing: ".14em",
-                textTransform: "uppercase",
-                color: isSelected ? T.accent.aurora : T.ink.ghost,
-              }}
-            >
-              {DAY_LABELS[d.getDay()]}
-            </span>
-            <span
-              style={{
-                fontFamily: T.font.serif,
-                fontSize: "18px",
-                lineHeight: 1.2,
-                color: isSelected
-                  ? T.accent.aurora
-                  : isToday
-                    ? T.ink.base
-                    : T.ink.dim,
-                fontWeight: 400,
-                marginTop: "2px",
-              }}
-            >
-              {d.getDate()}
-            </span>
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
 // ── EventCardGrid ──────────────────────────────────────────────────────────────
-
-// TODO: When dateScope is "this-week" or "this-month", the fetch still uses a
-// single selectedDate day window (from 00:00 to 23:59). Consider expanding
-// `to` to cover the full week/month range so the result count matches the
-// scope label shown in the sidebar.
 
 const PAGE_SIZE = 20
 
@@ -114,29 +22,6 @@ export function EventCardGrid({
   filters,
   onFiltersChange,
 }: EventCardGridProps) {
-  // manualDate = date set by the DateScrollPicker
-  const [manualDate, setManualDate] = useState<Date>(() => {
-    const d = new Date()
-    d.setHours(0, 0, 0, 0)
-
-    return d
-  })
-
-  // selectedDate is derived from dateScope filter + manual picker
-  const selectedDate = useMemo(() => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    if (filters.dateScope === "today") return today
-    if (filters.dateScope === "tomorrow") {
-      const d = new Date(today)
-      d.setDate(today.getDate() + 1)
-
-      return d
-    }
-
-    return manualDate
-  }, [filters.dateScope, manualDate])
-
   const [response, setResponse] = useState<GlobalEventsResponse>({
     events: [],
     total: 0,
@@ -147,16 +32,41 @@ export function EventCardGrid({
   const gridRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const from = new Date(selectedDate)
-    from.setHours(0, 0, 0, 0)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
 
-    const to = new Date(selectedDate)
-    if (filters.dateScope === "this-week") {
-      to.setDate(to.getDate() + 6)
-    } else if (filters.dateScope === "this-month") {
-      to.setDate(to.getDate() + 29)
+    let from: Date
+    let to: Date
+
+    if (filters.calendarDate) {
+      // Specific day selected from calendar
+      const [y, m, d] = filters.calendarDate.split("-").map(Number)
+      from = new Date(y, m - 1, d, 0, 0, 0, 0)
+      to = new Date(y, m - 1, d, 23, 59, 59, 999)
+    } else {
+      from = new Date(today)
+      to = new Date(today)
+      switch (filters.dateScope) {
+        case "tomorrow":
+          from.setDate(from.getDate() + 1)
+          to.setDate(to.getDate() + 1)
+
+          break
+
+        case "this-week":
+          to.setDate(to.getDate() + 6)
+
+          break
+
+        case "this-month":
+          to.setDate(to.getDate() + 29)
+
+          break
+
+        // No default
+      }
+      to.setHours(23, 59, 59, 999)
     }
-    to.setHours(23, 59, 59, 999)
 
     const params = new URLSearchParams({
       from: from.toISOString(),
@@ -168,9 +78,9 @@ export function EventCardGrid({
       params.set("type", filters.eventTypes.join(","))
     if (filters.priceScope === "free") params.set("isFree", "true")
     if (filters.priceScope === "paid") params.set("isFree", "false")
-    // TODO: countryCode/regionSlug filtering requires countryBreakdown to be
-    // reworked via the library relation join — removed from API for now.
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoading(true)
     fetch(`/api/public-proxy/api/events/global?${params}`)
       .then((r) => r.json())
       .then((data: GlobalEventsResponse) => {
@@ -181,7 +91,7 @@ export function EventCardGrid({
         setResponse({ events: [], total: 0, page: 1, pageSize: PAGE_SIZE })
         setLoading(false)
       })
-  }, [selectedDate, filters])
+  }, [filters])
 
   const filtered = applyClientFilters(response.events, filters)
 
@@ -194,42 +104,59 @@ export function EventCardGrid({
 
   return (
     <div ref={gridRef}>
-      {/* Date picker */}
-      <div style={{ marginBottom: "20px" }}>
-        <DateScrollPicker
-          selected={selectedDate}
-          onSelect={(d) => {
-            setManualDate(d)
-            onFiltersChange({ ...filters, page: 1 })
-          }}
-          count={
-            filters.dateScope === "this-month"
-              ? 30
-              : filters.dateScope === "this-week"
-                ? 14
-                : 7
-          }
-        />
-      </div>
-
-      {/* Result count */}
+      {/* Header row */}
       {!loading && (
-        <p
+        <div
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            color: T.ink.ghost,
-            marginBottom: "16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "20px",
           }}
         >
-          {filtered.length < response.total
-            ? `${filtered.length} of ${response.total}`
-            : response.total}{" "}
-          events
-        </p>
+          <p
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "10px",
+              letterSpacing: ".1em",
+              textTransform: "uppercase",
+              color: T.ink.faint,
+              margin: 0,
+            }}
+          >
+            {response.total > 0
+              ? (() => {
+                  const start = (filters.page - 1) * PAGE_SIZE + 1
+                  const end = Math.min(filters.page * PAGE_SIZE, response.total)
+                  const pages = Math.ceil(response.total / PAGE_SIZE)
+
+                  return `Showing ${start}–${end} of ${response.total} · Page ${filters.page} of ${pages}`
+                })()
+              : "No events"}
+          </p>
+          {}
+          <a
+            href="/api/events/ics"
+            download
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "10px",
+              letterSpacing: ".1em",
+              textTransform: "uppercase",
+              color: T.accent.aurora,
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+            }}
+          >
+            Subscribe to ICS
+            <Icon icon="mdi:arrow-top-right" className="size-3" />
+          </a>
+        </div>
       )}
 
-      {/* Grid */}
+      {/* List */}
       {loading ? (
         <div
           style={{
@@ -260,14 +187,7 @@ export function EventCardGrid({
           No events match your filters.
         </div>
       ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-            gap: "16px",
-          }}
-          className="sm:grid-cols-2"
-        >
+        <div className="ecards">
           {filtered.map((event) => (
             <EventCard key={event.documentId} event={event} />
           ))}
@@ -297,14 +217,6 @@ function getHourSlot(
   return "night"
 }
 
-const DIRECT_PROVIDERS = new Set([
-  "ical",
-  "custom_ical",
-  "aspen",
-  "solus",
-  "spydus",
-])
-
 function applyClientFilters(
   events: GridEvent[],
   filters: FilterState
@@ -327,12 +239,6 @@ function applyClientFilters(
   if (filters.timeOfDay.length > 0) {
     result = result.filter(
       (e) => !e.allDay && filters.timeOfDay.includes(getHourSlot(e.startTime))
-    )
-  }
-
-  if (filters.libraryDirect) {
-    result = result.filter(
-      (e) => e.libraryName != null && DIRECT_PROVIDERS.has(e.sourceProvider)
     )
   }
 

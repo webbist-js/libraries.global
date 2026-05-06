@@ -1,8 +1,8 @@
 import type { HeatmapCell } from "@/components/events/types"
 import { T } from "@/lib/design-tokens"
 
-const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-const HOUR_LABELS = new Set(["00", "03", "06", "09", "12", "15", "18", "21"])
+// Hours to display as bars (waking hours, 2-hour intervals)
+const DISPLAY_HOURS = [6, 8, 10, 12, 14, 16, 18, 20, 22]
 
 interface TimeOfDayHeatmapProps {
   readonly cells: HeatmapCell[]
@@ -11,142 +11,152 @@ interface TimeOfDayHeatmapProps {
 export function TimeOfDayHeatmap({ cells }: TimeOfDayHeatmapProps) {
   if (!cells.length) return null
 
-  const max = Math.max(...cells.map((c) => c.count), 1)
-
-  // Build lookup: dow → hour → count
-  const lookup = new Map<number, Map<number, number>>()
+  // Aggregate counts by hour across all days
+  const byHour = new Map<number, number>()
   for (const cell of cells) {
-    if (!lookup.has(cell.dow)) lookup.set(cell.dow, new Map())
-    lookup.get(cell.dow)!.set(cell.hour, cell.count)
+    byHour.set(cell.hour, (byHour.get(cell.hour) ?? 0) + cell.count)
   }
 
-  // Find peak
-  const peakCell = cells.reduce(
-    (best, c) => (c.count > best.count ? c : best),
-    cells[0]!
-  )
-  const peakLabel = `${DAY_LABELS[peakCell.dow]} ${String(peakCell.hour).padStart(2, "0")}:00`
+  const maxCount = Math.max(...Array.from(byHour.values()), 1)
+
+  // Find peak hour
+  let peakHour = 0
+  let peakCount = 0
+  for (const [hour, count] of byHour) {
+    if (count > peakCount) {
+      peakCount = count
+      peakHour = hour
+    }
+  }
+  const peakLabel = `${String(peakHour).padStart(2, "0")}:00 local`
+
+  const totalToday = Array.from(byHour.values()).reduce((s, v) => s + v, 0)
 
   return (
-    <div>
-      {/* Section header */}
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "9px",
-              letterSpacing: ".22em",
-              textTransform: "uppercase",
-              color: T.ink.faint,
-            }}
-          >
-            § 02 ·
-          </span>
-          <h2
-            style={{
-              fontFamily: T.font.serif,
-              fontSize: "1.4rem",
-              fontWeight: 400,
-              color: T.ink.base,
-            }}
-          >
-            Time of{" "}
-            <em style={{ fontStyle: "italic", color: T.ink.dim }}>day.</em>
-          </h2>
+    <div
+      style={{
+        background: "rgba(255,255,255,.025)",
+        border: `1px solid ${T.border.line}`,
+        borderRadius: "16px",
+        padding: "20px 22px",
+        backdropFilter: "blur(8px)",
+      }}
+    >
+      {/* Panel header */}
+      <div style={{ marginBottom: "16px" }}>
+        <div
+          style={{
+            fontFamily: T.font.mono,
+            fontSize: "9.5px",
+            letterSpacing: ".24em",
+            textTransform: "uppercase",
+            color: T.ink.faint,
+            marginBottom: "4px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
+          <span style={{ color: T.accent.aurora }}>§ B.03</span>
+          <span>Time of day</span>
         </div>
-        <div className="text-right">
-          <p
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".1em",
-              color: T.ink.faint,
-            }}
+        <h4
+          style={{
+            fontFamily: T.font.serif,
+            fontWeight: 400,
+            fontSize: "22px",
+            letterSpacing: "-.02em",
+            margin: 0,
+            lineHeight: 1.1,
+            color: T.ink.base,
+          }}
+        >
+          When the{" "}
+          <em
+            style={{ fontStyle: "italic", color: T.ink.dim, fontWeight: 300 }}
           >
-            Peak
-          </p>
-          <p
-            style={{
-              fontFamily: T.font.serif,
-              fontSize: "1.2rem",
-              color: T.accent.aurora,
-            }}
-          >
-            {peakLabel}
-          </p>
-        </div>
+            doors open.
+          </em>
+        </h4>
       </div>
 
-      {/* Grid */}
-      <div className="overflow-x-auto">
-        <div style={{ minWidth: "320px" }}>
-          {/* Hour labels across top */}
-          <div className="mb-1 flex" style={{ paddingLeft: "36px" }}>
-            {Array.from({ length: 24 }, (_, h) => (
+      {/* Bar chart */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-end",
+          gap: "6px",
+          height: "120px",
+          borderBottom: `1px solid ${T.border.line}`,
+          marginBottom: "10px",
+          padding: "10px 4px 0",
+        }}
+      >
+        {DISPLAY_HOURS.map((hour) => {
+          const count = byHour.get(hour) ?? 0
+          const pct = maxCount > 0 ? (count / maxCount) * 100 : 0
+          const isPeak = hour === peakHour
+
+          return (
+            <div
+              key={hour}
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "flex-end",
+                alignItems: "center",
+                gap: "4px",
+                height: "100%",
+              }}
+            >
               <div
-                key={h}
-                className="flex-1 text-center"
+                title={`${String(hour).padStart(2, "0")}:00 — ${count} events`}
+                style={{
+                  width: "100%",
+                  height: `${Math.max(pct, 3)}%`,
+                  borderRadius: "3px 3px 0 0",
+                  background: isPeak
+                    ? `linear-gradient(180deg, ${T.accent.gold}, rgba(232,201,138,.2))`
+                    : `linear-gradient(180deg, ${T.accent.aurora}, rgba(127,223,255,.2))`,
+                  boxShadow: isPeak
+                    ? "0 0 16px rgba(232,201,138,.4)"
+                    : undefined,
+                  transition: "height 500ms ease",
+                }}
+              />
+              <span
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "8px",
-                  color: HOUR_LABELS.has(String(h).padStart(2, "0"))
-                    ? T.ink.ghost
-                    : "transparent",
-                  letterSpacing: ".08em",
+                  fontSize: "9px",
+                  color: isPeak ? T.accent.gold : T.ink.low,
+                  letterSpacing: ".06em",
+                  paddingBottom: "4px",
                 }}
               >
-                {String(h).padStart(2, "0")}
-              </div>
-            ))}
-          </div>
-
-          {/* Rows: one per day */}
-          {DAY_LABELS.map((dayLabel, dow) => (
-            <div key={dow} className="mb-0.5 flex items-center gap-1">
-              {/* Day label */}
-              <div
-                className="w-8 shrink-0 text-right"
-                style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "8px",
-                  letterSpacing: ".1em",
-                  textTransform: "uppercase",
-                  color: T.ink.ghost,
-                  paddingRight: "4px",
-                }}
-              >
-                {dayLabel}
-              </div>
-
-              {/* Cells */}
-              {Array.from({ length: 24 }, (_, hour) => {
-                const count = lookup.get(dow)?.get(hour) ?? 0
-                const intensity = max > 0 ? count / max : 0
-
-                return (
-                  <div
-                    key={hour}
-                    title={`${dayLabel} ${String(hour).padStart(2, "0")}:00 — ${count} events`}
-                    className="flex-1 rounded-sm transition-opacity duration-200"
-                    style={{
-                      aspectRatio: "1",
-                      height: "14px",
-                      background:
-                        intensity > 0
-                          ? `rgba(127,223,255,${0.08 + intensity * 0.72})`
-                          : "rgba(255,255,255,0.04)",
-                      border:
-                        dow === peakCell.dow && hour === peakCell.hour
-                          ? `1px solid rgba(127,223,255,0.6)`
-                          : "1px solid transparent",
-                    }}
-                  />
-                )
-              })}
+                {String(hour).padStart(2, "0")}
+              </span>
             </div>
-          ))}
-        </div>
+          )
+        })}
+      </div>
+
+      {/* Footer */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          fontFamily: T.font.mono,
+          fontSize: "10px",
+          color: T.ink.low,
+          letterSpacing: ".14em",
+          textTransform: "uppercase",
+        }}
+      >
+        <span>
+          Peak · <b style={{ color: T.accent.gold }}>{peakLabel}</b>
+        </span>
+        <span>{totalToday.toLocaleString()} events</span>
       </div>
     </div>
   )

@@ -11,7 +11,6 @@ import { EventCategoryBreakdown } from "@/components/events/EventCategoryBreakdo
 import { EventsBrowseElsewhere } from "@/components/events/EventsBrowseElsewhere"
 import { EventsDailyVolumeChart } from "@/components/events/EventsDailyVolumeChart"
 import type { FilterState } from "@/components/events/EventsFilterBar"
-import { EventsGeoFilterBar } from "@/components/events/EventsGeoFilterBar"
 import { EventsHero } from "@/components/events/EventsHero"
 import { EventsSidebar } from "@/components/events/EventsSidebar"
 import { FeaturedEventsCarousel } from "@/components/events/FeaturedEventsCarousel"
@@ -23,12 +22,11 @@ import { T } from "@/lib/design-tokens"
 import { getCountryName } from "@/lib/iso-continent"
 
 const DEFAULT_FILTERS: FilterState = {
-  dateScope: "today",
+  dateScope: "this-month",
   priceScope: "all",
   eventTypes: [],
   search: "",
   timeOfDay: [],
-  libraryDirect: false,
   countryCode: "",
   regionSlug: "",
   page: 1,
@@ -72,13 +70,6 @@ export function EventsProgrammePage({ data }: EventsProgrammePageProps) {
 
       <SectionDivider />
 
-      {/* Geo filter bar */}
-      <EventsGeoFilterBar
-        filters={filters}
-        onChange={setFilters}
-        countryBreakdown={data.countryBreakdown}
-      />
-
       {/* Timeline section — sidebar + main on desktop */}
       <Container className="py-8 sm:py-10">
         {/* Mobile: filter toggle button */}
@@ -120,25 +111,36 @@ export function EventsProgrammePage({ data }: EventsProgrammePageProps) {
         </div>
 
         {sidebarOpen && (
-          <div
-            className="mb-6 rounded-2xl border p-5 lg:hidden"
-            style={{ borderColor: T.border.line, background: T.bg.deep }}
-          >
-            <EventsSidebar filters={filters} onChange={setFilters} />
+          <div className="mb-6 lg:hidden">
+            <EventsSidebar
+              filters={filters}
+              onChange={setFilters}
+              countryBreakdown={data.countryBreakdown}
+            />
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[280px,1fr]">
-          <div className="hidden lg:block">
+        <div
+          className="events-layout-grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "280px 1fr",
+            gap: "40px",
+          }}
+        >
+          <div
+            className="sticky"
+            style={{ top: "calc(3.5rem + 16px)", alignSelf: "start" }}
+          >
             <div
-              className="sticky rounded-2xl border p-5"
-              style={{
-                top: "calc(3.5rem + 16px)",
-                borderColor: T.border.line,
-                background: T.bg.deep,
-              }}
+              className="overflow-y-auto"
+              style={{ maxHeight: "calc(100vh - 5rem)", paddingRight: "4px" }}
             >
-              <EventsSidebar filters={filters} onChange={setFilters} />
+              <EventsSidebar
+                filters={filters}
+                onChange={setFilters}
+                countryBreakdown={data.countryBreakdown}
+              />
             </div>
           </div>
 
@@ -173,19 +175,15 @@ export function EventsProgrammePage({ data }: EventsProgrammePageProps) {
           {/* Category breakdown */}
           <EventCategoryBreakdown categories={data.categories} />
 
-          {/* Heatmap */}
+          {/* Time of day */}
           <TimeOfDayHeatmap cells={data.heatmap} />
 
           {/* Provider breakdown */}
           <ProviderBreakdownBar providers={data.providers} />
+
+          {/* Most active libraries */}
+          <MostBookedLibraries libraries={data.topLibraries} />
         </div>
-      </Container>
-
-      <SectionDivider />
-
-      {/* Most active libraries */}
-      <Container className="py-8 sm:py-10">
-        <MostBookedLibraries libraries={data.topLibraries} />
       </Container>
 
       <SectionDivider />
@@ -197,12 +195,21 @@ export function EventsProgrammePage({ data }: EventsProgrammePageProps) {
         onFiltersChange={setFilters}
       />
 
-      <SectionDivider />
-
       {/* Aggregation explainer */}
       <Container className="py-8 pb-16 sm:py-10 sm:pb-20">
         <AggregationExplainer />
       </Container>
+
+      <style>{`
+        @media (max-width: 1023px) {
+          .events-layout-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .events-layout-grid > :first-child {
+            display: none;
+          }
+        }
+      `}</style>
     </main>
   )
 }

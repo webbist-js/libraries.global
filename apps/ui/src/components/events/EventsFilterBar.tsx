@@ -15,9 +15,9 @@ export interface FilterState {
   eventTypes: string[] // multi-select; empty = all types
   search: string
   timeOfDay: TimeOfDay[]
-  libraryDirect: boolean
   countryCode: string
   regionSlug: string
+  calendarDate?: string // ISO date string (YYYY-MM-DD); when set, overrides dateScope to single day
   page: number
 }
 
@@ -103,12 +103,12 @@ export function EventsFilterBar({ filters, onChange }: EventsFilterBarProps) {
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".2em",
               textTransform: "uppercase",
-              color: T.ink.ghost,
+              color: T.ink.faint,
               flexShrink: 0,
-              paddingRight: "8px",
+              paddingRight: "10px",
             }}
           >
             When
@@ -129,12 +129,12 @@ export function EventsFilterBar({ filters, onChange }: EventsFilterBarProps) {
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".2em",
               textTransform: "uppercase",
-              color: T.ink.ghost,
+              color: T.ink.faint,
               flexShrink: 0,
-              paddingRight: "8px",
+              paddingRight: "10px",
             }}
           >
             Filter

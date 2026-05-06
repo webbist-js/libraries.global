@@ -66,7 +66,10 @@ export function GlobalFooter({
           {sections.length > 0 ? (
             <div className="grid gap-10 sm:grid-cols-2 xl:grid-cols-3">
               {sections.map((section) => (
-                <div key={section.id ?? section.title} className="space-y-4">
+                <div
+                  key={section.id ?? section.title}
+                  className="flex flex-col gap-7"
+                >
                   <p
                     style={{
                       fontFamily: T.font.mono,
@@ -118,7 +121,7 @@ export function GlobalFooter({
                   {index > 0 ? (
                     <span
                       className="font-mono text-[10px]"
-                      style={{ color: T.ink.ghost }}
+                      style={{ color: T.ink.faint }}
                     >
                       ·
                     </span>

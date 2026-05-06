@@ -1,179 +1,323 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useMemo, useState } from "react"
 
-import { FilterSidebarSection } from "@/components/ds"
 import type {
-  DateScope,
   FilterState,
   PriceScope,
   TimeOfDay,
 } from "@/components/events/EventsFilterBar"
 import { EVENT_TYPE_META } from "@/components/events/EventTypeChip"
+import type { CountryStat } from "@/components/events/types"
 import { T } from "@/lib/design-tokens"
-import { cn } from "@/lib/styles"
+import { CONTINENTS, getContinent, getCountryName } from "@/lib/iso-continent"
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const DATE_SCOPES: { value: DateScope; label: string; icon: string }[] = [
-  { value: "today", label: "Today", icon: "mdi:calendar-today" },
-  { value: "tomorrow", label: "Tomorrow", icon: "mdi:calendar-arrow-right" },
-  { value: "this-week", label: "This week", icon: "mdi:calendar-week" },
-  { value: "this-month", label: "This month", icon: "mdi:calendar-month" },
-]
-
 const PRICE_SCOPES: { value: PriceScope; label: string }[] = [
-  { value: "all", label: "All" },
+  { value: "all", label: "All prices" },
   { value: "free", label: "Free" },
   { value: "paid", label: "Paid" },
 ]
 
-const TIME_SLOTS: { value: TimeOfDay; label: string; range: string }[] = [
-  { value: "morning", label: "Morning", range: "06:00–12:00" },
-  { value: "afternoon", label: "Afternoon", range: "12:00–18:00" },
-  { value: "evening", label: "Evening", range: "18:00–22:00" },
-  { value: "night", label: "Night", range: "22:00–06:00" },
+const TIME_SLOTS: { value: TimeOfDay; label: string; note: string }[] = [
+  { value: "morning", label: "Morning", note: "before 12" },
+  { value: "afternoon", label: "Afternoon", note: "12–18" },
+  { value: "evening", label: "Evening", note: "18–22" },
+  { value: "night", label: "Night", note: "after 22" },
 ]
 
-// Event types from canonical EVENT_TYPE_META (excludes "other")
 const EVENT_TYPE_OPTIONS = Object.entries(EVENT_TYPE_META)
   .filter(([key]) => key !== "other")
   .map(([key, meta]) => ({ value: key, label: meta.label, color: meta.color }))
 
-// ── Sub-components ─────────────────────────────────────────────────────────────
+// ── Calendar ───────────────────────────────────────────────────────────────────
 
-function DateScopeButton({
-  active,
-  icon,
-  label,
-  onClick,
+const CAL_DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"]
+
+function toISODate(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+
+  return `${y}-${m}-${day}`
+}
+
+function MiniCalendar({
+  selectedDate,
+  onSelect,
 }: {
-  active: boolean
-  icon: string
-  label: string
-  onClick: () => void
+  selectedDate: string | undefined
+  onSelect: (iso: string | undefined) => void
 }) {
+  const today = new Date()
+  const [viewYear, setViewYear] = useState(today.getFullYear())
+  const [viewMonth, setViewMonth] = useState(today.getMonth())
+
+  const firstDay = new Date(viewYear, viewMonth, 1)
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate()
+  const startOffset = firstDay.getDay()
+
+  const cells: (number | null)[] = []
+  for (let i = 0; i < startOffset; i++) cells.push(null)
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d)
+  while (cells.length % 7 !== 0) cells.push(null)
+
+  const todayISO = toISODate(today)
+  const monthLabel = firstDay
+    .toLocaleDateString("en-GB", { month: "short", year: "numeric" })
+    .toUpperCase()
+
+  const prevMonth = () => {
+    if (viewMonth === 0) {
+      setViewYear((y) => y - 1)
+      setViewMonth(11)
+    } else setViewMonth((m) => m - 1)
+  }
+  const nextMonth = () => {
+    if (viewMonth === 11) {
+      setViewYear((y) => y + 1)
+      setViewMonth(0)
+    } else setViewMonth((m) => m + 1)
+  }
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-all duration-150"
+    <div>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: "8px",
+        }}
+      >
+        <button
+          type="button"
+          onClick={prevMonth}
+          style={{
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            color: T.ink.faint,
+            padding: "2px 4px",
+          }}
+        >
+          <Icon icon="mdi:chevron-left" style={{ fontSize: "14px" }} />
+        </button>
+        <span
+          style={{
+            fontFamily: T.font.mono,
+            fontSize: "10px",
+            letterSpacing: ".12em",
+            color: T.ink.dim,
+          }}
+        >
+          {monthLabel}
+        </span>
+        <button
+          type="button"
+          onClick={nextMonth}
+          style={{
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            color: T.ink.faint,
+            padding: "2px 4px",
+          }}
+        >
+          <Icon icon="mdi:chevron-right" style={{ fontSize: "14px" }} />
+        </button>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(7, 1fr)",
+          gap: "2px",
+          marginBottom: "2px",
+        }}
+      >
+        {CAL_DAY_LABELS.map((d, i) => (
+          <div
+            key={i}
+            style={{
+              textAlign: "center",
+              fontFamily: T.font.mono,
+              fontSize: "10px",
+              color: T.ink.faint,
+              padding: "2px 0",
+            }}
+          >
+            {d}
+          </div>
+        ))}
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(7, 1fr)",
+          gap: "2px",
+        }}
+      >
+        {cells.map((day, i) => {
+          if (!day) return <div key={i} />
+          const iso = toISODate(new Date(viewYear, viewMonth, day))
+          const isToday = iso === todayISO
+          const isSelected = iso === selectedDate
+
+          return (
+            <button
+              key={iso}
+              type="button"
+              onClick={() => onSelect(isSelected ? undefined : iso)}
+              style={{
+                textAlign: "center",
+                fontFamily: T.font.mono,
+                fontSize: "10px",
+                padding: "5px 2px",
+                borderRadius: "6px",
+                border: isSelected
+                  ? "1px solid rgba(127,223,255,0.35)"
+                  : isToday
+                    ? `1px solid ${T.border.hi}`
+                    : "1px solid transparent",
+                background: isSelected
+                  ? "rgba(127,223,255,0.12)"
+                  : "transparent",
+                color: isSelected
+                  ? T.accent.aurora
+                  : isToday
+                    ? T.ink.base
+                    : T.ink.dim,
+                cursor: "pointer",
+                transition: "background 100ms",
+              }}
+            >
+              {day}
+            </button>
+          )
+        })}
+      </div>
+
+      {selectedDate && (
+        <button
+          type="button"
+          onClick={() => onSelect(undefined)}
+          style={{
+            marginTop: "10px",
+            fontFamily: T.font.mono,
+            fontSize: "10px",
+            letterSpacing: ".08em",
+            color: T.ink.faint,
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+            padding: 0,
+          }}
+        >
+          <Icon icon="mdi:close" style={{ fontSize: "12px" }} />
+          Clear date
+        </button>
       )}
-      style={{
-        fontFamily: T.font.mono,
-        fontSize: "11px",
-        letterSpacing: ".08em",
-        background: active ? "rgba(127,223,255,0.1)" : "transparent",
-        border: active
-          ? "1px solid rgba(127,223,255,0.25)"
-          : "1px solid transparent",
-        color: active ? T.accent.aurora : T.ink.dim,
-      }}
-    >
-      <Icon
-        icon={icon}
-        className="size-3.5 shrink-0"
-        style={{ color: active ? T.accent.aurora : T.ink.ghost }}
-      />
-      {label}
-    </button>
+    </div>
   )
 }
 
-function PricePill({
-  active,
+// ── FBlock (accordion-capable) ─────────────────────────────────────────────────
+
+function FBlock({
   label,
-  onClick,
+  accordion = false,
+  defaultOpen = true,
+  onReset,
+  children,
 }: {
-  active: boolean
   label: string
-  onClick: () => void
+  accordion?: boolean
+  defaultOpen?: boolean
+  onReset?: () => void
+  children: React.ReactNode
 }) {
+  const [open, setOpen] = useState(defaultOpen)
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="rounded-full border px-3 py-1 text-[10px] tracking-[.1em] uppercase transition-all duration-150"
-      style={{
-        fontFamily: T.font.mono,
-        background: active ? "rgba(127,223,255,0.1)" : "transparent",
-        borderColor: active ? "rgba(127,223,255,0.3)" : T.border.line,
-        color: active ? T.accent.aurora : T.ink.low,
-      }}
-    >
-      {label}
-    </button>
+    <div className="fb">
+      {/* Header — clickable when accordion */}
+      <div className="fb-hd" style={{ marginBottom: open ? "10px" : 0 }}>
+        <button
+          type="button"
+          onClick={accordion ? () => setOpen((v) => !v) : undefined}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flex: 1,
+            background: "none",
+            border: "none",
+            padding: 0,
+            cursor: accordion ? "pointer" : "default",
+            gap: "8px",
+          }}
+        >
+          <span className="fb-t">{label}</span>
+          {accordion && (
+            <Icon
+              icon={open ? "mdi:chevron-up" : "mdi:chevron-down"}
+              style={{
+                fontSize: "14px",
+                color: "rgba(244,247,255,.30)",
+                flexShrink: 0,
+              }}
+            />
+          )}
+        </button>
+        {onReset && open && (
+          <button type="button" className="fb-a" onClick={onReset}>
+            Reset
+          </button>
+        )}
+      </div>
+
+      {open && children}
+    </div>
   )
 }
 
-function CheckRow({
+// ── FOptRow ────────────────────────────────────────────────────────────────────
+
+function FOptRow({
   checked,
   label,
   note,
   color,
-  count,
   onChange,
 }: {
   checked: boolean
   label: string
   note?: string
   color?: string
-  count?: number
   onChange: (v: boolean) => void
 }) {
   return (
-    <label
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        cursor: "pointer",
-        padding: "4px 0",
-      }}
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className={`fopt${checked ? "fopt-on" : ""}`}
     >
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        style={{ accentColor: T.accent.aurora, cursor: "pointer" }}
-      />
-      {color && (
-        <span
-          style={{
-            width: "8px",
-            height: "8px",
-            borderRadius: "2px",
-            background: color,
-            flexShrink: 0,
-          }}
-        />
-      )}
-      <span
-        style={{
-          fontFamily: T.font.mono,
-          fontSize: "11px",
-          color: T.ink.dim,
-          flex: 1,
-        }}
-      >
-        {label}
-        {note ? (
-          <span style={{ color: T.ink.ghost, marginLeft: "4px" }}>{note}</span>
-        ) : null}
-      </span>
-      {count !== undefined && (
-        <span
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            color: T.ink.ghost,
-          }}
-        >
-          {count}
+      <span className="fopt-l">
+        <span className="fopt-cb">{checked ? "✓" : ""}</span>
+        {color && <span className="fopt-pip" style={{ background: color }} />}
+        <span className="fopt-label">
+          {label}
+          {note && <span className="fopt-note"> · {note}</span>}
         </span>
-      )}
-    </label>
+      </span>
+    </button>
   )
 }
 
@@ -188,66 +332,140 @@ function toggleArr<TVal>(arr: TVal[], val: TVal): TVal[] {
 interface EventsSidebarProps {
   readonly filters: FilterState
   readonly onChange: (next: FilterState) => void
+  readonly countryBreakdown: CountryStat[]
 }
 
-export function EventsSidebar({ filters, onChange }: EventsSidebarProps) {
+export function EventsSidebar({
+  filters,
+  onChange,
+  countryBreakdown,
+}: EventsSidebarProps) {
+  const derivedContinent = useMemo(
+    () =>
+      filters.countryCode ? (getContinent(filters.countryCode) ?? "") : "",
+    [filters.countryCode]
+  )
+  const [selectedContinent, setSelectedContinent] = useState(derivedContinent)
+
+  const continentCountries = useMemo(() => {
+    const codes = countryBreakdown.map((c) => c.countryCode)
+    if (!selectedContinent) return codes
+
+    return codes.filter((c) => getContinent(c) === selectedContinent)
+  }, [countryBreakdown, selectedContinent])
+
   return (
-    <aside className="flex flex-col gap-6" style={{ fontFamily: T.font.mono }}>
-      {/* Search */}
-      <div
-        className="flex items-center gap-2 rounded-xl border px-3 py-2.5"
-        style={{ borderColor: T.border.line, background: T.bg.deep }}
-      >
-        <Icon
-          icon="mdi:magnify"
-          className="size-4 shrink-0"
-          style={{ color: T.ink.ghost }}
-        />
-        <input
-          type="text"
-          placeholder="Search events…"
-          value={filters.search}
-          onChange={(e) =>
-            onChange({ ...filters, search: e.target.value, page: 1 })
-          }
-          className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-(--t-ink-ghost)"
-          style={{ color: T.ink.dim, fontFamily: T.font.mono }}
-        />
-        {filters.search ? (
-          <button
-            type="button"
-            onClick={() => onChange({ ...filters, search: "", page: 1 })}
-            style={{ color: T.ink.ghost }}
-          >
-            <Icon icon="mdi:close" className="size-3.5" />
-          </button>
-        ) : null}
-      </div>
-
-      {/* § 01 · When */}
-      <FilterSidebarSection index={1} label="When">
-        <div className="flex flex-col gap-0.5">
-          {DATE_SCOPES.map((s) => (
-            <DateScopeButton
-              key={s.value}
-              active={filters.dateScope === s.value}
-              icon={s.icon}
-              label={s.label}
-              onClick={() =>
-                onChange({ ...filters, dateScope: s.value, page: 1 })
-              }
-            />
-          ))}
+    <aside className="sb">
+      {/* Search — always open, no accordion */}
+      <FBlock label="Search programme" defaultOpen>
+        <div className="fb-search">
+          <Icon
+            icon="mdi:magnify"
+            style={{ fontSize: "14px", color: T.ink.faint, flexShrink: 0 }}
+          />
+          <input
+            type="text"
+            placeholder="Author, title, venue, topic…"
+            value={filters.search}
+            onChange={(e) =>
+              onChange({ ...filters, search: e.target.value, page: 1 })
+            }
+            className="fb-search-input"
+          />
+          {filters.search && (
+            <button
+              type="button"
+              onClick={() => onChange({ ...filters, search: "", page: 1 })}
+              style={{
+                color: T.ink.faint,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              <Icon icon="mdi:close" style={{ fontSize: "12px" }} />
+            </button>
+          )}
         </div>
-      </FilterSidebarSection>
+      </FBlock>
 
-      <div style={{ borderTop: `1px solid ${T.border.line}` }} />
+      {/* Location — accordion, closed by default */}
+      {countryBreakdown.length > 0 && (
+        <FBlock label="§ 01 · Location" accordion defaultOpen={false}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ position: "relative" }}>
+              <select
+                value={selectedContinent}
+                onChange={(e) => {
+                  setSelectedContinent(e.target.value)
+                  onChange({ ...filters, countryCode: "", page: 1 })
+                }}
+                className="fb-select"
+              >
+                <option value="">All continents</option>
+                {CONTINENTS.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              <span className="fb-select-car">▾</span>
+            </div>
+            <div style={{ position: "relative" }}>
+              <select
+                value={filters.countryCode}
+                onChange={(e) =>
+                  onChange({ ...filters, countryCode: e.target.value, page: 1 })
+                }
+                className="fb-select"
+              >
+                <option value="">All countries</option>
+                {continentCountries.map((code) => (
+                  <option key={code} value={code}>
+                    {getCountryName(code)}
+                  </option>
+                ))}
+              </select>
+              <span className="fb-select-car">▾</span>
+            </div>
+          </div>
+        </FBlock>
+      )}
 
-      {/* § 02 · Category */}
-      <FilterSidebarSection index={2} label="Category">
-        <div className="flex flex-col">
+      {/* When — accordion, closed by default */}
+      <FBlock
+        label="§ 02 · When"
+        accordion
+        defaultOpen={false}
+        onReset={
+          filters.calendarDate
+            ? () => onChange({ ...filters, calendarDate: undefined, page: 1 })
+            : undefined
+        }
+      >
+        <MiniCalendar
+          selectedDate={filters.calendarDate}
+          onSelect={(iso) =>
+            onChange({ ...filters, calendarDate: iso, page: 1 })
+          }
+        />
+      </FBlock>
+
+      {/* Category — accordion, closed by default */}
+      <FBlock
+        label="§ 03 · Category"
+        accordion
+        defaultOpen={false}
+        onReset={
+          filters.eventTypes.length > 0
+            ? () => onChange({ ...filters, eventTypes: [], page: 1 })
+            : undefined
+        }
+      >
+        <div className="fopts">
           {EVENT_TYPE_OPTIONS.map((t) => (
-            <CheckRow
+            <FOptRow
               key={t.value}
               checked={filters.eventTypes.includes(t.value)}
               label={t.label}
@@ -264,19 +482,26 @@ export function EventsSidebar({ filters, onChange }: EventsSidebarProps) {
             />
           ))}
         </div>
-      </FilterSidebarSection>
+      </FBlock>
 
-      <div style={{ borderTop: `1px solid ${T.border.line}` }} />
-
-      {/* § 03 · Time of day */}
-      <FilterSidebarSection index={3} label="Time of day">
-        <div className="flex flex-col">
+      {/* Time of day — accordion, closed by default */}
+      <FBlock
+        label="§ 04 · Time of day"
+        accordion
+        defaultOpen={false}
+        onReset={
+          filters.timeOfDay.length > 0
+            ? () => onChange({ ...filters, timeOfDay: [], page: 1 })
+            : undefined
+        }
+      >
+        <div className="fopts">
           {TIME_SLOTS.map((slot) => (
-            <CheckRow
+            <FOptRow
               key={slot.value}
               checked={filters.timeOfDay.includes(slot.value)}
               label={slot.label}
-              note={slot.range}
+              note={slot.note}
               onChange={() =>
                 onChange({
                   ...filters,
@@ -287,101 +512,216 @@ export function EventsSidebar({ filters, onChange }: EventsSidebarProps) {
             />
           ))}
         </div>
-      </FilterSidebarSection>
+      </FBlock>
 
-      <div style={{ borderTop: `1px solid ${T.border.line}` }} />
-
-      {/* § 04 · Price */}
-      <FilterSidebarSection index={4} label="Price">
-        <div className="flex flex-wrap gap-1.5">
+      {/* Price — accordion, closed by default */}
+      <FBlock label="§ 05 · Price" accordion defaultOpen={false}>
+        <div className="fopts">
           {PRICE_SCOPES.map((s) => (
-            <PricePill
+            <FOptRow
               key={s.value}
-              active={filters.priceScope === s.value}
+              checked={filters.priceScope === s.value}
               label={s.label}
-              onClick={() =>
+              onChange={() =>
                 onChange({ ...filters, priceScope: s.value, page: 1 })
               }
             />
           ))}
         </div>
-      </FilterSidebarSection>
+      </FBlock>
 
-      <div style={{ borderTop: `1px solid ${T.border.line}` }} />
-
-      {/* § 05 · Library direct */}
-      <FilterSidebarSection index={5} label="Source">
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            cursor: "pointer",
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={filters.libraryDirect}
-            onChange={(e) =>
-              onChange({ ...filters, libraryDirect: e.target.checked, page: 1 })
-            }
-            style={{ accentColor: T.accent.aurora, cursor: "pointer" }}
-          />
-          <span
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "11px",
-              color: T.ink.dim,
-            }}
-          >
-            Library direct only
-          </span>
-        </label>
-        <p
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "9px",
-            color: T.ink.ghost,
-            marginTop: "4px",
-            lineHeight: 1.5,
-          }}
-        >
-          Excludes Eventbrite / TicketSource
-        </p>
-      </FilterSidebarSection>
-
-      {/* Reset */}
+      {/* Reset all */}
       <button
         type="button"
-        onClick={() =>
+        onClick={() => {
+          setSelectedContinent("")
           onChange({
-            dateScope: "today",
+            dateScope: "this-month",
             priceScope: "all",
             eventTypes: [],
             search: "",
             timeOfDay: [],
-            libraryDirect: false,
             countryCode: "",
             regionSlug: "",
+            calendarDate: undefined,
             page: 1,
           })
-        }
-        style={{
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".1em",
-          textTransform: "uppercase",
-          color: T.ink.ghost,
-          background: "transparent",
-          border: `1px solid ${T.border.line}`,
-          borderRadius: "8px",
-          padding: "8px",
-          cursor: "pointer",
-          transition: "color 150ms",
         }}
+        className="sb-reset"
       >
         Reset all filters
       </button>
+
+      <style>{`
+        .sb {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .fb {
+          background: rgba(255,255,255,.025);
+          border: 1px solid rgba(255,255,255,.08);
+          border-radius: 14px;
+          padding: 16px 18px;
+          backdrop-filter: blur(8px);
+        }
+        .fb-hd {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .fb-t {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 10px;
+          color: rgba(244,247,255,.48);
+          letter-spacing: .22em;
+          text-transform: uppercase;
+        }
+        .fb-a {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 9.5px;
+          color: rgba(244,247,255,.30);
+          letter-spacing: .16em;
+          text-transform: uppercase;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          padding: 0;
+          margin-left: 4px;
+          flex-shrink: 0;
+        }
+        .fb-a:hover { color: rgba(244,247,255,.72); }
+        .fb-search {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 9px 12px;
+          border: 1px solid rgba(255,255,255,.16);
+          border-radius: 8px;
+          background: rgba(255,255,255,.04);
+        }
+        .fb-search-input {
+          flex: 1;
+          border: 0;
+          background: transparent;
+          outline: none;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 12px;
+          color: rgba(244,247,255,.72);
+          min-width: 0;
+        }
+        .fb-search-input::placeholder {
+          color: rgba(244,247,255,.30);
+        }
+        .fb-select {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 11px;
+          letter-spacing: .08em;
+          background: rgba(7,11,30,1);
+          border: 1px solid rgba(255,255,255,.08);
+          border-radius: 10px;
+          color: rgba(244,247,255,.72);
+          padding: 6px 10px;
+          padding-right: 24px;
+          cursor: pointer;
+          outline: none;
+          appearance: none;
+          width: 100%;
+        }
+        .fb-select-car {
+          position: absolute;
+          right: 10px;
+          top: 50%;
+          transform: translateY(-50%);
+          pointer-events: none;
+          color: rgba(244,247,255,.30);
+          font-size: 10px;
+        }
+        .fopts {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+        .fopt {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 6px 8px;
+          border-radius: 6px;
+          font-size: 12.5px;
+          color: rgba(244,247,255,.72);
+          cursor: pointer;
+          transition: background 150ms;
+          background: transparent;
+          border: none;
+          text-align: left;
+          width: 100%;
+        }
+        .fopt:hover { background: rgba(255,255,255,.05); }
+        .fopt-on {
+          background: rgba(127,223,255,.10) !important;
+          color: #7fdfff !important;
+          font-weight: 500;
+        }
+        .fopt-l {
+          display: flex;
+          align-items: center;
+          gap: 9px;
+        }
+        .fopt-cb {
+          width: 14px;
+          height: 14px;
+          border: 1.5px solid rgba(255,255,255,.16);
+          border-radius: 3px;
+          display: grid;
+          place-items: center;
+          flex-shrink: 0;
+          color: transparent;
+          font-size: 9px;
+          font-weight: 700;
+          line-height: 1;
+        }
+        .fopt-on .fopt-cb {
+          background: #7fdfff;
+          border-color: #7fdfff;
+          color: #0a0f2a;
+        }
+        .fopt-pip {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          flex-shrink: 0;
+        }
+        .fopt-label {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 11px;
+        }
+        .fopt-note {
+          color: rgba(244,247,255,.30);
+          font-size: 10px;
+        }
+        .fopt-on .fopt-note {
+          color: rgba(127,223,255,.65);
+        }
+        .sb-reset {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 10px;
+          letter-spacing: .1em;
+          text-transform: uppercase;
+          color: rgba(244,247,255,.30);
+          background: transparent;
+          border: 1px solid rgba(255,255,255,.08);
+          border-radius: 10px;
+          padding: 10px;
+          cursor: pointer;
+          transition: color 150ms, border-color 150ms;
+          width: 100%;
+        }
+        .sb-reset:hover {
+          color: rgba(244,247,255,.72);
+          border-color: rgba(255,255,255,.16);
+        }
+      `}</style>
     </aside>
   )
 }

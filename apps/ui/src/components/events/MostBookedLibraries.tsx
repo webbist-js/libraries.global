@@ -17,68 +17,108 @@ export function MostBookedLibraries({ libraries }: MostBookedLibrariesProps) {
   const max = libraries[0]?.count ?? 1
 
   return (
-    <div>
-      {/* Section header */}
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "9px",
-              letterSpacing: ".22em",
-              textTransform: "uppercase",
-              color: T.ink.faint,
-            }}
-          >
-            § 05 ·
-          </span>
-          <h2
-            style={{
-              fontFamily: T.font.serif,
-              fontSize: "1.4rem",
-              fontWeight: 400,
-              color: T.ink.base,
-            }}
-          >
-            The most{" "}
-            <em style={{ fontStyle: "italic", color: T.ink.dim }}>active.</em>
-          </h2>
+    <div
+      style={{
+        background: "rgba(255,255,255,.025)",
+        border: `1px solid ${T.border.line}`,
+        borderRadius: "16px",
+        padding: "20px 22px",
+        backdropFilter: "blur(8px)",
+      }}
+    >
+      {/* Panel header */}
+      <div style={{ marginBottom: "16px" }}>
+        <div
+          style={{
+            fontFamily: T.font.mono,
+            fontSize: "9.5px",
+            letterSpacing: ".24em",
+            textTransform: "uppercase",
+            color: T.ink.faint,
+            marginBottom: "4px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
+          <span style={{ color: T.accent.aurora }}>§ B.06</span>
+          <span>Most active</span>
         </div>
+        <h4
+          style={{
+            fontFamily: T.font.serif,
+            fontWeight: 400,
+            fontSize: "22px",
+            letterSpacing: "-.02em",
+            margin: 0,
+            lineHeight: 1.1,
+            color: T.ink.base,
+          }}
+        >
+          The most{" "}
+          <em
+            style={{ fontStyle: "italic", color: T.ink.dim, fontWeight: 300 }}
+          >
+            active.
+          </em>
+        </h4>
       </div>
 
-      <div className="space-y-1">
+      {/* Library rows */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
         {libraries.map((lib, i) => {
           const pct = max > 0 ? (lib.count / max) * 100 : 0
+          const isFirst = i === 0
+          const isLast = i === libraries.length - 1
 
           return (
             <div
               key={lib.entityRef}
-              className="flex items-center gap-4 rounded-xl px-3 py-2.5 transition-colors duration-150 hover:bg-(--t-bg-surface)"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "8px 0",
+                borderBottom: isLast ? "none" : `1px dashed ${T.border.line}`,
+              }}
             >
               {/* Rank */}
               <span
-                className="w-5 shrink-0 text-right"
                 style={{
                   fontFamily: T.font.mono,
                   fontSize: "10px",
-                  color: i === 0 ? T.accent.gold : T.ink.ghost,
+                  color: isFirst ? T.accent.gold : T.ink.faint,
+                  width: "16px",
+                  flexShrink: 0,
+                  textAlign: "right",
                 }}
               >
                 {i + 1}
               </span>
 
               {/* Name + bar */}
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm" style={{ color: T.ink.dim }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    color: isFirst ? T.ink.base : T.ink.dim,
+                    margin: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
                   {lib.name}
                 </p>
-                {/* Mini fill bar */}
                 <div
-                  className="mt-1 h-px rounded-full"
                   style={{
+                    marginTop: "4px",
+                    height: "2px",
                     width: `${pct}%`,
-                    background:
-                      i === 0 ? T.accent.gold : "rgba(255,255,255,0.15)",
+                    borderRadius: "1px",
+                    background: isFirst
+                      ? T.accent.gold
+                      : "rgba(255,255,255,0.12)",
                     transition: "width 600ms ease",
                   }}
                 />
@@ -89,7 +129,7 @@ export function MostBookedLibraries({ libraries }: MostBookedLibrariesProps) {
                 style={{
                   fontFamily: T.font.mono,
                   fontSize: "11px",
-                  color: i === 0 ? T.accent.gold : T.ink.low,
+                  color: isFirst ? T.accent.gold : T.ink.low,
                   flexShrink: 0,
                 }}
               >
