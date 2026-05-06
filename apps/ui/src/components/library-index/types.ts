@@ -51,9 +51,19 @@ export function filtersFromParams(
     regionSlug: params.get("region") ?? "",
     areaSlug: params.get("area") ?? "",
     featured: params.get("featured") === "1",
-    sort:
-      (params.get("sort") as LibraryIndexFilterState["sort"]) ??
-      "featured:desc,name:asc",
+
+    sort: (() => {
+      const s = params.get("sort")
+      const valid: LibraryIndexFilterState["sort"][] = [
+        "featured:desc,name:asc",
+        "name:asc",
+        "name:desc",
+      ]
+
+      return valid.includes(s as LibraryIndexFilterState["sort"])
+        ? (s as LibraryIndexFilterState["sort"])
+        : "featured:desc,name:asc"
+    })(),
     page: Number(params.get("page") ?? "0"),
   }
 }
