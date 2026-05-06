@@ -107,16 +107,19 @@ function FCheckbox({
 }) {
   return (
     <label className="fopt">
-      <span
-        className={`fopt-cb ${checked ? "fopt-on" : ""}`}
-        onClick={() => onChange(!checked)}
-        role="checkbox"
-        aria-checked={checked}
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === " " || e.key === "Enter") onChange(!checked)
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        style={{
+          position: "absolute",
+          opacity: 0,
+          width: 0,
+          height: 0,
+          pointerEvents: "none",
         }}
-      >
+      />
+      <span className={`fopt-cb ${checked ? "fopt-on" : ""}`} aria-hidden>
         {checked && (
           <Icon
             icon="mdi:check"

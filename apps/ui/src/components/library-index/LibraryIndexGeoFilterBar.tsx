@@ -24,11 +24,10 @@ function countriesForContinent(continentSlug: string) {
 }
 
 async function fetchRegions(countrySlug: string): Promise<RegionOption[]> {
-  const STRAPI = process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://127.0.0.1:1337"
   try {
     const res = await fetch(
-      `${STRAPI}/api/regions?filters[country][slug][$eq]=${countrySlug}&fields[0]=name&fields[1]=slug&sort=name&pagination[pageSize]=200`,
-      { cache: "no-store" }
+      `/api/regions?countrySlug=${encodeURIComponent(countrySlug)}`,
+      { cache: "force-cache" }
     )
     if (!res.ok) return []
     const json = (await res.json()) as {
@@ -118,20 +117,17 @@ export function LibraryIndexGeoFilterBar({
 
   // Load regions when country changes
   useEffect(() => {
-    const slug = filters.countrySlug
     let cancelled = false
+    const slug = filters.countrySlug
     const load = slug
       ? fetchRegions(slug)
       : Promise.resolve([] as RegionOption[])
-    load
-      .then((r) => {
-        if (cancelled) return
+    load.then((r) => {
+      if (!cancelled) {
         setRegions(r)
         setRegionsLoading(false)
-      })
-      .catch(() => {
-        if (!cancelled) setRegionsLoading(false)
-      })
+      }
+    })
 
     return () => {
       cancelled = true

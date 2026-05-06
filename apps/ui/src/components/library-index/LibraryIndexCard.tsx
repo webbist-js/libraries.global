@@ -1,4 +1,6 @@
 // apps/ui/src/components/library-index/LibraryIndexCard.tsx
+import Image from "next/image"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 import {
@@ -87,12 +89,13 @@ export function LibraryIndexCard({ hit }: LibraryIndexCardProps) {
       >
         {imageUrl ? (
           <>
-            <img
+            <Image
               src={imageUrl}
               alt={hit.name}
-              className="absolute inset-0 h-full w-full object-cover"
+              fill
+              className="object-cover"
               style={{ filter: "saturate(0.75) brightness(0.85)" }}
-              loading="lazy"
+              sizes="(max-width: 640px) 100vw, 50vw"
             />
             <div
               className="absolute inset-0"
