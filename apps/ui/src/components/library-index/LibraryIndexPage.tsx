@@ -2,7 +2,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
 import { Container } from "@/components/elementary/Container"
@@ -32,6 +32,7 @@ export function LibraryIndexPage({
   initialTotal,
 }: LibraryIndexPageProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
   const [filters, setFilters] = useState<LibraryIndexFilterState>(() =>
     filtersFromParams(searchParams)
@@ -48,7 +49,7 @@ export function LibraryIndexPage({
       return
     }
     const qs = filtersToParams(filters).toString()
-    router.replace(qs ? `/index?${qs}` : "/index", { scroll: false })
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
   }, [filters]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleFiltersChange(next: LibraryIndexFilterState) {
