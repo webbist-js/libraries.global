@@ -73,14 +73,6 @@ export function LibraryIndexHero({ stats }: LibraryIndexHeroProps) {
           </HeroStatsGrid>
         </div>
       </div>
-
-      <style>{`
-        @media (max-width: 900px) {
-          .lib-hero-grid {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
     </section>
   )
 }
