@@ -186,7 +186,7 @@ export function AuthLeftPanel({ mode }: AuthLeftPanelProps) {
               <span
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "9px",
+                  fontSize: "10px",
                   letterSpacing: ".18em",
                   textTransform: "uppercase",
                   color: T.ink.faint,
@@ -255,7 +255,7 @@ export function AuthLeftPanel({ mode }: AuthLeftPanelProps) {
                 style={{
                   margin: 0,
                   fontFamily: T.font.mono,
-                  fontSize: "9px",
+                  fontSize: "10px",
                   letterSpacing: ".12em",
                   textTransform: "uppercase",
                   color: T.ink.faint,
@@ -276,7 +276,7 @@ export function AuthLeftPanel({ mode }: AuthLeftPanelProps) {
           fontFamily: T.font.mono,
           fontSize: "10px",
           letterSpacing: ".12em",
-          color: T.ink.ghost,
+          color: T.ink.faint,
         }}
       >
         01 — 00

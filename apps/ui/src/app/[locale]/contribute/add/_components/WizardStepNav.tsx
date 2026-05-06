@@ -41,7 +41,7 @@ export function WizardStepNav({
               alignItems: "flex-start",
               gap: "10px",
               padding: "10px 12px",
-              borderRadius: "8px",
+              borderRadius: "10px",
               cursor: "pointer",
               background: isActive ? "rgba(127,223,255,0.06)" : "transparent",
               border: "none",
@@ -79,7 +79,7 @@ export function WizardStepNav({
                     alignItems: "center",
                     justifyContent: "center",
                     fontFamily: T.font.mono,
-                    fontSize: "9px",
+                    fontSize: "10px",
                     color: isActive ? T.accent.aurora : T.ink.faint,
                   }}
                 >

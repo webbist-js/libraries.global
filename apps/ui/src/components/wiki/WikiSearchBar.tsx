@@ -203,7 +203,7 @@ export function WikiSearchBar() {
                 <span
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "9px",
+                    fontSize: "10px",
                     letterSpacing: ".12em",
                     textTransform: "uppercase",
                     color: T.ink.faint,
@@ -221,7 +221,7 @@ export function WikiSearchBar() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "8px",
+                gap: "10px",
                 padding: "10px 14px",
                 borderTop: `1px solid ${T.border.line}`,
                 textDecoration: "none",

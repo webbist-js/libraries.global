@@ -217,7 +217,7 @@ export function LibraryHero({
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: "8px",
+              gap: "10px",
               padding: "6px 12px",
               borderRadius: "999px",
               fontFamily: T.font.mono,
@@ -390,7 +390,7 @@ export function LibraryHero({
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "8px",
+                  gap: "10px",
                   padding: "12px 22px",
                   borderRadius: "14px",
                   background: "#ffffff",

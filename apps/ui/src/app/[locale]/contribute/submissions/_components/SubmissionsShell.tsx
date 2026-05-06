@@ -198,7 +198,7 @@ export function SubmissionsShell() {
                 <span
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "9px",
+                    fontSize: "10px",
                     letterSpacing: ".06em",
                     background: isActive ? "rgba(127,223,255,0.12)" : T.bg.deep,
                     color: isActive ? T.accent.aurora : T.ink.faint,
@@ -242,7 +242,7 @@ function SubmissionList({ submissions }: { submissions: Submission[] }) {
           onClick={() => setVisibleCount((c) => c + 9)}
           style={{
             padding: "12px 24px",
-            borderRadius: "8px",
+            borderRadius: "10px",
             border: `1px solid ${T.border.line}`,
             background: "transparent",
             color: T.ink.faint,
@@ -251,7 +251,7 @@ function SubmissionList({ submissions }: { submissions: Submission[] }) {
             letterSpacing: ".12em",
             cursor: "pointer",
             width: "100%",
-            marginTop: "8px",
+            marginTop: "10px",
             textTransform: "uppercase",
           }}
         >

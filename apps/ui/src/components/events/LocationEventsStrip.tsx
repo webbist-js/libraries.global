@@ -59,7 +59,7 @@ export function LocationEventsStrip({
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".22em",
               textTransform: "uppercase",
               color: T.ink.faint,
@@ -86,10 +86,10 @@ export function LocationEventsStrip({
           className="inline-flex items-center gap-1 transition-colors duration-150 hover:text-(--t-accent-aurora)"
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".16em",
             textTransform: "uppercase",
-            color: T.ink.ghost,
+            color: T.ink.faint,
             textDecoration: "none",
           }}
         >
@@ -112,9 +112,9 @@ export function LocationEventsStrip({
               <span
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "9px",
+                  fontSize: "10px",
                   letterSpacing: ".1em",
-                  color: T.ink.ghost,
+                  color: T.ink.faint,
                 }}
               >
                 {event.isFree ? "Free" : "Ticketed"}
@@ -135,10 +135,10 @@ export function LocationEventsStrip({
               <p
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "9px",
+                  fontSize: "10px",
                   letterSpacing: ".1em",
                   textTransform: "uppercase",
-                  color: T.ink.ghost,
+                  color: T.ink.faint,
                 }}
               >
                 {event.libraryEntityRef}

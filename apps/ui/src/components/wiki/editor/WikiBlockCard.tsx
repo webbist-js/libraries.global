@@ -44,7 +44,7 @@ export function WikiBlockCard({
     <div
       style={{
         border: `1px solid ${T.border.line}`,
-        borderRadius: "8px",
+        borderRadius: "10px",
         overflow: "hidden",
       }}
     >
@@ -62,7 +62,7 @@ export function WikiBlockCard({
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".14em",
             textTransform: "uppercase",
             color: T.ink.low,

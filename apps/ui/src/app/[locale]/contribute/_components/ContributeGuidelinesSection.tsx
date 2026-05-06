@@ -191,7 +191,7 @@ export function ContributeGuidelinesSection() {
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "8px",
+                      gap: "10px",
                       flexWrap: "wrap",
                     }}
                   >

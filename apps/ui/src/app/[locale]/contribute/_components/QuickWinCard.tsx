@@ -58,7 +58,7 @@ export function QuickWinCard({ win }: { readonly win: QuickWin }) {
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".16em",
             textTransform: "uppercase",
             color: T.ink.low,
@@ -107,7 +107,7 @@ export function QuickWinCard({ win }: { readonly win: QuickWin }) {
           justifyContent: "space-between",
           paddingTop: "12px",
           borderTop: `1px solid ${T.border.line}`,
-          gap: "8px",
+          gap: "10px",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -139,7 +139,7 @@ export function QuickWinCard({ win }: { readonly win: QuickWin }) {
           href={win.actionUrl}
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".14em",
             textTransform: "uppercase",
             color: T.accent.aurora,

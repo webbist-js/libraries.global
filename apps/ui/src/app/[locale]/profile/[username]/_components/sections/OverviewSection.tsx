@@ -345,7 +345,7 @@ export function OverviewSection({ profile }: { profile: UserProfile }) {
                 <p
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "9px",
+                    fontSize: "10px",
                     letterSpacing: ".12em",
                     textTransform: "uppercase",
                     color: T.ink.faint,
@@ -401,7 +401,7 @@ export function OverviewSection({ profile }: { profile: UserProfile }) {
                           style={{
                             display: "flex",
                             alignItems: "center",
-                            gap: "8px",
+                            gap: "10px",
                             marginBottom: "3px",
                           }}
                         >
@@ -439,7 +439,7 @@ export function OverviewSection({ profile }: { profile: UserProfile }) {
                           <p
                             style={{
                               fontFamily: T.font.mono,
-                              fontSize: "9px",
+                              fontSize: "10px",
                               letterSpacing: ".06em",
                               color: T.ink.faint,
                               margin: 0,
@@ -458,7 +458,7 @@ export function OverviewSection({ profile }: { profile: UserProfile }) {
                         <p
                           style={{
                             fontFamily: T.font.mono,
-                            fontSize: "9px",
+                            fontSize: "10px",
                             color: T.ink.faint,
                             margin: "0 0 2px",
                             textTransform: "uppercase",
@@ -471,7 +471,7 @@ export function OverviewSection({ profile }: { profile: UserProfile }) {
                           <p
                             style={{
                               fontFamily: T.font.mono,
-                              fontSize: "9px",
+                              fontSize: "10px",
                               color: T.accent.ok,
                               margin: 0,
                               fontWeight: 600,
@@ -548,7 +548,7 @@ export function OverviewSection({ profile }: { profile: UserProfile }) {
                 <span
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "9px",
+                    fontSize: "10px",
                     letterSpacing: ".12em",
                     textTransform: "uppercase",
                     color: T.ink.faint,
@@ -611,7 +611,7 @@ export function OverviewSection({ profile }: { profile: UserProfile }) {
                         <span
                           style={{
                             fontFamily: T.font.mono,
-                            fontSize: "9px",
+                            fontSize: "10px",
                             letterSpacing: ".10em",
                             textTransform: "uppercase",
                             color: T.ink.faint,
@@ -634,7 +634,7 @@ export function OverviewSection({ profile }: { profile: UserProfile }) {
                         <span
                           style={{
                             fontFamily: T.font.mono,
-                            fontSize: "9px",
+                            fontSize: "10px",
                             letterSpacing: ".10em",
                             textTransform: "uppercase",
                             color: T.ink.faint,
@@ -649,7 +649,7 @@ export function OverviewSection({ profile }: { profile: UserProfile }) {
                       <span
                         style={{
                           fontFamily: T.font.mono,
-                          fontSize: "9px",
+                          fontSize: "10px",
                           letterSpacing: ".10em",
                           textTransform: "uppercase",
                           color: T.accent.ok,
@@ -710,7 +710,7 @@ export function OverviewSection({ profile }: { profile: UserProfile }) {
                     <span
                       style={{
                         fontFamily: T.font.mono,
-                        fontSize: "9px",
+                        fontSize: "10px",
                         letterSpacing: ".14em",
                         textTransform: "uppercase",
                         color: T.ink.faint,
@@ -766,7 +766,7 @@ export function OverviewSection({ profile }: { profile: UserProfile }) {
               <span
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "9px",
+                  fontSize: "10px",
                   color: T.ink.faint,
                   letterSpacing: ".12em",
                 }}
@@ -778,7 +778,7 @@ export function OverviewSection({ profile }: { profile: UserProfile }) {
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(4, 1fr)",
-                gap: "8px",
+                gap: "10px",
               }}
             >
               {(() => {
@@ -797,7 +797,7 @@ export function OverviewSection({ profile }: { profile: UserProfile }) {
                     : {
                         border: T.border.line,
                         bg: T.bg.surface,
-                        color: T.ink.ghost,
+                        color: T.ink.faint,
                       }
 
                   return (
@@ -865,7 +865,7 @@ export function OverviewSection({ profile }: { profile: UserProfile }) {
                       alignItems: "center",
                       justifyContent: "space-between",
                       padding: "8px 10px",
-                      borderRadius: "8px",
+                      borderRadius: "10px",
                       textDecoration: "none",
                       background: "transparent",
                       transition: "background 150ms",

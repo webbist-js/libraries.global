@@ -187,7 +187,7 @@ const inputSx: React.CSSProperties = {
   fontSize: "13px",
   background: T.bg.deep,
   border: `1px solid ${T.border.line}`,
-  borderRadius: "8px",
+  borderRadius: "10px",
   color: T.ink.base,
   padding: "10px 14px",
   width: "100%",
@@ -197,7 +197,7 @@ const inputSx: React.CSSProperties = {
 
 const labelSx: React.CSSProperties = {
   fontFamily: T.font.mono,
-  fontSize: "9px",
+  fontSize: "10px",
   letterSpacing: ".18em",
   textTransform: "uppercase",
   color: T.ink.faint,
@@ -207,7 +207,7 @@ const labelSx: React.CSSProperties = {
 
 const hintSx: React.CSSProperties = {
   fontFamily: T.font.mono,
-  fontSize: "9px",
+  fontSize: "10px",
   letterSpacing: ".08em",
   color: T.ink.faint,
   marginTop: "5px",
@@ -444,7 +444,7 @@ export function EventFeedForm({
         <p
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".22em",
             textTransform: "uppercase",
             color: T.accent.aurora,
@@ -461,7 +461,7 @@ export function EventFeedForm({
               alignItems: "center",
               justifyContent: "space-between",
               padding: "12px 14px",
-              borderRadius: "8px",
+              borderRadius: "10px",
               border: `1px solid ${T.border.hi}`,
               background: T.bg.surface,
             }}
@@ -491,7 +491,7 @@ export function EventFeedForm({
                   .filter(Boolean)
                   .join(", ")}
                 {selectedLibrary.entityRef && (
-                  <span style={{ marginLeft: "10px", color: T.ink.ghost }}>
+                  <span style={{ marginLeft: "10px", color: T.ink.faint }}>
                     {selectedLibrary.entityRef}
                   </span>
                 )}
@@ -500,7 +500,7 @@ export function EventFeedForm({
                 <p
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "9px",
+                    fontSize: "10px",
                     color: T.accent.warn,
                     marginTop: "4px",
                   }}
@@ -568,7 +568,7 @@ export function EventFeedForm({
                       top: "50%",
                       transform: "translateY(-50%)",
                       fontFamily: T.font.mono,
-                      fontSize: "9px",
+                      fontSize: "10px",
                       color: T.ink.faint,
                       letterSpacing: ".08em",
                     }}
@@ -631,7 +631,7 @@ export function EventFeedForm({
                       <span
                         style={{
                           fontFamily: T.font.mono,
-                          fontSize: "9px",
+                          fontSize: "10px",
                           color: T.ink.faint,
                           letterSpacing: ".08em",
                           whiteSpace: "nowrap",
@@ -664,7 +664,7 @@ export function EventFeedForm({
           <p
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".22em",
               textTransform: "uppercase",
               color: T.accent.aurora,
@@ -684,7 +684,7 @@ export function EventFeedForm({
                   alignItems: "center",
                   justifyContent: "space-between",
                   padding: "12px 14px",
-                  borderRadius: "8px",
+                  borderRadius: "10px",
                   border: `1px solid ${provider === p.value ? T.border.hi : T.border.line}`,
                   background:
                     provider === p.value
@@ -717,7 +717,7 @@ export function EventFeedForm({
                   <p
                     style={{
                       fontFamily: T.font.mono,
-                      fontSize: "9px",
+                      fontSize: "10px",
                       color: T.ink.faint,
                       margin: "2px 0 0",
                       letterSpacing: ".06em",
@@ -751,7 +751,7 @@ export function EventFeedForm({
           <p
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".22em",
               textTransform: "uppercase",
               color: T.accent.aurora,
@@ -806,7 +806,7 @@ export function EventFeedForm({
         <div
           style={{
             padding: "12px 14px",
-            borderRadius: "8px",
+            borderRadius: "10px",
             border: `1px solid ${T.accent.danger}30`,
             background: `${T.accent.danger}10`,
           }}

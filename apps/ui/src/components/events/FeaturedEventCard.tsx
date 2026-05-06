@@ -104,10 +104,10 @@ function MetaCell({ label, value }: { label: string; value: string }) {
       <span
         style={{
           fontFamily: T.font.mono,
-          fontSize: "8px",
+          fontSize: "10px",
           letterSpacing: ".22em",
           textTransform: "uppercase",
-          color: T.ink.ghost,
+          color: T.ink.faint,
         }}
       >
         {label}
@@ -213,7 +213,7 @@ export function FeaturedEventCard({ event }: { event: FeaturedEvent }) {
               className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5"
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "9px",
+                fontSize: "10px",
                 letterSpacing: ".2em",
                 textTransform: "uppercase",
                 borderColor: "rgba(142,240,179,0.3)",
@@ -274,7 +274,7 @@ export function FeaturedEventCard({ event }: { event: FeaturedEvent }) {
                   className="rounded-full border px-2.5 py-1"
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "9px",
+                    fontSize: "10px",
                     letterSpacing: ".12em",
                     textTransform: "uppercase",
                     color: T.ink.dim,
@@ -300,7 +300,7 @@ export function FeaturedEventCard({ event }: { event: FeaturedEvent }) {
             className="flex flex-wrap items-center gap-x-2 gap-y-1"
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".18em",
               textTransform: "uppercase",
             }}
@@ -313,14 +313,14 @@ export function FeaturedEventCard({ event }: { event: FeaturedEvent }) {
 
             {libraryLabel ? (
               <>
-                <span style={{ color: T.ink.ghost }}>·</span>
+                <span style={{ color: T.ink.faint }}>·</span>
                 <span style={{ color: T.ink.low }}>{libraryLabel}</span>
               </>
             ) : null}
 
             {cityLabel ? (
               <>
-                <span style={{ color: T.ink.ghost }}>·</span>
+                <span style={{ color: T.ink.faint }}>·</span>
                 <span style={{ color: T.ink.faint }}>{cityLabel}</span>
               </>
             ) : null}
@@ -408,10 +408,10 @@ export function FeaturedEventCard({ event }: { event: FeaturedEvent }) {
                 className="ml-auto flex items-center gap-1.5"
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "9px",
+                  fontSize: "10px",
                   letterSpacing: ".14em",
                   textTransform: "uppercase",
-                  color: T.ink.ghost,
+                  color: T.ink.faint,
                 }}
               >
                 <span
@@ -419,7 +419,7 @@ export function FeaturedEventCard({ event }: { event: FeaturedEvent }) {
                   style={{ background: providerColor }}
                 />
                 Via {providerLabel}
-                <span style={{ color: T.ink.ghost }}>·</span>
+                <span style={{ color: T.ink.faint }}>·</span>
                 <span>ID {shortId}</span>
               </div>
             ) : null}

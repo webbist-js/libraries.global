@@ -43,7 +43,7 @@ export function FollowingSection({
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.ink.faint,
@@ -85,7 +85,7 @@ export function FollowingSection({
             <span
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "9px",
+                fontSize: "10px",
                 letterSpacing: ".14em",
                 textTransform: "uppercase",
                 color: T.ink.faint,

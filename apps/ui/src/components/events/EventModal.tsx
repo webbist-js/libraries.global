@@ -128,7 +128,7 @@ export function EventModal() {
           className="absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full border transition-colors duration-150"
           style={{
             borderColor: T.border.line,
-            color: T.ink.ghost,
+            color: T.ink.faint,
             background: T.bg.deep,
           }}
         >
@@ -182,7 +182,7 @@ export function EventModal() {
                     key={tag}
                     style={{
                       fontFamily: T.font.mono,
-                      fontSize: "9px",
+                      fontSize: "10px",
                       letterSpacing: ".14em",
                       textTransform: "uppercase",
                       color: T.ink.faint,
@@ -214,7 +214,7 @@ export function EventModal() {
                 <Icon
                   icon="mdi:calendar-outline"
                   className="size-4 shrink-0"
-                  style={{ color: T.ink.ghost }}
+                  style={{ color: T.ink.faint }}
                 />
                 <span
                   style={{
@@ -233,7 +233,7 @@ export function EventModal() {
                   <Icon
                     icon="mdi:library-outline"
                     className="size-4 shrink-0"
-                    style={{ color: T.ink.ghost }}
+                    style={{ color: T.ink.faint }}
                   />
                   <span
                     style={{

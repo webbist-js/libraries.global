@@ -383,7 +383,7 @@ function StatusPanelRow({
       <div
         style={{
           fontFamily: T.font.mono,
-          fontSize: "9px",
+          fontSize: "10px",
           letterSpacing: ".14em",
           textTransform: "uppercase",
           color: T.ink.faint,
@@ -568,7 +568,7 @@ function EditorialNote({
           alignItems: "center",
           justifyContent: "center",
           fontFamily: T.font.mono,
-          fontSize: "9px",
+          fontSize: "10px",
           fontWeight: 700,
           color: isWarning ? T.accent.warn : T.accent.danger,
           marginTop: "1px",
@@ -581,7 +581,7 @@ function EditorialNote({
         <div
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".14em",
             textTransform: "uppercase",
             color: isWarning ? T.accent.warn : T.accent.danger,
@@ -668,7 +668,7 @@ export function SubmissionCard({
           style={{
             display: "inline-block",
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".16em",
             textTransform: "uppercase",
             color: typeCfg.color,
@@ -711,7 +711,7 @@ export function SubmissionCard({
             <span
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "9px",
+                fontSize: "10px",
                 letterSpacing: ".14em",
                 textTransform: "uppercase",
                 color: statusCfg.color,

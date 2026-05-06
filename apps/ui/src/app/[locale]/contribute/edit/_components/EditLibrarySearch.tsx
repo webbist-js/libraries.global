@@ -135,7 +135,7 @@ export function EditLibrarySearch() {
               <p
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "9px",
+                  fontSize: "10px",
                   letterSpacing: ".16em",
                   textTransform: "uppercase",
                   color: T.ink.faint,
@@ -206,7 +206,7 @@ export function EditLibrarySearch() {
                         <span
                           style={{
                             fontFamily: T.font.mono,
-                            fontSize: "9px",
+                            fontSize: "10px",
                             letterSpacing: ".10em",
                             textTransform: "uppercase",
                             color: T.ink.faint,
@@ -229,7 +229,7 @@ export function EditLibrarySearch() {
                         <span
                           style={{
                             fontFamily: T.font.mono,
-                            fontSize: "9px",
+                            fontSize: "10px",
                             letterSpacing: ".10em",
                             textTransform: "uppercase",
                             color: T.ink.faint,
@@ -244,7 +244,7 @@ export function EditLibrarySearch() {
                       <span
                         style={{
                           fontFamily: T.font.mono,
-                          fontSize: "9px",
+                          fontSize: "10px",
                           letterSpacing: ".10em",
                           textTransform: "uppercase",
                           color: T.accent.ok,
@@ -422,7 +422,7 @@ export function EditLibrarySearch() {
                           <span
                             style={{
                               fontFamily: T.font.mono,
-                              fontSize: "9px",
+                              fontSize: "10px",
                               letterSpacing: ".12em",
                               textTransform: "uppercase",
                               color: T.ink.faint,
@@ -439,7 +439,7 @@ export function EditLibrarySearch() {
                           <span
                             style={{
                               fontFamily: T.font.mono,
-                              fontSize: "9px",
+                              fontSize: "10px",
                               letterSpacing: ".10em",
                               textTransform: "uppercase",
                               color: T.accent.aurora,
@@ -452,7 +452,7 @@ export function EditLibrarySearch() {
                           <span
                             style={{
                               fontFamily: T.font.mono,
-                              fontSize: "9px",
+                              fontSize: "10px",
                               letterSpacing: ".10em",
                               textTransform: "uppercase",
                               color: T.ink.faint,

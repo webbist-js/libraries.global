@@ -293,7 +293,7 @@ function StatBlock({
       <span
         style={{
           fontFamily: T.font.mono,
-          fontSize: "9.5px",
+          fontSize: "10px",
           letterSpacing: ".2em",
           color: "rgba(255,255,255,.38)",
           textTransform: "uppercase",
@@ -335,7 +335,7 @@ function TypeBadge({
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".14em",
             textTransform: "uppercase",
             padding: "2px 6px",
@@ -352,7 +352,7 @@ function TypeBadge({
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".12em",
             textTransform: "uppercase",
             padding: "2px 6px",
@@ -381,7 +381,7 @@ function RegionRow({ item, onClick }: { item: SubItem; onClick: () => void }) {
         style={{
           width: "40px",
           height: "40px",
-          borderRadius: "8px",
+          borderRadius: "10px",
           flexShrink: 0,
           background: "rgba(255,255,255,.04)",
           border: "1px solid rgba(255,255,255,.08)",
@@ -460,7 +460,7 @@ function FactRow({ label, value }: { label: string; value: string }) {
       <span
         style={{
           fontFamily: T.font.mono,
-          fontSize: "9.5px",
+          fontSize: "10px",
           letterSpacing: ".18em",
           textTransform: "uppercase",
           color: "rgba(255,255,255,.35)",
@@ -917,7 +917,7 @@ export default function GlobeInfoPanel({
                   style={{
                     width: "28px",
                     height: "28px",
-                    borderRadius: "8px",
+                    borderRadius: "10px",
                     border: "1px solid rgba(127,223,255,.25)",
                     background: "rgba(127,223,255,.1)",
                     display: "flex",

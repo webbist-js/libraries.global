@@ -113,7 +113,7 @@ export function HeroInlineTabNav({
           href={`#${tab.id}`}
           style={{
             padding: "8px 16px",
-            borderRadius: "9px",
+            borderRadius: "10px",
             fontSize: "13px",
             color: i === 0 ? T.accent.aurora : T.ink.dim,
             background: i === 0 ? "rgba(127,223,255,.1)" : "transparent",

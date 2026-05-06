@@ -43,7 +43,7 @@ export function WikiEditorSidebar({
       <span
         style={{
           fontFamily: T.font.mono,
-          fontSize: "9px",
+          fontSize: "10px",
           letterSpacing: ".14em",
           textTransform: "uppercase",
           color: T.ink.faint,
@@ -54,7 +54,7 @@ export function WikiEditorSidebar({
 
       {/* Status indicator */}
       <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <span
             style={{
               width: "6px",
@@ -94,7 +94,7 @@ export function WikiEditorSidebar({
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               color: T.ink.faint,
             }}
           >

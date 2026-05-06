@@ -134,7 +134,7 @@ export function FollowedUsersGrid({ users }: { users: FollowedUser[] }) {
         <p
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".14em",
             textTransform: "uppercase",
             color: T.ink.faint,
@@ -158,7 +158,7 @@ export function FollowedUsersGrid({ users }: { users: FollowedUser[] }) {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
       {users.map((user) => (
         <UserCard key={user.username} user={user} />
       ))}

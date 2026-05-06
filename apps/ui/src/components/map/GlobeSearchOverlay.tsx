@@ -203,7 +203,7 @@ function ResultRow({ r, onClick }: { r: SearchResult; onClick: () => void }) {
     >
       <span
         className={cn(
-          "flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-[9px] font-bold uppercase",
+          "flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-[10px] font-bold uppercase",
           r.type === "continent"
             ? "bg-cyan-500/20 text-cyan-300"
             : r.type === "library"

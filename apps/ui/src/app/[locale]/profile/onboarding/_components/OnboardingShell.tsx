@@ -35,7 +35,7 @@ type LanguageEntry = {
 const input: React.CSSProperties = {
   width: "100%",
   padding: "10px 14px",
-  borderRadius: "8px",
+  borderRadius: "10px",
   border: `1px solid ${T.border.hi}`,
   background: T.bg.surface,
   color: T.ink.base,
@@ -47,7 +47,7 @@ const input: React.CSSProperties = {
 
 const label: React.CSSProperties = {
   fontFamily: T.font.mono,
-  fontSize: "9px",
+  fontSize: "10px",
   letterSpacing: ".16em",
   textTransform: "uppercase",
   color: T.ink.faint,
@@ -143,11 +143,11 @@ function SectionHeading({
           marginBottom: "4px",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".18em",
               textTransform: "uppercase",
               color: T.ink.faint,
@@ -452,7 +452,7 @@ export function OnboardingShell({
               alignItems: "center",
               gap: "10px",
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".22em",
               textTransform: "uppercase",
               color: T.ink.faint,
@@ -555,7 +555,7 @@ export function OnboardingShell({
               <p
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "9px",
+                  fontSize: "10px",
                   letterSpacing: ".12em",
                   textTransform: "uppercase",
                   color: T.ink.faint,
@@ -580,10 +580,10 @@ export function OnboardingShell({
             <span
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "9px",
+                fontSize: "10px",
                 letterSpacing: ".16em",
                 textTransform: "uppercase",
-                color: T.ink.ghost,
+                color: T.ink.faint,
               }}
             >
               Profile setup
@@ -730,7 +730,7 @@ export function OnboardingShell({
                 >
                   <span>
                     Username *{" "}
-                    <span style={{ color: T.ink.ghost }}>
+                    <span style={{ color: T.ink.faint }}>
                       → libraries.global/@handle
                     </span>
                   </span>
@@ -830,7 +830,7 @@ export function OnboardingShell({
                   }}
                 >
                   <span>Short bio · optional</span>
-                  <span style={{ color: T.ink.ghost }}>{bio.length} / 320</span>
+                  <span style={{ color: T.ink.faint }}>{bio.length} / 320</span>
                 </label>
                 <textarea
                   style={{
@@ -850,7 +850,7 @@ export function OnboardingShell({
                   style={{
                     margin: "4px 0 0",
                     fontSize: "11px",
-                    color: T.ink.ghost,
+                    color: T.ink.faint,
                   }}
                 >
                   Shown at the top of your profile. Plain text; no markdown.
@@ -880,7 +880,7 @@ export function OnboardingShell({
                 style={{
                   display: "grid",
                   gridTemplateColumns: "1fr 1fr",
-                  gap: "8px",
+                  gap: "10px",
                 }}
               >
                 {AFFILIATION_TYPES.map((type) => {
@@ -893,7 +893,7 @@ export function OnboardingShell({
                       onClick={() => setAffiliationType(type.value)}
                       style={{
                         padding: "14px 16px",
-                        borderRadius: "8px",
+                        borderRadius: "10px",
                         border: `1px solid ${active ? "rgba(127,223,255,0.4)" : T.border.line}`,
                         background: active
                           ? "rgba(127,223,255,0.06)"
@@ -982,7 +982,7 @@ export function OnboardingShell({
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "8px",
+                      gap: "10px",
                       marginBottom: "6px",
                     }}
                   >
@@ -1026,7 +1026,7 @@ export function OnboardingShell({
                   style={{
                     marginTop: "16px",
                     padding: "14px 18px",
-                    borderRadius: "8px",
+                    borderRadius: "10px",
                     border: `1px solid ${claimResult.status === "verified" ? "rgba(142,240,179,0.3)" : "rgba(255,207,122,0.3)"}`,
                     background:
                       claimResult.status === "verified"
@@ -1119,7 +1119,7 @@ export function OnboardingShell({
                 style={{
                   display: "flex",
                   flexWrap: "wrap",
-                  gap: "8px",
+                  gap: "10px",
                   marginBottom: "12px",
                 }}
               >
@@ -1170,7 +1170,7 @@ export function OnboardingShell({
               </div>
 
               <div
-                style={{ display: "flex", gap: "8px", alignItems: "center" }}
+                style={{ display: "flex", gap: "10px", alignItems: "center" }}
               >
                 <select
                   style={{
@@ -1338,9 +1338,9 @@ export function OnboardingShell({
             <p
               style={{
                 fontSize: "12px",
-                color: T.ink.ghost,
+                color: T.ink.faint,
                 lineHeight: 1.6,
-                marginBottom: "8px",
+                marginBottom: "10px",
               }}
             >
               By continuing, you agree to the{" "}
@@ -1390,7 +1390,7 @@ export function OnboardingShell({
               onClick={() => void handleSave("home")}
               style={{
                 padding: "9px 20px",
-                borderRadius: "8px",
+                borderRadius: "10px",
                 border: `1px solid ${T.border.hi}`,
                 background: "transparent",
                 color: T.ink.dim,
@@ -1407,7 +1407,7 @@ export function OnboardingShell({
               onClick={() => void handleSave("profile")}
               style={{
                 padding: "10px 24px",
-                borderRadius: "8px",
+                borderRadius: "10px",
                 border: "1px solid rgba(127,223,255,0.35)",
                 background: "rgba(127,223,255,0.1)",
                 color: T.accent.aurora,

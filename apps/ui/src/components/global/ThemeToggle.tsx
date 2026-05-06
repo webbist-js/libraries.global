@@ -40,7 +40,7 @@ export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
         style={{
           width: "32px",
           height: "32px",
-          borderRadius: "8px",
+          borderRadius: "10px",
           border: "1px solid var(--t-border-line)",
           background: "var(--t-bg-surface)",
           color: "var(--t-ink-faint)",

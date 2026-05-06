@@ -51,7 +51,7 @@ export function LeaderboardSidebar({
         <p
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".18em",
             textTransform: "uppercase",
             color: T.ink.faint,
@@ -76,12 +76,12 @@ export function LeaderboardSidebar({
               style={{
                 display: "inline-block",
                 padding: "8px 16px",
-                borderRadius: "8px",
+                borderRadius: "10px",
                 border: `1px solid rgba(127,223,255,0.3)`,
                 background: "rgba(127,223,255,0.07)",
                 color: T.accent.aurora,
                 fontFamily: T.font.mono,
-                fontSize: "9px",
+                fontSize: "10px",
                 letterSpacing: ".14em",
                 textTransform: "uppercase",
                 textDecoration: "none",
@@ -203,7 +203,7 @@ export function LeaderboardSidebar({
               </p>
             )}
             {standing.recentBadges.length > 0 && (
-              <div style={{ marginTop: "8px" }}>
+              <div style={{ marginTop: "10px" }}>
                 <p
                   style={{
                     margin: "0 0 8px",
@@ -242,7 +242,7 @@ export function LeaderboardSidebar({
                         <span
                           style={{
                             fontFamily: T.font.mono,
-                            fontSize: "9px",
+                            fontSize: "10px",
                             color: T.ink.faint,
                             letterSpacing: ".06em",
                           }}
@@ -265,7 +265,7 @@ export function LeaderboardSidebar({
                   display: "inline-block",
                   marginTop: "12px",
                   fontFamily: T.font.mono,
-                  fontSize: "9px",
+                  fontSize: "10px",
                   letterSpacing: ".14em",
                   textTransform: "uppercase",
                   color: T.accent.aurora,
@@ -296,7 +296,7 @@ export function LeaderboardSidebar({
         <p
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".18em",
             textTransform: "uppercase",
             color: T.ink.faint,

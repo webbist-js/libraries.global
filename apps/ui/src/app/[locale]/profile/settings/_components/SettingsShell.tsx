@@ -223,15 +223,15 @@ export function SettingsShell({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "9px",
+                  gap: "10px",
                   padding: "8px 12px",
-                  borderRadius: "8px",
+                  borderRadius: "10px",
                   background: "transparent",
                   color: T.accent.aurora,
                   fontFamily: T.font.sans,
                   fontSize: "13px",
                   textDecoration: "none",
-                  marginBottom: "8px",
+                  marginBottom: "10px",
                   borderBottom: `1px solid ${T.border.line}`,
                   paddingBottom: "14px",
                   marginLeft: "-2px",
@@ -263,9 +263,9 @@ export function SettingsShell({
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "9px",
+                    gap: "10px",
                     padding: "8px 12px",
-                    borderRadius: "8px",
+                    borderRadius: "10px",
                     background: active
                       ? item.danger
                         ? "var(--t-danger-soft)"

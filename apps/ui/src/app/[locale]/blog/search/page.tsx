@@ -37,7 +37,7 @@ function SearchResult({ hit }: { hit: BlogArticleSearchHit }) {
             letterSpacing: ".18em",
             textTransform: "uppercase",
             color: T.ink.faint,
-            marginBottom: "8px",
+            marginBottom: "10px",
           }}
         >
           — {hit.section_slug}

@@ -110,7 +110,7 @@ function CardInner({
         </div>
       ) : libraryType ? (
         <div
-          className="absolute top-4 right-4 rounded px-2 py-0.5 font-mono text-[9px] tracking-[0.10em] text-white/70 uppercase backdrop-blur-sm"
+          className="absolute top-4 right-4 rounded px-2 py-0.5 font-mono text-[10px] tracking-[0.10em] text-white/70 uppercase backdrop-blur-sm"
           style={{ background: "rgba(0,0,0,0.55)" }}
         >
           {libraryType}

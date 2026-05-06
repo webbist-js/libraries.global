@@ -2,6 +2,7 @@ import type { Locale } from "next-intl"
 
 import {
   HeroEyebrow,
+  HeroLead,
   HeroTitle,
   PageShell,
   QuickPathCard,
@@ -113,18 +114,7 @@ export function WikiLandingPage({
               }}
             >
               {landing?.heroText ? (
-                <p
-                  style={{
-                    fontSize: "15px",
-                    lineHeight: 1.68,
-                    color: T.ink.dim,
-                    fontWeight: 300,
-                    maxWidth: "48ch",
-                    margin: 0,
-                  }}
-                >
-                  {landing.heroText}
-                </p>
+                <HeroLead maxWidth="48ch">{landing.heroText}</HeroLead>
               ) : null}
 
               {/* Search bar */}

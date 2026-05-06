@@ -164,7 +164,7 @@ export function ConnectionsSection() {
                   style={{
                     width: "34px",
                     height: "34px",
-                    borderRadius: "8px",
+                    borderRadius: "10px",
                     background: T.bg.deep,
                     border: `1px solid ${T.border.line}`,
                     display: "flex",

@@ -269,7 +269,7 @@ export function LibraryContactPanel({
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
-          gap: "8px",
+          gap: "10px",
           padding: "0 20px 16px",
         }}
       >

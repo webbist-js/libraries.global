@@ -28,7 +28,7 @@ export function MetaRow({
           key={i}
           style={{ display: "flex", alignItems: "center", gap: "6px" }}
         >
-          {i > 0 && <span style={{ color: T.ink.ghost }}>{separator}</span>}
+          {i > 0 && <span style={{ color: T.ink.faint }}>{separator}</span>}
           {item}
         </span>
       ))}

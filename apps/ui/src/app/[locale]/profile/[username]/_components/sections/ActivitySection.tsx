@@ -206,7 +206,7 @@ function ActivityRow({ sub }: { sub: PublicSubmission }) {
       <span
         style={{
           fontFamily: T.font.mono,
-          fontSize: "9px",
+          fontSize: "10px",
           color: T.ink.faint,
           textTransform: "uppercase",
           letterSpacing: ".06em",
@@ -239,7 +239,7 @@ function StatPill({
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: "8px",
+        gap: "10px",
         padding: "16px 20px",
         border: `1px solid ${T.border.line}`,
         borderRadius: "12px",
@@ -251,7 +251,7 @@ function StatPill({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "8px",
+          gap: "10px",
         }}
       >
         <Icon
@@ -262,7 +262,7 @@ function StatPill({
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".12em",
             textTransform: "uppercase",
             color: T.ink.faint,
@@ -434,7 +434,9 @@ export function ActivitySection({ username }: { username: string }) {
           </div>
 
           {/* Timeline feed */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+          >
             {grouped.map((group) => (
               <div
                 key={group.key}
@@ -458,7 +460,7 @@ export function ActivitySection({ username }: { username: string }) {
                   <span
                     style={{
                       fontFamily: T.font.mono,
-                      fontSize: "9px",
+                      fontSize: "10px",
                       letterSpacing: ".14em",
                       textTransform: "uppercase",
                       color: T.ink.faint,
@@ -469,7 +471,7 @@ export function ActivitySection({ username }: { username: string }) {
                   <span
                     style={{
                       fontFamily: T.font.mono,
-                      fontSize: "9px",
+                      fontSize: "10px",
                       color: T.ink.faint,
                       opacity: 0.6,
                     }}

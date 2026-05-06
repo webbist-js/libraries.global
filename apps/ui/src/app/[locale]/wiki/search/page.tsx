@@ -34,7 +34,7 @@ function SearchResult({ hit }: { hit: WikiArticleSearchHit }) {
           display: "flex",
           alignItems: "center",
           gap: "12px",
-          marginBottom: "8px",
+          marginBottom: "10px",
         }}
       >
         {hit.section_name && (
@@ -55,7 +55,7 @@ function SearchResult({ hit }: { hit: WikiArticleSearchHit }) {
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.accent.violet,
@@ -84,7 +84,7 @@ function SearchResult({ hit }: { hit: WikiArticleSearchHit }) {
       {hit.summary && (
         <p
           style={{
-            marginTop: "8px",
+            marginTop: "10px",
             fontSize: "13px",
             lineHeight: 1.6,
             color: T.ink.low,

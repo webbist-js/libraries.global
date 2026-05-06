@@ -67,7 +67,7 @@ function CountrySlugCombobox({
   const triggerStyle: React.CSSProperties = {
     width: "100%",
     padding: "10px 14px",
-    borderRadius: "8px",
+    borderRadius: "10px",
     border: `1px solid ${T.border.hi}`,
     background: disabled ? T.bg.deep : T.bg.surface,
     color: T.ink.base,
@@ -107,7 +107,7 @@ function CountrySlugCombobox({
             zIndex: 50,
             background: "var(--t-bg-deep)",
             border: `1px solid ${T.border.hi}`,
-            borderRadius: "8px",
+            borderRadius: "10px",
             overflow: "hidden",
             boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
           }}
@@ -231,7 +231,7 @@ export function LibraryClaimSearch({
   const inputStyle: React.CSSProperties = {
     width: "100%",
     padding: "10px 14px",
-    borderRadius: "8px",
+    borderRadius: "10px",
     border: `1px solid ${T.border.hi}`,
     background: T.bg.surface,
     color: T.ink.base,
@@ -243,7 +243,7 @@ export function LibraryClaimSearch({
 
   const labelStyle: React.CSSProperties = {
     fontFamily: T.font.mono,
-    fontSize: "9px",
+    fontSize: "10px",
     letterSpacing: ".16em",
     textTransform: "uppercase",
     color: T.ink.faint,
@@ -327,7 +327,7 @@ export function LibraryClaimSearch({
       <div
         style={{
           padding: "16px 20px",
-          borderRadius: "8px",
+          borderRadius: "10px",
           border: `1px solid ${claimResult.status === "verified" ? "rgba(142,240,179,0.3)" : "rgba(255,207,122,0.3)"}`,
           background:
             claimResult.status === "verified"
@@ -439,7 +439,7 @@ export function LibraryClaimSearch({
         <div
           style={{
             border: `1px solid ${T.border.line}`,
-            borderRadius: "8px",
+            borderRadius: "10px",
             overflow: "hidden",
           }}
         >
@@ -470,7 +470,7 @@ export function LibraryClaimSearch({
                   style={{
                     fontSize: "11px",
                     color: T.ink.faint,
-                    marginLeft: "8px",
+                    marginLeft: "10px",
                     fontFamily: T.font.mono,
                   }}
                 >
@@ -488,7 +488,7 @@ export function LibraryClaimSearch({
           <div
             style={{
               padding: "12px 16px",
-              borderRadius: "8px",
+              borderRadius: "10px",
               background: "rgba(127,223,255,0.06)",
               border: "1px solid rgba(127,223,255,0.2)",
               display: "flex",
@@ -567,7 +567,7 @@ export function LibraryClaimSearch({
             onClick={() => void handleClaim()}
             style={{
               padding: "10px 20px",
-              borderRadius: "8px",
+              borderRadius: "10px",
               border: "1px solid rgba(127,223,255,0.35)",
               background: "rgba(127,223,255,0.1)",
               color: T.accent.aurora,

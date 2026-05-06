@@ -19,7 +19,7 @@ const SELECT_STYLE: React.CSSProperties = {
   letterSpacing: ".08em",
   background: T.bg.deep,
   border: `1px solid ${T.border.line}`,
-  borderRadius: "8px",
+  borderRadius: "10px",
   color: T.ink.dim,
   padding: "6px 10px",
   cursor: "pointer",
@@ -101,7 +101,7 @@ export function EventsGeoFilterBar({
           padding: "10px 24px",
           display: "flex",
           alignItems: "center",
-          gap: "8px",
+          gap: "10px",
           overflowX: "auto",
           flexWrap: "wrap",
         }}
@@ -126,11 +126,11 @@ export function EventsGeoFilterBar({
           <span
             style={{
               position: "absolute",
-              right: "8px",
+              right: "10px",
               top: "50%",
               transform: "translateY(-50%)",
               pointerEvents: "none",
-              color: T.ink.ghost,
+              color: T.ink.faint,
               fontSize: "10px",
             }}
           >
@@ -157,11 +157,11 @@ export function EventsGeoFilterBar({
           <span
             style={{
               position: "absolute",
-              right: "8px",
+              right: "10px",
               top: "50%",
               transform: "translateY(-50%)",
               pointerEvents: "none",
-              color: T.ink.ghost,
+              color: T.ink.faint,
               fontSize: "10px",
             }}
           >
@@ -217,7 +217,7 @@ export function EventsGeoFilterBar({
               key={label}
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "9px",
+                fontSize: "10px",
                 letterSpacing: ".12em",
                 textTransform: "uppercase",
                 padding: "3px 8px",
@@ -243,7 +243,7 @@ export function EventsGeoFilterBar({
             }
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".12em",
               textTransform: "uppercase",
               color: T.accent.danger,

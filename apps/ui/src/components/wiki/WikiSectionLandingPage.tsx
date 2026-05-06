@@ -2,6 +2,7 @@ import type { Locale } from "next-intl"
 
 import {
   HeroEyebrow,
+  HeroLead,
   HeroTitle,
   PageShell,
   StickySubNav,
@@ -97,18 +98,7 @@ export function WikiSectionLandingPage({
               }}
             >
               {section.description ? (
-                <p
-                  style={{
-                    fontSize: "15px",
-                    lineHeight: 1.68,
-                    color: T.ink.dim,
-                    fontWeight: 300,
-                    maxWidth: "48ch",
-                    margin: 0,
-                  }}
-                >
-                  {section.description}
-                </p>
+                <HeroLead maxWidth="48ch">{section.description}</HeroLead>
               ) : null}
 
               {totalArticles > 0 ? (

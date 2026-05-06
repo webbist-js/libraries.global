@@ -147,7 +147,7 @@ function EventCard({ event }: { event: LibraryEvent }) {
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".18em",
             textTransform: "uppercase",
             color: T.ink.low,
@@ -190,7 +190,7 @@ function EventCard({ event }: { event: LibraryEvent }) {
             className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5"
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.ink.low,
@@ -207,7 +207,7 @@ function EventCard({ event }: { event: LibraryEvent }) {
             className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5"
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: event.isFree ? T.accent.ok : T.accent.ember,
@@ -344,7 +344,7 @@ export function LibraryEvents({
             style={{
               fontFamily: T.font.mono,
               fontSize: "10px",
-              color: T.ink.ghost,
+              color: T.ink.faint,
             }}
           >
             {events.length}
@@ -355,7 +355,7 @@ export function LibraryEvents({
             className="inline-flex items-center gap-1.5"
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.accent.ok,

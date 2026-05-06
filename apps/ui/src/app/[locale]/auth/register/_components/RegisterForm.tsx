@@ -27,7 +27,7 @@ const inputStyle = {
 
 const labelStyle = {
   fontFamily: T.font.mono,
-  fontSize: "9px",
+  fontSize: "10px",
   letterSpacing: ".18em",
   textTransform: "uppercase" as const,
   color: T.ink.low,
@@ -141,7 +141,7 @@ export function RegisterForm() {
           <p
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".22em",
               textTransform: "uppercase",
               color: T.ink.faint,
@@ -189,7 +189,7 @@ export function RegisterForm() {
             <div>
               <label style={labelStyle} htmlFor="email">
                 <span>Email address</span>
-                <span style={{ color: T.accent.aurora, fontSize: "9px" }}>
+                <span style={{ color: T.accent.aurora, fontSize: "10px" }}>
                   *
                 </span>
               </label>
@@ -218,7 +218,7 @@ export function RegisterForm() {
             <div>
               <label style={labelStyle} htmlFor="password">
                 <span>Create password</span>
-                <span style={{ color: T.ink.faint, fontSize: "9px" }}>
+                <span style={{ color: T.ink.faint, fontSize: "10px" }}>
                   Minimum {PASSWORD_MIN_LENGTH} characters
                 </span>
               </label>
@@ -247,7 +247,7 @@ export function RegisterForm() {
             <div>
               <label style={labelStyle} htmlFor="passwordConfirmation">
                 <span>Confirm password</span>
-                <span style={{ color: T.accent.aurora, fontSize: "9px" }}>
+                <span style={{ color: T.accent.aurora, fontSize: "10px" }}>
                   *
                 </span>
               </label>
@@ -380,10 +380,10 @@ export function RegisterForm() {
               textAlign: "center",
               marginTop: "12px",
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               textTransform: "uppercase",
-              color: T.ink.ghost,
+              color: T.ink.faint,
             }}
           >
             Your email is never shared

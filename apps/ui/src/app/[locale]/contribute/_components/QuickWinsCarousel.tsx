@@ -49,7 +49,7 @@ export function QuickWinsCarousel({ wins }: { readonly wins: QuickWin[] }) {
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".22em",
             textTransform: "uppercase",
             color: T.ink.faint,
@@ -57,7 +57,7 @@ export function QuickWinsCarousel({ wins }: { readonly wins: QuickWin[] }) {
         >
           Curated for you · {page + 1} of {totalPages}
         </span>
-        <div style={{ display: "flex", gap: "8px" }}>
+        <div style={{ display: "flex", gap: "10px" }}>
           {(["←", "→"] as const).map((arrow, i) => {
             const disabled = i === 0 ? page === 0 : page >= totalPages - 1
 

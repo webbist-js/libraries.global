@@ -13,7 +13,7 @@ export function PriceBadge({
   priceMax,
   size = "sm",
 }: PriceBadgeProps) {
-  const fontSize = size === "xs" ? "9px" : "10px"
+  const fontSize = "10px"
   const padding = size === "xs" ? "2px 6px" : "3px 8px"
 
   if (isFree) {

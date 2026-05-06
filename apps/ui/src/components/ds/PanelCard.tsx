@@ -49,7 +49,7 @@ export function PanelCard({
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              marginBottom: "8px",
+              marginBottom: "10px",
             }}
           >
             <div
@@ -58,7 +58,7 @@ export function PanelCard({
                 alignItems: "center",
                 gap: "6px",
                 fontFamily: T.font.mono,
-                fontSize: "9px",
+                fontSize: "10px",
                 letterSpacing: ".22em",
                 textTransform: "uppercase",
                 color: T.ink.faint,

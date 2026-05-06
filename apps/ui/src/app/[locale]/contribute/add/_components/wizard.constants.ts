@@ -4,7 +4,7 @@ import { T } from "@/lib/design-tokens"
 
 export const fieldInputStyle: React.CSSProperties = {
   padding: "10px 14px",
-  borderRadius: "8px",
+  borderRadius: "10px",
   border: `1px solid ${T.border.hi}`,
   background: T.bg.surface,
   color: T.ink.base,

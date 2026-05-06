@@ -21,7 +21,7 @@ export function Eyebrow({
         color: T.ink.faint,
         display: "flex",
         alignItems: "center",
-        gap: "8px",
+        gap: "10px",
         margin: 0,
       }}
     >

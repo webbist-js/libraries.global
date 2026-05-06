@@ -30,7 +30,7 @@ export function IndexPager({
     fontSize: "11px",
     letterSpacing: ".06em",
     padding: "6px 10px",
-    borderRadius: "8px",
+    borderRadius: "10px",
     border: `1px solid ${active ? "rgba(127,223,255,0.3)" : T.border.line}`,
     background: active ? "rgba(127,223,255,0.1)" : "transparent",
     color: disabled ? T.ink.ghost : active ? T.accent.aurora : T.ink.dim,
@@ -63,7 +63,7 @@ export function IndexPager({
           <span
             key={`ellipsis-${i}`}
             style={{
-              color: T.ink.ghost,
+              color: T.ink.faint,
               padding: "6px 4px",
               fontSize: "11px",
               fontFamily: T.font.mono,

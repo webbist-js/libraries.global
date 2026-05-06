@@ -356,7 +356,7 @@ export function ContributePathCards({
                 {locked && (
                   <em
                     style={{
-                      color: T.ink.ghost,
+                      color: T.ink.faint,
                       fontStyle: "italic",
                     }}
                   >
@@ -386,7 +386,7 @@ export function ContributePathCards({
                 <span
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "9px",
+                    fontSize: "10px",
                     letterSpacing: ".12em",
                     textTransform: "uppercase",
                     color: locked ? T.ink.ghost : T.ink.faint,
@@ -401,7 +401,7 @@ export function ContributePathCards({
                       fontFamily: T.font.serif,
                       fontStyle: "italic",
                       fontSize: "15px",
-                      color: T.ink.ghost,
+                      color: T.ink.faint,
                       letterSpacing: "-0.01em",
                     }}
                   >

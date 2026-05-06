@@ -317,10 +317,10 @@ export function BlogArticlePage({
                         <p
                           style={{
                             fontFamily: T.font.mono,
-                            fontSize: "9px",
+                            fontSize: "10px",
                             letterSpacing: ".20em",
                             textTransform: "uppercase",
-                            color: T.ink.ghost,
+                            color: T.ink.faint,
                             marginBottom: "4px",
                           }}
                         >
@@ -336,10 +336,10 @@ export function BlogArticlePage({
                       <p
                         style={{
                           fontFamily: T.font.mono,
-                          fontSize: "9px",
+                          fontSize: "10px",
                           letterSpacing: ".20em",
                           textTransform: "uppercase",
-                          color: T.ink.ghost,
+                          color: T.ink.faint,
                           marginBottom: "4px",
                         }}
                       >
@@ -355,10 +355,10 @@ export function BlogArticlePage({
                         <p
                           style={{
                             fontFamily: T.font.mono,
-                            fontSize: "9px",
+                            fontSize: "10px",
                             letterSpacing: ".20em",
                             textTransform: "uppercase",
-                            color: T.ink.ghost,
+                            color: T.ink.faint,
                             marginBottom: "4px",
                           }}
                         >
@@ -377,10 +377,10 @@ export function BlogArticlePage({
                       <p
                         style={{
                           fontFamily: T.font.mono,
-                          fontSize: "9px",
+                          fontSize: "10px",
                           letterSpacing: ".20em",
                           textTransform: "uppercase",
-                          color: T.ink.ghost,
+                          color: T.ink.faint,
                           marginBottom: "16px",
                         }}
                       >
@@ -430,10 +430,10 @@ export function BlogArticlePage({
                     <p
                       style={{
                         fontFamily: T.font.mono,
-                        fontSize: "9px",
+                        fontSize: "10px",
                         letterSpacing: ".20em",
                         textTransform: "uppercase",
-                        color: T.ink.ghost,
+                        color: T.ink.faint,
                         marginBottom: "4px",
                       }}
                     >

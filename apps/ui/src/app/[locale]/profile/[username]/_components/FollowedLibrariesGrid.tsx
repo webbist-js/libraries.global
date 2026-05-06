@@ -36,7 +36,7 @@ export function FollowedLibrariesGrid({
         <p
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".14em",
             textTransform: "uppercase",
             color: T.ink.faint,
@@ -92,7 +92,7 @@ export function FollowedLibrariesGrid({
             href={`/profile/${username}/following`}
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.accent.aurora,

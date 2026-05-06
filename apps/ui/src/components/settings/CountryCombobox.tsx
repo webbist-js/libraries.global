@@ -8,7 +8,7 @@ import { T } from "@/lib/design-tokens"
 const triggerStyle = {
   width: "100%",
   padding: "10px 14px",
-  borderRadius: "8px",
+  borderRadius: "10px",
   border: `1px solid ${T.border.hi}`,
   background: T.bg.surface,
   color: T.ink.base,
@@ -85,7 +85,7 @@ export function CountryCombobox({
             zIndex: 50,
             background: "rgba(7,11,30,0.98)",
             border: `1px solid ${T.border.hi}`,
-            borderRadius: "8px",
+            borderRadius: "10px",
             overflow: "hidden",
             boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
           }}

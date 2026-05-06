@@ -233,7 +233,7 @@ export function AddLibraryWizard({
         <aside
           style={{
             paddingRight: "24px",
-            paddingTop: "8px",
+            paddingTop: "10px",
             borderRight: `1px solid ${T.border.line}`,
             position: "sticky",
             top: "80px",

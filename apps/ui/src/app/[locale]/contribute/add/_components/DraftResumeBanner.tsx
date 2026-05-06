@@ -46,7 +46,7 @@ export function DraftResumeBanner({
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".16em",
             textTransform: "uppercase",
             color: T.accent.aurora,
@@ -66,7 +66,7 @@ export function DraftResumeBanner({
           You have unsaved progress. Resume where you left off?
         </span>
       </div>
-      <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+      <div style={{ display: "flex", gap: "10px", flexShrink: 0 }}>
         <button
           onClick={onResume}
           style={{
@@ -76,7 +76,7 @@ export function DraftResumeBanner({
             background: "rgba(127,223,255,0.1)",
             color: T.accent.aurora,
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".14em",
             textTransform: "uppercase",
             cursor: "pointer",
@@ -93,7 +93,7 @@ export function DraftResumeBanner({
             background: "transparent",
             color: T.ink.faint,
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".14em",
             textTransform: "uppercase",
             cursor: "pointer",

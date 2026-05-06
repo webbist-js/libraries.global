@@ -112,7 +112,7 @@ function NavStatusBadge({ status }: { status?: WikiArticleStatus | null }) {
     <span
       style={{
         fontFamily: T.font.mono,
-        fontSize: "9px",
+        fontSize: "10px",
         padding: "1px 5px",
         borderRadius: "3px",
         background: cfg.bg,
@@ -187,7 +187,7 @@ function WikiLeftNav({
               padding: "0 10px",
               display: "flex",
               alignItems: "center",
-              gap: "8px",
+              gap: "10px",
             }}
           >
             <span style={{ color: T.ink.faint }}>
@@ -504,7 +504,7 @@ export function WikiArticlePage({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "8px",
+                  gap: "10px",
                   padding: "8px 12px",
                   borderRadius: "10px",
                   border: `1px solid ${T.border.line}`,
@@ -711,7 +711,7 @@ export function WikiArticlePage({
                         alignItems: "center",
                         gap: "6px",
                         padding: "6px 10px",
-                        borderRadius: "8px",
+                        borderRadius: "10px",
                         border: `1px solid ${T.border.line}`,
                         background: "var(--t-bg-deep)",
                         fontFamily: T.font.mono,

@@ -189,7 +189,7 @@ function StatCell({
       <span
         style={{
           fontFamily: T.font.mono,
-          fontSize: "9px",
+          fontSize: "10px",
           letterSpacing: ".14em",
           textTransform: "uppercase",
           color: T.ink.faint,
@@ -235,7 +235,7 @@ function ContributionRow({ sub }: { sub: PublicSubmission }) {
         style={{
           width: "34px",
           height: "34px",
-          borderRadius: "9px",
+          borderRadius: "10px",
           border: `1px solid ${meta.border}`,
           background: meta.bg,
           display: "flex",
@@ -253,7 +253,7 @@ function ContributionRow({ sub }: { sub: PublicSubmission }) {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "8px",
+            gap: "10px",
             marginBottom: "4px",
             flexWrap: "wrap",
           }}
@@ -334,7 +334,7 @@ function ContributionRow({ sub }: { sub: PublicSubmission }) {
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             color: T.ink.faint,
             textTransform: "uppercase",
             letterSpacing: ".06em",
@@ -346,7 +346,7 @@ function ContributionRow({ sub }: { sub: PublicSubmission }) {
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               color: T.accent.ok,
               fontWeight: 600,
             }}
@@ -417,7 +417,7 @@ export function ContributionsSection({ username }: { username: string }) {
               style={{
                 width: "34px",
                 height: "34px",
-                borderRadius: "9px",
+                borderRadius: "10px",
                 background: T.bg.surface,
                 flexShrink: 0,
               }}
@@ -536,7 +536,7 @@ export function ContributionsSection({ username }: { username: string }) {
               style={{
                 padding: "10px 16px",
                 fontFamily: T.font.mono,
-                fontSize: "9px",
+                fontSize: "10px",
                 letterSpacing: ".14em",
                 textTransform: "uppercase",
                 color: active ? T.ink.base : T.ink.faint,
@@ -582,7 +582,7 @@ export function ContributionsSection({ username }: { username: string }) {
           <p
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.ink.faint,
@@ -614,7 +614,7 @@ export function ContributionsSection({ username }: { username: string }) {
                 <span
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "9px",
+                    fontSize: "10px",
                     letterSpacing: ".14em",
                     textTransform: "uppercase",
                     color: T.ink.faint,

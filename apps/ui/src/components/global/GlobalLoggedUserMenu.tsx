@@ -98,7 +98,7 @@ export function GlobalLoggedUserMenu({
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "8px",
+            gap: "10px",
             padding: "3px 12px 3px 3px",
             borderRadius: "999px",
             border: `1px solid ${T.border.line}`,
@@ -268,7 +268,7 @@ export function GlobalLoggedUserMenu({
                     style={{
                       marginLeft: "auto",
                       fontFamily: T.font.mono,
-                      fontSize: "8px",
+                      fontSize: "10px",
                       letterSpacing: ".12em",
                       textTransform: "uppercase",
                       color: T.accent.aurora,

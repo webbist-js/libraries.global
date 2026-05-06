@@ -97,7 +97,7 @@ export function QuickPathCard({
           style={{
             width: "36px",
             height: "36px",
-            borderRadius: "9px",
+            borderRadius: "10px",
             background: "rgba(127,223,255,.1)",
             border: "1px solid rgba(127,223,255,.25)",
             display: "grid",
@@ -155,7 +155,7 @@ export function QuickPathCard({
           color: T.accent.aurora,
           display: "flex",
           alignItems: "center",
-          gap: "8px",
+          gap: "10px",
           marginTop: "auto",
         }}
       >
@@ -308,7 +308,7 @@ export function SectionDomainCard({
                 color: T.ink.dim,
                 display: "flex",
                 alignItems: "center",
-                gap: "8px",
+                gap: "10px",
               }}
             >
               <span

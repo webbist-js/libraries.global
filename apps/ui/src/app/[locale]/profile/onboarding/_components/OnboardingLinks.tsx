@@ -26,7 +26,7 @@ export function OnboardingLinks({
   const inputStyle = {
     width: "100%",
     padding: "10px 14px",
-    borderRadius: "8px",
+    borderRadius: "10px",
     border: `1px solid ${T.border.hi}`,
     background: T.bg.surface,
     color: T.ink.base,
@@ -38,7 +38,7 @@ export function OnboardingLinks({
 
   const labelStyle = {
     fontFamily: "JetBrains Mono, monospace",
-    fontSize: "9px",
+    fontSize: "10px",
     letterSpacing: ".16em",
     textTransform: "uppercase" as const,
     color: T.ink.faint,
@@ -117,7 +117,7 @@ export function OnboardingLinks({
         style={{
           display: "flex",
           justifyContent: "space-between",
-          paddingTop: "8px",
+          paddingTop: "10px",
         }}
       >
         <button
@@ -140,7 +140,7 @@ export function OnboardingLinks({
           onClick={() => onNext(form)}
           style={{
             padding: "10px 24px",
-            borderRadius: "8px",
+            borderRadius: "10px",
             border: "none",
             background: T.ink.base,
             color: T.bg.void,

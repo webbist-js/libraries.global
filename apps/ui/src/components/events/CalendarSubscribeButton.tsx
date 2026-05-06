@@ -71,7 +71,7 @@ export function CalendarSubscribeButton({
             <Icon
               icon="mdi:download-outline"
               className="size-4"
-              style={{ color: T.ink.ghost }}
+              style={{ color: T.ink.faint }}
             />
             <span
               style={{

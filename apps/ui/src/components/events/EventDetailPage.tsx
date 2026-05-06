@@ -83,7 +83,7 @@ function RelatedEventCard({ event }: { event: DetailEvent }) {
             fontFamily: T.font.mono,
             fontSize: "10px",
             letterSpacing: ".1em",
-            color: T.ink.ghost,
+            color: T.ink.faint,
           }}
         >
           {date} · {time}
@@ -154,7 +154,7 @@ export function EventDetailPage({
                   fontSize: "10px",
                   letterSpacing: ".14em",
                   textTransform: "uppercase",
-                  color: T.ink.ghost,
+                  color: T.ink.faint,
                   textDecoration: "none",
                 }}
               >
@@ -182,7 +182,7 @@ export function EventDetailPage({
                   key={tag}
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "9px",
+                    fontSize: "10px",
                     letterSpacing: ".14em",
                     textTransform: "uppercase",
                     color: T.ink.faint,
@@ -220,7 +220,7 @@ export function EventDetailPage({
                 <Icon
                   icon="mdi:calendar-outline"
                   className="size-4"
-                  style={{ color: T.ink.ghost }}
+                  style={{ color: T.ink.faint }}
                 />
                 <span
                   style={{
@@ -239,7 +239,7 @@ export function EventDetailPage({
                   <Icon
                     icon="mdi:clock-outline"
                     className="size-4"
-                    style={{ color: T.ink.ghost }}
+                    style={{ color: T.ink.faint }}
                   />
                   <span
                     style={{
@@ -260,7 +260,7 @@ export function EventDetailPage({
                   <Icon
                     icon="mdi:library-outline"
                     className="size-4"
-                    style={{ color: T.ink.ghost }}
+                    style={{ color: T.ink.faint }}
                   />
                   <span
                     style={{
@@ -327,7 +327,7 @@ export function EventDetailPage({
                   className="mb-4"
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "9px",
+                    fontSize: "10px",
                     letterSpacing: ".2em",
                     textTransform: "uppercase",
                     color: T.ink.faint,
@@ -347,7 +347,7 @@ export function EventDetailPage({
                     fontFamily: T.font.mono,
                     letterSpacing: ".12em",
                     textTransform: "uppercase",
-                    color: T.ink.ghost,
+                    color: T.ink.faint,
                     textDecoration: "none",
                   }}
                 >

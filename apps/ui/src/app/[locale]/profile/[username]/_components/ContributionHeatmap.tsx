@@ -101,7 +101,7 @@ export function ContributionHeatmap({
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".18em",
             textTransform: "uppercase",
             color: T.ink.faint,
@@ -113,7 +113,7 @@ export function ContributionHeatmap({
       <p
         style={{
           fontFamily: T.font.mono,
-          fontSize: "9px",
+          fontSize: "10px",
           letterSpacing: ".14em",
           textTransform: "uppercase",
           color: T.ink.faint,
@@ -168,7 +168,7 @@ export function ContributionHeatmap({
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             color: T.ink.faint,
             letterSpacing: ".06em",
           }}
@@ -179,7 +179,7 @@ export function ContributionHeatmap({
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               color: T.ink.faint,
               letterSpacing: ".06em",
               marginRight: "2px",
@@ -201,7 +201,7 @@ export function ContributionHeatmap({
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               color: T.ink.faint,
               letterSpacing: ".06em",
               marginLeft: "2px",

@@ -26,16 +26,12 @@ export async function DELETE(req: Request) {
 
   const { sessionToken } = (await req.json()) as { sessionToken?: string }
 
-  if (sessionToken) {
-    // Revoke specific session
-    await auth.api.revokeSession({
-      headers: await headers(),
-      body: { token: sessionToken },
-    })
-  } else {
-    // Sign out all other sessions
-    await auth.api.revokeOtherSessions({ headers: await headers() })
-  }
+  await (sessionToken
+    ? auth.api.revokeSession({
+        headers: await headers(),
+        body: { token: sessionToken },
+      })
+    : auth.api.revokeOtherSessions({ headers: await headers() }))
 
   return NextResponse.json({ ok: true })
 }

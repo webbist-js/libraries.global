@@ -139,7 +139,7 @@ export function WizardCompletionSidebar({
           {checks.map((check) => (
             <div
               key={check.step}
-              style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}
+              style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}
             >
               <Icon
                 icon={check.done ? "mdi:check-circle" : "mdi:circle-outline"}
@@ -211,7 +211,7 @@ export function WizardCompletionSidebar({
       <div
         style={{
           border: "1px solid rgba(127,223,255,0.2)",
-          borderRadius: "8px",
+          borderRadius: "10px",
           padding: "12px",
           background: "rgba(127,223,255,0.04)",
         }}
@@ -223,7 +223,7 @@ export function WizardCompletionSidebar({
             letterSpacing: ".1em",
             textTransform: "uppercase",
             color: T.accent.aurora,
-            marginBottom: "8px",
+            marginBottom: "10px",
             opacity: 0.8,
           }}
         >

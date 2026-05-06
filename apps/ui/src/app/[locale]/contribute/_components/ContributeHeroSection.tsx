@@ -87,7 +87,7 @@ export function ContributeHeroSection({
       <p
         style={{
           fontFamily: T.font.mono,
-          fontSize: "9px",
+          fontSize: "10px",
           letterSpacing: ".22em",
           textTransform: "uppercase",
           color: T.accent.aurora,
@@ -155,7 +155,7 @@ export function ContributeHeroSection({
             alignItems: "center",
             gap: "6px",
             padding: "10px 22px",
-            borderRadius: "8px",
+            borderRadius: "10px",
             border: "1px solid var(--t-aurora-edge)",
             background: "var(--t-aurora-soft)",
             color: T.accent.aurora,
@@ -176,7 +176,7 @@ export function ContributeHeroSection({
             alignItems: "center",
             gap: "6px",
             padding: "10px 22px",
-            borderRadius: "8px",
+            borderRadius: "10px",
             border: `1px solid ${T.border.hi}`,
             background: T.bg.surface,
             color: T.ink.dim,

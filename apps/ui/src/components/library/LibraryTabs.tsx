@@ -87,23 +87,23 @@ export function LibraryTabNav({
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".18em",
               textTransform: "uppercase",
-              color: T.ink.ghost,
+              color: T.ink.faint,
             }}
           >
             {entityRef}
           </span>
         ) : null}
         {entityRef && lastVerifiedLabel ? (
-          <span style={{ color: T.ink.ghost, fontSize: "9px" }}>·</span>
+          <span style={{ color: T.ink.faint, fontSize: "10px" }}>·</span>
         ) : null}
         {lastVerifiedLabel ? (
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".18em",
               textTransform: "uppercase",
               color: T.ink.faint,

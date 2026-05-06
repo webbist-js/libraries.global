@@ -43,7 +43,7 @@ function Pagination({
             textDecoration: "none",
             padding: "8px 16px",
             border: `1px solid ${T.border.line}`,
-            borderRadius: "8px",
+            borderRadius: "10px",
             transition: "border-color 150ms, color 150ms",
           }}
           className="hover:border-(--t-border-hi) hover:text-(--t-ink-base)"
@@ -76,7 +76,7 @@ function Pagination({
             textDecoration: "none",
             padding: "8px 16px",
             border: `1px solid ${T.border.line}`,
-            borderRadius: "8px",
+            borderRadius: "10px",
             transition: "border-color 150ms, color 150ms",
           }}
           className="hover:border-(--t-border-hi) hover:text-(--t-ink-base)"

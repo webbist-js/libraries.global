@@ -65,7 +65,7 @@ export function LeaderboardRows({ entries }: { entries: LeaderboardEntry[] }) {
               alignItems: "center",
               justifyContent: "center",
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               fontWeight: 600,
               color: T.accent.aurora,
               flexShrink: 0,

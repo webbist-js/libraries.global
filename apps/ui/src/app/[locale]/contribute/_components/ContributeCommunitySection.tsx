@@ -194,7 +194,7 @@ export async function ContributeCommunitySection() {
                         style={{
                           display: "flex",
                           alignItems: "center",
-                          gap: "8px",
+                          gap: "10px",
                           marginBottom: "5px",
                           flexWrap: "wrap",
                         }}
@@ -215,7 +215,7 @@ export async function ContributeCommunitySection() {
                           <span
                             style={{
                               fontFamily: T.font.mono,
-                              fontSize: "9px",
+                              fontSize: "10px",
                               letterSpacing: ".12em",
                               textTransform: "uppercase",
                               color: T.ink.dim,
@@ -270,7 +270,7 @@ export async function ContributeCommunitySection() {
                       <div
                         style={{
                           fontFamily: T.font.mono,
-                          fontSize: "9px",
+                          fontSize: "10px",
                           letterSpacing: ".14em",
                           textTransform: "uppercase",
                           color: T.ink.faint,
@@ -409,14 +409,14 @@ export async function ContributeCommunitySection() {
 
             {/* CTAs */}
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
             >
               <GlobalLink
                 href="/contribute/community"
                 style={{
                   display: "block",
                   padding: "10px 16px",
-                  borderRadius: "8px",
+                  borderRadius: "10px",
                   border: `1px solid ${T.border.line}`,
                   background: "rgba(255,255,255,0.04)",
                   fontFamily: T.font.mono,
@@ -435,7 +435,7 @@ export async function ContributeCommunitySection() {
                 style={{
                   display: "block",
                   padding: "10px 16px",
-                  borderRadius: "8px",
+                  borderRadius: "10px",
                   border: "1px solid rgba(127,223,255,0.35)",
                   background: "rgba(127,223,255,0.10)",
                   fontFamily: T.font.mono,

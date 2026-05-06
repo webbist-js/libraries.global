@@ -17,7 +17,7 @@ import type { UserProfile } from "@/lib/types/profile"
 const inputStyle = {
   width: "100%",
   padding: "10px 14px",
-  borderRadius: "8px",
+  borderRadius: "10px",
   border: `1px solid ${T.border.hi}`,
   background: T.bg.surface,
   color: T.ink.base,
@@ -29,7 +29,7 @@ const inputStyle = {
 
 const labelStyle = {
   fontFamily: T.font.mono,
-  fontSize: "9px",
+  fontSize: "10px",
   letterSpacing: ".16em",
   textTransform: "uppercase" as const,
   color: T.ink.faint,
@@ -243,7 +243,7 @@ export function PublicProfileSection({
           <div
             style={{
               padding: "14px 18px",
-              borderRadius: "8px",
+              borderRadius: "10px",
               background: "rgba(127,223,255,0.06)",
               border: "1px solid rgba(127,223,255,0.2)",
               display: "flex",
@@ -462,7 +462,9 @@ export function PublicProfileSection({
         {/* Social links */}
         <div>
           <label style={labelStyle}>External links</label>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+          >
             <input
               style={inputStyle}
               type="text"
@@ -511,7 +513,7 @@ export function PublicProfileSection({
             display: "flex",
             gap: "10px",
             justifyContent: "flex-end",
-            paddingTop: "8px",
+            paddingTop: "10px",
             borderTop: `1px solid ${T.border.line}`,
           }}
         >
@@ -520,7 +522,7 @@ export function PublicProfileSection({
             onClick={handleDiscard}
             style={{
               padding: "9px 18px",
-              borderRadius: "8px",
+              borderRadius: "10px",
               border: `1px solid ${T.border.line}`,
               background: "transparent",
               color: T.ink.dim,
@@ -537,7 +539,7 @@ export function PublicProfileSection({
             onClick={() => void handleSave()}
             style={{
               padding: "9px 18px",
-              borderRadius: "8px",
+              borderRadius: "10px",
               border: "none",
               background: T.ink.base,
               color: T.bg.void,

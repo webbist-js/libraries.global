@@ -22,7 +22,7 @@ export function ScoreTag() {
       title="This field counts toward your completeness score"
       style={{
         fontFamily: T.font.mono,
-        fontSize: "9px",
+        fontSize: "10px",
         letterSpacing: ".1em",
         color: T.accent.aurora,
         opacity: 0.7,
@@ -146,7 +146,7 @@ export function WizardSelect({
           style={{
             width: "100%",
             padding: "10px 14px",
-            borderRadius: "8px",
+            borderRadius: "10px",
             border: `1px solid ${T.border.hi}`,
             background: "rgba(5,8,22,1)",
             color: value ? T.ink.base : T.ink.faint,
@@ -166,7 +166,7 @@ export function WizardSelect({
             background: "rgba(6,9,26,0.98)",
             border: `1px solid ${T.border.line}`,
             backdropFilter: "blur(20px)",
-            borderRadius: "8px",
+            borderRadius: "10px",
             zIndex: 9999,
           }}
         >
@@ -287,9 +287,9 @@ export function TagSelector({
   const overflow = unselected.length - LIMIT
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
       <span style={fieldLabelStyle}>{label}</span>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
         {selected.map((o) => (
           <button
             key={o.documentId}

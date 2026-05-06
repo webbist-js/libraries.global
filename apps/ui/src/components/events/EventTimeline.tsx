@@ -85,7 +85,7 @@ function DateScrollPicker({
             <span
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "9px",
+                fontSize: "10px",
                 letterSpacing: ".14em",
                 textTransform: "uppercase",
                 color: isSelected ? T.accent.aurora : T.ink.ghost,
@@ -151,7 +151,7 @@ function TimelineRow({ event }: { event: TimelineEvent }) {
       >
         <p style={{ fontSize: "12px", color: T.ink.dim }}>{startLabel}</p>
         {endLabel ? (
-          <p style={{ fontSize: "10px", color: T.ink.ghost, marginTop: "2px" }}>
+          <p style={{ fontSize: "10px", color: T.ink.faint, marginTop: "2px" }}>
             {endLabel}
           </p>
         ) : null}
@@ -184,9 +184,9 @@ function TimelineRow({ event }: { event: TimelineEvent }) {
             <span
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "9px",
+                fontSize: "10px",
                 letterSpacing: ".1em",
-                color: T.ink.ghost,
+                color: T.ink.faint,
               }}
             >
               {event.libraryEntityRef}
@@ -330,7 +330,7 @@ export function EventTimeline({ filters }: EventTimelineProps) {
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".22em",
               textTransform: "uppercase",
               color: T.ink.faint,
@@ -357,7 +357,7 @@ export function EventTimeline({ filters }: EventTimelineProps) {
             style={{
               fontFamily: T.font.mono,
               fontSize: "10px",
-              color: T.ink.ghost,
+              color: T.ink.faint,
             }}
           >
             {visible.length !== events.length

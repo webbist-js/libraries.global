@@ -32,7 +32,7 @@ const ROLE_OPTIONS = [
 const selectStyle: React.CSSProperties = {
   width: "100%",
   padding: "10px 14px",
-  borderRadius: "8px",
+  borderRadius: "10px",
   border: `1px solid ${T.border.hi}`,
   background: T.bg.surface,
   color: T.ink.base,
@@ -50,7 +50,7 @@ const selectStyle: React.CSSProperties = {
 const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: "10px 14px",
-  borderRadius: "8px",
+  borderRadius: "10px",
   border: `1px solid ${T.border.hi}`,
   background: T.bg.surface,
   color: T.ink.base,
@@ -359,7 +359,7 @@ export function ClaimLibraryForm({
                 onClick={() => router.back()}
                 style={{
                   padding: "10px 20px",
-                  borderRadius: "8px",
+                  borderRadius: "10px",
                   border: `1px solid ${T.border.hi}`,
                   background: "transparent",
                   color: T.ink.dim,

@@ -150,7 +150,7 @@ export default async function CommunityPage({
               href={`/contribute/community?period=${key}`}
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "9px",
+                fontSize: "10px",
                 letterSpacing: ".16em",
                 textTransform: "uppercase",
                 color: period === key ? T.accent.aurora : T.ink.faint,

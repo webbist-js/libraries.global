@@ -1,5 +1,6 @@
 import {
   HeroEyebrow,
+  HeroLead,
   HeroStat,
   HeroStatsGrid,
   HeroTitle,
@@ -7,7 +8,6 @@ import {
 } from "@/components/ds"
 import type { EventsStats } from "@/components/events/types"
 import { DotHeroCanvas } from "@/components/ui/DotHeroCanvas"
-import { T } from "@/lib/design-tokens"
 
 const DESCRIPTOR =
   "Author talks, exhibitions, classes, storytime, archive tours. Ingested live from Eventbrite, TicketSource, library calendars and direct partners. Filterable by anywhere, when, format and language."
@@ -44,7 +44,7 @@ export function EventsHero({ stats, topCountryName }: EventsHeroProps) {
     >
       <DotHeroCanvas variant="events" />
 
-      {/* Vignette */}
+      {/* Radial vignette */}
       <div
         aria-hidden
         style={{
@@ -52,6 +52,21 @@ export function EventsHero({ stats, topCountryName }: EventsHeroProps) {
           inset: 0,
           background:
             "radial-gradient(ellipse 110% 90% at 50% 50%, transparent 25%, var(--t-bg-space) 80%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Bottom fade — hides the canvas edge */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: "80px",
+          background:
+            "linear-gradient(to bottom, transparent, var(--t-bg-space))",
           pointerEvents: "none",
         }}
       />
@@ -82,22 +97,11 @@ export function EventsHero({ stats, topCountryName }: EventsHeroProps) {
               {parseHeroText("Tonight, and the next two thousand *nights.*")}
             </HeroTitle>
 
-            <p
-              style={{
-                fontSize: "15px",
-                lineHeight: 1.68,
-                color: T.ink.dim,
-                fontWeight: 300,
-                maxWidth: "52ch",
-                margin: "20px 0 0",
-              }}
-            >
-              {DESCRIPTOR}
-            </p>
+            <HeroLead className="mt-5">{DESCRIPTOR}</HeroLead>
           </div>
 
           {/* Right: stats grid */}
-          <div style={{ paddingBottom: "8px" }}>
+          <div style={{ paddingBottom: "10px" }}>
             <HeroStatsGrid cols={2}>
               <HeroStat
                 label="Events this week"

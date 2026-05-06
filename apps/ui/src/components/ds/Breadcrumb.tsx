@@ -25,7 +25,7 @@ export function Breadcrumb({
           key={i}
           style={{ display: "flex", alignItems: "center", gap: "6px" }}
         >
-          {i > 0 && <span style={{ color: T.ink.ghost }}>/</span>}
+          {i > 0 && <span style={{ color: T.ink.faint }}>/</span>}
           {item.href && i < items.length - 1 ? (
             <GlobalLink
               href={item.href}

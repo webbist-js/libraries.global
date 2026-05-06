@@ -51,7 +51,7 @@ export function ContributeBottomNav() {
               onClick={() => router.push(tab.href)}
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "9px",
+                fontSize: "10px",
                 letterSpacing: ".14em",
                 textTransform: "uppercase",
                 color: active ? T.accent.aurora : T.ink.faint,

@@ -216,7 +216,7 @@ export function DangerZoneSection({
                 out. You can reactivate any time by signing back in and updating
                 your visibility.
               </p>
-              <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+              <div style={{ display: "flex", gap: "10px", flexShrink: 0 }}>
                 <button
                   type="button"
                   onClick={() => setDeactivateConfirm(false)}
@@ -306,7 +306,7 @@ export function DangerZoneSection({
                 email address to confirm:
               </p>
               <div
-                style={{ display: "flex", gap: "8px", alignItems: "center" }}
+                style={{ display: "flex", gap: "10px", alignItems: "center" }}
               >
                 <input
                   type="email"

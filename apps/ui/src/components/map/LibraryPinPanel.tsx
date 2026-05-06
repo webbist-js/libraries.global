@@ -362,7 +362,7 @@ export function LibraryPinPanel({
                 <span
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "9px",
+                    fontSize: "10px",
                     letterSpacing: ".2em",
                     textTransform: "uppercase",
                     color: "rgba(255,255,255,.32)",
@@ -402,7 +402,7 @@ export function LibraryPinPanel({
             <span
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "9px",
+                fontSize: "10px",
                 letterSpacing: ".2em",
                 textTransform: "uppercase",
                 color: "rgba(255,255,255,.32)",

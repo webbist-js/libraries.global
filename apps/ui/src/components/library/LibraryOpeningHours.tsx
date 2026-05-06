@@ -138,12 +138,12 @@ function ExpandedBreakdown({ timeframes }: { timeframes: OpeningTimeframe[] }) {
       }}
     >
       {/* Full bar */}
-      <div style={{ marginBottom: "8px" }}>
+      <div style={{ marginBottom: "10px" }}>
         <div
           style={{
             position: "relative",
             height: "28px",
-            borderRadius: "8px",
+            borderRadius: "10px",
             background: T.bg.surface,
             overflow: "hidden",
             display: "flex",
@@ -227,7 +227,7 @@ function ExpandedBreakdown({ timeframes }: { timeframes: OpeningTimeframe[] }) {
                 display: "flex",
                 justifyContent: "space-between",
                 padding: "6px 12px",
-                borderRadius: "8px",
+                borderRadius: "10px",
                 background: isStaffed
                   ? "rgba(52,211,153,.08)"
                   : "rgba(99,102,241,.06)",
@@ -350,7 +350,7 @@ export function LibraryOpeningHours({
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: alwaysExpanded ? "8px" : "2px",
+          gap: alwaysExpanded ? "10px" : "2px",
         }}
       >
         {DAY_ORDER.map((day) => {
@@ -423,13 +423,13 @@ export function LibraryOpeningHours({
                     <span
                       style={{
                         display: "inline-block",
-                        marginLeft: "8px",
+                        marginLeft: "10px",
                         padding: "1px 7px",
                         borderRadius: "5px",
                         background: "var(--t-aurora-soft)",
                         border: "1px solid var(--t-aurora-edge)",
                         fontFamily: T.font.mono,
-                        fontSize: "9px",
+                        fontSize: "10px",
                         letterSpacing: ".14em",
                         color: T.accent.aurora,
                         textTransform: "uppercase",

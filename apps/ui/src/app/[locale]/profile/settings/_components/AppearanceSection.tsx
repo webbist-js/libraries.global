@@ -77,13 +77,13 @@ function ThemeCard({
             display: "flex",
             flexDirection: "column",
             gap: "4px",
-            padding: "8px",
+            padding: "10px",
           }}
         >
           {/* Fake header bar */}
           <div
             style={{
-              height: "8px",
+              height: "10px",
               borderRadius: "2px",
               background: isDark
                 ? "rgba(255,255,255,0.08)"
@@ -124,7 +124,7 @@ function ThemeCard({
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "8px",
+            gap: "10px",
           }}
         >
           {active && (
@@ -260,7 +260,7 @@ export function AppearanceSection({
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "8px",
+            gap: "10px",
             fontSize: "12px",
             fontFamily: T.font.mono,
             letterSpacing: ".08em",

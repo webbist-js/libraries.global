@@ -121,7 +121,7 @@ export function WelcomeBackWidget({
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: "8px",
+          gap: "10px",
           flexShrink: 0,
         }}
       >
@@ -133,7 +133,7 @@ export function WelcomeBackWidget({
           <p
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.ink.dim,

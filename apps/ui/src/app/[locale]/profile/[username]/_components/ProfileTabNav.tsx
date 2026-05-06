@@ -50,7 +50,7 @@ export function ProfileTabNav({
     <span
       style={{
         fontFamily: T.font.mono,
-        fontSize: "9px",
+        fontSize: "10px",
         letterSpacing: ".18em",
         textTransform: "uppercase",
         color: T.ink.faint,

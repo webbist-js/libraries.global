@@ -1,6 +1,6 @@
 import type { Locale } from "next-intl"
 
-import { HeroEyebrow, HeroTitle, PageShell } from "@/components/ds"
+import { HeroEyebrow, HeroLead, HeroTitle, PageShell } from "@/components/ds"
 import { parseHeroText } from "@/components/ds/HeroTitle"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { DotHeroCanvas } from "@/components/ui/DotHeroCanvas"
@@ -96,18 +96,7 @@ export function BlogLandingPage({
                 }}
               >
                 {landing?.heroText ? (
-                  <p
-                    style={{
-                      fontSize: "15px",
-                      lineHeight: 1.68,
-                      color: T.ink.dim,
-                      fontWeight: 300,
-                      maxWidth: "48ch",
-                      margin: 0,
-                    }}
-                  >
-                    {landing.heroText}
-                  </p>
+                  <HeroLead maxWidth="48ch">{landing.heroText}</HeroLead>
                 ) : null}
 
                 {/* Search bar */}

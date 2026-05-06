@@ -216,7 +216,7 @@ function DayToggle({
       <span
         style={{
           ...monoSm,
-          fontSize: "9px",
+          fontSize: "10px",
           color: open ? T.accent.aurora : "rgba(244,247,255,0.30)",
           transition: "color 0.15s",
           userSelect: "none",
@@ -286,7 +286,7 @@ function CopyDaySelect({
       }}
       style={{
         ...monoSm,
-        fontSize: "9px",
+        fontSize: "10px",
         color: T.accent.aurora,
         opacity: 0.65,
         background: "none",
@@ -366,7 +366,7 @@ function TimeframeRow({
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "8px",
+        gap: "10px",
         flexWrap: "wrap",
       }}
     >
@@ -385,7 +385,7 @@ function TimeframeRow({
         ))}
       </select>
 
-      <span style={{ ...monoSm, fontSize: "9px" }}>to</span>
+      <span style={{ ...monoSm, fontSize: "10px" }}>to</span>
 
       {/* End time */}
       <select
@@ -406,7 +406,7 @@ function TimeframeRow({
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".10em",
             color: T.accent.danger,
             opacity: 0.8,
@@ -429,7 +429,7 @@ function TimeframeRow({
           background: "none",
           border: "none",
           cursor: "pointer",
-          color: T.ink.ghost,
+          color: T.ink.faint,
           fontSize: "18px",
           lineHeight: 1,
           padding: "0 2px",
@@ -669,7 +669,7 @@ export function OpeningTimesEditor({
                   style={{
                     alignSelf: "flex-start",
                     ...monoSm,
-                    fontSize: "9px",
+                    fontSize: "10px",
                     color: T.accent.aurora,
                     opacity: 0.65,
                     background: "none",

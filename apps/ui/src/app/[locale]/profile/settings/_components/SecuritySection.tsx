@@ -113,7 +113,7 @@ export function SecuritySection({
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               color: T.ink.faint,
               textTransform: "uppercase",
@@ -191,7 +191,7 @@ export function SecuritySection({
                 style={{
                   width: "32px",
                   height: "32px",
-                  borderRadius: "8px",
+                  borderRadius: "10px",
                   background: T.bg.deep,
                   border: `1px solid ${T.border.line}`,
                   display: "flex",

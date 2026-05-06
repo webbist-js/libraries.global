@@ -11,7 +11,7 @@ export function WikiQuoteBlockEditor({
   readonly onChange: (updated: WikiQuoteDraftBlock) => void
 }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
       <textarea
         value={block.quote}
         onChange={(e) => onChange({ ...block, quote: e.target.value })}

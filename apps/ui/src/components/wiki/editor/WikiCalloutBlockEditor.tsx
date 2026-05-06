@@ -25,7 +25,7 @@ export function WikiCalloutBlockEditor({
     CALLOUT_TYPES.find((t) => t.value === block.type) ?? CALLOUT_TYPES[0]!
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
       <div style={{ display: "flex", gap: "6px" }}>
         {CALLOUT_TYPES.map((t) => (
           <button
@@ -33,7 +33,7 @@ export function WikiCalloutBlockEditor({
             onClick={() => onChange({ ...block, type: t.value })}
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".12em",
               textTransform: "uppercase",
               color: block.type === t.value ? t.color : T.ink.faint,

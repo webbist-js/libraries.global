@@ -29,17 +29,35 @@ export function decryptCredentials(blob: string): Record<string, string> {
   >
 }
 
+async function markLibrariesActive(
+  strapi: any,
+  libraryDocumentIds: string[]
+): Promise<void> {
+  if (!libraryDocumentIds.length) return
+  await Promise.all(
+    libraryDocumentIds.map((id) =>
+      strapi
+        .documents("api::library.library")
+        .update({ documentId: id, data: { hasActiveFeed: true } })
+    )
+  )
+}
+
 export default ({ strapi }: { strapi: any }) => ({
   async findAll() {
     return strapi.documents("plugin::events.event-credential").findMany({
-      populate: { libraries: { fields: ["id", "name", "entityRef"] } },
+      populate: {
+        libraries: { fields: ["id", "name", "entityRef", "documentId"] },
+      },
     })
   },
 
   async findOne(documentId: string) {
     return strapi.documents("plugin::events.event-credential").findOne({
       documentId,
-      populate: { libraries: { fields: ["id", "name", "entityRef"] } },
+      populate: {
+        libraries: { fields: ["id", "name", "entityRef", "documentId"] },
+      },
     })
   },
 
@@ -53,22 +71,30 @@ export default ({ strapi }: { strapi: any }) => ({
   }) {
     const credentialsEncrypted = encryptCredentials(data.credentials)
 
-    return strapi.documents("plugin::events.event-credential").create({
-      data: {
-        provider: data.provider,
-        label: data.label,
-        scope: data.scope,
-        isActive: data.isActive,
-        credentialsEncrypted,
-        ...(data.libraryDocumentIds?.length
-          ? {
-              libraries: data.libraryDocumentIds.map((id) => ({
-                documentId: id,
-              })),
-            }
-          : {}),
-      },
-    })
+    const result = await strapi
+      .documents("plugin::events.event-credential")
+      .create({
+        data: {
+          provider: data.provider,
+          label: data.label,
+          scope: data.scope,
+          isActive: data.isActive,
+          credentialsEncrypted,
+          ...(data.libraryDocumentIds?.length
+            ? {
+                libraries: data.libraryDocumentIds.map((id) => ({
+                  documentId: id,
+                })),
+              }
+            : {}),
+        },
+      })
+
+    if (data.isActive && data.libraryDocumentIds?.length) {
+      await markLibrariesActive(strapi, data.libraryDocumentIds)
+    }
+
+    return result
   },
 
   async update(
@@ -92,9 +118,20 @@ export default ({ strapi }: { strapi: any }) => ({
       }))
     }
 
-    return strapi
+    const result = await strapi
       .documents("plugin::events.event-credential")
       .update({ documentId, data: patch })
+
+    // When activating a credential, mark all linked libraries as having an active feed
+    if (data.isActive === true) {
+      const ids =
+        data.libraryDocumentIds ??
+        (result.libraries as any[])?.map((l: any) => l.documentId) ??
+        []
+      await markLibrariesActive(strapi, ids)
+    }
+
+    return result
   },
 
   async delete(documentId: string) {

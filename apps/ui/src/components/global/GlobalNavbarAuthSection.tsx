@@ -25,7 +25,7 @@ export function GlobalNavbarAuthSection({
   const session = error || data ? data : sessionSSR
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
       <ThemeToggle variant="icon" />
       {session?.user ? (
         <GlobalLoggedUserMenu

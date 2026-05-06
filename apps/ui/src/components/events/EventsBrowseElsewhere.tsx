@@ -113,7 +113,7 @@ export function EventsBrowseElsewhere({
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-            gap: "8px",
+            gap: "10px",
           }}
         >
           {visibleCountries.map((c) => (
@@ -164,7 +164,7 @@ export function EventsBrowseElsewhere({
                 style={{
                   fontFamily: T.font.mono,
                   fontSize: "10px",
-                  color: T.ink.ghost,
+                  color: T.ink.faint,
                 }}
               >
                 {c.count.toLocaleString()}

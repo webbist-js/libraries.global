@@ -17,7 +17,7 @@ export function WikiArticleEditToggle() {
         alignItems: "center",
         gap: "6px",
         padding: "6px 10px",
-        borderRadius: "8px",
+        borderRadius: "10px",
         border: `1px solid ${editMode ? "rgba(127,223,255,.3)" : T.border.line}`,
         background: editMode ? "rgba(127,223,255,.08)" : T.bg.surface,
         fontFamily: T.font.mono,

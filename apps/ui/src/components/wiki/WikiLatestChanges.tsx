@@ -58,7 +58,7 @@ export function WikiLatestChanges({
                   color: T.accent.ok,
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "8px",
+                  gap: "10px",
                 }}
               >
                 <span
@@ -257,13 +257,13 @@ export function WikiLatestChanges({
               >
                 Get notified when major additions land in the wiki.
               </p>
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                 <GlobalLink
                   href="/subscribe"
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: "8px",
+                    gap: "10px",
                     padding: "10px 14px",
                     borderRadius: "10px",
                     fontSize: "12px",

@@ -57,7 +57,7 @@ export function LibraryClaimButton({
           alignItems: "center",
           gap: "6px",
           border: `1px solid ${T.accent.ok}40`,
-          borderRadius: "8px",
+          borderRadius: "10px",
           padding: "8px 14px",
         }}
       >

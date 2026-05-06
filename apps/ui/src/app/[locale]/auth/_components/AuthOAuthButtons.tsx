@@ -14,7 +14,7 @@ const oauthBtnStyle = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  gap: "8px",
+  gap: "10px",
   padding: "10px 14px",
   borderRadius: "10px",
   border: `1px solid ${T.border.hi}`,
@@ -51,7 +51,7 @@ export function AuthOAuthButtons({ mode }: AuthOAuthButtonsProps) {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
       {/* Google */}
       <div>
         <button
@@ -104,7 +104,7 @@ export function AuthOAuthButtons({ mode }: AuthOAuthButtonsProps) {
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".2em",
             textTransform: "uppercase",
             color: T.ink.faint,

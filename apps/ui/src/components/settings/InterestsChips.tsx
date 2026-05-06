@@ -61,7 +61,7 @@ export function InterestsChips({
         style={{
           display: "flex",
           flexWrap: "wrap",
-          gap: "8px",
+          gap: "10px",
           marginBottom: "12px",
         }}
       >
@@ -92,7 +92,7 @@ export function InterestsChips({
         })}
       </div>
 
-      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
         <input
           type="text"
           placeholder="Suggest a topic…"

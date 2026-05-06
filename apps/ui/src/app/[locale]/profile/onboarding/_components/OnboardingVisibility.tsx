@@ -47,7 +47,7 @@ export function OnboardingVisibility({
         style={{
           display: "flex",
           justifyContent: "space-between",
-          paddingTop: "8px",
+          paddingTop: "10px",
         }}
       >
         <button
@@ -70,7 +70,7 @@ export function OnboardingVisibility({
           onClick={() => onNext({ profileVisibility: visibility })}
           style={{
             padding: "10px 24px",
-            borderRadius: "8px",
+            borderRadius: "10px",
             border: "1px solid rgba(127,223,255,0.35)",
             background: "rgba(127,223,255,0.1)",
             color: T.accent.aurora,

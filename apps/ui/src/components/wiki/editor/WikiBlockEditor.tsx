@@ -215,7 +215,7 @@ export function WikiBlockEditor({
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".12em",
             textTransform: "uppercase",
             color: saveColor,
@@ -253,7 +253,7 @@ export function WikiBlockEditor({
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".12em",
             textTransform: "uppercase",
             color: T.ink.faint,
@@ -273,7 +273,7 @@ export function WikiBlockEditor({
               alignItems: "center",
               gap: "4px",
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".12em",
               textTransform: "uppercase",
               color: T.ink.low,
@@ -295,7 +295,7 @@ export function WikiBlockEditor({
         <label
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".12em",
             textTransform: "uppercase",
             color: T.ink.low,

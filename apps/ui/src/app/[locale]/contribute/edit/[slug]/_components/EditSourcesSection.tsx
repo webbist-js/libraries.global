@@ -67,7 +67,7 @@ export function EditSourcesSection({
         style={{
           display: "flex",
           flexWrap: "wrap",
-          gap: "8px",
+          gap: "10px",
           marginBottom: "20px",
         }}
       >
@@ -84,7 +84,7 @@ export function EditSourcesSection({
                 letterSpacing: ".12em",
                 textTransform: "uppercase",
                 padding: "7px 14px",
-                borderRadius: "8px",
+                borderRadius: "10px",
                 border: selected
                   ? `1px solid rgba(127,223,255,0.4)`
                   : `1px solid ${T.border.line}`,

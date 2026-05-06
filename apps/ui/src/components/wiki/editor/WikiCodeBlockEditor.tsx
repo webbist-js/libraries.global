@@ -25,8 +25,8 @@ export function WikiCodeBlockEditor({
   readonly onChange: (updated: WikiCodeDraftBlock) => void
 }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-      <div style={{ display: "flex", gap: "8px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+      <div style={{ display: "flex", gap: "10px" }}>
         <select
           value={block.language ?? ""}
           onChange={(e) =>

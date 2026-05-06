@@ -127,7 +127,7 @@ export function OnboardingInterests({
           style={{
             display: "flex",
             flexWrap: "wrap",
-            gap: "8px",
+            gap: "10px",
             marginBottom: "12px",
           }}
         >
@@ -172,7 +172,7 @@ export function OnboardingInterests({
             )
           })}
         </div>
-        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           <select
             style={inputStyle}
             value={addingLang}
@@ -232,7 +232,7 @@ export function OnboardingInterests({
         style={{
           display: "flex",
           justifyContent: "space-between",
-          paddingTop: "8px",
+          paddingTop: "10px",
         }}
       >
         <button
@@ -255,7 +255,7 @@ export function OnboardingInterests({
           onClick={() => onNext({ interests, languages })}
           style={{
             padding: "10px 24px",
-            borderRadius: "8px",
+            borderRadius: "10px",
             border: "none",
             background: T.ink.base,
             color: T.bg.void,

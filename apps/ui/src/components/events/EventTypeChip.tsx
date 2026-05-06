@@ -54,7 +54,7 @@ interface EventTypeChipProps {
 
 export function EventTypeChip({ type, size = "sm" }: EventTypeChipProps) {
   const meta = EVENT_TYPE_META[type] ?? EVENT_TYPE_META.other!
-  const fontSize = size === "xs" ? "9px" : "10px"
+  const fontSize = "10px"
   const padding = size === "xs" ? "2px 6px" : "3px 8px"
 
   return (

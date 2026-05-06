@@ -64,14 +64,14 @@ export function WikiImageBlockEditor({
             }
             style={{
               position: "absolute",
-              top: "8px",
-              right: "8px",
+              top: "10px",
+              right: "10px",
               background: "rgba(0,0,0,.6)",
               border: "none",
               borderRadius: "4px",
               color: T.ink.dim,
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".1em",
               textTransform: "uppercase",
               padding: "4px 8px",
@@ -147,7 +147,7 @@ export function WikiImageBlockEditor({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "8px",
+          gap: "10px",
           cursor: "pointer",
         }}
       >

@@ -1405,52 +1405,6 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
   }
 }
 
-export interface ApiEventProviderEventProvider
-  extends Struct.CollectionTypeSchema {
-  collectionName: "event_providers"
-  info: {
-    displayName: "Event Provider"
-    pluralName: "event-providers"
-    singularName: "event-provider"
-  }
-  options: {
-    draftAndPublish: true
-  }
-  attributes: {
-    apiKey: Schema.Attribute.Password
-    createdAt: Schema.Attribute.DateTime
-    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
-      Schema.Attribute.Private
-    feedUrl: Schema.Attribute.String
-    lastImportAt: Schema.Attribute.DateTime
-    lastImportCount: Schema.Attribute.Integer
-    libraryEntityRef: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.Unique
-    locale: Schema.Attribute.String & Schema.Attribute.Private
-    localizations: Schema.Attribute.Relation<
-      "oneToMany",
-      "api::event-provider.event-provider"
-    > &
-      Schema.Attribute.Private
-    notes: Schema.Attribute.Text
-    providerType: Schema.Attribute.Enumeration<
-      ["eventbrite", "meetup", "ticketmaster", "ical_feed", "json_api", "other"]
-    > &
-      Schema.Attribute.Required
-    publishedAt: Schema.Attribute.DateTime
-    status: Schema.Attribute.Enumeration<
-      ["pending", "active", "paused", "rejected"]
-    > &
-      Schema.Attribute.DefaultTo<"pending">
-    submittedByEmail: Schema.Attribute.Email
-    submittedByName: Schema.Attribute.String
-    updatedAt: Schema.Attribute.DateTime
-    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
-      Schema.Attribute.Private
-  }
-}
-
 export interface ApiFooterFooter extends Struct.SingleTypeSchema {
   collectionName: "footers"
   info: {
@@ -3077,7 +3031,6 @@ export interface PluginEventsEvent extends Struct.CollectionTypeSchema {
     allDay: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
     audience: Schema.Attribute.JSON
     capacity: Schema.Attribute.Integer
-    countryCode: Schema.Attribute.String
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -3118,8 +3071,6 @@ export interface PluginEventsEvent extends Struct.CollectionTypeSchema {
     priceMax: Schema.Attribute.Decimal
     priceMin: Schema.Attribute.Decimal
     publishedAt: Schema.Attribute.DateTime
-    regionSlug: Schema.Attribute.String
-    registrationUrl: Schema.Attribute.Text
     sourceProvider: Schema.Attribute.Enumeration<
       [
         "eventbrite",
@@ -3872,7 +3823,6 @@ declare module "@strapi/strapi" {
       "api::category.category": ApiCategoryCategory
       "api::continent.continent": ApiContinentContinent
       "api::country.country": ApiCountryCountry
-      "api::event-provider.event-provider": ApiEventProviderEventProvider
       "api::footer.footer": ApiFooterFooter
       "api::homepage.homepage": ApiHomepageHomepage
       "api::library-affiliation.library-affiliation": ApiLibraryAffiliationLibraryAffiliation

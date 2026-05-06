@@ -89,7 +89,7 @@ export function ImageUploadEditor({
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: "8px",
+          gap: "10px",
           transition: "border-color .15s, color .15s",
           width: "100%",
         }}
@@ -98,7 +98,7 @@ export function ImageUploadEditor({
         <span>{uploading ? "Uploading…" : "Click to select images"}</span>
         <span
           style={{
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".10em",
             color: T.ink.faint,
             marginTop: "2px",
@@ -143,7 +143,7 @@ export function ImageUploadEditor({
               key={img.strapiId}
               style={{
                 position: "relative",
-                borderRadius: "8px",
+                borderRadius: "10px",
                 overflow: "hidden",
                 border: img.isHero
                   ? `2px solid ${T.accent.aurora}`

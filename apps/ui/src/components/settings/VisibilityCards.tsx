@@ -69,7 +69,7 @@ export function VisibilityCards({
               display: "flex",
               flexDirection: "column",
               alignItems: "flex-start",
-              gap: "8px",
+              gap: "10px",
             }}
           >
             <Icon

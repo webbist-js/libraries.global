@@ -292,7 +292,7 @@ export default function MapSidebar({
           >
             Filters
             {activeFilterCount > 0 && (
-              <span className="rounded-full bg-indigo-500 px-1.5 py-0.5 text-[9px] leading-none font-bold text-white">
+              <span className="rounded-full bg-indigo-500 px-1.5 py-0.5 text-[10px] leading-none font-bold text-white">
                 {activeFilterCount}
               </span>
             )}

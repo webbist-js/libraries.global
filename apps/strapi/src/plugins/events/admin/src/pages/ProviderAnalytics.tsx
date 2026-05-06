@@ -12,48 +12,57 @@ import {
 } from "@strapi/design-system"
 import { useEffect, useState } from "react"
 
-interface ProviderRow {
-  libraryEntityRef: string
-  providerType: string
-  status: string
-  lastImportAt: string | null
-  lastImportCount: number | null
+interface CredentialRow {
+  documentId: string
+  label: string
+  provider: string
+  scope: string
+  isActive: boolean
+  lastSyncAt: string | null
+  lastSyncStatus: "ok" | "partial" | "error" | null
+  lastErrorMessage: string | null
+  libraries: { name: string; entityRef: string }[]
 }
 
 export function ProviderAnalytics() {
-  const [rows, setRows] = useState<ProviderRow[]>([])
+  const [rows, setRows] = useState<CredentialRow[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(
-      "/api/event-providers?pagination[limit]=100&sort=libraryEntityRef:asc",
-      {
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      }
-    )
+    fetch("/api/events/admin/credentials", {
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    })
       .then((r) => r.json())
-      .then((res: { data?: ProviderRow[] }) => {
-        setRows(res.data ?? [])
+      .then((res: CredentialRow[]) => {
+        setRows(Array.isArray(res) ? res : [])
         setLoading(false)
       })
       .catch(() => setLoading(false))
   }, [])
 
-  function statusColor(
-    status: string
+  function syncStatusColor(
+    row: CredentialRow
   ): "success" | "warning" | "danger" | "neutral" {
-    if (status === "active") return "success"
-    if (status === "pending") return "warning"
-    if (status === "paused") return "neutral"
+    if (!row.isActive) return "neutral"
+    if (row.lastSyncStatus === "ok") return "success"
+    if (row.lastSyncStatus === "partial") return "warning"
+    if (row.lastSyncStatus === "error") return "danger"
 
-    return "danger"
+    return "neutral"
+  }
+
+  function syncStatusLabel(row: CredentialRow): string {
+    if (!row.isActive) return "inactive"
+    if (!row.lastSyncStatus) return "pending"
+
+    return row.lastSyncStatus
   }
 
   return (
     <Box padding={8} background="neutral100">
       <Flex justifyContent="space-between" alignItems="center" marginBottom={6}>
-        <Typography variant="alpha">Event Provider Analytics</Typography>
+        <Typography variant="alpha">Event Credentials</Typography>
         <Button variant="default" onClick={() => window.location.reload()}>
           Refresh
         </Button>
@@ -66,49 +75,64 @@ export function ProviderAnalytics() {
           <Thead>
             <Tr>
               <Th>
-                <Typography variant="sigma">Library Ref</Typography>
+                <Typography variant="sigma">Label</Typography>
               </Th>
               <Th>
                 <Typography variant="sigma">Provider</Typography>
               </Th>
               <Th>
-                <Typography variant="sigma">Status</Typography>
+                <Typography variant="sigma">Libraries</Typography>
               </Th>
               <Th>
-                <Typography variant="sigma">Last Import</Typography>
+                <Typography variant="sigma">Sync status</Typography>
               </Th>
               <Th>
-                <Typography variant="sigma">Events Imported</Typography>
+                <Typography variant="sigma">Last sync</Typography>
               </Th>
             </Tr>
           </Thead>
           <Tbody>
             {rows.map((row) => (
-              <Tr key={row.libraryEntityRef}>
+              <Tr key={row.documentId}>
                 <Td>
                   <Typography variant="omega" fontWeight="semiBold">
-                    {row.libraryEntityRef}
+                    {row.label}
+                  </Typography>
+                  <Typography variant="pi" textColor="neutral500">
+                    {row.scope}
                   </Typography>
                 </Td>
                 <Td>
                   <Typography variant="omega" textColor="neutral600">
-                    {row.providerType}
+                    {row.provider}
+                  </Typography>
+                </Td>
+                <Td>
+                  <Typography variant="omega" textColor="neutral600">
+                    {row.libraries?.length
+                      ? row.libraries.map((l) => l.name).join(", ")
+                      : "—"}
                   </Typography>
                 </Td>
                 <Td>
                   <Typography
                     variant="pi"
-                    textColor={`${statusColor(row.status)}600`}
+                    textColor={`${syncStatusColor(row)}600`}
                     fontWeight="semiBold"
                     textTransform="uppercase"
                   >
-                    {row.status}
+                    {syncStatusLabel(row)}
                   </Typography>
+                  {row.lastErrorMessage && (
+                    <Typography variant="pi" textColor="danger600">
+                      {row.lastErrorMessage}
+                    </Typography>
+                  )}
                 </Td>
                 <Td>
                   <Typography variant="omega" textColor="neutral600">
-                    {row.lastImportAt
-                      ? new Date(row.lastImportAt).toLocaleDateString("en-GB", {
+                    {row.lastSyncAt
+                      ? new Date(row.lastSyncAt).toLocaleDateString("en-GB", {
                           day: "numeric",
                           month: "short",
                           year: "numeric",
@@ -116,11 +140,6 @@ export function ProviderAnalytics() {
                           minute: "2-digit",
                         })
                       : "—"}
-                  </Typography>
-                </Td>
-                <Td>
-                  <Typography variant="omega" textColor="neutral600">
-                    {row.lastImportCount ?? "—"}
                   </Typography>
                 </Td>
               </Tr>

@@ -35,13 +35,13 @@ export function DiffFieldRow({
           borderBottom: `1px solid ${T.border.line}`,
           display: "flex",
           alignItems: "center",
-          gap: "8px",
+          gap: "10px",
         }}
       >
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".18em",
             textTransform: "uppercase",
             color: T.ink.faint,
@@ -53,7 +53,7 @@ export function DiffFieldRow({
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.accent.aurora,

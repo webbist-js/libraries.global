@@ -27,7 +27,7 @@ function SidebarArticleRow({
       </span>
       <div className="min-w-0">
         {(article.section?.name ?? article.category?.name) ? (
-          <p className="mb-1 font-mono text-[9px] tracking-[0.18em] text-(--t-ink-faint) uppercase">
+          <p className="mb-1 font-mono text-[10px] tracking-[0.18em] text-(--t-ink-faint) uppercase">
             {article.section?.name ?? article.category?.name}
           </p>
         ) : null}

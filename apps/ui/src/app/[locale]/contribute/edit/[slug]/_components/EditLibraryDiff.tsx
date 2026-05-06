@@ -188,13 +188,13 @@ export function EditLibraryDiff({ library }: EditLibraryDiffProps) {
           justifyContent: "space-between",
           marginBottom: "20px",
           flexWrap: "wrap",
-          gap: "8px",
+          gap: "10px",
         }}
       >
         <p
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".18em",
             textTransform: "uppercase",
             color: T.ink.faint,
@@ -206,7 +206,7 @@ export function EditLibraryDiff({ library }: EditLibraryDiffProps) {
         <p
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".14em",
             textTransform: "uppercase",
             color: T.ink.faint,
@@ -264,7 +264,7 @@ export function EditLibraryDiff({ library }: EditLibraryDiffProps) {
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.ink.faint,
@@ -278,7 +278,7 @@ export function EditLibraryDiff({ library }: EditLibraryDiffProps) {
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: changedCount > 0 ? T.accent.aurora : T.ink.faint,
@@ -296,14 +296,14 @@ export function EditLibraryDiff({ library }: EditLibraryDiffProps) {
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
           gap: "12px",
-          marginBottom: "8px",
+          marginBottom: "10px",
           paddingLeft: "4px",
         }}
       >
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".14em",
             textTransform: "uppercase",
             color: T.ink.faint,
@@ -314,7 +314,7 @@ export function EditLibraryDiff({ library }: EditLibraryDiffProps) {
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "9px",
+            fontSize: "10px",
             letterSpacing: ".14em",
             textTransform: "uppercase",
             color: T.ink.faint,
@@ -365,7 +365,7 @@ export function EditLibraryDiff({ library }: EditLibraryDiffProps) {
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.ink.faint,

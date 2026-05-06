@@ -63,7 +63,7 @@ function NearbyCard({ library }: { readonly library: NearbyLibrary }) {
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          gap: "8px",
+          gap: "10px",
         }}
       >
         <div
@@ -105,7 +105,7 @@ function NearbyCard({ library }: { readonly library: NearbyLibrary }) {
             {library.summary}
           </p>
         ) : null}
-        <div style={{ marginTop: "auto", paddingTop: "8px" }}>
+        <div style={{ marginTop: "auto", paddingTop: "10px" }}>
           <span
             style={{
               fontSize: "12px",

@@ -43,7 +43,7 @@ function BadgeCard({
 }) {
   const vs = earned
     ? BADGE_VARIANT_STYLES[badge.variant]
-    : { border: T.border.line, bg: T.bg.surface, color: T.ink.ghost }
+    : { border: T.border.line, bg: T.bg.surface, color: T.ink.faint }
 
   const awardedLabel = awardedAt
     ? new Date(awardedAt).toLocaleDateString("en-US", {
@@ -262,7 +262,7 @@ export function BadgesSection({
               <span
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "9px",
+                  fontSize: "10px",
                   letterSpacing: ".16em",
                   textTransform: "uppercase",
                   color: T.ink.faint,
@@ -289,7 +289,7 @@ export function BadgesSection({
                     background: T.border.line,
                     overflow: "hidden",
                     marginBottom: "6px",
-                    marginTop: "8px",
+                    marginTop: "10px",
                   }}
                 >
                   <div
@@ -304,7 +304,7 @@ export function BadgesSection({
                 <span
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "9px",
+                    fontSize: "10px",
                     letterSpacing: ".14em",
                     textTransform: "uppercase",
                     color: T.ink.faint,
@@ -319,12 +319,12 @@ export function BadgesSection({
               <span
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "9px",
+                  fontSize: "10px",
                   letterSpacing: ".14em",
                   textTransform: "uppercase",
                   color: tier === "Curator" ? T.accent.gold : T.ink.faint,
                   display: "block",
-                  marginTop: "8px",
+                  marginTop: "10px",
                 }}
               >
                 {tier === "Curator" ? "Max tier reached" : "—"}
@@ -334,14 +334,14 @@ export function BadgesSection({
               href="/contribute/community"
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "9px",
+                fontSize: "10px",
                 letterSpacing: ".12em",
                 textTransform: "uppercase",
                 color: T.accent.aurora,
                 textDecoration: "none",
                 opacity: 0.85,
                 display: "inline-block",
-                marginTop: "8px",
+                marginTop: "10px",
               }}
             >
               Leaderboard →
@@ -383,7 +383,7 @@ export function BadgesSection({
             <span
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "9px",
+                fontSize: "10px",
                 letterSpacing: ".16em",
                 textTransform: "uppercase",
                 color: T.ink.faint,

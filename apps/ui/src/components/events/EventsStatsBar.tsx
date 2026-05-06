@@ -29,10 +29,10 @@ function StatCell({
       <span
         style={{
           fontFamily: T.font.mono,
-          fontSize: "9px",
+          fontSize: "10px",
           letterSpacing: ".22em",
           textTransform: "uppercase",
-          color: T.ink.ghost,
+          color: T.ink.faint,
         }}
       >
         {label}

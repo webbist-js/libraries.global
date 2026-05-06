@@ -84,7 +84,7 @@ function ResultCard({
           <div
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.accent.warn,
@@ -122,14 +122,14 @@ function ResultCard({
             .join(" · ")}
         </div>
       </div>
-      <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+      <div style={{ display: "flex", gap: "10px", flexShrink: 0 }}>
         {path && (
           <Link
             href={path}
             target="_blank"
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".12em",
               textTransform: "uppercase",
               color: T.ink.faint,
@@ -147,7 +147,7 @@ function ResultCard({
             href={`/contribute/edit?slug=${hit.slug}`}
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".12em",
               textTransform: "uppercase",
               color: T.accent.aurora,
@@ -165,7 +165,7 @@ function ResultCard({
             href={`/contribute/claim?librarySlug=${hit.slug}&libraryName=${encodeURIComponent(hit.name)}${hit.documentId ? `&libraryDocumentId=${hit.documentId}` : ""}${hit.entityRef ? `&libraryEntityRef=${encodeURIComponent(hit.entityRef)}` : ""}`}
             style={{
               fontFamily: T.font.mono,
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: ".12em",
               textTransform: "uppercase",
               color: T.accent.violet,
@@ -345,7 +345,7 @@ export function LibrarySearchGate({
             autoFocus
             style={{
               padding: "10px 14px",
-              borderRadius: "8px",
+              borderRadius: "10px",
               border: `1px solid ${T.border.hi}`,
               background: T.bg.surface,
               color: T.ink.base,
@@ -378,7 +378,7 @@ export function LibrarySearchGate({
             placeholder=""
             style={{
               padding: "10px 14px",
-              borderRadius: "8px",
+              borderRadius: "10px",
               border: `1px solid ${T.border.hi}`,
               background: T.bg.surface,
               color: T.ink.base,
@@ -424,7 +424,9 @@ export function LibrarySearchGate({
               ? "Possible duplicate found"
               : `${highMatches.length} possible duplicates found`}
           </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+          >
             {highMatches.map((r) => (
               <ResultCard
                 key={r.hit.id}
@@ -456,7 +458,9 @@ export function LibrarySearchGate({
               Other results
             </p>
           )}
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+          >
             {otherResults.map((hit) => (
               <ResultCard
                 key={hit.id}
@@ -549,7 +553,7 @@ export function LibrarySearchGate({
           disabled={!canProceed}
           style={{
             padding: "11px 24px",
-            borderRadius: "8px",
+            borderRadius: "10px",
             border: canProceed
               ? `1px solid rgba(127,223,255,0.35)`
               : `1px solid ${T.border.line}`,

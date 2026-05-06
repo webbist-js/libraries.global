@@ -53,7 +53,7 @@ export function FeaturedEventsCarousel({
                 fontSize: "10px",
                 letterSpacing: ".18em",
                 textTransform: "uppercase",
-                color: T.ink.ghost,
+                color: T.ink.faint,
               }}
             >
               {current + 1} of {events.length} · Carousel
@@ -76,7 +76,7 @@ export function FeaturedEventsCarousel({
                   style={{
                     width: "32px",
                     height: "32px",
-                    borderRadius: "8px",
+                    borderRadius: "10px",
                     border: `1px solid ${T.border.line}`,
                     background: "transparent",
                     color:

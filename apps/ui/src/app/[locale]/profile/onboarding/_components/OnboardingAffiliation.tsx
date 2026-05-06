@@ -85,7 +85,7 @@ export function OnboardingAffiliation({
       </div>
 
       {/* Affiliation type cards */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         {AFFILIATION_TYPES.map((type) => {
           const active = affiliationType === type.value
 
@@ -96,7 +96,7 @@ export function OnboardingAffiliation({
               onClick={() => setAffiliationType(type.value)}
               style={{
                 padding: "14px 18px",
-                borderRadius: "8px",
+                borderRadius: "10px",
                 border: `1px solid ${active ? "rgba(127,223,255,0.4)" : T.border.line}`,
                 background: active ? "rgba(127,223,255,0.06)" : T.bg.surface,
                 cursor: "pointer",
@@ -162,7 +162,7 @@ export function OnboardingAffiliation({
         <div
           style={{
             padding: "14px 18px",
-            borderRadius: "8px",
+            borderRadius: "10px",
             border: `1px solid ${claimResult.status === "verified" ? "rgba(142,240,179,0.3)" : "rgba(255,207,122,0.3)"}`,
             background:
               claimResult.status === "verified"
@@ -189,7 +189,7 @@ export function OnboardingAffiliation({
         style={{
           display: "flex",
           justifyContent: "space-between",
-          paddingTop: "8px",
+          paddingTop: "10px",
         }}
       >
         <button
@@ -217,7 +217,7 @@ export function OnboardingAffiliation({
           }
           style={{
             padding: "10px 24px",
-            borderRadius: "8px",
+            borderRadius: "10px",
             border: "none",
             background: T.ink.base,
             color: T.bg.void,
