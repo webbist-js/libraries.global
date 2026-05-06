@@ -38,8 +38,14 @@ export interface LibrarySearchParams {
   libraryTypes?: string[]
   operationalStatuses?: string[]
   continentSlugs?: string[]
+  countrySlugs?: string[] // NEW
+  regionSlugs?: string[] // NEW
+  areaSlugs?: string[] // NEW
+  featured?: boolean // NEW — filter featured = true
+  sort?: "name:asc" | "name:desc" | "featured:desc,name:asc" // NEW
   page?: number
   hitsPerPage?: number
+  withFacets?: boolean // NEW — request continent_slug facet distribution
 }
 
 // ── Search ────────────────────────────────────────────────────────────────────
@@ -50,8 +56,14 @@ export async function searchLibraries(params: LibrarySearchParams = {}) {
     libraryTypes = [],
     operationalStatuses = [],
     continentSlugs = [],
+    countrySlugs = [],
+    regionSlugs = [],
+    areaSlugs = [],
+    featured,
+    sort,
     page = 0,
     hitsPerPage = 24,
+    withFacets = false,
   } = params
 
   const filterParts: string[] = []
@@ -71,18 +83,57 @@ export async function searchLibraries(params: LibrarySearchParams = {}) {
       `continent_slug IN [${continentSlugs.map((s) => JSON.stringify(s)).join(", ")}]`
     )
   }
+  if (countrySlugs.length > 0) {
+    filterParts.push(
+      `country_slug IN [${countrySlugs.map((s) => JSON.stringify(s)).join(", ")}]`
+    )
+  }
+  if (regionSlugs.length > 0) {
+    filterParts.push(
+      `region_slug IN [${regionSlugs.map((s) => JSON.stringify(s)).join(", ")}]`
+    )
+  }
+  if (areaSlugs.length > 0) {
+    filterParts.push(
+      `area_slug IN [${areaSlugs.map((s) => JSON.stringify(s)).join(", ")}]`
+    )
+  }
+  if (featured === true) {
+    filterParts.push(`featured = true`)
+  }
+
+  const sortArr: string[] = []
+  switch (sort) {
+    case "name:asc":
+      sortArr.push("name:asc")
+      break
+
+    case "name:desc":
+      sortArr.push("name:desc")
+      break
+
+    case "featured:desc,name:asc":
+      sortArr.push("featured:desc", "name:asc")
+
+      break
+
+    // No default
+  }
 
   const index = meiliClient.index("library")
 
   return index.search<LibrarySearchHit>(query, {
     filter: filterParts.length > 0 ? filterParts.join(" AND ") : undefined,
-    page: page + 1, // MeiliSearch pages are 1-indexed
+    sort: sortArr.length > 0 ? sortArr : undefined,
+    page: page + 1,
     hitsPerPage,
+    facets: withFacets ? ["continent_slug", "operationalStatus"] : undefined,
     attributesToRetrieve: [
       "id",
       "documentId",
       "name",
       "slug",
+      "entityRef",
       "shortName",
       "summary",
       "libraryType",
