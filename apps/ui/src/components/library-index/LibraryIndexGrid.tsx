@@ -36,8 +36,8 @@ export function LibraryIndexGrid({
   const isFirst = useRef(true)
 
   useEffect(() => {
-    // Skip the first render if we already have SSR data
-    if (isFirst.current && initialHits) {
+    // Skip the first render if we already have SSR data with results
+    if (isFirst.current && initialHits && initialHits.length > 0) {
       isFirst.current = false
 
       return
