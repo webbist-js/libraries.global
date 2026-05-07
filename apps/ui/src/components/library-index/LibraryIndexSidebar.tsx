@@ -30,6 +30,14 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: "permanently_closed", label: "Permanently closed" },
 ]
 
+// TODO: These access flags require services/amenities indexed in MeiliSearch
+const ACCESS_TODO_OPTIONS = [
+  "Free entry",
+  "Reader pass required",
+  "Wheelchair accessible",
+  "Online catalogue",
+]
+
 // ── FBlock accordion ───────────────────────────────────────────────────────────
 function FBlock({
   index,
@@ -135,6 +143,31 @@ function FCheckbox({
   )
 }
 
+// ── FTodo — disabled placeholder for unimplemented filters ────────────────────
+function FTodo({ label }: { label: string }) {
+  return (
+    <label className="fopt" style={{ opacity: 0.35, cursor: "not-allowed" }}>
+      <span
+        className="fopt-cb"
+        aria-hidden
+        style={{ borderColor: "rgba(255,255,255,0.1)" }}
+      />
+      <span className="fopt-label">{label}</span>
+      <span
+        style={{
+          fontFamily: T.font.mono,
+          fontSize: "8px",
+          letterSpacing: ".14em",
+          textTransform: "uppercase",
+          color: T.ink.ghost,
+        }}
+      >
+        Soon
+      </span>
+    </label>
+  )
+}
+
 // ── Main component ─────────────────────────────────────────────────────────────
 interface LibraryIndexSidebarProps {
   readonly filters: LibraryIndexFilterState
@@ -178,6 +211,30 @@ export function LibraryIndexSidebar({
 
   return (
     <div className="sb">
+      {/* Search within results */}
+      <div style={{ marginBottom: "8px" }}>
+        <input
+          type="search"
+          value={filters.query}
+          onChange={(e) =>
+            onChange({ ...filters, query: e.target.value, page: 0 })
+          }
+          placeholder="Search within results…"
+          style={{
+            width: "100%",
+            padding: "8px 12px",
+            background: "rgba(255,255,255,.04)",
+            border: `1px solid ${T.border.line}`,
+            borderRadius: "8px",
+            fontFamily: T.font.sans,
+            fontSize: "13px",
+            color: T.ink.dim,
+            outline: "none",
+            boxSizing: "border-box",
+          }}
+        />
+      </div>
+
       {/* § 01 Library type */}
       <FBlock
         index="§ 01"
@@ -223,6 +280,10 @@ export function LibraryIndexSidebar({
               label={s.label}
             />
           ))}
+          {/* TODO: these require services/amenities in MeiliSearch */}
+          {ACCESS_TODO_OPTIONS.map((label) => (
+            <FTodo key={label} label={label} />
+          ))}
         </div>
       </FBlock>
 
@@ -234,6 +295,82 @@ export function LibraryIndexSidebar({
             onChange={(v) => onChange({ ...filters, featured: v, page: 0 })}
             label="Pillar institutions only"
           />
+        </div>
+      </FBlock>
+
+      {/* § 04 Collection size — TODO: collectionStats not yet in MeiliSearch */}
+      <FBlock
+        index="§ 04"
+        label="Collection size"
+        accordion
+        defaultOpen={false}
+      >
+        <div style={{ padding: "4px 0 2px" }}>
+          <p
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "9px",
+              letterSpacing: ".14em",
+              textTransform: "uppercase",
+              color: T.ink.ghost,
+              margin: 0,
+            }}
+          >
+            {/* TODO: range slider — collectionStats.value not yet indexed in MeiliSearch */}
+            Range filter coming soon
+          </p>
+        </div>
+      </FBlock>
+
+      {/* § 05 Founded year — TODO: foundedYear slider not yet in MeiliSearch facets */}
+      <FBlock index="§ 05" label="Founded year" accordion defaultOpen={false}>
+        <div style={{ padding: "4px 0 2px" }}>
+          <p
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "9px",
+              letterSpacing: ".14em",
+              textTransform: "uppercase",
+              color: T.ink.ghost,
+              margin: 0,
+            }}
+          >
+            {/* TODO: range slider — requires foundedYear as numeric filterable attribute in MeiliSearch */}
+            Range filter coming soon
+          </p>
+        </div>
+      </FBlock>
+
+      {/* § 06 Facilities — TODO: services/amenities not yet indexed */}
+      <FBlock index="§ 06" label="Facilities" accordion defaultOpen={false}>
+        <div className="fopts">
+          {[
+            "Café / restaurant",
+            "Reading rooms",
+            "Study spaces",
+            "Exhibitions",
+            "Events programme",
+            "Printing & copying",
+          ].map((label) => (
+            <FTodo key={label} label={label} />
+          ))}
+        </div>
+      </FBlock>
+
+      {/* § 07 Operator type — TODO: operatorType not yet indexed in MeiliSearch */}
+      <FBlock index="§ 07" label="Operator" accordion defaultOpen={false}>
+        <div className="fopts">
+          {[
+            "National Government",
+            "Regional Government",
+            "Municipality",
+            "University",
+            "Religious Institution",
+            "Private Foundation",
+            "Independent",
+          ].map((label) => (
+            <FTodo key={label} label={label} />
+          ))}
         </div>
       </FBlock>
 

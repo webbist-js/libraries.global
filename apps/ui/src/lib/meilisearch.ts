@@ -25,6 +25,8 @@ export interface LibrarySearchHit {
   country_name?: string | null
   region_slug?: string | null
   region_name?: string | null
+  foundedYear?: string | null
+  operatorType?: string | null
   heroImage?: {
     url?: string | null
     formats?: Record<string, { url?: string }>
@@ -146,6 +148,8 @@ export async function searchLibraries(params: LibrarySearchParams = {}) {
       "country_name",
       "region_slug",
       "region_name",
+      "foundedYear",
+      "operatorType",
       "heroImage",
     ],
   })

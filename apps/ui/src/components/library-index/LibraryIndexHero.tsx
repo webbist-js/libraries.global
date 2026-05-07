@@ -72,10 +72,11 @@ export function LibraryIndexHero({ stats }: LibraryIndexHeroProps) {
               alignItems: "center",
               gap: "8px",
               padding: "5px 12px",
-              borderRadius: "999px",
+              borderRadius: "6px",
               fontSize: "10px",
-              border: `1px solid ${T.border.line}`,
-              background: T.bg.surface,
+              border: `1px solid ${T.border.hi}`,
+              background: "rgba(255,255,255,.04)",
+              backdropFilter: "blur(6px)",
               fontFamily: T.font.mono,
               letterSpacing: ".2em",
               color: T.ink.dim,
@@ -105,12 +106,13 @@ export function LibraryIndexHero({ stats }: LibraryIndexHeroProps) {
             style={{
               marginTop: "20px",
               marginBottom: 0,
-              fontSize: "16px",
-              lineHeight: 1.7,
+              fontSize: "21px",
+              lineHeight: 1.5,
               color: T.ink.dim,
-              fontWeight: 400,
-              fontFamily: T.font.sans,
-              maxWidth: "52ch",
+              fontWeight: 300,
+              fontFamily: T.font.serif,
+              letterSpacing: "-.005em",
+              maxWidth: "62ch",
             }}
           >
             A complete, sortable, filterable register of the world&rsquo;s
@@ -126,9 +128,10 @@ export function LibraryIndexHero({ stats }: LibraryIndexHeroProps) {
               display: "grid",
               gridTemplateColumns: "repeat(4, 1fr)",
               overflow: "hidden",
-              borderRadius: "12px",
+              borderRadius: "14px",
               border: `1px solid ${T.border.line}`,
-              background: T.bg.deep,
+              background: "rgba(255,255,255,.025)",
+              backdropFilter: "blur(10px)",
               minWidth: "520px",
             }}
           >
@@ -136,7 +139,7 @@ export function LibraryIndexHero({ stats }: LibraryIndexHeroProps) {
               <div
                 key={stat.label}
                 style={{
-                  padding: "20px 24px",
+                  padding: "16px 18px",
                   borderRight:
                     i < arr.length - 1
                       ? `1px solid ${T.border.line}`
@@ -150,8 +153,8 @@ export function LibraryIndexHero({ stats }: LibraryIndexHeroProps) {
                   style={{
                     fontFamily: T.font.serif,
                     fontWeight: 400,
-                    fontSize: "clamp(28px, 2.4vw, 36px)",
-                    letterSpacing: "-.02em",
+                    fontSize: "32px",
+                    letterSpacing: "-.03em",
                     lineHeight: 1,
                     color: T.ink.base,
                   }}

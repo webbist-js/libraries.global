@@ -89,9 +89,9 @@ export function EventsGeoFilterBar({
     <div
       className="sticky top-14 z-20"
       style={{
-        background: "var(--t-header-bg)",
+        background: "rgba(5,8,22,0.82)",
         borderBottom: `1px solid ${T.border.line}`,
-        backdropFilter: "blur(12px)",
+        backdropFilter: "blur(18px) saturate(140%)",
       }}
     >
       <div
@@ -205,31 +205,74 @@ export function EventsGeoFilterBar({
           style={{
             maxWidth: "1296px",
             margin: "0 auto",
-            padding: "6px 24px 10px",
+            padding: "0 24px 8px",
             display: "flex",
             gap: "6px",
             alignItems: "center",
             flexWrap: "wrap",
           }}
         >
-          {activeFilters.map((label) => (
-            <span
-              key={label}
+          <span
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "9px",
+              letterSpacing: ".18em",
+              textTransform: "uppercase",
+              color: T.ink.ghost,
+              marginRight: "2px",
+            }}
+          >
+            Active:
+          </span>
+          {filters.countryCode && (
+            <button
+              type="button"
+              onClick={() => onChange({ ...filters, countryCode: "", page: 1 })}
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".12em",
+                fontSize: "9px",
+                letterSpacing: ".14em",
                 textTransform: "uppercase",
-                padding: "3px 8px",
-                borderRadius: "12px",
-                border: `1px solid ${T.border.line}`,
-                color: T.ink.low,
-                background: "rgba(255,255,255,0.03)",
+                color: T.accent.aurora,
+                background: "rgba(127,223,255,0.08)",
+                border: "1px solid rgba(127,223,255,0.2)",
+                borderRadius: "4px",
+                padding: "2px 7px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
               }}
             >
-              {label}
-            </span>
-          ))}
+              {getCountryName(filters.countryCode)}{" "}
+              <span style={{ opacity: 0.6 }}>×</span>
+            </button>
+          )}
+          {filters.priceScope === "free" && (
+            <button
+              type="button"
+              onClick={() =>
+                onChange({ ...filters, priceScope: "all", page: 1 })
+              }
+              style={{
+                fontFamily: T.font.mono,
+                fontSize: "9px",
+                letterSpacing: ".14em",
+                textTransform: "uppercase",
+                color: T.accent.ok,
+                background: "rgba(142,240,179,0.08)",
+                border: "1px solid rgba(142,240,179,0.2)",
+                borderRadius: "4px",
+                padding: "2px 7px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
+            >
+              Free <span style={{ opacity: 0.6 }}>×</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={() =>
@@ -243,17 +286,18 @@ export function EventsGeoFilterBar({
             }
             style={{
               fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".12em",
+              fontSize: "9px",
+              letterSpacing: ".14em",
               textTransform: "uppercase",
-              color: T.accent.danger,
-              background: "transparent",
+              color: T.ink.faint,
+              background: "none",
               border: "none",
               cursor: "pointer",
-              padding: "3px 4px",
+              padding: "2px 4px",
+              marginLeft: "2px",
             }}
           >
-            Clear ×
+            Clear all
           </button>
         </div>
       )}

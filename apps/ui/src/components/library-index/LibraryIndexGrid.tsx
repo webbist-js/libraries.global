@@ -1,6 +1,7 @@
 // apps/ui/src/components/library-index/LibraryIndexGrid.tsx
 "use client"
 
+import { Icon } from "@iconify/react"
 import { useEffect, useRef, useState } from "react"
 
 import { IndexPager } from "@/components/ds"
@@ -30,6 +31,7 @@ export function LibraryIndexGrid({
   const [hits, setHits] = useState<LibrarySearchHit[]>(initialHits ?? [])
   const [total, setTotal] = useState(initialTotal)
   const [loading, setLoading] = useState(!initialHits)
+  const [view, setView] = useState<"grid" | "list">("grid")
   const gridRef = useRef<HTMLDivElement>(null)
   const isFirst = useRef(true)
 
@@ -114,6 +116,50 @@ export function LibraryIndexGrid({
               ? `${(filters.page * PAGE_SIZE + 1).toLocaleString()}–${Math.min((filters.page + 1) * PAGE_SIZE, total).toLocaleString()} of ${total.toLocaleString()}`
               : "No libraries found"}
         </p>
+
+        {/* View toggle */}
+        <div
+          style={{
+            display: "flex",
+            gap: "2px",
+            background: "rgba(255,255,255,.04)",
+            border: `1px solid ${T.border.line}`,
+            borderRadius: "8px",
+            padding: "2px",
+          }}
+        >
+          {(["grid", "list"] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              aria-pressed={view === v}
+              onClick={() => setView(v)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "28px",
+                height: "24px",
+                borderRadius: "6px",
+                border: "none",
+                background:
+                  view === v ? "rgba(127,223,255,0.12)" : "transparent",
+                color: view === v ? T.accent.aurora : T.ink.faint,
+                cursor: "pointer",
+                transition: "background 150ms, color 150ms",
+              }}
+            >
+              <Icon
+                icon={
+                  v === "grid"
+                    ? "mdi:view-grid-outline"
+                    : "mdi:view-list-outline"
+                }
+                style={{ fontSize: "15px" }}
+              />
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Grid */}
@@ -151,12 +197,12 @@ export function LibraryIndexGrid({
           className="lib-grid"
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: "16px",
+            gridTemplateColumns: view === "list" ? "1fr" : "repeat(2, 1fr)",
+            gap: view === "list" ? "8px" : "16px",
           }}
         >
           {hits.map((hit) => (
-            <LibraryIndexCard key={hit.documentId} hit={hit} />
+            <LibraryIndexCard key={hit.documentId} hit={hit} view={view} />
           ))}
         </div>
       )}

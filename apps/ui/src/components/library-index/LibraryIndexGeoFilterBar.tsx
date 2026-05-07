@@ -7,6 +7,7 @@ import type { LibraryIndexFilterState } from "@/components/library-index/types"
 import { CONTINENT_COUNTRIES, CONTINENTS } from "@/lib/data/continents"
 import { COUNTRIES } from "@/lib/data/countries"
 import { T } from "@/lib/design-tokens"
+import { OPERATIONAL_STATUSES } from "@/lib/meilisearch"
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface RegionOption {
@@ -199,16 +200,39 @@ export function LibraryIndexGeoFilterBar({
   const hasGeoFilter =
     filters.continentSlug || filters.countrySlug || filters.regionSlug
 
+  const activeTypes = filters.libraryTypes
+  const activeStatuses = filters.statuses
+  const hasSidebarFilters =
+    activeTypes.length > 0 || activeStatuses.length > 0 || filters.featured
+
+  function removeType(t: string) {
+    onChange({
+      ...filters,
+      libraryTypes: filters.libraryTypes.filter((x) => x !== t),
+      page: 0,
+    })
+  }
+
+  function removeStatus(s: string) {
+    onChange({
+      ...filters,
+      statuses: filters.statuses.filter((x) => x !== s),
+      page: 0,
+    })
+  }
+
   return (
     <div
       style={{
         borderBottom: `1px solid ${T.border.line}`,
-        background: T.bg.space,
+        background: "rgba(5,8,22,0.82)",
+        backdropFilter: "blur(18px) saturate(140%)",
         position: "sticky",
         top: "56px",
         zIndex: 15,
       }}
     >
+      {/* Main filter row */}
       <div
         style={{
           maxWidth: "1400px",
@@ -242,7 +266,7 @@ export function LibraryIndexGeoFilterBar({
           disabled={!filters.countrySlug || regionsLoading}
         />
 
-        {/* Reset */}
+        {/* Reset geo */}
         {hasGeoFilter && (
           <button
             type="button"
@@ -297,6 +321,140 @@ export function LibraryIndexGeoFilterBar({
           options={SORT_OPTIONS}
         />
       </div>
+
+      {/* Active filter pills row */}
+      {hasSidebarFilters && (
+        <div
+          style={{
+            maxWidth: "1400px",
+            margin: "0 auto",
+            padding: "0 24px 8px",
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: "6px",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "9px",
+              letterSpacing: ".18em",
+              textTransform: "uppercase",
+              color: T.ink.ghost,
+              marginRight: "2px",
+            }}
+          >
+            Active:
+          </span>
+
+          {filters.featured && (
+            <button
+              type="button"
+              onClick={() => onChange({ ...filters, featured: false, page: 0 })}
+              style={{
+                fontFamily: T.font.mono,
+                fontSize: "9px",
+                letterSpacing: ".14em",
+                textTransform: "uppercase",
+                color: T.accent.gold,
+                background: "rgba(232,201,138,0.1)",
+                border: "1px solid rgba(232,201,138,0.25)",
+                borderRadius: "4px",
+                padding: "2px 7px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
+            >
+              ✦ Featured <span style={{ opacity: 0.6 }}>×</span>
+            </button>
+          )}
+
+          {activeTypes.map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => removeType(t)}
+              style={{
+                fontFamily: T.font.mono,
+                fontSize: "9px",
+                letterSpacing: ".14em",
+                textTransform: "uppercase",
+                color: T.accent.aurora,
+                background: "rgba(127,223,255,0.08)",
+                border: "1px solid rgba(127,223,255,0.2)",
+                borderRadius: "4px",
+                padding: "2px 7px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
+            >
+              {t} <span style={{ opacity: 0.6 }}>×</span>
+            </button>
+          ))}
+
+          {activeStatuses.map((s) => {
+            const label =
+              OPERATIONAL_STATUSES.find((o) => o.value === s)?.label ?? s
+
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => removeStatus(s)}
+                style={{
+                  fontFamily: T.font.mono,
+                  fontSize: "9px",
+                  letterSpacing: ".14em",
+                  textTransform: "uppercase",
+                  color: T.accent.ember,
+                  background: "rgba(255,184,138,0.08)",
+                  border: "1px solid rgba(255,184,138,0.2)",
+                  borderRadius: "4px",
+                  padding: "2px 7px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                {label} <span style={{ opacity: 0.6 }}>×</span>
+              </button>
+            )
+          })}
+
+          <button
+            type="button"
+            onClick={() =>
+              onChange({
+                ...filters,
+                libraryTypes: [],
+                statuses: [],
+                featured: false,
+                page: 0,
+              })
+            }
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "9px",
+              letterSpacing: ".14em",
+              textTransform: "uppercase",
+              color: T.ink.faint,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "2px 4px",
+              marginLeft: "2px",
+            }}
+          >
+            Clear all
+          </button>
+        </div>
+      )}
     </div>
   )
 }
