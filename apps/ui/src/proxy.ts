@@ -4,7 +4,6 @@ import createMiddleware from "next-intl/middleware"
 import { routing } from "@/lib/navigation"
 import { authGuard } from "@/lib/proxies/authGuard"
 import { basicAuth } from "@/lib/proxies/basicAuth"
-import { dynamicRewrite } from "@/lib/proxies/dynamicRewrite"
 import { httpsRedirect } from "@/lib/proxies/httpsRedirect"
 
 // https://next-intl-docs.vercel.app/docs/getting-started/app-router
@@ -19,9 +18,6 @@ export default async function proxy(req: NextRequest) {
 
   const authResponse = await authGuard(req, intlProxy)
   if (authResponse) return authResponse
-
-  const dynamicResponse = dynamicRewrite(req, intlProxy)
-  if (dynamicResponse) return dynamicResponse
 
   return intlProxy(req)
 }
