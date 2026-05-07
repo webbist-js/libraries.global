@@ -125,9 +125,7 @@ export function EventsHero({ stats, topCountryName }: EventsHeroProps) {
 
           {/* Title */}
           <div style={{ marginTop: "20px" }}>
-            <HeroTitle>
-              {parseHeroText("Tonight, and the next two thousand *nights.*")}
-            </HeroTitle>
+            <HeroTitle>{parseHeroText("Talks, tours, *tonight.*")}</HeroTitle>
           </div>
 
           {/* Lead */}
