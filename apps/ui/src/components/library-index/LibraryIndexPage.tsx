@@ -2,7 +2,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
 import { Container } from "@/components/elementary/Container"
@@ -19,6 +19,7 @@ import {
 } from "@/components/library-index/types"
 import { T } from "@/lib/design-tokens"
 import type { LibrarySearchHit } from "@/lib/meilisearch"
+import { usePathname, useRouter } from "@/lib/navigation"
 
 interface LibraryIndexPageProps {
   readonly stats: LibraryIndexStats
