@@ -96,7 +96,7 @@ const SORT_OPTIONS: {
   value: LibraryIndexFilterState["sort"]
   label: string
 }[] = [
-  { value: "featured:desc,name:asc", label: "Featured first" },
+  { value: "featured:desc,name:asc", label: "Pillar first" },
   { value: "name:asc", label: "A–Z" },
   { value: "name:desc", label: "Z–A" },
 ]
@@ -203,7 +203,12 @@ export function LibraryIndexGeoFilterBar({
   const activeTypes = filters.libraryTypes
   const activeStatuses = filters.statuses
   const hasSidebarFilters =
-    activeTypes.length > 0 || activeStatuses.length > 0 || filters.featured
+    activeTypes.length > 0 ||
+    activeStatuses.length > 0 ||
+    filters.featured ||
+    filters.accessibilityNames.length > 0 ||
+    filters.serviceNames.length > 0 ||
+    filters.operatorTypes.length > 0
 
   function removeType(t: string) {
     onChange({
@@ -368,7 +373,7 @@ export function LibraryIndexGeoFilterBar({
                 gap: "4px",
               }}
             >
-              ✦ Featured <span style={{ opacity: 0.6 }}>×</span>
+              ✦ Pillar <span style={{ opacity: 0.6 }}>×</span>
             </button>
           )}
 
@@ -435,6 +440,9 @@ export function LibraryIndexGeoFilterBar({
                 libraryTypes: [],
                 statuses: [],
                 featured: false,
+                accessibilityNames: [],
+                serviceNames: [],
+                operatorTypes: [],
                 page: 0,
               })
             }

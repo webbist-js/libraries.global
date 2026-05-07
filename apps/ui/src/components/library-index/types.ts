@@ -18,6 +18,12 @@ export interface LibraryIndexFilterState {
   regionSlug: string
   areaSlug: string
   featured: boolean
+  /** Accessibility option names e.g. ["Wheelchair access", "Accessible toilets"] */
+  accessibilityNames: string[]
+  /** Service / facility names e.g. ["Café", "Study spaces"] */
+  serviceNames: string[]
+  /** operatorType enum values e.g. ["National Government", "University"] */
+  operatorTypes: string[]
   sort: "featured:desc,name:asc" | "name:asc" | "name:desc"
   page: number
 }
@@ -31,6 +37,9 @@ export const DEFAULT_FILTERS: LibraryIndexFilterState = {
   regionSlug: "",
   areaSlug: "",
   featured: false,
+  accessibilityNames: [],
+  serviceNames: [],
+  operatorTypes: [],
   sort: "featured:desc,name:asc",
   page: 0,
 }
@@ -41,6 +50,9 @@ export function filtersFromParams(
 ): LibraryIndexFilterState {
   const typeParam = params.get("type")
   const statusParam = params.get("status")
+  const accessParam = params.get("access")
+  const serviceParam = params.get("service")
+  const operatorParam = params.get("operator")
 
   return {
     query: params.get("q") ?? "",
@@ -51,6 +63,13 @@ export function filtersFromParams(
     regionSlug: params.get("region") ?? "",
     areaSlug: params.get("area") ?? "",
     featured: params.get("featured") === "1",
+    accessibilityNames: accessParam
+      ? accessParam.split(",").filter(Boolean)
+      : [],
+    serviceNames: serviceParam ? serviceParam.split(",").filter(Boolean) : [],
+    operatorTypes: operatorParam
+      ? operatorParam.split(",").filter(Boolean)
+      : [],
 
     sort: (() => {
       const s = params.get("sort")
@@ -79,6 +98,10 @@ export function filtersToParams(f: LibraryIndexFilterState): URLSearchParams {
   if (f.regionSlug) p.set("region", f.regionSlug)
   if (f.areaSlug) p.set("area", f.areaSlug)
   if (f.featured) p.set("featured", "1")
+  if (f.accessibilityNames.length > 0)
+    p.set("access", f.accessibilityNames.join(","))
+  if (f.serviceNames.length > 0) p.set("service", f.serviceNames.join(","))
+  if (f.operatorTypes.length > 0) p.set("operator", f.operatorTypes.join(","))
   if (f.sort !== "featured:desc,name:asc") p.set("sort", f.sort)
   if (f.page > 0) p.set("page", String(f.page))
 
@@ -95,6 +118,9 @@ export function hasActiveFilters(f: LibraryIndexFilterState): boolean {
     f.countrySlug !== "" ||
     f.regionSlug !== "" ||
     f.areaSlug !== "" ||
-    f.featured
+    f.featured ||
+    f.accessibilityNames.length > 0 ||
+    f.serviceNames.length > 0 ||
+    f.operatorTypes.length > 0
   )
 }

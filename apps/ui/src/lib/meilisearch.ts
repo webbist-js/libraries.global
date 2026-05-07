@@ -1,5 +1,7 @@
 import { Meilisearch } from "meilisearch"
 
+import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
+
 const host = process.env.NEXT_PUBLIC_MEILISEARCH_HOST ?? "http://localhost:7700"
 const searchKey = process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY ?? ""
 
@@ -27,6 +29,8 @@ export interface LibrarySearchHit {
   region_name?: string | null
   foundedYear?: string | null
   operatorType?: string | null
+  accessibility_names?: string[]
+  service_names?: string[]
   heroImage?: {
     url?: string | null
     formats?: Record<string, { url?: string }>
@@ -43,11 +47,14 @@ export interface LibrarySearchParams {
   countrySlugs?: string[] // NEW
   regionSlugs?: string[] // NEW
   areaSlugs?: string[] // NEW
-  featured?: boolean // NEW — filter featured = true
-  sort?: "name:asc" | "name:desc" | "featured:desc,name:asc" // NEW
+  featured?: boolean
+  accessibilityNames?: string[]
+  serviceNames?: string[]
+  operatorTypes?: string[]
+  sort?: "name:asc" | "name:desc" | "featured:desc,name:asc"
   page?: number
   hitsPerPage?: number
-  withFacets?: boolean // NEW — request continent_slug facet distribution
+  withFacets?: boolean
 }
 
 // ── Search ────────────────────────────────────────────────────────────────────
@@ -62,6 +69,9 @@ export async function searchLibraries(params: LibrarySearchParams = {}) {
     regionSlugs = [],
     areaSlugs = [],
     featured,
+    accessibilityNames = [],
+    serviceNames = [],
+    operatorTypes = [],
     sort,
     page = 0,
     hitsPerPage = 24,
@@ -103,6 +113,21 @@ export async function searchLibraries(params: LibrarySearchParams = {}) {
   if (featured === true) {
     filterParts.push(`featured = true`)
   }
+  if (accessibilityNames.length > 0) {
+    filterParts.push(
+      `accessibility_names IN [${accessibilityNames.map((n) => JSON.stringify(n)).join(", ")}]`
+    )
+  }
+  if (serviceNames.length > 0) {
+    filterParts.push(
+      `service_names IN [${serviceNames.map((n) => JSON.stringify(n)).join(", ")}]`
+    )
+  }
+  if (operatorTypes.length > 0) {
+    filterParts.push(
+      `operatorType IN [${operatorTypes.map((t) => JSON.stringify(t)).join(", ")}]`
+    )
+  }
 
   const sortArr: string[] = []
   switch (sort) {
@@ -129,7 +154,15 @@ export async function searchLibraries(params: LibrarySearchParams = {}) {
     sort: sortArr.length > 0 ? sortArr : undefined,
     page: page + 1,
     hitsPerPage,
-    facets: withFacets ? ["continent_slug", "operationalStatus"] : undefined,
+    facets: withFacets
+      ? [
+          "continent_slug",
+          "operationalStatus",
+          "accessibility_names",
+          "service_names",
+          "operatorType",
+        ]
+      : undefined,
     attributesToRetrieve: [
       "id",
       "documentId",
@@ -253,12 +286,13 @@ export function buildLibraryPath(hit: LibrarySearchHit): string | null {
 }
 
 export function libraryHeroUrl(hit: LibrarySearchHit): string | null {
-  return (
+  const raw =
     hit.heroImage?.formats?.small?.url ??
     hit.heroImage?.formats?.thumbnail?.url ??
     hit.heroImage?.url ??
     null
-  )
+
+  return raw ? formatStrapiMediaUrl(raw) : null
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────

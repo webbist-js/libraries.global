@@ -30,12 +30,17 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: "permanently_closed", label: "Permanently closed" },
 ]
 
-// TODO: These access flags require services/amenities indexed in MeiliSearch
-const ACCESS_TODO_OPTIONS = [
-  "Free entry",
-  "Reader pass required",
-  "Wheelchair accessible",
-  "Online catalogue",
+const OPERATOR_OPTIONS = [
+  "National Government",
+  "Regional Government",
+  "Municipality",
+  "University",
+  "Religious Institution",
+  "Private Foundation",
+  "Independent",
+  "Volunteer Managed",
+  "Community Managed",
+  "Other",
 ]
 
 // ── FBlock accordion ───────────────────────────────────────────────────────────
@@ -143,28 +148,21 @@ function FCheckbox({
   )
 }
 
-// ── FTodo — disabled placeholder for unimplemented filters ────────────────────
-function FTodo({ label }: { label: string }) {
+// ── FComingSoon — placeholder for filters that need range UI ─────────────────
+function FComingSoon({ text }: { text: string }) {
   return (
-    <label className="fopt" style={{ opacity: 0.35, cursor: "not-allowed" }}>
-      <span
-        className="fopt-cb"
-        aria-hidden
-        style={{ borderColor: "rgba(255,255,255,0.1)" }}
-      />
-      <span className="fopt-label">{label}</span>
-      <span
-        style={{
-          fontFamily: T.font.mono,
-          fontSize: "8px",
-          letterSpacing: ".14em",
-          textTransform: "uppercase",
-          color: T.ink.ghost,
-        }}
-      >
-        Soon
-      </span>
-    </label>
+    <p
+      style={{
+        fontFamily: T.font.mono,
+        fontSize: "9px",
+        letterSpacing: ".14em",
+        textTransform: "uppercase",
+        color: T.ink.ghost,
+        margin: "4px 0 2px",
+      }}
+    >
+      {text}
+    </p>
   )
 }
 
@@ -172,11 +170,15 @@ function FTodo({ label }: { label: string }) {
 interface LibraryIndexSidebarProps {
   readonly filters: LibraryIndexFilterState
   readonly onChange: (next: LibraryIndexFilterState) => void
+  readonly accessibilityOptions?: string[]
+  readonly serviceOptions?: string[]
 }
 
 export function LibraryIndexSidebar({
   filters,
   onChange,
+  accessibilityOptions = [],
+  serviceOptions = [],
 }: LibraryIndexSidebarProps) {
   // ── Type group toggle ────────────────────────────────────────────────────────
   // A group is "checked" if ALL of its types are in filters.libraryTypes.
@@ -200,12 +202,39 @@ export function LibraryIndexSidebar({
     onChange({ ...filters, statuses: next, page: 0 })
   }
 
+  // ── Accessibility toggle ──────────────────────────────────────────────────────
+  function toggleAccessibility(value: string, checked: boolean) {
+    const next = checked
+      ? [...new Set([...filters.accessibilityNames, value])]
+      : filters.accessibilityNames.filter((s) => s !== value)
+    onChange({ ...filters, accessibilityNames: next, page: 0 })
+  }
+
+  // ── Service toggle ────────────────────────────────────────────────────────────
+  function toggleService(value: string, checked: boolean) {
+    const next = checked
+      ? [...new Set([...filters.serviceNames, value])]
+      : filters.serviceNames.filter((s) => s !== value)
+    onChange({ ...filters, serviceNames: next, page: 0 })
+  }
+
+  // ── Operator toggle ───────────────────────────────────────────────────────────
+  function toggleOperator(value: string, checked: boolean) {
+    const next = checked
+      ? [...new Set([...filters.operatorTypes, value])]
+      : filters.operatorTypes.filter((s) => s !== value)
+    onChange({ ...filters, operatorTypes: next, page: 0 })
+  }
+
   const resetAll = () =>
     onChange({
       ...filters,
       libraryTypes: [],
       statuses: [],
       featured: false,
+      accessibilityNames: [],
+      serviceNames: [],
+      operatorTypes: [],
       page: 0,
     })
 
@@ -259,10 +288,10 @@ export function LibraryIndexSidebar({
         </div>
       </FBlock>
 
-      {/* § 02 Status & Access */}
+      {/* § 02 Status */}
       <FBlock
         index="§ 02"
-        label="Status & access"
+        label="Status"
         accordion
         defaultOpen={false}
         onReset={
@@ -280,15 +309,11 @@ export function LibraryIndexSidebar({
               label={s.label}
             />
           ))}
-          {/* TODO: these require services/amenities in MeiliSearch */}
-          {ACCESS_TODO_OPTIONS.map((label) => (
-            <FTodo key={label} label={label} />
-          ))}
         </div>
       </FBlock>
 
-      {/* § 03 Featured only toggle */}
-      <FBlock index="§ 03" label="Featured only" accordion defaultOpen={false}>
+      {/* § 03 Pillar only */}
+      <FBlock index="§ 03" label="Pillar only" accordion defaultOpen={false}>
         <div className="fopts">
           <FCheckbox
             checked={filters.featured}
@@ -298,79 +323,98 @@ export function LibraryIndexSidebar({
         </div>
       </FBlock>
 
-      {/* § 04 Collection size — TODO: collectionStats not yet in MeiliSearch */}
+      {/* § 04 Accessibility — dynamic from MeiliSearch facets */}
+      {accessibilityOptions.length > 0 && (
+        <FBlock
+          index="§ 04"
+          label="Accessibility"
+          accordion
+          defaultOpen={false}
+          onReset={
+            filters.accessibilityNames.length > 0
+              ? () => onChange({ ...filters, accessibilityNames: [], page: 0 })
+              : undefined
+          }
+        >
+          <div className="fopts">
+            {accessibilityOptions.map((name) => (
+              <FCheckbox
+                key={name}
+                checked={filters.accessibilityNames.includes(name)}
+                onChange={(v) => toggleAccessibility(name, v)}
+                label={name}
+              />
+            ))}
+          </div>
+        </FBlock>
+      )}
+
+      {/* § 05 Facilities / Services — dynamic from MeiliSearch facets */}
+      {serviceOptions.length > 0 && (
+        <FBlock
+          index="§ 05"
+          label="Facilities"
+          accordion
+          defaultOpen={false}
+          onReset={
+            filters.serviceNames.length > 0
+              ? () => onChange({ ...filters, serviceNames: [], page: 0 })
+              : undefined
+          }
+        >
+          <div className="fopts">
+            {serviceOptions.map((name) => (
+              <FCheckbox
+                key={name}
+                checked={filters.serviceNames.includes(name)}
+                onChange={(v) => toggleService(name, v)}
+                label={name}
+              />
+            ))}
+          </div>
+        </FBlock>
+      )}
+
+      {/* § 06 Operator */}
       <FBlock
-        index="§ 04"
+        index="§ 06"
+        label="Operator"
+        accordion
+        defaultOpen={false}
+        onReset={
+          filters.operatorTypes.length > 0
+            ? () => onChange({ ...filters, operatorTypes: [], page: 0 })
+            : undefined
+        }
+      >
+        <div className="fopts">
+          {OPERATOR_OPTIONS.map((label) => (
+            <FCheckbox
+              key={label}
+              checked={filters.operatorTypes.includes(label)}
+              onChange={(v) => toggleOperator(label, v)}
+              label={label}
+            />
+          ))}
+        </div>
+      </FBlock>
+
+      {/* § 07 Collection size — requires range slider + numeric MeiliSearch field */}
+      <FBlock
+        index="§ 07"
         label="Collection size"
         accordion
         defaultOpen={false}
       >
         <div style={{ padding: "4px 0 2px" }}>
-          <p
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "9px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
-              color: T.ink.ghost,
-              margin: 0,
-            }}
-          >
-            {/* TODO: range slider — collectionStats.value not yet indexed in MeiliSearch */}
-            Range filter coming soon
-          </p>
+          <FComingSoon text="Range filter coming soon" />
         </div>
       </FBlock>
 
-      {/* § 05 Founded year — TODO: foundedYear slider not yet in MeiliSearch facets */}
-      <FBlock index="§ 05" label="Founded year" accordion defaultOpen={false}>
+      {/* § 08 Founded year — requires numeric MeiliSearch filterable attribute */}
+      <FBlock index="§ 08" label="Founded year" accordion defaultOpen={false}>
         <div style={{ padding: "4px 0 2px" }}>
-          <p
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "9px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
-              color: T.ink.ghost,
-              margin: 0,
-            }}
-          >
-            {/* TODO: range slider — requires foundedYear as numeric filterable attribute in MeiliSearch */}
-            Range filter coming soon
-          </p>
-        </div>
-      </FBlock>
-
-      {/* § 06 Facilities — TODO: services/amenities not yet indexed */}
-      <FBlock index="§ 06" label="Facilities" accordion defaultOpen={false}>
-        <div className="fopts">
-          {[
-            "Café / restaurant",
-            "Reading rooms",
-            "Study spaces",
-            "Exhibitions",
-            "Events programme",
-            "Printing & copying",
-          ].map((label) => (
-            <FTodo key={label} label={label} />
-          ))}
-        </div>
-      </FBlock>
-
-      {/* § 07 Operator type — TODO: operatorType not yet indexed in MeiliSearch */}
-      <FBlock index="§ 07" label="Operator" accordion defaultOpen={false}>
-        <div className="fopts">
-          {[
-            "National Government",
-            "Regional Government",
-            "Municipality",
-            "University",
-            "Religious Institution",
-            "Private Foundation",
-            "Independent",
-          ].map((label) => (
-            <FTodo key={label} label={label} />
-          ))}
+          <FComingSoon text="Range filter coming soon" />
         </div>
       </FBlock>
 

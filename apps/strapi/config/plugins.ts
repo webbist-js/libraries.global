@@ -83,8 +83,11 @@ export default ({ env }) => {
               "country_slug",
               "region_slug",
               "featured",
+              "accessibility_names",
+              "service_names",
+              "operatorType",
             ],
-            sortableAttributes: ["name"],
+            sortableAttributes: ["name", "featured"],
           },
           // Flatten nested relations so they are searchable/filterable,
           // and map the location custom field to MeiliSearch's _geo format.
@@ -96,6 +99,16 @@ export default ({ env }) => {
               lat?: unknown
               lng?: unknown
             } | null
+            const accessibility = entry.accessibility as
+              | {
+                  name?: string
+                }[]
+              | null
+            const services = entry.services as
+              | {
+                  name?: string
+                }[]
+              | null
             const lat = location?.lat != null ? Number(location.lat) : null
             const lng = location?.lng != null ? Number(location.lng) : null
 
@@ -107,6 +120,13 @@ export default ({ env }) => {
               country_name: country?.name ?? null,
               region_slug: region?.slug ?? null,
               region_name: region?.name ?? null,
+              // Flat arrays for checkbox filters in the UI
+              accessibility_names: Array.isArray(accessibility)
+                ? accessibility.map((a) => a.name).filter(Boolean)
+                : [],
+              service_names: Array.isArray(services)
+                ? services.map((s) => s.name).filter(Boolean)
+                : [],
               // _geo enables MeiliSearch geo radius filtering and distance sorting
               ...(lat != null &&
               lng != null &&

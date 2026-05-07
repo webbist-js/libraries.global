@@ -18,8 +18,13 @@ import {
   type LibraryIndexStats,
 } from "@/components/library-index/types"
 import { T } from "@/lib/design-tokens"
-import type { LibrarySearchHit } from "@/lib/meilisearch"
+import { searchLibraries, type LibrarySearchHit } from "@/lib/meilisearch"
 import { usePathname, useRouter } from "@/lib/navigation"
+
+interface FilterOptions {
+  accessibilityNames: string[]
+  serviceNames: string[]
+}
 
 interface LibraryIndexPageProps {
   readonly stats: LibraryIndexStats
@@ -40,7 +45,26 @@ export function LibraryIndexPage({
   )
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [resultCount, setResultCount] = useState(initialTotal)
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
+    accessibilityNames: [],
+    serviceNames: [],
+  })
   const isMount = useRef(true)
+
+  // Fetch dynamic filter options from MeiliSearch facets once on mount
+  useEffect(() => {
+    searchLibraries({ withFacets: true, hitsPerPage: 0 })
+      .then((r) => {
+        const dist = r.facetDistribution ?? {}
+        setFilterOptions({
+          accessibilityNames: Object.keys(
+            dist["accessibility_names"] ?? {}
+          ).sort(),
+          serviceNames: Object.keys(dist["service_names"] ?? {}).sort(),
+        })
+      })
+      .catch(() => {})
+  }, [])
 
   // Sync URL when filters change (skip on first mount to avoid double-render)
   useEffect(() => {
@@ -113,6 +137,8 @@ export function LibraryIndexPage({
             <LibraryIndexSidebar
               filters={filters}
               onChange={handleFiltersChange}
+              accessibilityOptions={filterOptions.accessibilityNames}
+              serviceOptions={filterOptions.serviceNames}
             />
           </div>
         )}
