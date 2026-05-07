@@ -1,6 +1,7 @@
 import Image from "next/image"
 import type { Locale } from "next-intl"
 
+import { Breadcrumb } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -121,9 +122,7 @@ export function AreaDetailPage({
   const regionName = area.region?.name
   const regionHref = `/${continentSlug}/${countrySlug}/${regionSlug}`
   const countryName = area.region?.country?.name
-  const countryHref = `/${continentSlug}/${countrySlug}`
   const continentName = area.region?.country?.continent?.name
-  const continentHref = `/${continentSlug}`
 
   const tabs = [
     { id: "overview", label: "Overview" },
@@ -152,48 +151,21 @@ export function AreaDetailPage({
 
           <Container className="pb-8 sm:pb-10">
             {/* Breadcrumb */}
-            <div className="mb-4 flex flex-wrap items-center gap-1.5 text-xs text-white/36">
-              <GlobalLink
-                href="/"
-                className="transition-colors hover:text-white/60"
-              >
-                Global
-              </GlobalLink>
-              {continentName ? (
-                <>
-                  <span>/</span>
-                  <GlobalLink
-                    href={continentHref}
-                    className="transition-colors hover:text-white/60"
-                  >
-                    {continentName}
-                  </GlobalLink>
-                </>
-              ) : null}
-              {countryName ? (
-                <>
-                  <span>/</span>
-                  <GlobalLink
-                    href={countryHref}
-                    className="transition-colors hover:text-white/60"
-                  >
-                    {countryName}
-                  </GlobalLink>
-                </>
-              ) : null}
-              {regionName ? (
-                <>
-                  <span>/</span>
-                  <GlobalLink
-                    href={regionHref}
-                    className="transition-colors hover:text-white/60"
-                  >
-                    {regionName}
-                  </GlobalLink>
-                </>
-              ) : null}
-              <span>/</span>
-              <span className="text-white/60">{area.name}</span>
+            <div className="mb-4">
+              <Breadcrumb
+                labels={{
+                  ...(continentSlug && continentName
+                    ? { [continentSlug]: continentName }
+                    : {}),
+                  ...(countrySlug && countryName
+                    ? { [countrySlug]: countryName }
+                    : {}),
+                  ...(regionSlug && regionName
+                    ? { [regionSlug]: regionName }
+                    : {}),
+                  [slug]: area.name ?? "",
+                }}
+              />
             </div>
 
             <div className="flex flex-col gap-3">

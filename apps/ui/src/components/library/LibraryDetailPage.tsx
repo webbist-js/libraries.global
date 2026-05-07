@@ -35,36 +35,6 @@ interface LibraryDetailPageProps {
   readonly nearbyLibraries?: PopulatedLibraryData[]
 }
 
-// ── Breadcrumb ────────────────────────────────────────────────────────────────
-
-function LocationBreadcrumb({ library }: { library: PopulatedLibraryData }) {
-  const continentSlug = library.continent?.slug
-  const countrySlug = library.country?.slug
-  const regionSlug = library.region?.slug
-
-  const items = [
-    { label: "Atlas", href: "/" },
-    continentSlug
-      ? { label: library.continent!.name, href: `/${continentSlug}` }
-      : null,
-    continentSlug && countrySlug
-      ? {
-          label: library.country!.name,
-          href: `/${continentSlug}/${countrySlug}`,
-        }
-      : null,
-    continentSlug && countrySlug && regionSlug
-      ? {
-          label: library.region!.name,
-          href: `/${continentSlug}/${countrySlug}/${regionSlug}`,
-        }
-      : null,
-    { label: library.name ?? "" },
-  ].filter(Boolean) as { label: string; href?: string }[]
-
-  return <Breadcrumb items={items} />
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function LibraryDetailPage({
@@ -132,7 +102,24 @@ export function LibraryDetailPage({
           {/* Hero — no tab nav passed; nav is rendered as a sibling below */}
           <LibraryHero
             library={library}
-            breadcrumb={<LocationBreadcrumb library={library} />}
+            breadcrumb={
+              <Breadcrumb
+                labels={{
+                  ...(library.continent?.slug
+                    ? { [library.continent.slug]: library.continent.name ?? "" }
+                    : {}),
+                  ...(library.country?.slug
+                    ? { [library.country.slug]: library.country.name ?? "" }
+                    : {}),
+                  ...(library.region?.slug
+                    ? { [library.region.slug]: library.region.name ?? "" }
+                    : {}),
+                  ...(library.slug
+                    ? { [library.slug]: library.name ?? "" }
+                    : {}),
+                }}
+              />
+            }
           />
 
           {/* Tab nav — sibling of hero so sticky top-14 works correctly.

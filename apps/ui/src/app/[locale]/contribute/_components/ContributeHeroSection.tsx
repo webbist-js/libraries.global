@@ -78,9 +78,7 @@ export function ContributeHeroSection({
     >
       {/* Breadcrumb */}
       <div style={{ marginBottom: "20px" }}>
-        <Breadcrumb
-          items={[{ label: "Home", href: "/" }, { label: "Contribute" }]}
-        />
+        <Breadcrumb root={{ label: "Home", href: "/" }} />
       </div>
 
       {/* Eyebrow */}

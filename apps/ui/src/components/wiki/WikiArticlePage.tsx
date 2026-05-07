@@ -561,18 +561,13 @@ export function WikiArticlePage({
               {/* Breadcrumb */}
               <div style={{ marginBottom: "24px" }}>
                 <Breadcrumb
-                  items={[
-                    { label: "Wiki", href: "/wiki" },
+                  labels={{
+                    wiki: "Wiki",
                     ...(article.section
-                      ? [
-                          {
-                            label: article.section.name,
-                            href: `/wiki?section=${article.section.slug}`,
-                          },
-                        ]
-                      : []),
-                    { label: article.title ?? "" },
-                  ]}
+                      ? { [article.section.slug]: article.section.name }
+                      : {}),
+                    [article.slug ?? ""]: article.title ?? "",
+                  }}
                 />
               </div>
 

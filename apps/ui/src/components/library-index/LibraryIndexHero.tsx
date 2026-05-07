@@ -57,13 +57,7 @@ export function LibraryIndexHero({ stats }: LibraryIndexHeroProps) {
         {/* Left: breadcrumb + eyebrow + title + lead */}
         <div style={{ maxWidth: "640px" }}>
           {/* Breadcrumb */}
-          <Breadcrumb
-            items={[
-              { label: "Home", href: "/" },
-              { label: "Atlas", href: "/" },
-              { label: "Library Index" },
-            ]}
-          />
+          <Breadcrumb labels={{ index: "Library Index" }} />
 
           {/* Eyebrow pill */}
           <div

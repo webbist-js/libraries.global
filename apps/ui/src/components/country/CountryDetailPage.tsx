@@ -101,16 +101,9 @@ export function CountryDetailPage({
     : null
 
   const continentName = country.continent?.name
-  const continentHref = `/${continentSlug}`
 
   const browseRegions = country.regions ?? []
   const regionLabel = country.regionTypeLabel ?? "Regions"
-
-  const breadcrumbItems = [
-    { label: "Atlas", href: "/" },
-    ...(continentName ? [{ label: continentName, href: continentHref }] : []),
-    { label: country.name ?? "" },
-  ]
 
   const tabs = [
     { id: "overview", label: "Overview" },
@@ -158,7 +151,14 @@ export function CountryDetailPage({
             <div className="grid grid-cols-1 gap-10 pt-[70px] pb-14 lg:[grid-template-columns:1.3fr_1fr] lg:gap-14">
               {/* Left column */}
               <div>
-                <Breadcrumb items={breadcrumbItems} />
+                <Breadcrumb
+                  labels={{
+                    ...(continentSlug && continentName
+                      ? { [continentSlug]: continentName }
+                      : {}),
+                    [countrySlug]: country.name ?? "",
+                  }}
+                />
 
                 {country.iso2 ? (
                   <div className="mt-6">

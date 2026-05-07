@@ -107,10 +107,8 @@ export function RegionDetailPage({
     : null
 
   const countryName = region.country?.name
-  const countryHref = `/${continentSlug}/${countrySlug}`
   const continentName =
     region.continent?.name ?? region.country?.continent?.name
-  const continentHref = `/${continentSlug}`
 
   const areaTypeLabel = hasAreas
     ? ((region.areas![0] as { typeLabel?: string | null }).typeLabel ?? "Areas")
@@ -159,16 +157,15 @@ export function RegionDetailPage({
               <div>
                 <div className="mb-4">
                   <Breadcrumb
-                    items={[
-                      { label: "Atlas", href: "/" },
-                      ...(continentName
-                        ? [{ label: continentName, href: continentHref }]
-                        : []),
-                      ...(countryName
-                        ? [{ label: countryName, href: countryHref }]
-                        : []),
-                      { label: region.name ?? "" },
-                    ]}
+                    labels={{
+                      ...(continentSlug && continentName
+                        ? { [continentSlug]: continentName }
+                        : {}),
+                      ...(countrySlug && countryName
+                        ? { [countrySlug]: countryName }
+                        : {}),
+                      [slug]: region.name ?? "",
+                    }}
                   />
                 </div>
 
