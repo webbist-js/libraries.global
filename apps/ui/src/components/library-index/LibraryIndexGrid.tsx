@@ -7,8 +7,8 @@ import { useEffect, useRef, useState } from "react"
 import { IndexPager } from "@/components/ds"
 import { LibraryIndexCard } from "@/components/library-index/LibraryIndexCard"
 import type { LibraryIndexFilterState } from "@/components/library-index/types"
+import { useGeoLookup } from "@/hooks/useGeoLookup"
 import { T } from "@/lib/design-tokens"
-import { geocodePlaceName } from "@/lib/geo-lookup"
 import { searchLibraries, type LibrarySearchHit } from "@/lib/meilisearch"
 
 const PAGE_SIZE = 24
@@ -39,8 +39,6 @@ export function LibraryIndexGrid({
   const [geoError, setGeoError] = useState<string | null>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const isFirst = useRef(true)
-  const geoDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
-
   const nearActive = filters.nearLat != null
 
   function handleFindNearby() {
@@ -118,30 +116,15 @@ export function LibraryIndexGrid({
     }
   }, [filters]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Geo-lookup: when query changes and no near-me active, try to resolve
-  // a place name and auto-set continent/country filters.
-  useEffect(() => {
-    if (filters.nearLat != null) return // near-me overrides text geo-lookup
-    if (geoDebounce.current) clearTimeout(geoDebounce.current)
-    const q = filters.query.trim()
-    if (q.length < 3) return
-    geoDebounce.current = setTimeout(async () => {
-      const result = await geocodePlaceName(q)
-      if (!result) return
-      if (!result.continentSlug && !result.countrySlug) return
-      // Only update if the user hasn't already set geo filters manually
-      onFiltersChange({
-        ...filters,
-        continentSlug: result.continentSlug ?? filters.continentSlug,
-        countrySlug: result.countrySlug ?? filters.countrySlug,
-        page: 0,
-      })
-    }, 600)
-
-    return () => {
-      if (geoDebounce.current) clearTimeout(geoDebounce.current)
-    }
-  }, [filters.query]) // eslint-disable-line react-hooks/exhaustive-deps
+  useGeoLookup(filters.nearLat != null ? "" : filters.query, (result) => {
+    if (!result.continentSlug && !result.countrySlug) return
+    onFiltersChange({
+      ...filters,
+      continentSlug: result.continentSlug ?? filters.continentSlug,
+      countrySlug: result.countrySlug ?? filters.countrySlug,
+      page: 0,
+    })
+  })
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
