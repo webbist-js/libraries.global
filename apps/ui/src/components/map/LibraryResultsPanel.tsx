@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import {
   type LibrarySearchHit,
   type LibrarySearchParams,
-  searchLibraries,
+  searchLibrariesByParams,
 } from "@/lib/meilisearch"
 import { cn } from "@/lib/styles"
 
@@ -36,7 +36,7 @@ export default function LibraryResultsPanel({
   useEffect(() => {
     setLoading(true)
     setPage(0)
-    searchLibraries({ ...searchParams, page: 0, hitsPerPage: 20 })
+    searchLibrariesByParams({ ...searchParams, page: 0, hitsPerPage: 20 })
       .then((res) => {
         const t = res.estimatedTotalHits ?? 0
         setHits(res.hits)
@@ -59,7 +59,7 @@ export default function LibraryResultsPanel({
   function loadMore() {
     const nextPage = page + 1
     setPage(nextPage)
-    searchLibraries({
+    searchLibrariesByParams({
       ...paramsRef.current,
       page: nextPage,
       hitsPerPage: 20,

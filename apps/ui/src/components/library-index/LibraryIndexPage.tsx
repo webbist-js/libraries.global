@@ -12,6 +12,7 @@ import { LibraryIndexGrid } from "@/components/library-index/LibraryIndexGrid"
 import { LibraryIndexHero } from "@/components/library-index/LibraryIndexHero"
 import { LibraryIndexSidebar } from "@/components/library-index/LibraryIndexSidebar"
 import {
+  DEFAULT_FILTERS,
   filtersFromParams,
   filtersToParams,
   type LibraryIndexFilterState,
@@ -52,7 +53,7 @@ export function LibraryIndexPage({
 
   // Fetch dynamic filter options from MeiliSearch facets once on mount
   useEffect(() => {
-    searchLibraries({ withFacets: true, hitsPerPage: 0 })
+    searchLibraries(DEFAULT_FILTERS, { withFacets: true, hitsPerPage: 0 })
       .then((r) => {
         const dist = r.facetDistribution ?? {}
         setFilterOptions({

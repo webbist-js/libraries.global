@@ -7,7 +7,7 @@ import {
   type LibrarySearchHit,
   type LibrarySearchParams,
   OPERATIONAL_STATUSES,
-  searchLibraries,
+  searchLibrariesByParams,
 } from "@/lib/meilisearch"
 import { cn } from "@/lib/styles"
 
@@ -78,7 +78,7 @@ function ResultsList({ searchParams }: { searchParams: LibrarySearchParams }) {
   useEffect(() => {
     setLoading(true)
     setPage(0)
-    searchLibraries({ ...searchParams, page: 0, hitsPerPage: 20 })
+    searchLibrariesByParams({ ...searchParams, page: 0, hitsPerPage: 20 })
       .then((res) => {
         setHits(res.hits)
         setTotal(res.estimatedTotalHits ?? 0)
@@ -99,9 +99,11 @@ function ResultsList({ searchParams }: { searchParams: LibrarySearchParams }) {
   function loadMore() {
     const next = page + 1
     setPage(next)
-    searchLibraries({ ...paramsRef.current, page: next, hitsPerPage: 20 }).then(
-      (res) => setHits((prev) => [...prev, ...res.hits])
-    )
+    searchLibrariesByParams({
+      ...paramsRef.current,
+      page: next,
+      hitsPerPage: 20,
+    }).then((res) => setHits((prev) => [...prev, ...res.hits]))
   }
 
   if (loading && hits.length === 0) {

@@ -3,6 +3,7 @@
 import { Search } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 
+import { DEFAULT_FILTERS } from "@/components/library-index/types"
 import {
   buildLibraryPath,
   type LibrarySearchHit,
@@ -88,7 +89,7 @@ export default function HeroSearchBox() {
 
     debounceRef.current = setTimeout(() => {
       setLoading(true)
-      searchLibraries({ query, hitsPerPage: 6 })
+      searchLibraries({ ...DEFAULT_FILTERS, query }, { hitsPerPage: 6 })
         .then((res) => {
           setHits(res.hits)
           setOpen(res.hits.length > 0)

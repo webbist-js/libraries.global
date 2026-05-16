@@ -5,7 +5,10 @@ import { Suspense, use } from "react"
 
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { LibraryIndexPage } from "@/components/library-index/LibraryIndexPage"
-import type { LibraryIndexStats } from "@/components/library-index/types"
+import {
+  type LibraryIndexStats,
+  DEFAULT_FILTERS,
+} from "@/components/library-index/types"
 import { T } from "@/lib/design-tokens"
 import { searchLibraries } from "@/lib/meilisearch"
 
@@ -30,11 +33,7 @@ async function fetchPageData(): Promise<{
     })
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null),
-    searchLibraries({
-      sort: "featured:desc,name:asc",
-      page: 0,
-      hitsPerPage: 24,
-    }).catch(() => null),
+    searchLibraries(DEFAULT_FILTERS, { hitsPerPage: 24 }).catch(() => null),
   ])
 
   const stats: LibraryIndexStats = (statsRes as LibraryIndexStats | null) ?? {

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import {
   type LibrarySearchHit,
   type LibrarySearchParams,
-  searchLibraries,
+  searchLibrariesByParams,
 } from "@/lib/meilisearch"
 import { cn } from "@/lib/styles"
 
@@ -51,7 +51,7 @@ function useLibrarySearch(params: LibrarySearchParams, enabled: boolean) {
 
     setLoading(true)
     setPage(0)
-    searchLibraries({ ...params, page: 0 })
+    searchLibrariesByParams({ ...params, page: 0 })
       .then((res) => {
         setHits(res.hits)
         setTotal(res.estimatedTotalHits ?? 0)
@@ -68,9 +68,11 @@ function useLibrarySearch(params: LibrarySearchParams, enabled: boolean) {
   function loadMore() {
     const nextPage = page + 1
     setPage(nextPage)
-    searchLibraries({ ...paramsRef.current, page: nextPage }).then((res) => {
-      setHits((prev) => [...prev, ...res.hits])
-    })
+    searchLibrariesByParams({ ...paramsRef.current, page: nextPage }).then(
+      (res) => {
+        setHits((prev) => [...prev, ...res.hits])
+      }
+    )
   }
 
   return { hits, total, loading, loadMore, hasMore: hits.length < total }
@@ -261,7 +263,7 @@ function TypeGroupRow({
     // Fetch count only
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
-    searchLibraries({
+    searchLibrariesByParams({
       ...baseParams,
       libraryTypes: group.types,
       hitsPerPage: 0,
@@ -272,7 +274,7 @@ function TypeGroupRow({
 
   function handleExpand() {
     if (!expanded && hits.length === 0) {
-      searchLibraries({
+      searchLibrariesByParams({
         ...baseParams,
         libraryTypes: group.types,
         hitsPerPage: 20,

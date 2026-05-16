@@ -1,5 +1,9 @@
 import { Meilisearch } from "meilisearch"
 
+import {
+  type LibraryIndexFilterState,
+  DEFAULT_FILTERS,
+} from "@/components/library-index/types"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 const host = process.env.NEXT_PUBLIC_MEILISEARCH_HOST ?? "http://localhost:7700"
@@ -39,6 +43,7 @@ export interface LibrarySearchHit {
   _geoDistance?: number
 }
 
+/** @deprecated Use searchLibraries with LibraryIndexFilterState instead. */
 export interface LibrarySearchParams {
   query?: string
   libraryTypes?: string[]
@@ -55,36 +60,42 @@ export interface LibrarySearchParams {
   page?: number
   hitsPerPage?: number
   withFacets?: boolean
-  /** Near-me geo search — overrides sort to distance when set */
   nearLat?: number
   nearLng?: number
-  /** Radius in metres, default 50 000 */
   nearRadius?: number
 }
 
 // ── Search ────────────────────────────────────────────────────────────────────
 
-export async function searchLibraries(params: LibrarySearchParams = {}) {
+export async function searchLibraries(
+  filters: LibraryIndexFilterState,
+  options: { hitsPerPage?: number; withFacets?: boolean } = {}
+) {
   const {
-    query = "",
-    libraryTypes = [],
-    operationalStatuses = [],
-    continentSlugs = [],
-    countrySlugs = [],
-    regionSlugs = [],
-    areaSlugs = [],
+    query,
+    libraryTypes,
+    statuses: operationalStatuses,
+    continentSlug,
+    countrySlug,
+    regionSlug,
+    areaSlug,
     featured,
-    accessibilityNames = [],
-    serviceNames = [],
-    operatorTypes = [],
+    accessibilityNames,
+    serviceNames,
+    operatorTypes,
     sort,
-    page = 0,
-    hitsPerPage = 24,
-    withFacets = false,
+    page,
     nearLat,
     nearLng,
-    nearRadius = 80_467,
-  } = params
+    nearRadius,
+  } = filters
+
+  const { hitsPerPage = 24, withFacets = false } = options
+
+  const continentSlugs = continentSlug ? [continentSlug] : []
+  const countrySlugs = countrySlug ? [countrySlug] : []
+  const regionSlugs = regionSlug ? [regionSlug] : []
+  const areaSlugs = areaSlug ? [areaSlug] : []
 
   const filterParts: string[] = []
 
@@ -203,6 +214,32 @@ export async function searchLibraries(params: LibrarySearchParams = {}) {
       "heroImage",
     ],
   })
+}
+
+/** @deprecated Prefer searchLibraries with LibraryIndexFilterState. For map components only. */
+export async function searchLibrariesByParams(params: LibrarySearchParams) {
+  return searchLibraries(
+    {
+      ...DEFAULT_FILTERS,
+      query: params.query ?? "",
+      libraryTypes: params.libraryTypes ?? [],
+      statuses: params.operationalStatuses ?? [],
+      continentSlug: params.continentSlugs?.[0] ?? "",
+      countrySlug: params.countrySlugs?.[0] ?? "",
+      regionSlug: params.regionSlugs?.[0] ?? "",
+      areaSlug: params.areaSlugs?.[0] ?? "",
+      featured: params.featured ?? false,
+      accessibilityNames: params.accessibilityNames ?? [],
+      serviceNames: params.serviceNames ?? [],
+      operatorTypes: params.operatorTypes ?? [],
+      sort: params.sort ?? "featured:desc,name:asc",
+      page: params.page ?? 0,
+      nearLat: params.nearLat,
+      nearLng: params.nearLng,
+      nearRadius: params.nearRadius ?? DEFAULT_FILTERS.nearRadius,
+    },
+    { hitsPerPage: params.hitsPerPage, withFacets: params.withFacets }
+  )
 }
 
 // ── Blog search ───────────────────────────────────────────────────────────────
