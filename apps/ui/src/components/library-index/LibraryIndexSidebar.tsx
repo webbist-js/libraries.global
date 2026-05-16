@@ -5,6 +5,7 @@ import { Icon } from "@iconify/react"
 import { useEffect, useRef, useState } from "react"
 
 import type { LibraryIndexFilterState } from "@/components/library-index/types"
+import { useFilters } from "@/hooks/useFilters"
 import { T } from "@/lib/design-tokens"
 
 // ── Type groups ────────────────────────────────────────────────────────────────
@@ -263,63 +264,10 @@ export function LibraryIndexSidebar({
   accessibilityOptions = [],
   serviceOptions = [],
 }: LibraryIndexSidebarProps) {
-  // ── Type group toggle ────────────────────────────────────────────────────────
-  // A group is "checked" if ALL of its types are in filters.libraryTypes.
-  function isGroupChecked(types: string[]): boolean {
-    return types.every((t) => filters.libraryTypes.includes(t))
-  }
-
-  function toggleGroup(types: string[], checked: boolean) {
-    let next = [...filters.libraryTypes]
-    next = checked
-      ? [...new Set([...next, ...types])]
-      : next.filter((t) => !types.includes(t))
-    onChange({ ...filters, libraryTypes: next, page: 0 })
-  }
-
-  // ── Status toggle ────────────────────────────────────────────────────────────
-  function toggleStatus(value: string, checked: boolean) {
-    const next = checked
-      ? [...new Set([...filters.statuses, value])]
-      : filters.statuses.filter((s) => s !== value)
-    onChange({ ...filters, statuses: next, page: 0 })
-  }
-
-  // ── Accessibility toggle ──────────────────────────────────────────────────────
-  function toggleAccessibility(value: string, checked: boolean) {
-    const next = checked
-      ? [...new Set([...filters.accessibilityNames, value])]
-      : filters.accessibilityNames.filter((s) => s !== value)
-    onChange({ ...filters, accessibilityNames: next, page: 0 })
-  }
-
-  // ── Service toggle ────────────────────────────────────────────────────────────
-  function toggleService(value: string, checked: boolean) {
-    const next = checked
-      ? [...new Set([...filters.serviceNames, value])]
-      : filters.serviceNames.filter((s) => s !== value)
-    onChange({ ...filters, serviceNames: next, page: 0 })
-  }
-
-  // ── Operator toggle ───────────────────────────────────────────────────────────
-  function toggleOperator(value: string, checked: boolean) {
-    const next = checked
-      ? [...new Set([...filters.operatorTypes, value])]
-      : filters.operatorTypes.filter((s) => s !== value)
-    onChange({ ...filters, operatorTypes: next, page: 0 })
-  }
-
-  const resetAll = () =>
-    onChange({
-      ...filters,
-      libraryTypes: [],
-      statuses: [],
-      featured: false,
-      accessibilityNames: [],
-      serviceNames: [],
-      operatorTypes: [],
-      page: 0,
-    })
+  const { toggleArrayItem, toggleArrayItems, resetFields } = useFilters(
+    filters,
+    onChange
+  )
 
   return (
     <div className="sb">
@@ -339,8 +287,8 @@ export function LibraryIndexSidebar({
           {TYPE_GROUPS.map((g) => (
             <FCheckbox
               key={g.label}
-              checked={isGroupChecked(g.types)}
-              onChange={(v) => toggleGroup(g.types, v)}
+              checked={g.types.every((t) => filters.libraryTypes.includes(t))}
+              onChange={(v) => toggleArrayItems("libraryTypes", g.types, v)}
               label={g.label}
             />
           ))}
@@ -364,7 +312,7 @@ export function LibraryIndexSidebar({
             <FCheckbox
               key={s.value}
               checked={filters.statuses.includes(s.value)}
-              onChange={(v) => toggleStatus(s.value, v)}
+              onChange={(v) => toggleArrayItem("statuses", s.value, v)}
               label={s.label}
             />
           ))}
@@ -389,7 +337,7 @@ export function LibraryIndexSidebar({
               <FCheckbox
                 key={name}
                 checked={filters.accessibilityNames.includes(name)}
-                onChange={(v) => toggleAccessibility(name, v)}
+                onChange={(v) => toggleArrayItem("accessibilityNames", name, v)}
                 label={name}
               />
             ))}
@@ -415,7 +363,7 @@ export function LibraryIndexSidebar({
               <FCheckbox
                 key={name}
                 checked={filters.serviceNames.includes(name)}
-                onChange={(v) => toggleService(name, v)}
+                onChange={(v) => toggleArrayItem("serviceNames", name, v)}
                 label={name}
               />
             ))}
@@ -440,7 +388,7 @@ export function LibraryIndexSidebar({
             <FCheckbox
               key={label}
               checked={filters.operatorTypes.includes(label)}
-              onChange={(v) => toggleOperator(label, v)}
+              onChange={(v) => toggleArrayItem("operatorTypes", label, v)}
               label={label}
             />
           ))}
@@ -460,7 +408,20 @@ export function LibraryIndexSidebar({
       />
 
       {/* Reset all */}
-      <button type="button" className="sb-reset" onClick={resetAll}>
+      <button
+        type="button"
+        className="sb-reset"
+        onClick={() =>
+          resetFields({
+            libraryTypes: [],
+            statuses: [],
+            featured: false,
+            accessibilityNames: [],
+            serviceNames: [],
+            operatorTypes: [],
+          })
+        }
+      >
         Reset all filters
       </button>
 
