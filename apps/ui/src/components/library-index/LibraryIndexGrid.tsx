@@ -97,29 +97,11 @@ export function LibraryIndexGrid({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
 
-    searchLibraries({
-      query: filters.query,
-      libraryTypes: filters.libraryTypes,
-      operationalStatuses: filters.statuses,
-      continentSlugs: filters.continentSlug ? [filters.continentSlug] : [],
-      countrySlugs: filters.countrySlug ? [filters.countrySlug] : [],
-      regionSlugs: filters.regionSlug ? [filters.regionSlug] : [],
-      areaSlugs: filters.areaSlug ? [filters.areaSlug] : [],
-      featured: filters.featured || undefined,
-      accessibilityNames: filters.accessibilityNames,
-      serviceNames: filters.serviceNames,
-      operatorTypes: filters.operatorTypes,
-      sort: filters.nearLat != null ? undefined : filters.sort,
-      page: filters.page,
-      hitsPerPage: PAGE_SIZE,
-      nearLat: filters.nearLat,
-      nearLng: filters.nearLng,
-      nearRadius: filters.nearRadius,
-    })
+    searchLibraries(filters, { hitsPerPage: PAGE_SIZE })
       .then((result) => {
         if (cancelled) return
         setHits(result.hits)
-        const t = result.totalHits ?? result.estimatedTotalHits ?? 0
+        const t = result.estimatedTotalHits ?? 0
         setTotal(t)
         onResultCount?.(t)
         setLoading(false)
