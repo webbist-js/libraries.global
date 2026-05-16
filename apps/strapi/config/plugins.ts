@@ -65,6 +65,69 @@ export default ({ env }) => {
           },
         },
 
+        // Events — plugin content type; denormalise library location for geo/text search
+        "plugin::events.event": {
+          settings: {
+            searchableAttributes: [
+              "title",
+              "summary",
+              "library_name",
+              "library_city",
+              "library_country_name",
+            ],
+            filterableAttributes: [
+              "eventType",
+              "isFree",
+              "status",
+              "startTimestamp",
+              "library_country_code",
+              "library_country_slug",
+              "library_continent_slug",
+              "library_region_slug",
+            ],
+            sortableAttributes: ["startTimestamp"],
+          },
+          entriesQuery: {
+            populate: {
+              library: {
+                populate: {
+                  country: { fields: ["iso2", "slug", "name"] },
+                  continent: { fields: ["slug", "name"] },
+                  region: { fields: ["slug", "name"] },
+                },
+              },
+            },
+          },
+          transformEntry({ entry }: { entry: Record<string, unknown> }) {
+            const library = entry.library as Record<string, unknown> | null
+            const country = library?.country as Record<string, unknown> | null
+            const continent = library?.continent as Record<
+              string,
+              unknown
+            > | null
+            const region = library?.region as Record<string, unknown> | null
+
+            return {
+              ...entry,
+              library_name: library?.name ?? null,
+              library_slug: library?.slug ?? null,
+              library_city: library?.city ?? null,
+              library_country_code:
+                (country?.iso2 as string | null)?.toUpperCase() ?? null,
+              library_country_slug: country?.slug ?? null,
+              library_country_name: country?.name ?? null,
+              library_continent_slug: continent?.slug ?? null,
+              library_region_slug: region?.slug ?? null,
+              // Unix seconds for range filtering on startTime
+              startTimestamp: entry.startTime
+                ? Math.floor(
+                    new Date(entry.startTime as string).getTime() / 1000
+                  )
+                : null,
+            }
+          },
+        },
+
         library: {
           settings: {
             searchableAttributes: [
@@ -86,8 +149,9 @@ export default ({ env }) => {
               "accessibility_names",
               "service_names",
               "operatorType",
+              "_geo",
             ],
-            sortableAttributes: ["name", "featured"],
+            sortableAttributes: ["name", "featured", "_geo"],
           },
           // Flatten nested relations so they are searchable/filterable,
           // and map the location custom field to MeiliSearch's _geo format.

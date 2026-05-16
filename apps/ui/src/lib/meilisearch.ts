@@ -44,9 +44,9 @@ export interface LibrarySearchParams {
   libraryTypes?: string[]
   operationalStatuses?: string[]
   continentSlugs?: string[]
-  countrySlugs?: string[] // NEW
-  regionSlugs?: string[] // NEW
-  areaSlugs?: string[] // NEW
+  countrySlugs?: string[]
+  regionSlugs?: string[]
+  areaSlugs?: string[]
   featured?: boolean
   accessibilityNames?: string[]
   serviceNames?: string[]
@@ -55,6 +55,11 @@ export interface LibrarySearchParams {
   page?: number
   hitsPerPage?: number
   withFacets?: boolean
+  /** Near-me geo search — overrides sort to distance when set */
+  nearLat?: number
+  nearLng?: number
+  /** Radius in metres, default 50 000 */
+  nearRadius?: number
 }
 
 // ── Search ────────────────────────────────────────────────────────────────────
@@ -76,6 +81,9 @@ export async function searchLibraries(params: LibrarySearchParams = {}) {
     page = 0,
     hitsPerPage = 24,
     withFacets = false,
+    nearLat,
+    nearLng,
+    nearRadius = 80_467,
   } = params
 
   const filterParts: string[] = []
@@ -129,22 +137,31 @@ export async function searchLibraries(params: LibrarySearchParams = {}) {
     )
   }
 
+  // Near-me: add geo radius filter and sort by distance
+  if (nearLat != null && nearLng != null) {
+    filterParts.push(`_geoRadius(${nearLat}, ${nearLng}, ${nearRadius})`)
+  }
+
   const sortArr: string[] = []
-  switch (sort) {
-    case "name:asc":
-      sortArr.push("name:asc")
-      break
+  // Near-me overrides user sort — distance is always the primary sort
+  if (nearLat != null && nearLng != null) {
+    sortArr.push(`_geoPoint(${nearLat}, ${nearLng}):asc`)
+  } else {
+    switch (sort) {
+      case "name:asc":
+        sortArr.push("name:asc")
+        break
 
-    case "name:desc":
-      sortArr.push("name:desc")
-      break
+      case "name:desc":
+        sortArr.push("name:desc")
+        break
 
-    case "featured:desc,name:asc":
-      sortArr.push("featured:desc", "name:asc")
+      case "featured:desc,name:asc":
+        sortArr.push("featured:desc", "name:asc")
+        break
 
-      break
-
-    // No default
+      // No default
+    }
   }
 
   const index = meiliClient.index("library")
@@ -293,6 +310,127 @@ export function libraryHeroUrl(hit: LibrarySearchHit): string | null {
     null
 
   return raw ? formatStrapiMediaUrl(raw) : null
+}
+
+// ── Events search ─────────────────────────────────────────────────────────────
+
+export interface EventSearchHit {
+  id: number
+  documentId: string
+  title: string
+  summary?: string | null
+  url: string
+  imageUrl?: string | null
+  startTime: string
+  endTime?: string | null
+  allDay: boolean
+  timezone: string
+  eventType: string
+  sourceProvider?: string | null
+  isFree: boolean
+  priceMin?: number | null
+  priceMax?: number | null
+  status: string
+  /** Unix seconds — used for range filtering */
+  startTimestamp?: number | null
+  /** Denormalised from library relation */
+  library_name?: string | null
+  library_slug?: string | null
+  library_city?: string | null
+  library_country_code?: string | null
+  library_country_slug?: string | null
+  library_country_name?: string | null
+  library_continent_slug?: string | null
+  library_region_slug?: string | null
+}
+
+export interface EventSearchParams {
+  query?: string
+  eventTypes?: string[]
+  isFree?: boolean
+  /** Unix seconds */
+  fromTimestamp?: number
+  /** Unix seconds */
+  toTimestamp?: number
+  /** ISO 3166-1 alpha-2 e.g. "GB" */
+  countryCode?: string
+  continentSlug?: string
+  regionSlug?: string
+  page?: number
+  hitsPerPage?: number
+}
+
+export async function searchEvents(params: EventSearchParams = {}) {
+  const {
+    query = "",
+    eventTypes = [],
+    isFree,
+    fromTimestamp,
+    toTimestamp,
+    countryCode,
+    continentSlug,
+    regionSlug,
+    page = 0,
+    hitsPerPage = 20,
+  } = params
+
+  const filterParts: string[] = []
+
+  if (eventTypes.length > 0) {
+    filterParts.push(
+      `eventType IN [${eventTypes.map((t) => JSON.stringify(t)).join(", ")}]`
+    )
+  }
+  if (isFree === true) filterParts.push("isFree = true")
+  if (isFree === false) filterParts.push("isFree = false")
+  if (fromTimestamp != null)
+    filterParts.push(`startTimestamp >= ${fromTimestamp}`)
+  if (toTimestamp != null) filterParts.push(`startTimestamp <= ${toTimestamp}`)
+  if (continentSlug)
+    filterParts.push(
+      `library_continent_slug = ${JSON.stringify(continentSlug)}`
+    )
+  if (countryCode)
+    filterParts.push(
+      `library_country_code = ${JSON.stringify(countryCode.toUpperCase())}`
+    )
+  if (regionSlug)
+    filterParts.push(`library_region_slug = ${JSON.stringify(regionSlug)}`)
+
+  const index = meiliClient.index("event")
+
+  return index.search<EventSearchHit>(query, {
+    filter: filterParts.length > 0 ? filterParts.join(" AND ") : undefined,
+    sort: ["startTimestamp:asc"],
+    page: page + 1,
+    hitsPerPage,
+    attributesToRetrieve: [
+      "id",
+      "documentId",
+      "title",
+      "summary",
+      "url",
+      "imageUrl",
+      "startTime",
+      "endTime",
+      "allDay",
+      "timezone",
+      "eventType",
+      "sourceProvider",
+      "isFree",
+      "priceMin",
+      "priceMax",
+      "status",
+      "library_name",
+      "library_slug",
+      "library_city",
+      "library_country_code",
+      "library_country_slug",
+      "library_country_name",
+      "library_continent_slug",
+      "library_region_slug",
+    ],
+  })
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────

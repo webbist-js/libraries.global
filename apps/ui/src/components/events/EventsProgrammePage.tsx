@@ -1,7 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { SectionHeader } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
@@ -19,6 +19,7 @@ import { ProviderBreakdownBar } from "@/components/events/ProviderBreakdownBar"
 import { TimeOfDayHeatmap } from "@/components/events/TimeOfDayHeatmap"
 import type { EventsProgrammeData } from "@/components/events/types"
 import { T } from "@/lib/design-tokens"
+import { geocodePlaceName } from "@/lib/geo-lookup"
 import { getCountryName } from "@/lib/iso-continent"
 
 const DEFAULT_FILTERS: FilterState = {
@@ -45,6 +46,28 @@ interface EventsProgrammePageProps {
 export function EventsProgrammePage({ data }: EventsProgrammePageProps) {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const geoDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Geo-lookup: when search text changes and no country filter is set,
+  // try to resolve a place name and auto-set the country filter.
+  useEffect(() => {
+    if (geoDebounce.current) clearTimeout(geoDebounce.current)
+    const q = filters.search.trim()
+    if (q.length < 3 || filters.countryCode) return
+    geoDebounce.current = setTimeout(async () => {
+      const result = await geocodePlaceName(q)
+      if (!result?.countryCode) return
+      setFilters((prev) => ({
+        ...prev,
+        countryCode: result.countryCode!,
+        page: 1,
+      }))
+    }, 600)
+
+    return () => {
+      if (geoDebounce.current) clearTimeout(geoDebounce.current)
+    }
+  }, [filters.search]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Derive topCountryName from country breakdown
   // TODO: topCountryName is used in the hero stat label ("In [Country]") but

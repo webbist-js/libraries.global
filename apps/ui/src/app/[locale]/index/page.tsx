@@ -47,7 +47,8 @@ async function fetchPageData(): Promise<{
   return {
     stats,
     initialHits: firstPage?.hits ?? [],
-    initialTotal: firstPage?.estimatedTotalHits ?? 0,
+    initialTotal:
+      (firstPage as any)?.totalHits ?? firstPage?.estimatedTotalHits ?? 0,
   }
 }
 

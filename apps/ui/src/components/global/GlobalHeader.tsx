@@ -9,7 +9,6 @@ import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 
 const NAV_LINKS: { label: string; href: string }[] = [
-  { label: "Atlas", href: "/" },
   { label: "Index", href: "/index" },
   { label: "Map", href: "/map" },
   { label: "Wiki", href: "/wiki" },

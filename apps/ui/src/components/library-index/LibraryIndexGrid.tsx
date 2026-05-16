@@ -8,6 +8,7 @@ import { IndexPager } from "@/components/ds"
 import { LibraryIndexCard } from "@/components/library-index/LibraryIndexCard"
 import type { LibraryIndexFilterState } from "@/components/library-index/types"
 import { T } from "@/lib/design-tokens"
+import { geocodePlaceName } from "@/lib/geo-lookup"
 import { searchLibraries, type LibrarySearchHit } from "@/lib/meilisearch"
 
 const PAGE_SIZE = 24
@@ -30,10 +31,58 @@ export function LibraryIndexGrid({
 }: LibraryIndexGridProps) {
   const [hits, setHits] = useState<LibrarySearchHit[]>(initialHits ?? [])
   const [total, setTotal] = useState(initialTotal)
-  const [loading, setLoading] = useState(!initialHits)
+  const [loading, setLoading] = useState(
+    !initialHits || initialHits.length === 0
+  )
   const [view, setView] = useState<"grid" | "list">("grid")
+  const [geoLoading, setGeoLoading] = useState(false)
+  const [geoError, setGeoError] = useState<string | null>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const isFirst = useRef(true)
+  const geoDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const nearActive = filters.nearLat != null
+
+  function handleFindNearby() {
+    if (nearActive) {
+      setGeoError(null)
+      onFiltersChange({
+        ...filters,
+        nearLat: undefined,
+        nearLng: undefined,
+        page: 0,
+      })
+
+      return
+    }
+    if (!navigator.geolocation) {
+      setGeoError("Geolocation not supported by your browser")
+
+      return
+    }
+    setGeoLoading(true)
+    setGeoError(null)
+    // eslint-disable-next-line sonarjs/no-intrusive-permissions
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGeoLoading(false)
+        onFiltersChange({
+          ...filters,
+          nearLat: pos.coords.latitude,
+          nearLng: pos.coords.longitude,
+          continentSlug: "",
+          countrySlug: "",
+          regionSlug: "",
+          page: 0,
+        })
+      },
+      () => {
+        setGeoLoading(false)
+        setGeoError("Location access denied")
+      },
+      { timeout: 8000 }
+    )
+  }
 
   useEffect(() => {
     // Skip the first render if we already have SSR data with results
@@ -60,14 +109,17 @@ export function LibraryIndexGrid({
       accessibilityNames: filters.accessibilityNames,
       serviceNames: filters.serviceNames,
       operatorTypes: filters.operatorTypes,
-      sort: filters.sort,
+      sort: filters.nearLat != null ? undefined : filters.sort,
       page: filters.page,
       hitsPerPage: PAGE_SIZE,
+      nearLat: filters.nearLat,
+      nearLng: filters.nearLng,
+      nearRadius: filters.nearRadius,
     })
       .then((result) => {
         if (cancelled) return
         setHits(result.hits)
-        const t = result.estimatedTotalHits ?? 0
+        const t = result.totalHits ?? result.estimatedTotalHits ?? 0
         setTotal(t)
         onResultCount?.(t)
         setLoading(false)
@@ -84,6 +136,31 @@ export function LibraryIndexGrid({
     }
   }, [filters]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Geo-lookup: when query changes and no near-me active, try to resolve
+  // a place name and auto-set continent/country filters.
+  useEffect(() => {
+    if (filters.nearLat != null) return // near-me overrides text geo-lookup
+    if (geoDebounce.current) clearTimeout(geoDebounce.current)
+    const q = filters.query.trim()
+    if (q.length < 3) return
+    geoDebounce.current = setTimeout(async () => {
+      const result = await geocodePlaceName(q)
+      if (!result) return
+      if (!result.continentSlug && !result.countrySlug) return
+      // Only update if the user hasn't already set geo filters manually
+      onFiltersChange({
+        ...filters,
+        continentSlug: result.continentSlug ?? filters.continentSlug,
+        countrySlug: result.countrySlug ?? filters.countrySlug,
+        page: 0,
+      })
+    }, 600)
+
+    return () => {
+      if (geoDebounce.current) clearTimeout(geoDebounce.current)
+    }
+  }, [filters.query]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
   const handlePageChange = (p: number) => {
@@ -98,11 +175,107 @@ export function LibraryIndexGrid({
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
+          gap: "10px",
           marginBottom: "20px",
-          minHeight: "28px",
         }}
       >
+        {/* Search input */}
+        <div style={{ position: "relative", flex: 1 }}>
+          <Icon
+            icon="mdi:magnify"
+            style={{
+              position: "absolute",
+              left: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              fontSize: "14px",
+              color: T.ink.faint,
+              pointerEvents: "none",
+            }}
+          />
+          <input
+            type="search"
+            value={filters.query}
+            onChange={(e) =>
+              onFiltersChange({ ...filters, query: e.target.value, page: 0 })
+            }
+            placeholder="Search libraries…"
+            style={{
+              width: "100%",
+              padding: "7px 12px 7px 30px",
+              background: "rgba(255,255,255,.04)",
+              border: `1px solid ${T.border.line}`,
+              borderRadius: "8px",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
+              color: T.ink.dim,
+              outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+
+        {/* Find nearby */}
+        <button
+          type="button"
+          onClick={handleFindNearby}
+          disabled={geoLoading}
+          title={
+            nearActive
+              ? "Clear nearby search"
+              : "Find libraries within 50 miles"
+          }
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "5px",
+            fontFamily: T.font.mono,
+            fontSize: "11px",
+            letterSpacing: ".10em",
+            textTransform: "uppercase",
+            color: nearActive ? T.accent.aurora : T.ink.faint,
+            background: nearActive
+              ? "rgba(127,223,255,0.08)"
+              : "rgba(255,255,255,.04)",
+            border: `1px solid ${nearActive ? "rgba(127,223,255,0.25)" : T.border.line}`,
+            borderRadius: "8px",
+            padding: "7px 10px",
+            cursor: geoLoading ? "wait" : "pointer",
+            opacity: geoLoading ? 0.6 : 1,
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+          }}
+        >
+          <Icon
+            icon={
+              geoLoading
+                ? "mdi:loading"
+                : nearActive
+                  ? "mdi:crosshairs-gps"
+                  : "mdi:crosshairs"
+            }
+            style={{
+              fontSize: "14px",
+              animation: geoLoading ? "spin 1s linear infinite" : "none",
+            }}
+          />
+          {nearActive ? "Nearby ×" : "Nearby"}
+        </button>
+        {geoError && (
+          <span
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "10px",
+              color: T.accent.danger,
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+            }}
+          >
+            {geoError}
+          </span>
+        )}
+
+        {/* Result count */}
         <p
           style={{
             fontFamily: T.font.mono,
@@ -111,13 +284,15 @@ export function LibraryIndexGrid({
             textTransform: "uppercase",
             color: T.ink.faint,
             margin: 0,
+            whiteSpace: "nowrap",
+            flexShrink: 0,
           }}
         >
           {loading
             ? "Loading…"
             : total > 0
               ? `${(filters.page * PAGE_SIZE + 1).toLocaleString()}–${Math.min((filters.page + 1) * PAGE_SIZE, total).toLocaleString()} of ${total.toLocaleString()}`
-              : "No libraries found"}
+              : "No results"}
         </p>
 
         {/* View toggle */}
@@ -129,6 +304,7 @@ export function LibraryIndexGrid({
             border: `1px solid ${T.border.line}`,
             borderRadius: "8px",
             padding: "2px",
+            flexShrink: 0,
           }}
         >
           {(["grid", "list"] as const).map((v) => (
@@ -223,6 +399,7 @@ export function LibraryIndexGrid({
         @media (max-width: 640px) {
           .lib-grid { grid-template-columns: 1fr !important; }
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
   )

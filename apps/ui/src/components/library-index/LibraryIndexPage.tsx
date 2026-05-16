@@ -44,7 +44,6 @@ export function LibraryIndexPage({
     filtersFromParams(searchParams)
   )
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [resultCount, setResultCount] = useState(initialTotal)
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     accessibilityNames: [],
     serviceNames: [],
@@ -85,13 +84,6 @@ export function LibraryIndexPage({
     <main className="relative z-10 flex-1">
       {/* Hero */}
       <LibraryIndexHero stats={stats} />
-
-      {/* Sticky geo filter bar */}
-      <LibraryIndexGeoFilterBar
-        filters={filters}
-        onChange={handleFiltersChange}
-        resultCount={resultCount}
-      />
 
       {/* Main layout: sidebar + grid */}
       <Container className="py-8 sm:py-10">
@@ -155,7 +147,7 @@ export function LibraryIndexPage({
           {/* Sidebar (desktop) */}
           <div
             className="sticky hidden lg:block"
-            style={{ top: "calc(56px + 54px + 16px)", alignSelf: "start" }}
+            style={{ top: "calc(56px + 16px)", alignSelf: "start" }}
           >
             <div
               className="overflow-y-auto"
@@ -170,10 +162,14 @@ export function LibraryIndexPage({
 
           {/* Grid */}
           <div>
+            <LibraryIndexGeoFilterBar
+              filters={filters}
+              onChange={handleFiltersChange}
+            />
             <LibraryIndexGrid
               filters={filters}
               onFiltersChange={handleFiltersChange}
-              onResultCount={setResultCount}
+              onResultCount={undefined}
               initialHits={initialHits}
               initialTotal={initialTotal}
             />

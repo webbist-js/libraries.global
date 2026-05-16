@@ -2,7 +2,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import type { LibraryIndexFilterState } from "@/components/library-index/types"
 import { T } from "@/lib/design-tokens"
@@ -77,6 +77,7 @@ function FBlock({
             padding: 0,
             cursor: accordion ? "pointer" : "default",
             gap: "8px",
+            textAlign: "left",
           }}
         >
           <span className="fb-t">
@@ -119,7 +120,7 @@ function FCheckbox({
   count?: number
 }) {
   return (
-    <label className="fopt">
+    <label className={`fopt ${checked ? "fopt-row-on" : ""}`}>
       <input
         type="checkbox"
         checked={checked}
@@ -136,33 +137,115 @@ function FCheckbox({
         {checked && (
           <Icon
             icon="mdi:check"
-            style={{ fontSize: "9px", color: T.accent.aurora }}
+            style={{ fontSize: "10px", color: "#052030" }}
           />
         )}
       </span>
-      <span className="fopt-label">{label}</span>
+      <span className={`fopt-label ${checked ? "fopt-label-on" : ""}`}>
+        {label}
+      </span>
       {count != null && (
-        <span className="fopt-note">{count.toLocaleString()}</span>
+        <span className={`fopt-note ${checked ? "fopt-note-on" : ""}`}>
+          {count.toLocaleString()}
+        </span>
       )}
     </label>
   )
 }
 
-// ── FComingSoon — placeholder for filters that need range UI ─────────────────
-function FComingSoon({ text }: { text: string }) {
+// ── DistanceSlider ────────────────────────────────────────────────────────────
+const MI_TO_M = 1609.344
+const SLIDER_MIN = 5
+const SLIDER_MAX = 250
+const SLIDER_STEP = 5
+
+function DistanceSlider({
+  filters,
+  onChange,
+}: {
+  filters: LibraryIndexFilterState
+  onChange: (next: LibraryIndexFilterState) => void
+}) {
+  const committedMiles = Math.round(filters.nearRadius / MI_TO_M)
+  const [localMiles, setLocalMiles] = useState(committedMiles)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const active = filters.nearLat != null
+
+  // Sync local value when filter changes externally (e.g. reset)
+  useEffect(() => {
+    setLocalMiles(committedMiles)
+  }, [committedMiles])
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = Number(e.target.value)
+    setLocalMiles(val)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      onChange({ ...filters, nearRadius: val * MI_TO_M, page: 0 })
+    }, 300)
+  }
+
   return (
-    <p
-      style={{
-        fontFamily: T.font.mono,
-        fontSize: "9px",
-        letterSpacing: ".14em",
-        textTransform: "uppercase",
-        color: T.ink.ghost,
-        margin: "4px 0 2px",
-      }}
-    >
-      {text}
-    </p>
+    <div style={{ padding: "2px 0 4px" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: "10px",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: T.font.mono,
+            fontSize: "10px",
+            letterSpacing: ".1em",
+            color: active ? T.ink.dim : T.ink.faint,
+          }}
+        >
+          Within
+        </span>
+        <span
+          style={{
+            fontFamily: T.font.mono,
+            fontSize: "13px",
+            color: active ? T.accent.aurora : T.ink.faint,
+          }}
+        >
+          {localMiles} mi
+        </span>
+      </div>
+
+      <input
+        type="range"
+        min={SLIDER_MIN}
+        max={SLIDER_MAX}
+        step={SLIDER_STEP}
+        value={localMiles}
+        disabled={!active}
+        onChange={handleChange}
+        className="dist-slider"
+        style={{
+          opacity: active ? 1 : 0.35,
+          ["--pct" as string]: `${((localMiles - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN)) * 100}%`,
+        }}
+      />
+
+      {!active && (
+        <p
+          style={{
+            fontFamily: T.font.mono,
+            fontSize: "9px",
+            letterSpacing: ".12em",
+            textTransform: "uppercase",
+            color: T.ink.ghost,
+            margin: "8px 0 0",
+          }}
+        >
+          Enable &ldquo;Find nearby&rdquo; to use
+        </p>
+      )}
+    </div>
   )
 }
 
@@ -240,30 +323,6 @@ export function LibraryIndexSidebar({
 
   return (
     <div className="sb">
-      {/* Search within results */}
-      <div style={{ marginBottom: "8px" }}>
-        <input
-          type="search"
-          value={filters.query}
-          onChange={(e) =>
-            onChange({ ...filters, query: e.target.value, page: 0 })
-          }
-          placeholder="Search within results…"
-          style={{
-            width: "100%",
-            padding: "8px 12px",
-            background: "rgba(255,255,255,.04)",
-            border: `1px solid ${T.border.line}`,
-            borderRadius: "8px",
-            fontFamily: T.font.sans,
-            fontSize: "13px",
-            color: T.ink.dim,
-            outline: "none",
-            boxSizing: "border-box",
-          }}
-        />
-      </div>
-
       {/* § 01 Library type */}
       <FBlock
         index="§ 01"
@@ -312,21 +371,10 @@ export function LibraryIndexSidebar({
         </div>
       </FBlock>
 
-      {/* § 03 Pillar only */}
-      <FBlock index="§ 03" label="Pillar only" accordion defaultOpen={false}>
-        <div className="fopts">
-          <FCheckbox
-            checked={filters.featured}
-            onChange={(v) => onChange({ ...filters, featured: v, page: 0 })}
-            label="Pillar institutions only"
-          />
-        </div>
-      </FBlock>
-
-      {/* § 04 Accessibility — dynamic from MeiliSearch facets */}
+      {/* Accessibility — dynamic from MeiliSearch facets */}
       {accessibilityOptions.length > 0 && (
         <FBlock
-          index="§ 04"
+          index=""
           label="Accessibility"
           accordion
           defaultOpen={false}
@@ -349,10 +397,10 @@ export function LibraryIndexSidebar({
         </FBlock>
       )}
 
-      {/* § 05 Facilities / Services — dynamic from MeiliSearch facets */}
+      {/* Facilities / Services — dynamic from MeiliSearch facets */}
       {serviceOptions.length > 0 && (
         <FBlock
-          index="§ 05"
+          index=""
           label="Facilities"
           accordion
           defaultOpen={false}
@@ -375,9 +423,9 @@ export function LibraryIndexSidebar({
         </FBlock>
       )}
 
-      {/* § 06 Operator */}
+      {/* § 03 Operator */}
       <FBlock
-        index="§ 06"
+        index="§ 03"
         label="Operator"
         accordion
         defaultOpen={false}
@@ -399,24 +447,17 @@ export function LibraryIndexSidebar({
         </div>
       </FBlock>
 
-      {/* § 07 Collection size — requires range slider + numeric MeiliSearch field */}
-      <FBlock
-        index="§ 07"
-        label="Collection size"
-        accordion
-        defaultOpen={false}
-      >
-        <div style={{ padding: "4px 0 2px" }}>
-          <FComingSoon text="Range filter coming soon" />
-        </div>
+      {/* § 04 Distance — slider, active when near-me is on */}
+      <FBlock index="§ 04" label="Distance" accordion defaultOpen={false}>
+        <DistanceSlider filters={filters} onChange={onChange} />
       </FBlock>
 
-      {/* § 08 Founded year — requires numeric MeiliSearch filterable attribute */}
-      <FBlock index="§ 08" label="Founded year" accordion defaultOpen={false}>
-        <div style={{ padding: "4px 0 2px" }}>
-          <FComingSoon text="Range filter coming soon" />
-        </div>
-      </FBlock>
+      {/* Pillar only — standalone checkbox, no accordion */}
+      <FCheckbox
+        checked={filters.featured}
+        onChange={(v) => onChange({ ...filters, featured: v, page: 0 })}
+        label="Pillar institutions only"
+      />
 
       {/* Reset all */}
       <button type="button" className="sb-reset" onClick={resetAll}>
@@ -445,6 +486,7 @@ export function LibraryIndexSidebar({
           text-transform: uppercase;
           color: ${T.ink.low};
           flex: 1;
+          text-align: left;
         }
         .fb-a {
           font-family: ${T.font.mono};
@@ -460,39 +502,56 @@ export function LibraryIndexSidebar({
           flex-shrink: 0;
         }
         .fb-a:hover { opacity: 1; }
-        .fopts { display: flex; flex-direction: column; gap: 4px; }
+        .fopts { display: flex; flex-direction: column; gap: 2px; }
         .fopt {
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 3px 0;
+          padding: 6px 8px;
           cursor: pointer;
+          border-radius: 7px;
+          transition: background 120ms;
+        }
+        .fopt:hover:not(.fopt-row-on) {
+          background: rgba(255,255,255,0.04);
+        }
+        .fopt-row-on {
+          background: rgba(127,223,255,0.1);
         }
         .fopt-cb {
-          width: 14px;
-          height: 14px;
-          border: 1px solid ${T.border.hi};
-          border-radius: 3px;
+          width: 15px;
+          height: 15px;
+          border: 1.5px solid ${T.border.hi};
+          border-radius: 4px;
           flex-shrink: 0;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          transition: border-color 150ms, background 150ms;
+          transition: border-color 120ms, background 120ms;
         }
         .fopt-on {
           border-color: ${T.accent.aurora} !important;
-          background: rgba(127,223,255,0.12) !important;
+          background: ${T.accent.aurora} !important;
         }
         .fopt-label {
-          font-size: 13px;
+          font-family: ${T.font.sans};
+          font-size: 13.5px;
           color: ${T.ink.dim};
           flex: 1;
+          line-height: 1.3;
+        }
+        .fopt-label-on {
+          color: ${T.accent.aurora};
         }
         .fopt-note {
           font-family: ${T.font.mono};
           font-size: 10px;
           color: ${T.ink.faint};
+          flex-shrink: 0;
+        }
+        .fopt-note-on {
+          color: rgba(127,223,255,0.6);
         }
         .sb-reset {
           font-family: ${T.font.mono};
@@ -508,6 +567,41 @@ export function LibraryIndexSidebar({
           margin-top: 2px;
         }
         .sb-reset:hover { color: ${T.ink.dim}; }
+        .dist-slider {
+          width: 100%;
+          appearance: none;
+          height: 3px;
+          border-radius: 2px;
+          background: linear-gradient(
+            to right,
+            ${T.accent.aurora} 0%,
+            ${T.accent.aurora} var(--pct, 19%),
+            rgba(255,255,255,.12) var(--pct, 19%),
+            rgba(255,255,255,.12) 100%
+          );
+          outline: none;
+          cursor: pointer;
+        }
+        .dist-slider::-webkit-slider-thumb {
+          appearance: none;
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background: ${T.accent.aurora};
+          border: 2px solid #070b1e;
+          cursor: pointer;
+          transition: transform 100ms;
+        }
+        .dist-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        .dist-slider::-moz-range-thumb {
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background: ${T.accent.aurora};
+          border: 2px solid #070b1e;
+          cursor: pointer;
+        }
+        .dist-slider:disabled { cursor: not-allowed; }
       `}</style>
     </div>
   )

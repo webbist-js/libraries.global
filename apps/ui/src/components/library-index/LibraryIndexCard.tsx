@@ -152,11 +152,11 @@ export function LibraryIndexCard({
                 href={continentPath}
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "9px",
-                  letterSpacing: ".18em",
+                  fontSize: "11px",
+                  letterSpacing: ".14em",
                   textTransform: "uppercase",
                   color: T.accent.aurora,
-                  opacity: 0.7,
+                  opacity: 0.85,
                   textDecoration: "none",
                 }}
               >
@@ -165,17 +165,17 @@ export function LibraryIndexCard({
             )}
             {hit.country_name && (
               <>
-                <span style={{ color: T.ink.ghost, fontSize: "9px" }}>·</span>
+                <span style={{ color: T.ink.faint, fontSize: "11px" }}>·</span>
                 {countryPath ? (
                   <GlobalLink
                     href={countryPath}
                     style={{
                       fontFamily: T.font.mono,
-                      fontSize: "9px",
-                      letterSpacing: ".18em",
+                      fontSize: "11px",
+                      letterSpacing: ".14em",
                       textTransform: "uppercase",
                       color: T.accent.aurora,
-                      opacity: 0.7,
+                      opacity: 0.85,
                       textDecoration: "none",
                     }}
                   >
@@ -185,8 +185,8 @@ export function LibraryIndexCard({
                   <span
                     style={{
                       fontFamily: T.font.mono,
-                      fontSize: "9px",
-                      letterSpacing: ".18em",
+                      fontSize: "11px",
+                      letterSpacing: ".14em",
                       textTransform: "uppercase",
                       color: T.ink.faint,
                     }}
@@ -229,8 +229,8 @@ export function LibraryIndexCard({
               <span
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "9px",
-                  letterSpacing: ".16em",
+                  fontSize: "11px",
+                  letterSpacing: ".12em",
                   textTransform: "uppercase",
                   color: typeColor,
                   background: `${typeColor}15`,
@@ -246,10 +246,10 @@ export function LibraryIndexCard({
               <span
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "9px",
-                  letterSpacing: ".12em",
+                  fontSize: "11px",
+                  letterSpacing: ".10em",
                   textTransform: "uppercase",
-                  color: T.ink.faint,
+                  color: T.ink.dim,
                 }}
               >
                 {hit.city}
@@ -259,9 +259,9 @@ export function LibraryIndexCard({
               <span
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "9px",
-                  letterSpacing: ".12em",
-                  color: T.ink.ghost,
+                  fontSize: "11px",
+                  letterSpacing: ".10em",
+                  color: T.ink.faint,
                 }}
               >
                 Est. {hit.foundedYear}
@@ -343,10 +343,7 @@ export function LibraryIndexCard({
       }}
     >
       {/* Image area */}
-      <div
-        className="lib-card-img"
-        style={{ position: "relative", height: "180px", flexShrink: 0 }}
-      >
+      <div style={{ position: "relative", height: "180px", flexShrink: 0 }}>
         {imageUrl ? (
           <>
             <Image
@@ -354,14 +351,17 @@ export function LibraryIndexCard({
               alt={hit.name}
               fill
               className="object-cover"
-              style={{ filter: "saturate(0.75) brightness(0.85)" }}
               sizes="(max-width: 640px) 100vw, 50vw"
             />
+            {/* Top vignette — behind pills so text stays readable */}
             <div
-              className="absolute inset-0"
+              className="absolute inset-x-0 top-0"
               style={{
+                height: "80px",
                 background:
-                  "linear-gradient(to bottom, rgba(5,8,22,0.6) 0%, rgba(5,8,22,0) 40%, rgba(5,8,22,0.75) 100%)",
+                  "linear-gradient(to bottom, rgba(4,6,18,0.65) 0%, transparent 100%)",
+                zIndex: 1,
+                pointerEvents: "none",
               }}
             />
           </>
@@ -380,13 +380,16 @@ export function LibraryIndexCard({
         )}
 
         {/* Top-left: featured badge OR type chip */}
-        <div className="absolute top-0 left-0 flex items-center gap-2 p-3">
+        <div
+          className="absolute top-0 left-0 flex items-center gap-2 p-3"
+          style={{ zIndex: 2 }}
+        >
           {hit.featured ? (
             <span
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "9px",
-                letterSpacing: ".22em",
+                fontSize: "11px",
+                letterSpacing: ".18em",
                 textTransform: "uppercase",
                 color: T.accent.gold,
                 borderColor: "rgba(232,201,138,0.3)",
@@ -403,8 +406,8 @@ export function LibraryIndexCard({
               <span
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "9px",
-                  letterSpacing: ".18em",
+                  fontSize: "11px",
+                  letterSpacing: ".14em",
                   textTransform: "uppercase",
                   color: typeColor,
                   background: `${typeColor}18`,
@@ -421,7 +424,10 @@ export function LibraryIndexCard({
 
         {/* Top-right: status pip */}
         {hit.operationalStatus && (
-          <div className="absolute top-0 right-0 flex items-center gap-1.5 p-3">
+          <div
+            className="absolute top-0 right-0 flex items-center gap-1.5 p-3"
+            style={{ zIndex: 2 }}
+          >
             <span
               className={isOpen ? "pip-open" : undefined}
               title={statusLabel}
@@ -437,11 +443,11 @@ export function LibraryIndexCard({
             <span
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "9px",
-                letterSpacing: ".14em",
+                fontSize: "11px",
+                letterSpacing: ".12em",
                 textTransform: "uppercase",
                 color: statusColor,
-                background: "rgba(0,0,0,0.45)",
+                background: "rgba(0,0,0,0.55)",
                 padding: "2px 6px",
                 borderRadius: "4px",
               }}
@@ -477,11 +483,11 @@ export function LibraryIndexCard({
               href={continentPath}
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "9px",
-                letterSpacing: ".18em",
+                fontSize: "11px",
+                letterSpacing: ".14em",
                 textTransform: "uppercase",
                 color: T.accent.aurora,
-                opacity: 0.65,
+                opacity: 0.85,
                 textDecoration: "none",
               }}
             >
@@ -490,17 +496,17 @@ export function LibraryIndexCard({
           )}
           {hit.country_name && (
             <>
-              <span style={{ color: T.ink.ghost, fontSize: "9px" }}>·</span>
+              <span style={{ color: T.ink.faint, fontSize: "11px" }}>·</span>
               {countryPath ? (
                 <GlobalLink
                   href={countryPath}
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "9px",
-                    letterSpacing: ".18em",
+                    fontSize: "11px",
+                    letterSpacing: ".14em",
                     textTransform: "uppercase",
                     color: T.accent.aurora,
-                    opacity: 0.65,
+                    opacity: 0.85,
                     textDecoration: "none",
                   }}
                 >
@@ -510,8 +516,8 @@ export function LibraryIndexCard({
                 <span
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "9px",
-                    letterSpacing: ".18em",
+                    fontSize: "11px",
+                    letterSpacing: ".14em",
                     textTransform: "uppercase",
                     color: T.ink.faint,
                   }}
@@ -523,17 +529,17 @@ export function LibraryIndexCard({
           )}
           {hit.region_name && (
             <>
-              <span style={{ color: T.ink.ghost, fontSize: "9px" }}>·</span>
+              <span style={{ color: T.ink.faint, fontSize: "11px" }}>·</span>
               {regionPath ? (
                 <GlobalLink
                   href={regionPath}
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "9px",
-                    letterSpacing: ".18em",
+                    fontSize: "11px",
+                    letterSpacing: ".14em",
                     textTransform: "uppercase",
                     color: T.accent.aurora,
-                    opacity: 0.65,
+                    opacity: 0.85,
                     textDecoration: "none",
                   }}
                 >
@@ -543,8 +549,8 @@ export function LibraryIndexCard({
                 <span
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "9px",
-                    letterSpacing: ".18em",
+                    fontSize: "11px",
+                    letterSpacing: ".14em",
                     textTransform: "uppercase",
                     color: T.ink.faint,
                   }}
@@ -562,10 +568,10 @@ export function LibraryIndexCard({
             <p
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "9px",
-                letterSpacing: ".16em",
+                fontSize: "10px",
+                letterSpacing: ".14em",
                 textTransform: "uppercase",
-                color: T.ink.ghost,
+                color: T.ink.faint,
                 margin: "0 0 3px",
               }}
             >
@@ -622,10 +628,10 @@ export function LibraryIndexCard({
             <span
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "8px",
-                letterSpacing: ".18em",
+                fontSize: "10px",
+                letterSpacing: ".14em",
                 textTransform: "uppercase",
-                color: T.ink.ghost,
+                color: T.ink.faint,
               }}
             >
               Items
@@ -656,10 +662,10 @@ export function LibraryIndexCard({
             <span
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "8px",
-                letterSpacing: ".18em",
+                fontSize: "10px",
+                letterSpacing: ".14em",
                 textTransform: "uppercase",
-                color: T.ink.ghost,
+                color: T.ink.faint,
               }}
             >
               Founded
@@ -692,10 +698,10 @@ export function LibraryIndexCard({
             <span
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "8px",
-                letterSpacing: ".18em",
+                fontSize: "10px",
+                letterSpacing: ".14em",
                 textTransform: "uppercase",
-                color: T.ink.ghost,
+                color: T.ink.faint,
               }}
             >
               City
@@ -722,8 +728,8 @@ export function LibraryIndexCard({
               <span
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "8px",
-                  letterSpacing: ".18em",
+                  fontSize: "10px",
+                  letterSpacing: ".14em",
                   textTransform: "uppercase",
                   color: T.accent.gold,
                   background: "rgba(232,201,138,0.1)",

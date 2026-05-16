@@ -1,0 +1,3 @@
+# Library entityRef includes Area slug when present
+
+Library Entity References include the Area slug when the Library belongs to an Area, resulting in either a 4-segment identifier (`continent:country:region:library`) or a 5-segment identifier (`continent:country:region:area:library`). We considered always using 4 segments (omitting Area) for normalisation, but chose to include Area because it preserves full geographic fidelity and matches how Areas are used in routing — a Library in Camden is meaningfully distinct from one elsewhere in Greater London, and the entityRef should reflect that. Callers that need to compare entityRefs across Libraries must account for the variable segment count.

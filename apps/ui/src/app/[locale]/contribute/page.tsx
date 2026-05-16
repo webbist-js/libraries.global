@@ -3,6 +3,7 @@ import { headers } from "next/headers"
 import { LibraryCard } from "@/components/ds/LibraryCard"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
+import { Link } from "@/lib/navigation"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 import type {
   ClaimedLibrary,
@@ -292,6 +293,134 @@ export default async function ContributePage() {
     >
       <ContributeHeroSection stats={heroStats} isSignedIn={!!session?.user} />
       <ContributeNavBar />
+      {!session?.user && (
+        <div className="mx-auto w-full max-w-[1296px] px-6 py-10 md:px-10">
+          <div
+            style={{
+              position: "relative",
+              borderRadius: "20px",
+              border: `1px solid rgba(127,223,255,0.18)`,
+              background: `radial-gradient(ellipse 80% 120% at 10% 50%, rgba(127,223,255,0.07) 0%, transparent 60%), ${T.bg.deep}`,
+              padding: "40px 48px",
+              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "32px",
+              flexWrap: "wrap",
+            }}
+          >
+            {/* Decorative bar */}
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: "3px",
+                background: `linear-gradient(to bottom, ${T.accent.aurora}, transparent)`,
+                borderRadius: "20px 0 0 20px",
+              }}
+            />
+
+            <div style={{ flex: 1, minWidth: "280px" }}>
+              <p
+                style={{
+                  fontFamily: T.font.mono,
+                  fontSize: "10px",
+                  letterSpacing: ".22em",
+                  textTransform: "uppercase",
+                  color: T.accent.aurora,
+                  opacity: 0.8,
+                  margin: "0 0 12px",
+                }}
+              >
+                Join the atlas
+              </p>
+              <h2
+                style={{
+                  fontFamily: T.font.serif,
+                  fontSize: "clamp(1.6rem, 2.8vw, 2.2rem)",
+                  fontWeight: 400,
+                  letterSpacing: "-0.03em",
+                  lineHeight: 1.1,
+                  color: T.ink.base,
+                  margin: "0 0 12px",
+                }}
+              >
+                Every library added starts{" "}
+                <em style={{ fontStyle: "italic", color: T.ink.dim }}>
+                  with an account.
+                </em>
+              </h2>
+              <p
+                style={{
+                  fontFamily: T.font.sans,
+                  fontSize: "14px",
+                  color: T.ink.dim,
+                  lineHeight: 1.65,
+                  margin: 0,
+                  maxWidth: "52ch",
+                }}
+              >
+                Create a free account to submit corrections, add missing
+                libraries, and earn your place on the contributor leaderboard.
+                Your changes are reviewed by our editorial team before
+                publishing.
+              </p>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+                flexShrink: 0,
+              }}
+            >
+              <Link
+                href="/auth/register"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                  padding: "12px 28px",
+                  borderRadius: "10px",
+                  border: "1px solid rgba(127,223,255,0.35)",
+                  background: "rgba(127,223,255,0.1)",
+                  color: T.accent.aurora,
+                  fontFamily: T.font.mono,
+                  fontSize: "11px",
+                  letterSpacing: ".16em",
+                  textTransform: "uppercase",
+                  textDecoration: "none",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Create free account →
+              </Link>
+              <Link
+                href="/auth/signin"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "12px",
+                  fontFamily: T.font.mono,
+                  letterSpacing: ".12em",
+                  textTransform: "uppercase",
+                  color: T.ink.faint,
+                  textDecoration: "none",
+                }}
+              >
+                Already have an account? Sign in
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {session?.user && standingWithName && (
         <div className="mx-auto w-full max-w-[1296px] px-6 py-8 md:px-10">
           <WelcomeBackWidget standing={standingWithName} />

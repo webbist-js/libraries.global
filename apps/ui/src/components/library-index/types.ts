@@ -26,6 +26,11 @@ export interface LibraryIndexFilterState {
   operatorTypes: string[]
   sort: "featured:desc,name:asc" | "name:asc" | "name:desc"
   page: number
+  /** Near-me geo search — lat/lng from browser geolocation */
+  nearLat?: number
+  nearLng?: number
+  /** Radius in metres for near-me search, default 80 467 (50 miles) */
+  nearRadius: number
 }
 
 export const DEFAULT_FILTERS: LibraryIndexFilterState = {
@@ -42,6 +47,9 @@ export const DEFAULT_FILTERS: LibraryIndexFilterState = {
   operatorTypes: [],
   sort: "featured:desc,name:asc",
   page: 0,
+  nearLat: undefined,
+  nearLng: undefined,
+  nearRadius: 80_467,
 }
 
 /** Parse URLSearchParams into LibraryIndexFilterState */
@@ -70,6 +78,10 @@ export function filtersFromParams(
     operatorTypes: operatorParam
       ? operatorParam.split(",").filter(Boolean)
       : [],
+
+    nearLat: params.get("nlat") ? Number(params.get("nlat")) : undefined,
+    nearLng: params.get("nlng") ? Number(params.get("nlng")) : undefined,
+    nearRadius: params.get("nr") ? Number(params.get("nr")) : 80_467,
 
     sort: (() => {
       const s = params.get("sort")
@@ -104,6 +116,9 @@ export function filtersToParams(f: LibraryIndexFilterState): URLSearchParams {
   if (f.operatorTypes.length > 0) p.set("operator", f.operatorTypes.join(","))
   if (f.sort !== "featured:desc,name:asc") p.set("sort", f.sort)
   if (f.page > 0) p.set("page", String(f.page))
+  if (f.nearLat != null) p.set("nlat", String(f.nearLat))
+  if (f.nearLng != null) p.set("nlng", String(f.nearLng))
+  if (f.nearRadius !== 80_467) p.set("nr", String(f.nearRadius))
 
   return p
 }
@@ -121,6 +136,7 @@ export function hasActiveFilters(f: LibraryIndexFilterState): boolean {
     f.featured ||
     f.accessibilityNames.length > 0 ||
     f.serviceNames.length > 0 ||
-    f.operatorTypes.length > 0
+    f.operatorTypes.length > 0 ||
+    f.nearLat != null
   )
 }

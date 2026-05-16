@@ -56,7 +56,7 @@ export function FeaturedEventsCarousel({
                 color: T.ink.faint,
               }}
             >
-              {current + 1} of {events.length} · Carousel
+              {current + 1} of {events.length}
             </span>
 
             {/* Arrows */}
@@ -77,22 +77,27 @@ export function FeaturedEventsCarousel({
                     width: "32px",
                     height: "32px",
                     borderRadius: "10px",
-                    border: `1px solid ${T.border.line}`,
-                    background: "transparent",
+                    border: `1px solid ${T.border.hi}`,
+                    background: "rgba(255,255,255,0.06)",
                     color:
                       (dir === "prev" && current === 0) ||
                       (dir === "next" && current === events.length - 1)
-                        ? T.ink.ghost
-                        : T.ink.dim,
+                        ? T.ink.faint
+                        : T.ink.base,
                     cursor:
                       (dir === "prev" && current === 0) ||
                       (dir === "next" && current === events.length - 1)
                         ? "default"
                         : "pointer",
+                    opacity:
+                      (dir === "prev" && current === 0) ||
+                      (dir === "next" && current === events.length - 1)
+                        ? 0.35
+                        : 1,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "14px",
+                    fontSize: "16px",
                     transition: "all 150ms",
                   }}
                 >

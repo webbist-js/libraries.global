@@ -105,13 +105,11 @@ const SORT_OPTIONS: {
 interface LibraryIndexGeoFilterBarProps {
   readonly filters: LibraryIndexFilterState
   readonly onChange: (next: LibraryIndexFilterState) => void
-  readonly resultCount?: number
 }
 
 export function LibraryIndexGeoFilterBar({
   filters,
   onChange,
-  resultCount,
 }: LibraryIndexGeoFilterBarProps) {
   const [regions, setRegions] = useState<RegionOption[]>([])
   const [regionsLoading, setRegionsLoading] = useState(false)
@@ -185,18 +183,6 @@ export function LibraryIndexGeoFilterBar({
     })
   }
 
-  // Active geo label for result count string
-  const geoLabel = [
-    filters.regionSlug &&
-      regions.find((r) => r.slug === filters.regionSlug)?.name,
-    filters.countrySlug &&
-      countryOptions.find((c) => c.value === filters.countrySlug)?.label,
-    filters.continentSlug &&
-      continentOptions.find((c) => c.value === filters.continentSlug)?.label,
-  ]
-    .filter(Boolean)
-    .join(", ")
-
   const hasGeoFilter =
     filters.continentSlug || filters.countrySlug || filters.regionSlug
 
@@ -230,23 +216,17 @@ export function LibraryIndexGeoFilterBar({
     <div
       style={{
         borderBottom: `1px solid ${T.border.line}`,
-        background: "rgba(5,8,22,0.82)",
-        backdropFilter: "blur(18px) saturate(140%)",
-        position: "sticky",
-        top: "56px",
-        zIndex: 15,
+        marginBottom: "20px",
       }}
     >
       {/* Main filter row */}
       <div
         style={{
-          maxWidth: "1400px",
-          margin: "0 auto",
-          padding: "10px 24px",
           display: "flex",
           flexWrap: "wrap",
           alignItems: "center",
           gap: "8px",
+          paddingBottom: "10px",
         }}
       >
         {/* Geo selects */}
@@ -271,6 +251,20 @@ export function LibraryIndexGeoFilterBar({
           disabled={!filters.countrySlug || regionsLoading}
         />
 
+        {/* Sort */}
+        <GeoSelect
+          value={filters.sort}
+          onChange={(v) =>
+            onChange({
+              ...filters,
+              sort: v as LibraryIndexFilterState["sort"],
+              page: 0,
+            })
+          }
+          placeholder="Sort"
+          options={SORT_OPTIONS}
+        />
+
         {/* Reset geo */}
         {hasGeoFilter && (
           <button
@@ -291,53 +285,17 @@ export function LibraryIndexGeoFilterBar({
             Reset
           </button>
         )}
-
-        {/* Spacer */}
-        <div style={{ flex: 1 }} />
-
-        {/* Result count */}
-        {resultCount != null && (
-          <p
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".12em",
-              color: T.ink.faint,
-              margin: 0,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {resultCount.toLocaleString()} libraries
-            {geoLabel ? ` in ${geoLabel}` : ""}
-          </p>
-        )}
-
-        {/* Sort */}
-        <GeoSelect
-          value={filters.sort}
-          onChange={(v) =>
-            onChange({
-              ...filters,
-              sort: v as LibraryIndexFilterState["sort"],
-              page: 0,
-            })
-          }
-          placeholder="Sort"
-          options={SORT_OPTIONS}
-        />
       </div>
 
       {/* Active filter pills row */}
       {hasSidebarFilters && (
         <div
           style={{
-            maxWidth: "1400px",
-            margin: "0 auto",
-            padding: "0 24px 8px",
             display: "flex",
             flexWrap: "wrap",
             alignItems: "center",
             gap: "6px",
+            paddingBottom: "10px",
           }}
         >
           <span

@@ -6,8 +6,9 @@ import { useEffect, useRef, useState } from "react"
 import { IndexPager } from "@/components/ds"
 import { EventCard } from "@/components/events/EventCard"
 import type { FilterState } from "@/components/events/EventsFilterBar"
-import type { GlobalEventsResponse, GridEvent } from "@/components/events/types"
+import type { GridEvent } from "@/components/events/types"
 import { T } from "@/lib/design-tokens"
+import { searchEvents, type EventSearchHit } from "@/lib/meilisearch"
 
 // ── EventCardGrid ──────────────────────────────────────────────────────────────
 
@@ -22,12 +23,8 @@ export function EventCardGrid({
   filters,
   onFiltersChange,
 }: EventCardGridProps) {
-  const [response, setResponse] = useState<GlobalEventsResponse>({
-    events: [],
-    total: 0,
-    page: 1,
-    pageSize: PAGE_SIZE,
-  })
+  const [hits, setHits] = useState<EventSearchHit[]>([])
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const gridRef = useRef<HTMLDivElement>(null)
 
@@ -39,7 +36,6 @@ export function EventCardGrid({
     let to: Date
 
     if (filters.calendarDate) {
-      // Specific day selected from calendar
       const [y, m, d] = filters.calendarDate.split("-").map(Number)
       from = new Date(y, m - 1, d, 0, 0, 0, 0)
       to = new Date(y, m - 1, d, 23, 59, 59, 999)
@@ -50,52 +46,60 @@ export function EventCardGrid({
         case "tomorrow":
           from.setDate(from.getDate() + 1)
           to.setDate(to.getDate() + 1)
-
           break
-
         case "this-week":
           to.setDate(to.getDate() + 6)
-
           break
-
         case "this-month":
           to.setDate(to.getDate() + 29)
-
           break
-
         // No default
       }
       to.setHours(23, 59, 59, 999)
     }
 
-    const params = new URLSearchParams({
-      from: from.toISOString(),
-      to: to.toISOString(),
-      limit: String(PAGE_SIZE),
-      page: String(filters.page),
-    })
-    if (filters.eventTypes.length > 0)
-      params.set("type", filters.eventTypes.join(","))
-    if (filters.priceScope === "free") params.set("isFree", "true")
-    if (filters.priceScope === "paid") params.set("isFree", "false")
-
+    let cancelled = false
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
-    fetch(`/api/public-proxy/api/events/global?${params}`)
-      .then((r) => r.json())
-      .then((data: GlobalEventsResponse) => {
-        setResponse(data)
+
+    searchEvents({
+      query: filters.search,
+      eventTypes: filters.eventTypes,
+      isFree:
+        filters.priceScope === "free"
+          ? true
+          : filters.priceScope === "paid"
+            ? false
+            : undefined,
+      fromTimestamp: Math.floor(from.getTime() / 1000),
+      toTimestamp: Math.floor(to.getTime() / 1000),
+      countryCode: filters.countryCode || undefined,
+      page: filters.page - 1, // FilterState is 1-based
+      hitsPerPage: PAGE_SIZE,
+    })
+      .then((result) => {
+        if (cancelled) return
+        setHits(result.hits)
+        const t = (result as any).totalHits ?? result.estimatedTotalHits ?? 0
+        setTotal(t)
         setLoading(false)
       })
       .catch(() => {
-        setResponse({ events: [], total: 0, page: 1, pageSize: PAGE_SIZE })
+        if (cancelled) return
+        setHits([])
+        setTotal(0)
         setLoading(false)
       })
+
+    return () => {
+      cancelled = true
+    }
   }, [filters])
 
-  const filtered = applyClientFilters(response.events, filters)
+  // timeOfDay is still client-side (hour-of-day not stored as filterable attribute)
+  const displayed = applyTimeOfDayFilter(hits, filters)
 
-  const totalPages = Math.ceil(response.total / PAGE_SIZE)
+  const totalPages = Math.ceil(total / PAGE_SIZE)
 
   const handlePageChange = (p: number) => {
     onFiltersChange({ ...filters, page: p })
@@ -124,13 +128,13 @@ export function EventCardGrid({
               margin: 0,
             }}
           >
-            {response.total > 0
+            {total > 0
               ? (() => {
                   const start = (filters.page - 1) * PAGE_SIZE + 1
-                  const end = Math.min(filters.page * PAGE_SIZE, response.total)
-                  const pages = Math.ceil(response.total / PAGE_SIZE)
+                  const end = Math.min(filters.page * PAGE_SIZE, total)
+                  const pages = Math.ceil(total / PAGE_SIZE)
 
-                  return `Showing ${start}–${end} of ${response.total} · Page ${filters.page} of ${pages}`
+                  return `Showing ${start}–${end} of ${total} · Page ${filters.page} of ${pages}`
                 })()
               : "No events"}
           </p>
@@ -171,7 +175,7 @@ export function EventCardGrid({
         >
           Loading…
         </div>
-      ) : filtered.length === 0 ? (
+      ) : displayed.length === 0 ? (
         <div
           style={{
             padding: "60px",
@@ -188,8 +192,8 @@ export function EventCardGrid({
         </div>
       ) : (
         <div className="ecards">
-          {filtered.map((event) => (
-            <EventCard key={event.documentId} event={event} />
+          {displayed.map((hit) => (
+            <EventCard key={hit.documentId} event={hitToGridEvent(hit)} />
           ))}
         </div>
       )}
@@ -204,7 +208,28 @@ export function EventCardGrid({
   )
 }
 
-// ── Client-side filter helpers ─────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+function hitToGridEvent(hit: EventSearchHit): GridEvent {
+  return {
+    documentId: hit.documentId,
+    title: hit.title,
+    url: hit.url,
+    imageUrl: hit.imageUrl ?? null,
+    startTime: hit.startTime,
+    endTime: hit.endTime ?? null,
+    allDay: hit.allDay,
+    timezone: hit.timezone,
+    eventType: hit.eventType,
+    sourceProvider: hit.sourceProvider ?? "",
+    isFree: hit.isFree,
+    priceMin: hit.priceMin ?? null,
+    priceMax: hit.priceMax ?? null,
+    libraryName: hit.library_name ?? null,
+    librarySlug: hit.library_slug ?? null,
+    status: hit.status,
+  }
+}
 
 function getHourSlot(
   iso: string
@@ -217,30 +242,14 @@ function getHourSlot(
   return "night"
 }
 
-function applyClientFilters(
-  events: GridEvent[],
+// timeOfDay is client-side only — MeiliSearch doesn't store hour-of-day
+function applyTimeOfDayFilter(
+  hits: EventSearchHit[],
   filters: FilterState
-): GridEvent[] {
-  let result = events
+): EventSearchHit[] {
+  if (filters.timeOfDay.length === 0) return hits
 
-  if (filters.search.trim()) {
-    const q = filters.search.trim().toLowerCase()
-    result = result.filter(
-      (e) =>
-        e.title.toLowerCase().includes(q) ||
-        (e.libraryName ?? "").toLowerCase().includes(q)
-    )
-  }
-
-  if (filters.eventTypes.length > 0) {
-    result = result.filter((e) => filters.eventTypes.includes(e.eventType))
-  }
-
-  if (filters.timeOfDay.length > 0) {
-    result = result.filter(
-      (e) => !e.allDay && filters.timeOfDay.includes(getHourSlot(e.startTime))
-    )
-  }
-
-  return result
+  return hits.filter(
+    (e) => !e.allDay && filters.timeOfDay.includes(getHourSlot(e.startTime))
+  )
 }

@@ -1,0 +1,3 @@
+# Library search module accepts LibraryIndexFilterState directly
+
+The Library search module's input type is `LibraryIndexFilterState` — the same type used by the Library index UI. We considered defining a separate `LibrarySearchParams` type to decouple the search module from the UI layer, but chose against it: the filter state and the search params are structurally identical in this domain, and the mapping shim would add indirection with no practical benefit given that the Library index is the only caller. If a second caller ever emerges that cannot construct a `LibraryIndexFilterState`, this decision should be revisited.
