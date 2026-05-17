@@ -223,5 +223,5 @@ Values (ascending privilege): `reader` → `contributor` → `verified_librarian
 | 9   | `wiki-article` schema has no `contributors` relation field                 | `apps/strapi/src/api/wiki-article/`                 | Medium        |
 | 10  | `WikiArticlePage` doesn't render Wiki Contributors                         | `components/wiki/WikiArticlePage.tsx`               | Low           |
 | 11  | Following a library has no downstream effects (events feed, notifications) | Multiple                                            | Low (planned) |
-| 12  | GitHub OAuth referenced but not configured                                 | `lib/auth.ts`                                       | Low           |
-| 13  | `pendingReview` on Event is dead code                                      | `plugins/events` schema                             | Low           |
+| 12  | `SocialButtons.tsx` orphaned Strapi-OAuth remnant (never imported)         | `auth/signin/_components/SocialButtons.tsx`         | Resolved ✓    |
+| 13  | `pendingReview` on Event — NOT dead code; used by sync-worker + admin ctrl | N/A                                                 | N/A           |
