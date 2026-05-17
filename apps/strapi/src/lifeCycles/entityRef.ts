@@ -4,11 +4,13 @@ type TrackedUID =
   | "api::country.country"
   | "api::region.region"
   | "api::area.area"
+  | "api::library.library"
 
 const TRACKED_UIDS: TrackedUID[] = [
   "api::country.country",
   "api::region.region",
   "api::area.area",
+  "api::library.library",
 ]
 
 async function computeEntityRef(
@@ -74,6 +76,38 @@ async function computeEntityRef(
         ea.region.continent?.slug
       ) {
         return `${ea.region.continent.slug}:${ea.country.slug}:${ea.region.slug}:${ea.slug}`
+      }
+    }
+    if (uid === "api::library.library") {
+      const e = await strapi.documents(uid).findOne({
+        documentId,
+        fields: ["slug"],
+        populate: {
+          continent: { fields: ["slug"] },
+          country: { fields: ["slug"] },
+          region: { fields: ["slug"] },
+          area: { fields: ["slug"] },
+        } as never,
+      })
+      const el = e as {
+        slug?: string
+        continent?: { slug?: string }
+        country?: { slug?: string }
+        region?: { slug?: string }
+        area?: { slug?: string } | null
+      } | null
+
+      if (
+        el?.slug &&
+        el.continent?.slug &&
+        el.country?.slug &&
+        el.region?.slug
+      ) {
+        const parts = [el.continent.slug, el.country.slug, el.region.slug]
+        if (el.area?.slug) parts.push(el.area.slug)
+        parts.push(el.slug)
+
+        return parts.join(":")
       }
     }
   } catch {
