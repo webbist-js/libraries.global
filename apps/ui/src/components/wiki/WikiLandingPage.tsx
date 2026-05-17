@@ -18,6 +18,7 @@ import type {
   WikiLandingData,
   WikiNavCategory,
   WikiSectionNav,
+  WikiTopContributor,
 } from "@/lib/strapi-api/content/server"
 
 import { WikiLatestChanges } from "./WikiLatestChanges"
@@ -30,12 +31,14 @@ export function WikiLandingPage({
   articles,
   navCategories,
   wikiSections,
+  topContributors = [],
   locale,
 }: {
   readonly landing: WikiLandingData | null
   readonly articles: WikiArticleSummary[]
   readonly navCategories: WikiNavCategory[]
   readonly wikiSections: WikiSectionNav[]
+  readonly topContributors?: WikiTopContributor[]
   readonly locale: Locale
 }) {
   const quickStartCards = Array.isArray(landing?.quickStartCards)
@@ -353,6 +356,7 @@ export function WikiLandingPage({
         articles={articles}
         totalArticles={totalArticles}
         totalSections={totalSections}
+        topContributors={topContributors}
       />
 
       {/* Responsive overrides via <style> */}

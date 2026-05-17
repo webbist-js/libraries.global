@@ -1093,6 +1093,12 @@ export type WikiContributor = {
   avatar?: { url?: string | null } | null
 }
 
+export type WikiTopContributor = {
+  documentId: string
+  username?: string | null
+  avatar?: { url?: string | null } | null
+}
+
 export type WikiArticleDetail = WikiArticleSummary & {
   body?: ArticleBodyBlock[] | null
   contributors?: WikiContributor[] | null
@@ -1205,6 +1211,25 @@ export async function fetchAllWikiArticleSlugs(locale: Locale) {
   } catch (e: unknown) {
     logNonBlockingError({
       message: `Error fetching all wiki article slugs for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return { data: [] }
+  }
+}
+
+export async function fetchWikiTopContributors() {
+  try {
+    return (await PublicStrapiClient.fetchAPI(
+      "/wiki-articles/top-contributors",
+      {}
+    )) as { data: WikiTopContributor[] }
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: "Error fetching wiki top contributors",
       error: {
         error: e instanceof Error ? e.message : String(e),
         stack: e instanceof Error ? e.stack : undefined,

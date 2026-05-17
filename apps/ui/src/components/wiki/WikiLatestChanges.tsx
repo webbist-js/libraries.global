@@ -1,17 +1,23 @@
 import { ArticleChangelogRow, ContribAvatar } from "@/components/ds"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
-import type { WikiArticleSummary } from "@/lib/strapi-api/content/server"
+import type {
+  WikiArticleSummary,
+  WikiTopContributor,
+} from "@/lib/strapi-api/content/server"
+import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 export function WikiLatestChanges({
   articles,
   totalArticles,
   totalSections,
+  topContributors = [],
   title = "§ 02 · Latest changes",
 }: {
   readonly articles: WikiArticleSummary[]
   readonly totalArticles: number
   readonly totalSections?: number
+  readonly topContributors?: WikiTopContributor[]
   readonly title?: string
 }) {
   if (articles.length === 0) return null
@@ -125,22 +131,71 @@ export function WikiLatestChanges({
                   }}
                 />
               </h4>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                {[
-                  "LG",
-                  "AB",
-                  "MK",
-                  "SP",
-                  "JD",
-                  "RT",
-                  "EV",
-                  "PL",
-                  "NW",
-                  "+18",
-                ].map((init, i) => (
-                  <ContribAvatar key={init} initials={init} index={i} />
-                ))}
-              </div>
+              {topContributors.length === 0 ? (
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: T.ink.faint,
+                    margin: 0,
+                    fontFamily: T.font.mono,
+                    letterSpacing: ".06em",
+                  }}
+                >
+                  No edits this month yet.
+                </p>
+              ) : (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                  {topContributors.map((c, i) => {
+                    const initials = c.username
+                      ? c.username.slice(0, 2).toUpperCase()
+                      : "?"
+                    const avatarUrl = c.avatar?.url
+                      ? formatStrapiMediaUrl(c.avatar.url)
+                      : null
+                    const avatar = avatarUrl ? (
+                      <span
+                        title={c.username ?? undefined}
+                        style={{
+                          width: "32px",
+                          height: "32px",
+                          borderRadius: "50%",
+                          overflow: "hidden",
+                          flexShrink: 0,
+                          border: `1px solid ${T.border.hi}`,
+                          display: "inline-block",
+                        }}
+                      >
+                        <img
+                          src={avatarUrl}
+                          alt={c.username ?? "contributor"}
+                          width={32}
+                          height={32}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      </span>
+                    ) : (
+                      <ContribAvatar initials={initials} index={i} />
+                    )
+
+                    return c.username ? (
+                      <GlobalLink
+                        key={c.documentId}
+                        href={`/profile/${c.username}`}
+                        title={c.username}
+                        style={{ display: "inline-block", flexShrink: 0 }}
+                      >
+                        {avatar}
+                      </GlobalLink>
+                    ) : (
+                      <span key={c.documentId}>{avatar}</span>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Stats */}
