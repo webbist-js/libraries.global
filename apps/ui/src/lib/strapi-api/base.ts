@@ -2,6 +2,7 @@ import type { FindFirst, FindMany, ID, Result, UID } from "@repo/strapi-types"
 
 import { getEnvVar } from "@/lib/env-vars"
 import { isDevelopment } from "@/lib/general-helpers"
+import { eqOrNull } from "@/lib/strapi-api/query-builder"
 import type {
   APIResponse,
   APIResponseCollection,
@@ -208,7 +209,7 @@ export default abstract class BaseStrapiClient {
   ): Promise<
     APIResponse<Result<TContentTypeUID, DynamicZonePopulateParams<TParams>>>
   > {
-    const slugFilter = slug && slug.length > 0 ? { $eq: slug } : { $null: true }
+    const slugFilter = eqOrNull(slug)
     const mergedParams = {
       ...params,
       sort: { publishedAt: "desc" },
