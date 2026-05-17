@@ -8,12 +8,10 @@ import { CONTINENT_COUNTRIES, CONTINENTS } from "@/lib/data/continents"
 import { COUNTRIES } from "@/lib/data/countries"
 import { T } from "@/lib/design-tokens"
 import { OPERATIONAL_STATUSES } from "@/lib/meilisearch"
-
-// ── Types ──────────────────────────────────────────────────────────────────────
-interface RegionOption {
-  slug: string
-  name: string
-}
+import {
+  fetchRegionsByCountry,
+  type RegionOption,
+} from "@/lib/strapi-api/content/regions"
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function countriesForContinent(continentSlug: string) {
@@ -22,25 +20,6 @@ function countriesForContinent(continentSlug: string) {
   return COUNTRIES.filter((c) => codes.includes(c.code)).sort((a, b) =>
     a.name.localeCompare(b.name)
   )
-}
-
-async function fetchRegions(countrySlug: string): Promise<RegionOption[]> {
-  try {
-    const res = await fetch(
-      `/api/regions?countrySlug=${encodeURIComponent(countrySlug)}`,
-      { cache: "force-cache" }
-    )
-    if (!res.ok) return []
-    const json = (await res.json()) as {
-      data?: { name?: string; slug?: string }[]
-    }
-
-    return (json.data ?? [])
-      .filter((r) => r.slug && r.name)
-      .map((r) => ({ slug: r.slug!, name: r.name! }))
-  } catch {
-    return []
-  }
 }
 
 // ── Select pill ────────────────────────────────────────────────────────────────
@@ -119,7 +98,7 @@ export function LibraryIndexGeoFilterBar({
     let cancelled = false
     const slug = filters.countrySlug
     const load = slug
-      ? fetchRegions(slug)
+      ? fetchRegionsByCountry(slug)
       : Promise.resolve([] as RegionOption[])
     load.then((r) => {
       if (!cancelled) {
