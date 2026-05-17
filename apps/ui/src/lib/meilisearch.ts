@@ -43,7 +43,6 @@ export interface LibrarySearchHit {
   _geoDistance?: number
 }
 
-/** @deprecated Use searchLibraries with LibraryIndexFilterState instead. */
 export interface LibrarySearchParams {
   query?: string
   libraryTypes?: string[]
