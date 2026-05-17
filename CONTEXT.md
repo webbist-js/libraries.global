@@ -28,6 +28,14 @@ _Avoid_: integration, feed, data source
 Public-facing technical documentation for the platform — API usage, data scope, how to contribute, how to interpret the data model. Editable by the community via the Submission system (`wiki_edit`). Not a subject-matter encyclopaedia about libraries.
 _Avoid_: knowledge base, encyclopaedia, docs site
 
+**Wiki Author**:
+The original editorial author of a Wiki article — a freetext name, used for guest writers, historical attributions, or staff editors who predate the user account system. Stored as a plain string on the article. Not linked to a user profile.
+_Avoid_: contributor (use Wiki Contributor for that), editor
+
+**Wiki Contributor**:
+Any user whose `wiki_edit` Submission has been approved on a given article. Stored as a many-to-many relation from the article to `user-profile`. Additive — every approved editor is added to the list, never removed. Displayed on the article page as a linked avatar list. Distinct from Wiki Author.
+_Avoid_: author (that is the original editorial attribution), editor
+
 **Blog**:
 Editorial and narrative content — stories, features, guest pieces — managed exclusively by editors and invited guest editors. Not community-editable; guest posts are submitted via the Submission system (`blog_submission`) and curated by editors.
 _Avoid_: articles, posts, news
@@ -41,11 +49,11 @@ A Submission in which a user asserts a trusted relationship to a specific Librar
 _Avoid_: ownership claim, takeover
 
 **Saved Library**:
-A user's bookmarked Library — a wishlist of institutions they want to visit or want to remember. Not a visit record.
+A user's bookmarked Library — a wishlist of institutions they want to visit or want to remember. Not a visit record. Saving a Library drives two downstream effects: (1) the Library surfaces in a "Your libraries" filter on the Events browse and Library index, and (2) the user receives in-app and email notifications when significant data changes are approved for that Library (status change, opening hours, new Events).
 _Avoid_: favourite, bookmark, visited library
 
 **Points**:
-The unit of contribution credit awarded when a Submission is approved. Drive Tier progression and Badge eligibility. Tracked as a cumulative all-time total; cannot be spent or traded.
+The unit of contribution credit awarded when a Submission is approved. Drive Tier progression and Badge eligibility. Tracked as a cumulative all-time total; cannot be spent or traded. Point values by submission type: `correction` approved → 2pts; `library_edit` minor (1–3 fields) → 5pts; `library_edit` major (4+ fields) → 15pts; `library_claim` approved → 10pts; `wiki_edit` approved → 5pts; `wiki_edit` translation → 15pts; `new_library` approved → 50pts.
 _Avoid_: credits, score, karma
 
 **Tier**:
@@ -63,6 +71,10 @@ _Avoid_: combo, run, activity count
 **Moderator**:
 A community member or staff editor with authority to approve, reject, or request more information on Submissions. A future role — not yet fully built — intended to distribute moderation workload beyond the core team.
 _Avoid_: admin, reviewer (alone — too generic)
+
+**Contributor Role**:
+A permission level stored on a user's profile that gates access to privileged platform features. Distinct from Tier (which is cosmetic and based on Points). Values in ascending privilege order: `reader` (default), `contributor`, `verified_librarian`, `wiki_editor`, `editorial_board`. `wiki_editor` and `editorial_board` can edit Wiki articles. Roles are assigned manually by staff in Strapi admin; they are not earned automatically. Stored in the user-profile record and cached in the Better Auth session (refreshed within 24 hours of a role change).
+_Avoid_: permission, access level, tier (Tier is the Points-based cosmetic system)
 
 **Collection Stat**:
 A single data point describing what a Library _holds_ — volumes, manuscripts, maps, incunabula, digital objects, etc. Free-form `category` + `value` pairs today, with potential to become a structured collections API in the future.
@@ -116,7 +128,7 @@ _Avoid_: province, state, county (those are display names; the concept is Region
 
 - The `library` relation on the Event schema is not marked `required`, but every Event must belong to a Library — this is a schema gap to fix.
 - CLAUDE.md describes the Wiki as "editorial knowledge base (library history, classification systems)" — this is wrong. The Wiki is platform technical documentation (API usage, data scope, how-tos). CLAUDE.md should be updated.
-- `correction` and `library_edit` are both Submission types that change Library data — the distinction between them is unresolved and the types may need to be consolidated or clearly differentiated.
+- `correction` and `library_edit` are both Submission types that change Library data. Resolved: `library_edit` is a comprehensive multi-field diff produced by the full edit wizard and requires a Library Claim; `correction` is a targeted single-issue report (category picker + freetext) available to any logged-in user with no claim required, produced by the inline correction CTA on library detail pages. Non-logged-in users see a "Sign in to suggest a correction" prompt. Library stewards (claimants) bypass corrections entirely — they use the full edit diff flow.
 - `pendingReview` on Event is dead code — filtering happens at the import layer, not in Strapi. Candidate for removal.
 - Library `entityRef` auto-generation is not yet implemented (lifecycle hook exists for Country/Region/Area but not Library). The current format (`GB-BL-001`) in the CLAUDE.md is a relic of manual entry; the intended scheme is hierarchically composed from parent entityRefs + the Library's short name.
 
