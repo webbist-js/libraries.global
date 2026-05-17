@@ -37,7 +37,7 @@ export function AuthOAuthButtons({ mode }: AuthOAuthButtonsProps) {
     try {
       const result = await authClient.signIn.social({
         provider,
-        callbackURL: "/",
+        callbackURL: "/auth/post-signin",
       })
       if (result?.error) {
         toast.error(result.error.message ?? `${provider} sign-in failed`)

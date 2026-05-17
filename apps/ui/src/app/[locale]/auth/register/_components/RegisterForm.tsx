@@ -78,7 +78,7 @@ export function RegisterForm() {
       { email: values.email, password: values.password },
       {
         onSuccess: () => {
-          globalThis.location.href = "/"
+          globalThis.location.href = "/profile/onboarding"
         },
         onError: (error) => {
           const msg = error?.message ?? "Registration failed"

@@ -14,6 +14,15 @@ export type BetterAuthUser = {
   image?: string | null
   createdAt: Date
   updatedAt: Date
+  // Added by customSession plugin — sourced from Strapi user-profile
+  contributorRole?:
+    | "reader"
+    | "contributor"
+    | "verified_librarian"
+    | "wiki_editor"
+    | "editorial_board"
+    | null
+  username?: string | null
 }
 
 export type BetterAuthSession = {

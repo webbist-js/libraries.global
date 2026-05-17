@@ -67,8 +67,16 @@ function SuspensedSignInForm() {
 
   const onSubmit = form.handleSubmit(async (values) => {
     signInMutation.mutate(values, {
-      onSuccess: () => {
-        globalThis.location.href = callbackUrl
+      onSuccess: async () => {
+        const { data } = await authClient.getSession()
+        const username = (data?.user as Record<string, unknown> | undefined)
+          ?.username as string | null | undefined
+        if (!username) {
+          const next = encodeURIComponent(callbackUrl)
+          globalThis.location.href = `/profile/onboarding?next=${next}`
+        } else {
+          globalThis.location.href = callbackUrl
+        }
       },
       onError: (error) => {
         const msg = error instanceof Error ? error.message : "Sign in failed"

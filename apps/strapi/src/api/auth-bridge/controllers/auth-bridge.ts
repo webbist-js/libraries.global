@@ -46,18 +46,13 @@ export default {
         const nameParts = (name ?? "").trim().split(/\s+/)
         const firstName = nameParts[0] ?? ""
         const lastName = nameParts.slice(1).join(" ") || ""
-        const baseUsername = email
-          .split("@")[0]
-          .replaceAll(/[^a-z0-9_]/gi, "")
-          .toLowerCase()
-        const suffix = Math.floor(Math.random() * 9000 + 1000)
         const count = await strapi
           .query("api::user-profile.user-profile")
           .count()
+        // username is intentionally left null — set during onboarding
         await strapi.query("api::user-profile.user-profile").create({
           data: {
             baUserId,
-            username: `${baseUsername}${suffix}`,
             firstName,
             lastName,
             contributorNumber: count + 1,
@@ -559,6 +554,28 @@ export default {
     )
 
     return ctx.send({ following })
+  },
+
+  async sessionProfile(ctx: any) {
+    const serviceSecret = ctx.request.header["x-service-secret"]
+    if (
+      !process.env.STRAPI_BRIDGE_SECRET ||
+      serviceSecret !== process.env.STRAPI_BRIDGE_SECRET
+    ) {
+      return ctx.unauthorized("Invalid or missing service secret")
+    }
+
+    const { baUserId } = ctx.query as { baUserId?: string }
+    if (!baUserId) return ctx.badRequest("Missing baUserId")
+
+    const profile = await strapi.db
+      .query("api::user-profile.user-profile")
+      .findOne({ where: { baUserId }, select: ["contributorRole", "username"] })
+
+    return ctx.send({
+      contributorRole: profile?.contributorRole ?? "reader",
+      username: profile?.username ?? null,
+    })
   },
 
   async computeQuickWins(ctx: any) {

@@ -55,6 +55,12 @@ export default {
       config: { auth: false, policies: [], middlewares: [] },
     },
     {
+      method: "GET",
+      path: "/auth-bridge/session-profile",
+      handler: "auth-bridge.sessionProfile",
+      config: { auth: false, policies: [], middlewares: [] },
+    },
+    {
       method: "POST",
       path: "/auth-bridge/compute-quick-wins",
       handler: "auth-bridge.computeQuickWins",
