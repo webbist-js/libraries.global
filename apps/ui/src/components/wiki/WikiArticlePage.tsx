@@ -21,6 +21,7 @@ import type {
   WikiArticleStatus,
   WikiSectionNav,
 } from "@/lib/strapi-api/content/server"
+import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 import { WikiArticleEditBody } from "./editor/WikiArticleEditBody"
 import { WikiArticleEditProvider } from "./editor/WikiArticleEditContext"
@@ -728,6 +729,84 @@ export function WikiArticlePage({
                 locale={locale}
                 body={article.body as Record<string, unknown>[]}
               />
+
+              {/* ── Wiki Contributors ────────────────────────────────────── */}
+              {article.contributors && article.contributors.length > 0 && (
+                <div
+                  style={{
+                    marginTop: "40px",
+                    paddingTop: "20px",
+                    borderTop: `1px solid ${T.border.line}`,
+                  }}
+                >
+                  <p
+                    style={{
+                      fontFamily: T.font.mono,
+                      fontSize: "9px",
+                      letterSpacing: ".2em",
+                      textTransform: "uppercase",
+                      color: T.ink.ghost,
+                      marginBottom: "10px",
+                    }}
+                  >
+                    Contributors
+                  </p>
+                  <div
+                    style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}
+                  >
+                    {article.contributors.map((c) => {
+                      const avatarUrl = c.avatar?.url
+                        ? formatStrapiMediaUrl(c.avatar.url)
+                        : null
+                      const initials = c.username
+                        ? c.username.slice(0, 2).toUpperCase()
+                        : "??"
+                      const inner = (
+                        <span
+                          style={{
+                            width: "28px",
+                            height: "28px",
+                            borderRadius: "50%",
+                            background: avatarUrl
+                              ? "transparent"
+                              : `linear-gradient(135deg,${T.accent.aurora},${T.accent.violet})`,
+                            backgroundImage: avatarUrl
+                              ? `url(${avatarUrl})`
+                              : undefined,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            display: "grid",
+                            placeItems: "center",
+                            color: "#0a0f2a",
+                            fontFamily: T.font.serif,
+                            fontSize: "9px",
+                            fontWeight: 500,
+                            border: `2px solid ${T.bg.void}`,
+                            flexShrink: 0,
+                            transition: "opacity 150ms",
+                          }}
+                          title={c.username ?? undefined}
+                        >
+                          {avatarUrl ? null : initials}
+                        </span>
+                      )
+
+                      return c.username ? (
+                        <GlobalLink
+                          key={c.documentId}
+                          href={`/profile/${c.username}`}
+                          className="hover:opacity-70"
+                          style={{ display: "block" }}
+                        >
+                          {inner}
+                        </GlobalLink>
+                      ) : (
+                        <span key={c.documentId}>{inner}</span>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* ── Footer ───────────────────────────────────────────────── */}
               <div

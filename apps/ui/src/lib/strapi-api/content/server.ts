@@ -1087,8 +1087,15 @@ export type WikiArticleSummary = {
   articleStatus?: WikiArticleStatus | null
 }
 
+export type WikiContributor = {
+  documentId: string
+  username?: string | null
+  avatar?: { url?: string | null } | null
+}
+
 export type WikiArticleDetail = WikiArticleSummary & {
   body?: ArticleBodyBlock[] | null
+  contributors?: WikiContributor[] | null
   relatedArticles?: WikiArticleSummary[] | null
   seo?: LibrarySeoData | null
 }

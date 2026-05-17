@@ -42,6 +42,10 @@ export default factories.createCoreController(
             section: { fields: ["name", "slug"] },
             category: { fields: ["name", "slug"] },
             body: BODY_POPULATE,
+            contributors: {
+              fields: ["username", "documentId"],
+              populate: { avatar: { fields: ["url"] } },
+            },
             relatedArticles: {
               fields: ["title", "slug", "summary"],
               populate: {

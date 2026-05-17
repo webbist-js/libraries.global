@@ -312,6 +312,31 @@ export function LibraryInfoCards({
           </GlobalLink>
         </FactRow>
       ) : null}
+
+      {library.slug ? (
+        <div
+          style={{
+            marginTop: "16px",
+            paddingTop: "12px",
+            borderTop: `1px solid ${T.border.line}`,
+          }}
+        >
+          <GlobalLink
+            href={`/contribute/correct/${library.slug}?libraryName=${encodeURIComponent(library.name ?? "")}`}
+            style={{
+              fontFamily: T.font.mono,
+              fontSize: "10px",
+              letterSpacing: ".14em",
+              textTransform: "uppercase",
+              color: T.ink.faint,
+              textDecoration: "none",
+            }}
+            className="transition-colors hover:text-(--t-accent-ember)"
+          >
+            Spot an error? Suggest a correction →
+          </GlobalLink>
+        </div>
+      ) : null}
     </div>
   )
 }

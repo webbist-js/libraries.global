@@ -6,7 +6,7 @@ import { Link } from "@/lib/navigation"
 export interface LocationContributeCTAProps {
   locationName?: string
   entityType?: "continent" | "country" | "region" | "area" | "library"
-  /** Pass the library slug so the primary CTA can deep-link to the edit wizard. */
+  /** Pass the library slug so the primary CTA can deep-link to the edit wizard / correction form. */
   librarySlug?: string
 }
 
@@ -27,19 +27,31 @@ export function LocationContributeCTA({
     ? `Spotted an error, a missing opening time, or a new service? Help us keep the ${locationName} page accurate and up to date.`
     : `We track every institution holding more than 1,000 volumes. Missing a village library? A closed archive? Help us keep things moving to an organized record.`
 
-  const primaryLabel = isLibrary ? "Submit a correction" : "Propose an addition"
+  const primaryLabel = isLibrary
+    ? "Suggest a correction"
+    : "Propose an addition"
   const secondaryLabel = isLibrary
-    ? "Suggest a missing detail →"
+    ? "Edit this library →"
     : "Submit a correction →"
+
+  const correctionPath = librarySlug
+    ? `/contribute/correct/${librarySlug}?libraryName=${encodeURIComponent(locationName ?? "")}`
+    : "/contribute"
 
   // Resolve primary href based on auth state and entity context
   const primaryHref = isSignedIn
     ? isLibrary
+      ? correctionPath
+      : `/contribute/add`
+    : `/auth/signin?callbackUrl=${encodeURIComponent(isLibrary ? correctionPath : `/contribute/add`)}`
+
+  const secondaryHref = isLibrary
+    ? isSignedIn
       ? librarySlug
         ? `/contribute/edit/${librarySlug}`
         : `/contribute/edit`
-      : `/contribute/add`
-    : `/auth/signin?callbackUrl=${encodeURIComponent(isLibrary ? (librarySlug ? `/contribute/edit/${librarySlug}` : `/contribute/edit`) : `/contribute/add`)}`
+      : `/auth/signin?callbackUrl=${encodeURIComponent(librarySlug ? `/contribute/edit/${librarySlug}` : `/contribute/edit`)}`
+    : "/wiki/contributing/how-to-contribute"
 
   return (
     <section className="py-14 sm:py-18">
@@ -68,7 +80,7 @@ export function LocationContributeCTA({
                 {primaryLabel}
               </Link>
               <Link
-                href="/wiki/contributing/how-to-contribute"
+                href={secondaryHref}
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-surface) px-6 py-2.5 text-sm font-medium text-(--t-ink-dim) transition-all hover:bg-(--t-bg-deep) hover:text-(--t-ink-base)"
               >
                 {secondaryLabel}
