@@ -2638,6 +2638,15 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    contributors: Schema.Attribute.Relation<
+      "manyToMany",
+      "api::user-profile.user-profile"
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -3060,7 +3069,6 @@ export interface PluginEventsEvent extends Struct.CollectionTypeSchema {
     isFree: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
     lastSeenAt: Schema.Attribute.DateTime & Schema.Attribute.Required
     library: Schema.Attribute.Relation<"manyToOne", "api::library.library">
-    libraryEntityRef: Schema.Attribute.String & Schema.Attribute.Required
     locale: Schema.Attribute.String & Schema.Attribute.Private
     localizations: Schema.Attribute.Relation<
       "oneToMany",

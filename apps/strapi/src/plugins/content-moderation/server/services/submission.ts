@@ -345,6 +345,43 @@ export default ({ strapi }: { strapi: any }) => ({
       }
     }
 
+    // Award points for correction approval — 2pts
+    if (status === "approved" && submission?.submissionType === "correction") {
+      try {
+        await strapi
+          .plugin("rewards")
+          .service("points")
+          .award(submission.submittedByUserId, "correction_approved", 2, {
+            submissionId: documentId,
+          })
+      } catch (err) {
+        strapi.log.warn(
+          "[content-moderation] rewards.award (correction) failed:",
+          err
+        )
+      }
+    }
+
+    // Award points for library_claim approval — 10pts
+    if (
+      status === "approved" &&
+      submission?.submissionType === "library_claim"
+    ) {
+      try {
+        await strapi
+          .plugin("rewards")
+          .service("points")
+          .award(submission.submittedByUserId, "claim_approved", 10, {
+            submissionId: documentId,
+          })
+      } catch (err) {
+        strapi.log.warn(
+          "[content-moderation] rewards.award (claim) failed:",
+          err
+        )
+      }
+    }
+
     // Award points for wiki_edit approval
     if (status === "approved" && submission?.submissionType === "wiki_edit") {
       try {
@@ -578,9 +615,13 @@ export default ({ strapi }: { strapi: any }) => ({
 
       const locale = (draftData.locale as string | undefined) ?? "en"
 
-      const article = await strapi.db
-        .query("api::wiki-article.wiki-article")
-        .findOne({ where: { slug } })
+      const articles = await strapi
+        .documents("api::wiki-article.wiki-article" as any)
+        .findMany({
+          filters: { slug: { $eq: slug } } as any,
+          limit: 1,
+        })
+      const article = (articles as any[])[0] ?? null
       if (!article) return
 
       const updateData: Record<string, unknown> = {}
@@ -601,6 +642,19 @@ export default ({ strapi }: { strapi: any }) => ({
         status: "published",
         data: updateData,
       })
+
+      // Connect submitter to contributors relation (additive — never removes)
+      if (submission.submittedByUserId) {
+        const profile = await strapi.db
+          .query("api::user-profile.user-profile")
+          .findOne({ where: { baUserId: submission.submittedByUserId } })
+        if (profile) {
+          await strapi.db.query("api::wiki-article.wiki-article").update({
+            where: { id: article.id },
+            data: { contributors: { connect: [{ id: profile.id }] } },
+          })
+        }
+      }
     } catch (err) {
       strapi.log.error("[content-moderation] applyWikiEdit failed", err)
     }

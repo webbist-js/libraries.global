@@ -93,6 +93,12 @@
       "component": "shared.seo",
       "repeatable": false,
       "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "contributors": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::user-profile.user-profile",
+      "pluginOptions": { "i18n": { "localized": false } }
     }
   }
 }

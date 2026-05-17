@@ -2,6 +2,8 @@ export type PointAction =
   | "new_library_approved"
   | "edit_accepted_minor"
   | "edit_accepted_major"
+  | "correction_approved"
+  | "claim_approved"
   | "photo_licensed_cc"
   | "hours_verified"
   | "status_verified"
