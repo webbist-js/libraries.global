@@ -191,69 +191,8 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   async stats(ctx: any) {
-    try {
-      const db = strapi.db.connection
-      const now = new Date()
-      const weekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-      const monthLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-
-      const [totalRow] = await db("ev_events")
-        .count("* as count")
-        .where("start_time", ">=", now)
-      const [weekRow] = await db("ev_events")
-        .count("* as count")
-        .where("start_time", ">=", now)
-        .where("start_time", "<=", weekLater)
-      const [freeRow] = await db("ev_events")
-        .count("* as count")
-        .where("start_time", ">=", now)
-        .where("is_free", true)
-      const [monthRow] = await db("ev_events")
-        .count("* as count")
-        .where("start_time", ">=", now)
-        .where("start_time", "<=", monthLater)
-      const totalThisMonth = Number((monthRow as any).count)
-
-      // Peak day + hour: find the hour slot with most events upcoming
-      const peakRows = await db("ev_events")
-        .select(
-          db.raw("strftime('%w', start_time) as dow"),
-          db.raw("strftime('%H', start_time) as hour"),
-          db.raw("count(*) as cnt")
-        )
-        .where("start_time", ">=", now)
-        .groupByRaw("dow, hour")
-        .orderBy("cnt", "desc")
-        .limit(1)
-
-      const peak = peakRows[0] as any
-      const DOW_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-      const peakLabel = peak
-        ? `${DOW_LABELS[Number(peak.dow)] ?? ""} ${String(peak.hour).padStart(2, "0")}:00`
-        : null
-
-      const total = Number((totalRow as any).count)
-      const totalThisWeek = Number((weekRow as any).count)
-      const freeCount = Number((freeRow as any).count)
-
-      ctx.body = {
-        totalEvents: total,
-        totalThisWeek,
-        totalThisMonth,
-        percentFree: total > 0 ? Math.round((freeCount / total) * 100) : 0,
-        peakSlot: peakLabel,
-        peakCount: peak ? Number(peak.cnt) : 0,
-      }
-    } catch {
-      ctx.body = {
-        totalEvents: 0,
-        totalThisWeek: 0,
-        totalThisMonth: 0,
-        percentFree: 0,
-        peakSlot: null,
-        peakCount: 0,
-      }
-    }
+    const { computeEventStats } = await import("../services/stats")
+    ctx.body = await computeEventStats(strapi)
   },
 
   async providerBreakdown(ctx: any) {
