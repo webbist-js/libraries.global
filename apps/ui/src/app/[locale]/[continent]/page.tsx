@@ -28,6 +28,7 @@ export async function generateMetadata({
         metaTitle?: string | null
         metaDescription?: string | null
         metaImage?: { url?: string | null } | null
+        metaRobots?: string | null
       }
     | null
     | undefined
@@ -44,11 +45,21 @@ export async function generateMetadata({
   return {
     title,
     description,
+    robots: seo?.metaRobots ?? "index, follow",
+    alternates: {
+      canonical: `/${slug}`,
+    },
     openGraph: {
       title,
       description,
       type: "website",
       ...(ogImageUrl ? { images: [{ url: ogImageUrl }] } : {}),
+    },
+    twitter: {
+      card: ogImageUrl ? "summary_large_image" : "summary",
+      title,
+      description,
+      ...(ogImageUrl ? { images: [ogImageUrl] } : {}),
     },
   }
 }

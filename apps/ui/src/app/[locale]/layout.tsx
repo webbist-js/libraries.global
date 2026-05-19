@@ -30,9 +30,23 @@ export function generateStaticParams() {
 }
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://libraries.global"
+  ),
   title: {
     template: "%s / Libraries Global",
-    default: "",
+    default: "Libraries Global — Index of the World's Libraries",
+  },
+  description:
+    "A complete, searchable atlas of every significant library on earth. Browse by continent, country, region, type and status.",
+  robots: "index, follow",
+  openGraph: {
+    siteName: "Libraries Global",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    site: "@LibrariesGlobal",
   },
 }
 

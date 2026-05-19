@@ -11,7 +11,21 @@ export default function robots(): MetadataRoute.Robots {
   }
 
   return {
-    rules: { userAgent: "*", allow: "/" },
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: [
+          "/*/auth/",
+          "/*/profile/*/settings",
+          "/*/profile/onboarding",
+          "/*/contribute/edit/",
+          "/*/contribute/submissions",
+          "/*/dev/",
+          "/api/",
+        ],
+      },
+    ],
     ...(baseUrl
       ? { sitemap: new URL("./sitemap.xml", baseUrl).toString() }
       : {}),

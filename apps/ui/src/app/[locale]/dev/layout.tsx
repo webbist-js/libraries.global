@@ -1,8 +1,13 @@
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import DevNavbar from "@/app/[locale]/dev/components/DevNavbar"
 import { Container } from "@/components/elementary/Container"
 import { isProduction } from "@/lib/general-helpers"
+
+export const metadata: Metadata = {
+  robots: "noindex, nofollow",
+}
 
 export default async function Layout({
   children,

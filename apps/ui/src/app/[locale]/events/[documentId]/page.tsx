@@ -58,12 +58,28 @@ export async function generateMetadata({
   const event = await eventsGet(`/event/${documentId}`)
   if (!event) return { title: "Event — Libraries of the World" }
 
+  const title = `${event.title} — Libraries of the World`
+  const description = event.description ?? undefined
+  const canonical = `/events/${documentId}`
+
   return {
-    title: `${event.title} — Libraries of the World`,
-    description: event.description ?? undefined,
-    openGraph: event.imageUrl
-      ? { images: [{ url: event.imageUrl }] }
-      : undefined,
+    title,
+    description,
+    robots: "index, follow",
+    alternates: { canonical },
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      url: canonical,
+      ...(event.imageUrl ? { images: [{ url: event.imageUrl }] } : {}),
+    },
+    twitter: {
+      card: event.imageUrl ? "summary_large_image" : "summary",
+      title,
+      description,
+      ...(event.imageUrl ? { images: [event.imageUrl] } : {}),
+    },
   }
 }
 

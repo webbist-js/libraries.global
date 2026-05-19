@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { headers } from "next/headers"
 
 import { LibraryCard } from "@/components/ds/LibraryCard"
@@ -19,6 +20,27 @@ import { ContributeNavBar } from "./_components/ContributeNavBar"
 import { ContributePathCards } from "./_components/ContributePathCards"
 import { QuickWinsSection } from "./_components/QuickWinsSection"
 import { WelcomeBackWidget } from "./_components/WelcomeBackWidget"
+
+export const metadata: Metadata = {
+  title: "Contribute",
+  description:
+    "Help build the world's most comprehensive library atlas. Submit corrections, add missing libraries, and earn contributor recognition.",
+  robots: "index, follow",
+  alternates: { canonical: "/contribute" },
+  openGraph: {
+    title: "Contribute to Libraries Global",
+    description:
+      "Help build the world's most comprehensive library atlas. Submit corrections, add missing libraries, and earn contributor recognition.",
+    type: "website",
+    url: "/contribute",
+  },
+  twitter: {
+    card: "summary",
+    title: "Contribute to Libraries Global",
+    description:
+      "Help build the world's most comprehensive library atlas. Submit corrections, add missing libraries, and earn contributor recognition.",
+  },
+}
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 

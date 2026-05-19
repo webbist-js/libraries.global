@@ -4,92 +4,135 @@ import type { Locale } from "next-intl"
 import { getEnvVar } from "@/lib/env-vars"
 import { isDevelopment, isProduction } from "@/lib/general-helpers"
 import { createPublicFullPath, routing } from "@/lib/navigation"
-import { fetchAllPages } from "@/lib/strapi-api/content/server"
+import {
+  fetchAllBlogArticleSlugs,
+  fetchAllContinents,
+  fetchAllCountries,
+  fetchAllLibraries,
+  fetchAllPages,
+  fetchAllRegions,
+  fetchAllWikiArticleSlugs,
+} from "@/lib/strapi-api/content/server"
 
-// This should be static or dynamic based on build/runtime needs
 export const dynamic = "force-dynamic"
 
-/**
- * Note: We could use generateSitemaps to separate the sitemaps, however that does not create the root sitemap.
- */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  if (!isProduction() && !isDevelopment()) {
-    // Deployment environments other than production should not generate sitemap
-    return []
-  }
+  if (!isProduction() && !isDevelopment()) return []
+  if (!getEnvVar("APP_PUBLIC_URL")) return []
 
-  if (!getEnvVar("APP_PUBLIC_URL")) {
-    return []
-  }
-
-  const promises = routing.locales.map((locale) =>
-    generateLocalizedSitemap(locale)
+  const results = await Promise.allSettled(
+    routing.locales.map((locale) => generateLocalizedSitemap(locale))
   )
-  const results = await Promise.allSettled(promises)
 
   return results
-    .filter((result) => result.status === "fulfilled")
-    .reduce((acc, curr) => {
-      acc.push(...curr.value)
-
-      return acc
-    }, [] as MetadataRoute.Sitemap)
+    .filter((r) => r.status === "fulfilled")
+    .flatMap((r) => (r as PromiseFulfilledResult<MetadataRoute.Sitemap>).value)
 }
 
-/**
- * Fetches all entries in a given collection - by default this is api::page.page
- * and generates sitemap entries for a single locale
- * @param locale locale to retrieve (must be defined in routing `@/lib/navigation`)
- * @returns Sitemap entries for a single locale
- */
 async function generateLocalizedSitemap(
   locale: Locale
 ): Promise<MetadataRoute.Sitemap> {
-  const pageEntities: Partial<
-    Record<PageEntityUID, Awaited<ReturnType<typeof fetchAllPages>>["data"]>
-  > = {}
+  const entries: MetadataRoute.Sitemap = []
 
-  // Fetch all records for each entity individually
-  for (const entityUid of pageEntityUids) {
-    const entityResponse = await fetchAllPages(entityUid, locale)
-
-    if (entityResponse.data.length > 0) {
-      pageEntities[entityUid] = entityResponse.data
+  // ── CMS pages (about, contact, etc.) ──────────────────────────────────────
+  const pages = await fetchAllPages("api::page.page", locale)
+  for (const page of pages.data) {
+    if (page.slug) {
+      entries.push({
+        url: createPublicFullPath(page.slug, String(page.locale)),
+        lastModified: page.updatedAt ?? page.createdAt ?? undefined,
+        changeFrequency: "monthly",
+        priority: 0.5,
+      })
     }
   }
 
-  /**
-   * iterate over all pageable collections, and push each entry into the sitemap array,
-   * alongside mapping of changeFrequency
-   */
-  return Object.entries(pageEntities).reduce((acc, [uid, pages]) => {
-    pages.forEach((page) => {
-      if (page.slug) {
-        acc.push({
-          url: createPublicFullPath(page.slug, String(page.locale)),
-          lastModified: page.updatedAt ?? page.createdAt ?? undefined,
-          changeFrequency:
-            entityChangeFrequency[uid as PageEntityUID] ?? "monthly",
-        })
-      }
-    })
+  // ── Continents ────────────────────────────────────────────────────────────
+  const continents = await fetchAllContinents(locale)
+  for (const c of continents.data) {
+    if (c.slug) {
+      entries.push({
+        url: createPublicFullPath(c.slug, locale),
+        lastModified: (c as any).updatedAt ?? undefined,
+        changeFrequency: "monthly",
+        priority: 0.8,
+      })
+    }
+  }
 
-    return acc
-  }, [] as MetadataRoute.Sitemap)
-}
+  // ── Countries ─────────────────────────────────────────────────────────────
+  const countries = await fetchAllCountries(locale)
+  for (const c of countries.data) {
+    if (c.slug && c.continent?.slug) {
+      entries.push({
+        url: createPublicFullPath(`${c.continent.slug}/${c.slug}`, locale),
+        changeFrequency: "monthly",
+        priority: 0.7,
+      })
+    }
+  }
 
-// Should you have multiple "pageable" collections, add them to this array
-const pageEntityUids = ["api::page.page"] as const
+  // ── Regions ───────────────────────────────────────────────────────────────
+  const regions = await fetchAllRegions(locale)
+  for (const r of regions.data) {
+    if (r.slug && r.continent?.slug && r.country?.slug) {
+      entries.push({
+        url: createPublicFullPath(
+          `${r.continent.slug}/${r.country.slug}/${r.slug}`,
+          locale
+        ),
+        changeFrequency: "monthly",
+        priority: 0.6,
+      })
+    }
+  }
 
-type PageEntityUID = (typeof pageEntityUids)[number]
+  // ── Libraries ─────────────────────────────────────────────────────────────
+  const libraries = await fetchAllLibraries(locale)
+  for (const lib of libraries.data) {
+    if (
+      lib.slug &&
+      lib.continent?.slug &&
+      lib.country?.slug &&
+      lib.region?.slug
+    ) {
+      entries.push({
+        url: createPublicFullPath(
+          `${lib.continent.slug}/${lib.country.slug}/${lib.region.slug}/${lib.slug}`,
+          locale
+        ),
+        lastModified: (lib as any).updatedAt ?? undefined,
+        changeFrequency: "weekly",
+        priority: 0.9,
+      })
+    }
+  }
 
-/**
- * Object that determines default changeFrequency attribute for crawlers.
- * For example, pages may change once a month or year, whereas blog articles could update weekly
- */
-const entityChangeFrequency: Record<
-  PageEntityUID,
-  MetadataRoute.Sitemap[number]["changeFrequency"]
-> = {
-  "api::page.page": "monthly",
+  // ── Blog articles ─────────────────────────────────────────────────────────
+  const blogArticles = await fetchAllBlogArticleSlugs(locale)
+  for (const a of blogArticles.data) {
+    if (a.slug) {
+      const section = a.section?.slug ?? "general"
+      entries.push({
+        url: createPublicFullPath(`blog/${section}/${a.slug}`, locale),
+        changeFrequency: "weekly",
+        priority: 0.6,
+      })
+    }
+  }
+
+  // ── Wiki articles ─────────────────────────────────────────────────────────
+  const wikiArticles = await fetchAllWikiArticleSlugs(locale)
+  for (const a of wikiArticles.data) {
+    if (a.slug) {
+      const section = a.section?.slug ?? "general"
+      entries.push({
+        url: createPublicFullPath(`wiki/${section}/${a.slug}`, locale),
+        changeFrequency: "monthly",
+        priority: 0.5,
+      })
+    }
+  }
+
+  return entries
 }

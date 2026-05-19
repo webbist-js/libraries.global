@@ -40,14 +40,15 @@ export async function generateMetadata({
     section.description ??
     `Browse ${section.name} articles in the knowledge hub.`
 
+  const canonical = `/wiki/${sectionSlug}`
+
   return {
     title,
     description,
-    openGraph: {
-      title,
-      description,
-      type: "website",
-    },
+    robots: "index, follow",
+    alternates: { canonical },
+    openGraph: { title, description, type: "website", url: canonical },
+    twitter: { card: "summary", title, description },
   }
 }
 

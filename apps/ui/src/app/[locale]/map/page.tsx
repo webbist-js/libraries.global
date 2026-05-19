@@ -8,6 +8,21 @@ export const metadata: Metadata = {
   title: "World Library Map",
   description:
     "Explore libraries worldwide on an interactive map. Drill down from continents to individual library locations.",
+  robots: "index, follow",
+  alternates: { canonical: "/map" },
+  openGraph: {
+    title: "World Library Map",
+    description:
+      "Explore libraries worldwide on an interactive map. Drill down from continents to individual library locations.",
+    type: "website",
+    url: "/map",
+  },
+  twitter: {
+    card: "summary",
+    title: "World Library Map",
+    description:
+      "Explore libraries worldwide on an interactive map. Drill down from continents to individual library locations.",
+  },
 }
 
 export default async function MapPage({

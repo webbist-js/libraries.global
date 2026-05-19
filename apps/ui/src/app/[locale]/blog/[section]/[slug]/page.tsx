@@ -36,7 +36,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ locale: string; section: string; slug: string }>
 }): Promise<Metadata> {
-  const { locale, slug } = await params
+  const { locale, section, slug } = await params
   const data = (await fetchBlogArticle(slug, locale as Locale))?.data
   if (!data) return { title: "Article not found" }
 
@@ -50,15 +50,31 @@ export async function generateMetadata({
     : data.heroImage?.url
       ? formatStrapiMediaUrl(data.heroImage.url)
       : undefined
+  const canonical = `/blog/${section}/${slug}`
 
   return {
     title,
     description,
+    robots: "index, follow",
+    alternates: { canonical },
     openGraph: {
       title,
       description,
       type: "article",
+      url: canonical,
       ...(ogImageUrl ? { images: [{ url: ogImageUrl }] } : {}),
+      ...((data as any).publishedAt
+        ? { publishedTime: (data as any).publishedAt }
+        : {}),
+      ...((data as any).updatedAt
+        ? { modifiedTime: (data as any).updatedAt }
+        : {}),
+    },
+    twitter: {
+      card: ogImageUrl ? "summary_large_image" : "summary",
+      title,
+      description,
+      ...(ogImageUrl ? { images: [ogImageUrl] } : {}),
     },
   }
 }

@@ -34,11 +34,20 @@ export async function generateMetadata({
   return {
     title,
     description,
+    robots: "index, follow",
+    alternates: { canonical: "/wiki" },
     openGraph: {
       title,
       description,
       type: "website",
+      url: "/wiki",
       ...(ogImageUrl ? { images: [{ url: ogImageUrl }] } : {}),
+    },
+    twitter: {
+      card: ogImageUrl ? "summary_large_image" : "summary",
+      title,
+      description,
+      ...(ogImageUrl ? { images: [ogImageUrl] } : {}),
     },
   }
 }

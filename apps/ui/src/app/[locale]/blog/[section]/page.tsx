@@ -43,14 +43,17 @@ export async function generateMetadata({
 
   if (!section) return { title: "Section not found" }
 
+  const title = section.name
+  const description = `Browse ${section.name} articles from the Library Journal.`
+  const canonical = `/blog/${sectionSlug}`
+
   return {
-    title: section.name,
-    description: `Browse ${section.name} articles from the Library Journal.`,
-    openGraph: {
-      title: section.name,
-      description: `Browse ${section.name} articles from the Library Journal.`,
-      type: "website",
-    },
+    title,
+    description,
+    robots: "index, follow",
+    alternates: { canonical },
+    openGraph: { title, description, type: "website", url: canonical },
+    twitter: { card: "summary", title, description },
   }
 }
 

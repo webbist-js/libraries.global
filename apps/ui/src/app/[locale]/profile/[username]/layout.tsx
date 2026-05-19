@@ -1,6 +1,33 @@
+import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>
+}): Promise<Metadata> {
+  const { username } = await params
+
+  return {
+    title: `${username}'s Profile`,
+    description: `View ${username}'s library contributions, collections, and activity on Libraries Global.`,
+    robots: "index, follow",
+    alternates: { canonical: `/profile/${username}` },
+    openGraph: {
+      title: `${username} on Libraries Global`,
+      description: `View ${username}'s library contributions, collections, and activity on Libraries Global.`,
+      type: "profile",
+      url: `/profile/${username}`,
+    },
+    twitter: {
+      card: "summary",
+      title: `${username} on Libraries Global`,
+      description: `View ${username}'s library contributions, collections, and activity on Libraries Global.`,
+    },
+  }
+}
 
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { getSessionSSR } from "@/lib/auth-server"

@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import type { Locale } from "next-intl"
@@ -7,6 +8,10 @@ import { getSessionSSR } from "@/lib/auth-server"
 import type { UserProfile } from "@/lib/types/profile"
 
 import { SettingsShell } from "./_components/SettingsShell"
+
+export const metadata: Metadata = {
+  robots: "noindex, nofollow",
+}
 
 async function fetchOwnProfile(baUserId: string): Promise<UserProfile | null> {
   const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"

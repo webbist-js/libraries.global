@@ -1,6 +1,11 @@
+import type { Metadata } from "next"
 import { headers } from "next/headers"
 import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
+
+export const metadata: Metadata = {
+  robots: "noindex, nofollow",
+}
 
 import { Button } from "@/components/ui/button"
 import {

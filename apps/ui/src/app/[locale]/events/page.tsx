@@ -16,6 +16,21 @@ export const metadata: Metadata = {
   title: "Programme — Libraries of the World",
   description:
     "Talks, exhibitions, storytimes, workshops and more — this week at libraries worldwide.",
+  robots: "index, follow",
+  alternates: { canonical: "/events" },
+  openGraph: {
+    title: "Programme — Libraries of the World",
+    description:
+      "Talks, exhibitions, storytimes, workshops and more — this week at libraries worldwide.",
+    type: "website",
+    url: "/events",
+  },
+  twitter: {
+    card: "summary",
+    title: "Programme — Libraries of the World",
+    description:
+      "Talks, exhibitions, storytimes, workshops and more — this week at libraries worldwide.",
+  },
 }
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"

@@ -44,7 +44,13 @@ export async function generateMetadata({
     library: string
   }>
 }): Promise<Metadata> {
-  const { locale, library: librarySlug } = await params
+  const {
+    locale,
+    continent: continentSlug,
+    country: countrySlug,
+    region: regionSlug,
+    library: librarySlug,
+  } = await params
   const res = await fetchLibrary(librarySlug, locale as Locale)
   const library = res?.data
 
@@ -55,18 +61,31 @@ export async function generateMetadata({
   const description =
     seo?.metaDescription ??
     library.summary ??
-    `View details for ${library.name}.`
+    `Explore ${library.name ?? "this library"} — opening hours, collections, location, and services.`
+  const ogImageUrl =
+    seo?.metaImage?.url ?? (library as any).heroImage?.url ?? undefined
+  const canonical = `/${continentSlug}/${countrySlug}/${regionSlug}/${librarySlug}`
 
   return {
     title,
     description,
-    openGraph: {
-      title: seo?.openGraph?.ogTitle ?? title,
-      description: seo?.openGraph?.ogDescription ?? description,
-      type: seo?.openGraph?.ogType ?? "website",
-      images: seo?.metaImage?.url ? [{ url: seo.metaImage.url }] : undefined,
+    robots: seo?.metaRobots ?? "index, follow",
+    alternates: {
+      canonical,
     },
-    robots: seo?.metaRobots ?? undefined,
+    openGraph: {
+      title: seo?.openGraph?.ogTitle ?? title ?? undefined,
+      description: seo?.openGraph?.ogDescription ?? description,
+      type: "website",
+      url: canonical,
+      ...(ogImageUrl ? { images: [{ url: ogImageUrl }] } : {}),
+    },
+    twitter: {
+      card: ogImageUrl ? "summary_large_image" : "summary",
+      title: seo?.openGraph?.ogTitle ?? title ?? undefined,
+      description: seo?.openGraph?.ogDescription ?? description,
+      ...(ogImageUrl ? { images: [ogImageUrl] } : {}),
+    },
   }
 }
 

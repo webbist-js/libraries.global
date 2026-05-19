@@ -1,5 +1,10 @@
+import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
+
+export const metadata: Metadata = {
+  robots: "noindex, nofollow",
+}
 
 import { getSessionSSR } from "@/lib/auth-server"
 

@@ -18,6 +18,21 @@ export const metadata: Metadata = {
   title: "Index — Libraries of the World",
   description:
     "A complete, searchable, filterable register of every significant library on earth. Browse by continent, country, region, type and status.",
+  robots: "index, follow",
+  alternates: { canonical: "/index" },
+  openGraph: {
+    title: "Index — Libraries of the World",
+    description:
+      "A complete, searchable, filterable register of every significant library on earth. Browse by continent, country, region, type and status.",
+    type: "website",
+    url: "/index",
+  },
+  twitter: {
+    card: "summary",
+    title: "Index — Libraries of the World",
+    description:
+      "A complete, searchable, filterable register of every significant library on earth. Browse by continent, country, region, type and status.",
+  },
 }
 
 async function fetchPageData(): Promise<{

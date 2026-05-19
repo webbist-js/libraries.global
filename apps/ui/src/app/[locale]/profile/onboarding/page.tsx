@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import type { Locale } from "next-intl"
@@ -5,6 +6,10 @@ import type { Locale } from "next-intl"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { getSessionSSR } from "@/lib/auth-server"
 import type { UserProfile } from "@/lib/types/profile"
+
+export const metadata: Metadata = {
+  robots: "noindex, nofollow",
+}
 
 export default async function OnboardingPage({
   params,

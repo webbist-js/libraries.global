@@ -1,7 +1,12 @@
+import type { Metadata } from "next"
 import type { Locale } from "next-intl"
 
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { T } from "@/lib/design-tokens"
+
+export const metadata: Metadata = {
+  robots: "noindex, nofollow",
+}
 
 export default async function ContributeLayout({
   children,

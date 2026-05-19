@@ -14,15 +14,45 @@ export const dynamicParams = true
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ locale: string; region: string }>
+  params: Promise<{
+    locale: string
+    continent: string
+    country: string
+    region: string
+  }>
 }): Promise<Metadata> {
-  const { locale, region: slug } = await params
+  const {
+    locale,
+    continent: continentSlug,
+    country: countrySlug,
+    region: slug,
+  } = await params
   const data = (await fetchRegion(slug, locale as Locale))?.data
   if (!data) return { title: "Region not found" }
 
+  const title = data.name ?? "Region"
+  const country = data.country as { name?: string } | null | undefined
+  const description =
+    data.summary ??
+    `Browse libraries in ${data.name ?? "this region"}${country?.name ? `, ${country.name}` : ""} — hours, locations, services, and collections.`
+
   return {
-    title: data.name,
-    description: data.summary ?? `Explore libraries across ${data.name}.`,
+    title,
+    description,
+    robots: "index, follow",
+    alternates: {
+      canonical: `/${continentSlug}/${countrySlug}/${slug}`,
+    },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+    },
   }
 }
 

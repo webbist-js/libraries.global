@@ -19,13 +19,32 @@ export async function generateMetadata({
 }: {
   params: Promise<{ locale: string; continent: string; country: string }>
 }): Promise<Metadata> {
-  const { locale, country: slug } = await params
+  const { locale, continent: continentSlug, country: slug } = await params
   const data = (await fetchCountry(slug, locale as Locale))?.data
   if (!data) return { title: "Country not found" }
 
+  const title = data.name ?? "Country"
+  const description =
+    data.summary ??
+    `Discover libraries across ${data.name ?? "this country"} — browse by region, check opening hours, and explore collections.`
+
   return {
-    title: data.name,
-    description: data.summary ?? `Explore libraries across ${data.name}.`,
+    title,
+    description,
+    robots: "index, follow",
+    alternates: {
+      canonical: `/${continentSlug}/${slug}`,
+    },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+    },
   }
 }
 
