@@ -684,12 +684,6 @@ export interface ApiAreaArea extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
-    seo: Schema.Attribute.Component<"shared.seo", false> &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true
-        }
-      }>
     shortName: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1140,12 +1134,6 @@ export interface ApiContinentContinent extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
-    seo: Schema.Attribute.Component<"shared.seo", false> &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true
-        }
-      }>
     slug: Schema.Attribute.UID<"name"> &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
@@ -1345,12 +1333,6 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
         "sections.quick-links",
       ]
     > &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true
-        }
-      }>
-    seo: Schema.Attribute.Component<"shared.seo", false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true
@@ -2252,12 +2234,6 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
         "sections.quick-links",
       ]
     > &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true
-        }
-      }>
-    seo: Schema.Attribute.Component<"shared.seo", false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true

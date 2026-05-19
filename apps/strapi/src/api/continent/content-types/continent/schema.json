@@ -19,60 +19,98 @@
     "name": {
       "type": "string",
       "required": true,
-      "pluginOptions": { "i18n": { "localized": true } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "slug": {
       "type": "uid",
       "targetField": "name",
       "required": true,
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "code": {
       "type": "string",
       "unique": true,
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "summary": {
       "type": "text",
-      "pluginOptions": { "i18n": { "localized": true } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "mapConfig": {
       "type": "component",
       "component": "shared.map-config",
       "repeatable": false,
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "boundaryUrl": {
       "type": "string",
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "sourceAttribution": {
       "type": "string",
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "featuredLibraries": {
       "type": "relation",
       "relation": "manyToMany",
       "target": "api::library.library",
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "sections": {
       "type": "dynamiczone",
-      "components": ["sections.editorial-block", "sections.cta-banner", "sections.quick-links"],
-      "pluginOptions": { "i18n": { "localized": true } }
+      "components": [
+        "sections.editorial-block",
+        "sections.cta-banner",
+        "sections.quick-links"
+      ],
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "countries": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::country.country",
       "mappedBy": "continent",
-      "pluginOptions": { "i18n": { "localized": false } }
-    },
-    "seo": {
-      "type": "component",
-      "component": "shared.seo",
-      "repeatable": false,
-      "pluginOptions": { "i18n": { "localized": true } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     }
   }
 }

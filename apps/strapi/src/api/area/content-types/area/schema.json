@@ -5,7 +5,7 @@
     "singularName": "area",
     "pluralName": "areas",
     "displayName": "Area",
-    "description": "Sub-regional administrative division — borough, district, municipality, canton, arrondissement, etc. Sits below Region in the geographic hierarchy."
+    "description": "Sub-regional administrative division \u2014 borough, district, municipality, canton, arrondissement, etc. Sits below Region in the geographic hierarchy."
   },
   "options": {
     "draftAndPublish": true
@@ -19,66 +19,104 @@
     "name": {
       "type": "string",
       "required": true,
-      "pluginOptions": { "i18n": { "localized": true } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "slug": {
       "type": "uid",
       "targetField": "name",
       "required": true,
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "entityRef": {
       "type": "string",
       "unique": true,
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "shortName": {
       "type": "string",
-      "pluginOptions": { "i18n": { "localized": true } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "typeLabel": {
       "type": "string",
-      "pluginOptions": { "i18n": { "localized": true } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "summary": {
       "type": "text",
-      "pluginOptions": { "i18n": { "localized": true } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "region": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::region.region",
       "inversedBy": "areas",
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "country": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::country.country",
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "libraries": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::library.library",
       "mappedBy": "area",
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "boundaryUrl": {
       "type": "string",
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "mapConfig": {
       "type": "component",
       "component": "shared.map-config",
       "repeatable": false,
-      "pluginOptions": { "i18n": { "localized": false } }
-    },
-    "seo": {
-      "type": "component",
-      "component": "shared.seo",
-      "repeatable": false,
-      "pluginOptions": { "i18n": { "localized": true } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     }
   }
 }
