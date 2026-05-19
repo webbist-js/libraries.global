@@ -5,7 +5,7 @@ export default [
   ...baseConfig,
   {
     // Standalone CLI/data scripts — relax rules that only make sense for library code
-    files: ["apps/strapi/scripts/**/*.ts"],
+    files: ["scripts/**/*.ts"],
     rules: {
       "no-console": "off",
       "unicorn/no-process-exit": "off",
