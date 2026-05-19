@@ -156,7 +156,7 @@ export function CountryDetailPage({
                     ...(continentSlug && continentName
                       ? { [continentSlug]: continentName }
                       : {}),
-                    [countrySlug]: country.name ?? "",
+                    [slug]: country.name ?? "",
                   }}
                 />
 
