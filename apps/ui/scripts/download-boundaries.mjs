@@ -282,6 +282,142 @@ const SOURCES = {
   },
 }
 
+// ── GADM admin-1 sources for European countries ───────────────────────────────
+// GADM 4.1 — free for non-commercial/educational use. https://gadm.org/license.html
+// Each entry downloads level-1 admin divisions (states/provinces/regions) for
+// one country and writes it to countries/{slug}.geojson.
+// The GBR level-2 entries extract Scotland / Wales / Northern Ireland sub-regions.
+
+const GADM_ATTRIBUTION =
+  "GADM data. https://gadm.org/. License: Free for non-commercial use."
+
+// GADM URL for a given ISO-3 code and admin level
+const gadmUrl = (iso3, level = 1) =>
+  `https://geodata.ucdavis.edu/gadm/gadm4.1/json/gadm41_${iso3}_${level}.json`
+
+// Splits CamelCase names that GADM sometimes produces (e.g. "AberdeenCity" → "Aberdeen City")
+function splitCamelCase(str) {
+  if (!str.includes(" ") && str.length > 3 && /[a-z][A-Z]/.test(str)) {
+    return str.replace(/([a-z])([A-Z])/g, "$1 $2")
+  }
+  return str
+}
+
+/**
+ * EU country entries. Each key becomes the output path (countries/{slug}.geojson).
+ * iso3: GADM ISO-3 code. regionTypeLabel: human label for Strapi (informational only).
+ */
+const EU_GADM_COUNTRIES = [
+  { slug: "albania",               iso3: "ALB" },
+  { slug: "austria",               iso3: "AUT" },
+  { slug: "belarus",               iso3: "BLR" },
+  { slug: "belgium",               iso3: "BEL" },
+  { slug: "bosnia-and-herzegovina",iso3: "BIH" },
+  { slug: "bulgaria",              iso3: "BGR" },
+  { slug: "croatia",               iso3: "HRV" },
+  { slug: "cyprus",                iso3: "CYP" },
+  { slug: "czechia",               iso3: "CZE" },
+  { slug: "denmark",               iso3: "DNK" },
+  { slug: "estonia",               iso3: "EST" },
+  { slug: "finland",               iso3: "FIN" },
+  { slug: "france",                iso3: "FRA" },
+  { slug: "germany",               iso3: "DEU" },
+  { slug: "greece",                iso3: "GRC" },
+  { slug: "hungary",               iso3: "HUN" },
+  { slug: "iceland",               iso3: "ISL" },
+  { slug: "republic-of-ireland",   iso3: "IRL" },
+  { slug: "italy",                 iso3: "ITA" },
+  { slug: "latvia",                iso3: "LVA" },
+  { slug: "lithuania",             iso3: "LTU" },
+  { slug: "moldova",               iso3: "MDA" },
+  { slug: "montenegro",            iso3: "MNE" },
+  { slug: "netherlands",           iso3: "NLD" },
+  { slug: "north-macedonia",       iso3: "MKD" },
+  { slug: "norway",                iso3: "NOR" },
+  { slug: "poland",                iso3: "POL" },
+  { slug: "portugal",              iso3: "PRT" },
+  { slug: "romania",               iso3: "ROU" },
+  { slug: "serbia",                iso3: "SRB" },
+  { slug: "slovakia",              iso3: "SVK" },
+  { slug: "slovenia",              iso3: "SVN" },
+  { slug: "spain",                 iso3: "ESP" },
+  { slug: "sweden",                iso3: "SWE" },
+  { slug: "switzerland",           iso3: "CHE" },
+  { slug: "ukraine",               iso3: "UKR" },
+  // Kosovo — GADM uses XKX
+  { slug: "kosovo",                iso3: "XKO" },
+]
+
+// GBR L1 GID values for each devolved nation (from GADM 4.1)
+const GBR_NATION_GID = {
+  scotland:         "GBR.3_1",
+  wales:            "GBR.4_1",
+  "northern-ireland": "GBR.2_1",
+}
+
+/**
+ * nameMap: raw GADM name → { name: corrected display name, slug: correct slug }
+ * Used to fix GADM names that drop spaces (e.g. "Argylland Bute").
+ * The corrected name goes into properties.name; the slug into properties.slug.
+ */
+const GADM_NAME_CORRECTIONS = {
+  // France — GADM drops spaces in compound region names
+  "Centre-Valde Loire":          { name: "Centre-Val de Loire",       slug: "centre-val-de-loire" },
+  "Paysdela Loire":              { name: "Pays de la Loire",           slug: "pays-de-la-loire" },
+  "Provence-Alpes-Côted'Azur":   { name: "Provence-Alpes-Côte d'Azur",slug: "provence-alpes-cote-dazur" },
+  // Scotland — GADM drops spaces before "and" / "of"
+  "Argylland Bute":              { name: "Argyll and Bute",            slug: "argyll-and-bute" },
+  "Cityof Edinburgh":            { name: "City of Edinburgh",          slug: "city-of-edinburgh" },
+  "Dumfriesand Galloway":        { name: "Dumfries and Galloway",      slug: "dumfries-and-galloway" },
+  "Perthand Kinross":            { name: "Perth and Kinross",          slug: "perth-and-kinross" },
+  // Wales
+  "Isleof Anglesey":             { name: "Isle of Anglesey",           slug: "isle-of-anglesey" },
+  // Northern Ireland — all 11 districts have missing spaces
+  "Antrimand Newtownabbey":      { name: "Antrim and Newtownabbey",    slug: "antrim-and-newtownabbey" },
+  "Ardsand North Down":          { name: "Ards and North Down",        slug: "ards-and-north-down" },
+  "Armagh City,Banbridgeand Craig": { name: "Armagh City, Banbridge and Craigavon", slug: "armagh-city-banbridge-and-craigavon" },
+  "Derry Cityand Strabane":      { name: "Derry City and Strabane",    slug: "derry-city-and-strabane" },
+  "Fermanaghand Omagh":          { name: "Fermanagh and Omagh",        slug: "fermanagh-and-omagh" },
+  "Midand East Antrim":          { name: "Mid and East Antrim",        slug: "mid-and-east-antrim" },
+  "Newry,Mourneand Down":        { name: "Newry, Mourne and Down",     slug: "newry-mourne-and-down" },
+  // Northern Ireland districts with no issues (listed for completeness)
+  "Belfast":                     { name: "Belfast",                    slug: "belfast" },
+  "Causewaycoastand Glens":      { name: "Causeway Coast and Glens",   slug: "causeway-coast-and-glens" },
+  "Lisburn Cityand Castlereagh": { name: "Lisburn City and Castlereagh",slug: "lisburn-city-and-castlereagh" },
+  "Mid Ulster":                  { name: "Mid Ulster",                 slug: "mid-ulster" },
+}
+
+// Inject GADM country sources into SOURCES
+for (const { slug, iso3 } of EU_GADM_COUNTRIES) {
+  SOURCES[`countries/${slug}`] = {
+    url: gadmUrl(iso3, 1),
+    nameField: ["NAME_1"],
+    codeField: ["HASC_1"],
+    attribution: GADM_ATTRIBUTION,
+    formatName: splitCamelCase,
+    nameMap: GADM_NAME_CORRECTIONS,
+  }
+}
+
+// Scotland, Wales, Northern Ireland — Level 2 GBR filtered by parent GID
+for (const [slug, parentGid] of Object.entries(GBR_NATION_GID)) {
+  SOURCES[`countries/${slug}`] = {
+    url: gadmUrl("GBR", 2),
+    nameField: ["NAME_2"],
+    codeField: ["HASC_2"],
+    filterFeature: (f) => f.properties?.GID_1 === parentGid,
+    attribution: GADM_ATTRIBUTION,
+    formatName: splitCamelCase,
+    nameMap: GADM_NAME_CORRECTIONS,
+  }
+}
+
+// Northern Ireland: two districts have NAME_2="NA" in GADM — resolve by HASC_2 code
+SOURCES["countries/northern-ireland"].featureCodeMap = {
+  "GB.CJ": { name: "Causeway Coast and Glens",    slug: "causeway-coast-and-glens" },
+  "GB.LH": { name: "Lisburn City and Castlereagh", slug: "lisburn-city-and-castlereagh" },
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 async function fetchJson(url) {
@@ -383,6 +519,23 @@ function resolveField(properties, candidates) {
  * - Adds clean name, code, slug, bbox, centroid
  * - Returns { featureCollection, seedData }
  */
+function slugifyName(name) {
+  return name
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "") // strip combining diacritics
+    .replace(/[ß]/g, "ss")
+    .replace(/[łŁ]/g, "l")
+    .replace(/[øØ]/g, "o")
+    .replace(/[æÆ]/g, "ae")
+    .replace(/[đĐ]/g, "d")
+    .replace(/[þÞ]/g, "th")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/[\s_]+/g, "-")
+    .replace(/-+/g, "-")
+}
+
 function normalise(raw, sourceKey, sourceDef) {
   const features = []
   const seedData = []
@@ -391,10 +544,22 @@ function normalise(raw, sourceKey, sourceDef) {
     // Apply optional feature filter (e.g. continent filter for Natural Earth)
     if (sourceDef.filterFeature && !sourceDef.filterFeature(feature)) continue
 
-    const name = resolveField(feature.properties, sourceDef.nameField)
+    let name = resolveField(feature.properties, sourceDef.nameField)
+    if (name && sourceDef.formatName) name = sourceDef.formatName(name)
     const code = resolveField(feature.properties, sourceDef.codeField)
+
+    // Lookup by code first (handles features with name="NA" in GADM)
+    const codeOverride = code ? sourceDef.featureCodeMap?.[code] : null
+    const correction = codeOverride ?? sourceDef.nameMap?.[name]
+    if (correction) name = correction.name
+
+    // Skip features with no usable name
+    if (!name || name === "NA") continue
+
     const slug =
-      sourceDef.slugMap?.[name] ?? name?.toLowerCase().replaceAll(/\s+/g, "-")
+      correction?.slug ??
+      sourceDef.slugMap?.[name] ??
+      (name ? slugifyName(name) : null)
 
     if (!name || !feature.geometry) {
       console.warn(`  ⚠  Skipping feature with missing name or geometry`)
