@@ -2,10 +2,10 @@
  * Seeds one Better Auth user per Contributor Role for the access E2E.
  * Local only: refuses to run in production or against a non-local host.
  *
- * Reads go through Strapi REST with STRAPI_SEED_TOKEN. Writes can't: REST
- * exposes no update for user-profile and no routes for library-affiliation
- * (P-A hardening), so they go through the Document Service in a headless
- * Strapi process (strapi-access-writer.cjs).
+ * Strapi REST is used for reads only (STRAPI_SEED_TOKEN can be read-only).
+ * Writes can't use REST: it exposes no update for user-profile and no routes
+ * for library-affiliation (P-A hardening), so they go through the Document
+ * Service in a headless Strapi process (strapi-access-writer.cjs).
  */
 import { execFile } from "node:child_process"
 import path from "node:path"
@@ -14,15 +14,12 @@ import { promisify } from "node:util"
 import dotenv from "dotenv"
 import { Client } from "pg"
 
-export const FIXTURE_PASSWORD = "Access-fixture-2026!"
-export const FIXTURES = [
-  { key: "reader", role: "reader", claim: false },
-  { key: "contributor", role: "contributor", claim: false },
-  { key: "librarian", role: "verified_librarian", claim: true },
-  { key: "wiki-editor", role: "wiki_editor", claim: false },
-  { key: "editorial", role: "editorial_board", claim: false },
-] as const
-export const emailFor = (key: string) => `access-${key}@example.test`
+import {
+  emailFor,
+  FIXTURE_PASSWORD,
+  FIXTURES,
+  retryAfterMs,
+} from "./access-fixtures"
 
 // The UI caches each user's session profile for 60 s (SESSION_PROFILE_TTL_MS).
 const SESSION_CACHE_TTL_MS = 60_000
@@ -42,6 +39,7 @@ type WriteResult = {
   baUserId: string
   profileChanged: boolean
   claimCreated: boolean
+  claimsRemoved: number
 }
 
 function assertLocal(): void {
@@ -50,26 +48,30 @@ function assertLocal(): void {
   for (const v of ["BASE_URL", "STRAPI_URL", "BA_DATABASE_URL"]) {
     const raw = process.env[v]
     if (!raw) throw new Error(`Missing ${v}`)
-    if (!LOCAL.test(new URL(raw).hostname))
+    let url: URL
+    try {
+      url = new URL(raw)
+    } catch {
+      // Never echo the value: BA_DATABASE_URL carries a password.
+      throw new Error(`Invalid ${v}`)
+    }
+    if (!LOCAL.test(url.hostname))
       throw new Error(`Refusing: ${v} is not local`)
+    // pg lets ?host= override the URL's host, which would bypass the check.
+    if (v === "BA_DATABASE_URL" && url.searchParams.has("host"))
+      throw new Error("Refusing: BA_DATABASE_URL has a host= query override")
   }
   if (!process.env.STRAPI_SEED_TOKEN)
     throw new Error("Missing STRAPI_SEED_TOKEN")
 }
 
-async function strapi(pathAndQuery: string, init: RequestInit = {}) {
+/** Strapi REST reads (GET only). */
+async function strapiGet(pathAndQuery: string) {
   const res = await fetch(`${process.env.STRAPI_URL}${pathAndQuery}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.STRAPI_SEED_TOKEN}`,
-      ...init.headers,
-    },
+    headers: { Authorization: `Bearer ${process.env.STRAPI_SEED_TOKEN}` },
   })
   if (!res.ok)
-    throw new Error(
-      `${init.method ?? "GET"} ${pathAndQuery} → ${res.status} ${await res.text()}`
-    )
+    throw new Error(`GET ${pathAndQuery} → ${res.status} ${await res.text()}`)
 
   return res.json()
 }
@@ -80,26 +82,21 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 async function waitForProfile(baUserId: string, email: string): Promise<void> {
   const q = `/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(baUserId)}&fields[0]=documentId`
   for (let i = 0; i < 20; i++) {
-    const { data } = await strapi(q)
+    const { data } = await strapiGet(q)
     if (data[0]) return
     await sleep(500)
   }
   throw new Error(`No user-profile for ${email}; sign-up sync failed`)
 }
 
-/** Wait time for a Better Auth 429, from its X-Retry-After seconds (cap 65). */
-export function retryAfterMs(header: string | null | undefined): number {
-  const s = Number(header)
-
-  return (Number.isFinite(s) && s > 0 ? Math.min(s, 65) : 60) * 1000 + 500
-}
-
 /**
  * Returns true if this call created the user. Better Auth limits sign-up to
  * 3 per minute per IP, so a 429 is waited out rather than treated as failure.
  */
+const SIGN_UP_ATTEMPTS = 3
+
 async function signUp(email: string, key: string): Promise<boolean> {
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 1; attempt <= SIGN_UP_ATTEMPTS; attempt++) {
     const res = await fetch(`${process.env.BASE_URL}/api/auth/sign-up/email`, {
       method: "POST",
       headers: {
@@ -117,6 +114,7 @@ async function signUp(email: string, key: string): Promise<boolean> {
     if (res.status === 422) return false
     if (res.status !== 429)
       throw new Error(`sign-up ${email} → ${res.status} ${await res.text()}`)
+    if (attempt === SIGN_UP_ATTEMPTS) break
     const wait = retryAfterMs(res.headers.get("x-retry-after"))
     console.log(
       `sign-up rate-limited; retrying in ${Math.round(wait / 1000)} s`
@@ -158,9 +156,11 @@ export async function seedAccessFixtures(): Promise<void> {
   await db.connect()
   const plan: PlanItem[] = []
   try {
-    const { data: libs } = await strapi(
+    const { data: libs } = await strapiGet(
       "/api/libraries?pagination[pageSize]=1&sort[0]=id:asc&fields[0]=documentId"
     )
+    if (!libs?.[0]?.documentId)
+      throw new Error("No libraries to claim: Strapi has no published library")
     const claimLibrary: string = libs[0].documentId
 
     for (const f of FIXTURES) {
@@ -195,11 +195,13 @@ export async function seedAccessFixtures(): Promise<void> {
   let mayBeStale = false
   for (const item of plan) {
     const r = results.find((x) => x.baUserId === item.baUserId)
-    const changed = !!r && (r.profileChanged || r.claimCreated)
+    if (!r) throw new Error(`Strapi writer skipped ${item.email}`)
+    const changed = r.profileChanged || r.claimCreated || r.claimsRemoved > 0
     console.log(
       `${item.email}: ${item.signedUpNow ? "created" : "existing"}, role ${item.role}` +
-        `${r?.profileChanged ? " (updated)" : ""}` +
-        `${item.claimLibrary ? `, claim ${r?.claimCreated ? "created" : "present"}` : ""}`
+        `${r.profileChanged ? " (updated)" : ""}` +
+        `${item.claimLibrary ? `, claim ${r.claimCreated ? "created" : "present"}` : ""}` +
+        `${r.claimsRemoved ? `, ${r.claimsRemoved} stray claim(s) removed` : ""}`
     )
     // A user created in this run has never had a session read, so nothing
     // is cached for them. An existing one might, and the cache only expires.
