@@ -1,14 +1,17 @@
 import type { Metadata } from "next"
+import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
 import { use } from "react"
 
 import ContinentDetailPage from "@/components/continent/ContinentDetailPage"
+import { JsonLd } from "@/components/seo/JsonLd"
 import { isDevelopment } from "@/lib/general-helpers"
+import { buildBreadcrumbSchema } from "@/lib/seo/json-ld"
+import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
 import {
   fetchAllContinents,
   fetchContinent,
 } from "@/lib/strapi-api/content/server"
-import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 export const dynamic = "force-static"
 export const revalidate = 300
@@ -21,47 +24,18 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, continent: slug } = await params
   const data = (await fetchContinent(slug, locale as Locale))?.data
-  if (!data) return { title: "Continent not found" }
+  if (!data) return { title: "Continent not found", robots: { index: false } }
 
-  const seo = data.seo as
-    | {
-        metaTitle?: string | null
-        metaDescription?: string | null
-        metaImage?: { url?: string | null } | null
-        metaRobots?: string | null
-      }
-    | null
-    | undefined
+  const name = data.name ?? "Continent"
 
-  const title: string = seo?.metaTitle ?? data.name ?? "Continent"
-  const description: string =
-    seo?.metaDescription ??
-    data.summary ??
-    `Explore ${data.name ?? "this continent"}'s libraries — discover institutions, opening hours, and services.`
-  const ogImageUrl = seo?.metaImage?.url
-    ? formatStrapiMediaUrl(seo.metaImage.url)
-    : undefined
-
-  return {
-    title,
-    description,
-    robots: seo?.metaRobots ?? "index, follow",
-    alternates: {
-      canonical: `/${slug}`,
-    },
-    openGraph: {
-      title,
-      description,
-      type: "website",
-      ...(ogImageUrl ? { images: [{ url: ogImageUrl }] } : {}),
-    },
-    twitter: {
-      card: ogImageUrl ? "summary_large_image" : "summary",
-      title,
-      description,
-      ...(ogImageUrl ? { images: [ogImageUrl] } : {}),
-    },
-  }
+  return buildMetadata({
+    title: `Libraries in ${name}`,
+    description:
+      data.summary ??
+      `Explore libraries across ${name} — national, public and academic institutions by country, with opening hours and services.`,
+    path: slug,
+    locale,
+  })
 }
 
 export async function generateStaticParams({
@@ -85,12 +59,21 @@ export default function ContinentPage(props: {
   const slug = params.continent
 
   const continentData = use(fetchContinent(slug, locale))?.data
+  if (!continentData) notFound()
 
   return (
-    <ContinentDetailPage
-      continent={continentData ?? null}
-      locale={locale}
-      slug={slug}
-    />
+    <>
+      <JsonLd
+        data={buildBreadcrumbSchema([
+          { name: "Home", url: absoluteUrl("", locale) },
+          { name: continentData.name ?? slug, url: absoluteUrl(slug, locale) },
+        ])}
+      />
+      <ContinentDetailPage
+        continent={continentData}
+        locale={locale}
+        slug={slug}
+      />
+    </>
   )
 }

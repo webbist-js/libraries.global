@@ -1,21 +1,21 @@
 import type { Locale } from "next-intl"
 
-import { ContinentGlobeCanvas } from "@/components/continent/ContinentGlobeCanvas"
+import { ContinentHeroGlobe } from "@/components/continent/ContinentHeroGlobe"
 import {
   CtaBannerSection,
   EditorialSection,
-  Eyebrow,
-  HeroStat,
-  HeroStatsGrid,
   LocationContributeCTA,
   LocationGridBrowser,
-  MapSectionHeader,
-  SectionHeader,
 } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import FeaturedLibraryCards from "@/components/home/FeaturedLibraryCards"
+import {
+  LocationEmptyState,
+  LocationHero,
+  LocationSectionHeading,
+} from "@/components/location/LocationHero"
 import { LocationTabBar } from "@/components/location/LocationTabBar"
 import { InteractiveMap } from "@/components/map/InteractiveMap"
 import { T } from "@/lib/design-tokens"
@@ -25,11 +25,40 @@ import type {
   PageSection,
   PopulatedContinentData,
 } from "@/lib/strapi-api/content/server"
-import { auroraCtaLg } from "@/lib/styles"
+
+// ── Data ───────────────────────────────────────────────────────────────────
+
+/** Published record coordinates for this continent — plotted on the hero globe. */
+async function fetchContinentMarkers(slug: string) {
+  const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
+  try {
+    const res = await fetch(
+      `${STRAPI}/api/libraries?pagination[pageSize]=500&fields[0]=location&fields[1]=featured&filters[continent][slug][$eq]=${encodeURIComponent(slug)}&status=published`,
+      { next: { revalidate: 300 } }
+    )
+    if (!res.ok) return []
+    const json = (await res.json()) as {
+      data?: {
+        location?: { lat?: number | string; lng?: number | string } | null
+        featured?: boolean | null
+      }[]
+    }
+
+    return (json.data ?? [])
+      .map((entry) => ({
+        lat: Number(entry.location?.lat),
+        lng: Number(entry.location?.lng),
+        featured: entry.featured === true,
+      }))
+      .filter((m) => Number.isFinite(m.lat) && Number.isFinite(m.lng))
+  } catch {
+    return []
+  }
+}
 
 // ── Page ───────────────────────────────────────────────────────────────────
 
-export function ContinentDetailPage({
+export async function ContinentDetailPage({
   continent,
   locale,
   slug,
@@ -42,17 +71,18 @@ export function ContinentDetailPage({
     return (
       <div
         className="relative isolate flex min-h-screen w-full flex-col"
-        style={{ background: T.bg.space, color: T.ink.base }}
+        style={{ background: T.bg.void, color: T.ink.base }}
       >
         <GlobalHeader locale={locale} />
         <main className="flex flex-1 items-center justify-center">
-          <p className="text-(--t-ink-faint)">Continent not found.</p>
+          <p style={{ color: T.ink.dim }}>Continent not found.</p>
         </main>
       </div>
     )
   }
 
   const allCountries = continent.countries ?? []
+  const globeMarkers = await fetchContinentMarkers(slug)
 
   const hasFeaturedLibraries =
     Array.isArray(continent.featuredLibraries) &&
@@ -66,218 +96,172 @@ export function ContinentDetailPage({
     (s): s is CtaBanner => s.__component === "sections.cta-banner"
   )
 
+  const libraryCount =
+    typeof continent.libraryCount === "number" && continent.libraryCount > 0
+      ? continent.libraryCount
+      : null
+
   const tabs = [
     { id: "overview", label: "Overview" },
-    { id: "institutions", label: "Libraries" },
-    { id: "countries", label: "Countries" },
+    ...(hasFeaturedLibraries
+      ? [{ id: "institutions", label: "Libraries" }]
+      : []),
+    ...(allCountries.length > 0
+      ? [{ id: "countries", label: "Countries" }]
+      : []),
     { id: "map", label: "Map" },
-  ] as const
+  ]
 
   return (
     <div
       className="relative isolate flex min-h-screen w-full flex-col"
-      style={{ background: T.bg.space, color: T.ink.base }}
+      style={{ background: T.bg.void, color: T.ink.base }}
     >
       <GlobalHeader locale={locale} />
 
-      <main className="relative z-10 flex-1">
-        {/* ── Hero ──────────────────────────────────────────────────────────── */}
-        <section
-          id="overview"
-          data-transparent-header=""
-          className="relative isolate -mt-14 flex min-h-[82vh] flex-col justify-end overflow-hidden pt-28"
-          style={{ background: "#030511" }}
-        >
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 -z-10"
-          >
-            <ContinentGlobeCanvas
-              continentSlug={slug}
-              className="h-full w-full"
-            />
-          </div>
-
-          <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(5,8,22,0.35)_0%,rgba(5,8,22,0.0)_35%,rgba(5,8,22,0.0)_55%,rgba(5,8,22,0.92)_88%,rgba(5,8,22,1)_100%)]" />
-          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_50%_at_12%_35%,rgba(79,70,229,0.18),transparent_55%)]" />
-
-          <Container>
-            <div className="grid grid-cols-1 gap-10 pt-[70px] pb-14 lg:[grid-template-columns:1.3fr_1fr] lg:gap-14">
-              {/* Left column */}
-              <div>
-                <p className="mb-4 text-[11px] font-semibold tracking-[0.18em] text-cyan-400/60 uppercase">
-                  Libraries Global · {continent.name}
-                </p>
-                <h1 className="font-serif text-[clamp(4.5rem,12vw,9rem)] leading-[0.85] tracking-[-0.03em] text-white [text-shadow:0_4px_80px_rgba(0,0,0,0.8)]">
-                  {continent.name}
-                </h1>
-                {continent.summary ? (
-                  <p className="mt-5 max-w-[44ch] text-[17px] leading-[1.7] text-white/70">
-                    {continent.summary}
-                  </p>
-                ) : null}
-              </div>
-
-              {/* Right column: stats + inline tabs */}
-              <div style={{ paddingBottom: "14px" }}>
-                <HeroStatsGrid>
-                  <HeroStat
-                    label="Countries"
-                    value={allCountries.length || "—"}
-                  />
-                  <HeroStat
-                    label="Libraries"
-                    value={
-                      typeof continent.libraryCount === "number" &&
-                      continent.libraryCount > 0
-                        ? new Intl.NumberFormat().format(continent.libraryCount)
-                        : "—"
-                    }
-                  />
-                  <HeroStat
-                    label="Regions"
-                    value={
-                      typeof continent.regionCount === "number" &&
-                      continent.regionCount > 0
-                        ? new Intl.NumberFormat().format(continent.regionCount)
-                        : "—"
-                    }
-                  />
-                  <HeroStat
-                    label="Featured"
-                    value={
-                      hasFeaturedLibraries
-                        ? continent.featuredLibraries!.length
-                        : "—"
-                    }
-                  />
-                </HeroStatsGrid>
-              </div>
-            </div>
-          </Container>
-        </section>
-
-        <LocationTabBar tabs={[...tabs]} />
-
-        {/* ── Pillar Institutions ─────────────────────────────────────────── */}
-        {hasFeaturedLibraries ? (
-          <section
-            id="institutions"
-            className="relative overflow-hidden border-b border-(--t-border-line) py-16 sm:py-20"
-          >
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_55%_at_50%_0%,rgba(79,70,229,0.18),transparent_60%)]" />
-            <Container className="relative">
-              <div className="mb-8">
-                <Eyebrow index={1} bar>
-                  Archive Starts
-                </Eyebrow>
-                <h2 className="font-serif text-3xl font-normal tracking-tight text-(--t-ink-base) sm:text-4xl">
-                  Pillar Institutions
-                </h2>
-              </div>
-              <FeaturedLibraryCards libraries={continent.featuredLibraries} />
-            </Container>
-          </section>
-        ) : null}
-
-        {/* ── Browse by Country ───────────────────────────────────────────── */}
-        {allCountries.length > 0 ? (
-          <section id="countries" className="py-16 sm:py-20">
-            <Container>
-              <div style={{ marginBottom: "22px" }}>
-                <Eyebrow index={2} bar>
-                  Jurisdictions
-                </Eyebrow>
-              </div>
-              <div className="mb-[26px] flex flex-wrap items-end justify-between gap-6">
-                <SectionHeader italic="countries." as="h2">
-                  Browse by
-                </SectionHeader>
-              </div>
-              <LocationGridBrowser
-                rankPrefix="C"
-                items={(
-                  allCountries as {
-                    name: string
-                    slug: string
-                    capitalCity?: string | null
-                  }[]
-                ).map((country) => ({
-                  slug: country.slug,
-                  name: country.name,
-                  subtitle: country.capitalCity ?? null,
-                  href: `/${slug}/${country.slug}`,
-                }))}
-              />
-            </Container>
-          </section>
-        ) : null}
-
-        {/* ── Interactive Cartography ─────────────────────────────────────── */}
-        <section
-          id="map"
-          className="border-t border-(--t-border-line) py-[70px]"
-        >
-          <Container>
-            <MapSectionHeader
-              locationName={continent.name ?? "the Continent"}
-            />
-            <InteractiveMap
-              mode="continent"
-              continentSlug={slug}
-              locale={locale}
-            />
-          </Container>
-        </section>
-
-        <LocationContributeCTA
-          locationName={continent.name ?? undefined}
-          entityType="continent"
+      <main className="relative z-10 flex-1 pb-16">
+        <LocationHero
+          breadcrumbLabels={{ [slug]: continent.name ?? "" }}
+          typeLabel="Continent"
+          title={continent.name ?? ""}
+          intro={continent.summary}
+          stats={[
+            {
+              label: "Countries",
+              value: allCountries.length || "—",
+            },
+            {
+              label: "Libraries",
+              value: libraryCount
+                ? new Intl.NumberFormat().format(libraryCount)
+                : "—",
+              note: libraryCount ? undefined : "None documented yet",
+            },
+            {
+              label: "Regions",
+              value:
+                typeof continent.regionCount === "number" &&
+                continent.regionCount > 0
+                  ? new Intl.NumberFormat().format(continent.regionCount)
+                  : "—",
+            },
+          ]}
+          aside={<ContinentHeroGlobe slug={slug} markers={globeMarkers} />}
         />
 
-        {/* ── Editorial sections ──────────────────────────────────────────── */}
+        <LocationTabBar tabs={tabs} />
+
+        <Container>
+          <div className="flex flex-col gap-12 pt-10">
+            {/* ── Pillar Institutions ─────────────────────────────────────── */}
+            {hasFeaturedLibraries ? (
+              <section id="institutions" className="scroll-mt-28">
+                <LocationSectionHeading
+                  title="Libraries worth knowing"
+                  description={`The most significant institutions across ${continent.name}.`}
+                />
+                <FeaturedLibraryCards libraries={continent.featuredLibraries} />
+              </section>
+            ) : null}
+
+            {/* ── Browse by Country ───────────────────────────────────────── */}
+            {allCountries.length > 0 ? (
+              <section id="countries" className="scroll-mt-28">
+                <LocationSectionHeading
+                  title="Browse by country"
+                  count={`${allCountries.length} ${allCountries.length === 1 ? "country" : "countries"}`}
+                />
+                <LocationGridBrowser
+                  items={(
+                    allCountries as {
+                      name: string
+                      slug: string
+                      capitalCity?: string | null
+                    }[]
+                  ).map((country) => ({
+                    slug: country.slug,
+                    name: country.name,
+                    subtitle: country.capitalCity ?? null,
+                    href: `/${slug}/${country.slug}`,
+                  }))}
+                />
+              </section>
+            ) : (
+              <LocationEmptyState name={continent.name ?? "this continent"} />
+            )}
+
+            {/* ── Map ─────────────────────────────────────────────────────── */}
+            <section id="map" className="scroll-mt-28">
+              <LocationSectionHeading
+                title={`Map of ${continent.name ?? "the continent"}`}
+                description="Every documented library, plotted. Zoom in to drill down."
+              />
+              <div
+                className="overflow-hidden rounded-3xl"
+                style={{ border: `1px solid ${T.border.line}` }}
+              >
+                <InteractiveMap
+                  mode="continent"
+                  continentSlug={slug}
+                  locale={locale}
+                />
+              </div>
+            </section>
+          </div>
+        </Container>
+
+        <div className="mt-14">
+          <LocationContributeCTA
+            locationName={continent.name ?? undefined}
+            entityType="continent"
+          />
+        </div>
+
+        {/* ── Editorial / CTA sections (CMS dynamic zone) ─────────────────── */}
         {editorialBlocks.map((section) => (
-          <div key={section.id} className="border-t border-(--t-border-line)">
+          <div key={section.id}>
             <EditorialSection section={section} />
           </div>
         ))}
-
-        {/* ── CTA Banner sections ─────────────────────────────────────────── */}
         {ctaBanners.map((section) => (
-          <div key={section.id} className="border-t border-(--t-border-line)">
+          <div key={section.id}>
             <CtaBannerSection section={section} />
           </div>
         ))}
 
         {/* ── Journey CTA fallback ────────────────────────────────────────── */}
-        {ctaBanners.length === 0 ? (
-          <section className="relative overflow-hidden border-t border-(--t-border-line) py-24 sm:py-32">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_100%,rgba(127,223,255,0.07),transparent_70%)]" />
-            <Container>
-              <div className="flex flex-col items-center gap-6 text-center">
-                <Eyebrow>Archive Starts</Eyebrow>
-                <h2 className="text-[clamp(2.5rem,6vw,5.5rem)] leading-[0.93] font-bold tracking-[-0.045em] text-(--t-ink-base)">
-                  Your Journey Starts Now
-                </h2>
-                <p className="max-w-[40ch] text-base leading-7 text-(--t-ink-dim)">
-                  Thousands of libraries across {continent.name} are waiting to
-                  be explored.
-                </p>
-                {allCountries[0] ? (
-                  <GlobalLink
-                    href={`/${slug}/${allCountries[0].slug}`}
-                    className={auroraCtaLg}
-                  >
-                    Start Exploring
-                  </GlobalLink>
-                ) : (
-                  <GlobalLink href="/" className={auroraCtaLg}>
-                    Start Exploring
-                  </GlobalLink>
-                )}
-              </div>
-            </Container>
-          </section>
+        {ctaBanners.length === 0 && allCountries.length > 0 ? (
+          <Container>
+            <section
+              className="mt-14 rounded-3xl px-8 py-14 text-center"
+              style={{ background: T.bg.space }}
+            >
+              <h2
+                className="m-0 text-[clamp(28px,4vw,44px)]"
+                style={{
+                  fontFamily: T.font.serif,
+                  fontWeight: 500,
+                  color: T.ink.base,
+                }}
+              >
+                Start exploring {continent.name}
+              </h2>
+              <p
+                className="mx-auto mt-3 mb-6 max-w-[46ch] text-[16px] leading-[1.6]"
+                style={{ color: T.ink.dim }}
+              >
+                Libraries across {continent.name} are waiting to be explored —
+                country by country, shelf by shelf.
+              </p>
+              <GlobalLink
+                href={`/${slug}/${allCountries[0]!.slug}`}
+                className="inline-flex items-center rounded-full px-7 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
+                style={{ background: T.accent.primary }}
+              >
+                Start exploring
+              </GlobalLink>
+            </section>
+          </Container>
         ) : null}
       </main>
     </div>

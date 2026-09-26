@@ -1,14 +1,18 @@
 import type { Metadata } from "next"
+import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
 import { use } from "react"
 
 import { CountryDetailPage } from "@/components/country/CountryDetailPage"
-import GlobalHeader from "@/components/global/GlobalHeader"
+import { JsonLd } from "@/components/seo/JsonLd"
 import { isDevelopment } from "@/lib/general-helpers"
+import { buildBreadcrumbSchema } from "@/lib/seo/json-ld"
+import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
 import {
   fetchAllLibraries,
   fetchCountry,
 } from "@/lib/strapi-api/content/server"
+import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 export const dynamic = "force-static"
 export const revalidate = 300
@@ -21,31 +25,21 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, continent: continentSlug, country: slug } = await params
   const data = (await fetchCountry(slug, locale as Locale))?.data
-  if (!data) return { title: "Country not found" }
+  if (!data) return { title: "Country not found", robots: { index: false } }
 
-  const title = data.name ?? "Country"
-  const description =
-    data.summary ??
-    `Discover libraries across ${data.name ?? "this country"} — browse by region, check opening hours, and explore collections.`
+  const name = data.name ?? "Country"
 
-  return {
-    title,
-    description,
-    robots: "index, follow",
-    alternates: {
-      canonical: `/${continentSlug}/${slug}`,
-    },
-    openGraph: {
-      title,
-      description,
-      type: "website",
-    },
-    twitter: {
-      card: "summary",
-      title,
-      description,
-    },
-  }
+  return buildMetadata({
+    title: `Libraries in ${name}`,
+    description:
+      data.summary ??
+      `Discover libraries across ${name} — browse by region, check opening hours, and explore collections.`,
+    // Canonicalise to the entity's real parent, not whatever the URL said.
+    path: `${data.continent?.slug ?? continentSlug}/${slug}`,
+    locale,
+    image: formatStrapiMediaUrl(data.heroImage?.url),
+    imageAlt: data.heroImage?.alternativeText,
+  })
 }
 
 export async function generateStaticParams({
@@ -84,26 +78,30 @@ export default function CountryPage(props: {
 
   const countryData = use(fetchCountry(slug, locale))?.data
 
-  if (!countryData) {
-    return (
-      <div
-        className="relative isolate flex min-h-screen w-full flex-col"
-        style={{ background: "var(--t-bg-space)", color: "var(--t-ink-base)" }}
-      >
-        <GlobalHeader locale={locale} />
-        <main className="flex flex-1 items-center justify-center">
-          <p className="text-(--t-ink-faint)">Country not found.</p>
-        </main>
-      </div>
-    )
-  }
+  if (!countryData) notFound()
+  const parentSlug = countryData.continent?.slug ?? continentSlug
 
   return (
-    <CountryDetailPage
-      country={countryData}
-      locale={locale}
-      slug={slug}
-      continentSlug={continentSlug}
-    />
+    <>
+      <JsonLd
+        data={buildBreadcrumbSchema([
+          { name: "Home", url: absoluteUrl("", locale) },
+          {
+            name: countryData.continent?.name ?? parentSlug,
+            url: absoluteUrl(parentSlug, locale),
+          },
+          {
+            name: countryData.name ?? slug,
+            url: absoluteUrl(`${parentSlug}/${slug}`, locale),
+          },
+        ])}
+      />
+      <CountryDetailPage
+        country={countryData}
+        locale={locale}
+        slug={slug}
+        continentSlug={continentSlug}
+      />
+    </>
   )
 }

@@ -1,11 +1,15 @@
 import type { Metadata } from "next"
+import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
 import { use } from "react"
 
-import GlobalHeader from "@/components/global/GlobalHeader"
 import { RegionDetailPage } from "@/components/region/RegionDetailPage"
+import { JsonLd } from "@/components/seo/JsonLd"
 import { isDevelopment } from "@/lib/general-helpers"
+import { buildBreadcrumbSchema } from "@/lib/seo/json-ld"
+import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
 import { fetchAllRegions, fetchRegion } from "@/lib/strapi-api/content/server"
+import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 export const dynamic = "force-static"
 export const revalidate = 300
@@ -28,32 +32,27 @@ export async function generateMetadata({
     region: slug,
   } = await params
   const data = (await fetchRegion(slug, locale as Locale))?.data
-  if (!data) return { title: "Region not found" }
+  if (!data) return { title: "Region not found", robots: { index: false } }
 
-  const title = data.name ?? "Region"
-  const country = data.country as { name?: string } | null | undefined
-  const description =
-    data.summary ??
-    `Browse libraries in ${data.name ?? "this region"}${country?.name ? `, ${country.name}` : ""} — hours, locations, services, and collections.`
+  const name = data.name ?? "Region"
+  const countryName = data.country?.name
+  const parentContinent =
+    data.continent?.slug ?? data.country?.continent?.slug ?? continentSlug
+  const parentCountry = data.country?.slug ?? countrySlug
 
-  return {
-    title,
-    description,
-    robots: "index, follow",
-    alternates: {
-      canonical: `/${continentSlug}/${countrySlug}/${slug}`,
-    },
-    openGraph: {
-      title,
-      description,
-      type: "website",
-    },
-    twitter: {
-      card: "summary",
-      title,
-      description,
-    },
-  }
+  return buildMetadata({
+    title: countryName
+      ? `Libraries in ${name}, ${countryName}`
+      : `Libraries in ${name}`,
+    description:
+      data.summary ??
+      `Browse libraries in ${name}${countryName ? `, ${countryName}` : ""} — hours, locations, services, and collections.`,
+    // Canonicalise to the entity's real parents, not whatever the URL said.
+    path: `${parentContinent}/${parentCountry}/${slug}`,
+    locale,
+    image: formatStrapiMediaUrl(data.heroImage?.url),
+    imageAlt: data.heroImage?.alternativeText,
+  })
 }
 
 export async function generateStaticParams({
@@ -93,27 +92,45 @@ export default function RegionPage(props: {
 
   const regionData = use(fetchRegion(slug, locale))?.data
 
-  if (!regionData) {
-    return (
-      <div
-        className="relative isolate flex min-h-screen w-full flex-col"
-        style={{ background: "var(--t-bg-space)", color: "var(--t-ink-base)" }}
-      >
-        <GlobalHeader locale={locale} />
-        <main className="flex flex-1 items-center justify-center">
-          <p className="text-(--t-ink-faint)">Region not found.</p>
-        </main>
-      </div>
-    )
-  }
+  if (!regionData) notFound()
+  const parentContinent =
+    regionData.continent?.slug ??
+    regionData.country?.continent?.slug ??
+    continentSlug
+  const parentCountry = regionData.country?.slug ?? countrySlug
 
   return (
-    <RegionDetailPage
-      region={regionData}
-      locale={locale}
-      slug={slug}
-      countrySlug={countrySlug}
-      continentSlug={continentSlug}
-    />
+    <>
+      <JsonLd
+        data={buildBreadcrumbSchema([
+          { name: "Home", url: absoluteUrl("", locale) },
+          {
+            name:
+              regionData.continent?.name ??
+              regionData.country?.continent?.name ??
+              parentContinent,
+            url: absoluteUrl(parentContinent, locale),
+          },
+          {
+            name: regionData.country?.name ?? parentCountry,
+            url: absoluteUrl(`${parentContinent}/${parentCountry}`, locale),
+          },
+          {
+            name: regionData.name ?? slug,
+            url: absoluteUrl(
+              `${parentContinent}/${parentCountry}/${slug}`,
+              locale
+            ),
+          },
+        ])}
+      />
+      <RegionDetailPage
+        region={regionData}
+        locale={locale}
+        slug={slug}
+        countrySlug={countrySlug}
+        continentSlug={continentSlug}
+      />
+    </>
   )
 }

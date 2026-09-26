@@ -1,36 +1,21 @@
 import Image from "next/image"
 import type { Locale } from "next-intl"
 
-import { Breadcrumb } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
-import { homepagePanelClassName } from "@/components/home/homepage.constants"
+import {
+  LocationEmptyState,
+  LocationHero,
+  LocationSectionHeading,
+} from "@/components/location/LocationHero"
 import { LocationTabBar } from "@/components/location/LocationTabBar"
 import { InteractiveMap } from "@/components/map/InteractiveMap"
-import { T } from "@/lib/design-tokens"
+import { T, tintForLibraryType } from "@/lib/design-tokens"
 import type { PopulatedAreaData } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
-import { cn } from "@/lib/styles"
 
-// ── Stat card ─────────────────────────────────────────────────────────────────
-
-function StatCard({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div
-      className={cn(homepagePanelClassName, "flex flex-col gap-1 px-5 py-4")}
-    >
-      <span className="text-[10px] font-semibold tracking-[0.14em] text-(--t-ink-faint) uppercase">
-        {label}
-      </span>
-      <span className="text-2xl font-bold tracking-tight text-(--t-ink-base) tabular-nums">
-        {value}
-      </span>
-    </div>
-  )
-}
-
-// ── Library card ──────────────────────────────────────────────────────────────
+// ── Library card (v2 — tinted monogram, white card) ───────────────────────────
 
 function LibraryCard({
   library,
@@ -48,35 +33,65 @@ function LibraryCard({
   const imageUrl = library.heroImage?.url
     ? formatStrapiMediaUrl(library.heroImage.url)
     : null
+  const tint = tintForLibraryType(library.libraryType)
 
   return (
     <GlobalLink
       href={href}
-      className={cn(
-        homepagePanelClassName,
-        "group relative flex min-h-[11rem] flex-col justify-end overflow-hidden transition-[border-color,background-color] duration-500 hover:border-cyan-200/16 hover:bg-white/[0.07]"
-      )}
+      className="group flex flex-col overflow-hidden rounded-3xl transition-[border-color,box-shadow] hover:border-[#B9B4F5] hover:shadow-[0_12px_28px_rgba(23,22,43,0.08)]"
+      style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
     >
-      {imageUrl ? (
-        <Image
-          src={imageUrl}
-          alt={library.heroImage?.alternativeText ?? library.name}
-          fill
-          className="-z-10 object-cover opacity-20 transition-opacity duration-500 group-hover:opacity-30"
-        />
-      ) : null}
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_30%,rgba(5,8,22,0.85)_100%)]" />
-      <div className="relative z-10 space-y-1 p-5">
+      <div className="relative m-2 h-[130px] overflow-hidden rounded-2xl">
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={library.heroImage?.alternativeText ?? library.name}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div
+            aria-hidden="true"
+            className="flex h-full w-full items-center justify-center"
+            style={{ background: tint.bg }}
+          >
+            <span
+              style={{
+                fontFamily: T.font.serif,
+                fontSize: 48,
+                fontWeight: 500,
+                color: tint.fg,
+              }}
+            >
+              {library.name.charAt(0)}
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="flex flex-1 flex-col gap-1.5 px-5 pt-1 pb-5">
         {library.libraryType ? (
-          <p className="text-[10px] font-semibold tracking-[0.14em] text-cyan-400/70 uppercase">
+          <span
+            className="self-start rounded-full px-2.5 py-0.5 text-[13px] font-semibold"
+            style={{ background: tint.bg, color: tint.fg }}
+          >
             {library.libraryType}
-          </p>
+          </span>
         ) : null}
-        <h3 className="font-semibold text-(--t-ink-base) transition-colors group-hover:text-(--t-ink-dim)">
+        <h3
+          className="m-0 text-[22px] leading-[1.15]"
+          style={{
+            fontFamily: T.font.serif,
+            fontWeight: 500,
+            color: T.ink.base,
+          }}
+        >
           {library.name}
         </h3>
         {library.summary ? (
-          <p className="line-clamp-2 text-sm leading-6 text-(--t-ink-low)">
+          <p
+            className="m-0 line-clamp-2 text-[14px] leading-[1.55]"
+            style={{ color: T.ink.dim }}
+          >
             {library.summary}
           </p>
         ) : null}
@@ -106,11 +121,11 @@ export function AreaDetailPage({
     return (
       <div
         className="relative isolate flex min-h-screen w-full flex-col"
-        style={{ background: T.bg.space, color: T.ink.base }}
+        style={{ background: T.bg.void, color: T.ink.base }}
       >
         <GlobalHeader locale={locale} />
         <main className="flex flex-1 items-center justify-center">
-          <p className="text-(--t-ink-faint)">Area not found.</p>
+          <p style={{ color: T.ink.dim }}>Area not found.</p>
         </main>
       </div>
     )
@@ -123,160 +138,116 @@ export function AreaDetailPage({
   const regionHref = `/${continentSlug}/${countrySlug}/${regionSlug}`
   const countryName = area.region?.country?.name
   const continentName = area.region?.country?.continent?.name
+  const libraryCount =
+    typeof area.libraryCount === "number" && area.libraryCount > 0
+      ? area.libraryCount
+      : null
 
   const tabs = [
     { id: "overview", label: "Overview" },
-    { id: "map", label: "Map" },
     ...(hasLibraries ? [{ id: "libraries", label: "Libraries" }] : []),
+    { id: "map", label: "Map" },
   ]
 
   return (
     <div
       className="relative isolate flex min-h-screen w-full flex-col"
-      style={{ background: T.bg.space, color: T.ink.base }}
+      style={{ background: T.bg.void, color: T.ink.base }}
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_12%,rgba(92,149,255,0.09),transparent_38%),radial-gradient(circle_at_82%_70%,rgba(103,221,255,0.06),transparent_30%)]" />
-
       <GlobalHeader locale={locale} />
 
-      <main className="relative z-10 flex-1">
-        {/* ── Hero ──────────────────────────────────────────────────────────── */}
-        <section
-          id="overview"
-          data-transparent-header=""
-          className="relative isolate -mt-14 flex min-h-[52vh] flex-col justify-end overflow-hidden"
-        >
-          <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(5,8,22,0.45)_0%,rgba(5,8,22,0.92)_65%,rgba(5,8,22,1)_100%)]" />
-          <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_60%_at_10%_20%,rgba(79,70,229,0.16),transparent_60%)]" />
-
-          <Container className="pb-8 sm:pb-10">
-            {/* Breadcrumb */}
-            <div className="mb-4">
-              <Breadcrumb
-                labels={{
-                  ...(continentSlug && continentName
-                    ? { [continentSlug]: continentName }
-                    : {}),
-                  ...(countrySlug && countryName
-                    ? { [countrySlug]: countryName }
-                    : {}),
-                  ...(regionSlug && regionName
-                    ? { [regionSlug]: regionName }
-                    : {}),
-                  [slug]: area.name ?? "",
-                }}
-              />
-            </div>
-
-            <div className="flex flex-col gap-3">
-              {area.typeLabel ? (
-                <p className="text-[11px] font-semibold tracking-[0.16em] text-cyan-400/60 uppercase">
-                  {area.typeLabel}
-                </p>
-              ) : null}
-              <h1 className="text-[clamp(2.5rem,7vw,5.5rem)] leading-[0.93] font-bold tracking-[-0.04em] text-white">
-                {area.name}
-              </h1>
-              {area.summary ? (
-                <p className="max-w-[52ch] text-base leading-7 text-white/55">
-                  {area.summary}
-                </p>
-              ) : null}
-            </div>
-
-            {/* Stats */}
-            <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <StatCard
-                label="Libraries"
-                value={
-                  typeof area.libraryCount === "number" && area.libraryCount > 0
-                    ? new Intl.NumberFormat().format(area.libraryCount)
-                    : "—"
-                }
-              />
-            </div>
-          </Container>
-        </section>
+      <main className="relative z-10 flex-1 pb-16">
+        <LocationHero
+          breadcrumbLabels={{
+            ...(continentSlug && continentName
+              ? { [continentSlug]: continentName }
+              : {}),
+            ...(countrySlug && countryName
+              ? { [countrySlug]: countryName }
+              : {}),
+            ...(regionSlug && regionName ? { [regionSlug]: regionName } : {}),
+            [slug]: area.name ?? "",
+          }}
+          typeLabel={area.typeLabel ?? "Area"}
+          title={area.name ?? ""}
+          intro={area.summary}
+          stats={[
+            {
+              label: "Libraries",
+              value: libraryCount
+                ? new Intl.NumberFormat().format(libraryCount)
+                : "—",
+              note: libraryCount ? undefined : "None documented yet",
+            },
+          ]}
+        />
 
         <LocationTabBar tabs={tabs} />
 
-        {/* ── Interactive Map ───────────────────────────────────────────────── */}
-        <section
-          id="map"
-          className="border-t border-(--t-border-line) py-14 sm:py-18"
-        >
-          <Container>
-            <div className="mb-6">
-              <p className="mb-1.5 text-[11px] font-semibold tracking-[0.16em] text-(--t-ink-faint) uppercase">
-                Spatial View
-              </p>
-              <h2 className="text-2xl font-bold tracking-tight text-(--t-ink-base) sm:text-3xl">
-                {area.name ? `Libraries in ${area.name}` : "Map View"}
-              </h2>
-            </div>
-            <InteractiveMap
-              mapConfig={area.mapConfig}
-              mode="region"
-              regionSlug={regionSlug}
-              countrySlug={countrySlug}
-              continentSlug={continentSlug}
-              locale={locale}
-            />
-          </Container>
-        </section>
+        <Container>
+          <div className="flex flex-col gap-12 pt-10">
+            {/* ── Libraries in this area ──────────────────────────────────── */}
+            {hasLibraries ? (
+              <section id="libraries" className="scroll-mt-28">
+                <LocationSectionHeading
+                  title={`Libraries in ${area.name}`}
+                  count={
+                    libraryCount
+                      ? `${libraryCount} ${libraryCount === 1 ? "library" : "libraries"}`
+                      : null
+                  }
+                />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {area.libraries!.map((library) => (
+                    <LibraryCard
+                      key={library.slug}
+                      library={library}
+                      href={`/${continentSlug}/${countrySlug}/${regionSlug}/${slug}/${library.slug}`}
+                    />
+                  ))}
+                </div>
+              </section>
+            ) : (
+              <LocationEmptyState name={area.name ?? "this area"} />
+            )}
 
-        {/* ── Libraries in this area ────────────────────────────────────────── */}
-        {hasLibraries ? (
-          <section
-            id="libraries"
-            className="border-t border-(--t-border-line) py-14 sm:py-18"
-          >
-            <Container>
-              <div className="mb-8">
-                <p className="mb-1.5 text-[11px] font-semibold tracking-[0.16em] text-(--t-ink-faint) uppercase">
-                  Browse
-                </p>
-                <h2 className="text-2xl font-bold tracking-tight text-(--t-ink-base) sm:text-3xl">
-                  Libraries in {area.name}
-                </h2>
+            {/* ── Map ─────────────────────────────────────────────────────── */}
+            <section id="map" className="scroll-mt-28">
+              <LocationSectionHeading
+                title={area.name ? `Libraries in ${area.name}` : "Map view"}
+                description="Every documented library, plotted."
+              />
+              <div
+                className="overflow-hidden rounded-3xl"
+                style={{ border: `1px solid ${T.border.line}` }}
+              >
+                <InteractiveMap
+                  mapConfig={area.mapConfig}
+                  mode="region"
+                  regionSlug={regionSlug}
+                  countrySlug={countrySlug}
+                  continentSlug={continentSlug}
+                  locale={locale}
+                />
               </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {area.libraries!.map((library) => (
-                  <LibraryCard
-                    key={library.slug}
-                    library={library}
-                    href={`/${continentSlug}/${countrySlug}/${regionSlug}/${slug}/${library.slug}`}
-                  />
-                ))}
-              </div>
-            </Container>
-          </section>
-        ) : null}
+            </section>
 
-        {/* ── Fallback CTA ──────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden border-t border-(--t-border-line) py-24 sm:py-32">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_100%,rgba(79,70,229,0.18),transparent_70%)]" />
-          <Container>
-            <div className="flex flex-col items-center gap-6 text-center">
-              <p className="text-[11px] font-semibold tracking-[0.16em] text-(--t-ink-faint) uppercase">
-                Start Exploring
-              </p>
-              <h2 className="text-[clamp(2.5rem,6vw,5.5rem)] leading-[0.93] font-bold tracking-[-0.045em] text-(--t-ink-base)">
-                Discover {area.name}
-              </h2>
-              <p className="max-w-[40ch] text-base leading-7 text-(--t-ink-dim)">
-                Explore the libraries and cultural institutions across{" "}
-                {area.name}.
-              </p>
+            {/* ── Back link ───────────────────────────────────────────────── */}
+            <div>
               <GlobalLink
                 href={regionHref}
-                className="mt-2 inline-flex items-center gap-2 rounded-2xl border border-(--t-border-hi) bg-(--t-bg-surface) px-7 py-3 text-sm font-semibold text-(--t-ink-dim) transition-colors hover:bg-(--t-bg-deep) hover:text-(--t-ink-base)"
+                className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-[15px] font-semibold transition-colors hover:bg-(--t-bg-surface)"
+                style={{
+                  border: `1px solid ${T.border.hi}`,
+                  color: T.ink.base,
+                  background: T.bg.deep,
+                }}
               >
-                Back to {regionName ?? "Region"}
+                ← Back to {regionName ?? "region"}
               </GlobalLink>
             </div>
-          </Container>
-        </section>
+          </div>
+        </Container>
       </main>
     </div>
   )
