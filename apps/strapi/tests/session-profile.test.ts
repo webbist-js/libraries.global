@@ -1,3 +1,4 @@
+import { SESSION_PROFILE_MAX_CLAIMS } from "@repo/access"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
 import { makeFakeStrapi } from "./helpers/fake-strapi"
@@ -6,7 +7,7 @@ import controller from "../src/api/auth-bridge/controllers/auth-bridge"
 const PROFILE = "api::user-profile.user-profile"
 const AFF = "api::library-affiliation.library-affiliation"
 
-function ctx(query: Record<string, string>, secret = "s3cret") {
+function ctx(query: Record<string, unknown>, secret = "s3cret") {
   const c: any = {
     query,
     request: { header: { "x-service-secret": secret } },
@@ -19,6 +20,7 @@ function ctx(query: Record<string, string>, secret = "s3cret") {
 }
 
 describe("auth-bridge sessionProfile", () => {
+  let fake: any
   beforeEach(() => {
     process.env.STRAPI_BRIDGE_SECRET = "s3cret"
     const { strapi } = makeFakeStrapi({
@@ -37,6 +39,7 @@ describe("auth-bridge sessionProfile", () => {
       ],
     })
     ;(globalThis as any).strapi = strapi
+    fake = strapi
   })
   afterEach(() => {
     delete (globalThis as any).strapi
@@ -68,5 +71,25 @@ describe("auth-bridge sessionProfile", () => {
       tier: null,
       claims: [],
     })
+  })
+
+  it.each([
+    ["missing", {}],
+    ["empty", { baUserId: "" }],
+    ["repeated (array)", { baUserId: ["u1", "u2"] }],
+  ])("returns 400 when baUserId is %s", async (_label, query) => {
+    const c = ctx(query)
+    await controller.sessionProfile(c)
+    expect(c.status).toBe(400)
+    expect(fake.documents).not.toHaveBeenCalled()
+  })
+
+  it("reads at most SESSION_PROFILE_MAX_CLAIMS affiliations", async () => {
+    await controller.sessionProfile(ctx({ baUserId: "u1" }))
+    const i = fake.documents.mock.calls.findIndex(
+      ([uid]: [string]) => uid === AFF
+    )
+    const { findMany } = fake.documents.mock.results[i].value
+    expect(findMany.mock.calls[0][0].limit).toBe(SESSION_PROFILE_MAX_CLAIMS)
   })
 })

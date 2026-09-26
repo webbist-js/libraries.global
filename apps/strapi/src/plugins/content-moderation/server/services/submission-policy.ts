@@ -5,6 +5,7 @@ import {
   isContributorRole,
   isSubmissionType,
   resolveCapabilities,
+  SESSION_PROFILE_MAX_CLAIMS,
 } from "@repo/access"
 
 import { isDocumentId, VERIFICATION_METHODS } from "../utils/params"
@@ -39,7 +40,7 @@ export default ({ strapi }: { strapi: any }) => ({
       .findMany({
         filters: { baUserId: { $eq: baUserId } },
         populate: { library: { fields: ["documentId"] } },
-        limit: 100,
+        limit: SESSION_PROFILE_MAX_CLAIMS,
       })) as { library?: { documentId?: string } }[]
 
     const caps = resolveCapabilities({

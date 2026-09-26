@@ -1,3 +1,5 @@
+import { SESSION_PROFILE_MAX_CLAIMS } from "@repo/access"
+
 import {
   grantVerifiedLibrarian,
   upsertAffiliation,
@@ -603,8 +605,10 @@ export default {
       return ctx.unauthorized("Invalid or missing service secret")
     }
 
-    const { baUserId } = ctx.query as { baUserId?: string }
-    if (!baUserId) return ctx.badRequest("Missing baUserId")
+    // A repeated ?baUserId= arrives as an array; only one non-empty id is valid.
+    const { baUserId } = ctx.query as { baUserId?: unknown }
+    if (typeof baUserId !== "string" || baUserId.length === 0)
+      return ctx.badRequest("Missing baUserId")
 
     const [profile] = (await strapi
       .documents("api::user-profile.user-profile")
@@ -619,7 +623,7 @@ export default {
       .findMany({
         filters: { baUserId: { $eq: baUserId } },
         populate: { library: { fields: ["documentId"] } },
-        limit: 100,
+        limit: SESSION_PROFILE_MAX_CLAIMS,
       })) as { library?: { documentId?: string } }[]
 
     return ctx.send({
