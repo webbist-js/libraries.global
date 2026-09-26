@@ -1,33 +1,56 @@
 import type { MetadataRoute } from "next"
 
-import { getEnvVar } from "@/lib/env-vars"
 import { isProduction } from "@/lib/general-helpers"
+import { routing } from "@/lib/navigation"
+import { getSiteUrl } from "@/lib/seo/metadata"
+
+/**
+ * Private / transactional paths. Pages here also emit `noindex`, but blocking
+ * crawl saves budget on auth-gated redirects and form flows.
+ */
+const PRIVATE_PATHS = [
+  "/auth/",
+  "/profile/settings",
+  "/profile/onboarding",
+  "/contribute/add",
+  "/contribute/edit",
+  "/contribute/correct",
+  "/contribute/claim",
+  "/contribute/submissions",
+  "/contribute/docs/",
+  "/contribute/events",
+  "/dev/",
+  "/blog/search",
+  "/docs/search",
+]
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = getEnvVar("APP_PUBLIC_URL")
-
   if (!isProduction()) {
     return { rules: { userAgent: "*", disallow: "/" } }
   }
+
+  // localePrefix "as-needed": default locale is unprefixed, others are /{locale}/…
+  const prefixes = [
+    "",
+    ...routing.locales
+      .filter((l) => l !== routing.defaultLocale)
+      .map((l) => `/${l}`),
+  ]
 
   return {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
+        // Strapi media is proxied through /api/asset — keep images crawlable.
+        allow: ["/", "/api/asset/"],
         disallow: [
-          "/*/auth/",
-          "/*/profile/*/settings",
-          "/*/profile/onboarding",
-          "/*/contribute/edit/",
-          "/*/contribute/submissions",
-          "/*/dev/",
           "/api/",
+          ...prefixes.flatMap((p) =>
+            PRIVATE_PATHS.map((path) => `${p}${path}`)
+          ),
         ],
       },
     ],
-    ...(baseUrl
-      ? { sitemap: new URL("./sitemap.xml", baseUrl).toString() }
-      : {}),
+    sitemap: `${getSiteUrl()}/sitemap.xml`,
   }
 }

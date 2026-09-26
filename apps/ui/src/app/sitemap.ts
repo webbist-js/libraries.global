@@ -1,27 +1,43 @@
 import type { MetadataRoute } from "next"
 import type { Locale } from "next-intl"
 
+import { docsArticlePath } from "@/components/docs/docs.config"
 import { getEnvVar } from "@/lib/env-vars"
 import { isDevelopment, isProduction } from "@/lib/general-helpers"
-import { createPublicFullPath, routing } from "@/lib/navigation"
+import { absoluteUrl, LIVE_LOCALES } from "@/lib/seo/metadata"
 import {
   fetchAllBlogArticleSlugs,
   fetchAllContinents,
   fetchAllCountries,
   fetchAllLibraries,
-  fetchAllPages,
   fetchAllRegions,
-  fetchAllWikiArticleSlugs,
+  fetchDocsWikiArticles,
 } from "@/lib/strapi-api/content/server"
 
 export const dynamic = "force-dynamic"
+
+/** Public, indexable static routes (private/transactional ones are excluded). */
+const STATIC_ROUTES: {
+  path: string
+  changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"]
+  priority: number
+}[] = [
+  { path: "", changeFrequency: "daily", priority: 1 },
+  { path: "index", changeFrequency: "daily", priority: 0.9 },
+  { path: "map", changeFrequency: "weekly", priority: 0.7 },
+  { path: "events", changeFrequency: "daily", priority: 0.7 },
+  { path: "blog", changeFrequency: "weekly", priority: 0.6 },
+  { path: "docs", changeFrequency: "weekly", priority: 0.6 },
+  { path: "contribute", changeFrequency: "monthly", priority: 0.5 },
+]
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!isProduction() && !isDevelopment()) return []
   if (!getEnvVar("APP_PUBLIC_URL")) return []
 
+  // Only locales with published content — see LIVE_LOCALES in lib/seo/metadata.
   const results = await Promise.allSettled(
-    routing.locales.map((locale) => generateLocalizedSitemap(locale))
+    LIVE_LOCALES.map((locale) => generateLocalizedSitemap(locale as Locale))
   )
 
   return results
@@ -29,110 +45,147 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .flatMap((r) => (r as PromiseFulfilledResult<MetadataRoute.Sitemap>).value)
 }
 
+type Entry = MetadataRoute.Sitemap[number]
+
+async function settle<T>(p: Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await p
+  } catch {
+    return fallback
+  }
+}
+
 async function generateLocalizedSitemap(
   locale: Locale
 ): Promise<MetadataRoute.Sitemap> {
-  const entries: MetadataRoute.Sitemap = []
+  const url = (path: string) => absoluteUrl(path, locale)
 
-  // ── CMS pages (about, contact, etc.) ──────────────────────────────────────
-  const pages = await fetchAllPages("api::page.page", locale)
-  for (const page of pages.data) {
-    if (page.slug) {
-      entries.push({
-        url: createPublicFullPath(page.slug, String(page.locale)),
-        lastModified: page.updatedAt ?? page.createdAt ?? undefined,
-        changeFrequency: "monthly",
-        priority: 0.5,
-      })
-    }
-  }
+  const [continents, countries, regions, libraries, blog, docs, events] =
+    await Promise.all([
+      settle(fetchAllContinents(locale), { data: [] }),
+      settle(fetchAllCountries(locale), { data: [] }),
+      settle(fetchAllRegions(locale), { data: [] }),
+      settle(fetchAllLibraries(locale), { data: [] }),
+      settle(fetchAllBlogArticleSlugs(locale), { data: [] }),
+      settle(fetchDocsWikiArticles(locale), undefined),
+      settle(fetchUpcomingEventIds(), []),
+    ])
+
+  const entries: Entry[] = STATIC_ROUTES.map((r) => ({
+    url: url(r.path),
+    changeFrequency: r.changeFrequency,
+    priority: r.priority,
+  }))
 
   // ── Continents ────────────────────────────────────────────────────────────
-  const continents = await fetchAllContinents(locale)
   for (const c of continents.data) {
-    if (c.slug) {
-      entries.push({
-        url: createPublicFullPath(c.slug, locale),
-        lastModified: (c as any).updatedAt ?? undefined,
-        changeFrequency: "monthly",
-        priority: 0.8,
-      })
-    }
+    if (!c.slug) continue
+    entries.push({
+      url: url(c.slug),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    })
   }
 
   // ── Countries ─────────────────────────────────────────────────────────────
-  const countries = await fetchAllCountries(locale)
   for (const c of countries.data) {
-    if (c.slug && c.continent?.slug) {
-      entries.push({
-        url: createPublicFullPath(`${c.continent.slug}/${c.slug}`, locale),
-        changeFrequency: "monthly",
-        priority: 0.7,
-      })
-    }
+    if (!c.slug || !c.continent?.slug) continue
+    entries.push({
+      url: url(`${c.continent.slug}/${c.slug}`),
+      changeFrequency: "monthly",
+      priority: 0.7,
+    })
   }
 
   // ── Regions ───────────────────────────────────────────────────────────────
-  const regions = await fetchAllRegions(locale)
   for (const r of regions.data) {
-    if (r.slug && r.continent?.slug && r.country?.slug) {
-      entries.push({
-        url: createPublicFullPath(
-          `${r.continent.slug}/${r.country.slug}/${r.slug}`,
-          locale
-        ),
-        changeFrequency: "monthly",
-        priority: 0.6,
-      })
-    }
+    if (!r.slug || !r.continent?.slug || !r.country?.slug) continue
+    entries.push({
+      url: url(`${r.continent.slug}/${r.country.slug}/${r.slug}`),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    })
   }
 
   // ── Libraries ─────────────────────────────────────────────────────────────
-  const libraries = await fetchAllLibraries(locale)
   for (const lib of libraries.data) {
     if (
-      lib.slug &&
-      lib.continent?.slug &&
-      lib.country?.slug &&
-      lib.region?.slug
+      !lib.slug ||
+      !lib.continent?.slug ||
+      !lib.country?.slug ||
+      !lib.region?.slug
     ) {
-      entries.push({
-        url: createPublicFullPath(
-          `${lib.continent.slug}/${lib.country.slug}/${lib.region.slug}/${lib.slug}`,
-          locale
-        ),
-        lastModified: (lib as any).updatedAt ?? undefined,
-        changeFrequency: "weekly",
-        priority: 0.9,
-      })
+      continue
     }
+    const updatedAt = (lib as { updatedAt?: string | null }).updatedAt
+    entries.push({
+      url: url(
+        `${lib.continent.slug}/${lib.country.slug}/${lib.region.slug}/${lib.slug}`
+      ),
+      ...(updatedAt ? { lastModified: updatedAt } : {}),
+      changeFrequency: "weekly",
+      priority: 0.9,
+    })
   }
 
   // ── Blog articles ─────────────────────────────────────────────────────────
-  const blogArticles = await fetchAllBlogArticleSlugs(locale)
-  for (const a of blogArticles.data) {
-    if (a.slug) {
-      const section = a.section?.slug ?? "general"
-      entries.push({
-        url: createPublicFullPath(`blog/${section}/${a.slug}`, locale),
-        changeFrequency: "weekly",
-        priority: 0.6,
-      })
-    }
+  for (const a of blog.data) {
+    if (!a.slug) continue
+    entries.push({
+      url: url(`blog/${a.section?.slug ?? "general"}/${a.slug}`),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    })
   }
 
-  // ── Wiki articles ─────────────────────────────────────────────────────────
-  const wikiArticles = await fetchAllWikiArticleSlugs(locale)
-  for (const a of wikiArticles.data) {
-    if (a.slug) {
-      const section = a.section?.slug ?? "general"
-      entries.push({
-        url: createPublicFullPath(`wiki/${section}/${a.slug}`, locale),
-        changeFrequency: "monthly",
-        priority: 0.5,
-      })
-    }
+  // ── Docs articles (wiki content mapped into the docs taxonomy) ────────────
+  for (const a of docs?.data ?? []) {
+    if (!a.slug) continue
+    entries.push({
+      url: url(docsArticlePath(a)),
+      ...(a.updatedAt ? { lastModified: a.updatedAt } : {}),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    })
+  }
+
+  // ── Upcoming events ───────────────────────────────────────────────────────
+  for (const id of events) {
+    entries.push({
+      url: url(`events/${id}`),
+      changeFrequency: "weekly",
+      priority: 0.4,
+    })
   }
 
   return entries
+}
+
+/** documentIds of upcoming/ongoing events from the events plugin. */
+async function fetchUpcomingEventIds(): Promise<string[]> {
+  const strapi = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
+  const token = process.env.STRAPI_REST_READONLY_API_KEY
+  const pageSize = 1000
+  const maxPages = 10
+  const ids: string[] = []
+
+  for (let page = 1; page <= maxPages; page++) {
+    const res = await fetch(
+      `${strapi}/api/events/global?limit=${pageSize}&page=${page}`,
+      {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        next: { revalidate: 3600 },
+      }
+    )
+    if (!res.ok) break
+    const json = (await res.json()) as {
+      events?: { documentId?: string | null }[]
+      total?: number
+    }
+    const batch = json.events ?? []
+    for (const e of batch) if (e.documentId) ids.push(e.documentId)
+    if (batch.length < pageSize || ids.length >= (json.total ?? 0)) break
+  }
+
+  return ids
 }
