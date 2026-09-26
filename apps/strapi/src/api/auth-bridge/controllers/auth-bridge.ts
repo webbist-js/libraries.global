@@ -3,6 +3,7 @@ import {
   upsertAffiliation,
 } from "../../../utils/affiliations"
 import { isValidServiceSecret } from "../../../utils/service-secret"
+import { isValidUsername } from "../../../utils/username"
 
 const FREE_MAIL_DOMAINS = new Set([
   "gmail.com",
@@ -111,6 +112,23 @@ export default {
     }
     if (!baUserId) return ctx.badRequest("Missing baUserId")
 
+    const existing = await strapi
+      .query("api::user-profile.user-profile")
+      .findOne({ where: { baUserId } })
+
+    // Only enforce the format rule when the username is actually changing —
+    // existing users with a non-conforming username (created before this
+    // rule) must still be able to save other profile fields.
+    if (
+      "username" in fields &&
+      fields.username !== null &&
+      fields.username !== existing?.username &&
+      !isValidUsername(fields.username)
+    )
+      return ctx.badRequest(
+        "Username must be 3–30 characters: lowercase letters, numbers and underscores."
+      )
+
     // Scalar fields the user is allowed to set directly.
     // Trust-level fields (isVerifiedLibrarian, contributorRole) are written
     // exclusively by the moderation service on claim approval.
@@ -182,10 +200,6 @@ export default {
     if ("avatarFileId" in fields && fields.avatarFileId != null) {
       data.avatar = Number(fields.avatarFileId)
     }
-
-    const existing = await strapi
-      .query("api::user-profile.user-profile")
-      .findOne({ where: { baUserId } })
 
     // Both paths use the Document Service so repeatable components (languages)
     // and relation sets are written correctly in Strapi v5.
@@ -288,6 +302,28 @@ export default {
         },
       })
     }
+
+    // Scrub PII left on moderation and rewards records. These types all have
+    // draftAndPublish: false, so bulk db.query updates are consistent with
+    // the Document Service (see Global Constraints).
+    await strapi.db.query("plugin::content-moderation.submission").updateMany({
+      where: { submittedByUserId: baUserId },
+      data: {
+        submittedByEmail: "deleted@invalid",
+        submittedByName: null,
+        submittedByUserId: `deleted-${baUserId}`,
+      },
+    })
+    await strapi.db.query("plugin::rewards.point-event").updateMany({
+      where: { baUserId },
+      data: { baUserId: `deleted-${baUserId}` },
+    })
+    await strapi.db
+      .query("api::library-affiliation.library-affiliation")
+      .deleteMany({ where: { baUserId } })
+    await strapi.db
+      .query("plugin::content-moderation.submission-upload")
+      .deleteMany({ where: { baUserId } })
 
     const upUser = email
       ? await strapi

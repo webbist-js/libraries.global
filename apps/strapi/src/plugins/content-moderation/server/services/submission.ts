@@ -12,6 +12,48 @@ import { sanitizeWikiBody } from "../utils/wiki-body"
 // that nothing was auto-applied and it needs a manual pass.
 const SUGGESTION_MARKER = " [Suggestion — not auto-applied; apply manually]"
 
+// Library schema fields that count toward the library_edit points tier.
+// Anything else in `fields` (unknown keys, typos, injected junk) is ignored
+// so points can't be inflated by padding the payload.
+const LIBRARY_FIELDS = new Set([
+  "name",
+  "shortName",
+  "summary",
+  "libraryType",
+  "operationalStatus",
+  "operatorType",
+  "streetAddress",
+  "city",
+  "district",
+  "postalCode",
+  "website",
+  "catalogueUrl",
+  "planVisitUrl",
+  "membershipUrl",
+  "bookingUrl",
+  "donationUrl",
+  "virtualTourUrl",
+  "email",
+  "phone",
+  "admissionInfo",
+  "transitInfo",
+  "languagesServed",
+  "foundedYear",
+  "openedYear",
+  "closedYear",
+  "architect",
+  "buildingInfo",
+  "iiifEndpoint",
+  "classificationSystem",
+  "openingTimes",
+  "accessibilityNotes",
+  "visitNotes",
+  "services",
+  "amenities",
+  "accessibility",
+  "location",
+])
+
 /**
  * Selects the exact row `saveDraft`/`finalizeDraft` just read, by pinning
  * both the status *and* the revision counter it observed. `status:"draft"`
@@ -443,7 +485,10 @@ export default ({ strapi }: { strapi: any }) => ({
           const fields = (submission.fields ?? {}) as Record<string, unknown>
           const fieldCount = Object.keys(fields).filter(
             (k) =>
-              fields[k] !== null && fields[k] !== undefined && fields[k] !== ""
+              LIBRARY_FIELDS.has(k) &&
+              fields[k] !== null &&
+              fields[k] !== undefined &&
+              fields[k] !== ""
           ).length
           const action =
             fieldCount >= 4 ? "edit_accepted_major" : "edit_accepted_minor"
