@@ -29,6 +29,20 @@ const TIERS: { level: number; name: string; min: number }[] = [
   { level: 6, name: "Curator", min: 9000 },
 ]
 
+function isUniqueViolation(err: unknown): boolean {
+  const e = err as {
+    code?: string
+    nativeError?: { code?: string }
+    message?: string
+  }
+
+  return (
+    e?.code === "23505" ||
+    e?.nativeError?.code === "23505" ||
+    /unique/i.test(String(e?.message ?? ""))
+  )
+}
+
 export function computeTier(total: number): TierInfo {
   let current = TIERS[0]
   for (const tier of TIERS) {
@@ -120,7 +134,11 @@ export default ({ strapi }: { strapi: any }) => ({
       })
     } catch (err) {
       // Unique violation on idempotencyKey: a concurrent award won the race.
-      if (idempotencyKey) return { awarded: false }
+      if (idempotencyKey && isUniqueViolation(err)) return { awarded: false }
+      strapi.log.error(
+        `[rewards] Failed to record point event ${action} for ${baUserId}:`,
+        err
+      )
       throw err
     }
 

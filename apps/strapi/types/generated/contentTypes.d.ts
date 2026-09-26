@@ -3788,6 +3788,8 @@ export interface PluginRewardsPointEvent extends Struct.CollectionTypeSchema {
         "new_library_approved",
         "edit_accepted_minor",
         "edit_accepted_major",
+        "correction_approved",
+        "claim_approved",
         "photo_licensed_cc",
         "hours_verified",
         "status_verified",
@@ -3803,6 +3805,9 @@ export interface PluginRewardsPointEvent extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+    idempotencyKey: Schema.Attribute.String &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
     locale: Schema.Attribute.String & Schema.Attribute.Private
     localizations: Schema.Attribute.Relation<
       "oneToMany",

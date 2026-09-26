@@ -70,4 +70,63 @@ describe("points.award", () => {
     expect(events).toHaveLength(1)
     expect(profile.points).toBe(2)
   })
+
+  it("returns awarded:false on unique violation with concurrent race", async () => {
+    const { strapi, profile } = fakeStrapi()
+    const svc: any = createPoints({ strapi })
+    svc.updateStreak = vi.fn(async () => 1)
+
+    // Patch strapi.db.query to inject a unique violation error on create
+    const originalQuery = strapi.db.query
+    strapi.db.query = vi.fn((uid: string) => {
+      if (uid.includes("point-event")) {
+        return {
+          findOne: vi.fn(async () => null), // Pre-check finds nothing (concurrent race)
+          create: vi.fn(async () => {
+            const err = new Error("duplicate key")
+            ;(err as any).code = "23505"
+            throw err
+          }),
+        }
+      }
+
+      return originalQuery(uid)
+    })
+
+    const result = await svc.award(
+      "u1",
+      "correction_approved",
+      2,
+      {},
+      "dup-key-1"
+    )
+    expect(result).toEqual({ awarded: false })
+    expect(profile.points).toBe(0) // Points not updated
+  })
+
+  it("throws non-unique errors even with idempotencyKey set", async () => {
+    const { strapi, profile } = fakeStrapi()
+    const svc: any = createPoints({ strapi })
+    svc.updateStreak = vi.fn(async () => 1)
+
+    // Patch strapi.db.query to inject a generic error on create
+    const originalQuery = strapi.db.query
+    strapi.db.query = vi.fn((uid: string) => {
+      if (uid.includes("point-event")) {
+        return {
+          findOne: vi.fn(async () => null),
+          create: vi.fn(async () => {
+            throw new Error("connection reset")
+          }),
+        }
+      }
+
+      return originalQuery(uid)
+    })
+
+    await expect(
+      svc.award("u1", "correction_approved", 2, {}, "some-key")
+    ).rejects.toThrow("connection reset")
+    expect(profile.points).toBe(0) // Points not updated
+  })
 })
