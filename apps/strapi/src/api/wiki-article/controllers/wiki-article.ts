@@ -1,5 +1,6 @@
 import { factories } from "@strapi/strapi"
 
+import { isActivityPublic } from "../../../utils/activity-visibility"
 import { readStatus } from "../../../utils/read-status"
 
 const BODY_POPULATE = {
@@ -113,7 +114,13 @@ export default factories.createCoreController(
           filters: {
             baUserId: { $in: topUserIds },
           } as Record<string, unknown>,
-          fields: ["documentId", "username", "baUserId"],
+          fields: [
+            "documentId",
+            "username",
+            "baUserId",
+            "profileVisibility",
+            "publicPrefs",
+          ],
           populate: { avatar: { fields: ["url"] } },
         })
 
@@ -123,9 +130,19 @@ export default factories.createCoreController(
         )
         // eslint-disable-next-line unicorn/prefer-native-coercion-functions -- type predicate narrows away `undefined`
         .filter((p): p is NonNullable<typeof p> => Boolean(p))
-        // baUserId is only used above to sort by contribution count; it's
-        // never returned to the client.
-        .map(({ baUserId: _baUserId, ...rest }) => rest)
+        // A private profile, or one with publicPrefs.showActivity === false,
+        // is excluded from the public contributors listing entirely.
+        .filter((p) => isActivityPublic(p as Record<string, unknown>))
+        // baUserId/profileVisibility/publicPrefs are only used above to sort
+        // and gate by visibility; they're never returned to the client.
+        .map(
+          ({
+            baUserId: _baUserId,
+            profileVisibility: _profileVisibility,
+            publicPrefs: _publicPrefs,
+            ...rest
+          }) => rest
+        )
 
       ctx.body = { data: sorted, meta: {} }
     },

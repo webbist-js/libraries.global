@@ -1,5 +1,8 @@
-import { isContributorRole, promoteRole } from "@repo/access"
-
+import { isActivityPublic } from "../../../../utils/activity-visibility"
+import {
+  grantVerifiedLibrarian,
+  upsertAffiliation,
+} from "../../../../utils/affiliations"
 import { payloadHash } from "../utils/payload-hash"
 import { canTransition } from "../utils/transitions"
 import { sanitizeWikiBody } from "../utils/wiki-body"
@@ -8,81 +11,6 @@ import { sanitizeWikiBody } from "../utils/wiki-body"
 // (docs.directEdit re-check fails at apply time): flags for the moderator
 // that nothing was auto-applied and it needs a manual pass.
 const SUGGESTION_MARKER = " [Suggestion — not auto-applied; apply manually]"
-
-/** A private profile, or one with `publicPrefs.showActivity === false`, has no public activity. */
-function isActivityPublic(p: {
-  profileVisibility?: string
-  publicPrefs?: any
-}): boolean {
-  if (p.profileVisibility === "private") return false
-
-  return p.publicPrefs?.showActivity !== false
-}
-
-/**
- * Approving a Library Claim may only *raise* the submitter's contributor
- * role, never overwrite a higher one (e.g. wiki_editor, editorial_board)
- * with verified_librarian.
- */
-async function grantVerifiedLibrarian(strapi: any, baUserId: string) {
-  const [profile] = (await strapi
-    .documents("api::user-profile.user-profile")
-    .findMany({
-      filters: { baUserId: { $eq: baUserId } },
-      fields: ["documentId", "contributorRole"],
-      limit: 1,
-    })) as { documentId: string; contributorRole?: string }[]
-  if (!profile) return
-  await strapi.documents("api::user-profile.user-profile").update({
-    documentId: profile.documentId,
-    data: {
-      isVerifiedLibrarian: true,
-      contributorRole: promoteRole(
-        isContributorRole(profile.contributorRole)
-          ? profile.contributorRole
-          : null,
-        "verified_librarian"
-      ),
-    },
-  })
-}
-
-/** Creates or updates the affiliation for `baUserId` at `libraryId`, instead of duplicating rows. */
-async function upsertAffiliation(
-  strapi: any,
-  data: {
-    baUserId: string
-    libraryId: number
-    role?: string | null
-    department?: string | null
-    verificationMethod: string
-  }
-) {
-  const existing = (await strapi
-    .documents("api::library-affiliation.library-affiliation")
-    .findMany({
-      filters: {
-        baUserId: { $eq: data.baUserId },
-        library: { id: { $eq: data.libraryId } },
-      },
-      limit: 1,
-    })) as { documentId: string }[]
-  const payload = {
-    baUserId: data.baUserId,
-    role: data.role ?? null,
-    department: data.department ?? null,
-    verificationMethod: data.verificationMethod,
-    library: { connect: [{ id: data.libraryId }] },
-  }
-  if (existing[0])
-    return strapi
-      .documents("api::library-affiliation.library-affiliation")
-      .update({ documentId: existing[0].documentId, data: payload as any })
-
-  return strapi
-    .documents("api::library-affiliation.library-affiliation")
-    .create({ data: payload as any })
-}
 
 /**
  * Selects the exact row `saveDraft`/`finalizeDraft` just read, by pinning
@@ -387,10 +315,10 @@ export default ({ strapi }: { strapi: any }) => ({
           // Record the proposer's affiliation with the new library. D-C5:
           // proposing a library does not make you verified staff — a role
           // change only comes from an approved Library Claim.
-          if (submission.submittedByUserId && newLibrary?.id) {
+          if (submission.submittedByUserId && newLibrary?.documentId) {
             await upsertAffiliation(strapi, {
               baUserId: submission.submittedByUserId,
-              libraryId: newLibrary.id,
+              libraryDocumentId: newLibrary.documentId,
               role: "proposer",
               verificationMethod: "contact_us",
             })
@@ -417,7 +345,7 @@ export default ({ strapi }: { strapi: any }) => ({
         const targetLibrary = submission.targetDocumentId
           ? await strapi.documents("api::library.library").findOne({
               documentId: submission.targetDocumentId,
-              fields: ["id", "documentId"] as any,
+              fields: ["documentId"] as any,
             })
           : null
         if (!targetLibrary) {
@@ -427,9 +355,11 @@ export default ({ strapi }: { strapi: any }) => ({
         } else {
           await upsertAffiliation(strapi, {
             baUserId: submission.submittedByUserId,
-            libraryId: targetLibrary.id,
-            role: (fields.role as string) ?? null,
-            department: (fields.department as string) ?? null,
+            libraryDocumentId: targetLibrary.documentId,
+            // Pass through undefined (not null) when the claim didn't supply
+            // a value, so an update doesn't null out an existing one.
+            role: fields.role as string | undefined,
+            department: fields.department as string | undefined,
             verificationMethod:
               (submission.verificationMethod as string) ?? "contact_us",
           })
@@ -806,11 +736,16 @@ export default ({ strapi }: { strapi: any }) => ({
         .documents("api::user-profile.user-profile")
         .findMany({
           filters: { baUserId: { $in: userIds } } as any,
-          fields: ["baUserId", "username"] as any,
+          fields: [
+            "baUserId",
+            "username",
+            "profileVisibility",
+            "publicPrefs",
+          ] as any,
           limit: userIds.length,
         })
       for (const p of profiles as any[]) {
-        if (p.baUserId && p.username)
+        if (p.baUserId && p.username && isActivityPublic(p))
           usernameByBaUserId[p.baUserId] = p.username
       }
     }

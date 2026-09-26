@@ -1,5 +1,7 @@
-import { isContributorRole, promoteRole } from "@repo/access"
-
+import {
+  grantVerifiedLibrarian,
+  upsertAffiliation,
+} from "../../../utils/affiliations"
 import { isValidServiceSecret } from "../../../utils/service-secret"
 
 const FREE_MAIL_DOMAINS = new Set([
@@ -326,9 +328,10 @@ export default {
     if (!baUserId || !entityRef)
       return ctx.badRequest("Missing baUserId or entityRef")
 
-    const library = await strapi.db
-      .query("api::library.library")
-      .findOne({ where: { entityRef }, select: ["id", "website", "email"] })
+    const library = await strapi.db.query("api::library.library").findOne({
+      where: { entityRef },
+      select: ["id", "documentId", "website", "email"],
+    })
     if (!library) return ctx.notFound("Library not found")
 
     // This endpoint only handles email-domain auto-verification. The domain is
@@ -352,38 +355,16 @@ export default {
       return ctx.forbidden("domain_mismatch")
     }
 
-    const affiliationData: Record<string, unknown> = {
+    await upsertAffiliation(strapi, {
       baUserId,
-      role: role ?? null,
-      department: department ?? null,
+      libraryDocumentId: library.documentId,
+      // Pass through undefined (not null) when the caller didn't supply a
+      // value, so an update doesn't null out an existing one.
+      role,
+      department,
       verificationMethod,
-      library: { connect: [{ id: library.id }] },
-    }
-    await strapi
-      .documents("api::library-affiliation.library-affiliation")
-      .create({ data: affiliationData as any })
-
-    const [profile] = (await strapi
-      .documents("api::user-profile.user-profile")
-      .findMany({
-        filters: { baUserId: { $eq: baUserId } },
-        fields: ["documentId", "contributorRole"],
-        limit: 1,
-      })) as { documentId: string; contributorRole?: string }[]
-    if (profile) {
-      await strapi.documents("api::user-profile.user-profile").update({
-        documentId: profile.documentId,
-        data: {
-          isVerifiedLibrarian: true,
-          contributorRole: promoteRole(
-            isContributorRole(profile.contributorRole)
-              ? profile.contributorRole
-              : null,
-            "verified_librarian"
-          ),
-        },
-      })
-    }
+    })
+    await grantVerifiedLibrarian(strapi, baUserId)
 
     return ctx.send({ ok: true })
   },

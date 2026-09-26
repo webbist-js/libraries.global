@@ -7,6 +7,12 @@ export function makeFakeStrapi(seed: Record<string, Doc[]> = {}) {
   const store: Record<string, Doc[]> = structuredClone(seed)
   let n = 0
   const table = (uid: string) => (store[uid] ??= [])
+  const isOperatorObject = (v: any) =>
+    v &&
+    typeof v === "object" &&
+    !Array.isArray(v) &&
+    Object.keys(v).some((k) => k.startsWith("$"))
+
   const match = (d: Doc, filters: Record<string, any> = {}) =>
     Object.entries(filters).every(([k, v]) => {
       if (v && typeof v === "object" && "$eq" in v) return d[k] === v.$eq
@@ -18,6 +24,20 @@ export function makeFakeStrapi(seed: Record<string, Doc[]> = {}) {
         return v.$null
           ? d[k] === null || d[k] === undefined
           : d[k] !== null && d[k] !== undefined
+
+      // A plain object with no $-operator keys: one level of nested filter
+      // (e.g. `library: { documentId: { $eq } }`). Recurse into the doc's
+      // value for that key, which must itself be an object.
+      if (
+        v &&
+        typeof v === "object" &&
+        !Array.isArray(v) &&
+        !isOperatorObject(v) &&
+        d[k] &&
+        typeof d[k] === "object"
+      ) {
+        return match(d[k], v)
+      }
 
       return d[k] === v
     })

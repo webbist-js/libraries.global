@@ -1,4 +1,5 @@
 import { computeTier, type TierInfo } from "./points"
+import { isActivityPublic } from "../../../../utils/activity-visibility"
 
 export type Period = "today" | "week" | "month" | "all"
 
@@ -103,7 +104,9 @@ export default ({ strapi }: { strapi: any }) => ({
       const prevRank = prevRankMap.get(row.ba_user_id)
       const rankChange = prevRank != null ? prevRank - currentRank : null
 
-      const isPrivate = profile?.profileVisibility === "private"
+      // A profile with publicPrefs.showActivity === false is anonymised the
+      // same way a private profile is.
+      const isPrivate = !!profile && !isActivityPublic(profile)
       const showLocation = profile?.publicPrefs?.showLocation !== false
 
       return {
