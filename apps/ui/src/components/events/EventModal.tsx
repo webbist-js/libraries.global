@@ -1,7 +1,8 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useEffect, useRef, useState } from "react"
+import * as Dialog from "@radix-ui/react-dialog"
+import { useEffect, useState } from "react"
 
 import { useEventModal } from "@/components/events/EventModalContext"
 import { EventTypeChip } from "@/components/events/EventTypeChip"
@@ -57,26 +58,7 @@ export function EventModal() {
   const { activeDocumentId, closeModal } = useEventModal()
   const [event, setEvent] = useState<ModalEvent | null>(null)
   const [loading, setLoading] = useState(false)
-  const overlayRef = useRef<HTMLDivElement>(null)
-
-  // Close on Escape
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeModal()
-    }
-    window.addEventListener("keydown", handler)
-
-    return () => window.removeEventListener("keydown", handler)
-  }, [closeModal])
-
-  // Lock scroll when open
-  useEffect(() => {
-    document.body.style.overflow = activeDocumentId ? "hidden" : ""
-
-    return () => {
-      document.body.style.overflow = ""
-    }
-  }, [activeDocumentId])
+  // Escape, focus trap, focus restore and scroll lock are handled by Radix.
 
   // Fetch event when documentId changes
   useEffect(() => {
@@ -86,17 +68,25 @@ export function EventModal() {
 
       return
     }
+    const controller = new AbortController()
     setLoading(true)
-    fetch(`/api/public-proxy/api/events/event/${activeDocumentId}`)
-      .then((r) => r.json())
-      .then((data: ModalEvent) => {
+    fetch(
+      `/api/public-proxy/api/events/event/${encodeURIComponent(activeDocumentId)}`,
+      { signal: controller.signal }
+    )
+      .then((r) => (r.ok ? (r.json() as Promise<ModalEvent>) : null))
+      .then((data) => {
         setEvent(data)
         setLoading(false)
       })
       .catch(() => {
+        // Ignore aborts from a newer selection; they are not failures.
+        if (controller.signal.aborted) return
         setEvent(null)
         setLoading(false)
       })
+
+    return () => controller.abort()
   }, [activeDocumentId])
 
   if (!activeDocumentId) return null
@@ -104,134 +94,126 @@ export function EventModal() {
   const linkUrl = event?.registrationUrl ?? event?.url
 
   return (
-    // Backdrop
-    <div
-      ref={overlayRef}
-      className="fixed inset-0 z-50 flex justify-end"
-      style={{ background: "rgba(3,5,17,0.7)", backdropFilter: "blur(4px)" }}
-      onClick={(e) => {
-        if (e.target === overlayRef.current) closeModal()
+    <Dialog.Root
+      open
+      onOpenChange={(open) => {
+        if (!open) closeModal()
       }}
     >
-      {/* Panel */}
-      <div
-        className="relative flex h-full w-full max-w-lg flex-col overflow-y-auto"
-        style={{
-          background: T.bg.deep,
-          borderLeft: `1px solid ${T.border.hi}`,
-        }}
-      >
-        {/* Close button */}
-        <button
-          type="button"
-          onClick={closeModal}
-          className="absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full border transition-colors duration-150"
+      <Dialog.Portal>
+        <Dialog.Overlay
+          className="fixed inset-0 z-50"
           style={{
-            borderColor: T.border.line,
-            color: T.ink.faint,
+            background: "rgba(23,22,43,0.45)",
+            backdropFilter: "blur(4px)",
+          }}
+        />
+        <Dialog.Content
+          aria-describedby={undefined}
+          className="fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-lg flex-col overflow-y-auto focus:outline-none"
+          style={{
             background: T.bg.deep,
+            borderLeft: `1px solid ${T.border.hi}`,
           }}
         >
-          <Icon icon="mdi:close" className="size-4" />
-        </button>
+          {/* Screen-reader title while loading / when not found; the visible
+              h2 below becomes the title once the event has loaded. */}
+          {event ? null : (
+            <Dialog.Title className="sr-only">
+              {loading ? "Loading event" : "Event not found"}
+            </Dialog.Title>
+          )}
+          {/* Close button */}
+          <Dialog.Close
+            aria-label="Close event details"
+            className="absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full border transition-colors duration-150"
+            style={{
+              borderColor: T.border.line,
+              color: T.ink.faint,
+              background: T.bg.deep,
+            }}
+          >
+            <Icon icon="mdi:close" className="size-4" aria-hidden="true" />
+          </Dialog.Close>
 
-        {/* Image */}
-        {event?.imageUrl ? (
-          <div className="relative h-48 w-full shrink-0 overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={event.imageUrl}
-              alt={event.title}
-              className="h-full w-full object-cover"
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(to bottom, transparent 50%, rgba(7,11,30,0.9) 100%)",
-              }}
-            />
-          </div>
-        ) : (
-          <div className="h-8 w-full shrink-0" />
-        )}
-
-        {/* Content */}
-        <div className="flex flex-1 flex-col gap-5 p-6 pt-5">
-          {loading ? (
-            <div className="flex flex-1 items-center justify-center">
-              <span
+          {/* Image */}
+          {event?.imageUrl ? (
+            <div className="relative h-48 w-full shrink-0 overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={event.imageUrl}
+                alt={event.title}
+                className="h-full w-full object-cover"
+              />
+              <div
+                className="absolute inset-0"
                 style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".14em",
-                  textTransform: "uppercase",
-                  color: T.ink.faint,
+                  background:
+                    "linear-gradient(to bottom, transparent 50%, rgba(7,11,30,0.9) 100%)",
                 }}
-              >
-                Loading…
-              </span>
+              />
             </div>
-          ) : event ? (
-            <>
-              {/* Chips */}
-              <div className="flex flex-wrap items-center gap-2">
-                <EventTypeChip type={event.eventType} size="xs" />
-                {event.tags?.slice(0, 3).map((tag) => (
-                  <span
-                    key={tag}
-                    style={{
-                      fontFamily: T.font.mono,
-                      fontSize: "10px",
-                      letterSpacing: ".14em",
-                      textTransform: "uppercase",
-                      color: T.ink.faint,
-                      border: `1px solid ${T.border.line}`,
-                      borderRadius: "999px",
-                      padding: "2px 8px",
-                    }}
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
+          ) : (
+            <div className="h-8 w-full shrink-0" />
+          )}
 
-              {/* Title */}
-              <h2
-                style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "clamp(1.3rem, 3vw, 1.8rem)",
-                  lineHeight: 1.15,
-                  fontWeight: 400,
-                  color: T.ink.base,
-                }}
-              >
-                {event.title}
-              </h2>
-
-              {/* Date/time */}
-              <div className="flex items-center gap-2">
-                <Icon
-                  icon="mdi:calendar-outline"
-                  className="size-4 shrink-0"
-                  style={{ color: T.ink.faint }}
-                />
+          {/* Content */}
+          <div className="flex flex-1 flex-col gap-5 p-6 pt-5">
+            {loading ? (
+              <div className="flex flex-1 items-center justify-center">
                 <span
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "11px",
-                    color: T.ink.dim,
+                    fontSize: "10px",
+                    letterSpacing: ".14em",
+                    textTransform: "uppercase",
+                    color: T.ink.faint,
                   }}
                 >
-                  {formatDateTime(event.startTime, event.allDay)}
+                  Loading…
                 </span>
               </div>
+            ) : event ? (
+              <>
+                {/* Chips */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <EventTypeChip type={event.eventType} size="xs" />
+                  {event.tags?.slice(0, 3).map((tag) => (
+                    <span
+                      key={tag}
+                      style={{
+                        fontFamily: T.font.mono,
+                        fontSize: "10px",
+                        letterSpacing: ".14em",
+                        textTransform: "uppercase",
+                        color: T.ink.faint,
+                        border: `1px solid ${T.border.line}`,
+                        borderRadius: "999px",
+                        padding: "2px 8px",
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
 
-              {/* Library */}
-              {event.libraryEntityRef && (
+                {/* Title */}
+                <Dialog.Title
+                  style={{
+                    fontFamily: T.font.serif,
+                    fontSize: "clamp(1.3rem, 3vw, 1.8rem)",
+                    lineHeight: 1.15,
+                    fontWeight: 400,
+                    color: T.ink.base,
+                  }}
+                >
+                  {event.title}
+                </Dialog.Title>
+
+                {/* Date/time */}
                 <div className="flex items-center gap-2">
                   <Icon
-                    icon="mdi:library-outline"
+                    icon="mdi:calendar-outline"
                     className="size-4 shrink-0"
                     style={{ color: T.ink.faint }}
                   />
@@ -242,79 +224,99 @@ export function EventModal() {
                       color: T.ink.dim,
                     }}
                   >
-                    {event.libraryEntityRef}
+                    {formatDateTime(event.startTime, event.allDay)}
                   </span>
                 </div>
-              )}
 
-              <PriceBadge
-                isFree={event.isFree}
-                priceMin={event.priceMin}
-                priceMax={event.priceMax}
-              />
+                {/* Library */}
+                {event.libraryEntityRef && (
+                  <div className="flex items-center gap-2">
+                    <Icon
+                      icon="mdi:library-outline"
+                      className="size-4 shrink-0"
+                      style={{ color: T.ink.faint }}
+                    />
+                    <span
+                      style={{
+                        fontFamily: T.font.mono,
+                        fontSize: "11px",
+                        color: T.ink.dim,
+                      }}
+                    >
+                      {event.libraryEntityRef}
+                    </span>
+                  </div>
+                )}
 
-              {/* Description */}
-              {event.description && (
-                <p
-                  className="text-sm leading-relaxed whitespace-pre-line"
-                  style={{ color: T.ink.low }}
+                <PriceBadge
+                  isFree={event.isFree}
+                  priceMin={event.priceMin}
+                  priceMax={event.priceMax}
+                />
+
+                {/* Description */}
+                {event.description && (
+                  <p
+                    className="text-sm leading-relaxed whitespace-pre-line"
+                    style={{ color: T.ink.low }}
+                  >
+                    {event.description}
+                  </p>
+                )}
+
+                {/* CTAs */}
+                <div
+                  className="mt-auto flex flex-wrap items-center gap-3 border-t pt-5"
+                  style={{ borderColor: T.border.line }}
                 >
-                  {event.description}
-                </p>
-              )}
+                  <SaveEventButton documentId={event.documentId} size="sm" />
 
-              {/* CTAs */}
-              <div
-                className="mt-auto flex flex-wrap items-center gap-3 border-t pt-5"
-                style={{ borderColor: T.border.line }}
-              >
-                <SaveEventButton documentId={event.documentId} size="sm" />
-
-                {linkUrl && (
+                  {linkUrl && (
+                    <a
+                      href={linkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm transition-all duration-150 hover:bg-[var(--t-aurora-soft)]"
+                      style={{
+                        background: "var(--t-aurora-soft)",
+                        border: "1px solid var(--t-aurora-soft)",
+                        color: T.accent.aurora,
+                        textDecoration: "none",
+                      }}
+                    >
+                      <Icon icon="mdi:ticket-outline" className="size-4" />
+                      {event.isFree ? "Register" : "Get tickets"}
+                    </a>
+                  )}
                   <a
-                    href={linkUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm transition-all duration-150 hover:bg-[rgba(127,223,255,0.18)]"
+                    href={`/events/${event.documentId}`}
+                    className="inline-flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm transition-colors duration-150"
                     style={{
-                      background: "rgba(127,223,255,0.1)",
-                      border: "1px solid rgba(127,223,255,0.3)",
-                      color: T.accent.aurora,
+                      borderColor: T.border.line,
+                      color: T.ink.dim,
                       textDecoration: "none",
                     }}
                   >
-                    <Icon icon="mdi:ticket-outline" className="size-4" />
-                    {event.isFree ? "Register" : "Get tickets"}
+                    Full details
+                    <Icon icon="mdi:arrow-right" className="size-4" />
                   </a>
-                )}
-                <a
-                  href={`/events/${event.documentId}`}
-                  className="inline-flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm transition-colors duration-150"
-                  style={{
-                    borderColor: T.border.line,
-                    color: T.ink.dim,
-                    textDecoration: "none",
-                  }}
-                >
-                  Full details
-                  <Icon icon="mdi:arrow-right" className="size-4" />
-                </a>
-              </div>
-            </>
-          ) : (
-            <p
-              style={{
-                fontFamily: T.font.serif,
-                fontSize: "1rem",
-                color: T.ink.faint,
-                fontStyle: "italic",
-              }}
-            >
-              Event not found.
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
+                </div>
+              </>
+            ) : (
+              <p
+                style={{
+                  fontFamily: T.font.serif,
+                  fontSize: "1rem",
+                  color: T.ink.faint,
+                  fontStyle: "italic",
+                }}
+              >
+                Event not found.
+              </p>
+            )}
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   )
 }

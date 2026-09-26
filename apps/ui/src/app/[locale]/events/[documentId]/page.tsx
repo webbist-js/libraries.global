@@ -7,6 +7,7 @@ import { use } from "react"
 import { EventDetailPage } from "@/components/events/EventDetailPage"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { T } from "@/lib/design-tokens"
+import { buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
 
 export const revalidate = 300
 export const dynamicParams = true
@@ -52,35 +53,37 @@ async function fetchLibraryName(
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ documentId: string }>
+  params: Promise<{ locale: string; documentId: string }>
 }): Promise<Metadata> {
-  const { documentId } = await params
-  const event = await eventsGet(`/event/${documentId}`)
-  if (!event) return { title: "Event — Libraries of the World" }
+  const { locale, documentId } = await params
+  const event = (await eventsGet(`/event/${documentId}`)) as {
+    title?: string | null
+    description?: string | null
+    imageUrl?: string | null
+    startTime?: string | null
+  } | null
+  if (!event) return { title: "Event not found", robots: { index: false } }
 
-  const title = `${event.title} — Libraries of the World`
-  const description = event.description ?? undefined
-  const canonical = `/events/${documentId}`
+  const title = event.title ?? "Library event"
+  const when = event.startTime
+    ? new Date(event.startTime).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null
 
-  return {
+  return buildMetadata({
     title,
-    description,
-    robots: "index, follow",
-    alternates: { canonical },
-    openGraph: {
-      title,
-      description,
-      type: "article",
-      url: canonical,
-      ...(event.imageUrl ? { images: [{ url: event.imageUrl }] } : {}),
-    },
-    twitter: {
-      card: event.imageUrl ? "summary_large_image" : "summary",
-      title,
-      description,
-      ...(event.imageUrl ? { images: [event.imageUrl] } : {}),
-    },
-  }
+    description:
+      event.description ??
+      `${title}${when ? ` — ${when}` : ""}. Library event listing on ${SITE_NAME}.`,
+    path: `events/${documentId}`,
+    locale,
+    type: "article",
+    image: event.imageUrl,
+    imageAlt: title,
+  })
 }
 
 export default function EventPage(props: {

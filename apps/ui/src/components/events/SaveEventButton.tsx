@@ -70,9 +70,9 @@ export function SaveEventButton({
         fontFamily: T.font.mono,
         letterSpacing: ".1em",
         textTransform: "uppercase",
-        borderColor: saved ? "rgba(127,223,255,0.3)" : T.border.line,
+        borderColor: saved ? "var(--t-aurora-soft)" : T.border.line,
         color: saved ? T.accent.aurora : T.ink.ghost,
-        background: saved ? "rgba(127,223,255,0.07)" : "transparent",
+        background: saved ? "var(--t-aurora-soft)" : "transparent",
       }}
     >
       <Icon

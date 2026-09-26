@@ -131,7 +131,7 @@ export function UpcomingEventsWidget() {
                           event.eventType === "drop_in"
                         ? "#8ef0b3"
                         : event.eventType === "exhibition"
-                          ? "#7fdfff"
+                          ? "var(--t-accent-primary)"
                           : "rgba(255,255,255,0.12)",
               }}
             />

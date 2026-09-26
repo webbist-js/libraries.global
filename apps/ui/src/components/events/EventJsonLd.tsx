@@ -1,7 +1,8 @@
 // apps/ui/src/components/events/EventJsonLd.tsx
 // Server Component — safe to inject structured data via script tag.
-// All values come from the Strapi API (server-fetched), never from user input.
-// JSON.stringify with a replacer removes undefined values — no clone needed.
+// Values come from third-party provider feeds — serialised via serializeJsonLd.
+
+import { serializeJsonLd } from "@/components/seo/JsonLd"
 
 interface EventJsonLdProps {
   title: string
@@ -40,6 +41,9 @@ export function EventJsonLd({
     organizer: libraryName
       ? { "@type": "Organization", name: libraryName }
       : undefined,
+    // Google requires `location` for Event rich results; the host library is
+    // the best we have until events carry a structured venue/address.
+    location: libraryName ? { "@type": "Place", name: libraryName } : undefined,
     offers: {
       "@type": "Offer",
       price: isFree ? 0 : (priceMin ?? undefined),
@@ -52,11 +56,9 @@ export function EventJsonLd({
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
   }
 
-  // JSON.stringify with a replacer drops undefined values, producing clean JSON-LD.
-  // Safe: server-serialised structured data, not user-supplied HTML.
-  const jsonLdString = JSON.stringify(schema, (_key, value: unknown) =>
-    value === undefined ? undefined : value
-  )
+  // JSON.stringify drops undefined values; serializeJsonLd escapes `<`/`>`/`&`
+  // because titles/descriptions come from third-party provider feeds.
+  const jsonLdString = serializeJsonLd(schema)
 
   return (
     <script

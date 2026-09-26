@@ -2,6 +2,7 @@
 import { Icon } from "@iconify/react"
 import Link from "next/link"
 
+import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import { Container } from "@/components/elementary/Container"
 import { CalendarSubscribeButton } from "@/components/events/CalendarSubscribeButton"
 import { EventJsonLd } from "@/components/events/EventJsonLd"
@@ -146,33 +147,14 @@ export function EventDetailPage({
           {/* Main column */}
           <div className="lg:col-span-2">
             {/* Breadcrumb */}
-            <nav className="mb-6 flex items-center gap-1.5">
-              <Link
-                href="/events"
-                style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".14em",
-                  textTransform: "uppercase",
-                  color: T.ink.faint,
-                  textDecoration: "none",
-                }}
-              >
-                Programme
-              </Link>
-              <span style={{ color: T.ink.faint, fontSize: "10px" }}>/</span>
-              <span
-                style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".14em",
-                  textTransform: "uppercase",
-                  color: T.ink.faint,
-                }}
-              >
-                Event
-              </span>
-            </nav>
+            <Breadcrumb
+              className="mb-6"
+              items={[
+                { label: "Home", href: "/" },
+                { label: "Events", href: "/events" },
+                { label: event.title },
+              ]}
+            />
 
             {/* Type chip + tags */}
             <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -301,10 +283,10 @@ export function EventDetailPage({
                 href={linkUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-all duration-150 hover:bg-[rgba(127,223,255,0.18)]"
+                className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-all duration-150 hover:bg-[var(--t-aurora-soft)]"
                 style={{
-                  background: "rgba(127,223,255,0.1)",
-                  border: "1px solid rgba(127,223,255,0.3)",
+                  background: "var(--t-aurora-soft)",
+                  border: "1px solid var(--t-aurora-soft)",
                   color: T.accent.aurora,
                   textDecoration: "none",
                 }}

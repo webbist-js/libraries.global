@@ -44,7 +44,7 @@ export function CalendarSubscribeButton({
         >
           <a
             href={webcalUrl}
-            className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors duration-150 hover:bg-[rgba(255,255,255,0.05)]"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors duration-150 hover:bg-[var(--t-bg-muted-2)]"
             style={{ color: T.ink.dim, textDecoration: "none" }}
           >
             <Icon
@@ -65,7 +65,7 @@ export function CalendarSubscribeButton({
           <a
             href={icsUrl}
             download
-            className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors duration-150 hover:bg-[rgba(255,255,255,0.05)]"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors duration-150 hover:bg-[var(--t-bg-muted-2)]"
             style={{ color: T.ink.dim, textDecoration: "none" }}
           >
             <Icon

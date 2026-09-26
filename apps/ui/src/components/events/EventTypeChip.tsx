@@ -1,49 +1,65 @@
 import { Icon } from "@iconify/react"
 
-import { T } from "@/lib/design-tokens"
+import { eventTypeTint } from "@/components/events/event-display"
 
 export const EVENT_TYPE_META: Record<
   string,
   { label: string; icon: string; color: string }
 > = {
-  talk: { label: "Talk", icon: "mdi:microphone-outline", color: "#a390ff" },
+  talk: {
+    label: "Talk",
+    icon: "mdi:microphone-outline",
+    color: "var(--tint-national-fg)",
+  },
   exhibition: {
     label: "Exhibition",
     icon: "mdi:image-frame",
-    color: "#7fdfff",
+    color: "var(--tint-special-fg)",
   },
   storytime: {
     label: "Storytime",
     icon: "mdi:book-open-page-variant-outline",
-    color: "#ffb88a",
+    color: "var(--tint-special-fg)",
   },
   book_club: {
-    label: "Book Club",
+    label: "Book club",
     icon: "mdi:book-multiple-outline",
-    color: "#e8c98a",
+    color: "#6B5420",
   },
-  workshop: { label: "Workshop", icon: "mdi:laptop", color: "#7fdfff" },
-  tour: { label: "Tour", icon: "mdi:map-marker-path", color: "#8ef0b3" },
-  screening: { label: "Screening", icon: "mdi:film-outline", color: "#a390ff" },
+  workshop: {
+    label: "Workshop",
+    icon: "mdi:code-tags",
+    color: "var(--tint-academic-fg)",
+  },
+  tour: {
+    label: "Tour",
+    icon: "mdi:map-marker-outline",
+    color: "var(--tint-public-fg)",
+  },
+  screening: {
+    label: "Screening",
+    icon: "mdi:film-outline",
+    color: "var(--tint-national-fg)",
+  },
   reading_group: {
-    label: "Reading Group",
+    label: "Reading group",
     icon: "mdi:account-group-outline",
-    color: "#ffb88a",
+    color: "#6B5420",
   },
   performance: {
     label: "Performance",
     icon: "mdi:music-note-outline",
-    color: "#e8c98a",
+    color: "var(--tint-national-fg)",
   },
   drop_in: {
     label: "Drop-in",
-    icon: "mdi:calendar-check-outline",
-    color: "#8ef0b3",
+    icon: "mdi:home-outline",
+    color: "var(--tint-public-fg)",
   },
   other: {
     label: "Event",
     icon: "mdi:calendar-blank-outline",
-    color: "#7fdfff",
+    color: "var(--tint-neutral-fg)",
   },
 }
 
@@ -54,27 +70,21 @@ interface EventTypeChipProps {
 
 export function EventTypeChip({ type, size = "sm" }: EventTypeChipProps) {
   const meta = EVENT_TYPE_META[type] ?? EVENT_TYPE_META.other!
-  const fontSize = "10px"
-  const padding = size === "xs" ? "2px 6px" : "3px 8px"
+  const tint = eventTypeTint(type)
 
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full border"
+      className="inline-flex shrink-0 items-center gap-1 rounded-full font-semibold"
       style={{
-        fontFamily: T.font.mono,
-        fontSize,
-        letterSpacing: ".14em",
-        textTransform: "uppercase",
-        color: meta.color,
-        borderColor: `${meta.color}28`,
-        background: `${meta.color}0d`,
-        padding,
-        flexShrink: 0,
+        fontSize: size === "xs" ? "12px" : "13px",
+        color: tint.fg,
+        background: tint.bg,
+        padding: size === "xs" ? "2px 8px" : "3px 10px",
       }}
     >
       <Icon
         icon={meta.icon}
-        className={size === "xs" ? "size-2" : "size-2.5"}
+        className={size === "xs" ? "size-3" : "size-3.5"}
       />
       {meta.label}
     </span>

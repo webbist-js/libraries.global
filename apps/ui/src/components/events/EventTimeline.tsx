@@ -3,9 +3,9 @@
 import { Icon } from "@iconify/react"
 import { useEffect, useMemo, useState } from "react"
 
-import type { FilterState } from "@/components/events/EventsFilterBar"
 import { EventTypeChip } from "@/components/events/EventTypeChip"
 import { PriceBadge } from "@/components/events/PriceBadge"
+import type { FilterState } from "@/components/events/types"
 import { T } from "@/lib/design-tokens"
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -72,12 +72,12 @@ function DateScrollPicker({
             className="flex shrink-0 flex-col items-center rounded-xl px-3 py-2.5 transition-all duration-150"
             style={{
               background: isSelected
-                ? "rgba(127,223,255,0.12)"
+                ? "var(--t-aurora-soft)"
                 : isToday
-                  ? "rgba(255,255,255,0.04)"
+                  ? "var(--t-bg-muted-2)"
                   : "transparent",
               border: isSelected
-                ? "1px solid rgba(127,223,255,0.3)"
+                ? "1px solid var(--t-aurora-soft)"
                 : `1px solid ${T.border.line}`,
               minWidth: "44px",
             }}
@@ -171,7 +171,7 @@ function TimelineRow({ event }: { event: TimelineEvent }) {
                     event.eventType === "drop_in"
                   ? "#8ef0b3"
                   : event.eventType === "exhibition"
-                    ? "#7fdfff"
+                    ? "var(--t-accent-primary)"
                     : "rgba(255,255,255,0.12)",
         }}
       />

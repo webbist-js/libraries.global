@@ -2,100 +2,41 @@ import type { Metadata } from "next"
 import type { Locale } from "next-intl"
 import { use } from "react"
 
-import { EventsProgrammePage } from "@/components/events/EventsProgrammePage"
-import type { EventsProgrammeData } from "@/components/events/types"
+import { EventsPageClient } from "@/components/events/EventsPageClient"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { T } from "@/lib/design-tokens"
+import { buildMetadata } from "@/lib/seo/metadata"
 
 export const dynamic = "force-dynamic"
-// TODO: All stats (totalEvents, totalThisWeek, totalThisMonth, percentFree)
-// will show 0 until Strapi is running AND the sync-worker has populated the
-// ev_events table. Run the sync-worker against a real provider feed to seed data.
 
-export const metadata: Metadata = {
-  title: "Programme — Libraries of the World",
-  description:
-    "Talks, exhibitions, storytimes, workshops and more — this week at libraries worldwide.",
-  robots: "index, follow",
-  alternates: { canonical: "/events" },
-  openGraph: {
-    title: "Programme — Libraries of the World",
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+
+  return buildMetadata({
+    title: "Library events",
     description:
-      "Talks, exhibitions, storytimes, workshops and more — this week at libraries worldwide.",
-    type: "website",
-    url: "/events",
-  },
-  twitter: {
-    card: "summary",
-    title: "Programme — Libraries of the World",
-    description:
-      "Talks, exhibitions, storytimes, workshops and more — this week at libraries worldwide.",
-  },
-}
-
-const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
-const API_TOKEN = process.env.STRAPI_REST_READONLY_API_KEY
-
-function eventsGet(path: string) {
-  return fetch(`${STRAPI}/api/events${path}`, {
-    headers: API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {},
-    next: { revalidate: 120 },
-  }).then((r) => (r.ok ? r.json() : null))
-}
-
-async function fetchProgrammeData(): Promise<EventsProgrammeData> {
-  const [
-    stats,
-    providers,
-    categories,
-    topLibraries,
-    heatmap,
-    featured,
-    countryBreakdown,
-    dailyVolume,
-  ] = await Promise.all([
-    eventsGet("/stats"),
-    eventsGet("/provider-breakdown"),
-    eventsGet("/category-breakdown"),
-    eventsGet("/top-libraries?limit=10"),
-    eventsGet("/heatmap"),
-    eventsGet("/featured?count=6"),
-    eventsGet("/country-breakdown"),
-    eventsGet("/daily-volume"),
-  ])
-
-  return {
-    stats: stats ?? {
-      totalEvents: 0,
-      totalThisWeek: 0,
-      totalThisMonth: 0,
-      percentFree: 0,
-      peakSlot: null,
-      peakCount: 0,
-    },
-    providers: Array.isArray(providers) ? providers : [],
-    categories: Array.isArray(categories) ? categories : [],
-    topLibraries: Array.isArray(topLibraries) ? topLibraries : [],
-    heatmap: Array.isArray(heatmap) ? heatmap : [],
-    featured: Array.isArray(featured) ? featured : [],
-    countryBreakdown: Array.isArray(countryBreakdown) ? countryBreakdown : [],
-    dailyVolume: Array.isArray(dailyVolume) ? dailyVolume : [],
-  }
+      "Author talks, exhibitions, classes, storytime and archive tours, gathered from library calendars and ticketing sites.",
+    path: "events",
+    locale,
+  })
 }
 
 export default function EventsPage(props: {
   params: Promise<{ locale: string }>
 }) {
   const { locale } = use(props.params)
-  const data = use(fetchProgrammeData())
 
   return (
     <div
       className="relative isolate flex min-h-screen w-full flex-col"
-      style={{ background: T.bg.space, color: T.ink.base }}
+      style={{ background: T.bg.void, color: T.ink.base }}
     >
       <GlobalHeader locale={locale as Locale} />
-      <EventsProgrammePage data={data} />
+      <EventsPageClient />
     </div>
   )
 }
