@@ -64,7 +64,9 @@
       "dependsOn": [
         "@repo/shared-data#build",
         "@repo/design-system#build",
-        "@repo/events-crypto#build"
+        "@repo/events-crypto#build",
+        "@repo/access#build",
+        "@repo/catalogues#build"
       ],
       "cache": false,
       "persistent": true
