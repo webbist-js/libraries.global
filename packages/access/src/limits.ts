@@ -55,7 +55,7 @@ const STAFF_ROLES: ReadonlySet<string> = new Set([
  */
 export function contributionLimits(
   tier: string | null,
-  role?: string | null
+  role: string | null
 ): Limits {
   if (role && STAFF_ROLES.has(role)) return LIMITS.Curator
 
