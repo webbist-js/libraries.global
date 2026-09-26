@@ -1,9 +1,9 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 
 import { hashStringSHA256 } from "@/lib/crypto"
-import { useRouter } from "@/lib/navigation"
 
 /**
  * This component reloads the application when an update from Strapi is reported. This is useful for the sidebar preview

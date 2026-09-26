@@ -9,7 +9,7 @@ interface HeroLeadProps {
 
 /**
  * Lead paragraph that sits beneath a hero title or section header.
- * Fraunces serif, light-weight (300), T.ink.dim, 21px / 1.5 line-height.
+ * v2: Figtree 19px, T.ink.dim, 1.6 line-height.
  * Margin is intentionally absent — control spacing from the parent.
  */
 export function HeroLead({
@@ -21,12 +21,11 @@ export function HeroLead({
     <p
       className={className}
       style={{
-        fontFamily: T.font.serif,
-        fontSize: "21px",
-        lineHeight: 1.5,
-        letterSpacing: "-.005em",
+        fontFamily: T.font.sans,
+        fontSize: "19px",
+        lineHeight: 1.6,
         color: T.ink.dim,
-        fontWeight: 300,
+        fontWeight: 400,
         maxWidth,
         margin: 0,
       }}

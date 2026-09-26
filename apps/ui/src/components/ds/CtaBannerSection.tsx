@@ -20,7 +20,7 @@ export function CtaBannerSection({
 }) {
   return (
     <section className="relative overflow-hidden py-20 sm:py-28">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_100%,rgba(127,223,255,0.07),transparent_70%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_100%,rgba(67,56,202,0.08),transparent_70%)]" />
       <Container>
         <div className="flex flex-col items-center gap-6 text-center">
           <h2 className="text-[clamp(2.5rem,6vw,5rem)] leading-[0.95] font-bold tracking-[-0.04em] text-(--t-ink-base)">

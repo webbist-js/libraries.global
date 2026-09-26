@@ -25,11 +25,10 @@ export function StatBlock({
       </span>
       <span
         style={{
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".18em",
-          textTransform: "uppercase",
-          color: T.ink.low,
+          fontFamily: T.font.sans,
+          fontSize: "14px",
+          fontWeight: 600,
+          color: T.ink.dim,
         }}
       >
         {label}

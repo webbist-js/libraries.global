@@ -1,6 +1,5 @@
 import type { Data } from "@repo/strapi-types"
 import type { Locale } from "next-intl"
-import React from "react"
 
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -31,31 +30,22 @@ export function GlobalFooter({
       <Container className="py-14 sm:py-16">
         {/* Main grid: logo col + sections */}
         <div
-          className="grid gap-12 border-b pb-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.4fr)]"
+          className="grid gap-12 border-b pb-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,3fr)]"
           style={{ borderBottomColor: T.border.line }}
         >
           {/* Brand column */}
-          <div className="space-y-4">
-            {footer?.title ? (
-              <h2
-                className="text-[1.6rem] leading-[1.1] font-semibold tracking-[-0.02em]"
-                style={{ fontFamily: T.font.serif, color: T.ink.base }}
-              >
-                {footer.title}
-              </h2>
-            ) : (
-              <h2
-                className="text-[1.6rem] leading-[1.1] font-semibold tracking-[-0.02em]"
-                style={{ fontFamily: T.font.serif, color: T.ink.base }}
-              >
-                Libraries of the World
-              </h2>
-            )}
+          <div className="space-y-6">
+            <h2
+              className="m-0 text-[30px] leading-[1.15] font-medium tracking-[-0.015em]"
+              style={{ fontFamily: T.font.serif, color: T.ink.base }}
+            >
+              {footer?.title || "Libraries of the World"}
+            </h2>
 
             {footer?.text ? (
               <p
-                className="max-w-[28ch] text-[14px] leading-6"
-                style={{ color: T.ink.low }}
+                className="m-0 max-w-[34ch] text-[15px] leading-[1.7]"
+                style={{ color: T.ink.dim }}
               >
                 {footer.text}
               </p>
@@ -64,31 +54,25 @@ export function GlobalFooter({
 
           {/* Nav sections */}
           {sections.length > 0 ? (
-            <div className="grid gap-10 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-10 sm:grid-cols-3">
               {sections.map((section) => (
                 <div
                   key={section.id ?? section.title}
-                  className="flex flex-col gap-7"
+                  className="flex flex-col gap-5"
                 >
                   <p
-                    style={{
-                      fontFamily: T.font.mono,
-                      fontSize: "10px",
-                      letterSpacing: ".22em",
-                      textTransform: "uppercase",
-                      color: T.ink.low,
-                      margin: 0,
-                    }}
+                    className="m-0 text-[18px] font-bold"
+                    style={{ color: T.ink.dim }}
                   >
                     {section.title}
                   </p>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     {section.links?.map((link, index) => (
                       <GlobalLink
                         key={link.id ?? link.page?.slug ?? link.href ?? index}
                         href={getStrapiLinkHref(link)}
-                        className="block text-[15px] text-(--t-ink-base) opacity-80 transition-[opacity,color] hover:text-(--t-accent-aurora) hover:opacity-100"
+                        className="block w-fit text-[17px] text-(--t-ink-base) transition-colors hover:text-(--t-accent-primary)"
                       >
                         {link.label}
                       </GlobalLink>
@@ -103,36 +87,22 @@ export function GlobalFooter({
         {/* Bottom bar */}
         <div className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
           {/* Left: copyright + tagline */}
-          <p
-            className="font-mono text-[10px] tracking-[0.18em] uppercase"
-            style={{ color: T.ink.low }}
-          >
-            © {year} · Libraries of the World · Indexing the World&rsquo;s
-            Libraries
+          <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+            © {year} Libraries of the World · Indexing the world&rsquo;s
+            libraries
           </p>
 
           {/* Right: legal links */}
           {links.length > 0 ? (
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
               {links.map((link, index) => (
-                <React.Fragment
+                <GlobalLink
                   key={link.id ?? link.page?.slug ?? link.href ?? index}
+                  href={getStrapiLinkHref(link)}
+                  className="text-[15px] text-(--t-ink-dim) underline underline-offset-4 transition-colors hover:text-(--t-accent-primary)"
                 >
-                  {index > 0 ? (
-                    <span
-                      className="font-mono text-[10px]"
-                      style={{ color: T.ink.faint }}
-                    >
-                      ·
-                    </span>
-                  ) : null}
-                  <GlobalLink
-                    href={getStrapiLinkHref(link)}
-                    className="font-mono text-[10px] tracking-[0.18em] text-(--t-ink-dim) uppercase transition-colors hover:text-(--t-ink-base)"
-                  >
-                    {link.label}
-                  </GlobalLink>
-                </React.Fragment>
+                  {link.label}
+                </GlobalLink>
               ))}
             </div>
           ) : null}

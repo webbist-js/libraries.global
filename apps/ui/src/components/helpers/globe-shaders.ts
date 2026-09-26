@@ -1,7 +1,7 @@
 // ── Globe Shader Library ───────────────────────────────────────────────────
 //
 // All GLSL shaders used by KnowledgeGlobeCanvas (and by extension
-// ContinentGlobeCanvas which wraps it). Centralised here so the rendering
+// ContinentHeroGlobe which wraps it). Centralised here so the rendering
 // layers can be audited and tuned in one place without navigating the larger
 // canvas file.
 
@@ -36,6 +36,7 @@ export const LAND_DOT_VERTEX_SHADER = `
 export const LAND_DOT_FRAGMENT_SHADER = `
   uniform vec3 uBaseColor;
   uniform vec3 uHighlightColor;
+  uniform float uAlpha;
 
   varying float vIntensity;
 
@@ -48,7 +49,7 @@ export const LAND_DOT_FRAGMENT_SHADER = `
       mix(uBaseColor, uHighlightColor, core * 0.22 + vIntensity * 0.18) *
       (1.0 + halo * 0.08);
 
-    alpha *= 1.5;
+    alpha *= 1.5 * uAlpha;
 
     if (alpha < 0.01) discard;
 
@@ -228,9 +229,10 @@ export const HOTSPOT_FRAGMENT_SHADER = `
 
     if (alpha < 0.02) discard;
 
+    // Warm city-light gold, whitening toward the hottest cores.
     vec3 color = mix(
-      vec3(0.38, 0.72, 1.0),
-      vec3(1.0),
+      vec3(0.98, 0.74, 0.38),
+      vec3(1.0, 0.96, 0.88),
       core * 0.55 + vGlow * 0.28 + vActivity * 0.12
     );
     gl_FragColor = vec4(color, alpha);
@@ -333,5 +335,142 @@ export const WIREFRAME_FRAGMENT_SHADER = `
     float alpha = 0.023 * (1.0 - fade);
     if (alpha < 0.0035) discard;
     gl_FragColor = vec4(0.18, 0.25, 0.36, alpha);
+  }
+`
+
+// ── Globe surface ──────────────────────────────────────────────────────────
+// Deep navy body that lifts to lavender toward the limb, so the sphere reads
+// as lit by its own atmosphere. Pairs with HALO_VERTEX_SHADER.
+
+export const GLOBE_SURFACE_FRAGMENT_SHADER = `
+  uniform vec3 uDeepColor;
+  uniform vec3 uRimColor;
+
+  varying vec3 vNormal;
+  varying vec3 vViewPosition;
+
+  void main() {
+    float facing = max(dot(normalize(vNormal), normalize(vViewPosition)), 0.0);
+    float rim = pow(1.0 - facing, 3.0);
+    gl_FragColor = vec4(mix(uDeepColor, uRimColor, rim), 1.0);
+  }
+`
+
+// ── Arc routes ─────────────────────────────────────────────────────────────
+// A faint gold thread with a comet of light travelling along it. aProgress
+// runs 0→1 from source to destination; the head position is uTime-driven so
+// no per-frame CPU work is needed.
+
+export const ARC_VERTEX_SHADER = `
+  attribute float aProgress;
+
+  varying float vProgress;
+
+  void main() {
+    vProgress = aProgress;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`
+
+export const ARC_FRAGMENT_SHADER = `
+  uniform vec3 uColor;
+  uniform float uOpacity;
+  uniform float uPhase;
+  uniform float uSpeed;
+  uniform float uTime;
+
+  varying float vProgress;
+
+  void main() {
+    float endFade =
+      smoothstep(0.0, 0.08, vProgress) * smoothstep(1.0, 0.92, vProgress);
+    float head = fract(uTime * uSpeed + uPhase);
+    // Distance behind the head, wrapped — the tail trails toward the source.
+    float behind = fract(head - vProgress);
+    float tail = exp(-behind * 7.0);
+    float spark = exp(-behind * 60.0);
+
+    float alpha = (0.2 + tail * 0.75 + spark * 0.6) * endFade * uOpacity;
+    vec3 color = mix(uColor, vec3(1.0, 0.97, 0.9), spark) * (1.0 + tail * 0.9);
+
+    if (alpha < 0.004) discard;
+
+    gl_FragColor = vec4(color, alpha);
+  }
+`
+
+// ── Graticule ──────────────────────────────────────────────────────────────
+// Hairline lat/long grid. Fades toward the limb so it never outlines the
+// sphere, and toward the poles where meridians converge.
+
+export const GRATICULE_VERTEX_SHADER = `
+  varying float vFacing;
+  varying float vLatitude;
+
+  void main() {
+    vec3 direction = normalize(position);
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    vec3 viewNormal = normalize(normalMatrix * direction);
+
+    vFacing = dot(viewNormal, normalize(-mvPosition.xyz));
+    vLatitude = abs(direction.y);
+    gl_Position = projectionMatrix * mvPosition;
+  }
+`
+
+export const GRATICULE_FRAGMENT_SHADER = `
+  uniform vec3 uColor;
+  uniform float uOpacity;
+
+  varying float vFacing;
+  varying float vLatitude;
+
+  void main() {
+    float alpha =
+      uOpacity *
+      smoothstep(0.0, 0.55, vFacing) *
+      (1.0 - smoothstep(0.78, 0.97, vLatitude));
+
+    if (alpha < 0.002) discard;
+
+    gl_FragColor = vec4(uColor, alpha);
+  }
+`
+
+// ── Orbital dust ───────────────────────────────────────────────────────────
+// Sparse twinkling motes in a shell around the globe — the render's lavender
+// "space dust". Denser near the atmosphere, thinning outward.
+
+export const DUST_VERTEX_SHADER = `
+  attribute float aPhase;
+  attribute float aSize;
+
+  uniform float uSizeScale;
+  uniform float uTime;
+
+  varying float vTwinkle;
+
+  void main() {
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+
+    vTwinkle = 0.35 + 0.65 * (0.5 + 0.5 * sin(uTime * 0.7 + aPhase));
+    gl_PointSize = aSize * uSizeScale * (0.7 + vTwinkle * 0.5) * (120.0 / -mvPosition.z);
+    gl_Position = projectionMatrix * mvPosition;
+  }
+`
+
+export const DUST_FRAGMENT_SHADER = `
+  uniform vec3 uColor;
+  uniform float uOpacity;
+
+  varying float vTwinkle;
+
+  void main() {
+    float d = length(gl_PointCoord - vec2(0.5)) * 2.0;
+    float alpha = exp(-d * d * 4.0) * vTwinkle * uOpacity;
+
+    if (alpha < 0.01) discard;
+
+    gl_FragColor = vec4(uColor, alpha);
   }
 `

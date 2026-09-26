@@ -98,19 +98,19 @@ function CardInner({
 
       {/* Index badge — top left */}
       {index != null && (
-        <div className="absolute top-4 left-4 flex size-7 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] font-mono text-[10px] text-white/50 backdrop-blur-sm">
+        <div className="absolute top-4 left-4 flex size-7 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] text-[10px] text-white/50 backdrop-blur-sm">
           {padIndex(index)}
         </div>
       )}
 
       {/* Continent code / type chip — top right */}
       {!isCompact && continentCode ? (
-        <div className="absolute top-4 right-4 font-mono text-[10px] tracking-[0.08em] text-white/30 uppercase">
+        <div className="absolute top-4 right-4 text-[10px] tracking-[0.08em] text-white/30">
           {continentCode}
         </div>
       ) : libraryType ? (
         <div
-          className="absolute top-4 right-4 rounded px-2 py-0.5 font-mono text-[10px] tracking-[0.10em] text-white/70 uppercase backdrop-blur-sm"
+          className="absolute top-4 right-4 rounded px-2 py-0.5 text-[10px] tracking-[0.10em] text-white/70 backdrop-blur-sm"
           style={{ background: "rgba(0,0,0,0.55)" }}
         >
           {libraryType}
@@ -136,14 +136,14 @@ function CardInner({
         </h3>
 
         {!isCompact && locationParts.length > 0 && (
-          <p className="text-[11px] tracking-[0.08em] text-white/45 uppercase">
+          <p className="text-[11px] tracking-[0.08em] text-white/45">
             {locationParts.join(" · ")}
           </p>
         )}
 
         {isCompact && (city || countryName) && (
           <p
-            className="truncate text-[10px] tracking-[0.08em] text-white/40 uppercase"
+            className="truncate text-[10px] tracking-[0.08em] text-white/40"
             style={{ fontFamily: T.font.mono }}
           >
             {[city, countryName].filter(Boolean).join(", ")}

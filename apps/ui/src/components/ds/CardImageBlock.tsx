@@ -59,7 +59,7 @@ export function CardImageBlock({
             position: "absolute",
             inset: 0,
             background: `
-              radial-gradient(ellipse 90% 70% at 20% 30%, rgba(127,223,255,0.13), transparent 60%),
+              radial-gradient(ellipse 90% 70% at 20% 30%, rgba(67,56,202,0.08), transparent 60%),
               radial-gradient(ellipse 70% 90% at 75% 75%, rgba(163,144,255,0.10), transparent 55%),
               radial-gradient(ellipse 50% 50% at 55% 20%, rgba(232,201,138,0.06), transparent 50%),
               linear-gradient(160deg, #08101f 0%, #060c1a 60%, #070b1e 100%)

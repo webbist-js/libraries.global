@@ -24,6 +24,7 @@ export function createLandDotsGeometry({
   latBounds = [-62, 82],
   lngBounds = [-180, 180],
   activitySources = [],
+  invert = false,
 }: {
   maskImage: HTMLImageElement | null
   radius: number
@@ -31,6 +32,8 @@ export function createLandDotsGeometry({
   latBounds?: [number, number]
   lngBounds?: [number, number]
   activitySources?: ActivitySource[]
+  /** Sample the bright (ocean) side of the mask instead of land. */
+  invert?: boolean
 }) {
   if (maskImage == null) {
     return new THREE.BufferGeometry()
@@ -85,11 +88,11 @@ export function createLandDotsGeometry({
           pixelData[pixelIndex + 2]!) /
         3
 
-      if (brightness > 112) {
+      if (invert ? brightness <= 112 : brightness > 112) {
         continue
       }
 
-      if (random() < 0.004 + (brightness / 112) * 0.045) {
+      if (!invert && random() < 0.004 + (brightness / 112) * 0.045) {
         continue
       }
 

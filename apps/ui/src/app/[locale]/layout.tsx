@@ -17,8 +17,15 @@ import { ServerProviders } from "@/components/providers/ServerProviders"
 import TrackingScripts from "@/components/providers/TrackingScripts"
 import { Toaster } from "@/components/ui/sonner"
 import { debugStaticParams } from "@/lib/build"
-import { fontFraunces, fontJetBrainsMono, fontRoboto } from "@/lib/fonts"
+import { fontFigtree, fontJetBrainsMono, fontNewsreader } from "@/lib/fonts"
 import { routing } from "@/lib/navigation"
+import {
+  DEFAULT_DESCRIPTION,
+  DEFAULT_TITLE,
+  getSiteUrl,
+  SITE_NAME,
+  TWITTER_SITE,
+} from "@/lib/seo/metadata"
 import { fetchFooter } from "@/lib/strapi-api/content/server"
 import { cn } from "@/lib/styles"
 
@@ -30,23 +37,21 @@ export function generateStaticParams() {
 }
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://libraries.global"
-  ),
+  metadataBase: new URL(getSiteUrl()),
   title: {
-    template: "%s / Libraries Global",
-    default: "Libraries Global — Index of the World's Libraries",
+    template: `%s / ${SITE_NAME}`,
+    default: DEFAULT_TITLE,
   },
-  description:
-    "A complete, searchable atlas of every significant library on earth. Browse by continent, country, region, type and status.",
-  robots: "index, follow",
+  description: DEFAULT_DESCRIPTION,
+  applicationName: SITE_NAME,
+  robots: { index: true, follow: true },
   openGraph: {
-    siteName: "Libraries Global",
+    siteName: SITE_NAME,
     type: "website",
   },
   twitter: {
     card: "summary",
-    site: "@LibrariesGlobal",
+    site: TWITTER_SITE,
   },
 }
 
@@ -105,19 +110,25 @@ export default async function RootLayout({
       </head>
       <body
         className={cn(
-          "min-h-screen bg-gray-100 font-sans antialiased",
-          fontRoboto.variable,
-          fontFraunces.variable,
+          "min-h-screen antialiased",
+          fontFigtree.variable,
+          fontNewsreader.variable,
           fontJetBrainsMono.variable
         )}
       >
+        <a href="#main" className="skip-link">
+          Skip to main content
+        </a>
         <TrackingScripts />
         <ServerProviders>
           <StrapiPreviewListener />
           <ClientProviders>
             <EventModalProvider>
               <div className="relative flex min-h-screen flex-col">
-                <div className="strapi-page-slot flex flex-1 flex-col">
+                <div
+                  id="main"
+                  className="strapi-page-slot flex flex-1 flex-col"
+                >
                   {children}
                 </div>
 

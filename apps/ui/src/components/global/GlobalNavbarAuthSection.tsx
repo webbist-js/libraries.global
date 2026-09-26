@@ -3,7 +3,6 @@
 import { useTranslations } from "next-intl"
 
 import { GlobalLoggedUserMenu } from "@/components/global/GlobalLoggedUserMenu"
-import { ThemeToggle } from "@/components/global/ThemeToggle"
 import { authClient } from "@/lib/auth-client"
 import type { AuthSessionResult } from "@/lib/auth-server"
 import { Link } from "@/lib/navigation"
@@ -26,7 +25,6 @@ export function GlobalNavbarAuthSection({
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-      <ThemeToggle variant="icon" />
       {session?.user ? (
         <GlobalLoggedUserMenu
           user={session.user}

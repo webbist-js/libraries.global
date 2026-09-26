@@ -11,34 +11,46 @@ import { T } from "@/lib/design-tokens"
  */
 export function HeroEyebrow({
   children,
-  icon = "★",
+  icon: _icon,
   accent,
 }: {
   readonly children: ReactNode
   readonly icon?: string
   readonly accent?: string
 }) {
+  // v2: sentence-case sans pill. `icon` glyphs are retired (accepted for API
+  // compatibility); a small indigo dot leads instead.
   return (
     <div
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: "10px",
-        padding: "5px 11px",
+        gap: "8px",
+        padding: "6px 14px",
         borderRadius: "999px",
-        fontSize: "10px",
+        fontSize: "14px",
+        fontWeight: 600,
         border: `1px solid ${T.border.line}`,
-        background: T.bg.surface,
-        fontFamily: T.font.mono,
-        letterSpacing: ".22em",
+        background: T.bg.deep,
+        fontFamily: T.font.sans,
         color: T.ink.dim,
-        textTransform: "uppercase",
         marginBottom: "22px",
       }}
     >
-      <span>{icon}</span>
+      <span
+        aria-hidden="true"
+        style={{
+          width: "7px",
+          height: "7px",
+          borderRadius: "999px",
+          background: T.accent.primary,
+          flexShrink: 0,
+        }}
+      />
       <span>{children}</span>
-      {accent ? <span style={{ color: T.accent.aurora }}>{accent}</span> : null}
+      {accent ? (
+        <span style={{ color: T.accent.primary }}>{accent}</span>
+      ) : null}
     </div>
   )
 }

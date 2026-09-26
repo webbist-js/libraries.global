@@ -51,14 +51,14 @@ export function LocationContributeCTA({
         ? `/contribute/edit/${librarySlug}`
         : `/contribute/edit`
       : `/auth/signin?callbackUrl=${encodeURIComponent(librarySlug ? `/contribute/edit/${librarySlug}` : `/contribute/edit`)}`
-    : "/wiki/contributing/how-to-contribute"
+    : "/docs/contributing/how-to-contribute"
 
   return (
     <section className="py-14 sm:py-18">
-      <div className="mx-auto w-full max-w-[1296px] px-4 sm:px-6 lg:px-10">
+      <div className="mx-auto w-full max-w-[1360px] px-4 sm:px-8">
         <div className="relative overflow-hidden rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) px-8 py-10 shadow-[0_32px_80px_rgba(0,0,0,0.15)] sm:px-12 sm:py-12">
           {/* Dark-mode: teal left + violet right */}
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_120%_at_-8%_50%,rgba(127,223,255,0.07),transparent_58%),radial-gradient(ellipse_65%_90%_at_108%_50%,rgba(163,148,255,0.13),transparent_55%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_120%_at_-8%_50%,rgba(67,56,202,0.08),transparent_58%),radial-gradient(ellipse_65%_90%_at_108%_50%,rgba(163,148,255,0.13),transparent_55%)]" />
           {/* Light-mode: sage left + amber right sweep */}
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,rgba(90,150,90,0.09)_0%,transparent_38%,rgba(210,170,70,0.10)_100%)]" />
 

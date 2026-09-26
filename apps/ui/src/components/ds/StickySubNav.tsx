@@ -37,18 +37,17 @@ function tabStyle(active: boolean): React.CSSProperties {
   return {
     display: "inline-flex",
     alignItems: "center",
-    padding: "14px 16px",
-    fontFamily: T.font.mono,
-    fontSize: "10px",
-    letterSpacing: ".14em",
-    textTransform: "uppercase",
-    color: active ? T.ink.base : T.ink.faint,
+    padding: "13px 14px 11px",
+    fontFamily: T.font.sans,
+    fontSize: "15px",
+    fontWeight: active ? 600 : 500,
+    color: active ? T.ink.base : T.ink.dim,
     borderTop: "none",
     borderLeft: "none",
     borderRight: "none",
     borderBottom: active
-      ? `2px solid ${T.accent.aurora}`
-      : "2px solid transparent",
+      ? `3px solid ${T.accent.primary}`
+      : "3px solid transparent",
     whiteSpace: "nowrap",
     transition: "color 150ms",
     textDecoration: "none",
@@ -59,8 +58,8 @@ function tabStyle(active: boolean): React.CSSProperties {
 
 /**
  * Universal sticky sub-navigation bar used beneath hero sections sitewide.
- * Matches the profile page tab nav style: underline indicator, aurora accent,
- * mono font, uppercase.
+ * v2 underline tabs: sentence-case sans, 3px indigo indicator on the active
+ * tab (matches the profile tab nav).
  *
  * Tabs render as `<Link>` when `href` is provided, otherwise as `<button>`.
  */
@@ -72,7 +71,7 @@ export function StickySubNav({
 }: StickySubNavProps) {
   return (
     <div style={BASE_STYLE}>
-      <div className="mx-auto max-w-[1296px] px-6 md:px-10">
+      <div className="mx-auto max-w-[1360px] px-4 sm:px-8">
         <div
           style={{
             display: "flex",

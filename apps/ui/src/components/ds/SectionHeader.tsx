@@ -16,9 +16,9 @@ export function SectionHeader({
       style={{
         fontFamily: T.font.serif,
         fontSize: "clamp(1.6rem, 3vw, 2.4rem)",
-        fontWeight: 600,
+        fontWeight: 500,
         lineHeight: 1.1,
-        letterSpacing: "-0.02em",
+        letterSpacing: "-0.01em",
         color: T.ink.base,
         margin: 0,
       }}

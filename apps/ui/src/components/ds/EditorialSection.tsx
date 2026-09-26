@@ -45,7 +45,7 @@ export function EditorialSection({
           {/* Text */}
           <div className="flex flex-col gap-5">
             {section.eyebrow ? (
-              <span className="text-[11px] font-semibold tracking-[0.16em] text-(--t-accent-aurora) uppercase opacity-70">
+              <span className="text-[11px] font-semibold tracking-[0.16em] text-(--t-accent-aurora) opacity-70">
                 {section.eyebrow}
               </span>
             ) : null}

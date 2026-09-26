@@ -26,14 +26,14 @@ export function IndexPager({
   }
 
   const pill = (active: boolean, disabled = false): React.CSSProperties => ({
-    fontFamily: T.font.mono,
-    fontSize: "11px",
-    letterSpacing: ".06em",
-    padding: "6px 10px",
-    borderRadius: "10px",
-    border: `1px solid ${active ? "rgba(127,223,255,0.3)" : T.border.line}`,
-    background: active ? "rgba(127,223,255,0.1)" : "transparent",
-    color: disabled ? T.ink.ghost : active ? T.accent.aurora : T.ink.dim,
+    fontFamily: T.font.sans,
+    fontSize: "14px",
+    fontWeight: 600,
+    padding: "7px 13px",
+    borderRadius: "999px",
+    border: `1px solid ${active ? "transparent" : T.border.hi}`,
+    background: active ? T.accent.primary : T.bg.deep,
+    color: disabled ? T.ink.ghost : active ? "#fff" : T.ink.base,
     cursor: disabled ? "default" : "pointer",
     transition: "all 150ms",
   })
@@ -65,8 +65,8 @@ export function IndexPager({
             style={{
               color: T.ink.faint,
               padding: "6px 4px",
-              fontSize: "11px",
-              fontFamily: T.font.mono,
+              fontSize: "14px",
+              fontFamily: T.font.sans,
             }}
           >
             …

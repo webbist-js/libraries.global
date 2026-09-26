@@ -1,48 +1,32 @@
-"use client"
-
 import type React from "react"
 
-import { DotHeroCanvas } from "@/components/ui/DotHeroCanvas"
 import { T } from "@/lib/design-tokens"
 
 interface ContributeHeroShellProps {
   children: React.ReactNode
   minHeight?: string
+  /** @deprecated pre-v2 wash — ignored. */
   overlay?: React.CSSProperties["background"]
 }
 
 /**
- * Shared hero shell for all /contribute pages.
- * Renders the DotHeroCanvas background, fade overlay, and a transparent-header
- * section that slides behind the 56px sticky global header.
- *
- * Content is placed in `children` — use a relative z-10 div inside.
+ * Shared hero band for all /contribute pages — the v2 tinted band pattern
+ * (deeper paper, hairline border below), matching the Docs/Events heroes.
  */
 export function ContributeHeroShell({
   children,
   minHeight,
-  overlay = "linear-gradient(to bottom, transparent 0%, var(--t-bg-space) 100%)",
 }: ContributeHeroShellProps) {
   return (
     <section
-      data-transparent-header=""
-      className="-mt-14 overflow-hidden"
       style={{
         position: "relative",
-        background: T.bg.void,
+        background: T.bg.space,
         borderBottom: `1px solid ${T.border.line}`,
         ...(minHeight ? { minHeight } : {}),
       }}
     >
-      <DotHeroCanvas />
-
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{ background: overlay }}
-      />
-
-      <div className="relative z-10 mx-auto w-full max-w-[1296px] px-6 pt-28 pb-10 md:px-10">
+      <div className="relative z-10 mx-auto w-full max-w-[1360px] px-4 py-12 sm:px-8 md:py-14">
         {children}
       </div>
     </section>

@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import type React from "react"
 
 import {
   DropdownMenu,
@@ -53,21 +54,55 @@ function Avatar({
         width: size,
         height: size,
         borderRadius: "50%",
-        background: "var(--t-aurora-soft)",
-        border: "1px solid var(--t-aurora-edge)",
+        background: "var(--tint-national-bg)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontFamily: T.font.mono,
-        fontSize: size * 0.38,
-        fontWeight: 600,
-        color: T.accent.aurora,
+        fontFamily: T.font.sans,
+        fontSize: size * 0.4,
+        fontWeight: 700,
+        color: "var(--tint-national-fg)",
         flexShrink: 0,
-        letterSpacing: "0.04em",
       }}
     >
       {initials}
     </span>
+  )
+}
+
+function MenuLink({
+  href,
+  icon,
+  trailing,
+  children,
+}: {
+  href: string
+  icon: string
+  trailing?: React.ReactNode
+  children: React.ReactNode
+}) {
+  return (
+    <DropdownMenuItem
+      asChild
+      className="cursor-pointer rounded-[12px] p-0 focus:bg-(--t-bg-muted-2) focus:text-(--t-ink-base)"
+    >
+      <Link
+        href={href}
+        className="flex w-full items-center gap-3 px-2.5 py-2.5 text-[15px] font-medium"
+        style={{ color: T.ink.base }}
+      >
+        <Icon
+          icon={icon}
+          width={19}
+          height={19}
+          aria-hidden="true"
+          className="shrink-0"
+          style={{ color: T.ink.dim }}
+        />
+        <span>{children}</span>
+        {trailing}
+      </Link>
+    </DropdownMenuItem>
   )
 }
 
@@ -99,257 +134,116 @@ export function GlobalLoggedUserMenu({
             display: "flex",
             alignItems: "center",
             gap: "10px",
-            padding: "3px 12px 3px 3px",
+            height: "36px",
+            padding: "2px 14px 2px 2px",
             borderRadius: "999px",
             border: `1px solid ${T.border.line}`,
             background: T.bg.deep,
             cursor: "pointer",
-            transition: "background 150ms, border-color 150ms",
-            fontFamily: T.font.mono,
-            fontSize: "12px",
-            letterSpacing: "0.05em",
-            color: T.ink.dim,
+            transition: "background 150ms",
+            fontFamily: T.font.sans,
+            fontSize: "14px",
+            fontWeight: 600,
+            color: T.ink.base,
           }}
-          className="hover:border-(--t-border-hi) hover:bg-(--t-bg-surface)"
+          className="hover:bg-(--t-bg-surface)"
         >
-          <Avatar src={avatarSrc} initials={initials} size={28} />
-          <span>{username ? `@${username}` : firstName}</span>
+          <Avatar src={avatarSrc} initials={initials} size={30} />
+          <span>{firstName}</span>
         </button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
         align="end"
+        sideOffset={8}
+        className="w-[272px] rounded-[20px] border p-2 shadow-none"
         style={{
-          width: "236px",
           background: T.bg.deep,
-          border: `1px solid ${T.border.line}`,
-          backdropFilter: "blur(20px)",
-          boxShadow: "0 16px 48px rgba(0,0,0,0.2), 0 1px 0 rgba(0,0,0,0.06)",
-          borderRadius: "12px",
-          padding: "6px",
+          borderColor: T.border.line,
+          boxShadow: "0 12px 28px rgba(23,22,43,.08)",
         }}
       >
         {/* Identity header */}
         <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            padding: "10px 10px 12px",
-            marginBottom: "4px",
-            borderBottom: `1px solid ${T.border.line}`,
-          }}
+          className="mb-1 flex items-center gap-3 border-b px-2.5 pt-2 pb-3"
+          style={{ borderBottomColor: T.border.divider }}
         >
-          <Avatar src={avatarSrc} initials={initials} size={38} />
-          <div style={{ minWidth: 0, flex: 1 }}>
+          <Avatar src={avatarSrc} initials={initials} size={44} />
+          <div className="min-w-0 flex-1">
             <p
-              style={{
-                margin: 0,
-                fontFamily: T.font.sans,
-                fontSize: "13px",
-                fontWeight: 600,
-                color: T.ink.base,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
+              className="m-0 truncate text-[16px] font-semibold"
+              style={{ color: T.ink.base }}
             >
               {user.name || firstName}
             </p>
-            {username ? (
-              <p
-                style={{
-                  margin: "1px 0 0",
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: "0.06em",
-                  color: T.accent.aurora,
-                  opacity: 0.7,
-                }}
-              >
-                @{username}
-              </p>
-            ) : (
-              <p
-                style={{
-                  margin: "1px 0 0",
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: "0.04em",
-                  color: T.ink.faint,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {user.email}
-              </p>
-            )}
+            <p
+              className="m-0 mt-0.5 truncate text-[14px]"
+              style={{ color: T.ink.dim }}
+            >
+              {username ? `@${username}` : user.email}
+            </p>
           </div>
         </div>
 
         {username ? (
           <>
-            {/* My profile */}
-            <DropdownMenuItem
-              asChild
-              className="cursor-pointer rounded-lg focus:bg-(--t-aurora-soft)"
+            <MenuLink
+              href={`/profile/${username}`}
+              icon="mdi:account-circle-outline"
             >
-              <Link
-                href={`/profile/${username}`}
-                className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-(--t-ink-dim) hover:text-(--t-ink-base)"
-              >
-                <Icon
-                  icon="mdi:account-circle-outline"
-                  width={15}
-                  height={15}
-                  className="shrink-0 opacity-60"
-                />
-                <span>My profile</span>
-              </Link>
-            </DropdownMenuItem>
-
-            {/* My contributions */}
-            <DropdownMenuItem
-              asChild
-              className="cursor-pointer rounded-lg focus:bg-(--t-aurora-soft)"
+              My profile
+            </MenuLink>
+            <MenuLink
+              href={`/profile/${username}/contributions`}
+              icon="mdi:pencil-outline"
             >
-              <Link
-                href={`/profile/${username}/contributions`}
-                className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-(--t-ink-dim) hover:text-(--t-ink-base)"
-              >
-                <Icon
-                  icon="mdi:book-edit-outline"
-                  width={15}
-                  height={15}
-                  className="shrink-0 opacity-60"
-                />
-                <span>My contributions</span>
-              </Link>
-            </DropdownMenuItem>
-
-            {/* Badges & points */}
-            <DropdownMenuItem
-              asChild
-              className="cursor-pointer rounded-lg focus:bg-(--t-aurora-soft)"
+              My contributions
+            </MenuLink>
+            <MenuLink
+              href={`/profile/${username}/badges`}
+              icon="mdi:medal-outline"
             >
-              <Link
-                href={`/profile/${username}/badges`}
-                className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-(--t-ink-dim) hover:text-(--t-ink-base)"
-              >
-                <Icon
-                  icon="mdi:medal-outline"
-                  width={15}
-                  height={15}
-                  className="shrink-0 opacity-60"
-                />
-                <span>Badges & points</span>
-              </Link>
-            </DropdownMenuItem>
-
+              Badges & points
+            </MenuLink>
             {/* Submissions — verified librarians only */}
             {isVerifiedLibrarian && (
-              <DropdownMenuItem
-                asChild
-                className="cursor-pointer rounded-lg focus:bg-(--t-aurora-soft)"
-              >
-                <Link
-                  href="/contribute/submissions"
-                  className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-(--t-ink-dim) hover:text-(--t-ink-base)"
-                >
-                  <Icon
-                    icon="mdi:inbox-multiple-outline"
-                    width={15}
-                    height={15}
-                    className="shrink-0 opacity-60"
-                  />
-                  <span>My submissions</span>
+              <MenuLink
+                href="/contribute/submissions"
+                icon="mdi:inbox-multiple-outline"
+                trailing={
                   <span
+                    className="ml-auto rounded-full px-2 py-0.5 text-[12px] font-semibold"
                     style={{
-                      marginLeft: "auto",
-                      fontFamily: T.font.mono,
-                      fontSize: "10px",
-                      letterSpacing: ".12em",
-                      textTransform: "uppercase",
-                      color: T.accent.aurora,
-                      background: "rgba(127,223,255,0.1)",
-                      border: "1px solid rgba(127,223,255,0.2)",
-                      borderRadius: "4px",
-                      padding: "1px 5px",
+                      background: "var(--tint-national-bg)",
+                      color: "var(--tint-national-fg)",
                     }}
                   >
                     Librarian
                   </span>
-                </Link>
-              </DropdownMenuItem>
+                }
+              >
+                My submissions
+              </MenuLink>
             )}
           </>
         ) : (
           /* No profile yet — prompt to complete setup */
-          <DropdownMenuItem
-            asChild
-            className="cursor-pointer rounded-lg focus:bg-(--t-aurora-soft)"
-          >
-            <Link
-              href="/profile/settings"
-              className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-(--t-ink-dim) hover:text-(--t-ink-base)"
-            >
-              <Icon
-                icon="mdi:account-plus-outline"
-                width={15}
-                height={15}
-                className="shrink-0 opacity-60"
-              />
-              <span>Complete your profile</span>
-            </Link>
-          </DropdownMenuItem>
+          <MenuLink href="/profile/settings" icon="mdi:account-plus-outline">
+            Complete your profile
+          </MenuLink>
         )}
 
         <DropdownMenuSeparator
-          style={{ margin: "4px 0", background: T.border.line }}
+          className="mx-1 my-1.5"
+          style={{ background: T.border.divider }}
         />
 
-        {/* Settings */}
-        <DropdownMenuItem
-          asChild
-          className="cursor-pointer rounded-lg focus:bg-(--t-aurora-soft)"
-        >
-          <Link
-            href="/profile/settings"
-            className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-(--t-ink-dim) hover:text-(--t-ink-base)"
-          >
-            <Icon
-              icon="mdi:cog-outline"
-              width={15}
-              height={15}
-              className="shrink-0 opacity-60"
-            />
-            <span>Settings</span>
-          </Link>
-        </DropdownMenuItem>
-
-        <DropdownMenuSeparator
-          style={{ margin: "4px 0", background: T.border.line }}
-        />
-
-        {/* Sign out */}
-        <DropdownMenuItem
-          asChild
-          className="cursor-pointer rounded-lg focus:bg-(--t-aurora-soft)"
-        >
-          <Link
-            href="/auth/signout"
-            className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-(--t-ink-faint) hover:text-(--t-ink-dim)"
-          >
-            <Icon
-              icon="mdi:logout"
-              width={15}
-              height={15}
-              className="shrink-0 opacity-60"
-            />
-            <span>Sign out</span>
-          </Link>
-        </DropdownMenuItem>
+        <MenuLink href="/profile/settings" icon="mdi:cog-outline">
+          Settings
+        </MenuLink>
+        <MenuLink href="/auth/signout" icon="mdi:logout">
+          Sign out
+        </MenuLink>
       </DropdownMenuContent>
     </DropdownMenu>
   )

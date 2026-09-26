@@ -7,7 +7,7 @@ export function EmptyState({ message }: { readonly message: string }) {
     >
       <p
         style={{
-          fontFamily: T.font.mono,
+          fontFamily: T.font.sans,
           fontSize: "13px",
           color: T.ink.faint,
           margin: 0,

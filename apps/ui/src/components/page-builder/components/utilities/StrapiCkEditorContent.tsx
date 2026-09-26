@@ -13,7 +13,7 @@ export function StrapiCkEditorContent({
   return (
     <CKEditorRenderer
       htmlContent={component.content}
-      className="mx-auto w-full max-w-[1296px] px-4 py-8 lg:py-12"
+      className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8 lg:py-12"
     />
   )
 }

@@ -1,15 +1,17 @@
-import { Fraunces, JetBrains_Mono, Roboto } from "next/font/google"
+import { Figtree, JetBrains_Mono, Newsreader } from "next/font/google"
 
-export const fontRoboto = Roboto({
+export const fontFigtree = Figtree({
   subsets: ["latin"],
-  weight: ["100", "300", "400", "500", "700"],
-  variable: "--font-roboto",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-figtree",
+  display: "swap",
 })
 
-export const fontFraunces = Fraunces({
+export const fontNewsreader = Newsreader({
   subsets: ["latin"],
-  axes: ["opsz", "SOFT", "WONK"],
-  variable: "--font-fraunces",
+  style: ["normal", "italic"],
+  axes: ["opsz"],
+  variable: "--font-newsreader",
   display: "swap",
 })
 

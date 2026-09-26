@@ -80,8 +80,8 @@ export function QuickPathCard({
           left: 0,
           right: 0,
           height: "2px",
-          background: `linear-gradient(90deg,${T.accent.aurora},${T.accent.violet})`,
-          opacity: 0.5,
+          background: T.accent.primary,
+          opacity: 0.4,
           transition: "opacity 200ms",
         }}
         className="qpath-bar"
@@ -98,8 +98,8 @@ export function QuickPathCard({
             width: "36px",
             height: "36px",
             borderRadius: "10px",
-            background: "rgba(127,223,255,.1)",
-            border: "1px solid rgba(127,223,255,.25)",
+            background: "var(--t-aurora-soft)",
+            border: "1px solid var(--t-aurora-edge)",
             display: "grid",
             placeItems: "center",
             color: T.accent.aurora,
@@ -109,11 +109,9 @@ export function QuickPathCard({
         </div>
         <div
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
+            fontFamily: T.font.sans,
+            fontSize: "13px",
             color: T.ink.low,
-            letterSpacing: ".14em",
-            textTransform: "uppercase",
             display: "flex",
             alignItems: "center",
             gap: "6px",
@@ -150,8 +148,8 @@ export function QuickPathCard({
       ) : null}
       <div
         style={{
-          fontFamily: T.font.mono,
-          fontSize: "11px",
+          fontFamily: T.font.sans,
+          fontSize: "13px",
           color: T.accent.aurora,
           display: "flex",
           alignItems: "center",
@@ -248,13 +246,12 @@ export function SectionDomainCard({
     >
       <div
         style={{
-          fontFamily: T.font.mono,
-          fontSize: "10px",
+          fontFamily: T.font.sans,
+          fontSize: "13px",
           color: T.ink.faint,
-          letterSpacing: ".2em",
         }}
       >
-        § 01.{sectionNum}
+        {sectionNum}
       </div>
       <div style={{ display: "flex" }}>
         <Badge
@@ -303,8 +300,8 @@ export function SectionDomainCard({
             <li
               key={category!.slug!}
               style={{
-                fontFamily: T.font.mono,
-                fontSize: "11px",
+                fontFamily: T.font.sans,
+                fontSize: "13px",
                 color: T.ink.dim,
                 display: "flex",
                 alignItems: "center",
@@ -385,11 +382,9 @@ export function ArticleChangelogRow({
     >
       <div
         style={{
-          fontFamily: T.font.mono,
-          fontSize: "10px",
+          fontFamily: T.font.sans,
+          fontSize: "13px",
           color: T.ink.faint,
-          letterSpacing: ".12em",
-          textTransform: "uppercase",
           paddingTop: "3px",
         }}
       >
@@ -418,10 +413,10 @@ export function ArticleChangelogRow({
 // ── Contributor avatar ─────────────────────────────────────────────────────
 
 const AVATAR_GRADIENTS = [
-  `linear-gradient(135deg,${T.accent.aurora},${T.accent.violet})`,
-  `linear-gradient(135deg,${T.accent.ember},${T.accent.gold})`,
-  `linear-gradient(135deg,${T.accent.violet},#c4b5ff)`,
-  `linear-gradient(135deg,${T.accent.gold},${T.accent.ember})`,
+  "var(--tint-national-bg)",
+  "var(--tint-special-bg)",
+  "var(--tint-academic-bg)",
+  "var(--tint-public-bg)",
 ]
 
 export function ContribAvatar({
@@ -441,9 +436,9 @@ export function ContribAvatar({
         background: AVATAR_GRADIENTS[index % AVATAR_GRADIENTS.length],
         display: "grid",
         placeItems: "center",
-        color: "#0a0f2a",
+        color: T.ink.base,
         fontFamily: T.font.serif,
-        fontSize: "11px",
+        fontSize: "13px",
         fontWeight: 500,
         border: `1px solid ${T.border.hi}`,
         cursor: "pointer",

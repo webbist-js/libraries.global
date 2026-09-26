@@ -13,7 +13,7 @@ export function MetaRow({
   return (
     <p
       style={{
-        fontFamily: T.font.mono,
+        fontFamily: T.font.sans,
         fontSize: "12.5px",
         color: T.ink.low,
         display: "flex",

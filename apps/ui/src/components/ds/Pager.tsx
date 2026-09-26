@@ -21,11 +21,10 @@ export function Pager({
           <Card hover style={{ padding: "16px 20px" }}>
             <p
               style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                color: T.ink.faint,
-                letterSpacing: ".16em",
-                textTransform: "uppercase",
+                fontFamily: T.font.sans,
+                fontSize: "13px",
+                fontWeight: 600,
+                color: T.ink.dim,
                 margin: "0 0 6px",
               }}
             >
@@ -52,11 +51,10 @@ export function Pager({
           <Card hover style={{ padding: "16px 20px", textAlign: "right" }}>
             <p
               style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                color: T.ink.faint,
-                letterSpacing: ".16em",
-                textTransform: "uppercase",
+                fontFamily: T.font.sans,
+                fontSize: "13px",
+                fontWeight: 600,
+                color: T.ink.dim,
                 margin: "0 0 6px",
               }}
             >
