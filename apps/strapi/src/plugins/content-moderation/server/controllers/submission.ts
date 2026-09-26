@@ -216,6 +216,18 @@ export default ({ strapi }: { strapi: any }) => ({
     const reviewer = ctx.state.user ?? ctx.state.admin
     const reviewerId = String(reviewer?.id ?? "unknown")
 
+    const target = await strapi
+      .documents("plugin::content-moderation.submission")
+      .findOne({ documentId: id })
+    if (
+      target &&
+      reviewer?.email &&
+      target.submittedByEmail &&
+      String(reviewer.email).toLowerCase() ===
+        String(target.submittedByEmail).toLowerCase()
+    )
+      return ctx.forbidden("You can't review your own submission.")
+
     const result = await strapi
       .plugin("content-moderation")
       .service("submission")
