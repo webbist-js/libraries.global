@@ -1,5 +1,79 @@
 import { factories } from "@strapi/strapi"
 
+import { isValidServiceSecret } from "../../../utils/service-secret"
+
+/** Atlas URL for a library (/continent/country/region/slug), or null if any segment is missing. */
+function buildLibraryPath(library: any): string | null {
+  const segments = [
+    library.continent?.slug,
+    library.country?.slug,
+    library.region?.slug,
+    library.slug,
+  ]
+
+  return segments.every(Boolean) ? `/${segments.join("/")}` : null
+}
+
+type PublicPrefs = {
+  showLocation: boolean
+  showAffiliation: boolean
+  showActivity: boolean
+  showFollows: boolean
+}
+
+const DEFAULT_PUBLIC_PREFS: PublicPrefs = {
+  showLocation: true,
+  showAffiliation: true,
+  showActivity: true,
+  showFollows: true,
+}
+
+function resolvePublicPrefs(raw: unknown): PublicPrefs {
+  const prefs = { ...DEFAULT_PUBLIC_PREFS }
+  if (raw && typeof raw === "object") {
+    for (const key of Object.keys(
+      DEFAULT_PUBLIC_PREFS
+    ) as (keyof PublicPrefs)[]) {
+      const value = (raw as Record<string, unknown>)[key]
+      if (typeof value === "boolean") prefs[key] = value
+    }
+  }
+
+  return prefs
+}
+
+/**
+ * Enforce the owner's public-visibility toggles server-side. The UI also hides
+ * these, but this endpoint is unauthenticated, so the data must never leave
+ * Strapi when the owner has switched it off. The owner themselves (via the
+ * bridge-secret owner bypass) always gets the full record.
+ */
+function applyPublicPrefs(
+  data: Record<string, any>,
+  isOwnerRequest: boolean
+): Record<string, any> {
+  if (isOwnerRequest) return data
+  const prefs = resolvePublicPrefs(data.publicPrefs)
+  const out = { ...data }
+  if (!prefs.showLocation) {
+    out.city = null
+    out.country = null
+    out.timezone = null
+  }
+  if (!prefs.showAffiliation) {
+    out.affiliation = null
+    out.affiliationType = null
+    out.jobTitle = null
+    out.claimedLibraries = []
+  }
+  if (!prefs.showFollows) {
+    out.followedLibraries = []
+    out.followedProfiles = []
+  }
+
+  return out
+}
+
 export default factories.createCoreController(
   "api::user-profile.user-profile",
   () => ({
@@ -12,7 +86,14 @@ export default factories.createCoreController(
           populate: {
             avatar: true,
             languages: true,
-            followedLibraries: { populate: { heroImage: true } },
+            followedLibraries: {
+              populate: {
+                heroImage: true,
+                continent: true,
+                country: true,
+                region: true,
+              },
+            },
           },
           limit: 1,
         })
@@ -20,10 +101,9 @@ export default factories.createCoreController(
       if (!profile) return ctx.notFound("Profile not found")
 
       // Server-to-server owner/viewer bypass — both require the bridge secret
-      const bridgeSecret = process.env.STRAPI_BRIDGE_SECRET
-      const secretMatch =
-        !!bridgeSecret &&
-        String(ctx.request.headers["x-service-secret"] ?? "") === bridgeSecret
+      const secretMatch = isValidServiceSecret(
+        ctx.request.headers["x-service-secret"]
+      )
 
       // ownerBaUserId: profile owner viewing their own private/limited profile
       const ownerBaUserId = (ctx.query as any)?.ownerBaUserId as
@@ -49,7 +129,11 @@ export default factories.createCoreController(
             .query("api::library-affiliation.library-affiliation")
             .findMany({
               where: { baUserId: profile.baUserId },
-              populate: { library: true },
+              populate: {
+                library: {
+                  populate: { continent: true, country: true, region: true },
+                },
+              },
             })
         : []
 
@@ -61,6 +145,7 @@ export default factories.createCoreController(
           name: a.library.name ?? null,
           slug: a.library.slug ?? null,
           libraryType: a.library.libraryType ?? null,
+          path: buildLibraryPath(a.library),
         }))
 
       // For limited profiles, check whether the viewer is affiliated with any of
@@ -107,7 +192,14 @@ export default factories.createCoreController(
         ? await strapi.db.query("api::user-profile.user-profile").findOne({
             where: { baUserId: profile.baUserId },
             populate: {
-              followedLibraries: { populate: { heroImage: true } },
+              followedLibraries: {
+                populate: {
+                  heroImage: true,
+                  continent: true,
+                  country: true,
+                  region: true,
+                },
+              },
               followedProfiles: { populate: { avatar: true } },
             },
           })
@@ -121,6 +213,7 @@ export default factories.createCoreController(
         slug: lib.slug ?? null,
         libraryType: lib.libraryType ?? null,
         heroImageUrl: lib.heroImage?.url ?? null,
+        path: buildLibraryPath(lib),
       }))
       // Only surface public followed profiles — never expose private/limited ones
       const followedProfiles = (
@@ -164,11 +257,19 @@ export default factories.createCoreController(
         } = safe
 
         return ctx.send({
-          data: { ...limited, claimedLibraries, earnedBadges },
+          data: applyPublicPrefs(
+            { ...limited, claimedLibraries, earnedBadges },
+            isOwnerRequest
+          ),
         })
       }
 
-      return ctx.send({ data: { ...safe, claimedLibraries, earnedBadges } })
+      return ctx.send({
+        data: applyPublicPrefs(
+          { ...safe, claimedLibraries, earnedBadges },
+          isOwnerRequest
+        ),
+      })
     },
 
     async findByDocumentId(ctx: any) {
@@ -180,7 +281,14 @@ export default factories.createCoreController(
           populate: {
             avatar: true,
             languages: true,
-            followedLibraries: { populate: { heroImage: true } },
+            followedLibraries: {
+              populate: {
+                heroImage: true,
+                continent: true,
+                country: true,
+                region: true,
+              },
+            },
           },
         })
       if (!profile) return ctx.notFound("Profile not found")
@@ -194,7 +302,11 @@ export default factories.createCoreController(
             .query("api::library-affiliation.library-affiliation")
             .findMany({
               where: { baUserId: profile.baUserId },
-              populate: { library: true },
+              populate: {
+                library: {
+                  populate: { continent: true, country: true, region: true },
+                },
+              },
             })
         : []
 
@@ -206,6 +318,7 @@ export default factories.createCoreController(
           name: a.library.name ?? null,
           slug: a.library.slug ?? null,
           libraryType: a.library.libraryType ?? null,
+          path: buildLibraryPath(a.library),
         }))
 
       const badgeAwards = profile.baUserId
@@ -223,7 +336,14 @@ export default factories.createCoreController(
         ? await strapi.db.query("api::user-profile.user-profile").findOne({
             where: { baUserId: profile.baUserId },
             populate: {
-              followedLibraries: { populate: { heroImage: true } },
+              followedLibraries: {
+                populate: {
+                  heroImage: true,
+                  continent: true,
+                  country: true,
+                  region: true,
+                },
+              },
             },
           })
         : null
@@ -236,6 +356,7 @@ export default factories.createCoreController(
         slug: lib.slug ?? null,
         libraryType: lib.libraryType ?? null,
         heroImageUrl: lib.heroImage?.url ?? null,
+        path: buildLibraryPath(lib),
       }))
 
       const {
@@ -258,11 +379,19 @@ export default factories.createCoreController(
         } = safe
 
         return ctx.send({
-          data: { ...limited, claimedLibraries, earnedBadges },
+          data: applyPublicPrefs(
+            { ...limited, claimedLibraries, earnedBadges },
+            false
+          ),
         })
       }
 
-      return ctx.send({ data: { ...safe, claimedLibraries, earnedBadges } })
+      return ctx.send({
+        data: applyPublicPrefs(
+          { ...safe, claimedLibraries, earnedBadges },
+          false
+        ),
+      })
     },
 
     async findBadgesByDocumentId(ctx: any) {
@@ -302,14 +431,11 @@ export default factories.createCoreController(
         })
       const profile = results[0] ?? null
 
-      const bridgeSecret2 = process.env.STRAPI_BRIDGE_SECRET
       const ownerBaUserId2 = (ctx.query as any)?.ownerBaUserId as
         | string
         | undefined
       const isOwnerRequest2 =
-        !!bridgeSecret2 &&
-        String(ctx.request.headers["x-service-secret"] ?? "") ===
-          bridgeSecret2 &&
+        isValidServiceSecret(ctx.request.headers["x-service-secret"]) &&
         !!ownerBaUserId2 &&
         ownerBaUserId2 === profile?.baUserId
 

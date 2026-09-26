@@ -6,9 +6,18 @@
     "pluralName": "saved-events",
     "displayName": "Saved Event"
   },
-  "options": { "draftAndPublish": false },
+  "options": {
+    "draftAndPublish": false
+  },
   "attributes": {
-    "eventDocumentId": { "type": "string", "required": true },
+    "eventDocumentId": {
+      "type": "string",
+      "required": true
+    },
+    "baUserId": {
+      "type": "string",
+      "private": true
+    },
     "user": {
       "type": "relation",
       "relation": "manyToOne",

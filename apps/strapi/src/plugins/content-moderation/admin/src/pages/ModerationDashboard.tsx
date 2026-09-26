@@ -492,8 +492,17 @@ function LibraryClaimPanel({ sub }: { sub: Submission }) {
     ...(fields.libraryWebsiteDomain
       ? [
           {
-            label: "Library web domain",
+            // Legacy claims: this was typed by the claimant, not looked up.
+            label: "Website given by claimant (unverified)",
             value: String(fields.libraryWebsiteDomain),
+          },
+        ]
+      : []),
+    ...(fields.claimedWebsiteDomain
+      ? [
+          {
+            label: "Website given by claimant (unverified)",
+            value: String(fields.claimedWebsiteDomain),
           },
         ]
       : []),

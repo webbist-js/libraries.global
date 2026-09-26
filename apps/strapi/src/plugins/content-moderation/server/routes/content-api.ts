@@ -25,6 +25,12 @@ export default [
   },
   {
     method: "GET",
+    path: "/libraries/:documentId/revisions",
+    handler: "submission.libraryRevisions",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
     path: "/submissions/my",
     handler: "submission.findMine",
     config: { auth: false, policies: [] },

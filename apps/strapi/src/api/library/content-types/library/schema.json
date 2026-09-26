@@ -380,7 +380,9 @@
     "heroImage": {
       "type": "media",
       "multiple": false,
-      "allowedTypes": ["images"],
+      "allowedTypes": [
+        "images"
+      ],
       "pluginOptions": {
         "i18n": {
           "localized": false
@@ -390,7 +392,9 @@
     "gallery": {
       "type": "media",
       "multiple": true,
-      "allowedTypes": ["images"],
+      "allowedTypes": [
+        "images"
+      ],
       "pluginOptions": {
         "i18n": {
           "localized": false
@@ -472,6 +476,12 @@
           "localized": true
         }
       }
+    },
+    "nearestStation": {
+      "type": "string"
+    },
+    "wikidataId": {
+      "type": "string"
     },
     "featured": {
       "type": "boolean",

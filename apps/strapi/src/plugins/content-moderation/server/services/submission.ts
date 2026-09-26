@@ -475,6 +475,67 @@ export default ({ strapi }: { strapi: any }) => ({
     })
   },
 
+  /**
+   * Public revision history for a library: the most recent approved
+   * submissions targeting that library, sanitized for anonymous display.
+   * Never exposes emails, reviewer identity, or review notes.
+   */
+  async findLibraryRevisions(libraryDocumentId: string, limit = 10) {
+    const submissions = await strapi
+      .documents("plugin::content-moderation.submission")
+      .findMany({
+        filters: {
+          targetDocumentId: libraryDocumentId,
+          status: "approved",
+        } as any,
+        sort: { reviewedAt: "desc" },
+        limit,
+      })
+
+    // Resolve submitter usernames (batch, by baUserId)
+    const userIds = [
+      ...new Set(
+        submissions.map((s: any) => s.submittedByUserId).filter(Boolean)
+      ),
+    ]
+    const usernameByBaUserId: Record<string, string> = {}
+    if (userIds.length > 0) {
+      const profiles = await strapi
+        .documents("api::user-profile.user-profile")
+        .findMany({
+          filters: { baUserId: { $in: userIds } } as any,
+          fields: ["baUserId", "username"] as any,
+          limit: userIds.length,
+        })
+      for (const p of profiles as any[]) {
+        if (p.baUserId && p.username)
+          usernameByBaUserId[p.baUserId] = p.username
+      }
+    }
+
+    const KIND_MAP: Record<string, "edit" | "addition" | "import"> = {
+      correction: "edit",
+      library_edit: "edit",
+      new_library: "addition",
+      library_claim: "edit",
+    }
+
+    return submissions.map((s: any) => ({
+      kind: KIND_MAP[s.submissionType] ?? "edit",
+      summary:
+        s.editSummary ??
+        (s.fields && typeof s.fields === "object"
+          ? `Updated ${Object.keys(s.fields).join(", ")}`
+          : "Record updated"),
+      fieldsChanged:
+        s.fields && typeof s.fields === "object" ? Object.keys(s.fields) : [],
+      submittedByUsername: s.submittedByUserId
+        ? (usernameByBaUserId[s.submittedByUserId] ?? null)
+        : null,
+      decidedAt: s.reviewedAt ?? s.updatedAt ?? null,
+    }))
+  },
+
   async findPublicByDocumentId(documentId: string) {
     // Resolve the profile to get baUserId via Document Service
     const profile = await strapi

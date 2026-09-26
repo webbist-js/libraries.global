@@ -6,44 +6,101 @@
     "pluralName": "user-profiles",
     "displayName": "User Profile"
   },
-  "options": { "draftAndPublish": false },
+  "options": {
+    "draftAndPublish": false
+  },
   "pluginOptions": {},
   "attributes": {
-    "baUserId": { "type": "string", "unique": true, "required": true },
-    "username": { "type": "string", "unique": true },
-    "firstName": { "type": "string" },
-    "lastName": { "type": "string" },
-    "bio": { "type": "text" },
+    "baUserId": {
+      "type": "string",
+      "unique": true,
+      "required": true
+    },
+    "username": {
+      "type": "string",
+      "unique": true
+    },
+    "firstName": {
+      "type": "string"
+    },
+    "lastName": {
+      "type": "string"
+    },
+    "bio": {
+      "type": "text"
+    },
     "pronouns": {
       "type": "enumeration",
-      "enum": ["he_him", "she_her", "they_them", "other", "prefer_not_to_say"]
+      "enum": [
+        "he_him",
+        "she_her",
+        "they_them",
+        "other",
+        "prefer_not_to_say"
+      ]
     },
-    "affiliation": { "type": "string" },
+    "affiliation": {
+      "type": "string"
+    },
     "affiliationType": {
       "type": "enumeration",
-      "enum": ["reader", "librarian", "researcher", "archivist", "educator", "other"]
+      "enum": [
+        "reader",
+        "librarian",
+        "researcher",
+        "archivist",
+        "educator",
+        "other"
+      ]
     },
-    "jobTitle": { "type": "string" },
-    "city": { "type": "string" },
-    "country": { "type": "string" },
-    "timezone": { "type": "string" },
-    "website": { "type": "string" },
-    "orcid": { "type": "string" },
-    "mastodon": { "type": "string" },
-    "linkedin": { "type": "string" },
+    "jobTitle": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "timezone": {
+      "type": "string"
+    },
+    "website": {
+      "type": "string"
+    },
+    "orcid": {
+      "type": "string"
+    },
+    "mastodon": {
+      "type": "string"
+    },
+    "linkedin": {
+      "type": "string"
+    },
     "avatar": {
       "type": "media",
       "multiple": false,
       "required": false,
-      "allowedTypes": ["images"]
+      "allowedTypes": [
+        "images"
+      ]
     },
     "profileVisibility": {
       "type": "enumeration",
-      "enum": ["public", "limited", "private"],
+      "enum": [
+        "public",
+        "limited",
+        "private"
+      ],
       "default": "public"
     },
-    "isVerifiedLibrarian": { "type": "boolean", "default": false },
-    "contributorNumber": { "type": "integer" },
+    "isVerifiedLibrarian": {
+      "type": "boolean",
+      "default": false
+    },
+    "contributorNumber": {
+      "type": "integer"
+    },
     "languages": {
       "type": "component",
       "component": "profile.language-entry",
@@ -63,14 +120,26 @@
         "marketing": false
       }
     },
+    "publicPrefs": {
+      "type": "json"
+    },
     "contributorRole": {
       "type": "enumeration",
-      "enum": ["reader", "contributor", "verified_librarian", "wiki_editor", "editorial_board"],
+      "enum": [
+        "reader",
+        "contributor",
+        "verified_librarian",
+        "wiki_editor",
+        "editorial_board"
+      ],
       "default": "reader"
     },
     "theme": {
       "type": "enumeration",
-      "enum": ["dark", "light"],
+      "enum": [
+        "dark",
+        "light"
+      ],
       "default": "dark"
     },
     "followedLibraries": {
@@ -83,11 +152,25 @@
       "relation": "manyToMany",
       "target": "api::user-profile.user-profile"
     },
-    "points": { "type": "integer", "default": 0 },
-    "pointsThisMonth": { "type": "integer", "default": 0 },
-    "tier": { "type": "string", "default": "Reader" },
-    "streak": { "type": "integer", "default": 0 },
-    "lastActivityDate": { "type": "string" },
+    "points": {
+      "type": "integer",
+      "default": 0
+    },
+    "pointsThisMonth": {
+      "type": "integer",
+      "default": 0
+    },
+    "tier": {
+      "type": "string",
+      "default": "Reader"
+    },
+    "streak": {
+      "type": "integer",
+      "default": 0
+    },
+    "lastActivityDate": {
+      "type": "string"
+    },
     "quickWins": {
       "type": "component",
       "component": "contribute.quick-win",

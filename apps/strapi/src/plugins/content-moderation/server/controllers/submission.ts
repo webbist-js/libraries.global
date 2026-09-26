@@ -1,3 +1,5 @@
+import { isValidServiceSecret } from "../utils/service-secret"
+
 export default ({ strapi }: { strapi: any }) => ({
   // GET /content-moderation/submissions?status=pending  (admin route)
   async findAll(ctx: any) {
@@ -112,6 +114,20 @@ export default ({ strapi }: { strapi: any }) => ({
       .findPublicByDocumentId(documentId)
 
     ctx.body = { data: submissions }
+  },
+
+  // GET /api/content-moderation/libraries/:documentId/revisions  (content-api route)
+  // Public, sanitized revision history for a library (approved submissions only).
+  async libraryRevisions(ctx: any) {
+    const { documentId } = ctx.params as { documentId: string }
+    if (!documentId) return ctx.badRequest("Missing documentId")
+
+    const revisions = await strapi
+      .plugin("content-moderation")
+      .service("submission")
+      .findLibraryRevisions(documentId)
+
+    ctx.body = { data: revisions }
   },
 
   // GET /api/content-moderation/submissions/by-username/:username  (content-api route)
@@ -277,9 +293,7 @@ async function resolveUser(
 ): Promise<{ id: string; email: string; name?: string } | null> {
   try {
     // Pattern 1: service-to-service via X-Service-Secret
-    const incoming = ctx.request.headers["x-service-secret"]
-    const bridgeSecret = process.env.STRAPI_BRIDGE_SECRET
-    if (incoming && bridgeSecret && incoming === bridgeSecret) {
+    if (isValidServiceSecret(ctx.request.headers["x-service-secret"])) {
       const userId = ctx.request.headers["x-ba-user-id"] as string | undefined
       const userEmail = ctx.request.headers["x-ba-user-email"] as
         | string

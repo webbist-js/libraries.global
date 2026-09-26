@@ -662,7 +662,7 @@ export interface UtilitiesTipTapRichText extends Struct.ComponentSchema {
 }
 
 declare module "@strapi/strapi" {
-  export module Public {
+  export namespace Public {
     export interface ComponentSchemas {
       "content.callout": ContentCallout
       "content.code-block": ContentCodeBlock

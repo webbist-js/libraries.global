@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "sections": {
+    "collectionTypes": {
+      "groups": [
+        {
+          "parent": null,
+          "name": "Libraries",
+          "id": "grp_87eb9095704c41fd96f557c0",
+          "children": [
+            {
+              "uid": "api::service.service",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::country.country",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::continent.continent",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::accessibility.accessibility",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::amenity.amenity",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::area.area",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::library.library",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::region.region",
+              "type": "contentType"
+            }
+          ]
+        },
+        {
+          "parent": null,
+          "name": "Wiki",
+          "id": "grp_1772a908ee7748dcac964ff4",
+          "children": [
+            {
+              "uid": "api::wiki-article.wiki-article",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::wiki-section.wiki-section",
+              "type": "contentType"
+            }
+          ]
+        },
+        {
+          "parent": null,
+          "name": "Blog",
+          "id": "grp_b60124713c5d4e7ebd248c7c",
+          "children": [
+            {
+              "uid": "api::blog-section.blog-section",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::blog-article.blog-article",
+              "type": "contentType"
+            }
+          ]
+        }
+      ]
+    },
+    "singleTypes": {
+      "groups": []
+    }
+  }
+}
