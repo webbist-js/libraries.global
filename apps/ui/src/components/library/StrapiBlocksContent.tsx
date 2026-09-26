@@ -86,10 +86,26 @@ export function StrapiBlocksContent({
               6: "text-sm font-semibold",
             }[block.level]
 
+            // Anchor id matching lib/article-helpers extractHeadings, so
+            // tables of contents can deep-link into the prose.
+            const headingText = block.children
+              .map((child) => ("text" in child ? (child.text ?? "") : ""))
+              .join("")
+              .trim()
+            const headingId = headingText
+              ? "h-" +
+                headingText
+                  .toLowerCase()
+                  .replaceAll(/[^a-z0-9\s-]/g, "")
+                  .replaceAll(/\s+/g, "-")
+                  .slice(0, 60)
+              : undefined
+
             return (
               <Tag
                 key={blockIndex}
-                className={cn(sizeClass, "text-(--t-ink-base)")}
+                className={cn(sizeClass, "scroll-mt-24 text-(--t-ink-base)")}
+                id={headingId}
               >
                 {block.children.map(renderInlineNode)}
               </Tag>

@@ -1,5 +1,5 @@
 import GlobalLink from "@/components/global/GlobalLink"
-import { T } from "@/lib/design-tokens"
+import { T, tintForLibraryType } from "@/lib/design-tokens"
 import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
@@ -27,6 +27,7 @@ function NearbyCard({ library }: { readonly library: NearbyLibrary }) {
       : null
 
   const imageUrl = formatStrapiMediaUrl(library.heroImage?.url)
+  const tint = tintForLibraryType(library.libraryType)
 
   if (!href) return null
 
@@ -37,24 +38,41 @@ function NearbyCard({ library }: { readonly library: NearbyLibrary }) {
         display: "flex",
         flexDirection: "column",
         border: `1px solid ${T.border.line}`,
-        borderRadius: "16px",
+        borderRadius: "20px",
         overflow: "hidden",
-        background: T.bg.surface,
-        transition: "background 250ms",
+        background: T.bg.deep,
+        transition: "border-color 200ms, box-shadow 200ms",
         textDecoration: "none",
       }}
-      className="group hover:bg-[rgba(127,223,255,.03)]"
+      className="group hover:border-[#B9B4F5] hover:shadow-[0_12px_28px_rgba(23,22,43,0.08)]"
     >
-      {/* Thumbnail */}
-      <div
-        style={{
-          height: "140px",
-          background: imageUrl
-            ? `url(${imageUrl}) center/cover no-repeat`
-            : "linear-gradient(135deg,rgba(8,12,30,1),rgba(20,28,60,1))",
-          flexShrink: 0,
-        }}
-      />
+      {/* Thumbnail — photo or type-tinted monogram */}
+      {imageUrl ? (
+        <div
+          style={{
+            height: "140px",
+            background: `url(${imageUrl}) center/cover no-repeat`,
+            flexShrink: 0,
+          }}
+        />
+      ) : (
+        <div
+          aria-hidden="true"
+          style={{
+            height: "140px",
+            background: tint.bg,
+            color: tint.fg,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontFamily: T.font.serif,
+            fontSize: "44px",
+            flexShrink: 0,
+          }}
+        >
+          {(library.name ?? "?").charAt(0)}
+        </div>
+      )}
 
       {/* Content */}
       <div
@@ -63,37 +81,29 @@ function NearbyCard({ library }: { readonly library: NearbyLibrary }) {
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          gap: "10px",
+          gap: "8px",
         }}
       >
-        <div
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".12em",
-            textTransform: "uppercase",
-            color: T.ink.faint,
-          }}
-        >
-          {[library.libraryType, library.city].filter(Boolean).join(" · ")}
-        </div>
         <h3
           style={{
             fontFamily: T.font.serif,
-            fontWeight: 400,
-            fontSize: "17px",
+            fontWeight: 500,
+            fontSize: "20px",
             color: T.ink.base,
             margin: 0,
-            lineHeight: 1.3,
+            lineHeight: 1.2,
           }}
         >
           {library.name}
         </h3>
+        <div style={{ fontSize: "14px", color: T.ink.dim }}>
+          {[library.libraryType, library.city].filter(Boolean).join(" · ")}
+        </div>
         {library.summary ? (
           <p
             style={{
-              fontSize: "13px",
-              color: T.ink.low,
+              fontSize: "14px",
+              color: T.ink.dim,
               margin: 0,
               lineHeight: 1.55,
               display: "-webkit-box",
@@ -105,15 +115,13 @@ function NearbyCard({ library }: { readonly library: NearbyLibrary }) {
             {library.summary}
           </p>
         ) : null}
-        <div style={{ marginTop: "auto", paddingTop: "10px" }}>
+        <div style={{ marginTop: "auto", paddingTop: "8px" }}>
           <span
             style={{
-              fontSize: "12px",
-              color: T.accent.aurora,
-              opacity: 0.7,
-              transition: "opacity 200ms",
+              fontSize: "14px",
+              fontWeight: 600,
+              color: T.accent.primary,
             }}
-            className="group-hover:opacity-100"
           >
             View library →
           </span>
@@ -133,30 +141,16 @@ export function LibraryExploreNearby({
   if (!libraries.length) return null
 
   return (
-    <section style={{ paddingTop: "40px", paddingBottom: "40px" }}>
-      <div
+    <section>
+      <p
         style={{
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".18em",
-          textTransform: "uppercase",
-          color: T.ink.faint,
-          marginBottom: "6px",
+          fontSize: "16px",
+          color: T.ink.dim,
+          margin: "0 0 16px",
         }}
       >
-        Explore Nearby
-      </div>
-      <h2
-        style={{
-          fontFamily: T.font.serif,
-          fontWeight: 400,
-          fontSize: "26px",
-          color: T.ink.base,
-          margin: "0 0 24px",
-        }}
-      >
-        Other libraries{regionName ? ` in ${regionName}` : " nearby"}
-      </h2>
+        Other libraries{regionName ? ` in ${regionName}` : " nearby"}.
+      </p>
 
       <div
         style={{

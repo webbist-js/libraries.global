@@ -1,306 +1,309 @@
+import Image from "next/image"
 import type { Locale } from "next-intl"
 
-import { Breadcrumb, LocationContributeCTA } from "@/components/ds"
-import { Container } from "@/components/elementary/Container"
+import {
+  Breadcrumb,
+  type BreadcrumbItem,
+  LocationContributeCTA,
+} from "@/components/ds"
 import GlobalHeader from "@/components/global/GlobalHeader"
-import LibraryContactPanel from "@/components/library/LibraryContactPanel"
-import LibraryContent from "@/components/library/LibraryContent"
+import GlobalLink from "@/components/global/GlobalLink"
+import type { OpeningTimesValue } from "@/components/library/library-page.helpers"
+import {
+  LIBRARY_ANCHORS,
+  LibraryAnchorNav,
+  type AnchorItem,
+} from "@/components/library/LibraryAnchorNav"
 import { LibraryEvents } from "@/components/library/LibraryEvents"
 import LibraryExploreNearby from "@/components/library/LibraryExploreNearby"
-import LibraryHero from "@/components/library/LibraryHero"
-import LibraryInfoCards from "@/components/library/LibraryInfoCards"
-import LibraryMap from "@/components/library/LibraryMap"
-import LibraryOpeningHours from "@/components/library/LibraryOpeningHours"
-import LibraryStats from "@/components/library/LibraryStats"
+import { LibraryHeroActions } from "@/components/library/LibraryHeroActions"
+import { LibraryOpenStatusBadge } from "@/components/library/LibraryHoursTable"
 import {
-  LibraryTabNav,
-  LibraryTabPanel,
-  LibraryTabsProvider,
-} from "@/components/library/LibraryTabs"
-import LibraryTagPanel from "@/components/library/LibraryTagPanel"
-import LibraryVirtualTour from "@/components/library/LibraryVirtualTour"
-import StrapiBlocksContent from "@/components/library/StrapiBlocksContent"
-import { T } from "@/lib/design-tokens"
-import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
-
-// The JSON shape returned by @arshiash80/strapi-plugin-iconhub
-type IconHubValue = {
-  iconData?: string | null
-  iconName?: string | null
-} | null
+  LIB_ICONS,
+  LibIcon,
+  LibrarySectionCard,
+} from "@/components/library/LibrarySectionCard"
+import {
+  LibraryCollectionsSection,
+  LibraryFacilitiesSection,
+  LibraryHistorySection,
+  LibrarySourcesSection,
+  LibraryVisitSection,
+} from "@/components/library/LibrarySections"
+import {
+  LibraryLinksPanel,
+  LibraryMapPanel,
+  LibraryRecordPanel,
+} from "@/components/library/LibrarySidebar"
+import { T, tintForLibraryType } from "@/lib/design-tokens"
+import type {
+  LibraryRevision,
+  PopulatedLibraryData,
+} from "@/lib/strapi-api/content/server"
+import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 interface LibraryDetailPageProps {
   readonly library: PopulatedLibraryData | null
   readonly locale: Locale
   readonly nearbyLibraries?: PopulatedLibraryData[]
+  readonly revisions?: LibraryRevision[]
 }
-
-// ── Page ──────────────────────────────────────────────────────────────────────
 
 export function LibraryDetailPage({
   library,
   locale,
   nearbyLibraries = [],
+  revisions = [],
 }: LibraryDetailPageProps) {
   if (!library) {
     return (
       <div
-        className="relative isolate flex min-h-screen w-full flex-col"
-        style={{ background: T.bg.space, color: T.ink.base }}
+        className="relative flex min-h-screen w-full flex-col"
+        style={{ background: T.bg.void, color: T.ink.base }}
       >
         <GlobalHeader locale={locale} />
         <main className="flex flex-1 items-center justify-center">
-          <p className="text-(--t-ink-faint)">Library not found.</p>
+          <p style={{ color: T.ink.dim }}>Library not found.</p>
         </main>
       </div>
     )
   }
 
-  const toTagItems = (
-    items: {
-      documentId?: string | null
-      id?: string | number | null
-      name?: string | null
-      icon?: unknown
-      category?: unknown
-      summary?: unknown
-    }[]
-  ) =>
-    items.map((item) => ({
-      id: item.documentId ?? item.id ?? Math.random(),
-      name: item.name ?? "",
-      category: (item.category as string | null | undefined) ?? null,
-      icon: (item.icon as IconHubValue) ?? null,
-      summary: (item.summary as string | null | undefined) ?? null,
-    }))
+  const rec = library as unknown as Record<string, unknown>
+  const tint = tintForLibraryType(library.libraryType)
+  const typeLabel = library.libraryType
+    ? library.libraryType === "Other"
+      ? "Library"
+      : `${library.libraryType} library`
+    : null
+  const heroUrl = formatStrapiMediaUrl(library.heroImage?.url)
+  const openingTimes =
+    (library.openingTimes as OpeningTimesValue | null) ?? null
+  const timezone = (rec.timezone as string | null) ?? null
 
-  const virtualTourUrl = library.virtualTourEmbed as string | null | undefined
+  const locationLine = [
+    library.city,
+    library.region?.name,
+    library.country?.name,
+  ]
+    .filter(Boolean)
+    .join(", ")
 
-  // Collection stats — repeatable component (value, category, description)
-  const rawCollectionStats = (library as Record<string, unknown>)
-    .collectionStats
-  const libraryStats = Array.isArray(rawCollectionStats)
-    ? (rawCollectionStats as {
-        value: string
-        category?: string | null
-        description?: string | null
-      }[])
-    : []
+  const shortName = (rec.shortName as string | null) ?? null
 
-  // Last verified / entity ref for tab bar
-  const lastVerifiedAt = library.lastVerifiedAt as string | null | undefined
+  const hasHistory = Boolean(rec.foundedYear || rec.openedYear)
+  const anchors: AnchorItem[] = [
+    LIBRARY_ANCHORS.photos,
+    LIBRARY_ANCHORS.visit,
+    LIBRARY_ANCHORS.access,
+    LIBRARY_ANCHORS.collections,
+    ...(hasHistory ? [LIBRARY_ANCHORS.history] : []),
+    LIBRARY_ANCHORS.events,
+    LIBRARY_ANCHORS.sources,
+  ]
+
+  const crumbs: BreadcrumbItem[] = [
+    { href: "/", label: "Home" },
+    ...(library.continent?.slug
+      ? [
+          {
+            href: `/${library.continent.slug}`,
+            label: library.continent.name ?? "",
+          },
+        ]
+      : []),
+    ...(library.continent?.slug && library.country?.slug
+      ? [
+          {
+            href: `/${library.continent.slug}/${library.country.slug}`,
+            label: library.country.name ?? "",
+          },
+        ]
+      : []),
+    ...(library.continent?.slug && library.country?.slug && library.region?.slug
+      ? [
+          {
+            href: `/${library.continent.slug}/${library.country.slug}/${library.region.slug}`,
+            label: library.region.name ?? "",
+          },
+        ]
+      : []),
+    { label: library.name ?? "" },
+  ]
 
   return (
     <div
-      className="relative isolate flex min-h-screen w-full flex-col"
-      style={{ background: T.bg.space, color: T.ink.base }}
+      className="relative flex min-h-screen w-full flex-col"
+      style={{ background: T.bg.void, color: T.ink.base }}
     >
       <GlobalHeader locale={locale} />
 
-      <main className="relative z-10 flex-1">
-        <LibraryTabsProvider defaultTab="overview">
-          {/* Hero — no tab nav passed; nav is rendered as a sibling below */}
-          <LibraryHero
-            library={library}
-            breadcrumb={
-              <Breadcrumb
-                labels={{
-                  ...(library.continent?.slug
-                    ? { [library.continent.slug]: library.continent.name ?? "" }
-                    : {}),
-                  ...(library.country?.slug
-                    ? { [library.country.slug]: library.country.name ?? "" }
-                    : {}),
-                  ...(library.region?.slug
-                    ? { [library.region.slug]: library.region.name ?? "" }
-                    : {}),
-                  ...(library.slug
-                    ? { [library.slug]: library.name ?? "" }
-                    : {}),
-                }}
-              />
-            }
-          />
+      <main className="relative z-10 mx-auto w-full max-w-[1360px] flex-1 px-4 pt-6 pb-22 sm:px-8 sm:pt-10">
+        {/* Breadcrumb */}
+        <Breadcrumb items={crumbs} />
 
-          {/* Tab nav — sibling of hero so sticky top-14 works correctly.
-              Placing it inside overflow-hidden/clip would break sticky. */}
-          <LibraryTabNav
-            extraTabs={
-              virtualTourUrl ? [{ id: "explore", label: "Explore" }] : undefined
-            }
-            lastVerifiedAt={lastVerifiedAt}
-            entityRef={library.entityRef}
-          />
-
-          {/* ── Overview ─────────────────────────────────────────────────────── */}
-          {/* libraryType, operatorType, foundedYear, architect,                */}
-          {/* description, libraryStats                                         */}
-          <LibraryTabPanel id="overview">
-            <Container className="py-8 sm:py-12">
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
-                {/* Left: classification + description + collection stats */}
-                <div className="space-y-6 lg:col-span-2">
-                  <LibraryInfoCards library={library} variant="overview" />
-                  <LibraryContent library={library} section="description" />
-                  {libraryStats.length > 0 ? (
-                    <LibraryStats stats={libraryStats} />
-                  ) : null}
-                </div>
-
-                {/* Right: opening hours + contact & location */}
-                <div className="space-y-6">
-                  <LibraryOpeningHours
-                    openingTimes={
-                      library.openingTimes as Parameters<
-                        typeof LibraryOpeningHours
-                      >[0]["openingTimes"]
-                    }
-                  />
-                  <LibraryContactPanel library={library} />
-                </div>
-              </div>
-            </Container>
-          </LibraryTabPanel>
-
-          {/* ── Hours ────────────────────────────────────────────────────────── */}
-          <LibraryTabPanel id="hours">
-            <Container className="py-8 sm:py-12">
-              <LibraryOpeningHours
-                openingTimes={
-                  library.openingTimes as Parameters<
-                    typeof LibraryOpeningHours
-                  >[0]["openingTimes"]
-                }
-                alwaysExpanded
-              />
-            </Container>
-          </LibraryTabPanel>
-
-          {/* ── Visit & Access ───────────────────────────────────────────────── */}
-          {/* visitNotes, admissionInfo, accessibilityNotes                      */}
-          <LibraryTabPanel id="visit">
-            <Container className="py-8 sm:py-12">
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <LibraryContent library={library} section="visit-info" />
-                <LibraryTagPanel
-                  title="Accessibility"
-                  headerIcon="mdi:wheelchair-accessibility"
-                  items={toTagItems(library.accessibility ?? [])}
+        {/* Hero */}
+        <div className="mt-4 flex flex-wrap items-end justify-between gap-6">
+          <div className="min-w-0 flex-[1_1_520px]">
+            <div className="mb-3.5 flex flex-wrap gap-2">
+              {typeLabel ? (
+                <span
+                  className="flex items-center gap-1.5 rounded-full px-3 py-[5px] text-[14px] font-semibold"
+                  style={{ background: tint.bg, color: tint.fg }}
                 >
-                  {Array.isArray(library.accessibilityNotes) &&
-                  library.accessibilityNotes.length > 0 ? (
-                    <StrapiBlocksContent
-                      blocks={
-                        library.accessibilityNotes as Parameters<
-                          typeof StrapiBlocksContent
-                        >[0]["blocks"]
-                      }
-                    />
-                  ) : null}
-                </LibraryTagPanel>
-              </div>
-            </Container>
-          </LibraryTabPanel>
-
-          {/* ── Collections ──────────────────────────────────────────────────── */}
-          {/* libraryStats, iiifEndpoint, classificationSystem               */}
-          <LibraryTabPanel id="collections">
-            <Container className="py-8 sm:py-12">
-              {libraryStats.length > 0 ? (
-                <div className="mb-6">
-                  <LibraryStats stats={libraryStats} />
-                </div>
+                  <LibIcon d={LIB_ICONS.building} size={16} />
+                  {typeLabel}
+                </span>
               ) : null}
-
-              {/* TODO: integrate IIIF viewer when iiifEndpoint is set */}
-              {(library as Record<string, unknown>).iiifEndpoint ? (
-                <p className="text-sm text-(--t-ink-faint) italic">
-                  {/* TODO: render IIIF viewer for digital collection browsing */}
-                  Digital collection available — IIIF viewer coming soon.
-                </p>
-              ) : (
-                <p className="text-sm text-(--t-ink-faint) italic">
-                  Collection details not yet available for this library.
-                </p>
-              )}
-
-              <LibraryEvents
-                entityRef={library.entityRef}
-                hasActiveFeed={
-                  (library as Record<string, unknown>).hasActiveFeed as
-                    | boolean
-                    | undefined
-                }
+              <LibraryOpenStatusBadge
+                openingTimes={openingTimes}
+                timezone={timezone}
               />
-            </Container>
-          </LibraryTabPanel>
+            </div>
+            <h1
+              className="m-0 text-[clamp(44px,6vw,76px)] leading-none tracking-[-0.02em]"
+              style={{ fontFamily: T.font.serif, fontWeight: 500 }}
+            >
+              {library.name}
+            </h1>
+            <p
+              className="mt-3 mb-0 flex flex-wrap items-center gap-1.5 text-[17px]"
+              style={{ color: T.ink.dim }}
+            >
+              <LibIcon d={LIB_ICONS.pin} size={18} />
+              {shortName ? (
+                <>
+                  Also known as{" "}
+                  <span style={{ color: T.ink.base }}>{shortName}</span>
+                  {locationLine ? " · " : ""}
+                </>
+              ) : null}
+              {locationLine}
+            </p>
+          </div>
 
-          {/* ── Facilities ───────────────────────────────────────────────────── */}
-          {/* services, amenities                                                */}
-          <LibraryTabPanel id="facilities">
-            <Container className="py-8 sm:py-12">
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <LibraryTagPanel
-                  title="Services"
-                  headerIcon="mdi:briefcase-outline"
-                  items={toTagItems(library.services ?? [])}
+          <LibraryHeroActions
+            librarySlug={library.slug ?? ""}
+            libraryName={library.name ?? ""}
+            libraryDocumentId={library.documentId ?? ""}
+          />
+        </div>
+
+        {/* On this page */}
+        <LibraryAnchorNav items={anchors} />
+
+        {/* Content: main column + sidebar */}
+        <div className="mt-7 flex flex-wrap items-start gap-7">
+          <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-5">
+            {/* Photos */}
+            <div
+              id="photos"
+              className="relative scroll-mt-32 overflow-hidden rounded-3xl"
+              style={{
+                aspectRatio: "16/8",
+                background: T.bg.deep,
+                border: `1px solid ${T.border.line}`,
+              }}
+            >
+              {heroUrl ? (
+                <Image
+                  src={heroUrl}
+                  alt={library.heroImage?.alternativeText ?? library.name ?? ""}
+                  fill
+                  sizes="(max-width: 900px) 100vw, 60vw"
+                  className="rounded-[18px] object-cover p-2"
                 />
-
-                <LibraryTagPanel
-                  title="Amenities"
-                  headerIcon="mdi:sofa-outline"
-                  items={toTagItems(library.amenities ?? [])}
-                />
-              </div>
-            </Container>
-          </LibraryTabPanel>
-
-          {/* ── Contact ──────────────────────────────────────────────────────── */}
-          {/* streetAddress, city, postalCode, phone, email, website, map      */}
-          <LibraryTabPanel id="contact">
-            <Container className="py-8 sm:py-12">
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
-                {/* Left: map stretches to fill the full height of the right column */}
-                <LibraryMap library={library} className="h-full" />
-
-                {/* Right: contact details */}
-                <div className="space-y-6">
-                  <LibraryInfoCards library={library} variant="contact" />
+              ) : (
+                <div
+                  className="absolute inset-2 flex items-center justify-center rounded-[18px]"
+                  style={{ background: tint.bg }}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="text-[64px]"
+                    style={{ fontFamily: T.font.serif, color: tint.fg }}
+                  >
+                    {(library.name ?? "?").charAt(0)}
+                  </span>
                 </div>
-              </div>
-            </Container>
-          </LibraryTabPanel>
+              )}
+            </div>
+            <p className="-mt-2 mb-0 text-[15px]" style={{ color: T.ink.dim }}>
+              {heroUrl ? "Have a better photo? " : "No community photos yet. "}
+              <GlobalLink
+                href="/contribute"
+                className="underline underline-offset-[3px]"
+                style={{ color: T.accent.primary }}
+              >
+                Add a photo you took or have permission to share
+              </GlobalLink>{" "}
+              (CC BY or CC BY-SA).
+            </p>
 
-          {/* ── Explore ──────────────────────────────────────────────────────── */}
-          {/* Virtual tour — only rendered when virtualTourEmbed is present     */}
-          {virtualTourUrl ? (
-            <LibraryTabPanel id="explore">
-              <Container className="py-8 sm:py-12">
-                <LibraryVirtualTour url={virtualTourUrl} />
-              </Container>
-            </LibraryTabPanel>
-          ) : null}
+            <LibraryVisitSection library={library} />
+            <LibraryFacilitiesSection library={library} />
+            <LibraryCollectionsSection library={library} />
+            <LibraryHistorySection library={library} />
 
-          {/* ── Explore Nearby ───────────────────────────────────────────────── */}
-          {/* TODO: expand to cross-region when data grows */}
-          <LibraryTabPanel id="nearby">
-            <Container className="py-8 sm:py-12">
-              {nearbyLibraries.length > 0 ? (
+            {/* Events */}
+            {(rec.hasActiveFeed as boolean) ? (
+              <LibrarySectionCard
+                id="events"
+                title="Events"
+                iconPath={LIB_ICONS.calendar}
+              >
+                <LibraryEvents entityRef={library.entityRef} hasActiveFeed />
+              </LibrarySectionCard>
+            ) : (
+              <LibrarySectionCard
+                id="events"
+                title="Events"
+                iconPath={LIB_ICONS.calendar}
+                dashed
+              >
+                <p
+                  className="m-0 text-[17px] leading-normal"
+                  style={{ color: T.ink.dim }}
+                >
+                  No events listed. If you run events here, you can add them or
+                  link your events calendar.
+                </p>
+                <GlobalLink
+                  href="/contribute/event-feed"
+                  className="mt-3 inline-block font-semibold underline underline-offset-[3px]"
+                  style={{ color: T.accent.primary }}
+                >
+                  Add an event
+                </GlobalLink>
+              </LibrarySectionCard>
+            )}
+
+            <LibrarySourcesSection library={library} revisions={revisions} />
+
+            {/* Nearby */}
+            {nearbyLibraries.length > 0 ? (
+              <LibrarySectionCard
+                id="nearby"
+                title="Nearby libraries"
+                iconPath={LIB_ICONS.pin}
+              >
                 <LibraryExploreNearby
                   libraries={nearbyLibraries}
                   regionName={library.region?.name}
                 />
-              ) : (
-                <p className="text-sm text-(--t-ink-faint) italic">
-                  No other libraries found in this region yet.
-                </p>
-              )}
-            </Container>
-          </LibraryTabPanel>
-        </LibraryTabsProvider>
+              </LibrarySectionCard>
+            ) : null}
+          </div>
+
+          {/* Sidebar */}
+          <aside className="top-24 flex flex-[1_1_300px] flex-col gap-4 lg:sticky">
+            <LibraryRecordPanel library={library} />
+            <LibraryLinksPanel library={library} />
+            <LibraryMapPanel library={library} />
+          </aside>
+        </div>
       </main>
 
-      {/* Know something we don't? */}
       <LocationContributeCTA
         entityType="library"
         locationName={library.name ?? "this library"}

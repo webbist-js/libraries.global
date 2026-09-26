@@ -25,13 +25,13 @@ function getCoords(
 }
 
 function buildMapboxStaticUrl(lat: number, lng: number, token: string): string {
-  // Indigo-500 (#6366f1) pin matching the site accent colour
-  const marker = `pin-l+6366f1(${lng},${lat})`
+  // Indigo (#4338CA) pin matching the v2 accent colour
+  const marker = `pin-l+4338ca(${lng},${lat})`
   const center = `${lng},${lat},14,0`
   // Request tall image; CSS object-cover fills whatever height the container needs
   const size = "800x600@2x"
 
-  return `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/${marker}/${center}/${size}?access_token=${token}`
+  return `https://api.mapbox.com/styles/v1/mapbox/light-v11/static/${marker}/${center}/${size}?access_token=${token}`
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -90,8 +90,11 @@ export function LibraryMap({
             className="absolute inset-0 h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full items-center justify-center bg-white/4">
-            <Icon icon="mdi:map-outline" className="size-10 text-white/20" />
+          <div className="flex h-full items-center justify-center bg-(--t-bg-muted)">
+            <Icon
+              icon="mdi:map-outline"
+              className="size-10 text-(--t-ink-faint)"
+            />
           </div>
         )}
       </div>
@@ -104,11 +107,11 @@ export function LibraryMap({
               href={googleUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-2 rounded-lg border border-white/8 bg-white/4 px-3 py-2 text-sm text-white/64 transition-colors hover:border-white/14 hover:bg-white/7 hover:text-white/86"
+              className="group inline-flex items-center gap-2 rounded-full border border-(--t-border-hi) bg-white px-3 py-2 text-sm font-medium text-(--t-ink-dim) transition-colors hover:bg-(--t-bg-muted) hover:text-(--t-ink-base)"
             >
               <Icon
                 icon="mdi:google-maps"
-                className="size-4 shrink-0 text-white/46 transition-colors group-hover:text-white/70"
+                className="size-4 shrink-0 text-(--t-ink-low) transition-colors group-hover:text-(--t-ink-dim)"
               />
               Google Maps
               <Icon
@@ -123,11 +126,11 @@ export function LibraryMap({
               href={appleUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-2 rounded-lg border border-white/8 bg-white/4 px-3 py-2 text-sm text-white/64 transition-colors hover:border-white/14 hover:bg-white/7 hover:text-white/86"
+              className="group inline-flex items-center gap-2 rounded-full border border-(--t-border-hi) bg-white px-3 py-2 text-sm font-medium text-(--t-ink-dim) transition-colors hover:bg-(--t-bg-muted) hover:text-(--t-ink-base)"
             >
               <Icon
                 icon="mdi:apple"
-                className="size-4 shrink-0 text-white/46 transition-colors group-hover:text-white/70"
+                className="size-4 shrink-0 text-(--t-ink-low) transition-colors group-hover:text-(--t-ink-dim)"
               />
               Apple Maps
               <Icon

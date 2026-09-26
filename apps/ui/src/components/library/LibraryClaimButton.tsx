@@ -5,7 +5,6 @@ import { useEffect, useState } from "react"
 
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
-import { auroraCtaSm } from "@/lib/styles"
 
 interface LibraryClaimButtonProps {
   readonly libraryDocumentId: string
@@ -47,43 +46,20 @@ export function LibraryClaimButton({
       <Link
         href={`/contribute/edit/${librarySlug}`}
         style={{
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".12em",
-          textTransform: "uppercase",
-          color: T.accent.ok,
+          fontSize: "15px",
+          fontWeight: 600,
+          color: "var(--tint-public-fg)",
           textDecoration: "none",
           display: "inline-flex",
           alignItems: "center",
           gap: "6px",
-          border: `1px solid ${T.accent.ok}40`,
-          borderRadius: "10px",
+          border: `1px solid var(--tint-public-fg)`,
+          borderRadius: "999px",
           padding: "8px 14px",
+          background: "var(--tint-public-bg)",
         }}
       >
-        You manage this library
-      </Link>
-    )
-  }
-
-  if (!session?.user) {
-    return (
-      <Link
-        href={`/auth/signin?callbackUrl=${encodeURIComponent(`/contribute/claim?librarySlug=${librarySlug}&libraryName=${encodeURIComponent(libraryName)}&libraryDocumentId=${libraryDocumentId}${refParam}`)}`}
-        style={{
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".12em",
-          textTransform: "uppercase",
-          color: "rgba(255,255,255,.40)",
-          textDecoration: "none",
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "6px",
-        }}
-        className="transition-colors hover:text-white"
-      >
-        Sign in to claim this library
+        ✓ You manage this library
       </Link>
     )
   }
@@ -91,8 +67,20 @@ export function LibraryClaimButton({
   const claimUrl = `/contribute/claim?librarySlug=${encodeURIComponent(librarySlug)}&libraryName=${encodeURIComponent(libraryName)}&libraryDocumentId=${encodeURIComponent(libraryDocumentId)}${refParam}`
 
   return (
-    <Link href={claimUrl} className={auroraCtaSm}>
-      Claim this library
+    <Link
+      href={
+        session?.user
+          ? claimUrl
+          : `/auth/signin?callbackUrl=${encodeURIComponent(claimUrl)}`
+      }
+      style={{
+        fontSize: "15px",
+        fontWeight: 600,
+        color: T.accent.primary,
+        textUnderlineOffset: "3px",
+      }}
+    >
+      Work here? Request stewardship
     </Link>
   )
 }

@@ -128,8 +128,8 @@ function EventCard({ event }: { event: LibraryEvent }) {
       <div
         className="flex shrink-0 flex-col items-center justify-center rounded-xl p-3"
         style={{
-          background: "rgba(127,223,255,0.06)",
-          border: "1px solid rgba(127,223,255,0.12)",
+          background: "var(--t-aurora-soft)",
+          border: "1px solid var(--t-aurora-edge)",
           minWidth: "52px",
         }}
       >
@@ -397,11 +397,11 @@ export function LibraryEvents({
                 textTransform: "uppercase",
                 background:
                   typeFilter === f.value
-                    ? "rgba(127,223,255,0.12)"
+                    ? "var(--t-aurora-soft)"
                     : "transparent",
                 borderColor:
                   typeFilter === f.value
-                    ? "rgba(127,223,255,0.35)"
+                    ? "var(--t-aurora-edge)"
                     : T.border.line,
                 color: typeFilter === f.value ? T.accent.aurora : T.ink.low,
               }}
