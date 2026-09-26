@@ -43,8 +43,8 @@ export interface EntitlementInput {
     periodEnd?: string | null
     pastDueSince?: string | null
   } | null
-  /** Strapi `entitlement-grant` rows (P-D). */
-  grants?: { plan: "pro" | "team"; expiresAt: string | null }[]
+  /** Strapi `entitlement-grant` rows (P-D). Unknown plans are ignored. */
+  grants?: { plan: string; expiresAt: string | null }[]
   /** Free-Pro verifications (C5, P-D). */
   verifications?: { expiresAt: string | null }[]
   rewardsTier?: string | null
@@ -173,7 +173,10 @@ export function resolveEntitlements(i: EntitlementInput): Entitlements {
   const paid = paidPlan(i.subscription, i.now)
   if (paid) candidates.push({ plan: paid, source: "paid" })
   for (const g of i.grants ?? [])
-    if (notExpired(g.expiresAt, i.now))
+    if (
+      (g.plan === "pro" || g.plan === "team") &&
+      notExpired(g.expiresAt, i.now)
+    )
       candidates.push({ plan: g.plan, source: "grant" })
   if ((i.verifications ?? []).some((v) => notExpired(v.expiresAt, i.now)))
     candidates.push({ plan: "pro", source: "verified" })

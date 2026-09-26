@@ -92,6 +92,16 @@ describe("resolveEntitlements: grants, verifications and earned Pro", () => {
     expect(can(e, "team.workspace")).toBe(true)
   })
 
+  it("ignores a grant with an unknown plan (fails closed to free)", () => {
+    for (const plan of ["platinum", "PRO", "", "public", "free"]) {
+      const e = resolveEntitlements(
+        base({ grants: [{ plan, expiresAt: null }] })
+      )
+      expect(e).toMatchObject({ plan: "free", source: "none" })
+      expect(e.features.size).toBe(0)
+    }
+  })
+
   it("an unexpired verification gives verified pro", () => {
     expect(
       resolveEntitlements(base({ verifications: [{ expiresAt: days(30) }] }))
