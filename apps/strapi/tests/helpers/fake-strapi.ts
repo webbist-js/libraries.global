@@ -81,6 +81,14 @@ export function makeFakeStrapi(seed: Record<string, Doc[]> = {}) {
         return doc
       }
     ),
+    delete: vi.fn(async ({ documentId }: { documentId: string }) => {
+      const rows = table(uid)
+      const idx = rows.findIndex((d) => d.documentId === documentId)
+      if (idx === -1) return null
+      const [removed] = rows.splice(idx, 1)
+
+      return removed
+    }),
   }))
 
   const db = {

@@ -34,6 +34,9 @@ export async function grantVerifiedLibrarian(strapi: any, baUserId: string) {
  * `verificationMethod` are only overwritten when the caller explicitly
  * provides them (not `undefined`) — an update must never null out values a
  * previous call set.
+ *
+ * Returns the affiliation's documentId and whether this call created it, so
+ * a caller can compensate (delete it) if a later step fails.
  */
 export async function upsertAffiliation(
   strapi: any,
@@ -44,7 +47,7 @@ export async function upsertAffiliation(
     department?: string | null
     verificationMethod?: string
   }
-) {
+): Promise<{ documentId: string; created: boolean }> {
   const existing = (await strapi
     .documents("api::library-affiliation.library-affiliation")
     .findMany({
@@ -62,12 +65,14 @@ export async function upsertAffiliation(
     if (data.verificationMethod !== undefined)
       updateData.verificationMethod = data.verificationMethod
 
-    return strapi
+    await strapi
       .documents("api::library-affiliation.library-affiliation")
       .update({ documentId: existing[0].documentId, data: updateData as any })
+
+    return { documentId: existing[0].documentId, created: false }
   }
 
-  return strapi
+  const created = (await strapi
     .documents("api::library-affiliation.library-affiliation")
     .create({
       data: {
@@ -77,5 +82,7 @@ export async function upsertAffiliation(
         verificationMethod: data.verificationMethod ?? null,
         library: { connect: [{ documentId: data.libraryDocumentId }] },
       } as any,
-    })
+    })) as { documentId: string }
+
+  return { documentId: created.documentId, created: true }
 }

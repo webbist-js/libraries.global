@@ -12,6 +12,8 @@ function sendVerdict(
   verdict: { status: number; message: string }
 ): void {
   ctx.status = verdict.status
+  // A6: rate-limited callers are told when to come back (quotas are hourly).
+  if (verdict.status === 429) ctx.set("Retry-After", "3600")
   ctx.body = { error: { status: verdict.status, message: verdict.message } }
 }
 
@@ -273,6 +275,19 @@ export default ({ strapi }: { strapi: any }) => ({
 
     if ("error" in result) {
       if (result.error === "not_found") return ctx.notFound()
+      if (result.error === "apply_failed" && result.unreverted) {
+        ctx.status = 500
+        ctx.body = {
+          error: {
+            status: 500,
+            name: "apply_failed_unreverted",
+            message:
+              "Approval could not be applied, and the submission could not be returned to review: it is marked with the new status but none of its side effects were applied. Check the server log and fix it manually.",
+          },
+        }
+
+        return
+      }
       if (result.error === "apply_failed") {
         ctx.status = 500
         ctx.body = {

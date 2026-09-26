@@ -75,6 +75,21 @@ function revisionWhere(existing: {
     : { draftRevision: existing.draftRevision }
 }
 
+/**
+ * M2: strips internal fields (`payloadHash`, `draftRevision`) before a
+ * submission is returned to any client. Passes null/undefined through.
+ */
+export function toClient<T>(sub: T): T {
+  if (!sub || typeof sub !== "object") return sub
+  const {
+    payloadHash: _payloadHash,
+    draftRevision: _draftRevision,
+    ...rest
+  } = sub as Record<string, unknown>
+
+  return rest as T
+}
+
 // NOTE: `status` on a submission is the moderation status (draft/pending/
 // approved/rejected/needs_info) and is stored correctly in cm_submissions.
 // Strapi's content-manager (and tools built on it, like the MCP) overlays its
@@ -101,13 +116,17 @@ export default ({ strapi }: { strapi: any }) => ({
     const { asDraft, ...rest } = data
     const status = asDraft ? "draft" : "pending"
 
-    return strapi.documents("plugin::content-moderation.submission").create({
-      data: {
-        ...rest,
-        status,
-        ...(status === "pending" ? { payloadHash: payloadHash(rest) } : {}),
-      },
-    })
+    const created = await strapi
+      .documents("plugin::content-moderation.submission")
+      .create({
+        data: {
+          ...rest,
+          status,
+          ...(status === "pending" ? { payloadHash: payloadHash(rest) } : {}),
+        },
+      })
+
+    return toClient(created)
   },
 
   async findAll(status?: string) {
@@ -116,19 +135,27 @@ export default ({ strapi }: { strapi: any }) => ({
     }
 
     // Default to all non-draft statuses when no filter is specified
-    return strapi.documents("plugin::content-moderation.submission").findMany({
-      filters,
-      sort: { createdAt: "desc" },
-      limit: 200,
-    })
+    const rows = await strapi
+      .documents("plugin::content-moderation.submission")
+      .findMany({
+        filters,
+        sort: { createdAt: "desc" },
+        limit: 200,
+      })
+
+    return (rows ?? []).map(toClient)
   },
 
   async findByUser(userId: string) {
-    return strapi.documents("plugin::content-moderation.submission").findMany({
-      filters: { submittedByUserId: userId },
-      sort: { createdAt: "desc" },
-      limit: 100,
-    })
+    const rows = await strapi
+      .documents("plugin::content-moderation.submission")
+      .findMany({
+        filters: { submittedByUserId: userId },
+        sort: { createdAt: "desc" },
+        limit: 100,
+      })
+
+    return (rows ?? []).map(toClient)
   },
 
   async updateStatus(
@@ -144,6 +171,9 @@ export default ({ strapi }: { strapi: any }) => ({
           | "conflict"
           | "tampered"
           | "apply_failed"
+        // Set on apply_failed when the revert itself failed: the submission
+        // is still at the new status, with none of its side effects applied.
+        unreverted?: true
       }
     | { data: unknown }
   > {
@@ -190,14 +220,13 @@ export default ({ strapi }: { strapi: any }) => ({
 
     // Built from the pre-CAS snapshot, not re-read from the db. `payloadHash`
     // is a private field and must never be echoed back to admin clients.
-    const updated: Record<string, unknown> = {
+    const updated: Record<string, unknown> = toClient({
       ...submission,
       status,
       reviewedByUserId,
       reviewNote,
       reviewedAt,
-    }
-    delete updated.payloadHash
+    })
 
     try {
       // Side-effect: if approving a new_library, create a draft library entry
@@ -374,10 +403,14 @@ export default ({ strapi }: { strapi: any }) => ({
             )
           }
         } catch (err) {
+          // I1: rethrow so the outer catch reverts the approval. A retry is
+          // safe: the draft library isn't created when creation throws, and
+          // the proposer affiliation is an upsert.
           strapi.log.error(
             `[content-moderation] Failed to auto-create library from approved submission ${documentId}:`,
             err
           )
+          throw err
         }
       }
 
@@ -400,7 +433,7 @@ export default ({ strapi }: { strapi: any }) => ({
             `[content-moderation] claim ${documentId} has no valid targetDocumentId; skipping affiliation`
           )
         } else {
-          await upsertAffiliation(strapi, {
+          const affiliation = await upsertAffiliation(strapi, {
             baUserId: submission.submittedByUserId,
             libraryDocumentId: targetLibrary.documentId,
             // Pass through undefined (not null) when the claim didn't supply
@@ -410,7 +443,26 @@ export default ({ strapi }: { strapi: any }) => ({
             verificationMethod:
               (submission.verificationMethod as string) ?? "contact_us",
           })
-          await grantVerifiedLibrarian(strapi, submission.submittedByUserId)
+          try {
+            await grantVerifiedLibrarian(strapi, submission.submittedByUserId)
+          } catch (err) {
+            // I3: compensate — the approval is about to be reverted, so an
+            // affiliation this call created must not survive it. (An
+            // existing row that was only updated is left in place.)
+            if (affiliation?.created && affiliation.documentId) {
+              try {
+                await strapi
+                  .documents("api::library-affiliation.library-affiliation")
+                  .delete({ documentId: affiliation.documentId })
+              } catch (cleanupErr) {
+                strapi.log.error(
+                  `[content-moderation] claim ${documentId}: failed to remove affiliation ${affiliation.documentId} after grant failure`,
+                  cleanupErr
+                )
+              }
+            }
+            throw err
+          }
         }
       }
 
@@ -609,17 +661,33 @@ export default ({ strapi }: { strapi: any }) => ({
         `[content-moderation] updateStatus side effects failed for ${documentId}; reverting to "${priorStatus}"`,
         err
       )
-      await strapi.db
-        .query("plugin::content-moderation.submission")
-        .updateMany({
-          where: { documentId, status },
-          data: {
-            status: priorStatus,
-            reviewedByUserId: priorReviewedByUserId,
-            reviewNote: priorReviewNote,
-            reviewedAt: priorReviewedAt,
-          },
-        })
+      let reverted = false
+      try {
+        const { count: revertCount } = await strapi.db
+          .query("plugin::content-moderation.submission")
+          .updateMany({
+            where: { documentId, status },
+            data: {
+              status: priorStatus,
+              reviewedByUserId: priorReviewedByUserId,
+              reviewNote: priorReviewNote,
+              reviewedAt: priorReviewedAt,
+            },
+          })
+        reverted = revertCount === 1
+      } catch (revertErr) {
+        strapi.log.error(
+          `[content-moderation] revert of ${documentId} threw`,
+          revertErr
+        )
+      }
+      if (!reverted) {
+        strapi.log.error(
+          `[content-moderation] approval revert failed; submission left approved without side effects (${documentId}, status "${status}")`
+        )
+
+        return { error: "apply_failed", unreverted: true }
+      }
 
       return { error: "apply_failed" }
     }
@@ -679,7 +747,7 @@ export default ({ strapi }: { strapi: any }) => ({
       .documents("plugin::content-moderation.submission")
       .findOne({ documentId })
 
-    return { data }
+    return { data: toClient(data) }
   },
 
   async finalizeDraft(
@@ -752,9 +820,11 @@ export default ({ strapi }: { strapi: any }) => ({
       })
     if (count !== 1) return null
 
-    return strapi
-      .documents("plugin::content-moderation.submission")
-      .findOne({ documentId })
+    return toClient(
+      await strapi
+        .documents("plugin::content-moderation.submission")
+        .findOne({ documentId })
+    )
   },
 
   /**
@@ -974,100 +1044,95 @@ export default ({ strapi }: { strapi: any }) => ({
         limit: 1,
       })
 
-    return results[0] ?? null
+    return toClient(results[0] ?? null)
   },
 
   async applyWikiEdit(
     submission: any
   ): Promise<"applied" | "skipped_suggestion" | "noop"> {
-    try {
-      // A2: the target is whatever the moderator saw, never draftData.
-      const slug: string | undefined = submission.targetSlug ?? undefined
-      if (!slug) return "noop"
+    // I1: "noop" only for genuine no-ops (no slug, no article, unknown
+    // locale, nothing to write). Any other error propagates, so
+    // updateStatus reverts the approval instead of spending it.
+    // A2: the target is whatever the moderator saw, never draftData.
+    const slug: string | undefined = submission.targetSlug ?? undefined
+    if (!slug) return "noop"
 
-      // Critical: re-check the submitter's rights at apply time, before
-      // applying anything. A reader's suggestion draft can be turned into a
-      // direct-edit body (title/blocks) after creation; the create-time
-      // policy check alone can't see that. This is defence in depth
-      // alongside the saveDraft/finalizeDraft compare-and-set above.
-      const { caps } = await strapi
-        .plugin("content-moderation")
-        .service("submission-policy")
-        .loadCapabilities(submission.submittedByUserId)
-      if (!caps.set.has("docs.directEdit")) {
-        strapi.log.warn(
-          `[content-moderation] wiki_edit ${submission.documentId} is a suggestion; apply it manually`
-        )
+    // Critical: re-check the submitter's rights at apply time, before
+    // applying anything. A reader's suggestion draft can be turned into a
+    // direct-edit body (title/blocks) after creation; the create-time
+    // policy check alone can't see that. This is defence in depth
+    // alongside the saveDraft/finalizeDraft compare-and-set above.
+    const { caps } = await strapi
+      .plugin("content-moderation")
+      .service("submission-policy")
+      .loadCapabilities(submission.submittedByUserId)
+    if (!caps.set.has("docs.directEdit")) {
+      strapi.log.warn(
+        `[content-moderation] wiki_edit ${submission.documentId} is a suggestion; apply it manually`
+      )
 
-        // The reviewNote write for this case is the caller's (updateStatus)
-        // responsibility: it's the only one holding the moderator's actual
-        // reviewNote argument, not a possibly-stale snapshot of it.
-        return "skipped_suggestion"
-      }
+      // The reviewNote write for this case is the caller's (updateStatus)
+      // responsibility: it's the only one holding the moderator's actual
+      // reviewNote argument, not a possibly-stale snapshot of it.
+      return "skipped_suggestion"
+    }
 
-      const draftData = (submission.draftData ?? {}) as Record<string, unknown>
+    const draftData = (submission.draftData ?? {}) as Record<string, unknown>
 
-      const locales: { code: string }[] = await strapi
-        .plugin("i18n")
-        .service("locales")
-        .find()
-      const locale =
-        typeof draftData.locale === "string" ? draftData.locale : "en"
-      if (!locales.some((l) => l.code === locale)) {
-        strapi.log.warn(
-          `[content-moderation] applyWikiEdit: unknown locale ${locale}`
-        )
-
-        return "noop"
-      }
-
-      const [article] = (await strapi
-        .documents("api::wiki-article.wiki-article" as any)
-        .findMany({
-          filters: { slug: { $eq: slug } } as any,
-          limit: 1,
-        })) as any[]
-      if (!article) return "noop"
-
-      const updateData: Record<string, unknown> = {}
-      if (typeof draftData.title === "string" && draftData.title.trim())
-        updateData.title = draftData.title.trim().slice(0, 200)
-      const body = sanitizeWikiBody(draftData.body)
-      if (body) updateData.body = body
-      if (Object.keys(updateData).length === 0) return "noop"
-
-      await strapi.documents("api::wiki-article.wiki-article" as any).update({
-        documentId: article.documentId,
-        locale,
-        status: "published",
-        data: updateData,
-      })
-
-      if (submission.submittedByUserId) {
-        const [profile] = (await strapi
-          .documents("api::user-profile.user-profile")
-          .findMany({
-            filters: { baUserId: { $eq: submission.submittedByUserId } } as any,
-            fields: ["documentId"] as any,
-            limit: 1,
-          })) as any[]
-        if (profile)
-          await strapi
-            .documents("api::wiki-article.wiki-article" as any)
-            .update({
-              documentId: article.documentId,
-              locale,
-              data: {
-                contributors: { connect: [{ documentId: profile.documentId }] },
-              },
-            })
-      }
-
-      return "applied"
-    } catch (err) {
-      strapi.log.error("[content-moderation] applyWikiEdit failed", err)
+    const locales: { code: string }[] = await strapi
+      .plugin("i18n")
+      .service("locales")
+      .find()
+    const locale =
+      typeof draftData.locale === "string" ? draftData.locale : "en"
+    if (!locales.some((l) => l.code === locale)) {
+      strapi.log.warn(
+        `[content-moderation] applyWikiEdit: unknown locale ${locale}`
+      )
 
       return "noop"
     }
+
+    const [article] = (await strapi
+      .documents("api::wiki-article.wiki-article" as any)
+      .findMany({
+        filters: { slug: { $eq: slug } } as any,
+        limit: 1,
+      })) as any[]
+    if (!article) return "noop"
+
+    const updateData: Record<string, unknown> = {}
+    if (typeof draftData.title === "string" && draftData.title.trim())
+      updateData.title = draftData.title.trim().slice(0, 200)
+    const body = sanitizeWikiBody(draftData.body)
+    if (body) updateData.body = body
+    if (Object.keys(updateData).length === 0) return "noop"
+
+    await strapi.documents("api::wiki-article.wiki-article" as any).update({
+      documentId: article.documentId,
+      locale,
+      status: "published",
+      data: updateData,
+    })
+
+    if (submission.submittedByUserId) {
+      const [profile] = (await strapi
+        .documents("api::user-profile.user-profile")
+        .findMany({
+          filters: { baUserId: { $eq: submission.submittedByUserId } } as any,
+          fields: ["documentId"] as any,
+          limit: 1,
+        })) as any[]
+      if (profile)
+        await strapi.documents("api::wiki-article.wiki-article" as any).update({
+          documentId: article.documentId,
+          locale,
+          data: {
+            contributors: { connect: [{ documentId: profile.documentId }] },
+          },
+        })
+    }
+
+    return "applied"
   },
 })
