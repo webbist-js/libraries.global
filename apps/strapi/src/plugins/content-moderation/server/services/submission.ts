@@ -312,6 +312,14 @@ export default ({ strapi }: { strapi: any }) => ({
         documentId: submission.targetDocumentId,
         data: { status: "approved" },
       })
+    } else if (
+      status === "approved" &&
+      submission?.submissionType === "topic_suggestion" &&
+      (submission.targetEntityType !== "topic" || !submission.targetDocumentId)
+    ) {
+      strapi.log.warn(
+        `[content-moderation] topic_suggestion ${documentId} has no topic targetDocumentId; nothing applied`
+      )
     }
 
     // ── wiki_edit approval ─────────────────────────────────────────────

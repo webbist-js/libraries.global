@@ -92,3 +92,37 @@ describe("applyWikiEdit", () => {
     expect(store[WIKI][0].title).toBe("A")
   })
 })
+
+describe("ownedUploadIds", () => {
+  it("returns only ids with matching submission-upload rows", async () => {
+    const { strapi } = makeFakeStrapi({
+      "plugin::content-moderation.submission-upload": [
+        { fileId: 1, baUserId: "u1" },
+        { fileId: 2, baUserId: "u2" },
+      ],
+    })
+    const result = await createService({ strapi }).ownedUploadIds(
+      "u1",
+      [1, 2, 3]
+    )
+    expect(result).toEqual(new Set([1]))
+  })
+})
+
+describe("recordUpload", () => {
+  it("creates a submission-upload row with fileId and baUserId", async () => {
+    const { strapi, store } = makeFakeStrapi({
+      "plugin::content-moderation.submission-upload": [],
+    })
+    await createService({ strapi }).recordUpload(5, "u1")
+    expect(store["plugin::content-moderation.submission-upload"]).toHaveLength(
+      1
+    )
+    expect(
+      store["plugin::content-moderation.submission-upload"][0]
+    ).toMatchObject({
+      fileId: 5,
+      baUserId: "u1",
+    })
+  })
+})
