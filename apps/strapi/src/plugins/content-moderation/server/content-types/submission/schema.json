@@ -40,7 +40,8 @@
         "area",
         "wiki_article",
         "blog_article",
-        "user_profile"
+        "user_profile",
+        "topic"
       ]
     },
     "targetDocumentId": { "type": "string" },

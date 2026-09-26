@@ -63,6 +63,32 @@ export async function POST(req: Request) {
       { status: 500 }
     )
 
+  const secret = process.env.STRAPI_BRIDGE_SECRET
+  if (secret) {
+    try {
+      const ownershipRes = await fetch(
+        `${STRAPI}/api/content-moderation/uploads`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Service-Secret": secret,
+            "X-Ba-User-Id": session.user.id,
+            "X-Ba-User-Email": session.user.email,
+          },
+          body: JSON.stringify({ fileId: first.id }),
+        }
+      )
+      if (!ownershipRes.ok)
+        console.error(
+          "Failed to record submission upload ownership",
+          ownershipRes.status
+        )
+    } catch (err) {
+      console.error("Failed to record submission upload ownership", err)
+    }
+  }
+
   return NextResponse.json({
     id: first.id,
     url: first.url.startsWith("http") ? first.url : `${STRAPI}${first.url}`,

@@ -1,4 +1,5 @@
 import { payloadHash } from "../utils/payload-hash"
+import { sanitizeWikiBody } from "../utils/wiki-body"
 
 export default ({ strapi }: { strapi: any }) => ({
   async create(data: {
@@ -86,9 +87,17 @@ export default ({ strapi }: { strapi: any }) => ({
 
       // Uploaded images: find hero and gallery
       type UploadedImage = { strapiId: number; url: string; isHero: boolean }
-      const uploadedImages = Array.isArray(f.uploadedImages)
+      const claimed = Array.isArray(f.uploadedImages)
         ? (f.uploadedImages as UploadedImage[])
         : []
+      // A2: only attach files this submitter uploaded through the submission flow.
+      const owned = await (this as any).ownedUploadIds(
+        submission.submittedByUserId,
+        claimed.map((i) => Number(i.strapiId)).filter(Number.isInteger)
+      )
+      const uploadedImages = claimed.filter((i) =>
+        owned.has(Number(i.strapiId))
+      )
       const heroImage =
         uploadedImages.find((img) => img.isHero) ?? uploadedImages[0] ?? null
       const galleryImages = uploadedImages.filter((img) => img !== heroImage)
@@ -247,34 +256,38 @@ export default ({ strapi }: { strapi: any }) => ({
     ) {
       const fields = (submission.fields ?? {}) as Record<string, unknown>
 
-      // Find the library by entityRef to get its documentId for the relation
-      const targetLibrary = fields.entityRef
-        ? await strapi.db
-            .query("api::library.library")
-            .findOne({ where: { entityRef: fields.entityRef } })
-        : null
-
-      try {
-        const affiliationData: Record<string, unknown> = {
-          baUserId: submission.submittedByUserId,
-          role: (fields.role as string) ?? null,
-          department: (fields.department as string) ?? null,
-          verificationMethod:
-            (submission.verificationMethod as string) ?? "contact_us",
-        }
-        if (targetLibrary) {
-          affiliationData.library = { connect: [{ id: targetLibrary.id }] }
-        }
-        await strapi
-          .documents("api::library-affiliation.library-affiliation")
-          .create({
-            data: affiliationData as any,
+      // A2: resolve by the reviewed targetDocumentId, never fields.entityRef.
+      const targetLibrary = submission.targetDocumentId
+        ? await strapi.documents("api::library.library").findOne({
+            documentId: submission.targetDocumentId,
+            fields: ["id", "documentId"] as any,
           })
-      } catch (err) {
-        strapi.log.error(
-          "[content-moderation] Failed to create library-affiliation:",
-          err
+        : null
+      if (!targetLibrary) {
+        strapi.log.warn(
+          `[content-moderation] claim ${documentId} has no valid targetDocumentId; skipping affiliation`
         )
+      } else {
+        try {
+          const affiliationData: Record<string, unknown> = {
+            baUserId: submission.submittedByUserId,
+            role: (fields.role as string) ?? null,
+            department: (fields.department as string) ?? null,
+            verificationMethod:
+              (submission.verificationMethod as string) ?? "contact_us",
+            library: { connect: [{ id: targetLibrary.id }] },
+          }
+          await strapi
+            .documents("api::library-affiliation.library-affiliation")
+            .create({
+              data: affiliationData as any,
+            })
+        } catch (err) {
+          strapi.log.error(
+            "[content-moderation] Failed to create library-affiliation:",
+            err
+          )
+        }
       }
 
       // Mark the user profile as a verified librarian
@@ -288,17 +301,17 @@ export default ({ strapi }: { strapi: any }) => ({
     }
 
     // Side-effect: if approving a topic_suggestion, approve the topic
+    // A2: resolve by the reviewed targetDocumentId, never fields.topicDocumentId.
     if (
       status === "approved" &&
-      submission?.submissionType === "topic_suggestion"
+      submission?.submissionType === "topic_suggestion" &&
+      submission.targetEntityType === "topic" &&
+      submission.targetDocumentId
     ) {
-      const fields = (submission.fields ?? {}) as Record<string, unknown>
-      if (fields.topicDocumentId) {
-        await strapi.documents("api::topic.topic").update({
-          documentId: fields.topicDocumentId as string,
-          data: { status: "approved" },
-        })
-      }
+      await strapi.documents("api::topic.topic").update({
+        documentId: submission.targetDocumentId,
+        data: { status: "approved" },
+      })
     }
 
     // ── wiki_edit approval ─────────────────────────────────────────────
@@ -675,6 +688,26 @@ export default ({ strapi }: { strapi: any }) => ({
     return (this as any).findPublicByBaUserId(profile.baUserId)
   },
 
+  /** Records that `baUserId` uploaded `fileId` through the submission flow. */
+  async recordUpload(fileId: number, baUserId: string) {
+    return strapi
+      .documents("plugin::content-moderation.submission-upload" as any)
+      .create({ data: { fileId, baUserId } })
+  },
+
+  /** A2: only files this submitter actually uploaded may be attached to their submission. */
+  async ownedUploadIds(baUserId: string, ids: number[]): Promise<Set<number>> {
+    if (ids.length === 0) return new Set()
+    const rows = (await strapi
+      .documents("plugin::content-moderation.submission-upload" as any)
+      .findMany({
+        filters: { baUserId: { $eq: baUserId }, fileId: { $in: ids } } as any,
+        limit: ids.length,
+      })) as { fileId: number }[]
+
+    return new Set(rows.map((r) => r.fileId))
+  },
+
   async findDraft(userId: string, submissionType: string, targetSlug?: string) {
     const filters: Record<string, unknown> = {
       submittedByUserId: userId,
@@ -695,32 +728,39 @@ export default ({ strapi }: { strapi: any }) => ({
 
   async applyWikiEdit(submission: any): Promise<void> {
     try {
-      const draftData = submission.draftData ?? {}
-      const slug: string | undefined = draftData.targetSlug
+      // A2: the target is whatever the moderator saw, never draftData.
+      const slug: string | undefined = submission.targetSlug ?? undefined
       if (!slug) return
+      const draftData = (submission.draftData ?? {}) as Record<string, unknown>
 
-      const locale = (draftData.locale as string | undefined) ?? "en"
-
-      const articles = await strapi
-        .documents("api::wiki-article.wiki-article" as any)
-        .findMany({
-          filters: { slug: { $eq: slug } } as any,
-          limit: 1,
-        })
-      const article = (articles as any[])[0] ?? null
-      if (!article) return
-
-      const updateData: Record<string, unknown> = {}
-      if (draftData.title) updateData.title = draftData.title
-      if (Array.isArray(draftData.body)) updateData.body = draftData.body
-
-      if (Object.keys(updateData).length === 0) {
+      const locales: { code: string }[] = await strapi
+        .plugin("i18n")
+        .service("locales")
+        .find()
+      const locale =
+        typeof draftData.locale === "string" ? draftData.locale : "en"
+      if (!locales.some((l) => l.code === locale)) {
         strapi.log.warn(
-          "[content-moderation] applyWikiEdit: draftData has no title or body, skipping update"
+          `[content-moderation] applyWikiEdit: unknown locale ${locale}`
         )
 
         return
       }
+
+      const [article] = (await strapi
+        .documents("api::wiki-article.wiki-article" as any)
+        .findMany({
+          filters: { slug: { $eq: slug } } as any,
+          limit: 1,
+        })) as any[]
+      if (!article) return
+
+      const updateData: Record<string, unknown> = {}
+      if (typeof draftData.title === "string" && draftData.title.trim())
+        updateData.title = draftData.title.trim().slice(0, 200)
+      const body = sanitizeWikiBody(draftData.body)
+      if (body) updateData.body = body
+      if (Object.keys(updateData).length === 0) return
 
       await strapi.documents("api::wiki-article.wiki-article" as any).update({
         documentId: article.documentId,
@@ -729,17 +769,24 @@ export default ({ strapi }: { strapi: any }) => ({
         data: updateData,
       })
 
-      // Connect submitter to contributors relation (additive — never removes)
       if (submission.submittedByUserId) {
-        const profile = await strapi.db
-          .query("api::user-profile.user-profile")
-          .findOne({ where: { baUserId: submission.submittedByUserId } })
-        if (profile) {
-          await strapi.db.query("api::wiki-article.wiki-article").update({
-            where: { id: article.id },
-            data: { contributors: { connect: [{ id: profile.id }] } },
-          })
-        }
+        const [profile] = (await strapi
+          .documents("api::user-profile.user-profile")
+          .findMany({
+            filters: { baUserId: { $eq: submission.submittedByUserId } } as any,
+            fields: ["documentId"] as any,
+            limit: 1,
+          })) as any[]
+        if (profile)
+          await strapi
+            .documents("api::wiki-article.wiki-article" as any)
+            .update({
+              documentId: article.documentId,
+              locale,
+              data: {
+                contributors: { connect: [{ documentId: profile.documentId }] },
+              },
+            })
       }
     } catch (err) {
       strapi.log.error("[content-moderation] applyWikiEdit failed", err)

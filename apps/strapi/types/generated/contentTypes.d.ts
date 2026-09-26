@@ -3142,6 +3142,7 @@ export interface PluginContentModerationSubmission
         "wiki_article",
         "blog_article",
         "user_profile",
+        "topic",
       ]
     >
     targetSlug: Schema.Attribute.String
@@ -3151,6 +3152,46 @@ export interface PluginContentModerationSubmission
     verificationMethod: Schema.Attribute.Enumeration<
       ["email_domain", "vouching", "contact_us"]
     >
+  }
+}
+
+export interface PluginContentModerationSubmissionUpload
+  extends Struct.CollectionTypeSchema {
+  collectionName: "cm_submission_uploads"
+  info: {
+    displayName: "Submission Upload"
+    pluralName: "submission-uploads"
+    singularName: "submission-upload"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    baUserId: Schema.Attribute.String & Schema.Attribute.Required
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    fileId: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::content-moderation.submission-upload"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
   }
 }
 
@@ -4078,6 +4119,7 @@ declare module "@strapi/strapi" {
       "api::wiki-landing.wiki-landing": ApiWikiLandingWikiLanding
       "api::wiki-section.wiki-section": ApiWikiSectionWikiSection
       "plugin::content-moderation.submission": PluginContentModerationSubmission
+      "plugin::content-moderation.submission-upload": PluginContentModerationSubmissionUpload
       "plugin::content-releases.release": PluginContentReleasesRelease
       "plugin::content-releases.release-action": PluginContentReleasesReleaseAction
       "plugin::events.event": PluginEventsEvent

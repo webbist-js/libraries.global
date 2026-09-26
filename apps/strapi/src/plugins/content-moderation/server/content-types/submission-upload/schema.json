@@ -1,0 +1,18 @@
+{
+  "kind": "collectionType",
+  "collectionName": "cm_submission_uploads",
+  "info": {
+    "singularName": "submission-upload",
+    "pluralName": "submission-uploads",
+    "displayName": "Submission Upload"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": false },
+    "content-type-builder": { "visible": false }
+  },
+  "attributes": {
+    "fileId": { "type": "integer", "required": true, "unique": true },
+    "baUserId": { "type": "string", "required": true }
+  }
+}

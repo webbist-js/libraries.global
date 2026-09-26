@@ -53,4 +53,10 @@ export default [
     handler: "submission.findDraft",
     config: { auth: false, policies: [] },
   },
+  {
+    method: "POST",
+    path: "/uploads",
+    handler: "submission.recordUpload",
+    config: { auth: false, policies: [] },
+  },
 ]

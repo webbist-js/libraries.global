@@ -280,6 +280,19 @@ export default ({ strapi }: { strapi: any }) => ({
     ctx.body = { data: result.data }
   },
 
+  // POST /api/content-moderation/uploads  (content-api route, secret-gated)
+  async recordUpload(ctx: any) {
+    const user = await resolveUser(strapi, ctx)
+    if (!user) return ctx.unauthorized()
+    const fileId = Number((ctx.request.body as any)?.fileId)
+    if (!Number.isInteger(fileId)) return ctx.badRequest("fileId required")
+    await strapi
+      .plugin("content-moderation")
+      .service("submission")
+      .recordUpload(fileId, user.id)
+    ctx.body = { ok: true }
+  },
+
   // GET /api/content-moderation/submissions/draft/:type  (content-api route)
   async findDraft(ctx: any) {
     const user = await resolveUser(strapi, ctx)
