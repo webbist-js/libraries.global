@@ -155,7 +155,6 @@ function relationToFeature(rel) {
 // ── Fetch ─────────────────────────────────────────────────────────────────────
 
 async function tryFetch(baseUrl, query) {
-  const url = `${baseUrl}?data=${encodeURIComponent(query)}`
   console.debug(`  POST ${baseUrl}`)
   console.debug(`  Query: ${query.slice(0, 80)}…`)
 
@@ -185,6 +184,7 @@ async function main() {
 
   let relations = []
 
+  // eslint-disable-next-line sonarjs/no-labels -- exits both the mirror and query loops on first success
   outer: for (const baseUrl of [OVERPASS_BASE, OVERPASS_MIRROR]) {
     for (const query of QUERIES) {
       try {

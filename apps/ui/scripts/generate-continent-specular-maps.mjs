@@ -168,8 +168,11 @@ async function getConnectedMask(imageBuffer) {
       .toBuffer()
   }
 
-  const largestComponent = components.reduce((largest, component) =>
-    component.area > largest.area ? component : largest
+  // Non-empty: the zero-component case returned above.
+  const largestComponent = components.reduce(
+    (largest, component) =>
+      component.area > largest.area ? component : largest,
+    components[0]
   )
   const expandedLargestBounds = {
     height: largestComponent.height + Math.round(largestComponent.height * 0.9),
