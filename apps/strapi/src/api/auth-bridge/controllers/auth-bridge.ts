@@ -606,13 +606,29 @@ export default {
     const { baUserId } = ctx.query as { baUserId?: string }
     if (!baUserId) return ctx.badRequest("Missing baUserId")
 
-    const profile = await strapi.db
-      .query("api::user-profile.user-profile")
-      .findOne({ where: { baUserId }, select: ["contributorRole", "username"] })
+    const [profile] = (await strapi
+      .documents("api::user-profile.user-profile")
+      .findMany({
+        filters: { baUserId: { $eq: baUserId } },
+        fields: ["contributorRole", "username", "tier"],
+        limit: 1,
+      })) as { contributorRole?: string; username?: string; tier?: string }[]
+
+    const affiliations = (await strapi
+      .documents("api::library-affiliation.library-affiliation")
+      .findMany({
+        filters: { baUserId: { $eq: baUserId } },
+        populate: { library: { fields: ["documentId"] } },
+        limit: 100,
+      })) as { library?: { documentId?: string } }[]
 
     return ctx.send({
       contributorRole: profile?.contributorRole ?? "reader",
       username: profile?.username ?? null,
+      tier: profile?.tier ?? null,
+      claims: affiliations
+        .map((a) => a.library?.documentId)
+        .filter((id): id is string => !!id),
     })
   },
 

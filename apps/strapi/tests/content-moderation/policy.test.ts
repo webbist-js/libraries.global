@@ -97,4 +97,24 @@ describe("submission policy", () => {
       })
     ).toEqual({ ok: true })
   })
+  it("ignores plan fields on the profile (invariant 3)", async () => {
+    const { strapi } = makeFakeStrapi({
+      [PROFILE]: [
+        {
+          documentId: "p0000000000000000000001",
+          baUserId: "u1",
+          contributorRole: "reader",
+          tier: "Reader",
+          plan: "pro",
+          planSource: "paid",
+        },
+      ],
+    })
+    const verdict = await createPolicy({ strapi }).check({
+      baUserId: "u1",
+      submissionType: "wiki_edit",
+      directWikiEdit: true,
+    })
+    expect(verdict).toMatchObject({ ok: false, status: 403 })
+  })
 })
