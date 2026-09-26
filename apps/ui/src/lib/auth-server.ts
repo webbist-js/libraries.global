@@ -1,5 +1,12 @@
 import "server-only"
 
+import type {
+  Capability,
+  ContributorRole,
+  Feature,
+  PlanKey,
+  PlanSource,
+} from "@repo/access"
 import type { ReadonlyHeaders } from "next/dist/server/web/spec-extension/adapters/headers"
 
 import { auth } from "./auth"
@@ -14,15 +21,15 @@ export type BetterAuthUser = {
   image?: string | null
   createdAt: Date
   updatedAt: Date
-  // Added by customSession plugin — sourced from Strapi user-profile
-  contributorRole?:
-    | "reader"
-    | "contributor"
-    | "verified_librarian"
-    | "wiki_editor"
-    | "editorial_board"
-    | null
+  // Added by customSession (lib/session-access.ts). Missing means deny.
+  contributorRole?: ContributorRole | null
   username?: string | null
+  profileLoaded?: boolean
+  capabilities?: Capability[]
+  claimedLibraryIds?: string[]
+  plan?: PlanKey
+  planSource?: PlanSource
+  features?: Feature[]
 }
 
 export type BetterAuthSession = {

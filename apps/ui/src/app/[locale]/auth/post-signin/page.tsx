@@ -18,8 +18,9 @@ export default async function PostSigninPage({
     redirect(`/auth/signin?callbackUrl=${encodeURIComponent(destination)}`)
 
   // customSession enriches the session with `username` from Strapi.
-  // null means the user has never completed onboarding.
-  if (!session.user.username) {
+  // null means the user has never completed onboarding, but only when the
+  // profile loaded: a Strapi outage must not bounce users into onboarding.
+  if (session.user.profileLoaded && !session.user.username) {
     const nextParam =
       destination !== "/" ? `?next=${encodeURIComponent(destination)}` : ""
     redirect(`/profile/onboarding${nextParam}`)

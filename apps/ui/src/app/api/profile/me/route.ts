@@ -2,6 +2,7 @@ import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/lib/auth"
+import { invalidateSessionProfile } from "@/lib/session-profile"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
@@ -112,6 +113,7 @@ export async function PUT(req: Request) {
       { error: "Failed to update profile" },
       { status: 500 }
     )
+  invalidateSessionProfile(session.user.id)
   const json = await res.json()
 
   return NextResponse.json(json)
@@ -168,6 +170,7 @@ export async function PATCH(req: Request) {
       { error: "Failed to update profile" },
       { status: 500 }
     )
+  invalidateSessionProfile(session.user.id)
 
   return NextResponse.json({ ok: true })
 }
@@ -200,6 +203,7 @@ export async function DELETE() {
       { status: 500 }
     )
   }
+  invalidateSessionProfile(session.user.id)
 
   try {
     await auth.api.deleteUser({ body: {}, headers: await headers() })

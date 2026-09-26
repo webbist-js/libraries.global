@@ -9,6 +9,8 @@ import {
   sendResetPasswordEmail,
   sendVerificationEmail,
 } from "./email"
+import { buildSessionAccess } from "./session-access"
+import { fetchSessionProfile } from "./session-profile"
 
 // Pool singleton — prevents multiple connections during Next.js dev hot-reload
 const globalForPg = global as typeof globalThis & { _baPool?: Pool }
@@ -118,36 +120,9 @@ export const auth = betterAuth({
       },
     }),
     customSession(async ({ user, session }) => {
-      const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
-      const secret = process.env.STRAPI_BRIDGE_SECRET
-      if (!secret) return { user, session }
-      try {
-        const res = await fetch(
-          `${strapiUrl}/api/auth-bridge/session-profile?baUserId=${encodeURIComponent(user.id)}`,
-          { cache: "no-store", headers: { "X-Service-Secret": secret } }
-        )
-        if (!res.ok) return { user, session }
-        const data = (await res.json()) as {
-          contributorRole?: string
-          username?: string | null
-        }
+      const profile = await fetchSessionProfile(user.id)
 
-        return {
-          user: {
-            ...user,
-            contributorRole: (data.contributorRole ?? "reader") as
-              | "reader"
-              | "contributor"
-              | "verified_librarian"
-              | "wiki_editor"
-              | "editorial_board",
-            username: data.username ?? null,
-          },
-          session,
-        }
-      } catch {
-        return { user, session }
-      }
+      return { user: { ...user, ...buildSessionAccess(profile) }, session }
     }),
   ],
   session: {

@@ -68,9 +68,11 @@ function SuspensedSignInForm() {
     signInMutation.mutate(values, {
       onSuccess: async () => {
         const { data } = await authClient.getSession()
-        const username = (data?.user as Record<string, unknown> | undefined)
-          ?.username as string | null | undefined
-        if (!username) {
+        const user = data?.user as Record<string, unknown> | undefined
+        const username = user?.username as string | null | undefined
+        // Only a loaded profile with no username means "not onboarded"; a
+        // Strapi outage (profileLoaded false) must not force onboarding.
+        if (user?.profileLoaded === true && !username) {
           const next = encodeURIComponent(callbackUrl)
           globalThis.location.href = `/profile/onboarding?next=${next}`
         } else {
