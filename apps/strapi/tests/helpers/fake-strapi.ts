@@ -111,6 +111,10 @@ export function makeFakeStrapi(seed: Record<string, Doc[]> = {}) {
         async ({ where }: { where: Record<string, any> }) =>
           table(uid).find((d) => match(d, where)) ?? null
       ),
+      // `populate` is ignored: seed relations as nested objects instead.
+      findMany: vi.fn(async ({ where }: { where?: Record<string, any> } = {}) =>
+        table(uid).filter((d) => match(d, where))
+      ),
     })),
   }
 

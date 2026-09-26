@@ -74,6 +74,83 @@ function applyPublicPrefs(
   return out
 }
 
+const AFFILIATION = "api::library-affiliation.library-affiliation"
+
+/**
+ * Who is asking, as far as the bridge secret vouches for it. The owner and
+ * viewer ids are only trusted alongside the secret, which only the UI
+ * server holds.
+ */
+function requestIdentity(
+  ctx: any,
+  profileBaUserId: string | null | undefined
+): { isOwnerRequest: boolean; viewerBaUserId: string | null } {
+  const secretMatch = isValidServiceSecret(
+    ctx.request.headers["x-service-secret"]
+  )
+  const { ownerBaUserId, viewerBaUserId } = (ctx.query ?? {}) as Record<
+    string,
+    unknown
+  >
+
+  return {
+    // ownerBaUserId: the owner viewing their own private/limited profile
+    isOwnerRequest:
+      secretMatch &&
+      typeof ownerBaUserId === "string" &&
+      !!ownerBaUserId &&
+      ownerBaUserId === profileBaUserId,
+    // viewerBaUserId: a signed-in user viewing a limited profile
+    viewerBaUserId:
+      secretMatch && typeof viewerBaUserId === "string" && viewerBaUserId
+        ? viewerBaUserId
+        : null,
+  }
+}
+
+/**
+ * The limited-profile rule: a viewer who shares a library affiliation with
+ * the owner sees a limited profile in full. `ownerAffiliations` must have
+ * `library` populated.
+ */
+async function viewerSharesLibrary(
+  ownerAffiliations: any[],
+  viewerBaUserId: string | null
+): Promise<boolean> {
+  if (!viewerBaUserId) return false
+  const ownerLibraryIds = ownerAffiliations
+    .map((a: any) => a.library?.id)
+    .filter(Boolean)
+  if (ownerLibraryIds.length === 0) return false
+  const viewerAffiliations = await strapi.db.query(AFFILIATION).findMany({
+    where: {
+      baUserId: viewerBaUserId,
+      library: { id: { $in: ownerLibraryIds } },
+    },
+  })
+
+  return (viewerAffiliations as any[]).length > 0
+}
+
+/** Only the owner or an affiliated viewer may see a limited profile's extras. */
+async function canSeeLimitedProfile(
+  ctx: any,
+  profileBaUserId: string | null | undefined
+): Promise<boolean> {
+  const { isOwnerRequest, viewerBaUserId } = requestIdentity(
+    ctx,
+    profileBaUserId
+  )
+  if (isOwnerRequest) return true
+  if (!profileBaUserId || !viewerBaUserId) return false
+  const ownerAffiliations = await strapi.db.query(AFFILIATION).findMany({
+    where: { baUserId: profileBaUserId },
+    populate: { library: true },
+  })
+
+  return viewerSharesLibrary(ownerAffiliations as any[], viewerBaUserId)
+}
+
 export default factories.createCoreController(
   "api::user-profile.user-profile",
   () => ({
@@ -101,22 +178,10 @@ export default factories.createCoreController(
       if (!profile) return ctx.notFound("Profile not found")
 
       // Server-to-server owner/viewer bypass — both require the bridge secret
-      const secretMatch = isValidServiceSecret(
-        ctx.request.headers["x-service-secret"]
+      const { isOwnerRequest, viewerBaUserId } = requestIdentity(
+        ctx,
+        profile.baUserId
       )
-
-      // ownerBaUserId: profile owner viewing their own private/limited profile
-      const ownerBaUserId = (ctx.query as any)?.ownerBaUserId as
-        | string
-        | undefined
-      const isOwnerRequest =
-        secretMatch && !!ownerBaUserId && ownerBaUserId === profile.baUserId
-
-      // viewerBaUserId: logged-in user viewing a limited profile (membership check)
-      const viewerBaUserId = (ctx.query as any)?.viewerBaUserId as
-        | string
-        | undefined
-      const hasViewerIdentity = secretMatch && !!viewerBaUserId
 
       // Private profiles are not publicly visible (unless the owner is requesting)
       if (profile.profileVisibility === "private" && !isOwnerRequest) {
@@ -150,28 +215,10 @@ export default factories.createCoreController(
 
       // For limited profiles, check whether the viewer is affiliated with any of
       // the same libraries as the profile owner — if so, they see the full profile
-      let viewerIsLibraryMember = false
-      if (
-        profile.profileVisibility === "limited" &&
-        !isOwnerRequest &&
-        hasViewerIdentity &&
-        affiliations.length > 0
-      ) {
-        const ownerLibraryIds = (affiliations as any[])
-          .map((a: any) => a.library?.id)
-          .filter(Boolean)
-        if (ownerLibraryIds.length > 0) {
-          const viewerAffiliations = await strapi.db
-            .query("api::library-affiliation.library-affiliation")
-            .findMany({
-              where: {
-                baUserId: viewerBaUserId,
-                library: { id: { $in: ownerLibraryIds } },
-              },
-            })
-          viewerIsLibraryMember = (viewerAffiliations as any[]).length > 0
-        }
-      }
+      const viewerIsLibraryMember =
+        profile.profileVisibility === "limited" && !isOwnerRequest
+          ? await viewerSharesLibrary(affiliations as any[], viewerBaUserId)
+          : false
 
       // Fetch earned badges for this profile
       const badgeAwards = profile.baUserId
@@ -406,6 +453,14 @@ export default factories.createCoreController(
       if (!profile || profile.profileVisibility === "private") {
         return ctx.notFound("Profile not found")
       }
+      // Same rule as the profile endpoints: a limited profile's badges are
+      // for the owner and affiliated viewers only.
+      if (
+        profile.profileVisibility === "limited" &&
+        !(await canSeeLimitedProfile(ctx, profile.baUserId))
+      ) {
+        return ctx.notFound("Profile not found")
+      }
       if (!profile.baUserId) return ctx.send({ data: [] })
 
       const awards = await strapi.db
@@ -430,18 +485,17 @@ export default factories.createCoreController(
           limit: 1,
         })
       const profile = results[0] ?? null
+      if (!profile) return ctx.notFound("Profile not found")
 
-      const ownerBaUserId2 = (ctx.query as any)?.ownerBaUserId as
-        | string
-        | undefined
-      const isOwnerRequest2 =
-        isValidServiceSecret(ctx.request.headers["x-service-secret"]) &&
-        !!ownerBaUserId2 &&
-        ownerBaUserId2 === profile?.baUserId
-
+      const { isOwnerRequest } = requestIdentity(ctx, profile.baUserId)
+      if (profile.profileVisibility === "private" && !isOwnerRequest) {
+        return ctx.notFound("Profile not found")
+      }
+      // Same rule as the profile endpoints: a limited profile's badges are
+      // for the owner and affiliated viewers only.
       if (
-        !profile ||
-        (profile.profileVisibility === "private" && !isOwnerRequest2)
+        profile.profileVisibility === "limited" &&
+        !(await canSeeLimitedProfile(ctx, profile.baUserId))
       ) {
         return ctx.notFound("Profile not found")
       }
