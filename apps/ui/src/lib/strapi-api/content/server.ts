@@ -1195,6 +1195,58 @@ export async function fetchPopularWikiArticles(locale: Locale) {
   }
 }
 
+export type DocsWikiArticle = WikiArticleSummary & { body?: unknown }
+
+/**
+ * Every published wiki article with its body — the /docs front door maps
+ * these into the fixed docs taxonomy and derives reading time from the body.
+ */
+export async function fetchDocsWikiArticles(locale: Locale) {
+  // draftMode() throws outside a request scope (generateStaticParams) —
+  // fall back to published, which is what static params want anyway.
+  let isDraft = false
+  try {
+    isDraft = (await draftMode()).isEnabled
+  } catch {
+    isDraft = false
+  }
+  try {
+    return (await PublicStrapiClient.fetchAPI("/wiki-articles", {
+      locale,
+      status: isDraft ? "draft" : "published",
+
+      populate: {
+        section: { fields: ["name", "slug"] },
+        category: { fields: ["name", "slug"] },
+        body: { populate: "*" },
+      } as any,
+
+      fields: [
+        "title",
+        "slug",
+        "summary",
+        "author",
+        "publishedAt",
+        "updatedAt",
+      ] as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sort: ["updatedAt:desc"] as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      pagination: { pageSize: 100 } as any,
+    })) as APIResponseCollection<DocsWikiArticle>
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching docs wiki articles for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return { data: [] }
+  }
+}
+
 export async function fetchAllWikiArticleSlugs(locale: Locale) {
   try {
     return (await PublicStrapiClient.fetchAPI("/wiki-articles/slugs", {
@@ -1291,5 +1343,45 @@ export async function fetchFooter(locale: Locale) {
         stack: e instanceof Error ? e.stack : undefined,
       },
     })
+  }
+}
+
+// ------ Library revision history (content-moderation plugin)
+
+export interface LibraryRevision {
+  kind: "edit" | "addition" | "import"
+  summary: string
+  fieldsChanged: string[]
+  submittedByUsername: string | null
+  decidedAt: string | null
+}
+
+/**
+ * Public, sanitized revision history for a library — the most recent
+ * approved submissions from the content-moderation plugin.
+ */
+export async function fetchLibraryRevisions(
+  documentId: string
+): Promise<LibraryRevision[]> {
+  const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
+  try {
+    const res = await fetch(
+      `${strapiUrl}/api/content-moderation/libraries/${documentId}/revisions`,
+      { next: { revalidate: 300 } }
+    )
+    if (!res.ok) return []
+    const json = (await res.json()) as { data?: LibraryRevision[] }
+
+    return Array.isArray(json.data) ? json.data : []
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching revisions for library '${documentId}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return []
   }
 }

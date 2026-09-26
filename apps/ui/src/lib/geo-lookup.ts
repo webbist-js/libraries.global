@@ -48,6 +48,7 @@ export async function geocodePlaceName(
     if (!data.length) return null
 
     const hit = data[0]
+    if (!hit) return null
     const iso2 = (hit.address?.country_code ?? "").toUpperCase()
     const country = COUNTRIES.find((c) => c.code === iso2) ?? null
     const continentSlug = iso2 ? resolveContinent(iso2) : null
