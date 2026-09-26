@@ -1,23 +1,15 @@
-import { headers } from "next/headers"
+import { savedEventsBridgeHeaders, STRAPI } from "@/lib/saved-events-bridge"
 
-import { auth } from "@/lib/auth"
-
-const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const API_TOKEN = process.env.STRAPI_REST_READONLY_API_KEY
 
-async function getStrapiJwt(): Promise<string | null> {
-  const session = await auth.api.getSession({ headers: await headers() })
-
-  return (session?.session as { strapiJWT?: string })?.strapiJWT ?? null
-}
-
 export async function GET() {
-  const jwt = await getStrapiJwt()
-  if (!jwt) return new Response("Unauthorized", { status: 401 })
+  const bridge = await savedEventsBridgeHeaders()
+  if (!bridge) return new Response("Unauthorized", { status: 401 })
 
   // Fetch user's saved event IDs
   const savedRes = await fetch(`${STRAPI}/api/saved-events`, {
-    headers: { Authorization: `Bearer ${jwt}` },
+    headers: bridge,
+    cache: "no-store",
   })
   if (!savedRes.ok) return new Response("Error", { status: 500 })
 

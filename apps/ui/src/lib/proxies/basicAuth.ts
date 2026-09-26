@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 
 import { getEnvVar } from "@/lib/env-vars"
+import { safeEqual } from "@/lib/safe-equal"
 
 const UNAUTHORIZED_RESPONSE = (message: string) =>
   new NextResponse(message, {
@@ -25,12 +26,18 @@ export const basicAuth = (req: NextRequest): NextResponse | null => {
 
   try {
     const credentials = atob(authHeader.substring(6))
-    const [username, password] = credentials.split(":")
+    // Split on the first colon only — passwords may contain ":".
+    const separator = credentials.indexOf(":")
+    const username =
+      separator === -1 ? credentials : credentials.slice(0, separator)
+    const password = separator === -1 ? "" : credentials.slice(separator + 1)
+    const expectedUser = getEnvVar("BASIC_AUTH_USERNAME") ?? ""
+    const expectedPassword = getEnvVar("BASIC_AUTH_PASSWORD") ?? ""
 
-    if (
-      username !== getEnvVar("BASIC_AUTH_USERNAME") ||
-      password !== getEnvVar("BASIC_AUTH_PASSWORD")
-    ) {
+    // Evaluate both comparisons so timing doesn't reveal which one failed.
+    const userOk = safeEqual(username, expectedUser)
+    const passwordOk = safeEqual(password, expectedPassword)
+    if (!expectedUser || !expectedPassword || !userOk || !passwordOk) {
       return UNAUTHORIZED_RESPONSE("Invalid credentials")
     }
   } catch {

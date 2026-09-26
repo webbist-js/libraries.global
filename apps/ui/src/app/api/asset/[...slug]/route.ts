@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 
 import { getEnvVar } from "@/lib/env-vars"
+import { normaliseProxyPath } from "@/lib/strapi-api/request-auth"
 
 /**
  * This route handler allows asset fetching from Strapi backend even from client-side components,
@@ -16,13 +17,15 @@ import { getEnvVar } from "@/lib/env-vars"
 export const revalidate = false
 
 async function handler(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ slug: string[] }> }
 ) {
   const { slug } = await params
-  const path = Array.isArray(slug) ? slug.join("/") : slug
+  const rawPath = Array.isArray(slug) ? slug.join("/") : slug
+  // Reject dot segments etc. so `uploads/../admin` cannot escape the prefix.
+  const path = normaliseProxyPath(rawPath)
 
-  if (!path.startsWith("uploads/")) {
+  if (!path?.startsWith("uploads/")) {
     // allow only uploads to be fetched through this proxy
     return NextResponse.json(
       {
@@ -37,14 +40,8 @@ async function handler(
 
   const strapiUrl = getEnvVar("STRAPI_URL", true)
   const url = `${strapiUrl!}/${path}`
-  const clonedRequest = request.clone()
 
-  const { url: _, ...rest } = clonedRequest
-  const response = await fetch(url, {
-    ...rest,
-  })
-
-  return response
+  return fetch(url, { method: "GET" })
 }
 
 export { handler as GET }

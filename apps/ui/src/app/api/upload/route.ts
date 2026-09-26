@@ -1,6 +1,7 @@
 import { headers } from "next/headers"
 
 import { auth } from "@/lib/auth"
+import { toSafeImageFile } from "@/lib/image-upload"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const STRAPI_API_KEY = process.env.STRAPI_REST_READONLY_API_KEY ?? ""
@@ -25,18 +26,25 @@ export async function POST(req: Request) {
     return Response.json({ error: "No file provided" }, { status: 400 })
   }
 
-  // Validate file type
-  if (!file.type.startsWith("image/")) {
+  // Validate file size (5 MB max) before reading it into memory
+  if (file.size > 5 * 1024 * 1024) {
     return Response.json(
-      { error: "Only image files are allowed" },
+      { error: "File too large (max 5 MB)" },
       { status: 400 }
     )
   }
 
-  // Validate file size (5 MB max)
-  if (file.size > 5 * 1024 * 1024) {
+  // Validate by content, not the client-declared type. SVG is rejected: it is
+  // served from the Strapi origin and can carry script.
+  const safeFile = await toSafeImageFile(file, [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+  ])
+  if (!safeFile) {
     return Response.json(
-      { error: "File too large (max 5 MB)" },
+      { error: "Only JPEG, PNG, WebP or GIF images are allowed" },
       { status: 400 }
     )
   }
@@ -46,7 +54,7 @@ export async function POST(req: Request) {
   }
 
   const upload = new FormData()
-  upload.append("files", file)
+  upload.append("files", safeFile, safeFile.name)
 
   const res = await fetch(`${STRAPI}/api/upload`, {
     method: "POST",

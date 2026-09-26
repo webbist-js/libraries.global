@@ -67,16 +67,11 @@ export async function POST(req: Request) {
     }
   }
 
-  // Check email domain vs library website domain
+  // Email-domain auto-verification. Strapi compares the domain of this
+  // (verified) session email with the library's stored website/email and
+  // refuses on mismatch, so nothing from the request body is trusted here.
   const emailDomain = session.user.email.split("@")[1]?.toLowerCase() ?? ""
-  const libraryDomain = libraryWebsite ? extractDomain(libraryWebsite) : ""
-  const domainMatch =
-    emailDomain.length > 0 &&
-    libraryDomain.length > 0 &&
-    emailDomain === libraryDomain
-
-  if (domainMatch) {
-    // Auto-verify: create affiliation record + mark profile verified
+  if (session.user.emailVerified) {
     const res = await fetch(`${STRAPI}/api/auth-bridge/create-affiliation`, {
       method: "POST",
       headers: {
@@ -89,15 +84,20 @@ export async function POST(req: Request) {
         role: role ?? "",
         department: department ?? "",
         verificationMethod: "email_domain",
+        userEmail: session.user.email,
+        emailVerified: true,
       }),
     })
-    if (!res.ok)
+    if (res.ok)
+      return NextResponse.json({ status: "verified", method: "email_domain" })
+    if (res.status === 404)
+      return NextResponse.json({ error: "Library not found" }, { status: 404 })
+    // 403 (domain mismatch) falls through to the moderated claim flow.
+    if (res.status !== 403)
       return NextResponse.json(
         { error: "Failed to create affiliation" },
         { status: 500 }
       )
-
-    return NextResponse.json({ status: "verified", method: "email_domain" })
   }
 
   // Check if there are existing verified librarians at this library (for vouching)
@@ -134,7 +134,9 @@ export async function POST(req: Request) {
           role: role ?? "",
           department: department ?? "",
           userEmailDomain: emailDomain,
-          libraryWebsiteDomain: libraryDomain,
+          claimedWebsiteDomain: libraryWebsite
+            ? extractDomain(libraryWebsite)
+            : "",
         },
         note: `Library affiliation claim: ${libraryName} (${libraryEntityRef}) — ${verificationMethod}`,
       }),

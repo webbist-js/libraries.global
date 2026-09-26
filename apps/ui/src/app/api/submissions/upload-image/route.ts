@@ -2,10 +2,10 @@ import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/lib/auth"
+import { toSafeImageFile } from "@/lib/image-upload"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 
-const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"])
 const MAX_SIZE = 10 * 1024 * 1024 // 10 MB
 
 export async function POST(req: Request) {
@@ -30,7 +30,12 @@ export async function POST(req: Request) {
       { status: 400 }
     )
 
-  if (!ALLOWED_TYPES.has(file.type))
+  const safeFile = await toSafeImageFile(file, [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+  ])
+  if (!safeFile)
     return NextResponse.json(
       { error: "Invalid file type. Use JPEG, PNG, or WebP." },
       { status: 400 }
@@ -38,7 +43,7 @@ export async function POST(req: Request) {
 
   const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
   const strapiForm = new FormData()
-  strapiForm.append("files", file, file.name)
+  strapiForm.append("files", safeFile, safeFile.name)
 
   const uploadRes = await fetch(`${STRAPI}/api/upload`, {
     method: "POST",

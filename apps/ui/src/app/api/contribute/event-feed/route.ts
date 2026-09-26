@@ -48,19 +48,14 @@ export async function POST(req: Request) {
     return new Response("Invalid JSON", { status: 400 })
   }
 
-  const {
-    provider,
-    libraryDocumentId,
-    libraryEntityRef,
-    libraryName,
-    credentials,
-  } = body
+  // libraryDocumentId from the body is ignored: the affiliation check below is
+  // on libraryEntityRef, so the target library is resolved from that instead.
+  const { provider, libraryEntityRef, libraryName, credentials } = body
 
   if (!VALID_PROVIDERS.includes(provider as (typeof VALID_PROVIDERS)[number])) {
     return new Response("Invalid provider", { status: 400 })
   }
   if (
-    !libraryDocumentId ||
     !libraryEntityRef ||
     !credentials ||
     typeof credentials !== "object" ||
@@ -107,10 +102,29 @@ export async function POST(req: Request) {
     isVerifiedLibrarian?: boolean
     claimedLibraryEntityRef?: string | null
   }
-  if (!claimData.claimedLibraryEntityRef) {
+  if (claimData.claimedLibraryEntityRef !== libraryEntityRef) {
     return new Response("Forbidden: you are not affiliated with this library", {
       status: 403,
     })
+  }
+
+  // Resolve the library's documentId from the verified entityRef.
+  const libraryRes = await fetch(
+    `${STRAPI}/api/libraries?filters[entityRef][$eq]=${encodeURIComponent(libraryEntityRef)}&fields[0]=documentId&pagination[limit]=1`,
+    {
+      cache: "no-store",
+      headers: API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {},
+    }
+  )
+  if (!libraryRes.ok) {
+    return new Response("Library lookup failed", { status: 500 })
+  }
+  const libraryJson = (await libraryRes.json()) as {
+    data?: { documentId?: string }[]
+  }
+  const libraryDocumentId = libraryJson.data?.[0]?.documentId
+  if (!libraryDocumentId) {
+    return new Response("Library not found", { status: 404 })
   }
 
   // 5. Sanitize credentials — only string values, bounded length

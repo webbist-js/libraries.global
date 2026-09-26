@@ -4,7 +4,11 @@ import { betterAuth } from "better-auth"
 import { customSession, magicLink } from "better-auth/plugins"
 import { Pool } from "pg"
 
-import { sendMagicLinkEmail, sendResetPasswordEmail } from "./email"
+import {
+  sendMagicLinkEmail,
+  sendResetPasswordEmail,
+  sendVerificationEmail,
+} from "./email"
 
 // Pool singleton — prevents multiple connections during Next.js dev hot-reload
 const globalForPg = global as typeof globalThis & { _baPool?: Pool }
@@ -69,10 +73,36 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
+    // Unverified password accounts cannot sign in. Without this, anyone could
+    // register someone else's address and pre-claim the account.
+    requireEmailVerification: true,
     sendResetPassword: async ({ user, token }) => {
       const base = process.env.APP_PUBLIC_URL ?? "http://localhost:3000"
       const url = `${base}/auth/reset-password?token=${encodeURIComponent(token)}`
       await sendResetPasswordEmail(user.email, url)
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    sendOnSignIn: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendVerificationEmail(user.email, url)
+    },
+  },
+  rateLimit: {
+    enabled: true,
+    // Database storage so limits hold across serverless instances.
+    storage: "database",
+    window: 60,
+    max: 100,
+    customRules: {
+      "/sign-in/email": { window: 60, max: 5 },
+      "/sign-in/magic-link": { window: 60, max: 3 },
+      "/sign-up/email": { window: 60, max: 3 },
+      "/forget-password": { window: 60, max: 3 },
+      "/request-password-reset": { window: 60, max: 3 },
+      "/send-verification-email": { window: 60, max: 3 },
     },
   },
   socialProviders: {
@@ -129,6 +159,31 @@ export const auth = betterAuth({
     },
   },
   databaseHooks: {
+    account: {
+      create: {
+        // Pre-hijack guard. Better Auth implicitly links an OAuth login to an
+        // existing user with the same email, then marks the email verified.
+        // If that existing user was never verified, whoever set its password
+        // may not own the address — so drop the password credential and any
+        // sessions before the rightful owner's OAuth account is attached.
+        before: async (account) => {
+          if (account.providerId === "credential") return
+          const { rows } = await pool.query<{ emailVerified: boolean }>(
+            'select "emailVerified" from "user" where id = $1',
+            [account.userId]
+          )
+          if (rows[0] && rows[0].emailVerified === false) {
+            await pool.query(
+              `delete from "account" where "userId" = $1 and "providerId" = 'credential'`,
+              [account.userId]
+            )
+            await pool.query('delete from "session" where "userId" = $1', [
+              account.userId,
+            ])
+          }
+        },
+      },
+    },
     user: {
       create: {
         after: async (user) => {

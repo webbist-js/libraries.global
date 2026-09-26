@@ -75,3 +75,25 @@ export async function sendResetPasswordEmail(
     text: `Reset your libraries.global password: ${resetUrl}`,
   })
 }
+
+export async function sendVerificationEmail(
+  to: string,
+  verifyUrl: string
+): Promise<void> {
+  const transporter = createTransporter()
+  const from = process.env.EMAIL_FROM ?? "noreply@libraries.global"
+
+  if (!transporter) {
+    console.log(`[email] Verification link for ${to}: ${verifyUrl}`)
+
+    return
+  }
+
+  await transporter.sendMail({
+    from,
+    to,
+    subject: "Confirm your libraries.global email address",
+    html: `<p>Confirm your email address to finish creating your libraries.global account:</p><p><a href="${verifyUrl}">${verifyUrl}</a></p><p>If you didn't sign up, you can ignore this email.</p>`,
+    text: `Confirm your email address to finish creating your libraries.global account: ${verifyUrl}\n\nIf you didn't sign up, you can ignore this email.`,
+  })
+}

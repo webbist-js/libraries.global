@@ -1,41 +1,38 @@
-import { headers } from "next/headers"
-
-import { auth } from "@/lib/auth"
-
-const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
-
-async function getStrapiJwt(): Promise<string | null> {
-  const session = await auth.api.getSession({ headers: await headers() })
-
-  return (session?.session as { strapiJWT?: string })?.strapiJWT ?? null
-}
+import { savedEventsBridgeHeaders, STRAPI } from "@/lib/saved-events-bridge"
 
 export async function GET() {
-  const jwt = await getStrapiJwt()
-  if (!jwt) return Response.json([], { status: 200 })
+  const bridge = await savedEventsBridgeHeaders()
+  if (!bridge) return Response.json([], { status: 200 })
 
   const res = await fetch(`${STRAPI}/api/saved-events`, {
-    headers: { Authorization: `Bearer ${jwt}` },
+    headers: bridge,
+    cache: "no-store",
   })
-  const data = await res.json()
+  if (!res.ok) return Response.json([], { status: 200 })
 
-  return Response.json(data)
+  return Response.json(await res.json())
 }
 
 export async function POST(req: Request) {
-  const jwt = await getStrapiJwt()
-  if (!jwt) return new Response("Unauthorized", { status: 401 })
+  const bridge = await savedEventsBridgeHeaders()
+  if (!bridge) return new Response("Unauthorized", { status: 401 })
 
-  const body = (await req.json()) as { eventDocumentId: string }
+  let eventDocumentId: unknown
+  try {
+    ;({ eventDocumentId } = (await req.json()) as { eventDocumentId?: unknown })
+  } catch {
+    return new Response("Invalid JSON", { status: 400 })
+  }
+  if (typeof eventDocumentId !== "string" || !eventDocumentId)
+    return new Response("eventDocumentId required", { status: 400 })
+
   const res = await fetch(`${STRAPI}/api/saved-events`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${jwt}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
+    headers: { ...bridge, "Content-Type": "application/json" },
+    body: JSON.stringify({ eventDocumentId }),
   })
-  const data = await res.json()
 
-  return Response.json(data, { status: res.status })
+  return Response.json(await res.json().catch(() => ({})), {
+    status: res.status,
+  })
 }

@@ -9,8 +9,14 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   try {
     const sessions = await auth.api.listSessions({ headers: await headers() })
+    // Flag the session making this request so the UI can label "This device"
+    const currentToken = session.session?.token
+    const data = sessions.map((s) => ({
+      ...s,
+      current: currentToken != null && s.token === currentToken,
+    }))
 
-    return NextResponse.json({ data: sessions })
+    return NextResponse.json({ data })
   } catch {
     return NextResponse.json(
       { error: "Failed to list sessions" },

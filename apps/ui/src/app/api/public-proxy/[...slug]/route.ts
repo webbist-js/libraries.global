@@ -16,6 +16,18 @@ import {
  * Since the STRAPI_REST_READONLY_API_KEY is injected into every GET request and Strapi does not block findOne and findMany
  * operations for any content type, this proxy checks if the requested content type is allowed to be fetched.
  */
+const FORWARD_HEADERS = ["accept", "accept-language", "content-type"]
+
+function pickForwardHeaders(headers: Headers): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const name of FORWARD_HEADERS) {
+    const value = headers.get(name)
+    if (value) out[name] = value
+  }
+
+  return out
+}
+
 async function handler(
   request: Request,
   { params }: { params: Promise<{ slug: string[] }> }
@@ -38,8 +50,24 @@ async function handler(
   }
 
   const strapiUrl = getEnvVar("STRAPI_URL", true)
-  const { search } = new URL(request.url)
-  const url = `${strapiUrl!}/${path}${search ?? ""}`
+  const incoming = new URL(request.url)
+  const target = new URL(`${strapiUrl!.replace(/\/$/, "")}/${path}`)
+  // Final guard: the resolved path must still be the allowlisted one.
+  const expectedSuffix = new URL(`http://proxy.invalid/${path}`).pathname
+  if (!target.pathname.endsWith(expectedSuffix)) {
+    return NextResponse.json(
+      { error: { message: "Forbidden", name: "Forbidden" } },
+      { status: 403 }
+    )
+  }
+  incoming.searchParams.forEach((value, key) => {
+    target.searchParams.append(key, value)
+  })
+  // The service token can read drafts; this proxy only ever serves published.
+  if (target.searchParams.has("status")) {
+    target.searchParams.set("status", "published")
+  }
+  const url = target.toString()
   const isReadOnly = request.method === "GET" || request.method === "HEAD"
 
   const clonedRequest = request.clone()
@@ -65,9 +93,10 @@ async function handler(
 
   const response = await fetch(url, {
     headers: {
-      // Convert headers to object
-      ...Object.fromEntries(clonedRequest.headers),
-      // Override the Authorization header with the injected token
+      // Forward only content-negotiation headers. Passing every client header
+      // through would let callers inject service headers (x-service-secret,
+      // x-ba-user-id) or cookies into a request that carries our API token.
+      ...pickForwardHeaders(clonedRequest.headers),
       ...authHeader,
     },
     body,

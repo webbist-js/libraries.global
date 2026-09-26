@@ -7,8 +7,6 @@ const ALLOWED_STRAPI_ENDPOINTS: Record<string, string[]> = {
     "api/homepage/continents",
     "api/footer",
     "api/navbar",
-    "api/users/me",
-    "api/auth/local",
     // Map exploration — public content types (read-only, published only)
     "api/continents",
     "api/countries",
@@ -24,26 +22,52 @@ const ALLOWED_STRAPI_ENDPOINTS: Record<string, string[]> = {
     // Events plugin — public feeds (ICS calendar + browsing)
     "api/events",
   ],
-  POST: [
-    "api/subscribers",
-    "api/auth/local/register",
-    "api/auth/forgot-password",
-    "api/auth/reset-password",
-    "api/auth/change-password",
-  ],
+  // Strapi's own register/password endpoints are intentionally absent: all
+  // account flows go through Better Auth, and exposing them here would let
+  // anyone create users-permissions accounts directly.
+  POST: ["api/subscribers"],
+}
+
+/**
+ * Normalise a proxied path and reject anything that could escape the
+ * allowlist once `fetch` resolves it: dot segments, empty segments, and
+ * backslashes or percent signs (which could decode to `/` or `..` downstream).
+ * Returns the cleaned path, or null if it is unsafe.
+ */
+export const normaliseProxyPath = (path: string): string | null => {
+  const segments = path.split("/")
+  for (const segment of segments) {
+    if (
+      segment === "" ||
+      segment === "." ||
+      segment === ".." ||
+      /[\\%]/.test(segment) ||
+      // eslint-disable-next-line no-control-regex
+      /[\u0000-\u001F\u007F]/.test(segment)
+    ) {
+      return null
+    }
+  }
+
+  return segments.join("/")
 }
 
 /**
  * Check if the given Strapi Admin/API path is allowed to be accessed
- * with the provided HTTP method.
+ * with the provided HTTP method. Matches whole path segments only, so
+ * `api/libraries` allows `api/libraries/map-pins` but not `api/libraries-x`
+ * or `api/libraries/../user-profiles`.
  */
 export const isStrapiEndpointAllowed = (
   path: string,
   method: string
 ): boolean => {
+  const safePath = normaliseProxyPath(path)
+  if (!safePath) return false
+
   return (
-    ALLOWED_STRAPI_ENDPOINTS[method]?.some((endpoint) =>
-      path.startsWith(endpoint)
+    ALLOWED_STRAPI_ENDPOINTS[method]?.some(
+      (endpoint) => safePath === endpoint || safePath.startsWith(`${endpoint}/`)
     ) ?? false
   )
 }

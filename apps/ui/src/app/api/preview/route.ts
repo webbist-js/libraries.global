@@ -4,6 +4,7 @@ import { hasLocale } from "next-intl"
 
 import { getEnvVar } from "@/lib/env-vars"
 import { redirect, routing } from "@/lib/navigation"
+import { safeEqual } from "@/lib/safe-equal"
 
 export async function GET(request: Request) {
   const previewSecret = getEnvVar("STRAPI_PREVIEW_SECRET")
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   // Check if the provided secret matches our secret key
   const secret = String(searchParams.get("secret"))
-  if (secret !== previewSecret) {
+  if (!safeEqual(secret, previewSecret)) {
     console.warn(
       "[STRAPI_PREVIEW]: Preview request received, but [secret] does not match [STRAPI_PREVIEW_SECRET]. Status: 401."
     )
