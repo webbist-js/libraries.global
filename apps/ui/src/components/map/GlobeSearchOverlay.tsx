@@ -177,10 +177,10 @@ function FilterChip({
     <button
       onClick={onClick}
       className={cn(
-        "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12px] font-medium whitespace-nowrap transition-colors",
+        "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12.5px] font-semibold whitespace-nowrap transition-colors",
         active
-          ? "border-cyan-400/60 bg-cyan-500/15 text-cyan-300"
-          : "border-white/12 bg-white/5 text-white/55 hover:border-white/22 hover:text-white/80"
+          ? "border-(--t-accent-primary) bg-(--t-accent-chip) text-(--t-accent-primary-hover)"
+          : "border-(--t-border-hi) bg-white/92 text-(--t-ink-dim) hover:bg-white hover:text-(--t-ink-base)"
       )}
     >
       {label}
@@ -199,32 +199,34 @@ function ResultRow({ r, onClick }: { r: SearchResult; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-white/8"
+      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-(--t-bg-muted)"
     >
       <span
         className={cn(
           "flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-[10px] font-bold uppercase",
           r.type === "continent"
-            ? "bg-cyan-500/20 text-cyan-300"
+            ? "bg-[#E4ECF5] text-[#28496E]"
             : r.type === "library"
-              ? "bg-indigo-500/20 text-indigo-300"
-              : "bg-white/10 text-white/50"
+              ? "bg-(--t-accent-chip) text-(--t-accent-primary-hover)"
+              : "bg-(--t-bg-muted) text-(--t-ink-dim)"
         )}
       >
         {r.type === "continent" ? "C" : r.type === "country" ? "Co" : "L"}
       </span>
       <span className="min-w-0">
-        <span className="block text-sm leading-snug text-white/90">
+        <span className="block text-sm leading-snug text-(--t-ink-base)">
           {r.name}
         </span>
         {r.subtitle && (
-          <span className="block text-[11px] text-white/40">{r.subtitle}</span>
+          <span className="block text-[11px] text-(--t-ink-low)">
+            {r.subtitle}
+          </span>
         )}
       </span>
       <svg
         viewBox="0 0 12 12"
         fill="none"
-        className="ml-auto h-3 w-3 flex-shrink-0 text-white/25"
+        className="ml-auto h-3 w-3 flex-shrink-0 text-(--t-ink-faint)"
       >
         <path
           d="M2 6h8M6 2l4 4-4 4"
@@ -338,7 +340,7 @@ export default function GlobeSearchOverlay({
       >
         {/* Eyebrow */}
         <p
-          className="mb-4 text-[11px] font-semibold tracking-[0.22em] text-cyan-400/70 uppercase"
+          className="mb-4 text-[11px] font-semibold tracking-[0.22em] text-[#B9B4F5] uppercase"
           style={{
             opacity: mounted && !settled ? 1 : 0,
             transform:
@@ -396,14 +398,14 @@ export default function GlobeSearchOverlay({
       >
         <div
           className={cn(
-            "flex items-center gap-3 rounded-full border bg-[#07111f]/88 px-4 py-3 shadow-xl backdrop-blur-xl transition-colors",
-            focused ? "border-white/25" : "border-white/10"
+            "flex items-center gap-3 rounded-full border bg-white/95 px-4 py-3 shadow-xl backdrop-blur-xl transition-colors",
+            focused ? "border-(--t-accent-primary)" : "border-(--t-border-hi)"
           )}
         >
           <svg
             viewBox="0 0 20 20"
             fill="none"
-            className="h-4 w-4 flex-shrink-0 text-white/40"
+            className="h-4 w-4 flex-shrink-0 text-(--t-ink-low)"
           >
             <circle
               cx="9"
@@ -428,7 +430,7 @@ export default function GlobeSearchOverlay({
             onFocus={() => setFocused(true)}
             onBlur={() => setTimeout(() => setFocused(false), 150)}
             placeholder="Search for a continent, country or library…"
-            className="flex-1 bg-transparent text-sm text-white placeholder-white/35 outline-none"
+            className="flex-1 bg-transparent text-sm text-(--t-ink-base) placeholder-(--t-ink-faint) outline-none"
           />
 
           {query && (
@@ -437,7 +439,7 @@ export default function GlobeSearchOverlay({
                 setQuery("")
                 inputRef.current?.focus()
               }}
-              className="flex-shrink-0 text-white/35 transition-colors hover:text-white/60"
+              className="flex-shrink-0 text-(--t-ink-faint) transition-colors hover:text-(--t-ink-dim)"
               aria-label="Clear"
             >
               <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3">
@@ -454,14 +456,14 @@ export default function GlobeSearchOverlay({
 
         {/* Dropdown */}
         {showDropdown && (
-          <div className="absolute top-full right-0 left-0 mt-1.5 overflow-hidden rounded-2xl border border-white/10 bg-[#07111f]/95 shadow-2xl backdrop-blur-xl">
+          <div className="absolute top-full right-0 left-0 mt-1.5 overflow-hidden rounded-2xl border border-(--t-border-line) bg-white/98 shadow-2xl backdrop-blur-xl">
             {loading && (
-              <div className="py-4 text-center text-sm text-white/30">
+              <div className="py-4 text-center text-sm text-(--t-ink-low)">
                 Searching…
               </div>
             )}
             {!loading && results.length === 0 && (
-              <div className="py-4 text-center text-sm text-white/30">
+              <div className="py-4 text-center text-sm text-(--t-ink-low)">
                 No results found
               </div>
             )}
@@ -499,7 +501,7 @@ export default function GlobeSearchOverlay({
             onClick={() => toggleType(t)}
           />
         ))}
-        <span className="mx-1 h-4 w-px bg-white/12" />
+        <span className="mx-1 h-4 w-px bg-white/30" />
         <FilterChip
           label="Open now"
           active={filters.statuses.includes("open")}

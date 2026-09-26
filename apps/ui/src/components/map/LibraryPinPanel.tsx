@@ -1,7 +1,7 @@
 "use client"
 
 import GlobalLink from "@/components/global/GlobalLink"
-import { T } from "@/lib/design-tokens"
+import { T, tintForLibraryType, TYPE_TINT } from "@/lib/design-tokens"
 
 import {
   buildLibraryHref,
@@ -23,97 +23,58 @@ interface LibraryPinPanelProps {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
+const chipBase: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "5px",
+  padding: "4px 10px",
+  borderRadius: "999px",
+  fontFamily: T.font.sans,
+  fontSize: "12.5px",
+  fontWeight: 600,
+}
+
 function StatusChip({
   operationalStatus,
 }: {
   operationalStatus?: string | null
 }) {
-  if (operationalStatus === "open") {
-    return (
-      <span
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "5px",
-          padding: "4px 10px",
-          borderRadius: "999px",
-          border: "1px solid rgba(52,211,153,.3)",
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".18em",
-          textTransform: "uppercase",
-          color: "#6ee7b7",
-        }}
-      >
-        <span
-          style={{
-            width: "5px",
-            height: "5px",
-            borderRadius: "50%",
-            background: "#6ee7b7",
-            flexShrink: 0,
-          }}
-        />
-        Open
-      </span>
-    )
-  }
-  if (operationalStatus) {
-    return (
-      <span
-        style={{
-          padding: "4px 10px",
-          borderRadius: "999px",
-          border: "1px solid rgba(255,255,255,.12)",
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".18em",
-          textTransform: "uppercase",
-          color: "rgba(255,255,255,.45)",
-        }}
-      >
-        {operationalLabel(operationalStatus)}
-      </span>
-    )
-  }
+  if (!operationalStatus) return null
+  const isOpen = operationalStatus === "open"
+  const tint = isOpen ? TYPE_TINT.public : TYPE_TINT.neutral
 
-  return null
-}
-
-function MonoChip({ children }: { children: React.ReactNode }) {
   return (
-    <span
-      style={{
-        padding: "4px 10px",
-        borderRadius: "999px",
-        border: "1px solid rgba(255,255,255,.12)",
-        fontFamily: T.font.mono,
-        fontSize: "10px",
-        letterSpacing: ".18em",
-        textTransform: "uppercase",
-        color: "rgba(255,255,255,.5)",
-      }}
-    >
-      {children}
+    <span style={{ ...chipBase, background: tint.bg, color: tint.fg }}>
+      <span
+        aria-hidden
+        style={{
+          width: "5px",
+          height: "5px",
+          borderRadius: "50%",
+          background: "currentColor",
+          flexShrink: 0,
+        }}
+      />
+      {operationalLabel(operationalStatus)}
     </span>
   )
 }
 
-function GoldChip({ children }: { children: React.ReactNode }) {
+function TypeChip({ libraryType }: { libraryType: string }) {
+  const label = TYPE_LABELS[libraryType] ?? libraryType
+  const tint = tintForLibraryType(label)
+
   return (
-    <span
-      style={{
-        padding: "4px 10px",
-        borderRadius: "999px",
-        border: `1px solid rgba(232,201,138,.3)`,
-        fontFamily: T.font.mono,
-        fontSize: "10px",
-        letterSpacing: ".18em",
-        textTransform: "uppercase",
-        color: T.accent.gold,
-      }}
-    >
-      {children}
+    <span style={{ ...chipBase, background: tint.bg, color: tint.fg }}>
+      {label}
+    </span>
+  )
+}
+
+function PillarChip() {
+  return (
+    <span style={{ ...chipBase, background: "#F5EEDC", color: "#6B5420" }}>
+      Pillar
     </span>
   )
 }
@@ -144,29 +105,25 @@ export function LibraryPinPanel({
     district,
   ].filter(Boolean)
 
-  const pillTags = [
-    isFeatured ? "Pillar" : null,
-    pin.libraryType ? (TYPE_LABELS[pin.libraryType] ?? pin.libraryType) : null,
-  ].filter(Boolean)
-
   const statCells: { label: string; value: string }[] = []
   if (foundedYear) statCells.push({ label: "Founded", value: foundedYear })
-  if (coordText) statCells.push({ label: "Coord.", value: coordText })
+  if (coordText) statCells.push({ label: "Coordinates", value: coordText })
 
   const libraryHref = buildLibraryHref(pin)
 
   return (
     <div
-      className="absolute top-4 right-4 z-20 flex max-h-[calc(100%-2rem)] w-[340px] flex-col overflow-hidden rounded-2xl shadow-2xl"
+      className="absolute top-4 right-4 z-20 flex max-h-[calc(100%-2rem)] w-[340px] flex-col overflow-hidden rounded-[20px]"
       style={{
-        background: "var(--t-bg-deep)",
-        border: "1px solid rgba(255,255,255,.09)",
+        background: "#fff",
+        border: `1px solid ${T.border.line}`,
+        boxShadow: "0 12px 28px rgba(23,22,43,.08)",
       }}
     >
       {/* ── Hero image ───────────────────────────────────────────────────── */}
       <div
         className="relative flex-shrink-0"
-        style={{ height: heroImageUrl ? "180px" : "0px" }}
+        style={{ height: heroImageUrl ? "170px" : "0px" }}
       >
         {heroImageUrl ? (
           <>
@@ -176,60 +133,30 @@ export function LibraryPinPanel({
               alt={pin.name}
               className="h-full w-full object-cover"
             />
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(180deg, rgba(7,13,30,.15) 0%, rgba(7,13,30,.6) 65%, var(--t-bg-deep) 100%)",
-              }}
-            />
 
             {/* Top pill */}
-            {pillTags.length > 0 && (
-              <div className="absolute top-3 left-3">
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    padding: "4px 10px",
-                    borderRadius: "999px",
-                    background: "rgba(7,13,30,.75)",
-                    border: "1px solid rgba(232,201,138,.25)",
-                    backdropFilter: "blur(8px)",
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".2em",
-                    textTransform: "uppercase",
-                    color: T.accent.gold,
-                  }}
-                >
-                  {isFeatured && (
-                    <span
-                      style={{
-                        width: "5px",
-                        height: "5px",
-                        borderRadius: "50%",
-                        background: T.accent.gold,
-                        flexShrink: 0,
-                      }}
-                    />
-                  )}
-                  {pillTags.join(" · ")}
-                </span>
+            {(isFeatured || pin.libraryType) && (
+              <div className="absolute top-3 left-3 flex gap-1.5">
+                {isFeatured ? <PillarChip /> : null}
+                {pin.libraryType ? (
+                  <TypeChip libraryType={pin.libraryType} />
+                ) : null}
               </div>
             )}
 
             {/* Breadcrumb bottom */}
             {heroCrumbs.length > 0 && (
-              <div className="absolute bottom-3 left-4">
+              <div className="absolute bottom-2 left-3">
                 <span
                   style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".18em",
-                    textTransform: "uppercase",
-                    color: "rgba(255,255,255,.55)",
+                    display: "inline-block",
+                    padding: "3px 9px",
+                    borderRadius: "999px",
+                    background: "rgba(255,255,255,.88)",
+                    fontFamily: T.font.sans,
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    color: T.ink.dim,
                   }}
                 >
                   {heroCrumbs.join(" › ")}
@@ -242,7 +169,12 @@ export function LibraryPinPanel({
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 flex h-7 w-7 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white/60 backdrop-blur-sm transition-colors hover:border-white/40 hover:text-white"
+          className="absolute top-3 right-3 flex h-7 w-7 items-center justify-center rounded-full transition-colors"
+          style={{
+            background: "rgba(255,255,255,.92)",
+            border: `1px solid ${T.border.hi}`,
+            color: T.ink.dim,
+          }}
           aria-label="Close"
         >
           <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3">
@@ -261,62 +193,41 @@ export function LibraryPinPanel({
         className="flex min-h-0 flex-1 flex-col overflow-y-auto"
         style={{ padding: "16px" }}
       >
-        {/* Pill header when no hero image */}
-        {!heroImageUrl && pillTags.length > 0 && (
-          <div className="mb-2 flex items-center justify-between">
-            <span
-              style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".2em",
-                textTransform: "uppercase",
-                color: T.accent.gold,
-              }}
-            >
-              {pillTags.join(" · ")}
-            </span>
-          </div>
-        )}
-
         {/* Title */}
         <h3
           style={{
             fontFamily: T.font.serif,
-            fontWeight: 400,
-            fontSize: "28px",
-            lineHeight: 1.1,
-            letterSpacing: "-.02em",
+            fontWeight: 500,
+            fontSize: "26px",
+            lineHeight: 1.12,
+            letterSpacing: "-.01em",
             color: T.ink.base,
             margin: "0 0 10px",
           }}
         >
-          {pin.name}.
+          {pin.name}
         </h3>
 
-        {/* Status / type chips */}
+        {/* Status / type chips (type shown here when no hero image) */}
         <div className="mb-2 flex flex-wrap items-center gap-1.5">
           <StatusChip operationalStatus={pin.operationalStatus} />
-          {pin.libraryType ? (
-            <MonoChip>
-              {TYPE_LABELS[pin.libraryType] ?? pin.libraryType}
-            </MonoChip>
+          {!heroImageUrl && pin.libraryType ? (
+            <TypeChip libraryType={pin.libraryType} />
           ) : null}
-          {isFeatured ? <GoldChip>Pillar</GoldChip> : null}
+          {!heroImageUrl && isFeatured ? <PillarChip /> : null}
         </div>
 
         {/* District */}
         {district ? (
           <p
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".15em",
-              textTransform: "uppercase",
-              color: "rgba(255,255,255,.3)",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
+              color: T.ink.low,
               marginBottom: "12px",
             }}
           >
-            · {district}
+            {district}
           </p>
         ) : null}
 
@@ -324,9 +235,9 @@ export function LibraryPinPanel({
         {pin.summary ? (
           <p
             style={{
-              fontSize: "13.5px",
+              fontSize: "14px",
               lineHeight: "1.6",
-              color: "rgba(255,255,255,.58)",
+              color: T.ink.dim,
               marginBottom: "14px",
             }}
           >
@@ -342,8 +253,8 @@ export function LibraryPinPanel({
               gridTemplateColumns: statCells.length === 1 ? "1fr" : "1fr 1fr",
               gap: "1px",
               borderRadius: "12px",
-              border: "1px solid rgba(255,255,255,.08)",
-              background: "rgba(255,255,255,.08)",
+              border: `1px solid ${T.border.line}`,
+              background: T.border.line,
               overflow: "hidden",
               marginBottom: "10px",
             }}
@@ -352,7 +263,7 @@ export function LibraryPinPanel({
               <div
                 key={cell.label}
                 style={{
-                  background: "rgba(7,13,30,1)",
+                  background: T.bg.surface,
                   padding: "12px 14px",
                   display: "flex",
                   flexDirection: "column",
@@ -361,20 +272,20 @@ export function LibraryPinPanel({
               >
                 <span
                   style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".2em",
-                    textTransform: "uppercase",
-                    color: "rgba(255,255,255,.32)",
+                    fontFamily: T.font.sans,
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: T.ink.low,
                   }}
                 >
                   {cell.label}
                 </span>
                 <span
                   style={{
-                    fontFamily: T.font.serif,
-                    fontSize: "20px",
-                    lineHeight: 1.1,
+                    fontFamily:
+                      cell.label === "Coordinates" ? T.font.mono : T.font.serif,
+                    fontSize: cell.label === "Coordinates" ? "12px" : "20px",
+                    lineHeight: 1.2,
                     color: T.ink.base,
                   }}
                 >
@@ -394,18 +305,16 @@ export function LibraryPinPanel({
               gap: "10px",
               padding: "10px 14px",
               borderRadius: "12px",
-              border: "1px solid rgba(255,255,255,.08)",
-              background: "rgba(255,255,255,.03)",
+              background: todayHours.isOpen ? TYPE_TINT.public.bg : T.bg.muted,
               marginBottom: "14px",
             }}
           >
             <span
               style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".2em",
-                textTransform: "uppercase",
-                color: "rgba(255,255,255,.32)",
+                fontFamily: T.font.sans,
+                fontSize: "12.5px",
+                fontWeight: 700,
+                color: todayHours.isOpen ? TYPE_TINT.public.fg : T.ink.dim,
                 flexShrink: 0,
               }}
             >
@@ -413,10 +322,10 @@ export function LibraryPinPanel({
             </span>
             <span
               style={{
-                fontFamily: T.font.mono,
-                fontSize: "12px",
-                color: T.accent.aurora,
-                letterSpacing: ".06em",
+                fontFamily: T.font.sans,
+                fontSize: "13px",
+                fontWeight: 600,
+                color: todayHours.isOpen ? TYPE_TINT.public.fg : T.ink.dim,
               }}
             >
               {todayHours.timeRange}
@@ -424,14 +333,13 @@ export function LibraryPinPanel({
             {todayHours.closesIn ? (
               <span
                 style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "11px",
-                  color: "rgba(255,255,255,.35)",
-                  letterSpacing: ".04em",
+                  fontFamily: T.font.sans,
+                  fontSize: "12.5px",
+                  color: todayHours.isOpen ? TYPE_TINT.public.fg : T.ink.low,
                   marginLeft: "auto",
                 }}
               >
-                · {todayHours.closesIn}
+                {todayHours.closesIn}
               </span>
             ) : null}
           </div>
@@ -451,26 +359,27 @@ export function LibraryPinPanel({
                 justifyContent: "center",
                 gap: "6px",
                 padding: "12px 16px",
-                borderRadius: "14px",
-                border: `1px solid rgba(127,223,255,.25)`,
-                background: "rgba(127,223,255,.07)",
+                borderRadius: "999px",
+                border: "none",
+                background: T.accent.primary,
                 fontFamily: T.font.sans,
-                fontWeight: 500,
-                fontSize: "13.5px",
-                color: T.accent.aurora,
-                transition: "background 150ms, border-color 150ms",
+                fontWeight: 600,
+                fontSize: "14px",
+                color: "#fff",
+                transition: "background 150ms",
               }}
-              className="hover:border-[rgba(127,223,255,.45)] hover:bg-[rgba(127,223,255,.12)]"
+              className="hover:bg-(--t-accent-primary-hover)"
             >
               Explore {pin.name}
               <svg
                 viewBox="0 0 12 12"
                 fill="none"
+                aria-hidden
                 style={{ width: "11px", height: "11px" }}
               >
                 <path
                   d="M2 10L10 2M10 2H4M10 2v6"
-                  stroke={T.accent.aurora}
+                  stroke="#fff"
                   strokeWidth="1.4"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -490,18 +399,20 @@ export function LibraryPinPanel({
                 justifyContent: "center",
                 width: "44px",
                 flexShrink: 0,
-                borderRadius: "14px",
-                border: "1px solid rgba(255,255,255,.1)",
-                background: "rgba(255,255,255,.04)",
-                color: "rgba(255,255,255,.45)",
+                borderRadius: "999px",
+                border: `1px solid ${T.border.hi}`,
+                background: "#fff",
+                color: T.ink.dim,
                 transition: "border-color 150ms, background 150ms",
               }}
-              className="hover:border-white/20 hover:bg-white/8 hover:text-white/70"
+              className="hover:bg-(--t-bg-muted)"
               title="Get directions"
+              aria-label="Get directions"
             >
               <svg
                 viewBox="0 0 16 16"
                 fill="none"
+                aria-hidden
                 style={{ width: "14px", height: "14px" }}
               >
                 <circle

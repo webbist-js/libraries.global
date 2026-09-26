@@ -152,7 +152,7 @@ export default function FullMapPage({ locale: _locale }: FullMapPageProps) {
           {/* "Click a continent" hint */}
           {drillState.level === "world" && !effectiveSettled && (
             <div className="pointer-events-none absolute bottom-8 left-1/2 z-10 -translate-x-1/2">
-              <p className="text-center text-[12px] text-white/25">
+              <p className="text-center text-[12px] text-white/45">
                 Click a continent to explore
               </p>
             </div>
@@ -160,9 +160,11 @@ export default function FullMapPage({ locale: _locale }: FullMapPageProps) {
 
           {/* Map loading indicator */}
           {loadingMsg && (
-            <div className="pointer-events-none absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-black/50 px-4 py-2 backdrop-blur-md">
-              <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/20 border-t-cyan-400" />
-              <span className="text-[12px] text-white/50">{loadingMsg}</span>
+            <div className="pointer-events-none absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-(--t-border-hi) bg-white/92 px-4 py-2 backdrop-blur-md">
+              <span className="h-3 w-3 animate-spin rounded-full border-2 border-(--t-border-hi) border-t-(--t-accent-primary)" />
+              <span className="text-[12px] font-medium text-(--t-ink-dim)">
+                {loadingMsg}
+              </span>
             </div>
           )}
         </div>
@@ -175,11 +177,11 @@ export default function FullMapPage({ locale: _locale }: FullMapPageProps) {
             "absolute inset-0 z-30 flex flex-col transition-transform duration-500 ease-out",
             mapVisible ? "translate-y-0" : "translate-y-full"
           )}
-          style={{ boxShadow: "0 -8px 40px rgba(0,0,0,0.7)" }}
+          style={{ boxShadow: "0 -8px 40px rgba(23,22,43,0.3)" }}
         >
           {/* Drag handle hint */}
           <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center pt-2">
-            <div className="h-1 w-10 rounded-full bg-white/15" />
+            <div className="h-1 w-10 rounded-full bg-(--t-border-hi)" />
           </div>
 
           <MapLibreFullView

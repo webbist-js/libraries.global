@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
+import { buildLibraryPath } from "@/lib/library-helpers"
 import { cn } from "@/lib/styles"
 
 import type { GlobeDrillState } from "./MapGlobe"
@@ -17,6 +18,9 @@ interface LibraryPin {
   libraryType?: string | null
   operationalStatus?: string | null
   featured?: boolean | null
+  continent?: { slug?: string | null } | null
+  country?: { slug?: string | null } | null
+  region?: { slug?: string | null } | null
 }
 
 interface SubItem {
@@ -62,6 +66,9 @@ async function fetchPanelData(state: GlobeDrillState): Promise<PanelData> {
     "fields[3]": "operationalStatus",
     "fields[4]": "city",
     "fields[5]": "featured",
+    "populate[continent][fields][0]": "slug",
+    "populate[country][fields][0]": "slug",
+    "populate[region][fields][0]": "slug",
   })
 
   if (state.region?.slug) {
@@ -252,16 +259,16 @@ function Breadcrumb({
     <nav className="flex flex-wrap items-center gap-1 text-[11px] tracking-widest">
       {crumbs.map((c, i) => (
         <span key={i} className="flex items-center gap-1">
-          {i > 0 && <span className="text-white/30">›</span>}
+          {i > 0 && <span className="text-(--t-ink-faint)">›</span>}
           {c.onClick ? (
             <button
               onClick={c.onClick}
-              className="text-white/45 transition-colors hover:text-white/80"
+              className="text-(--t-ink-low) transition-colors hover:text-(--t-ink-base)"
             >
               {c.label}
             </button>
           ) : (
-            <span className="font-semibold text-white/90">{c.label}</span>
+            <span className="font-semibold text-(--t-ink-base)">{c.label}</span>
           )}
         </span>
       ))}
@@ -340,9 +347,9 @@ function TypeBadge({
             textTransform: "uppercase",
             padding: "2px 6px",
             borderRadius: "4px",
-            border: "1px solid rgba(127,223,255,.3)",
+            border: "1px solid var(--t-aurora-edge)",
             color: T.accent.aurora,
-            background: "rgba(127,223,255,.08)",
+            background: "var(--t-aurora-soft)",
           }}
         >
           Pillar
@@ -374,7 +381,7 @@ function RegionRow({ item, onClick }: { item: SubItem; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="group flex w-full items-center gap-3 rounded-xl border border-white/6 bg-white/3 px-3 py-3 text-left transition-colors hover:border-white/12 hover:bg-white/6"
+      className="group flex w-full items-center gap-3 rounded-xl border border-(--t-border-line) bg-(--t-bg-surface) px-3 py-3 text-left transition-colors hover:border-(--t-border-hi) hover:bg-(--t-bg-muted)"
     >
       {/* Boundary SVG thumbnail */}
       <div
@@ -383,8 +390,8 @@ function RegionRow({ item, onClick }: { item: SubItem; onClick: () => void }) {
           height: "40px",
           borderRadius: "10px",
           flexShrink: 0,
-          background: "rgba(255,255,255,.04)",
-          border: "1px solid rgba(255,255,255,.08)",
+          background: "var(--t-bg-muted)",
+          border: "1px solid var(--t-border-line)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -401,7 +408,6 @@ function RegionRow({ item, onClick }: { item: SubItem; onClick: () => void }) {
               width: "32px",
               height: "32px",
               objectFit: "contain",
-              filter: "invert(1) brightness(0.55)",
             }}
           />
         ) : (
@@ -416,21 +422,21 @@ function RegionRow({ item, onClick }: { item: SubItem; onClick: () => void }) {
               width="14"
               height="14"
               rx="2"
-              stroke="white"
+              stroke="currentColor"
               strokeWidth="1.5"
             />
           </svg>
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[14px] leading-snug font-medium text-white/85 transition-colors group-hover:text-white">
+        <p className="text-[14px] leading-snug font-medium text-(--t-ink-base) transition-colors group-hover:text-(--t-ink-base)">
           {item.name}
         </p>
       </div>
       <svg
         viewBox="0 0 12 12"
         fill="none"
-        className="h-3 w-3 flex-shrink-0 text-white/25 transition-colors group-hover:text-white/55"
+        className="h-3 w-3 flex-shrink-0 text-(--t-ink-faint) transition-colors group-hover:text-(--t-ink-dim)"
       >
         <path
           d="M2 6h8M6 2l4 4-4 4"
@@ -496,7 +502,7 @@ function CountryFactsCard({ facts }: { facts: CountryFacts }) {
     <div
       style={{
         borderRadius: "14px",
-        border: "1px solid rgba(255,255,255,.08)",
+        border: "1px solid var(--t-border-line)",
         background: "rgba(255,255,255,.025)",
         padding: "14px 16px",
       }}
@@ -687,7 +693,7 @@ export default function GlobeInfoPanel({
               onBackToGlobe()
             }
           }}
-          className="flex flex-shrink-0 items-center gap-2 self-start rounded-full border border-white/15 bg-black/60 px-4 py-2 text-sm text-white/70 backdrop-blur-md transition-colors hover:border-white/30 hover:text-white"
+          className="flex flex-shrink-0 items-center gap-2 self-start rounded-full border border-(--t-border-hi) bg-white/92 px-4 py-2 text-sm font-semibold text-(--t-ink-dim) backdrop-blur-md transition-colors hover:bg-white hover:text-(--t-ink-base)"
         >
           <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5">
             <path
@@ -706,7 +712,7 @@ export default function GlobeInfoPanel({
 
       {/* Main panel */}
       <div
-        className="flex min-h-0 w-[340px] flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 shadow-2xl"
+        className="flex min-h-0 w-[340px] flex-1 flex-col overflow-hidden rounded-2xl border border-(--t-border-line) shadow-2xl"
         style={{ background: "var(--t-bg-deep)" }}
       >
         {/* ── Hero image header ─────────────────────────────────────── */}
@@ -732,7 +738,7 @@ export default function GlobeInfoPanel({
                   position: "absolute",
                   inset: 0,
                   background:
-                    "linear-gradient(180deg, rgba(7,13,30,.25) 0%, rgba(7,13,30,.7) 70%, var(--t-bg-deep) 100%)",
+                    "linear-gradient(180deg, rgba(23,22,43,.10) 0%, rgba(250,248,244,.55) 70%, var(--t-bg-deep) 100%)",
                 }}
               />
               {/* Breadcrumb overlaid on image */}
@@ -756,7 +762,7 @@ export default function GlobeInfoPanel({
               top: "12px",
               right: "12px",
             }}
-            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white/50 backdrop-blur-md transition-colors hover:border-white/30 hover:text-white/80"
+            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-(--t-border-hi) bg-white/92 text-(--t-ink-dim) backdrop-blur-md transition-colors hover:text-(--t-ink-base)"
             aria-label="Close panel"
           >
             <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3">
@@ -780,7 +786,7 @@ export default function GlobeInfoPanel({
                 <Breadcrumb state={state} onNavigate={handleNavigate} />
                 <button
                   onClick={onClose}
-                  className="ml-3 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border border-white/10 text-white/40 transition-colors hover:border-white/25 hover:text-white/70"
+                  className="ml-3 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border border-(--t-border-line) text-(--t-ink-low) transition-colors hover:border-(--t-border-hi) hover:text-(--t-ink-dim)"
                   aria-label="Close panel"
                 >
                   <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3">
@@ -896,12 +902,12 @@ export default function GlobeInfoPanel({
                   justifyContent: "space-between",
                   padding: "13px 16px",
                   borderRadius: "14px",
-                  border: "1px solid rgba(127,223,255,.25)",
-                  background: "rgba(127,223,255,.07)",
+                  border: "1px solid var(--t-aurora-edge)",
+                  background: "var(--t-aurora-soft)",
                   marginBottom: "20px",
                   transition: "background 150ms, border-color 150ms",
                 }}
-                className="hover:border-[rgba(127,223,255,.45)] hover:bg-[rgba(127,223,255,.12)]"
+                className="hover:border-(--t-accent-primary) hover:bg-(--t-accent-chip)"
               >
                 <span
                   style={{
@@ -918,8 +924,8 @@ export default function GlobeInfoPanel({
                     width: "28px",
                     height: "28px",
                     borderRadius: "10px",
-                    border: "1px solid rgba(127,223,255,.25)",
-                    background: "rgba(127,223,255,.1)",
+                    border: "1px solid var(--t-aurora-edge)",
+                    background: "var(--t-aurora-soft)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -967,7 +973,7 @@ export default function GlobeInfoPanel({
                 {Array.from({ length: 4 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-[58px] animate-pulse rounded-xl bg-white/4"
+                    className="h-[58px] animate-pulse rounded-xl bg-(--t-bg-muted)"
                   />
                 ))}
               </div>
@@ -1015,7 +1021,7 @@ export default function GlobeInfoPanel({
                     {Array.from({ length: 5 }).map((_, i) => (
                       <div
                         key={i}
-                        className="h-14 animate-pulse rounded-lg bg-white/4"
+                        className="h-14 animate-pulse rounded-lg bg-(--t-bg-muted)"
                       />
                     ))}
                   </div>
@@ -1026,11 +1032,15 @@ export default function GlobeInfoPanel({
                     {panelData.libraries.map((lib) => (
                       <li key={lib.documentId}>
                         <a
-                          href={`/en/library/${lib.slug}`}
-                          className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-white/5"
+                          href={
+                            buildLibraryPath(lib)
+                              ? `/en${buildLibraryPath(lib)}`
+                              : undefined
+                          }
+                          className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-(--t-bg-muted)"
                         >
                           <div className="min-w-0 flex-1">
-                            <p className="text-[14px] leading-snug font-medium text-white/85 transition-colors group-hover:text-white">
+                            <p className="text-[14px] leading-snug font-medium text-(--t-ink-base) transition-colors group-hover:text-(--t-ink-base)">
                               {lib.name}
                             </p>
                             <div className="mt-1 flex items-center gap-1.5">
@@ -1056,7 +1066,7 @@ export default function GlobeInfoPanel({
                           <svg
                             viewBox="0 0 12 12"
                             fill="none"
-                            className="h-3 w-3 flex-shrink-0 text-white/20 transition-colors group-hover:text-white/50"
+                            className="h-3 w-3 flex-shrink-0 text-(--t-ink-ghost) transition-colors group-hover:text-(--t-ink-base)/50"
                           >
                             <path
                               d="M2 6h8M6 2l4 4-4 4"
@@ -1071,7 +1081,7 @@ export default function GlobeInfoPanel({
                     ))}
 
                     {panelData.libraryCount > panelData.libraries.length && (
-                      <li className="pt-1 text-center text-[11px] text-white/25">
+                      <li className="pt-1 text-center text-[11px] text-(--t-ink-faint)">
                         +{panelData.libraryCount - panelData.libraries.length}{" "}
                         more libraries
                       </li>

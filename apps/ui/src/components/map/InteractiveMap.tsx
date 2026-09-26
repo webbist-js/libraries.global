@@ -107,12 +107,9 @@ export function InteractiveMap({
         mapConfig?.defaultZoom ??
         (initialMode === "region" ? 9 : initialMode === "country" ? 5 : 3)
 
-      const isLight =
-        document.documentElement.classList.contains("light") ||
-        document.documentElement.dataset.theme === "light"
-      const mapStyle = isLight
-        ? "https://basemaps.cartocdn.com/gl/voyager-nolabels-gl-style/style.json"
-        : "https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json"
+      // v2 is light-only — Voyager's warm tones sit well on the paper palette
+      const mapStyle =
+        "https://basemaps.cartocdn.com/gl/voyager-nolabels-gl-style/style.json"
 
       const map = new maplibregl.Map({
         container: containerRef.current,
@@ -279,11 +276,11 @@ export function InteractiveMap({
       source: "libraries",
       filter: ["has", "point_count"],
       paint: {
-        "circle-color": "#6366f1",
+        "circle-color": "#ffffff",
         "circle-radius": ["step", ["get", "point_count"], 16, 10, 22, 30, 28],
-        "circle-opacity": 0.85,
-        "circle-stroke-width": 1.5,
-        "circle-stroke-color": "rgba(99,102,241,0.35)",
+        "circle-opacity": 0.95,
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#4338CA",
       },
     })
 
@@ -296,7 +293,7 @@ export function InteractiveMap({
         "text-field": ["to-string", ["get", "point_count"]],
         "text-size": 11,
       },
-      paint: { "text-color": "#ffffff" },
+      paint: { "text-color": "#4338CA" },
     })
 
     map.addLayer({
@@ -306,10 +303,10 @@ export function InteractiveMap({
       filter: ["!", ["has", "point_count"]],
       paint: {
         "circle-radius": 7,
-        "circle-color": "#6366f1",
-        "circle-opacity": 0.92,
+        "circle-color": "#4338CA",
+        "circle-opacity": 1,
         "circle-stroke-width": 2,
-        "circle-stroke-color": "rgba(255,255,255,0.3)",
+        "circle-stroke-color": "#ffffff",
       },
     })
 
@@ -400,7 +397,7 @@ export function InteractiveMap({
 
     const gen = ++geoGenRef.current
     const color =
-      type === "country" ? "#22d3ee" : type === "region" ? "#f59e0b" : "#a78bfa"
+      type === "country" ? "#4338CA" : type === "region" ? "#4A3F8C" : "#28496E"
     const fallbackZoom = type === "country" ? 6 : type === "region" ? 9 : 11
 
     // ── Shared drill-down handler ───────────────────────────────────────────
@@ -689,17 +686,17 @@ export function InteractiveMap({
           wrap.style.cssText = "pointer-events:none;padding:2px 0;"
           const label = document.createElement("span")
           label.style.cssText =
-            "font-size:11px;color:#fff;text-shadow:0 1px 4px rgba(5,8,22,0.95),0 0 8px rgba(5,8,22,0.7);white-space:nowrap;font-family:system-ui,sans-serif;font-weight:600;letter-spacing:0.01em;"
+            "font-size:11px;color:#17162B;text-shadow:0 1px 4px rgba(250,248,244,0.95),0 0 8px rgba(250,248,244,0.8);white-space:nowrap;font-family:Figtree,system-ui,sans-serif;font-weight:600;letter-spacing:0.01em;"
           label.textContent = pin.name ?? ""
           wrap.append(label)
         } else {
           wrap.style.cssText =
             "display:flex;flex-direction:column;align-items:center;cursor:pointer;"
           const dot = document.createElement("div")
-          dot.style.cssText = `width:10px;height:10px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.3);box-shadow:0 0 8px ${color}66;flex-shrink:0;`
+          dot.style.cssText = `width:10px;height:10px;border-radius:50%;background:${color};border:2px solid #ffffff;box-shadow:0 1px 4px rgba(23,22,43,0.25);flex-shrink:0;`
           const label = document.createElement("span")
           label.style.cssText =
-            "font-size:10px;color:#fff;text-shadow:0 1px 3px rgba(5,8,22,0.9);margin-top:3px;white-space:nowrap;font-family:system-ui,sans-serif;font-weight:500;pointer-events:none;"
+            "font-size:10px;color:#17162B;text-shadow:0 1px 3px rgba(250,248,244,0.9);margin-top:3px;white-space:nowrap;font-family:Figtree,system-ui,sans-serif;font-weight:500;pointer-events:none;"
           label.textContent = pin.name ?? ""
           wrap.append(dot)
           wrap.append(label)
@@ -974,7 +971,7 @@ export function InteractiveMap({
     <div
       className={cn(
         "relative overflow-hidden",
-        !fill && "rounded-2xl border border-white/8",
+        !fill && "rounded-2xl border border-(--t-border-line)",
         className
       )}
       style={
@@ -988,7 +985,7 @@ export function InteractiveMap({
 
       {/* Inset ring — only in embedded mode */}
       {!fill && (
-        <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/8 ring-inset" />
+        <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-(--t-border-line) ring-inset" />
       )}
 
       {/* Loading spinner */}
@@ -1003,7 +1000,7 @@ export function InteractiveMap({
         <div className="absolute top-3 left-3 z-10">
           <button
             onClick={handleBack}
-            className="flex items-center gap-1.5 rounded-lg border border-white/12 bg-[#050816]/80 px-3 py-1.5 text-xs font-medium text-white/70 backdrop-blur-md transition-colors hover:border-white/22 hover:text-white"
+            className="flex items-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white/90 px-3 py-1.5 text-xs font-semibold text-(--t-ink-dim) backdrop-blur-md transition-colors hover:bg-white hover:text-(--t-ink-base)"
           >
             ← {breadcrumb.at(-1)?.label ?? "Back"}
           </button>

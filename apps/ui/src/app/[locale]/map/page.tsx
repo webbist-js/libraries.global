@@ -3,26 +3,20 @@ import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 
 import FullMapPage from "@/components/map/FullMapPage"
+import { buildMetadata } from "@/lib/seo/metadata"
 
-export const metadata: Metadata = {
-  title: "World Library Map",
-  description:
-    "Explore libraries worldwide on an interactive map. Drill down from continents to individual library locations.",
-  robots: "index, follow",
-  alternates: { canonical: "/map" },
-  openGraph: {
-    title: "World Library Map",
+export async function generateMetadata({
+  params,
+}: PageProps<"/[locale]/map">): Promise<Metadata> {
+  const { locale } = await params
+
+  return buildMetadata({
+    title: "World library map",
     description:
       "Explore libraries worldwide on an interactive map. Drill down from continents to individual library locations.",
-    type: "website",
-    url: "/map",
-  },
-  twitter: {
-    card: "summary",
-    title: "World Library Map",
-    description:
-      "Explore libraries worldwide on an interactive map. Drill down from continents to individual library locations.",
-  },
+    path: "map",
+    locale,
+  })
 }
 
 export default async function MapPage({
