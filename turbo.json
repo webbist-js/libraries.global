@@ -83,6 +83,10 @@
       "dependsOn": ["^build"],
       "cache": true
     },
+    "test:unit": {
+      "dependsOn": ["^build"],
+      "cache": true
+    },
     "axe-test": {
       "cache": false,
       "persistent": false

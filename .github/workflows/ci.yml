@@ -40,6 +40,9 @@ jobs:
       - name: Check css/md formatting
         run: pnpm format:check
 
+      # Includes the @repo/access type-level invariants and the Strapi unit
+      # suite (test:unit). Strapi's tests/app.test.ts boots a real Strapi on
+      # Postgres, so it stays out of CI and runs locally with pnpm test:strapi.
       - name: Run unit tests
         run: pnpm test:ci
 

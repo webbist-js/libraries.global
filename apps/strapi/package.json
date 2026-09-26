@@ -24,6 +24,7 @@
     "start": "strapi start",
     "strapi": "strapi",
     "test": "vitest run",
+    "test:unit": "vitest run --exclude tests/app.test.ts",
     "test:watch": "vitest",
     "transfer": "strapi transfer",
     "typecheck": "tsc --noEmit"
