@@ -213,8 +213,8 @@ export default ({ strapi }: { strapi: any }) => ({
       )
     }
 
-    const admin = ctx.state.user ?? ctx.state.admin
-    const reviewerId = String(admin?.id ?? "unknown")
+    const reviewer = ctx.state.user ?? ctx.state.admin
+    const reviewerId = String(reviewer?.id ?? "unknown")
 
     const result = await strapi
       .plugin("content-moderation")
@@ -223,6 +223,19 @@ export default ({ strapi }: { strapi: any }) => ({
 
     if ("error" in result) {
       if (result.error === "not_found") return ctx.notFound()
+      if (result.error === "apply_failed") {
+        ctx.status = 500
+        ctx.body = {
+          error: {
+            status: 500,
+            name: result.error,
+            message:
+              "Approval could not be applied; the submission was returned to review. Check the server log.",
+          },
+        }
+
+        return
+      }
       ctx.status = 409
       ctx.body = {
         error: {

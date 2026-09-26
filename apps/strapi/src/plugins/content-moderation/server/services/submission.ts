@@ -60,7 +60,12 @@ export default ({ strapi }: { strapi: any }) => ({
     reviewNote?: string
   ): Promise<
     | {
-        error: "not_found" | "invalid_transition" | "conflict" | "tampered"
+        error:
+          | "not_found"
+          | "invalid_transition"
+          | "conflict"
+          | "tampered"
+          | "apply_failed"
       }
     | { data: unknown }
   > {
@@ -77,410 +82,480 @@ export default ({ strapi }: { strapi: any }) => ({
     )
       return { error: "tampered" }
 
+    // Snapshot the pre-CAS values as primitives: if a side effect later
+    // throws, we revert to exactly this, not to whatever `submission` might
+    // read after the compare-and-set has run.
+    const priorStatus = submission.status
+    const priorReviewedByUserId = submission.reviewedByUserId ?? null
+    const priorReviewNote = submission.reviewNote ?? null
+    const priorReviewedAt = submission.reviewedAt ?? null
+
     // Compare-and-set: only one concurrent request can move it out of
-    // `submission.status`. Submissions have draftAndPublish:false, so the
-    // db layer sees the same row as documents().
+    // `priorStatus`. Submissions have draftAndPublish:false, so the db layer
+    // sees the same row as documents(). Also pin the payloadHash (when one
+    // was recorded) so a request built against a stale review can't win the
+    // race either.
+    const reviewedAt = new Date()
     const { count } = await strapi.db
       .query("plugin::content-moderation.submission")
       .updateMany({
-        where: { documentId, status: submission.status },
-        data: { status, reviewedByUserId, reviewNote, reviewedAt: new Date() },
+        where: {
+          documentId,
+          status: priorStatus,
+          ...(submission.payloadHash
+            ? { payloadHash: submission.payloadHash }
+            : {}),
+        },
+        data: { status, reviewedByUserId, reviewNote, reviewedAt },
       })
     if (count !== 1) return { error: "conflict" }
-    const updated = { ...submission, status, reviewedByUserId, reviewNote }
 
-    // Side-effect: if approving a new_library, create a draft library entry
-    if (status === "approved" && submission?.submissionType === "new_library") {
-      const f = (submission.fields ?? {}) as Record<string, unknown>
-      const tempRef = `PENDING-${Date.now()}`
+    // Built from the pre-CAS snapshot, not re-read from the db. `payloadHash`
+    // is a private field and must never be echoed back to admin clients.
+    const updated: Record<string, unknown> = {
+      ...submission,
+      status,
+      reviewedByUserId,
+      reviewNote,
+      reviewedAt,
+    }
+    delete updated.payloadHash
 
-      // Convert plain-text notes to Strapi blocks format
-      const toBlocks = (text: unknown) =>
-        text
-          ? [
-              {
-                type: "paragraph",
-                children: [{ type: "text", text: String(text) }],
-              },
-            ]
-          : undefined
+    try {
+      // Side-effect: if approving a new_library, create a draft library entry
+      if (
+        status === "approved" &&
+        submission?.submissionType === "new_library"
+      ) {
+        const f = (submission.fields ?? {}) as Record<string, unknown>
+        const tempRef = `PENDING-${Date.now()}`
 
-      // Uploaded images: find hero and gallery
-      type UploadedImage = { strapiId: number; url: string; isHero: boolean }
-      const claimed = Array.isArray(f.uploadedImages)
-        ? (f.uploadedImages as UploadedImage[])
-        : []
-      // A2: only attach files this submitter uploaded through the submission flow.
-      const owned = await (this as any).ownedUploadIds(
-        submission.submittedByUserId,
-        claimed.map((i) => Number(i.strapiId)).filter(Number.isInteger)
-      )
-      const uploadedImages = claimed.filter((i) =>
-        owned.has(Number(i.strapiId))
-      )
-      const heroImage =
-        uploadedImages.find((img) => img.isHero) ?? uploadedImages[0] ?? null
-      const galleryImages = uploadedImages.filter((img) => img !== heroImage)
+        // Convert plain-text notes to Strapi blocks format
+        const toBlocks = (text: unknown) =>
+          text
+            ? [
+                {
+                  type: "paragraph",
+                  children: [{ type: "text", text: String(text) }],
+                },
+              ]
+            : undefined
 
-      // Social links: filter to valid entries
-      const socialLinksData = Array.isArray(f.socialLinks)
-        ? (
-            f.socialLinks as { platform: string; url: string; label?: string }[]
-          ).filter((s) => s.platform && s.url)
-        : []
-
-      try {
-        const newLibrary = await strapi
-          .documents("api::library.library")
-          .create({
-            data: {
-              name: String(f.name ?? "Unnamed Library"),
-              libraryType: (f.libraryType as string) ?? "Other",
-              operationalStatus: (f.operationalStatus as string) ?? "unknown",
-              operatorType: (f.operatorType as string) || undefined,
-              entityRef: tempRef,
-              shortName: (f.shortName as string) || undefined,
-              summary: (f.summary as string) || undefined,
-              streetAddress: (f.streetAddress as string) || undefined,
-              city: (f.city as string) || undefined,
-              district: (f.district as string) || undefined,
-              postalCode: (f.postalCode as string) || undefined,
-              website: (f.website as string) || undefined,
-              catalogueUrl: (f.catalogueUrl as string) || undefined,
-              planVisitUrl: (f.planVisitUrl as string) || undefined,
-              membershipUrl: (f.membershipUrl as string) || undefined,
-              bookingUrl: (f.bookingUrl as string) || undefined,
-              donationUrl: (f.donationUrl as string) || undefined,
-              virtualTourUrl: (f.virtualTourUrl as string) || undefined,
-              virtualTourEmbed: (f.virtualTourEmbed as string) || undefined,
-              email: (f.email as string) || undefined,
-              phone: (f.phone as string) || undefined,
-              admissionInfo: (f.admissionInfo as string) || undefined,
-              transitInfo: (f.transitInfo as string) || undefined,
-              languagesServed: (f.languagesServed as string) || undefined,
-              foundedYear: (f.foundedYear as string) || undefined,
-              openedYear: (f.openedYear as string) || undefined,
-              closedYear: (f.closedYear as string) || undefined,
-              architect: (f.architect as string) || undefined,
-              buildingInfo: (f.buildingInfo as string) || undefined,
-              iiifEndpoint: (f.iiifEndpoint as string) || undefined,
-              classificationSystem:
-                (f.classificationSystem as string) || undefined,
-              source: (f.source as string) || undefined,
-              sourceUrl: (f.sourceUrl as string) || undefined,
-              closureReason: (f.closureReason as string) || undefined,
-              openingTimes: f.openingTimes || undefined,
-              accessibilityNotes: toBlocks(f.accessibilityNotes),
-              visitNotes: toBlocks(f.visitNotes),
-              lastVerifiedAt: new Date(),
-              contentUpdatedAt: new Date(),
-              location:
-                f.lat && f.lng
-                  ? {
-                      lat: Number.parseFloat(String(f.lat)),
-                      lng: Number.parseFloat(String(f.lng)),
-                    }
-                  : undefined,
-              continent: (f.continentDocumentId as string)
-                ? { connect: [{ documentId: f.continentDocumentId as string }] }
-                : undefined,
-              country: (f.countryDocumentId as string)
-                ? { connect: [{ documentId: f.countryDocumentId as string }] }
-                : undefined,
-              region: (f.regionDocumentId as string)
-                ? { connect: [{ documentId: f.regionDocumentId as string }] }
-                : undefined,
-              area: (f.areaDocumentId as string)
-                ? { connect: [{ documentId: f.areaDocumentId as string }] }
-                : undefined,
-              heroImage: heroImage
-                ? { connect: [{ id: heroImage.strapiId }] }
-                : undefined,
-              gallery:
-                galleryImages.length > 0
-                  ? {
-                      connect: galleryImages.map((img) => ({
-                        id: img.strapiId,
-                      })),
-                    }
-                  : undefined,
-              socialLinks:
-                socialLinksData.length > 0 ? socialLinksData : undefined,
-              services:
-                Array.isArray(f.services) && f.services.length > 0
-                  ? {
-                      connect: (f.services as string[]).map((id) => ({
-                        documentId: id,
-                      })),
-                    }
-                  : undefined,
-              amenities:
-                Array.isArray(f.amenities) && f.amenities.length > 0
-                  ? {
-                      connect: (f.amenities as string[]).map((id) => ({
-                        documentId: id,
-                      })),
-                    }
-                  : undefined,
-              accessibility:
-                Array.isArray(f.accessibility) && f.accessibility.length > 0
-                  ? {
-                      connect: (f.accessibility as string[]).map((id) => ({
-                        documentId: id,
-                      })),
-                    }
-                  : undefined,
-            },
-            status: "draft",
-          })
-        strapi.log.info(
-          `[content-moderation] Auto-created draft library "${f.name}" from approved submission ${documentId}`
+        // Uploaded images: find hero and gallery
+        type UploadedImage = { strapiId: number; url: string; isHero: boolean }
+        const claimed = Array.isArray(f.uploadedImages)
+          ? (f.uploadedImages as UploadedImage[])
+          : []
+        // A2: only attach files this submitter uploaded through the submission flow.
+        const owned = await (this as any).ownedUploadIds(
+          submission.submittedByUserId,
+          claimed.map((i) => Number(i.strapiId)).filter(Number.isInteger)
         )
+        const uploadedImages = claimed.filter((i) =>
+          owned.has(Number(i.strapiId))
+        )
+        const heroImage =
+          uploadedImages.find((img) => img.isHero) ?? uploadedImages[0] ?? null
+        const galleryImages = uploadedImages.filter((img) => img !== heroImage)
 
-        // Auto-claim: create a library-affiliation for the original submitter
-        if (submission.submittedByUserId && newLibrary?.id) {
-          await strapi
-            .documents("api::library-affiliation.library-affiliation")
+        // Social links: filter to valid entries
+        const socialLinksData = Array.isArray(f.socialLinks)
+          ? (
+              f.socialLinks as {
+                platform: string
+                url: string
+                label?: string
+              }[]
+            ).filter((s) => s.platform && s.url)
+          : []
+
+        try {
+          const newLibrary = await strapi
+            .documents("api::library.library")
             .create({
               data: {
-                baUserId: submission.submittedByUserId,
-                library: { connect: [{ id: newLibrary.id }] },
-                role: null,
-                department: null,
-                verificationMethod: "contact_us",
-              } as any,
+                name: String(f.name ?? "Unnamed Library"),
+                libraryType: (f.libraryType as string) ?? "Other",
+                operationalStatus: (f.operationalStatus as string) ?? "unknown",
+                operatorType: (f.operatorType as string) || undefined,
+                entityRef: tempRef,
+                shortName: (f.shortName as string) || undefined,
+                summary: (f.summary as string) || undefined,
+                streetAddress: (f.streetAddress as string) || undefined,
+                city: (f.city as string) || undefined,
+                district: (f.district as string) || undefined,
+                postalCode: (f.postalCode as string) || undefined,
+                website: (f.website as string) || undefined,
+                catalogueUrl: (f.catalogueUrl as string) || undefined,
+                planVisitUrl: (f.planVisitUrl as string) || undefined,
+                membershipUrl: (f.membershipUrl as string) || undefined,
+                bookingUrl: (f.bookingUrl as string) || undefined,
+                donationUrl: (f.donationUrl as string) || undefined,
+                virtualTourUrl: (f.virtualTourUrl as string) || undefined,
+                virtualTourEmbed: (f.virtualTourEmbed as string) || undefined,
+                email: (f.email as string) || undefined,
+                phone: (f.phone as string) || undefined,
+                admissionInfo: (f.admissionInfo as string) || undefined,
+                transitInfo: (f.transitInfo as string) || undefined,
+                languagesServed: (f.languagesServed as string) || undefined,
+                foundedYear: (f.foundedYear as string) || undefined,
+                openedYear: (f.openedYear as string) || undefined,
+                closedYear: (f.closedYear as string) || undefined,
+                architect: (f.architect as string) || undefined,
+                buildingInfo: (f.buildingInfo as string) || undefined,
+                iiifEndpoint: (f.iiifEndpoint as string) || undefined,
+                classificationSystem:
+                  (f.classificationSystem as string) || undefined,
+                source: (f.source as string) || undefined,
+                sourceUrl: (f.sourceUrl as string) || undefined,
+                closureReason: (f.closureReason as string) || undefined,
+                openingTimes: f.openingTimes || undefined,
+                accessibilityNotes: toBlocks(f.accessibilityNotes),
+                visitNotes: toBlocks(f.visitNotes),
+                lastVerifiedAt: new Date(),
+                contentUpdatedAt: new Date(),
+                location:
+                  f.lat && f.lng
+                    ? {
+                        lat: Number.parseFloat(String(f.lat)),
+                        lng: Number.parseFloat(String(f.lng)),
+                      }
+                    : undefined,
+                continent: (f.continentDocumentId as string)
+                  ? {
+                      connect: [
+                        { documentId: f.continentDocumentId as string },
+                      ],
+                    }
+                  : undefined,
+                country: (f.countryDocumentId as string)
+                  ? { connect: [{ documentId: f.countryDocumentId as string }] }
+                  : undefined,
+                region: (f.regionDocumentId as string)
+                  ? { connect: [{ documentId: f.regionDocumentId as string }] }
+                  : undefined,
+                area: (f.areaDocumentId as string)
+                  ? { connect: [{ documentId: f.areaDocumentId as string }] }
+                  : undefined,
+                heroImage: heroImage
+                  ? { connect: [{ id: heroImage.strapiId }] }
+                  : undefined,
+                gallery:
+                  galleryImages.length > 0
+                    ? {
+                        connect: galleryImages.map((img) => ({
+                          id: img.strapiId,
+                        })),
+                      }
+                    : undefined,
+                socialLinks:
+                  socialLinksData.length > 0 ? socialLinksData : undefined,
+                services:
+                  Array.isArray(f.services) && f.services.length > 0
+                    ? {
+                        connect: (f.services as string[]).map((id) => ({
+                          documentId: id,
+                        })),
+                      }
+                    : undefined,
+                amenities:
+                  Array.isArray(f.amenities) && f.amenities.length > 0
+                    ? {
+                        connect: (f.amenities as string[]).map((id) => ({
+                          documentId: id,
+                        })),
+                      }
+                    : undefined,
+                accessibility:
+                  Array.isArray(f.accessibility) && f.accessibility.length > 0
+                    ? {
+                        connect: (f.accessibility as string[]).map((id) => ({
+                          documentId: id,
+                        })),
+                      }
+                    : undefined,
+              },
+              status: "draft",
             })
-          await strapi.db.query("api::user-profile.user-profile").update({
-            where: { baUserId: submission.submittedByUserId },
-            data: {
-              isVerifiedLibrarian: true,
-              contributorRole: "verified_librarian",
-            },
-          })
           strapi.log.info(
-            `[content-moderation] Auto-claimed library "${f.name}" for submitter ${submission.submittedByUserId}`
+            `[content-moderation] Auto-created draft library "${f.name}" from approved submission ${documentId}`
           )
-        }
-      } catch (err) {
-        strapi.log.error(
-          `[content-moderation] Failed to auto-create library from approved submission ${documentId}:`,
-          err
-        )
-      }
-    }
 
-    // Side-effect: if approving a library_claim, create affiliation record + mark profile verified
-    if (
-      status === "approved" &&
-      submission?.submissionType === "library_claim"
-    ) {
-      const fields = (submission.fields ?? {}) as Record<string, unknown>
-
-      // A2: resolve by the reviewed targetDocumentId, never fields.entityRef.
-      const targetLibrary = submission.targetDocumentId
-        ? await strapi.documents("api::library.library").findOne({
-            documentId: submission.targetDocumentId,
-            fields: ["id", "documentId"] as any,
-          })
-        : null
-      if (!targetLibrary) {
-        strapi.log.warn(
-          `[content-moderation] claim ${documentId} has no valid targetDocumentId; skipping affiliation`
-        )
-      } else {
-        try {
-          const affiliationData: Record<string, unknown> = {
-            baUserId: submission.submittedByUserId,
-            role: (fields.role as string) ?? null,
-            department: (fields.department as string) ?? null,
-            verificationMethod:
-              (submission.verificationMethod as string) ?? "contact_us",
-            library: { connect: [{ id: targetLibrary.id }] },
-          }
-          await strapi
-            .documents("api::library-affiliation.library-affiliation")
-            .create({
-              data: affiliationData as any,
+          // Auto-claim: create a library-affiliation for the original submitter
+          if (submission.submittedByUserId && newLibrary?.id) {
+            await strapi
+              .documents("api::library-affiliation.library-affiliation")
+              .create({
+                data: {
+                  baUserId: submission.submittedByUserId,
+                  library: { connect: [{ id: newLibrary.id }] },
+                  role: null,
+                  department: null,
+                  verificationMethod: "contact_us",
+                } as any,
+              })
+            await strapi.db.query("api::user-profile.user-profile").update({
+              where: { baUserId: submission.submittedByUserId },
+              data: {
+                isVerifiedLibrarian: true,
+                contributorRole: "verified_librarian",
+              },
             })
+            strapi.log.info(
+              `[content-moderation] Auto-claimed library "${f.name}" for submitter ${submission.submittedByUserId}`
+            )
+          }
         } catch (err) {
           strapi.log.error(
-            "[content-moderation] Failed to create library-affiliation:",
+            `[content-moderation] Failed to auto-create library from approved submission ${documentId}:`,
             err
           )
         }
       }
 
-      // Mark the user profile as a verified librarian
-      await strapi.db.query("api::user-profile.user-profile").update({
-        where: { baUserId: submission.submittedByUserId },
-        data: {
-          isVerifiedLibrarian: true,
-          contributorRole: "verified_librarian",
-        },
-      })
-    }
+      // Side-effect: if approving a library_claim, create affiliation record + mark profile verified
+      if (
+        status === "approved" &&
+        submission?.submissionType === "library_claim"
+      ) {
+        const fields = (submission.fields ?? {}) as Record<string, unknown>
 
-    // Side-effect: if approving a topic_suggestion, approve the topic
-    // A2: resolve by the reviewed targetDocumentId, never fields.topicDocumentId.
-    if (
-      status === "approved" &&
-      submission?.submissionType === "topic_suggestion" &&
-      submission.targetEntityType === "topic" &&
-      submission.targetDocumentId
-    ) {
-      await strapi.documents("api::topic.topic").update({
-        documentId: submission.targetDocumentId,
-        data: { status: "approved" },
-      })
-    } else if (
-      status === "approved" &&
-      submission?.submissionType === "topic_suggestion" &&
-      (submission.targetEntityType !== "topic" || !submission.targetDocumentId)
-    ) {
-      strapi.log.warn(
-        `[content-moderation] topic_suggestion ${documentId} has no topic targetDocumentId; nothing applied`
-      )
-    }
+        // A2: resolve by the reviewed targetDocumentId, never fields.entityRef.
+        const targetLibrary = submission.targetDocumentId
+          ? await strapi.documents("api::library.library").findOne({
+              documentId: submission.targetDocumentId,
+              fields: ["id", "documentId"] as any,
+            })
+          : null
+        if (!targetLibrary) {
+          strapi.log.warn(
+            `[content-moderation] claim ${documentId} has no valid targetDocumentId; skipping affiliation`
+          )
+        } else {
+          try {
+            const affiliationData: Record<string, unknown> = {
+              baUserId: submission.submittedByUserId,
+              role: (fields.role as string) ?? null,
+              department: (fields.department as string) ?? null,
+              verificationMethod:
+                (submission.verificationMethod as string) ?? "contact_us",
+              library: { connect: [{ id: targetLibrary.id }] },
+            }
+            await strapi
+              .documents("api::library-affiliation.library-affiliation")
+              .create({
+                data: affiliationData as any,
+              })
+          } catch (err) {
+            strapi.log.error(
+              "[content-moderation] Failed to create library-affiliation:",
+              err
+            )
+          }
+        }
 
-    // ── wiki_edit approval ─────────────────────────────────────────────
-    if (status === "approved" && submission?.submissionType === "wiki_edit") {
-      await (this as any).applyWikiEdit(submission)
-    }
+        // Mark the user profile as a verified librarian
+        await strapi.db.query("api::user-profile.user-profile").update({
+          where: { baUserId: submission.submittedByUserId },
+          data: {
+            isVerifiedLibrarian: true,
+            contributorRole: "verified_librarian",
+          },
+        })
+      }
 
-    // Award points for new_library approval — non-fatal
-    if (status === "approved" && submission?.submissionType === "new_library") {
-      try {
-        await strapi
-          .plugin("rewards")
-          .service("points")
-          .award(
+      // Side-effect: if approving a topic_suggestion, approve the topic
+      // A2: resolve by the reviewed targetDocumentId, never fields.topicDocumentId.
+      if (
+        status === "approved" &&
+        submission?.submissionType === "topic_suggestion" &&
+        submission.targetEntityType === "topic" &&
+        submission.targetDocumentId
+      ) {
+        await strapi.documents("api::topic.topic").update({
+          documentId: submission.targetDocumentId,
+          data: { status: "approved" },
+        })
+      } else if (
+        status === "approved" &&
+        submission?.submissionType === "topic_suggestion" &&
+        (submission.targetEntityType !== "topic" ||
+          !submission.targetDocumentId)
+      ) {
+        strapi.log.warn(
+          `[content-moderation] topic_suggestion ${documentId} has no topic targetDocumentId; nothing applied`
+        )
+      }
+
+      // ── wiki_edit approval ─────────────────────────────────────────────
+      if (status === "approved" && submission?.submissionType === "wiki_edit") {
+        await (this as any).applyWikiEdit(submission)
+      }
+
+      // Award points for new_library approval — non-fatal
+      if (
+        status === "approved" &&
+        submission?.submissionType === "new_library"
+      ) {
+        try {
+          await strapi
+            .plugin("rewards")
+            .service("points")
+            .award(
+              submission.submittedByUserId,
+              "new_library_approved",
+              50,
+              {
+                submissionId: documentId,
+                libraryName: String(
+                  (submission.fields as Record<string, unknown>)?.name ?? ""
+                ),
+              },
+              `${documentId}:new_library_approved`
+            )
+        } catch (err) {
+          strapi.log.warn("[content-moderation] rewards.award failed:", err)
+        }
+      }
+
+      // Award points for library_edit approval (minor: 1–3 fields, major: 4+)
+      if (
+        status === "approved" &&
+        submission?.submissionType === "library_edit"
+      ) {
+        try {
+          const fields = (submission.fields ?? {}) as Record<string, unknown>
+          const fieldCount = Object.keys(fields).filter(
+            (k) =>
+              fields[k] !== null && fields[k] !== undefined && fields[k] !== ""
+          ).length
+          const action =
+            fieldCount >= 4 ? "edit_accepted_major" : "edit_accepted_minor"
+          const pts = fieldCount >= 4 ? 15 : 5
+
+          await strapi.plugin("rewards").service("points").award(
             submission.submittedByUserId,
-            "new_library_approved",
-            50,
+            action,
+            pts,
             {
               submissionId: documentId,
-              libraryName: String(
-                (submission.fields as Record<string, unknown>)?.name ?? ""
-              ),
+              fieldCount,
             },
-            `${documentId}:new_library_approved`
+            `${documentId}:${action}`
           )
-      } catch (err) {
-        strapi.log.warn("[content-moderation] rewards.award failed:", err)
+        } catch (err) {
+          strapi.log.warn(
+            "[content-moderation] rewards.award (edit) failed:",
+            err
+          )
+        }
       }
-    }
 
-    // Award points for library_edit approval (minor: 1–3 fields, major: 4+)
-    if (
-      status === "approved" &&
-      submission?.submissionType === "library_edit"
-    ) {
-      try {
-        const fields = (submission.fields ?? {}) as Record<string, unknown>
-        const fieldCount = Object.keys(fields).filter(
-          (k) =>
-            fields[k] !== null && fields[k] !== undefined && fields[k] !== ""
-        ).length
-        const action =
-          fieldCount >= 4 ? "edit_accepted_major" : "edit_accepted_minor"
-        const pts = fieldCount >= 4 ? 15 : 5
-
-        await strapi.plugin("rewards").service("points").award(
-          submission.submittedByUserId,
-          action,
-          pts,
-          {
-            submissionId: documentId,
-            fieldCount,
-          },
-          `${documentId}:${action}`
-        )
-      } catch (err) {
-        strapi.log.warn(
-          "[content-moderation] rewards.award (edit) failed:",
-          err
-        )
-      }
-    }
-
-    // Award points for correction approval — 2pts
-    if (status === "approved" && submission?.submissionType === "correction") {
-      try {
-        await strapi.plugin("rewards").service("points").award(
-          submission.submittedByUserId,
-          "correction_approved",
-          2,
-          {
-            submissionId: documentId,
-          },
-          `${documentId}:correction_approved`
-        )
-      } catch (err) {
-        strapi.log.warn(
-          "[content-moderation] rewards.award (correction) failed:",
-          err
-        )
-      }
-    }
-
-    // Award points for library_claim approval — 10pts
-    if (
-      status === "approved" &&
-      submission?.submissionType === "library_claim"
-    ) {
-      try {
-        await strapi.plugin("rewards").service("points").award(
-          submission.submittedByUserId,
-          "claim_approved",
-          10,
-          {
-            submissionId: documentId,
-          },
-          `${documentId}:claim_approved`
-        )
-      } catch (err) {
-        strapi.log.warn(
-          "[content-moderation] rewards.award (claim) failed:",
-          err
-        )
-      }
-    }
-
-    // Award points for wiki_edit approval
-    if (status === "approved" && submission?.submissionType === "wiki_edit") {
-      try {
-        const fields = (submission.fields ?? {}) as Record<string, unknown>
-        const isTranslation = fields.isTranslation === true
-        const wikiAction = isTranslation
-          ? "wiki_translated"
-          : "edit_accepted_minor"
-        await strapi
-          .plugin("rewards")
-          .service("points")
-          .award(
+      // Award points for correction approval — 2pts
+      if (
+        status === "approved" &&
+        submission?.submissionType === "correction"
+      ) {
+        try {
+          await strapi.plugin("rewards").service("points").award(
             submission.submittedByUserId,
-            wikiAction,
-            isTranslation ? 15 : 5,
-            { submissionId: documentId },
-            `${documentId}:${wikiAction}`
+            "correction_approved",
+            2,
+            {
+              submissionId: documentId,
+            },
+            `${documentId}:correction_approved`
           )
-      } catch (err) {
-        strapi.log.warn(
-          "[content-moderation] rewards.award (wiki) failed:",
-          err
-        )
+        } catch (err) {
+          strapi.log.warn(
+            "[content-moderation] rewards.award (correction) failed:",
+            err
+          )
+        }
       }
-    }
 
-    // Invalidate quick wins for the submitter after approval
-    if (status === "approved" && submission?.submittedByUserId) {
-      try {
-        await strapi
-          .service("api::user-profile.quick-wins")
-          .computeAndSave(submission.submittedByUserId)
-      } catch (err) {
-        strapi.log.warn("[quick-wins] Post-approval recompute failed:", err)
+      // Award points for library_claim approval — 10pts
+      if (
+        status === "approved" &&
+        submission?.submissionType === "library_claim"
+      ) {
+        try {
+          await strapi.plugin("rewards").service("points").award(
+            submission.submittedByUserId,
+            "claim_approved",
+            10,
+            {
+              submissionId: documentId,
+            },
+            `${documentId}:claim_approved`
+          )
+        } catch (err) {
+          strapi.log.warn(
+            "[content-moderation] rewards.award (claim) failed:",
+            err
+          )
+        }
       }
+
+      // Award points for wiki_edit approval
+      if (status === "approved" && submission?.submissionType === "wiki_edit") {
+        try {
+          const fields = (submission.fields ?? {}) as Record<string, unknown>
+          const isTranslation = fields.isTranslation === true
+          const wikiAction = isTranslation
+            ? "wiki_translated"
+            : "edit_accepted_minor"
+          await strapi
+            .plugin("rewards")
+            .service("points")
+            .award(
+              submission.submittedByUserId,
+              wikiAction,
+              isTranslation ? 15 : 5,
+              { submissionId: documentId },
+              `${documentId}:${wikiAction}`
+            )
+        } catch (err) {
+          strapi.log.warn(
+            "[content-moderation] rewards.award (wiki) failed:",
+            err
+          )
+        }
+      }
+
+      // Invalidate quick wins for the submitter after approval
+      if (status === "approved" && submission?.submittedByUserId) {
+        try {
+          await strapi
+            .service("api::user-profile.quick-wins")
+            .computeAndSave(submission.submittedByUserId)
+        } catch (err) {
+          strapi.log.warn("[quick-wins] Post-approval recompute failed:", err)
+        }
+      }
+    } catch (err) {
+      // A side effect above threw without being caught by its own non-fatal
+      // try/catch. The status was already committed by the compare-and-set,
+      // so the submission would otherwise be stuck at `status` forever
+      // (canTransition(status, status) is false). Revert it to what it was
+      // before this call so the review can be retried.
+      strapi.log.error(
+        `[content-moderation] updateStatus side effects failed for ${documentId}; reverting to "${priorStatus}"`,
+        err
+      )
+      await strapi.db
+        .query("plugin::content-moderation.submission")
+        .updateMany({
+          where: { documentId, status },
+          data: {
+            status: priorStatus,
+            reviewedByUserId: priorReviewedByUserId,
+            reviewNote: priorReviewNote,
+            reviewedAt: priorReviewedAt,
+          },
+        })
+
+      return { error: "apply_failed" }
     }
 
     return { data: updated }

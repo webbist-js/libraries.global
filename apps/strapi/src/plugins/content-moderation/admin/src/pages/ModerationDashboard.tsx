@@ -1,5 +1,5 @@
 import { Box, Button, Flex, Tabs, Typography } from "@strapi/design-system"
-import { useFetchClient } from "@strapi/strapi/admin"
+import { useFetchClient, useNotification } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { WikiEditDiffPanel } from "../components/WikiEditDiffPanel"
@@ -1424,6 +1424,7 @@ function CountChip({ count }: { count: number }) {
 
 export function ModerationDashboard() {
   const { get, put } = useFetchClient()
+  const { toggleNotification } = useNotification()
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState("pending")
@@ -1465,17 +1466,16 @@ export function ModerationDashboard() {
           status,
           reviewNote,
         })
-        setError(null)
       } catch (err) {
         const message =
           (err as { response?: { data?: { error?: { message?: string } } } })
             ?.response?.data?.error?.message ?? "Failed to update submission."
-        setError(message)
+        toggleNotification({ type: "danger", message })
         console.error(err)
       }
       void load(statusFilter)
     },
-    [put, load, statusFilter]
+    [put, load, statusFilter, toggleNotification]
   )
 
   const allTypes = useMemo(
