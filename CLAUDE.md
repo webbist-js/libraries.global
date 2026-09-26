@@ -4,7 +4,7 @@
 
 **libraries.global** is a comprehensive global index of libraries — every significant public, national, academic, monastic, parliamentary, and cultural library in the world. The goal is a definitive, navigable reference: every institution findable by continent → country → region → area → library, with rich detail pages for each entry.
 
-This is not a search engine or aggregator. It is an atlas. The aesthetic and UX deliberately echoes cartographic archives and scholarly reference works — dark, typographically rich, with geographic wayfinding at its core.
+This is not a search engine or aggregator. It is an atlas. The aesthetic and UX echoes scholarly reference works — a **light, accessible "warm paper" design** (v2, Sept 2026): ink-on-paper typography, indigo accents, borders over shadows, honest empty states. The pre-2026 dark "cartographic night" theme is retired.
 
 **Core product pillars:**
 
@@ -23,10 +23,16 @@ This is not a search engine or aggregator. It is an atlas. The aesthetic and UX 
 ```
 libraries.global/
 ├── apps/
-│   ├── ui/          — Next.js 15 frontend (App Router)
-│   └── strapi/      — Strapi v5 CMS (headless backend + admin)
+│   ├── ui/            — Next.js 16 frontend (App Router)
+│   ├── strapi/        — Strapi v5 CMS (headless backend + admin, custom plugins:
+│   │                    content-moderation, rewards, topics, events)
+│   └── sync-worker/   — events provider sync worker (Eventbrite, Spydus, Solus,
+│                        Aspen, iCal, TicketSource, WeGotTickets)
 └── packages/
-    └── strapi-types/ — Generated TypeScript types from Strapi schemas
+    ├── strapi-types/   — Generated TypeScript types from Strapi schemas
+    ├── events-crypto/  — AES-256-GCM shared encryption for provider credentials
+    ├── design-system/  — shared theme css consumed by both apps
+    └── shared-data/    — shared static data
 ```
 
 **Package manager:** pnpm with workspaces.
@@ -109,17 +115,18 @@ Continent
 
 All routes are under `app/[locale]/`. Key routes:
 
-| Route                                       | Component                                             |
-| ------------------------------------------- | ----------------------------------------------------- |
-| `/`                                         | HomePage                                              |
-| `/[continent]`                              | ContinentDetailPage                                   |
-| `/[continent]/[country]`                    | CountryDetailPage                                     |
-| `/[continent]/[country]/[region]`           | RegionDetailPage                                      |
-| `/[continent]/[country]/[region]/[library]` | LibraryDetailPage                                     |
-| `/map`                                      | FullMapPage (MapLibre GL full-screen)                 |
-| `/wiki/[section]/[slug]`                    | WikiArticlePage                                       |
-| `/blog/[slug]`                              | BlogArticlePage                                       |
-| `/auth/*`                                   | Auth flows (sign in, register, OAuth, reset password) |
+| Route                                       | Component                                                  |
+| ------------------------------------------- | ---------------------------------------------------------- |
+| `/`                                         | HomePage                                                   |
+| `/index`                                    | FindLibraryPage (faceted search/browse — "Find libraries") |
+| `/[continent]`                              | ContinentDetailPage                                        |
+| `/[continent]/[country]`                    | CountryDetailPage                                          |
+| `/[continent]/[country]/[region]`           | RegionDetailPage                                           |
+| `/[continent]/[country]/[region]/[library]` | LibraryDetailPage                                          |
+| `/map`                                      | FullMapPage (MapLibre GL full-screen)                      |
+| `/wiki/[section]/[slug]`                    | WikiArticlePage                                            |
+| `/blog/[slug]`                              | BlogArticlePage                                            |
+| `/auth/*`                                   | Auth flows (sign in, register, OAuth, reset password)      |
 
 ### Data fetching
 
@@ -142,41 +149,51 @@ All routes are under `app/[locale]/`. Key routes:
 
 All design decisions flow from `lib/design-tokens.ts` (`T`). **Never hardcode colors or fonts** that exist in the token system.
 
-### Color tokens (`T`)
+### Color tokens (`T`) — v2 light system (light-only, no dark mode)
 
 ```ts
-T.bg.void // #030511 — page root
-T.bg.space // #050816 — standard page background
-T.bg.deep // #070b1e — card/panel interior
-T.bg.surface // #060b19 — elevated card
+T.bg.void // #FAF8F4 — page root (warm paper)
+T.bg.space // #F1EDE5 — deeper band: footer, cover strips
+T.bg.deep // #FFFFFF — card / panel surface
+T.bg.surface // #FBFAF7 — nested surface: row hover, inputs
+T.bg.muted // #F3F0EA — muted fills: disabled, neutral chips
+T.bg.muted2 // #EFEBE3 — nav hover, segmented-control track
 
-T.ink.base // #f4f7ff — primary text
-T.ink.dim // rgba(...,.72) — secondary text
-T.ink.low // rgba(...,.48) — tertiary / labels
-T.ink.faint // rgba(...,.30) — placeholder / disabled
-T.ink.ghost // rgba(...,.14) — hairlines / ghost states
+T.ink.base // #17162B — primary text
+T.ink.dim // #55536A — secondary text
+T.ink.low / faint / ghost // alpha ramp of ink for tertiary states
 
-T.border.line // rgba(255,255,255,.08) — standard border
-T.border.hi // rgba(255,255,255,.16) — prominent border
+T.border.line // #E7E3DB — standard border (borders carry elevation; no shadows)
+T.border.hi // #D9D3C9 — prominent border
+T.border.divider // #F0ECE5 — hairline dividers
 
-T.accent.aurora // #7fdfff — primary CTA, aurora tint
-T.accent.violet // #a390ff — secondary accent
-T.accent.ember // #ffb88a — warm accent
-T.accent.gold // #e8c98a — pillar/featured marker
-T.accent.ok // #8ef0b3 — success/open states
-T.accent.warn // #ffcf7a — warning states
-T.accent.danger // #ff8a8a — error/closed states
+T.accent.primary // #4338CA — indigo: CTAs, links, focus, active states
+T.accent.primaryHover // #3730A3
+T.accent.chip // #ECEBFB — active filter chips
+T.accent.ok // #2F5D3A — success/open (on #E6EFE6)
+T.accent.danger // #A13A1A — errors (on #F6E3DA)
 ```
+
+Library-type tint pairs live in `TYPE_TINT` / `tintForLibraryType()` (same file): national purple `#ECE8F6/#4A3F8C`, public green `#E6EFE6/#2F5D3A`, academic blue `#E4ECF5/#28496E`, special rust `#F6E3DA/#8A3F22`, neutral `#F3F0EA/#55536A` — used for badges, card monograms, and stat cards.
 
 ### Typography (`T.font`)
 
-| Token          | Font           | Use                                                |
-| -------------- | -------------- | -------------------------------------------------- |
-| `T.font.serif` | Fraunces       | Hero titles, large numerals, editorial headings    |
-| `T.font.mono`  | JetBrains Mono | Labels, metadata, chips, coordinates, stats labels |
-| `T.font.sans`  | Roboto         | Body copy, UI chrome                               |
+| Token          | Font           | Use                                                  |
+| -------------- | -------------- | ---------------------------------------------------- |
+| `T.font.serif` | Newsreader     | Display headings, card titles, large stat numerals   |
+| `T.font.mono`  | JetBrains Mono | Coordinates and technical data ONLY (used sparingly) |
+| `T.font.sans`  | Figtree        | Body copy, UI chrome, labels, buttons (site default) |
 
-**Rule:** Large data values (counts, years, coordinates) always use `T.font.serif`. Labels and categories always use `T.font.mono` with `letterSpacing: ".12em–.22em"` and `textTransform: "uppercase"`.
+**Rules:** Serif for display + big data values. Mono is restricted to coordinates/technical strings — the old mono-uppercase eyebrow pattern is retired except for sparing true-metadata use. Pill radii (999px) for buttons/badges, 20–24px for cards, 14px for inputs. The only sanctioned shadow is the card hover: `0 12px 28px rgba(23,22,43,.08)`.
+
+### Accessibility baseline (non-negotiable)
+
+- Global `:focus-visible` — 3px `#4338CA` outline (in globals.css; never suppress)
+- Skip-to-content link in the root layout; `#main` landmark
+- `prefers-reduced-motion` kill-switch is global
+- Status is always conveyed as color + icon + text (never color alone)
+- Filters use `fieldset`/`legend`; hours use semantic `<table>` with `th scope="row"`; counts update via `aria-live`
+- Honest empty states over fake data ("Hours not added yet", "No photo yet" monograms)
 
 ### Design System components (`components/ds/`)
 
@@ -205,18 +222,9 @@ All shared UI primitives live here. Always check `ds/index.ts` before building a
 | `Pager`                 | Pagination control                                                               |
 | `WikiCards`             | Wiki article card layouts                                                        |
 
-### Aurora CTA pattern
+### Primary CTA pattern
 
-CTA buttons use the aurora colour. Prefer the named constants from `lib/styles.ts`:
-
-```ts
-import { auroraCtaSm, auroraCtaMd, auroraCtaLg } from "@/lib/styles"
-// sm = px-5 py-2.5  (editorial inline)
-// md = px-7 py-3    (banner CTAs)
-// lg = px-8 py-3.5  (hero / journey CTAs)
-```
-
-Never hardcode the `border-[rgba(127,223,255,.35)] bg-[rgba(127,223,255,.1)] text-[#7fdfff]` string directly.
+Primary CTAs are indigo pills: `bg-(--t-accent-primary) hover:bg-(--t-accent-primary-hover) text-white rounded-full font-semibold`. Secondary actions are white pills with a `--t-border-hi` border. The old aurora-cyan CTA constants in `lib/styles.ts` are deprecated — do not use them in new code.
 
 ### Inline styles vs Tailwind
 
@@ -224,39 +232,17 @@ Never hardcode the `border-[rgba(127,223,255,.35)] bg-[rgba(127,223,255,.1)] tex
 - **Use Tailwind** for layout, spacing scales, responsive breakpoints, and hover/group state that needs pseudo-classes
 - This is intentional — it keeps token values inspectable and prevents Tailwind's purger from stripping dynamic values
 
-### Transparent sticky header pattern
+### Header pattern
 
-Pages with a full-bleed hero use a scroll-driven animation to transition the header from transparent to opaque:
+v2 pages use normal in-flow light heroes — the header renders solid from the start. The legacy `data-transparent-header` + `-mt-14` scroll-reveal pattern is retired for v2 pages (the CSS machinery still exists in globals.css for any stragglers). **Never add `overflow-x-hidden` or `overflow: hidden` to the page wrapper or `<main>`** — it breaks `position: sticky`.
 
-- Add `data-transparent-header=""` to the hero `<section>`
-- Add `-mt-14` to the hero section (pulls content behind the 56px sticky header)
-- **Never add `overflow-x-hidden` or `overflow: hidden` to the page wrapper or `<main>`** — it breaks `position: sticky` and the negative margin trick
+### Page shell pattern (v2)
 
-### Page shell pattern
-
-All location detail pages follow this structure:
-
-```tsx
-<div className="relative isolate flex min-h-screen w-full flex-col bg-[#050816] text-white">
-  <GlobalHeader locale={locale} navbar={navbar} />
-  <main className="relative z-10 flex-1">
-    <section id="overview" data-transparent-header="" className="... -mt-14 ...">
-      {/* Hero */}
-    </section>
-    {/* Content sections */}
-    <LocationContributeCTA ... />
-  </main>
-</div>
-```
+Detail pages follow the POC single-flow layout: breadcrumb → in-flow hero (badges, serif clamp title, action pills) → sticky anchor nav → main column + sticky sidebar, all on `T.bg.void` paper with white section cards. See `components/library/LibraryDetailPage.tsx` for the canonical implementation.
 
 ### Map panel pattern (LibraryPinPanel)
 
-Selected-pin panels are dark glassmorphic cards (`#070d1e` bg, `rgba(255,255,255,.09)` border) with:
-
-- Hero image with gradient overlay
-- Aurora CTA for "Explore" link
-- Mono chip labels (type, status)
-- Gold chip for featured/Pillar libraries (`T.accent.gold`)
+Selected-pin panels are white v2 cards (`#fff` bg, `#E7E3DB` border, 20px radius) with a serif name, type-tinted badge (`tintForLibraryType`), and an indigo "Explore" CTA pill.
 
 ---
 
@@ -354,6 +340,8 @@ Libraries with `iiifEndpoint` can expose their digital collections. Plan:
 ## Development Notes
 
 - **Strapi local dev:** `http://127.0.0.1:1337` — must be running for local UI development
+- **Meilisearch local dev:** container `librariesglobal-meilisearch` on `http://localhost:7701` (port 7700 is occupied by an unrelated project's container — do not touch it). Fresh instance? Run `node apps/strapi/scripts/seed-meilisearch.mjs` to seed the `library` index from Strapi.
+- **Node 22 required** (`nvm use`) — a v20 shell will start but violates `engines`
 - **TypeScript types** for Strapi are generated into `packages/strapi-types` — regenerate after schema changes
 - **Lint** runs on pre-commit via ESLint + SonarJS; fix all errors before committing (warnings are tolerated)
 - **No `overflow-x-hidden` on page wrappers** — it breaks sticky headers and negative margin heroes

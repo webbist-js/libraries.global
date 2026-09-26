@@ -1,143 +1,74 @@
 # libraries.global — Open TODOs & Unfinished Work
 
-_Last audited: 2026-05-03_
+_Last audited: 2026-09-24_
+
+The v2 light/accessible UI rework is **done** across all routes (homepage, find-a-library `/index`, library detail, atlas pages, profile, blog/journal, wiki, events, auth, contribute, settings, map). Strapi is on 5.55.1. The monorepo typechecks with zero errors. What remains:
 
 ---
 
-## CRITICAL — Broken at runtime
+## HIGH — Blocks or degrades launch (target: 15 Oct 2026)
 
-### 1. Stats endpoint returns 404
+### 1. LibraryOn full ingest (~3,800 UK records)
 
-**File:** `apps/strapi/src/plugins/content-moderation/`
-**Symptom:** `GET /api/content-moderation/submissions/stats` → 404. Route and handler are correctly written in source but the compiled plugin dist is stale.
-**Fix:** Rebuild the plugin:
+The source dies when the British Library shuts libraryOn down on 15 Oct. Dry run done (`ingest-dry-log.json`); the full resumable run has not completed. See `docs/pre-golive-checklist.md` §2a. **Run this before anything else.**
 
-```bash
-cd apps/strapi
-pnpm build:plugins   # or: node_modules/.bin/strapi-plugin build from plugin dir
-```
+### 2. MeiliSearch — secondary indexes + post-ingest scaling
 
-**Affects:** `ContributeCTA` stats bar, `LibraryHomePage` contributor/language counts.
+- Local instance is `librariesglobal-meilisearch` on **:7701** (the :7700 container belongs to a different project). `library` index seeded via `apps/strapi/scripts/seed-meilisearch.mjs`.
+- `blog-article` and `wiki-article` indexes not yet seeded on the new instance (blog/wiki search returns errors until then).
+- After the UK ingest (>1,000 records), `/index`'s client-side "Open now" / "Has digital collections" / "Most complete first" computations hit MeiliSearch's fetch ceiling — index a completeness score and a filterable open-now-friendly schedule encoding, then move those to real facets.
 
----
+### 3. CMS content tasks (Strapi admin)
 
-## HIGH — Features wired in UI but missing backend data
+- Populate homepage `featuredLibraries` — "Libraries worth knowing" is hidden while empty
+- Add Wiki/knowledge-base link to a footer section (nav dropped it by design)
+- Optionally set homepage heroTitle to the POC copy ("Every library has a story. _Find yours._") — code falls back to it if the field is emptied
 
-### 2. MeiliSearch reindex required
+### 4. Production deploy
 
-**File:** `apps/strapi/config/plugins.ts`
-After adding `_geo` to the library `transformEntry`, and creating the new `blog-article` and `wiki-article` indexes, all three indexes need to be rebuilt.
-**Action:** Strapi admin → Settings → MeiliSearch → Rebuild each index.
-
-- `library` — needs rebuild for `_geo` field (enables geo search / LibraryExploreNearby)
-- `blog-article` — new index, won't exist until first rebuild
-- `wiki-article` — new index, won't exist until first rebuild
-
-### ~~3. "Followed users" (people) not implemented~~ ✅ DONE
-
-Strapi `user-profile` schema now has `followedProfiles` (manyToMany self-relation). Auth-bridge routes `POST /toggle-follow-user` and `GET /user-follow-status` enforce public-only following. Next.js API route `/api/profile/me/follow-user` proxies both. `ProfileFollowButton` client component in profile hero. `FollowingPage` wired to pass `profile.followedProfiles` to `FollowingSection`.
-
-### 4. Homepage hero: COLLECTIONS stat is not wired
-
-**File:** `apps/ui/src/components/home/HomepageHero.tsx:40`
-
-```ts
-sub: "Items catalogued", // TODO: add when collections feature ships
-```
-
-The collections count stat slot is hardcoded. It will remain `—` until the Collections content type is built and an endpoint exists.
-
-### ~~5. Leaderboard `rankChange` always null~~ ✅ DONE
-
-`plugin::rewards.leaderboard-snapshot` content type added. Weekly cron (Monday 00:05 UTC) calls `snapshot.takeWeeklySnapshot()` which stores the top-1000 ranked list as JSON. `leaderboard.getLeaderboard()` now loads the previous week's snapshot via `snapshot.getPreviousWeekRankMap()` and computes `rankChange = prevRank - currentRank`. Admin `POST /rewards/snapshot` route allows manual trigger. First snapshot must be taken manually (or will auto-run next Monday) — after that, trend arrows will appear on the leaderboard.
+Vercel (UI) + Strapi Cloud (backend) + production MeiliSearch. Full list: `docs/pre-golive-checklist.md` §4–6 (env rotation, OAuth callbacks, sitemap/robots checks).
 
 ---
 
-## MEDIUM — Placeholder stubs / coming-soon screens
+## MEDIUM — Post-POC functional gaps
 
-### 6. Collections tab on profile is a stub
+### 5. Revision history on library pages
 
-**File:** `apps/ui/src/app/[locale]/profile/[username]/_components/sections/CollectionsSection.tsx`
-Renders "Collections — coming next" placeholder. Blocked on the Collections content type being built in Strapi. All three relevant files are stubs:
+POC's "Recent changes" list (Edit/Steward/Import badges) needs a per-library submissions read endpoint in the content-moderation plugin. UI slot exists (Sources section covers provenance meanwhile).
 
-- `CollectionsSection.tsx` — placeholder UI
-- `collections/page.tsx` — just renders the stub
-- No Strapi content type
+### 6. Profile privacy toggles
 
-### 7. Library detail: Events tab — not implemented
+POC's "Manage what's public" fieldset needs a `publicPrefs` JSON field on `user-profile` (only the coarse `profileVisibility` enum exists). Banner currently links to settings.
 
-**File:** `apps/ui/src/components/library/LibraryDetailPage.tsx:243`
+### 7. Schema nice-to-haves from the POC
 
-```tsx
-{
-  /* TODO: add events listing once events content type is built */
-}
-```
+`nearestStation` (using `transitInfo` meanwhile), `wikidataId` (using `sourceUrl`), steward-user relation on Library (record status hardcoded "Community maintained"), "contributed to" relation for profile Libraries tab.
 
-The Events feature (Events content type, provider integration, library detail tab, global `/events` browse) is planned but not started.
+### 8. Real-browser WebGL check
 
-### 8. Library detail: IIIF Digital Collections tab — not implemented
-
-**File:** `apps/ui/src/components/library/LibraryDetailPage.tsx:231`
-
-```tsx
-{
-  /* TODO: integrate IIIF viewer when iiifEndpoint is set */
-}
-```
-
-The `iiifEndpoint` field exists on the Library schema and is populated for some libraries, but there is no viewer component. IIIF viewer integration (Universal Viewer / Mirador embed) is needed.
-
-### 9. 2FA disabled in Security settings
-
-**File:** `apps/ui/src/app/[locale]/settings/_components/SecuritySection.tsx:82,109`
-Two-factor authentication UI is commented out, waiting on Better Auth `twoFactor` plugin being installed and configured.
+Headless screenshots can't verify: map Voyager tiles + indigo pins, drill-down shelf, homepage/atlas globe canvases (dark-disc treatment on light bg — consider a lighter globe variant).
 
 ---
 
-## LOW — Dead links / empty scaffolding
+## LOW — Polish / cleanup
 
-### ~~10. `/contribute/guide` is a dead link~~ ✅ DONE
-
-Changed link in `ContributeCTA.tsx` to `/wiki` with label "Browse the knowledge base".
-
-### ~~11. Empty `[city]` route directories~~ ✅ DONE
-
-Deleted `apps/ui/src/app/[locale]/[continent]/[country]/[city]/` and its `[slug]/` subdirectory entirely.
-
----
-
-## INFORMATIONAL — Not broken, but good to know
-
-### 12. Notification prefs saved to Strapi but no emails/in-product delivery
-
-**File:** `apps/ui/src/app/[locale]/settings/_components/NotificationsSection.tsx`
-Toggle state is persisted to `user-profile.notifPrefs` in Strapi correctly. However, no email-sending infrastructure reads these prefs and sends notifications. The `weeklyDigest`, `editsReviewed`, etc. settings are UI-complete but have no delivery mechanism.
-
-### 13. ContributionsSection uses estimated points, not actual
-
-**File:** `apps/ui/src/app/[locale]/profile/[username]/_components/sections/ContributionsSection.tsx:93-108`
-`estimatePoints()` uses hardcoded per-type values (e.g. `new_library → 50`). These values mirror the rewards plugin, but the actual awarded points from `plugin::rewards.point-event` are not fetched — if the rewards config changes, the displayed pts will diverge.
-
-### ~~14. `/profile/settings` redirect~~ ✅ DONE
-
-`/profile/settings` is the canonical settings page. `/settings/page.tsx` (which redirected to it) has been deleted. All `_components` moved from `settings/_components/` to `profile/settings/_components/`. All links already pointed to `/profile/settings`.
+- Blog card components still use the `--font-fraunces` alias (maps to Newsreader) — remove alias with their next restyle
+- Wiki + contribute retain dense mono-uppercase micro-labels — optional typography polish toward POC restraint
+- `/profile/[username]/contributions` sub-page micro-labels — same
+- Old Collections stub route reachable by URL only (`/profile/[username]/collections`)
+- Deprecated `auroraCta*` constants in `lib/styles.ts` still used by 3 contribute wizard components — replace with indigo pills, then delete constants
+- `strapi-plugin-meilisearch` lifecycle hooks vs seed script: confirm hooks index on publish against :7701 (plugin store may need re-enabling in admin)
 
 ---
 
-## Feature backlog (from CLAUDE.md Future Goals — not yet started)
+## Feature backlog (unchanged priorities)
 
-| Feature                                    | Status                                         |
-| ------------------------------------------ | ---------------------------------------------- |
-| Events content type + provider integration | Not started                                    |
-| Global `/events` browse page               | Not started                                    |
-| Events on library detail page              | Not started                                    |
-| Collections content type                   | Not started                                    |
-| User "visit log" on library                | Not started                                    |
-| Personal annotation layer                  | Not started                                    |
-| Nearby libraries geo-bounding search       | Partial — MeiliSearch geo wired, needs reindex |
-| Faceted search (open now, accessibility)   | Not started                                    |
-| `/search` results page                     | Not started                                    |
-| IIIF viewer on library detail              | Not started                                    |
-| i18n expansion (FR, ES, AR, JA)            | Not started                                    |
-| 2FA (Better Auth twoFactor plugin)         | Not started                                    |
+| Feature                         | Status                                             |
+| ------------------------------- | -------------------------------------------------- |
+| Events (sync-worker + UI)       | Sync-worker phase 1 done, typechecks; not launched |
+| Collections content type        | Not started                                        |
+| IIIF viewer on library detail   | Not started (external links shipped)               |
+| 2FA (Better Auth twoFactor)     | Not started                                        |
+| i18n expansion (FR, ES, AR, JA) | Not started                                        |
+| Notification email delivery     | Prefs saved, no delivery mechanism                 |
+| Visit log / annotations         | Not started                                        |
