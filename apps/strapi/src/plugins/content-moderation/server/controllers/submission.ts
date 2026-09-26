@@ -1,3 +1,4 @@
+import { isDocumentId } from "../utils/params"
 import { isValidServiceSecret } from "../utils/service-secret"
 
 export default ({ strapi }: { strapi: any }) => ({
@@ -248,23 +249,35 @@ export default ({ strapi }: { strapi: any }) => ({
     const user = await resolveUser(strapi, ctx)
     if (!user) return ctx.unauthorized("You must be signed in.")
     const { id } = ctx.params
-    const { draftData, stepCompleted } = ctx.request.body as {
-      draftData: Record<string, unknown>
-      stepCompleted: number
+    if (!isDocumentId(id)) return ctx.badRequest("Invalid id")
+    const { draftData, stepCompleted } = (ctx.request.body ?? {}) as {
+      draftData?: Record<string, unknown>
+      stepCompleted?: number
     }
-    // Verify the draft belongs to the requesting user
-    const existing = await strapi
-      .documents("plugin::content-moderation.submission")
-      .findOne({ documentId: id })
-    if (!existing) return ctx.notFound()
-    if (existing.submittedByUserId !== user.id) {
-      return ctx.forbidden("You do not own this submission.")
-    }
-    const updated = await strapi
+    const result = await strapi
       .plugin("content-moderation")
       .service("submission")
-      .saveDraft(id, draftData, stepCompleted ?? 0)
-    ctx.body = { data: updated }
+      .saveDraft(id, user.id, draftData ?? {}, Number(stepCompleted) || 0)
+    if ("error" in result) {
+      if (result.error === "not_found") return ctx.notFound()
+      if (result.error === "forbidden")
+        return ctx.forbidden("You do not own this submission.")
+      if (typeof ctx.conflict === "function") {
+        return ctx.conflict(
+          "This submission is already in review and can't be edited."
+        )
+      }
+      ctx.status = 409
+      ctx.body = {
+        error: {
+          status: 409,
+          message: "This submission is already in review and can't be edited.",
+        },
+      }
+
+      return
+    }
+    ctx.body = { data: result.data }
   },
 
   // GET /api/content-moderation/submissions/draft/:type  (content-api route)

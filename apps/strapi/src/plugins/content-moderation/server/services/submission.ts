@@ -1,3 +1,5 @@
+import { payloadHash } from "../utils/payload-hash"
+
 export default ({ strapi }: { strapi: any }) => ({
   async create(data: {
     submissionType: string
@@ -5,6 +7,7 @@ export default ({ strapi }: { strapi: any }) => ({
     targetDocumentId?: string
     targetSlug?: string
     fields?: Record<string, unknown>
+    draftData?: Record<string, unknown>
     note?: string
     verificationMethod?: string
     editSummary?: string
@@ -16,9 +19,14 @@ export default ({ strapi }: { strapi: any }) => ({
     asDraft?: boolean
   }) {
     const { asDraft, ...rest } = data
+    const status = asDraft ? "draft" : "pending"
 
     return strapi.documents("plugin::content-moderation.submission").create({
-      data: { ...rest, status: asDraft ? "draft" : "pending" },
+      data: {
+        ...rest,
+        status,
+        ...(status === "pending" ? { payloadHash: payloadHash(rest) } : {}),
+      },
     })
   },
 
@@ -420,16 +428,29 @@ export default ({ strapi }: { strapi: any }) => ({
 
   async saveDraft(
     documentId: string,
+    userId: string,
     draftData: Record<string, unknown>,
     stepCompleted: number
-  ) {
+  ): Promise<
+    { error: "not_found" | "forbidden" | "not_draft" } | { data: unknown }
+  > {
+    const existing = await strapi
+      .documents("plugin::content-moderation.submission")
+      .findOne({ documentId })
+    if (!existing) return { error: "not_found" }
+    if (existing.submittedByUserId !== userId) return { error: "forbidden" }
+    // A1: once a submission is in review (or decided) its content is frozen.
+    if (existing.status !== "draft") return { error: "not_draft" }
+
+    const safeDraft =
+      draftData && typeof draftData === "object" ? draftData : {}
     // Also sync the top-level submission fields from draftData so the
     // moderation queue always reflects the latest wizard state.
     const { editSummary, evidenceType, evidenceUrl, note, ...libraryFields } =
-      draftData as Record<string, unknown>
+      safeDraft as Record<string, unknown>
 
     const updateData: Record<string, unknown> = {
-      draftData,
+      draftData: safeDraft,
       stepCompleted,
       fields: libraryFields,
     }
@@ -438,10 +459,11 @@ export default ({ strapi }: { strapi: any }) => ({
     if (evidenceUrl !== undefined) updateData.evidenceUrl = evidenceUrl
     if (note !== undefined) updateData.note = note
 
-    return strapi.documents("plugin::content-moderation.submission").update({
-      documentId,
-      data: updateData,
-    })
+    const data = await strapi
+      .documents("plugin::content-moderation.submission")
+      .update({ documentId, data: updateData })
+
+    return { data }
   },
 
   async finalizeDraft(
@@ -468,6 +490,9 @@ export default ({ strapi }: { strapi: any }) => ({
     if (evidenceType) updateData.evidenceType = evidenceType
     if (evidenceUrl) updateData.evidenceUrl = evidenceUrl
     if (note) updateData.note = note
+
+    const next = { ...existing, ...updateData }
+    updateData.payloadHash = payloadHash(next)
 
     return strapi.documents("plugin::content-moderation.submission").update({
       documentId,

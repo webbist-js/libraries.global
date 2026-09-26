@@ -3105,6 +3105,7 @@ export interface PluginContentModerationSubmission
     > &
       Schema.Attribute.Private
     note: Schema.Attribute.Text
+    payloadHash: Schema.Attribute.String & Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
     reviewedAt: Schema.Attribute.DateTime
     reviewedByUserId: Schema.Attribute.String
