@@ -58,6 +58,43 @@ describe("saveDraft", () => {
   })
 })
 
+describe("draftRevision compare-and-set (finalize race)", () => {
+  it("saveDraft bumps draftRevision on every write", async () => {
+    const { strapi, store } = makeFakeStrapi({
+      [UID]: [sub({ status: "draft", draftRevision: 3 })],
+    })
+    const res = await createService({ strapi }).saveDraft(
+      "s0000000000000000000001",
+      "u1",
+      { title: "ok" },
+      1
+    )
+    expect("data" in res).toBe(true)
+    expect(store[UID][0].draftRevision).toBe(4)
+  })
+
+  it("finalizeDraft's compare-and-set fails when a concurrent saveDraft bumps draftRevision between the policy check and the write", async () => {
+    const { strapi, store } = makeFakeStrapi({
+      [UID]: [sub({ status: "draft", draftRevision: 3 })],
+    })
+    const result = await createService({ strapi }).finalizeDraft(
+      "s0000000000000000000001",
+      "u1",
+      { title: "t" },
+      async () => {
+        // Simulate a concurrent saveDraft landing after finalize read the
+        // row (and after its beforeTransition policy check ran) but before
+        // finalize's own compare-and-set write.
+        store[UID][0].draftRevision = 5
+
+        return { ok: true }
+      }
+    )
+    expect(result).toBeNull()
+    expect(store[UID][0].status).toBe("draft")
+  })
+})
+
 describe("payloadHash on entering review", () => {
   it("is set by create when not a draft", async () => {
     const { strapi, store } = makeFakeStrapi()

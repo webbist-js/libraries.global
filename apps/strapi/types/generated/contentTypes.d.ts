@@ -3085,6 +3085,9 @@ export interface PluginContentModerationSubmission
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
     draftData: Schema.Attribute.JSON
+    draftRevision: Schema.Attribute.Integer &
+      Schema.Attribute.Private &
+      Schema.Attribute.DefaultTo<0>
     editSummary: Schema.Attribute.String
     evidenceType: Schema.Attribute.Enumeration<
       [

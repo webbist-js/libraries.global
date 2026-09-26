@@ -25,3 +25,14 @@ export function isDirectWikiEdit(draftData: unknown): boolean {
 
   return Array.isArray(d.body) || typeof d.title === "string"
 }
+
+/**
+ * `draftData` must be a plain, non-array object no larger than 256KB
+ * serialized. Shared by `create` and `saveDraft` so both reject the same
+ * malformed/oversized payloads the same way.
+ */
+export function isValidDraftData(v: unknown): boolean {
+  const isPlainObject = typeof v === "object" && v !== null && !Array.isArray(v)
+
+  return isPlainObject && JSON.stringify(v).length <= 256 * 1024
+}

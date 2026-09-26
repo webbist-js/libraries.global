@@ -2,6 +2,26 @@ import { payloadHash } from "../utils/payload-hash"
 import { canTransition } from "../utils/transitions"
 import { sanitizeWikiBody } from "../utils/wiki-body"
 
+/**
+ * Selects the exact row `saveDraft`/`finalizeDraft` just read, by pinning
+ * both the status *and* the revision counter it observed. `status:"draft"`
+ * alone doesn't close the race between them: saveDraft never changes
+ * status, so a concurrent saveDraft can still land between finalize's
+ * policy check and finalize's own compare-and-set write while both see
+ * status:"draft" the whole time. Pinning draftRevision (bumped on every
+ * successful saveDraft/finalizeDraft write) means only the caller that read
+ * the current revision can win the write; everyone else's compare-and-set
+ * matches zero rows. Rows written before this field existed may have
+ * `draftRevision` as null.
+ */
+function revisionWhere(existing: {
+  draftRevision?: number | null
+}): Record<string, unknown> {
+  return existing.draftRevision == null
+    ? { draftRevision: { $null: true } }
+    : { draftRevision: existing.draftRevision }
+}
+
 export default ({ strapi }: { strapi: any }) => ({
   async create(data: {
     submissionType: string
@@ -588,22 +608,23 @@ export default ({ strapi }: { strapi: any }) => ({
       draftData: safeDraft,
       stepCompleted,
       fields: libraryFields,
+      draftRevision: (existing.draftRevision ?? 0) + 1,
     }
     if (editSummary !== undefined) updateData.editSummary = editSummary
     if (evidenceType !== undefined) updateData.evidenceType = evidenceType
     if (evidenceUrl !== undefined) updateData.evidenceUrl = evidenceUrl
     if (note !== undefined) updateData.note = note
 
-    // Compare-and-set: only write while the row is still `draft`, closing
-    // the race between the status check above and this write (a reader's
-    // suggestion could otherwise be turned into a direct-edit body by a
-    // second concurrent request slipping in between). `submission` has
-    // draftAndPublish:false, so constraints.md allows this strapi.db.query
-    // CAS in place of the plain documents().update.
+    // Compare-and-set pinned to status *and* the exact draftRevision this
+    // call read (see `revisionWhere`): status alone would let a concurrent
+    // finalizeDraft's compare-and-set slip in between finalize's policy
+    // check and its write while both still see status:"draft". `submission`
+    // has draftAndPublish:false, so constraints.md allows this
+    // strapi.db.query CAS in place of the plain documents().update.
     const { count } = await strapi.db
       .query("plugin::content-moderation.submission")
       .updateMany({
-        where: { documentId, status: "draft" },
+        where: { documentId, status: "draft", ...revisionWhere(existing) },
         data: updateData,
       })
     if (count !== 1) return { error: "not_draft" }
@@ -642,6 +663,13 @@ export default ({ strapi }: { strapi: any }) => ({
     if (existing.submittedByUserId !== userId) return null
     if (existing.status !== "draft") return null
 
+    // Snapshot the revision selector now, before `beforeTransition` runs:
+    // the compare-and-set below must pin to what this call actually read at
+    // the top, not to whatever `existing` might look like by the time we
+    // reach the write (a concurrent saveDraft can land, and bump
+    // draftRevision, while `beforeTransition` is still running).
+    const casRevision = revisionWhere(existing)
+
     if (beforeTransition) {
       const verdict = await beforeTransition(existing)
       if (!verdict.ok) return { error: "policy", verdict }
@@ -664,14 +692,16 @@ export default ({ strapi }: { strapi: any }) => ({
     const next = { ...existing, ...updateData }
     updateData.payloadHash = payloadHash(next)
 
-    // Compare-and-set: only succeeds if the row is still `draft` at write
-    // time, closing the same race as saveDraft's CAS above.
-    // `submission` has draftAndPublish:false, so constraints.md allows this
-    // strapi.db.query CAS in place of the plain documents().update.
+    // Compare-and-set pinned to status *and* the draftRevision snapshotted
+    // above (see `revisionWhere`): a concurrent saveDraft that landed after
+    // our read (bumping draftRevision) makes this match zero rows, even
+    // though status is still "draft" on both sides. `submission` has
+    // draftAndPublish:false, so constraints.md allows this strapi.db.query
+    // CAS in place of the plain documents().update.
     const { count } = await strapi.db
       .query("plugin::content-moderation.submission")
       .updateMany({
-        where: { documentId, status: "draft" },
+        where: { documentId, status: "draft", ...casRevision },
         data: updateData,
       })
     if (count !== 1) return null
@@ -910,9 +940,23 @@ export default ({ strapi }: { strapi: any }) => ({
         .service("submission-policy")
         .loadCapabilities(submission.submittedByUserId)
       if (!caps.set.has("docs.directEdit")) {
-        strapi.log.info(
+        strapi.log.warn(
           `[content-moderation] wiki_edit ${submission.documentId} is a suggestion; apply it manually`
         )
+
+        // Flag it in reviewNote so the moderator sees this wasn't applied,
+        // without duplicating the marker if it's already there (e.g. a
+        // retried approval).
+        const marker = " [Suggestion — not auto-applied; apply manually]"
+        const currentNote = String(submission.reviewNote ?? "")
+        if (!currentNote.includes(marker)) {
+          await strapi
+            .documents("plugin::content-moderation.submission")
+            .update({
+              documentId: submission.documentId,
+              data: { reviewNote: `${currentNote}${marker}` },
+            })
+        }
 
         return
       }

@@ -100,16 +100,15 @@ describe("controller wiring: policy re-check closes the direct-edit race", () =>
     expect(ctx.status).toBe(403)
   })
 
-  it("(iv) saveDraft's compare-and-set returns not_draft when updateMany reports count 0", async () => {
+  it("(iv) saveDraft's compare-and-set where includes status:'draft', and returns not_draft when updateMany reports count 0", async () => {
     const documentId = "s000000000000000000001"
     const { strapi } = makeFakeStrapi({
       [SUB]: [{ documentId, status: "draft", submittedByUserId: "u1" }],
     })
     // Simulate a race: another request flipped the row's status between the
     // ownership/status read above and this write.
-    strapi.db.query = vi.fn(() => ({
-      updateMany: vi.fn(async () => ({ count: 0 })),
-    }))
+    const updateMany = vi.fn(async () => ({ count: 0 }))
+    strapi.db.query = vi.fn(() => ({ updateMany }))
 
     const result = await createSubmissionService({ strapi }).saveDraft(
       documentId,
@@ -119,6 +118,50 @@ describe("controller wiring: policy re-check closes the direct-edit race", () =>
     )
 
     expect(result).toEqual({ error: "not_draft" })
+    expect(updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ status: "draft" }),
+      })
+    )
+  })
+
+  it("finalize on someone else's draft returns 404", async () => {
+    const draftId = "d000000000000000000003"
+    const { controller } = makeControllerHarness({
+      [SUB]: [
+        {
+          documentId: draftId,
+          status: "draft",
+          submissionType: "correction",
+          submittedByUserId: "someone-else",
+          targetSlug: "a",
+          fields: {},
+        },
+      ],
+      [PROFILE]: [
+        {
+          documentId: "p1",
+          baUserId: "u1",
+          contributorRole: "reader",
+          tier: "Reader",
+        },
+      ],
+      [AFF]: [],
+    })
+
+    const ctx: any = {
+      params: { id: draftId },
+      request: { body: {}, headers: serviceHeaders },
+      state: {},
+      unauthorized: vi.fn(),
+      badRequest: vi.fn(),
+      notFound: vi.fn(),
+    }
+
+    await controller.finalize(ctx)
+
+    expect(ctx.notFound).toHaveBeenCalled()
+    expect(ctx.status).not.toBe(409)
   })
 })
 

@@ -1,4 +1,8 @@
-import { isDirectWikiEdit, isDocumentId } from "../utils/params"
+import {
+  isDirectWikiEdit,
+  isDocumentId,
+  isValidDraftData,
+} from "../utils/params"
 import { isValidServiceSecret } from "../utils/service-secret"
 
 // One place to map a policy verdict to the response, used by both `create`
@@ -91,14 +95,8 @@ export default ({ strapi }: { strapi: any }) => ({
       return ctx.badRequest("submissionType is required")
     }
 
-    if (draftData !== undefined) {
-      const isPlainObject =
-        typeof draftData === "object" &&
-        draftData !== null &&
-        !Array.isArray(draftData)
-      if (!isPlainObject || JSON.stringify(draftData).length > 256 * 1024) {
-        return ctx.badRequest("draftData must be an object under 256KB")
-      }
+    if (draftData !== undefined && !isValidDraftData(draftData)) {
+      return ctx.badRequest("draftData must be an object under 256KB")
     }
 
     const directWikiEdit =
@@ -340,7 +338,38 @@ export default ({ strapi }: { strapi: any }) => ({
             excludeDocumentId: id,
           })
       )
-    if (!result) return ctx.notFound("Draft not found or already finalized.")
+    if (!result) {
+      // `finalizeDraft` returns the same bare `null` for three different
+      // reasons (missing/not-owned/no-longer-draft *before* the CAS, and a
+      // revision-mismatched compare-and-set *after* it) so it can't tell us
+      // which happened. Distinguish here, scoped to this caller's own
+      // document (so it can't be used to probe whether someone else's
+      // submission exists): if the row is still there, still ours, and
+      // still `draft`, the only way `finalizeDraft` could have failed is
+      // the revision race — a concurrent saveDraft landed after we read the
+      // row — so that's retryable (409). Anything else collapses to the
+      // same 404 as before.
+      const after = await strapi
+        .documents("plugin::content-moderation.submission")
+        .findOne({ documentId: id })
+      if (
+        after &&
+        after.submittedByUserId === user.id &&
+        after.status === "draft"
+      ) {
+        ctx.status = 409
+        ctx.body = {
+          error: {
+            status: 409,
+            message: "The draft changed while submitting; please try again.",
+          },
+        }
+
+        return
+      }
+
+      return ctx.notFound("Draft not found or already finalized.")
+    }
     if ("error" in result && result.error === "policy") {
       sendVerdict(ctx, result.verdict)
 
@@ -358,6 +387,9 @@ export default ({ strapi }: { strapi: any }) => ({
     const { draftData, stepCompleted } = (ctx.request.body ?? {}) as {
       draftData?: Record<string, unknown>
       stepCompleted?: number
+    }
+    if (draftData !== undefined && !isValidDraftData(draftData)) {
+      return ctx.badRequest("draftData must be an object under 256KB")
     }
     const result = await strapi
       .plugin("content-moderation")

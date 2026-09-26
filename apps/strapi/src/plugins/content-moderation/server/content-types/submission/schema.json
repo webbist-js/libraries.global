@@ -74,6 +74,7 @@
     },
     "evidenceUrl": { "type": "string" },
     "reviewerAssignedTo": { "type": "string" },
-    "payloadHash": { "type": "string", "private": true }
+    "payloadHash": { "type": "string", "private": true },
+    "draftRevision": { "type": "integer", "default": 0, "private": true }
   }
 }
