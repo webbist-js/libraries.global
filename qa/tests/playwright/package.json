@@ -14,7 +14,8 @@
     "playwright-e2e-tests": "playwright test e2e",
     "playwright-interactive-mode": "playwright test e2e --ui",
     "playwright-seo-tests": "playwright test seo/seo.spec.ts",
-    "playwright-visual-tests": "playwright test visual/visual.spec.ts"
+    "playwright-visual-tests": "playwright test visual/visual.spec.ts",
+    "seed:access": "tsx helpers/seed-access-fixtures.ts"
   },
   "dependencies": {
     "@axe-core/playwright": "^4.10.2",
@@ -25,8 +26,10 @@
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.53.2",
     "@types/node": "^22",
+    "@types/pg": "^8.23.1",
     "dotenv": "17.2.3",
     "eslint-plugin-playwright": "^2.2.0",
+    "pg": "^8.23.0",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
   }
