@@ -59,7 +59,11 @@
       "cache": false
     },
     "dev": {
-      "dependsOn": ["@repo/shared-data#build", "@repo/design-system#build"],
+      "dependsOn": [
+        "@repo/shared-data#build",
+        "@repo/design-system#build",
+        "@repo/events-crypto#build"
+      ],
       "cache": false,
       "persistent": true
     },
@@ -69,7 +73,7 @@
       "persistent": true
     },
     "typecheck": {
-      "dependsOn": ["^typecheck"]
+      "dependsOn": ["^build", "^typecheck"]
     },
     "test": {
       "dependsOn": ["^build"],

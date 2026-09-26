@@ -2,16 +2,24 @@
   "name": "@repo/events-crypto",
   "version": "0.1.0",
   "private": true,
-  "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
   },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "vitest": "^2.0.0",
     "typescript": "^5.0.0"
   }

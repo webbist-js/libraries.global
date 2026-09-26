@@ -11,7 +11,7 @@ export default [
       "**/dist/**",
       "**/generated/**",
       "**/build/**",
-      "**/docs/**",
+      "docs/**", // repo-root documentation folder only — app code may live in src/**/docs/
       "**/storybook-static/**",
       "**/coverage/**",
     ],

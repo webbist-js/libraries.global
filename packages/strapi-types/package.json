@@ -22,6 +22,6 @@
     "sync-types": "cp -r ../../apps/strapi/types/generated ./generated"
   },
   "devDependencies": {
-    "@strapi/strapi": "5.36.0"
+    "@strapi/strapi": "5.55.1"
   }
 }

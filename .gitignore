@@ -49,3 +49,6 @@ next-env.d.ts
 
 .claude/settings.local.json
 .superpowers/brainstorm/*
+# Local ingest run logs
+ingest-log.json
+ingest-dry-log.json
