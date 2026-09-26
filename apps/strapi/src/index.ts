@@ -91,5 +91,23 @@ export default {
 
     // Seed approved topics (idempotent — skips existing names)
     await seedTopics(strapi)
+
+    // Accounts are owned by Better Auth; Strapi users are created only via the
+    // auth-bridge. Keep users-permissions self-registration off everywhere so
+    // nobody can mint a Strapi JWT by POSTing to /api/auth/local/register.
+    await disableUsersPermissionsRegistration(strapi)
   },
+}
+
+async function disableUsersPermissionsRegistration(strapi: Core.Strapi) {
+  const store = strapi.store({
+    type: "plugin",
+    name: "users-permissions",
+    key: "advanced",
+  })
+  const advanced = ((await store.get()) ?? {}) as Record<string, unknown>
+  if (advanced.allow_register !== false) {
+    await store.set({ value: { ...advanced, allow_register: false } })
+    strapi.log.info("[security] Disabled users-permissions self-registration")
+  }
 }

@@ -1,3 +1,5 @@
+import { isValidServiceSecret } from "../utils/service-secret"
+
 export default ({ strapi }: { strapi: any }) => ({
   // ── Content API ──────────────────────────────────────────────────────────
 
@@ -23,6 +25,10 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   async myStanding(ctx: any) {
+    // X-Ba-User-Id is only trusted on server-to-server calls from Next.js.
+    if (!isValidServiceSecret(ctx.request.headers["x-service-secret"])) {
+      return ctx.unauthorized("Invalid or missing service secret")
+    }
     const baUserId = ctx.request.headers["x-ba-user-id"] as string | undefined
 
     if (!baUserId) {
@@ -38,6 +44,10 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   async myHistory(ctx: any) {
+    // X-Ba-User-Id is only trusted on server-to-server calls from Next.js.
+    if (!isValidServiceSecret(ctx.request.headers["x-service-secret"])) {
+      return ctx.unauthorized("Invalid or missing service secret")
+    }
     const baUserId = ctx.request.headers["x-ba-user-id"] as string | undefined
 
     if (!baUserId) {

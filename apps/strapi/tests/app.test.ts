@@ -16,28 +16,58 @@ describe("App Test Suite", () => {
       expect(strapi).toBeDefined()
     })
 
-    it("has required content types registered", () => {
+    it("registers the atlas hierarchy and supporting content types", () => {
       const contentTypes = Object.keys(strapi.contentTypes)
 
-      expect(contentTypes).toContain("api::page.page")
-      expect(contentTypes).toContain("api::subscriber.subscriber")
-      expect(contentTypes).toContain("api::navbar.navbar")
-      expect(contentTypes).toContain("api::footer.footer")
-      expect(contentTypes).toContain("api::redirect.redirect")
+      for (const uid of [
+        "api::continent.continent",
+        "api::country.country",
+        "api::region.region",
+        "api::area.area",
+        "api::library.library",
+        "api::user-profile.user-profile",
+        "api::library-affiliation.library-affiliation",
+        "api::saved-event.saved-event",
+        "api::page.page",
+        "api::subscriber.subscriber",
+        "api::footer.footer",
+        "api::redirect.redirect",
+      ]) {
+        expect(contentTypes).toContain(uid)
+      }
     })
   })
 
-  describe("page content type", () => {
-    it("has correct schema attributes", () => {
-      const pageSchema = strapi.contentTypes["api::page.page"]
+  describe("library content type", () => {
+    it("has the core atlas fields", () => {
+      const { attributes } = strapi.contentTypes["api::library.library"]
 
-      expect(pageSchema.attributes.title).toBeDefined()
-      expect(pageSchema.attributes.slug).toBeDefined()
-      expect(pageSchema.attributes.fullPath).toBeDefined()
-      expect(pageSchema.attributes.content).toBeDefined()
-      expect(pageSchema.attributes.parent).toBeDefined()
-      expect(pageSchema.attributes.children).toBeDefined()
-      expect(pageSchema.attributes.seo).toBeDefined()
+      for (const field of [
+        "name",
+        "slug",
+        "entityRef",
+        "libraryType",
+        "website",
+        "continent",
+        "country",
+        "region",
+      ]) {
+        expect(attributes[field as keyof typeof attributes]).toBeDefined()
+      }
+    })
+  })
+
+  describe("security-sensitive schema", () => {
+    it("keeps saved-event owner ids out of API responses", () => {
+      const { attributes } = strapi.contentTypes["api::saved-event.saved-event"]
+      expect((attributes as any).baUserId?.private).toBe(true)
+    })
+
+    it("disables users-permissions self-registration at bootstrap", async () => {
+      const advanced = (await strapi
+        .store({ type: "plugin", name: "users-permissions", key: "advanced" })
+        .get()) as { allow_register?: boolean } | null
+      expect(advanced?.allow_register).toBe(false)
     })
   })
 })

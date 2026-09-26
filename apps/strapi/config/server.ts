@@ -10,6 +10,11 @@ export default ({ env }) => ({
   webhooks: {
     populateRelations: env.bool("WEBHOOKS_POPULATE_RELATIONS", false),
   },
+  // Built-in MCP server (POST /mcp). Authenticates with admin tokens only;
+  // every tool call runs with the token owner's admin RBAC permissions.
+  mcp: {
+    enabled: env.bool("MCP_ENABLED", false),
+  },
   cron: {
     enabled: env.bool("CRON_ENABLED", false),
     tasks: cronTasks,

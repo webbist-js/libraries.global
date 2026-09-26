@@ -8,7 +8,22 @@ export default ({ env }) => {
 
   return {
     upload: {
-      config: awsS3Config ?? localUploadConfig,
+      config: {
+        ...(awsS3Config ?? localUploadConfig),
+        // Content-sniffed by Strapi. Deny types that execute in the browser
+        // when served from our origin (stored XSS via uploads).
+        security: {
+          deniedTypes: [
+            "text/html",
+            "application/xhtml+xml",
+            "image/svg+xml",
+            "application/javascript",
+            "text/javascript",
+            "application/x-sh",
+            "application/x-msdownload",
+          ],
+        },
+      },
     },
 
     "config-sync": {

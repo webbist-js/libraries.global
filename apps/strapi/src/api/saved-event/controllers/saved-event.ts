@@ -1,75 +1,89 @@
 import { factories } from "@strapi/strapi"
 
-export default factories.createCoreController(
-  "api::saved-event.saved-event",
-  ({ strapi }) => ({
-    // GET /api/saved-events — list current user's saved events
-    async find(ctx) {
-      const userId = ctx.state.user?.id
-      if (!userId) return ctx.unauthorized()
+import { isValidServiceSecret } from "../../../utils/service-secret"
 
-      const results = await strapi
-        .documents("api::saved-event.saved-event")
-        .findMany({
-          filters: { user: { id: userId } } as never,
-        })
+const UID = "api::saved-event.saved-event"
 
-      ctx.body = results
-    },
+/** Returns the Better Auth user id for a bridge-authenticated request, else null. */
+function bridgeUserId(ctx: any): string | null {
+  if (!isValidServiceSecret(ctx.request.headers["x-service-secret"]))
+    return null
+  const id = ctx.request.headers["x-ba-user-id"]
 
-    // POST /api/saved-events { eventDocumentId } — save an event
-    async create(ctx) {
-      const userId = ctx.state.user?.id
-      if (!userId) return ctx.unauthorized()
+  return typeof id === "string" && id.length > 0 && id.length <= 128 ? id : null
+}
 
-      const { eventDocumentId } = ctx.request.body as {
-        eventDocumentId: string
-      }
-      if (!eventDocumentId) return ctx.badRequest("eventDocumentId required")
+const toPublic = (r: any) => ({
+  documentId: r.documentId,
+  eventDocumentId: r.eventDocumentId,
+  createdAt: r.createdAt,
+})
 
-      // Idempotent: return existing if already saved
-      const existingResults = await strapi
-        .documents("api::saved-event.saved-event")
-        .findMany({
-          filters: { user: { id: userId }, eventDocumentId } as never,
-          pagination: { pageSize: 1 },
-        })
-      const existing = existingResults[0] ?? null
-      if (existing) {
-        ctx.body = existing
+export default factories.createCoreController(UID, ({ strapi }) => ({
+  // GET /api/saved-events — list the current user's saved events
+  async find(ctx) {
+    const baUserId = bridgeUserId(ctx)
+    if (!baUserId) return ctx.unauthorized()
 
-        return
-      }
+    const results = await strapi.documents(UID).findMany({
+      filters: { baUserId: { $eq: baUserId } } as never,
+      sort: "createdAt:desc",
+      limit: 500,
+    } as never)
 
-      const created = await strapi
-        .documents("api::saved-event.saved-event")
-        .create({
-          data: { eventDocumentId, user: userId },
-        })
-      ctx.status = 201
-      ctx.body = created
-    },
+    ctx.body = (results as any[]).map(toPublic)
+  },
 
-    // DELETE /api/saved-events/:documentId — unsave
-    async delete(ctx) {
-      const userId = ctx.state.user?.id
-      if (!userId) return ctx.unauthorized()
+  // POST /api/saved-events { eventDocumentId } — save an event (idempotent)
+  async create(ctx) {
+    const baUserId = bridgeUserId(ctx)
+    if (!baUserId) return ctx.unauthorized()
 
-      const { id: documentId } = ctx.params as { id: string }
+    const { eventDocumentId } = (ctx.request.body ?? {}) as {
+      eventDocumentId?: unknown
+    }
+    if (
+      typeof eventDocumentId !== "string" ||
+      !eventDocumentId ||
+      eventDocumentId.length > 64
+    )
+      return ctx.badRequest("eventDocumentId required")
 
-      const record = await strapi
-        .documents("api::saved-event.saved-event")
-        .findOne({ documentId })
+    const existing = await strapi.documents(UID).findFirst({
+      filters: {
+        baUserId: { $eq: baUserId },
+        eventDocumentId: { $eq: eventDocumentId },
+      } as never,
+    })
+    if (existing) {
+      ctx.body = toPublic(existing)
 
-      if (!record) return ctx.notFound()
-      if ((record as { user?: { id: number } }).user?.id !== userId)
-        return ctx.forbidden()
+      return
+    }
 
-      await strapi
-        .documents("api::saved-event.saved-event")
-        .delete({ documentId })
+    const created = await strapi.documents(UID).create({
+      data: { eventDocumentId, baUserId } as never,
+    })
+    ctx.status = 201
+    ctx.body = toPublic(created)
+  },
 
-      ctx.status = 204
-    },
-  })
-)
+  // DELETE /api/saved-events/:documentId — unsave (own records only)
+  async delete(ctx) {
+    const baUserId = bridgeUserId(ctx)
+    if (!baUserId) return ctx.unauthorized()
+
+    const { id: documentId } = ctx.params as { id: string }
+    const record = await strapi.documents(UID).findFirst({
+      filters: {
+        documentId: { $eq: documentId },
+        baUserId: { $eq: baUserId },
+      } as never,
+    })
+    // Same response whether it doesn't exist or belongs to someone else.
+    if (!record) return ctx.notFound()
+
+    await strapi.documents(UID).delete({ documentId })
+    ctx.status = 204
+  },
+}))

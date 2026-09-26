@@ -1,4 +1,34 @@
-export default [
+/**
+ * CORS origins that may make credentialed requests to Strapi.
+ * - CORS_ORIGINS: comma-separated list (set the production app URL here).
+ * - CLIENT_URL is always included.
+ * - ngrok tunnels are only allowed outside production, and only when
+ *   ALLOW_NGROK_ORIGINS=true — otherwise any ngrok customer could send
+ *   credentialed requests.
+ */
+function corsOrigins(env: any): (string | RegExp)[] {
+  const isProd = env("NODE_ENV") === "production"
+  const configured = env
+    .array("CORS_ORIGINS", [])
+    .map((o: string) => o.trim())
+    .filter(Boolean)
+  const origins: (string | RegExp)[] = [
+    ...new Set<string>([env("CLIENT_URL", ""), ...configured].filter(Boolean)),
+  ]
+  if (!isProd) {
+    origins.push("http://localhost:3000", "http://127.0.0.1:3000")
+    if (env.bool("ALLOW_NGROK_ORIGINS", false)) {
+      origins.push(
+        /^https:\/\/[a-z0-9-]+\.ngrok-free\.app$/,
+        /^https:\/\/[a-z0-9-]+\.ngrok\.io$/
+      )
+    }
+  }
+
+  return origins
+}
+
+export default ({ env }: { env: any }) => [
   "strapi::errors",
   {
     name: "strapi::security",
@@ -77,13 +107,7 @@ export default [
       ],
       // Allow credentials (cookies) — required for Better Auth session cookies
       credentials: true,
-      // Allow requests from the Next.js dev server and any ngrok tunnels
-      origin: [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        /\.ngrok-free\.app$/,
-        /\.ngrok\.io$/,
-      ],
+      origin: corsOrigins(env),
     },
   },
   "strapi::poweredBy",

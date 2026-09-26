@@ -1,5 +1,7 @@
-// Auth is enforced in the controller via ctx.state.user checks —
-// the standard pattern in this codebase (Strapi v5).
+// These routes are called server-to-server by Next.js only. They are
+// `auth: false` at the Strapi level because the caller is authenticated by the
+// bridge secret, and the user by the X-Ba-User-Id header that Next.js sets from
+// the Better Auth session — both checked in the controller.
 export default {
   routes: [
     {

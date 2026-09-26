@@ -51,7 +51,10 @@ export default ({ strapi }: { strapi: any }) => ({
     try {
       const res = await fetch(`${workerUrl}/test-credential`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Worker-Secret": process.env.WORKER_SECRET ?? "",
+        },
         body: JSON.stringify({ credentialDocumentId: documentId }),
         signal: AbortSignal.timeout(10_000),
       })

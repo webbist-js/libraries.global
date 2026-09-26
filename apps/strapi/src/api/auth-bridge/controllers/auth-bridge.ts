@@ -1,10 +1,34 @@
+import { isValidServiceSecret } from "../../../utils/service-secret"
+
+const FREE_MAIL_DOMAINS = new Set([
+  "gmail.com",
+  "googlemail.com",
+  "outlook.com",
+  "hotmail.com",
+  "live.com",
+  "yahoo.com",
+  "icloud.com",
+  "me.com",
+  "proton.me",
+  "protonmail.com",
+  "aol.com",
+  "gmx.com",
+])
+
+function domainOf(url: unknown): string {
+  if (typeof url !== "string" || !url.trim()) return ""
+  try {
+    const parsed = new URL(url.startsWith("http") ? url : `https://${url}`)
+
+    return parsed.hostname.replace(/^www\./, "").toLowerCase()
+  } catch {
+    return ""
+  }
+}
+
 export default {
   async syncUser(ctx: any) {
-    const serviceSecret = ctx.request.header["x-service-secret"]
-    if (
-      !process.env.STRAPI_BRIDGE_SECRET ||
-      serviceSecret !== process.env.STRAPI_BRIDGE_SECRET
-    ) {
+    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
       return ctx.unauthorized("Invalid or missing service secret")
     }
 
@@ -50,13 +74,13 @@ export default {
           .query("api::user-profile.user-profile")
           .count()
         // username is intentionally left null — set during onboarding
-        await strapi.query("api::user-profile.user-profile").create({
+        await strapi.documents("api::user-profile.user-profile").create({
           data: {
             baUserId,
             firstName,
             lastName,
             contributorNumber: count + 1,
-          },
+          } as any,
         })
       }
     }
@@ -73,11 +97,7 @@ export default {
   },
 
   async upsertProfile(ctx: any) {
-    const serviceSecret = ctx.request.header["x-service-secret"]
-    if (
-      !process.env.STRAPI_BRIDGE_SECRET ||
-      serviceSecret !== process.env.STRAPI_BRIDGE_SECRET
-    ) {
+    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
       return ctx.unauthorized("Invalid or missing service secret")
     }
 
@@ -108,6 +128,7 @@ export default {
       "linkedin",
       "profileVisibility",
       "notifPrefs",
+      "publicPrefs",
       "theme",
     ]
 
@@ -162,16 +183,16 @@ export default {
       .query("api::user-profile.user-profile")
       .findOne({ where: { baUserId } })
 
-    // Create path uses db.query; update path uses Document Service so that
-    // repeatable components + relation sets are handled correctly in Strapi v5.
+    // Both paths use the Document Service so repeatable components (languages)
+    // and relation sets are written correctly in Strapi v5.
     await (existing
       ? strapi.documents("api::user-profile.user-profile").update({
           documentId: existing.documentId,
           data,
         })
-      : strapi
-          .query("api::user-profile.user-profile")
-          .create({ data: { baUserId, ...data } }))
+      : strapi.documents("api::user-profile.user-profile").create({
+          data: { baUserId, ...data } as any,
+        }))
 
     // Recompute quick wins if personalisation fields changed
     if (baUserId && ("country" in data || "languages" in data)) {
@@ -199,11 +220,7 @@ export default {
   },
 
   async followStatus(ctx: any) {
-    const serviceSecret = ctx.request.header["x-service-secret"]
-    if (
-      !process.env.STRAPI_BRIDGE_SECRET ||
-      serviceSecret !== process.env.STRAPI_BRIDGE_SECRET
-    ) {
+    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
       return ctx.unauthorized("Invalid or missing service secret")
     }
 
@@ -227,11 +244,7 @@ export default {
   },
 
   async deleteProfile(ctx: any) {
-    const serviceSecret = ctx.request.header["x-service-secret"]
-    if (
-      !process.env.STRAPI_BRIDGE_SECRET ||
-      serviceSecret !== process.env.STRAPI_BRIDGE_SECRET
-    ) {
+    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
       return ctx.unauthorized("Invalid or missing service secret")
     }
 
@@ -287,37 +300,62 @@ export default {
   },
 
   async createAffiliation(ctx: any) {
-    const serviceSecret = ctx.request.header["x-service-secret"]
-    if (
-      !process.env.STRAPI_BRIDGE_SECRET ||
-      serviceSecret !== process.env.STRAPI_BRIDGE_SECRET
-    ) {
+    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
       return ctx.unauthorized("Invalid or missing service secret")
     }
 
-    const { baUserId, entityRef, role, department, verificationMethod } = ctx
-      .request.body as {
+    const {
+      baUserId,
+      entityRef,
+      role,
+      department,
+      verificationMethod,
+      userEmail,
+      emailVerified,
+    } = ctx.request.body as {
       baUserId?: string
       entityRef?: string
       role?: string
       department?: string
       verificationMethod?: string
+      userEmail?: string
+      emailVerified?: boolean
     }
     if (!baUserId || !entityRef)
       return ctx.badRequest("Missing baUserId or entityRef")
 
     const library = await strapi.db
       .query("api::library.library")
-      .findOne({ where: { entityRef } })
+      .findOne({ where: { entityRef }, select: ["id", "website", "email"] })
+    if (!library) return ctx.notFound("Library not found")
+
+    // This endpoint only handles email-domain auto-verification. The domain is
+    // checked here against the library's *stored* website/email — never a
+    // domain supplied by the caller. Moderated claims create affiliations in
+    // the content-moderation service on approval.
+    if (verificationMethod !== "email_domain")
+      return ctx.badRequest("Unsupported verificationMethod")
+    if (emailVerified !== true || !userEmail)
+      return ctx.forbidden("email_not_verified")
+    const emailDomain = userEmail.split("@")[1]?.toLowerCase() ?? ""
+    const libraryDomains = [
+      domainOf(library.website),
+      library.email?.split("@")[1]?.toLowerCase() ?? "",
+    ].filter(Boolean)
+    if (
+      !emailDomain ||
+      FREE_MAIL_DOMAINS.has(emailDomain) ||
+      !libraryDomains.includes(emailDomain)
+    ) {
+      return ctx.forbidden("domain_mismatch")
+    }
 
     const affiliationData: Record<string, unknown> = {
       baUserId,
       role: role ?? null,
       department: department ?? null,
-      verificationMethod: verificationMethod ?? "contact_us",
-    }
-    if (library) {
-      affiliationData.library = { connect: [{ id: library.id }] }
+      verificationMethod,
+      library: { connect: [{ id: library.id }] },
     }
     await strapi
       .documents("api::library-affiliation.library-affiliation")
@@ -340,11 +378,7 @@ export default {
   },
 
   async affiliationCount(ctx: any) {
-    const serviceSecret = ctx.request.header["x-service-secret"]
-    if (
-      !process.env.STRAPI_BRIDGE_SECRET ||
-      serviceSecret !== process.env.STRAPI_BRIDGE_SECRET
-    ) {
+    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
       return ctx.unauthorized("Invalid or missing service secret")
     }
 
@@ -363,11 +397,7 @@ export default {
   },
 
   async claimStatus(ctx: any) {
-    const serviceSecret = ctx.request.header["x-service-secret"]
-    if (
-      !process.env.STRAPI_BRIDGE_SECRET ||
-      serviceSecret !== process.env.STRAPI_BRIDGE_SECRET
-    ) {
+    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
       return ctx.unauthorized("Invalid or missing service secret")
     }
 
@@ -397,11 +427,7 @@ export default {
   },
 
   async getUserAffiliations(ctx: any) {
-    const serviceSecret = ctx.request.header["x-service-secret"]
-    if (
-      !process.env.STRAPI_BRIDGE_SECRET ||
-      serviceSecret !== process.env.STRAPI_BRIDGE_SECRET
-    ) {
+    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
       return ctx.unauthorized("Invalid or missing service secret")
     }
 
@@ -438,11 +464,7 @@ export default {
   },
 
   async toggleFollow(ctx: any) {
-    const serviceSecret = ctx.request.header["x-service-secret"]
-    if (
-      !process.env.STRAPI_BRIDGE_SECRET ||
-      serviceSecret !== process.env.STRAPI_BRIDGE_SECRET
-    ) {
+    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
       return ctx.unauthorized("Invalid or missing service secret")
     }
 
@@ -479,11 +501,7 @@ export default {
   },
 
   async toggleFollowUser(ctx: any) {
-    const serviceSecret = ctx.request.header["x-service-secret"]
-    if (
-      !process.env.STRAPI_BRIDGE_SECRET ||
-      serviceSecret !== process.env.STRAPI_BRIDGE_SECRET
-    ) {
+    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
       return ctx.unauthorized("Invalid or missing service secret")
     }
 
@@ -526,11 +544,7 @@ export default {
   },
 
   async userFollowStatus(ctx: any) {
-    const serviceSecret = ctx.request.header["x-service-secret"]
-    if (
-      !process.env.STRAPI_BRIDGE_SECRET ||
-      serviceSecret !== process.env.STRAPI_BRIDGE_SECRET
-    ) {
+    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
       return ctx.unauthorized("Invalid or missing service secret")
     }
 
@@ -557,11 +571,7 @@ export default {
   },
 
   async sessionProfile(ctx: any) {
-    const serviceSecret = ctx.request.header["x-service-secret"]
-    if (
-      !process.env.STRAPI_BRIDGE_SECRET ||
-      serviceSecret !== process.env.STRAPI_BRIDGE_SECRET
-    ) {
+    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
       return ctx.unauthorized("Invalid or missing service secret")
     }
 
@@ -579,11 +589,7 @@ export default {
   },
 
   async computeQuickWins(ctx: any) {
-    const serviceSecret = ctx.request.header["x-service-secret"]
-    if (
-      !process.env.STRAPI_BRIDGE_SECRET ||
-      serviceSecret !== process.env.STRAPI_BRIDGE_SECRET
-    ) {
+    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
       return ctx.unauthorized("Invalid or missing service secret")
     }
 

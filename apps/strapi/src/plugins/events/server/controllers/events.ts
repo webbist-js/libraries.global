@@ -1,3 +1,5 @@
+import { isValidServiceSecret } from "../utils/service-secret"
+
 export default ({ strapi }: { strapi: any }) => ({
   async library(ctx: any) {
     const { entityRef } = ctx.params as { entityRef: string }
@@ -433,9 +435,7 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   async submitCredential(ctx: any) {
-    const bridgeSecret = process.env.STRAPI_BRIDGE_SECRET
-    const provided = String(ctx.request.headers["x-service-secret"] ?? "")
-    if (!bridgeSecret || provided !== bridgeSecret) {
+    if (!isValidServiceSecret(ctx.request.headers["x-service-secret"])) {
       ctx.status = 403
       ctx.body = { error: "Forbidden" }
 
