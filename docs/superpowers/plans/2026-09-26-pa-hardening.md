@@ -16,7 +16,7 @@
 
 ## Global Constraints
 
-- Strapi v5: use `strapi.documents(uid)` for content reads and writes. `strapi.db.query` / knex is allowed only for (a) the atomic compare-and-set and increments in Tasks 5–6 and (b) counts. Both apply only to types with `draftAndPublish: false`.
+- Strapi v5: use `strapi.documents(uid)` for content reads and writes. `strapi.db.query` / knex is allowed only for (a) the atomic compare-and-set and increments in Tasks 5–6, (b) counts, and (c) the bulk PII scrub on deletion in Task 13. Both apply only to types with `draftAndPublish: false`.
 - Node 22 (`nvm use`). The package manager is pnpm.
 - Strapi tests live in `apps/strapi/tests/**/*.test.ts` (vitest, globals on). Run them with `pnpm --filter @repo/strapi test`.
 - UI tests live in `apps/ui/src/**/*.test.ts`. Run them with `pnpm --filter @repo/ui test`.
@@ -1302,12 +1302,10 @@ In the `library_claim` block, replace the `targetLibrary` lookup (lines 242–24
 ```ts
 // A2: resolve by the reviewed targetDocumentId, never fields.entityRef.
 const targetLibrary = submission.targetDocumentId
-  ? await strapi
-      .documents("api::library.library")
-      .findOne({
-        documentId: submission.targetDocumentId,
-        fields: ["id", "documentId"] as any,
-      })
+  ? await strapi.documents("api::library.library").findOne({
+      documentId: submission.targetDocumentId,
+      fields: ["id", "documentId"] as any,
+    })
   : null
 if (!targetLibrary) {
   strapi.log.warn(
@@ -3117,22 +3115,18 @@ In `deleteProfile`, after the profile update and before deleting the users-permi
 
 ```ts
 // Scrub PII left on moderation and rewards records.
-await strapi.db
-  .query("plugin::content-moderation.submission")
-  .updateMany({
-    where: { submittedByUserId: baUserId },
-    data: {
-      submittedByEmail: "deleted@invalid",
-      submittedByName: null,
-      submittedByUserId: `deleted-${baUserId}`,
-    },
-  })
-await strapi.db
-  .query("plugin::rewards.point-event")
-  .updateMany({
-    where: { baUserId },
-    data: { baUserId: `deleted-${baUserId}` },
-  })
+await strapi.db.query("plugin::content-moderation.submission").updateMany({
+  where: { submittedByUserId: baUserId },
+  data: {
+    submittedByEmail: "deleted@invalid",
+    submittedByName: null,
+    submittedByUserId: `deleted-${baUserId}`,
+  },
+})
+await strapi.db.query("plugin::rewards.point-event").updateMany({
+  where: { baUserId },
+  data: { baUserId: `deleted-${baUserId}` },
+})
 await strapi.db
   .query("api::library-affiliation.library-affiliation")
   .deleteMany({ where: { baUserId } })
