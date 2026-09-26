@@ -43,6 +43,16 @@ export class PublicClient extends BaseStrapiClient {
       headers = {
         ...authHeader,
       }
+
+      // Draft reads (preview mode) must carry the bridge secret; Strapi ignores
+      // ?status=draft from anyone else.
+      const bridgeSecret = process.env.STRAPI_BRIDGE_SECRET
+      if (
+        bridgeSecret &&
+        (params as Record<string, unknown>)?.status === "draft"
+      ) {
+        headers["X-Service-Secret"] = bridgeSecret
+      }
     }
 
     const isFormData = requestInit?.body instanceof FormData
