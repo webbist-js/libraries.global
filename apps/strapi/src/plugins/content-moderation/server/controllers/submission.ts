@@ -74,10 +74,31 @@ export default ({ strapi }: { strapi: any }) => ({
       evidenceType,
       evidenceUrl,
       asDraft,
+      draftData,
     } = ctx.request.body as Record<string, unknown>
 
     if (!submissionType) {
       return ctx.badRequest("submissionType is required")
+    }
+
+    const directWikiEdit =
+      submissionType === "wiki_edit" &&
+      Array.isArray((ctx.request.body as any)?.draftData?.body)
+    const verdict = await strapi
+      .plugin("content-moderation")
+      .service("submission-policy")
+      .check({
+        baUserId: user.id,
+        submissionType,
+        targetDocumentId,
+        directWikiEdit,
+        verificationMethod,
+      })
+    if (!verdict.ok) {
+      ctx.status = verdict.status
+      ctx.body = { error: { status: verdict.status, message: verdict.message } }
+
+      return
     }
 
     const submission = await strapi
@@ -89,6 +110,7 @@ export default ({ strapi }: { strapi: any }) => ({
         targetDocumentId,
         targetSlug,
         fields,
+        draftData,
         note,
         verificationMethod,
         editSummary,
@@ -268,12 +290,40 @@ export default ({ strapi }: { strapi: any }) => ({
     const user = await resolveUser(strapi, ctx)
     if (!user) return ctx.unauthorized("You must be signed in.")
     const { id } = ctx.params
+    if (!isDocumentId(id)) return ctx.badRequest("Invalid id")
     let body: Record<string, unknown>
     try {
       body = (await ctx.request.body) as Record<string, unknown>
     } catch {
       return ctx.badRequest("Invalid request body")
     }
+
+    const draft = await strapi
+      .documents("plugin::content-moderation.submission")
+      .findOne({ documentId: id })
+    if (draft) {
+      const directWikiEdit =
+        draft.submissionType === "wiki_edit" &&
+        Array.isArray(draft.draftData?.body)
+      const verdict = await strapi
+        .plugin("content-moderation")
+        .service("submission-policy")
+        .check({
+          baUserId: user.id,
+          submissionType: draft.submissionType,
+          targetDocumentId: draft.targetDocumentId ?? undefined,
+          directWikiEdit,
+        })
+      if (!verdict.ok) {
+        ctx.status = verdict.status
+        ctx.body = {
+          error: { status: verdict.status, message: verdict.message },
+        }
+
+        return
+      }
+    }
+
     const result = await strapi
       .plugin("content-moderation")
       .service("submission")

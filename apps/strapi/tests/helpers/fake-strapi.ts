@@ -12,6 +12,8 @@ export function makeFakeStrapi(seed: Record<string, Doc[]> = {}) {
       if (v && typeof v === "object" && "$eq" in v) return d[k] === v.$eq
       if (v && typeof v === "object" && "$in" in v) return v.$in.includes(d[k])
       if (v && typeof v === "object" && "$ne" in v) return d[k] !== v.$ne
+      if (v && typeof v === "object" && "$gte" in v)
+        return String(d[k] ?? "") >= String(v.$gte)
 
       return d[k] === v
     })
