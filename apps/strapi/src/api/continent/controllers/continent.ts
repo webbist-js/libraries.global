@@ -1,6 +1,7 @@
 import { factories } from "@strapi/strapi"
 
 import { countLibrariesByType } from "../../../utils/library-type-counts"
+import { readStatus } from "../../../utils/read-status"
 
 export default factories.createCoreController(
   "api::continent.continent",
@@ -9,7 +10,7 @@ export default factories.createCoreController(
     async homepage(ctx) {
       const locale =
         typeof ctx.query.locale === "string" ? ctx.query.locale : undefined
-      const status = ctx.query.status === "draft" ? "draft" : "published"
+      const status = readStatus(ctx)
 
       const continentService = strapi.service("api::continent.continent") as {
         getHomepageSummaries: (params: {
@@ -34,7 +35,7 @@ export default factories.createCoreController(
       const { slug } = ctx.params as { slug: string }
       const locale =
         typeof ctx.query.locale === "string" ? ctx.query.locale : undefined
-      const status = ctx.query.status === "draft" ? "draft" : "published"
+      const status = readStatus(ctx)
 
       // Base populate — always safe (fields exist in original schema)
       const basePopulate: Record<string, unknown> = {
@@ -129,7 +130,7 @@ export default factories.createCoreController(
     async mapPins(ctx) {
       const locale =
         typeof ctx.query.locale === "string" ? ctx.query.locale : undefined
-      const status = ctx.query.status === "draft" ? "draft" : "published"
+      const status = readStatus(ctx)
 
       const results = await strapi
         .documents("api::continent.continent")
@@ -175,7 +176,7 @@ export default factories.createCoreController(
     async slugs(ctx) {
       const locale =
         typeof ctx.query.locale === "string" ? ctx.query.locale : undefined
-      const status = ctx.query.status === "draft" ? "draft" : "published"
+      const status = readStatus(ctx)
 
       const results = await strapi
         .documents("api::continent.continent")

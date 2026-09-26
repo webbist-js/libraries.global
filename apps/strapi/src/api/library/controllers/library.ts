@@ -1,5 +1,7 @@
 import { factories } from "@strapi/strapi"
 
+import { readStatus } from "../../../utils/read-status"
+
 // ── Atlas helpers ──────────────────────────────────────────────────────────
 
 interface AtlasSource {
@@ -143,7 +145,7 @@ export default factories.createCoreController(
     async mapPins(ctx) {
       const q = ctx.query as Record<string, string | undefined>
       const locale = typeof q.locale === "string" ? q.locale : undefined
-      const status = q.status === "draft" ? "draft" : "published"
+      const status = readStatus(ctx)
 
       const filters: Record<string, unknown> = {}
       if (q.areaSlug) {

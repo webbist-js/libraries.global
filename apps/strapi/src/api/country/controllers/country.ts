@@ -1,6 +1,7 @@
 import { factories } from "@strapi/strapi"
 
 import { countLibrariesByType } from "../../../utils/library-type-counts"
+import { readStatus } from "../../../utils/read-status"
 
 export default factories.createCoreController(
   "api::country.country",
@@ -10,7 +11,7 @@ export default factories.createCoreController(
       const { slug } = ctx.params as { slug: string }
       const locale =
         typeof ctx.query.locale === "string" ? ctx.query.locale : undefined
-      const status = ctx.query.status === "draft" ? "draft" : "published"
+      const status = readStatus(ctx)
 
       const basePopulate: Record<string, unknown> = {
         continent: { fields: ["name", "slug", "code"] },
@@ -121,7 +122,7 @@ export default factories.createCoreController(
     async mapPins(ctx) {
       const q = ctx.query as Record<string, string | undefined>
       const locale = typeof q.locale === "string" ? q.locale : undefined
-      const status = q.status === "draft" ? "draft" : "published"
+      const status = readStatus(ctx)
 
       const filters: Record<string, unknown> = {}
       if (q.continentSlug)
@@ -178,7 +179,7 @@ export default factories.createCoreController(
     async slugs(ctx) {
       const locale =
         typeof ctx.query.locale === "string" ? ctx.query.locale : undefined
-      const status = ctx.query.status === "draft" ? "draft" : "published"
+      const status = readStatus(ctx)
 
       const results = await strapi.documents("api::country.country").findMany({
         fields: ["slug", "locale"],

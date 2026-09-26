@@ -1,5 +1,7 @@
 import { factories } from "@strapi/strapi"
 
+import { readStatus } from "../../../utils/read-status"
+
 export default factories.createCoreController(
   "api::blog-landing.blog-landing",
   ({ strapi }) => ({
@@ -8,7 +10,7 @@ export default factories.createCoreController(
     async find(ctx) {
       const locale =
         typeof ctx.query.locale === "string" ? ctx.query.locale : undefined
-      const status = ctx.query.status === "draft" ? "draft" : "published"
+      const status = readStatus(ctx)
 
       const data = await strapi
         .documents("api::blog-landing.blog-landing")

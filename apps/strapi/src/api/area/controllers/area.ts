@@ -1,5 +1,7 @@
 import { factories } from "@strapi/strapi"
 
+import { readStatus } from "../../../utils/read-status"
+
 export default factories.createCoreController(
   "api::area.area",
   ({ strapi }) => ({
@@ -8,7 +10,7 @@ export default factories.createCoreController(
       const { slug } = ctx.params as { slug: string }
       const q = ctx.query as Record<string, string | undefined>
       const locale = typeof q.locale === "string" ? q.locale : undefined
-      const status = q.status === "draft" ? "draft" : "published"
+      const status = readStatus(ctx)
 
       const results = await strapi.documents("api::area.area").findMany({
         filters: { slug: { $eq: slug } } as never,
@@ -70,7 +72,7 @@ export default factories.createCoreController(
     async slugs(ctx) {
       const q = ctx.query as Record<string, string | undefined>
       const locale = typeof q.locale === "string" ? q.locale : undefined
-      const status = q.status === "draft" ? "draft" : "published"
+      const status = readStatus(ctx)
 
       const results = await strapi.documents("api::area.area").findMany({
         fields: ["slug", "locale"],
@@ -91,7 +93,7 @@ export default factories.createCoreController(
     async mapPins(ctx) {
       const q = ctx.query as Record<string, string | undefined>
       const locale = typeof q.locale === "string" ? q.locale : undefined
-      const status = q.status === "draft" ? "draft" : "published"
+      const status = readStatus(ctx)
 
       const filters: Record<string, unknown> = {}
       if (q.regionSlug) filters.region = { slug: { $eq: q.regionSlug } }
