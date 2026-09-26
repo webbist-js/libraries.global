@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
+import { SearchField } from "@/components/ds"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 import {
@@ -10,7 +11,7 @@ import {
   type BlogArticleSearchHit,
 } from "@/lib/meilisearch"
 
-export function BlogSearchBar() {
+export function BlogSearchBar({ inputId }: { readonly inputId?: string }) {
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<BlogArticleSearchHit[]>([])
   const [open, setOpen] = useState(false)
@@ -67,108 +68,37 @@ export function BlogSearchBar() {
 
   return (
     <div ref={containerRef} style={{ position: "relative" }}>
-      {/* Input */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          padding: "10px 14px",
-          borderRadius: open && results.length > 0 ? "12px 12px 0 0" : "12px",
-          border: `1px solid ${T.border.hi}`,
-          borderBottom:
-            open && results.length > 0
-              ? `1px solid ${T.border.line}`
-              : undefined,
-          background: "rgba(8,12,30,.5)",
-          backdropFilter: "blur(8px)",
-          transition: "border-radius 100ms",
+      <SearchField
+        id={inputId ?? "blog-search"}
+        placeholder="Search articles, authors or topics"
+        loading={loading}
+        inputRef={inputRef}
+        onClear={() => {
+          setQuery("")
+          setOpen(false)
+          inputRef.current?.focus()
         }}
-      >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          style={{
-            color: loading ? T.accent.ember : T.ink.low,
-            flexShrink: 0,
-            transition: "color 200ms",
-          }}
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="m20 20-3.5-3.5" />
-        </svg>
-        <input
-          ref={inputRef}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => results.length > 0 && setOpen(true)}
-          onKeyDown={handleKeyDown}
-          placeholder="Search articles, authors, topics…"
-          style={{
-            flex: 1,
-            background: "transparent",
-            border: "none",
-            outline: "none",
-            color: T.ink.base,
-            fontSize: "13px",
-            fontFamily: T.font.mono,
-            letterSpacing: ".02em",
-          }}
-        />
-        {query ? (
-          <button
-            onClick={() => {
-              setQuery("")
-              setOpen(false)
-              inputRef.current?.focus()
-            }}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: T.ink.faint,
-              fontSize: "16px",
-              lineHeight: 1,
-              padding: "0 2px",
-            }}
-            aria-label="Clear search"
-          >
-            ×
-          </button>
-        ) : (
-          <span
-            style={{
-              padding: "3px 7px",
-              borderRadius: "5px",
-              background: T.bg.deep,
-              border: `1px solid ${T.border.hi}`,
-              fontSize: "10px",
-              color: T.ink.dim,
-              fontFamily: T.font.mono,
-            }}
-          >
-            ⌘K
-          </span>
-        )}
-      </div>
+        inputProps={{
+          value: query,
+          onChange: (e) => setQuery(e.target.value),
+          onFocus: () => results.length > 0 && setOpen(true),
+          onKeyDown: handleKeyDown,
+          autoComplete: "off",
+        }}
+      />
 
       {/* Results dropdown */}
       {open && results.length > 0 && (
         <div
           style={{
             position: "absolute",
-            top: "100%",
+            top: "calc(100% + 8px)",
             left: 0,
             right: 0,
-            background: "rgba(6,9,22,.96)",
-            backdropFilter: "blur(16px)",
-            border: `1px solid ${T.border.hi}`,
-            borderTop: "none",
-            borderRadius: "0 0 12px 12px",
+            background: T.bg.deep,
+            border: `1px solid ${T.border.line}`,
+            boxShadow: "0 12px 28px rgba(23,22,43,.08)",
+            borderRadius: "16px",
             overflow: "hidden",
             zIndex: 50,
           }}
@@ -187,11 +117,11 @@ export function BlogSearchBar() {
                 textDecoration: "none",
                 transition: "background 150ms",
               }}
-              className="hover:bg-[rgba(255,184,138,.04)]"
+              className="hover:bg-(--t-bg-surface)"
             >
               <span
                 style={{
-                  fontSize: "13px",
+                  fontSize: "15px",
                   color: T.ink.base,
                   fontWeight: 500,
                   overflow: "hidden",
@@ -202,15 +132,7 @@ export function BlogSearchBar() {
                 {hit.title ?? hit.slug}
               </span>
               {hit.section_slug && (
-                <span
-                  style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".12em",
-                    textTransform: "uppercase",
-                    color: T.ink.faint,
-                  }}
-                >
+                <span style={{ fontSize: "13px", color: T.ink.dim }}>
                   {hit.section_slug}
                 </span>
               )}
@@ -227,12 +149,11 @@ export function BlogSearchBar() {
                 padding: "10px 14px",
                 borderTop: `1px solid ${T.border.line}`,
                 textDecoration: "none",
-                fontSize: "11px",
-                color: T.accent.ember,
-                fontFamily: T.font.mono,
-                letterSpacing: ".06em",
+                fontSize: "14px",
+                color: T.accent.primary,
+                fontWeight: 600,
               }}
-              className="hover:bg-[rgba(255,184,138,.04)]"
+              className="hover:bg-(--t-bg-surface)"
             >
               View all results for &ldquo;{query}&rdquo; →
             </GlobalLink>

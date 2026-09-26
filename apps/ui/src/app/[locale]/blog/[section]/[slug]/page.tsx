@@ -1,9 +1,13 @@
 import type { Metadata } from "next"
+import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
 import { use } from "react"
 
 import BlogArticlePage from "@/components/blog/BlogArticlePage"
+import { JsonLd } from "@/components/seo/JsonLd"
 import { isDevelopment } from "@/lib/general-helpers"
+import { buildArticleSchema, buildBreadcrumbSchema } from "@/lib/seo/json-ld"
+import { absoluteUrl, buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
 import {
   fetchAllBlogArticleSlugs,
   fetchBlogArticle,
@@ -31,6 +35,13 @@ export async function generateStaticParams({
     }))
 }
 
+function articleSection(
+  article: { section?: { slug?: string | null } | null },
+  fallback: string
+) {
+  return article.section?.slug ?? fallback
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -38,61 +49,73 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, section, slug } = await params
   const data = (await fetchBlogArticle(slug, locale as Locale))?.data
-  if (!data) return { title: "Article not found" }
+  if (!data) return { title: "Article not found", robots: { index: false } }
 
   const title = data.seo?.metaTitle ?? data.title ?? "Article"
-  const description =
-    data.seo?.metaDescription ??
-    data.summary ??
-    `Read "${data.title ?? "this article"}" on the global libraries blog.`
-  const ogImageUrl = data.seo?.metaImage?.url
-    ? formatStrapiMediaUrl(data.seo.metaImage.url)
-    : data.heroImage?.url
-      ? formatStrapiMediaUrl(data.heroImage.url)
-      : undefined
-  const canonical = `/blog/${section}/${slug}`
 
-  return {
+  return buildMetadata({
     title,
-    description,
-    robots: "index, follow",
-    alternates: { canonical },
-    openGraph: {
-      title,
-      description,
-      type: "article",
-      url: canonical,
-      ...(ogImageUrl ? { images: [{ url: ogImageUrl }] } : {}),
-      ...((data as any).publishedAt
-        ? { publishedTime: (data as any).publishedAt }
-        : {}),
-      ...((data as any).updatedAt
-        ? { modifiedTime: (data as any).updatedAt }
-        : {}),
-    },
-    twitter: {
-      card: ogImageUrl ? "summary_large_image" : "summary",
-      title,
-      description,
-      ...(ogImageUrl ? { images: [ogImageUrl] } : {}),
-    },
-  }
+    description:
+      data.seo?.metaDescription ??
+      data.summary ??
+      `Read "${data.title ?? "this article"}" on the ${SITE_NAME} blog.`,
+    path: `blog/${articleSection(data, section)}/${slug}`,
+    locale,
+    type: "article",
+    image: formatStrapiMediaUrl(
+      data.seo?.openGraph?.ogImage?.url ??
+        data.seo?.metaImage?.url ??
+        data.heroImage?.url
+    ),
+    imageAlt: data.heroImage?.alternativeText ?? data.title,
+    publishedTime: data.publishedAt,
+    modifiedTime: data.updatedAt,
+    authors: data.author ? [data.author] : undefined,
+    robots: data.seo?.metaRobots?.replaceAll(" ", "").startsWith("noindex")
+      ? "noindex"
+      : "index",
+  })
 }
 
 export default function BlogArticleRoute(props: {
   params: Promise<{ locale: string; section: string; slug: string }>
 }) {
-  const { locale: localeStr, slug } = use(props.params)
+  const { locale: localeStr, section, slug } = use(props.params)
   const locale = localeStr as Locale
 
   const article = use(fetchBlogArticle(slug, locale))?.data ?? null
+  if (!article) notFound()
   const related = use(fetchRecentBlogArticles(locale))?.data ?? []
+  const path = `blog/${articleSection(article, section)}/${slug}`
+  const url = absoluteUrl(path, locale)
 
   return (
-    <BlogArticlePage
-      article={article}
-      related={related.filter((a) => a.slug !== slug)}
-      locale={locale}
-    />
+    <>
+      <JsonLd
+        data={[
+          buildArticleSchema({
+            type: "BlogPosting",
+            title: article.title ?? slug,
+            description: article.summary,
+            url,
+            imageUrl: formatStrapiMediaUrl(article.heroImage?.url),
+            authorName: article.author,
+            publishedAt: article.publishedAt,
+            updatedAt: article.updatedAt,
+            sectionName: article.section?.name,
+          }),
+          buildBreadcrumbSchema([
+            { name: "Home", url: absoluteUrl("", locale) },
+            { name: "Blog", url: absoluteUrl("blog", locale) },
+            { name: article.title ?? slug, url },
+          ]),
+        ]}
+      />
+      <BlogArticlePage
+        article={article}
+        related={related.filter((a) => a.slug !== slug)}
+        locale={locale}
+      />
+    </>
   )
 }

@@ -3,6 +3,7 @@ import type { Locale } from "next-intl"
 import { use } from "react"
 
 import BlogLandingPage from "@/components/blog/BlogLandingPage"
+import { buildMetadata } from "@/lib/seo/metadata"
 import {
   fetchBlogLanding,
   fetchBlogSections,
@@ -21,33 +22,15 @@ export async function generateMetadata({
   const { locale } = await params
   const data = (await fetchBlogLanding(locale as Locale))?.data
 
-  const title = data?.seo?.metaTitle ?? "Blog"
-  const description =
-    data?.seo?.metaDescription ??
-    "Explore stories, research, and editorial from the global libraries community."
-  const ogImageUrl = data?.seo?.metaImage?.url
-    ? formatStrapiMediaUrl(data.seo.metaImage.url)
-    : undefined
-
-  return {
-    title,
-    description,
-    robots: "index, follow",
-    alternates: { canonical: "/blog" },
-    openGraph: {
-      title,
-      description,
-      type: "website",
-      url: "/blog",
-      ...(ogImageUrl ? { images: [{ url: ogImageUrl }] } : {}),
-    },
-    twitter: {
-      card: ogImageUrl ? "summary_large_image" : "summary",
-      title,
-      description,
-      ...(ogImageUrl ? { images: [ogImageUrl] } : {}),
-    },
-  }
+  return buildMetadata({
+    title: data?.seo?.metaTitle ?? "Blog",
+    description:
+      data?.seo?.metaDescription ??
+      "Stories, research and editorial from the global libraries community — library history, collections and the people who run them.",
+    path: "blog",
+    locale,
+    image: formatStrapiMediaUrl(data?.seo?.metaImage?.url),
+  })
 }
 
 export default function BlogPage(props: {

@@ -1,6 +1,5 @@
 import Image from "next/image"
 
-import { Badge } from "@/components/ds"
 import GlobalLink from "@/components/global/GlobalLink"
 import { formatDate } from "@/lib/article-helpers"
 import { T } from "@/lib/design-tokens"
@@ -8,13 +7,8 @@ import type { BlogArticleSummary } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 import { cn } from "@/lib/styles"
 
-function pad(n: number) {
-  return String(n + 1).padStart(2, "0")
-}
-
 export function BlogArticleCard({
   article,
-  index,
   className,
 }: {
   readonly article: BlogArticleSummary
@@ -32,60 +26,73 @@ export function BlogArticleCard({
     <GlobalLink
       href={`/blog/${article.section?.slug ?? "general"}/${article.slug}`}
       className={cn(
-        "group flex flex-col overflow-hidden rounded-2xl transition-[border-color] duration-300 hover:border-(--t-border-hi)",
+        "group flex flex-col overflow-hidden rounded-[20px] border transition-[border-color,box-shadow] duration-300 hover:border-[#B9B4F5] hover:shadow-[0_12px_28px_rgba(23,22,43,.08)]",
         className
       )}
-      style={{ background: T.bg.surface, border: `1px solid ${T.border.line}` }}
+      style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
       {/* Thumbnail */}
-      <div className="relative aspect-[16/9] overflow-hidden">
+      <div className="relative m-2 aspect-[16/9] overflow-hidden rounded-[14px]">
         {imgUrl ? (
           <Image
             src={imgUrl}
             alt={article.heroImage?.alternativeText ?? article.title ?? ""}
             fill
-            className="object-cover opacity-75 transition-transform duration-700 group-hover:scale-[1.03]"
+            className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
           />
         ) : (
-          <div className="h-full w-full bg-[radial-gradient(circle_at_35%_40%,rgba(40,80,180,0.22),transparent_60%),linear-gradient(135deg,#0a1020,#060b19)]" />
-        )}
-        {/* Index badge */}
-        {index != null ? (
-          <div className="absolute top-3 left-3 flex size-7 items-center justify-center rounded-full border border-white/12 bg-black/40 font-mono text-[10px] text-white/40 backdrop-blur-sm">
-            {pad(index)}
+          <div
+            className="flex h-full w-full items-center justify-center"
+            style={{ background: "var(--tint-national-bg)" }}
+          >
+            <span
+              aria-hidden="true"
+              style={{
+                fontFamily: T.font.serif,
+                fontSize: "44px",
+                color: "var(--tint-national-fg)",
+              }}
+            >
+              {(article.title ?? "J").charAt(0)}
+            </span>
           </div>
-        ) : null}
-        {/* Bottom gradient */}
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_40%,rgba(6,11,25,0.7)_100%)]" />
+        )}
       </div>
 
       {/* Content */}
-      <div className="flex flex-1 flex-col p-5">
-        <div className="mb-3 h-px bg-(--t-border-line)" />
+      <div className="flex flex-1 flex-col px-5 pt-3 pb-5">
+        <p
+          className="m-0 mb-2 text-[14px] font-semibold"
+          style={{ color: T.accent.ember }}
+        >
+          {[article.section?.name ?? article.category?.name, date]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
 
-        <div className="mb-3 flex items-center gap-2">
-          {article.category?.name ? (
-            <Badge label={article.category.name} color="dim" />
-          ) : null}
-          {date ? (
-            <span className="ml-auto font-mono text-[10px] text-(--t-ink-faint)">
-              {date}
-            </span>
-          ) : null}
-        </div>
-
-        <h3 className="mb-3 flex-1 font-[family-name:var(--font-fraunces)] text-[1.2rem] leading-[1.15] font-semibold tracking-[-0.01em] text-(--t-ink-base) transition-colors group-hover:text-(--t-ink-dim)">
+        <h3
+          className="m-0 mb-2.5 flex-1 text-[22px] leading-[1.15]"
+          style={{
+            fontFamily: T.font.serif,
+            fontWeight: 500,
+            letterSpacing: "-0.01em",
+            color: T.ink.base,
+          }}
+        >
           {article.title}
         </h3>
 
         {article.summary ? (
-          <p className="mb-4 line-clamp-2 text-[13px] leading-6 text-(--t-ink-low)">
+          <p
+            className="m-0 mb-3 line-clamp-2 text-[15px] leading-[1.55]"
+            style={{ color: T.ink.dim }}
+          >
             {article.summary}
           </p>
         ) : null}
 
         {article.author ? (
-          <p className="mt-auto font-mono text-[10px] tracking-[0.1em] text-(--t-ink-faint) uppercase">
+          <p className="m-0 mt-auto text-[14px]" style={{ color: T.ink.dim }}>
             {article.author}
           </p>
         ) : null}

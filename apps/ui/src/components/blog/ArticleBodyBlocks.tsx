@@ -117,7 +117,7 @@ export function ArticleBodyBlocks({
             return (
               <blockquote
                 key={block.id}
-                className="relative border-l-2 border-(--t-accent-aurora) py-1 pl-6"
+                className="relative border-l-2 border-(--t-accent-primary) py-1 pl-6"
               >
                 <p className="text-lg leading-8 text-(--t-ink-dim) italic">
                   {block.quote}

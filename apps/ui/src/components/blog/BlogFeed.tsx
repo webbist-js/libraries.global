@@ -1,6 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { Suspense, useMemo, useState } from "react"
 
 import { Container } from "@/components/elementary/Container"
 import type { BlogArticleSummary } from "@/lib/strapi-api/content/server"
@@ -8,17 +9,33 @@ import type { BlogArticleSummary } from "@/lib/strapi-api/content/server"
 import BlogArticleList from "./BlogArticleList"
 import { BlogFilterBar } from "./BlogFilterBar"
 import { FeaturedArticleCard } from "./FeaturedArticleCard"
+import { MoreToCome } from "./MoreToCome"
 
-export default function BlogFeed({
-  articles,
-  featuredArticle,
-  sections = [],
-}: {
+type BlogFeedProps = {
   readonly articles: BlogArticleSummary[]
   readonly featuredArticle: BlogArticleSummary | null
   readonly sections?: { documentId: string; name: string; slug: string }[]
-}) {
-  const [activeSection, setActiveSection] = useState("All")
+}
+
+/** The page is force-static, so ?section= is read client-side on hydration. */
+export default function BlogFeed(props: BlogFeedProps) {
+  return (
+    <Suspense fallback={null}>
+      <BlogFeedInner {...props} />
+    </Suspense>
+  )
+}
+
+function BlogFeedInner({
+  articles,
+  featuredArticle,
+  sections = [],
+}: BlogFeedProps) {
+  const searchParams = useSearchParams()
+  const initialSectionSlug = searchParams.get("section")
+  const [activeSection, setActiveSection] = useState(
+    () => sections.find((s) => s.slug === initialSectionSlug)?.name ?? "All"
+  )
   const [sortOrder, setSortOrder] = useState("newest")
 
   // Build section tab list: All + sections from API with article counts.
@@ -78,6 +95,9 @@ export default function BlogFeed({
     return result
   }, [articles, activeSection, sortOrder])
 
+  // A young journal shows an invitation instead of padding a one-item grid.
+  const youngJournal = articles.length < 4
+
   return (
     <>
       <BlogFilterBar
@@ -90,26 +110,40 @@ export default function BlogFeed({
 
       {/* ── Featured article ───────────────────────────────────────────── */}
       {featuredArticle && activeSection === "All" ? (
-        <section className="border-b border-(--t-border-line) py-12 sm:py-16">
+        <section className="pt-6 pb-4">
           <Container>
-            <p className="mb-6 font-mono text-[10px] tracking-[0.22em] text-(--t-ink-faint) uppercase">
-              — Featured this issue
-            </p>
             <FeaturedArticleCard article={featuredArticle} />
           </Container>
         </section>
       ) : null}
 
-      <section className="py-14 sm:py-20">
-        <Container>
-          <div className="mb-10">
-            <h2 className="font-[family-name:var(--font-fraunces)] text-[2.4rem] leading-[1.05] font-semibold tracking-[-0.02em] text-(--t-ink-base) sm:text-[3rem]">
-              Latest <em className="text-(--t-ink-dim) italic">dispatches</em>
-            </h2>
-          </div>
-          <BlogArticleList articles={processedArticles} />
-        </Container>
-      </section>
+      {youngJournal && activeSection === "All" ? (
+        <MoreToCome articleCount={articles.length} />
+      ) : (
+        <section className="py-14 sm:py-20">
+          <Container>
+            <div className="mb-10">
+              <h2
+                className="m-0 text-[clamp(30px,3.4vw,44px)] leading-[1.05]"
+                style={{
+                  fontFamily: "var(--font-newsreader), Georgia, serif",
+                  fontWeight: 500,
+                  letterSpacing: "-0.02em",
+                  color: "var(--t-ink-base)",
+                }}
+              >
+                Latest{" "}
+                <em
+                  style={{ fontWeight: 400, color: "var(--t-accent-primary)" }}
+                >
+                  dispatches
+                </em>
+              </h2>
+            </div>
+            <BlogArticleList articles={processedArticles} />
+          </Container>
+        </section>
+      )}
     </>
   )
 }

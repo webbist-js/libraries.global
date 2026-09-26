@@ -4,8 +4,8 @@ import type { Locale } from "next-intl"
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
 import { ArticleShareButtons } from "@/components/blog/ArticleShareButtons"
 import { BlogArticleCard } from "@/components/blog/BlogArticleCard"
-import { Avatar, PageShell, SectionHeader } from "@/components/ds"
-import { Container } from "@/components/elementary/Container"
+import { Badge } from "@/components/ds/Badge"
+import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import {
@@ -34,12 +34,15 @@ export function BlogArticlePage({
 }) {
   if (!article) {
     return (
-      <PageShell className="flex flex-col">
+      <div
+        className="relative isolate flex min-h-screen w-full flex-col"
+        style={{ background: T.bg.void, color: T.ink.base }}
+      >
         <GlobalHeader locale={locale} />
         <main className="flex flex-1 items-center justify-center">
-          <p style={{ color: T.ink.faint }}>Article not found.</p>
+          <p style={{ color: T.ink.dim }}>Article not found.</p>
         </main>
-      </PageShell>
+      </div>
     )
   }
 
@@ -50,14 +53,10 @@ export function BlogArticlePage({
   const readingTime = estimateReadingTime(article.body)
   const wordCount = countWords(article.body)
   const publishedDate = formatDate(article.publishedAt ?? article.updatedAt)
-  const breadcrumbDate = article.publishedAt
-    ? new Date(article.publishedAt)
-        .toLocaleDateString("en-US", {
-          month: "short",
-          year: "numeric",
-        })
-        .toUpperCase()
-    : null
+  const shortDate = formatDate(
+    article.publishedAt ?? article.updatedAt,
+    "short"
+  )
   const headings = extractHeadings(article.body)
 
   // Curated related articles take priority; fall back to prop from page.tsx
@@ -69,180 +68,108 @@ export function BlogArticlePage({
 
   const authorInitial = (article.author ?? "?").charAt(0).toUpperCase()
 
+  const metaRows = [
+    { label: "Published", value: publishedDate },
+    {
+      label: "Reading time",
+      value: readingTime ? `${readingTime} min` : null,
+    },
+    {
+      label: "Words",
+      value: wordCount > 0 ? wordCount.toLocaleString("en-GB") : null,
+    },
+    { label: "Section", value: article.section?.name },
+    { label: "Category", value: article.category?.name },
+  ].filter((row): row is { label: string; value: string } => !!row.value)
+
   return (
-    <PageShell className="flex flex-col">
+    <div
+      className="relative isolate flex min-h-screen w-full flex-col"
+      style={{ background: T.bg.void, color: T.ink.base }}
+    >
       <GlobalHeader locale={locale} />
 
-      <main className="relative z-10 flex-1">
-        {/* ── Hero — full-bleed image, slides behind transparent header ── */}
-        <section
-          data-transparent-header=""
-          className="relative isolate -mt-14 flex min-h-[88vh] flex-col overflow-hidden"
-          style={{ background: "#030511" }}
-        >
-          {/* Background */}
-          {imgUrl ? (
-            <div className="absolute inset-0">
-              <Image
-                src={imgUrl}
-                alt={article.heroImage?.alternativeText ?? article.title ?? ""}
-                fill
-                priority
-                className="object-cover"
-              />
-            </div>
-          ) : (
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_40%,rgba(80,140,80,0.18),transparent_55%),radial-gradient(circle_at_80%_60%,rgba(160,120,40,0.14),transparent_45%),linear-gradient(135deg,#0d1408,#100c04,#050816)]" />
-          )}
+      <main className="relative z-10 mx-auto w-full max-w-[1360px] flex-1 px-4 pt-6 pb-22 sm:px-8 sm:pt-10">
+        {/* Breadcrumb */}
+        <Breadcrumb
+          items={[
+            { label: "Home", href: "/" },
+            { label: "Journal", href: "/blog" },
+            ...(article.section?.slug
+              ? [
+                  {
+                    label: article.section.name ?? article.section.slug,
+                    href: `/blog?section=${article.section.slug}`,
+                  },
+                ]
+              : []),
+            { label: article.title ?? "" },
+          ]}
+        />
 
-          {/* Gradient overlays */}
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,8,22,0.18)_0%,rgba(5,8,22,0.05)_18%,rgba(5,8,22,0.60)_60%,rgba(5,8,22,0.97)_100%)]" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,8,22,0.55)_0%,transparent_60%)]" />
-
-          {/* Content centered in hero */}
-          <Container className="relative z-10 flex flex-1 items-center py-24 pt-36">
-            <div className="mx-auto w-full max-w-[680px]">
-              {/* Plain-text breadcrumb */}
-              <p
-                style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".22em",
-                  textTransform: "uppercase",
-                  color: "rgba(255,255,255,.38)",
-                  marginBottom: "28px",
-                }}
-              >
-                <GlobalLink
-                  href="/blog"
-                  className="transition-colors hover:text-white/70"
-                >
-                  Journal
-                </GlobalLink>
-                {article.section?.name ? (
-                  <>
-                    <span
-                      style={{
-                        margin: "0 8px",
-                        color: "rgba(255,255,255,.20)",
-                      }}
-                    >
-                      /
-                    </span>
-                    <span>{article.section.name}</span>
-                  </>
+        {/* Content: article column + sidebar */}
+        <div className="mt-4 grid grid-cols-1 items-start gap-x-10 gap-y-7 lg:grid-cols-[minmax(0,880px)_300px] lg:justify-between">
+          <div className="flex min-w-0 flex-col gap-5">
+            {/* Hero — in-flow, on paper */}
+            <header>
+              <div className="mb-3.5 flex flex-wrap items-center gap-2">
+                {(article.section?.name ?? article.category?.name) ? (
+                  <Badge
+                    label={
+                      (article.section?.name ??
+                        article.category?.name) as string
+                    }
+                    color="violet"
+                    size="md"
+                  />
                 ) : null}
-                {breadcrumbDate ? (
-                  <>
-                    <span
-                      style={{
-                        margin: "0 8px",
-                        color: "rgba(255,255,255,.20)",
-                      }}
-                    >
-                      /
-                    </span>
-                    <span>{breadcrumbDate}</span>
-                  </>
-                ) : null}
-              </p>
+                <span className="text-[15px]" style={{ color: T.ink.dim }}>
+                  {[shortDate, readingTime ? `${readingTime} min read` : null]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+              </div>
 
-              {/* Title */}
               <h1
-                style={{
-                  fontFamily: T.font.serif,
-                  fontWeight: 400,
-                  fontSize: "clamp(2.8rem,6vw,5.5rem)",
-                  lineHeight: 0.96,
-                  letterSpacing: "-.03em",
-                  margin: 0,
-                  color: T.ink.base,
-                }}
+                className="m-0 text-[clamp(40px,5.2vw,68px)] leading-[1.02] tracking-[-0.02em] text-balance"
+                style={{ fontFamily: T.font.serif, fontWeight: 500 }}
               >
                 {article.title}
               </h1>
 
-              {/* Summary */}
               {article.summary ? (
                 <p
-                  style={{
-                    marginTop: "22px",
-                    fontSize: "18px",
-                    lineHeight: 1.72,
-                    color: "rgba(244,247,255,.60)",
-                    maxWidth: "52ch",
-                  }}
+                  className="mt-4 mb-0 max-w-[62ch] text-[19px] leading-[1.6] text-pretty"
+                  style={{ color: T.ink.dim }}
                 >
                   {article.summary}
                 </p>
               ) : null}
 
-              {/* Meta row: section pill · read time · word count · date */}
-              <div
-                className="mt-6 flex flex-wrap items-center gap-3"
-                style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".14em",
-                  textTransform: "uppercase",
-                  color: "rgba(255,255,255,.40)",
-                }}
-              >
-                {article.section?.name ? (
+              {/* Byline + share */}
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
                   <span
+                    aria-hidden="true"
+                    className="flex size-10 flex-none items-center justify-center rounded-full text-[15px] font-semibold"
                     style={{
-                      padding: "3px 9px",
-                      borderRadius: "999px",
-                      border: "1px solid rgba(255,255,255,.18)",
-                      background: "rgba(255,255,255,.06)",
-                      color: "rgba(255,255,255,.65)",
+                      background: "var(--tint-national-bg)",
+                      color: "var(--tint-national-fg)",
                     }}
                   >
-                    {article.section.name}
+                    {authorInitial}
                   </span>
-                ) : null}
-                {readingTime ? <span>{readingTime} min read</span> : null}
-                {wordCount > 0 ? (
-                  <span>{wordCount.toLocaleString("en-US")} words</span>
-                ) : null}
-                {publishedDate ? (
-                  <span style={{ marginLeft: "auto" }}>{publishedDate}</span>
-                ) : null}
-              </div>
-
-              {/* Separator */}
-              <div
-                className="mt-8"
-                style={{ borderTop: "1px solid rgba(255,255,255,.12)" }}
-              />
-
-              {/* Author + share strip */}
-              <div className="mt-6 flex items-center gap-5">
-                <div className="flex items-center gap-3">
-                  <Avatar initials={authorInitial} size="md" />
                   <div>
-                    {article.author ? (
-                      <p
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: 500,
-                          color: T.ink.base,
-                          margin: 0,
-                        }}
-                      >
-                        {article.author}
-                      </p>
-                    ) : null}
+                    <p
+                      className="m-0 text-[15px] font-semibold"
+                      style={{ color: T.ink.base }}
+                    >
+                      {article.author ?? "The Journal"}
+                    </p>
                     {article.authorTitle ? (
                       <p
-                        style={{
-                          fontFamily: T.font.mono,
-                          fontSize: "10px",
-                          letterSpacing: ".14em",
-                          textTransform: "uppercase",
-                          color: T.ink.faint,
-                          margin: 0,
-                        }}
+                        className="m-0 text-[14px]"
+                        style={{ color: T.ink.dim }}
                       >
                         {article.authorTitle}
                       </p>
@@ -250,272 +177,228 @@ export function BlogArticlePage({
                   </div>
                 </div>
 
-                <div className="ml-auto">
-                  <ArticleShareButtons
-                    title={article.title}
-                    slug={article.slug}
+                <ArticleShareButtons
+                  title={article.title}
+                  slug={article.slug}
+                />
+              </div>
+            </header>
+
+            {/* Hero image */}
+            {imgUrl ? (
+              <figure className="m-0 mt-2">
+                <div
+                  className="relative aspect-[16/9] overflow-hidden rounded-3xl"
+                  style={{ background: T.bg.deep }}
+                >
+                  <Image
+                    src={imgUrl}
+                    alt={
+                      article.heroImage?.alternativeText ?? article.title ?? ""
+                    }
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 880px"
+                    className="object-cover"
                   />
                 </div>
+              </figure>
+            ) : null}
+
+            {/* Prose — white section card on paper */}
+            <article
+              className="rounded-3xl border px-6 py-8 sm:px-12 sm:py-11"
+              style={{ background: T.bg.deep, borderColor: T.border.line }}
+            >
+              <div className="article-drop-cap [&_h2]:mt-10 [&_h2]:[font-family:var(--font-newsreader),Georgia,serif] [&_h2]:text-[28px] [&_h2]:font-medium [&_h2]:tracking-[-0.01em] [&_h3]:mt-8 [&_h3]:[font-family:var(--font-newsreader),Georgia,serif] [&_h3]:text-[21px] [&_h3]:font-medium [&_li]:text-[17px] [&_li]:leading-[1.7] [&_p]:text-[17px] [&_p]:leading-[1.7]">
+                <ArticleBodyBlocks blocks={article.body} />
               </div>
-            </div>
-          </Container>
-        </section>
+            </article>
 
-        {/* ── Article body ──────────────────────────────────────────────── */}
-        <section className="py-14 sm:py-20">
-          <Container>
-            <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_240px]">
-              {/* Prose */}
-              <article className="max-w-[700px] min-w-0">
-                <div className="article-drop-cap">
-                  <ArticleBodyBlocks blocks={article.body} />
-                </div>
-
-                {/* Back link */}
-                <div
-                  className="mt-10 border-t pt-6"
-                  style={{ borderColor: T.border.line }}
+            {/* Author bio */}
+            {article.author ? (
+              <div
+                className="flex items-start gap-5 rounded-3xl border p-6 sm:p-7"
+                style={{ background: T.bg.deep, borderColor: T.border.line }}
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex size-14 flex-none items-center justify-center rounded-full text-[20px] font-semibold"
+                  style={{
+                    background: "var(--tint-national-bg)",
+                    color: "var(--tint-national-fg)",
+                  }}
                 >
-                  <GlobalLink
-                    href="/blog"
-                    className="inline-flex items-center gap-2 transition-colors hover:text-(--t-ink-dim)"
+                  {authorInitial}
+                </span>
+                <div className="min-w-0">
+                  <p
+                    className="m-0 mb-0.5 text-[14px] font-semibold"
+                    style={{ color: T.ink.dim }}
+                  >
+                    Written by
+                  </p>
+                  <p
+                    className="m-0 text-[22px]"
                     style={{
-                      fontFamily: T.font.mono,
-                      fontSize: "11px",
-                      letterSpacing: ".10em",
-                      textTransform: "uppercase",
-                      color: T.ink.faint,
+                      fontFamily: T.font.serif,
+                      fontWeight: 500,
+                      color: T.ink.base,
                     }}
                   >
-                    <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3">
-                      <path
-                        d="M10 3L5 8l5 5"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    Back to journal
-                  </GlobalLink>
-                </div>
-              </article>
-
-              {/* Right sidebar */}
-              <aside className="hidden lg:block">
-                <div className="sticky top-24 space-y-8">
-                  {/* Article metadata */}
-                  <div
-                    className="space-y-4 rounded-xl p-5"
-                    style={{
-                      background: T.bg.surface,
-                      border: `1px solid ${T.border.line}`,
-                    }}
-                  >
-                    {publishedDate ? (
-                      <div>
-                        <p
-                          style={{
-                            fontFamily: T.font.mono,
-                            fontSize: "10px",
-                            letterSpacing: ".20em",
-                            textTransform: "uppercase",
-                            color: T.ink.faint,
-                            marginBottom: "4px",
-                          }}
-                        >
-                          Published
-                        </p>
-                        <p style={{ fontSize: "13px", color: T.ink.low }}>
-                          {publishedDate}
-                        </p>
-                      </div>
-                    ) : null}
-
-                    <div>
-                      <p
-                        style={{
-                          fontFamily: T.font.mono,
-                          fontSize: "10px",
-                          letterSpacing: ".20em",
-                          textTransform: "uppercase",
-                          color: T.ink.faint,
-                          marginBottom: "4px",
-                        }}
-                      >
-                        Reading time
-                      </p>
-                      <p style={{ fontSize: "13px", color: T.ink.low }}>
-                        {readingTime} min
-                      </p>
-                    </div>
-
-                    {article.category?.name ? (
-                      <div>
-                        <p
-                          style={{
-                            fontFamily: T.font.mono,
-                            fontSize: "10px",
-                            letterSpacing: ".20em",
-                            textTransform: "uppercase",
-                            color: T.ink.faint,
-                            marginBottom: "4px",
-                          }}
-                        >
-                          Category
-                        </p>
-                        <p style={{ fontSize: "13px", color: T.ink.low }}>
-                          {article.category.name}
-                        </p>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  {/* TOC */}
-                  {headings.length > 0 ? (
-                    <div>
-                      <p
-                        style={{
-                          fontFamily: T.font.mono,
-                          fontSize: "10px",
-                          letterSpacing: ".20em",
-                          textTransform: "uppercase",
-                          color: T.ink.faint,
-                          marginBottom: "16px",
-                        }}
-                      >
-                        In this article
-                      </p>
-                      <nav className="space-y-2">
-                        {headings.map((h) => (
-                          <a
-                            key={h.id}
-                            href={`#${h.id}`}
-                            className="block text-[12px] leading-snug transition-colors hover:text-(--t-ink-dim)"
-                            style={{
-                              color: T.ink.faint,
-                              paddingLeft:
-                                h.level > 2 ? `${(h.level - 2) * 12}px` : "0",
-                            }}
-                          >
-                            {h.text}
-                          </a>
-                        ))}
-                      </nav>
-                    </div>
+                    {article.author}
+                  </p>
+                  {article.authorTitle ? (
+                    <p
+                      className="m-0 mt-0.5 text-[14px]"
+                      style={{ color: T.ink.dim }}
+                    >
+                      {article.authorTitle}
+                    </p>
+                  ) : null}
+                  {article.authorBio ? (
+                    <p
+                      className="m-0 mt-3 text-[15px] leading-[1.6]"
+                      style={{ color: T.ink.base }}
+                    >
+                      {article.authorBio}
+                    </p>
                   ) : null}
                 </div>
-              </aside>
-            </div>
-          </Container>
-        </section>
-
-        {/* ── Author bio ────────────────────────────────────────────────── */}
-        {article.author ? (
-          <section
-            className="border-t py-12"
-            style={{ borderColor: T.border.line }}
-          >
-            <Container>
-              <div className="max-w-[700px]">
-                <div
-                  className="flex items-start gap-5 rounded-2xl p-6 sm:p-8"
-                  style={{
-                    background: T.bg.surface,
-                    border: `1px solid ${T.border.line}`,
-                  }}
-                >
-                  <Avatar initials={authorInitial} size="lg" />
-                  <div className="min-w-0">
-                    <p
-                      style={{
-                        fontFamily: T.font.mono,
-                        fontSize: "10px",
-                        letterSpacing: ".20em",
-                        textTransform: "uppercase",
-                        color: T.ink.faint,
-                        marginBottom: "4px",
-                      }}
-                    >
-                      Written by
-                    </p>
-                    <p
-                      style={{
-                        fontSize: "15px",
-                        fontWeight: 500,
-                        color: T.ink.base,
-                        marginBottom: "2px",
-                      }}
-                    >
-                      {article.author}
-                    </p>
-                    {article.authorTitle ? (
-                      <p
-                        style={{
-                          fontFamily: T.font.mono,
-                          fontSize: "10px",
-                          letterSpacing: ".12em",
-                          textTransform: "uppercase",
-                          color: T.ink.faint,
-                          marginBottom: "10px",
-                        }}
-                      >
-                        {article.authorTitle}
-                      </p>
-                    ) : null}
-                    {article.authorBio ? (
-                      <p
-                        style={{
-                          fontSize: "13px",
-                          lineHeight: 1.7,
-                          color: T.ink.faint,
-                        }}
-                      >
-                        {article.authorBio}
-                      </p>
-                    ) : null}
-                  </div>
-                </div>
               </div>
-            </Container>
-          </section>
-        ) : null}
+            ) : null}
 
-        {/* ── More from the journal ─────────────────────────────────────── */}
+            {/* Back link */}
+            <GlobalLink
+              href="/blog"
+              className="mt-1 inline-flex w-fit items-center gap-2 text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+              style={{ color: T.accent.primary }}
+            >
+              <svg
+                viewBox="0 0 16 16"
+                fill="none"
+                className="h-3.5 w-3.5"
+                aria-hidden="true"
+              >
+                <path
+                  d="M10 3L5 8l5 5"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Back to the journal
+            </GlobalLink>
+          </div>
+
+          {/* Sidebar */}
+          <aside className="top-24 flex flex-col gap-4 lg:sticky">
+            {metaRows.length > 0 ? (
+              <div
+                className="rounded-[20px] border p-5"
+                style={{ background: T.bg.deep, borderColor: T.border.line }}
+              >
+                <p
+                  className="m-0 mb-2 text-[15px] font-semibold"
+                  style={{ color: T.ink.base }}
+                >
+                  About this article
+                </p>
+                <dl className="m-0">
+                  {metaRows.map((row) => (
+                    <div
+                      key={row.label}
+                      className="flex items-center justify-between gap-3 border-t py-2.5 first:border-t-0"
+                      style={{ borderColor: T.border.divider }}
+                    >
+                      <dt className="text-[14px]" style={{ color: T.ink.dim }}>
+                        {row.label}
+                      </dt>
+                      <dd
+                        className="m-0 text-right text-[14px] font-semibold"
+                        style={{ color: T.ink.base }}
+                      >
+                        {row.value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            ) : null}
+
+            {headings.length > 0 ? (
+              <nav
+                aria-label="In this article"
+                className="hidden rounded-[20px] border p-5 lg:block"
+                style={{ background: T.bg.deep, borderColor: T.border.line }}
+              >
+                <p
+                  className="m-0 mb-2 text-[15px] font-semibold"
+                  style={{ color: T.ink.base }}
+                >
+                  In this article
+                </p>
+                <ul
+                  className="m-0 flex list-none flex-col gap-1 border-l p-0 pl-3"
+                  style={{ borderColor: T.border.divider }}
+                >
+                  {headings.map((h) => (
+                    <li
+                      key={h.id}
+                      style={
+                        h.level > 2
+                          ? { paddingLeft: `${(h.level - 2) * 12}px` }
+                          : undefined
+                      }
+                    >
+                      <a
+                        href={`#${h.id}`}
+                        className="block py-0.5 text-[14px] leading-snug transition-colors hover:text-(--t-accent-primary)"
+                        style={{ color: T.ink.dim }}
+                      >
+                        {h.text}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ) : null}
+          </aside>
+        </div>
+
+        {/* More from the journal */}
         {relatedCards.length > 0 ? (
           <section
-            className="border-t py-14 sm:py-20"
+            aria-labelledby="related-heading"
+            className="mt-16 border-t pt-12"
             style={{ borderColor: T.border.line }}
           >
-            <Container>
-              <div className="mb-10">
-                <p
-                  style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".22em",
-                    textTransform: "uppercase",
-                    color: T.ink.faint,
-                    marginBottom: "14px",
-                  }}
-                >
-                  Continue reading
-                </p>
-                <SectionHeader italic="from the journal." as="h2">
-                  More
-                </SectionHeader>
-              </div>
+            <h2
+              id="related-heading"
+              className="m-0 mb-8 text-[clamp(28px,3vw,40px)] leading-[1.05]"
+              style={{
+                fontFamily: T.font.serif,
+                fontWeight: 500,
+                letterSpacing: "-0.02em",
+                color: T.ink.base,
+              }}
+            >
+              More{" "}
+              <em style={{ fontWeight: 400, color: T.accent.primary }}>
+                from the journal
+              </em>
+            </h2>
 
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {relatedCards.map((a, i) => (
-                  <BlogArticleCard key={a.documentId} article={a} index={i} />
-                ))}
-              </div>
-            </Container>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {relatedCards.map((a) => (
+                <BlogArticleCard key={a.documentId} article={a} />
+              ))}
+            </div>
           </section>
         ) : null}
       </main>
-    </PageShell>
+    </div>
   )
 }
 

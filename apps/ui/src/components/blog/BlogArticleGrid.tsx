@@ -1,9 +1,13 @@
 import GlobalLink from "@/components/global/GlobalLink"
-import { BlogCard } from "@/components/home/sections/BlogSection"
 import { T } from "@/lib/design-tokens"
 import type { BlogArticleSummary } from "@/lib/strapi-api/content/server"
 
+import { BlogArticleCard } from "./BlogArticleCard"
+
 // ── Pagination ─────────────────────────────────────────────────────────────────
+
+const PAGER_LINK_CLASS =
+  "rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-muted)"
 
 function Pagination({
   page,
@@ -20,71 +24,43 @@ function Pagination({
   const next = page < pageCount ? `${baseUrl}?page=${page + 1}` : null
 
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "16px",
-        paddingTop: "48px",
-        marginTop: "48px",
-        borderTop: `1px solid ${T.border.line}`,
-      }}
+    <nav
+      aria-label="Pagination"
+      className="mt-12 flex items-center justify-center gap-4 border-t pt-10"
+      style={{ borderColor: T.border.line }}
     >
       {prev ? (
         <GlobalLink
           href={prev}
+          className={PAGER_LINK_CLASS}
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "11px",
-            letterSpacing: ".14em",
-            textTransform: "uppercase",
-            color: T.ink.dim,
-            textDecoration: "none",
-            padding: "8px 16px",
-            border: `1px solid ${T.border.line}`,
-            borderRadius: "10px",
-            transition: "border-color 150ms, color 150ms",
+            borderColor: T.border.hi,
+            background: T.bg.deep,
+            color: T.ink.base,
           }}
-          className="hover:border-(--t-border-hi) hover:text-(--t-ink-base)"
         >
-          ← Prev
+          ← Previous
         </GlobalLink>
       ) : null}
 
-      <span
-        style={{
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".12em",
-          color: T.ink.faint,
-          textTransform: "uppercase",
-        }}
-      >
-        {page} / {pageCount}
+      <span className="text-[14px]" style={{ color: T.ink.dim }}>
+        Page {page} of {pageCount}
       </span>
 
       {next ? (
         <GlobalLink
           href={next}
+          className={PAGER_LINK_CLASS}
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "11px",
-            letterSpacing: ".14em",
-            textTransform: "uppercase",
-            color: T.ink.dim,
-            textDecoration: "none",
-            padding: "8px 16px",
-            border: `1px solid ${T.border.line}`,
-            borderRadius: "10px",
-            transition: "border-color 150ms, color 150ms",
+            borderColor: T.border.hi,
+            background: T.bg.deep,
+            color: T.ink.base,
           }}
-          className="hover:border-(--t-border-hi) hover:text-(--t-ink-base)"
         >
           Next →
         </GlobalLink>
       ) : null}
-    </div>
+    </nav>
   )
 }
 
@@ -104,32 +80,31 @@ export function BlogArticleGrid({
   if (articles.length === 0) {
     return (
       <div
-        style={{
-          padding: "80px",
-          textAlign: "center",
-          color: T.ink.low,
-          fontSize: "15px",
-          border: `1px solid ${T.border.line}`,
-          borderRadius: "18px",
-          background: T.bg.surface,
-        }}
+        className="rounded-[24px] border px-8 py-16 text-center"
+        style={{ background: T.bg.deep, borderColor: T.border.line }}
       >
-        No articles in this section yet.
+        <p
+          className="m-0 text-[24px]"
+          style={{
+            fontFamily: T.font.serif,
+            fontWeight: 500,
+            color: T.ink.base,
+          }}
+        >
+          No articles in this section yet
+        </p>
+        <p className="m-0 mt-2 text-[15px]" style={{ color: T.ink.dim }}>
+          New dispatches land here as they&rsquo;re published.
+        </p>
       </div>
     )
   }
 
   return (
     <>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-          gap: "20px",
-        }}
-      >
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {articles.map((article) => (
-          <BlogCard key={article.documentId} article={article} />
+          <BlogArticleCard key={article.documentId} article={article} />
         ))}
       </div>
       <Pagination page={page} pageCount={pageCount} baseUrl={baseUrl} />
