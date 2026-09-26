@@ -75,6 +75,11 @@ function revisionWhere(existing: {
     : { draftRevision: existing.draftRevision }
 }
 
+// NOTE: `status` on a submission is the moderation status (draft/pending/
+// approved/rejected/needs_info) and is stored correctly in cm_submissions.
+// Strapi's content-manager (and tools built on it, like the MCP) overlays its
+// own document `status` key in list responses, so they show "published".
+// Read moderation state through this plugin's routes, not the content-manager.
 export default ({ strapi }: { strapi: any }) => ({
   async create(data: {
     submissionType: string
