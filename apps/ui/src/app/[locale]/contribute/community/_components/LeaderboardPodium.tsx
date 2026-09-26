@@ -36,7 +36,7 @@ export function LeaderboardPodium({
         const isFirst = entry.rank === 1
 
         return (
-          <li key={entry.baUserId} className="min-w-0">
+          <li key={entry.rank} className="min-w-0">
             <GlobalLink
               href={entry.username ? `/profile/${entry.username}` : "#"}
               className="block h-full rounded-[20px] px-5 py-6 text-center no-underline transition-[box-shadow,border-color] hover:border-(--t-border-hi) hover:shadow-[0_12px_28px_rgba(23,22,43,.08)]"

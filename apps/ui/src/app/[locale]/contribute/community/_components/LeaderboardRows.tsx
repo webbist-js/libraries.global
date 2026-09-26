@@ -25,7 +25,7 @@ export function LeaderboardRows({ entries }: { entries: LeaderboardEntry[] }) {
     >
       {entries.map((entry, i) => (
         <li
-          key={entry.baUserId}
+          key={entry.rank}
           style={
             i > 0 ? { borderTop: `1px solid ${T.border.divider}` } : undefined
           }

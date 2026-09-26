@@ -1,3 +1,5 @@
+import { isContributorRole, promoteRole } from "@repo/access"
+
 import { isValidServiceSecret } from "../../../utils/service-secret"
 
 const FREE_MAIL_DOMAINS = new Set([
@@ -361,15 +363,24 @@ export default {
       .documents("api::library-affiliation.library-affiliation")
       .create({ data: affiliationData as any })
 
-    const profile = await strapi.db
-      .query("api::user-profile.user-profile")
-      .findOne({ where: { baUserId } })
+    const [profile] = (await strapi
+      .documents("api::user-profile.user-profile")
+      .findMany({
+        filters: { baUserId: { $eq: baUserId } },
+        fields: ["documentId", "contributorRole"],
+        limit: 1,
+      })) as { documentId: string; contributorRole?: string }[]
     if (profile) {
-      await strapi.db.query("api::user-profile.user-profile").update({
-        where: { id: profile.id },
+      await strapi.documents("api::user-profile.user-profile").update({
+        documentId: profile.documentId,
         data: {
           isVerifiedLibrarian: true,
-          contributorRole: "verified_librarian",
+          contributorRole: promoteRole(
+            isContributorRole(profile.contributorRole)
+              ? profile.contributorRole
+              : null,
+            "verified_librarian"
+          ),
         },
       })
     }

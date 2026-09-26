@@ -1,6 +1,5 @@
 export type LeaderboardEntry = {
   rank: number
-  baUserId: string
   username: string | null
   firstName: string | null
   lastName: string | null
@@ -15,7 +14,7 @@ export type LeaderboardEntry = {
 export function getDisplayName(entry: LeaderboardEntry): string {
   const full = [entry.firstName, entry.lastName].filter(Boolean).join(" ")
 
-  return full || entry.username || `User ${entry.baUserId.slice(0, 6)}`
+  return full || entry.username || `Contributor #${entry.rank}`
 }
 
 export function getInitials(entry: LeaderboardEntry): string {

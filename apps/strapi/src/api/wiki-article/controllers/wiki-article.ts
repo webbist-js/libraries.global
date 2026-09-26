@@ -121,7 +121,11 @@ export default factories.createCoreController(
         .map((uid) =>
           profiles.find((p) => (p as Record<string, unknown>).baUserId === uid)
         )
-        .filter(Boolean)
+        // eslint-disable-next-line unicorn/prefer-native-coercion-functions -- type predicate narrows away `undefined`
+        .filter((p): p is NonNullable<typeof p> => Boolean(p))
+        // baUserId is only used above to sort by contribution count; it's
+        // never returned to the client.
+        .map(({ baUserId: _baUserId, ...rest }) => rest)
 
       ctx.body = { data: sorted, meta: {} }
     },

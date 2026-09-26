@@ -5,7 +5,6 @@ export type Period = "today" | "week" | "month" | "all"
 export type LeaderboardEntry = {
   rank: number
   rankChange: number | null
-  baUserId: string
   username: string | null
   firstName: string | null
   lastName: string | null
@@ -86,6 +85,8 @@ export default ({ strapi }: { strapi: any }) => ({
       contributorRole: string | null
       points: number
       tier: string
+      profileVisibility?: string
+      publicPrefs?: { showLocation?: boolean; showActivity?: boolean } | null
     }[]
 
     const profileMap = new Map(profiles.map((p) => [p.baUserId, p]))
@@ -102,16 +103,18 @@ export default ({ strapi }: { strapi: any }) => ({
       const prevRank = prevRankMap.get(row.ba_user_id)
       const rankChange = prevRank != null ? prevRank - currentRank : null
 
+      const isPrivate = profile?.profileVisibility === "private"
+      const showLocation = profile?.publicPrefs?.showLocation !== false
+
       return {
         rank: currentRank,
         rankChange,
-        baUserId: row.ba_user_id,
-        username: profile?.username ?? null,
-        firstName: profile?.firstName ?? null,
-        lastName: profile?.lastName ?? null,
-        avatarUrl: profile?.avatarUrl ?? null,
-        country: profile?.country ?? null,
-        contributorRole: profile?.contributorRole ?? null,
+        username: isPrivate ? null : (profile?.username ?? null),
+        firstName: isPrivate ? "Private" : (profile?.firstName ?? null),
+        lastName: isPrivate ? "contributor" : (profile?.lastName ?? null),
+        avatarUrl: isPrivate ? null : (profile?.avatarUrl ?? null),
+        country: isPrivate || !showLocation ? null : (profile?.country ?? null),
+        contributorRole: isPrivate ? null : (profile?.contributorRole ?? null),
         periodPoints: Number(row.periodPoints),
         totalPoints: profile?.points ?? 0,
         tier: profile?.tier ?? "Reader",
