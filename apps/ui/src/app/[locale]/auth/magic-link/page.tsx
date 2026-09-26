@@ -3,8 +3,11 @@ import { setRequestLocale } from "next-intl/server"
 import { use } from "react"
 
 import { T } from "@/lib/design-tokens"
+import { privateMetadata } from "@/lib/seo/metadata"
 
 import { MagicLinkVerifyContent } from "./_components/MagicLinkVerifyContent"
+
+export const metadata = privateMetadata("Signing you in")
 
 export default function MagicLinkPage({
   params,

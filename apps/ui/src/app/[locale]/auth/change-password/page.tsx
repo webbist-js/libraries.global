@@ -3,8 +3,11 @@ import { setRequestLocale } from "next-intl/server"
 import { use } from "react"
 
 import { removeThisWhenYouNeedMe } from "@/lib/general-helpers"
+import { privateMetadata } from "@/lib/seo/metadata"
 
 import { ChangePasswordForm } from "./_components/ChangePasswordForm"
+
+export const metadata = privateMetadata("Change password")
 
 export default function ChangePasswordPage({
   params,

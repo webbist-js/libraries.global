@@ -103,10 +103,8 @@ export function AuthOAuthButtons({ mode }: AuthOAuthButtonsProps) {
         />
         <span
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".2em",
-            textTransform: "uppercase",
+            fontFamily: T.font.sans,
+            fontSize: "13px",
             color: T.ink.faint,
           }}
         >

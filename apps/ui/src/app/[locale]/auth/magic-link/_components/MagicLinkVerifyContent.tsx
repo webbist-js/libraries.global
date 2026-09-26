@@ -102,8 +102,8 @@ function SuspensedMagicLinkVerifyContent() {
           <div
             className="mb-6 flex h-14 w-14 items-center justify-center rounded-full"
             style={{
-              background: "rgba(127,223,255,.10)",
-              border: `1px solid rgba(127,223,255,.25)`,
+              background: "var(--t-aurora-soft)",
+              border: `1px solid var(--t-aurora-edge)`,
               fontSize: "24px",
             }}
             aria-hidden="true"
@@ -150,10 +150,8 @@ function SuspensedMagicLinkVerifyContent() {
         href="/auth/signin"
         className="text-sm transition-colors"
         style={{
-          fontFamily: T.font.mono,
-          fontSize: "11px",
-          letterSpacing: ".14em",
-          textTransform: "uppercase",
+          fontFamily: T.font.sans,
+          fontSize: "13px",
           color: T.accent.aurora,
           textDecoration: "none",
         }}

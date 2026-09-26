@@ -5,10 +5,11 @@ interface AuthLeftPanelProps {
   mode: "signin" | "register"
 }
 
-const STATS = [
-  { value: "412,938", label: "Libraries Indexed" },
-  { value: "197", label: "Countries" },
-  { value: "4,218", label: "Contributions" },
+// Qualitative, honest value props — no invented numbers.
+const PRINCIPLES = [
+  { value: "Open", label: "CC-licensed records" },
+  { value: "Community-run", label: "Peer-reviewed edits" },
+  { value: "Independent", label: "No ads, no tracking" },
 ]
 
 export function AuthLeftPanel({ mode }: AuthLeftPanelProps) {
@@ -65,7 +66,7 @@ export function AuthLeftPanel({ mode }: AuthLeftPanelProps) {
   const subtext =
     mode === "signin"
       ? "Sign in to contribute additions, propose edits, and follow the librarians and regions you care about."
-      : "Create a free account to propose library additions, correct entries, and help the project's 4,200 librarians keep the world's index current."
+      : "Create a free account to propose library additions, correct entries, and help librarians and readers keep the world's index current."
 
   return (
     <div
@@ -77,7 +78,7 @@ export function AuthLeftPanel({ mode }: AuthLeftPanelProps) {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 70% 60% at 65% 40%, rgba(127,223,255,0.06), transparent 60%), radial-gradient(ellipse 50% 80% at 55% 50%, rgba(92,149,255,0.08), transparent 55%)",
+            "radial-gradient(ellipse 70% 60% at 65% 40%, rgba(67,56,202,0.08), transparent 60%), radial-gradient(ellipse 50% 80% at 55% 50%, rgba(92,149,255,0.08), transparent 55%)",
         }}
       />
       {/* Globe circle suggestion */}
@@ -90,9 +91,9 @@ export function AuthLeftPanel({ mode }: AuthLeftPanelProps) {
           width: "520px",
           height: "520px",
           borderRadius: "50%",
-          border: "1px solid rgba(127,223,255,0.08)",
+          border: "1px solid rgba(67,56,202,0.08)",
           background:
-            "radial-gradient(circle, rgba(127,223,255,0.04) 0%, transparent 70%)",
+            "radial-gradient(circle, rgba(67,56,202,0.08) 0%, transparent 70%)",
         }}
       />
       <div
@@ -104,7 +105,7 @@ export function AuthLeftPanel({ mode }: AuthLeftPanelProps) {
           width: "380px",
           height: "380px",
           borderRadius: "50%",
-          border: "1px solid rgba(127,223,255,0.05)",
+          border: "1px solid rgba(67,56,202,0.08)",
         }}
       />
 
@@ -114,23 +115,22 @@ export function AuthLeftPanel({ mode }: AuthLeftPanelProps) {
           display: "flex",
           alignItems: "center",
           gap: "10px",
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".2em",
-          textTransform: "uppercase",
+          fontFamily: T.font.sans,
+          fontSize: "13px",
           color: T.ink.faint,
         }}
       >
         <span
           style={{
             width: "28px",
-            height: "1px",
-            background: T.accent.aurora,
+            height: "2px",
+            borderRadius: "2px",
+            background: T.accent.primary,
             display: "inline-block",
             flexShrink: 0,
           }}
         />
-        § Join the Index
+        Join the index
       </div>
 
       {/* Main content */}
@@ -141,9 +141,9 @@ export function AuthLeftPanel({ mode }: AuthLeftPanelProps) {
             style={{
               fontFamily: T.font.serif,
               fontSize: "clamp(2.8rem, 5vw, 4.5rem)",
-              fontWeight: 700,
-              lineHeight: 0.92,
-              letterSpacing: "-0.03em",
+              fontWeight: 500,
+              lineHeight: 1.02,
+              letterSpacing: "-0.02em",
               color: T.ink.base,
               margin: 0,
             }}
@@ -157,129 +157,89 @@ export function AuthLeftPanel({ mode }: AuthLeftPanelProps) {
               lineHeight: "1.65",
               color: T.ink.dim,
               maxWidth: "42ch",
-              fontWeight: 300,
             }}
           >
             {subtext}
           </p>
         </div>
 
-        {/* Stats row */}
-        <div style={{ display: "flex", gap: "32px" }}>
-          {STATS.map((stat) => (
+        {/* Project principles — qualitative, no invented figures */}
+        <div style={{ display: "flex", gap: "32px", flexWrap: "wrap" }}>
+          {PRINCIPLES.map((item) => (
             <div
-              key={stat.label}
+              key={item.value}
               style={{ display: "flex", flexDirection: "column", gap: "2px" }}
             >
               <span
                 style={{
                   fontFamily: T.font.serif,
-                  fontSize: "28px",
-                  fontWeight: 400,
-                  letterSpacing: "-0.03em",
+                  fontSize: "24px",
+                  fontWeight: 500,
+                  letterSpacing: "-0.02em",
                   color: T.ink.base,
-                  lineHeight: 1,
+                  lineHeight: 1.1,
                 }}
               >
-                {stat.value}
+                {item.value}
               </span>
               <span
                 style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".18em",
-                  textTransform: "uppercase",
-                  color: T.ink.faint,
+                  fontFamily: T.font.sans,
+                  fontSize: "14px",
+                  color: T.ink.dim,
                 }}
               >
-                {stat.label}
+                {item.label}
               </span>
             </div>
           ))}
         </div>
 
-        {/* Testimonial */}
+        {/* Editorial covenant — project copy, not an endorsement */}
         <div
           style={{
-            border: `1px solid ${T.border.line}`,
-            borderRadius: "16px",
-            padding: "20px 22px",
-            background: T.bg.surface,
+            borderLeft: `2px solid ${T.accent.primary}`,
+            paddingLeft: "16px",
             maxWidth: "360px",
           }}
         >
           <p
             style={{
-              fontSize: "13.5px",
+              fontFamily: T.font.serif,
+              fontSize: "15px",
               lineHeight: "1.65",
               color: T.ink.dim,
               fontStyle: "italic",
-              margin: "0 0 14px",
-              fontWeight: 300,
+              margin: "0 0 8px",
             }}
           >
-            &ldquo;An atlas of every reading-room on the planet — open,
-            peer-edited, and finally indexed in one place.&rdquo;
+            &ldquo;A name on an entry is a small act of trust between a
+            librarian and a reader.&rdquo;
           </p>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div
-              style={{
-                width: "30px",
-                height: "30px",
-                borderRadius: "50%",
-                background: "rgba(127,223,255,0.15)",
-                border: `1px solid ${T.border.line}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontFamily: T.font.mono,
-                fontSize: "11px",
-                color: T.accent.aurora,
-                flexShrink: 0,
-              }}
-            >
-              AR
-            </div>
-            <div>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: "12px",
-                  color: T.ink.base,
-                  fontWeight: 500,
-                }}
-              >
-                Amélie Rault
-              </p>
-              <p
-                style={{
-                  margin: 0,
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".12em",
-                  textTransform: "uppercase",
-                  color: T.ink.faint,
-                }}
-              >
-                Bibliothèque nationale de France · Verified librarian
-              </p>
-            </div>
-          </div>
+          <p
+            style={{
+              margin: 0,
+              fontSize: "13px",
+              fontWeight: 600,
+              color: T.ink.low,
+            }}
+          >
+            Editorial covenant
+          </p>
         </div>
       </div>
 
-      {/* Bottom decoration */}
+      {/* Bottom line */}
       <div
         style={{
           position: "relative",
           zIndex: 10,
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".12em",
-          color: T.ink.faint,
+          fontFamily: T.font.sans,
+          fontSize: "13px",
+          color: T.ink.low,
         }}
       >
-        01 — 00
+        Independent and open source
       </div>
     </div>
   )

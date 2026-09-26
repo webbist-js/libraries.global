@@ -1,7 +1,11 @@
 import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 
+import { privateMetadata } from "@/lib/seo/metadata"
+
 import { RegisterForm } from "./_components/RegisterForm"
+
+export const metadata = privateMetadata("Create an account")
 
 export default async function RegisterPage({
   params,
@@ -9,5 +13,10 @@ export default async function RegisterPage({
   const { locale } = (await params) as { locale: Locale }
   setRequestLocale(locale)
 
-  return <RegisterForm />
+  return (
+    <>
+      <span data-hide-footer="true" hidden />
+      <RegisterForm />
+    </>
+  )
 }

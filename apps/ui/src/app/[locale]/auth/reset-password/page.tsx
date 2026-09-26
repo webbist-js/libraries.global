@@ -4,6 +4,9 @@ import { use } from "react"
 
 import { SetPasswordForm } from "@/app/[locale]/auth/activate/_components/SetPasswordForm"
 import { removeThisWhenYouNeedMe } from "@/lib/general-helpers"
+import { privateMetadata } from "@/lib/seo/metadata"
+
+export const metadata = privateMetadata("Reset password")
 
 export default function ResetPasswordPage({
   params,

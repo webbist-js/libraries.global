@@ -4,6 +4,9 @@ import { use } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
+import { privateMetadata } from "@/lib/seo/metadata"
+
+export const metadata = privateMetadata("Check your email")
 
 export default function MagicLinkSentPage({
   params,
@@ -62,8 +65,8 @@ export default function MagicLinkSentPage({
           className="mb-8 text-sm"
           style={{ fontFamily: T.font.sans, color: T.ink.low }}
         >
-          The link expires in 10 minutes. You can safely close this tab while
-          you wait.
+          The link expires in 5 minutes. You can safely close this tab while you
+          wait.
         </p>
 
         {/* Divider */}
@@ -77,10 +80,8 @@ export default function MagicLinkSentPage({
           href="/auth/signin"
           className="text-sm transition-colors"
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "11px",
-            letterSpacing: ".14em",
-            textTransform: "uppercase",
+            fontFamily: T.font.sans,
+            fontSize: "13px",
             color: T.accent.aurora,
             textDecoration: "none",
           }}

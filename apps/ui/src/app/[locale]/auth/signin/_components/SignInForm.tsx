@@ -14,6 +14,7 @@ import { UseSearchParamsWrapper } from "@/components/helpers/UseSearchParamsWrap
 import { useUserMutations } from "@/hooks/useUserMutations"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
+import { safeRedirectPath } from "@/lib/safe-redirect"
 
 const inputStyle = {
   width: "100%",
@@ -29,10 +30,8 @@ const inputStyle = {
 }
 
 const labelStyle = {
-  fontFamily: T.font.mono,
-  fontSize: "10px",
-  letterSpacing: ".18em",
-  textTransform: "uppercase" as const,
+  fontFamily: T.font.sans,
+  fontSize: "13px",
   color: T.ink.low,
   display: "flex",
   justifyContent: "space-between",
@@ -55,7 +54,7 @@ export function SignInForm() {
 
 function SuspensedSignInForm() {
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/"
+  const callbackUrl = safeRedirectPath(searchParams.get("callbackUrl"))
   const { signInMutation } = useUserMutations()
   const [magicEmail, setMagicEmail] = useState("")
   const [magicPending, setMagicPending] = useState(false)
@@ -80,9 +79,13 @@ function SuspensedSignInForm() {
       },
       onError: (error) => {
         const msg = error instanceof Error ? error.message : "Sign in failed"
-        const display = msg.includes("identifier or password")
-          ? "Incorrect email or password."
-          : msg
+        let display = msg
+        if (msg.includes("identifier or password")) {
+          display = "Incorrect email or password."
+        } else if (/email not verified/i.test(msg)) {
+          display =
+            "Please confirm your email address first. We've sent you a new link."
+        }
         toast.error(display)
       },
     })
@@ -102,10 +105,8 @@ function SuspensedSignInForm() {
           <GlobalLink
             href="/"
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: T.ink.faint,
               textDecoration: "none",
               display: "flex",
@@ -119,10 +120,8 @@ function SuspensedSignInForm() {
           <GlobalLink
             href="/auth/register"
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: T.ink.faint,
               textDecoration: "none",
             }}
@@ -137,15 +136,13 @@ function SuspensedSignInForm() {
           {/* Eyebrow */}
           <p
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".22em",
-              textTransform: "uppercase",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: T.ink.faint,
               marginBottom: "12px",
             }}
           >
-            § 01 · Authentication
+            Sign in
           </p>
 
           {/* Heading */}
@@ -185,7 +182,7 @@ function SuspensedSignInForm() {
             <div>
               <label style={labelStyle} htmlFor="email">
                 <span>Email address</span>
-                <span style={{ color: T.accent.aurora, fontSize: "10px" }}>
+                <span style={{ color: T.accent.aurora, fontSize: "13px" }}>
                   *
                 </span>
               </label>
@@ -195,13 +192,13 @@ function SuspensedSignInForm() {
                 autoComplete="email"
                 placeholder="you@library.org"
                 style={inputStyle}
-                className="focus:border-[rgba(127,223,255,.4)] focus:bg-[rgba(127,223,255,.03)]"
+                className="focus:border-(--t-aurora-edge) focus:bg-(--t-aurora-soft)"
                 {...form.register("email")}
               />
               {form.formState.errors.email && (
                 <p
                   style={{
-                    fontSize: "11px",
+                    fontSize: "13px",
                     color: T.accent.danger,
                     marginTop: "4px",
                   }}
@@ -217,10 +214,8 @@ function SuspensedSignInForm() {
                 <GlobalLink
                   href="/auth/forgot-password"
                   style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".12em",
-                    textTransform: "uppercase",
+                    fontFamily: T.font.sans,
+                    fontSize: "13px",
                     color: T.ink.faint,
                     textDecoration: "none",
                   }}
@@ -235,13 +230,13 @@ function SuspensedSignInForm() {
                 autoComplete="current-password"
                 placeholder="••••••••••"
                 style={inputStyle}
-                className="focus:border-[rgba(127,223,255,.4)] focus:bg-[rgba(127,223,255,.03)]"
+                className="focus:border-(--t-aurora-edge) focus:bg-(--t-aurora-soft)"
                 {...form.register("password")}
               />
               {form.formState.errors.password && (
                 <p
                   style={{
-                    fontSize: "11px",
+                    fontSize: "13px",
                     color: T.accent.danger,
                     marginTop: "4px",
                   }}
@@ -258,9 +253,9 @@ function SuspensedSignInForm() {
                 marginTop: "6px",
                 width: "100%",
                 padding: "13px",
-                borderRadius: "10px",
-                background: T.ink.base,
-                color: T.bg.void,
+                borderRadius: "999px",
+                background: T.accent.primary,
+                color: "#fff",
                 fontFamily: T.font.sans,
                 fontWeight: 600,
                 fontSize: "14px",
@@ -300,10 +295,8 @@ function SuspensedSignInForm() {
             />
             <span
               style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".2em",
-                textTransform: "uppercase",
+                fontFamily: T.font.sans,
+                fontSize: "13px",
                 color: T.ink.faint,
               }}
             >
@@ -352,7 +345,7 @@ function SuspensedSignInForm() {
               onChange={(e) => setMagicEmail(e.target.value)}
               required
               style={inputStyle}
-              className="focus:border-[rgba(127,223,255,.4)] focus:bg-[rgba(127,223,255,.03)]"
+              className="focus:border-(--t-aurora-edge) focus:bg-(--t-aurora-soft)"
             />
             <button
               type="submit"
@@ -366,7 +359,7 @@ function SuspensedSignInForm() {
                 fontFamily: T.font.sans,
                 fontWeight: 500,
                 fontSize: "14px",
-                border: `1px solid rgba(127,223,255,.35)`,
+                border: `1px solid var(--t-aurora-edge)`,
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
@@ -404,10 +397,8 @@ function SuspensedSignInForm() {
               marginTop: "40px",
               display: "flex",
               justifyContent: "space-between",
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: T.ink.faint,
             }}
           >

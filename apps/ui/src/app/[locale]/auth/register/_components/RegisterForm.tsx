@@ -26,10 +26,8 @@ const inputStyle = {
 }
 
 const labelStyle = {
-  fontFamily: T.font.mono,
-  fontSize: "10px",
-  letterSpacing: ".18em",
-  textTransform: "uppercase" as const,
+  fontFamily: T.font.sans,
+  fontSize: "13px",
   color: T.ink.low,
   display: "flex",
   justifyContent: "space-between",
@@ -78,7 +76,8 @@ export function RegisterForm() {
       { email: values.email, password: values.password },
       {
         onSuccess: () => {
-          globalThis.location.href = "/profile/onboarding"
+          // Email verification is required before the first sign-in.
+          globalThis.location.href = "/auth/verify-email-sent"
         },
         onError: (error) => {
           const msg = error?.message ?? "Registration failed"
@@ -105,10 +104,8 @@ export function RegisterForm() {
           <GlobalLink
             href="/"
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: T.ink.faint,
               textDecoration: "none",
               display: "flex",
@@ -122,10 +119,8 @@ export function RegisterForm() {
           <GlobalLink
             href="/auth/signin"
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: T.ink.faint,
               textDecoration: "none",
             }}
@@ -140,15 +135,13 @@ export function RegisterForm() {
           {/* Eyebrow */}
           <p
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".22em",
-              textTransform: "uppercase",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: T.ink.faint,
               marginBottom: "12px",
             }}
           >
-            § 01 · Create account
+            Create account
           </p>
 
           {/* Heading */}
@@ -189,7 +182,7 @@ export function RegisterForm() {
             <div>
               <label style={labelStyle} htmlFor="email">
                 <span>Email address</span>
-                <span style={{ color: T.accent.aurora, fontSize: "10px" }}>
+                <span style={{ color: T.accent.aurora, fontSize: "13px" }}>
                   *
                 </span>
               </label>
@@ -199,13 +192,13 @@ export function RegisterForm() {
                 autoComplete="email"
                 placeholder="you@library.org"
                 style={inputStyle}
-                className="focus:border-[rgba(127,223,255,.4)] focus:bg-[rgba(127,223,255,.03)]"
+                className="focus:border-(--t-aurora-edge) focus:bg-(--t-aurora-soft)"
                 {...register("email")}
               />
               {errors.email && (
                 <p
                   style={{
-                    fontSize: "11px",
+                    fontSize: "13px",
                     color: T.accent.danger,
                     marginTop: "4px",
                   }}
@@ -218,7 +211,7 @@ export function RegisterForm() {
             <div>
               <label style={labelStyle} htmlFor="password">
                 <span>Create password</span>
-                <span style={{ color: T.ink.faint, fontSize: "10px" }}>
+                <span style={{ color: T.ink.faint, fontSize: "13px" }}>
                   Minimum {PASSWORD_MIN_LENGTH} characters
                 </span>
               </label>
@@ -228,13 +221,13 @@ export function RegisterForm() {
                 autoComplete="new-password"
                 placeholder="••••••••••••"
                 style={inputStyle}
-                className="focus:border-[rgba(127,223,255,.4)] focus:bg-[rgba(127,223,255,.03)]"
+                className="focus:border-(--t-aurora-edge) focus:bg-(--t-aurora-soft)"
                 {...register("password")}
               />
               {errors.password && (
                 <p
                   style={{
-                    fontSize: "11px",
+                    fontSize: "13px",
                     color: T.accent.danger,
                     marginTop: "4px",
                   }}
@@ -247,7 +240,7 @@ export function RegisterForm() {
             <div>
               <label style={labelStyle} htmlFor="passwordConfirmation">
                 <span>Confirm password</span>
-                <span style={{ color: T.accent.aurora, fontSize: "10px" }}>
+                <span style={{ color: T.accent.aurora, fontSize: "13px" }}>
                   *
                 </span>
               </label>
@@ -257,13 +250,13 @@ export function RegisterForm() {
                 autoComplete="new-password"
                 placeholder="••••••••••••"
                 style={inputStyle}
-                className="focus:border-[rgba(127,223,255,.4)] focus:bg-[rgba(127,223,255,.03)]"
+                className="focus:border-(--t-aurora-edge) focus:bg-(--t-aurora-soft)"
                 {...register("passwordConfirmation")}
               />
               {errors.passwordConfirmation && (
                 <p
                   style={{
-                    fontSize: "11px",
+                    fontSize: "13px",
                     color: T.accent.danger,
                     marginTop: "4px",
                   }}
@@ -319,7 +312,7 @@ export function RegisterForm() {
             {errors.terms && (
               <p
                 style={{
-                  fontSize: "11px",
+                  fontSize: "13px",
                   color: T.accent.danger,
                   marginTop: "-8px",
                 }}
@@ -335,9 +328,9 @@ export function RegisterForm() {
                 marginTop: "6px",
                 width: "100%",
                 padding: "13px",
-                borderRadius: "10px",
-                background: T.ink.base,
-                color: T.bg.void,
+                borderRadius: "999px",
+                background: T.accent.primary,
+                color: "#fff",
                 fontFamily: T.font.sans,
                 fontWeight: 600,
                 fontSize: "14px",
@@ -379,10 +372,8 @@ export function RegisterForm() {
             style={{
               textAlign: "center",
               marginTop: "12px",
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: T.ink.faint,
             }}
           >

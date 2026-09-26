@@ -2,6 +2,7 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { getSessionSSR } from "@/lib/auth-server"
+import { safeRedirectPath } from "@/lib/safe-redirect"
 
 export default async function PostSigninPage({
   searchParams,
@@ -11,7 +12,7 @@ export default async function PostSigninPage({
   const session = await getSessionSSR(await headers())
   const { next } = await searchParams
 
-  const destination = next && next.startsWith("/") ? next : "/"
+  const destination = safeRedirectPath(next)
 
   if (!session?.user)
     redirect(`/auth/signin?callbackUrl=${encodeURIComponent(destination)}`)
