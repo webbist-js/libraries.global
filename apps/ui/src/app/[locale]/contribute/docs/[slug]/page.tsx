@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation"
 import type { Locale } from "next-intl"
 
 import { docsSectionForArticle } from "@/components/docs/docs.config"
+import { hasCapability } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { fetchDocsWikiArticles } from "@/lib/strapi-api/content/server"
 
@@ -20,8 +21,6 @@ export async function generateMetadata({
   return { title: `Edit doc: ${slug} / Docs`, robots: "noindex, nofollow" }
 }
 
-const DIRECT_EDIT_ROLES = new Set(["wiki_editor", "editorial_board"])
-
 export default async function EditDocPage({
   params,
 }: {
@@ -37,9 +36,7 @@ export default async function EditDocPage({
   const article = articles.find((a) => a.slug === slug)
   if (!article) notFound()
 
-  const canDirectEdit = DIRECT_EDIT_ROLES.has(
-    session.user.contributorRole ?? ""
-  )
+  const canDirectEdit = hasCapability(session.user, "docs.directEdit")
 
   return (
     <DocsEditShell

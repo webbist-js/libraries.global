@@ -1,10 +1,10 @@
 import { headers } from "next/headers"
 
 import { userHeaders } from "@/app/api/submissions/route"
+import { requireCapability } from "@/lib/access-server"
 import { auth } from "@/lib/auth"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
-const WIKI_EDITOR_ROLES = new Set(["wiki_editor", "editorial_board"])
 
 // GET /api/contribute/wiki/[slug] — fetch existing draft for this slug
 export async function GET(
@@ -13,19 +13,12 @@ export async function GET(
 ) {
   const { slug } = await params
   const session = await auth.api.getSession({ headers: await headers() })
-  if (!session?.user)
-    return Response.json({ error: "Unauthorized" }, { status: 401 })
-  if (
-    !WIKI_EDITOR_ROLES.has(
-      (session.user as Record<string, unknown>).contributorRole as string
-    )
-  ) {
-    return Response.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const denied = requireCapability(session?.user, "docs.directEdit")
+  if (denied) return denied
 
   const res = await fetch(
     `${STRAPI}/api/content-moderation/submissions/draft/wiki_edit?targetSlug=${encodeURIComponent(slug)}`,
-    { headers: { ...userHeaders(session.user) }, cache: "no-store" }
+    { headers: { ...userHeaders(session!.user) }, cache: "no-store" }
   )
   if (!res.ok) return Response.json({ draft: null })
   const data = await res.json()
@@ -40,15 +33,8 @@ export async function POST(
 ) {
   const { slug } = await params
   const session = await auth.api.getSession({ headers: await headers() })
-  if (!session?.user)
-    return Response.json({ error: "Unauthorized" }, { status: 401 })
-  if (
-    !WIKI_EDITOR_ROLES.has(
-      (session.user as Record<string, unknown>).contributorRole as string
-    )
-  ) {
-    return Response.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const denied = requireCapability(session?.user, "docs.directEdit")
+  if (denied) return denied
 
   let body: { draftData?: unknown }
   try {
@@ -61,7 +47,7 @@ export async function POST(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...userHeaders(session.user),
+      ...userHeaders(session!.user),
     },
     body: JSON.stringify({
       submissionType: "wiki_edit",
@@ -83,15 +69,8 @@ export async function PATCH(
 ) {
   const { slug: _slug } = await params
   const session = await auth.api.getSession({ headers: await headers() })
-  if (!session?.user)
-    return Response.json({ error: "Unauthorized" }, { status: 401 })
-  if (
-    !WIKI_EDITOR_ROLES.has(
-      (session.user as Record<string, unknown>).contributorRole as string
-    )
-  ) {
-    return Response.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const denied = requireCapability(session?.user, "docs.directEdit")
+  if (denied) return denied
 
   let body: { submissionId?: unknown; draftData?: unknown }
   try {
@@ -115,7 +94,7 @@ export async function PATCH(
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        ...userHeaders(session.user),
+        ...userHeaders(session!.user),
       },
       body: JSON.stringify({ draftData: body.draftData }),
     }

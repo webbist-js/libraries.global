@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { authClient } from "@/lib/auth-client"
+import { useEntitlements } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
 import { cn } from "@/lib/styles"
 
@@ -87,12 +87,9 @@ function useIsMobile(): boolean {
 }
 
 function useTier(): Tier {
-  const { data } = authClient.useSession()
-  if (!data?.user) return "public"
-  // Entitlements aren't built yet; a `plan` on the session user will switch Pro on.
-  const plan = (data.user as { plan?: string | null }).plan
+  const { plan } = useEntitlements()
 
-  return plan === "pro" ? "pro" : "free"
+  return plan === "public" ? "public" : plan === "free" ? "free" : "pro"
 }
 
 export function AtlasExplorer() {

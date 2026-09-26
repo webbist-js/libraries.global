@@ -1,23 +1,16 @@
 import { headers } from "next/headers"
 
+import { requireCapability } from "@/lib/access-server"
 import { auth } from "@/lib/auth"
 import { toSafeImageFile } from "@/lib/image-upload"
 import { resolveUploadApiKey } from "@/lib/upload-token"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
-const WIKI_EDITOR_ROLES = new Set(["wiki_editor", "editorial_board"])
 
 export async function POST(req: Request) {
   const session = await auth.api.getSession({ headers: await headers() })
-  if (!session?.user)
-    return Response.json({ error: "Unauthorized" }, { status: 401 })
-
-  const role = (session.user as Record<string, unknown>).contributorRole as
-    | string
-    | undefined
-  if (!role || !WIKI_EDITOR_ROLES.has(role)) {
-    return Response.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const denied = requireCapability(session?.user, "docs.directEdit")
+  if (denied) return denied
 
   const formData = await req.formData()
   // Forward only the `files` field for security
