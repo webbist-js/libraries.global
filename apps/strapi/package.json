@@ -32,6 +32,7 @@
     "@_sh/strapi-plugin-ckeditor": "^6.0.2",
     "@arshiash80/strapi-plugin-iconhub": "1.1.1",
     "@notum-cz/strapi-plugin-tiptap-editor": "^1.0.1",
+    "@repo/access": "workspace:*",
     "@repo/catalogues": "workspace:*",
     "@repo/design-system": "workspace:*",
     "@repo/events-crypto": "workspace:*",

@@ -40,6 +40,7 @@
     "strapi-server.ts"
   ],
   "dependencies": {
+    "@repo/access": "workspace:*",
     "diff": "^9.0.0"
   },
   "devDependencies": {
