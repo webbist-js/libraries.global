@@ -181,13 +181,27 @@ A doc is a `wiki-article`, served at `/docs`. Anyone signed in can suggest a cha
 - **C-J1: pitch form** at `/contribute/journal` for any signed-in user (`submit.journalPitch`): title, angle, outline, links and a short bio. It creates a `blog_submission`. Approval creates a **draft** `blog-article` assigned to an editor, with the contributor credited.
 - **C-J2:** editorial authoring stays in Strapi admin (D-C3). A Journal tab in the nav for signed-in users.
 
+### 5.3a Reviewer conversation on `needs_info`
+
+- **C-M1: editable `needs_info` submissions.** A submission in `needs_info` can be edited by its submitter. The same `draftRevision` CAS and `payloadHash` rules apply. Saving recomputes `payloadHash`, and resubmitting moves it `needs_info → pending` through the transitions table. `approve`, `reject` and a second `needs_info` stay moderator-only. The submitter can't reach `approved` from `needs_info` directly.
+- **C-M2: a submission thread.** Add a `submission-message` collection with these fields:
+  - `submission` (relation)
+  - `authorBaUserId`
+  - `authorRole` (`submitter | moderator`)
+  - `body` (plain text, max 4,000 characters)
+  - `createdAt`
+
+  Only the submitter and moderators can read or post. The Next.js proxy goes through the bridge. Moderators post from the Strapi admin review panel. Setting `needs_info` requires a message, which replaces the free-text `reviewNote` for new rows. Each message notifies the other party through the existing notifications plumbing. The thread is never public, whatever the profile visibility, and messages are append-only: no edits or deletes, except by the owner through admin.
+
+- **UI:** `/contribute/submissions/[id]` shows the thread and, when the submission is `needs_info`, an "Update and resubmit" action that reopens the matching editor shell.
+
 ### 5.4 A contribute section that adapts to your role
 
 - `HubActionChooser`, the nav tabs and `RecordsThatNeedYou` are driven by `useCapabilities()` from the session. Nothing is hard-coded.
 - **Your libraries:** a card for claimants showing "Edit your library" and "Connect an event feed".
 - **Editors:** Docs and Journal cards.
 - **`RolesTable`** is rewritten to the real model: Contributor Role columns, what each unlocks and how you get it. Remove "publish without review" (D-C4) and the unimplemented "review others' changes". Add a "Tiers raise your limits; they never skip review" row. **Pro does not appear in this table** (principle 3).
-- **Tier conveniences** (answering the "levels and unlocks" question): `contributionLimits(tier)` raises the pending-submission and upload quotas by tier, and the hub shows the next unlock ("Reach Cartographer to have 20 submissions in review at once"). Earned Pro at Archivist is the top unlock (D-P4).
+- **Tier conveniences** (answering the "levels and unlocks" question): `contributionLimits(tier, role)` raises the pending-submission and upload quotas by tier, and the hub shows the next unlock ("Reach Cartographer to have 20 submissions in review at once"). Earned Pro at Archivist is the top unlock (D-P4).
 
 ---
 
@@ -415,6 +429,16 @@ The defaults below were proposed on 2026-09-26. Confirm or change them.
 | D-O2 | Trademark policy for the name and logo                                                                   | **Yes.** Forks rebrand.                                                                                                                                    |
 | D-O3 | Private package for the gating code                                                                      | **No.** Enforce on the server. Keep data and compute private, and put a service seam at `ANALYSIS_SERVICE_URL` (§11.4).                                    |
 | D-O4 | Is the repository public today? If so, keep this spec's §4 off the public branch until P-A ships (§11.5) | Confirm visibility                                                                                                                                         |
+
+### 10.3 P-A follow-up decisions (answered 2026-09-26)
+
+| #   | Question                                                   | Decision                                                                                                                                                                                             |
+| --- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| I5  | Hide Submission from the content-manager?                  | **No.** Only the owner has Strapi admin access. Contributors never log in to Strapi.                                                                                                                 |
+| I7  | Are `needs_info` submissions editable?                     | **Yes, with a submitter and reviewer thread.** See C-M1 and C-M2 (§5.3a). Scheduled for P-C.                                                                                                         |
+| I8  | Is a `limited` profile's activity public?                  | **No.** It's treated like `private` on world-visible surfaces: leaderboard, top contributors and public history. Affiliated viewers still see the profile itself. Implemented in `isActivityPublic`. |
+| A13 | Content-manager shows `status: "published"` on submissions | **Accepted.** It's an overlay for admin-only users. The DB `status` column is authoritative.                                                                                                         |
+| I9  | Are editorial staff exempt from tier quotas?               | **Curator quotas, not unlimited.** `contributionLimits(tier, role)` gives `wiki_editor` and `editorial_board` the Curator limits, so a compromised staff account still can't flood the queue.        |
 
 ---
 

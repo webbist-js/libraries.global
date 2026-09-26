@@ -89,4 +89,12 @@ describe("submission policy", () => {
       })
     ).toMatchObject({ ok: false, status: 429 })
   })
+  it("gives editorial staff Curator quotas on a Reader tier", async () => {
+    expect(
+      await setup("wiki_editor", [], 5).check({
+        baUserId: "u1",
+        submissionType: "wiki_edit",
+      })
+    ).toEqual({ ok: true })
+  })
 })

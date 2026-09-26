@@ -43,8 +43,22 @@ const LIMITS: Record<TierName, Limits> = {
   },
 }
 
-/** Tier-scaled contribution quotas. Tiers raise limits; they never skip review. */
-export function contributionLimits(tier: string | null): Limits {
+const STAFF_ROLES: ReadonlySet<string> = new Set([
+  "wiki_editor",
+  "editorial_board",
+])
+
+/**
+ * Tier-scaled contribution quotas. Tiers raise limits; they never skip review.
+ * Editorial staff get Curator quotas whatever their points: bounded rather
+ * than unlimited, so a compromised staff account still can't flood the queue.
+ */
+export function contributionLimits(
+  tier: string | null,
+  role?: string | null
+): Limits {
+  if (role && STAFF_ROLES.has(role)) return LIMITS.Curator
+
   return (TIER_NAMES as readonly string[]).includes(tier ?? "")
     ? LIMITS[tier as TierName]
     : LIMITS.Reader

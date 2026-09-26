@@ -21,9 +21,11 @@ export default ({ strapi }: { strapi: any }) => ({
    * a role or claim that changed (or was never valid) between submission
    * and approval is re-checked at apply time, not trusted from the past.
    */
-  async loadCapabilities(
-    baUserId: string
-  ): Promise<{ caps: Capabilities; tier: string | null }> {
+  async loadCapabilities(baUserId: string): Promise<{
+    caps: Capabilities
+    tier: string | null
+    role: string | null
+  }> {
     const [profile] = (await strapi
       .documents("api::user-profile.user-profile")
       .findMany({
@@ -51,7 +53,11 @@ export default ({ strapi }: { strapi: any }) => ({
         .map((libraryDocumentId) => ({ libraryDocumentId })),
     })
 
-    return { caps, tier: profile?.tier ?? null }
+    return {
+      caps,
+      tier: profile?.tier ?? null,
+      role: profile?.contributorRole ?? null,
+    }
   },
 
   async check(input: {
@@ -79,7 +85,7 @@ export default ({ strapi }: { strapi: any }) => ({
     )
       return { ok: false, status: 400, message: "Invalid verification method" }
 
-    const { caps, tier } = await (this as any).loadCapabilities(baUserId)
+    const { caps, tier, role } = await (this as any).loadCapabilities(baUserId)
 
     if (
       !canSubmit(caps, submissionType, {
@@ -96,7 +102,7 @@ export default ({ strapi }: { strapi: any }) => ({
         message: "You can't submit this type of change.",
       }
 
-    const limits = contributionLimits(tier)
+    const limits = contributionLimits(tier, role)
     const excludeFilter = input.excludeDocumentId
       ? { documentId: { $ne: input.excludeDocumentId } }
       : {}
