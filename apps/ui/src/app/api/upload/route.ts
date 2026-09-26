@@ -2,9 +2,9 @@ import { headers } from "next/headers"
 
 import { auth } from "@/lib/auth"
 import { toSafeImageFile } from "@/lib/image-upload"
+import { resolveUploadApiKey } from "@/lib/upload-token"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
-const STRAPI_API_KEY = process.env.STRAPI_REST_READONLY_API_KEY ?? ""
 const WIKI_EDITOR_ROLES = new Set(["wiki_editor", "editorial_board"])
 
 export async function POST(req: Request) {
@@ -49,8 +49,11 @@ export async function POST(req: Request) {
     )
   }
 
-  if (!STRAPI_API_KEY) {
-    return Response.json({ error: "Upload not configured" }, { status: 503 })
+  const apiKey = resolveUploadApiKey()
+  if (!apiKey) {
+    const status = process.env.NODE_ENV === "production" ? 500 : 503
+
+    return Response.json({ error: "Upload not configured" }, { status })
   }
 
   const upload = new FormData()
@@ -58,7 +61,7 @@ export async function POST(req: Request) {
 
   const res = await fetch(`${STRAPI}/api/upload`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${STRAPI_API_KEY}` },
+    headers: { Authorization: `Bearer ${apiKey}` },
     body: upload,
   })
 

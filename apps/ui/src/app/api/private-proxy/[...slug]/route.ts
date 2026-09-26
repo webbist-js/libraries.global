@@ -20,6 +20,19 @@ async function handler(
 
   const path = Array.isArray(slug) ? slug.join("/") : slug
 
+  // Reject path traversal before checking the allowlist — a segment like
+  // `..` or a backslash could otherwise be used to escape the intended
+  // Strapi endpoint once concatenated into the upstream URL.
+  if (
+    path
+      .split("/")
+      .some((seg) => seg === ".." || seg === "." || seg.includes("\\"))
+  )
+    return NextResponse.json(
+      { error: { message: "Invalid path", name: "BadRequest" } },
+      { status: 400 }
+    )
+
   const isAccessible = isStrapiEndpointAllowed(path, request.method)
   if (!isAccessible) {
     return NextResponse.json(
@@ -55,10 +68,14 @@ async function handler(
   }
 
   const response = await fetch(url, {
-    headers: {
-      // Convert headers to object
-      ...Object.fromEntries(clonedRequest.headers),
-    },
+    // Forward only a small allowlist of headers — passing the request's
+    // headers through verbatim would let a client set arbitrary upstream
+    // headers (e.g. host, cookie, x-forwarded-*) via this proxy.
+    headers: Object.fromEntries(
+      ["authorization", "content-type", "accept", "accept-language"]
+        .map((h) => [h, clonedRequest.headers.get(h)])
+        .filter((e): e is [string, string] => !!e[1])
+    ),
     body,
     // this needs to be explicitly stated, because it is defaulted to GET
     method: request.method,

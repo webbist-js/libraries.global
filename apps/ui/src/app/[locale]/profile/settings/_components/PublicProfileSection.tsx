@@ -324,7 +324,15 @@ export function PublicProfileSection({
                 type="text"
                 aria-label="Username"
                 placeholder="yourhandle"
-                {...field("username")}
+                value={form.username}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    username: e.target.value
+                      .toLowerCase()
+                      .replaceAll(/[^a-z0-9_]/g, ""),
+                  }))
+                }
               />
             </div>
           </div>

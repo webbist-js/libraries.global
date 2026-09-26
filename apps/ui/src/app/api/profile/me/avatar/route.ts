@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 
 import { auth } from "@/lib/auth"
 import { toSafeImageFile } from "@/lib/image-upload"
+import { resolveUploadApiKey } from "@/lib/upload-token"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
@@ -44,7 +45,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid file type" }, { status: 400 })
 
   // Upload file to Strapi media library
-  const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
+  const apiToken = resolveUploadApiKey()
+  if (!apiToken && process.env.NODE_ENV === "production")
+    return NextResponse.json(
+      { error: "Upload not configured" },
+      { status: 500 }
+    )
+
   const strapiForm = new FormData()
   strapiForm.append("files", safeFile, safeFile.name)
 
