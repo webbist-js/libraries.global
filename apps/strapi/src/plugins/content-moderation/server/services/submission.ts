@@ -2,17 +2,23 @@ import { payloadHash } from "../utils/payload-hash"
 import { canTransition } from "../utils/transitions"
 import { sanitizeWikiBody } from "../utils/wiki-body"
 
+// Appended to reviewNote when a reader's wiki_edit is approved but skipped
+// (docs.directEdit re-check fails at apply time): flags for the moderator
+// that nothing was auto-applied and it needs a manual pass.
+const SUGGESTION_MARKER = " [Suggestion — not auto-applied; apply manually]"
+
 /**
  * Selects the exact row `saveDraft`/`finalizeDraft` just read, by pinning
  * both the status *and* the revision counter it observed. `status:"draft"`
  * alone doesn't close the race between them: saveDraft never changes
  * status, so a concurrent saveDraft can still land between finalize's
  * policy check and finalize's own compare-and-set write while both see
- * status:"draft" the whole time. Pinning draftRevision (bumped on every
- * successful saveDraft/finalizeDraft write) means only the caller that read
- * the current revision can win the write; everyone else's compare-and-set
- * matches zero rows. Rows written before this field existed may have
- * `draftRevision` as null.
+ * status:"draft" the whole time. Pinning draftRevision (bumped only by
+ * saveDraft — finalizeDraft never increments it, relying instead on its
+ * own status change from "draft" to "pending" to close the race) means
+ * only the caller that read the current revision can win the write;
+ * everyone else's compare-and-set matches zero rows. Rows written before
+ * this field existed may have `draftRevision` as null.
  */
 function revisionWhere(existing: {
   draftRevision?: number | null
@@ -409,7 +415,20 @@ export default ({ strapi }: { strapi: any }) => ({
 
       // ── wiki_edit approval ─────────────────────────────────────────────
       if (status === "approved" && submission?.submissionType === "wiki_edit") {
-        await (this as any).applyWikiEdit(submission)
+        const outcome = await (this as any).applyWikiEdit(submission)
+        if (outcome === "skipped_suggestion") {
+          // `reviewNote` here is the argument this call received — the
+          // moderator's note the compare-and-set above just wrote. Reading
+          // it off the pre-CAS `submission` snapshot instead would silently
+          // discard that note, since the snapshot predates the write.
+          const noted = (reviewNote ?? "").includes(SUGGESTION_MARKER)
+            ? (reviewNote ?? "")
+            : `${reviewNote ?? ""}${SUGGESTION_MARKER}`
+          await strapi
+            .documents("plugin::content-moderation.submission")
+            .update({ documentId, data: { reviewNote: noted } })
+          updated.reviewNote = noted
+        }
       }
 
       // Award points for new_library approval — non-fatal
@@ -924,11 +943,13 @@ export default ({ strapi }: { strapi: any }) => ({
     return results[0] ?? null
   },
 
-  async applyWikiEdit(submission: any): Promise<void> {
+  async applyWikiEdit(
+    submission: any
+  ): Promise<"applied" | "skipped_suggestion" | "noop"> {
     try {
       // A2: the target is whatever the moderator saw, never draftData.
       const slug: string | undefined = submission.targetSlug ?? undefined
-      if (!slug) return
+      if (!slug) return "noop"
 
       // Critical: re-check the submitter's rights at apply time, before
       // applying anything. A reader's suggestion draft can be turned into a
@@ -944,21 +965,10 @@ export default ({ strapi }: { strapi: any }) => ({
           `[content-moderation] wiki_edit ${submission.documentId} is a suggestion; apply it manually`
         )
 
-        // Flag it in reviewNote so the moderator sees this wasn't applied,
-        // without duplicating the marker if it's already there (e.g. a
-        // retried approval).
-        const marker = " [Suggestion — not auto-applied; apply manually]"
-        const currentNote = String(submission.reviewNote ?? "")
-        if (!currentNote.includes(marker)) {
-          await strapi
-            .documents("plugin::content-moderation.submission")
-            .update({
-              documentId: submission.documentId,
-              data: { reviewNote: `${currentNote}${marker}` },
-            })
-        }
-
-        return
+        // The reviewNote write for this case is the caller's (updateStatus)
+        // responsibility: it's the only one holding the moderator's actual
+        // reviewNote argument, not a possibly-stale snapshot of it.
+        return "skipped_suggestion"
       }
 
       const draftData = (submission.draftData ?? {}) as Record<string, unknown>
@@ -974,7 +984,7 @@ export default ({ strapi }: { strapi: any }) => ({
           `[content-moderation] applyWikiEdit: unknown locale ${locale}`
         )
 
-        return
+        return "noop"
       }
 
       const [article] = (await strapi
@@ -983,14 +993,14 @@ export default ({ strapi }: { strapi: any }) => ({
           filters: { slug: { $eq: slug } } as any,
           limit: 1,
         })) as any[]
-      if (!article) return
+      if (!article) return "noop"
 
       const updateData: Record<string, unknown> = {}
       if (typeof draftData.title === "string" && draftData.title.trim())
         updateData.title = draftData.title.trim().slice(0, 200)
       const body = sanitizeWikiBody(draftData.body)
       if (body) updateData.body = body
-      if (Object.keys(updateData).length === 0) return
+      if (Object.keys(updateData).length === 0) return "noop"
 
       await strapi.documents("api::wiki-article.wiki-article" as any).update({
         documentId: article.documentId,
@@ -1018,8 +1028,12 @@ export default ({ strapi }: { strapi: any }) => ({
               },
             })
       }
+
+      return "applied"
     } catch (err) {
       strapi.log.error("[content-moderation] applyWikiEdit failed", err)
+
+      return "noop"
     }
   },
 })

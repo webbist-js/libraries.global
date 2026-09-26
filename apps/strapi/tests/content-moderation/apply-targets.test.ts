@@ -76,11 +76,12 @@ describe("applyWikiEdit", () => {
             }),
           }
     )
-    await createService({ strapi }).applyWikiEdit({
+    const outcome = await createService({ strapi }).applyWikiEdit({
       targetSlug: "article-a",
       draftData: { targetSlug: "article-b", title: "Hijacked", locale: "en" },
       submittedByUserId: "u1",
     })
+    expect(outcome).toBe("applied")
     expect(store[WIKI][0].title).toBe("Hijacked")
     expect(store[WIKI][1].title).toBe("B")
   })
@@ -111,11 +112,12 @@ describe("applyWikiEdit", () => {
             }),
           }
     )
-    await createService({ strapi }).applyWikiEdit({
+    const outcome = await createService({ strapi }).applyWikiEdit({
       targetSlug: "a",
       draftData: { title: "T", locale: "xx" },
       submittedByUserId: "u1",
     })
+    expect(outcome).toBe("noop")
     expect(store[WIKI][0].title).toBe("A")
   })
 })
