@@ -2,6 +2,7 @@ import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/lib/auth"
+import { isDocumentIdParam, readJsonCapped } from "@/lib/bridge-params"
 
 import { userHeaders } from "../../route"
 
@@ -23,15 +24,19 @@ export async function PATCH(
     )
 
   const { id } = await params
-  let body: Record<string, unknown>
-  try {
-    body = (await req.json()) as Record<string, unknown>
-  } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
-  }
+  if (!isDocumentIdParam(id))
+    return NextResponse.json({ error: "Invalid id" }, { status: 400 })
+
+  const parsed = await readJsonCapped(req, 512 * 1024)
+  if (!parsed.ok)
+    return NextResponse.json(
+      { error: "Invalid request body" },
+      { status: parsed.status }
+    )
+  const body = parsed.body as Record<string, unknown>
 
   const res = await fetch(
-    `${STRAPI}/api/content-moderation/submissions/${id}/draft`,
+    `${STRAPI}/api/content-moderation/submissions/${encodeURIComponent(id)}/draft`,
     {
       method: "PATCH",
       headers: {

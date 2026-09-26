@@ -2,6 +2,7 @@ import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/lib/auth"
+import { isSubmissionTypeParam } from "@/lib/bridge-params"
 
 import { userHeaders } from "../../route"
 
@@ -23,11 +24,17 @@ export async function GET(
     )
 
   const { type } = await params
+  if (!isSubmissionTypeParam(type))
+    return NextResponse.json(
+      { error: "Invalid submission type" },
+      { status: 400 }
+    )
+
   const { searchParams } = new URL(req.url)
   const targetSlug = searchParams.get("targetSlug")
 
   const strapiUrl = new URL(
-    `${STRAPI}/api/content-moderation/submissions/draft/${type}`
+    `${STRAPI}/api/content-moderation/submissions/draft/${encodeURIComponent(type)}`
   )
   if (targetSlug) strapiUrl.searchParams.set("targetSlug", targetSlug)
 

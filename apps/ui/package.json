@@ -39,6 +39,7 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
     "@react-three/postprocessing": "^3.0.4",
+    "@repo/access": "workspace:*",
     "@repo/design-system": "workspace:*",
     "@repo/shared-data": "workspace:*",
     "@sentry/nextjs": "10.35.0",

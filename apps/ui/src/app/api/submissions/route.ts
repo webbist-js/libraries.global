@@ -2,6 +2,7 @@ import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/lib/auth"
+import { readJsonCapped } from "@/lib/bridge-params"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
@@ -30,12 +31,13 @@ export async function POST(req: Request) {
       { status: 500 }
     )
 
-  let body: Record<string, unknown>
-  try {
-    body = (await req.json()) as Record<string, unknown>
-  } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
-  }
+  const parsed = await readJsonCapped(req, 512 * 1024)
+  if (!parsed.ok)
+    return NextResponse.json(
+      { error: "Invalid request body" },
+      { status: parsed.status }
+    )
+  const body = parsed.body as Record<string, unknown>
 
   const res = await fetch(`${STRAPI}/api/content-moderation/submissions`, {
     method: "POST",

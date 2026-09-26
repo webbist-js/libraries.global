@@ -1,7 +1,9 @@
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
+import { z } from "zod"
 
 import { auth } from "@/lib/auth"
+import { readJsonCapped } from "@/lib/bridge-params"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
@@ -32,12 +34,34 @@ export async function PUT(req: Request) {
   if (!session?.user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const body = (await req.json()) as Record<string, unknown>
   if (!SECRET)
     return NextResponse.json(
       { error: "Bridge not configured" },
       { status: 500 }
     )
+
+  const NotifPrefs = z
+    .object({
+      soundOn: z.boolean(),
+      marketing: z.boolean(),
+      newFollowers: z.boolean(),
+      weeklyDigest: z.boolean(),
+      editsReviewed: z.boolean(),
+      editorialMessages: z.boolean(),
+      productUpdates: z.boolean(),
+    })
+    .partial()
+    .strict()
+  const parsed = await readJsonCapped(req, 4 * 1024)
+  if (!parsed.ok)
+    return NextResponse.json(
+      { error: "Invalid request body" },
+      { status: parsed.status }
+    )
+  const result = NotifPrefs.safeParse(parsed.body)
+  if (!result.success)
+    return NextResponse.json({ error: "Invalid preferences" }, { status: 400 })
+  const body = result.data
 
   const res = await fetch(`${STRAPI}/api/auth-bridge/upsert-profile`, {
     method: "POST",
