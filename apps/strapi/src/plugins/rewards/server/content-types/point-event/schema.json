@@ -20,6 +20,8 @@
         "new_library_approved",
         "edit_accepted_minor",
         "edit_accepted_major",
+        "correction_approved",
+        "claim_approved",
         "photo_licensed_cc",
         "hours_verified",
         "status_verified",
@@ -31,6 +33,7 @@
     },
     "points": { "type": "integer", "required": true },
     "metadata": { "type": "json" },
-    "awardedAt": { "type": "datetime", "required": true }
+    "awardedAt": { "type": "datetime", "required": true },
+    "idempotencyKey": { "type": "string", "unique": true, "private": true }
   }
 }

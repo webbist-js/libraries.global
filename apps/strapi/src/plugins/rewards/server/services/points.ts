@@ -93,20 +93,36 @@ export default ({ strapi }: { strapi: any }) => ({
     baUserId: string,
     action: PointAction,
     pts: number,
-    metadata?: Record<string, unknown>
-  ): Promise<void> {
+    metadata?: Record<string, unknown>,
+    idempotencyKey?: string
+  ): Promise<{ awarded: boolean }> {
     const now = new Date()
 
-    // Create the point-event record
-    await strapi.db.query("plugin::rewards.point-event").create({
-      data: {
-        baUserId,
-        action,
-        points: pts,
-        metadata: metadata ?? null,
-        awardedAt: now,
-      },
-    })
+    // Idempotency check: a previously-seen key means this award already happened.
+    if (idempotencyKey) {
+      const seen = await strapi.db
+        .query("plugin::rewards.point-event")
+        .findOne({ where: { idempotencyKey } })
+      if (seen) return { awarded: false }
+    }
+
+    try {
+      // Create the point-event record
+      await strapi.db.query("plugin::rewards.point-event").create({
+        data: {
+          baUserId,
+          action,
+          points: pts,
+          metadata: metadata ?? null,
+          awardedAt: now,
+          idempotencyKey: idempotencyKey ?? null,
+        },
+      })
+    } catch (err) {
+      // Unique violation on idempotencyKey: a concurrent award won the race.
+      if (idempotencyKey) return { awarded: false }
+      throw err
+    }
 
     // Read current profile totals — create a minimal one if it doesn't exist yet
     let profile = await strapi.db
@@ -136,26 +152,41 @@ export default ({ strapi }: { strapi: any }) => ({
           createErr
         )
 
-        return
+        return { awarded: true }
       }
     }
 
     const today = now.toISOString().slice(0, 10)
     const currentMonth = today.slice(0, 7) // "YYYY-MM"
     const lastMonth = profile.lastActivityDate?.slice(0, 7) ?? null
+    const sameMonth = lastMonth === currentMonth
 
-    const newTotal = (profile.points ?? 0) + pts
-    const newThisMonth =
-      lastMonth === currentMonth ? (profile.pointsThisMonth ?? 0) + pts : pts
+    // Atomic increments on the DB row: concurrent awards can't lose updates
+    // the way a read-modify-write on `profile.points` would.
+    await strapi.db
+      .connection("user_profiles")
+      .where({ ba_user_id: baUserId })
+      .increment("points", pts)
 
+    await (sameMonth
+      ? strapi.db
+          .connection("user_profiles")
+          .where({ ba_user_id: baUserId })
+          .increment("points_this_month", pts)
+      : strapi.db
+          .connection("user_profiles")
+          .where({ ba_user_id: baUserId })
+          .update({ points_this_month: pts }))
+
+    const fresh = await strapi.db
+      .query("api::user-profile.user-profile")
+      .findOne({ where: { baUserId } })
     const newStreak = await (this as any).updateStreak(baUserId)
-    const tier = computeTier(newTotal)
+    const tier = computeTier(fresh?.points ?? 0)
 
     await strapi.db.query("api::user-profile.user-profile").update({
       where: { baUserId },
       data: {
-        points: newTotal,
-        pointsThisMonth: newThisMonth,
         tier: tier.name,
         streak: newStreak,
         lastActivityDate: today,
@@ -164,5 +195,7 @@ export default ({ strapi }: { strapi: any }) => ({
 
     // Check and award badges after every point event
     await strapi.plugin("rewards").service("badges").checkAndAward(baUserId)
+
+    return { awarded: true }
   },
 })
