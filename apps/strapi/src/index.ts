@@ -8,6 +8,7 @@ import { registerAdminUserSubscriber } from "./lifeCycles/adminUser"
 import { registerEntityRefSubscriber } from "./lifeCycles/entityRef"
 import { registerUserSubscriber } from "./lifeCycles/user"
 import { getPopulateDynamicZoneConfig } from "./populateDynamicZone"
+import { ensureUniqueIndexes } from "./utils/ensure-unique-indexes"
 
 const SEED_TOPICS = [
   "Rare Books",
@@ -98,6 +99,11 @@ export default {
 
     // Import the LibrariesHacked UK catalogue list once (idempotent)
     await seedCatalogues(strapi)
+
+    // I2 fresh-DB follow-up: re-ensure the unique indexes the migration
+    // creates, in case this is a first deploy where the migration ran
+    // before schema sync created the tables. See ensure-unique-indexes.ts.
+    await ensureUniqueIndexes(strapi)
 
     // Accounts are owned by Better Auth; Strapi users are created only via the
     // auth-bridge. Keep users-permissions self-registration off everywhere so
