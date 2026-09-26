@@ -19,12 +19,39 @@ const Body = z.object({
   claims: z.array(z.string()).max(100).optional(),
 })
 
+export const SESSION_PROFILE_MAX_ENTRIES = 5000
+
+type CacheEntry = { at: number; value: SessionProfile }
+
 // Per-process cache. On serverless each instance has its own; the TTL bounds
-// how long a revoked role or claim survives anywhere (spec §3.2: 60 s).
-const cache = new Map<string, { at: number; value: SessionProfile }>()
+// how long a revoked role or claim survives anywhere (spec §3.2: 60 s). Kept
+// on globalThis so dev HMR and duplicate module instances share one cache.
+const globalForSessionProfile = globalThis as typeof globalThis & {
+  _sessionProfileCache?: Map<string, CacheEntry>
+  _sessionProfileGen?: Map<string, number>
+  _sessionProfileSeq?: number
+}
+const cache = (globalForSessionProfile._sessionProfileCache ??= new Map())
+// Generation per id, bumped on invalidate. A fetch that started before an
+// invalidate must not repopulate the cache with what may be stale data.
+// Values come from one monotonic sequence, so an evicted and re-created
+// entry can never match a generation captured earlier.
+const generations = (globalForSessionProfile._sessionProfileGen ??= new Map())
+
+function setBounded<V>(map: Map<string, V>, key: string, value: V): void {
+  map.delete(key)
+  if (map.size >= SESSION_PROFILE_MAX_ENTRIES) {
+    const oldest = map.keys().next().value
+    if (oldest !== undefined) map.delete(oldest)
+  }
+  map.set(key, value)
+}
 
 export function invalidateSessionProfile(baUserId: string): void {
   cache.delete(baUserId)
+  const seq = (globalForSessionProfile._sessionProfileSeq ?? 0) + 1
+  globalForSessionProfile._sessionProfileSeq = seq
+  setBounded(generations, baUserId, seq)
 }
 
 export async function fetchSessionProfile(
@@ -36,14 +63,27 @@ export async function fetchSessionProfile(
   const secret = process.env.STRAPI_BRIDGE_SECRET
   if (!secret) return null
   const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
+  const gen = generations.get(baUserId)
   try {
     const res = await fetch(
       `${strapiUrl}/api/auth-bridge/session-profile?baUserId=${encodeURIComponent(baUserId)}`,
-      { cache: "no-store", headers: { "X-Service-Secret": secret } }
+      {
+        cache: "no-store",
+        headers: { "X-Service-Secret": secret },
+        signal: AbortSignal.timeout(3000),
+      }
     )
-    if (!res.ok) return null
+    if (!res.ok) {
+      console.warn(`[session-profile] bridge returned ${res.status}`)
+
+      return null
+    }
     const parsed = Body.safeParse(await res.json())
-    if (!parsed.success) return null
+    if (!parsed.success) {
+      console.warn("[session-profile] bridge body failed validation")
+
+      return null
+    }
     const d = parsed.data
     const value: SessionProfile = {
       contributorRole: isContributorRole(d.contributorRole)
@@ -53,10 +93,15 @@ export async function fetchSessionProfile(
       tier: d.tier ?? null,
       claims: d.claims ?? [],
     }
-    cache.set(baUserId, { at: Date.now(), value })
+    if (generations.get(baUserId) === gen) {
+      setBounded(cache, baUserId, { at: Date.now(), value })
+    }
 
     return value
-  } catch {
+  } catch (err) {
+    const reason = err instanceof Error ? err.name : "unknown error"
+    console.warn(`[session-profile] bridge request failed (${reason})`)
+
     return null
   }
 }
