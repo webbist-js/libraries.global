@@ -1,9 +1,9 @@
 "use client"
 
-import { Icon } from "@iconify/react"
 import { useRouter } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
 
+import { SearchField } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
 import type { ClaimedLibrary } from "@/lib/types/profile"
 
@@ -134,10 +134,8 @@ export function EditLibrarySearch() {
             <div style={{ marginBottom: "32px" }}>
               <p
                 style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".16em",
-                  textTransform: "uppercase",
+                  fontFamily: T.font.sans,
+                  fontSize: "13px",
                   color: T.ink.faint,
                   margin: "0 0 10px",
                 }}
@@ -205,10 +203,8 @@ export function EditLibrarySearch() {
                       {lib.entityRef && (
                         <span
                           style={{
-                            fontFamily: T.font.mono,
-                            fontSize: "10px",
-                            letterSpacing: ".10em",
-                            textTransform: "uppercase",
+                            fontFamily: T.font.sans,
+                            fontSize: "13px",
                             color: T.ink.faint,
                           }}
                         >
@@ -228,10 +224,8 @@ export function EditLibrarySearch() {
                       {lib.libraryType && (
                         <span
                           style={{
-                            fontFamily: T.font.mono,
-                            fontSize: "10px",
-                            letterSpacing: ".10em",
-                            textTransform: "uppercase",
+                            fontFamily: T.font.sans,
+                            fontSize: "13px",
                             color: T.ink.faint,
                             border: `1px solid ${T.border.line}`,
                             borderRadius: "5px",
@@ -243,10 +237,8 @@ export function EditLibrarySearch() {
                       )}
                       <span
                         style={{
-                          fontFamily: T.font.mono,
-                          fontSize: "10px",
-                          letterSpacing: ".10em",
-                          textTransform: "uppercase",
+                          fontFamily: T.font.sans,
+                          fontSize: "13px",
                           color: T.accent.ok,
                         }}
                       >
@@ -260,56 +252,20 @@ export function EditLibrarySearch() {
           )}
 
           {/* Search input */}
-          <div style={{ position: "relative", marginBottom: "20px" }}>
-            <span
-              style={{
-                position: "absolute",
-                left: "16px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                color: T.ink.faint,
-                display: "flex",
-                alignItems: "center",
-                pointerEvents: "none",
-              }}
-            >
-              <Icon icon="mdi:magnify" width={18} />
-            </span>
-            <input
-              ref={inputRef}
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search libraries…"
-              autoFocus
-              style={{
-                width: "100%",
-                padding: "14px 18px 14px 46px",
-                border: `1px solid ${T.border.hi}`,
-                borderRadius: "12px",
-                background: T.bg.surface,
-                color: T.ink.base,
-                fontSize: "15px",
-                fontFamily: T.font.sans,
-                outline: "none",
-                boxSizing: "border-box",
+          <div style={{ marginBottom: "20px" }}>
+            <SearchField
+              id="edit-library-search"
+              placeholder="Search libraries by name or place"
+              loading={loading}
+              inputRef={inputRef}
+              onClear={() => setQuery("")}
+              inputProps={{
+                value: query,
+                onChange: (e) => setQuery(e.target.value),
+                autoFocus: true,
+                autoComplete: "off",
               }}
             />
-            {loading && (
-              <span
-                style={{
-                  position: "absolute",
-                  right: "16px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  color: T.ink.faint,
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <Icon icon="mdi:loading" width={16} className="animate-spin" />
-              </span>
-            )}
           </div>
 
           {/* Results */}
@@ -317,10 +273,8 @@ export function EditLibrarySearch() {
             <div>
               <p
                 style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".14em",
-                  textTransform: "uppercase",
+                  fontFamily: T.font.sans,
+                  fontSize: "13px",
                   color: T.ink.faint,
                   margin: "0 0 12px",
                 }}
@@ -362,8 +316,8 @@ export function EditLibrarySearch() {
                       }}
                       onMouseEnter={(e) => {
                         const el = e.currentTarget as HTMLButtonElement
-                        el.style.background = "rgba(127,223,255,0.04)"
-                        el.style.borderColor = "rgba(127,223,255,0.22)"
+                        el.style.background = "var(--t-aurora-soft)"
+                        el.style.borderColor = "var(--t-aurora-soft)"
                       }}
                       onMouseLeave={(e) => {
                         const el = e.currentTarget as HTMLButtonElement
@@ -395,10 +349,8 @@ export function EditLibrarySearch() {
                         </span>
                         <span
                           style={{
-                            fontFamily: T.font.mono,
-                            fontSize: "10px",
-                            letterSpacing: ".12em",
-                            textTransform: "uppercase",
+                            fontFamily: T.font.sans,
+                            fontSize: "13px",
                             color: T.ink.faint,
                           }}
                         >
@@ -421,10 +373,8 @@ export function EditLibrarySearch() {
                         {lib.libraryType && (
                           <span
                             style={{
-                              fontFamily: T.font.mono,
-                              fontSize: "10px",
-                              letterSpacing: ".12em",
-                              textTransform: "uppercase",
+                              fontFamily: T.font.sans,
+                              fontSize: "13px",
                               color: T.ink.faint,
                               border: `1px solid ${T.border.line}`,
                               borderRadius: "6px",
@@ -438,10 +388,8 @@ export function EditLibrarySearch() {
                         {isClaimed ? (
                           <span
                             style={{
-                              fontFamily: T.font.mono,
-                              fontSize: "10px",
-                              letterSpacing: ".10em",
-                              textTransform: "uppercase",
+                              fontFamily: T.font.sans,
+                              fontSize: "13px",
                               color: T.accent.aurora,
                               opacity: 0.85,
                             }}
@@ -451,10 +399,8 @@ export function EditLibrarySearch() {
                         ) : (
                           <span
                             style={{
-                              fontFamily: T.font.mono,
-                              fontSize: "10px",
-                              letterSpacing: ".10em",
-                              textTransform: "uppercase",
+                              fontFamily: T.font.sans,
+                              fontSize: "13px",
                               color: T.ink.faint,
                               border: `1px solid ${T.border.line}`,
                               borderRadius: "6px",
@@ -483,10 +429,8 @@ export function EditLibrarySearch() {
             >
               <p
                 style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".16em",
-                  textTransform: "uppercase",
+                  fontFamily: T.font.sans,
+                  fontSize: "13px",
                   color: T.ink.faint,
                   margin: "0 0 6px",
                 }}
@@ -511,10 +455,8 @@ export function EditLibrarySearch() {
           {!loading && debouncedQuery.length < 2 && (
             <p
               style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".14em",
-                textTransform: "uppercase",
+                fontFamily: T.font.sans,
+                fontSize: "13px",
                 color: T.ink.faint,
                 textAlign: "center",
                 padding: "40px 0",

@@ -2,8 +2,11 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { getSessionSSR } from "@/lib/auth-server"
+import { privateMetadata } from "@/lib/seo/metadata"
 
 import { CorrectLibraryForm } from "./_components/CorrectLibraryForm"
+
+export const metadata = privateMetadata("Suggest a correction")
 
 export default async function CorrectLibraryPage({
   params,

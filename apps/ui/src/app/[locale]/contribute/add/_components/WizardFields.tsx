@@ -1,5 +1,6 @@
 "use client"
 
+import type React from "react"
 import { useEffect, useState } from "react"
 
 import {
@@ -11,25 +12,26 @@ import {
 } from "@/components/ui/select"
 import { T } from "@/lib/design-tokens"
 
-import { fieldInputStyle, fieldLabelStyle } from "./wizard.constants"
+import {
+  fieldHintStyle,
+  fieldInputStyle,
+  fieldLabelStyle,
+} from "./wizard.constants"
 import type { FormData } from "./wizard.types"
 
-// ── ScoreTag — aurora diamond shown on fields that count toward the score ─────
+// ── RequiredTag — subtle rust "required" marker next to a label ──────────────
 
-export function ScoreTag() {
+export function RequiredTag() {
   return (
     <span
-      title="This field counts toward your completeness score"
       style={{
-        fontFamily: T.font.mono,
-        fontSize: "10px",
-        letterSpacing: ".1em",
-        color: T.accent.aurora,
-        opacity: 0.7,
-        userSelect: "none",
+        fontFamily: T.font.sans,
+        fontSize: "14px",
+        fontWeight: 500,
+        color: "var(--tint-special-fg)",
       }}
     >
-      ◈
+      required
     </span>
   )
 }
@@ -44,7 +46,6 @@ export function Field({
   placeholder,
   type = "text",
   required,
-  score,
   hint,
   autoComplete,
 }: {
@@ -55,22 +56,16 @@ export function Field({
   placeholder?: string
   type?: string
   required?: boolean
-  score?: boolean
   hint?: string
   autoComplete?: string
 }) {
   const hintId = hint ? `${id}-hint` : undefined
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
       <label htmlFor={id} style={fieldLabelStyle}>
         {label}
-        {required && (
-          <span aria-hidden="true" style={{ color: T.accent.danger }}>
-            *
-          </span>
-        )}
-        {score && <ScoreTag />}
+        {required && <RequiredTag />}
       </label>
       <input
         id={id}
@@ -86,16 +81,7 @@ export function Field({
         style={fieldInputStyle}
       />
       {hint && (
-        <p
-          id={hintId}
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "11px",
-            color: T.ink.faint,
-            margin: 0,
-            lineHeight: 1.5,
-          }}
-        >
+        <p id={hintId} style={fieldHintStyle}>
           {hint}
         </p>
       )}
@@ -112,7 +98,6 @@ export function WizardSelect({
   onChange,
   options,
   required,
-  score,
 }: {
   label: string
   id: keyof FormData
@@ -120,19 +105,13 @@ export function WizardSelect({
   onChange: (name: keyof FormData, val: string) => void
   options: { value: string; label: string }[]
   required?: boolean
-  score?: boolean
 }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
       {/* Radix Select doesn't support htmlFor; aria-labelledby used instead */}
-      <span id={`${id}-label`} style={fieldLabelStyle} aria-hidden="false">
+      <span id={`${id}-label`} style={fieldLabelStyle}>
         {label}
-        {required && (
-          <span aria-hidden="true" style={{ color: T.accent.danger }}>
-            *
-          </span>
-        )}
-        {score && <ScoreTag />}
+        {required && <RequiredTag />}
       </span>
       <RadixSelect
         value={value}
@@ -144,29 +123,19 @@ export function WizardSelect({
           aria-labelledby={`${id}-label`}
           aria-required={required}
           style={{
-            width: "100%",
-            padding: "10px 14px",
-            borderRadius: "10px",
-            border: `1px solid ${T.border.hi}`,
-            background: "rgba(5,8,22,1)",
-            color: value ? T.ink.base : T.ink.faint,
-            fontSize: "14px",
-            fontFamily: T.font.sans,
+            ...fieldInputStyle,
+            color: value ? T.ink.base : T.ink.dim,
             height: "auto",
-            minHeight: "42px",
             justifyContent: "space-between",
-            outline: "none",
-            boxSizing: "border-box",
           }}
         >
           <SelectValue placeholder="Select…" />
         </SelectTrigger>
         <SelectContent
           style={{
-            background: "rgba(6,9,26,0.98)",
+            background: T.bg.deep,
             border: `1px solid ${T.border.line}`,
-            backdropFilter: "blur(20px)",
-            borderRadius: "10px",
+            borderRadius: "14px",
             zIndex: 9999,
           }}
         >
@@ -176,7 +145,7 @@ export function WizardSelect({
               value={o.value}
               style={{
                 color: T.ink.base,
-                fontSize: "14px",
+                fontSize: "15px",
                 fontFamily: T.font.sans,
                 cursor: "pointer",
               }}
@@ -200,7 +169,7 @@ export function TextareaField({
   placeholder,
   rows = 3,
   hint,
-  score,
+  required,
 }: {
   label: string
   id: keyof FormData
@@ -209,15 +178,15 @@ export function TextareaField({
   placeholder?: string
   rows?: number
   hint?: string
-  score?: boolean
+  required?: boolean
 }) {
   const hintId = hint ? `${id}-hint` : undefined
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
       <label htmlFor={id} style={fieldLabelStyle}>
         {label}
-        {score && <ScoreTag />}
+        {required && <RequiredTag />}
       </label>
       <textarea
         id={id}
@@ -230,16 +199,7 @@ export function TextareaField({
         style={{ ...fieldInputStyle, resize: "vertical", lineHeight: 1.6 }}
       />
       {hint && (
-        <p
-          id={hintId}
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "11px",
-            color: T.ink.faint,
-            margin: 0,
-            lineHeight: 1.5,
-          }}
-        >
+        <p id={hintId} style={fieldHintStyle}>
           {hint}
         </p>
       )}
@@ -286,52 +246,58 @@ export function TagSelector({
   const visibleUnselected = showAll ? unselected : unselected.slice(0, LIMIT)
   const overflow = unselected.length - LIMIT
 
+  const chipBase: React.CSSProperties = {
+    padding: "8px 14px",
+    borderRadius: "999px",
+    fontSize: "14px",
+    fontFamily: T.font.sans,
+    cursor: "pointer",
+    lineHeight: 1.1,
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+  }
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+    <div
+      role="group"
+      aria-label={label}
+      style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+    >
       <span style={fieldLabelStyle}>{label}</span>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
         {selected.map((o) => (
           <button
             key={o.documentId}
             type="button"
+            aria-pressed="true"
             onClick={() => toggle(o.documentId)}
             style={{
-              padding: "6px 12px",
-              borderRadius: "20px",
-              border: `1px solid ${T.accent.aurora}`,
-              background: "rgba(127,223,255,0.1)",
-              color: T.accent.aurora,
-              fontSize: "13px",
-              fontFamily: T.font.sans,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              lineHeight: 1,
+              ...chipBase,
+              border: `1px solid ${T.accent.primary}`,
+              background: T.accent.chip,
+              color: T.accent.primary,
+              fontWeight: 600,
             }}
           >
             {o.name}
-            <span style={{ opacity: 0.6, fontSize: "11px" }}>×</span>
+            <span aria-hidden="true">×</span>
           </button>
         ))}
         {visibleUnselected.map((o) => (
           <button
             key={o.documentId}
             type="button"
+            aria-pressed="false"
             onClick={() => toggle(o.documentId)}
             style={{
-              padding: "6px 12px",
-              borderRadius: "20px",
+              ...chipBase,
               border: `1px solid ${T.border.hi}`,
-              background: "transparent",
+              background: T.bg.deep,
               color: T.ink.dim,
-              fontSize: "13px",
-              fontFamily: T.font.sans,
-              cursor: "pointer",
-              lineHeight: 1,
             }}
           >
-            + {o.name}
+            <span aria-hidden="true">+</span> {o.name}
           </button>
         ))}
         {!showAll && overflow > 0 && (
@@ -339,34 +305,18 @@ export function TagSelector({
             type="button"
             onClick={() => setShowAll(true)}
             style={{
-              padding: "6px 12px",
-              borderRadius: "20px",
+              ...chipBase,
               border: `1px solid ${T.border.line}`,
               background: "transparent",
-              color: T.ink.faint,
-              fontSize: "13px",
-              fontFamily: T.font.sans,
-              cursor: "pointer",
-              lineHeight: 1,
+              color: T.accent.primary,
+              fontWeight: 600,
             }}
           >
-            + search {overflow} more…
+            Show {overflow} more
           </button>
         )}
       </div>
-      {hint && (
-        <p
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "11px",
-            color: T.ink.faint,
-            margin: 0,
-            lineHeight: 1.5,
-          }}
-        >
-          {hint}
-        </p>
-      )}
+      {hint && <p style={fieldHintStyle}>{hint}</p>}
     </div>
   )
 }
@@ -377,31 +327,20 @@ export function SubSection({ label, sub }: { label: string; sub?: string }) {
   return (
     <div
       style={{
-        borderTop: `1px solid ${T.border.line}`,
-        paddingTop: "18px",
-        marginTop: "4px",
+        borderTop: `1px solid ${T.border.divider}`,
+        paddingTop: "24px",
+        marginTop: "8px",
       }}
     >
-      <p
-        style={{
-          fontFamily: T.font.mono,
-          fontSize: "11px",
-          letterSpacing: ".14em",
-          textTransform: "uppercase",
-          color: T.ink.faint,
-          margin: "0 0 4px",
-        }}
-      >
-        Sub-section
-      </p>
       <h3
         style={{
           fontFamily: T.font.serif,
-          fontSize: "22px",
-          fontWeight: 600,
+          fontSize: "26px",
+          fontWeight: 500,
           color: T.ink.base,
-          margin: "0 0 4px",
+          margin: "0 0 6px",
           letterSpacing: "-0.01em",
+          lineHeight: 1.2,
         }}
       >
         {label}
@@ -410,10 +349,10 @@ export function SubSection({ label, sub }: { label: string; sub?: string }) {
         <p
           style={{
             fontFamily: T.font.sans,
-            fontSize: "13px",
+            fontSize: "15px",
             color: T.ink.dim,
             margin: 0,
-            lineHeight: 1.5,
+            lineHeight: 1.55,
           }}
         >
           {sub}
@@ -423,40 +362,39 @@ export function SubSection({ label, sub }: { label: string; sub?: string }) {
   )
 }
 
-// ── StepHeader ────────────────────────────────────────────────────────────────
+// ── StepHeading — eyebrow + serif display heading + lead ─────────────────────
 
-export function StepHeader({
-  n,
+export function StepHeading({
+  eyebrow,
   title,
-  sub,
+  lead,
 }: {
-  n: number
+  eyebrow: string
   title: string
-  sub: string
+  lead: string
 }) {
   return (
-    <div style={{ marginBottom: "4px" }}>
+    <div style={{ marginBottom: "12px" }}>
       <p
         style={{
-          fontFamily: T.font.mono,
-          fontSize: "11px",
-          letterSpacing: ".16em",
-          textTransform: "uppercase",
-          color: T.accent.aurora,
-          margin: "0 0 6px",
-          opacity: 0.8,
+          fontFamily: T.font.sans,
+          fontSize: "15px",
+          fontWeight: 600,
+          color: T.accent.primary,
+          margin: "0 0 12px",
         }}
       >
-        Step {n} of 7
+        {eyebrow}
       </p>
       <h2
         style={{
           fontFamily: T.font.serif,
-          fontSize: "32px",
-          fontWeight: 600,
-          color: T.ink.base,
-          margin: "0 0 8px",
+          fontSize: "clamp(40px, 5vw, 64px)",
+          fontWeight: 500,
+          lineHeight: 1.05,
           letterSpacing: "-0.02em",
+          color: T.ink.base,
+          margin: "0 0 16px",
         }}
       >
         {title}
@@ -464,15 +402,38 @@ export function StepHeader({
       <p
         style={{
           fontFamily: T.font.sans,
-          fontSize: "14px",
+          fontSize: "18px",
           color: T.ink.dim,
           margin: 0,
           lineHeight: 1.55,
-          maxWidth: "54ch",
+          maxWidth: "58ch",
         }}
       >
-        {sub}
+        {lead}
       </p>
     </div>
+  )
+}
+
+// ── StepHeader — numbered step heading (steps 1–7) ────────────────────────────
+
+export function StepHeader({
+  n,
+  label,
+  title,
+  sub,
+}: {
+  n: number
+  /** Short step name shown in the eyebrow, e.g. "Identity" */
+  label: string
+  title: string
+  sub: string
+}) {
+  return (
+    <StepHeading
+      eyebrow={`Step ${n} of 7 · ${label}`}
+      title={title}
+      lead={sub}
+    />
   )
 }

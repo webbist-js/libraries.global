@@ -4,11 +4,10 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 
-import { DotHeroCanvas } from "@/components/ui/DotHeroCanvas"
+import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import { useCreateSubmission } from "@/hooks/useSubmissions"
 import { T } from "@/lib/design-tokens"
-import { Link } from "@/lib/navigation"
-import { auroraCtaSm } from "@/lib/styles"
+import { primaryCtaSm } from "@/lib/styles"
 
 interface ClaimLibraryFormProps {
   libraryDocumentId: string
@@ -61,10 +60,8 @@ const inputStyle: React.CSSProperties = {
 }
 
 const labelStyle: React.CSSProperties = {
-  fontFamily: T.font.mono,
-  fontSize: "10px",
-  letterSpacing: ".14em",
-  textTransform: "uppercase",
+  fontFamily: T.font.sans,
+  fontSize: "13px",
   color: T.ink.faint,
   display: "block",
   marginBottom: "6px",
@@ -123,14 +120,12 @@ export function ClaimLibraryForm({
         }}
         className="-mt-14"
       >
-        <DotHeroCanvas />
-
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "linear-gradient(to bottom, rgba(3,5,17,0) 0%, rgba(3,5,17,0.65) 100%)",
+              "linear-gradient(to bottom, rgba(23,22,43,0) 0%, rgba(23,22,43,0.55) 100%)",
           }}
         />
 
@@ -138,26 +133,14 @@ export function ClaimLibraryForm({
           className="relative z-10 mx-auto w-full max-w-[900px]"
           style={{ padding: "110px 24px 44px" }}
         >
-          <p
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".20em",
-              textTransform: "uppercase",
-              color: T.ink.faint,
-              margin: "0 0 22px",
-            }}
-          >
-            <Link
-              href="/contribute"
-              style={{ color: T.ink.faint, textDecoration: "none" }}
-              className="transition-colors hover:text-(--t-ink-base)"
-            >
-              Contribute
-            </Link>
-            <span style={{ margin: "0 8px", opacity: 0.4 }}>/</span>
-            <span style={{ color: T.ink.low }}>Claim a library</span>
-          </p>
+          <Breadcrumb
+            className="mb-[22px]"
+            items={[
+              { label: "Home", href: "/" },
+              { label: "Contribute", href: "/contribute" },
+              { label: "Claim a library" },
+            ]}
+          />
 
           <h1
             style={{
@@ -214,19 +197,17 @@ export function ClaimLibraryForm({
             {/* Info callout */}
             <div
               style={{
-                border: `1px solid rgba(127,223,255,0.18)`,
+                border: `1px solid var(--t-aurora-soft)`,
                 borderRadius: "12px",
                 padding: "18px 22px",
-                background: "rgba(127,223,255,0.04)",
+                background: "var(--t-aurora-soft)",
                 marginBottom: "32px",
               }}
             >
               <p
                 style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".18em",
-                  textTransform: "uppercase",
+                  fontFamily: T.font.sans,
+                  fontSize: "13px",
                   color: T.accent.aurora,
                   margin: "0 0 8px",
                 }}
@@ -317,9 +298,8 @@ export function ClaimLibraryForm({
               />
               <p
                 style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".08em",
+                  fontFamily: T.font.sans,
+                  fontSize: "13px",
                   color:
                     note.trim().length < 10 && note.length > 0
                       ? T.accent.warn
@@ -346,7 +326,7 @@ export function ClaimLibraryForm({
               <button
                 disabled={!canSubmit}
                 onClick={handleSubmit}
-                className={auroraCtaSm}
+                className={primaryCtaSm}
                 style={{
                   border: "none",
                   cursor: canSubmit ? "pointer" : "not-allowed",

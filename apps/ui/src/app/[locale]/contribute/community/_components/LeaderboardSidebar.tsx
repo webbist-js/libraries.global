@@ -50,10 +50,8 @@ export function LeaderboardSidebar({
       >
         <p
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".18em",
-            textTransform: "uppercase",
+            fontFamily: T.font.sans,
+            fontSize: "13px",
             color: T.ink.faint,
             marginBottom: "12px",
           }}
@@ -75,15 +73,13 @@ export function LeaderboardSidebar({
               href="/auth/signin"
               style={{
                 display: "inline-block",
-                padding: "8px 16px",
-                borderRadius: "10px",
-                border: `1px solid rgba(127,223,255,0.3)`,
-                background: "rgba(127,223,255,0.07)",
-                color: T.accent.aurora,
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".14em",
-                textTransform: "uppercase",
+                padding: "9px 18px",
+                borderRadius: "999px",
+                background: T.accent.primary,
+                color: "#fff",
+                fontFamily: T.font.sans,
+                fontSize: "14px",
+                fontWeight: 600,
                 textDecoration: "none",
               }}
             >
@@ -121,10 +117,8 @@ export function LeaderboardSidebar({
                 <p
                   style={{
                     margin: 0,
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".14em",
-                    textTransform: "uppercase",
+                    fontFamily: T.font.sans,
+                    fontSize: "13px",
                     color: T.ink.faint,
                   }}
                 >
@@ -149,10 +143,8 @@ export function LeaderboardSidebar({
                 <p
                   style={{
                     margin: "0 0 4px",
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".14em",
-                    textTransform: "uppercase",
+                    fontFamily: T.font.sans,
+                    fontSize: "13px",
                     color: T.ink.faint,
                   }}
                 >
@@ -179,8 +171,8 @@ export function LeaderboardSidebar({
                 <p
                   style={{
                     margin: "4px 0 0",
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
+                    fontFamily: T.font.sans,
+                    fontSize: "13px",
                     color: T.ink.faint,
                     textAlign: "right",
                   }}
@@ -207,10 +199,8 @@ export function LeaderboardSidebar({
                 <p
                   style={{
                     margin: "0 0 8px",
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".14em",
-                    textTransform: "uppercase",
+                    fontFamily: T.font.sans,
+                    fontSize: "13px",
                     color: T.ink.faint,
                   }}
                 >
@@ -241,10 +231,9 @@ export function LeaderboardSidebar({
                         </span>
                         <span
                           style={{
-                            fontFamily: T.font.mono,
-                            fontSize: "10px",
+                            fontFamily: T.font.sans,
+                            fontSize: "13px",
                             color: T.ink.faint,
-                            letterSpacing: ".06em",
                           }}
                         >
                           {new Date(b.awardedAt).toLocaleDateString("en-US", {
@@ -264,10 +253,8 @@ export function LeaderboardSidebar({
                 style={{
                   display: "inline-block",
                   marginTop: "12px",
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".14em",
-                  textTransform: "uppercase",
+                  fontFamily: T.font.sans,
+                  fontSize: "13px",
                   color: T.accent.aurora,
                   textDecoration: "none",
                   opacity: 0.85,
@@ -295,10 +282,8 @@ export function LeaderboardSidebar({
       >
         <p
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".18em",
-            textTransform: "uppercase",
+            fontFamily: T.font.sans,
+            fontSize: "13px",
             color: T.ink.faint,
             marginBottom: "12px",
           }}
@@ -318,8 +303,8 @@ export function LeaderboardSidebar({
             <span style={{ fontSize: "12px", color: T.ink.dim }}>{label}</span>
             <span
               style={{
-                fontFamily: T.font.mono,
-                fontSize: "11px",
+                fontFamily: T.font.sans,
+                fontSize: "13px",
                 color: T.accent.aurora,
               }}
             >

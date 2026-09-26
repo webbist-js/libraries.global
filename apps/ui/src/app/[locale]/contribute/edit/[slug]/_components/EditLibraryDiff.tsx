@@ -4,9 +4,10 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect, useCallback, useRef } from "react"
 import { toast } from "sonner"
 
+import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import { useCreateSubmission } from "@/hooks/useSubmissions"
 import { T } from "@/lib/design-tokens"
-import { auroraCtaSm } from "@/lib/styles"
+import { primaryCtaSm } from "@/lib/styles"
 
 import { DiffFieldRow } from "./DiffFieldRow"
 import { EditSourcesSection } from "./EditSourcesSection"
@@ -191,24 +192,18 @@ export function EditLibraryDiff({ library }: EditLibraryDiffProps) {
           gap: "10px",
         }}
       >
+        <Breadcrumb
+          items={[
+            { label: "Home", href: "/" },
+            { label: "Contribute", href: "/contribute" },
+            { label: "Edit a library", href: "/contribute/edit" },
+            { label: library.name },
+          ]}
+        />
         <p
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".18em",
-            textTransform: "uppercase",
-            color: T.ink.faint,
-            margin: 0,
-          }}
-        >
-          Contribute / Edit a Library / {library.name.toUpperCase()}
-        </p>
-        <p
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".14em",
-            textTransform: "uppercase",
+            fontFamily: T.font.sans,
+            fontSize: "13px",
             color: T.ink.faint,
             margin: 0,
           }}
@@ -263,10 +258,8 @@ export function EditLibraryDiff({ library }: EditLibraryDiffProps) {
         <div style={{ padding: "12px 16px", background: T.bg.deep }}>
           <span
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: T.ink.faint,
             }}
           >
@@ -277,10 +270,8 @@ export function EditLibraryDiff({ library }: EditLibraryDiffProps) {
         <div style={{ padding: "12px 16px", background: T.bg.deep }}>
           <span
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: changedCount > 0 ? T.accent.aurora : T.ink.faint,
             }}
           >
@@ -302,10 +293,8 @@ export function EditLibraryDiff({ library }: EditLibraryDiffProps) {
       >
         <span
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".14em",
-            textTransform: "uppercase",
+            fontFamily: T.font.sans,
+            fontSize: "13px",
             color: T.ink.faint,
           }}
         >
@@ -313,10 +302,8 @@ export function EditLibraryDiff({ library }: EditLibraryDiffProps) {
         </span>
         <span
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".14em",
-            textTransform: "uppercase",
+            fontFamily: T.font.sans,
+            fontSize: "13px",
             color: T.ink.faint,
           }}
         >
@@ -364,10 +351,8 @@ export function EditLibraryDiff({ library }: EditLibraryDiffProps) {
           {/* Left: stats */}
           <span
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: T.ink.faint,
             }}
           >
@@ -379,10 +364,8 @@ export function EditLibraryDiff({ library }: EditLibraryDiffProps) {
             <button
               onClick={handleDiscard}
               style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".12em",
-                textTransform: "uppercase",
+                fontFamily: T.font.sans,
+                fontSize: "13px",
                 color: T.accent.danger,
                 background: "transparent",
                 border: "none",
@@ -395,10 +378,8 @@ export function EditLibraryDiff({ library }: EditLibraryDiffProps) {
             <button
               onClick={handleSaveDraft}
               style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".12em",
-                textTransform: "uppercase",
+                fontFamily: T.font.sans,
+                fontSize: "13px",
                 color: T.ink.dim,
                 background: "transparent",
                 border: `1px solid ${T.border.hi}`,
@@ -412,7 +393,7 @@ export function EditLibraryDiff({ library }: EditLibraryDiffProps) {
             <button
               onClick={handleSubmit}
               disabled={isPending || changedCount === 0}
-              className={auroraCtaSm}
+              className={primaryCtaSm}
               style={{
                 opacity: isPending || changedCount === 0 ? 0.5 : 1,
                 cursor:

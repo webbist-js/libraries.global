@@ -49,6 +49,7 @@ export function ContributeSubpageHero({
       >
         <Breadcrumb
           items={[
+            { label: "Home", href: "/" },
             { label: "Contribute", href: "/contribute" },
             { label: section },
           ]}
@@ -60,12 +61,12 @@ export function ContributeSubpageHero({
       <h1
         style={{
           fontFamily: T.font.serif,
-          fontSize: "clamp(2.6rem, 5.5vw, 4.2rem)",
-          fontWeight: 700,
-          letterSpacing: "-0.04em",
-          lineHeight: 0.95,
+          fontSize: "clamp(2.4rem, 4.6vw, 3.6rem)",
+          fontWeight: 500,
+          letterSpacing: "-0.02em",
+          lineHeight: 1.04,
           color: T.ink.base,
-          margin: "0 0 18px",
+          margin: "0 0 16px",
         }}
       >
         {heading}{" "}
@@ -73,7 +74,7 @@ export function ContributeSubpageHero({
           style={{
             fontStyle: "italic",
             fontWeight: 400,
-            color: accentColor ?? T.accent.aurora,
+            color: accentColor ?? T.accent.primary,
           }}
         >
           {headingItalic}
@@ -85,10 +86,10 @@ export function ContributeSubpageHero({
       <p
         style={{
           fontFamily: T.font.sans,
-          fontSize: "15px",
+          fontSize: "17px",
           color: T.ink.dim,
-          maxWidth: "52ch",
-          lineHeight: "1.65",
+          maxWidth: "56ch",
+          lineHeight: "1.6",
           margin: 0,
         }}
       >

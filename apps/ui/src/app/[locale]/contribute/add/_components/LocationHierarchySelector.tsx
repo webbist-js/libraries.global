@@ -83,8 +83,8 @@ export function LocationHierarchySelector({
     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
       <p
         style={{
-          fontFamily: T.font.mono,
-          fontSize: "11px",
+          fontFamily: T.font.sans,
+          fontSize: "13px",
           color: T.ink.faint,
           margin: 0,
           lineHeight: 1.5,

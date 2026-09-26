@@ -1,18 +1,17 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
+import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import GlobalLink from "@/components/global/GlobalLink"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
+import { privateMetadata } from "@/lib/seo/metadata"
 
 import { EventFeedForm } from "./_components/EventFeedForm"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 
-export const metadata = {
-  title: "Connect Event Feed — Libraries of the World",
-  description: "Connect your library's event calendar to libraries.global.",
-}
+export const metadata = privateMetadata("Connect an event feed")
 
 async function fetchIsVerifiedLibrarian(baUserId: string): Promise<boolean> {
   const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
@@ -56,18 +55,14 @@ export default async function ContributeEventsPage({
         <div className="mx-auto max-w-2xl px-6 py-16">
           {/* Page header */}
           <div className="mb-10">
-            <p
-              style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".22em",
-                textTransform: "uppercase",
-                color: T.ink.faint,
-                marginBottom: "12px",
-              }}
-            >
-              Contribute · Events
-            </p>
+            <Breadcrumb
+              className="mb-3"
+              items={[
+                { label: "Home", href: "/" },
+                { label: "Contribute", href: "/contribute" },
+                { label: "Connect an event feed" },
+              ]}
+            />
             <h1
               style={{
                 fontFamily: T.font.serif,
@@ -117,10 +112,8 @@ export default async function ContributeEventsPage({
             >
               <p
                 style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".18em",
-                  textTransform: "uppercase",
+                  fontFamily: T.font.sans,
+                  fontSize: "13px",
                   color: T.accent.warn,
                   marginBottom: "16px",
                 }}
@@ -163,13 +156,11 @@ export default async function ContributeEventsPage({
                   gap: "10px",
                   padding: "10px 20px",
                   borderRadius: "100px",
-                  background: "rgba(127,223,255,0.1)",
-                  border: "1px solid rgba(127,223,255,0.3)",
+                  background: "var(--t-aurora-soft)",
+                  border: "1px solid var(--t-aurora-edge)",
                   color: T.accent.aurora,
-                  fontFamily: T.font.mono,
-                  fontSize: "11px",
-                  letterSpacing: ".1em",
-                  textTransform: "uppercase",
+                  fontFamily: T.font.sans,
+                  fontSize: "13px",
                   textDecoration: "none",
                 }}
               >

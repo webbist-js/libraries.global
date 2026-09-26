@@ -33,14 +33,15 @@ function StepBasics({ f, set }: StepProps) {
         margin: 0,
         display: "flex",
         flexDirection: "column",
-        gap: "18px",
+        gap: "22px",
       }}
     >
       <legend style={{ display: "contents" }}>
         <StepHeader
           n={1}
-          title="Identity"
-          sub="Core fields that drive the listing card and search index."
+          label="Identity"
+          title="What library is this?"
+          sub="Name, type and status drive the listing card and the search index. Use the name the library uses for itself."
         />
       </legend>
       <Field
@@ -49,12 +50,9 @@ function StepBasics({ f, set }: StepProps) {
         value={f.name}
         onChange={set}
         required
-        score
         autoComplete="organization"
       />
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-      >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
           label="Short name / abbreviation"
           id="shortName"
@@ -69,9 +67,7 @@ function StepBasics({ f, set }: StepProps) {
           onChange={set}
         />
       </div>
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-      >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <WizardSelect
           label="Library type"
           id="libraryType"
@@ -79,7 +75,6 @@ function StepBasics({ f, set }: StepProps) {
           onChange={set}
           options={LIBRARY_TYPES}
           required
-          score
         />
         <WizardSelect
           label="Operator type"
@@ -96,7 +91,6 @@ function StepBasics({ f, set }: StepProps) {
         onChange={set}
         options={OPERATIONAL_STATUSES}
         required
-        score
       />
       <TextareaField
         label="Summary / description"
@@ -132,14 +126,15 @@ function StepLocation({ f, set, setFormData }: StepProps) {
         margin: 0,
         display: "flex",
         flexDirection: "column",
-        gap: "18px",
+        gap: "22px",
       }}
     >
       <legend style={{ display: "contents" }}>
         <StepHeader
           n={2}
-          title="Location"
-          sub="Address details and coordinates. Coordinates place the library on the map."
+          label="Location"
+          title="Where is it?"
+          sub="An address and coordinates put the library on the map and in the right place in the atlas."
         />
       </legend>
       <Field
@@ -149,16 +144,13 @@ function StepLocation({ f, set, setFormData }: StepProps) {
         onChange={set}
         autoComplete="street-address"
       />
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-      >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
           label="City / Town"
           id="city"
           value={f.city}
           onChange={set}
           required
-          score
           autoComplete="address-level2"
         />
         <Field
@@ -168,16 +160,13 @@ function StepLocation({ f, set, setFormData }: StepProps) {
           onChange={set}
         />
       </div>
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-      >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
           label="Country"
           id="country"
           value={f.country}
           onChange={set}
           required
-          score
           autoComplete="country-name"
         />
         <Field
@@ -188,9 +177,7 @@ function StepLocation({ f, set, setFormData }: StepProps) {
           autoComplete="postal-code"
         />
       </div>
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-      >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
           label="Latitude"
           id="lat"
@@ -228,20 +215,19 @@ function StepVisit({ f, set, setFormData }: StepProps) {
         margin: 0,
         display: "flex",
         flexDirection: "column",
-        gap: "18px",
+        gap: "22px",
       }}
     >
       <legend style={{ display: "contents" }}>
         <StepHeader
           n={3}
-          title="Visit"
-          sub="URLs, contact details, admission policy, and visitor access."
+          label="Visit"
+          title="How do people visit?"
+          sub="Links, contact details, opening hours and access: what a visitor needs to know before setting off."
         />
       </legend>
 
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-      >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
           label="Website URL"
           id="website"
@@ -249,7 +235,6 @@ function StepVisit({ f, set, setFormData }: StepProps) {
           onChange={set}
           placeholder="https://"
           type="url"
-          score
         />
         <Field
           label="Plan your visit URL"
@@ -260,9 +245,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
           type="url"
         />
       </div>
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-      >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
           label="Catalogue / OPAC URL"
           id="catalogueUrl"
@@ -270,8 +253,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
           onChange={set}
           placeholder="https://"
           type="url"
-          score
-          hint="◈ counts if no website URL provided"
+          hint="Counts as the contact link if there’s no website."
         />
         <Field
           label="Membership / reader registration URL"
@@ -282,9 +264,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
           type="url"
         />
       </div>
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-      >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
           label="Booking URL"
           id="bookingUrl"
@@ -302,9 +282,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
           type="url"
         />
       </div>
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-      >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
           label="Virtual tour URL"
           id="virtualTourUrl"
@@ -322,9 +300,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
           hint="Paste the embed snippet if you have one."
         />
       </div>
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-      >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
           label="Phone"
           id="phone"
@@ -393,19 +369,19 @@ function StepVisit({ f, set, setFormData }: StepProps) {
         sub="Tag what's actually offered — relations to canonical services / amenities / accessibility records."
       />
       <TagSelector
-        label="Services — Relation · Multi"
+        label="Services"
         endpoint="/api/relations/services"
         value={f.services}
         onChange={(ids) => setFormData((prev) => ({ ...prev, services: ids }))}
       />
       <TagSelector
-        label="Amenities — Relation · Multi"
+        label="Amenities"
         endpoint="/api/relations/amenities"
         value={f.amenities}
         onChange={(ids) => setFormData((prev) => ({ ...prev, amenities: ids }))}
       />
       <TagSelector
-        label="Accessibility — Relation · Multi"
+        label="Accessibility features"
         endpoint="/api/relations/accessibility"
         value={f.accessibility}
         onChange={(ids) =>
@@ -447,14 +423,15 @@ function StepCollections({ f, set }: StepProps) {
         margin: 0,
         display: "flex",
         flexDirection: "column",
-        gap: "18px",
+        gap: "22px",
       }}
     >
       <legend style={{ display: "contents" }}>
         <StepHeader
           n={4}
-          title="Collections"
-          sub="Holdings size, types, classification system, and digital endpoints."
+          label="Collections"
+          title="What does it hold?"
+          sub="Holdings size, notable collections, classification system and any digital endpoints."
         />
       </legend>
       <Field
@@ -462,7 +439,6 @@ function StepCollections({ f, set }: StepProps) {
         id="collectionSize"
         value={f.collectionSize}
         onChange={set}
-        score
         hint="Approximate total — include unit (e.g. '170 million items', '2.4 million volumes')"
       />
       <Field
@@ -478,9 +454,7 @@ function StepCollections({ f, set }: StepProps) {
         value={f.specialCollections}
         onChange={set}
       />
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-      >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
           label="Classification system"
           id="classificationSystem"
@@ -512,30 +486,24 @@ function StepBuilding({ f, set }: StepProps) {
         margin: 0,
         display: "flex",
         flexDirection: "column",
-        gap: "18px",
+        gap: "22px",
       }}
     >
       <legend style={{ display: "contents" }}>
         <StepHeader
           n={5}
-          title="Building"
-          sub="Dates, architect, and architectural notes."
+          label="History"
+          title="When did it begin?"
+          sub="Founding and opening dates, the building, and who designed it."
         />
       </legend>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr 1fr",
-          gap: "14px",
-        }}
-      >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Field
           label="Founded year"
           id="foundedYear"
           value={f.foundedYear}
           onChange={set}
           placeholder="YYYY"
-          score
         />
         <Field
           label="Current building opened"
@@ -552,9 +520,7 @@ function StepBuilding({ f, set }: StepProps) {
           placeholder="YYYY"
         />
       </div>
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-      >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
           label="Architect"
           id="architect"
@@ -589,14 +555,15 @@ function StepImagery({ f, set, setFormData }: StepProps) {
         margin: 0,
         display: "flex",
         flexDirection: "column",
-        gap: "18px",
+        gap: "22px",
       }}
     >
       <legend style={{ display: "contents" }}>
         <StepHeader
           n={6}
-          title="Imagery"
-          sub="Upload images of the library. Mark one as the hero — it appears on the detail page header."
+          label="Photo"
+          title="Add a photo."
+          sub="Upload images of the library and mark one as the hero. It appears at the top of the library page."
         />
       </legend>
       <ImageUploadEditor
@@ -635,14 +602,15 @@ function StepSources({ f, set }: StepProps) {
         margin: 0,
         display: "flex",
         flexDirection: "column",
-        gap: "18px",
+        gap: "22px",
       }}
     >
       <legend style={{ display: "contents" }}>
         <StepHeader
           n={7}
-          title="Sources & review"
-          sub="Cite your evidence, provide a source, and summarise what you've added."
+          label="Sources & send"
+          title="Cite your sources."
+          sub="Tell reviewers how you know. Good evidence is the fastest route through editorial review."
         />
       </legend>
       <WizardSelect
@@ -661,11 +629,8 @@ function StepSources({ f, set }: StepProps) {
         placeholder="https://"
         type="url"
         required
-        score
       />
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-      >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
           label="Primary source (Wikidata, Wikipedia…)"
           id="source"
@@ -688,7 +653,6 @@ function StepSources({ f, set }: StepProps) {
         onChange={set}
         placeholder="Briefly describe what you're adding and how you verified it."
         rows={2}
-        score
       />
       <TextareaField
         label="Note to reviewer (optional)"

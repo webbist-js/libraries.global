@@ -1,5 +1,7 @@
 "use client"
 
+import { Icon } from "@iconify/react"
+import type React from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -9,6 +11,9 @@ import {
   type LibrarySearchHit,
 } from "@/lib/meilisearch"
 import { Link } from "@/lib/navigation"
+import { primaryCtaSm } from "@/lib/styles"
+
+import { StepHeading } from "./WizardFields"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -55,6 +60,19 @@ function scoreResult(
 // Result card
 // ---------------------------------------------------------------------------
 
+const secondaryPill: React.CSSProperties = {
+  fontFamily: T.font.sans,
+  fontSize: "14px",
+  fontWeight: 600,
+  color: T.ink.base,
+  textDecoration: "none",
+  padding: "8px 16px",
+  borderRadius: "999px",
+  border: `1px solid ${T.border.hi}`,
+  background: T.bg.deep,
+  whiteSpace: "nowrap",
+}
+
 function ResultCard({
   hit,
   score,
@@ -65,122 +83,101 @@ function ResultCard({
   isClaimed: boolean
 }) {
   const path = buildLibraryPath(hit)
+  const claimHref = `/contribute/claim?librarySlug=${hit.slug}&libraryName=${encodeURIComponent(hit.name)}${hit.documentId ? `&libraryDocumentId=${hit.documentId}` : ""}${hit.entityRef ? `&libraryEntityRef=${encodeURIComponent(hit.entityRef)}` : ""}`
+  // Owners go straight to the edit wizard; everyone else claims first
+  // (the edit route redirects non-owners to the claim flow anyway).
+  const improveHref = isClaimed ? `/contribute/edit/${hit.slug}` : claimHref
+  const isHigh = score === "high"
 
   return (
-    <div
+    <li
+      className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       style={{
-        padding: "14px 18px",
-        borderRadius: "10px",
-        border: `1px solid ${score === "high" ? T.accent.warn + "40" : T.border.line}`,
-        background: score === "high" ? "rgba(255,207,122,0.04)" : T.bg.surface,
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-        gap: "16px",
+        padding: "18px 20px",
+        borderRadius: "20px",
+        border: `1px solid ${isHigh ? "var(--tint-special-fg)" : T.border.line}`,
+        background: T.bg.deep,
       }}
     >
       <div style={{ flex: 1, minWidth: 0 }}>
-        {score === "high" && (
-          <div
+        {isHigh && (
+          <p
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
-              color: T.accent.warn,
-              marginBottom: "4px",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              fontFamily: T.font.sans,
+              fontSize: "14px",
+              fontWeight: 600,
+              color: "var(--tint-special-fg)",
+              margin: "0 0 4px",
             }}
           >
-            ⚠ Possible duplicate
-          </div>
+            <Icon icon="mdi:alert-outline" width={16} aria-hidden="true" />
+            Possible duplicate
+          </p>
         )}
-        <div
+        <p
           style={{
-            fontFamily: T.font.sans,
-            fontSize: "15px",
+            fontFamily: T.font.serif,
+            fontSize: "20px",
             fontWeight: 500,
             color: T.ink.base,
+            margin: 0,
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
           }}
         >
           {hit.name}
-        </div>
-        <div
+        </p>
+        <p
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".08em",
-            textTransform: "uppercase",
-            color: T.ink.faint,
-            marginTop: "3px",
+            fontFamily: T.font.sans,
+            fontSize: "15px",
+            color: T.ink.dim,
+            margin: "2px 0 0",
           }}
         >
           {[hit.libraryType, hit.city, hit.country_name]
             .filter(Boolean)
             .join(" · ")}
-        </div>
+        </p>
       </div>
-      <div style={{ display: "flex", gap: "10px", flexShrink: 0 }}>
+      <div
+        className="flex flex-wrap items-center gap-2"
+        style={{ flexShrink: 0 }}
+      >
         {path && (
-          <Link
-            href={path}
-            target="_blank"
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".12em",
-              textTransform: "uppercase",
-              color: T.ink.faint,
-              textDecoration: "none",
-              padding: "5px 10px",
-              borderRadius: "5px",
-              border: `1px solid ${T.border.line}`,
-            }}
-          >
-            View →
+          <Link href={path} target="_blank" style={secondaryPill}>
+            View
+            <span className="sr-only"> {hit.name} (opens in a new tab)</span>
           </Link>
         )}
-        {isClaimed ? (
+        <Link
+          href={improveHref}
+          className={primaryCtaSm}
+          style={{ textDecoration: "none", whiteSpace: "nowrap" }}
+        >
+          Improve this record
+        </Link>
+        {!isClaimed && (
           <Link
-            href={`/contribute/edit?slug=${hit.slug}`}
+            href={claimHref}
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".12em",
-              textTransform: "uppercase",
-              color: T.accent.aurora,
-              textDecoration: "none",
-              padding: "5px 10px",
-              borderRadius: "5px",
-              border: `1px solid rgba(127,223,255,0.28)`,
-              background: "rgba(127,223,255,0.06)",
+              fontFamily: T.font.sans,
+              fontSize: "14px",
+              fontWeight: 600,
+              color: T.accent.primary,
+              padding: "8px 4px",
+              whiteSpace: "nowrap",
             }}
           >
-            Suggest edit →
-          </Link>
-        ) : (
-          <Link
-            href={`/contribute/claim?librarySlug=${hit.slug}&libraryName=${encodeURIComponent(hit.name)}${hit.documentId ? `&libraryDocumentId=${hit.documentId}` : ""}${hit.entityRef ? `&libraryEntityRef=${encodeURIComponent(hit.entityRef)}` : ""}`}
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".12em",
-              textTransform: "uppercase",
-              color: T.accent.violet,
-              textDecoration: "none",
-              padding: "5px 10px",
-              borderRadius: "5px",
-              border: `1px solid rgba(163,144,255,0.28)`,
-              background: "rgba(163,144,255,0.06)",
-            }}
-          >
-            Claim library →
+            Claim library
           </Link>
         )}
       </div>
-    </div>
+    </li>
   )
 }
 
@@ -193,20 +190,26 @@ interface LibrarySearchGateProps {
   claimedEntityRefs?: string[]
 }
 
+const groupLabelStyle: React.CSSProperties = {
+  fontFamily: T.font.sans,
+  fontSize: "15px",
+  fontWeight: 600,
+  margin: "0 0 12px",
+}
+
 export function LibrarySearchGate({
   onConfirmNew,
   claimedEntityRefs = [],
 }: LibrarySearchGateProps) {
   const [query, setQuery] = useState("")
-  const [city, setCity] = useState("")
   const [results, setResults] = useState<LibrarySearchHit[]>([])
   const [scored, setScored] = useState<SimilarityResult[]>([])
   const [loading, setLoading] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const search = useCallback(async (q: string, c: string) => {
-    if (q.trim().length < 2 && c.trim().length < 2) {
+  const search = useCallback(async (q: string) => {
+    if (q.trim().length < 2) {
       setResults([])
       setScored([])
       setHasSearched(false)
@@ -215,10 +218,9 @@ export function LibrarySearchGate({
     }
     setLoading(true)
     try {
-      const searchQuery = [q, c].filter(Boolean).join(" ")
       const res = await meiliClient
         .index("library")
-        .search<LibrarySearchHit>(searchQuery, {
+        .search<LibrarySearchHit>(q, {
           hitsPerPage: 8,
           attributesToRetrieve: [
             "id",
@@ -236,9 +238,13 @@ export function LibrarySearchGate({
           ],
         })
       setResults(res.hits)
+      // One box covers name, town or city — score against both, but a bare
+      // city query ("Leeds") shouldn't flag every library in that city.
       setScored(
         res.hits
-          .map((h) => scoreResult(h, q, c))
+          .map((h) =>
+            similarity(h.city ?? "", q) === 1 ? null : scoreResult(h, q, q)
+          )
           .filter((r): r is SimilarityResult => r !== null)
       )
       setHasSearched(true)
@@ -251,182 +257,128 @@ export function LibrarySearchGate({
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => void search(query, city), 380)
+    debounceRef.current = setTimeout(() => void search(query), 380)
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [query, city, search])
+  }, [query, search])
 
   const highMatches = scored.filter((s) => s.score === "high")
   const otherResults = results.filter(
     (h) => !highMatches.some((m) => m.hit.id === h.id)
   )
   const noResults = hasSearched && results.length === 0
-  const canProceed = query.trim().length >= 2 || city.trim().length >= 2
+  const canProceed = query.trim().length >= 2
+
+  let status = ""
+  if (loading) status = "Searching…"
+  else if (hasSearched)
+    status =
+      results.length === 0
+        ? "No matching libraries found."
+        : `${results.length} result${results.length === 1 ? "" : "s"} found.`
 
   return (
-    <div
-      style={{
-        maxWidth: "680px",
-        margin: "0 auto",
-        padding: "48px 24px 60px",
-      }}
-    >
-      {/* Header */}
-      <p
-        style={{
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".20em",
-          textTransform: "uppercase",
-          color: T.accent.aurora,
-          opacity: 0.7,
-          margin: "0 0 16px",
-        }}
-      >
-        Step 0 · Duplicate check
-      </p>
-      <h2
-        style={{
-          fontFamily: T.font.serif,
-          fontSize: "clamp(1.8rem, 4vw, 2.6rem)",
-          fontWeight: 700,
-          letterSpacing: "-0.02em",
-          lineHeight: 1.1,
-          color: T.ink.base,
-          margin: "0 0 10px",
-        }}
-      >
-        Is this library already indexed?
-      </h2>
-      <p
-        style={{
-          fontFamily: T.font.sans,
-          fontSize: "14px",
-          color: T.ink.dim,
-          margin: "0 0 32px",
-          lineHeight: 1.65,
-          maxWidth: "52ch",
-        }}
-      >
-        Search by name or city before adding. If you find it, claim it as yours
-        or suggest an edit — duplicates slow down the review queue.
-      </p>
+    <div>
+      <StepHeading
+        eyebrow="Before you start"
+        title="Is it already listed?"
+        lead="Search first. If the library is already in the index, improving that record helps more than a duplicate."
+      />
 
-      {/* Search inputs */}
+      {/* Search input */}
       <div
+        role="search"
         style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "12px",
-          marginBottom: "20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",
+          marginTop: "36px",
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          <label
-            htmlFor="gate-name"
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".12em",
-              textTransform: "uppercase",
-              color: T.ink.faint,
-            }}
-          >
-            Library name
-          </label>
-          <input
-            id="gate-name"
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder=""
-            autoFocus
-            style={{
-              padding: "10px 14px",
-              borderRadius: "10px",
-              border: `1px solid ${T.border.hi}`,
-              background: T.bg.surface,
-              color: T.ink.base,
-              fontSize: "14px",
-              fontFamily: T.font.sans,
-              outline: "none",
-              width: "100%",
-              boxSizing: "border-box",
-            }}
-          />
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          <label
-            htmlFor="gate-city"
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".12em",
-              textTransform: "uppercase",
-              color: T.ink.faint,
-            }}
-          >
-            City or postcode
-          </label>
-          <input
-            id="gate-city"
-            type="text"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            placeholder=""
-            style={{
-              padding: "10px 14px",
-              borderRadius: "10px",
-              border: `1px solid ${T.border.hi}`,
-              background: T.bg.surface,
-              color: T.ink.base,
-              fontSize: "14px",
-              fontFamily: T.font.sans,
-              outline: "none",
-              width: "100%",
-              boxSizing: "border-box",
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Results */}
-      {loading && (
-        <div
+        <label
+          htmlFor="gate-query"
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".12em",
-            textTransform: "uppercase",
-            color: T.ink.faint,
-            margin: "16px 0",
+            fontFamily: T.font.sans,
+            fontSize: "15px",
+            fontWeight: 600,
+            color: T.ink.base,
           }}
         >
-          Searching…
-        </div>
-      )}
-
-      {!loading && highMatches.length > 0 && (
-        <div style={{ marginBottom: "16px" }}>
-          <p
+          Library name, town or city
+        </label>
+        <div style={{ position: "relative" }}>
+          <Icon
+            icon="mdi:magnify"
+            width={26}
+            aria-hidden="true"
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
-              color: T.accent.warn,
-              margin: "0 0 10px",
+              position: "absolute",
+              left: "20px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: T.ink.dim,
+              pointerEvents: "none",
             }}
-          >
+          />
+          <input
+            id="gate-query"
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="e.g. Leeds"
+            autoComplete="off"
+            aria-describedby="gate-status"
+            autoFocus
+            style={{
+              height: "64px",
+              padding: "0 20px 0 58px",
+              borderRadius: "14px",
+              border: `2px solid ${T.ink.base}`,
+              background: T.bg.deep,
+              color: T.ink.base,
+              fontSize: "19px",
+              fontFamily: T.font.sans,
+              width: "100%",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+        <p
+          id="gate-status"
+          aria-live="polite"
+          style={{
+            fontFamily: T.font.sans,
+            fontSize: "14px",
+            color: T.ink.dim,
+            margin: 0,
+            minHeight: "1.4em",
+          }}
+        >
+          {status}
+        </p>
+      </div>
+
+      <div
+        style={{
+          borderTop: `1px solid ${T.border.line}`,
+          margin: "16px 0 28px",
+        }}
+      />
+
+      {/* Results */}
+      {!loading && highMatches.length > 0 && (
+        <section
+          aria-label="Possible duplicates"
+          style={{ marginBottom: "28px" }}
+        >
+          <p style={{ ...groupLabelStyle, color: "var(--tint-special-fg)" }}>
             {highMatches.length === 1
               ? "Possible duplicate found"
               : `${highMatches.length} possible duplicates found`}
           </p>
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
-          >
+          <ul className="m-0 flex list-none flex-col gap-3 p-0">
             {highMatches.map((r) => (
               <ResultCard
                 key={r.hit.id}
@@ -438,29 +390,18 @@ export function LibrarySearchGate({
                 }
               />
             ))}
-          </div>
-        </div>
+          </ul>
+        </section>
       )}
 
       {!loading && otherResults.length > 0 && (
-        <div style={{ marginBottom: "16px" }}>
+        <section aria-label="Search results" style={{ marginBottom: "28px" }}>
           {highMatches.length > 0 && (
-            <p
-              style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".14em",
-                textTransform: "uppercase",
-                color: T.ink.faint,
-                margin: "0 0 10px",
-              }}
-            >
+            <p style={{ ...groupLabelStyle, color: T.ink.dim }}>
               Other results
             </p>
           )}
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
-          >
+          <ul className="m-0 flex list-none flex-col gap-3 p-0">
             {otherResults.map((hit) => (
               <ResultCard
                 key={hit.id}
@@ -471,104 +412,87 @@ export function LibrarySearchGate({
                 }
               />
             ))}
-          </div>
-        </div>
+          </ul>
+        </section>
       )}
 
       {!loading && noResults && (
         <div
           style={{
-            padding: "16px 18px",
-            borderRadius: "10px",
-            border: `1px solid ${T.accent.ok}30`,
-            background: "rgba(142,240,179,0.03)",
-            marginBottom: "20px",
+            display: "flex",
+            gap: "12px",
+            alignItems: "flex-start",
+            padding: "18px 20px",
+            borderRadius: "20px",
+            background: "var(--tint-public-bg)",
+            marginBottom: "28px",
           }}
         >
-          <p
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
-              color: T.accent.ok,
-              margin: "0 0 3px",
-            }}
-          >
-            Nothing found
-          </p>
-          <p
-            style={{
-              fontFamily: T.font.sans,
-              fontSize: "13px",
-              color: T.ink.dim,
-              margin: 0,
-              lineHeight: 1.6,
-            }}
-          >
-            No matching library found in the index. You&apos;re clear to add it
-            as new.
-          </p>
+          <Icon
+            icon="mdi:check-circle-outline"
+            width={22}
+            aria-hidden="true"
+            style={{ color: "var(--tint-public-fg)", flexShrink: 0 }}
+          />
+          <div>
+            <p
+              style={{
+                fontFamily: T.font.sans,
+                fontSize: "16px",
+                fontWeight: 600,
+                color: "var(--tint-public-fg)",
+                margin: "0 0 2px",
+              }}
+            >
+              Nothing found
+            </p>
+            <p
+              style={{
+                fontFamily: T.font.sans,
+                fontSize: "15px",
+                color: T.ink.base,
+                margin: 0,
+                lineHeight: 1.55,
+              }}
+            >
+              No matching library in the index. You&apos;re clear to add it as
+              new.
+            </p>
+          </div>
         </div>
       )}
 
-      {/* Divider */}
-      <div
-        style={{
-          borderTop: `1px solid ${T.border.line}`,
-          margin: "24px 0 20px",
-        }}
-      />
-
       {/* CTA row */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "16px",
-          flexWrap: "wrap",
-        }}
-      >
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <p
           style={{
             fontFamily: T.font.sans,
-            fontSize: "13px",
-            color: T.ink.faint,
+            fontSize: "15px",
+            color: T.ink.dim,
             margin: 0,
-            maxWidth: "40ch",
+            maxWidth: "44ch",
             lineHeight: 1.5,
           }}
         >
           {canProceed
-            ? "Searched and didn't find it? Proceed to add as new."
-            : "Search first, then add if not found."}
+            ? "Searched and didn't find it? Add it as a new library."
+            : "Search first, then add it if it isn't listed."}
         </p>
 
         <button
           type="button"
-          onClick={() =>
-            onConfirmNew({ name: query.trim(), city: city.trim() })
-          }
+          onClick={() => onConfirmNew({ name: query.trim(), city: "" })}
           disabled={!canProceed}
+          className={primaryCtaSm}
           style={{
-            padding: "11px 24px",
-            borderRadius: "10px",
-            border: canProceed
-              ? `1px solid rgba(127,223,255,0.35)`
-              : `1px solid ${T.border.line}`,
-            background: canProceed ? "rgba(127,223,255,0.10)" : T.bg.surface,
-            color: canProceed ? T.accent.aurora : T.ink.faint,
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".16em",
-            textTransform: "uppercase",
+            border: "none",
             cursor: canProceed ? "pointer" : "not-allowed",
+            opacity: canProceed ? 1 : 0.45,
             whiteSpace: "nowrap",
-            transition: "all 0.15s",
           }}
         >
-          Not in index — add new library →
+          Not listed — add a new library
+          <Icon icon="mdi:arrow-right" width={18} aria-hidden="true" />
         </button>
       </div>
     </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 
+import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 
@@ -76,10 +77,8 @@ export function CorrectLibraryForm({
   }
 
   const labelStyle = {
-    fontFamily: T.font.mono,
-    fontSize: "10px",
-    letterSpacing: ".18em",
-    textTransform: "uppercase" as const,
+    fontFamily: T.font.sans,
+    fontSize: "13px",
     color: T.ink.low,
     display: "block",
     marginBottom: "6px",
@@ -112,10 +111,8 @@ export function CorrectLibraryForm({
         <GlobalLink
           href="/contribute/submissions"
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "11px",
-            letterSpacing: ".14em",
-            textTransform: "uppercase",
+            fontFamily: T.font.sans,
+            fontSize: "13px",
             color: T.accent.aurora,
             textDecoration: "none",
           }}
@@ -128,36 +125,24 @@ export function CorrectLibraryForm({
 
   return (
     <div style={{ maxWidth: "560px", margin: "60px auto", padding: "0 20px" }}>
-      <GlobalLink
-        href="/"
-        style={{
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".14em",
-          textTransform: "uppercase",
-          color: T.ink.faint,
-          textDecoration: "none",
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "6px",
-          marginBottom: "32px",
-        }}
-        className="transition-colors hover:text-(--t-ink-base)"
-      >
-        ← Back to atlas
-      </GlobalLink>
+      <Breadcrumb
+        className="mb-8"
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Contribute", href: "/contribute" },
+          { label: "Suggest a correction" },
+        ]}
+      />
 
       <p
         style={{
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".22em",
-          textTransform: "uppercase",
+          fontFamily: T.font.sans,
+          fontSize: "13px",
           color: T.ink.faint,
           marginBottom: "10px",
         }}
       >
-        § Corrections
+        Corrections
       </p>
       <h1
         style={{
@@ -205,7 +190,7 @@ export function CorrectLibraryForm({
               backgroundPosition: "right 14px center",
               paddingRight: "36px",
             }}
-            className="focus:border-[rgba(127,223,255,.4)]"
+            className="focus:border-(--t-aurora-edge)"
           >
             <option value="">Select a category…</option>
             {CORRECTION_CATEGORIES.map((c) => (
@@ -233,7 +218,7 @@ export function CorrectLibraryForm({
               minHeight: "110px",
               lineHeight: "1.6",
             }}
-            className="focus:border-[rgba(127,223,255,.4)] focus:bg-[rgba(127,223,255,.03)]"
+            className="focus:border-(--t-aurora-edge) focus:bg-(--t-aurora-soft)"
           />
         </div>
 

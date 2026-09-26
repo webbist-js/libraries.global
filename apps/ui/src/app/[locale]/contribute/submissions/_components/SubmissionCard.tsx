@@ -121,8 +121,8 @@ const STATUS_CONFIG: Record<
   pending: {
     label: "UNDER REVIEW",
     color: T.accent.aurora,
-    bg: "rgba(127,223,255,0.08)",
-    border: "rgba(127,223,255,0.30)",
+    bg: "var(--t-aurora-soft)",
+    border: "var(--t-aurora-soft)",
   },
   approved: {
     label: "APPROVED",
@@ -145,13 +145,13 @@ const STATUS_CONFIG: Record<
 }
 
 const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
-  new_library: { label: "ADD", color: T.accent.ok },
-  library_edit: { label: "EDIT", color: T.accent.aurora },
-  correction: { label: "CORRECTION", color: T.accent.aurora },
-  library_claim: { label: "CLAIM", color: T.accent.violet },
-  wiki_edit: { label: "WIKI", color: T.accent.violet },
-  blog_submission: { label: "BLOG", color: T.accent.gold },
-  topic_suggestion: { label: "TOPIC", color: T.ink.faint },
+  new_library: { label: "Addition", color: T.accent.ok },
+  library_edit: { label: "Edit", color: T.accent.aurora },
+  correction: { label: "Correction", color: T.accent.aurora },
+  library_claim: { label: "Claim", color: T.accent.violet },
+  wiki_edit: { label: "Docs", color: T.accent.violet },
+  blog_submission: { label: "Journal", color: T.accent.gold },
+  topic_suggestion: { label: "Topic", color: T.ink.faint },
 }
 
 // ---------------------------------------------------------------------------
@@ -240,7 +240,7 @@ function getPipelineDotStyles({
 
   if (done) {
     return {
-      background: "rgba(127,223,255,0.22)",
+      background: "var(--t-aurora-soft)",
       border: T.accent.aurora,
       boxShadow: "none",
     }
@@ -342,10 +342,8 @@ function SubmissionPipeline({ status }: { status: string }) {
             <span
               key={stage}
               style={{
-                fontFamily: T.font.mono,
+                fontFamily: T.font.sans,
                 fontSize: "7.5px",
-                letterSpacing: ".08em",
-                textTransform: "uppercase",
                 color: getPipelineLabelColor(dotState),
                 lineHeight: 1,
                 textAlign:
@@ -382,10 +380,8 @@ function StatusPanelRow({
     <div>
       <div
         style={{
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".14em",
-          textTransform: "uppercase",
+          fontFamily: T.font.sans,
+          fontSize: "13px",
           color: T.ink.faint,
           marginBottom: "2px",
         }}
@@ -395,9 +391,8 @@ function StatusPanelRow({
 
       <div
         style={{
-          fontFamily: T.font.mono,
-          fontSize: "11px",
-          letterSpacing: ".06em",
+          fontFamily: T.font.sans,
+          fontSize: "13px",
           color: valueColor ?? T.ink.dim,
         }}
       >
@@ -439,13 +434,11 @@ function StatusPanel({ submission }: { submission: Submission }) {
               gap: "5px",
               padding: "7px 14px",
               borderRadius: "6px",
-              border: `1px solid rgba(127,223,255,0.28)`,
-              background: "rgba(127,223,255,0.07)",
+              border: `1px solid var(--t-aurora-edge)`,
+              background: "var(--t-aurora-soft)",
               color: T.accent.aurora,
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               textDecoration: "none",
               whiteSpace: "nowrap",
             }}
@@ -567,8 +560,8 @@ function EditorialNote({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontFamily: T.font.mono,
-          fontSize: "10px",
+          fontFamily: T.font.sans,
+          fontSize: "13px",
           fontWeight: 700,
           color: isWarning ? T.accent.warn : T.accent.danger,
           marginTop: "1px",
@@ -580,10 +573,8 @@ function EditorialNote({
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".14em",
-            textTransform: "uppercase",
+            fontFamily: T.font.sans,
+            fontSize: "13px",
             color: isWarning ? T.accent.warn : T.accent.danger,
             opacity: 0.75,
             marginBottom: "7px",
@@ -626,8 +617,8 @@ export function SubmissionCard({
   const statusCfg = STATUS_CONFIG[submission.status] ?? {
     label: "PENDING",
     color: T.accent.aurora,
-    bg: "rgba(127,223,255,0.08)",
-    border: "rgba(127,223,255,0.28)",
+    bg: "var(--t-aurora-soft)",
+    border: "var(--t-aurora-soft)",
   }
 
   const typeCfg = TYPE_CONFIG[submission.submissionType] ?? {
@@ -667,10 +658,8 @@ export function SubmissionCard({
         <span
           style={{
             display: "inline-block",
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".16em",
-            textTransform: "uppercase",
+            fontFamily: T.font.sans,
+            fontSize: "13px",
             color: typeCfg.color,
             background: `${typeCfg.color}14`,
             border: `1px solid ${typeCfg.color}38`,
@@ -685,14 +674,12 @@ export function SubmissionCard({
         {eyebrowParts.length > 0 && (
           <span
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".08em",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: T.ink.faint,
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
-              textTransform: "uppercase",
             }}
           >
             {eyebrowParts.join(" · ")}
@@ -710,10 +697,8 @@ export function SubmissionCard({
           >
             <span
               style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".14em",
-                textTransform: "uppercase",
+                fontFamily: T.font.sans,
+                fontSize: "13px",
                 color: statusCfg.color,
                 whiteSpace: "nowrap",
               }}

@@ -148,10 +148,8 @@ function displayTime(t: string): string {
 // ---------------------------------------------------------------------------
 
 const monoSm: React.CSSProperties = {
-  fontFamily: T.font.mono,
-  fontSize: "10px",
-  letterSpacing: ".12em",
-  textTransform: "uppercase" as const,
+  fontFamily: T.font.sans,
+  fontSize: "13px",
   color: T.ink.faint,
 }
 
@@ -165,11 +163,11 @@ function selectStyle(hasError: boolean): React.CSSProperties {
     background: hasError ? "rgba(255,138,138,0.06)" : T.bg.deep,
     color: T.ink.base,
     fontSize: "13px",
-    fontFamily: T.font.mono,
+    fontFamily: T.font.sans,
     outline: "none",
     cursor: "pointer",
     width: "112px",
-    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(244,247,255,0.25)'/%3E%3C/svg%3E")`,
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(23,22,43,0.45)'/%3E%3C/svg%3E")`,
     backgroundRepeat: "no-repeat",
     backgroundPosition: "right 10px center",
     boxSizing: "border-box" as const,
@@ -197,7 +195,7 @@ function DayToggle({
         alignItems: "center",
         gap: "7px",
         background: "none",
-        border: `1px solid ${open ? "rgba(127,223,255,0.22)" : T.border.line}`,
+        border: `1px solid ${open ? "var(--tint-public-fg)" : T.border.hi}`,
         borderRadius: "6px",
         padding: "4px 9px 4px 10px",
         cursor: "pointer",
@@ -206,8 +204,8 @@ function DayToggle({
       onMouseEnter={(e) => {
         const el = e.currentTarget as HTMLButtonElement
         el.style.background = open
-          ? "rgba(255,138,138,0.06)"
-          : "rgba(127,223,255,0.06)"
+          ? "var(--tint-special-bg)"
+          : "var(--tint-public-bg)"
       }}
       onMouseLeave={(e) => {
         ;(e.currentTarget as HTMLButtonElement).style.background = "none"
@@ -216,8 +214,8 @@ function DayToggle({
       <span
         style={{
           ...monoSm,
-          fontSize: "10px",
-          color: open ? T.accent.aurora : "rgba(244,247,255,0.30)",
+          fontSize: "13px",
+          color: open ? "var(--tint-public-fg)" : T.ink.dim,
           transition: "color 0.15s",
           userSelect: "none",
         }}
@@ -228,7 +226,7 @@ function DayToggle({
         style={{
           fontSize: "14px",
           lineHeight: 1,
-          color: open ? T.accent.danger : T.accent.aurora,
+          color: open ? T.accent.danger : "var(--tint-public-fg)",
           opacity: open ? 0.7 : 0.5,
           fontWeight: 300,
           transition: "color 0.15s, opacity 0.15s",
@@ -286,16 +284,15 @@ function CopyDaySelect({
       }}
       style={{
         ...monoSm,
-        fontSize: "10px",
-        color: T.accent.aurora,
-        opacity: 0.65,
+        fontSize: "13px",
+        color: T.accent.primary,
+        fontWeight: 600,
         background: "none",
         border: "none",
         cursor: "pointer",
         padding: 0,
         outline: "none",
         marginLeft: "auto",
-        letterSpacing: ".12em",
         appearance: "none" as const,
         WebkitAppearance: "none" as const,
       }}
@@ -385,7 +382,7 @@ function TimeframeRow({
         ))}
       </select>
 
-      <span style={{ ...monoSm, fontSize: "10px" }}>to</span>
+      <span style={{ ...monoSm, fontSize: "13px" }}>to</span>
 
       {/* End time */}
       <select
@@ -405,9 +402,8 @@ function TimeframeRow({
       {hasError && (
         <span
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".10em",
+            fontFamily: T.font.sans,
+            fontSize: "13px",
             color: T.accent.danger,
             opacity: 0.8,
           }}
@@ -597,10 +593,8 @@ export function OpeningTimesEditor({
             >
               <span
                 style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "11px",
-                  letterSpacing: ".13em",
-                  textTransform: "uppercase",
+                  fontFamily: T.font.sans,
+                  fontSize: "13px",
                   color: day.enabled ? T.ink.base : T.ink.faint,
                   width: "82px",
                   flexShrink: 0,
@@ -669,14 +663,13 @@ export function OpeningTimesEditor({
                   style={{
                     alignSelf: "flex-start",
                     ...monoSm,
-                    fontSize: "10px",
-                    color: T.accent.aurora,
-                    opacity: 0.65,
+                    fontSize: "13px",
+                    color: T.accent.primary,
+                    fontWeight: 600,
                     background: "none",
                     border: "none",
                     cursor: "pointer",
                     padding: "3px 0",
-                    letterSpacing: ".14em",
                   }}
                 >
                   + Add time slot

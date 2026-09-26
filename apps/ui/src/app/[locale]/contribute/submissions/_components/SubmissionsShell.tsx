@@ -75,10 +75,8 @@ function EmptyState({ filter }: { filter: string }) {
     >
       <div
         style={{
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".18em",
-          textTransform: "uppercase",
+          fontFamily: T.font.sans,
+          fontSize: "13px",
           color: T.ink.faint,
           marginBottom: "14px",
         }}
@@ -122,10 +120,8 @@ export function SubmissionsShell() {
         badge={
           <span
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: T.ink.faint,
             }}
           >
@@ -148,13 +144,7 @@ export function SubmissionsShell() {
       <ContributeNavBar />
 
       {/* ── Content ────────────────────────────────────────────────────── */}
-      <div
-        style={{
-          maxWidth: "1296px",
-          margin: "0 auto",
-          padding: "40px 24px 60px",
-        }}
-      >
+      <div className="mx-auto w-full max-w-[1360px] px-4 pt-10 pb-15 sm:px-8">
         {/* Filter tabs */}
         <div
           style={{
@@ -186,10 +176,8 @@ export function SubmissionsShell() {
                   alignItems: "center",
                   gap: "7px",
                   whiteSpace: "nowrap",
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".16em",
-                  textTransform: "uppercase",
+                  fontFamily: T.font.sans,
+                  fontSize: "13px",
                   color: isActive ? T.ink.base : T.ink.faint,
                   transition: "color .15s, border-color .15s",
                 }}
@@ -197,10 +185,9 @@ export function SubmissionsShell() {
                 {tab.label}
                 <span
                   style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".06em",
-                    background: isActive ? "rgba(127,223,255,0.12)" : T.bg.deep,
+                    fontFamily: T.font.sans,
+                    fontSize: "13px",
+                    background: isActive ? "var(--t-aurora-soft)" : T.bg.deep,
                     color: isActive ? T.accent.aurora : T.ink.faint,
                     borderRadius: "4px",
                     padding: "1px 6px",
@@ -246,13 +233,11 @@ function SubmissionList({ submissions }: { submissions: Submission[] }) {
             border: `1px solid ${T.border.line}`,
             background: "transparent",
             color: T.ink.faint,
-            fontFamily: T.font.mono,
-            fontSize: "11px",
-            letterSpacing: ".12em",
+            fontFamily: T.font.sans,
+            fontSize: "13px",
             cursor: "pointer",
             width: "100%",
             marginTop: "10px",
-            textTransform: "uppercase",
           }}
         >
           {`Load ${remaining} earlier submission${remaining === 1 ? "" : "s"} →`}

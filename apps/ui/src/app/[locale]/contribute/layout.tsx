@@ -4,8 +4,10 @@ import type { Locale } from "next-intl"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { T } from "@/lib/design-tokens"
 
+// Default for every /contribute/* route: forms and auth-gated flows are not
+// indexable. The hub (contribute/page.tsx) overrides this with index,follow.
 export const metadata: Metadata = {
-  robots: "noindex, nofollow",
+  robots: { index: false, follow: false },
 }
 
 export default async function ContributeLayout({

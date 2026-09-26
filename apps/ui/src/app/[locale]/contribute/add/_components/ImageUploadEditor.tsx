@@ -81,10 +81,8 @@ export function ImageUploadEditor({
           border: `1.5px dashed ${uploading ? T.border.line : T.border.hi}`,
           background: T.bg.surface,
           color: uploading ? T.ink.faint : T.ink.dim,
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".14em",
-          textTransform: "uppercase",
+          fontFamily: T.font.sans,
+          fontSize: "13px",
           cursor: uploading ? "not-allowed" : "pointer",
           display: "flex",
           flexDirection: "column",
@@ -98,8 +96,7 @@ export function ImageUploadEditor({
         <span>{uploading ? "Uploading…" : "Click to select images"}</span>
         <span
           style={{
-            fontSize: "10px",
-            letterSpacing: ".10em",
+            fontSize: "13px",
             color: T.ink.faint,
             marginTop: "2px",
           }}
@@ -119,9 +116,8 @@ export function ImageUploadEditor({
       {error && (
         <p
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".12em",
+            fontFamily: T.font.sans,
+            fontSize: "13px",
             color: T.accent.danger,
             margin: 0,
           }}
@@ -146,7 +142,7 @@ export function ImageUploadEditor({
                 borderRadius: "10px",
                 overflow: "hidden",
                 border: img.isHero
-                  ? `2px solid ${T.accent.aurora}`
+                  ? `2px solid ${T.accent.primary}`
                   : `1px solid ${T.border.line}`,
                 background: T.bg.deep,
                 aspectRatio: "4/3",
@@ -169,12 +165,10 @@ export function ImageUploadEditor({
                     position: "absolute",
                     top: "6px",
                     left: "6px",
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".12em",
-                    textTransform: "uppercase",
-                    color: T.bg.void,
-                    background: T.accent.aurora,
+                    fontFamily: T.font.sans,
+                    fontSize: "13px",
+                    color: "#fff",
+                    background: T.accent.primary,
                     padding: "2px 7px",
                     borderRadius: "4px",
                     fontWeight: 700,
@@ -193,7 +187,7 @@ export function ImageUploadEditor({
                   display: "flex",
                   gap: "4px",
                   padding: "6px",
-                  background: "rgba(3,5,17,0.75)",
+                  background: "rgba(23,22,43,0.65)",
                 }}
               >
                 {!img.isHero && (
@@ -202,13 +196,11 @@ export function ImageUploadEditor({
                     onClick={() => setHero(i)}
                     style={{
                       flex: 1,
-                      fontFamily: T.font.mono,
-                      fontSize: "10px",
-                      letterSpacing: ".10em",
-                      textTransform: "uppercase",
-                      color: T.accent.aurora,
-                      background: "rgba(127,223,255,0.10)",
-                      border: `1px solid rgba(127,223,255,0.25)`,
+                      fontFamily: T.font.sans,
+                      fontSize: "13px",
+                      color: T.accent.primary,
+                      background: T.bg.deep,
+                      border: "none",
                       borderRadius: "4px",
                       padding: "3px 4px",
                       cursor: "pointer",
@@ -221,13 +213,11 @@ export function ImageUploadEditor({
                   type="button"
                   onClick={() => remove(i)}
                   style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".10em",
-                    textTransform: "uppercase",
+                    fontFamily: T.font.sans,
+                    fontSize: "13px",
                     color: T.accent.danger,
-                    background: "rgba(255,138,138,0.08)",
-                    border: `1px solid rgba(255,138,138,0.20)`,
+                    background: "var(--tint-special-bg)",
+                    border: "none",
                     borderRadius: "4px",
                     padding: "3px 6px",
                     cursor: "pointer",

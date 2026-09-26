@@ -3,9 +3,12 @@ import { notFound, redirect } from "next/navigation"
 import type { Locale } from "next-intl"
 
 import { getSessionSSR } from "@/lib/auth-server"
+import { privateMetadata } from "@/lib/seo/metadata"
 import { fetchLibrary } from "@/lib/strapi-api/content/server"
 
 import { EditLibraryShell } from "./_components/EditLibraryShell"
+
+export const metadata = privateMetadata("Edit library record")
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 

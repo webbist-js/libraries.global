@@ -44,8 +44,8 @@ export function LeaderboardRows({ entries }: { entries: LeaderboardEntry[] }) {
         >
           <span
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: T.ink.faint,
               width: "28px",
               textAlign: "right",
@@ -59,13 +59,13 @@ export function LeaderboardRows({ entries }: { entries: LeaderboardEntry[] }) {
               width: "30px",
               height: "30px",
               borderRadius: "50%",
-              background: "rgba(127,223,255,0.08)",
-              border: "1px solid rgba(127,223,255,0.14)",
+              background: "var(--t-aurora-soft)",
+              border: "1px solid rgba(67,56,202,0.08)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontFamily: T.font.mono,
-              fontSize: "10px",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               fontWeight: 600,
               color: T.accent.aurora,
               flexShrink: 0,
@@ -100,10 +100,8 @@ export function LeaderboardRows({ entries }: { entries: LeaderboardEntry[] }) {
             <p
               style={{
                 margin: 0,
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".10em",
-                textTransform: "uppercase",
+                fontFamily: T.font.sans,
+                fontSize: "13px",
                 color: TIER_COLORS[entry.tier] ?? T.ink.faint,
               }}
             >
@@ -124,10 +122,8 @@ export function LeaderboardRows({ entries }: { entries: LeaderboardEntry[] }) {
             {entry.periodPoints.toLocaleString()}
             <span
               style={{
-                fontFamily: T.font.mono,
+                fontFamily: T.font.sans,
                 fontSize: "7px",
-                letterSpacing: ".12em",
-                textTransform: "uppercase",
                 color: T.ink.faint,
                 marginLeft: "5px",
               }}

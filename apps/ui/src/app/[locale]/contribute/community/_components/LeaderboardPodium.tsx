@@ -65,12 +65,12 @@ export function LeaderboardPodium({
               width: "44px",
               height: "44px",
               borderRadius: "50%",
-              background: "rgba(127,223,255,0.10)",
-              border: "1px solid rgba(127,223,255,0.18)",
+              background: "var(--t-aurora-soft)",
+              border: "1px solid rgba(67,56,202,0.08)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontFamily: T.font.mono,
+              fontFamily: T.font.sans,
               fontSize: "12px",
               fontWeight: 600,
               color: T.accent.aurora,
@@ -102,10 +102,8 @@ export function LeaderboardPodium({
           <p
             style={{
               margin: "0 0 10px",
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".10em",
-              textTransform: "uppercase",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: TIER_COLORS[entry.tier] ?? T.ink.faint,
             }}
           >
@@ -126,10 +124,8 @@ export function LeaderboardPodium({
             </span>
             <span
               style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".12em",
-                textTransform: "uppercase",
+                fontFamily: T.font.sans,
+                fontSize: "13px",
                 color: T.ink.faint,
                 marginLeft: "6px",
               }}

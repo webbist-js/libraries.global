@@ -87,10 +87,8 @@ export function SocialLinksEditor({
           border: `1px solid ${T.border.hi}`,
           background: "transparent",
           color: T.ink.dim,
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".12em",
-          textTransform: "uppercase",
+          fontFamily: T.font.sans,
+          fontSize: "13px",
           cursor: "pointer",
           alignSelf: "flex-start",
         }}

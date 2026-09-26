@@ -51,10 +51,8 @@ export function EditSourcesSection({
       </h2>
       <p
         style={{
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".14em",
-          textTransform: "uppercase",
+          fontFamily: T.font.sans,
+          fontSize: "13px",
           color: T.ink.faint,
           marginBottom: "20px",
         }}
@@ -79,16 +77,14 @@ export function EditSourcesSection({
               key={opt.key}
               onClick={() => toggleType(opt.key)}
               style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".12em",
-                textTransform: "uppercase",
+                fontFamily: T.font.sans,
+                fontSize: "13px",
                 padding: "7px 14px",
                 borderRadius: "10px",
                 border: selected
-                  ? `1px solid rgba(127,223,255,0.4)`
+                  ? `1px solid var(--t-aurora-edge)`
                   : `1px solid ${T.border.line}`,
-                background: selected ? "rgba(127,223,255,0.08)" : "transparent",
+                background: selected ? "var(--t-aurora-soft)" : "transparent",
                 color: selected ? T.accent.aurora : T.ink.faint,
                 cursor: "pointer",
                 transition: "all 0.15s",

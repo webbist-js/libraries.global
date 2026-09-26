@@ -40,10 +40,8 @@ export function DiffFieldRow({
       >
         <span
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".18em",
-            textTransform: "uppercase",
+            fontFamily: T.font.sans,
+            fontSize: "13px",
             color: T.ink.faint,
           }}
         >
@@ -52,15 +50,13 @@ export function DiffFieldRow({
         {isChanged && (
           <span
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: T.accent.aurora,
-              border: `1px solid rgba(127,223,255,0.3)`,
+              border: `1px solid var(--t-aurora-soft)`,
               borderRadius: "5px",
               padding: "2px 6px",
-              background: "rgba(127,223,255,0.07)",
+              background: "var(--t-aurora-soft)",
             }}
           >
             Changed
@@ -90,9 +86,7 @@ export function DiffFieldRow({
           }}
         >
           {currentValue || (
-            <span
-              style={{ color: "rgba(244,247,255,0.18)", fontStyle: "italic" }}
-            >
+            <span style={{ color: "var(--t-ink-ghost)", fontStyle: "italic" }}>
               No value
             </span>
           )}
@@ -101,7 +95,7 @@ export function DiffFieldRow({
         {/* Right: editable */}
         <div
           style={{
-            background: isChanged ? "rgba(127,223,255,0.04)" : T.bg.deep,
+            background: isChanged ? "var(--t-aurora-soft)" : T.bg.deep,
             padding: 0,
             minHeight: "48px",
           }}

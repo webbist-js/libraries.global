@@ -3,27 +3,35 @@ import type React from "react"
 import { T } from "@/lib/design-tokens"
 
 export const fieldInputStyle: React.CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: "10px",
+  padding: "12px 16px",
+  minHeight: "48px",
+  borderRadius: "14px",
   border: `1px solid ${T.border.hi}`,
-  background: T.bg.surface,
+  background: T.bg.deep,
   color: T.ink.base,
-  fontSize: "14px",
+  fontSize: "16px",
   fontFamily: T.font.sans,
-  outline: "none",
   width: "100%",
   boxSizing: "border-box",
 }
 
 export const fieldLabelStyle: React.CSSProperties = {
-  fontFamily: T.font.mono,
-  fontSize: "11px",
-  letterSpacing: ".12em",
-  textTransform: "uppercase",
-  color: T.ink.faint,
+  fontFamily: T.font.sans,
+  fontSize: "15px",
+  fontWeight: 600,
+  color: T.ink.base,
   display: "flex",
-  alignItems: "center",
-  gap: "6px",
+  alignItems: "baseline",
+  flexWrap: "wrap",
+  gap: "8px",
+}
+
+export const fieldHintStyle: React.CSSProperties = {
+  fontFamily: T.font.sans,
+  fontSize: "14px",
+  color: T.ink.dim,
+  margin: 0,
+  lineHeight: 1.5,
 }
 
 export const LIBRARY_TYPES = [

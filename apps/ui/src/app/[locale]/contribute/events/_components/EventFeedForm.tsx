@@ -183,7 +183,7 @@ const COUNTRIES: { name: string; slug: string }[] = [
 // ── Shared input style ─────────────────────────────────────────────────────────
 
 const inputSx: React.CSSProperties = {
-  fontFamily: T.font.mono,
+  fontFamily: T.font.sans,
   fontSize: "13px",
   background: T.bg.deep,
   border: `1px solid ${T.border.line}`,
@@ -196,19 +196,16 @@ const inputSx: React.CSSProperties = {
 }
 
 const labelSx: React.CSSProperties = {
-  fontFamily: T.font.mono,
-  fontSize: "10px",
-  letterSpacing: ".18em",
-  textTransform: "uppercase",
+  fontFamily: T.font.sans,
+  fontSize: "13px",
   color: T.ink.faint,
   display: "block",
   marginBottom: "6px",
 }
 
 const hintSx: React.CSSProperties = {
-  fontFamily: T.font.mono,
-  fontSize: "10px",
-  letterSpacing: ".08em",
+  fontFamily: T.font.sans,
+  fontSize: "13px",
   color: T.ink.faint,
   marginTop: "5px",
 }
@@ -260,7 +257,8 @@ export function EventFeedForm({
     searchTimer.current = setTimeout(async () => {
       try {
         const filterParts: string[] = []
-        if (countrySlug) filterParts.push(`country_slug = "${countrySlug}"`)
+        if (countrySlug)
+          filterParts.push(`country_slug = ${JSON.stringify(countrySlug)}`)
         const res = await meiliClient
           .index("library")
           .search<LibrarySearchHit>(libraryQuery, {
@@ -410,9 +408,8 @@ export function EventFeedForm({
         </p>
         <p
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "11px",
-            letterSpacing: ".1em",
+            fontFamily: T.font.sans,
+            fontSize: "13px",
             color: T.ink.faint,
             maxWidth: "400px",
             lineHeight: 1.6,
@@ -443,10 +440,8 @@ export function EventFeedForm({
       >
         <p
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".22em",
-            textTransform: "uppercase",
+            fontFamily: T.font.sans,
+            fontSize: "13px",
             color: T.accent.aurora,
             marginBottom: "16px",
           }}
@@ -480,11 +475,10 @@ export function EventFeedForm({
               </p>
               <p
                 style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
+                  fontFamily: T.font.sans,
+                  fontSize: "13px",
                   color: T.ink.faint,
                   margin: "3px 0 0",
-                  letterSpacing: ".06em",
                 }}
               >
                 {[selectedLibrary.city, selectedLibrary.country_name]
@@ -499,8 +493,8 @@ export function EventFeedForm({
               {!selectedLibrary.entityRef && (
                 <p
                   style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
+                    fontFamily: T.font.sans,
+                    fontSize: "13px",
                     color: T.accent.warn,
                     marginTop: "4px",
                   }}
@@ -517,10 +511,8 @@ export function EventFeedForm({
                 border: "none",
                 cursor: "pointer",
                 color: T.ink.faint,
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".1em",
-                textTransform: "uppercase",
+                fontFamily: T.font.sans,
+                fontSize: "13px",
                 padding: "4px 8px",
               }}
             >
@@ -567,10 +559,9 @@ export function EventFeedForm({
                       right: "12px",
                       top: "50%",
                       transform: "translateY(-50%)",
-                      fontFamily: T.font.mono,
-                      fontSize: "10px",
+                      fontFamily: T.font.sans,
+                      fontSize: "13px",
                       color: T.ink.faint,
-                      letterSpacing: ".08em",
                     }}
                   >
                     Searching…
@@ -613,7 +604,7 @@ export function EventFeedForm({
                         alignItems: "center",
                         gap: "12px",
                       }}
-                      className="hover:bg-[rgba(127,223,255,.04)]"
+                      className="hover:bg-(--t-bg-surface)"
                     >
                       <span
                         style={{
@@ -630,10 +621,9 @@ export function EventFeedForm({
                       </span>
                       <span
                         style={{
-                          fontFamily: T.font.mono,
-                          fontSize: "10px",
+                          fontFamily: T.font.sans,
+                          fontSize: "13px",
                           color: T.ink.faint,
-                          letterSpacing: ".08em",
                           whiteSpace: "nowrap",
                           flexShrink: 0,
                         }}
@@ -663,10 +653,8 @@ export function EventFeedForm({
         >
           <p
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".22em",
-              textTransform: "uppercase",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: T.accent.aurora,
               marginBottom: "16px",
             }}
@@ -688,7 +676,7 @@ export function EventFeedForm({
                   border: `1px solid ${provider === p.value ? T.border.hi : T.border.line}`,
                   background:
                     provider === p.value
-                      ? "rgba(127,223,255,.06)"
+                      ? "var(--t-aurora-soft)"
                       : "transparent",
                   cursor: "pointer",
                   textAlign: "left",
@@ -703,24 +691,22 @@ export function EventFeedForm({
                 <div>
                   <p
                     style={{
-                      fontFamily: T.font.mono,
+                      fontFamily: T.font.sans,
                       fontSize: "12px",
                       color:
                         provider === p.value ? T.accent.aurora : T.ink.base,
                       margin: 0,
                       fontWeight: 500,
-                      letterSpacing: ".04em",
                     }}
                   >
                     {p.label}
                   </p>
                   <p
                     style={{
-                      fontFamily: T.font.mono,
-                      fontSize: "10px",
+                      fontFamily: T.font.sans,
+                      fontSize: "13px",
                       color: T.ink.faint,
                       margin: "2px 0 0",
-                      letterSpacing: ".06em",
                     }}
                   >
                     {p.desc}
@@ -750,10 +736,8 @@ export function EventFeedForm({
         >
           <p
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".22em",
-              textTransform: "uppercase",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: T.accent.aurora,
               marginBottom: "4px",
             }}
@@ -763,12 +747,11 @@ export function EventFeedForm({
           </p>
           <p
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: T.ink.faint,
               marginBottom: "16px",
               lineHeight: 1.5,
-              letterSpacing: ".04em",
             }}
           >
             Credentials are encrypted at rest and only used to sync events. They
@@ -813,8 +796,8 @@ export function EventFeedForm({
         >
           <p
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "11px",
+              fontFamily: T.font.sans,
+              fontSize: "13px",
               color: T.accent.danger,
               margin: 0,
             }}
@@ -829,14 +812,12 @@ export function EventFeedForm({
         <button
           type="submit"
           disabled={!canSubmit || status === "submitting"}
-          className="inline-flex items-center gap-2 self-start rounded-full px-6 py-3 text-sm transition-all duration-150 hover:bg-[rgba(127,223,255,0.18)] disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center gap-2 self-start rounded-full px-6 py-3 text-sm transition-all duration-150 hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
           style={{
-            fontFamily: T.font.mono,
-            background: "rgba(127,223,255,0.1)",
-            border: "1px solid rgba(127,223,255,0.3)",
+            fontFamily: T.font.sans,
+            background: "var(--t-aurora-soft)",
+            border: "1px solid var(--t-aurora-edge)",
             color: T.accent.aurora,
-            letterSpacing: ".1em",
-            textTransform: "uppercase",
           }}
         >
           <Icon icon="mdi:shield-check-outline" className="size-4" />

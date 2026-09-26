@@ -1,6 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { Icon } from "@iconify/react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import {
@@ -10,13 +11,11 @@ import {
   useSaveDraft,
 } from "@/hooks/useSubmissions"
 import { T } from "@/lib/design-tokens"
-import { useRouter } from "@/lib/navigation"
-import { auroraCtaSm } from "@/lib/styles"
+import { Link, useRouter } from "@/lib/navigation"
+import { primaryCtaSm } from "@/lib/styles"
 
-import { AddLibraryHero } from "./AddLibraryHero"
 import { DraftResumeBanner } from "./DraftResumeBanner"
 import { LibrarySearchGate } from "./LibrarySearchGate"
-import { calcScore } from "./wizard.scoring"
 import {
   EMPTY_FORM,
   type AddLibraryWizardProps,
@@ -25,10 +24,43 @@ import {
 import { WizardCompletionSidebar } from "./WizardCompletionSidebar"
 import { WizardStepNav } from "./WizardStepNav"
 import { STEP_COMPONENTS } from "./WizardSteps"
-import { ContributeNavBar } from "../../_components/ContributeNavBar"
 
 export type { FormData, SocialLink, UploadedImage } from "./wizard.types"
 export { calcScore } from "./wizard.scoring"
+
+function formatSavedTime(date: Date): string {
+  return date.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZoneName: "short",
+  })
+}
+
+function DraftStatus({ lastSavedAt }: { lastSavedAt: Date | null }) {
+  return (
+    <p
+      role="status"
+      style={{
+        fontFamily: T.font.sans,
+        fontSize: "15px",
+        color: lastSavedAt ? T.accent.ok : T.ink.dim,
+        margin: 0,
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+      }}
+    >
+      <Icon
+        icon={lastSavedAt ? "mdi:check-circle-outline" : "mdi:circle-outline"}
+        width={16}
+        aria-hidden="true"
+      />
+      {lastSavedAt
+        ? `Draft saved · ${formatSavedTime(lastSavedAt)}`
+        : "Draft not yet saved"}
+    </p>
+  )
+}
 
 export function AddLibraryWizard({
   sessionUser: _,
@@ -93,7 +125,6 @@ export function AddLibraryWizard({
     setFormData((prev) => ({ ...prev, [k]: v }))
   }, [])
 
-  const score = calcScore(formData)
   const StepComponent = step > 0 ? STEP_COMPONENTS[step - 1]! : null
 
   const saveDraft = useCallback(
@@ -149,6 +180,20 @@ export function AddLibraryWizard({
   const handleStepClick = (n: number) => {
     if (n === 0 || completed.includes(step) || n <= step) setStep(n)
   }
+
+  const topRef = useRef<HTMLDivElement>(null)
+  const isFirstRender = useRef(true)
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+
+      return
+    }
+    const el = topRef.current
+    if (el && el.getBoundingClientRect().top < 0) {
+      el.scrollIntoView({ block: "start" })
+    }
+  }, [step])
 
   useEffect(() => {
     if (!draftId) return
@@ -209,59 +254,70 @@ export function AddLibraryWizard({
   }
 
   return (
-    <>
-      <AddLibraryHero
-        lastSavedAt={lastSavedAt}
-        libraryName={isEditMode ? formData.name || undefined : undefined}
-      />
-
-      <ContributeNavBar />
-
+    <main
+      id="wizard-main"
+      className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8 lg:py-12"
+    >
       <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "220px 1fr 260px",
-          gap: "0",
-          minHeight: "calc(100vh - 260px)",
-          maxWidth: "1296px",
-          margin: "0 auto",
-          padding: "48px 24px 80px",
-        }}
-        className="grid-cols-1 lg:grid-cols-[220px_1fr_260px]"
+        ref={topRef}
+        className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-12 xl:grid-cols-[280px_minmax(0,1fr)_340px] 2xl:grid-cols-[300px_minmax(0,1fr)_380px]"
+        style={{ scrollMarginTop: "96px" }}
       >
-        {/* Left — step nav */}
-        <aside
-          style={{
-            paddingRight: "24px",
-            paddingTop: "10px",
-            borderRight: `1px solid ${T.border.line}`,
-            position: "sticky",
-            top: "80px",
-            alignSelf: "start",
-          }}
-        >
-          <p
+        {/* Left — rail: back link, title, stepper */}
+        <div className="min-w-0 self-start lg:sticky lg:top-24 lg:row-span-2 xl:row-span-1">
+          <Link
+            href="/contribute"
+            className="inline-flex items-center gap-2 hover:underline"
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "11px",
-              letterSpacing: ".16em",
-              textTransform: "uppercase",
-              color: T.accent.aurora,
-              margin: "0 0 16px",
-              opacity: 0.7,
+              fontFamily: T.font.sans,
+              fontSize: "15px",
+              color: T.ink.base,
+              textDecoration: "none",
+            }}
+          >
+            <Icon icon="mdi:arrow-left" width={18} aria-hidden="true" />
+            Contribute
+          </Link>
+          <h1
+            style={{
+              fontFamily: T.font.serif,
+              fontSize: "30px",
+              fontWeight: 500,
+              letterSpacing: "-0.01em",
+              lineHeight: 1.15,
+              color: T.ink.base,
+              margin: "20px 0 6px",
             }}
           >
             {isEditMode ? "Edit library" : "Add a library"}
-          </p>
-          <WizardStepNav
-            currentStep={step}
-            completedSteps={completed}
-            onStepClick={handleStepClick}
-          />
-        </aside>
+          </h1>
+          {isEditMode && formData.name && (
+            <p
+              style={{
+                fontFamily: T.font.sans,
+                fontSize: "15px",
+                color: T.ink.dim,
+                margin: "0 0 6px",
+                lineHeight: 1.45,
+              }}
+            >
+              Suggesting edits to {formData.name}. Changes go to editorial
+              review before going live.
+            </p>
+          )}
+          <DraftStatus lastSavedAt={lastSavedAt} />
+          <div className="mt-6">
+            <WizardStepNav
+              currentStep={step}
+              completedSteps={completed}
+              onStepClick={handleStepClick}
+              hideFindStep={isEditMode}
+            />
+          </div>
+        </div>
 
         {/* Centre — step form */}
-        <main id="wizard-main" style={{ padding: "0 40px" }}>
+        <div className="min-w-0">
           {step === 0 ? (
             <LibrarySearchGate
               claimedEntityRefs={claimedEntityRefs}
@@ -295,24 +351,28 @@ export function AddLibraryWizard({
               <div
                 role="group"
                 aria-label="Step navigation"
-                style={{ display: "flex", gap: "10px", marginTop: "36px" }}
+                className="flex flex-wrap items-center gap-3"
+                style={{
+                  marginTop: "40px",
+                  paddingTop: "28px",
+                  borderTop: `1px solid ${T.border.line}`,
+                }}
               >
                 {step > 1 && (
                   <button
                     type="button"
                     onClick={goPrev}
+                    className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted-2)"
                     style={{
-                      padding: "11px 22px",
-                      borderRadius: "10px",
                       border: `1px solid ${T.border.hi}`,
-                      background: "transparent",
-                      color: T.ink.dim,
-                      fontSize: "14px",
+                      background: T.bg.deep,
+                      color: T.ink.base,
                       cursor: "pointer",
                       fontFamily: T.font.sans,
                     }}
                   >
-                    ← Back
+                    <Icon icon="mdi:arrow-left" width={18} aria-hidden="true" />
+                    Back
                   </button>
                 )}
 
@@ -320,10 +380,15 @@ export function AddLibraryWizard({
                   <button
                     type="button"
                     onClick={goNext}
-                    className={auroraCtaSm}
+                    className={primaryCtaSm}
                     style={{ border: "none", cursor: "pointer" }}
                   >
-                    Next step →
+                    Next step
+                    <Icon
+                      icon="mdi:arrow-right"
+                      width={18}
+                      aria-hidden="true"
+                    />
                   </button>
                 ) : (
                   <button
@@ -331,35 +396,36 @@ export function AddLibraryWizard({
                     onClick={submit}
                     disabled={isPending}
                     aria-busy={isPending}
-                    className={auroraCtaSm}
+                    className={primaryCtaSm}
                     style={{
                       border: "none",
                       cursor: isPending ? "not-allowed" : "pointer",
                       opacity: isPending ? 0.6 : 1,
                     }}
                   >
-                    {isPending ? "Submitting…" : "Submit for review →"}
+                    {isPending ? "Submitting…" : "Submit for review"}
+                    {!isPending && (
+                      <Icon
+                        icon="mdi:arrow-right"
+                        width={18}
+                        aria-hidden="true"
+                      />
+                    )}
                   </button>
                 )}
               </div>
             </>
           )}
-        </main>
+        </div>
 
-        {/* Right — completion sidebar */}
+        {/* Right — completeness + tip */}
         <aside
           aria-label="Submission completeness"
-          style={{
-            paddingLeft: "24px",
-            borderLeft: `1px solid ${T.border.line}`,
-            position: "sticky",
-            top: "80px",
-            alignSelf: "start",
-          }}
+          className="self-start lg:col-start-2 xl:sticky xl:top-24 xl:col-start-auto"
         >
-          <WizardCompletionSidebar score={score} formData={formData} />
+          <WizardCompletionSidebar formData={formData} step={step} />
         </aside>
       </div>
-    </>
+    </main>
   )
 }

@@ -3,6 +3,7 @@
 import { useMemo } from "react"
 
 import { T } from "@/lib/design-tokens"
+import { primaryCtaSm } from "@/lib/styles"
 
 export function DraftResumeBanner({
   savedStep,
@@ -29,73 +30,58 @@ export function DraftResumeBanner({
 
   return (
     <div
+      role="region"
+      aria-label="Saved draft"
+      className="flex flex-wrap items-center justify-between gap-4"
       style={{
-        border: `1px solid rgba(127,223,255,0.25)`,
-        borderRadius: "10px",
-        padding: "14px 18px",
-        background: "rgba(127,223,255,0.06)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: "16px",
-        marginBottom: "24px",
-        flexWrap: "wrap",
+        border: `1px solid ${T.border.line}`,
+        borderRadius: "20px",
+        padding: "18px 22px",
+        background: T.accent.chip,
+        marginBottom: "32px",
       }}
     >
       <div>
-        <span
+        <p
           style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".16em",
-            textTransform: "uppercase",
-            color: T.accent.aurora,
-            display: "block",
-            marginBottom: "2px",
+            fontFamily: T.font.sans,
+            fontSize: "16px",
+            fontWeight: 600,
+            color: T.ink.base,
+            margin: "0 0 2px",
           }}
         >
           Draft found · Step {savedStep} · saved {relTime}
-        </span>
-        <span
+        </p>
+        <p
           style={{
             fontFamily: T.font.sans,
-            fontSize: "13px",
+            fontSize: "15px",
             color: T.ink.dim,
+            margin: 0,
           }}
         >
           You have unsaved progress. Resume where you left off?
-        </span>
+        </p>
       </div>
-      <div style={{ display: "flex", gap: "10px", flexShrink: 0 }}>
+      <div className="flex shrink-0 gap-2">
         <button
+          type="button"
           onClick={onResume}
-          style={{
-            padding: "7px 16px",
-            borderRadius: "6px",
-            border: `1px solid rgba(127,223,255,0.35)`,
-            background: "rgba(127,223,255,0.1)",
-            color: T.accent.aurora,
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".14em",
-            textTransform: "uppercase",
-            cursor: "pointer",
-          }}
+          className={primaryCtaSm}
+          style={{ border: "none", cursor: "pointer" }}
         >
-          Continue →
+          Continue
         </button>
         <button
+          type="button"
           onClick={onDiscard}
+          className="rounded-full px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted-2)"
           style={{
-            padding: "7px 16px",
-            borderRadius: "6px",
-            border: `1px solid ${T.border.line}`,
-            background: "transparent",
-            color: T.ink.faint,
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".14em",
-            textTransform: "uppercase",
+            border: `1px solid ${T.border.hi}`,
+            background: T.bg.deep,
+            color: T.ink.base,
+            fontFamily: T.font.sans,
             cursor: "pointer",
           }}
         >

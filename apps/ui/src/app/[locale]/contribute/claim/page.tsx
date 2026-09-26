@@ -2,8 +2,11 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { getSessionSSR } from "@/lib/auth-server"
+import { privateMetadata } from "@/lib/seo/metadata"
 
 import { ClaimLibraryForm } from "./_components/ClaimLibraryForm"
+
+export const metadata = privateMetadata("Claim a library")
 
 export default async function ClaimLibraryPage({
   searchParams,

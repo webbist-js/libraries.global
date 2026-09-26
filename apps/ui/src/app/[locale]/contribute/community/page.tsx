@@ -2,6 +2,7 @@ import { headers } from "next/headers"
 
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
+import { privateMetadata } from "@/lib/seo/metadata"
 import type { LeaderboardEntry } from "@/lib/types/leaderboard"
 
 import { ContributeNavBar } from "../_components/ContributeNavBar"
@@ -9,6 +10,8 @@ import { ContributeSubpageHero } from "../_components/ContributeSubpageHero"
 import { LeaderboardPodium } from "./_components/LeaderboardPodium"
 import { LeaderboardRows } from "./_components/LeaderboardRows"
 import { LeaderboardSidebar } from "./_components/LeaderboardSidebar"
+
+export const metadata = privateMetadata("Community leaderboard")
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const API_TOKEN = process.env.STRAPI_REST_READONLY_API_KEY
@@ -127,14 +130,13 @@ export default async function CommunityPage({
         section="Community"
         heading="The community,"
         headingItalic="in numbers."
-        accentColor={T.ink.dim}
         body="Contributors who keep the atlas accurate and growing. Points are earned for every approved contribution."
         minHeight="340px"
       />
 
       <ContributeNavBar />
 
-      <div className="mx-auto w-full max-w-[1296px] px-6 pt-10 pb-20 md:px-10">
+      <div className="mx-auto w-full max-w-[1360px] px-4 pt-10 pb-20 sm:px-8">
         {/* Period tabs */}
         <div
           style={{
@@ -149,10 +151,8 @@ export default async function CommunityPage({
               key={key}
               href={`/contribute/community?period=${key}`}
               style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".16em",
-                textTransform: "uppercase",
+                fontFamily: T.font.sans,
+                fontSize: "13px",
                 color: period === key ? T.accent.aurora : T.ink.faint,
                 textDecoration: "none",
                 padding: "10px 16px",
@@ -182,11 +182,9 @@ export default async function CommunityPage({
             {entries.length === 0 ? (
               <p
                 style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "11px",
+                  fontFamily: T.font.sans,
+                  fontSize: "13px",
                   color: T.ink.faint,
-                  letterSpacing: ".08em",
-                  textTransform: "uppercase",
                 }}
               >
                 No contributions recorded for this period yet.
