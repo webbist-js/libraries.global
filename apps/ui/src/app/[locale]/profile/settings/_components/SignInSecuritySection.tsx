@@ -9,7 +9,6 @@ import { T } from "@/lib/design-tokens"
 
 type SessionEntry = {
   id: string
-  token: string
   userAgent?: string | null
   ipAddress?: string | null
   createdAt: string
@@ -101,15 +100,15 @@ export function SignInSecuritySection() {
       .finally(() => setLoading(false))
   }, [])
 
-  const revokeSession = async (token: string) => {
-    setRevoking(token)
+  const revokeSession = async (id: string) => {
+    setRevoking(id)
     const res = await fetch("/api/profile/me/sessions", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionToken: token }),
+      body: JSON.stringify({ id }),
     })
     if (res.ok) {
-      setSessions((s) => s.filter((x) => x.token !== token))
+      setSessions((s) => s.filter((x) => x.id !== id))
       toast.success("Session signed out")
     } else {
       toast.error("Failed to sign out session")
@@ -326,11 +325,11 @@ export function SignInSecuritySection() {
             ) : (
               <button
                 type="button"
-                disabled={revoking === s.token}
-                onClick={() => void revokeSession(s.token)}
+                disabled={revoking === s.id}
+                onClick={() => void revokeSession(s.id)}
                 style={{
                   ...pillButton,
-                  opacity: revoking === s.token ? 0.5 : 1,
+                  opacity: revoking === s.id ? 0.5 : 1,
                 }}
               >
                 Sign out

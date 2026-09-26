@@ -9,11 +9,16 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   try {
     const sessions = await auth.api.listSessions({ headers: await headers() })
-    // Flag the session making this request so the UI can label "This device"
-    const currentToken = session.session?.token
+    // Flag the session making this request so the UI can label "This device".
+    // Only non-sensitive fields are returned — never the bearer `token`.
+    const currentId = session.session?.id
     const data = sessions.map((s) => ({
-      ...s,
-      current: currentToken != null && s.token === currentToken,
+      id: s.id,
+      userAgent: s.userAgent ?? null,
+      ipAddress: s.ipAddress ?? null,
+      createdAt: s.createdAt,
+      expiresAt: s.expiresAt,
+      current: currentId != null && s.id === currentId,
     }))
 
     return NextResponse.json({ data })
@@ -30,14 +35,24 @@ export async function DELETE(req: Request) {
   if (!session?.user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const { sessionToken } = (await req.json()) as { sessionToken?: string }
+  const { id } = (await req.json().catch(() => ({}))) as { id?: string }
 
-  await (sessionToken
-    ? auth.api.revokeSession({
-        headers: await headers(),
-        body: { token: sessionToken },
-      })
-    : auth.api.revokeOtherSessions({ headers: await headers() }))
+  if (!id) {
+    await auth.api.revokeOtherSessions({ headers: await headers() })
+
+    return NextResponse.json({ ok: true })
+  }
+
+  // Resolve the id to its bearer token server-side — the client never
+  // sees or sends the token.
+  const sessions = await auth.api.listSessions({ headers: await headers() })
+  const target = sessions.find((s) => s.id === id)
+  if (!target) return NextResponse.json({ error: "Not found" }, { status: 404 })
+
+  await auth.api.revokeSession({
+    headers: await headers(),
+    body: { token: target.token },
+  })
 
   return NextResponse.json({ ok: true })
 }
