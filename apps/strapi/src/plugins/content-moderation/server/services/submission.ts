@@ -276,6 +276,11 @@ export default ({ strapi }: { strapi: any }) => ({
             ).filter((s) => s.platform && s.url)
           : []
 
+        // Tracks the draft library once it's created, so the catch below
+        // can clean it up if a later step in this block (e.g. the proposer
+        // affiliation) throws — otherwise the library survives the revert
+        // and a retry creates another one alongside it.
+        let createdLibraryDocumentId: string | undefined
         try {
           const newLibrary = await strapi
             .documents("api::library.library")
@@ -384,6 +389,7 @@ export default ({ strapi }: { strapi: any }) => ({
               },
               status: "draft",
             })
+          createdLibraryDocumentId = newLibrary.documentId
           strapi.log.info(
             `[content-moderation] Auto-created draft library "${f.name}" from approved submission ${documentId}`
           )
@@ -404,12 +410,37 @@ export default ({ strapi }: { strapi: any }) => ({
           }
         } catch (err) {
           // I1: rethrow so the outer catch reverts the approval. A retry is
-          // safe: the draft library isn't created when creation throws, and
-          // the proposer affiliation is an upsert.
-          strapi.log.error(
-            `[content-moderation] Failed to auto-create library from approved submission ${documentId}:`,
-            err
-          )
+          // safe: the proposer affiliation is an upsert, and — per the
+          // cleanup just below — a library this block created doesn't
+          // survive a later failure, so a retry can't leave duplicates.
+          if (createdLibraryDocumentId) {
+            // The library was created; something after it (the proposer
+            // affiliation) threw. Leaving the draft in place would orphan
+            // it: the approval reverts to pending, but a retry would create
+            // a second draft library alongside this one.
+            try {
+              await strapi
+                .documents("api::library.library")
+                .delete({ documentId: createdLibraryDocumentId })
+              strapi.log.info(
+                `[content-moderation] Removed orphaned draft library ${createdLibraryDocumentId} after submission ${documentId} approval failed`
+              )
+            } catch (cleanupErr) {
+              strapi.log.error(
+                `[content-moderation] Failed to remove orphaned draft library ${createdLibraryDocumentId} after submission ${documentId} approval failed`,
+                cleanupErr
+              )
+            }
+            strapi.log.error(
+              `[content-moderation] new_library submission ${documentId} approval failed after the library was created; reverting`,
+              err
+            )
+          } else {
+            strapi.log.error(
+              `[content-moderation] Failed to auto-create library from approved submission ${documentId}:`,
+              err
+            )
+          }
           throw err
         }
       }

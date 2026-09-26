@@ -1,9 +1,19 @@
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import submissionControllerFactory from "../../src/plugins/content-moderation/server/controllers/submission"
 import createService from "../../src/plugins/content-moderation/server/services/submission"
 import { payloadHash } from "../../src/plugins/content-moderation/server/utils/payload-hash"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
+
+// The 429 Retry-After test below sets STRAPI_BRIDGE_SECRET for the
+// duration of one test; restore whatever this suite started with so it
+// can't leak into other test files run in the same vitest worker.
+const ORIGINAL_BRIDGE_SECRET = process.env.STRAPI_BRIDGE_SECRET
+afterEach(() => {
+  if (ORIGINAL_BRIDGE_SECRET === undefined)
+    delete process.env.STRAPI_BRIDGE_SECRET
+  else process.env.STRAPI_BRIDGE_SECRET = ORIGINAL_BRIDGE_SECRET
+})
 
 const SUB = "plugin::content-moderation.submission"
 const WIKI = "api::wiki-article.wiki-article"
@@ -124,6 +134,50 @@ describe("I1: side-effect errors revert the approval", () => {
 
     expect(result).toEqual({ error: "apply_failed" })
     expect(statusOf(store, sub.documentId)).toBe("pending")
+    expect(store[LIB]).toHaveLength(0)
+    expect(award).not.toHaveBeenCalled()
+  })
+
+  it("deletes the orphaned draft library when a later step (the proposer affiliation) throws", async () => {
+    const sub = newLibrary()
+    const { strapi, store, svc, award } = setup({
+      [SUB]: [sub],
+      [LIB]: [],
+      [AFF]: [],
+    })
+    failOn(strapi, AFF, "create")
+
+    const originalDocuments = strapi.documents
+    let createdLibraryDocumentId: string | undefined
+    const deleteSpy = vi.fn()
+    strapi.documents = vi.fn((u: string) => {
+      const api = originalDocuments(u)
+      if (u !== LIB) return api
+
+      return {
+        ...api,
+        create: vi.fn(async (args: any) => {
+          const doc = await api.create(args)
+          createdLibraryDocumentId = doc.documentId
+
+          return doc
+        }),
+        delete: vi.fn(async (args: any) => {
+          deleteSpy(args)
+
+          return api.delete(args)
+        }),
+      }
+    })
+
+    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+
+    expect(result).toEqual({ error: "apply_failed" })
+    expect(statusOf(store, sub.documentId)).toBe("pending")
+    expect(createdLibraryDocumentId).toBeDefined()
+    expect(deleteSpy).toHaveBeenCalledWith({
+      documentId: createdLibraryDocumentId,
+    })
     expect(store[LIB]).toHaveLength(0)
     expect(award).not.toHaveBeenCalled()
   })

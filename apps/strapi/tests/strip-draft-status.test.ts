@@ -93,6 +93,26 @@ describe("strip-draft-status middleware", () => {
     expect(ctx.querystring).toBe("status=pending")
   })
 
+  it("strips ?status on a case-varied prefix (/API/wiki-articles)", async () => {
+    const ctx = await run(makeCtx("/API/wiki-articles", "status=draft"))
+    expect(ctx.query.status).toBeUndefined()
+  })
+
+  it("strips ?status on a mixed-case prefix (/Api/x)", async () => {
+    const ctx = await run(makeCtx("/Api/x", "status=draft"))
+    expect(ctx.query.status).toBeUndefined()
+  })
+
+  it("strips ?status behind a doubled leading slash (//api/x)", async () => {
+    const ctx = await run(makeCtx("//api/x", "status=draft"))
+    expect(ctx.query.status).toBeUndefined()
+  })
+
+  it("strips ?status when the path is exactly /api", async () => {
+    const ctx = await run(makeCtx("/api", "status=draft"))
+    expect(ctx.query.status).toBeUndefined()
+  })
+
   it("leaves a querystring without status unchanged", () => {
     expect(stripStatusFromQuerystring("a=1&b[0]=2")).toBe("a=1&b[0]=2")
     expect(stripStatusFromQuerystring("")).toBe("")
