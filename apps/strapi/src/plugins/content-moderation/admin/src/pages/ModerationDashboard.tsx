@@ -1460,10 +1460,19 @@ export function ModerationDashboard() {
 
   const updateStatus = useCallback(
     async (id: string, status: string, reviewNote?: string) => {
-      await put(`/content-moderation/submissions/${id}/status`, {
-        status,
-        reviewNote,
-      })
+      try {
+        await put(`/content-moderation/submissions/${id}/status`, {
+          status,
+          reviewNote,
+        })
+        setError(null)
+      } catch (err) {
+        const message =
+          (err as { response?: { data?: { error?: { message?: string } } } })
+            ?.response?.data?.error?.message ?? "Failed to update submission."
+        setError(message)
+        console.error(err)
+      }
       void load(statusFilter)
     },
     [put, load, statusFilter]

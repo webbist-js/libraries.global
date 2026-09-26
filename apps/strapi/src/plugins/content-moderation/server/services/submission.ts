@@ -1,4 +1,5 @@
 import { payloadHash } from "../utils/payload-hash"
+import { canTransition } from "../utils/transitions"
 import { sanitizeWikiBody } from "../utils/wiki-body"
 
 export default ({ strapi }: { strapi: any }) => ({
@@ -57,17 +58,36 @@ export default ({ strapi }: { strapi: any }) => ({
     status: "approved" | "rejected" | "needs_info" | "pending",
     reviewedByUserId: string,
     reviewNote?: string
-  ) {
+  ): Promise<
+    | {
+        error: "not_found" | "invalid_transition" | "conflict" | "tampered"
+      }
+    | { data: unknown }
+  > {
     const submission = await strapi
       .documents("plugin::content-moderation.submission")
       .findOne({ documentId })
+    if (!submission) return { error: "not_found" }
+    if (!canTransition(submission.status, status))
+      return { error: "invalid_transition" }
+    if (
+      status === "approved" &&
+      submission.payloadHash &&
+      submission.payloadHash !== payloadHash(submission)
+    )
+      return { error: "tampered" }
 
-    const updated = await strapi
-      .documents("plugin::content-moderation.submission")
-      .update({
-        documentId,
+    // Compare-and-set: only one concurrent request can move it out of
+    // `submission.status`. Submissions have draftAndPublish:false, so the
+    // db layer sees the same row as documents().
+    const { count } = await strapi.db
+      .query("plugin::content-moderation.submission")
+      .updateMany({
+        where: { documentId, status: submission.status },
         data: { status, reviewedByUserId, reviewNote, reviewedAt: new Date() },
       })
+    if (count !== 1) return { error: "conflict" }
+    const updated = { ...submission, status, reviewedByUserId, reviewNote }
 
     // Side-effect: if approving a new_library, create a draft library entry
     if (status === "approved" && submission?.submissionType === "new_library") {
@@ -333,12 +353,18 @@ export default ({ strapi }: { strapi: any }) => ({
         await strapi
           .plugin("rewards")
           .service("points")
-          .award(submission.submittedByUserId, "new_library_approved", 50, {
-            submissionId: documentId,
-            libraryName: String(
-              (submission.fields as Record<string, unknown>)?.name ?? ""
-            ),
-          })
+          .award(
+            submission.submittedByUserId,
+            "new_library_approved",
+            50,
+            {
+              submissionId: documentId,
+              libraryName: String(
+                (submission.fields as Record<string, unknown>)?.name ?? ""
+              ),
+            },
+            `${documentId}:new_library_approved`
+          )
       } catch (err) {
         strapi.log.warn("[content-moderation] rewards.award failed:", err)
       }
@@ -359,13 +385,16 @@ export default ({ strapi }: { strapi: any }) => ({
           fieldCount >= 4 ? "edit_accepted_major" : "edit_accepted_minor"
         const pts = fieldCount >= 4 ? 15 : 5
 
-        await strapi
-          .plugin("rewards")
-          .service("points")
-          .award(submission.submittedByUserId, action, pts, {
+        await strapi.plugin("rewards").service("points").award(
+          submission.submittedByUserId,
+          action,
+          pts,
+          {
             submissionId: documentId,
             fieldCount,
-          })
+          },
+          `${documentId}:${action}`
+        )
       } catch (err) {
         strapi.log.warn(
           "[content-moderation] rewards.award (edit) failed:",
@@ -377,12 +406,15 @@ export default ({ strapi }: { strapi: any }) => ({
     // Award points for correction approval — 2pts
     if (status === "approved" && submission?.submissionType === "correction") {
       try {
-        await strapi
-          .plugin("rewards")
-          .service("points")
-          .award(submission.submittedByUserId, "correction_approved", 2, {
+        await strapi.plugin("rewards").service("points").award(
+          submission.submittedByUserId,
+          "correction_approved",
+          2,
+          {
             submissionId: documentId,
-          })
+          },
+          `${documentId}:correction_approved`
+        )
       } catch (err) {
         strapi.log.warn(
           "[content-moderation] rewards.award (correction) failed:",
@@ -397,12 +429,15 @@ export default ({ strapi }: { strapi: any }) => ({
       submission?.submissionType === "library_claim"
     ) {
       try {
-        await strapi
-          .plugin("rewards")
-          .service("points")
-          .award(submission.submittedByUserId, "claim_approved", 10, {
+        await strapi.plugin("rewards").service("points").award(
+          submission.submittedByUserId,
+          "claim_approved",
+          10,
+          {
             submissionId: documentId,
-          })
+          },
+          `${documentId}:claim_approved`
+        )
       } catch (err) {
         strapi.log.warn(
           "[content-moderation] rewards.award (claim) failed:",
@@ -416,14 +451,18 @@ export default ({ strapi }: { strapi: any }) => ({
       try {
         const fields = (submission.fields ?? {}) as Record<string, unknown>
         const isTranslation = fields.isTranslation === true
+        const wikiAction = isTranslation
+          ? "wiki_translated"
+          : "edit_accepted_minor"
         await strapi
           .plugin("rewards")
           .service("points")
           .award(
             submission.submittedByUserId,
-            isTranslation ? "wiki_translated" : "edit_accepted_minor",
+            wikiAction,
             isTranslation ? 15 : 5,
-            { submissionId: documentId }
+            { submissionId: documentId },
+            `${documentId}:${wikiAction}`
           )
       } catch (err) {
         strapi.log.warn(
@@ -444,7 +483,7 @@ export default ({ strapi }: { strapi: any }) => ({
       }
     }
 
-    return updated
+    return { data: updated }
   },
 
   async saveDraft(

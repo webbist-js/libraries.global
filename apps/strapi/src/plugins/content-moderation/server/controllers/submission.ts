@@ -200,7 +200,8 @@ export default ({ strapi }: { strapi: any }) => ({
   // PUT  /content-moderation/submissions/:id/status   (admin route only)
   async updateStatus(ctx: any) {
     const { id } = ctx.params
-    const { status, reviewNote } = ctx.request.body as {
+    if (!isDocumentId(id)) return ctx.badRequest("Invalid id")
+    const { status, reviewNote } = (ctx.request.body ?? {}) as {
       status: string
       reviewNote?: string
     }
@@ -212,16 +213,28 @@ export default ({ strapi }: { strapi: any }) => ({
       )
     }
 
-    const reviewerId = String(
-      ctx.state.admin?.id ?? ctx.state.user?.id ?? "unknown"
-    )
+    const admin = ctx.state.user ?? ctx.state.admin
+    const reviewerId = String(admin?.id ?? "unknown")
 
-    const updated = await strapi
+    const result = await strapi
       .plugin("content-moderation")
       .service("submission")
       .updateStatus(id, status, reviewerId, reviewNote)
 
-    ctx.body = { data: updated }
+    if ("error" in result) {
+      if (result.error === "not_found") return ctx.notFound()
+      ctx.status = 409
+      ctx.body = {
+        error: {
+          status: 409,
+          name: result.error,
+          message: `Cannot change status: ${result.error}`,
+        },
+      }
+
+      return
+    }
+    ctx.body = { data: result.data }
   },
 
   // PATCH /api/content-moderation/submissions/:id/finalize  (content-api route)
