@@ -22,6 +22,12 @@ export type Capability =
   | "submit.topicSuggestion"
   | "events.feed"
 
+/**
+ * Most library claims one session carries. The bridge and the submission
+ * policy read at most this many affiliations, and the UI rejects more.
+ */
+export const SESSION_PROFILE_MAX_CLAIMS = 100
+
 export interface CapabilityInput {
   signedIn: boolean
   contributorRole: ContributorRole | null
