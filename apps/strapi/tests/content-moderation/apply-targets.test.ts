@@ -59,9 +59,23 @@ describe("applyWikiEdit", () => {
       ],
       "api::user-profile.user-profile": [],
     })
-    strapi.plugin = vi.fn(() => ({
-      service: () => ({ find: async () => [{ code: "en" }] }),
-    }))
+    // Grants docs.directEdit so this test can focus on slug/locale handling;
+    // the capability gate itself is covered in policy-wiring.test.ts.
+    strapi.plugin = vi.fn((name: string) =>
+      name === "i18n"
+        ? { service: () => ({ find: async () => [{ code: "en" }] }) }
+        : {
+            service: () => ({
+              loadCapabilities: async () => ({
+                caps: {
+                  set: new Set(["docs.directEdit"]),
+                  claimedLibraryIds: new Set(),
+                },
+                tier: null,
+              }),
+            }),
+          }
+    )
     await createService({ strapi }).applyWikiEdit({
       targetSlug: "article-a",
       draftData: { targetSlug: "article-b", title: "Hijacked", locale: "en" },
@@ -82,12 +96,25 @@ describe("applyWikiEdit", () => {
         },
       ],
     })
-    strapi.plugin = vi.fn(() => ({
-      service: () => ({ find: async () => [{ code: "en" }] }),
-    }))
+    strapi.plugin = vi.fn((name: string) =>
+      name === "i18n"
+        ? { service: () => ({ find: async () => [{ code: "en" }] }) }
+        : {
+            service: () => ({
+              loadCapabilities: async () => ({
+                caps: {
+                  set: new Set(["docs.directEdit"]),
+                  claimedLibraryIds: new Set(),
+                },
+                tier: null,
+              }),
+            }),
+          }
+    )
     await createService({ strapi }).applyWikiEdit({
       targetSlug: "a",
       draftData: { title: "T", locale: "xx" },
+      submittedByUserId: "u1",
     })
     expect(store[WIKI][0].title).toBe("A")
   })

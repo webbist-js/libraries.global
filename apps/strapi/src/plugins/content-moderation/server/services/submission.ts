@@ -594,9 +594,23 @@ export default ({ strapi }: { strapi: any }) => ({
     if (evidenceUrl !== undefined) updateData.evidenceUrl = evidenceUrl
     if (note !== undefined) updateData.note = note
 
+    // Compare-and-set: only write while the row is still `draft`, closing
+    // the race between the status check above and this write (a reader's
+    // suggestion could otherwise be turned into a direct-edit body by a
+    // second concurrent request slipping in between). `submission` has
+    // draftAndPublish:false, so constraints.md allows this strapi.db.query
+    // CAS in place of the plain documents().update.
+    const { count } = await strapi.db
+      .query("plugin::content-moderation.submission")
+      .updateMany({
+        where: { documentId, status: "draft" },
+        data: updateData,
+      })
+    if (count !== 1) return { error: "not_draft" }
+
     const data = await strapi
       .documents("plugin::content-moderation.submission")
-      .update({ documentId, data: updateData })
+      .findOne({ documentId })
 
     return { data }
   },
@@ -604,8 +618,22 @@ export default ({ strapi }: { strapi: any }) => ({
   async finalizeDraft(
     documentId: string,
     userId: string,
-    formData: Record<string, unknown>
-  ) {
+    formData: Record<string, unknown>,
+    // Runs against the same `existing` row this call is about to transition,
+    // after the ownership/status checks below and before the CAS write —
+    // so a policy check here can't be tricked by racing the check against a
+    // stale or someone-else's row (C-1c / C-5).
+    beforeTransition?: (
+      existing: any
+    ) => Promise<{ ok: true } | { ok: false; status: number; message: string }>
+  ): Promise<
+    | null
+    | {
+        error: "policy"
+        verdict: { ok: false; status: number; message: string }
+      }
+    | Record<string, unknown>
+  > {
     const existing = await strapi
       .documents("plugin::content-moderation.submission")
       .findOne({ documentId })
@@ -613,6 +641,11 @@ export default ({ strapi }: { strapi: any }) => ({
     if (!existing) return null
     if (existing.submittedByUserId !== userId) return null
     if (existing.status !== "draft") return null
+
+    if (beforeTransition) {
+      const verdict = await beforeTransition(existing)
+      if (!verdict.ok) return { error: "policy", verdict }
+    }
 
     const { editSummary, evidenceType, evidenceUrl, note, ...libraryFields } =
       formData as Record<string, unknown>
@@ -626,13 +659,26 @@ export default ({ strapi }: { strapi: any }) => ({
     if (evidenceUrl) updateData.evidenceUrl = evidenceUrl
     if (note) updateData.note = note
 
+    // payloadHash must be computed from exactly what gets written, so it's
+    // derived from `next` (existing + this updateData) before the CAS call.
     const next = { ...existing, ...updateData }
     updateData.payloadHash = payloadHash(next)
 
-    return strapi.documents("plugin::content-moderation.submission").update({
-      documentId,
-      data: updateData,
-    })
+    // Compare-and-set: only succeeds if the row is still `draft` at write
+    // time, closing the same race as saveDraft's CAS above.
+    // `submission` has draftAndPublish:false, so constraints.md allows this
+    // strapi.db.query CAS in place of the plain documents().update.
+    const { count } = await strapi.db
+      .query("plugin::content-moderation.submission")
+      .updateMany({
+        where: { documentId, status: "draft" },
+        data: updateData,
+      })
+    if (count !== 1) return null
+
+    return strapi
+      .documents("plugin::content-moderation.submission")
+      .findOne({ documentId })
   },
 
   /**
@@ -853,6 +899,24 @@ export default ({ strapi }: { strapi: any }) => ({
       // A2: the target is whatever the moderator saw, never draftData.
       const slug: string | undefined = submission.targetSlug ?? undefined
       if (!slug) return
+
+      // Critical: re-check the submitter's rights at apply time, before
+      // applying anything. A reader's suggestion draft can be turned into a
+      // direct-edit body (title/blocks) after creation; the create-time
+      // policy check alone can't see that. This is defence in depth
+      // alongside the saveDraft/finalizeDraft compare-and-set above.
+      const { caps } = await strapi
+        .plugin("content-moderation")
+        .service("submission-policy")
+        .loadCapabilities(submission.submittedByUserId)
+      if (!caps.set.has("docs.directEdit")) {
+        strapi.log.info(
+          `[content-moderation] wiki_edit ${submission.documentId} is a suggestion; apply it manually`
+        )
+
+        return
+      }
+
       const draftData = (submission.draftData ?? {}) as Record<string, unknown>
 
       const locales: { code: string }[] = await strapi

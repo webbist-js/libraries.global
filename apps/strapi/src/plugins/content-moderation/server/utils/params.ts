@@ -11,3 +11,17 @@ const DOCUMENT_ID = /^[a-z0-9]{20,32}$/
 export function isDocumentId(v: unknown): v is string {
   return typeof v === "string" && DOCUMENT_ID.test(v)
 }
+
+/**
+ * A `wiki_edit` draft counts as a direct edit (not a mere suggestion) as
+ * soon as it carries an applied key: a `body` array or a `title` string.
+ * Used identically at create time and at finalize time so a reader can't
+ * slip a direct-edit body past the create-time check by saving it into the
+ * draft afterwards.
+ */
+export function isDirectWikiEdit(draftData: unknown): boolean {
+  if (!draftData || typeof draftData !== "object") return false
+  const d = draftData as Record<string, unknown>
+
+  return Array.isArray(d.body) || typeof d.title === "string"
+}

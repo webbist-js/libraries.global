@@ -1,5 +1,15 @@
-import { isDocumentId } from "../utils/params"
+import { isDirectWikiEdit, isDocumentId } from "../utils/params"
 import { isValidServiceSecret } from "../utils/service-secret"
+
+// One place to map a policy verdict to the response, used by both `create`
+// and `finalize`.
+function sendVerdict(
+  ctx: any,
+  verdict: { status: number; message: string }
+): void {
+  ctx.status = verdict.status
+  ctx.body = { error: { status: verdict.status, message: verdict.message } }
+}
 
 export default ({ strapi }: { strapi: any }) => ({
   // GET /content-moderation/submissions?status=pending  (admin route)
@@ -81,9 +91,18 @@ export default ({ strapi }: { strapi: any }) => ({
       return ctx.badRequest("submissionType is required")
     }
 
+    if (draftData !== undefined) {
+      const isPlainObject =
+        typeof draftData === "object" &&
+        draftData !== null &&
+        !Array.isArray(draftData)
+      if (!isPlainObject || JSON.stringify(draftData).length > 256 * 1024) {
+        return ctx.badRequest("draftData must be an object under 256KB")
+      }
+    }
+
     const directWikiEdit =
-      submissionType === "wiki_edit" &&
-      Array.isArray((ctx.request.body as any)?.draftData?.body)
+      submissionType === "wiki_edit" && isDirectWikiEdit(draftData)
     const verdict = await strapi
       .plugin("content-moderation")
       .service("submission-policy")
@@ -95,8 +114,7 @@ export default ({ strapi }: { strapi: any }) => ({
         verificationMethod,
       })
     if (!verdict.ok) {
-      ctx.status = verdict.status
-      ctx.body = { error: { status: verdict.status, message: verdict.message } }
+      sendVerdict(ctx, verdict)
 
       return
     }
@@ -298,37 +316,36 @@ export default ({ strapi }: { strapi: any }) => ({
       return ctx.badRequest("Invalid request body")
     }
 
-    const draft = await strapi
-      .documents("plugin::content-moderation.submission")
-      .findOne({ documentId: id })
-    if (draft) {
-      const directWikiEdit =
-        draft.submissionType === "wiki_edit" &&
-        Array.isArray(draft.draftData?.body)
-      const verdict = await strapi
-        .plugin("content-moderation")
-        .service("submission-policy")
-        .check({
-          baUserId: user.id,
-          submissionType: draft.submissionType,
-          targetDocumentId: draft.targetDocumentId ?? undefined,
-          directWikiEdit,
-        })
-      if (!verdict.ok) {
-        ctx.status = verdict.status
-        ctx.body = {
-          error: { status: verdict.status, message: verdict.message },
-        }
-
-        return
-      }
-    }
-
+    // C-5: ownership and status are checked inside `finalizeDraft` itself,
+    // before the policy re-check below ever runs, so a request against
+    // someone else's draft (or a non-draft row) always collapses to the
+    // same 404 as a nonexistent id — no existence oracle via a 403 leaking
+    // through first.
     const result = await strapi
       .plugin("content-moderation")
       .service("submission")
-      .finalizeDraft(id, user.id, body)
+      .finalizeDraft(id, user.id, body, (existing: any) =>
+        strapi
+          .plugin("content-moderation")
+          .service("submission-policy")
+          .check({
+            baUserId: user.id,
+            submissionType: existing.submissionType,
+            targetDocumentId: existing.targetDocumentId ?? undefined,
+            directWikiEdit:
+              existing.submissionType === "wiki_edit" &&
+              isDirectWikiEdit(existing.draftData),
+            // C-4: this draft isn't `pending` yet, but excluding it keeps a
+            // retried finalize from counting the row against its own quota.
+            excludeDocumentId: id,
+          })
+      )
     if (!result) return ctx.notFound("Draft not found or already finalized.")
+    if ("error" in result && result.error === "policy") {
+      sendVerdict(ctx, result.verdict)
+
+      return
+    }
     ctx.body = { data: result }
   },
 

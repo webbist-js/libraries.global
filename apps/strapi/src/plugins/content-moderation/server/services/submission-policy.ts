@@ -1,5 +1,6 @@
 import {
   canSubmit,
+  type Capabilities,
   contributionLimits,
   isContributorRole,
   isSubmissionType,
@@ -13,26 +14,16 @@ type Result =
   | { ok: false; status: 400 | 403 | 429; message: string }
 
 export default ({ strapi }: { strapi: any }) => ({
-  async check(input: {
+  /**
+   * Loads the submitter's contributor role, tier and library claims, and
+   * resolves them into `Capabilities`. Shared by `check()` (create/finalize
+   * time) and `applyWikiEdit` (apply time) so the same rule governs both —
+   * a role or claim that changed (or was never valid) between submission
+   * and approval is re-checked at apply time, not trusted from the past.
+   */
+  async loadCapabilities(
     baUserId: string
-    submissionType: unknown
-    targetDocumentId?: unknown
-    directWikiEdit?: boolean
-    verificationMethod?: unknown
-  }): Promise<Result> {
-    const { baUserId, submissionType } = input
-    if (!isSubmissionType(submissionType))
-      return { ok: false, status: 400, message: "Unknown submission type" }
-    if (input.targetDocumentId != null && !isDocumentId(input.targetDocumentId))
-      return { ok: false, status: 400, message: "Invalid target" }
-    if (
-      input.verificationMethod != null &&
-      !(VERIFICATION_METHODS as readonly string[]).includes(
-        String(input.verificationMethod)
-      )
-    )
-      return { ok: false, status: 400, message: "Invalid verification method" }
-
+  ): Promise<{ caps: Capabilities; tier: string | null }> {
     const [profile] = (await strapi
       .documents("api::user-profile.user-profile")
       .findMany({
@@ -59,6 +50,37 @@ export default ({ strapi }: { strapi: any }) => ({
         .filter((id): id is string => !!id)
         .map((libraryDocumentId) => ({ libraryDocumentId })),
     })
+
+    return { caps, tier: profile?.tier ?? null }
+  },
+
+  async check(input: {
+    baUserId: string
+    submissionType: unknown
+    targetDocumentId?: unknown
+    directWikiEdit?: boolean
+    verificationMethod?: unknown
+    // Finalize re-checks the quota against the same row that's about to be
+    // promoted out of `draft`; excluding it here avoids counting it against
+    // itself (it isn't `pending`/`needs_info` yet, but the hourly count
+    // would otherwise double-count it once finalize is itself a retry).
+    excludeDocumentId?: string
+  }): Promise<Result> {
+    const { baUserId, submissionType } = input
+    if (!isSubmissionType(submissionType))
+      return { ok: false, status: 400, message: "Unknown submission type" }
+    if (input.targetDocumentId != null && !isDocumentId(input.targetDocumentId))
+      return { ok: false, status: 400, message: "Invalid target" }
+    if (
+      input.verificationMethod != null &&
+      !(VERIFICATION_METHODS as readonly string[]).includes(
+        String(input.verificationMethod)
+      )
+    )
+      return { ok: false, status: 400, message: "Invalid verification method" }
+
+    const { caps, tier } = await (this as any).loadCapabilities(baUserId)
+
     if (
       !canSubmit(caps, submissionType, {
         libraryDocumentId:
@@ -74,13 +96,18 @@ export default ({ strapi }: { strapi: any }) => ({
         message: "You can't submit this type of change.",
       }
 
-    const limits = contributionLimits(profile?.tier ?? null)
+    const limits = contributionLimits(tier)
+    const excludeFilter = input.excludeDocumentId
+      ? { documentId: { $ne: input.excludeDocumentId } }
+      : {}
+
     const pending = await strapi
       .documents("plugin::content-moderation.submission")
       .count({
         filters: {
           submittedByUserId: { $eq: baUserId },
           status: { $in: ["pending", "needs_info"] },
+          ...excludeFilter,
         },
       })
     if (pending >= limits.pendingSubmissions)
@@ -97,6 +124,7 @@ export default ({ strapi }: { strapi: any }) => ({
         filters: {
           submittedByUserId: { $eq: baUserId },
           createdAt: { $gte: hourAgo },
+          ...excludeFilter,
         },
       })
     if (lastHour >= limits.submissionsPerHour)
