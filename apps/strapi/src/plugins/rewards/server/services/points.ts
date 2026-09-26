@@ -180,21 +180,18 @@ export default ({ strapi }: { strapi: any }) => ({
     const sameMonth = lastMonth === currentMonth
 
     // Atomic increments on the DB row: concurrent awards can't lose updates
-    // the way a read-modify-write on `profile.points` would.
-    await strapi.db
-      .connection("user_profiles")
+    // the way a read-modify-write on `profile.points` would. COALESCE, not
+    // knex's increment(): `NULL + n` is NULL, so a profile whose counters
+    // were never set would stay at NULL forever (M1).
+    const knex = strapi.db.connection
+    await knex("user_profiles")
       .where({ ba_user_id: baUserId })
-      .increment("points", pts)
-
-    await (sameMonth
-      ? strapi.db
-          .connection("user_profiles")
-          .where({ ba_user_id: baUserId })
-          .increment("points_this_month", pts)
-      : strapi.db
-          .connection("user_profiles")
-          .where({ ba_user_id: baUserId })
-          .update({ points_this_month: pts }))
+      .update({
+        points: knex.raw("COALESCE(points, 0) + ?", [pts]),
+        points_this_month: sameMonth
+          ? knex.raw("COALESCE(points_this_month, 0) + ?", [pts])
+          : pts,
+      })
 
     const fresh = await strapi.db
       .query("api::user-profile.user-profile")
