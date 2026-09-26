@@ -1,185 +1,195 @@
-import { ArrowDown } from "lucide-react"
+import { Globe } from "lucide-react"
 
-import { StatBlock } from "@/components/ds"
-import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
-import GlobeParallaxWrapper from "@/components/home/GlobeParallaxWrapper"
-import HeroSearchBox from "@/components/home/HeroSearchBox"
+import HomeSearch from "@/components/home/HomeSearch"
+import type { LibraryMarker } from "@/components/home/knowledge-globe-data"
 import KnowledgeGlobeCanvas from "@/components/home/KnowledgeGlobeCanvas"
-import { T } from "@/lib/design-tokens"
+import { GRAIN_SVG, T } from "@/lib/design-tokens"
 
-// Render title with optional *italic* word syntax from CMS
-function RichTitle({ text }: { text: string }) {
-  // Split on *...* patterns and render italics
-  const parts = text.split(/(\*[^*]+\*)/g)
+/** Sphere centre sits below the hero's bottom edge, right of centre. */
+const HERO_GLOBE_ANCHOR = { x: 0.9, y: 1.1, radius: 0.84, maxRadiusW: 0.4 }
 
-  return (
-    <>
-      {parts.map((part, i) => {
-        if (part.startsWith("*") && part.endsWith("*")) {
-          return (
-            <em key={i} style={{ fontStyle: "italic", color: T.ink.dim }}>
-              {part.slice(1, -1)}
-            </em>
-          )
-        }
+/** Split `*emphasised*` CMS syntax, keyed by character offset (stable even
+ * when the same fragment repeats). */
+function splitHeroTitle(title: string): { key: string; text: string }[] {
+  const parts: { key: string; text: string }[] = []
+  let offset = 0
+  for (const text of title.split(/(\*[^*]+\*)/g)) {
+    parts.push({ key: `${offset}`, text })
+    offset += text.length
+  }
 
-        return <span key={i}>{part}</span>
-      })}
-    </>
-  )
-}
-
-const STATS = [
-  {
-    label: "LIBRARIES INDEXED",
-    sub: "Across countries & territories",
-  },
-  {
-    label: "COLLECTIONS",
-    sub: "Items catalogued", // TODO: add when collections feature ships
-  },
-  {
-    label: "LANGUAGES",
-    sub: "Living, liturgical, extinct",
-  },
-  {
-    label: "CONTRIBUTORS",
-    sub: "Librarians, scholars, researchers",
-  },
-] as const
-
-function formatCount(n: number | null | undefined): string {
-  if (n == null) return "—"
-
-  return n.toLocaleString("en-US")
+  return parts
 }
 
 export function HomepageHero({
-  heroEyebrow,
   heroTitle,
   heroText,
   libraryCount,
-  contributorCount,
-  languageCount,
+  coverageNote,
+  markers,
 }: {
-  readonly heroEyebrow?: string | null
   readonly heroTitle?: string | null
   readonly heroText?: string | null
   readonly libraryCount?: number | null
-  readonly contributorCount?: number | null
-  readonly languageCount?: number | null
+  readonly coverageNote?: string | null
+  readonly markers?: LibraryMarker[]
 }) {
-  const statValues = [
-    formatCount(libraryCount),
-    "—", // Collections — future feature
-    formatCount(languageCount),
-    formatCount(contributorCount),
-  ]
+  const title = heroTitle ?? "Every library has a story. *Find yours.*"
+  const parts = splitHeroTitle(title)
 
   return (
     <section
-      className="relative flex h-[calc(100svh-4.5rem)] flex-col overflow-hidden"
-      id="explore"
-      style={{ background: T.bg.void }}
+      className="relative flex w-full flex-col justify-center overflow-hidden border-b md:min-h-[calc(100svh-56px)]"
+      style={{ borderColor: T.border.line }}
     >
-      {/* Outer div handles X-centering; inner GlobeParallaxWrapper handles Y on scroll */}
-      <div className="absolute inset-y-0 left-1/2 z-0 h-full w-screen -translate-x-1/2">
-        <GlobeParallaxWrapper>
-          <KnowledgeGlobeCanvas />
-        </GlobeParallaxWrapper>
+      {/* Sky — soft daylight wash fading into the paper page */}
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, #E9F0F7 0%, #EFF1F0 46%, var(--t-bg-void) 88%)",
+        }}
+      />
+      {/* Cloud light — soft white radials, concept-art sky */}
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(640px 300px at 76% 16%, rgba(255,255,255,.9) 0%, transparent 70%), radial-gradient(520px 280px at 12% 10%, rgba(255,255,255,.65) 0%, transparent 70%), radial-gradient(760px 340px at 55% 92%, rgba(255,255,255,.5) 0%, transparent 75%)",
+        }}
+      />
+
+      {/* Globe — a huge sphere rising out of the bottom-right corner, cropped
+          by the hero so only the (tilted) northern cap shows. The canvas
+          covers the hero; the anchor places the sphere's centre below it. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 hidden md:block"
+      >
+        <KnowledgeGlobeCanvas
+          markers={markers}
+          overrides={{
+            anchor: HERO_GLOBE_ANCHOR,
+            autoRotateSpeed: 0.025,
+            cameraY: 0,
+            cameraZ: 12.6,
+            dprMax: 1.25,
+            globePitch: 16,
+            globeTilt: 24,
+            interactive: false,
+            landDotDensity: 1.25,
+            landDotSize: 1.6,
+            showSatellites: false,
+            showStars: false,
+          }}
+        />
+        {/* Grain — keeps the canvas texture of the original treatment,
+            masked to the sphere so the sky stays clean */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-60"
+          style={{
+            backgroundImage: GRAIN_SVG,
+            maskImage: `radial-gradient(circle at ${HERO_GLOBE_ANCHOR.x * 100}% ${HERO_GLOBE_ANCHOR.y * 100}%, #000 45%, transparent 62%)`,
+          }}
+        />
       </div>
 
-      <Container className="relative z-20 box-border grid flex-1 grid-rows-[1fr_auto] pt-6 pb-0 sm:pt-8">
-        <div className="flex min-h-0 items-start pt-[7vh] sm:pt-[5vh]">
-          <div className="max-w-[800px] pb-4 sm:pb-8">
-            {/* Coordinate / project eyebrow */}
-            <div className="mb-6 space-y-2">
-              <p className="font-mono text-[11px] tracking-[0.22em] text-white/35 uppercase">
-                PROJECT · 001&nbsp;&nbsp;51.5308° N&nbsp;&nbsp;0.1238° W
-              </p>
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  padding: "5px 11px",
-                  borderRadius: "999px",
-                  fontSize: "10px",
-                  border: `1px solid ${T.border.line}`,
-                  background: "rgba(255,255,255,.03)",
-                  fontFamily: T.font.mono,
-                  letterSpacing: ".22em",
-                  color: T.ink.dim,
-                  textTransform: "uppercase",
-                }}
-              >
-                <span>★</span>
-                <span>
-                  {heroEyebrow ?? "AN ATLAS OF HUMAN KNOWLEDGE · V.2026"}
-                </span>
-              </div>
-            </div>
-
-            {heroTitle ? (
-              <h1
-                style={{
-                  fontFamily: T.font.serif,
-                  fontWeight: 400,
-                  fontSize: "clamp(56px,8.4vw,128px)",
-                  lineHeight: 0.92,
-                  letterSpacing: "-.045em",
-                  margin: 0,
-                  color: T.ink.base,
-                }}
-              >
-                <RichTitle text={heroTitle} />
-              </h1>
-            ) : null}
-
-            {heroText ? (
-              <p className="mt-6 max-w-[48ch] text-base leading-7 text-white/60 sm:text-lg">
-                {heroText}
-              </p>
-            ) : null}
-
-            <HeroSearchBox />
-          </div>
-        </div>
-
-        <div className="flex justify-center py-4 text-white/42 sm:py-6">
-          <GlobalLink
-            href="#homepage-content"
-            aria-label="Scroll below the hero"
-            className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/54 transition-colors hover:border-white/18 hover:bg-white/[0.06] hover:text-white"
+      {/* Hero content */}
+      <div className="relative z-10 mx-auto w-full max-w-[1360px] px-4 py-[clamp(48px,9vh,110px)] sm:px-8">
+        <div className="max-w-[660px]">
+          <p
+            className="mb-4 flex items-center gap-2 text-[16px] font-semibold"
+            style={{ color: T.accent.ok }}
           >
-            <ArrowDown className="size-4" strokeWidth={1.8} />
-          </GlobalLink>
-        </div>
-      </Container>
+            <span
+              aria-hidden="true"
+              className="size-2 rounded-full"
+              style={{ background: T.accent.ok }}
+            />
+            Independent · Open source · Community maintained
+          </p>
+          <h1
+            className="m-0 text-balance"
+            style={{
+              fontFamily: T.font.serif,
+              fontWeight: 500,
+              fontSize: "clamp(46px,6.2vw,88px)",
+              lineHeight: 1,
+              letterSpacing: "-0.02em",
+              color: T.ink.base,
+            }}
+          >
+            {parts.map(({ key, text }) =>
+              text.startsWith("*") && text.endsWith("*") ? (
+                <em
+                  key={key}
+                  style={{ fontWeight: 400, color: T.accent.primary }}
+                >
+                  {text.slice(1, -1)}
+                </em>
+              ) : (
+                <span key={key}>{text}</span>
+              )
+            )}
+          </h1>
+          <p
+            className="mt-5 max-w-[560px] text-[19px] leading-[1.6] text-pretty"
+            style={{ color: T.ink.dim }}
+          >
+            {heroText ??
+              "An open index of the world's libraries — where they are, when they're open, what they hold — kept accurate by the people who use and run them."}
+          </p>
 
-      {/* Stats bar — absolutely pinned to hero bottom, never pushed by content */}
-      <div
-        className="absolute right-0 bottom-0 left-0 z-20 border-t border-white/8 backdrop-blur-md"
-        style={{ background: "rgba(3,5,17,0.60)" }}
-      >
-        <Container>
-          <div className="grid grid-cols-2 divide-x divide-white/8 lg:grid-cols-4">
-            {STATS.map((stat, i) => (
-              <div
-                key={stat.label}
-                className="flex flex-col gap-1 px-5 py-5 sm:px-6 sm:py-6"
+          <HomeSearch />
+
+          {/* Record-count line — under the search, per the tightened layout */}
+          <p
+            className="mt-5 flex max-w-[560px] items-start gap-2 text-[14px] leading-[1.5]"
+            style={{ color: T.ink.dim }}
+          >
+            <Globe
+              aria-hidden="true"
+              className="mt-0.5 size-4 shrink-0"
+              strokeWidth={1.7}
+              style={{ color: T.ink.low }}
+            />
+            <span>
+              The globe shows every published record:{" "}
+              <strong style={{ color: T.ink.base }}>
+                {libraryCount != null
+                  ? `${libraryCount.toLocaleString("en-US")} so far`
+                  : "growing"}
+                {coverageNote ? `, ${coverageNote}` : ""}.
+              </strong>{" "}
+              <GlobalLink
+                href="/index"
+                className="underline underline-offset-[3px]"
+                style={{ color: T.accent.primary }}
               >
-                <StatBlock
-                  value={statValues[i] ?? "—"}
-                  label={stat.label}
-                  size="lg"
-                />
-                <p className="text-[11px] text-white/35">{stat.sub}</p>
-              </div>
-            ))}
-          </div>
-        </Container>
+                View them as a list
+              </GlobalLink>
+            </span>
+          </p>
+        </div>
+
+        {/* Mobile globe — modest, in-flow */}
+        <div className="mx-auto mt-10 aspect-square w-[min(100%,340px)] md:hidden">
+          <KnowledgeGlobeCanvas
+            markers={markers}
+            overrides={{
+              globeY: 0,
+              cameraY: 0,
+              cameraZ: 17.5,
+              interactive: false,
+              showSatellites: false,
+              showStars: false,
+            }}
+          />
+        </div>
       </div>
     </section>
   )

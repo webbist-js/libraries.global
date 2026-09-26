@@ -23,7 +23,7 @@ export function FeaturedLibraryCards({
             key={library.documentId ?? library.slug ?? index}
             documentId={library.documentId ?? library.slug ?? String(index)}
             slug={library.slug}
-            name={library.name}
+            name={library.name ?? ""}
             shortName={library.shortName}
             libraryType={library.libraryType}
             city={library.city}

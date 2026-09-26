@@ -3,16 +3,24 @@
 /* eslint-disable react/no-unknown-property */
 
 import { OrbitControls, Stars, useTexture } from "@react-three/drei"
-import { Canvas, useFrame } from "@react-three/fiber"
+import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Bloom, EffectComposer } from "@react-three/postprocessing"
 import { Suspense, useEffect, useMemo, useRef } from "react"
 import * as THREE from "three"
 
 import {
   createLandDotsGeometry,
+  createSeededRandom,
   createLandGlowGeometry,
 } from "@/components/helpers/globe-geometry"
 import {
+  ARC_FRAGMENT_SHADER,
+  ARC_VERTEX_SHADER,
+  DUST_FRAGMENT_SHADER,
+  DUST_VERTEX_SHADER,
+  GLOBE_SURFACE_FRAGMENT_SHADER,
+  GRATICULE_FRAGMENT_SHADER,
+  GRATICULE_VERTEX_SHADER,
   HALO_FRAGMENT_SHADER,
   HALO_VERTEX_SHADER,
   HOTSPOT_FRAGMENT_SHADER,
@@ -23,8 +31,6 @@ import {
   LAND_GLOW_VERTEX_SHADER,
   NODE_GLOW_FRAGMENT_SHADER,
   NODE_GLOW_VERTEX_SHADER,
-  WIREFRAME_FRAGMENT_SHADER,
-  WIREFRAME_VERTEX_SHADER,
 } from "@/components/helpers/globe-shaders"
 import {
   ARC_ROUTES,
@@ -32,8 +38,13 @@ import {
   EARTH_TILT,
   HUB_MARKERS,
   KNOWLEDGE_LIGHTS,
+  buildLibraryArcs,
+  buildLibraryLights,
+  markersCentroid,
   type ArcRoute,
   type GlobeLight,
+  type LibraryMarker,
+  latLngToVector3,
 } from "@/components/home/knowledge-globe-data"
 import {
   GLOBE_SETTINGS,
@@ -42,7 +53,6 @@ import {
 import { cn } from "@/lib/styles"
 
 const NODE_GLOW_GEOMETRY = new THREE.PlaneGeometry(1, 1)
-const ARC_PULSE_GEOMETRY = new THREE.SphereGeometry(1, 10, 10)
 const GLOBE_QUALITY = GLOBE_QUALITY_TUNING[GLOBE_SETTINGS.qualityProfile]
 const RENDERED_ARC_ROUTES = ARC_ROUTES.map((route) => ({
   points:
@@ -51,19 +61,31 @@ const RENDERED_ARC_ROUTES = ARC_ROUTES.map((route) => ({
       : route.curve.getPoints(GLOBE_QUALITY.routePoints),
   route,
 }))
-const ACTIVITY_SOURCES = [
-  ...HUB_MARKERS.map((light) => ({
-    position: light.position,
-    radius: 0.46 + light.size * 4.8,
-    weight: 0.42 + light.size * 5.6,
-  })),
-  ...KNOWLEDGE_LIGHTS.map((light) => ({
-    position: light.position,
-    radius: 0.2 + light.size * 4.2,
-    weight: 0.05 + light.size * 2.8,
-  })),
-]
-const ARC_VISIBILITY_SAMPLES = [0.16, 0.42, 0.68, 0.86] as const
+type ActivitySource = {
+  position: THREE.Vector3
+  radius: number
+  weight: number
+}
+
+function buildActivitySources(
+  hubs: GlobeLight[],
+  lights: GlobeLight[]
+): ActivitySource[] {
+  return [
+    ...hubs.map((light) => ({
+      position: light.position,
+      radius: 0.46 + light.size * 4.8,
+      weight: 0.42 + light.size * 5.6,
+    })),
+    ...lights.map((light) => ({
+      position: light.position,
+      radius: 0.2 + light.size * 4.2,
+      weight: 0.05 + light.size * 2.8,
+    })),
+  ]
+}
+
+const ACTIVITY_SOURCES = buildActivitySources(HUB_MARKERS, KNOWLEDGE_LIGHTS)
 
 function computeSphereVisibility(
   point: THREE.Vector3,
@@ -102,6 +124,7 @@ function computeSphereVisibility(
 }
 
 function DotGlobe({
+  activitySources = ACTIVITY_SOURCES,
   latBounds,
   lngBounds,
   landDotDensity,
@@ -109,6 +132,7 @@ function DotGlobe({
   showGlow = true,
   showHotspots = true,
 }: {
+  readonly activitySources?: ActivitySource[]
   readonly latBounds?: [number, number]
   readonly lngBounds?: [number, number]
   readonly landDotDensity?: number
@@ -133,7 +157,26 @@ function DotGlobe({
       density: landDotDensity ?? GLOBE_SETTINGS.landDotDensity,
       latBounds,
       lngBounds,
-      activitySources: ACTIVITY_SOURCES,
+      activitySources,
+    })
+  }, [maskTexture.image, latBounds, lngBounds, landDotDensity, activitySources])
+
+  // Ocean — sparser, dimmer indigo dots so the whole sphere reads as a
+  // dot-matrix object rather than land floating on a void.
+  const oceanGeometry = useMemo(() => {
+    const image =
+      typeof HTMLImageElement !== "undefined" &&
+      maskTexture.image instanceof HTMLImageElement
+        ? maskTexture.image
+        : null
+
+    return createLandDotsGeometry({
+      maskImage: image,
+      radius: EARTH_RADIUS,
+      density: (landDotDensity ?? GLOBE_SETTINGS.landDotDensity) * 0.55,
+      latBounds,
+      lngBounds,
+      invert: true,
     })
   }, [maskTexture.image, latBounds, lngBounds, landDotDensity])
 
@@ -146,9 +189,22 @@ function DotGlobe({
 
   const uniforms = useMemo(
     () => ({
-      uBaseColor: { value: new THREE.Color("#c3d8ee") },
-      uHighlightColor: { value: new THREE.Color("#f7fbff") },
-      uSizeScale: { value: dotSize * 1.04 },
+      // Land — parchment-white dots; the hotspot layer adds gold city light.
+      uAlpha: { value: 1 },
+      uBaseColor: { value: new THREE.Color("#d8d0bd") },
+      uHighlightColor: { value: new THREE.Color("#fff8e6") },
+      uSizeScale: { value: dotSize * 0.82 },
+    }),
+    [dotSize]
+  )
+
+  const oceanUniforms = useMemo(
+    () => ({
+      // Ocean — barely-there indigo so the sea reads dark, as in the render.
+      uAlpha: { value: 0.3 },
+      uBaseColor: { value: new THREE.Color("#5a60b8") },
+      uHighlightColor: { value: new THREE.Color("#8c90d8") },
+      uSizeScale: { value: dotSize * 0.8 },
     }),
     [dotSize]
   )
@@ -156,9 +212,10 @@ function DotGlobe({
   useEffect(() => {
     return () => {
       geometry.dispose()
+      oceanGeometry.dispose()
       glowGeometry.dispose()
     }
-  }, [geometry, glowGeometry])
+  }, [geometry, oceanGeometry, glowGeometry])
 
   useFrame(({ clock }) => {
     const glowTimeUniform = glowMaterialRef.current?.uniforms.uTime
@@ -175,6 +232,17 @@ function DotGlobe({
 
   return (
     <>
+      <points geometry={oceanGeometry}>
+        <shaderMaterial
+          depthWrite={false}
+          fragmentShader={LAND_DOT_FRAGMENT_SHADER}
+          toneMapped={false}
+          transparent
+          uniforms={oceanUniforms}
+          vertexShader={LAND_DOT_VERTEX_SHADER}
+        />
+      </points>
+
       <points geometry={geometry}>
         <shaderMaterial
           depthWrite={false}
@@ -197,7 +265,7 @@ function DotGlobe({
             transparent
             uniforms={{
               uGlowColor: {
-                value: new THREE.Color("#76c9ff").multiplyScalar(1.18),
+                value: new THREE.Color("#f2c879").multiplyScalar(0.6),
               },
               uSizeScale: { value: dotSize * 1.18 },
               uTime: { value: 0 },
@@ -226,22 +294,30 @@ function DotGlobe({
 }
 
 function GlobeShell() {
+  const surfaceUniforms = useMemo(
+    () => ({
+      uDeepColor: { value: new THREE.Color("#12163a") },
+      uRimColor: { value: new THREE.Color("#3f3f96") },
+    }),
+    []
+  )
+
   const rimUniforms = useMemo(
     () => ({
-      uC: { value: 0.64 },
-      uP: { value: 7 },
-      uColor: { value: new THREE.Color("#7ec8f0") },
-      uOpacity: { value: 0.38 * GLOBE_SETTINGS.atmosphereOpacity },
+      uC: { value: 0.66 },
+      uP: { value: 6 },
+      uColor: { value: new THREE.Color("#c9c2ff") },
+      uOpacity: { value: 0.42 * GLOBE_SETTINGS.atmosphereOpacity },
     }),
     []
   )
 
   const haloUniforms = useMemo(
     () => ({
-      uC: { value: 0.68 },
-      uP: { value: 4.5 },
-      uColor: { value: new THREE.Color("#112040") },
-      uOpacity: { value: 0.22 * GLOBE_SETTINGS.atmosphereOpacity },
+      uC: { value: 0.72 },
+      uP: { value: 3.2 },
+      uColor: { value: new THREE.Color("#7d70e6") },
+      uOpacity: { value: 0.16 * GLOBE_SETTINGS.atmosphereOpacity },
     }),
     []
   )
@@ -256,22 +332,11 @@ function GlobeShell() {
             GLOBE_QUALITY.globeSegments,
           ]}
         />
-        <meshBasicMaterial color="#000000" />
-      </mesh>
-
-      <mesh>
-        <sphereGeometry
-          args={[
-            EARTH_RADIUS - 0.012,
-            GLOBE_QUALITY.wireframeSegments,
-            GLOBE_QUALITY.wireframeSegments,
-          ]}
-        />
         <shaderMaterial
-          fragmentShader={WIREFRAME_FRAGMENT_SHADER}
-          transparent
-          vertexShader={WIREFRAME_VERTEX_SHADER}
-          wireframe
+          fragmentShader={GLOBE_SURFACE_FRAGMENT_SHADER}
+          toneMapped={false}
+          uniforms={surfaceUniforms}
+          vertexShader={HALO_VERTEX_SHADER}
         />
       </mesh>
 
@@ -295,7 +360,7 @@ function GlobeShell() {
         />
       </mesh>
 
-      <mesh scale={1.08}>
+      <mesh scale={1.14}>
         <sphereGeometry
           args={[
             EARTH_RADIUS,
@@ -355,24 +420,30 @@ function KnowledgeNode({
 
   const haloColor = useMemo(
     () =>
-      new THREE.Color(prominent ? "#7fdfff" : "#60b7ff").multiplyScalar(
+      new THREE.Color(prominent ? "#dfe4ff" : "#f2c879").multiplyScalar(
         prominent ? 2.1 : 1.7
       ),
     [prominent]
   )
   const outerHaloColor = useMemo(
     () =>
-      new THREE.Color(prominent ? "#60b7ff" : "#7fdfff").multiplyScalar(
+      new THREE.Color(prominent ? "#b9b4f5" : "#ffd9a0").multiplyScalar(
         prominent ? 1.7 : 1.45
       ),
     [prominent]
   )
   const ambientHaloColor = useMemo(
-    () => new THREE.Color("#90d9ff").multiplyScalar(prominent ? 1.1 : 0.95),
+    () =>
+      new THREE.Color(prominent ? "#8f86e8" : "#f5e3bd").multiplyScalar(
+        prominent ? 1.1 : 0.95
+      ),
     [prominent]
   )
   const pulseColor = useMemo(
-    () => new THREE.Color("#9ad8ff").multiplyScalar(prominent ? 1.55 : 1.35),
+    () =>
+      new THREE.Color(prominent ? "#ffffff" : "#ffedcb").multiplyScalar(
+        prominent ? 1.7 : 1.35
+      ),
     [prominent]
   )
 
@@ -539,88 +610,6 @@ function KnowledgeNode({
   )
 }
 
-function ArcPulse({ route }: { readonly route: ArcRoute }) {
-  const pulseRef = useRef<THREE.Mesh>(null)
-  const glowRef = useRef<THREE.Mesh>(null)
-  const worldPulsePosition = useMemo(() => new THREE.Vector3(), [])
-  const worldCenter = useMemo(() => new THREE.Vector3(), [])
-  const worldScale = useMemo(() => new THREE.Vector3(), [])
-  const segmentVector = useMemo(() => new THREE.Vector3(), [])
-  const centerOffset = useMemo(() => new THREE.Vector3(), [])
-  const closestPoint = useMemo(() => new THREE.Vector3(), [])
-
-  const pulseColor = useMemo(
-    () => new THREE.Color(route.color).multiplyScalar(1.6),
-    [route.color]
-  )
-  const glowColor = useMemo(
-    () => new THREE.Color(route.color).multiplyScalar(0.9),
-    [route.color]
-  )
-
-  useFrame(({ camera, clock }) => {
-    if (pulseRef.current == null) return
-
-    const progress = (clock.elapsedTime * 0.06 + route.phase) % 1
-    const point = route.curve.getPointAt(progress)
-    const pulse =
-      0.6 + 0.4 * Math.sin(clock.elapsedTime * 1.2 + route.phase * 10)
-
-    pulseRef.current.position.copy(point)
-    pulseRef.current.scale.setScalar(0.011 * (0.84 + pulse * 0.28))
-    glowRef.current?.position.copy(point)
-    glowRef.current?.scale.setScalar(0.028 * (0.8 + pulse * 0.3))
-
-    pulseRef.current.getWorldPosition(worldPulsePosition)
-    pulseRef.current.parent?.getWorldPosition(worldCenter)
-    pulseRef.current.parent?.getWorldScale(worldScale)
-
-    const visibility = computeSphereVisibility(
-      worldPulsePosition,
-      camera.position,
-      worldCenter,
-      worldScale.x * EARTH_RADIUS,
-      segmentVector,
-      centerOffset,
-      closestPoint
-    )
-
-    ;(pulseRef.current.material as THREE.MeshBasicMaterial).opacity =
-      0.92 * visibility
-    if (glowRef.current) {
-      ;(glowRef.current.material as THREE.MeshBasicMaterial).opacity =
-        0.22 * visibility
-    }
-  })
-
-  return (
-    <>
-      <mesh geometry={ARC_PULSE_GEOMETRY} ref={glowRef}>
-        <meshBasicMaterial
-          blending={THREE.AdditiveBlending}
-          color={glowColor}
-          depthTest={false}
-          depthWrite={false}
-          opacity={0.22}
-          toneMapped={false}
-          transparent
-        />
-      </mesh>
-      <mesh geometry={ARC_PULSE_GEOMETRY} ref={pulseRef}>
-        <meshBasicMaterial
-          blending={THREE.AdditiveBlending}
-          color={pulseColor}
-          depthTest={false}
-          depthWrite={false}
-          opacity={0.92}
-          toneMapped={false}
-          transparent
-        />
-      </mesh>
-    </>
-  )
-}
-
 function KnowledgeArc({
   points,
   route,
@@ -628,117 +617,264 @@ function KnowledgeArc({
   readonly points: THREE.Vector3[]
   readonly route: ArcRoute
 }) {
-  const groupRef = useRef<THREE.Group>(null)
-  const lineRef = useRef<THREE.Line>(null)
-  const ghostLineRef = useRef<THREE.Line>(null)
-  const worldCenter = useMemo(() => new THREE.Vector3(), [])
-  const worldPoint = useMemo(() => new THREE.Vector3(), [])
-  const worldScale = useMemo(() => new THREE.Vector3(), [])
-  const segmentVector = useMemo(() => new THREE.Vector3(), [])
-  const centerOffset = useMemo(() => new THREE.Vector3(), [])
-  const closestPoint = useMemo(() => new THREE.Vector3(), [])
-
   const geometry = useMemo(() => {
-    const lineGeometry = new THREE.BufferGeometry()
-    lineGeometry.setFromPoints(points)
+    const lineGeometry = new THREE.BufferGeometry().setFromPoints(points)
+    const progress = points.map((_, i) => i / Math.max(points.length - 1, 1))
+    lineGeometry.setAttribute(
+      "aProgress",
+      new THREE.Float32BufferAttribute(progress, 1)
+    )
 
     return lineGeometry
   }, [points])
 
-  const material = useMemo(
-    () =>
-      new THREE.LineBasicMaterial({
-        blending: THREE.AdditiveBlending,
-        color: route.color,
-        depthTest: true,
-        depthWrite: false,
-        opacity: 0.34,
-        transparent: true,
-        toneMapped: false,
-      }),
-    [route.color]
-  )
+  // Comets cross every arc in roughly the same wall-clock time band, so short
+  // regional hops don't flicker and long routes don't crawl.
+  const material = useMemo(() => {
+    const arcLength = route.curve.getLength()
 
-  const ghostMaterial = useMemo(
-    () =>
-      new THREE.LineBasicMaterial({
-        blending: THREE.AdditiveBlending,
-        color: new THREE.Color(route.color).lerp(
-          new THREE.Color("#9fdcff"),
-          0.38
-        ),
-        depthTest: true,
-        depthWrite: false,
-        opacity: 0.055,
-        transparent: true,
-        toneMapped: false,
-      }),
-    [route.color]
-  )
+    return new THREE.ShaderMaterial({
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      fragmentShader: ARC_FRAGMENT_SHADER,
+      toneMapped: false,
+      transparent: true,
+      uniforms: {
+        uColor: { value: new THREE.Color(route.color) },
+        uOpacity: { value: 0.9 },
+        uPhase: { value: route.phase },
+        uSpeed: {
+          value: THREE.MathUtils.clamp(0.9 / (arcLength + 1.2), 0.08, 0.3),
+        },
+        uTime: { value: 0 },
+      },
+      vertexShader: ARC_VERTEX_SHADER,
+    })
+  }, [route.color, route.curve, route.phase])
 
   const line = useMemo(
     () => new THREE.Line(geometry, material),
     [geometry, material]
-  )
-  const ghostLine = useMemo(
-    () => new THREE.Line(geometry, ghostMaterial),
-    [geometry, ghostMaterial]
   )
 
   useEffect(() => {
     return () => {
       geometry.dispose()
       material.dispose()
-      ghostMaterial.dispose()
     }
-  }, [geometry, material, ghostMaterial])
+  }, [geometry, material])
 
-  useFrame(({ camera }) => {
-    if (groupRef.current == null) {
-      return
+  const lineRef = useRef<THREE.Line>(null)
+
+  useFrame(({ clock }) => {
+    const timeUniform = (lineRef.current?.material as THREE.ShaderMaterial)
+      ?.uniforms.uTime
+    if (timeUniform != null) timeUniform.value = clock.elapsedTime
+  })
+
+  return <primitive object={line} ref={lineRef} />
+}
+
+// ---------------------------------------------------------------------------
+// Graticule — hairline lat/long grid, faded at the limb and poles.
+// ---------------------------------------------------------------------------
+
+const GRATICULE_STEP = 20
+
+function createGraticuleGeometry(radius: number) {
+  const positions: number[] = []
+  const push = (lat: number, lng: number) => {
+    const point = latLngToVector3(lat, lng, radius)
+    positions.push(point.x, point.y, point.z)
+  }
+
+  for (let lng = -180; lng < 180; lng += GRATICULE_STEP) {
+    for (let lat = -80; lat < 80; lat += 2) {
+      push(lat, lng)
+      push(lat + 2, lng)
     }
-
-    groupRef.current.getWorldPosition(worldCenter)
-    groupRef.current.getWorldScale(worldScale)
-    const worldRadius = worldScale.x * EARTH_RADIUS
-    let visibilityTotal = 0
-
-    ARC_VISIBILITY_SAMPLES.forEach((sample) => {
-      worldPoint.copy(route.curve.getPointAt(sample))
-      groupRef.current?.localToWorld(worldPoint)
-
-      visibilityTotal += computeSphereVisibility(
-        worldPoint,
-        camera.position,
-        worldCenter,
-        worldRadius,
-        segmentVector,
-        centerOffset,
-        closestPoint
-      )
-    })
-
-    const averageVisibility = visibilityTotal / ARC_VISIBILITY_SAMPLES.length
-    const lineOpacity = THREE.MathUtils.lerp(0.06, 0.82, averageVisibility)
-    const ghostOpacity = lineOpacity * 0.16
-
-    if (lineRef.current != null) {
-      ;(lineRef.current.material as THREE.LineBasicMaterial).opacity =
-        lineOpacity
+  }
+  for (let lat = -60; lat <= 60; lat += GRATICULE_STEP) {
+    for (let lng = -180; lng < 180; lng += 2) {
+      push(lat, lng)
+      push(lat, lng + 2)
     }
+  }
 
-    if (ghostLineRef.current != null) {
-      ;(ghostLineRef.current.material as THREE.LineBasicMaterial).opacity =
-        ghostOpacity
-    }
+  const geometry = new THREE.BufferGeometry()
+  geometry.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute(positions, 3)
+  )
+
+  return geometry
+}
+
+function Graticule() {
+  const geometry = useMemo(
+    () => createGraticuleGeometry(EARTH_RADIUS + 0.004),
+    []
+  )
+  const uniforms = useMemo(
+    () => ({
+      uColor: { value: new THREE.Color("#c9c2ff") },
+      uOpacity: { value: 0.07 },
+    }),
+    []
+  )
+
+  useEffect(() => () => geometry.dispose(), [geometry])
+
+  return (
+    <lineSegments geometry={geometry}>
+      <shaderMaterial
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+        fragmentShader={GRATICULE_FRAGMENT_SHADER}
+        toneMapped={false}
+        transparent
+        uniforms={uniforms}
+        vertexShader={GRATICULE_VERTEX_SHADER}
+      />
+    </lineSegments>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// OrbitalDust — twinkling lavender motes in a shell around the globe.
+// ---------------------------------------------------------------------------
+
+const DUST_COUNT = 420
+
+function createDustGeometry() {
+  const random = createSeededRandom(7)
+  const positions: number[] = []
+  const phases: number[] = []
+  const sizes: number[] = []
+  const direction = new THREE.Vector3()
+
+  for (let i = 0; i < DUST_COUNT; i += 1) {
+    direction
+      .set(random() * 2 - 1, random() * 2 - 1, random() * 2 - 1)
+      .normalize()
+    // Squared falloff crowds motes near the atmosphere.
+    const shell = EARTH_RADIUS * (1.04 + random() ** 2 * 0.5)
+    direction.multiplyScalar(shell)
+    positions.push(direction.x, direction.y, direction.z)
+    phases.push(random() * Math.PI * 2)
+    sizes.push(0.6 + random() * 1.1)
+  }
+
+  const geometry = new THREE.BufferGeometry()
+  geometry.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute(positions, 3)
+  )
+  geometry.setAttribute("aPhase", new THREE.Float32BufferAttribute(phases, 1))
+  geometry.setAttribute("aSize", new THREE.Float32BufferAttribute(sizes, 1))
+
+  return geometry
+}
+
+function OrbitalDust() {
+  const geometry = useMemo(() => createDustGeometry(), [])
+  const uniforms = useMemo(
+    () => ({
+      uColor: { value: new THREE.Color("#8a80ea") },
+      uOpacity: { value: 0.6 },
+      uSizeScale: { value: 0.9 },
+      uTime: { value: 0 },
+    }),
+    []
+  )
+
+  const materialRef = useRef<THREE.ShaderMaterial>(null)
+
+  useEffect(() => () => geometry.dispose(), [geometry])
+
+  useFrame(({ clock }) => {
+    const timeUniform = materialRef.current?.uniforms.uTime
+    if (timeUniform != null) timeUniform.value = clock.elapsedTime
   })
 
   return (
-    <group ref={groupRef}>
-      <primitive object={ghostLine} ref={ghostLineRef} />
-      <primitive object={line} ref={lineRef} />
-      <ArcPulse route={route} />
-    </group>
+    <points geometry={geometry}>
+      <shaderMaterial
+        ref={materialRef}
+        depthWrite={false}
+        fragmentShader={DUST_FRAGMENT_SHADER}
+        toneMapped={false}
+        transparent
+        uniforms={uniforms}
+        vertexShader={DUST_VERTEX_SHADER}
+      />
+    </points>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// LibraryPointsLayer — one Points draw call for every plotted record. Scales
+// to thousands of records where per-node halo meshes would not, and avoids
+// the additive white-out that stacked halos caused on dense clusters.
+// ---------------------------------------------------------------------------
+
+function createNodeSpriteTexture() {
+  const size = 64
+  const canvas = document.createElement("canvas")
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext("2d")
+  if (ctx) {
+    const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32)
+    gradient.addColorStop(0, "rgba(255,243,214,1)")
+    gradient.addColorStop(0.3, "rgba(245,201,126,0.85)")
+    gradient.addColorStop(1, "rgba(245,201,126,0)")
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, size, size)
+  }
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+
+  return texture
+}
+
+function LibraryPointsLayer({ lights }: { readonly lights: GlobeLight[] }) {
+  const texture = useMemo(() => createNodeSpriteTexture(), [])
+  const geometry = useMemo(() => {
+    const positions: number[] = []
+    lights.forEach((light) => {
+      positions.push(light.position.x, light.position.y, light.position.z)
+    })
+    const pointsGeometry = new THREE.BufferGeometry()
+    pointsGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(positions, 3)
+    )
+    pointsGeometry.computeBoundingSphere()
+
+    return pointsGeometry
+  }, [lights])
+
+  useEffect(() => {
+    return () => {
+      geometry.dispose()
+      texture.dispose()
+    }
+  }, [geometry, texture])
+
+  return (
+    <points geometry={geometry}>
+      <pointsMaterial
+        blending={THREE.AdditiveBlending}
+        color="#ffdf9e"
+        depthWrite={false}
+        map={texture}
+        size={0.13}
+        sizeAttenuation
+        toneMapped={false}
+        transparent
+      />
+    </points>
   )
 }
 
@@ -925,12 +1061,27 @@ function StarfieldLayer({
   )
 }
 
+/**
+ * Pins the globe to a point on the canvas instead of centring it. `x`/`y` are
+ * fractions of the canvas (0 = left/top, values past 1 sit off-canvas),
+ * `radius` is a fraction of canvas height, capped by `maxRadiusW` (fraction
+ * of width) so narrow viewports don't swallow the page content.
+ */
+export type GlobeScreenAnchor = {
+  x: number
+  y: number
+  radius: number
+  maxRadiusW?: number
+}
+
 export type GlobeOverrides = {
+  anchor?: GlobeScreenAnchor
   autoRotate?: boolean
   autoRotateSpeed?: number
   cameraFov?: number
   cameraY?: number
   cameraZ?: number
+  dprMax?: number
   globePitch?: number
   globeScale?: number
   globeTilt?: number
@@ -944,22 +1095,116 @@ export type GlobeOverrides = {
   maxPolarAngle?: number
   minPolarAngle?: number
   showArcs?: boolean
+  showDust?: boolean
   showGlow?: boolean
+  showGraticule?: boolean
   showHotspots?: boolean
   showNodes?: boolean
   showSatellites?: boolean
   showStars?: boolean
 }
 
-function GlobeScene({ overrides }: { readonly overrides?: GlobeOverrides }) {
+/** World-space position + scale that places the globe at a screen anchor.
+ * Assumes the camera looks down -z at the origin, so the globe plane (z=0)
+ * sits `camera.position.z` away. */
+function useAnchorFrame(anchor: GlobeScreenAnchor | undefined) {
+  const size = useThree((state) => state.size)
+  const camera = useThree((state) => state.camera)
+
+  return useMemo(() => {
+    if (!anchor || !(camera instanceof THREE.PerspectiveCamera)) return null
+    const worldH =
+      2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)
+    const aspect = size.width / Math.max(size.height, 1)
+    const worldW = worldH * aspect
+    const radiusH = Math.min(
+      anchor.radius,
+      (anchor.maxRadiusW ?? Infinity) * aspect
+    )
+
+    return {
+      position: [(anchor.x - 0.5) * worldW, (0.5 - anchor.y) * worldH, 0] as [
+        number,
+        number,
+        number,
+      ],
+      scale: (radiusH * worldH) / EARTH_RADIUS,
+    }
+  }, [anchor, camera, size.width, size.height])
+}
+
+/** Spins its children about the globe's own polar axis — used in anchored
+ * mode, where OrbitControls' auto-rotate would swing the camera around the
+ * origin rather than the off-centre globe. */
+function PolarSpin({
+  children,
+  speed,
+}: {
+  readonly children: React.ReactNode
+  readonly speed: number
+}) {
+  const ref = useRef<THREE.Group>(null)
+  useFrame((_, delta) => {
+    if (ref.current) ref.current.rotation.y += delta * speed
+  })
+
+  return <group ref={ref}>{children}</group>
+}
+
+function GlobeScene({
+  markers,
+  overrides,
+}: {
+  readonly markers?: LibraryMarker[]
+  readonly overrides?: GlobeOverrides
+}) {
+  const anchorFrame = useAnchorFrame(overrides?.anchor)
+  // Real records replace the illustrative dataset when available.
+  const dataLayers = useMemo(() => {
+    if (!markers || markers.length === 0) return null
+    const { hubs, lights } = buildLibraryLights(markers)
+    const arcs = buildLibraryArcs(markers)
+
+    return {
+      activity: buildActivitySources(hubs, lights),
+      arcs: arcs.map((route) => ({
+        points: route.curve.getPoints(GLOBE_QUALITY.routePoints),
+        route,
+      })),
+      hubs,
+      lights,
+    }
+  }, [markers])
+
+  const centroid = useMemo(
+    () => (markers && markers.length > 0 ? markersCentroid(markers) : null),
+    [markers]
+  )
+
+  const hubMarkers = dataLayers?.hubs ?? HUB_MARKERS
+  const knowledgeLights = dataLayers?.lights ?? KNOWLEDGE_LIGHTS
+  const renderedArcs = dataLayers?.arcs ?? RENDERED_ARC_ROUTES
+  const activitySources = dataLayers?.activity ?? ACTIVITY_SOURCES
+
   const globeY = overrides?.globeY ?? GLOBE_SETTINGS.globeY
   const globeScale = overrides?.globeScale ?? GLOBE_SETTINGS.globeScale
-  const globePitch = overrides?.globePitch ?? GLOBE_SETTINGS.globePitch
-  const globeYaw = overrides?.globeYaw ?? GLOBE_SETTINGS.globeYaw
+  // Face the plotted data toward the camera by default.
+  const globePitch =
+    overrides?.globePitch ??
+    (centroid
+      ? THREE.MathUtils.clamp(centroid.lat * 0.55, -32, 32)
+      : GLOBE_SETTINGS.globePitch)
+  const globeYaw =
+    overrides?.globeYaw ?? (centroid ? -centroid.lng : GLOBE_SETTINGS.globeYaw)
+  // Axial tilt is decorative on the illustrative globe; with real data it
+  // rolls the centred cluster off-axis, so it's dropped when markers drive
+  // the framing.
   const globeTilt =
     overrides?.globeTilt !== undefined
       ? THREE.MathUtils.degToRad(overrides.globeTilt)
-      : EARTH_TILT
+      : centroid
+        ? 0
+        : EARTH_TILT
   const autoRotate = overrides?.autoRotate ?? true
   const autoRotateSpeed =
     overrides?.autoRotateSpeed ?? GLOBE_SETTINGS.autoRotateSpeed
@@ -968,7 +1213,9 @@ function GlobeScene({ overrides }: { readonly overrides?: GlobeOverrides }) {
   const maxPolarAngle = overrides?.maxPolarAngle ?? Math.PI * 0.7
   const showStars = overrides?.showStars ?? true
   const showArcs = overrides?.showArcs ?? true
+  const showDust = overrides?.showDust ?? true
   const showGlow = overrides?.showGlow ?? true
+  const showGraticule = overrides?.showGraticule ?? true
   const showNodes = overrides?.showNodes ?? true
   const showSatellites = overrides?.showSatellites ?? true
   const showHotspots = overrides?.showHotspots ?? true
@@ -979,22 +1226,20 @@ function GlobeScene({ overrides }: { readonly overrides?: GlobeOverrides }) {
 
   return (
     <>
-      <color args={["#02040a"]} attach="background" />
-
       <ambientLight intensity={GLOBE_SETTINGS.ambientLight} />
       <hemisphereLight
-        color="#eef8ff"
-        groundColor="#050814"
+        color="#fdf8ec"
+        groundColor="#17162b"
         intensity={GLOBE_SETTINGS.ambientLight * 1.46}
       />
       <directionalLight
-        color="#f4fbff"
+        color="#fff6e6"
         intensity={GLOBE_SETTINGS.directionalLight}
         position={[5, 4, 8]}
       />
       <pointLight
-        color="#6fa6ff"
-        intensity={GLOBE_SETTINGS.pointLight}
+        color="#8a7ce8"
+        intensity={GLOBE_SETTINGS.pointLight * 0.7}
         position={[-7, -2, -10]}
       />
 
@@ -1024,77 +1269,89 @@ function GlobeScene({ overrides }: { readonly overrides?: GlobeOverrides }) {
         </>
       ) : null}
 
-      <group position={[-0.02, globeY, 0]} scale={globeScale}>
+      <group
+        position={anchorFrame?.position ?? [-0.02, globeY, 0]}
+        scale={anchorFrame?.scale ?? globeScale}
+      >
         {showSatellites ? <Satellites /> : null}
+        {showDust ? <OrbitalDust /> : null}
 
-        <group
-          rotation={[
-            THREE.MathUtils.degToRad(globePitch),
-            THREE.MathUtils.degToRad(globeYaw),
-            globeTilt,
-          ]}
-        >
-          <GlobeShell />
-          <DotGlobe
-            landDotDensity={landDotDensity}
-            landDotSize={landDotSize}
-            latBounds={latBounds}
-            lngBounds={lngBounds}
-            showGlow={showGlow}
-            showHotspots={showHotspots}
-          />
+        {/* Pitch/tilt applied outside, yaw inside — so yaw spins the sphere
+            about its own poles and lng→front math stays exact. */}
+        <group rotation={[THREE.MathUtils.degToRad(globePitch), 0, globeTilt]}>
+          <PolarSpin speed={anchorFrame && autoRotate ? autoRotateSpeed : 0}>
+            <group rotation={[0, THREE.MathUtils.degToRad(globeYaw), 0]}>
+              <GlobeShell />
+              {showGraticule ? <Graticule /> : null}
+              <DotGlobe
+                activitySources={activitySources}
+                landDotDensity={landDotDensity}
+                landDotSize={landDotSize}
+                latBounds={latBounds}
+                lngBounds={lngBounds}
+                showGlow={showGlow}
+                showHotspots={showHotspots}
+              />
 
-          {showArcs
-            ? RENDERED_ARC_ROUTES.map(({ points, route }) => (
-                <KnowledgeArc
-                  key={`${route.phase}-${route.color}`}
-                  points={points}
-                  route={route}
-                />
-              ))
-            : null}
+              {showArcs
+                ? renderedArcs.map(({ points, route }) => (
+                    <KnowledgeArc
+                      key={`${route.phase}-${route.color}`}
+                      points={points}
+                      route={route}
+                    />
+                  ))
+                : null}
 
-          {showNodes
-            ? KNOWLEDGE_LIGHTS.map((light) => (
-                <KnowledgeNode
-                  key={`${light.phase}-${light.size}`}
-                  light={light}
-                />
-              ))
-            : null}
+              {showNodes && dataLayers ? (
+                <LibraryPointsLayer lights={knowledgeLights} />
+              ) : null}
 
-          {showNodes
-            ? HUB_MARKERS.map((light) => (
-                <KnowledgeNode
-                  key={`hub-${light.phase}-${light.size}`}
-                  light={light}
-                  prominent
-                />
-              ))
-            : null}
+              {showNodes && !dataLayers
+                ? knowledgeLights.map((light) => (
+                    <KnowledgeNode
+                      key={`${light.phase}-${light.size}`}
+                      light={light}
+                    />
+                  ))
+                : null}
+
+              {showNodes
+                ? hubMarkers.map((light) => (
+                    <KnowledgeNode
+                      key={`hub-${light.phase}-${light.size}`}
+                      light={light}
+                      prominent
+                    />
+                  ))
+                : null}
+            </group>
+          </PolarSpin>
         </group>
       </group>
 
-      <OrbitControls
-        autoRotate={autoRotate}
-        autoRotateSpeed={autoRotateSpeed}
-        dampingFactor={0.08}
-        enableDamping
-        enablePan={false}
-        enableRotate={interactive}
-        enableZoom={false}
-        maxPolarAngle={maxPolarAngle}
-        minPolarAngle={minPolarAngle}
-        rotateSpeed={0.34}
-      />
+      {anchorFrame ? null : (
+        <OrbitControls
+          autoRotate={autoRotate}
+          autoRotateSpeed={autoRotateSpeed}
+          dampingFactor={0.08}
+          enableDamping
+          enablePan={false}
+          enableRotate={interactive}
+          enableZoom={false}
+          maxPolarAngle={maxPolarAngle}
+          minPolarAngle={minPolarAngle}
+          rotateSpeed={0.34}
+        />
+      )}
 
       <EffectComposer enableNormalPass={false} multisampling={0}>
         <Bloom
-          intensity={1.6}
-          luminanceSmoothing={0.76}
-          luminanceThreshold={0.12}
+          intensity={0.85}
+          luminanceSmoothing={0.7}
+          luminanceThreshold={0.32}
           mipmapBlur
-          radius={0.78}
+          radius={0.66}
         />
       </EffectComposer>
     </>
@@ -1103,33 +1360,38 @@ function GlobeScene({ overrides }: { readonly overrides?: GlobeOverrides }) {
 
 export function KnowledgeGlobeCanvas({
   className,
+  markers,
   overrides,
 }: {
   readonly className?: string
+  readonly markers?: LibraryMarker[]
   readonly overrides?: GlobeOverrides
 }) {
   const fov = overrides?.cameraFov ?? GLOBE_SETTINGS.cameraFov
   const cameraZ = overrides?.cameraZ ?? GLOBE_SETTINGS.cameraZ
   const cameraY = overrides?.cameraY ?? 0.06
+  const anchor = overrides?.anchor
 
   return (
     <div className={cn("relative h-full w-full", className)}>
-      {/* Ambient canvas glow — soft radial blue light emanating from the globe */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse 75% 65% at 62% 48%, rgba(18,72,148,0.22) 0%, rgba(8,28,72,0.10) 42%, transparent 68%)",
-        }}
-      />
+      {/* Ambient canvas glow — a soft warm indigo wash behind the globe */}
+      {anchor ? null : (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 62% at 50% 46%, rgba(67,56,202,0.10) 0%, rgba(242,200,121,0.07) 44%, transparent 70%)",
+          }}
+        />
+      )}
       <Canvas
         camera={{
           fov,
           position: [0, cameraY, cameraZ],
         }}
         className="h-full w-full touch-none"
-        dpr={[1, GLOBE_QUALITY.dprMax]}
+        dpr={[1, overrides?.dprMax ?? GLOBE_QUALITY.dprMax]}
         gl={{
           alpha: true,
           antialias: GLOBE_QUALITY.antialias,
@@ -1142,7 +1404,7 @@ export function KnowledgeGlobeCanvas({
         performance={{ min: 0.75 }}
       >
         <Suspense fallback={null}>
-          <GlobeScene overrides={overrides} />
+          <GlobeScene markers={markers} overrides={overrides} />
         </Suspense>
       </Canvas>
     </div>

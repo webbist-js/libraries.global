@@ -248,66 +248,54 @@ export function latLngToVector3(
   )
 }
 
-function createArcCurve(start: Hub, end: Hub, spreadSeed: number) {
-  const startPoint = latLngToVector3(start.lat, start.lng, EARTH_RADIUS + 0.03)
-  const endPoint = latLngToVector3(end.lat, end.lng, EARTH_RADIUS + 0.03)
+type LatLng = { lat: number; lng: number }
 
-  // Direction from globe centre through the arc midpoint.
-  const midpointDirection = startPoint.clone().add(endPoint).normalize()
+/**
+ * Great-circle arc that lifts gently off the surface. The route follows the
+ * shortest path over the sphere (slerp), and altitude is a sine bump whose
+ * peak scales with angular distance — short regional hops barely clear the
+ * surface, trans-ocean routes rise to ~a fifth of the radius. No more
+ * quadratic-bezier spikes on short chords.
+ */
+class GreatCircleArc extends THREE.Curve<THREE.Vector3> {
+  private readonly from: THREE.Vector3
+  private readonly to: THREE.Vector3
+  private readonly angle: number
+  private readonly peak: number
+  private readonly base: number
 
-  // Lateral axis perpendicular to the arc plane — used for visual separation
-  // of routes that would otherwise overlap.
-  let planeNormal = startPoint.clone().cross(endPoint)
-  if (planeNormal.lengthSq() < 1e-6) {
-    planeNormal = new THREE.Vector3(0, 1, 0)
-  } else {
-    planeNormal.normalize()
+  constructor(from: THREE.Vector3, to: THREE.Vector3, base: number) {
+    super()
+    this.from = from.clone().normalize()
+    this.to = to.clone().normalize()
+    this.angle = this.from.angleTo(this.to)
+    this.base = base
+    this.peak = EARTH_RADIUS * ((0.2 * this.angle) / (1 + this.angle * 0.6))
   }
 
-  const lateralDirection = planeNormal
-    .clone()
-    .cross(midpointDirection)
-    .normalize()
+  override getPoint(t: number, target = new THREE.Vector3()) {
+    const sinAngle = Math.sin(this.angle)
+    if (sinAngle < 1e-6) {
+      target.copy(this.from)
+    } else {
+      target
+        .copy(this.from)
+        .multiplyScalar(Math.sin((1 - t) * this.angle) / sinAngle)
+        .addScaledVector(this.to, Math.sin(t * this.angle) / sinAngle)
+    }
 
-  const random = createSeededRandom(spreadSeed * 97 + 31)
+    return target
+      .normalize()
+      .multiplyScalar(this.base + this.peak * Math.sin(Math.PI * t))
+  }
+}
 
-  const chordLength = startPoint.distanceTo(endPoint)
-  const distanceFactor = THREE.MathUtils.clamp(
-    chordLength / (EARTH_RADIUS * 2.15),
-    0.22,
-    1
+function createArcCurve(start: LatLng, end: LatLng) {
+  return new GreatCircleArc(
+    latLngToVector3(start.lat, start.lng, 1),
+    latLngToVector3(end.lat, end.lng, 1),
+    EARTH_RADIUS + 0.02
   )
-
-  // For a QuadraticBezierCurve3 the arc peak only reaches ~half the distance
-  // to the control point, so the control point must be pushed 2× the desired
-  // Shallower arcs that hug the globe surface more closely, matching the
-  // reference image aesthetic. Range: 1.14 (short) → 1.38 (long).
-  const arcHeightMultiplier = 1.14 + distanceFactor * 0.24
-
-  // Small lateral nudge so adjacent routes don't stack on top of each other.
-  const lateralOffset =
-    EARTH_RADIUS * (0.008 + random() * 0.018) * (0.3 + distanceFactor * 0.45)
-  const lateralSign = spreadSeed % 2 === 0 ? 1 : -1
-
-  // Keep transatlantic routes flatter.
-  const isAtlantic =
-    (start.name === "London" && end.name === "New York") ||
-    (start.name === "New York" && end.name === "London") ||
-    (start.name === "Warsaw" && end.name === "New York") ||
-    (start.name === "New York" && end.name === "Warsaw")
-
-  const arcHeight =
-    EARTH_RADIUS * (arcHeightMultiplier + (isAtlantic ? -0.04 : 0))
-
-  // Single quadratic bezier control point: pushed outward along the midpoint
-  // direction to form the arc, plus a tiny lateral nudge for separation.
-  // QuadraticBezierCurve3 guarantees smooth tangents at both endpoints.
-  const controlPoint = midpointDirection
-    .clone()
-    .multiplyScalar(arcHeight)
-    .add(lateralDirection.clone().multiplyScalar(lateralOffset * lateralSign))
-
-  return new THREE.QuadraticBezierCurve3(startPoint, controlPoint, endPoint)
 }
 
 function createKnowledgeLights() {
@@ -342,26 +330,125 @@ export const HUB_MARKERS: GlobeLight[] = HUBS.map((hub) => ({
 
 export const KNOWLEDGE_LIGHTS = createKnowledgeLights()
 
-export const ARC_ROUTES: ArcRoute[] = CONNECTIONS.map(
-  ([startIndex, endIndex], index) => {
-    const curve = createArcCurve(HUBS[startIndex]!, HUBS[endIndex]!, index)
+/** Arc palette — warm gold with the occasional pale indigo, per the render. */
+const ARC_COLORS = [
+  "#f2c879", // warm gold
+  "#ffe2a8", // pale gold
+  "#e8b65a", // deeper gold
+  "#f5e3bd", // parchment
+  "#c9c2ff", // pale indigo
+] as const
 
-    // Pure white / silver-blue palette — no warm tones, matches the
-    // reference image's cool monochromatic style.
-    const color = [
-      "#e8f4ff", // near-white cool
-      "#c8e0ff", // light blue
-      "#f0f8ff", // almost white
-      "#b8d0f0", // steel blue
-      "#d8ecff", // pale sky
-      "#a8c8e8", // muted blue
-    ][index % 6]!
-
-    return {
-      color,
-      curve,
-      linePoints: curve.getPoints(190),
-      phase: index * 0.09,
-    }
+function toArcRoute(curve: THREE.Curve<THREE.Vector3>, index: number) {
+  return {
+    color: ARC_COLORS[index % ARC_COLORS.length]!,
+    curve,
+    linePoints: curve.getPoints(96),
+    phase: (index * 0.137) % 1,
   }
+}
+
+export const ARC_ROUTES: ArcRoute[] = CONNECTIONS.map(
+  ([startIndex, endIndex], index) =>
+    toArcRoute(createArcCurve(HUBS[startIndex]!, HUBS[endIndex]!), index)
 )
+
+// ─── Real-data builders ───────────────────────────────────────────────────────
+// When the homepage has actual published records, the globe plots those instead
+// of the illustrative HUBS/CONNECTIONS above.
+
+export type LibraryMarker = {
+  lat: number
+  lng: number
+  featured?: boolean
+}
+
+/**
+ * Build globe lights from real library records. Featured records become
+ * prominent hub markers; the rest are smaller knowledge lights.
+ */
+export function buildLibraryLights(markers: LibraryMarker[]): {
+  hubs: GlobeLight[]
+  lights: GlobeLight[]
+} {
+  const random = createSeededRandom(41)
+  const hubs: GlobeLight[] = []
+  const lights: GlobeLight[] = []
+
+  markers.forEach((marker, index) => {
+    const light: GlobeLight = {
+      phase: (index * 0.61) % (Math.PI * 2),
+      position: latLngToVector3(
+        marker.lat,
+        marker.lng,
+        EARTH_RADIUS + (marker.featured ? 0.014 : 0.011)
+      ),
+      size: marker.featured
+        ? 0.038 + random() * 0.008
+        : 0.02 + random() * 0.012,
+    }
+    if (marker.featured) hubs.push(light)
+    else lights.push(light)
+  })
+
+  return { hubs, lights }
+}
+
+/** Each featured library links to this many of its nearest featured peers. */
+const ARC_NEIGHBOURS = 2
+const ARC_LIMIT = 48
+/** ~0.3° — below this two records are effectively the same spot. */
+const ARC_MIN_ANGLE = 0.005
+
+/**
+ * Build network arcs from real records. Only featured ("pillar") libraries
+ * are connected — each to its nearest featured peers. Purely visual for now;
+ * one day this could reflect real inter-library loan relationships.
+ */
+export function buildLibraryArcs(markers: LibraryMarker[]): ArcRoute[] {
+  const featured = markers.filter((m) => m.featured)
+  if (featured.length < 2) return []
+
+  const directions = featured.map((m) => latLngToVector3(m.lat, m.lng, 1))
+  const seen = new Set<string>()
+  const routes: ArcRoute[] = []
+
+  directions.forEach((direction, i) => {
+    const nearest = directions
+      .map((other, j) => ({ j, angle: direction.angleTo(other) }))
+      .filter(({ j, angle }) => j !== i && angle > ARC_MIN_ANGLE)
+      .sort((x, y) => x.angle - y.angle)
+      .slice(0, ARC_NEIGHBOURS)
+
+    nearest.forEach(({ j }) => {
+      const key = i < j ? `${i}-${j}` : `${j}-${i}`
+      if (seen.has(key)) return
+      seen.add(key)
+      routes.push(
+        toArcRoute(createArcCurve(featured[i]!, featured[j]!), routes.length)
+      )
+    })
+  })
+
+  return routes.slice(0, ARC_LIMIT)
+}
+
+/** Centroid of the plotted records — used to face the data toward the camera. */
+export function markersCentroid(markers: LibraryMarker[]): {
+  lat: number
+  lng: number
+} | null {
+  if (markers.length === 0) return null
+  // Average on the unit sphere so antimeridian-spanning data behaves.
+  const sum = markers.reduce(
+    (acc, m) => acc.add(latLngToVector3(m.lat, m.lng, 1)),
+    new THREE.Vector3()
+  )
+  if (sum.lengthSq() < 1e-9) return null
+  sum.normalize()
+
+  return {
+    lat: THREE.MathUtils.radToDeg(Math.asin(sum.y)),
+    lng: THREE.MathUtils.radToDeg(Math.atan2(sum.x, sum.z)),
+  }
+}
