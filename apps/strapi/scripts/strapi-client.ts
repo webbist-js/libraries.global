@@ -152,6 +152,8 @@ export interface LibraryCreateData {
   source?: string
   sourceUrl?: string
   featured?: boolean
+  contentUpdatedAt?: string
+  socialLinks?: { platform: string; label?: string; url: string }[]
   country?: { connect: { documentId: string }[] }
   region?: { connect: { documentId: string }[] }
   area?: { connect: { documentId: string }[] }

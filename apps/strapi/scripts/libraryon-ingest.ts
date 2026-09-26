@@ -214,8 +214,8 @@ async function run() {
       }
 
       // Resolve accessibility relations
-      if (meta.accessibilityLabels.length > 0) {
-        const accessDocIds = meta.accessibilityLabels
+      if (meta.accessibilityNames.length > 0) {
+        const accessDocIds = meta.accessibilityNames
           .map((label) => strapi.lookupAccessibility(label))
           .filter(Boolean) as string[]
         if (accessDocIds.length > 0) {

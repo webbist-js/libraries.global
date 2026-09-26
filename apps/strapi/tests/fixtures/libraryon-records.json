@@ -1,0 +1,1383 @@
+{
+  "laRun": {
+    "id": 10,
+    "attributes": {
+      "name": "Pollokshields Library",
+      "slug": "pollokshields-library",
+      "libraryID": "lib_bc081ddf-5213-46e9-a6b6-bc21d71c56e6",
+      "openingTimes": {
+        "friday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "17:00",
+              "startTime": "10:00"
+            }
+          ]
+        },
+        "monday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "17:00",
+              "startTime": "10:00"
+            }
+          ]
+        },
+        "sunday": {
+          "timeFrames": []
+        },
+        "tuesday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "20:00",
+              "startTime": "10:00"
+            }
+          ]
+        },
+        "saturday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "17:00",
+              "startTime": "10:00"
+            }
+          ]
+        },
+        "thursday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "20:00",
+              "startTime": "10:00"
+            }
+          ]
+        },
+        "wednesday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "17:00",
+              "startTime": "10:00"
+            }
+          ]
+        },
+        "exceptions": []
+      },
+      "location": {
+        "id": "address.1049208787566314",
+        "text": "Leslie Street",
+        "type": "Feature",
+        "center": [
+          -4.2727805430525905,
+          55.84098377311176
+        ],
+        "address": "21",
+        "context": [
+          {
+            "id": "postcode.1049208787566314",
+            "text": "G41 2LH"
+          },
+          {
+            "id": "place.4474959",
+            "text": "Glasgow",
+            "wikidata": "Q4093",
+            "mapbox_id": "dXJuOm1ieHBsYzpSRWhQ"
+          },
+          {
+            "id": "district.575055",
+            "text": "Glasgow City",
+            "wikidata": "Q4093",
+            "mapbox_id": "dXJuOm1ieHBsYzpDTVpQ"
+          },
+          {
+            "id": "region.17487",
+            "text": "Scotland",
+            "wikidata": "Q22",
+            "mapbox_id": "dXJuOm1ieHBsYzpSRTg",
+            "short_code": "GB-SCT"
+          },
+          {
+            "id": "country.8783",
+            "text": "United Kingdom",
+            "wikidata": "Q145",
+            "mapbox_id": "dXJuOm1ieHBsYzpJazg",
+            "short_code": "gb"
+          }
+        ],
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -4.2727805430525905,
+            55.84098377311176
+          ]
+        },
+        "relevance": 1,
+        "place_name": "21 Leslie Street, Glasgow, G41 2LH, United Kingdom",
+        "place_type": [
+          "address"
+        ],
+        "properties": {
+          "accuracy": "point",
+          "mapbox_id": "dXJuOm1ieGFkcjoyMDU4MzZlNi1hZjkxLTRlOGEtYTY2Yi1jMDcyOGI1MjdjZTA"
+        }
+      },
+      "email": "libraries@glasgowlife.org.uk",
+      "phone": "0141 276 1535",
+      "website": "https://www.glasgowlife.org.uk/libraries/venues/pollokshaws-library",
+      "facilityOperated": "Local Authority Run",
+      "accessibility": [
+        "accessible-restrooms",
+        "service-dog-friendly",
+        "wheelchair-access",
+        "hearing-loop-system",
+        "step-free-access",
+        "baby-changing-facilities"
+      ],
+      "createdAt": "2024-10-09T11:59:58.211Z",
+      "updatedAt": "2026-01-23T08:46:34.975Z",
+      "coLocatedWith": null,
+      "coLocated": [],
+      "notes": null,
+      "yearOpen": null,
+      "yearClosed": null,
+      "statutory": true,
+      "uprn": null,
+      "virtualTourUrl": null,
+      "virtualTourEmbed": null,
+      "streetAddress": "30 Leslie St, Glasgow, Glasgow, Glasgow City, G41 2LF",
+      "catalogue": "https://www.glasgowlife.org.uk/libraries/online-library",
+      "joinOnline": "https://www.glasgowlife.org.uk/libraries/join-the-library",
+      "tempClosedUntil": null,
+      "openingTimesNotes": null,
+      "contentUpdatedAt": "2026-01-23T08:46:34.975Z",
+      "ref": "gb:sct:glasgow-city:pollokshields-library",
+      "managingDepartment": null,
+      "isMobileLibrary": null,
+      "isNewBuild": null,
+      "permanentlyClosed": null,
+      "mobileLibraryTimetable": null,
+      "services": [
+        {
+          "id": 23,
+          "url": null,
+          "service": "Books"
+        },
+        {
+          "id": 24,
+          "url": null,
+          "service": "Printing"
+        },
+        {
+          "id": 25,
+          "url": null,
+          "service": "Free Wi-Fi"
+        },
+        {
+          "id": 14611,
+          "url": null,
+          "service": "BFI Replay"
+        },
+        {
+          "id": 14612,
+          "url": null,
+          "service": "Hobby and interest groups"
+        },
+        {
+          "id": 14613,
+          "url": null,
+          "service": "Digital lending"
+        },
+        {
+          "id": 31564,
+          "url": null,
+          "service": "British Newspaper Archive"
+        },
+        {
+          "id": 31563,
+          "url": null,
+          "service": "Findmypast"
+        }
+      ],
+      "social": [
+        {
+          "id": 1136,
+          "channel": "facebook",
+          "handle": "GlasgowLibraries",
+          "url": "https://www.facebook.com/GlasgowLibraries/"
+        },
+        {
+          "id": 1135,
+          "channel": "twitter",
+          "handle": "GlasgowLib",
+          "url": "https://x.com/GlasgowLib"
+        }
+      ],
+      "authority": {
+        "data": {
+          "id": 70,
+          "attributes": {
+            "name": "Glasgow City",
+            "slug": "glasgow-city"
+          }
+        }
+      },
+      "occurrences": {
+        "data": []
+      }
+    }
+  },
+  "notOpenWithHours": {
+    "id": 7,
+    "attributes": {
+      "name": "Fairlie Library",
+      "slug": "fairlie-library",
+      "libraryID": "lib_0325c544-64a4-4956-9b0b-798fc7d0c3dc",
+      "openingTimes": {
+        "friday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "14:00",
+              "startTime": "10:00"
+            }
+          ]
+        },
+        "monday": {
+          "timeFrames": []
+        },
+        "sunday": {
+          "timeFrames": []
+        },
+        "tuesday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "17:00",
+              "startTime": "12:00"
+            }
+          ]
+        },
+        "saturday": {
+          "timeFrames": []
+        },
+        "thursday": {
+          "timeFrames": []
+        },
+        "wednesday": {
+          "timeFrames": []
+        },
+        "exceptions": []
+      },
+      "location": {
+        "id": "address.3818470122714268",
+        "text": "Main Road",
+        "type": "Feature",
+        "center": [
+          -4.85443,
+          55.7592
+        ],
+        "address": "83",
+        "context": [
+          {
+            "id": "postcode.3818470122714268",
+            "text": "KA29 0AD"
+          },
+          {
+            "id": "locality.63236687",
+            "text": "Fairlie",
+            "wikidata": "Q5430546",
+            "mapbox_id": "dXJuOm1ieHBsYzpBOFRxVHc"
+          },
+          {
+            "id": "place.6285391",
+            "text": "Largs",
+            "wikidata": "Q1016169",
+            "mapbox_id": "dXJuOm1ieHBsYzpYK2hQ"
+          },
+          {
+            "id": "district.869967",
+            "text": "North Ayrshire",
+            "wikidata": "Q206926",
+            "mapbox_id": "dXJuOm1ieHBsYzpEVVpQ"
+          },
+          {
+            "id": "region.17487",
+            "text": "Scotland",
+            "wikidata": "Q22",
+            "mapbox_id": "dXJuOm1ieHBsYzpSRTg",
+            "short_code": "GB-SCT"
+          },
+          {
+            "id": "country.8783",
+            "text": "United Kingdom",
+            "wikidata": "Q145",
+            "mapbox_id": "dXJuOm1ieHBsYzpJazg",
+            "short_code": "gb"
+          }
+        ],
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -4.85443,
+            55.7592
+          ]
+        },
+        "relevance": 1,
+        "place_name": "83 Main Road, Fairlie, Largs, KA29 0AD, United Kingdom",
+        "place_type": [
+          "address"
+        ],
+        "properties": {
+          "accuracy": "rooftop",
+          "mapbox_id": "dXJuOm1ieGFkcjoyYmVlMjg3ZS0zY2ZjLTQ4ZmUtYmQ3My00ODBiNGNmNTkyMTg"
+        }
+      },
+      "email": "fairlielibrary@north-ayrshire.gov.uk",
+      "phone": "01475 568707",
+      "website": "https://north-ayrshire.spydus.co.uk/cgi-bin/spydus.exe/ENQ/WPAC/GENENQ/?LOCX=F",
+      "facilityOperated": "Facility Not Open",
+      "accessibility": [],
+      "createdAt": "2024-10-09T11:59:57.768Z",
+      "updatedAt": "2026-01-23T08:45:25.571Z",
+      "coLocatedWith": null,
+      "coLocated": [],
+      "notes": null,
+      "yearOpen": null,
+      "yearClosed": null,
+      "statutory": true,
+      "uprn": null,
+      "virtualTourUrl": null,
+      "virtualTourEmbed": null,
+      "streetAddress": "Main Road, Fairlie, Largs, Ayrshire, KA29 0AD",
+      "catalogue": null,
+      "joinOnline": null,
+      "tempClosedUntil": null,
+      "openingTimesNotes": null,
+      "contentUpdatedAt": "2026-01-23T08:45:25.571Z",
+      "ref": "gb:sct:north-ayrshire:fairlie-library",
+      "managingDepartment": null,
+      "isMobileLibrary": null,
+      "isNewBuild": null,
+      "permanentlyClosed": null,
+      "mobileLibraryTimetable": null,
+      "services": [
+        {
+          "id": 8,
+          "url": null,
+          "service": "Books"
+        },
+        {
+          "id": 9,
+          "url": null,
+          "service": "Printing"
+        },
+        {
+          "id": 11,
+          "url": null,
+          "service": "Free Wi-Fi"
+        }
+      ],
+      "social": [],
+      "authority": {
+        "data": {
+          "id": 122,
+          "attributes": {
+            "name": "North Ayrshire",
+            "slug": "north-ayrshire"
+          }
+        }
+      },
+      "occurrences": {
+        "data": []
+      }
+    }
+  },
+  "notOpenNoHours": {
+    "id": 5,
+    "attributes": {
+      "name": "Longniddry Library",
+      "slug": "longniddry-library",
+      "libraryID": "lib_a4a8d693-6b9f-4cee-8b48-6eeb05460368",
+      "openingTimes": {
+        "friday": {
+          "timeFrames": []
+        },
+        "monday": {
+          "timeFrames": []
+        },
+        "sunday": {
+          "timeFrames": []
+        },
+        "tuesday": {
+          "timeFrames": []
+        },
+        "saturday": {
+          "timeFrames": []
+        },
+        "thursday": {
+          "timeFrames": []
+        },
+        "wednesday": {
+          "timeFrames": []
+        },
+        "exceptions": []
+      },
+      "location": {
+        "id": "address.3805695281526530",
+        "text": "Church Way",
+        "type": "Feature",
+        "center": [
+          -2.89594,
+          55.97695
+        ],
+        "address": "6",
+        "context": [
+          {
+            "id": "postcode.3805695281526530",
+            "text": "EH32 0LW"
+          },
+          {
+            "id": "place.6981711",
+            "text": "Longniddry",
+            "wikidata": "Q1016963",
+            "mapbox_id": "dXJuOm1ieHBsYzphb2hQ"
+          },
+          {
+            "id": "district.509519",
+            "text": "East Lothian",
+            "wikidata": "Q207257",
+            "mapbox_id": "dXJuOm1ieHBsYzpCOFpQ"
+          },
+          {
+            "id": "region.17487",
+            "text": "Scotland",
+            "wikidata": "Q22",
+            "mapbox_id": "dXJuOm1ieHBsYzpSRTg",
+            "short_code": "GB-SCT"
+          },
+          {
+            "id": "country.8783",
+            "text": "United Kingdom",
+            "wikidata": "Q145",
+            "mapbox_id": "dXJuOm1ieHBsYzpJazg",
+            "short_code": "gb"
+          }
+        ],
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -2.89594,
+            55.97695
+          ]
+        },
+        "relevance": 1,
+        "place_name": "6 Church Way, Longniddry, EH32 0LW, United Kingdom",
+        "place_type": [
+          "address"
+        ],
+        "properties": {
+          "accuracy": "rooftop",
+          "mapbox_id": "dXJuOm1ieGFkcjo1MGY0MWQ3Ni1lODhiLTRlNjYtYmE0YS04YTZmNDJmMDA1OTM"
+        }
+      },
+      "email": null,
+      "phone": null,
+      "website": "http://www.eastlothian.gov.uk/info/200259/your_local_library/486/local_libraries_in_east_lothian/8",
+      "facilityOperated": "Facility Not Open",
+      "accessibility": [],
+      "createdAt": "2024-10-09T11:59:57.765Z",
+      "updatedAt": "2026-01-23T08:46:20.133Z",
+      "coLocatedWith": null,
+      "coLocated": [],
+      "notes": null,
+      "yearOpen": null,
+      "yearClosed": null,
+      "statutory": true,
+      "uprn": null,
+      "virtualTourUrl": null,
+      "virtualTourEmbed": null,
+      "streetAddress": null,
+      "catalogue": null,
+      "joinOnline": null,
+      "tempClosedUntil": null,
+      "openingTimesNotes": null,
+      "contentUpdatedAt": "2026-01-23T08:46:20.133Z",
+      "ref": "gb:sct:east-lothian:longniddry-library",
+      "managingDepartment": null,
+      "isMobileLibrary": null,
+      "isNewBuild": null,
+      "permanentlyClosed": null,
+      "mobileLibraryTimetable": null,
+      "services": [
+        {
+          "id": 5,
+          "url": null,
+          "service": "Books"
+        },
+        {
+          "id": 6,
+          "url": null,
+          "service": "Printing"
+        },
+        {
+          "id": 7,
+          "url": null,
+          "service": "Free Wi-Fi"
+        }
+      ],
+      "social": [],
+      "authority": {
+        "data": {
+          "id": 60,
+          "attributes": {
+            "name": "East Lothian",
+            "slug": "east-lothian"
+          }
+        }
+      },
+      "occurrences": {
+        "data": []
+      }
+    }
+  },
+  "closed": {
+    "id": 13,
+    "attributes": {
+      "name": "Fettercairn Library",
+      "slug": "fettercairn-library",
+      "libraryID": "lib_5130dbb0-8399-4bac-8e31-ddf3e0e8d623",
+      "openingTimes": {
+        "friday": {
+          "timeFrames": []
+        },
+        "monday": {
+          "timeFrames": []
+        },
+        "sunday": {
+          "timeFrames": []
+        },
+        "tuesday": {
+          "timeFrames": []
+        },
+        "saturday": {
+          "timeFrames": []
+        },
+        "thursday": {
+          "timeFrames": []
+        },
+        "wednesday": {
+          "timeFrames": []
+        },
+        "exceptions": []
+      },
+      "location": {
+        "id": "address.615713997710078",
+        "text": "School Road",
+        "type": "Feature",
+        "center": [
+          -2.57568,
+          56.85214
+        ],
+        "address": "9",
+        "context": [
+          {
+            "id": "postcode.615713997710078",
+            "text": "AB30 1TH"
+          },
+          {
+            "id": "locality.64981583",
+            "text": "Fettercairn",
+            "wikidata": "Q3070901",
+            "mapbox_id": "dXJuOm1ieHBsYzpBOStLVHc"
+          },
+          {
+            "id": "place.6342735",
+            "text": "Laurencekirk",
+            "mapbox_id": "dXJuOm1ieHBsYzpZTWhQ"
+          },
+          {
+            "id": "district.17999",
+            "text": "Aberdeenshire",
+            "wikidata": "Q189912",
+            "mapbox_id": "dXJuOm1ieHBsYzpSazg"
+          },
+          {
+            "id": "region.17487",
+            "text": "Scotland",
+            "wikidata": "Q22",
+            "mapbox_id": "dXJuOm1ieHBsYzpSRTg",
+            "short_code": "GB-SCT"
+          },
+          {
+            "id": "country.8783",
+            "text": "United Kingdom",
+            "wikidata": "Q145",
+            "mapbox_id": "dXJuOm1ieHBsYzpJazg",
+            "short_code": "gb"
+          }
+        ],
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -2.57568,
+            56.85214
+          ]
+        },
+        "relevance": 1,
+        "place_name": "9 School Road, Fettercairn, Laurencekirk, AB30 1TH, United Kingdom",
+        "place_type": [
+          "address"
+        ],
+        "properties": {
+          "accuracy": "rooftop",
+          "mapbox_id": "dXJuOm1ieGFkcjowMzJjMWUxNi05OWY0LTQ3MjYtYmFhYi1hYzdkOTQ4MmZjMjg"
+        }
+      },
+      "email": "fettercairn.libaberdeenshire.gov.uk",
+      "phone": "01561 340442",
+      "website": null,
+      "facilityOperated": "Closed",
+      "accessibility": [],
+      "createdAt": "2024-10-09T11:59:58.237Z",
+      "updatedAt": "2026-01-23T08:46:44.266Z",
+      "coLocatedWith": null,
+      "coLocated": [],
+      "notes": null,
+      "yearOpen": null,
+      "yearClosed": null,
+      "statutory": true,
+      "uprn": null,
+      "virtualTourUrl": null,
+      "virtualTourEmbed": null,
+      "streetAddress": null,
+      "catalogue": null,
+      "joinOnline": null,
+      "tempClosedUntil": null,
+      "openingTimesNotes": null,
+      "contentUpdatedAt": "2026-01-23T08:46:44.266Z",
+      "ref": "gb:sct:aberdeenshire:fettercairn-library",
+      "managingDepartment": null,
+      "isMobileLibrary": null,
+      "isNewBuild": null,
+      "permanentlyClosed": null,
+      "mobileLibraryTimetable": null,
+      "services": [
+        {
+          "id": 33,
+          "url": null,
+          "service": "Books"
+        },
+        {
+          "id": 34,
+          "url": null,
+          "service": "Printing"
+        },
+        {
+          "id": 32,
+          "url": null,
+          "service": "Free Wi-Fi"
+        }
+      ],
+      "social": [],
+      "authority": {
+        "data": {
+          "id": 3,
+          "attributes": {
+            "name": "Aberdeenshire",
+            "slug": "aberdeenshire"
+          }
+        }
+      },
+      "occurrences": {
+        "data": []
+      }
+    }
+  },
+  "tempClosure": {
+    "id": 173,
+    "attributes": {
+      "name": "Tiree Library",
+      "slug": "tiree-library",
+      "libraryID": "lib_26d9f38e-875b-4125-aedf-a22430b367ea",
+      "openingTimes": {
+        "friday": {
+          "timeFrames": []
+        },
+        "monday": {
+          "timeFrames": []
+        },
+        "sunday": {
+          "timeFrames": []
+        },
+        "tuesday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "17:00",
+              "startTime": "13:00"
+            }
+          ]
+        },
+        "saturday": {
+          "timeFrames": []
+        },
+        "thursday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "17:00",
+              "startTime": "13:00"
+            }
+          ]
+        },
+        "wednesday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "13:00",
+              "startTime": "09:00"
+            }
+          ]
+        },
+        "exceptions": []
+      },
+      "location": {
+        "id": "address.1183846328282066",
+        "text": "Machair",
+        "type": "Feature",
+        "center": [
+          -6.915609,
+          56.520199
+        ],
+        "context": [
+          {
+            "id": "postcode.9331846735",
+            "text": "PA77 6XA",
+            "mapbox_id": "dXJuOm1ieHBsYzpBaXc0cms4"
+          },
+          {
+            "id": "locality.44034639",
+            "text": "Cornaigmore",
+            "wikidata": "Q40851534",
+            "mapbox_id": "dXJuOm1ieHBsYzpBcC9xVHc"
+          },
+          {
+            "id": "place.5802063",
+            "text": "Isle of Tiree",
+            "mapbox_id": "dXJuOm1ieHBsYzpXSWhQ"
+          },
+          {
+            "id": "district.58959",
+            "text": "Argyll and Bute",
+            "wikidata": "Q202174",
+            "mapbox_id": "dXJuOm1ieHBsYzo1azg"
+          },
+          {
+            "id": "region.17487",
+            "text": "Scotland",
+            "wikidata": "Q22",
+            "mapbox_id": "dXJuOm1ieHBsYzpSRTg",
+            "short_code": "GB-SCT"
+          },
+          {
+            "id": "country.8783",
+            "text": "United Kingdom",
+            "wikidata": "Q145",
+            "mapbox_id": "dXJuOm1ieHBsYzpJazg",
+            "short_code": "gb"
+          }
+        ],
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -6.915609,
+            56.520199
+          ]
+        },
+        "relevance": 1,
+        "place_name": "Machair, Cornaigmore, Isle of Tiree, PA77 6XA, United Kingdom",
+        "place_type": [
+          "address"
+        ],
+        "properties": {
+          "accuracy": "street"
+        }
+      },
+      "email": "tireelibrary@liveargyll.co.uk",
+      "phone": "01436 657664",
+      "website": "https://liveargyll.co.uk/facility/tiree-library/",
+      "facilityOperated": "Temporary Closure",
+      "accessibility": [
+        "wheelchair-access",
+        "step-free-access",
+        "accessible-restrooms"
+      ],
+      "createdAt": "2024-10-09T12:00:12.978Z",
+      "updatedAt": "2026-01-23T08:56:36.431Z",
+      "coLocatedWith": null,
+      "coLocated": [],
+      "notes": null,
+      "yearOpen": null,
+      "yearClosed": null,
+      "statutory": true,
+      "uprn": null,
+      "virtualTourUrl": null,
+      "virtualTourEmbed": null,
+      "streetAddress": null,
+      "catalogue": null,
+      "joinOnline": null,
+      "tempClosedUntil": null,
+      "openingTimesNotes": null,
+      "contentUpdatedAt": "2026-01-23T08:56:36.431Z",
+      "ref": "gb:sct:argyll-and-bute:tiree-library",
+      "managingDepartment": null,
+      "isMobileLibrary": null,
+      "isNewBuild": null,
+      "permanentlyClosed": null,
+      "mobileLibraryTimetable": null,
+      "services": [
+        {
+          "id": 512,
+          "url": null,
+          "service": "Books"
+        },
+        {
+          "id": 514,
+          "url": null,
+          "service": "Printing"
+        },
+        {
+          "id": 513,
+          "url": null,
+          "service": "Free Wi-Fi"
+        }
+      ],
+      "social": [],
+      "authority": {
+        "data": {
+          "id": 5,
+          "attributes": {
+            "name": "Argyll and Bute",
+            "slug": "argyll-and-bute"
+          }
+        }
+      },
+      "occurrences": {
+        "data": []
+      }
+    }
+  },
+  "permClosedFlag": {
+    "id": 394,
+    "attributes": {
+      "name": "Barmulloch Library",
+      "slug": "barmulloch-library",
+      "libraryID": "lib_e5912bde-ca1d-450a-b89c-d010f12671e1",
+      "openingTimes": {
+        "friday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "17:00",
+              "startTime": "10:00"
+            }
+          ]
+        },
+        "monday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "20:00",
+              "startTime": "13:00"
+            }
+          ]
+        },
+        "sunday": {
+          "timeFrames": []
+        },
+        "tuesday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "17:00",
+              "startTime": "10:00"
+            }
+          ]
+        },
+        "saturday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "17:00",
+              "startTime": "10:00"
+            }
+          ]
+        },
+        "thursday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "17:00",
+              "startTime": "10:00"
+            }
+          ]
+        },
+        "wednesday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "20:00",
+              "startTime": "13:00"
+            }
+          ]
+        }
+      },
+      "location": {
+        "id": "address.1561889914908728",
+        "text": "Wallacewell Quadrant",
+        "type": "Feature",
+        "center": [
+          -4.20168,
+          55.89078
+        ],
+        "address": "61",
+        "context": [
+          {
+            "id": "postcode.1561889914908728",
+            "text": "G21 3PX"
+          },
+          {
+            "id": "place.4474959",
+            "text": "Glasgow",
+            "wikidata": "Q4093",
+            "mapbox_id": "dXJuOm1ieHBsYzpSRWhQ"
+          },
+          {
+            "id": "district.575055",
+            "text": "Glasgow City",
+            "wikidata": "Q4093",
+            "mapbox_id": "dXJuOm1ieHBsYzpDTVpQ"
+          },
+          {
+            "id": "region.17487",
+            "text": "Scotland",
+            "wikidata": "Q22",
+            "mapbox_id": "dXJuOm1ieHBsYzpSRTg",
+            "short_code": "GB-SCT"
+          },
+          {
+            "id": "country.8783",
+            "text": "United Kingdom",
+            "wikidata": "Q145",
+            "mapbox_id": "dXJuOm1ieHBsYzpJazg",
+            "short_code": "gb"
+          }
+        ],
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -4.20168,
+            55.89078
+          ]
+        },
+        "relevance": 1,
+        "place_name": "61 Wallacewell Quadrant, Glasgow, G21 3PX, United Kingdom",
+        "place_type": [
+          "address"
+        ],
+        "properties": {
+          "accuracy": "rooftop",
+          "mapbox_id": "dXJuOm1ieGFkcjo5YTI2ZDMwZi01MTA4LTRkZDYtYjllYi04YTcyODUxYzY2ZWE"
+        }
+      },
+      "email": "libraries@glasgowlife.org.uk",
+      "phone": "0141 276 0875",
+      "website": "http://www.glasgowlife.org.uk/libraries/your-local-library/barmulloch-library/Pages/home.aspx",
+      "facilityOperated": "Local Authority Run",
+      "accessibility": [],
+      "createdAt": "2024-10-09T12:00:28.678Z",
+      "updatedAt": "2026-06-03T13:03:56.515Z",
+      "coLocatedWith": null,
+      "coLocated": [],
+      "notes": null,
+      "yearOpen": null,
+      "yearClosed": null,
+      "statutory": true,
+      "uprn": null,
+      "virtualTourUrl": null,
+      "virtualTourEmbed": null,
+      "streetAddress": "Wallacewell Quadrant, Glasgow, G21 3PX",
+      "catalogue": null,
+      "joinOnline": null,
+      "tempClosedUntil": null,
+      "openingTimesNotes": null,
+      "contentUpdatedAt": "2026-06-03T13:03:56.515Z",
+      "ref": "gb:sct:glasgow-city:barmulloch-library",
+      "managingDepartment": null,
+      "isMobileLibrary": null,
+      "isNewBuild": null,
+      "permanentlyClosed": true,
+      "mobileLibraryTimetable": null,
+      "services": [
+        {
+          "id": 1179,
+          "url": null,
+          "service": "Books"
+        },
+        {
+          "id": 1178,
+          "url": null,
+          "service": "Printing"
+        },
+        {
+          "id": 1180,
+          "url": null,
+          "service": "Free Wi-Fi"
+        },
+        {
+          "id": 16795,
+          "url": "https://www.bfi.org.uk/bfi-replay",
+          "service": "BFI Replay"
+        },
+        {
+          "id": 31583,
+          "url": null,
+          "service": "British Newspaper Archive"
+        },
+        {
+          "id": 31584,
+          "url": null,
+          "service": "Findmypast"
+        }
+      ],
+      "social": [],
+      "authority": {
+        "data": {
+          "id": 70,
+          "attributes": {
+            "name": "Glasgow City",
+            "slug": "glasgow-city"
+          }
+        }
+      },
+      "occurrences": {
+        "data": []
+      }
+    }
+  },
+  "communityRun": {
+    "id": 26,
+    "attributes": {
+      "name": "Insch Library",
+      "slug": "insch-library",
+      "libraryID": "lib_072d0c5e-fd7e-4bdb-a9e3-466a8219536f",
+      "openingTimes": {
+        "friday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "17:00",
+              "startTime": "14:00"
+            }
+          ]
+        },
+        "monday": {
+          "timeFrames": []
+        },
+        "sunday": {
+          "timeFrames": []
+        },
+        "tuesday": {
+          "timeFrames": [
+            {
+              "type": "Staffed",
+              "endTime": "17:00",
+              "startTime": "15:00"
+            }
+          ]
+        },
+        "saturday": {
+          "timeFrames": []
+        },
+        "thursday": {
+          "timeFrames": []
+        },
+        "wednesday": {
+          "timeFrames": []
+        },
+        "exceptions": []
+      },
+      "location": {
+        "id": "address.8349505917754294",
+        "text": "Rannes Street",
+        "type": "Feature",
+        "center": [
+          -2.61202,
+          57.3409
+        ],
+        "address": "20",
+        "context": [
+          {
+            "id": "postcode.8349505917754294",
+            "text": "AB52 6JJ"
+          },
+          {
+            "id": "place.5556303",
+            "text": "Insch",
+            "wikidata": "Q987782",
+            "mapbox_id": "dXJuOm1ieHBsYzpWTWhQ"
+          },
+          {
+            "id": "district.17999",
+            "text": "Aberdeenshire",
+            "wikidata": "Q189912",
+            "mapbox_id": "dXJuOm1ieHBsYzpSazg"
+          },
+          {
+            "id": "region.17487",
+            "text": "Scotland",
+            "wikidata": "Q22",
+            "mapbox_id": "dXJuOm1ieHBsYzpSRTg",
+            "short_code": "GB-SCT"
+          },
+          {
+            "id": "country.8783",
+            "text": "United Kingdom",
+            "wikidata": "Q145",
+            "mapbox_id": "dXJuOm1ieHBsYzpJazg",
+            "short_code": "gb"
+          }
+        ],
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -2.61202,
+            57.3409
+          ]
+        },
+        "relevance": 1,
+        "place_name": "20 Rannes Street, Insch, AB52 6JJ, United Kingdom",
+        "place_type": [
+          "address"
+        ],
+        "properties": {
+          "accuracy": "rooftop",
+          "mapbox_id": "dXJuOm1ieGFkcjoyMDBjMWI5Mi02YjU3LTQ2ZjQtOTRmZC1kZDJkYjliNGJkYjM"
+        }
+      },
+      "email": "insch.library@aberdeenshire.gov.uk",
+      "phone": "01464 635190",
+      "website": "https://www.livelifeaberdeenshire.org.uk/libraries/local-libraries/insch-library/",
+      "facilityOperated": "Community Run",
+      "accessibility": [],
+      "createdAt": "2024-10-09T11:59:59.615Z",
+      "updatedAt": "2026-01-23T08:46:42.915Z",
+      "coLocatedWith": null,
+      "coLocated": [],
+      "notes": null,
+      "yearOpen": null,
+      "yearClosed": null,
+      "statutory": true,
+      "uprn": null,
+      "virtualTourUrl": null,
+      "virtualTourEmbed": null,
+      "streetAddress": null,
+      "catalogue": null,
+      "joinOnline": null,
+      "tempClosedUntil": null,
+      "openingTimesNotes": null,
+      "contentUpdatedAt": "2026-01-23T08:46:42.915Z",
+      "ref": "gb:sct:aberdeenshire:insch-library",
+      "managingDepartment": null,
+      "isMobileLibrary": null,
+      "isNewBuild": null,
+      "permanentlyClosed": null,
+      "mobileLibraryTimetable": null,
+      "services": [
+        {
+          "id": 74,
+          "url": null,
+          "service": "Books"
+        },
+        {
+          "id": 75,
+          "url": null,
+          "service": "Printing"
+        },
+        {
+          "id": 76,
+          "url": null,
+          "service": "Free Wi-Fi"
+        }
+      ],
+      "social": [],
+      "authority": {
+        "data": {
+          "id": 3,
+          "attributes": {
+            "name": "Aberdeenshire",
+            "slug": "aberdeenshire"
+          }
+        }
+      },
+      "occurrences": {
+        "data": []
+      }
+    }
+  },
+  "badEmail": {
+    "id": 13,
+    "attributes": {
+      "name": "Fettercairn Library",
+      "slug": "fettercairn-library",
+      "libraryID": "lib_5130dbb0-8399-4bac-8e31-ddf3e0e8d623",
+      "openingTimes": {
+        "friday": {
+          "timeFrames": []
+        },
+        "monday": {
+          "timeFrames": []
+        },
+        "sunday": {
+          "timeFrames": []
+        },
+        "tuesday": {
+          "timeFrames": []
+        },
+        "saturday": {
+          "timeFrames": []
+        },
+        "thursday": {
+          "timeFrames": []
+        },
+        "wednesday": {
+          "timeFrames": []
+        },
+        "exceptions": []
+      },
+      "location": {
+        "id": "address.615713997710078",
+        "text": "School Road",
+        "type": "Feature",
+        "center": [
+          -2.57568,
+          56.85214
+        ],
+        "address": "9",
+        "context": [
+          {
+            "id": "postcode.615713997710078",
+            "text": "AB30 1TH"
+          },
+          {
+            "id": "locality.64981583",
+            "text": "Fettercairn",
+            "wikidata": "Q3070901",
+            "mapbox_id": "dXJuOm1ieHBsYzpBOStLVHc"
+          },
+          {
+            "id": "place.6342735",
+            "text": "Laurencekirk",
+            "mapbox_id": "dXJuOm1ieHBsYzpZTWhQ"
+          },
+          {
+            "id": "district.17999",
+            "text": "Aberdeenshire",
+            "wikidata": "Q189912",
+            "mapbox_id": "dXJuOm1ieHBsYzpSazg"
+          },
+          {
+            "id": "region.17487",
+            "text": "Scotland",
+            "wikidata": "Q22",
+            "mapbox_id": "dXJuOm1ieHBsYzpSRTg",
+            "short_code": "GB-SCT"
+          },
+          {
+            "id": "country.8783",
+            "text": "United Kingdom",
+            "wikidata": "Q145",
+            "mapbox_id": "dXJuOm1ieHBsYzpJazg",
+            "short_code": "gb"
+          }
+        ],
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -2.57568,
+            56.85214
+          ]
+        },
+        "relevance": 1,
+        "place_name": "9 School Road, Fettercairn, Laurencekirk, AB30 1TH, United Kingdom",
+        "place_type": [
+          "address"
+        ],
+        "properties": {
+          "accuracy": "rooftop",
+          "mapbox_id": "dXJuOm1ieGFkcjowMzJjMWUxNi05OWY0LTQ3MjYtYmFhYi1hYzdkOTQ4MmZjMjg"
+        }
+      },
+      "email": "fettercairn.libaberdeenshire.gov.uk",
+      "phone": "01561 340442",
+      "website": null,
+      "facilityOperated": "Closed",
+      "accessibility": [],
+      "createdAt": "2024-10-09T11:59:58.237Z",
+      "updatedAt": "2026-01-23T08:46:44.266Z",
+      "coLocatedWith": null,
+      "coLocated": [],
+      "notes": null,
+      "yearOpen": null,
+      "yearClosed": null,
+      "statutory": true,
+      "uprn": null,
+      "virtualTourUrl": null,
+      "virtualTourEmbed": null,
+      "streetAddress": null,
+      "catalogue": null,
+      "joinOnline": null,
+      "tempClosedUntil": null,
+      "openingTimesNotes": null,
+      "contentUpdatedAt": "2026-01-23T08:46:44.266Z",
+      "ref": "gb:sct:aberdeenshire:fettercairn-library",
+      "managingDepartment": null,
+      "isMobileLibrary": null,
+      "isNewBuild": null,
+      "permanentlyClosed": null,
+      "mobileLibraryTimetable": null,
+      "services": [
+        {
+          "id": 33,
+          "url": null,
+          "service": "Books"
+        },
+        {
+          "id": 34,
+          "url": null,
+          "service": "Printing"
+        },
+        {
+          "id": 32,
+          "url": null,
+          "service": "Free Wi-Fi"
+        }
+      ],
+      "social": [],
+      "authority": {
+        "data": {
+          "id": 3,
+          "attributes": {
+            "name": "Aberdeenshire",
+            "slug": "aberdeenshire"
+          }
+        }
+      },
+      "occurrences": {
+        "data": []
+      }
+    }
+  }
+}

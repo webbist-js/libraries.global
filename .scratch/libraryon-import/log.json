@@ -1,0 +1,883 @@
+[
+  {
+    "libraryOnId": 4,
+    "ref": "gb:sct:glasgow-city:pollokshaws-library",
+    "name": "Pollokshaws Library",
+    "at": "2026-09-26T01:40:32.701Z",
+    "slug": "pollokshaws-library",
+    "documentId": "ntaqr6i57q04b8l249x17atu",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 5,
+    "ref": "gb:sct:east-lothian:longniddry-library",
+    "name": "Longniddry Library",
+    "at": "2026-09-26T01:41:58.768Z",
+    "slug": "longniddry-library",
+    "documentId": "bhjlykr9i8aevihezhm3jsca",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 6,
+    "ref": "gb:sct:aberdeenshire:ellon-library",
+    "name": "Ellon Library",
+    "at": "2026-09-26T01:42:00.587Z",
+    "slug": "ellon-library",
+    "documentId": "vtdqwcns5pvqorroudazwcmd",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 7,
+    "ref": "gb:sct:north-ayrshire:fairlie-library",
+    "name": "Fairlie Library",
+    "at": "2026-09-26T01:42:02.595Z",
+    "slug": "fairlie-library",
+    "documentId": "gnyxc2xe5qozyg3yyn2b8wny",
+    "status": "updated"
+  },
+  {
+    "libraryOnId": 8,
+    "ref": "gb:sct:angus:arbroath-library",
+    "name": "Arbroath Library",
+    "at": "2026-09-26T01:42:04.317Z",
+    "slug": "arbroath-library",
+    "documentId": "pj2ramx3c0nocqj57hpohuas",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 9,
+    "ref": "gb:sct:east-lothian:musselburgh-library",
+    "name": "Musselburgh Library",
+    "at": "2026-09-26T01:42:06.110Z",
+    "slug": "musselburgh-library",
+    "documentId": "i5e57c6i00po9eslrylk5r6m",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 10,
+    "ref": "gb:sct:glasgow-city:pollokshields-library",
+    "name": "Pollokshields Library",
+    "at": "2026-09-26T01:42:07.501Z",
+    "slug": "pollokshields-library",
+    "documentId": "rvlvgi2jl8dzps5sz58ruclb",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 11,
+    "ref": "gb:sct:angus:brechin-library",
+    "name": "Brechin Library",
+    "at": "2026-09-26T01:42:09.137Z",
+    "slug": "brechin-library",
+    "documentId": "b68bzvpyszcwi0ogzcq8beoi",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 12,
+    "ref": "gb:sct:north-ayrshire:irvine-library",
+    "name": "Irvine Library",
+    "at": "2026-09-26T01:42:10.599Z",
+    "slug": "irvine-library",
+    "documentId": "j0nwpvlgkzluvno59d3mr7b8",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 13,
+    "ref": "gb:sct:aberdeenshire:fettercairn-library",
+    "name": "Fettercairn Library",
+    "at": "2026-09-26T01:42:12.489Z",
+    "slug": "fettercairn-library",
+    "documentId": "y9b9ukp7aq7ztmnky5q0f97s",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 14,
+    "ref": "gb:sct:angus:carnoustie-library",
+    "name": "Carnoustie Library",
+    "at": "2026-09-26T01:42:14.036Z",
+    "slug": "carnoustie-library",
+    "documentId": "l13rq0eaqev8xizepeqm10id",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 15,
+    "ref": "gb:sct:glasgow-city:possilpark-library",
+    "name": "Possilpark Library",
+    "at": "2026-09-26T01:42:15.862Z",
+    "slug": "possilpark-library",
+    "documentId": "ac67l573m40iayv5dv6zwdi2",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 16,
+    "ref": "gb:sct:east-lothian:north-berwick-library",
+    "name": "North Berwick Library",
+    "at": "2026-09-26T01:42:17.128Z",
+    "slug": "north-berwick-library",
+    "documentId": "nsnzsz9m84bdyudda2o1funi",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 17,
+    "ref": "gb:sct:aberdeenshire:fraserburgh-library",
+    "name": "Fraserburgh Library",
+    "at": "2026-09-26T01:42:18.704Z",
+    "slug": "fraserburgh-library",
+    "documentId": "q8avhhcjoehqsxukh0lo2gfc",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 18,
+    "ref": "gb:sct:north-ayrshire:kilbirnie-library",
+    "name": "Kilbirnie Library",
+    "at": "2026-09-26T01:42:20.022Z",
+    "slug": "kilbirnie-library",
+    "documentId": "o8l8x0iwcwthmi7zeq5ta62v",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 19,
+    "ref": "gb:sct:angus:kirriemuir-library",
+    "name": "Kirriemuir Library",
+    "at": "2026-09-26T01:42:21.619Z",
+    "slug": "kirriemuir-library",
+    "documentId": "x8d871ab9iv9p4sf2t6wq754",
+    "status": "updated"
+  },
+  {
+    "libraryOnId": 20,
+    "ref": "gb:sct:glasgow-city:riddrie-library",
+    "name": "Riddrie Library",
+    "at": "2026-09-26T01:42:23.226Z",
+    "slug": "riddrie-library",
+    "documentId": "sb8gsitzes3dl0chg6mpy9mo",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 21,
+    "ref": "gb:sct:east-lothian:prestonpans-library",
+    "name": "Prestonpans Library",
+    "at": "2026-09-26T01:42:24.865Z",
+    "slug": "prestonpans-library",
+    "documentId": "oakh5a8dkf2sqvpc3pwqgo4p",
+    "status": "updated"
+  },
+  {
+    "libraryOnId": 22,
+    "ref": "gb:sct:aberdeenshire:huntly-library",
+    "name": "Huntly Library",
+    "at": "2026-09-26T01:42:26.524Z",
+    "slug": "huntly-library",
+    "documentId": "pwje1vop0jrdc0j9cg6podh8",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 23,
+    "ref": "gb:sct:north-ayrshire:kilwinning-library",
+    "name": "Kilwinning Library",
+    "at": "2026-09-26T01:42:27.883Z",
+    "slug": "kilwinning-library",
+    "documentId": "tk2grvkdz2dasxledn0mibwt",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 24,
+    "ref": "gb:sct:glasgow-city:royston-library",
+    "name": "Royston Library",
+    "at": "2026-09-26T01:42:29.463Z",
+    "slug": "royston-library",
+    "documentId": "cmi5ewj6q36qbfe73g3yirrs",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 25,
+    "ref": "gb:sct:angus:monifieth-library",
+    "name": "Monifieth Library",
+    "at": "2026-09-26T01:42:31.002Z",
+    "slug": "monifieth-library",
+    "documentId": "scbbdohnmdnjgr70idyzquav",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 26,
+    "ref": "gb:sct:aberdeenshire:insch-library",
+    "name": "Insch Library",
+    "at": "2026-09-26T01:42:32.599Z",
+    "slug": "insch-library",
+    "documentId": "fxg085pae0xgnpbjm5zbb7dh",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 27,
+    "ref": "gb:sct:east-lothian:tranent-library",
+    "name": "Tranent Library",
+    "at": "2026-09-26T01:42:33.979Z",
+    "slug": "tranent-library",
+    "documentId": "zlkcyn51ajs03l9pywvci20s",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 28,
+    "ref": "gb:sct:north-ayrshire:largs-library",
+    "name": "Largs Library",
+    "at": "2026-09-26T01:42:35.614Z",
+    "slug": "largs-library",
+    "documentId": "uxx23ga62n2jvcki5fy5888f",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 29,
+    "ref": "gb:sct:glasgow-city:shettleston-library",
+    "name": "Shettleston Library",
+    "at": "2026-09-26T01:42:36.837Z",
+    "slug": "shettleston-library",
+    "documentId": "hkcgxp772h8kpoeq8iioo3et",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 30,
+    "ref": "gb:sct:angus:montrose-library",
+    "name": "Montrose Library",
+    "at": "2026-09-26T01:42:38.610Z",
+    "slug": "montrose-library",
+    "documentId": "c56egqt9omcbwmrd224xl3tf",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 31,
+    "ref": "gb:sct:aberdeenshire:inverbervie-library",
+    "name": "Inverbervie Library",
+    "at": "2026-09-26T01:42:40.093Z",
+    "slug": "inverbervie-library",
+    "documentId": "z733z14pr9ay3q17t0tyvxb5",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 32,
+    "ref": "gb:sct:east-lothian:wallyford-library",
+    "name": "Wallyford Library",
+    "at": "2026-09-26T01:42:41.836Z",
+    "slug": "wallyford-library",
+    "documentId": "ytthn11q7jg1hxz88ffo9aip",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 33,
+    "ref": "gb:sct:north-ayrshire:millport-library",
+    "name": "Millport Library",
+    "at": "2026-09-26T01:42:43.233Z",
+    "slug": "millport-library",
+    "documentId": "tfzn7h1g2qiuyw0dtyo8g1ay",
+    "status": "updated"
+  },
+  {
+    "libraryOnId": 34,
+    "ref": "gb:sct:glasgow-city:springburn-library",
+    "name": "Springburn Library",
+    "at": "2026-09-26T01:42:45.077Z",
+    "slug": "springburn-library",
+    "documentId": "xeqsskdnwa0oegnp8jl400s6",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 35,
+    "ref": "gb:sct:aberdeenshire:inverurie-library",
+    "name": "Inverurie Library",
+    "at": "2026-09-26T01:42:46.612Z",
+    "slug": "inverurie-library",
+    "documentId": "vf3r1wz85lyspernvo0uke52",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 36,
+    "ref": "gb:sct:dundee-city:ardler-community-library",
+    "name": "Ardler Community Library",
+    "at": "2026-09-26T01:42:48.966Z",
+    "slug": "ardler-community-library",
+    "documentId": "o2amqlkm9bkjsbemuyueurye",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 37,
+    "ref": "gb:sct:east-renfrewshire:barrhead-foundry-library",
+    "name": "Barrhead Foundry Library",
+    "at": "2026-09-26T01:42:50.869Z",
+    "slug": "barrhead-foundry-library",
+    "documentId": "a8nsp4jsnz8nclzbegbr5xvn",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 38,
+    "ref": "gb:sct:north-ayrshire:saltcoats-library",
+    "name": "Saltcoats Library",
+    "at": "2026-09-26T01:42:53.602Z",
+    "slug": "saltcoats-library",
+    "documentId": "avdwz8w7dbnve24zl1euwixc",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 39,
+    "ref": "gb:sct:glasgow-city:whiteinch-library",
+    "name": "Whiteinch Library",
+    "at": "2026-09-26T01:42:55.305Z",
+    "slug": "whiteinch-library",
+    "documentId": "wc9joo31l8yw89zhe3vltz64",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 40,
+    "ref": "gb:sct:aberdeenshire:kemnay-library",
+    "name": "Kemnay Library",
+    "at": "2026-09-26T01:42:57.240Z",
+    "slug": "kemnay-library",
+    "documentId": "rz6rseyetlf9d8aqwdnr6dzr",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 41,
+    "ref": "gb:sct:east-renfrewshire:busby-library",
+    "name": "Busby Library",
+    "at": "2026-09-26T01:42:58.666Z",
+    "slug": "busby-library",
+    "documentId": "k8gf7z29oymnr545a2ray425",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 42,
+    "ref": "gb:sct:dundee-city:arthurstone-community-library",
+    "name": "Arthurstone Community Library",
+    "at": "2026-09-26T01:43:00.897Z",
+    "slug": "arthurstone-community-library",
+    "documentId": "m3o7h2yrnuskpwco4nyh0vwc",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 43,
+    "ref": "gb:sct:north-ayrshire:skelmorlie-library",
+    "name": "Skelmorlie Library",
+    "at": "2026-09-26T01:43:02.522Z",
+    "slug": "skelmorlie-library",
+    "documentId": "dkrj8jah4cvo98lzitccq1fl",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 44,
+    "ref": "gb:sct:aberdeenshire:kintore-library",
+    "name": "Kintore Library",
+    "at": "2026-09-26T01:43:04.200Z",
+    "slug": "kintore-library",
+    "documentId": "h5lt0qhbjxnz0z4dhvi7oduf",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 45,
+    "ref": "gb:sct:glasgow-city:woodside-library",
+    "name": "Woodside Library",
+    "at": "2026-09-26T01:43:05.932Z",
+    "slug": "woodside-library",
+    "documentId": "hde06zsk0fypkss9kvi1za7x",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 46,
+    "ref": "gb:sct:dundee-city:blackness-community-library",
+    "name": "Blackness Community Library",
+    "at": "2026-09-26T01:43:07.805Z",
+    "slug": "blackness-community-library",
+    "documentId": "itcmxasfx8p59f6nysfuxqe2",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 47,
+    "ref": "gb:sct:east-renfrewshire:clarkston-library",
+    "name": "Clarkston Library",
+    "at": "2026-09-26T01:43:09.941Z",
+    "slug": "clarkston-library",
+    "documentId": "pg0nod8lcscydqaiznwljwti",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 48,
+    "ref": "gb:sct:east-ayrshire:springside-library",
+    "name": "Springside Library",
+    "at": "2026-09-26T01:43:11.680Z",
+    "slug": "springside-library",
+    "documentId": "f0z0cwrx0icf6eyk6xa09dg3",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 49,
+    "ref": "gb:sct:north-lanarkshire:abronhill-library",
+    "name": "Abronhill Library",
+    "at": "2026-09-26T01:43:13.614Z",
+    "slug": "abronhill-library",
+    "documentId": "d4gw30empoyne8wqi7ywnumf",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 50,
+    "ref": "gb:sct:aberdeenshire:macduff-library",
+    "name": "Macduff Library",
+    "at": "2026-09-26T01:43:15.627Z",
+    "slug": "macduff-library",
+    "documentId": "m7gphnijlkfsf5kfydlpz9y5",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 51,
+    "ref": "gb:sct:dundee-city:broughty-ferry-community-library",
+    "name": "Broughty Ferry Community Library",
+    "at": "2026-09-26T01:43:19.144Z",
+    "slug": "broughty-ferry-community-library",
+    "documentId": "bisz9fx5r4q2twbr3j3xaw3l",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 52,
+    "ref": "gb:sct:north-ayrshire:stevenston-library",
+    "name": "Stevenston Library",
+    "at": "2026-09-26T01:43:21.727Z",
+    "slug": "stevenston-library",
+    "documentId": "ib57v8tjs917x7qhueiypm44",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 53,
+    "ref": "gb:sct:east-renfrewshire:eaglesham-library",
+    "name": "Eaglesham Library",
+    "at": "2026-09-26T01:43:24.073Z",
+    "slug": "eaglesham-library",
+    "documentId": "skoruim3xttkrwep5dto9t7m",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 54,
+    "ref": "gb:sct:north-lanarkshire:airdrie-library",
+    "name": "Airdrie Library",
+    "at": "2026-09-26T01:43:25.648Z",
+    "slug": "airdrie-library",
+    "documentId": "difl5ufmesgw7s2n6wv8g6xm",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 55,
+    "ref": "gb:sct:aberdeenshire:mearns-community-campus-library",
+    "name": "Mearns Community Campus Library",
+    "at": "2026-09-26T01:43:27.325Z",
+    "slug": "mearns-community-campus-library",
+    "documentId": "awoefdhqqmn614e6zhw6h531",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 56,
+    "ref": "gb:sct:dundee-city:charleston-community-library",
+    "name": "Charleston Community Library",
+    "at": "2026-09-26T01:43:28.582Z",
+    "slug": "charleston-community-library",
+    "documentId": "c4kiq2mh3sz0zrgkbiq79jev",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 57,
+    "ref": "gb:sct:north-ayrshire:west-kilbride-library",
+    "name": "West Kilbride Library",
+    "at": "2026-09-26T01:43:30.550Z",
+    "slug": "west-kilbride-library",
+    "documentId": "d1z4klbe9oc7d3lddrw6o813",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 58,
+    "ref": "gb:sct:east-renfrewshire:giffnock-library",
+    "name": "Giffnock Library",
+    "at": "2026-09-26T01:43:31.982Z",
+    "slug": "giffnock-library",
+    "documentId": "aqz40unjq0rr00xmq71bet9l",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 59,
+    "ref": "gb:sct:north-lanarkshire:bellshill-cultural-centre-library",
+    "name": "Bellshill Cultural Centre Library",
+    "at": "2026-09-26T01:43:33.728Z",
+    "slug": "bellshill-cultural-centre-library",
+    "documentId": "tvsmby2pcvdi0os7m6ywupf9",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 60,
+    "ref": "gb:sct:aberdeenshire:oldmeldrum-library",
+    "name": "Oldmeldrum Library",
+    "at": "2026-09-26T01:43:35.029Z",
+    "slug": "oldmeldrum-library",
+    "documentId": "vfvw4r3xb25a1tyjzhgo6j9o",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 61,
+    "ref": "gb:sct:dundee-city:coldside-community-library",
+    "name": "Coldside Community Library",
+    "at": "2026-09-26T01:43:37.361Z",
+    "slug": "coldside-community-library",
+    "documentId": "ed3ypsweb1njcd2c80nidetj",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 62,
+    "ref": "gb:sct:east-renfrewshire:mearns-library",
+    "name": "Mearns Library",
+    "at": "2026-09-26T01:43:38.733Z",
+    "slug": "mearns-library",
+    "documentId": "i4kbv61sfsgz2f9vopk5bx58",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 63,
+    "ref": "gb:sct:orkney-islands:kirkwall-library",
+    "name": "Kirkwall Library",
+    "at": "2026-09-26T01:43:40.844Z",
+    "slug": "kirkwall-library",
+    "documentId": "fa48rgjndcrxg9jzmcj4rgne",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 64,
+    "ref": "gb:sct:north-lanarkshire:chapelhall-library",
+    "name": "Chapelhall Library",
+    "at": "2026-09-26T01:43:42.340Z",
+    "slug": "chapelhall-library",
+    "documentId": "doxfynkqlt4ugzsr1goqeuld",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 65,
+    "ref": "gb:sct:aberdeenshire:mintlaw-library",
+    "name": "Mintlaw Library",
+    "at": "2026-09-26T01:43:44.088Z",
+    "slug": "mintlaw-library",
+    "documentId": "ns6y2ine89oxgdhqyeihgvzd",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 66,
+    "ref": "gb:sct:east-renfrewshire:neilston-library",
+    "name": "Neilston Library",
+    "at": "2026-09-26T01:43:45.324Z",
+    "slug": "neilston-library",
+    "documentId": "g1jv4bx09ug0u8hej9g5tp82",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 67,
+    "ref": "gb:sct:dundee-city:douglas-community-library-",
+    "name": "Douglas Community Library",
+    "at": "2026-09-26T01:43:46.922Z",
+    "slug": "douglas-community-library-",
+    "documentId": "nqgj0nk4gin2n1j4mk80zhro",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 68,
+    "ref": "gb:sct:orkney-islands:stromness-library",
+    "name": "Stromness Library",
+    "at": "2026-09-26T01:43:48.129Z",
+    "slug": "stromness-library",
+    "documentId": "eqcv9ssnhbona2dbj8vl4ga7",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 69,
+    "ref": "gb:sct:aberdeenshire:newmachar-library",
+    "name": "Newmachar Library",
+    "at": "2026-09-26T01:43:49.903Z",
+    "slug": "newmachar-library",
+    "documentId": "clq24eux3ts314lf5wx53hls",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 70,
+    "ref": "gb:sct:north-lanarkshire:chryston-library",
+    "name": "Chryston Library",
+    "at": "2026-09-26T01:43:51.288Z",
+    "slug": "chryston-library",
+    "documentId": "pcssusu76hm5qq1pmipk2yp5",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 71,
+    "ref": "gb:sct:east-renfrewshire:netherlee-library",
+    "name": "Netherlee Library",
+    "at": "2026-09-26T01:43:52.883Z",
+    "slug": "netherlee-library",
+    "documentId": "fe4a1l0g1h47kghlgdepq9wk",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 72,
+    "ref": "gb:sct:dundee-city:dundee-central-library",
+    "name": "Dundee Central Library",
+    "at": "2026-09-26T01:43:54.865Z",
+    "slug": "dundee-central-library",
+    "documentId": "w6tz66i6liothdea12407b1q",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 73,
+    "ref": "gb:sct:scottish-borders:coldstream-library-contact-centre",
+    "name": "Coldstream Library Contact Centre",
+    "at": "2026-09-26T01:43:57.360Z",
+    "slug": "coldstream-library-contact-centre",
+    "documentId": "nxuhfcuph808qt5guju7ni9r",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 74,
+    "ref": "gb:sct:aberdeenshire:new-pitsligo-library",
+    "name": "New Pitsligo Library",
+    "at": "2026-09-26T01:43:58.920Z",
+    "slug": "new-pitsligo-library",
+    "documentId": "j67v7dy25p09htu6he804r6d",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 75,
+    "ref": "gb:sct:north-lanarkshire:cleland-library",
+    "name": "Cleland Library",
+    "at": "2026-09-26T01:44:01.365Z",
+    "slug": "cleland-library",
+    "documentId": "rs3fc0247x5nuvu6y7gdbcjr",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 76,
+    "ref": "gb:sct:east-renfrewshire:thornliebank-library",
+    "name": "Thornliebank Library",
+    "at": "2026-09-26T01:44:03.142Z",
+    "slug": "thornliebank-library",
+    "documentId": "ku0ril72pxrq6n41kd4yz6x0",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 77,
+    "ref": "gb:sct:dundee-city:fintry-community-library",
+    "name": "Fintry Community Library",
+    "at": "2026-09-26T01:44:04.838Z",
+    "slug": "fintry-community-library",
+    "documentId": "oosdx2okgux5das2rq8x5ps9",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 78,
+    "ref": "gb:sct:scottish-borders:duns-library-contact-centre",
+    "name": "Duns Library Contact Centre",
+    "at": "2026-09-26T01:44:07.800Z",
+    "slug": "duns-library-contact-centre",
+    "documentId": "gw6zvqezl25amb6e2lww6366",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 79,
+    "ref": "gb:sct:aberdeenshire:newtonhill-library",
+    "name": "Newtonhill Library",
+    "at": "2026-09-26T01:44:09.695Z",
+    "slug": "newtonhill-library",
+    "documentId": "ox7w5cyfzj82nmj9fz8ci0nd",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 80,
+    "ref": "gb:sct:north-lanarkshire:coatbridge-library",
+    "name": "Coatbridge Library",
+    "at": "2026-09-26T01:44:11.993Z",
+    "slug": "coatbridge-library",
+    "documentId": "h4pobxmbpdbuqbnvms0gz1bt",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 81,
+    "ref": "gb:sct:east-renfrewshire:uplawmoor-library",
+    "name": "Uplawmoor Library",
+    "at": "2026-09-26T01:44:13.653Z",
+    "slug": "uplawmoor-library",
+    "documentId": "kq7tnrk14oz7pklemcaejqys",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 82,
+    "ref": "gb:sct:dundee-city:hub-community-library-learning-centre",
+    "name": "Hub Community Library & Learning Centre",
+    "at": "2026-09-26T01:44:15.584Z",
+    "slug": "hub-community-library-learning-centre",
+    "documentId": "jophh9a8skm93owb8twbbiqb",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 83,
+    "ref": "gb:sct:scottish-borders:earlston-library",
+    "name": "Earlston Library",
+    "at": "2026-09-26T01:44:16.986Z",
+    "slug": "earlston-library",
+    "documentId": "mnnwp39ikpvxekdf7vner1s9",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 84,
+    "ref": "gb:sct:aberdeenshire:peterhead-library",
+    "name": "Peterhead Library",
+    "at": "2026-09-26T01:44:18.628Z",
+    "slug": "peterhead-library",
+    "documentId": "xmnnce1jzzb5z651ez9aq0yy",
+    "status": "created"
+  },
+  {
+    "libraryOnId": 85,
+    "ref": "gb:sct:north-lanarkshire:condorrat-library",
+    "name": "Condorrat Library",
+    "status": "error",
+    "error": "terminated",
+    "at": "2026-09-26T01:44:22.526Z"
+  },
+  {
+    "libraryOnId": 86,
+    "ref": "gb:sct:outer-hebrides:castlebay-library",
+    "name": "Castlebay Library",
+    "status": "error",
+    "error": "fetch failed",
+    "at": "2026-09-26T01:44:22.529Z"
+  },
+  {
+    "libraryOnId": 87,
+    "ref": "gb:sct:dundee-city:kirkton-community-library",
+    "name": "Kirkton Community Library",
+    "status": "error",
+    "error": "fetch failed",
+    "at": "2026-09-26T01:44:22.530Z"
+  },
+  {
+    "libraryOnId": 88,
+    "ref": "gb:sct:scottish-borders:eyemouth-library",
+    "name": "Eyemouth Library",
+    "status": "error",
+    "error": "fetch failed",
+    "at": "2026-09-26T01:44:22.530Z"
+  },
+  {
+    "libraryOnId": 89,
+    "ref": "gb:sct:aberdeenshire:portlethen-library",
+    "name": "Portlethen Library",
+    "status": "error",
+    "error": "fetch failed",
+    "at": "2026-09-26T01:44:22.531Z"
+  },
+  {
+    "libraryOnId": 90,
+    "ref": "gb:sct:outer-hebrides:lionacleit-library",
+    "name": "Lionacleit Library",
+    "status": "error",
+    "error": "fetch failed",
+    "at": "2026-09-26T01:44:22.532Z"
+  },
+  {
+    "libraryOnId": 91,
+    "ref": "gb:sct:north-lanarkshire:cumbernauld-library",
+    "name": "Cumbernauld Library",
+    "status": "error",
+    "error": "fetch failed",
+    "at": "2026-09-26T01:44:22.533Z"
+  },
+  {
+    "libraryOnId": 92,
+    "ref": "gb:sct:dundee-city:lochee-community-library-",
+    "name": "Lochee Community Library",
+    "status": "error",
+    "error": "fetch failed",
+    "at": "2026-09-26T01:44:22.535Z"
+  },
+  {
+    "libraryOnId": 93,
+    "ref": "gb:sct:scottish-borders:galashiels-library",
+    "name": "Galashiels Library",
+    "status": "error",
+    "error": "fetch failed",
+    "at": "2026-09-26T01:44:22.537Z"
+  },
+  {
+    "libraryOnId": 94,
+    "ref": "gb:sct:aberdeenshire:portsoy-library",
+    "name": "Portsoy Library",
+    "status": "error",
+    "error": "fetch failed",
+    "at": "2026-09-26T01:44:22.540Z"
+  },
+  {
+    "libraryOnId": 95,
+    "ref": "gb:sct:outer-hebrides:stornoway-library",
+    "name": "Stornoway Library",
+    "status": "error",
+    "error": "fetch failed",
+    "at": "2026-09-26T01:44:22.541Z"
+  },
+  {
+    "libraryOnId": 96,
+    "ref": "gb:sct:north-lanarkshire:kilsyth-library",
+    "name": "Kilsyth Library",
+    "status": "error",
+    "error": "fetch failed",
+    "at": "2026-09-26T01:44:22.543Z"
+  },
+  {
+    "libraryOnId": 97,
+    "ref": "gb:sct:dundee-city:menzieshill-community-library",
+    "name": "Menzieshill Community Library",
+    "status": "error",
+    "error": "fetch failed",
+    "at": "2026-09-26T01:44:22.546Z"
+  },
+  {
+    "libraryOnId": 98,
+    "ref": "gb:sct:scottish-borders:hawick-library",
+    "name": "Hawick Library",
+    "status": "error",
+    "error": "fetch failed",
+    "at": "2026-09-26T01:44:22.548Z"
+  },
+  {
+    "libraryOnId": 99,
+    "ref": "gb:sct:aberdeenshire:rosehearty-library",
+    "name": "Rosehearty Library",
+    "status": "error",
+    "error": "fetch failed",
+    "at": "2026-09-26T01:44:22.549Z"
+  },
+  {
+    "libraryOnId": 100,
+    "ref": "gb:sct:outer-hebrides:tarbert-library",
+    "name": "Tarbert Library",
+    "status": "error",
+    "error": "fetch failed",
+    "at": "2026-09-26T01:44:22.550Z"
+  },
+  {
+    "libraryOnId": 101,
+    "ref": "gb:sct:north-lanarkshire:moodiesburn-library",
+    "name": "Moodiesburn Library",
+    "status": "error",
+    "error": "fetch failed",
+    "at": "2026-09-26T01:44:22.551Z"
+  },
+  {
+    "libraryOnId": 102,
+    "ref": "gb:sct:dundee-city:whitfield-community-library",
+    "name": "Whitfield Community Library",
+    "status": "error",
+    "error": "fetch failed",
+    "at": "2026-09-26T01:44:22.552Z"
+  },
+  {
+    "libraryOnId": 103,
+    "ref": "gb:sct:scottish-borders:innerleithen-library-contact-centre-",
+    "name": "Innerleithen Library Contact Centre",
+    "status": "error",
+    "error": "fetch failed",
+    "at": "2026-09-26T01:44:22.554Z"
+  }
+]
