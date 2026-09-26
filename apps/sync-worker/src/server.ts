@@ -1,5 +1,6 @@
 // apps/sync-worker/src/server.ts
-import { createServer } from "node:http"
+import { createHash, timingSafeEqual } from "node:crypto"
+import { createServer, type IncomingMessage } from "node:http"
 
 import { decrypt } from "@repo/events-crypto"
 
@@ -19,6 +20,21 @@ export function setSyncStatus(s: "idle" | "running"): void {
 }
 export function setNextSync(iso: string): void {
   nextSync = iso
+}
+
+/**
+ * /test-credential decrypts stored provider credentials and calls out to the
+ * provider, so it must only be callable by Strapi. Fails closed when
+ * WORKER_SECRET is unset.
+ */
+function hasWorkerSecret(req: IncomingMessage): boolean {
+  const expected = process.env.WORKER_SECRET
+  const provided = req.headers["x-worker-secret"]
+  if (!expected || typeof provided !== "string" || !provided) return false
+  const a = createHash("sha256").update(provided).digest()
+  const b = createHash("sha256").update(expected).digest()
+
+  return timingSafeEqual(a, b)
 }
 
 export function startHealthServer(port: number): void {
@@ -41,6 +57,12 @@ export function startHealthServer(port: number): void {
     }
 
     if (req.method === "POST" && req.url === "/test-credential") {
+      if (!hasWorkerSecret(req)) {
+        res.writeHead(401)
+        res.end(JSON.stringify({ ok: false, error: "Unauthorized" }))
+
+        return
+      }
       let body = ""
       let bodySize = 0
       const MAX_BODY = 65_536 // 64 KB
@@ -125,7 +147,10 @@ export function startHealthServer(port: number): void {
     res.end(JSON.stringify({ error: "Not found" }))
   })
 
-  server.listen(port, () => {
-    console.log(`[server] Health server listening on port ${port}`)
+  // Bind to loopback by default; set WORKER_HOST=0.0.0.0 only when Strapi runs
+  // on another host and the port is on a private network.
+  const host = process.env.WORKER_HOST ?? "127.0.0.1"
+  server.listen(port, host, () => {
+    console.log(`[server] Health server listening on ${host}:${port}`)
   })
 }

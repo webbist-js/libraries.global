@@ -5,6 +5,7 @@ import type {
   ProviderCredentials,
   RawEvent,
 } from "./types"
+import { safeFetch } from "../lib/safe-fetch"
 
 const PAGE_SIZE = 100
 const MAX_FUTURE_MONTHS = 18
@@ -57,7 +58,7 @@ async function fetchPage(
   url.searchParams.set("pageSize", String(PAGE_SIZE))
   url.searchParams.set("startDate", startDate)
 
-  const res = await fetch(url.toString(), {
+  const res = await safeFetch(url.toString(), {
     headers: { Authorization: authHeader, Accept: "application/json" },
   })
   if (!res.ok) throw new Error(`Aspen API ${res.status}: ${url.toString()}`)

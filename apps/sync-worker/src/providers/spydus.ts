@@ -5,6 +5,7 @@ import type {
   ProviderCredentials,
   RawEvent,
 } from "./types"
+import { safeFetch } from "../lib/safe-fetch"
 
 const MAX_EVENTS = 5000
 const MAX_PAGES = 50
@@ -57,7 +58,7 @@ async function getAuthToken(
     return cached.token
   }
 
-  const res = await fetch(`${baseUrl}lcf/1.0/authorization`, {
+  const res = await safeFetch(`${baseUrl}lcf/1.0/authorization`, {
     method: "POST",
     headers: {
       Authorization: `Basic ${Buffer.from(authString).toString("base64")}`,
@@ -114,7 +115,7 @@ async function fetchSessions(
       for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v)
     }
 
-    const res = await fetch(url.toString(), { headers })
+    const res = await safeFetch(url.toString(), { headers })
     if (!res.ok) throw new Error(`Spydus sessions/search ${res.status}`)
 
     const data = await res.json()

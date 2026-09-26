@@ -6,6 +6,8 @@ export type ProviderKey =
   | "wegottickets"
   | "spydus"
   | "bibliocommons"
+  | "solus"
+  | "aspen"
 
 export type EventType =
   | "talk"

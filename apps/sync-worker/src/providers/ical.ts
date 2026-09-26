@@ -7,6 +7,7 @@ import type {
   ProviderCredentials,
   RawEvent,
 } from "./types"
+import { safeFetch } from "../lib/safe-fetch"
 
 const EVENT_TYPE_MAP: Record<string, EventType> = {
   READING: "reading_group",
@@ -50,6 +51,69 @@ function unfoldIcal(text: string): string {
   return result.join("\n")
 }
 
+/**
+ * Convert an ICAL.Time to a JS Date, honouring its TZID.
+ *
+ * ical.js only resolves a TZID when the matching VTIMEZONE has been
+ * registered; otherwise the time is "floating" and `toJSDate()` interprets the
+ * wall-clock value in the *server's* local timezone. On a UTC host that shifts
+ * every London event by an hour during BST. We resolve the offset ourselves
+ * with Intl so the result is independent of the host timezone.
+ */
+export function icalTimeToDate(time: ICAL.Time, tzid: string): Date {
+  const isFloating = !time.zone || time.zone.tzid === "floating"
+  if (!isFloating) return time.toJSDate()
+
+  const wallClockAsUtc = Date.UTC(
+    time.year,
+    time.month - 1,
+    time.day,
+    time.hour,
+    time.minute,
+    time.second
+  )
+  if (time.isDate || tzid === "UTC") return new Date(wallClockAsUtc)
+
+  let fmt: Intl.DateTimeFormat
+  try {
+    fmt = new Intl.DateTimeFormat("en-GB", {
+      timeZone: tzid,
+      hourCycle: "h23",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    })
+  } catch {
+    // Unknown TZID (e.g. a Windows zone name) — treat the wall clock as UTC.
+    return new Date(wallClockAsUtc)
+  }
+
+  const offsetAt = (instant: number): number => {
+    const parts = Object.fromEntries(
+      fmt.formatToParts(new Date(instant)).map((p) => [p.type, p.value])
+    )
+    const asUtc = Date.UTC(
+      Number(parts.year),
+      Number(parts.month) - 1,
+      Number(parts.day),
+      Number(parts.hour),
+      Number(parts.minute),
+      Number(parts.second)
+    )
+
+    return asUtc - instant
+  }
+
+  // Two passes settle the offset across DST transitions.
+  let instant = wallClockAsUtc - offsetAt(wallClockAsUtc)
+  instant = wallClockAsUtc - offsetAt(instant)
+
+  return new Date(instant)
+}
+
 async function fetchFeed(
   feedUrl: string,
   username?: string,
@@ -59,7 +123,7 @@ async function fetchFeed(
   if (username && password) {
     headers.Authorization = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`
   }
-  const res = await fetch(feedUrl, { headers })
+  const res = await safeFetch(feedUrl, { headers })
   if (!res.ok) throw new Error(`iCal feed returned ${res.status}: ${feedUrl}`)
 
   return res.text()
@@ -102,13 +166,20 @@ export const icalProvider: EventProvider = {
       const ev = new ICAL.Event(vevent)
       if (!ev.startDate) continue
 
-      const startDt = ev.startDate.toJSDate()
-      const endDt = ev.endDate?.toJSDate() ?? null
+      // ical.js sets an undeclared `timezone` string from the TZID parameter;
+      // `zone.tzid` is only meaningful when a VTIMEZONE was registered.
+      const declaredTz = (ev.startDate as unknown as { timezone?: string })
+        .timezone
+      const zoneTz = ev.startDate.zone?.tzid
+      const tzid =
+        declaredTz ?? (zoneTz && zoneTz !== "floating" ? zoneTz : "UTC")
+
+      const startDt = icalTimeToDate(ev.startDate, tzid)
+      const endDt = ev.endDate ? icalTimeToDate(ev.endDate, tzid) : null
       const uid = ev.uid ?? `${startDt.toISOString()}-${ev.summary}`
       const title = ev.summary ?? ""
       const description = ev.description ?? ""
       const url = (vevent.getFirstPropertyValue("url") as string | null) ?? ""
-      const tzid = ev.startDate.timezone ?? "UTC"
 
       // Derive eventType from title keywords
       const upperTitle = title.toUpperCase()

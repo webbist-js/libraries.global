@@ -1,4 +1,10 @@
+/* eslint-disable sonarjs/no-hardcoded-ip -- SSRF guard: IP literals are the blocklist / test fixtures */
 import { describe, it, expect, vi } from "vitest"
+
+// Keep tests offline: the SSRF guard resolves hosts before fetching.
+vi.mock("node:dns/promises", () => ({
+  lookup: vi.fn(async () => [{ address: "93.184.216.34", family: 4 }]),
+}))
 
 import { icalProvider } from "../../src/providers/ical"
 
@@ -53,5 +59,78 @@ describe("icalProvider.fetch()", () => {
     expect(events[0]!.externalId).toBe("abc-123@example.com")
     expect(events[0]!.title).toBe("Reading Group")
     expect(events[0]!.isFree).toBe(true)
+  })
+})
+
+describe("icalProvider.fetch() timezones", () => {
+  const feed = (dtstart: string, dtend: string) => `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+UID:tz@example.com
+${dtstart}
+${dtend}
+SUMMARY:Talk
+END:VEVENT
+END:VCALENDAR`
+
+  const fetchOne = async (text: string) => {
+    mockFetch.mockResolvedValueOnce({ ok: true, text: async () => text })
+    const events = await icalProvider.fetch(
+      { feedUrl: "https://example.com/cal.ics" },
+      []
+    )
+
+    return events[0]!
+  }
+
+  it("keeps the feed TZID and converts BST wall-clock time to UTC", async () => {
+    const ev = await fetchOne(
+      feed(
+        "DTSTART;TZID=Europe/London:20260601T140000",
+        "DTEND;TZID=Europe/London:20260601T150000"
+      )
+    )
+    expect(ev.timezone).toBe("Europe/London")
+    expect(ev.startTime).toBe("2026-06-01T13:00:00.000Z")
+    expect(ev.endTime).toBe("2026-06-01T14:00:00.000Z")
+  })
+
+  it("converts GMT (winter) wall-clock time to UTC", async () => {
+    const ev = await fetchOne(
+      feed(
+        "DTSTART;TZID=Europe/London:20261201T140000",
+        "DTEND;TZID=Europe/London:20261201T150000"
+      )
+    )
+    expect(ev.startTime).toBe("2026-12-01T14:00:00.000Z")
+  })
+
+  it("handles non-European zones", async () => {
+    const ev = await fetchOne(
+      feed(
+        "DTSTART;TZID=America/New_York:20260601T090000",
+        "DTEND;TZID=America/New_York:20260601T100000"
+      )
+    )
+    expect(ev.timezone).toBe("America/New_York")
+    expect(ev.startTime).toBe("2026-06-01T13:00:00.000Z")
+  })
+
+  it("treats Z-suffixed times as UTC", async () => {
+    const ev = await fetchOne(
+      feed("DTSTART:20260601T140000Z", "DTEND:20260601T150000Z")
+    )
+    expect(ev.timezone).toBe("UTC")
+    expect(ev.startTime).toBe("2026-06-01T14:00:00.000Z")
+  })
+
+  it("falls back to UTC for an unknown TZID instead of throwing", async () => {
+    const ev = await fetchOne(
+      feed(
+        "DTSTART;TZID=Not/AZone:20260601T140000",
+        "DTEND;TZID=Not/AZone:20260601T150000"
+      )
+    )
+    expect(ev.startTime).toBe("2026-06-01T14:00:00.000Z")
   })
 })

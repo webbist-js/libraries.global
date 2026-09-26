@@ -5,6 +5,7 @@ import type {
   ProviderCredentials,
   RawEvent,
 } from "./types"
+import { safeFetch } from "../lib/safe-fetch"
 
 const MAX_FUTURE_MONTHS = 18
 const PAGE_LIMIT = 100
@@ -29,7 +30,7 @@ function normaliseEndpoint(endpoint: string): string {
 }
 
 async function getToken(endpoint: string, secretKey: string): Promise<string> {
-  const res = await fetch(`${endpoint}/1.0/authorization`, {
+  const res = await safeFetch(`${endpoint}/1.0/authorization`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ secretKey }),
@@ -62,7 +63,7 @@ export const solusProvider: EventProvider = {
       const token = await getToken(base, secretKey)
 
       // Quick probe: list 1 event to confirm token works
-      const res = await fetch(
+      const res = await safeFetch(
         `${base}/1.0/event/query?includeCancelled=false&limit=1`,
         {
           headers: {
@@ -111,7 +112,7 @@ export const solusProvider: EventProvider = {
         fromDate,
       })
 
-      const res = await fetch(`${base}/1.0/event/query?${params}`, {
+      const res = await safeFetch(`${base}/1.0/event/query?${params}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
