@@ -18,6 +18,7 @@ import {
   findStateFromParams,
   findStateToParams,
   hasActiveFindFilters,
+  hitNeeds,
   openStatus,
 } from "./find-helpers"
 import { LibraryResultCard, LibraryResultRow } from "./FindCards"
@@ -163,10 +164,16 @@ export function FindLibraryPage({
     if (state.digital) {
       hits = hits.filter((h) => Boolean(h.iiifEndpoint))
     }
-    if (state.sort === "complete") {
+    if (state.needs.length > 0) {
+      hits = hits.filter((h) =>
+        hitNeeds(h).some((need) => state.needs.includes(need))
+      )
+    }
+    if (state.sort === "complete" || state.sort === "gaps") {
+      const dir = state.sort === "gaps" ? -1 : 1
       hits = [...hits].sort(
         (a, b) =>
-          completenessScore(b) - completenessScore(a) ||
+          dir * (completenessScore(b) - completenessScore(a)) ||
           (a.name ?? "").localeCompare(b.name ?? "")
       )
     } else if (state.sort === "name") {
@@ -177,7 +184,7 @@ export function FindLibraryPage({
     // sort === "near": server already ordered by distance
 
     return hits
-  }, [result, state.openNow, state.digital, state.sort, now])
+  }, [result, state.openNow, state.digital, state.needs, state.sort, now])
 
   const pageCount = Math.max(1, Math.ceil(refined.length / PAGE_SIZE))
   const page = Math.min(state.page, pageCount - 1)
@@ -189,6 +196,7 @@ export function FindLibraryPage({
     state.services.length +
     (state.openNow ? 1 : 0) +
     (state.digital ? 1 : 0) +
+    state.needs.length +
     (state.nearLat != null ? 1 : 0)
 
   const clearAll = useCallback(() => {
@@ -445,7 +453,10 @@ function facetsFrom(
   let openNowCount = 0
   let hoursKnownCount = 0
   let digitalCount = 0
+  const needCounts: Record<string, number> = {}
   for (const h of hits) {
+    for (const need of hitNeeds(h))
+      needCounts[need] = (needCounts[need] ?? 0) + 1
     const st = openStatus(h.openingTimes, h.timezone, nowDate)
     if (st.known) hoursKnownCount += 1
     if (st.known && st.open) openNowCount += 1
@@ -459,6 +470,7 @@ function facetsFrom(
     openNowCount,
     hoursKnownCount,
     digitalCount,
+    needs: needCounts,
   }
 }
 

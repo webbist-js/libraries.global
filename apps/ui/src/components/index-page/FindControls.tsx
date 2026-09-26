@@ -8,6 +8,7 @@ import {
   type FindState,
   type SortKey,
   type ViewMode,
+  NEED_KEYS,
   TYPE_GROUPS,
 } from "./find-helpers"
 
@@ -128,6 +129,13 @@ export function FindFilterChips({
     chips.push({
       label: "Digital collections",
       onRemove: () => onChange({ digital: false, page: 0 }),
+    })
+  }
+  for (const need of state.needs) {
+    chips.push({
+      label: NEED_KEYS.find((n) => n.key === need)?.label ?? need,
+      onRemove: () =>
+        onChange({ needs: state.needs.filter((n) => n !== need), page: 0 }),
     })
   }
   if (state.nearLat != null) {
@@ -263,6 +271,7 @@ export function FindResultsControls({
           }}
         >
           <option value="complete">Most complete first</option>
+          <option value="gaps">Most gaps first</option>
           <option value="name">Name A–Z</option>
           {state.nearLat != null ? <option value="near">Nearest</option> : null}
         </select>

@@ -1,5 +1,8 @@
 "use client"
 
+import { Icon } from "@iconify/react"
+import { useId } from "react"
+
 import { T } from "@/lib/design-tokens"
 
 interface DiffFieldRowProps {
@@ -17,104 +20,82 @@ export function DiffFieldRow({
   onChange,
 }: DiffFieldRowProps) {
   const isChanged = proposedValue !== currentValue
+  const uid = useId()
+  const inputId = `${uid}-proposed`
+  const currentId = `${uid}-current`
 
   return (
     <div
+      className="mb-3 overflow-hidden rounded-[20px]"
       style={{
-        border: `1px solid ${T.border.line}`,
-        borderRadius: "12px",
-        overflow: "hidden",
-        marginBottom: "12px",
+        background: T.bg.deep,
+        border: `1px solid ${isChanged ? T.accent.primary : T.border.line}`,
       }}
     >
       {/* Label bar */}
       <div
-        style={{
-          padding: "8px 16px",
-          background: T.bg.surface,
-          borderBottom: `1px solid ${T.border.line}`,
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-        }}
+        className="flex flex-wrap items-center gap-3 px-5 py-3"
+        style={{ borderBottom: `1px solid ${T.border.divider}` }}
       >
-        <span
-          style={{
-            fontFamily: T.font.sans,
-            fontSize: "13px",
-            color: T.ink.faint,
-          }}
+        <label
+          htmlFor={inputId}
+          className="text-[15px] font-semibold"
+          style={{ color: T.ink.base }}
         >
           {label}
-        </span>
+        </label>
         {isChanged && (
           <span
-            style={{
-              fontFamily: T.font.sans,
-              fontSize: "13px",
-              color: T.accent.aurora,
-              border: `1px solid var(--t-aurora-soft)`,
-              borderRadius: "5px",
-              padding: "2px 6px",
-              background: "var(--t-aurora-soft)",
-            }}
+            className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[13px] font-semibold"
+            style={{ background: T.accent.chip, color: T.accent.primary }}
           >
+            <Icon icon="mdi:pencil" width={13} height={13} aria-hidden="true" />
             Changed
           </span>
         )}
       </div>
 
-      {/* Two columns */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "1px",
-          background: T.border.line,
-        }}
-      >
+      {/* Two columns (stack on phones) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2">
         {/* Left: current value (read only) */}
-        <div
-          style={{
-            padding: "14px 16px",
-            background: T.bg.deep,
-            color: T.ink.faint,
-            fontSize: "13px",
-            fontFamily: T.font.sans,
-            lineHeight: 1.5,
-            minHeight: "48px",
-          }}
-        >
-          {currentValue || (
-            <span style={{ color: "var(--t-ink-ghost)", fontStyle: "italic" }}>
-              No value
-            </span>
-          )}
+        <div className="px-5 py-3.5" style={{ background: T.bg.surface }}>
+          <span
+            className="mb-1 block text-[14px] sm:sr-only"
+            style={{ color: T.ink.dim }}
+          >
+            Current value
+          </span>
+          <p
+            id={currentId}
+            className="m-0 text-[15px] leading-normal wrap-break-word"
+            style={{ color: T.ink.dim }}
+          >
+            {currentValue || (
+              <span style={{ color: T.ink.low, fontStyle: "italic" }}>
+                Not set
+              </span>
+            )}
+          </p>
         </div>
 
         {/* Right: editable */}
-        <div
-          style={{
-            background: isChanged ? "var(--t-aurora-soft)" : T.bg.deep,
-            padding: 0,
-            minHeight: "48px",
-          }}
-        >
+        <div className="border-(--t-divider) px-3 py-2 max-sm:border-t sm:border-l">
           <input
+            id={inputId}
             type="text"
             value={proposedValue}
             onChange={(e) => onChange(e.target.value)}
             placeholder={currentValue || "Enter value…"}
+            aria-describedby={currentId}
+            className="w-full"
             style={{
-              width: "100%",
-              height: "100%",
-              minHeight: "48px",
-              padding: "14px 16px",
-              background: "transparent",
+              minHeight: "44px",
+              padding: "10px 12px",
+              borderRadius: "14px",
+              border: `1px solid ${T.border.hi}`,
+              background: T.bg.deep,
               color: T.ink.base,
-              border: "none",
-              outline: "none",
-              fontSize: "13px",
+              fontSize: "15px",
               fontFamily: T.font.sans,
               boxSizing: "border-box",
             }}

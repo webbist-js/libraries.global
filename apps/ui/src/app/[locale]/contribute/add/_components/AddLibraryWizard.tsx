@@ -11,7 +11,7 @@ import {
   useSaveDraft,
 } from "@/hooks/useSubmissions"
 import { T } from "@/lib/design-tokens"
-import { Link, useRouter } from "@/lib/navigation"
+import { useRouter } from "@/lib/navigation"
 import { primaryCtaSm } from "@/lib/styles"
 
 import { DraftResumeBanner } from "./DraftResumeBanner"
@@ -261,50 +261,23 @@ export function AddLibraryWizard({
       <div
         ref={topRef}
         className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-12 xl:grid-cols-[280px_minmax(0,1fr)_340px] 2xl:grid-cols-[300px_minmax(0,1fr)_380px]"
-        style={{ scrollMarginTop: "96px" }}
+        style={{ scrollMarginTop: "128px" }}
       >
         {/* Left — rail: back link, title, stepper */}
-        <div className="min-w-0 self-start lg:sticky lg:top-24 lg:row-span-2 xl:row-span-1">
-          <Link
-            href="/contribute"
-            className="inline-flex items-center gap-2 hover:underline"
-            style={{
-              fontFamily: T.font.sans,
-              fontSize: "15px",
-              color: T.ink.base,
-              textDecoration: "none",
-            }}
-          >
-            <Icon icon="mdi:arrow-left" width={18} aria-hidden="true" />
-            Contribute
-          </Link>
-          <h1
+        <div className="min-w-0 self-start lg:sticky lg:top-[128px] lg:row-span-2 xl:row-span-1">
+          <h2
             style={{
               fontFamily: T.font.serif,
-              fontSize: "30px",
+              fontSize: "24px",
               fontWeight: 500,
               letterSpacing: "-0.01em",
-              lineHeight: 1.15,
+              lineHeight: 1.2,
               color: T.ink.base,
-              margin: "20px 0 6px",
+              margin: "0 0 6px",
             }}
           >
-            {isEditMode ? "Edit library" : "Add a library"}
-          </h1>
-          {isEditMode && formData.name && (
-            <p
-              style={{
-                fontFamily: T.font.sans,
-                fontSize: "15px",
-                color: T.ink.dim,
-                margin: "0 0 6px",
-                lineHeight: 1.45,
-              }}
-            >
-              Suggesting edits to {formData.name}. Changes go to editorial
-              review before going live.
-            </p>
-          )}
+            {isEditMode ? "Your edits" : "Your record"}
+          </h2>
           <DraftStatus lastSavedAt={lastSavedAt} />
           <div className="mt-6">
             <WizardStepNav
@@ -421,7 +394,7 @@ export function AddLibraryWizard({
         {/* Right — completeness + tip */}
         <aside
           aria-label="Submission completeness"
-          className="self-start lg:col-start-2 xl:sticky xl:top-24 xl:col-start-auto"
+          className="self-start lg:col-start-2 xl:sticky xl:top-[128px] xl:col-start-auto"
         >
           <WizardCompletionSidebar formData={formData} step={step} />
         </aside>

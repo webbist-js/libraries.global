@@ -3,7 +3,12 @@
 
 import { FilterGroup, FilterOption, FilterPanelHeader } from "@/components/ds"
 
-import { type FindState, type TypeGroupKey, TYPE_GROUPS } from "./find-helpers"
+import {
+  type FindState,
+  type TypeGroupKey,
+  NEED_KEYS,
+  TYPE_GROUPS,
+} from "./find-helpers"
 
 export interface FindFacets {
   /** raw libraryType enum value → count */
@@ -14,6 +19,8 @@ export interface FindFacets {
   openNowCount?: number
   hoursKnownCount?: number
   digitalCount?: number
+  /** need key → records missing it */
+  needs?: Record<string, number>
 }
 
 export function FindFilterSidebar({
@@ -183,6 +190,36 @@ export function FindFilterSidebar({
           count={facets.digitalCount}
           onChange={() => onChange({ digital: !state.digital, page: 0 })}
         />
+      </FilterGroup>
+
+      <FilterGroup
+        title="Needs contributions"
+        icon={
+          <>
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
+          </>
+        }
+        helper="Records with gaps you can help fill"
+      >
+        {NEED_KEYS.map((n) => (
+          <FilterOption
+            key={n.key}
+            type="checkbox"
+            name="needs"
+            label={n.label}
+            checked={state.needs.includes(n.key)}
+            count={facets.needs?.[n.key]}
+            onChange={() =>
+              onChange({
+                needs: state.needs.includes(n.key)
+                  ? state.needs.filter((k) => k !== n.key)
+                  : [...state.needs, n.key],
+                page: 0,
+              })
+            }
+          />
+        ))}
       </FilterGroup>
 
       <FilterGroup

@@ -7,7 +7,7 @@ import { DOCS_SECTIONS } from "@/components/docs/docs.config"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 
-import { ContributeSubpageHero } from "../../../_components/ContributeSubpageHero"
+import { ContributeSectionHeader } from "../../../_components/ContributeSectionHeader"
 
 export function NewDocShell() {
   return (
@@ -66,12 +66,11 @@ function NewDocShellInner() {
       style={{ background: T.bg.void, color: T.ink.base }}
     >
       <main className="relative z-10 flex-1">
-        <ContributeSubpageHero
+        <ContributeSectionHeader
+          compact
           section="Write a doc"
-          heading="Write a doc for the"
-          headingItalic="knowledge base."
-          accentColor={T.accent.primary}
-          body="Propose a new documentation page. A reviewer will help shape it, and published pages are credited to you."
+          title="Write a doc for the *knowledge base.*"
+          lead="Propose a new documentation page. A reviewer will help shape it, and published pages are credited to you."
         />
 
         <div className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">

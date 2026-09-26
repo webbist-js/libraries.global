@@ -8,7 +8,7 @@ import { WikiEditorSidebar } from "@/components/docs/editor/WikiEditorSidebar"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 
-import { ContributeSubpageHero } from "../../../_components/ContributeSubpageHero"
+import { ContributeSectionHeader } from "../../../_components/ContributeSectionHeader"
 
 type EditArticle = {
   title: string
@@ -49,12 +49,15 @@ function DocsEditShellInner({
       style={{ background: T.bg.void, color: T.ink.base }}
     >
       <main className="relative z-10 flex-1">
-        <ContributeSubpageHero
+        <ContributeSectionHeader
+          compact
           section={reportMode ? "Report a docs issue" : "Edit a doc"}
-          heading={reportMode ? "Something wrong in" : "Improve"}
-          headingItalic={`${article.title}?`}
-          accentColor={T.accent.primary}
-          body={
+          title={
+            reportMode
+              ? `Something wrong in *${article.title}?*`
+              : `Improve *${article.title}.*`
+          }
+          lead={
             directEdit
               ? "Edit the page below. Your change is saved as a draft and goes to review — accepted changes are published and credited to you."
               : "Describe the change you'd like to see. A reviewer checks it against your source, and accepted changes are credited to you."

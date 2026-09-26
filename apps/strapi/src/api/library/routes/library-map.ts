@@ -6,5 +6,11 @@ export default {
       handler: "library.mapPins",
       config: { auth: false },
     },
+    {
+      method: "GET",
+      path: "/libraries/atlas",
+      handler: "library.atlas",
+      config: { auth: false },
+    },
   ],
 }

@@ -130,10 +130,35 @@ export function completenessScore(hit: LibrarySearchHitV2): number {
   return score
 }
 
+/** Gaps a contributor can fill, as surfaced on the Contribute hub. */
+export const NEED_KEYS = [
+  { key: "hours", label: "Missing opening hours" },
+  { key: "photo", label: "Missing photo" },
+  { key: "facilities", label: "Missing accessibility & facilities" },
+] as const
+
+export type NeedKey = (typeof NEED_KEYS)[number]["key"]
+
+export const ALL_NEED_KEYS: NeedKey[] = NEED_KEYS.map((n) => n.key)
+
+export function hitNeeds(hit: LibrarySearchHitV2): NeedKey[] {
+  const needs: NeedKey[] = []
+  const days = (hit.openingTimes as OpeningTimes | null | undefined)?.days
+  if (!days?.some((d) => d.enabled && d.timeframes?.length)) {
+    needs.push("hours")
+  }
+  if (!hit.heroImage?.url) needs.push("photo")
+  if (!hit.accessibility_names?.length && !hit.service_names?.length) {
+    needs.push("facilities")
+  }
+
+  return needs
+}
+
 // ── URL state ───────────────────────────────────────────────────────────────
 
 export type ViewMode = "grid" | "list" | "map"
-export type SortKey = "complete" | "name" | "near"
+export type SortKey = "complete" | "gaps" | "name" | "near"
 
 export interface FindState {
   q: string
@@ -142,6 +167,8 @@ export interface FindState {
   services: string[]
   digital: boolean
   openNow: boolean
+  /** records missing any of these (OR) */
+  needs: NeedKey[]
   nearLat?: number
   nearLng?: number
   /** km; 0 = any distance */
@@ -158,6 +185,7 @@ export const DEFAULT_FIND_STATE: FindState = {
   services: [],
   digital: false,
   openNow: false,
+  needs: [],
   nearLat: undefined,
   nearLng: undefined,
   radiusKm: 0,
@@ -171,6 +199,10 @@ export function findStateFromParams(params: URLSearchParams): FindState {
   const groups = (params.get("tg") ?? "")
     .split(",")
     .filter((g): g is TypeGroupKey => groupKeys.includes(g))
+  const needKeys = ALL_NEED_KEYS as string[]
+  const needs = (params.get("needs") ?? "")
+    .split(",")
+    .filter((n): n is NeedKey => needKeys.includes(n))
   const sort = params.get("sort")
   const view = params.get("view")
 
@@ -181,11 +213,15 @@ export function findStateFromParams(params: URLSearchParams): FindState {
     services: (params.get("service") ?? "").split(",").filter(Boolean),
     digital: params.get("digital") === "1",
     openNow: params.get("open") === "1",
+    needs,
     nearLat: params.get("nlat") ? Number(params.get("nlat")) : undefined,
     nearLng: params.get("nlng") ? Number(params.get("nlng")) : undefined,
     radiusKm: params.get("nr") ? Number(params.get("nr")) : 0,
     sort:
-      sort === "name" || sort === "near" || sort === "complete"
+      sort === "name" ||
+      sort === "near" ||
+      sort === "complete" ||
+      sort === "gaps"
         ? sort
         : "complete",
     view: view === "list" || view === "map" ? view : "grid",
@@ -201,6 +237,7 @@ export function findStateToParams(s: FindState): URLSearchParams {
   if (s.services.length > 0) p.set("service", s.services.join(","))
   if (s.digital) p.set("digital", "1")
   if (s.openNow) p.set("open", "1")
+  if (s.needs.length > 0) p.set("needs", s.needs.join(","))
   if (s.nearLat != null) p.set("nlat", s.nearLat.toFixed(4))
   if (s.nearLng != null) p.set("nlng", s.nearLng.toFixed(4))
   if (s.radiusKm > 0) p.set("nr", String(s.radiusKm))
@@ -219,6 +256,7 @@ export function hasActiveFindFilters(s: FindState): boolean {
     s.services.length > 0 ||
     s.digital ||
     s.openNow ||
+    s.needs.length > 0 ||
     s.nearLat != null
   )
 }

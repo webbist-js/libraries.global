@@ -1,34 +1,23 @@
 import GlobalLink from "@/components/global/GlobalLink"
+import type { LinkCard, SectionIntro } from "@/components/home/homepage.types"
+import { KOFI_URL } from "@/lib/constants"
 import { T } from "@/lib/design-tokens"
 
-const OPEN_LINKS = [
-  {
-    title: "Source code",
-    desc: "The whole platform is open source. Read it, fork it, improve it.",
-    href: "https://github.com/libraries-global/libraries.global",
-  },
-  {
-    title: "Contribution guide",
-    desc: "How to add and edit records, and what counts as a good source.",
-    href: "/contribute",
-  },
-  {
-    title: "Data licence & export",
-    desc: "Download the index under an open licence, with provenance.",
-    href: "/docs",
-  },
-  {
-    title: "Methodology",
-    desc: "What we include, how we verify, and known gaps.",
-    href: "/docs",
-  },
-] as const
-
-export function OpenByDesignSection() {
+export function OpenByDesignSection({
+  intro,
+  links,
+}: {
+  readonly intro: SectionIntro
+  readonly links: readonly LinkCard[]
+}) {
   return (
-    <section className="mx-auto w-full max-w-[1360px] px-4 pt-[clamp(48px,6vw,80px)] pb-[clamp(64px,8vw,104px)] sm:px-8">
+    <section
+      aria-labelledby="open-title"
+      className="mx-auto w-full max-w-[1360px] px-4 pt-[clamp(64px,8vw,104px)] sm:px-8"
+    >
       <h2
-        className="m-0 mb-5"
+        id="open-title"
+        className="m-0"
         style={{
           fontFamily: T.font.serif,
           fontWeight: 500,
@@ -36,13 +25,21 @@ export function OpenByDesignSection() {
           color: T.ink.base,
         }}
       >
-        Open by design
+        {intro.title}
       </h2>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3">
-        {OPEN_LINKS.map((link) => (
+      {intro.text ? (
+        <p
+          className="mt-2 mb-0 max-w-[620px] text-[16px] leading-[1.6]"
+          style={{ color: T.ink.dim }}
+        >
+          {intro.text}
+        </p>
+      ) : null}
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {links.map((link) => (
           <GlobalLink
             key={link.title}
-            href={link.href}
+            href={link.href ?? "/docs"}
             className="flex flex-col gap-1.5 rounded-[18px] border bg-white p-5 no-underline transition-colors hover:border-(--t-accent-primary)"
             style={{ borderColor: T.border.line }}
           >
@@ -56,11 +53,23 @@ export function OpenByDesignSection() {
               className="text-[15px] leading-[1.5]"
               style={{ color: T.ink.dim }}
             >
-              {link.desc}
+              {link.text}
             </span>
           </GlobalLink>
         ))}
       </div>
+      <p className="mt-5 mb-0 text-[15px]" style={{ color: T.ink.dim }}>
+        Open doesn&rsquo;t mean free to run. If the index is useful to you,{" "}
+        <GlobalLink
+          href={KOFI_URL}
+          className="font-semibold underline underline-offset-[3px]"
+          style={{ color: T.accent.primary }}
+        >
+          support it on Ko-fi
+          <span className="sr-only"> (opens in a new tab)</span>
+        </GlobalLink>
+        .
+      </p>
     </section>
   )
 }

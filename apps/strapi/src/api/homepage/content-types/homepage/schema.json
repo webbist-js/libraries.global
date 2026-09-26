@@ -101,6 +101,182 @@
         }
       }
     },
+    "proofIntro": {
+      "type": "component",
+      "component": "homepage.section-intro",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "openDataDefinition": {
+      "type": "component",
+      "component": "homepage.citation",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "journeysIntro": {
+      "type": "component",
+      "component": "homepage.section-intro",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "journeys": {
+      "type": "component",
+      "component": "homepage.journey",
+      "repeatable": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "featuredIntro": {
+      "type": "component",
+      "component": "homepage.section-intro",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "featuredPrompt": {
+      "type": "component",
+      "component": "homepage.cta-band",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "tasksIntro": {
+      "type": "component",
+      "component": "homepage.section-intro",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "stewardBand": {
+      "type": "component",
+      "component": "homepage.cta-band",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "coverageIntro": {
+      "type": "component",
+      "component": "homepage.section-intro",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "journalIntro": {
+      "type": "component",
+      "component": "homepage.section-intro",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "communityBand": {
+      "type": "component",
+      "component": "homepage.cta-band",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "communitySteps": {
+      "type": "component",
+      "component": "homepage.step",
+      "repeatable": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "openIntro": {
+      "type": "component",
+      "component": "homepage.section-intro",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "openLinks": {
+      "type": "component",
+      "component": "homepage.link-card",
+      "repeatable": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "finalCta": {
+      "type": "component",
+      "component": "homepage.cta-band",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "finalBenefitsTitle": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "finalBenefits": {
+      "type": "component",
+      "component": "homepage.step",
+      "repeatable": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "finalProgression": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
     "seo": {
       "type": "component",
       "component": "shared.seo",

@@ -1,0 +1,13 @@
+{
+  "collectionName": "components_homepage_steps",
+  "info": {
+    "displayName": "Step",
+    "icon": "bulletList",
+    "description": "A numbered step or bullet point."
+  },
+  "options": {},
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "text": { "type": "text" }
+  }
+}

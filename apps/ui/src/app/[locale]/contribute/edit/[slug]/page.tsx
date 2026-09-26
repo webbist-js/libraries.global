@@ -3,10 +3,12 @@ import { notFound, redirect } from "next/navigation"
 import type { Locale } from "next-intl"
 
 import { getSessionSSR } from "@/lib/auth-server"
+import { T } from "@/lib/design-tokens"
 import { privateMetadata } from "@/lib/seo/metadata"
 import { fetchLibrary } from "@/lib/strapi-api/content/server"
 
 import { EditLibraryShell } from "./_components/EditLibraryShell"
+import { ContributeSectionHeader } from "../../_components/ContributeSectionHeader"
 
 export const metadata = privateMetadata("Edit library record")
 
@@ -136,11 +138,21 @@ export default async function EditLibraryPage({
   }
 
   return (
-    <EditLibraryShell
-      sessionUser={sessionUser}
-      initialData={initialData}
-      targetDocumentId={library.documentId ?? ""}
-      targetSlug={slug}
-    />
+    <div
+      style={{ background: T.bg.void, minHeight: "100vh", color: T.ink.base }}
+    >
+      <ContributeSectionHeader
+        compact
+        section="Edit the index"
+        title={`Edit *${initialData.name || slug}.*`}
+        lead="You're editing a library you manage. Changes go to editorial review before they appear on the public record."
+      />
+      <EditLibraryShell
+        sessionUser={sessionUser}
+        initialData={initialData}
+        targetDocumentId={library.documentId ?? ""}
+        targetSlug={slug}
+      />
+    </div>
   )
 }

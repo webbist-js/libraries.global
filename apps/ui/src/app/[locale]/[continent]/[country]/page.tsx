@@ -7,6 +7,12 @@ import { CountryDetailPage } from "@/components/country/CountryDetailPage"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { isDevelopment } from "@/lib/general-helpers"
 import { buildBreadcrumbSchema } from "@/lib/seo/json-ld"
+import {
+  buildLibraryItemListSchema,
+  buildLocationDescription,
+  locationRobots,
+  locationTitle,
+} from "@/lib/seo/location"
 import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
 import {
   fetchAllLibraries,
@@ -30,15 +36,24 @@ export async function generateMetadata({
   const name = data.name ?? "Country"
 
   return buildMetadata({
-    title: `Libraries in ${name}`,
+    title: locationTitle(data.seo, `Libraries in ${name}`),
     description:
+      data.seo?.metaDescription ??
       data.summary ??
-      `Discover libraries across ${name} — browse by region, check opening hours, and explore collections.`,
+      buildLocationDescription({
+        name,
+        libraryCount: data.libraryCount,
+        typeCounts: data.libraryTypeCounts,
+        childLabel: data.regions?.length ? data.regionTypeLabel : null,
+      }),
     // Canonicalise to the entity's real parent, not whatever the URL said.
     path: `${data.continent?.slug ?? continentSlug}/${slug}`,
     locale,
-    image: formatStrapiMediaUrl(data.heroImage?.url),
+    image: formatStrapiMediaUrl(
+      data.seo?.metaImage?.url ?? data.heroImage?.url
+    ),
     imageAlt: data.heroImage?.alternativeText,
+    robots: locationRobots(data.libraryCount),
   })
 }
 
@@ -95,6 +110,14 @@ export default function CountryPage(props: {
             url: absoluteUrl(`${parentSlug}/${slug}`, locale),
           },
         ])}
+      />
+      <JsonLd
+        data={buildLibraryItemListSchema({
+          name: `Notable libraries in ${countryData.name ?? slug}`,
+          path: `${parentSlug}/${slug}`,
+          locale,
+          libraries: countryData.featuredLibraries,
+        })}
       />
       <CountryDetailPage
         country={countryData}

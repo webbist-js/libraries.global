@@ -2,12 +2,7 @@ import { Icon } from "@iconify/react"
 import Image from "next/image"
 import type { Locale } from "next-intl"
 
-import {
-  CtaBannerSection,
-  EditorialSection,
-  LocationContributeCTA,
-  LocationGridBrowser,
-} from "@/components/ds"
+import { LocationContributeCTA, LocationGridBrowser } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import { LocationEventsStrip } from "@/components/events/LocationEventsStrip"
 import GlobalHeader from "@/components/global/GlobalHeader"
@@ -21,11 +16,9 @@ import {
 import { LocationTabBar } from "@/components/location/LocationTabBar"
 import { InteractiveMap } from "@/components/map/InteractiveMap"
 import { T } from "@/lib/design-tokens"
+import { buildLocationDescription } from "@/lib/seo/location"
 import type {
   PopulatedRegionData,
-  EditorialBlock as EditorialBlockType,
-  CtaBanner as CtaBannerType,
-  PageSection,
   QuickLink,
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
@@ -79,8 +72,6 @@ export function RegionDetailPage({
   countrySlug: string
   continentSlug: string
 }) {
-  const typedSections = (region.sections ?? []) as PageSection[]
-
   const hasFeaturedLibraries =
     Array.isArray(region.featuredLibraries) &&
     region.featuredLibraries.length > 0
@@ -135,7 +126,16 @@ export function RegionDetailPage({
           }}
           typeLabel={region.typeLabel ?? "Region"}
           title={region.name ?? ""}
-          intro={region.heroTagline ?? region.summary}
+          intro={
+            region.heroTagline ??
+            region.summary ??
+            buildLocationDescription({
+              name: region.name ?? "",
+              libraryCount: region.libraryCount,
+              typeCounts: region.libraryTypeCounts,
+              childLabel: hasAreas ? areaTypeLabel : null,
+            })
+          }
           stats={[
             {
               label: "Libraries",
@@ -284,17 +284,6 @@ export function RegionDetailPage({
             entityType="region"
           />
         </div>
-
-        {/* ── Dynamic zone sections ───────────────────────────────────────── */}
-        {typedSections.map((section) => (
-          <div key={section.id}>
-            {section.__component === "sections.editorial-block" ? (
-              <EditorialSection section={section as EditorialBlockType} />
-            ) : section.__component === "sections.cta-banner" ? (
-              <CtaBannerSection section={section as CtaBannerType} />
-            ) : null}
-          </div>
-        ))}
       </main>
     </div>
   )

@@ -2,14 +2,17 @@ import type { Metadata } from "next"
 import { headers } from "next/headers"
 import type { Locale } from "next-intl"
 
-import { PageHero } from "@/components/ds"
 import GlobalLink from "@/components/global/GlobalLink"
-import { computeCompleteness } from "@/components/library/library-page.helpers"
 import { getSessionSSR } from "@/lib/auth-server"
+import { KOFI_URL } from "@/lib/constants"
 import { T } from "@/lib/design-tokens"
 import { buildMetadata } from "@/lib/seo/metadata"
-import { fetchHomepageContinents } from "@/lib/strapi-api/content/server"
+import {
+  fetchHomepageContinents,
+  fetchIncompleteLibraries,
+} from "@/lib/strapi-api/content/server"
 
+import { ContributeSectionHeader } from "./_components/ContributeSectionHeader"
 import { HowReviewWorks } from "./_components/hub/HowReviewWorks"
 import { HubActionChooser } from "./_components/hub/HubActionChooser"
 import {
@@ -73,68 +76,18 @@ async function fetchLibraryCount(): Promise<number> {
   }
 }
 
-type LibraryEntry = {
-  documentId: string
-  slug?: string | null
-  name?: string | null
-  city?: string | null
-  region?: { name?: string | null } | null
-  country?: { name?: string | null } | null
-  heroImage?: unknown
-  [key: string]: unknown
-}
-
 async function fetchIncompleteRecords(): Promise<IncompleteRecord[]> {
-  const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
-  try {
-    const params = new URLSearchParams({
-      status: "published",
-      "pagination[pageSize]": "100",
-      "populate[heroImage][fields][0]": "url",
-      "populate[accessibility][fields][0]": "name",
-      "populate[services][fields][0]": "name",
-      "populate[amenities][fields][0]": "name",
-      "populate[country][fields][0]": "name",
-      "populate[region][fields][0]": "name",
-    })
-    const res = await fetch(`${STRAPI}/api/libraries?${params}`, {
-      next: { revalidate: 300 },
-      headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
-    })
-    if (!res.ok) return []
-    const json = (await res.json()) as { data?: LibraryEntry[] }
+  const records = await fetchIncompleteLibraries()
 
-    const scored = (json.data ?? [])
-      .filter((entry) => entry.slug && entry.name)
-      .map((entry) => {
-        const completeness = computeCompleteness(
-          entry as Parameters<typeof computeCompleteness>[0]
-        )
-        const percent = Math.round(
-          (completeness.filled / completeness.total) * 100
-        )
-        const missing = completeness.sections
-          .filter((section) => !section.filled && MISSING_LABELS[section.key])
-          .map((section) => MISSING_LABELS[section.key]!)
-
-        return {
-          documentId: entry.documentId,
-          slug: entry.slug!,
-          name: entry.name!,
-          place: [entry.city, entry.region?.name, entry.country?.name]
-            .filter(Boolean)
-            .join(", "),
-          percent,
-          missing,
-        }
-      })
-      .filter((record) => record.percent < 100 && record.missing.length > 0)
-      .sort((a, b) => a.percent - b.percent)
-
-    return scored.slice(0, 4)
-  } catch {
-    return []
-  }
+  return records
+    .map(({ missing, ...record }) => ({
+      ...record,
+      missing: missing
+        .filter((key) => MISSING_LABELS[key])
+        .map((key) => MISSING_LABELS[key]!),
+    }))
+    .filter((record) => record.missing.length > 0)
+    .slice(0, 4)
 }
 
 async function fetchMySubmissions(baUserId: string): Promise<HubSubmission[]> {
@@ -270,10 +223,7 @@ export default async function ContributePage({
       style={{ background: T.bg.void, minHeight: "100vh", color: T.ink.base }}
     >
       {/* Hero band */}
-      <PageHero
-        breadcrumb={[{ label: "Home", href: "/" }, { label: "Contribute" }]}
-        eyebrow="Contribute"
-        eyebrowIcon="mdi:account-group-outline"
+      <ContributeSectionHeader
         title="Help build the world’s *library index.*"
         lead="Add a missing library, fix a detail you know is wrong, or share a photo you took. Accuracy matters more than volume. A single well-sourced correction helps more than ten guesses."
       >
@@ -288,7 +238,7 @@ export default async function ContributePage({
           </GlobalLink>{" "}
           (5 min).
         </p>
-      </PageHero>
+      </ContributeSectionHeader>
 
       {/* What would you like to do? */}
       <section className="mx-auto w-full max-w-[1360px] px-4 pt-12 sm:px-8">
@@ -327,9 +277,9 @@ export default async function ContributePage({
         <SignInPromptCard />
       )}
 
-      {/* Bottom trio */}
+      {/* Bottom links */}
       <section className="mx-auto w-full max-w-[1360px] px-4 pt-2 pb-14 sm:px-8">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <BottomLinkCard
             title="Contribution guide"
             copy="What makes a good source, and how to write clear changes."
@@ -345,6 +295,12 @@ export default async function ContributePage({
             title="Contribute code"
             copy="The platform is open source. Issues and pull requests welcome."
             href={GITHUB_REPO}
+            external
+          />
+          <BottomLinkCard
+            title="Support the project"
+            copy="No time to edit? A coffee on Ko-fi helps keep the index online and open."
+            href={KOFI_URL}
             external
           />
         </div>

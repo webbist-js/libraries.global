@@ -3,15 +3,18 @@ import { use } from "react"
 
 import GlobalFooter from "@/components/global/GlobalFooter"
 import GlobalHeader from "@/components/global/GlobalHeader"
+import { resolveHomepageContent } from "@/components/home/homepage.content"
 import HomepageHero from "@/components/home/HomepageHero"
 import HomepageSections from "@/components/home/HomepageSections"
-import StartHereNav from "@/components/home/StartHereNav"
+import { pickTasks } from "@/components/home/sections/TasksSection"
 import StrapiStructuredData from "@/components/page-builder/components/seo-utilities/StrapiStructuredData"
 import { T } from "@/lib/design-tokens"
 import {
   fetchFooter,
   fetchHomepage,
   fetchHomepageContinents,
+  fetchHomepageStats,
+  fetchIncompleteLibraries,
   fetchRecentBlogArticles,
 } from "@/lib/strapi-api/content/server"
 
@@ -22,17 +25,13 @@ export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
   const blogArticlesPromise = fetchRecentBlogArticles(locale)
   const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 
-  const statsPromise = fetch(
-    `${STRAPI}/api/libraries?pagination[pageSize]=1&fields[0]=id&status=published`,
-    { next: { revalidate: 300 } }
-  )
-    .then((r) => r.json())
-    .catch(() => null)
+  const statsPromise = fetchHomepageStats()
+  const incompletePromise = fetchIncompleteLibraries()
 
   // Every published record with coordinates — plotted on the hero globe and
   // aggregated for the coverage breakdown.
   const markersPromise = fetch(
-    `${STRAPI}/api/libraries?pagination[pageSize]=500&fields[0]=location&fields[1]=featured&populate[country][fields][0]=name&populate[continent][fields][0]=slug&populate[continent][fields][1]=name&status=published`,
+    `${STRAPI}/api/libraries?pagination[pageSize]=500&fields[0]=location&fields[1]=featured&populate[country][fields][0]=name&populate[continent][fields][0]=slug&status=published`,
     { next: { revalidate: 300 } }
   )
     .then((r) => r.json())
@@ -43,16 +42,17 @@ export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
   const footer = use(footerPromise)?.data
   const blogArticles = use(blogArticlesPromise)?.data ?? []
   const stats = use(statsPromise)
+  const tasks = pickTasks(use(incompletePromise), 3)
+  const content = resolveHomepageContent(homepage)
   const markersJson = use(markersPromise) as {
     data?: {
       location?: { lat?: number | string; lng?: number | string } | null
       featured?: boolean | null
       country?: { name?: string | null } | null
-      continent?: { slug?: string | null; name?: string | null } | null
+      continent?: { slug?: string | null } | null
     }[]
   } | null
 
-  const libraryCount: number | null = stats?.meta?.pagination?.total ?? null
   const records = markersJson?.data ?? []
   const globeMarkers = records
     .map((entry) => ({
@@ -62,16 +62,12 @@ export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
     }))
     .filter((m) => Number.isFinite(m.lat) && Number.isFinite(m.lng))
 
-  // Per-continent country breakdown for the coverage section, and the hero's
-  // honest coverage phrase ("all in Europe" while that's true).
+  // Per-continent country breakdown for the coverage section.
   const countryBreakdown: Record<string, { name: string; count: number }[]> = {}
-  const continentNames = new Map<string, string>()
   for (const entry of records) {
     const cSlug = entry.continent?.slug
     const countryName = entry.country?.name
-    if (!cSlug) continue
-    if (entry.continent?.name) continentNames.set(cSlug, entry.continent.name)
-    if (!countryName) continue
+    if (!cSlug || !countryName) continue
     countryBreakdown[cSlug] ??= []
     const bucket = countryBreakdown[cSlug]
     const existing = bucket.find((c) => c.name === countryName)
@@ -81,14 +77,6 @@ export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
   for (const bucket of Object.values(countryBreakdown)) {
     bucket.sort((a, b) => b.count - a.count)
   }
-
-  const activeContinents = [...continentNames.values()]
-  const coverageNote =
-    records.length > 0 && activeContinents.length === 1
-      ? `all in ${activeContinents[0]}`
-      : activeContinents.length > 1
-        ? `across ${activeContinents.length} continents`
-        : null
 
   // Total country count per continent-with-records ("39 more countries: none yet")
   const totalCountriesByContinent: Record<string, number> = {}
@@ -123,20 +111,20 @@ export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
 
         <main className="relative z-10 flex-1">
           <HomepageHero
-            heroTitle={homepage?.heroTitle}
-            heroText={homepage?.heroText}
-            libraryCount={libraryCount}
-            coverageNote={coverageNote}
+            eyebrow={content.heroEyebrow}
+            title={content.heroTitle}
+            text={content.heroText}
             markers={globeMarkers}
           />
 
-          <StartHereNav />
-
           <HomepageSections
+            content={content}
+            stats={stats}
+            tasks={tasks}
+            featuredLibraries={homepage?.featuredLibraries}
             continents={continentSummaries}
             countryBreakdown={countryBreakdown}
             totalCountriesByContinent={totalCountriesByContinent}
-            homepage={homepage}
             blogArticles={blogArticles}
           />
         </main>

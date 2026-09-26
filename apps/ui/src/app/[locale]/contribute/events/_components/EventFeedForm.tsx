@@ -6,6 +6,13 @@ import { useEffect, useRef, useState } from "react"
 import { T } from "@/lib/design-tokens"
 import { meiliClient, type LibrarySearchHit } from "@/lib/meilisearch"
 
+import {
+  fieldHintStyle,
+  fieldInputStyle,
+  fieldLabelStyle,
+} from "../../add/_components/wizard.constants"
+import { RequiredTag } from "../../add/_components/WizardFields"
+
 // ── Provider definitions aligned with event-credential schema enum ─────────────
 
 type Provider =
@@ -180,34 +187,66 @@ const COUNTRIES: { name: string; slug: string }[] = [
   { name: "Vietnam", slug: "vietnam" },
 ]
 
-// ── Shared input style ─────────────────────────────────────────────────────────
+// ── Shared styles (field styles shared with the add-library wizard) ─────────
 
-const inputSx: React.CSSProperties = {
-  fontFamily: T.font.sans,
-  fontSize: "13px",
-  background: T.bg.deep,
+const cardSx: React.CSSProperties = {
   border: `1px solid ${T.border.line}`,
-  borderRadius: "10px",
+  borderRadius: "20px",
+  background: T.bg.deep,
+}
+
+const stepEyebrowSx: React.CSSProperties = {
+  fontFamily: T.font.sans,
+  fontSize: "15px",
+  fontWeight: 600,
+  color: T.accent.primary,
+  margin: "0 0 6px",
+}
+
+const stepTitleSx: React.CSSProperties = {
+  fontFamily: T.font.serif,
+  fontSize: "clamp(24px, 3vw, 28px)",
+  fontWeight: 500,
+  lineHeight: 1.2,
+  letterSpacing: "-0.01em",
   color: T.ink.base,
-  padding: "10px 14px",
-  width: "100%",
-  outline: "none",
-  boxSizing: "border-box",
 }
 
-const labelSx: React.CSSProperties = {
+const bodySx: React.CSSProperties = {
   fontFamily: T.font.sans,
-  fontSize: "13px",
-  color: T.ink.faint,
-  display: "block",
-  marginBottom: "6px",
+  fontSize: "15px",
+  lineHeight: 1.55,
+  color: T.ink.dim,
+  margin: 0,
 }
 
-const hintSx: React.CSSProperties = {
-  fontFamily: T.font.sans,
-  fontSize: "13px",
-  color: T.ink.faint,
-  marginTop: "5px",
+function StepHeading({
+  n,
+  title,
+  as = "h2",
+  id,
+}: {
+  readonly n: number
+  readonly title: string
+  readonly as?: "h2" | "legend"
+  readonly id?: string
+}) {
+  const Tag = as
+
+  return (
+    <Tag
+      id={id}
+      className="block w-full"
+      style={{ padding: 0, margin: "0 0 20px" }}
+    >
+      <span className="block" style={stepEyebrowSx}>
+        Step {n} of 3
+      </span>
+      <span className="block" style={stepTitleSx}>
+        {title}
+      </span>
+    </Tag>
+  )
 }
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -388,37 +427,50 @@ export function EventFeedForm({
   if (status === "success") {
     return (
       <div
-        className="flex flex-col items-center gap-4 rounded-2xl border p-12 text-center"
-        style={{ borderColor: T.border.line, background: T.bg.deep }}
+        role="status"
+        className="flex flex-col items-start gap-4 px-6 py-10 sm:px-10"
+        style={cardSx}
       >
-        <Icon
-          icon="mdi:check-circle-outline"
-          className="size-12"
-          style={{ color: T.accent.ok }}
-        />
         <p
+          className="inline-flex items-center gap-2"
+          style={{
+            fontFamily: T.font.sans,
+            fontSize: "14px",
+            fontWeight: 600,
+            color: T.accent.ok,
+            background: "#E6EFE6",
+            borderRadius: "999px",
+            padding: "6px 12px",
+            margin: 0,
+          }}
+        >
+          <Icon
+            icon="mdi:check-circle-outline"
+            className="size-4"
+            aria-hidden="true"
+          />
+          Submitted
+        </p>
+        <h2
           style={{
             fontFamily: T.font.serif,
-            fontSize: "1.4rem",
-            fontWeight: 400,
+            fontSize: "clamp(26px, 3vw, 32px)",
+            fontWeight: 500,
+            lineHeight: 1.2,
+            letterSpacing: "-0.01em",
             color: T.ink.base,
+            margin: 0,
           }}
         >
           Credential submitted for review.
-        </p>
-        <p
-          style={{
-            fontFamily: T.font.sans,
-            fontSize: "13px",
-            color: T.ink.faint,
-            maxWidth: "400px",
-            lineHeight: 1.6,
-          }}
-        >
+        </h2>
+        <p style={{ ...bodySx, fontSize: "16px", maxWidth: "56ch" }}>
           Our team will review and activate your{" "}
           {PROVIDERS.find((p) => p.value === provider)?.label ?? provider}{" "}
           connection for{" "}
-          <strong style={{ color: T.ink.dim }}>{selectedLibrary?.name}</strong>{" "}
+          <strong style={{ color: T.ink.base, fontWeight: 600 }}>
+            {selectedLibrary?.name}
+          </strong>{" "}
           within 48 hours. Events will then start appearing automatically.
         </p>
       </div>
@@ -427,110 +479,114 @@ export function EventFeedForm({
 
   // ── Form ─────────────────────────────────────────────────────────────────────
 
+  const hasRef = !!selectedLibrary?.entityRef
+
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {/* Step 1: Library selection */}
-      <div
-        style={{
-          border: `1px solid ${T.border.line}`,
-          borderRadius: "12px",
-          padding: "20px",
-          background: T.bg.deep,
-        }}
+      <section
+        aria-labelledby="event-feed-step-1"
+        className="p-5 sm:p-8"
+        style={cardSx}
       >
-        <p
-          style={{
-            fontFamily: T.font.sans,
-            fontSize: "13px",
-            color: T.accent.aurora,
-            marginBottom: "16px",
-          }}
-        >
-          Step 1 · Select your library
-        </p>
+        <StepHeading n={1} title="Select your library" id="event-feed-step-1" />
 
         {selectedLibrary ? (
           <div
+            className="flex flex-wrap items-center justify-between gap-3"
             style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "12px 14px",
-              borderRadius: "10px",
+              padding: "14px 16px",
+              borderRadius: "14px",
               border: `1px solid ${T.border.hi}`,
               background: T.bg.surface,
             }}
           >
-            <div>
+            <div className="min-w-0">
               <p
                 style={{
-                  fontFamily: T.font.sans,
-                  fontSize: "14px",
+                  fontFamily: T.font.serif,
+                  fontSize: "20px",
                   fontWeight: 500,
+                  lineHeight: 1.25,
                   color: T.ink.base,
                   margin: 0,
                 }}
               >
                 {selectedLibrary.name}
               </p>
-              <p
-                style={{
-                  fontFamily: T.font.sans,
-                  fontSize: "13px",
-                  color: T.ink.faint,
-                  margin: "3px 0 0",
-                }}
-              >
+              <p style={{ ...bodySx, fontSize: "14px", marginTop: "4px" }}>
                 {[selectedLibrary.city, selectedLibrary.country_name]
                   .filter(Boolean)
                   .join(", ")}
                 {selectedLibrary.entityRef && (
-                  <span style={{ marginLeft: "10px", color: T.ink.faint }}>
+                  <span
+                    style={{
+                      marginLeft: "10px",
+                      fontFamily: T.font.mono,
+                      fontSize: "13px",
+                      color: T.ink.dim,
+                    }}
+                  >
                     {selectedLibrary.entityRef}
                   </span>
                 )}
               </p>
               {!selectedLibrary.entityRef && (
                 <p
+                  role="alert"
+                  className="inline-flex items-center gap-2"
                   style={{
                     fontFamily: T.font.sans,
-                    fontSize: "13px",
-                    color: T.accent.warn,
-                    marginTop: "4px",
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    color: T.accent.danger,
+                    background: "#F6E3DA",
+                    borderRadius: "10px",
+                    padding: "6px 10px",
+                    margin: "10px 0 0",
                   }}
                 >
-                  ⚠ This library has no entity ref — cannot submit
+                  <Icon
+                    icon="mdi:alert-circle-outline"
+                    className="size-4 shrink-0"
+                    aria-hidden="true"
+                  />
+                  This library has no entity ref, so a feed can&apos;t be
+                  connected yet.
                 </p>
               )}
             </div>
             <button
               type="button"
               onClick={clearLibrary}
+              className="rounded-full px-4 py-2 font-semibold transition-colors hover:bg-(--t-bg-muted)"
               style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                color: T.ink.faint,
                 fontFamily: T.font.sans,
-                fontSize: "13px",
-                padding: "4px 8px",
+                fontSize: "14px",
+                color: T.ink.base,
+                background: T.bg.deep,
+                border: `1px solid ${T.border.hi}`,
+                cursor: "pointer",
               }}
             >
               Change
             </button>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-5">
             {/* Country filter */}
-            <div>
-              <label style={labelSx}>Filter by country</label>
+            <div className="flex flex-col gap-2">
+              <label htmlFor="event-feed-country" style={fieldLabelStyle}>
+                Filter by country
+              </label>
               <select
+                id="event-feed-country"
                 value={countrySlug}
                 onChange={(e) => {
                   setCountrySlug(e.target.value)
                   setLibraryResults([])
                 }}
-                style={inputSx}
+                style={fieldInputStyle}
               >
                 {COUNTRIES.map((c) => (
                   <option key={c.slug} value={c.slug}>
@@ -541,263 +597,257 @@ export function EventFeedForm({
             </div>
 
             {/* Library search */}
-            <div ref={containerRef} style={{ position: "relative" }}>
-              <label style={labelSx}>Search library name *</label>
-              <div style={{ position: "relative" }}>
+            <div ref={containerRef} className="relative flex flex-col gap-2">
+              <label htmlFor="event-feed-library" style={fieldLabelStyle}>
+                Search library name
+                <RequiredTag />
+              </label>
+              <div className="relative">
+                <Icon
+                  icon="mdi:magnify"
+                  className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2"
+                  style={{ color: T.ink.dim }}
+                  aria-hidden="true"
+                />
                 <input
+                  id="event-feed-library"
                   type="text"
                   value={libraryQuery}
                   onChange={(e) => setLibraryQuery(e.target.value)}
                   placeholder="Start typing your library name…"
-                  style={inputSx}
+                  style={{
+                    ...fieldInputStyle,
+                    paddingLeft: "44px",
+                    paddingRight: "110px",
+                  }}
                   autoComplete="off"
+                  aria-autocomplete="list"
+                  aria-expanded={dropdownOpen && libraryResults.length > 0}
+                  aria-controls="event-feed-library-results"
                 />
-                {librarySearching && (
-                  <span
-                    style={{
-                      position: "absolute",
-                      right: "12px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      fontFamily: T.font.sans,
-                      fontSize: "13px",
-                      color: T.ink.faint,
-                    }}
-                  >
-                    Searching…
-                  </span>
-                )}
+                <span
+                  aria-live="polite"
+                  className="absolute top-1/2 right-4 -translate-y-1/2"
+                  style={{
+                    fontFamily: T.font.sans,
+                    fontSize: "14px",
+                    color: T.ink.dim,
+                  }}
+                >
+                  {librarySearching ? "Searching…" : ""}
+                </span>
               </div>
 
               {dropdownOpen && libraryResults.length > 0 && (
-                <div
+                <ul
+                  id="event-feed-library-results"
+                  className="absolute right-0 left-0 m-0 list-none p-1"
                   style={{
-                    position: "absolute",
-                    top: "100%",
-                    left: 0,
-                    right: 0,
-                    background: "rgba(6,9,22,.97)",
-                    backdropFilter: "blur(16px)",
+                    top: "calc(100% + 6px)",
+                    background: T.bg.deep,
                     border: `1px solid ${T.border.hi}`,
-                    borderTop: "none",
-                    borderRadius: "0 0 10px 10px",
+                    borderRadius: "14px",
                     zIndex: 50,
-                    overflow: "hidden",
                   }}
                 >
-                  {libraryResults.map((hit, i) => (
-                    <button
-                      key={hit.documentId}
-                      type="button"
-                      onClick={() => selectLibrary(hit)}
-                      style={{
-                        width: "100%",
-                        textAlign: "left",
-                        padding: "11px 14px",
-                        background: "none",
-                        border: "none",
-                        borderTop:
-                          i > 0 ? `1px solid ${T.border.line}` : undefined,
-                        cursor: "pointer",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        gap: "12px",
-                      }}
-                      className="hover:bg-(--t-bg-surface)"
-                    >
-                      <span
+                  {libraryResults.map((hit) => (
+                    <li key={hit.documentId}>
+                      <button
+                        type="button"
+                        onClick={() => selectLibrary(hit)}
+                        className="flex w-full items-center justify-between gap-3 rounded-[10px] px-3 py-3 text-left transition-colors hover:bg-(--t-bg-surface)"
                         style={{
-                          fontFamily: T.font.sans,
-                          fontSize: "13px",
-                          color: T.ink.base,
-                          fontWeight: 500,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
                         }}
                       >
-                        {hit.name}
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: T.font.sans,
-                          fontSize: "13px",
-                          color: T.ink.faint,
-                          whiteSpace: "nowrap",
-                          flexShrink: 0,
-                        }}
-                      >
-                        {[hit.city, hit.country_name]
-                          .filter(Boolean)
-                          .join(", ")}
-                      </span>
-                    </button>
+                        <span
+                          className="min-w-0 truncate"
+                          style={{
+                            fontFamily: T.font.sans,
+                            fontSize: "15px",
+                            fontWeight: 600,
+                            color: T.ink.base,
+                          }}
+                        >
+                          {hit.name}
+                        </span>
+                        <span
+                          className="shrink-0 whitespace-nowrap"
+                          style={{
+                            fontFamily: T.font.sans,
+                            fontSize: "14px",
+                            color: T.ink.dim,
+                          }}
+                        >
+                          {[hit.city, hit.country_name]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </span>
+                      </button>
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
             </div>
           </div>
         )}
-      </div>
+      </section>
 
       {/* Step 2: Provider selection */}
-      {selectedLibrary && selectedLibrary.entityRef && (
-        <div
-          style={{
-            border: `1px solid ${T.border.line}`,
-            borderRadius: "12px",
-            padding: "20px",
-            background: T.bg.deep,
-          }}
-        >
-          <p
-            style={{
-              fontFamily: T.font.sans,
-              fontSize: "13px",
-              color: T.accent.aurora,
-              marginBottom: "16px",
-            }}
-          >
-            Step 2 · Event platform
-          </p>
-          <div className="flex flex-col gap-2">
-            {PROVIDERS.map((p) => (
-              <button
-                key={p.value}
-                type="button"
-                onClick={() => setProvider(p.value)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "12px 14px",
-                  borderRadius: "10px",
-                  border: `1px solid ${provider === p.value ? T.border.hi : T.border.line}`,
-                  background:
-                    provider === p.value
-                      ? "var(--t-aurora-soft)"
-                      : "transparent",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  transition: "border-color 120ms, background 120ms",
-                }}
-                className={
-                  provider !== p.value
-                    ? "hover:border-(--t-border-hi)"
-                    : undefined
-                }
-              >
-                <div>
-                  <p
-                    style={{
-                      fontFamily: T.font.sans,
-                      fontSize: "12px",
-                      color:
-                        provider === p.value ? T.accent.aurora : T.ink.base,
-                      margin: 0,
-                      fontWeight: 500,
-                    }}
-                  >
-                    {p.label}
-                  </p>
-                  <p
-                    style={{
-                      fontFamily: T.font.sans,
-                      fontSize: "13px",
-                      color: T.ink.faint,
-                      margin: "2px 0 0",
-                    }}
-                  >
-                    {p.desc}
-                  </p>
-                </div>
-                {provider === p.value && (
+      {selectedLibrary && hasRef && (
+        <fieldset className="m-0 min-w-0 p-5 sm:p-8" style={cardSx}>
+          <StepHeading n={2} title="Event platform" as="legend" />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {PROVIDERS.map((p) => {
+              const active = provider === p.value
+
+              return (
+                <button
+                  key={p.value}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setProvider(p.value)}
+                  className={`flex items-center justify-between gap-3 text-left transition-colors ${
+                    active
+                      ? ""
+                      : "hover:border-(--t-border-hi) hover:bg-(--t-bg-surface)"
+                  }`}
+                  style={{
+                    padding: "14px 16px",
+                    borderRadius: "14px",
+                    border: `1px solid ${active ? T.accent.primary : T.border.line}`,
+                    background: active ? T.accent.chip : T.bg.deep,
+                    cursor: "pointer",
+                  }}
+                >
+                  <span className="min-w-0">
+                    <span
+                      className="block"
+                      style={{
+                        fontFamily: T.font.sans,
+                        fontSize: "15px",
+                        fontWeight: 600,
+                        color: active ? T.accent.primary : T.ink.base,
+                      }}
+                    >
+                      {p.label}
+                    </span>
+                    <span
+                      className="mt-0.5 block"
+                      style={{
+                        fontFamily: T.font.sans,
+                        fontSize: "14px",
+                        color: T.ink.dim,
+                      }}
+                    >
+                      {p.desc}
+                    </span>
+                  </span>
                   <Icon
-                    icon="mdi:check-circle"
-                    style={{ color: T.accent.aurora, flexShrink: 0 }}
+                    icon={
+                      active
+                        ? "mdi:check-circle"
+                        : "mdi:checkbox-blank-circle-outline"
+                    }
+                    className="size-5 shrink-0"
+                    style={{ color: active ? T.accent.primary : T.border.hi }}
+                    aria-hidden="true"
                   />
-                )}
-              </button>
-            ))}
+                </button>
+              )
+            })}
           </div>
-        </div>
+        </fieldset>
       )}
 
       {/* Step 3: Credential fields */}
-      {selectedLibrary && selectedLibrary.entityRef && provider && (
-        <div
-          style={{
-            border: `1px solid ${T.border.line}`,
-            borderRadius: "12px",
-            padding: "20px",
-            background: T.bg.deep,
-          }}
+      {selectedLibrary && hasRef && provider && (
+        <section
+          aria-labelledby="event-feed-step-3"
+          className="p-5 sm:p-8"
+          style={cardSx}
         >
-          <p
-            style={{
-              fontFamily: T.font.sans,
-              fontSize: "13px",
-              color: T.accent.aurora,
-              marginBottom: "4px",
-            }}
-          >
-            Step 3 · {PROVIDERS.find((p2) => p2.value === provider)?.label}{" "}
-            credentials
-          </p>
-          <p
-            style={{
-              fontFamily: T.font.sans,
-              fontSize: "13px",
-              color: T.ink.faint,
-              marginBottom: "16px",
-              lineHeight: 1.5,
-            }}
-          >
+          <StepHeading
+            n={3}
+            id="event-feed-step-3"
+            title={`${PROVIDERS.find((p2) => p2.value === provider)?.label ?? ""} credentials`}
+          />
+          <p className="-mt-2 mb-6 flex items-start gap-2" style={bodySx}>
+            <Icon
+              icon="mdi:lock-outline"
+              className="mt-0.5 size-4 shrink-0"
+              style={{ color: T.ink.dim }}
+              aria-hidden="true"
+            />
             Credentials are encrypted at rest and only used to sync events. They
             are never shared publicly.
           </p>
 
           <div className="flex flex-col gap-5">
-            {providerFields.map((field) => (
-              <div key={field.key}>
-                <label style={labelSx}>{field.label} *</label>
-                <input
-                  type={field.type}
-                  required
-                  placeholder={field.placeholder ?? ""}
-                  value={credFields[field.key] ?? ""}
-                  onChange={(e) =>
-                    setCredFields((prev) => ({
-                      ...prev,
-                      [field.key]: e.target.value,
-                    }))
-                  }
-                  style={inputSx}
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-                {field.hint && <p style={hintSx}>{field.hint}</p>}
-              </div>
-            ))}
+            {providerFields.map((field) => {
+              const inputId = `event-feed-cred-${field.key}`
+              const hintId = field.hint ? `${inputId}-hint` : undefined
+
+              return (
+                <div key={field.key} className="flex flex-col gap-2">
+                  <label htmlFor={inputId} style={fieldLabelStyle}>
+                    {field.label}
+                    <RequiredTag />
+                  </label>
+                  <input
+                    id={inputId}
+                    type={field.type}
+                    required
+                    aria-required
+                    aria-describedby={hintId}
+                    placeholder={field.placeholder ?? ""}
+                    value={credFields[field.key] ?? ""}
+                    onChange={(e) =>
+                      setCredFields((prev) => ({
+                        ...prev,
+                        [field.key]: e.target.value,
+                      }))
+                    }
+                    style={fieldInputStyle}
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                  {field.hint && (
+                    <p id={hintId} style={fieldHintStyle}>
+                      {field.hint}
+                    </p>
+                  )}
+                </div>
+              )
+            })}
           </div>
-        </div>
+        </section>
       )}
 
       {/* Error message */}
       {status === "error" && errorMsg && (
         <div
+          role="alert"
+          className="flex items-start gap-2"
           style={{
-            padding: "12px 14px",
-            borderRadius: "10px",
-            border: `1px solid ${T.accent.danger}30`,
-            background: `${T.accent.danger}10`,
+            padding: "12px 16px",
+            borderRadius: "14px",
+            background: "#F6E3DA",
+            color: T.accent.danger,
           }}
         >
+          <Icon
+            icon="mdi:alert-circle-outline"
+            className="mt-0.5 size-5 shrink-0"
+            aria-hidden="true"
+          />
           <p
             style={{
               fontFamily: T.font.sans,
-              fontSize: "13px",
+              fontSize: "15px",
+              fontWeight: 500,
               color: T.accent.danger,
               margin: 0,
             }}
@@ -808,19 +858,18 @@ export function EventFeedForm({
       )}
 
       {/* Submit */}
-      {selectedLibrary && selectedLibrary.entityRef && provider && (
+      {selectedLibrary && hasRef && provider && (
         <button
           type="submit"
           disabled={!canSubmit || status === "submitting"}
-          className="inline-flex items-center gap-2 self-start rounded-full px-6 py-3 text-sm transition-all duration-150 hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
-          style={{
-            fontFamily: T.font.sans,
-            background: "var(--t-aurora-soft)",
-            border: "1px solid var(--t-aurora-edge)",
-            color: T.accent.aurora,
-          }}
+          className="inline-flex items-center justify-center gap-2 self-stretch rounded-full bg-(--t-accent-primary) px-6 py-3 font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-50 sm:self-start"
+          style={{ fontFamily: T.font.sans, fontSize: "15px" }}
         >
-          <Icon icon="mdi:shield-check-outline" className="size-4" />
+          <Icon
+            icon="mdi:shield-check-outline"
+            className="size-5"
+            aria-hidden="true"
+          />
           {status === "submitting" ? "Submitting…" : "Submit for review"}
         </button>
       )}

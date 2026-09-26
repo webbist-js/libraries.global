@@ -21,6 +21,7 @@ export function PageHero({
   eyebrowAccent,
   title,
   lead,
+  compact = false,
   children,
 }: {
   /** Optional breadcrumb trail rendered above the eyebrow pill. */
@@ -32,6 +33,8 @@ export function PageHero({
   readonly eyebrowAccent?: ReactNode
   readonly title: string
   readonly lead?: ReactNode
+  /** Tighter band + smaller title for task pages (forms, wizards). */
+  readonly compact?: boolean
   /** Rendered under the lead in the right column (search field, status line). */
   readonly children?: ReactNode
 }) {
@@ -41,19 +44,25 @@ export function PageHero({
       style={{ background: T.bg.space, borderColor: T.border.line }}
     >
       {breadcrumb?.length ? (
-        <Container className="pt-6 sm:pt-10">
+        <Container className={compact ? "pt-5 sm:pt-7" : "pt-6 sm:pt-10"}>
           <Breadcrumb items={breadcrumb} />
         </Container>
       ) : null}
       <Container
-        className={
+        className={[
+          "grid gap-x-16 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-end",
+          compact ? "gap-y-5" : "gap-y-8",
           breadcrumb?.length
-            ? "grid gap-x-16 gap-y-8 pt-[clamp(24px,3.5vw,40px)] pb-[clamp(40px,6vw,72px)] lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-end"
-            : "grid gap-x-16 gap-y-8 py-[clamp(40px,6vw,72px)] lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-end"
-        }
+            ? compact
+              ? "pt-5 pb-[clamp(28px,4vw,44px)]"
+              : "pt-[clamp(24px,3.5vw,40px)] pb-[clamp(40px,6vw,72px)]"
+            : compact
+              ? "py-[clamp(28px,4vw,44px)]"
+              : "py-[clamp(40px,6vw,72px)]",
+        ].join(" ")}
       >
         <div>
-          <p className="m-0 mb-5">
+          <p className={compact ? "m-0 mb-4" : "m-0 mb-5"}>
             <span
               className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[14px] font-semibold"
               style={{
@@ -81,7 +90,9 @@ export function PageHero({
             className="m-0 text-balance"
             style={{
               fontFamily: T.font.serif,
-              fontSize: "clamp(40px,5vw,68px)",
+              fontSize: compact
+                ? "clamp(32px,3.6vw,46px)"
+                : "clamp(40px,5vw,68px)",
               fontWeight: 500,
               lineHeight: 1.04,
               letterSpacing: "-0.02em",

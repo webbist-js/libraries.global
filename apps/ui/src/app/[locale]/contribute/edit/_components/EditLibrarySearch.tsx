@@ -1,14 +1,15 @@
 "use client"
 
+import { Icon } from "@iconify/react"
 import { useRouter } from "next/navigation"
+import type React from "react"
 import { useState, useEffect, useRef } from "react"
 
 import { SearchField } from "@/components/ds"
-import { T } from "@/lib/design-tokens"
+import { T, tintForLibraryType } from "@/lib/design-tokens"
 import type { ClaimedLibrary } from "@/lib/types/profile"
 
-import { ContributeNavBar } from "../../_components/ContributeNavBar"
-import { ContributeSubpageHero } from "../../_components/ContributeSubpageHero"
+import { ContributeSectionHeader } from "../../_components/ContributeSectionHeader"
 
 interface LibraryResult {
   documentId: string
@@ -18,6 +19,22 @@ interface LibraryResult {
   entityRef?: string | null
   libraryType?: string | null
 }
+
+const cardStyle: React.CSSProperties = {
+  background: T.bg.deep,
+  border: `1px solid ${T.border.line}`,
+}
+
+const headingStyle: React.CSSProperties = {
+  fontFamily: T.font.serif,
+  fontSize: "clamp(22px,2.4vw,26px)",
+  fontWeight: 500,
+  letterSpacing: "-0.01em",
+  color: T.ink.base,
+}
+
+const rowClass =
+  "flex w-full cursor-pointer flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-transparent px-5 py-4 text-left transition-colors hover:bg-(--t-bg-surface) sm:px-6"
 
 function useDebounce<V>(value: V, delay: number): V {
   const [debounced, setDebounced] = useState(value)
@@ -104,370 +121,276 @@ export function EditLibrarySearch() {
   )
 
   return (
-    <>
-      <ContributeSubpageHero
-        section="Edit a library"
-        heading="Find a library"
-        headingItalic="to edit."
-        body="Search by name or city. Only libraries you've claimed can be edited — select one to open the wizard."
-        minHeight="340px"
+    <div
+      style={{ background: T.bg.void, minHeight: "100vh", color: T.ink.base }}
+    >
+      <ContributeSectionHeader
+        section="Edit the index"
+        title="Find a library *to edit.*"
+        lead="Search by name or city. Only libraries you've claimed can be edited. Select one to open the editor."
       />
 
-      <ContributeNavBar />
-
-      {/* Search content */}
-      <div
-        style={{
-          background: T.bg.void,
-          minHeight: "60vh",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "768px",
-            margin: "0 auto",
-            padding: "48px 24px 80px",
-          }}
-        >
+      <div className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8 lg:py-12">
+        <div className="max-w-[820px]">
           {/* Claimed libraries */}
           {claimedLibraries.length > 0 && (
-            <div style={{ marginBottom: "32px" }}>
-              <p
-                style={{
-                  fontFamily: T.font.sans,
-                  fontSize: "13px",
-                  color: T.ink.faint,
-                  margin: "0 0 10px",
-                }}
+            <section aria-labelledby="claimed-heading" className="mb-10">
+              <h2
+                id="claimed-heading"
+                className="m-0 mb-4"
+                style={headingStyle}
               >
                 Your claimed libraries
-              </p>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
-                }}
+              </h2>
+              <ul
+                className="m-0 list-none overflow-hidden rounded-[20px] p-0"
+                style={cardStyle}
               >
-                {claimedLibraries.map((lib) => (
-                  <button
-                    key={lib.entityRef ?? lib.documentId}
-                    onClick={() =>
-                      router.push(`/contribute/edit/${lib.slug ?? ""}`)
-                    }
-                    style={{
-                      padding: "14px 18px",
-                      border: `1px solid rgba(142,240,179,0.25)`,
-                      borderRadius: "10px",
-                      background: "rgba(142,240,179,0.03)",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      width: "100%",
-                      textAlign: "left",
-                      transition: "background 0.15s, border-color 0.15s",
-                    }}
-                    onMouseEnter={(e) => {
-                      const el = e.currentTarget as HTMLButtonElement
-                      el.style.background = "rgba(142,240,179,0.06)"
-                      el.style.borderColor = "rgba(142,240,179,0.4)"
-                    }}
-                    onMouseLeave={(e) => {
-                      const el = e.currentTarget as HTMLButtonElement
-                      el.style.background = "rgba(142,240,179,0.03)"
-                      el.style.borderColor = "rgba(142,240,179,0.25)"
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "4px",
-                        minWidth: 0,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontFamily: T.font.sans,
-                          fontSize: "14px",
-                          fontWeight: 500,
-                          color: T.ink.base,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {lib.name}
-                      </span>
-                      {lib.entityRef && (
-                        <span
-                          style={{
-                            fontFamily: T.font.sans,
-                            fontSize: "13px",
-                            color: T.ink.faint,
-                          }}
-                        >
-                          {lib.entityRef}
-                        </span>
-                      )}
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        flexShrink: 0,
-                        marginLeft: "12px",
-                      }}
-                    >
-                      {lib.libraryType && (
-                        <span
-                          style={{
-                            fontFamily: T.font.sans,
-                            fontSize: "13px",
-                            color: T.ink.faint,
-                            border: `1px solid ${T.border.line}`,
-                            borderRadius: "5px",
-                            padding: "3px 8px",
-                          }}
-                        >
-                          {lib.libraryType}
-                        </span>
-                      )}
-                      <span
-                        style={{
-                          fontFamily: T.font.sans,
-                          fontSize: "13px",
-                          color: T.accent.ok,
-                        }}
-                      >
-                        Edit →
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Search input */}
-          <div style={{ marginBottom: "20px" }}>
-            <SearchField
-              id="edit-library-search"
-              placeholder="Search libraries by name or place"
-              loading={loading}
-              inputRef={inputRef}
-              onClear={() => setQuery("")}
-              inputProps={{
-                value: query,
-                onChange: (e) => setQuery(e.target.value),
-                autoFocus: true,
-                autoComplete: "off",
-              }}
-            />
-          </div>
-
-          {/* Results */}
-          {results.length > 0 && (
-            <div>
-              <p
-                style={{
-                  fontFamily: T.font.sans,
-                  fontSize: "13px",
-                  color: T.ink.faint,
-                  margin: "0 0 12px",
-                }}
-              >
-                {results.length} result{results.length !== 1 ? "s" : ""}
-              </p>
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: "6px" }}
-              >
-                {results.map((lib) => {
-                  const isClaimed =
-                    lib.entityRef != null &&
-                    claimedEntityRefs.has(lib.entityRef)
+                {claimedLibraries.map((lib, index) => {
+                  const tint = tintForLibraryType(lib.libraryType)
 
                   return (
-                    <button
-                      key={lib.documentId}
-                      onClick={() => {
-                        if (isClaimed) {
-                          router.push(`/contribute/edit/${lib.slug}`)
-                        } else {
-                          router.push(
-                            `/contribute/claim?librarySlug=${encodeURIComponent(lib.slug)}&libraryName=${encodeURIComponent(lib.name)}&libraryDocumentId=${encodeURIComponent(lib.documentId)}${lib.entityRef ? `&libraryEntityRef=${encodeURIComponent(lib.entityRef)}` : ""}`
-                          )
-                        }
-                      }}
-                      style={{
-                        padding: "16px 20px",
-                        border: `1px solid ${T.border.line}`,
-                        borderRadius: "10px",
-                        background: T.bg.surface,
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        width: "100%",
-                        textAlign: "left",
-                        transition: "background 0.15s, border-color 0.15s",
-                      }}
-                      onMouseEnter={(e) => {
-                        const el = e.currentTarget as HTMLButtonElement
-                        el.style.background = "var(--t-aurora-soft)"
-                        el.style.borderColor = "var(--t-aurora-soft)"
-                      }}
-                      onMouseLeave={(e) => {
-                        const el = e.currentTarget as HTMLButtonElement
-                        el.style.background = "var(--t-bg-surface)"
-                        el.style.borderColor = T.border.line
-                      }}
+                    <li
+                      key={lib.entityRef ?? lib.documentId}
+                      style={
+                        index > 0
+                          ? { borderTop: `1px solid ${T.border.divider}` }
+                          : undefined
+                      }
                     >
-                      {/* Left: name + meta */}
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "5px",
-                          minWidth: 0,
-                        }}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          router.push(`/contribute/edit/${lib.slug ?? ""}`)
+                        }
+                        className={rowClass}
                       >
-                        <span
-                          style={{
-                            fontFamily: T.font.sans,
-                            fontSize: "15px",
-                            fontWeight: 500,
-                            color: T.ink.base,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {lib.name}
+                        <span className="flex min-w-0 flex-col gap-1">
+                          <span
+                            className="truncate text-[16px] font-semibold"
+                            style={{ color: T.ink.base }}
+                          >
+                            {lib.name}
+                          </span>
+                          {lib.entityRef && (
+                            <span
+                              className="text-[14px]"
+                              style={{
+                                color: T.ink.dim,
+                                fontFamily: T.font.mono,
+                              }}
+                            >
+                              {lib.entityRef}
+                            </span>
+                          )}
                         </span>
-                        <span
-                          style={{
-                            fontFamily: T.font.sans,
-                            fontSize: "13px",
-                            color: T.ink.faint,
-                          }}
-                        >
-                          {[lib.city, lib.entityRef]
-                            .filter(Boolean)
-                            .join(" · ")}
+                        <span className="flex shrink-0 flex-wrap items-center gap-3">
+                          {lib.libraryType && (
+                            <span
+                              className="rounded-full px-3 py-1 text-[13px] font-semibold whitespace-nowrap"
+                              style={{ background: tint.bg, color: tint.fg }}
+                            >
+                              {lib.libraryType}
+                            </span>
+                          )}
+                          <span
+                            className="inline-flex items-center gap-1 text-[14px] font-semibold"
+                            style={{ color: T.accent.primary }}
+                          >
+                            Edit
+                            <Icon
+                              icon="mdi:arrow-right"
+                              width={16}
+                              height={16}
+                              aria-hidden="true"
+                            />
+                          </span>
                         </span>
-                      </div>
-
-                      {/* Right: type chip + action */}
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "12px",
-                          flexShrink: 0,
-                          marginLeft: "16px",
-                        }}
-                      >
-                        {lib.libraryType && (
-                          <span
-                            style={{
-                              fontFamily: T.font.sans,
-                              fontSize: "13px",
-                              color: T.ink.faint,
-                              border: `1px solid ${T.border.line}`,
-                              borderRadius: "6px",
-                              padding: "4px 9px",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {lib.libraryType}
-                          </span>
-                        )}
-                        {isClaimed ? (
-                          <span
-                            style={{
-                              fontFamily: T.font.sans,
-                              fontSize: "13px",
-                              color: T.accent.aurora,
-                              opacity: 0.85,
-                            }}
-                          >
-                            Edit →
-                          </span>
-                        ) : (
-                          <span
-                            style={{
-                              fontFamily: T.font.sans,
-                              fontSize: "13px",
-                              color: T.ink.faint,
-                              border: `1px solid ${T.border.line}`,
-                              borderRadius: "6px",
-                              padding: "4px 9px",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            Claim to edit
-                          </span>
-                        )}
-                      </div>
-                    </button>
+                      </button>
+                    </li>
                   )
                 })}
-              </div>
-            </div>
+              </ul>
+            </section>
           )}
 
-          {/* Empty state */}
-          {!loading && debouncedQuery.length >= 2 && results.length === 0 && (
-            <div
-              style={{
-                padding: "32px 0",
-                textAlign: "center",
-              }}
-            >
-              <p
-                style={{
-                  fontFamily: T.font.sans,
-                  fontSize: "13px",
-                  color: T.ink.faint,
-                  margin: "0 0 6px",
+          {/* Search */}
+          <section aria-labelledby="search-heading">
+            <h2 id="search-heading" className="m-0 mb-4" style={headingStyle}>
+              Search the index
+            </h2>
+            <div className="mb-5">
+              <SearchField
+                id="edit-library-search"
+                placeholder="Search libraries by name or place"
+                loading={loading}
+                inputRef={inputRef}
+                onClear={() => setQuery("")}
+                inputProps={{
+                  value: query,
+                  onChange: (e) => setQuery(e.target.value),
+                  autoFocus: true,
+                  autoComplete: "off",
                 }}
-              >
-                No results
-              </p>
-              <p
-                style={{
-                  fontFamily: T.font.sans,
-                  fontSize: "13px",
-                  color: T.ink.faint,
-                  margin: 0,
-                  opacity: 0.7,
-                }}
-              >
-                No libraries matched &ldquo;{debouncedQuery}&rdquo;.
-              </p>
+              />
             </div>
-          )}
 
-          {/* Idle prompt */}
-          {!loading && debouncedQuery.length < 2 && (
-            <p
-              style={{
-                fontFamily: T.font.sans,
-                fontSize: "13px",
-                color: T.ink.faint,
-                textAlign: "center",
-                padding: "40px 0",
-                opacity: 0.5,
-              }}
-            >
-              Type at least 2 characters to search
+            <p aria-live="polite" className="sr-only">
+              {results.length > 0
+                ? `${results.length} result${results.length !== 1 ? "s" : ""}`
+                : ""}
             </p>
-          )}
+
+            {/* Results */}
+            {results.length > 0 && (
+              <div>
+                <p
+                  className="m-0 mb-3 text-[14px]"
+                  style={{ color: T.ink.dim }}
+                >
+                  {results.length} result{results.length !== 1 ? "s" : ""}
+                </p>
+                <ul
+                  className="m-0 list-none overflow-hidden rounded-[20px] p-0"
+                  style={cardStyle}
+                >
+                  {results.map((lib, index) => {
+                    const isClaimed =
+                      lib.entityRef != null &&
+                      claimedEntityRefs.has(lib.entityRef)
+                    const tint = tintForLibraryType(lib.libraryType)
+
+                    return (
+                      <li
+                        key={lib.documentId}
+                        style={
+                          index > 0
+                            ? { borderTop: `1px solid ${T.border.divider}` }
+                            : undefined
+                        }
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isClaimed) {
+                              router.push(`/contribute/edit/${lib.slug}`)
+                            } else {
+                              router.push(
+                                `/contribute/claim?librarySlug=${encodeURIComponent(lib.slug)}&libraryName=${encodeURIComponent(lib.name)}&libraryDocumentId=${encodeURIComponent(lib.documentId)}${lib.entityRef ? `&libraryEntityRef=${encodeURIComponent(lib.entityRef)}` : ""}`
+                              )
+                            }
+                          }}
+                          className={rowClass}
+                        >
+                          {/* Left: name + meta */}
+                          <span className="flex min-w-0 flex-col gap-1">
+                            <span
+                              className="truncate text-[16px] font-semibold"
+                              style={{ color: T.ink.base }}
+                            >
+                              {lib.name}
+                            </span>
+                            {(lib.city || lib.entityRef) && (
+                              <span
+                                className="text-[14px]"
+                                style={{ color: T.ink.dim }}
+                              >
+                                {lib.city}
+                                {lib.city && lib.entityRef ? " · " : null}
+                                {lib.entityRef && (
+                                  <span style={{ fontFamily: T.font.mono }}>
+                                    {lib.entityRef}
+                                  </span>
+                                )}
+                              </span>
+                            )}
+                          </span>
+
+                          {/* Right: type chip + action */}
+                          <span className="flex shrink-0 flex-wrap items-center gap-3">
+                            {lib.libraryType && (
+                              <span
+                                className="rounded-full px-3 py-1 text-[13px] font-semibold whitespace-nowrap"
+                                style={{ background: tint.bg, color: tint.fg }}
+                              >
+                                {lib.libraryType}
+                              </span>
+                            )}
+                            {isClaimed ? (
+                              <span
+                                className="inline-flex items-center gap-1 text-[14px] font-semibold"
+                                style={{ color: T.accent.primary }}
+                              >
+                                Edit
+                                <Icon
+                                  icon="mdi:arrow-right"
+                                  width={16}
+                                  height={16}
+                                  aria-hidden="true"
+                                />
+                              </span>
+                            ) : (
+                              <span
+                                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold whitespace-nowrap"
+                                style={{
+                                  background: T.bg.deep,
+                                  border: `1px solid ${T.border.hi}`,
+                                  color: T.ink.dim,
+                                }}
+                              >
+                                <Icon
+                                  icon="mdi:lock-outline"
+                                  width={14}
+                                  height={14}
+                                  aria-hidden="true"
+                                />
+                                Claim to edit
+                              </span>
+                            )}
+                          </span>
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            )}
+
+            {/* Empty state */}
+            {!loading && debouncedQuery.length >= 2 && results.length === 0 && (
+              <div
+                className="rounded-[20px] px-6 py-10 text-center"
+                style={cardStyle}
+              >
+                <p
+                  className="m-0 mb-1"
+                  style={{
+                    fontFamily: T.font.serif,
+                    fontSize: "22px",
+                    fontWeight: 500,
+                    color: T.ink.base,
+                  }}
+                >
+                  No results
+                </p>
+                <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+                  No libraries matched &ldquo;{debouncedQuery}&rdquo;.
+                </p>
+              </div>
+            )}
+
+            {/* Idle prompt */}
+            {!loading && debouncedQuery.length < 2 && (
+              <p
+                className="m-0 py-6 text-center text-[15px]"
+                style={{ color: T.ink.dim }}
+              >
+                Type at least 2 characters to search
+              </p>
+            )}
+          </section>
         </div>
       </div>
-    </>
+    </div>
   )
 }

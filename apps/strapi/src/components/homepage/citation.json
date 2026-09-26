@@ -1,0 +1,16 @@
+{
+  "collectionName": "components_homepage_citations",
+  "info": {
+    "displayName": "Citation",
+    "icon": "quote",
+    "description": "A quoted definition or statement with its source."
+  },
+  "options": {},
+  "attributes": {
+    "lead": { "type": "string" },
+    "quote": { "type": "text", "required": true },
+    "attribution": { "type": "string" },
+    "sourceLabel": { "type": "string" },
+    "sourceUrl": { "type": "string" }
+  }
+}

@@ -16,21 +16,28 @@ const NAV_ITEMS = [
   },
 ] as const
 
+/** Sub-routes that belong under a tab without being the tab's own page. */
+const SEGMENT_TO_TAB: Record<string, (typeof NAV_ITEMS)[number]["id"]> = {
+  community: "community",
+  add: "add",
+  claim: "add",
+  edit: "edit",
+  correct: "edit",
+  submissions: "submissions",
+}
+
+function activeTab(pathname: string): string {
+  const match = /\/contribute(?:\/([^/?#]+))?/.exec(pathname)
+  if (!match) return ""
+  const segment = match[1]
+  if (!segment) return "hub"
+
+  // docs/, events/ etc. sit in the section but under no tab
+  return SEGMENT_TO_TAB[segment] ?? ""
+}
+
 export function ContributeNavBar() {
   const pathname = usePathname()
 
-  const activeId =
-    NAV_ITEMS.find(({ href, id }) => {
-      if (id === "hub") {
-        return (
-          pathname === "/contribute" ||
-          pathname === "/en/contribute" ||
-          pathname.endsWith("/contribute")
-        )
-      }
-
-      return pathname.includes(href.slice("/contribute".length))
-    })?.id ?? "hub"
-
-  return <StickySubNav tabs={[...NAV_ITEMS]} activeId={activeId} />
+  return <StickySubNav tabs={[...NAV_ITEMS]} activeId={activeTab(pathname)} />
 }

@@ -1,10 +1,20 @@
 "use client"
 
+import { Icon } from "@iconify/react"
+import type React from "react"
 import { useState } from "react"
 
-import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
+import { primaryCtaSm } from "@/lib/styles"
+
+import { ContributeSectionHeader } from "../../../_components/ContributeSectionHeader"
+import {
+  fieldHintStyle,
+  fieldInputStyle,
+  fieldLabelStyle,
+} from "../../../add/_components/wizard.constants"
+import { RequiredTag } from "../../../add/_components/WizardFields"
 
 const CORRECTION_CATEGORIES = [
   { value: "opening_hours", label: "Opening hours" },
@@ -21,6 +31,89 @@ interface CorrectLibraryFormProps {
   slug: string
   libraryName: string
   sessionUser: { id: string; email: string; name: string }
+}
+
+const selectStyle: React.CSSProperties = {
+  ...fieldInputStyle,
+  appearance: "none",
+  cursor: "pointer",
+  paddingRight: "44px",
+  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2355536A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "right 16px center",
+}
+
+const cardStyle: React.CSSProperties = {
+  background: T.bg.deep,
+  border: `1px solid ${T.border.line}`,
+}
+
+const REVIEW_STEPS = [
+  {
+    icon: "mdi:send-outline",
+    copy: "Your note is saved and waits for a reviewer.",
+  },
+  {
+    icon: "mdi:magnify",
+    copy: "A trusted contributor checks it against the library's own sources.",
+  },
+  {
+    icon: "mdi:check",
+    copy: "Accepted corrections are published and credited to you.",
+  },
+] as const
+
+function ReviewSidebar() {
+  return (
+    <aside
+      aria-labelledby="correct-review-heading"
+      className="self-start rounded-[20px] p-6 lg:sticky lg:top-[128px]"
+      style={cardStyle}
+    >
+      <h2
+        id="correct-review-heading"
+        className="m-0"
+        style={{
+          fontFamily: T.font.serif,
+          fontSize: "22px",
+          fontWeight: 500,
+          color: T.ink.base,
+        }}
+      >
+        How review works
+      </h2>
+      <ol className="mt-4 mb-0 flex list-none flex-col gap-4 p-0">
+        {REVIEW_STEPS.map((step) => (
+          <li key={step.icon} className="flex items-start gap-3">
+            <span
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+              style={{ background: T.accent.chip, color: T.accent.primary }}
+            >
+              <Icon
+                icon={step.icon}
+                width={16}
+                height={16}
+                aria-hidden="true"
+              />
+            </span>
+            <span
+              className="text-[15px] leading-[1.55]"
+              style={{ color: T.ink.dim }}
+            >
+              {step.copy}
+            </span>
+          </li>
+        ))}
+      </ol>
+      <p
+        className="mt-5 mb-0 pt-5 text-[15px] leading-[1.6]"
+        style={{ color: T.ink.dim, borderTop: `1px solid ${T.border.divider}` }}
+      >
+        The more specific you are — the right hours, the new address, a link to
+        the source — the faster it goes through.
+      </p>
+    </aside>
+  )
 }
 
 export function CorrectLibraryForm({
@@ -63,190 +156,200 @@ export function CorrectLibraryForm({
     }
   }
 
-  const inputStyle = {
-    width: "100%",
-    padding: "11px 14px",
-    borderRadius: "10px",
-    border: `1px solid ${T.border.hi}`,
-    background: T.bg.surface,
-    color: T.ink.base,
-    fontSize: "14px",
-    fontFamily: T.font.sans,
-    outline: "none",
-    boxSizing: "border-box" as const,
-  }
-
-  const labelStyle = {
-    fontFamily: T.font.sans,
-    fontSize: "13px",
-    color: T.ink.low,
-    display: "block",
-    marginBottom: "6px",
-  }
-
-  if (submitted) {
-    return (
-      <div
-        style={{
-          maxWidth: "480px",
-          margin: "80px auto",
-          padding: "0 20px",
-          textAlign: "center",
-        }}
-      >
-        <p
-          style={{
-            fontFamily: T.font.serif,
-            fontSize: "28px",
-            color: T.ink.base,
-            marginBottom: "12px",
-          }}
-        >
-          Correction submitted.
-        </p>
-        <p style={{ fontSize: "14px", color: T.ink.low, marginBottom: "28px" }}>
-          Thanks for helping keep {libraryName} accurate. Our team will review
-          your note shortly.
-        </p>
-        <GlobalLink
-          href="/contribute/submissions"
-          style={{
-            fontFamily: T.font.sans,
-            fontSize: "13px",
-            color: T.accent.aurora,
-            textDecoration: "none",
-          }}
-        >
-          View my submissions →
-        </GlobalLink>
-      </div>
-    )
-  }
+  const disabled = pending || !category || !note.trim()
 
   return (
-    <div style={{ maxWidth: "560px", margin: "60px auto", padding: "0 20px" }}>
-      <Breadcrumb
-        className="mb-8"
-        items={[
-          { label: "Home", href: "/" },
-          { label: "Contribute", href: "/contribute" },
-          { label: "Suggest a correction" },
-        ]}
+    <div
+      style={{ background: T.bg.void, minHeight: "100vh", color: T.ink.base }}
+    >
+      <ContributeSectionHeader
+        compact
+        section="Suggest a correction"
+        title={`Correct *${libraryName}.*`}
+        lead="Spotted something wrong on this library's page? Tell us what needs fixing and an editor will review it."
       />
 
-      <p
-        style={{
-          fontFamily: T.font.sans,
-          fontSize: "13px",
-          color: T.ink.faint,
-          marginBottom: "10px",
-        }}
-      >
-        Corrections
-      </p>
-      <h1
-        style={{
-          fontFamily: T.font.serif,
-          fontSize: "clamp(1.8rem,4vw,2.4rem)",
-          fontWeight: 400,
-          letterSpacing: "-0.02em",
-          color: T.ink.base,
-          margin: "0 0 6px",
-        }}
-      >
-        Suggest a correction
-      </h1>
-      <p
-        style={{
-          fontSize: "14px",
-          color: T.ink.low,
-          marginBottom: "32px",
-          lineHeight: "1.6",
-        }}
-      >
-        Spotted something wrong on the{" "}
-        <strong style={{ color: T.ink.base }}>{libraryName}</strong> page? Let
-        us know and we&apos;ll review it.
-      </p>
+      <div className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8 lg:py-12">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-12">
+          {submitted ? (
+            <section
+              role="status"
+              aria-labelledby="correct-success-heading"
+              className="min-w-0 self-start rounded-[20px] p-6 sm:p-8"
+              style={cardStyle}
+            >
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[14px] font-semibold"
+                style={{ background: "#E6EFE6", color: T.accent.ok }}
+              >
+                <Icon
+                  icon="mdi:check-circle-outline"
+                  width={16}
+                  height={16}
+                  aria-hidden="true"
+                />
+                Submitted
+              </span>
+              <h2
+                id="correct-success-heading"
+                className="mt-4 mb-0"
+                style={{
+                  fontFamily: T.font.serif,
+                  fontSize: "clamp(26px,3vw,32px)",
+                  fontWeight: 500,
+                  letterSpacing: "-0.01em",
+                  color: T.ink.base,
+                }}
+              >
+                Correction submitted
+              </h2>
+              <p
+                className="mt-2 mb-6 max-w-[56ch] text-[16px] leading-[1.6]"
+                style={{ color: T.ink.dim }}
+              >
+                Thanks for helping keep {libraryName} accurate. Our team will
+                review your note shortly.
+              </p>
+              <GlobalLink
+                href="/contribute/submissions"
+                className={primaryCtaSm}
+              >
+                View my submissions
+                <Icon
+                  icon="mdi:arrow-right"
+                  width={16}
+                  height={16}
+                  aria-hidden="true"
+                />
+              </GlobalLink>
+            </section>
+          ) : (
+            <section
+              aria-labelledby="correct-form-heading"
+              className="min-w-0 self-start rounded-[20px] p-6 sm:p-8"
+              style={cardStyle}
+            >
+              <h2
+                id="correct-form-heading"
+                className="m-0"
+                style={{
+                  fontFamily: T.font.serif,
+                  fontSize: "clamp(24px,2.6vw,28px)",
+                  fontWeight: 500,
+                  letterSpacing: "-0.01em",
+                  color: T.ink.base,
+                }}
+              >
+                What needs fixing?
+              </h2>
+              <p
+                className="mt-2 mb-6 max-w-[62ch] text-[15px] leading-[1.6]"
+                style={{ color: T.ink.dim }}
+              >
+                You&apos;re suggesting a change to{" "}
+                <strong style={{ color: T.ink.base, fontWeight: 600 }}>
+                  {libraryName}
+                </strong>
+                .
+              </p>
 
-      <form
-        onSubmit={handleSubmit}
-        style={{ display: "flex", flexDirection: "column", gap: "20px" }}
-      >
-        <div>
-          <label style={labelStyle} htmlFor="category">
-            What needs correcting?
-          </label>
-          <select
-            id="category"
-            required
-            value={category}
-            onChange={(e) => setCategory(e.target.value as CorrectionCategory)}
-            style={{
-              ...inputStyle,
-              appearance: "none",
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23ffffff44'/%3E%3C/svg%3E")`,
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "right 14px center",
-              paddingRight: "36px",
-            }}
-            className="focus:border-(--t-aurora-edge)"
-          >
-            <option value="">Select a category…</option>
-            {CORRECTION_CATEGORIES.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
+              <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+                <div className="flex flex-col gap-2">
+                  <label style={fieldLabelStyle} htmlFor="category">
+                    What needs correcting?
+                    <RequiredTag />
+                  </label>
+                  <select
+                    id="category"
+                    required
+                    value={category}
+                    onChange={(e) =>
+                      setCategory(e.target.value as CorrectionCategory)
+                    }
+                    style={{
+                      ...selectStyle,
+                      color: category ? T.ink.base : T.ink.dim,
+                    }}
+                  >
+                    <option value="">Select a category…</option>
+                    {CORRECTION_CATEGORIES.map((c) => (
+                      <option key={c.value} value={c.value}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label style={fieldLabelStyle} htmlFor="note">
+                    What&apos;s wrong?
+                    <RequiredTag />
+                  </label>
+                  <textarea
+                    id="note"
+                    required
+                    rows={5}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Describe the issue. Include the correct information if you know it."
+                    aria-describedby="note-hint"
+                    style={{
+                      ...fieldInputStyle,
+                      resize: "vertical",
+                      minHeight: "140px",
+                      lineHeight: 1.6,
+                    }}
+                  />
+                  <p id="note-hint" style={fieldHintStyle}>
+                    If you have a source (the library&apos;s website, a notice,
+                    a photo), mention it here.
+                  </p>
+                </div>
+
+                {error ? (
+                  <p
+                    role="alert"
+                    className="m-0 flex items-start gap-2 rounded-[14px] px-4 py-3 text-[15px] leading-normal"
+                    style={{ background: "#F6E3DA", color: T.accent.danger }}
+                  >
+                    <Icon
+                      icon="mdi:alert-circle-outline"
+                      width={18}
+                      height={18}
+                      aria-hidden="true"
+                      className="mt-0.5 shrink-0"
+                    />
+                    {error}
+                  </p>
+                ) : null}
+
+                <div
+                  className="flex flex-wrap items-center gap-3 pt-6"
+                  style={{ borderTop: `1px solid ${T.border.divider}` }}
+                >
+                  <button
+                    type="submit"
+                    disabled={disabled}
+                    className={`${primaryCtaSm} text-[15px] disabled:cursor-not-allowed disabled:opacity-45`}
+                  >
+                    {pending ? "Submitting…" : "Submit correction"}
+                    {!pending && (
+                      <Icon
+                        icon="mdi:arrow-right"
+                        width={16}
+                        height={16}
+                        aria-hidden="true"
+                      />
+                    )}
+                  </button>
+                </div>
+              </form>
+            </section>
+          )}
+
+          <ReviewSidebar />
         </div>
-
-        <div>
-          <label style={labelStyle} htmlFor="note">
-            What&apos;s wrong?
-          </label>
-          <textarea
-            id="note"
-            required
-            rows={5}
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Describe the issue. Include the correct information if you know it."
-            style={{
-              ...inputStyle,
-              resize: "vertical",
-              minHeight: "110px",
-              lineHeight: "1.6",
-            }}
-            className="focus:border-(--t-aurora-edge) focus:bg-(--t-aurora-soft)"
-          />
-        </div>
-
-        {error ? (
-          <p style={{ fontSize: "13px", color: T.accent.danger }}>{error}</p>
-        ) : null}
-
-        <button
-          type="submit"
-          disabled={pending || !category || !note.trim()}
-          style={{
-            padding: "13px",
-            borderRadius: "10px",
-            background: T.ink.base,
-            color: T.bg.void,
-            fontFamily: T.font.sans,
-            fontWeight: 600,
-            fontSize: "14px",
-            border: "none",
-            cursor:
-              pending || !category || !note.trim() ? "not-allowed" : "pointer",
-            opacity: pending || !category || !note.trim() ? 0.5 : 1,
-            transition: "opacity 150ms",
-          }}
-        >
-          {pending ? "Submitting…" : "Submit correction →"}
-        </button>
-      </form>
+      </div>
     </div>
   )
 }

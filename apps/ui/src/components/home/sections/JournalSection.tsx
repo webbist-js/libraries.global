@@ -1,6 +1,8 @@
 import Image from "next/image"
 
 import GlobalLink from "@/components/global/GlobalLink"
+import type { SectionIntro } from "@/components/home/homepage.types"
+import SectionHeader from "@/components/home/sections/SectionHeader"
 import { formatDate } from "@/lib/article-helpers"
 import { T } from "@/lib/design-tokens"
 import type { BlogArticleSummary } from "@/lib/strapi-api/content/server"
@@ -11,8 +13,10 @@ function articleHref(article: BlogArticleSummary): string {
 }
 
 export function JournalSection({
+  intro,
   articles,
 }: {
+  readonly intro: SectionIntro
   readonly articles: BlogArticleSummary[]
 }) {
   if (articles.length === 0) return null
@@ -24,28 +28,23 @@ export function JournalSection({
   const date = formatDate(featured.publishedAt ?? featured.updatedAt, "short")
 
   return (
-    <section className="mx-auto w-full max-w-[1360px] px-4 pt-[clamp(64px,8vw,104px)] sm:px-8">
-      <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
-        <h2
-          className="m-0"
-          style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
-            fontSize: "clamp(34px,4vw,50px)",
-            letterSpacing: "-0.015em",
-            color: T.ink.base,
-          }}
-        >
-          From the journal
-        </h2>
-        <GlobalLink
-          href="/blog"
-          className="font-semibold underline underline-offset-[3px]"
-          style={{ color: T.accent.primary }}
-        >
-          All stories
-        </GlobalLink>
-      </div>
+    <section
+      aria-labelledby="journal-title"
+      className="mx-auto w-full max-w-[1360px] px-4 pt-[clamp(64px,8vw,104px)] sm:px-8"
+    >
+      <SectionHeader
+        id="journal-title"
+        intro={intro}
+        action={
+          <GlobalLink
+            href="/blog"
+            className="font-semibold underline underline-offset-[3px]"
+            style={{ color: T.accent.primary }}
+          >
+            All stories
+          </GlobalLink>
+        }
+      />
 
       <article className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))] items-center gap-[clamp(20px,3vw,40px)]">
         <div className="relative aspect-[3/2] overflow-hidden rounded-[24px]">

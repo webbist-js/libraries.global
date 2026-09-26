@@ -1,5 +1,5 @@
 import GlobalLink from "@/components/global/GlobalLink"
-import { T } from "@/lib/design-tokens"
+import { T, TYPE_TINT } from "@/lib/design-tokens"
 import {
   type LeaderboardEntry,
   getDisplayName,
@@ -7,12 +7,18 @@ import {
 } from "@/lib/types/leaderboard"
 
 const TIER_COLORS: Record<string, string> = {
-  Reader: T.ink.faint,
+  Reader: T.ink.dim,
   Indexer: T.ink.dim,
-  Cartographer: T.accent.aurora,
-  Archivist: T.accent.violet,
-  Scholar: T.accent.gold,
-  Curator: T.accent.gold,
+  Cartographer: T.accent.primary,
+  Archivist: TYPE_TINT.national.fg,
+  Scholar: T.accent.warn,
+  Curator: T.accent.warn,
+}
+
+const COLS_CLASS: Record<number, string> = {
+  1: "sm:grid-cols-1",
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-3",
 }
 
 export function LeaderboardPodium({
@@ -23,118 +29,97 @@ export function LeaderboardPodium({
   if (entries.length === 0) return null
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${entries.length}, 1fr)`,
-        gap: "12px",
-        marginBottom: "24px",
-      }}
+    <ol
+      className={`m-0 mb-6 grid list-none grid-cols-1 gap-4 p-0 ${COLS_CLASS[entries.length] ?? "sm:grid-cols-3"}`}
     >
-      {entries.map((entry) => (
-        <GlobalLink
-          key={entry.baUserId}
-          href={entry.username ? `/profile/${entry.username}` : "#"}
-          style={{
-            padding: "20px 16px",
-            borderRadius: "12px",
-            border: `1px solid ${entry.rank === 1 ? T.accent.gold + "40" : T.border.line}`,
-            background:
-              entry.rank === 1 ? "rgba(232,201,138,0.04)" : T.bg.surface,
-            textAlign: "center",
-            position: "relative",
-            display: "block",
-            textDecoration: "none",
-            transition: "border-color 150ms",
-          }}
-        >
-          <div
-            style={{
-              fontFamily: T.font.serif,
-              fontSize: "32px",
-              fontWeight: 400,
-              color: entry.rank === 1 ? T.accent.gold : T.ink.faint,
-              lineHeight: 1,
-              marginBottom: "12px",
-            }}
-          >
-            {entry.rank}
-          </div>
-          <div
-            style={{
-              width: "44px",
-              height: "44px",
-              borderRadius: "50%",
-              background: "var(--t-aurora-soft)",
-              border: "1px solid rgba(67,56,202,0.08)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontFamily: T.font.sans,
-              fontSize: "12px",
-              fontWeight: 600,
-              color: T.accent.aurora,
-              margin: "0 auto 10px",
-              overflow: "hidden",
-            }}
-          >
-            {entry.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={entry.avatarUrl}
-                alt=""
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            ) : (
-              getInitials(entry)
-            )}
-          </div>
-          <p
-            style={{
-              margin: "0 0 4px",
-              fontSize: "14px",
-              fontWeight: 500,
-              color: T.ink.base,
-            }}
-          >
-            {getDisplayName(entry)}
-          </p>
-          <p
-            style={{
-              margin: "0 0 10px",
-              fontFamily: T.font.sans,
-              fontSize: "13px",
-              color: TIER_COLORS[entry.tier] ?? T.ink.faint,
-            }}
-          >
-            {entry.tier}
-            {entry.country ? ` · ${entry.country}` : ""}
-          </p>
-          <div>
-            <span
+      {entries.map((entry) => {
+        const isFirst = entry.rank === 1
+
+        return (
+          <li key={entry.baUserId} className="min-w-0">
+            <GlobalLink
+              href={entry.username ? `/profile/${entry.username}` : "#"}
+              className="block h-full rounded-[20px] px-5 py-6 text-center no-underline transition-[box-shadow,border-color] hover:border-(--t-border-hi) hover:shadow-[0_12px_28px_rgba(23,22,43,.08)]"
               style={{
-                fontFamily: T.font.serif,
-                fontSize: "24px",
-                fontWeight: 400,
-                letterSpacing: "-0.02em",
-                color: T.ink.base,
+                border: `1px solid ${isFirst ? T.border.hi : T.border.line}`,
+                background: T.bg.deep,
               }}
             >
-              {entry.periodPoints.toLocaleString()}
-            </span>
-            <span
-              style={{
-                fontFamily: T.font.sans,
-                fontSize: "13px",
-                color: T.ink.faint,
-                marginLeft: "6px",
-              }}
-            >
-              pts
-            </span>
-          </div>
-        </GlobalLink>
-      ))}
-    </div>
+              <span
+                className="mb-4 inline-flex items-center rounded-full px-3 py-1 text-[13px] font-semibold"
+                style={
+                  isFirst
+                    ? { background: T.accent.chip, color: T.accent.primary }
+                    : { background: T.bg.muted, color: T.ink.dim }
+                }
+              >
+                Rank {entry.rank}
+              </span>
+              <div
+                className="mx-auto mb-3 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full text-[15px] font-semibold"
+                style={{ background: T.accent.chip, color: T.accent.primary }}
+              >
+                {entry.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={entry.avatarUrl}
+                    alt=""
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  getInitials(entry)
+                )}
+              </div>
+              <p
+                className="m-0 mb-1 break-words"
+                style={{
+                  fontFamily: T.font.serif,
+                  fontSize: "20px",
+                  fontWeight: 500,
+                  lineHeight: 1.25,
+                  color: T.ink.base,
+                }}
+              >
+                {getDisplayName(entry)}
+              </p>
+              <p
+                className="m-0 mb-3 text-[14px] font-medium"
+                style={{ color: TIER_COLORS[entry.tier] ?? T.ink.dim }}
+              >
+                {entry.tier}
+                {entry.country ? (
+                  <span style={{ color: T.ink.dim }}>
+                    {` · ${entry.country}`}
+                  </span>
+                ) : null}
+              </p>
+              <p className="m-0">
+                <span
+                  style={{
+                    fontFamily: T.font.serif,
+                    fontSize: "32px",
+                    fontWeight: 500,
+                    letterSpacing: "-0.02em",
+                    color: T.ink.base,
+                  }}
+                >
+                  {entry.periodPoints.toLocaleString()}
+                </span>
+                <span
+                  className="ml-1.5 text-[14px]"
+                  style={{ color: T.ink.dim }}
+                >
+                  pts
+                </span>
+              </p>
+            </GlobalLink>
+          </li>
+        )
+      })}
+    </ol>
   )
 }

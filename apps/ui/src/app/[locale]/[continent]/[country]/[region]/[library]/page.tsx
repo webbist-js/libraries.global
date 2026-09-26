@@ -12,6 +12,7 @@ import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
 import {
   fetchAllLibraries,
   fetchLibrary,
+  fetchLibraryCatalogue,
   fetchLibraryRevisions,
   fetchNearbyLibraries,
 } from "@/lib/strapi-api/content/server"
@@ -143,6 +144,7 @@ export default function LibraryRoutePage(props: {
     )
   )
   const revisions = use(fetchLibraryRevisions(library.documentId))
+  const catalogue = use(fetchLibraryCatalogue(library.documentId))
 
   const crumbs = libraryPath(library, {
     continent: params.continent,
@@ -202,6 +204,7 @@ export default function LibraryRoutePage(props: {
         locale={locale}
         nearbyLibraries={nearbyLibraries}
         revisions={revisions}
+        catalogue={catalogue}
       />
     </>
   )

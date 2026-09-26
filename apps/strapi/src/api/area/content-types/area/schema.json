@@ -44,6 +44,14 @@
         }
       }
     },
+    "gssCode": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
     "shortName": {
       "type": "string",
       "pluginOptions": {

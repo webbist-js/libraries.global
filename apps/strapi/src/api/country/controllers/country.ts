@@ -1,5 +1,7 @@
 import { factories } from "@strapi/strapi"
 
+import { countLibrariesByType } from "../../../utils/library-type-counts"
+
 export default factories.createCoreController(
   "api::country.country",
   ({ strapi }) => ({
@@ -36,13 +38,7 @@ export default factories.createCoreController(
             region: { fields: ["name", "slug"] },
           },
         },
-        sections: {
-          on: {
-            "sections.editorial-block": { populate: { image: true } },
-            "sections.cta-banner": true,
-            "sections.quick-links": { populate: { links: true } },
-          },
-        },
+        seo: { populate: { metaImage: true } },
       }
 
       const results = await strapi
@@ -71,6 +67,7 @@ export default factories.createCoreController(
 
       // ── Computed aggregates ─────────────────────────────────────────────────
       let libraryCount = 0
+      let libraryTypeCounts: { type: string; count: number }[] = []
       let regionCount = 0
 
       if (country?.id) {
@@ -85,6 +82,15 @@ export default factories.createCoreController(
           })
         } catch {
           // non-critical
+        }
+
+        if (libraryCount > 0 && country.documentId) {
+          libraryTypeCounts = await countLibrariesByType(
+            strapi,
+            "country",
+            country.documentId,
+            { locale, status }
+          )
         }
 
         try {
@@ -102,7 +108,9 @@ export default factories.createCoreController(
       }
 
       ctx.body = {
-        data: country ? { ...country, libraryCount, regionCount } : null,
+        data: country
+          ? { ...country, libraryCount, regionCount, libraryTypeCounts }
+          : null,
         meta: {},
       }
     },

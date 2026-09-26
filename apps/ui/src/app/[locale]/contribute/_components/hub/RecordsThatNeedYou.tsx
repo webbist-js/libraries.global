@@ -54,7 +54,7 @@ export function RecordsThatNeedYou({
               Records that need you
             </h2>
             <GlobalLink
-              href="/index"
+              href="/index?needs=hours,photo,facilities&sort=gaps"
               className="text-[14px] font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >

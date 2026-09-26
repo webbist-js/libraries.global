@@ -1,17 +1,16 @@
 import Image from "next/image"
 import type { Locale } from "next-intl"
 
-import {
-  CtaBannerSection,
-  EditorialSection,
-  LocationContributeCTA,
-  LocationGridBrowser,
-} from "@/components/ds"
+import { LocationContributeCTA, LocationGridBrowser } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import { LocationEventsStrip } from "@/components/events/LocationEventsStrip"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import FeaturedLibraryCards from "@/components/home/FeaturedLibraryCards"
+import {
+  hasLocationAbout,
+  LocationAbout,
+} from "@/components/location/LocationAbout"
 import {
   LocationEmptyState,
   LocationHero,
@@ -20,12 +19,8 @@ import {
 import { LocationTabBar } from "@/components/location/LocationTabBar"
 import { InteractiveMap } from "@/components/map/InteractiveMap"
 import { T } from "@/lib/design-tokens"
-import type {
-  PopulatedCountryData,
-  EditorialBlock as EditorialBlockType,
-  CtaBanner as CtaBannerType,
-  PageSection,
-} from "@/lib/strapi-api/content/server"
+import { buildLocationDescription } from "@/lib/seo/location"
+import type { PopulatedCountryData } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 // ── Page ────────────────────────────────────────────────────────────────────
@@ -41,8 +36,6 @@ export function CountryDetailPage({
   slug: string
   continentSlug: string
 }) {
-  const typedSections = (country.sections ?? []) as PageSection[]
-
   const hasFeaturedLibraries =
     Array.isArray(country.featuredLibraries) &&
     country.featuredLibraries.length > 0
@@ -69,6 +62,9 @@ export function CountryDetailPage({
       : []),
     ...(hasRegions ? [{ id: "regions", label: regionLabel }] : []),
     { id: "map", label: "Map" },
+    ...(hasLocationAbout(country.about)
+      ? [{ id: "about", label: "About" }]
+      : []),
   ]
 
   return (
@@ -88,7 +84,16 @@ export function CountryDetailPage({
           }}
           typeLabel={country.iso2 ? `Country · ${country.iso2}` : "Country"}
           title={country.name ?? ""}
-          intro={country.heroTagline ?? country.summary}
+          intro={
+            country.heroTagline ??
+            country.summary ??
+            buildLocationDescription({
+              name: country.name ?? "",
+              libraryCount: country.libraryCount,
+              typeCounts: country.libraryTypeCounts,
+              childLabel: hasRegions ? regionLabel : null,
+            })
+          }
           stats={[
             {
               label: "Libraries",
@@ -209,6 +214,9 @@ export function CountryDetailPage({
               </div>
             </section>
 
+            {/* ── About (optional CMS copy) ───────────────────────────────── */}
+            <LocationAbout name={country.name ?? ""} about={country.about} />
+
             {/* ── Events strip ────────────────────────────────────────────── */}
             {country.iso2 ? (
               <section className="scroll-mt-28">
@@ -228,19 +236,8 @@ export function CountryDetailPage({
           />
         </div>
 
-        {/* ── Dynamic zone sections ───────────────────────────────────────── */}
-        {typedSections.map((section) => (
-          <div key={section.id}>
-            {section.__component === "sections.editorial-block" ? (
-              <EditorialSection section={section as EditorialBlockType} />
-            ) : section.__component === "sections.cta-banner" ? (
-              <CtaBannerSection section={section as CtaBannerType} />
-            ) : null}
-          </div>
-        ))}
-
         {/* ── Journey CTA fallback ────────────────────────────────────────── */}
-        {typedSections.length === 0 && browseRegions[0] ? (
+        {browseRegions[0] ? (
           <Container>
             <section
               className="mt-14 rounded-3xl px-8 py-14 text-center"

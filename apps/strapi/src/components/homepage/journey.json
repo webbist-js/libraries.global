@@ -1,0 +1,22 @@
+{
+  "collectionName": "components_homepage_journeys",
+  "info": {
+    "displayName": "Journey",
+    "icon": "walk",
+    "description": "One of the primary homepage journeys (explore / contribute / represent a library)."
+  },
+  "options": {},
+  "attributes": {
+    "tone": {
+      "type": "enumeration",
+      "enum": ["explore", "contribute", "steward"],
+      "default": "explore",
+      "required": true
+    },
+    "eyebrow": { "type": "string" },
+    "title": { "type": "string", "required": true },
+    "text": { "type": "text" },
+    "ctaLabel": { "type": "string" },
+    "ctaHref": { "type": "string" }
+  }
+}

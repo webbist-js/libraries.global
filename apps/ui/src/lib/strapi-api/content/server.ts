@@ -5,6 +5,7 @@ import { draftMode } from "next/headers"
 import type { Locale } from "next-intl"
 
 import type { HomepageContinentSummary } from "@/components/home/homepage.types"
+import { computeCompleteness } from "@/components/library/library-page.helpers"
 import { logNonBlockingError } from "@/lib/logging"
 import { PublicStrapiClient } from "@/lib/strapi-api"
 import type {
@@ -123,6 +124,28 @@ export async function fetchSeo(
 
 // ------ Homepage fetching functions
 
+/** Editable homepage section copy (flat `homepage.*` components). */
+const HOMEPAGE_SECTION_POPULATE = Object.fromEntries(
+  [
+    "proofIntro",
+    "openDataDefinition",
+    "journeysIntro",
+    "journeys",
+    "featuredIntro",
+    "featuredPrompt",
+    "tasksIntro",
+    "stewardBand",
+    "coverageIntro",
+    "journalIntro",
+    "communityBand",
+    "communitySteps",
+    "openIntro",
+    "openLinks",
+    "finalCta",
+    "finalBenefits",
+  ].map((key) => [key, true])
+)
+
 export async function fetchHomepage(locale: Locale) {
   const dm = await draftMode()
 
@@ -139,6 +162,7 @@ export async function fetchHomepage(locale: Locale) {
           },
           featuredServices: true,
           seo: true,
+          ...HOMEPAGE_SECTION_POPULATE,
         },
       } as Parameters<typeof PublicStrapiClient.fetchOne>[2]
     )) as APIResponse<PopulatedHomepageData>
@@ -441,6 +465,23 @@ export type CtaBanner = {
 
 export type PageSection = EditorialBlock | CtaBanner
 
+// ── Location page fields (shared across continent/country/region) ─────────────
+
+/** Published-library count per `libraryType`, largest first (computed by Strapi). */
+export type LibraryTypeCount = { type: string; count: number }
+
+/**
+ * Programmatic by default: copy and metadata are derived from data. These are
+ * the only CMS-authored fields, and every one is optional.
+ */
+type LocationCmsFields = {
+  /** Optional hand-written context (country/continent only). Rendered only when set. */
+  about?: unknown
+  /** Optional overrides for the generated title/description/image. */
+  seo?: Data.Component<"shared.seo"> | null
+  libraryTypeCounts?: LibraryTypeCount[]
+}
+
 // ── Continent ─────────────────────────────────────────────────────────────────
 
 export type PopulatedContinentData =
@@ -454,8 +495,7 @@ export type PopulatedContinentData =
       capitalCity?: string | null
     }[]
     featuredLibraries?: PopulatedFeaturedLibraryData[]
-    sections?: PageSection[]
-  }
+  } & LocationCmsFields
 
 // ── Country ───────────────────────────────────────────────────────────────────
 
@@ -481,10 +521,9 @@ export type PopulatedCountryData = Data.ContentType<"api::country.country"> & {
   featuredLibraries?: PopulatedFeaturedLibraryData[]
   quickLinks?: QuickLink[]
   mapConfig?: MapConfig | null
-  sections?: PageSection[]
   libraryCount?: number
   regionCount?: number
-}
+} & LocationCmsFields
 
 // ── Region ────────────────────────────────────────────────────────────────────
 
@@ -511,10 +550,9 @@ export type PopulatedRegionData = Data.ContentType<"api::region.region"> & {
   featuredLibraries?: PopulatedFeaturedLibraryData[]
   quickLinks?: QuickLink[]
   mapConfig?: MapConfig | null
-  sections?: PageSection[]
   libraryCount?: number
   areaCount?: number
-}
+} & LocationCmsFields
 
 // ── Area ──────────────────────────────────────────────────────────────────────
 
@@ -1383,5 +1421,155 @@ export async function fetchLibraryRevisions(
     })
 
     return []
+  }
+}
+
+// ── Homepage: community proof + contribution opportunities ────────────────────
+
+export type HomepageStats = {
+  libraries: number
+  countries: number
+  contributors: number
+  contributionsThisMonth: number
+}
+
+/** Live community counts from the custom `/homepage/stats` route. */
+export async function fetchHomepageStats(): Promise<HomepageStats | null> {
+  const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
+  try {
+    const res = await fetch(`${strapiUrl}/api/homepage/stats`, {
+      next: { revalidate: 300 },
+    })
+    if (!res.ok) return null
+    const json = (await res.json()) as { data?: HomepageStats }
+
+    return json.data ?? null
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: "Error fetching homepage stats",
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return null
+  }
+}
+
+export type IncompleteLibrary = {
+  documentId: string
+  slug: string
+  name: string
+  place: string
+  percent: number
+  /** `computeCompleteness` section keys that aren't filled yet. */
+  missing: string[]
+}
+
+type IncompleteLibraryEntry = {
+  documentId: string
+  slug?: string | null
+  name?: string | null
+  city?: string | null
+  region?: { name?: string | null } | null
+  country?: { name?: string | null } | null
+} & Parameters<typeof computeCompleteness>[0]
+
+/**
+ * Published libraries with gaps, least complete first — the raw material for
+ * "help complete the map" tasks on the homepage and the contribute hub.
+ */
+export async function fetchIncompleteLibraries(): Promise<IncompleteLibrary[]> {
+  const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
+  const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
+  try {
+    const params = new URLSearchParams({
+      status: "published",
+      "pagination[pageSize]": "100",
+      "sort[0]": "name:asc",
+      "populate[heroImage][fields][0]": "url",
+      "populate[accessibility][fields][0]": "name",
+      "populate[services][fields][0]": "name",
+      "populate[amenities][fields][0]": "name",
+      "populate[collectionStats]": "true",
+      "populate[country][fields][0]": "name",
+      "populate[region][fields][0]": "name",
+    })
+    const res = await fetch(`${strapiUrl}/api/libraries?${params}`, {
+      next: { revalidate: 300 },
+      headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
+    })
+    if (!res.ok) return []
+    const json = (await res.json()) as { data?: IncompleteLibraryEntry[] }
+
+    return (json.data ?? [])
+      .filter((entry) => entry.slug && entry.name)
+      .map((entry) => {
+        const { filled, total, sections } = computeCompleteness(entry)
+
+        return {
+          documentId: entry.documentId,
+          slug: entry.slug!,
+          name: entry.name!,
+          place: [entry.city, entry.region?.name, entry.country?.name]
+            .filter(Boolean)
+            .join(", "),
+          percent: Math.round((filled / total) * 100),
+          missing: sections.filter((s) => !s.filled).map((s) => s.key),
+        }
+      })
+      .filter((record) => record.missing.length > 0)
+      .sort((a, b) => a.percent - b.percent)
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: "Error fetching incomplete libraries",
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return []
+  }
+}
+
+// ------ Library catalogue (live availability via @repo/catalogues in Strapi)
+
+export interface LibraryCatalogueSummary {
+  name: string
+  system: string
+  url: string
+  status: "unverified" | "active" | "failing" | "unsupported"
+  /** The catalogue's name for this Library's branch, when matched. */
+  branch: string | null
+}
+
+/**
+ * The online catalogue a Library belongs to, if we know it. Drives the
+ * "Check the catalogue" section; null hides it.
+ */
+export async function fetchLibraryCatalogue(
+  documentId: string
+): Promise<LibraryCatalogueSummary | null> {
+  const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
+  try {
+    const res = await fetch(
+      `${strapiUrl}/api/catalogues/for-library/${documentId}`,
+      { next: { revalidate: 3600 } }
+    )
+    if (!res.ok) return null
+
+    return ((await res.json()) as LibraryCatalogueSummary | null) ?? null
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching catalogue for library '${documentId}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return null
   }
 }

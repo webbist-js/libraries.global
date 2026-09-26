@@ -1,0 +1,14 @@
+{
+  "collectionName": "components_homepage_link_cards",
+  "info": {
+    "displayName": "Link Card",
+    "icon": "link",
+    "description": "Titled link with a one-line description."
+  },
+  "options": {},
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "text": { "type": "text" },
+    "href": { "type": "string", "required": true }
+  }
+}

@@ -7,11 +7,18 @@ import ContinentDetailPage from "@/components/continent/ContinentDetailPage"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { isDevelopment } from "@/lib/general-helpers"
 import { buildBreadcrumbSchema } from "@/lib/seo/json-ld"
+import {
+  buildLibraryItemListSchema,
+  buildLocationDescription,
+  locationRobots,
+  locationTitle,
+} from "@/lib/seo/location"
 import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
 import {
   fetchAllContinents,
   fetchContinent,
 } from "@/lib/strapi-api/content/server"
+import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 export const dynamic = "force-static"
 export const revalidate = 300
@@ -29,12 +36,20 @@ export async function generateMetadata({
   const name = data.name ?? "Continent"
 
   return buildMetadata({
-    title: `Libraries in ${name}`,
+    title: locationTitle(data.seo, `Libraries in ${name}`),
     description:
+      data.seo?.metaDescription ??
       data.summary ??
-      `Explore libraries across ${name} — national, public and academic institutions by country, with opening hours and services.`,
+      buildLocationDescription({
+        name,
+        libraryCount: data.libraryCount,
+        typeCounts: data.libraryTypeCounts,
+        childLabel: "country",
+      }),
     path: slug,
     locale,
+    image: formatStrapiMediaUrl(data.seo?.metaImage?.url),
+    robots: locationRobots(data.libraryCount),
   })
 }
 
@@ -68,6 +83,14 @@ export default function ContinentPage(props: {
           { name: "Home", url: absoluteUrl("", locale) },
           { name: continentData.name ?? slug, url: absoluteUrl(slug, locale) },
         ])}
+      />
+      <JsonLd
+        data={buildLibraryItemListSchema({
+          name: `Notable libraries in ${continentData.name ?? slug}`,
+          path: slug,
+          locale,
+          libraries: continentData.featuredLibraries,
+        })}
       />
       <ContinentDetailPage
         continent={continentData}

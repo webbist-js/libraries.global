@@ -14,6 +14,7 @@ import {
   LibraryAnchorNav,
   type AnchorItem,
 } from "@/components/library/LibraryAnchorNav"
+import { LibraryCatalogueCheck } from "@/components/library/LibraryCatalogueCheck"
 import { LibraryEvents } from "@/components/library/LibraryEvents"
 import LibraryExploreNearby from "@/components/library/LibraryExploreNearby"
 import { LibraryHeroActions } from "@/components/library/LibraryHeroActions"
@@ -37,6 +38,7 @@ import {
 } from "@/components/library/LibrarySidebar"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
 import type {
+  LibraryCatalogueSummary,
   LibraryRevision,
   PopulatedLibraryData,
 } from "@/lib/strapi-api/content/server"
@@ -47,6 +49,7 @@ interface LibraryDetailPageProps {
   readonly locale: Locale
   readonly nearbyLibraries?: PopulatedLibraryData[]
   readonly revisions?: LibraryRevision[]
+  readonly catalogue?: LibraryCatalogueSummary | null
 }
 
 export function LibraryDetailPage({
@@ -54,6 +57,7 @@ export function LibraryDetailPage({
   locale,
   nearbyLibraries = [],
   revisions = [],
+  catalogue = null,
 }: LibraryDetailPageProps) {
   if (!library) {
     return (
@@ -243,6 +247,8 @@ export function LibraryDetailPage({
             <LibraryVisitSection library={library} />
             <LibraryFacilitiesSection library={library} />
             <LibraryCollectionsSection library={library} />
+
+            <CatalogueSection library={library} catalogue={catalogue} />
             <LibraryHistorySection library={library} />
 
             {/* Events */}
@@ -309,6 +315,33 @@ export function LibraryDetailPage({
         locationName={library.name ?? "this library"}
       />
     </div>
+  )
+}
+
+/** Live availability check, shown when the Library's catalogue is connected. */
+function CatalogueSection({
+  library,
+  catalogue,
+}: {
+  readonly library: PopulatedLibraryData
+  readonly catalogue: LibraryCatalogueSummary | null
+}) {
+  if (!catalogue || catalogue.status === "unsupported" || !library.documentId)
+    return null
+
+  return (
+    <LibrarySectionCard
+      id="catalogue"
+      title="Check the catalogue"
+      iconPath={LIB_ICONS.search}
+      intro="See whether a book is on the shelf here, or at another branch."
+    >
+      <LibraryCatalogueCheck
+        libraryDocumentId={library.documentId}
+        catalogueName={catalogue.name}
+        catalogueUrl={catalogue.url}
+      />
+    </LibrarySectionCard>
   )
 }
 

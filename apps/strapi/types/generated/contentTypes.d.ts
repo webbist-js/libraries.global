@@ -669,6 +669,12 @@ export interface ApiAreaArea extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    gssCode: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     libraries: Schema.Attribute.Relation<"oneToMany", "api::library.library"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -979,6 +985,133 @@ export interface ApiBlogSectionBlogSection extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface ApiCatalogueBranchCatalogueBranch
+  extends Struct.CollectionTypeSchema {
+  collectionName: "catalogue_branches"
+  info: {
+    description: "A service point listed by a Catalogue, and the Library it corresponds to. Keyed to the Library by documentId so matching never touches Library drafts."
+    displayName: "Catalogue Branch"
+    pluralName: "catalogue-branches"
+    singularName: "catalogue-branch"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    i18n: {
+      localized: false
+    }
+  }
+  attributes: {
+    catalogue: Schema.Attribute.Relation<
+      "manyToOne",
+      "api::catalogue.catalogue"
+    >
+    code: Schema.Attribute.String
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    lastSeenAt: Schema.Attribute.DateTime
+    libraryDocumentId: Schema.Attribute.String
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::catalogue-branch.catalogue-branch"
+    > &
+      Schema.Attribute.Private
+    matchScore: Schema.Attribute.Decimal
+    matchStatus: Schema.Attribute.Enumeration<
+      ["confirmed", "auto", "review", "unmatched", "rejected"]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"unmatched">
+    name: Schema.Attribute.String & Schema.Attribute.Required
+    publishedAt: Schema.Attribute.DateTime
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface ApiCatalogueCatalogue extends Struct.CollectionTypeSchema {
+  collectionName: "catalogues"
+  info: {
+    description: "A library service's online catalogue (OPAC) and how to talk to it. Operational data maintained by the catalogue sync; not editorial content."
+    displayName: "Catalogue"
+    pluralName: "catalogues"
+    singularName: "catalogue"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    i18n: {
+      localized: false
+    }
+  }
+  attributes: {
+    availabilityStatus: Schema.Attribute.Enumeration<
+      ["unverified", "active", "failing", "unsupported"]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"unverified">
+    baseUrl: Schema.Attribute.String & Schema.Attribute.Required
+    branches: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::catalogue-branch.catalogue-branch"
+    >
+    branchStatus: Schema.Attribute.Enumeration<
+      ["unverified", "active", "failing", "unsupported"]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"unverified">
+    countryCode: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 2
+      }>
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    gssCode: Schema.Attribute.String
+    lastCheckedAt: Schema.Attribute.DateTime
+    lastError: Schema.Attribute.Text
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::catalogue.catalogue"
+    > &
+      Schema.Attribute.Private
+    missingSettings: Schema.Attribute.JSON
+    name: Schema.Attribute.String & Schema.Attribute.Required
+    publishedAt: Schema.Attribute.DateTime
+    settings: Schema.Attribute.JSON
+    source: Schema.Attribute.Enumeration<
+      ["librarieshacked", "detected", "manual"]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"manual">
+    system: Schema.Attribute.Enumeration<
+      [
+        "arena",
+        "aspen",
+        "durham",
+        "enterprise",
+        "iguana",
+        "koha",
+        "luci",
+        "prism",
+        "spydus",
+        "webpac",
+      ]
+    > &
+      Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    version: Schema.Attribute.String
+  }
+}
+
 export interface ApiCategoryCategory extends Struct.CollectionTypeSchema {
   collectionName: "categories"
   info: {
@@ -1085,6 +1218,12 @@ export interface ApiContinentContinent extends Struct.CollectionTypeSchema {
     }
   }
   attributes: {
+    about: Schema.Attribute.Blocks &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     boundaryUrl: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1135,13 +1274,7 @@ export interface ApiContinentContinent extends Struct.CollectionTypeSchema {
         }
       }>
     publishedAt: Schema.Attribute.DateTime
-    sections: Schema.Attribute.DynamicZone<
-      [
-        "sections.editorial-block",
-        "sections.cta-banner",
-        "sections.quick-links",
-      ]
-    > &
+    seo: Schema.Attribute.Component<"shared.seo", false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true
@@ -1189,6 +1322,12 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
     }
   }
   attributes: {
+    about: Schema.Attribute.Blocks &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     boundaryUrl: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1339,13 +1478,7 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
         }
       }> &
       Schema.Attribute.DefaultTo<"Region">
-    sections: Schema.Attribute.DynamicZone<
-      [
-        "sections.editorial-block",
-        "sections.cta-banner",
-        "sections.quick-links",
-      ]
-    > &
+    seo: Schema.Attribute.Component<"shared.seo", false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true
@@ -1482,6 +1615,18 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
     }
   }
   attributes: {
+    communityBand: Schema.Attribute.Component<"homepage.cta-band", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    communitySteps: Schema.Attribute.Component<"homepage.step", true> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     contentCtaHref: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1512,9 +1657,21 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
           localized: true
         }
       }>
+    coverageIntro: Schema.Attribute.Component<"homepage.section-intro", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+    featuredIntro: Schema.Attribute.Component<"homepage.section-intro", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     featuredLibraries: Schema.Attribute.Relation<
       "manyToMany",
       "api::library.library"
@@ -1524,6 +1681,12 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
           localized: false
         }
       }>
+    featuredPrompt: Schema.Attribute.Component<"homepage.cta-band", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     featuredServices: Schema.Attribute.Relation<
       "manyToMany",
       "api::service.service"
@@ -1531,6 +1694,30 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
+        }
+      }>
+    finalBenefits: Schema.Attribute.Component<"homepage.step", true> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    finalBenefitsTitle: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    finalCta: Schema.Attribute.Component<"homepage.cta-band", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    finalProgression: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
         }
       }>
     heroEyebrow: Schema.Attribute.String &
@@ -1552,13 +1739,67 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
           localized: true
         }
       }>
+    journalIntro: Schema.Attribute.Component<"homepage.section-intro", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    journeys: Schema.Attribute.Component<"homepage.journey", true> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    journeysIntro: Schema.Attribute.Component<"homepage.section-intro", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     locale: Schema.Attribute.String
     localizations: Schema.Attribute.Relation<
       "oneToMany",
       "api::homepage.homepage"
     >
+    openDataDefinition: Schema.Attribute.Component<"homepage.citation", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    openIntro: Schema.Attribute.Component<"homepage.section-intro", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    openLinks: Schema.Attribute.Component<"homepage.link-card", true> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    proofIntro: Schema.Attribute.Component<"homepage.section-intro", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     publishedAt: Schema.Attribute.DateTime
     seo: Schema.Attribute.Component<"shared.seo", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    stewardBand: Schema.Attribute.Component<"homepage.cta-band", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    tasksIntro: Schema.Attribute.Component<"homepage.section-intro", false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true
@@ -2242,13 +2483,7 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
         }
       }>
     publishedAt: Schema.Attribute.DateTime
-    sections: Schema.Attribute.DynamicZone<
-      [
-        "sections.editorial-block",
-        "sections.cta-banner",
-        "sections.quick-links",
-      ]
-    > &
+    seo: Schema.Attribute.Component<"shared.seo", false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true
@@ -3821,6 +4056,8 @@ declare module "@strapi/strapi" {
       "api::blog-article.blog-article": ApiBlogArticleBlogArticle
       "api::blog-landing.blog-landing": ApiBlogLandingBlogLanding
       "api::blog-section.blog-section": ApiBlogSectionBlogSection
+      "api::catalogue-branch.catalogue-branch": ApiCatalogueBranchCatalogueBranch
+      "api::catalogue.catalogue": ApiCatalogueCatalogue
       "api::category.category": ApiCategoryCategory
       "api::continent.continent": ApiContinentContinent
       "api::country.country": ApiCountryCountry

@@ -161,7 +161,7 @@ export function DocsArticlePage({
             </div>
 
             <h1
-              className="mt-4 mb-0"
+              className="mt-4 mb-0 text-balance"
               style={{
                 fontFamily: T.font.serif,
                 fontSize: "clamp(38px, 4.5vw, 56px)",
@@ -176,7 +176,7 @@ export function DocsArticlePage({
 
             {article.summary ? (
               <p
-                className="mt-4 mb-0 text-[18px] leading-[1.6]"
+                className="mt-4 mb-0 max-w-[62ch] text-[18px] leading-[1.6] text-pretty"
                 style={{ color: T.ink.dim }}
               >
                 {article.summary}
@@ -184,10 +184,7 @@ export function DocsArticlePage({
             ) : null}
 
             {/* Author + page actions */}
-            <div
-              className="mt-6 flex flex-wrap items-center justify-between gap-3 border-b pb-6"
-              style={{ borderColor: T.border.line }}
-            >
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <span
                   aria-hidden="true"
@@ -201,7 +198,7 @@ export function DocsArticlePage({
                 </span>
                 <span className="flex flex-col">
                   <span
-                    className="text-[15px] font-semibold underline decoration-(--t-ink-ghost) underline-offset-[3px]"
+                    className="text-[15px] font-semibold"
                     style={{ color: T.ink.base }}
                   >
                     {article.author ?? "Community contributors"}
@@ -252,17 +249,28 @@ export function DocsArticlePage({
               </div>
             </div>
 
-            {/* Body — serif headings, 17px prose, per the docs design */}
-            <div className="mt-8 [&_h2]:mt-10 [&_h2]:[font-family:var(--font-newsreader),Georgia,serif] [&_h2]:text-[26px] [&_h2]:font-medium [&_h2]:tracking-[-0.01em] [&_h3]:mt-8 [&_h3]:[font-family:var(--font-newsreader),Georgia,serif] [&_h3]:text-[20px] [&_h3]:font-medium [&_li]:text-[17px] [&_li]:leading-[1.65] [&_p]:text-[17px] [&_p]:leading-[1.65]">
-              <ArticleBodyBlocks blocks={body} />
-            </div>
+            {/* Body — white section card on paper, serif headings, 17px prose */}
+            {body.length > 0 ? (
+              <div
+                className="mt-7 rounded-3xl border px-6 py-8 sm:px-10 sm:py-10"
+                style={{ background: T.bg.deep, borderColor: T.border.line }}
+              >
+                <div className="[&_h2]:mt-8 [&_h2]:[font-family:var(--font-newsreader),Georgia,serif] [&_h2]:text-[26px] [&_h2]:font-medium [&_h2]:tracking-[-0.01em] [&_h2:first-child]:mt-0 [&_h3]:mt-6 [&_h3]:[font-family:var(--font-newsreader),Georgia,serif] [&_h3]:text-[20px] [&_h3]:font-medium [&_h3:first-child]:mt-0 [&_li]:text-[17px] [&_li]:leading-[1.7] [&_p]:text-[17px] [&_p]:leading-[1.7]">
+                  <ArticleBodyBlocks blocks={body} />
+                </div>
+              </div>
+            ) : (
+              <p className="mt-8 text-[16px]" style={{ color: T.ink.dim }}>
+                This page has no content yet.
+              </p>
+            )}
 
             {/* Previous / next */}
             {(previous ?? next) ? (
-              <div className="mt-12 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {previous ? (
                   <GlobalLink
-                    className="rounded-[16px] border p-5 transition-colors hover:border-(--t-border-hi)"
+                    className="rounded-[20px] border p-5 transition-colors hover:border-(--t-border-hi)"
                     href={docsArticlePath(previous)}
                     style={{
                       background: T.bg.deep,
@@ -287,7 +295,7 @@ export function DocsArticlePage({
                 )}
                 {next ? (
                   <GlobalLink
-                    className="rounded-[16px] border p-5 text-right transition-colors hover:border-(--t-border-hi)"
+                    className="rounded-[20px] border p-5 text-right transition-colors hover:border-(--t-border-hi)"
                     href={docsArticlePath(next)}
                     style={{
                       background: T.bg.deep,
@@ -316,15 +324,19 @@ export function DocsArticlePage({
           <aside className="hidden xl:block">
             <div className="sticky top-[76px] flex flex-col gap-5">
               {headings.length > 0 ? (
-                <nav aria-label="On this page">
+                <nav
+                  aria-label="On this page"
+                  className="rounded-[20px] border p-5"
+                  style={{ background: T.bg.deep, borderColor: T.border.line }}
+                >
                   <p
-                    className="m-0 text-[14px] font-semibold"
+                    className="m-0 mb-2 text-[15px] font-semibold"
                     style={{ color: T.ink.base }}
                   >
                     On this page
                   </p>
                   <ul
-                    className="m-0 mt-2 flex list-none flex-col gap-1 border-l p-0 pl-3"
+                    className="m-0 flex list-none flex-col gap-1 border-l p-0 pl-3"
                     style={{ borderColor: T.border.divider }}
                   >
                     {headings.map((heading) => (
@@ -337,7 +349,7 @@ export function DocsArticlePage({
                         }
                       >
                         <a
-                          className="block py-0.5 text-[14px] transition-colors hover:text-(--t-ink-base)"
+                          className="block py-0.5 text-[14px] leading-snug transition-colors hover:text-(--t-accent-primary)"
                           href={`#${heading.id}`}
                           style={{ color: T.ink.dim }}
                         >
@@ -349,35 +361,44 @@ export function DocsArticlePage({
                 </nav>
               ) : null}
 
-              <dl
-                className="m-0 rounded-[16px] border p-4"
+              <div
+                className="rounded-[20px] border p-5"
                 style={{ background: T.bg.deep, borderColor: T.border.line }}
               >
-                {[
-                  { label: "Status", value: status },
-                  { label: "Updated", value: updated ?? "—" },
-                  {
-                    label: "Words",
-                    value: words > 0 ? words.toLocaleString("en-GB") : "—",
-                  },
-                  { label: "Licence", value: "CC BY-SA 4.0" },
-                ].map((row) => (
-                  <div
-                    key={row.label}
-                    className="flex items-center justify-between gap-3 py-1.5"
-                  >
-                    <dt className="text-[13px]" style={{ color: T.ink.dim }}>
-                      {row.label}
-                    </dt>
-                    <dd
-                      className="m-0 text-[13px] font-semibold"
-                      style={{ color: T.ink.base }}
+                <p
+                  className="m-0 mb-2 text-[15px] font-semibold"
+                  style={{ color: T.ink.base }}
+                >
+                  About this page
+                </p>
+                <dl className="m-0">
+                  {[
+                    { label: "Status", value: status },
+                    { label: "Updated", value: updated ?? "—" },
+                    {
+                      label: "Words",
+                      value: words > 0 ? words.toLocaleString("en-GB") : "—",
+                    },
+                    { label: "Licence", value: "CC BY-SA 4.0" },
+                  ].map((row) => (
+                    <div
+                      key={row.label}
+                      className="flex items-center justify-between gap-3 border-t py-2.5 first:border-t-0"
+                      style={{ borderColor: T.border.divider }}
                     >
-                      {row.value}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+                      <dt className="text-[14px]" style={{ color: T.ink.dim }}>
+                        {row.label}
+                      </dt>
+                      <dd
+                        className="m-0 text-right text-[14px] font-semibold"
+                        style={{ color: T.ink.base }}
+                      >
+                        {row.value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
             </div>
           </aside>
         </div>

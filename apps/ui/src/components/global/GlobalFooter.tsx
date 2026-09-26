@@ -1,9 +1,11 @@
+import { Icon } from "@iconify/react"
 import type { Data } from "@repo/strapi-types"
 import type { Locale } from "next-intl"
 
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
 import { getStrapiLinkHref } from "@/components/page-builder/components/utilities/StrapiLink"
+import { KOFI_URL } from "@/lib/constants"
 import { T } from "@/lib/design-tokens"
 
 type FooterData = Data.ContentType<"api::footer.footer"> | null | undefined
@@ -34,9 +36,9 @@ export function GlobalFooter({
           style={{ borderBottomColor: T.border.line }}
         >
           {/* Brand column */}
-          <div className="space-y-6">
+          <div className="flex flex-col items-start">
             <h2
-              className="m-0 text-[30px] leading-[1.15] font-medium tracking-[-0.015em]"
+              className="m-0 mb-3 text-[30px] leading-[1.15] font-medium tracking-[-0.015em]"
               style={{ fontFamily: T.font.serif, color: T.ink.base }}
             >
               {footer?.title || "Libraries of the World"}
@@ -50,6 +52,16 @@ export function GlobalFooter({
                 {footer.text}
               </p>
             ) : null}
+
+            <GlobalLink
+              href={KOFI_URL}
+              className="mt-6 inline-flex w-fit items-center gap-2 rounded-full border bg-white px-4 py-2.5 text-[15px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary) hover:text-(--t-accent-primary)"
+              style={{ borderColor: T.border.hi }}
+            >
+              <Icon icon="simple-icons:kofi" className="size-4" aria-hidden />
+              Support us on Ko-fi
+              <span className="sr-only"> (opens in a new tab)</span>
+            </GlobalLink>
           </div>
 
           {/* Nav sections */}

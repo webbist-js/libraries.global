@@ -4,6 +4,7 @@ import type { Locale } from "next-intl"
 import { docsArticlePath } from "@/components/docs/docs.config"
 import { getEnvVar } from "@/lib/env-vars"
 import { isDevelopment, isProduction } from "@/lib/general-helpers"
+import { isIndexableLocation } from "@/lib/seo/location"
 import { absoluteUrl, LIVE_LOCALES } from "@/lib/seo/metadata"
 import {
   fetchAllBlogArticleSlugs,
@@ -71,6 +72,11 @@ async function generateLocalizedSitemap(
       settle(fetchUpcomingEventIds(), []),
     ])
 
+  // Location pages are listed only once they have published records — empty
+  // templates are noindex (see lib/seo/location), so keep them out of here too.
+  const counts = countLibrariesByLocation(libraries.data)
+  const indexable = (key: string) => isIndexableLocation(counts.get(key))
+
   const entries: Entry[] = STATIC_ROUTES.map((r) => ({
     url: url(r.path),
     changeFrequency: r.changeFrequency,
@@ -79,7 +85,7 @@ async function generateLocalizedSitemap(
 
   // ── Continents ────────────────────────────────────────────────────────────
   for (const c of continents.data) {
-    if (!c.slug) continue
+    if (!c.slug || !indexable(c.slug)) continue
     entries.push({
       url: url(c.slug),
       changeFrequency: "monthly",
@@ -90,6 +96,7 @@ async function generateLocalizedSitemap(
   // ── Countries ─────────────────────────────────────────────────────────────
   for (const c of countries.data) {
     if (!c.slug || !c.continent?.slug) continue
+    if (!indexable(`${c.continent.slug}/${c.slug}`)) continue
     entries.push({
       url: url(`${c.continent.slug}/${c.slug}`),
       changeFrequency: "monthly",
@@ -100,6 +107,7 @@ async function generateLocalizedSitemap(
   // ── Regions ───────────────────────────────────────────────────────────────
   for (const r of regions.data) {
     if (!r.slug || !r.continent?.slug || !r.country?.slug) continue
+    if (!indexable(`${r.continent.slug}/${r.country.slug}/${r.slug}`)) continue
     entries.push({
       url: url(`${r.continent.slug}/${r.country.slug}/${r.slug}`),
       changeFrequency: "monthly",
@@ -159,6 +167,31 @@ async function generateLocalizedSitemap(
   }
 
   return entries
+}
+
+/** Published-library counts keyed by continent, continent/country and full region path. */
+function countLibrariesByLocation(
+  libraries: {
+    continent?: { slug?: string | null } | null
+    country?: { slug?: string | null } | null
+    region?: { slug?: string | null } | null
+  }[]
+): Map<string, number> {
+  const counts = new Map<string, number>()
+  const bump = (key: string) => counts.set(key, (counts.get(key) ?? 0) + 1)
+
+  for (const lib of libraries) {
+    const continent = lib.continent?.slug
+    if (!continent) continue
+    bump(continent)
+    const country = lib.country?.slug
+    if (!country) continue
+    bump(`${continent}/${country}`)
+    const region = lib.region?.slug
+    if (region) bump(`${continent}/${country}/${region}`)
+  }
+
+  return counts
 }
 
 /** documentIds of upcoming/ongoing events from the events plugin. */

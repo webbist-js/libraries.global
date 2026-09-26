@@ -7,6 +7,12 @@ import { RegionDetailPage } from "@/components/region/RegionDetailPage"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { isDevelopment } from "@/lib/general-helpers"
 import { buildBreadcrumbSchema } from "@/lib/seo/json-ld"
+import {
+  buildLibraryItemListSchema,
+  buildLocationDescription,
+  locationRobots,
+  locationTitle,
+} from "@/lib/seo/location"
 import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
 import { fetchAllRegions, fetchRegion } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
@@ -41,17 +47,31 @@ export async function generateMetadata({
   const parentCountry = data.country?.slug ?? countrySlug
 
   return buildMetadata({
-    title: countryName
-      ? `Libraries in ${name}, ${countryName}`
-      : `Libraries in ${name}`,
+    title: locationTitle(
+      data.seo,
+      countryName
+        ? `Libraries in ${name}, ${countryName}`
+        : `Libraries in ${name}`
+    ),
     description:
+      data.seo?.metaDescription ??
       data.summary ??
-      `Browse libraries in ${name}${countryName ? `, ${countryName}` : ""} — hours, locations, services, and collections.`,
+      buildLocationDescription({
+        name: countryName ? `${name}, ${countryName}` : name,
+        libraryCount: data.libraryCount,
+        typeCounts: data.libraryTypeCounts,
+        childLabel: data.areas?.length
+          ? (data.areas[0]?.typeLabel ?? "area")
+          : null,
+      }),
     // Canonicalise to the entity's real parents, not whatever the URL said.
     path: `${parentContinent}/${parentCountry}/${slug}`,
     locale,
-    image: formatStrapiMediaUrl(data.heroImage?.url),
+    image: formatStrapiMediaUrl(
+      data.seo?.metaImage?.url ?? data.heroImage?.url
+    ),
     imageAlt: data.heroImage?.alternativeText,
+    robots: locationRobots(data.libraryCount),
   })
 }
 
@@ -123,6 +143,14 @@ export default function RegionPage(props: {
             ),
           },
         ])}
+      />
+      <JsonLd
+        data={buildLibraryItemListSchema({
+          name: `Notable libraries in ${regionData.name ?? slug}`,
+          path: `${parentContinent}/${parentCountry}/${slug}`,
+          locale,
+          libraries: regionData.featuredLibraries,
+        })}
       />
       <RegionDetailPage
         region={regionData}

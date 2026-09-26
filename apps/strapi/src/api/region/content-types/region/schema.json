@@ -124,13 +124,10 @@
         }
       }
     },
-    "sections": {
-      "type": "dynamiczone",
-      "components": [
-        "sections.editorial-block",
-        "sections.cta-banner",
-        "sections.quick-links"
-      ],
+    "seo": {
+      "type": "component",
+      "component": "shared.seo",
+      "repeatable": false,
       "pluginOptions": {
         "i18n": {
           "localized": true

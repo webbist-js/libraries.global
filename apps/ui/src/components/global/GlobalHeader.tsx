@@ -4,6 +4,7 @@ import type { Locale } from "next-intl"
 import AppLink from "@/components/elementary/AppLink"
 import LocaleSwitcher from "@/components/elementary/LocaleSwitcher"
 import GlobalLink from "@/components/global/GlobalLink"
+import GlobalMobileMenu from "@/components/global/GlobalMobileMenu"
 import { GlobalNavbarAuthSection } from "@/components/global/GlobalNavbarAuthSection"
 import GlobalNavLinks, {
   type NavLink,
@@ -64,27 +65,73 @@ async function fetchProfileSnippet(
   }
 }
 
-export async function GlobalHeader({ locale }: { readonly locale: Locale }) {
+/** The map's app header also links the Atlas itself, first. */
+const APP_NAV_LINKS: NavLink[] = [
+  { label: "Atlas", href: "/map" },
+  ...NAV_LINKS,
+]
+
+export async function GlobalHeader({
+  locale,
+  variant = "site",
+}: {
+  readonly locale: Locale
+  /**
+   * "site": centred nav in a max-width container (every page).
+   * "app": full-bleed, nav beside the logo, for full-screen tools like the map.
+   */
+  readonly variant?: "site" | "app"
+}) {
   const sessionSSR = await getSessionSSR(await headers())
   const profileSnippet = sessionSSR?.user
     ? await fetchProfileSnippet(sessionSSR.user.id)
     : null
+  const app = variant === "app"
+  const links = app ? APP_NAV_LINKS : NAV_LINKS
+
+  const localeSwitcher = (
+    <LocaleSwitcher
+      locale={locale}
+      triggerClassName="h-9 w-auto gap-1 rounded-full border-(--t-border-line) bg-(--t-bg-deep) px-3.5 text-[14px] font-medium uppercase text-(--t-ink-base) shadow-none hover:border-(--t-border-hi) [&_svg]:text-(--t-ink-base) [&_svg]:opacity-100"
+    />
+  )
+  const auth = (
+    <GlobalNavbarAuthSection
+      sessionSSR={sessionSSR}
+      profileSnippet={profileSnippet}
+    />
+  )
+  const contribute = (className = "") => (
+    <AppLink
+      href="/contribute"
+      size="sm"
+      className={`h-9 rounded-full border-0 bg-(--t-accent-primary) px-4 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) ${className}`}
+    >
+      Contribute
+    </AppLink>
+  )
 
   return (
     <header
       data-global-header=""
       className="global-header sticky top-0 z-[60] w-full border-b border-(--t-border-line) backdrop-blur-xl"
-      style={{ background: "var(--t-header-bg)" }}
+      style={{ background: app ? "var(--t-bg-void)" : "var(--t-header-bg)" }}
     >
-      <div className="mx-auto flex h-14 w-full max-w-[1360px] items-center gap-4 px-4 sm:px-8">
+      <div
+        className={
+          app
+            ? "relative flex h-14 w-full items-center gap-6 px-4 sm:px-5"
+            : "relative mx-auto flex h-14 w-full max-w-[1360px] items-center gap-4 px-4 sm:px-8"
+        }
+      >
         {/* Left: logo */}
-        <div className="flex shrink-0 items-center">
+        <div className="flex min-w-0 shrink-0 items-center">
           <GlobalLink
             href="/"
             className="flex items-center text-(--t-ink-base)"
           >
             <span
-              className="text-[1.2rem] leading-none font-medium text-(--t-ink-base)"
+              className="text-[1.2rem] leading-none font-medium whitespace-nowrap text-(--t-ink-base)"
               style={{ fontFamily: T.font.serif }}
             >
               Libraries <em className="font-normal italic">of the </em>
@@ -93,26 +140,35 @@ export async function GlobalHeader({ locale }: { readonly locale: Locale }) {
           </GlobalLink>
         </div>
 
-        {/* Center: main nav (active section renders as an ink pill) */}
-        <GlobalNavLinks links={NAV_LINKS} />
+        {/* Centre (or beside the logo in the app header): main nav, lg and up */}
+        <GlobalNavLinks links={links} align={app ? "start" : "center"} />
 
-        {/* Right: locale + auth + contribute */}
-        <div data-header-stable="" className="flex shrink-0 items-center gap-2">
-          <LocaleSwitcher
-            locale={locale}
-            triggerClassName="h-9 w-auto gap-1 rounded-full border-(--t-border-line) bg-(--t-bg-deep) px-3.5 text-[14px] font-medium uppercase text-(--t-ink-base) shadow-none hover:border-(--t-border-hi) [&_svg]:text-(--t-ink-base) [&_svg]:opacity-100"
+        {/* Pushes the actions right when the nav is collapsed */}
+        <span className="flex-1 lg:hidden" aria-hidden="true" />
+
+        {/* Right: locale + auth + contribute, lg and up */}
+        <div
+          data-header-stable=""
+          className="hidden shrink-0 items-center gap-2 lg:flex"
+        >
+          {localeSwitcher}
+          {auth}
+          {contribute()}
+        </div>
+
+        {/* Below lg: Contribute stays visible from sm; everything else is in the menu */}
+        <div className="flex shrink-0 items-center gap-2 lg:hidden">
+          {contribute("hidden sm:inline-flex")}
+          <GlobalMobileMenu
+            links={links}
+            actions={
+              <>
+                {localeSwitcher}
+                {auth}
+                {contribute("sm:hidden")}
+              </>
+            }
           />
-          <GlobalNavbarAuthSection
-            sessionSSR={sessionSSR}
-            profileSnippet={profileSnippet}
-          />
-          <AppLink
-            href="/contribute"
-            size="sm"
-            className="h-9 rounded-full border-0 bg-(--t-accent-primary) px-4 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
-          >
-            Contribute
-          </AppLink>
         </div>
       </div>
     </header>

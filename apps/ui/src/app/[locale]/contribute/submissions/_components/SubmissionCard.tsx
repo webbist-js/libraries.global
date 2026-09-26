@@ -1,9 +1,10 @@
 "use client"
 
+import { Icon } from "@iconify/react"
 import React from "react"
 
 import type { Submission } from "@/hooks/useSubmissions"
-import { T } from "@/lib/design-tokens"
+import { T, TYPE_TINT } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 
 // ---------------------------------------------------------------------------
@@ -14,11 +15,6 @@ const CARD_ANIMATIONS = `
 @keyframes sub-fade-in {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes progress-shimmer {
-  0%   { opacity: 0.6; }
-  50%  { opacity: 1; }
-  100% { opacity: 0.6; }
 }
 `
 
@@ -53,16 +49,15 @@ function formatRelativeTime(dateStr: string): string {
 
   if (days < 7) return `${days}d ago`
 
-  return new Date(dateStr)
-    .toLocaleDateString("en-US", { month: "short", day: "numeric" })
-    .toUpperCase()
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  })
 }
 
 function formatDateTime(dateStr: string): string {
   const d = new Date(dateStr)
-  const date = d
-    .toLocaleDateString("en-US", { day: "numeric", month: "short" })
-    .toUpperCase()
+  const date = d.toLocaleDateString("en-US", { day: "numeric", month: "short" })
   const time = d.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
@@ -95,63 +90,70 @@ function buildEyebrowParts(submission: Submission): string[] {
   const parts: string[] = []
   const fields = submission.fields ?? {}
 
-  if (fields.country) parts.push(String(fields.country).toUpperCase())
-  if (fields.city) parts.push(String(fields.city).toUpperCase())
+  if (fields.country) parts.push(String(fields.country))
+  if (fields.city) parts.push(String(fields.city))
   if (submission.createdAt) {
-    parts.push(`SUBMITTED ${formatDateTime(submission.createdAt)}`)
+    parts.push(`Submitted ${formatDateTime(submission.createdAt)}`)
   }
 
   return parts
+}
+
+function humanizeType(type: string): string {
+  const label = type.replaceAll("_", " ")
+
+  return label.charAt(0).toUpperCase() + label.slice(1)
 }
 
 // ---------------------------------------------------------------------------
 // Config maps
 // ---------------------------------------------------------------------------
 
-const STATUS_CONFIG: Record<
-  string,
-  { label: string; color: string; bg: string; border: string }
-> = {
+type StatusStyle = { label: string; icon: string; bg: string; fg: string }
+
+const PENDING_STATUS: StatusStyle = {
+  label: "Under review",
+  icon: "mdi:clock-outline",
+  bg: TYPE_TINT.academic.bg,
+  fg: TYPE_TINT.academic.fg,
+}
+
+const STATUS_CONFIG: Record<string, StatusStyle> = {
   draft: {
-    label: "DRAFT",
-    color: T.ink.faint,
-    bg: T.bg.deep,
-    border: T.border.line,
+    label: "Draft",
+    icon: "mdi:pencil-outline",
+    bg: TYPE_TINT.neutral.bg,
+    fg: TYPE_TINT.neutral.fg,
   },
-  pending: {
-    label: "UNDER REVIEW",
-    color: T.accent.aurora,
-    bg: "var(--t-aurora-soft)",
-    border: "var(--t-aurora-soft)",
-  },
+  pending: PENDING_STATUS,
   approved: {
-    label: "APPROVED",
-    color: T.accent.ok,
-    bg: "rgba(142,240,179,0.08)",
-    border: "rgba(142,240,179,0.30)",
+    label: "Approved",
+    icon: "mdi:check-circle-outline",
+    bg: "#E6EFE6",
+    fg: T.accent.ok,
   },
   needs_info: {
-    label: "CHANGES REQUESTED",
-    color: T.accent.warn,
-    bg: "rgba(255,207,122,0.08)",
-    border: "rgba(255,207,122,0.30)",
+    label: "Changes requested",
+    icon: "mdi:alert-circle-outline",
+    bg: "#F5EEDC",
+    fg: T.accent.warn,
   },
   rejected: {
-    label: "REJECTED",
-    color: T.accent.danger,
-    bg: "rgba(255,138,138,0.08)",
-    border: "rgba(255,138,138,0.30)",
+    label: "Rejected",
+    icon: "mdi:close-circle-outline",
+    bg: "#F6E3DA",
+    fg: T.accent.danger,
   },
 }
 
-const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
-  new_library: { label: "Addition", color: T.accent.ok },
-  library_edit: { label: "Edit", color: T.accent.aurora },
-  correction: { label: "Correction", color: T.accent.aurora },
-  library_claim: { label: "Claim", color: T.accent.violet },
-  wiki_edit: { label: "Docs", color: T.accent.violet },
-  blog_submission: { label: "Journal", color: T.accent.gold },
-  topic_suggestion: { label: "Topic", color: T.ink.faint },
+const TYPE_CONFIG: Record<string, { label: string; bg: string; fg: string }> = {
+  new_library: { label: "Addition", ...TYPE_TINT.public },
+  library_edit: { label: "Edit", ...TYPE_TINT.academic },
+  correction: { label: "Correction", ...TYPE_TINT.academic },
+  library_claim: { label: "Claim", ...TYPE_TINT.national },
+  wiki_edit: { label: "Docs", ...TYPE_TINT.national },
+  blog_submission: { label: "Journal", ...TYPE_TINT.special },
+  topic_suggestion: { label: "Topic", ...TYPE_TINT.neutral },
 }
 
 // ---------------------------------------------------------------------------
@@ -159,10 +161,10 @@ const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
 // ---------------------------------------------------------------------------
 
 const PIPELINE_STAGES = [
-  "SUBMITTED",
-  "UNDER\u00A0REVIEW",
-  "APPROVED",
-  "PUBLISHED",
+  "Submitted",
+  "Under review",
+  "Approved",
+  "Published",
 ] as const
 
 const STAGE_INDEX_BY_STATUS: Record<string, number> = {
@@ -208,9 +210,9 @@ function getPipelineLineColor({
 }) {
   if (index === 0) return "transparent"
   if (isRejected && index <= 1) return T.accent.danger
-  if (index <= stageIndex) return T.accent.aurora
+  if (index <= stageIndex) return T.accent.primary
 
-  return T.border.line
+  return T.border.hi
 }
 
 function getPipelineDotStyles({
@@ -226,29 +228,29 @@ function getPipelineDotStyles({
     return {
       background: T.accent.danger,
       border: T.accent.danger,
-      boxShadow: `0 0 7px ${T.accent.danger}55`,
+      boxShadow: "0 0 0 3px #F6E3DA",
     }
   }
 
   if (current) {
     return {
-      background: T.accent.aurora,
-      border: T.accent.aurora,
-      boxShadow: `0 0 7px ${T.accent.aurora}55`,
+      background: T.accent.primary,
+      border: T.accent.primary,
+      boxShadow: `0 0 0 3px ${T.accent.chip}`,
     }
   }
 
   if (done) {
     return {
-      background: "var(--t-aurora-soft)",
-      border: T.accent.aurora,
+      background: T.accent.primary,
+      border: T.accent.primary,
       boxShadow: "none",
     }
   }
 
   return {
-    background: T.bg.surface,
-    border: T.border.line,
+    background: T.bg.deep,
+    border: T.border.hi,
     boxShadow: "none",
   }
 }
@@ -266,7 +268,7 @@ function getPipelineLabelColor({
   if (current) return T.ink.base
   if (done) return T.ink.dim
 
-  return T.ink.faint
+  return T.ink.low
 }
 
 function SubmissionPipeline({ status }: { status: string }) {
@@ -275,8 +277,8 @@ function SubmissionPipeline({ status }: { status: string }) {
   const { isRejected, stageIndex } = getPipelineState(status)
 
   return (
-    <div style={{ marginTop: "16px", maxWidth: "480px" }}>
-      <div style={{ display: "flex", alignItems: "center" }}>
+    <div className="mt-5 max-w-[480px]">
+      <div className="flex items-center px-1" aria-hidden="true">
         {PIPELINE_STAGES.map((stage, index) => {
           const dotState = getPipelineDotState({
             index,
@@ -284,8 +286,6 @@ function SubmissionPipeline({ status }: { status: string }) {
             isRejected,
           })
           const dotStyles = getPipelineDotStyles(dotState)
-          const isActiveSegment =
-            !isRejected && index === stageIndex && index > 0
 
           return (
             <React.Fragment key={stage}>
@@ -293,29 +293,26 @@ function SubmissionPipeline({ status }: { status: string }) {
                 <div
                   style={{
                     flex: 1,
-                    height: "1.5px",
+                    height: "2px",
                     background: getPipelineLineColor({
                       index,
                       stageIndex,
                       isRejected,
                     }),
                     borderRadius: "1px",
-                    animation: isActiveSegment
-                      ? "progress-shimmer 2.4s ease-in-out infinite"
-                      : undefined,
                   }}
                 />
               )}
 
               <div
                 style={{
-                  width: "10px",
-                  height: "10px",
+                  width: "12px",
+                  height: "12px",
                   borderRadius: "50%",
                   background: dotStyles.background,
-                  border: `1.5px solid ${dotStyles.border}`,
+                  border: `2px solid ${dotStyles.border}`,
                   flexShrink: 0,
-                  transition: "background 0.3s, box-shadow 0.3s",
+                  transition: "background 0.3s",
                   boxShadow: dotStyles.boxShadow,
                 }}
               />
@@ -324,13 +321,7 @@ function SubmissionPipeline({ status }: { status: string }) {
         })}
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginTop: "5px",
-        }}
-      >
+      <ol className="m-0 mt-2 flex list-none justify-between gap-2 p-0">
         {PIPELINE_STAGES.map((stage, index) => {
           const dotState = getPipelineDotState({
             index,
@@ -339,13 +330,15 @@ function SubmissionPipeline({ status }: { status: string }) {
           })
 
           return (
-            <span
+            <li
               key={stage}
+              aria-current={dotState.current ? "step" : undefined}
               style={{
                 fontFamily: T.font.sans,
-                fontSize: "7.5px",
+                fontSize: "13px",
+                fontWeight: dotState.current || dotState.failed ? 600 : 500,
                 color: getPipelineLabelColor(dotState),
-                lineHeight: 1,
+                lineHeight: 1.3,
                 textAlign:
                   index === 0
                     ? "left"
@@ -355,10 +348,10 @@ function SubmissionPipeline({ status }: { status: string }) {
               }}
             >
               {stage}
-            </span>
+            </li>
           )
         })}
-      </div>
+      </ol>
     </div>
   )
 }
@@ -378,95 +371,67 @@ function StatusPanelRow({
 }) {
   return (
     <div>
-      <div
-        style={{
-          fontFamily: T.font.sans,
-          fontSize: "13px",
-          color: T.ink.faint,
-          marginBottom: "2px",
-        }}
-      >
+      <dt className="text-[14px]" style={{ color: T.ink.dim }}>
         {label}
-      </div>
-
-      <div
-        style={{
-          fontFamily: T.font.sans,
-          fontSize: "13px",
-          color: valueColor ?? T.ink.dim,
-        }}
+      </dt>
+      <dd
+        className="m-0 text-[15px] font-semibold"
+        style={{ color: valueColor ?? T.ink.base }}
       >
         {value}
-      </div>
+      </dd>
     </div>
   )
 }
 
+const PANEL_CLASS =
+  "m-0 flex shrink-0 flex-col gap-3 border-t pt-4 sm:w-[200px] sm:border-t-0 sm:border-l sm:pt-0 sm:pl-6"
+
 function StatusPanel({ submission }: { submission: Submission }) {
   const { status, updatedAt, createdAt, reviewedAt } = submission
 
-  const panelStyle: React.CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-    minWidth: "172px",
-    maxWidth: "192px",
-    flexShrink: 0,
-    paddingLeft: "20px",
-    borderLeft: `1px solid ${T.border.line}`,
-  }
+  const panelStyle: React.CSSProperties = { borderColor: T.border.divider }
 
   if (status === "draft") {
     return (
-      <div style={panelStyle}>
+      <dl className={PANEL_CLASS} style={panelStyle}>
         <StatusPanelRow
           label="Last saved"
           value={formatRelativeTime(updatedAt ?? createdAt)}
         />
         <StatusPanelRow label="Status" value="In progress" />
 
-        <div style={{ marginTop: "2px" }}>
+        <div className="mt-1">
           <Link
             href="/contribute/add"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "5px",
-              padding: "7px 14px",
-              borderRadius: "6px",
-              border: `1px solid var(--t-aurora-edge)`,
-              background: "var(--t-aurora-soft)",
-              color: T.accent.aurora,
-              fontFamily: T.font.sans,
-              fontSize: "13px",
-              textDecoration: "none",
-              whiteSpace: "nowrap",
-            }}
+            className="inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-[15px] font-semibold whitespace-nowrap text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+            style={{ background: T.accent.primary }}
           >
-            Continue →
+            Continue
+            <span aria-hidden="true">→</span>
           </Link>
         </div>
-      </div>
+      </dl>
     )
   }
 
   if (status === "pending") {
     return (
-      <div style={panelStyle}>
+      <dl className={PANEL_CLASS} style={panelStyle}>
         <StatusPanelRow
           label="Status"
           value="Awaiting review"
-          valueColor={T.accent.aurora}
+          valueColor={T.accent.primary}
         />
         <StatusPanelRow label="Est. response" value="2–5 days" />
         <StatusPanelRow label="Reviewer" value="Editorial board" />
-      </div>
+      </dl>
     )
   }
 
   if (status === "needs_info") {
     return (
-      <div style={panelStyle}>
+      <dl className={PANEL_CLASS} style={panelStyle}>
         <StatusPanelRow
           label="Action required"
           value="Respond to reviewer"
@@ -477,13 +442,13 @@ function StatusPanel({ submission }: { submission: Submission }) {
           value={formatRelativeTime(updatedAt ?? createdAt)}
         />
         <StatusPanelRow label="Items to address" value="See note below" />
-      </div>
+      </dl>
     )
   }
 
   if (status === "approved") {
     return (
-      <div style={panelStyle}>
+      <dl className={PANEL_CLASS} style={panelStyle}>
         <StatusPanelRow
           label="Decision"
           value="Approved"
@@ -494,13 +459,13 @@ function StatusPanel({ submission }: { submission: Submission }) {
           value={reviewedAt ? formatRelativeTime(reviewedAt) : "—"}
         />
         <StatusPanelRow label="Publishing" value="Next build queue" />
-      </div>
+      </dl>
     )
   }
 
   if (status === "rejected") {
     return (
-      <div style={panelStyle}>
+      <dl className={PANEL_CLASS} style={panelStyle}>
         <StatusPanelRow
           label="Decision"
           value="Not accepted"
@@ -510,7 +475,7 @@ function StatusPanel({ submission }: { submission: Submission }) {
           label="Reviewed"
           value={reviewedAt ? formatRelativeTime(reviewedAt) : "—"}
         />
-      </div>
+      </dl>
     )
   }
 
@@ -529,68 +494,40 @@ function EditorialNote({
   status: "needs_info" | "rejected"
 }) {
   const isWarning = status === "needs_info"
+  const fg = isWarning ? T.accent.warn : T.accent.danger
 
   return (
     <div
-      style={{
-        marginTop: "16px",
-        padding: "14px 16px",
-        borderRadius: "10px",
-        border: `1px solid ${
-          isWarning ? T.accent.warn + "30" : T.accent.danger + "28"
-        }`,
-        background: isWarning
-          ? "rgba(255,207,122,0.03)"
-          : "rgba(255,138,138,0.02)",
-        display: "flex",
-        gap: "14px",
-        alignItems: "flex-start",
-      }}
+      className="mt-5 flex items-start gap-3.5 rounded-[14px] px-5 py-4"
+      style={{ background: isWarning ? "#F5EEDC" : "#F6E3DA" }}
     >
       <div
-        style={{
-          width: "28px",
-          height: "28px",
-          borderRadius: "50%",
-          background: isWarning
-            ? "rgba(255,207,122,0.10)"
-            : "rgba(255,138,138,0.10)",
-          border: `1px solid ${isWarning ? T.accent.warn : T.accent.danger}40`,
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: T.font.sans,
-          fontSize: "13px",
-          fontWeight: 700,
-          color: isWarning ? T.accent.warn : T.accent.danger,
-          marginTop: "1px",
-        }}
+        aria-hidden="true"
+        className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-bold"
+        style={{ background: T.bg.deep, color: fg }}
       >
         EB
       </div>
 
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            fontFamily: T.font.sans,
-            fontSize: "13px",
-            color: isWarning ? T.accent.warn : T.accent.danger,
-            opacity: 0.75,
-            marginBottom: "7px",
-          }}
+      <div className="min-w-0 flex-1">
+        <p
+          className="m-0 mb-1 flex items-center gap-1.5 text-[14px] font-semibold"
+          style={{ color: fg }}
         >
-          {isWarning ? "Editorial Board" : "Reviewer Note"}
-        </div>
+          <Icon
+            icon={
+              isWarning ? "mdi:message-alert-outline" : "mdi:message-outline"
+            }
+            width={16}
+            height={16}
+            aria-hidden="true"
+          />
+          {isWarning ? "Editorial board" : "Reviewer note"}
+        </p>
 
         <p
-          style={{
-            fontFamily: T.font.sans,
-            fontSize: "14px",
-            color: T.ink.dim,
-            margin: 0,
-            lineHeight: 1.65,
-          }}
+          className="m-0 text-[15px] leading-[1.6]"
+          style={{ color: T.ink.base }}
         >
           {note}
         </p>
@@ -614,16 +551,11 @@ export function SubmissionCard({
     injectAnimations()
   }, [])
 
-  const statusCfg = STATUS_CONFIG[submission.status] ?? {
-    label: "PENDING",
-    color: T.accent.aurora,
-    bg: "var(--t-aurora-soft)",
-    border: "var(--t-aurora-soft)",
-  }
+  const statusCfg = STATUS_CONFIG[submission.status] ?? PENDING_STATUS
 
   const typeCfg = TYPE_CONFIG[submission.submissionType] ?? {
-    label: submission.submissionType.toUpperCase(),
-    color: T.ink.faint,
+    label: humanizeType(submission.submissionType),
+    ...TYPE_TINT.neutral,
   }
 
   const title =
@@ -634,117 +566,66 @@ export function SubmissionCard({
   const eyebrowParts = buildEyebrowParts(submission)
 
   return (
-    <div
+    <article
+      className="rounded-[20px] px-5 py-5 sm:px-7 sm:py-6"
       style={{
         border: `1px solid ${T.border.line}`,
-        borderRadius: "14px",
-        padding: "20px 24px",
-        background: T.bg.surface,
-        marginBottom: "12px",
+        background: T.bg.deep,
         animation: `sub-fade-in 0.35s ease both`,
         animationDelay: `${index * 55}ms`,
         opacity: 0,
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          marginBottom: "10px",
-          overflow: "hidden",
-        }}
-      >
+      <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
         <span
-          style={{
-            display: "inline-block",
-            fontFamily: T.font.sans,
-            fontSize: "13px",
-            color: typeCfg.color,
-            background: `${typeCfg.color}14`,
-            border: `1px solid ${typeCfg.color}38`,
-            borderRadius: "4px",
-            padding: "3px 8px",
-            flexShrink: 0,
-          }}
+          className="shrink-0 rounded-full px-3 py-1 text-[13px] font-semibold"
+          style={{ background: typeCfg.bg, color: typeCfg.fg }}
         >
           {typeCfg.label}
         </span>
 
         {eyebrowParts.length > 0 && (
-          <span
-            style={{
-              fontFamily: T.font.sans,
-              fontSize: "13px",
-              color: T.ink.faint,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
+          <span className="min-w-0 text-[14px]" style={{ color: T.ink.dim }}>
             {eyebrowParts.join(" · ")}
           </span>
         )}
 
-        <div style={{ marginLeft: "auto", flexShrink: 0 }}>
-          <div
-            style={{
-              background: statusCfg.bg,
-              border: `1px solid ${statusCfg.border}`,
-              borderRadius: "20px",
-              padding: "4px 12px",
-            }}
-          >
-            <span
-              style={{
-                fontFamily: T.font.sans,
-                fontSize: "13px",
-                color: statusCfg.color,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {statusCfg.label}
-            </span>
-          </div>
-        </div>
+        <span
+          className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold whitespace-nowrap"
+          style={{ background: statusCfg.bg, color: statusCfg.fg }}
+        >
+          <Icon
+            icon={statusCfg.icon}
+            width={14}
+            height={14}
+            aria-hidden="true"
+          />
+          {statusCfg.label}
+        </span>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          gap: "24px",
-          alignItems: "flex-start",
-        }}
-      >
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
+        <div className="min-w-0 flex-1">
+          <h3
+            className="m-0 break-words"
             style={{
-              fontFamily: T.font.sans,
-              fontSize: "17px",
+              fontFamily: T.font.serif,
+              fontSize: "22px",
               fontWeight: 500,
+              letterSpacing: "-0.01em",
+              lineHeight: 1.25,
               color: T.ink.base,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              lineHeight: 1.3,
             }}
           >
             {title}
-          </div>
+          </h3>
 
-          <div
-            style={{
-              fontFamily: T.font.sans,
-              fontSize: "13px",
-              color: T.ink.faint,
-              marginTop: "3px",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
+          <p
+            className="mt-1 mb-0 text-[15px] leading-[1.55] break-words"
+            style={{ color: T.ink.dim }}
           >
             {getChangeDescription(submission)}
-          </div>
+          </p>
 
           <SubmissionPipeline status={submission.status} />
         </div>
@@ -759,6 +640,6 @@ export function SubmissionCard({
       {submission.status === "rejected" && submission.reviewNote && (
         <EditorialNote note={submission.reviewNote} status="rejected" />
       )}
-    </div>
+    </article>
   )
 }

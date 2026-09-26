@@ -1,0 +1,13 @@
+{
+  "collectionName": "components_homepage_section_intros",
+  "info": {
+    "displayName": "Section Intro",
+    "icon": "heading",
+    "description": "Heading + supporting line for a homepage section. Wrap words in *asterisks* to italicise them in indigo."
+  },
+  "options": {},
+  "attributes": {
+    "title": { "type": "string" },
+    "text": { "type": "text" }
+  }
+}

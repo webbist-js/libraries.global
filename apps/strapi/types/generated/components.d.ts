@@ -132,6 +132,98 @@ export interface FormsNewsletterForm extends Struct.ComponentSchema {
   }
 }
 
+export interface HomepageCitation extends Struct.ComponentSchema {
+  collectionName: "components_homepage_citations"
+  info: {
+    description: "A quoted definition or statement with its source."
+    displayName: "Citation"
+    icon: "quote"
+  }
+  attributes: {
+    attribution: Schema.Attribute.String
+    lead: Schema.Attribute.String
+    quote: Schema.Attribute.Text & Schema.Attribute.Required
+    sourceLabel: Schema.Attribute.String
+    sourceUrl: Schema.Attribute.String
+  }
+}
+
+export interface HomepageCtaBand extends Struct.ComponentSchema {
+  collectionName: "components_homepage_cta_bands"
+  info: {
+    description: "Heading, body and up to two calls to action. Wrap words in *asterisks* to italicise them."
+    displayName: "CTA Band"
+    icon: "cursor"
+  }
+  attributes: {
+    primaryHref: Schema.Attribute.String
+    primaryLabel: Schema.Attribute.String
+    secondaryHref: Schema.Attribute.String
+    secondaryLabel: Schema.Attribute.String
+    text: Schema.Attribute.Text
+    title: Schema.Attribute.String
+  }
+}
+
+export interface HomepageJourney extends Struct.ComponentSchema {
+  collectionName: "components_homepage_journeys"
+  info: {
+    description: "One of the primary homepage journeys (explore / contribute / represent a library)."
+    displayName: "Journey"
+    icon: "walk"
+  }
+  attributes: {
+    ctaHref: Schema.Attribute.String
+    ctaLabel: Schema.Attribute.String
+    eyebrow: Schema.Attribute.String
+    text: Schema.Attribute.Text
+    title: Schema.Attribute.String & Schema.Attribute.Required
+    tone: Schema.Attribute.Enumeration<["explore", "contribute", "steward"]> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"explore">
+  }
+}
+
+export interface HomepageLinkCard extends Struct.ComponentSchema {
+  collectionName: "components_homepage_link_cards"
+  info: {
+    description: "Titled link with a one-line description."
+    displayName: "Link Card"
+    icon: "link"
+  }
+  attributes: {
+    href: Schema.Attribute.String & Schema.Attribute.Required
+    text: Schema.Attribute.Text
+    title: Schema.Attribute.String & Schema.Attribute.Required
+  }
+}
+
+export interface HomepageSectionIntro extends Struct.ComponentSchema {
+  collectionName: "components_homepage_section_intros"
+  info: {
+    description: "Heading + supporting line for a homepage section. Wrap words in *asterisks* to italicise them in indigo."
+    displayName: "Section Intro"
+    icon: "heading"
+  }
+  attributes: {
+    text: Schema.Attribute.Text
+    title: Schema.Attribute.String
+  }
+}
+
+export interface HomepageStep extends Struct.ComponentSchema {
+  collectionName: "components_homepage_steps"
+  info: {
+    description: "A numbered step or bullet point."
+    displayName: "Step"
+    icon: "bulletList"
+  }
+  attributes: {
+    text: Schema.Attribute.Text
+    title: Schema.Attribute.String & Schema.Attribute.Required
+  }
+}
+
 export interface LibraryCollectionStat extends Struct.ComponentSchema {
   collectionName: "components_library_collection_stats"
   info: {
@@ -673,6 +765,12 @@ declare module "@strapi/strapi" {
       "elements.footer-item": ElementsFooterItem
       "forms.contact-form": FormsContactForm
       "forms.newsletter-form": FormsNewsletterForm
+      "homepage.citation": HomepageCitation
+      "homepage.cta-band": HomepageCtaBand
+      "homepage.journey": HomepageJourney
+      "homepage.link-card": HomepageLinkCard
+      "homepage.section-intro": HomepageSectionIntro
+      "homepage.step": HomepageStep
       "library.collection-stat": LibraryCollectionStat
       "library.library-stat": LibraryLibraryStat
       "profile.language-entry": ProfileLanguageEntry

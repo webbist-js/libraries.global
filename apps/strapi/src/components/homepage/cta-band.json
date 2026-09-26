@@ -1,0 +1,17 @@
+{
+  "collectionName": "components_homepage_cta_bands",
+  "info": {
+    "displayName": "CTA Band",
+    "icon": "cursor",
+    "description": "Heading, body and up to two calls to action. Wrap words in *asterisks* to italicise them."
+  },
+  "options": {},
+  "attributes": {
+    "title": { "type": "string" },
+    "text": { "type": "text" },
+    "primaryLabel": { "type": "string" },
+    "primaryHref": { "type": "string" },
+    "secondaryLabel": { "type": "string" },
+    "secondaryHref": { "type": "string" }
+  }
+}

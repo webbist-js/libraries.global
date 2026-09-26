@@ -5,8 +5,7 @@ import { T } from "@/lib/design-tokens"
 import { privateMetadata } from "@/lib/seo/metadata"
 import type { LeaderboardEntry } from "@/lib/types/leaderboard"
 
-import { ContributeNavBar } from "../_components/ContributeNavBar"
-import { ContributeSubpageHero } from "../_components/ContributeSubpageHero"
+import { ContributeSectionHeader } from "../_components/ContributeSectionHeader"
 import { LeaderboardPodium } from "./_components/LeaderboardPodium"
 import { LeaderboardRows } from "./_components/LeaderboardRows"
 import { LeaderboardSidebar } from "./_components/LeaderboardSidebar"
@@ -39,9 +38,9 @@ type Period = "today" | "week" | "month" | "all"
 
 const PERIODS: { key: Period; label: string }[] = [
   { key: "today", label: "Today" },
-  { key: "week", label: "This Week" },
-  { key: "month", label: "This Month" },
-  { key: "all", label: "All Time" },
+  { key: "week", label: "This week" },
+  { key: "month", label: "This month" },
+  { key: "all", label: "All time" },
 ]
 
 type Standing = {
@@ -126,78 +125,81 @@ export default async function CommunityPage({
     <div
       style={{ minHeight: "100vh", background: T.bg.void, color: T.ink.base }}
     >
-      <ContributeSubpageHero
+      <ContributeSectionHeader
         section="Community"
-        heading="The community,"
-        headingItalic="in numbers."
-        body="Contributors who keep the atlas accurate and growing. Points are earned for every approved contribution."
-        minHeight="340px"
+        title="The community, *in numbers.*"
+        lead="Contributors who keep the atlas accurate and growing. Points are earned for every approved contribution."
       />
 
-      <ContributeNavBar />
-
-      <div className="mx-auto w-full max-w-[1360px] px-4 pt-10 pb-20 sm:px-8">
-        {/* Period tabs */}
-        <div
-          style={{
-            display: "flex",
-            gap: "4px",
-            marginBottom: "32px",
-            borderBottom: `1px solid ${T.border.line}`,
-          }}
+      <div className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-16 sm:px-8">
+        <nav
+          aria-label="Leaderboard period"
+          className="mb-8 flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          style={{ borderBottom: `1px solid ${T.border.line}` }}
         >
-          {PERIODS.map(({ key, label }) => (
-            <a
-              key={key}
-              href={`/contribute/community?period=${key}`}
-              style={{
-                fontFamily: T.font.sans,
-                fontSize: "13px",
-                color: period === key ? T.accent.aurora : T.ink.faint,
-                textDecoration: "none",
-                padding: "10px 16px",
-                borderBottom:
-                  period === key
-                    ? `2px solid ${T.accent.aurora}`
-                    : "2px solid transparent",
-                marginBottom: "-1px",
-                transition: "color 150ms",
-              }}
-            >
-              {label}
-            </a>
-          ))}
-        </div>
+          {PERIODS.map(({ key, label }) => {
+            const active = period === key
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 280px",
-            gap: "32px",
-            alignItems: "start",
-          }}
-        >
-          {/* Left: podium + ranked list */}
-          <div>
-            {entries.length === 0 ? (
-              <p
+            return (
+              <a
+                key={key}
+                href={`/contribute/community?period=${key}`}
+                aria-current={active ? "page" : undefined}
+                className="-mb-px whitespace-nowrap"
                 style={{
                   fontFamily: T.font.sans,
-                  fontSize: "13px",
-                  color: T.ink.faint,
+                  fontSize: "15px",
+                  fontWeight: active ? 600 : 500,
+                  color: active ? T.ink.base : T.ink.dim,
+                  textDecoration: "none",
+                  padding: "12px 14px 10px",
+                  borderBottom: active
+                    ? `3px solid ${T.accent.primary}`
+                    : "3px solid transparent",
+                  transition: "color 150ms",
                 }}
               >
-                No contributions recorded for this period yet.
-              </p>
+                {label}
+              </a>
+            )
+          })}
+        </nav>
+
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <section aria-labelledby="leaderboard-heading" className="min-w-0">
+            <h2
+              id="leaderboard-heading"
+              className="m-0 mb-5"
+              style={{
+                fontFamily: T.font.serif,
+                fontSize: "clamp(26px,3vw,32px)",
+                fontWeight: 500,
+                letterSpacing: "-0.01em",
+                color: T.ink.base,
+              }}
+            >
+              Top contributors
+            </h2>
+            {entries.length === 0 ? (
+              <div
+                className="rounded-[20px] px-6 py-10 text-center"
+                style={{
+                  background: T.bg.deep,
+                  border: `1px solid ${T.border.line}`,
+                }}
+              >
+                <p className="m-0 text-[16px]" style={{ color: T.ink.dim }}>
+                  No contributions recorded for this period yet.
+                </p>
+              </div>
             ) : (
               <>
                 <LeaderboardPodium entries={podium} />
                 <LeaderboardRows entries={rest} />
               </>
             )}
-          </div>
+          </section>
 
-          {/* Right sidebar */}
           <LeaderboardSidebar
             isSignedIn={!!session?.user}
             standing={standing}
