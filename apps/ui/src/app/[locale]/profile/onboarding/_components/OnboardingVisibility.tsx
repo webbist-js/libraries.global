@@ -71,9 +71,9 @@ export function OnboardingVisibility({
           style={{
             padding: "10px 24px",
             borderRadius: "10px",
-            border: "1px solid rgba(127,223,255,0.35)",
-            background: "rgba(127,223,255,0.1)",
-            color: T.accent.aurora,
+            border: "none",
+            background: T.accent.primary,
+            color: "#fff",
             fontSize: "13px",
             fontFamily: "Roboto, sans-serif",
             fontWeight: 600,

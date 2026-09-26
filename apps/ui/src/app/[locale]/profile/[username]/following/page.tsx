@@ -91,6 +91,7 @@ export default async function FollowingPage({
       username={username}
       followedLibraries={profile.followedLibraries ?? []}
       followedUsers={profile.followedProfiles ?? []}
+      claimedLibraries={profile.claimedLibraries ?? []}
     />
   )
 }

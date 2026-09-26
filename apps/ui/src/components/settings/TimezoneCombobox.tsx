@@ -89,7 +89,6 @@ export function TimezoneCombobox({
       <button
         type="button"
         style={triggerStyle}
-        className="focus:border-[rgba(127,223,255,.4)]"
         onClick={() => setOpen((o) => !o)}
       >
         <span style={{ color: value ? T.ink.base : T.ink.faint }}>
@@ -106,11 +105,11 @@ export function TimezoneCombobox({
             left: 0,
             right: 0,
             zIndex: 50,
-            background: "rgba(7,11,30,0.98)",
+            background: T.bg.deep,
             border: `1px solid ${T.border.hi}`,
             borderRadius: "10px",
             overflow: "hidden",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+            boxShadow: "0 12px 28px rgba(23,22,43,.12)",
           }}
         >
           <input
@@ -158,15 +157,16 @@ export function TimezoneCombobox({
                   width: "100%",
                   padding: "9px 14px",
                   background:
-                    tz === value ? "rgba(127,223,255,0.08)" : "transparent",
+                    tz === value ? "var(--t-accent-chip)" : "transparent",
                   border: "none",
-                  color: tz === value ? T.accent.aurora : T.ink.dim,
-                  fontSize: "13px",
-                  fontFamily: T.font.mono,
+                  color: tz === value ? T.accent.primaryHover : T.ink.base,
+                  fontSize: "14px",
+                  fontFamily: T.font.sans,
+                  fontWeight: tz === value ? 600 : 400,
                   cursor: "pointer",
                   textAlign: "left",
                 }}
-                className="hover:bg-white/[0.05]"
+                className="hover:bg-(--t-bg-surface)"
               >
                 {tz.replaceAll("_", " ")}
               </button>
@@ -175,9 +175,8 @@ export function TimezoneCombobox({
               <div
                 style={{
                   padding: "8px 14px",
-                  color: T.ink.faint,
-                  fontSize: "11px",
-                  fontFamily: T.font.mono,
+                  color: T.ink.low,
+                  fontSize: "13px",
                 }}
               >
                 {filtered.length - 100} more — refine your search

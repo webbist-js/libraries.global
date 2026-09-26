@@ -5,6 +5,8 @@ export type FollowedLibrary = {
   slug: string
   libraryType?: string | null
   heroImageUrl?: string | null
+  /** Atlas path (/continent/country/region/slug); null when the hierarchy is incomplete */
+  path?: string | null
 }
 
 export type FollowedUser = {
@@ -21,6 +23,8 @@ export type ClaimedLibrary = {
   slug: string | null
   libraryType: string | null
   heroImageUrl?: string | null
+  /** Atlas path (/continent/country/region/slug); null when the hierarchy is incomplete */
+  path?: string | null
 }
 
 export type AvatarMedia = {
@@ -72,6 +76,7 @@ export type UserProfile = {
   languages?: LanguageEntry[]
   interests?: InterestTopic[]
   notifPrefs: NotifPrefs
+  publicPrefs?: PublicPrefs | null
   followedLibraries?: FollowedLibrary[]
   followedProfiles?: FollowedUser[]
   claimedLibraries?: ClaimedLibrary[]
@@ -97,6 +102,27 @@ export type NotifPrefs = {
   editorialMessages: boolean
   soundOn: boolean
   marketing: boolean
+}
+
+/** Per-section public visibility toggles ("Manage what's public"). Defaults: all true. */
+export type PublicPrefs = {
+  showLocation: boolean
+  showAffiliation: boolean
+  showActivity: boolean
+  showFollows: boolean
+}
+
+export const DEFAULT_PUBLIC_PREFS: PublicPrefs = {
+  showLocation: true,
+  showAffiliation: true,
+  showActivity: true,
+  showFollows: true,
+}
+
+export function resolvePublicPrefs(
+  prefs: PublicPrefs | null | undefined
+): PublicPrefs {
+  return { ...DEFAULT_PUBLIC_PREFS, ...prefs }
 }
 
 export type PublicProfile = Omit<UserProfile, "notifPrefs">

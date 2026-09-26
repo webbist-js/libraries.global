@@ -77,7 +77,9 @@ export async function PUT(req: Request) {
     "notifPrefs",
     "languages",
     "interests",
-    "avatarFileId",
+    // avatarFileId is intentionally absent: only the avatar upload route may
+    // set it, with the id of the file it just uploaded. Accepting it here would
+    // let users attach any media-library file to their profile.
     "theme",
   ]
   const data: Record<string, unknown> = { baUserId: session.user.id }
@@ -128,7 +130,12 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
   }
 
-  const patchAllowed = ["theme", "notifPrefs", "profileVisibility"]
+  const patchAllowed = [
+    "theme",
+    "notifPrefs",
+    "profileVisibility",
+    "publicPrefs",
+  ]
   const data: Record<string, unknown> = { baUserId: session.user.id }
   for (const key of patchAllowed) {
     if (key in body) data[key] = body[key]
@@ -195,7 +202,7 @@ export async function DELETE() {
   }
 
   try {
-    await auth.api.deleteUser({ headers: await headers() })
+    await auth.api.deleteUser({ body: {}, headers: await headers() })
   } catch (err) {
     console.warn("[deleteUser] BA deletion error (non-fatal):", err)
   }

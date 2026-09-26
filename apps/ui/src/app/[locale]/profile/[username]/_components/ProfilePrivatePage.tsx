@@ -4,7 +4,7 @@ export function ProfilePrivatePage({ username }: { username: string }) {
   return (
     <div
       className="relative isolate flex min-h-screen w-full flex-col items-center justify-center"
-      style={{ background: T.bg.space }}
+      style={{ background: T.bg.void }}
     >
       <div
         style={{

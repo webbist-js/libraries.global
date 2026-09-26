@@ -8,7 +8,8 @@ import { getSessionSSR } from "@/lib/auth-server"
 import type { UserProfile } from "@/lib/types/profile"
 
 export const metadata: Metadata = {
-  robots: "noindex, nofollow",
+  title: "Set up your profile",
+  robots: { index: false, follow: false },
 }
 
 export default async function OnboardingPage({

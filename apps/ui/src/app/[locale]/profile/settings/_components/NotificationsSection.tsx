@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 
+import { ToggleSwitch } from "@/components/settings/ToggleSwitch"
 import { useProfile } from "@/hooks/useProfile"
 import { T } from "@/lib/design-tokens"
 import type { UserProfile } from "@/lib/types/profile"
@@ -20,55 +21,16 @@ type NotificationItem = {
   desc: string
 }
 
-function Toggle({
-  value,
-  onChange,
-}: {
-  value: boolean
-  onChange: (v: boolean) => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!value)}
-      style={{
-        width: "42px",
-        height: "24px",
-        borderRadius: "999px",
-        border: "none",
-        background: value ? T.accent.aurora : T.border.hi,
-        cursor: "pointer",
-        position: "relative",
-        flexShrink: 0,
-        transition: "background 200ms",
-      }}
-    >
-      <span
-        style={{
-          position: "absolute",
-          top: "3px",
-          left: value ? "21px" : "3px",
-          width: "18px",
-          height: "18px",
-          borderRadius: "50%",
-          background: "#fff",
-          transition: "left 200ms",
-        }}
-      />
-    </button>
-  )
-}
-
 const EMAIL_NOTIFS: NotificationItem[] = [
   {
     key: "weeklyDigest",
     label: "Weekly digest",
-    desc: "Every activity on followed libraries + your contributions.",
+    desc: "Activity on libraries you follow and your contributions.",
   },
   {
     key: "editsReviewed",
-    label: "Edits reviewed",
-    desc: "When an editor approves, rejects, or comments on your submission.",
+    label: "Your edits are reviewed",
+    desc: "When a change is accepted, returned or commented on.",
   },
   {
     key: "newFollowers",
@@ -77,27 +39,27 @@ const EMAIL_NOTIFS: NotificationItem[] = [
   },
   {
     key: "editorialMessages",
-    label: "Editorial-board messages",
-    desc: "Important announcements from the project stewards. Recommended.",
+    label: "Announcements from project stewards",
+    desc: "Important project news. Recommended.",
   },
 ]
 
-const PRODUCT_NOTIFS: NotificationItem[] = [
+const SITE_NOTIFS: NotificationItem[] = [
   {
     key: "soundOn",
-    label: "Sound on new notifications",
-    desc: "A subtle chime when a new notification arrives.",
+    label: "Play a sound for new notifications",
+    desc: "A short chime.",
   },
   {
     key: "marketing",
-    label: "Marketing emails",
-    desc: "Occasional updates on new features and project milestones.",
+    label: "Product updates",
+    desc: "New features and project milestones.",
   },
 ]
 
 type NotificationPrefs = Record<NotifKey, boolean>
 
-function SectionCard({
+function NotifGroup({
   title,
   items,
   prefs,
@@ -109,62 +71,40 @@ function SectionCard({
   onToggle: (key: NotifKey) => void
 }) {
   return (
-    <div
-      style={{
-        border: `1px solid ${T.border.line}`,
-        borderRadius: "12px",
-        overflow: "hidden",
-        marginBottom: "16px",
-      }}
-    >
-      <div
-        style={{
-          padding: "16px 20px",
-          borderBottom: `1px solid ${T.border.line}`,
-          background: T.bg.surface,
-        }}
+    <div>
+      <p
+        className="m-0 mb-1 text-[15px] font-semibold"
+        style={{ color: T.ink.base }}
       >
-        <h3
-          style={{
-            margin: 0,
-            fontSize: "14px",
-            fontWeight: 600,
-            color: T.ink.base,
-          }}
-        >
-          {title}
-        </h3>
-      </div>
-
-      {items.map((item, i) => (
+        {title}
+      </p>
+      {items.map((item, index) => (
         <div
           key={item.key}
+          className="flex items-center justify-between gap-4 py-3.5"
           style={{
-            padding: "14px 20px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "16px",
             borderBottom:
-              i < items.length - 1 ? `1px solid ${T.border.line}` : "none",
+              index < items.length - 1
+                ? `1px solid ${T.border.divider}`
+                : "none",
           }}
         >
-          <div>
-            <p style={{ margin: 0, fontSize: "13px", color: T.ink.base }}>
+          <div className="min-w-0">
+            <p
+              className="m-0 text-[15px] font-medium"
+              style={{ color: T.ink.base }}
+            >
               {item.label}
             </p>
-            <p
-              style={{
-                margin: "2px 0 0",
-                fontSize: "12px",
-                color: T.ink.faint,
-              }}
-            >
+            <p className="m-0 mt-0.5 text-[14px]" style={{ color: T.ink.dim }}>
               {item.desc}
             </p>
           </div>
-
-          <Toggle value={prefs[item.key]} onChange={() => onToggle(item.key)} />
+          <ToggleSwitch
+            value={prefs[item.key]}
+            onChange={() => onToggle(item.key)}
+            label={item.label}
+          />
         </div>
       ))}
     </div>
@@ -176,7 +116,7 @@ export function NotificationsSection({
 }: {
   profile: UserProfile | null
 }) {
-  const { saving, updateNotifications } = useProfile()
+  const { updateNotifications } = useProfile()
 
   const defaults: NotificationPrefs = profile?.notifPrefs ?? {
     weeklyDigest: true,
@@ -199,46 +139,36 @@ export function NotificationsSection({
   return (
     <div>
       <h2
+        className="m-0"
         style={{
-          margin: "0 0 6px",
-          fontSize: "16px",
-          fontWeight: 600,
+          fontFamily: T.font.serif,
+          fontSize: "24px",
+          fontWeight: 500,
           color: T.ink.base,
         }}
       >
         Notifications
       </h2>
-
-      <p style={{ margin: "0 0 24px", fontSize: "13px", color: T.ink.faint }}>
-        Choose how you want to hear about activity on libraries, contributions,
-        and the people you follow.
+      <p className="mt-1 mb-6 text-[15px]" style={{ color: T.ink.dim }}>
+        Choose what you hear about libraries, your contributions and the people
+        you follow.
       </p>
 
-      <SectionCard
-        title="Email"
+      <NotifGroup
+        title="By email"
         items={EMAIL_NOTIFS}
         prefs={prefs}
         onToggle={toggle}
       />
 
-      <SectionCard
-        title="In-product"
-        items={PRODUCT_NOTIFS}
-        prefs={prefs}
-        onToggle={toggle}
-      />
-
-      {saving && (
-        <p
-          style={{
-            fontSize: "11px",
-            color: T.ink.faint,
-            fontFamily: T.font.mono,
-          }}
-        >
-          Saving…
-        </p>
-      )}
+      <div className="mt-7">
+        <NotifGroup
+          title="On the site"
+          items={SITE_NOTIFS}
+          prefs={prefs}
+          onToggle={toggle}
+        />
+      </div>
     </div>
   )
 }

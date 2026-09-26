@@ -8,12 +8,12 @@ import { T } from "@/lib/design-tokens"
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function heatColor(count: number, isFuture: boolean): string {
-  if (isFuture || count === 0) return "rgba(255,255,255,0.04)"
-  if (count <= 2) return "rgba(127,223,255,0.18)"
-  if (count <= 5) return "rgba(127,223,255,0.40)"
-  if (count <= 10) return "rgba(127,223,255,0.64)"
+  if (isFuture) return "transparent"
+  if (count === 0) return "#F0ECE5"
+  if (count <= 2) return "#D6D2F6"
+  if (count <= 5) return "#A59DEB"
 
-  return "rgba(127,223,255,0.90)"
+  return "#4338CA"
 }
 
 function buildGrid(
@@ -73,9 +73,9 @@ export function ContributionHeatmap({
     <div
       style={{
         border: `1px solid ${T.border.line}`,
-        borderRadius: "14px",
+        borderRadius: "20px",
         padding: "20px 24px",
-        background: T.bg.surface,
+        background: T.bg.deep,
       }}
     >
       {/* Header */}
@@ -84,44 +84,24 @@ export function ContributionHeatmap({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "baseline",
-          marginBottom: "10px",
+          marginBottom: "14px",
         }}
       >
         <span
           style={{
             fontFamily: T.font.serif,
-            fontSize: "18px",
-            fontWeight: 400,
-            letterSpacing: "-0.02em",
+            fontSize: "24px",
+            fontWeight: 500,
+            letterSpacing: "-0.01em",
             color: T.ink.base,
           }}
         >
           Activity
         </span>
-        <span
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".18em",
-            textTransform: "uppercase",
-            color: T.ink.faint,
-          }}
-        >
-          § Last 26 weeks
+        <span style={{ fontSize: "14px", color: T.ink.dim }}>
+          Last 26 weeks
         </span>
       </div>
-      <p
-        style={{
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".14em",
-          textTransform: "uppercase",
-          color: T.ink.faint,
-          margin: "0 0 14px",
-        }}
-      >
-        Daily contribution graph
-      </p>
 
       {/* Grid: columns = weeks, rows = Mon→Sun — fills full container width */}
       <div
@@ -148,13 +128,28 @@ export function ContributionHeatmap({
                 gridColumn: col + 1,
                 gridRow: row + 1,
                 aspectRatio: "1",
-                borderRadius: "2px",
+                borderRadius: "4px",
                 background: heatColor(cell.count, cell.isFuture),
               }}
             />
           ))
         )}
       </div>
+
+      {/* Text alternative */}
+      <details style={{ marginTop: "12px" }}>
+        <summary
+          style={{ fontSize: "14px", color: T.ink.dim, cursor: "pointer" }}
+        >
+          Activity as text
+        </summary>
+        <p style={{ fontSize: "14px", color: T.ink.dim, margin: "8px 0 0" }}>
+          {submissions.length} contribution
+          {submissions.length === 1 ? "" : "s"} recorded in the last 26 weeks
+          across {dateCountMap.size} active day
+          {dateCountMap.size === 1 ? "" : "s"}.
+        </p>
+      </details>
 
       {/* Footer */}
       <div
@@ -165,23 +160,14 @@ export function ContributionHeatmap({
           marginTop: "10px",
         }}
       >
-        <span
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            color: T.ink.faint,
-            letterSpacing: ".06em",
-          }}
-        >
+        <span style={{ fontSize: "13px", color: T.ink.low }}>
           Mon – Sun, last 182 days
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
           <span
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              color: T.ink.faint,
-              letterSpacing: ".06em",
+              fontSize: "13px",
+              color: T.ink.low,
               marginRight: "2px",
             }}
           >
@@ -193,17 +179,15 @@ export function ContributionHeatmap({
               style={{
                 width: `${LEGEND_CELL}px`,
                 height: `${LEGEND_CELL}px`,
-                borderRadius: "2px",
+                borderRadius: "4px",
                 background: heatColor(v, false),
               }}
             />
           ))}
           <span
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              color: T.ink.faint,
-              letterSpacing: ".06em",
+              fontSize: "13px",
+              color: T.ink.low,
               marginLeft: "2px",
             }}
           >

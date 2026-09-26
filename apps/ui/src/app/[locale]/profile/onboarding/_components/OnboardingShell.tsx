@@ -35,22 +35,20 @@ type LanguageEntry = {
 const input: React.CSSProperties = {
   width: "100%",
   padding: "10px 14px",
-  borderRadius: "10px",
-  border: `1px solid ${T.border.hi}`,
-  background: T.bg.surface,
+  borderRadius: "12px",
+  border: `1px solid ${T.border.line}`,
+  background: T.bg.deep,
   color: T.ink.base,
-  fontSize: "13px",
+  fontSize: "15px",
   fontFamily: T.font.sans,
-  outline: "none",
   boxSizing: "border-box",
 }
 
 const label: React.CSSProperties = {
-  fontFamily: T.font.mono,
-  fontSize: "10px",
-  letterSpacing: ".16em",
-  textTransform: "uppercase",
-  color: T.ink.faint,
+  fontFamily: T.font.sans,
+  fontSize: "14px",
+  fontWeight: 500,
+  color: T.ink.dim,
   display: "block",
   marginBottom: "6px",
 }
@@ -145,27 +143,26 @@ function SectionHeading({
       >
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <span
+            aria-hidden="true"
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".18em",
-              textTransform: "uppercase",
-              color: T.ink.faint,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
+              background: T.accent.chip,
+              color: T.accent.primary,
+              flexShrink: 0,
             }}
           >
-            §
+            <Icon icon={icon} width={16} height={16} />
           </span>
-          <Icon
-            icon={icon}
-            width={15}
-            height={15}
-            style={{ color: T.ink.dim, flexShrink: 0 }}
-          />
           <h2
             style={{
               fontFamily: T.font.serif,
-              fontSize: "18px",
-              fontWeight: 700,
+              fontSize: "22px",
+              fontWeight: 500,
               color: T.ink.base,
               margin: 0,
               letterSpacing: "-0.01em",
@@ -177,11 +174,12 @@ function SectionHeading({
         {required && (
           <span
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".18em",
-              textTransform: "uppercase",
-              color: T.accent.aurora,
+              fontSize: "13px",
+              fontWeight: 600,
+              padding: "3px 10px",
+              borderRadius: "999px",
+              background: T.accent.chip,
+              color: T.accent.primaryHover,
             }}
           >
             Required
@@ -190,11 +188,12 @@ function SectionHeading({
         {optional && (
           <span
             style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".18em",
-              textTransform: "uppercase",
-              color: T.ink.faint,
+              fontSize: "13px",
+              fontWeight: 600,
+              padding: "3px 10px",
+              borderRadius: "999px",
+              background: T.bg.muted,
+              color: T.ink.dim,
             }}
           >
             Optional · Public
@@ -204,9 +203,9 @@ function SectionHeading({
       {subtitle && (
         <p
           style={{
-            margin: "6px 0 0 23px",
-            fontSize: "13px",
-            color: T.ink.faint,
+            margin: "8px 0 0 42px",
+            fontSize: "15px",
+            color: T.ink.dim,
             lineHeight: 1.55,
           }}
         >
@@ -409,7 +408,7 @@ export function OnboardingShell({
               position: "absolute",
               inset: 0,
               background:
-                "radial-gradient(ellipse 70% 55% at 60% 35%, rgba(127,223,255,0.055), transparent 60%), radial-gradient(ellipse 50% 70% at 50% 50%, rgba(92,149,255,0.07), transparent 55%)",
+                "radial-gradient(ellipse 70% 55% at 60% 35%, rgba(67,56,202,0.05), transparent 60%), radial-gradient(ellipse 50% 70% at 50% 50%, rgba(242,200,121,0.06), transparent 55%)",
               pointerEvents: "none",
             }}
           />
@@ -424,7 +423,7 @@ export function OnboardingShell({
               width: "480px",
               height: "480px",
               borderRadius: "50%",
-              border: "1px solid rgba(127,223,255,0.07)",
+              border: "1px solid rgba(67,56,202,0.10)",
               pointerEvents: "none",
             }}
           />
@@ -438,7 +437,7 @@ export function OnboardingShell({
               width: "340px",
               height: "340px",
               borderRadius: "50%",
-              border: "1px solid rgba(127,223,255,0.04)",
+              border: "1px solid rgba(67,56,202,0.06)",
               pointerEvents: "none",
             }}
           />
@@ -451,23 +450,23 @@ export function OnboardingShell({
               display: "flex",
               alignItems: "center",
               gap: "10px",
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".22em",
-              textTransform: "uppercase",
-              color: T.ink.faint,
+              fontFamily: T.font.sans,
+              fontSize: "14px",
+              fontWeight: 600,
+              color: T.ink.dim,
             }}
           >
             <span
               style={{
                 width: "22px",
-                height: "1px",
-                background: T.accent.aurora,
+                height: "2px",
+                borderRadius: "2px",
+                background: T.accent.primary,
                 display: "inline-block",
                 flexShrink: 0,
               }}
             />
-            § Before you continue
+            Before you continue
           </div>
 
           {/* Main content */}
@@ -485,9 +484,9 @@ export function OnboardingShell({
                 style={{
                   fontFamily: T.font.serif,
                   fontSize: "clamp(2rem, 3.5vw, 3rem)",
-                  fontWeight: 700,
-                  lineHeight: 0.95,
-                  letterSpacing: "-0.03em",
+                  fontWeight: 500,
+                  lineHeight: 1.05,
+                  letterSpacing: "-0.02em",
                   color: T.ink.base,
                   margin: "0 0 18px",
                 }}
@@ -497,7 +496,7 @@ export function OnboardingShell({
                   style={{
                     fontStyle: "italic",
                     fontWeight: 400,
-                    color: T.ink.dim,
+                    color: T.accent.primary,
                   }}
                 >
                   introduce yourself.
@@ -505,10 +504,9 @@ export function OnboardingShell({
               </h1>
               <p
                 style={{
-                  fontSize: "14px",
+                  fontSize: "15px",
                   lineHeight: "1.65",
                   color: T.ink.dim,
-                  fontWeight: 300,
                   maxWidth: "38ch",
                 }}
               >
@@ -519,10 +517,9 @@ export function OnboardingShell({
               <p
                 style={{
                   marginTop: "12px",
-                  fontSize: "14px",
+                  fontSize: "15px",
                   lineHeight: "1.65",
                   color: T.ink.dim,
-                  fontWeight: 300,
                   maxWidth: "38ch",
                 }}
               >
@@ -534,19 +531,19 @@ export function OnboardingShell({
             {/* Pull-quote */}
             <div
               style={{
-                borderLeft: `2px solid ${T.accent.aurora}`,
+                borderLeft: `2px solid ${T.accent.primary}`,
                 paddingLeft: "16px",
                 maxWidth: "34ch",
               }}
             >
               <p
                 style={{
-                  fontSize: "13px",
+                  fontFamily: T.font.serif,
+                  fontSize: "15px",
                   fontStyle: "italic",
                   color: T.ink.dim,
                   lineHeight: "1.6",
                   margin: "0 0 8px",
-                  fontWeight: 300,
                 }}
               >
                 &ldquo;A name on an entry is a small act of trust between a
@@ -554,15 +551,13 @@ export function OnboardingShell({
               </p>
               <p
                 style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".12em",
-                  textTransform: "uppercase",
-                  color: T.ink.faint,
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: T.ink.low,
                   margin: 0,
                 }}
               >
-                Editorial covenant — §0.7
+                Editorial covenant
               </p>
             </div>
           </div>
@@ -579,11 +574,10 @@ export function OnboardingShell({
           >
             <span
               style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".16em",
-                textTransform: "uppercase",
-                color: T.ink.faint,
+                fontFamily: T.font.sans,
+                fontSize: "13px",
+                fontWeight: 600,
+                color: T.ink.dim,
               }}
             >
               Profile setup
@@ -601,13 +595,13 @@ export function OnboardingShell({
                   title={s}
                   style={{
                     flex: 1,
-                    height: "2px",
+                    height: "3px",
                     borderRadius: "2px",
                     background:
                       i === 0
-                        ? T.accent.aurora
+                        ? T.accent.primary
                         : i < 4
-                          ? "rgba(127,223,255,0.25)"
+                          ? "var(--t-aurora-edge)"
                           : T.border.line,
                   }}
                 />
@@ -633,8 +627,8 @@ export function OnboardingShell({
                 style={{
                   fontFamily: T.font.serif,
                   fontSize: "clamp(1.8rem, 3vw, 2.4rem)",
-                  fontWeight: 700,
-                  letterSpacing: "-0.03em",
+                  fontWeight: 500,
+                  letterSpacing: "-0.02em",
                   color: T.ink.base,
                   margin: "0 0 6px",
                 }}
@@ -644,7 +638,7 @@ export function OnboardingShell({
                   style={{
                     fontStyle: "italic",
                     fontWeight: 400,
-                    color: T.ink.dim,
+                    color: T.accent.primary,
                   }}
                 >
                   public
@@ -653,8 +647,8 @@ export function OnboardingShell({
               </h2>
               <p
                 style={{
-                  fontSize: "13px",
-                  color: T.ink.faint,
+                  fontSize: "15px",
+                  color: T.ink.dim,
                   margin: 0,
                   lineHeight: 1.6,
                 }}
@@ -671,7 +665,7 @@ export function OnboardingShell({
               style={{
                 marginBottom: "40px",
                 padding: "28px",
-                borderRadius: "12px",
+                borderRadius: "20px",
                 border: `1px solid ${T.border.line}`,
                 background: T.bg.deep,
               }}
@@ -704,7 +698,6 @@ export function OnboardingShell({
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="Amélie"
-                    className="focus:border-[rgba(127,223,255,.4)]"
                   />
                 </div>
                 <div>
@@ -715,7 +708,6 @@ export function OnboardingShell({
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Rault"
-                    className="focus:border-[rgba(127,223,255,.4)]"
                   />
                 </div>
               </div>
@@ -749,7 +741,7 @@ export function OnboardingShell({
                     ...input,
                     borderColor:
                       usernameStatus === "taken"
-                        ? "rgba(255,138,138,0.45)"
+                        ? "var(--t-danger-edge)"
                         : undefined,
                   }}
                   type="text"
@@ -760,7 +752,6 @@ export function OnboardingShell({
                     )
                   }
                   placeholder="amelie.rault"
-                  className="focus:border-[rgba(127,223,255,.4)]"
                 />
               </div>
 
@@ -798,7 +789,6 @@ export function OnboardingShell({
                     value={city ?? ""}
                     onChange={(e) => setCity(e.target.value)}
                     placeholder="Paris"
-                    className="focus:border-[rgba(127,223,255,.4)]"
                   />
                 </div>
               </div>
@@ -844,13 +834,12 @@ export function OnboardingShell({
                   maxLength={320}
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="Shown at the top of your profile. Plain text, no markdown."
-                  className="focus:border-[rgba(127,223,255,.4)]"
                 />
                 <p
                   style={{
                     margin: "4px 0 0",
-                    fontSize: "11px",
-                    color: T.ink.faint,
+                    fontSize: "13px",
+                    color: T.ink.low,
                   }}
                 >
                   Shown at the top of your profile. Plain text; no markdown.
@@ -864,7 +853,7 @@ export function OnboardingShell({
               style={{
                 marginBottom: "40px",
                 padding: "28px",
-                borderRadius: "12px",
+                borderRadius: "20px",
                 border: `1px solid ${T.border.line}`,
                 background: T.bg.deep,
               }}
@@ -894,10 +883,8 @@ export function OnboardingShell({
                       style={{
                         padding: "14px 16px",
                         borderRadius: "10px",
-                        border: `1px solid ${active ? "rgba(127,223,255,0.4)" : T.border.line}`,
-                        background: active
-                          ? "rgba(127,223,255,0.06)"
-                          : T.bg.surface,
+                        border: `1px solid ${active ? "var(--t-aurora-edge)" : T.border.line}`,
+                        background: active ? T.accent.chip : T.bg.surface,
                         cursor: "pointer",
                         textAlign: "left",
                         display: "flex",
@@ -911,7 +898,7 @@ export function OnboardingShell({
                         width={16}
                         height={16}
                         style={{
-                          color: active ? T.accent.aurora : T.ink.faint,
+                          color: active ? T.accent.primary : T.ink.low,
                           marginTop: "2px",
                           flexShrink: 0,
                         }}
@@ -920,9 +907,9 @@ export function OnboardingShell({
                         <p
                           style={{
                             margin: 0,
-                            fontSize: "13px",
+                            fontSize: "15px",
                             fontWeight: 600,
-                            color: active ? T.ink.base : T.ink.dim,
+                            color: T.ink.base,
                           }}
                         >
                           {type.label}
@@ -930,8 +917,8 @@ export function OnboardingShell({
                         <p
                           style={{
                             margin: "2px 0 0",
-                            fontSize: "11px",
-                            color: T.ink.faint,
+                            fontSize: "13px",
+                            color: T.ink.dim,
                           }}
                         >
                           {type.desc}
@@ -943,9 +930,9 @@ export function OnboardingShell({
                             width: "14px",
                             height: "14px",
                             borderRadius: "50%",
-                            border: `1px solid ${active ? T.accent.aurora : T.border.hi}`,
+                            border: `1px solid ${active ? T.accent.primary : T.border.hi}`,
                             background: active
-                              ? T.accent.aurora
+                              ? T.accent.primary
                               : "transparent",
                             display: "flex",
                             alignItems: "center",
@@ -957,7 +944,7 @@ export function OnboardingShell({
                               icon="mdi:check"
                               width={9}
                               height={9}
-                              style={{ color: T.bg.void }}
+                              style={{ color: "#fff" }}
                             />
                           )}
                         </div>
@@ -975,7 +962,7 @@ export function OnboardingShell({
                     padding: "20px",
                     borderRadius: "10px",
                     border: `1px solid ${T.border.line}`,
-                    background: "rgba(127,223,255,0.02)",
+                    background: T.bg.surface,
                   }}
                 >
                   <div
@@ -990,12 +977,12 @@ export function OnboardingShell({
                       icon="mdi:check-decagram-outline"
                       width={15}
                       height={15}
-                      style={{ color: T.accent.aurora }}
+                      style={{ color: T.accent.primary }}
                     />
                     <p
                       style={{
                         margin: 0,
-                        fontSize: "13px",
+                        fontSize: "15px",
                         fontWeight: 600,
                         color: T.ink.base,
                       }}
@@ -1005,9 +992,9 @@ export function OnboardingShell({
                   </div>
                   <p
                     style={{
-                      margin: "0 0 16px 23px",
-                      fontSize: "12px",
-                      color: T.ink.faint,
+                      margin: "0 0 16px 25px",
+                      fontSize: "14px",
+                      color: T.ink.dim,
                       lineHeight: 1.55,
                     }}
                   >
@@ -1027,11 +1014,11 @@ export function OnboardingShell({
                     marginTop: "16px",
                     padding: "14px 18px",
                     borderRadius: "10px",
-                    border: `1px solid ${claimResult.status === "verified" ? "rgba(142,240,179,0.3)" : "rgba(255,207,122,0.3)"}`,
+                    border: `1px solid ${claimResult.status === "verified" ? "var(--tint-public-bg)" : "#EADFC4"}`,
                     background:
                       claimResult.status === "verified"
-                        ? "rgba(142,240,179,0.05)"
-                        : "rgba(255,207,122,0.05)",
+                        ? "var(--tint-public-bg)"
+                        : "#F5EEDC",
                     display: "flex",
                     alignItems: "center",
                     gap: "10px",
@@ -1056,10 +1043,11 @@ export function OnboardingShell({
                   <p
                     style={{
                       margin: 0,
-                      fontSize: "13px",
+                      fontSize: "14px",
+                      fontWeight: 600,
                       color:
                         claimResult.status === "verified"
-                          ? T.accent.ok
+                          ? "var(--tint-public-fg)"
                           : T.accent.warn,
                     }}
                   >
@@ -1077,7 +1065,7 @@ export function OnboardingShell({
               style={{
                 marginBottom: "40px",
                 padding: "28px",
-                borderRadius: "12px",
+                borderRadius: "20px",
                 border: `1px solid ${T.border.line}`,
                 background: T.bg.deep,
               }}
@@ -1091,11 +1079,9 @@ export function OnboardingShell({
               <p
                 style={{
                   margin: "0 0 10px",
-                  fontSize: "11px",
-                  fontFamily: T.font.mono,
-                  letterSpacing: ".12em",
-                  textTransform: "uppercase",
-                  color: T.ink.faint,
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  color: T.ink.dim,
                 }}
               >
                 Topics you care about
@@ -1105,11 +1091,9 @@ export function OnboardingShell({
               <p
                 style={{
                   margin: "20px 0 10px",
-                  fontSize: "11px",
-                  fontFamily: T.font.mono,
-                  letterSpacing: ".12em",
-                  textTransform: "uppercase",
-                  color: T.ink.faint,
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  color: T.ink.dim,
                 }}
               >
                 Languages you can review in
@@ -1137,11 +1121,12 @@ export function OnboardingShell({
                         gap: "6px",
                         padding: "4px 10px",
                         borderRadius: "999px",
-                        border: "1px solid rgba(127,223,255,0.3)",
-                        background: "rgba(127,223,255,0.06)",
-                        color: T.accent.aurora,
-                        fontSize: "12px",
-                        fontFamily: T.font.mono,
+                        border: "1px solid transparent",
+                        background: T.accent.chip,
+                        color: T.accent.primaryHover,
+                        fontSize: "14px",
+                        fontWeight: 600,
+                        fontFamily: T.font.sans,
                       }}
                     >
                       {name} · {lang.proficiency}
@@ -1233,7 +1218,7 @@ export function OnboardingShell({
                     border: `1px solid ${T.border.hi}`,
                     background: T.bg.deep,
                     color: T.ink.dim,
-                    fontSize: "12px",
+                    fontSize: "14px",
                     cursor: addingLang ? "pointer" : "not-allowed",
                     opacity: addingLang ? 1 : 0.5,
                   }}
@@ -1249,7 +1234,7 @@ export function OnboardingShell({
               style={{
                 marginBottom: "40px",
                 padding: "28px",
-                borderRadius: "12px",
+                borderRadius: "20px",
                 border: `1px solid ${T.border.line}`,
                 background: T.bg.deep,
               }}
@@ -1275,7 +1260,6 @@ export function OnboardingShell({
                     value={website}
                     onChange={(e) => setWebsite(e.target.value)}
                     placeholder="https://"
-                    className="focus:border-[rgba(127,223,255,.4)]"
                   />
                 </div>
                 <div>
@@ -1286,7 +1270,6 @@ export function OnboardingShell({
                     value={orcid}
                     onChange={(e) => setOrcid(e.target.value)}
                     placeholder="0000-0000-0000-0000"
-                    className="focus:border-[rgba(127,223,255,.4)]"
                   />
                 </div>
                 <div>
@@ -1297,7 +1280,6 @@ export function OnboardingShell({
                     value={mastodon}
                     onChange={(e) => setMastodon(e.target.value)}
                     placeholder="@you@mastodon.social"
-                    className="focus:border-[rgba(127,223,255,.4)]"
                   />
                 </div>
                 <div>
@@ -1308,7 +1290,6 @@ export function OnboardingShell({
                     value={linkedin}
                     onChange={(e) => setLinkedin(e.target.value)}
                     placeholder="linkedin.com/in/"
-                    className="focus:border-[rgba(127,223,255,.4)]"
                   />
                 </div>
               </div>
@@ -1320,7 +1301,7 @@ export function OnboardingShell({
               style={{
                 marginBottom: "40px",
                 padding: "28px",
-                borderRadius: "12px",
+                borderRadius: "20px",
                 border: `1px solid ${T.border.line}`,
                 background: T.bg.deep,
               }}
@@ -1337,8 +1318,8 @@ export function OnboardingShell({
             {/* Fine print */}
             <p
               style={{
-                fontSize: "12px",
-                color: T.ink.faint,
+                fontSize: "13px",
+                color: T.ink.low,
                 lineHeight: 1.6,
                 marginBottom: "10px",
               }}
@@ -1390,11 +1371,11 @@ export function OnboardingShell({
               onClick={() => void handleSave("home")}
               style={{
                 padding: "9px 20px",
-                borderRadius: "10px",
+                borderRadius: "999px",
                 border: `1px solid ${T.border.hi}`,
-                background: "transparent",
-                color: T.ink.dim,
-                fontSize: "13px",
+                background: T.bg.deep,
+                color: T.ink.base,
+                fontSize: "14px",
                 fontFamily: T.font.sans,
                 cursor: "pointer",
               }}
@@ -1407,11 +1388,11 @@ export function OnboardingShell({
               onClick={() => void handleSave("profile")}
               style={{
                 padding: "10px 24px",
-                borderRadius: "10px",
-                border: "1px solid rgba(127,223,255,0.35)",
-                background: "rgba(127,223,255,0.1)",
-                color: T.accent.aurora,
-                fontSize: "13px",
+                borderRadius: "999px",
+                border: "none",
+                background: T.accent.primary,
+                color: "#fff",
+                fontSize: "14px",
                 fontFamily: T.font.sans,
                 fontWeight: 600,
                 cursor:

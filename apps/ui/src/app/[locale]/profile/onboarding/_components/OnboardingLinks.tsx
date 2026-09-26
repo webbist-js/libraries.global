@@ -73,7 +73,6 @@ export function OnboardingLinks({
           value={form.website ?? ""}
           onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))}
           placeholder="https://yoursite.net"
-          className="focus:border-[rgba(127,223,255,.4)]"
         />
       </div>
 
@@ -85,7 +84,6 @@ export function OnboardingLinks({
           value={form.orcid ?? ""}
           onChange={(e) => setForm((f) => ({ ...f, orcid: e.target.value }))}
           placeholder="https://orcid.org/0000-0000-0000-0000"
-          className="focus:border-[rgba(127,223,255,.4)]"
         />
       </div>
 
@@ -97,7 +95,6 @@ export function OnboardingLinks({
           value={form.mastodon ?? ""}
           onChange={(e) => setForm((f) => ({ ...f, mastodon: e.target.value }))}
           placeholder="@you@mastodon.social or @you.bsky.social"
-          className="focus:border-[rgba(127,223,255,.4)]"
         />
       </div>
 
@@ -109,7 +106,6 @@ export function OnboardingLinks({
           value={form.linkedin ?? ""}
           onChange={(e) => setForm((f) => ({ ...f, linkedin: e.target.value }))}
           placeholder="https://linkedin.com/in/yourhandle"
-          className="focus:border-[rgba(127,223,255,.4)]"
         />
       </div>
 

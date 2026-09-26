@@ -60,9 +60,9 @@ export function VisibilityCards({
             style={{
               flex: layout === "horizontal" ? "1 1 0" : undefined,
               padding: "16px 18px",
-              borderRadius: "10px",
-              border: `1px solid ${selected ? "var(--t-aurora-edge)" : T.border.line}`,
-              background: selected ? "var(--t-aurora-soft)" : T.bg.surface,
+              borderRadius: "14px",
+              border: `1px solid ${selected ? T.accent.primary : T.border.line}`,
+              background: selected ? T.accent.chip : T.bg.deep,
               cursor: "pointer",
               textAlign: "left",
               transition: "border-color 150ms, background 150ms",
@@ -77,7 +77,7 @@ export function VisibilityCards({
               width={20}
               height={20}
               style={{
-                color: selected ? T.accent.aurora : T.ink.dim,
+                color: selected ? T.accent.primaryHover : T.ink.dim,
                 flexShrink: 0,
                 transition: "color 150ms",
               }}
@@ -86,9 +86,9 @@ export function VisibilityCards({
               <p
                 style={{
                   margin: 0,
-                  fontSize: "13px",
+                  fontSize: "15px",
                   fontWeight: 600,
-                  color: selected ? T.ink.base : T.ink.dim,
+                  color: T.ink.base,
                   lineHeight: 1.3,
                 }}
               >
@@ -97,8 +97,8 @@ export function VisibilityCards({
               <p
                 style={{
                   margin: "4px 0 0",
-                  fontSize: "12px",
-                  color: T.ink.faint,
+                  fontSize: "14px",
+                  color: T.ink.dim,
                   lineHeight: 1.5,
                 }}
               >

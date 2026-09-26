@@ -57,14 +57,14 @@ export function ProfileFollowButton({
           display: "inline-flex",
           alignItems: "center",
           gap: "6px",
-          padding: "10px 18px",
-          borderRadius: "10px",
-          border: `1px solid ${T.border.hi}`,
-          background: T.bg.surface,
-          color: T.ink.dim,
+          padding: "10px 20px",
+          borderRadius: "999px",
+          border: `1px solid ${T.accent.primary}`,
+          background: T.bg.deep,
+          color: T.ink.base,
           fontFamily: T.font.sans,
-          fontSize: "13px",
-          fontWeight: 500,
+          fontSize: "15px",
+          fontWeight: 600,
           textDecoration: "none",
           cursor: "pointer",
         }}
@@ -89,18 +89,21 @@ export function ProfileFollowButton({
       type="button"
       onClick={toggle}
       disabled={busy || loading}
+      aria-pressed={following}
       style={{
         display: "inline-flex",
         alignItems: "center",
         gap: "6px",
-        padding: "10px 18px",
-        borderRadius: "10px",
-        border: following ? `1px solid ${T.border.hi}` : "none",
-        background: following ? T.bg.surface : T.ink.base,
-        color: following ? T.ink.dim : T.bg.void,
+        padding: "10px 20px",
+        borderRadius: "999px",
+        border: following
+          ? `1px solid ${T.ink.base}`
+          : `1px solid ${T.accent.primary}`,
+        background: following ? T.ink.base : T.bg.deep,
+        color: following ? "#fff" : T.ink.base,
         fontFamily: T.font.sans,
-        fontSize: "13px",
-        fontWeight: 500,
+        fontSize: "15px",
+        fontWeight: 600,
         cursor: busy || loading ? "default" : "pointer",
         opacity: busy || loading ? 0.6 : 1,
         transition: "opacity 150ms, background 150ms",

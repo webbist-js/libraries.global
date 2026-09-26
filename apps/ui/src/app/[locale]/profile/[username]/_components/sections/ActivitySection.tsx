@@ -184,7 +184,7 @@ function ActivityRow({ sub }: { sub: PublicSubmission }) {
                 : T.ink.faint,
             border: `1px solid ${
               isApproved
-                ? "rgba(142,240,179,0.25)"
+                ? "var(--tint-public-bg)"
                 : isPending
                   ? "rgba(255,207,122,0.25)"
                   : T.border.line

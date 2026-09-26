@@ -1,15 +1,88 @@
+import { Icon } from "@iconify/react"
+import type { ReactNode } from "react"
+
+import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import GlobalLink from "@/components/global/GlobalLink"
-import { DotHeroCanvas } from "@/components/ui/DotHeroCanvas"
 import { T } from "@/lib/design-tokens"
-import type { UserProfile } from "@/lib/types/profile"
+import { resolvePublicPrefs, type UserProfile } from "@/lib/types/profile"
 
 import { ProfileFollowButton } from "./ProfileFollowButton"
+import { ProfilePrivacyControls } from "./ProfilePrivacyControls"
+
+function countryName(code?: string | null): string | null {
+  if (!code) return null
+  try {
+    return (
+      new Intl.DisplayNames(["en"], { type: "region" }).of(
+        code.toUpperCase()
+      ) ?? code
+    )
+  } catch {
+    return code
+  }
+}
 
 function getInitials(p: UserProfile): string {
   const first = p.firstName?.[0] ?? ""
   const last = p.lastName?.[0] ?? ""
 
   return (first + last).toUpperCase() || p.username.slice(0, 2).toUpperCase()
+}
+
+function MetaItem({ icon, children }: { icon: string; children: ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-2">
+      <Icon
+        icon={icon}
+        width={18}
+        height={18}
+        aria-hidden="true"
+        style={{ color: T.ink.low }}
+      />
+      {children}
+    </span>
+  )
+}
+
+function RoleCard({
+  icon,
+  bg,
+  fg,
+  title,
+  note,
+}: {
+  icon: string
+  bg: string
+  fg: string
+  title: ReactNode
+  note?: ReactNode
+}) {
+  return (
+    <div
+      className="inline-flex items-center gap-3.5 rounded-[16px] border py-3 pr-5 pl-3.5"
+      style={{ borderColor: T.border.line, background: T.bg.deep }}
+    >
+      <span
+        className="flex size-10 shrink-0 items-center justify-center rounded-full"
+        style={{ background: bg, color: fg }}
+      >
+        <Icon icon={icon} width={20} height={20} aria-hidden="true" />
+      </span>
+      <span className="flex flex-col">
+        <span
+          className="text-[16px] font-semibold"
+          style={{ color: T.ink.base }}
+        >
+          {title}
+        </span>
+        {note ? (
+          <span className="text-[14px]" style={{ color: T.ink.dim }}>
+            {note}
+          </span>
+        ) : null}
+      </span>
+    </div>
+  )
 }
 
 export function ProfileHero({
@@ -22,395 +95,192 @@ export function ProfileHero({
   isSignedIn: boolean
 }) {
   const initials = getInitials(profile)
+  const prefs = resolvePublicPrefs(profile.publicPrefs)
+  const showAffiliation = isOwnProfile || prefs.showAffiliation
+  const showLocation = isOwnProfile || prefs.showLocation
+  const location = [profile.city, countryName(profile.country)]
+    .filter(Boolean)
+    .join(", ")
+  // Prefer the verified claimed library (canonical name + link) over free-text affiliation
+  const staffLibrary = profile.claimedLibraries?.find((l) => l.name)
+  const affiliationName = staffLibrary?.name ?? profile.affiliation
   const displayName =
     [profile.firstName, profile.lastName].filter(Boolean).join(" ") ||
     profile.username
-  const [first, ...lastParts] = displayName.split(" ")
-  const last = lastParts.join(" ")
 
-  const joinedYear = new Date(profile.createdAt)
-    .toLocaleDateString("en-US", { month: "short", year: "numeric" })
-    .toUpperCase()
+  const joined = new Date(profile.createdAt).toLocaleDateString("en-GB", {
+    month: "long",
+    year: "numeric",
+  })
+
+  const visibilityLabel =
+    profile.profileVisibility === "private"
+      ? "private"
+      : profile.profileVisibility === "limited"
+        ? "limited"
+        : "public"
 
   return (
-    <section
-      data-transparent-header=""
-      className="relative -mt-14 overflow-hidden"
-      style={{
-        background: T.bg.void,
-        borderBottom: `1px solid ${T.border.line}`,
-        minHeight: "320px",
-      }}
-    >
-      {/* Dot canvas background */}
-      <DotHeroCanvas />
+    <section style={{ background: T.bg.void }}>
+      <div className="mx-auto w-full max-w-[1360px] px-4 pt-6 sm:px-8 sm:pt-10">
+        <Breadcrumb
+          className="mb-5"
+          items={[
+            { label: "Home", href: "/" },
+            { label: "Community", href: "/contribute/community" },
+            { label: `@${profile.username}` },
+          ]}
+        />
 
-      {/* Radial depth overlay */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse 70% 90% at 70% 40%, var(--t-aurora-soft) 0%, transparent 60%), linear-gradient(to bottom, transparent 0%, var(--t-bg-space) 100%)",
-        }}
-      />
-
-      {/* Hero content */}
-      <div className="relative z-10 mx-auto w-full max-w-[1296px] px-6 pt-24 pb-10 md:px-10">
-        {/* Private profile notice — only visible to the owner */}
-        {isOwnProfile && profile.profileVisibility === "private" && (
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "10px",
-              padding: "7px 14px",
-              borderRadius: "10px",
-              border: `1px solid rgba(255,138,138,0.25)`,
-              background: "rgba(255,138,138,0.08)",
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
-              color: T.accent.danger,
-              marginBottom: "16px",
-            }}
-          >
-            <svg
-              width="11"
-              height="11"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0110 0v4" />
-            </svg>
-            Private profile — only visible to you
-          </div>
-        )}
-        {/* Breadcrumb */}
-        <div
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".18em",
-            textTransform: "uppercase",
-            color: T.ink.low,
-            display: "flex",
-            gap: "10px",
-            marginBottom: "20px",
-          }}
-        >
-          <GlobalLink
-            href="/"
-            style={{ color: T.ink.low, textDecoration: "none" }}
-          >
-            Atlas
-          </GlobalLink>
-          <span>/</span>
-          <span>Contributors</span>
-          <span>/</span>
-          <span style={{ color: T.ink.base }}>{displayName}</span>
-        </div>
-
-        {/* Location / verified chip */}
-        {(profile.city || profile.country || profile.isVerifiedLibrarian) && (
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "10px",
-              padding: "4px 12px",
-              borderRadius: "999px",
-              border: `1px solid ${T.border.line}`,
-              background: T.bg.surface,
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
-              color: T.ink.dim,
-              marginBottom: "18px",
-            }}
-          >
-            {profile.city && <span>{profile.city}</span>}
-            {profile.country && (
-              <>
-                <span>·</span>
-                <span>{profile.country}</span>
-              </>
-            )}
-            {profile.isVerifiedLibrarian && (
-              <>
-                <span>·</span>
-                <span style={{ color: T.accent.aurora }}>
-                  Verified Librarian
-                </span>
-              </>
-            )}
-          </div>
+        {/* Own-profile banner */}
+        {isOwnProfile && (
+          <ProfilePrivacyControls
+            initialPrefs={profile.publicPrefs}
+            message={
+              profile.profileVisibility === "public" ? (
+                <>
+                  <strong style={{ color: T.accent.primaryHover }}>
+                    This is your public profile.
+                  </strong>{" "}
+                  Choose what others can see.
+                </>
+              ) : (
+                <>
+                  <strong style={{ color: T.accent.primaryHover }}>
+                    This profile is {visibilityLabel}.
+                  </strong>{" "}
+                  Visibility can be changed in settings.
+                </>
+              )
+            }
+            actions={
+              <GlobalLink
+                href="/profile/settings"
+                className="text-[15px] font-semibold underline underline-offset-4"
+                style={{ color: T.accent.primary }}
+              >
+                Edit profile
+              </GlobalLink>
+            }
+          />
         )}
 
-        <div className="flex items-start gap-8">
+        {/* Hero row */}
+        <div className="flex flex-wrap items-start gap-7 pb-8">
           {/* Avatar */}
-          <div className="shrink-0">
-            {/* Conic-gradient ring wrapper */}
-            <div
-              style={{
-                width: "120px",
-                height: "120px",
-                borderRadius: "50%",
-                padding: "3px",
-                background: `conic-gradient(from 180deg at 50% 50%, ${T.accent.aurora}, ${T.accent.violet}, ${T.accent.gold}, ${T.accent.aurora})`,
-                flexShrink: 0,
-              }}
-            >
-              <div
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  borderRadius: "50%",
-                  background:
-                    "linear-gradient(135deg, rgba(20,28,64,0.97), rgba(8,12,36,0.99))",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontFamily: T.font.serif,
-                  fontSize: "42px",
-                  fontWeight: 400,
-                  color: T.ink.base,
-                  letterSpacing: "-0.02em",
-                  position: "relative",
-                  overflow: "hidden",
-                }}
-              >
-                {profile.avatar?.url ? (
-                  <img
-                    src={profile.avatar.url}
-                    alt={displayName}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
-                ) : (
-                  initials
-                )}
-              </div>
-            </div>
-            {profile.isVerifiedLibrarian && (
-              <div
-                style={{
-                  marginTop: "-22px",
-                  marginLeft: "86px",
-                  width: "30px",
-                  height: "30px",
-                  borderRadius: "50%",
-                  background: T.accent.aurora,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border: `3px solid ${T.bg.void}`,
-                  position: "relative",
-                  zIndex: 1,
-                }}
-              >
-                <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="var(--t-bg-void)"
-                  strokeWidth="2.5"
-                >
-                  <path
-                    d="m5 13 4 4L19 7"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
+          <div
+            className="flex shrink-0 items-center justify-center overflow-hidden rounded-full"
+            style={{
+              width: "128px",
+              height: "128px",
+              background: "var(--tint-national-bg)",
+              color: "var(--tint-national-fg)",
+              fontFamily: T.font.serif,
+              fontSize: "50px",
+              fontWeight: 500,
+            }}
+          >
+            {profile.avatar?.url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={profile.avatar.url}
+                alt=""
+                className="size-full object-cover"
+              />
+            ) : (
+              <span aria-hidden="true">{initials}</span>
             )}
           </div>
 
-          {/* Main content */}
+          {/* Identity */}
           <div className="min-w-0 flex-1">
-            {/* Name */}
             <h1
+              className="m-0"
               style={{
                 fontFamily: T.font.serif,
-                fontSize: "clamp(2.5rem, 5.5vw, 4.25rem)",
-                fontWeight: 400,
-                lineHeight: 0.92,
-                letterSpacing: "-0.035em",
+                fontSize: "clamp(42px, 5.4vw, 68px)",
+                fontWeight: 500,
+                lineHeight: 1.02,
+                letterSpacing: "-0.02em",
                 color: T.ink.base,
-                margin: "0 0 10px",
               }}
             >
-              {first}{" "}
-              {last && (
-                <em
-                  style={{
-                    fontStyle: "italic",
-                    fontWeight: 400,
-                    color: "rgba(244,247,255,0.62)",
-                  }}
-                >
-                  {last}.
-                </em>
-              )}
+              {displayName}
             </h1>
 
-            {/* Meta row */}
-            <div
-              style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".12em",
-                textTransform: "uppercase",
-                color: T.ink.low,
-                display: "flex",
-                gap: "10px",
-                marginBottom: "14px",
-                flexWrap: "wrap",
-              }}
+            <p
+              className="mt-3 mb-0 flex flex-wrap gap-x-7 gap-y-1.5 text-[16px]"
+              style={{ color: T.ink.dim }}
             >
-              <span>@{profile.username}</span>
-              {profile.contributorNumber && (
-                <>
-                  <span>·</span>
-                  <span>
-                    Contributor #
-                    {String(profile.contributorNumber).padStart(6, "0")}
-                  </span>
-                </>
-              )}
-              <span>·</span>
-              <span>Joined {joinedYear}</span>
-            </div>
+              <MetaItem icon="mdi:at">{profile.username}</MetaItem>
+              <MetaItem icon="mdi:calendar-blank-outline">
+                Contributor since {joined}
+              </MetaItem>
+              {showLocation && location ? (
+                <MetaItem icon="mdi:map-marker-outline">{location}</MetaItem>
+              ) : null}
+            </p>
 
-            {/* Bio */}
-            {profile.bio && (
+            {profile.bio ? (
               <p
-                style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "17px",
-                  lineHeight: "1.5",
-                  color: T.ink.dim,
-                  maxWidth: "60ch",
-                  margin: "0 0 14px",
-                  fontWeight: 300,
-                  letterSpacing: "-0.005em",
-                }}
+                className="mt-3 mb-0 max-w-[64ch] text-[17px] leading-[1.55]"
+                style={{ color: T.ink.base }}
               >
                 {profile.bio}
               </p>
-            )}
+            ) : null}
 
-            {/* Affiliation + website */}
-            <div
-              style={{
-                display: "flex",
-                gap: "20px",
-                alignItems: "center",
-                flexWrap: "wrap",
-              }}
-            >
-              {profile.affiliation && (
-                <span
-                  style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".08em",
-                    color: T.ink.base,
-                    fontWeight: 500,
-                  }}
-                >
-                  {profile.affiliation}
-                </span>
-              )}
-              {profile.jobTitle && (
-                <span
-                  style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".08em",
-                    color: T.ink.dim,
-                  }}
-                >
-                  {profile.jobTitle}
-                </span>
-              )}
-              {profile.website && (
-                <a
-                  href={
-                    profile.website.startsWith("http")
-                      ? profile.website
-                      : `https://${profile.website}`
+            {/* Role cards */}
+            <div className="mt-5 flex flex-wrap gap-3">
+              {profile.isVerifiedLibrarian ? (
+                <RoleCard
+                  icon="mdi:shield-check-outline"
+                  bg="var(--tint-public-bg)"
+                  fg="var(--tint-public-fg)"
+                  title={
+                    <>
+                      Verified staff
+                      {affiliationName && showAffiliation ? (
+                        <>
+                          <span aria-hidden="true"> · </span>
+                          <span className="sr-only">at </span>
+                          {staffLibrary?.path ? (
+                            <GlobalLink
+                              href={staffLibrary.path}
+                              className="font-medium underline underline-offset-4"
+                              style={{ color: T.accent.primary }}
+                            >
+                              {affiliationName}
+                            </GlobalLink>
+                          ) : (
+                            <span className="font-medium">
+                              {affiliationName}
+                            </span>
+                          )}
+                        </>
+                      ) : null}
+                    </>
                   }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".06em",
-                    color: T.accent.aurora,
-                    textDecoration: "none",
-                  }}
-                >
-                  {profile.website.replace(/^https?:\/\//, "")} ↗
-                </a>
-              )}
+                  note="Confirmed by the review team via work email"
+                />
+              ) : null}
+              <RoleCard
+                icon="mdi:account-group-outline"
+                bg="var(--tint-national-bg)"
+                fg="var(--tint-national-fg)"
+                title="Community contributor"
+              />
             </div>
           </div>
 
-          {/* Action buttons */}
+          {/* Actions */}
           {!isOwnProfile && profile.profileVisibility === "public" && (
-            <div style={{ flexShrink: 0 }}>
+            <div className="shrink-0 pt-2">
               <ProfileFollowButton
                 targetUsername={profile.username}
                 isSignedIn={isSignedIn}
               />
             </div>
-          )}
-
-          {isOwnProfile && (
-            <GlobalLink
-              href="/profile/settings"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "10px 18px",
-                borderRadius: "10px",
-                border: `1px solid ${T.border.hi}`,
-                background: T.bg.surface,
-                color: T.ink.dim,
-                fontFamily: T.font.sans,
-                fontSize: "13px",
-                fontWeight: 400,
-                textDecoration: "none",
-                flexShrink: 0,
-              }}
-            >
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-              >
-                <path
-                  d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Edit profile
-            </GlobalLink>
           )}
         </div>
       </div>

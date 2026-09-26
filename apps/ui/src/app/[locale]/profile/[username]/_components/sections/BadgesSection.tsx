@@ -1,17 +1,18 @@
 "use client"
 
-import { Icon } from "@iconify/react"
 import { useEffect, useMemo, useState } from "react"
 
 import type { EarnedBadge } from "@/app/api/profile/[username]/badges/route"
-import {
-  BADGE_CATALOG,
-  BADGE_VARIANT_STYLES,
-  RARITY_COLOR,
-  type BadgeDefinition,
-} from "@/lib/badges"
+import { BADGE_CATALOG } from "@/lib/badges"
 import { T } from "@/lib/design-tokens"
-import { Link } from "@/lib/navigation"
+
+import {
+  BadgeTile,
+  CARD,
+  SectionTitle,
+  StatCard,
+  TextLink,
+} from "../ProfileSectionUI"
 
 const TIERS = [
   { name: "Reader", min: 0, next: 100 },
@@ -32,118 +33,12 @@ function computeProgress(points: number, tierName: string): number {
   )
 }
 
-function BadgeCard({
-  badge,
-  earned,
-  awardedAt,
-}: {
-  badge: BadgeDefinition
-  earned: boolean
-  awardedAt?: string
-}) {
-  const vs = earned
-    ? BADGE_VARIANT_STYLES[badge.variant]
-    : { border: T.border.line, bg: T.bg.surface, color: T.ink.faint }
+function formatAwarded(iso?: string): string | null {
+  if (!iso) return null
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return null
 
-  const awardedLabel = awardedAt
-    ? new Date(awardedAt).toLocaleDateString("en-US", {
-        month: "short",
-        year: "numeric",
-      })
-    : null
-
-  return (
-    <div
-      className="transition-transform duration-150 hover:-translate-y-0.5"
-      style={{
-        padding: "20px",
-        borderRadius: "14px",
-        border: `1px solid ${vs.border}`,
-        background: earned ? vs.bg : T.bg.surface,
-        opacity: earned ? 1 : 0.45,
-        display: "flex",
-        flexDirection: "column",
-        gap: "12px",
-      }}
-    >
-      {/* Icon tile */}
-      <div
-        style={{
-          width: "48px",
-          height: "48px",
-          borderRadius: "12px",
-          background: earned ? vs.bg : T.bg.surface,
-          border: `1px solid ${vs.border}`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Icon
-          icon={badge.icon}
-          width={22}
-          height={22}
-          style={{ color: vs.color }}
-        />
-      </div>
-
-      <div>
-        <p
-          style={{
-            margin: "0 0 4px",
-            fontFamily: T.font.serif,
-            fontSize: "15px",
-            fontWeight: 400,
-            letterSpacing: "-0.01em",
-            color: earned ? T.ink.base : T.ink.dim,
-          }}
-        >
-          {badge.name}
-        </p>
-        <p
-          style={{
-            margin: "0 0 10px",
-            fontSize: "12px",
-            color: T.ink.faint,
-            lineHeight: "1.55",
-          }}
-        >
-          {badge.description}
-        </p>
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <span
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".18em",
-              textTransform: "uppercase",
-              color: RARITY_COLOR[badge.rarity],
-            }}
-          >
-            {badge.rarity}
-          </span>
-          <span
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".12em",
-              textTransform: "uppercase",
-              color: earned ? T.accent.ok : T.ink.faint,
-            }}
-          >
-            {earned ? (awardedLabel ?? "Earned") : "Locked"}
-          </span>
-        </div>
-      </div>
-    </div>
-  )
+  return d.toLocaleDateString("en-GB", { month: "long", year: "numeric" })
 }
 
 export function BadgesSection({
@@ -194,24 +89,6 @@ export function BadgesSection({
     return BADGE_CATALOG.find((b) => b.id === sorted[0]?.badgeId) ?? null
   }, [earnedBadges])
 
-  const stats = [
-    { label: "Earned", value: `${earnedCount} / ${BADGE_CATALOG.length}` },
-    { label: "Rare badges", value: String(rareCount) },
-    { label: "Latest", value: latest?.name ?? "—" },
-    {
-      label: "Next milestone",
-      value:
-        earnedCount < BADGE_CATALOG.length
-          ? (BADGE_CATALOG.find((b) => !earnedMap.has(b.id))?.name ?? "—")
-          : "Complete!",
-    },
-  ]
-
-  const sorted = [
-    ...BADGE_CATALOG.filter((b) => earnedMap.has(b.id)),
-    ...BADGE_CATALOG.filter((b) => !earnedMap.has(b.id)),
-  ]
-
   const progress = points != null && tier ? computeProgress(points, tier) : null
   const currentTier = TIERS.find((t) => t.name === tier)
   const nextTierName =
@@ -219,199 +96,192 @@ export function BadgesSection({
       ? (TIERS.find((t) => t.min === currentTier.next)?.name ?? null)
       : null
 
+  const earnedList = BADGE_CATALOG.filter((b) => earnedMap.has(b.id))
+  const lockedList = BADGE_CATALOG.filter((b) => !earnedMap.has(b.id))
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-      {/* Points & tier panel */}
-      {(points != null || tier) && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr auto",
-            gap: "1px",
-            border: `1px solid ${T.border.line}`,
-            borderRadius: "18px",
-            overflow: "hidden",
-            background: T.border.line,
-          }}
+    <div className="flex flex-col gap-6">
+      {/* Stat cards */}
+      <h2 className="sr-only">Recognition summary</h2>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-live="polite">
+        <StatCard
+          label="Total points"
+          value={points != null ? points.toLocaleString() : "0"}
+          bg="var(--tint-national-bg)"
+          fg="var(--tint-national-fg)"
+          icon="mdi:star-four-points-outline"
+        />
+        <StatCard
+          label="Tier"
+          value={tier ?? "—"}
+          bg="var(--tint-academic-bg)"
+          fg="var(--tint-academic-fg)"
+          icon="mdi:school-outline"
+          compactValue
+        />
+        <StatCard
+          label="Day streak"
+          value={String(streak ?? 0)}
+          bg="var(--tint-special-bg)"
+          fg="var(--tint-special-fg)"
+          icon="mdi:fire"
+        />
+        <StatCard
+          label="Badges earned"
+          value={loading ? "—" : `${earnedCount}/${BADGE_CATALOG.length}`}
+          bg="var(--tint-public-bg)"
+          fg="var(--tint-public-fg)"
+          icon="mdi:medal-outline"
+        />
+      </div>
+
+      {/* Tier progress */}
+      <section
+        aria-labelledby="rc-progress"
+        className="flex flex-col gap-4"
+        style={{ ...CARD, padding: "20px 24px 24px" }}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <SectionTitle as="h2" id="rc-progress">
+            Progress
+          </SectionTitle>
+          <TextLink href="/contribute/community">View leaderboard</TextLink>
+        </div>
+
+        {progress != null && nextTierName ? (
+          <div>
+            <div
+              role="progressbar"
+              aria-label={`Progress to ${nextTierName}`}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={progress}
+              className="h-2 overflow-hidden rounded-full"
+              style={{ background: T.bg.muted }}
+            >
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${progress}%`,
+                  background: T.accent.primary,
+                }}
+              />
+            </div>
+            <p
+              className="m-0 mt-2 text-[15px] font-semibold"
+              style={{ color: T.ink.base }}
+            >
+              {progress}% to {nextTierName}
+            </p>
+            {pointsThisMonth ? (
+              <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+                {pointsThisMonth.toLocaleString()} points this month
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+            {tier === "Curator"
+              ? "Highest tier reached."
+              : "Earn points by contributing to start climbing the tiers."}
+          </p>
+        )}
+
+        <dl
+          className="m-0 grid grid-cols-1 gap-x-6 gap-y-2 border-t pt-4 sm:grid-cols-3"
+          style={{ borderTopColor: T.border.divider }}
         >
           {[
+            { label: "Rare badges", value: loading ? "—" : String(rareCount) },
+            { label: "Latest badge", value: latest?.name ?? "None yet" },
             {
-              label: "Total points",
-              value: points != null ? points.toLocaleString() : "—",
+              label: "Next up",
+              value:
+                earnedCount < BADGE_CATALOG.length
+                  ? (lockedList[0]?.name ?? "—")
+                  : "All earned",
             },
-            { label: "Tier", value: tier ?? "—" },
-            { label: "Streak", value: streak != null ? `${streak}d` : "—" },
-          ].map((s) => (
-            <div
-              key={s.label}
-              style={{ padding: "20px 24px", background: T.bg.surface }}
-            >
-              <span
-                style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "26px",
-                  fontWeight: 400,
-                  letterSpacing: "-0.03em",
-                  color: T.ink.base,
-                  display: "block",
-                  marginBottom: "4px",
-                }}
+          ].map((f) => (
+            <div key={f.label}>
+              <dt
+                className="text-[13px] font-semibold"
+                style={{ color: T.ink.low }}
               >
-                {s.value}
-              </span>
-              <span
-                style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".16em",
-                  textTransform: "uppercase",
-                  color: T.ink.faint,
-                }}
-              >
-                {s.label}
-              </span>
+                {f.label}
+              </dt>
+              <dd className="m-0 text-[15px]" style={{ color: T.ink.base }}>
+                {f.value}
+              </dd>
             </div>
           ))}
-          {/* Progress cell */}
-          <div
-            style={{
-              padding: "20px 24px",
-              background: T.bg.surface,
-              minWidth: "160px",
-            }}
+        </dl>
+      </section>
+
+      {/* Earned */}
+      <section
+        aria-labelledby="rc-earned"
+        aria-busy={loading}
+        style={{ ...CARD, padding: "20px 24px 24px" }}
+      >
+        <div className="flex items-baseline justify-between gap-2 pb-4">
+          <SectionTitle as="h2" id="rc-earned">
+            Earned
+          </SectionTitle>
+          <span
+            className="text-[15px]"
+            style={{ color: T.ink.dim }}
+            aria-live="polite"
           >
-            {progress != null && nextTierName ? (
-              <>
-                <div
-                  style={{
-                    height: "4px",
-                    borderRadius: "2px",
-                    background: T.border.line,
-                    overflow: "hidden",
-                    marginBottom: "6px",
-                    marginTop: "10px",
-                  }}
-                >
-                  <div
-                    style={{
-                      height: "100%",
-                      width: `${progress}%`,
-                      background: T.accent.aurora,
-                      borderRadius: "2px",
-                    }}
-                  />
-                </div>
-                <span
-                  style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".14em",
-                    textTransform: "uppercase",
-                    color: T.ink.faint,
-                    display: "block",
-                    marginBottom: "2px",
-                  }}
-                >
-                  {progress}% to {nextTierName}
-                </span>
-              </>
-            ) : (
-              <span
-                style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".14em",
-                  textTransform: "uppercase",
-                  color: tier === "Curator" ? T.accent.gold : T.ink.faint,
-                  display: "block",
-                  marginTop: "10px",
-                }}
-              >
-                {tier === "Curator" ? "Max tier reached" : "—"}
-              </span>
-            )}
-            <Link
-              href="/contribute/community"
-              style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".12em",
-                textTransform: "uppercase",
-                color: T.accent.aurora,
-                textDecoration: "none",
-                opacity: 0.85,
-                display: "inline-block",
-                marginTop: "10px",
-              }}
-            >
-              Leaderboard →
-            </Link>
-          </div>
+            {loading
+              ? "Loading…"
+              : `${earnedCount} ${earnedCount === 1 ? "badge" : "badges"}`}
+          </span>
         </div>
-      )}
+        {loading ? null : earnedList.length === 0 ? (
+          <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+            No badges earned yet. A first accepted contribution earns one.
+          </p>
+        ) : (
+          <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 xl:grid-cols-3">
+            {earnedList.map((badge) => (
+              <BadgeTile
+                key={badge.id}
+                badge={badge}
+                earned
+                awardedLabel={formatAwarded(earnedMap.get(badge.id))}
+                showRarity
+              />
+            ))}
+          </ul>
+        )}
+      </section>
 
-      {/* Stats strip */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "1px",
-          border: `1px solid ${T.border.line}`,
-          borderRadius: "18px",
-          overflow: "hidden",
-          background: T.border.line,
-        }}
-      >
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            style={{ padding: "20px 24px", background: T.bg.surface }}
-          >
-            <span
-              style={{
-                fontFamily: T.font.serif,
-                fontSize: "26px",
-                fontWeight: 400,
-                letterSpacing: "-0.03em",
-                color: T.ink.base,
-                display: "block",
-                marginBottom: "4px",
-              }}
-            >
-              {loading ? "—" : stat.value}
-            </span>
-            <span
-              style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".16em",
-                textTransform: "uppercase",
-                color: T.ink.faint,
-              }}
-            >
-              {stat.label}
+      {/* Still to earn */}
+      {lockedList.length > 0 && !loading ? (
+        <section
+          aria-labelledby="rc-locked"
+          style={{ ...CARD, padding: "20px 24px 24px" }}
+        >
+          <div className="flex items-baseline justify-between gap-2 pb-4">
+            <SectionTitle as="h2" id="rc-locked">
+              Still to earn
+            </SectionTitle>
+            <span className="text-[15px]" style={{ color: T.ink.dim }}>
+              {lockedList.length} {lockedList.length === 1 ? "badge" : "badges"}
             </span>
           </div>
-        ))}
-      </div>
-
-      {/* Badge grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-          gap: "12px",
-        }}
-      >
-        {sorted.map((badge) => (
-          <BadgeCard
-            key={badge.id}
-            badge={badge}
-            earned={earnedMap.has(badge.id)}
-            awardedAt={earnedMap.get(badge.id)}
-          />
-        ))}
-      </div>
+          <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 xl:grid-cols-3">
+            {lockedList.map((badge) => (
+              <BadgeTile
+                key={badge.id}
+                badge={badge}
+                earned={false}
+                showRarity
+              />
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   )
 }

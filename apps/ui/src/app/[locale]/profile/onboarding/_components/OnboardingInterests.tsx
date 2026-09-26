@@ -145,9 +145,9 @@ export function OnboardingInterests({
                   gap: "6px",
                   padding: "4px 10px",
                   borderRadius: "999px",
-                  border: "1px solid rgba(127,223,255,0.3)",
-                  background: "rgba(127,223,255,0.06)",
-                  color: T.accent.aurora,
+                  border: "1px solid transparent",
+                  background: T.accent.chip,
+                  color: T.accent.primaryHover,
                   fontSize: "12px",
                   fontFamily: "JetBrains Mono, monospace",
                 }}

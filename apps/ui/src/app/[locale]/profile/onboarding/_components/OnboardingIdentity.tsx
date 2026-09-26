@@ -136,7 +136,6 @@ export function OnboardingIdentity({
             onChange={(e) =>
               setForm((f) => ({ ...f, firstName: e.target.value }))
             }
-            className="focus:border-[rgba(127,223,255,.4)]"
           />
         </div>
         <div>
@@ -148,7 +147,6 @@ export function OnboardingIdentity({
             onChange={(e) =>
               setForm((f) => ({ ...f, lastName: e.target.value }))
             }
-            className="focus:border-[rgba(127,223,255,.4)]"
           />
         </div>
       </div>
@@ -189,7 +187,6 @@ export function OnboardingIdentity({
             }))
           }
           placeholder="yourhandle"
-          className="focus:border-[rgba(127,223,255,.4)]"
         />
       </div>
 
@@ -222,7 +219,6 @@ export function OnboardingIdentity({
             type="text"
             value={form.city ?? ""}
             onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-            className="focus:border-[rgba(127,223,255,.4)]"
           />
         </div>
         <div>

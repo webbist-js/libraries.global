@@ -24,7 +24,9 @@ export function useUserMutations() {
         email: values.email,
         password: values.password,
         name: values.email,
-        callbackURL: "/",
+        // Where the email-verification link lands; post-signin routes new
+        // users to onboarding.
+        callbackURL: "/auth/post-signin",
       })
 
       return unwrapBetterAuth(result)

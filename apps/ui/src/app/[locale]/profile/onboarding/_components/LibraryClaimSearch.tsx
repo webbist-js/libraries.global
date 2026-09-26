@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
+import { SearchField } from "@/components/ds"
 import { CONTINENT_COUNTRIES, CONTINENTS } from "@/lib/data/continents"
 import { COUNTRIES } from "@/lib/data/countries"
 import { T } from "@/lib/design-tokens"
@@ -143,9 +144,9 @@ function CountrySlugCombobox({
                 display: "block",
                 width: "100%",
                 padding: "9px 14px",
-                background: !value ? "rgba(127,223,255,0.08)" : "transparent",
+                background: !value ? T.accent.chip : "transparent",
                 border: "none",
-                color: !value ? T.accent.aurora : T.ink.faint,
+                color: !value ? T.accent.primaryHover : T.ink.dim,
                 fontSize: "13px",
                 fontFamily: T.font.sans,
                 cursor: "pointer",
@@ -178,10 +179,9 @@ function CountrySlugCombobox({
                   display: "block",
                   width: "100%",
                   padding: "9px 14px",
-                  background:
-                    c.slug === value ? "rgba(127,223,255,0.08)" : "transparent",
+                  background: c.slug === value ? T.accent.chip : "transparent",
                   border: "none",
-                  color: c.slug === value ? T.accent.aurora : T.ink.dim,
+                  color: c.slug === value ? T.accent.primaryHover : T.ink.dim,
                   fontSize: "13px",
                   fontFamily: T.font.sans,
                   cursor: "pointer",
@@ -242,10 +242,9 @@ export function LibraryClaimSearch({
   }
 
   const labelStyle: React.CSSProperties = {
-    fontFamily: T.font.mono,
-    fontSize: "10px",
-    letterSpacing: ".16em",
-    textTransform: "uppercase",
+    fontFamily: T.font.sans,
+    fontSize: "14px",
+    fontWeight: 500,
     color: T.ink.faint,
     display: "block",
     marginBottom: "6px",
@@ -398,25 +397,24 @@ export function LibraryClaimSearch({
       </div>
 
       {/* Library search */}
-      <div>
-        <label style={labelStyle}>Search for your library</label>
-        <input
-          style={inputStyle}
-          type="text"
-          value={query}
-          onChange={(e) => void search(e.target.value)}
-          placeholder="British Library, Bibliothèque nationale…"
-          className="focus:border-[rgba(127,223,255,.4)]"
-        />
-      </div>
+      <SearchField
+        id="claim-library-search"
+        label="Search for your library"
+        placeholder="Search for your library — e.g. British Library"
+        onClear={() => void search("")}
+        inputProps={{
+          value: query,
+          onChange: (e) => void search(e.target.value),
+          autoComplete: "off",
+        }}
+      />
 
       {/* Results */}
       {searching && (
         <p
           style={{
-            fontSize: "12px",
-            color: T.ink.faint,
-            fontFamily: T.font.mono,
+            fontSize: "14px",
+            color: T.ink.dim,
           }}
         >
           Searching…
@@ -426,9 +424,8 @@ export function LibraryClaimSearch({
       {!searching && hits.length === 0 && query.trim() && (
         <p
           style={{
-            fontSize: "12px",
-            color: T.ink.faint,
-            fontFamily: T.font.mono,
+            fontSize: "14px",
+            color: T.ink.dim,
           }}
         >
           No libraries found — try a different name or broaden your filters.
@@ -468,10 +465,9 @@ export function LibraryClaimSearch({
               {(hit.city || hit.country_name) && (
                 <span
                   style={{
-                    fontSize: "11px",
-                    color: T.ink.faint,
+                    fontSize: "13px",
+                    color: T.ink.dim,
                     marginLeft: "10px",
-                    fontFamily: T.font.mono,
                   }}
                 >
                   {[hit.city, hit.country_name].filter(Boolean).join(", ")}
@@ -489,8 +485,8 @@ export function LibraryClaimSearch({
             style={{
               padding: "12px 16px",
               borderRadius: "10px",
-              background: "rgba(127,223,255,0.06)",
-              border: "1px solid rgba(127,223,255,0.2)",
+              background: T.accent.chip,
+              border: "1px solid var(--t-aurora-edge)",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
@@ -511,9 +507,8 @@ export function LibraryClaimSearch({
                 <p
                   style={{
                     margin: "2px 0 0",
-                    fontSize: "11px",
-                    color: T.ink.faint,
-                    fontFamily: T.font.mono,
+                    fontSize: "13px",
+                    color: T.ink.dim,
                   }}
                 >
                   {[selected.city, selected.country_name]
@@ -545,7 +540,6 @@ export function LibraryClaimSearch({
               value={role}
               onChange={(e) => setRole(e.target.value)}
               placeholder="e.g. Reference Librarian"
-              className="focus:border-[rgba(127,223,255,.4)]"
             />
           </div>
 
@@ -557,7 +551,6 @@ export function LibraryClaimSearch({
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
               placeholder="e.g. Rare Books"
-              className="focus:border-[rgba(127,223,255,.4)]"
             />
           </div>
 
@@ -567,11 +560,11 @@ export function LibraryClaimSearch({
             onClick={() => void handleClaim()}
             style={{
               padding: "10px 20px",
-              borderRadius: "10px",
-              border: "1px solid rgba(127,223,255,0.35)",
-              background: "rgba(127,223,255,0.1)",
-              color: T.accent.aurora,
-              fontSize: "13px",
+              borderRadius: "999px",
+              border: "none",
+              background: T.accent.primary,
+              color: "#fff",
+              fontSize: "14px",
               fontFamily: T.font.sans,
               fontWeight: 600,
               cursor: claiming ? "not-allowed" : "pointer",

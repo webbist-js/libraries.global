@@ -97,8 +97,8 @@ export function OnboardingAffiliation({
               style={{
                 padding: "14px 18px",
                 borderRadius: "10px",
-                border: `1px solid ${active ? "rgba(127,223,255,0.4)" : T.border.line}`,
-                background: active ? "rgba(127,223,255,0.06)" : T.bg.surface,
+                border: `1px solid ${active ? "var(--t-aurora-edge)" : T.border.line}`,
+                background: active ? T.accent.chip : T.bg.surface,
                 cursor: "pointer",
                 textAlign: "left",
                 transition: "border-color 150ms, background 150ms",

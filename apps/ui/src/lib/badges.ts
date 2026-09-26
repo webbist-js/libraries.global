@@ -212,35 +212,37 @@ export const BADGE_CATALOG: BadgeDefinition[] = [
   },
 ]
 
+// v2 tint pairs (see TYPE_TINT in design-tokens.ts). Variant names are kept
+// for catalog compatibility with the Strapi rewards plugin.
 export const BADGE_VARIANT_STYLES: Record<
   BadgeVariant,
   { border: string; bg: string; color: string }
 > = {
   aurora: {
-    border: "rgba(127,223,255,0.28)",
-    bg: "rgba(127,223,255,0.08)",
-    color: "var(--t-accent-aurora)",
+    border: "var(--tint-academic-bg)",
+    bg: "var(--tint-academic-bg)",
+    color: "var(--tint-academic-fg)",
   },
   violet: {
-    border: "rgba(163,144,255,0.28)",
-    bg: "rgba(163,144,255,0.08)",
-    color: "var(--t-accent-violet)",
+    border: "var(--tint-national-bg)",
+    bg: "var(--tint-national-bg)",
+    color: "var(--tint-national-fg)",
   },
   gold: {
-    border: "rgba(232,201,138,0.28)",
-    bg: "rgba(232,201,138,0.08)",
-    color: "var(--t-accent-gold)",
+    border: "var(--tint-special-bg)",
+    bg: "var(--tint-special-bg)",
+    color: "var(--tint-special-fg)",
   },
   ember: {
-    border: "rgba(255,184,138,0.28)",
-    bg: "rgba(255,184,138,0.08)",
-    color: "var(--t-accent-ember)",
+    border: "var(--tint-special-bg)",
+    bg: "var(--tint-special-bg)",
+    color: "var(--tint-special-fg)",
   },
 }
 
 export const RARITY_COLOR: Record<BadgeRarity, string> = {
-  COMMON: "var(--t-ink-low)",
-  UNCOMMON: "var(--t-accent-aurora)",
-  RARE: "var(--t-accent-violet)",
-  STATUS: "var(--t-accent-gold)",
+  COMMON: "var(--tint-neutral-fg)",
+  UNCOMMON: "var(--tint-academic-fg)",
+  RARE: "var(--tint-national-fg)",
+  STATUS: "var(--tint-special-fg)",
 }

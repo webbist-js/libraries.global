@@ -65,20 +65,21 @@ export default async function ProfileOverviewPage({
   ])
 
   let profile: UserProfile | null = publicProfile
+  let isOwner = false
 
   if (session?.user?.id) {
     const ownProfile = await fetchOwnProfile(session.user.id)
-    const isOwnProfile = ownProfile?.username === username
+    isOwner = ownProfile?.username === username
 
     if (!profile) {
-      if (isOwnProfile) {
+      if (isOwner) {
         profile = await fetchProfile(username, {
           ownerBaUserId: session.user.id,
         })
       }
     } else if (profile.profileVisibility === "limited") {
       const expanded = await fetchProfile(username, {
-        [isOwnProfile ? "ownerBaUserId" : "viewerBaUserId"]: session.user.id,
+        [isOwner ? "ownerBaUserId" : "viewerBaUserId"]: session.user.id,
       })
       if (expanded) profile = expanded
     }
@@ -86,5 +87,5 @@ export default async function ProfileOverviewPage({
 
   if (!profile) notFound()
 
-  return <OverviewSection profile={profile} />
+  return <OverviewSection profile={profile} isOwner={isOwner} />
 }

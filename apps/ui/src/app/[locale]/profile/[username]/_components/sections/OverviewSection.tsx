@@ -4,157 +4,33 @@ import { Icon } from "@iconify/react"
 import { useEffect, useMemo, useState } from "react"
 
 import type { PublicSubmission } from "@/app/api/profile/[username]/contributions/route"
-import { BADGE_CATALOG, BADGE_VARIANT_STYLES } from "@/lib/badges"
+import { BADGE_CATALOG } from "@/lib/badges"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
-import type { UserProfile } from "@/lib/types/profile"
+import { resolvePublicPrefs, type UserProfile } from "@/lib/types/profile"
 
 import { ContributionHeatmap } from "../ContributionHeatmap"
-import { FollowedLibrariesGrid } from "../FollowedLibrariesGrid"
+import {
+  BadgeTile,
+  CARD,
+  ContributionRow,
+  SectionTitle,
+  StatCard,
+} from "../ProfileSectionUI"
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── Main component ────────────────────────────────────────────────────────────
 
-function StatCell({
-  label,
-  value,
-  sub,
+export function OverviewSection({
+  profile,
+  isOwner = false,
 }: {
-  label: string
-  value: string
-  sub?: string
+  profile: UserProfile
+  isOwner?: boolean
 }) {
-  return (
-    <div
-      style={{
-        padding: "20px 22px",
-        background: T.bg.surface,
-        display: "flex",
-        flexDirection: "column",
-        gap: "4px",
-      }}
-    >
-      <span
-        style={{
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".12em",
-          textTransform: "uppercase",
-          color: T.ink.faint,
-          marginBottom: "2px",
-        }}
-      >
-        {label}
-      </span>
-      <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
-        <span
-          style={{
-            fontFamily: T.font.serif,
-            fontSize: "36px",
-            fontWeight: 400,
-            letterSpacing: "-0.03em",
-            color: T.ink.base,
-            lineHeight: 1,
-          }}
-        >
-          {value}
-        </span>
-      </div>
-      {sub && (
-        <span
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "11px",
-            color: T.ink.faint,
-            letterSpacing: ".04em",
-            marginTop: "2px",
-          }}
-        >
-          {sub}
-        </span>
-      )}
-    </div>
-  )
-}
-
-const CONTRIB_TYPE_META: Record<
-  string,
-  { color: string; bg: string; border: string; icon: string; label: string }
-> = {
-  new_library: {
-    color: T.accent.ok,
-    bg: "rgba(142,240,179,0.1)",
-    border: "rgba(142,240,179,0.25)",
-    icon: "mdi:book-plus-outline",
-    label: "Added",
-  },
-  library_edit: {
-    color: T.accent.aurora,
-    bg: "rgba(127,223,255,0.1)",
-    border: "rgba(127,223,255,0.25)",
-    icon: "mdi:pencil-outline",
-    label: "Edited",
-  },
-  correction: {
-    color: T.accent.gold,
-    bg: "rgba(232,201,138,0.1)",
-    border: "rgba(232,201,138,0.25)",
-    icon: "mdi:flag-outline",
-    label: "Correction",
-  },
-  wiki_edit: {
-    color: T.accent.violet,
-    bg: "rgba(163,144,255,0.1)",
-    border: "rgba(163,144,255,0.25)",
-    icon: "mdi:book-edit-outline",
-    label: "Wiki",
-  },
-  library_claim: {
-    color: T.accent.gold,
-    bg: "rgba(232,201,138,0.1)",
-    border: "rgba(232,201,138,0.25)",
-    icon: "mdi:shield-check-outline",
-    label: "Claimed",
-  },
-  default: {
-    color: T.ink.dim,
-    bg: T.bg.deep,
-    border: T.border.line,
-    icon: "mdi:message-text-outline",
-    label: "Other",
-  },
-}
-
-function relativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime()
-  const h = Math.floor(diff / 3_600_000)
-  if (h < 1) return "Just now"
-  if (h < 24) return `${h}h ago`
-  const d = Math.floor(diff / 86_400_000)
-  if (d === 1) return "Yesterday"
-  if (d < 7) return `${d} days ago`
-  if (d < 30) return `${Math.floor(d / 7)}w ago`
-
-  return `${Math.floor(d / 30)}mo ago`
-}
-
-function approxPoints(type: string): number | null {
-  if (type === "new_library") return 50
-  if (type === "library_edit") return 10
-  if (type === "wiki_edit") return 5
-
-  return null
-}
-
-const CONTRIB_FALLBACK = CONTRIB_TYPE_META.default!
-
-// Badge widget shows up to 8 badges from the catalog (earned first)
-const BADGE_WIDGET_COUNT = 8
-
-// ── Main component ─────────────────────────────────────────────────────────────
-
-export function OverviewSection({ profile }: { profile: UserProfile }) {
   const [allContribs, setAllContribs] = useState<PublicSubmission[]>([])
   const [now] = useState<number>(() => Date.now())
+  const prefs = resolvePublicPrefs(profile.publicPrefs)
+  const canSee = (pref: boolean) => isOwner || pref
 
   useEffect(() => {
     fetch(`/api/profile/${encodeURIComponent(profile.username)}/contributions`)
@@ -165,24 +41,42 @@ export function OverviewSection({ profile }: { profile: UserProfile }) {
       .catch(() => {})
   }, [profile.username])
 
-  const recentContribs = useMemo(() => allContribs.slice(0, 5), [allContribs])
-  const joinedDate = new Date(profile.createdAt)
-  const memberSince = joinedDate.toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })
+  const stats = useMemo(() => {
+    const accepted = allContribs.filter((c) => c.status === "approved").length
+    const inReview = allContribs.filter((c) => c.status === "pending").length
+    const added = allContribs.filter(
+      (c) => c.submissionType === "new_library" && c.status === "approved"
+    ).length
 
-  /* eslint-disable react-hooks/purity */
-  const memberYears = useMemo(
-    () =>
-      (
-        (Date.now() - joinedDate.getTime()) /
-        (1000 * 60 * 60 * 24 * 365.25)
-      ).toFixed(1),
-    [joinedDate]
-  )
-  /* eslint-enable react-hooks/purity */
+    return { accepted, inReview, added }
+  }, [allContribs])
+
+  const recentContribs = useMemo(() => allContribs.slice(0, 5), [allContribs])
+
+  const earnedSet = new Set((profile.earnedBadges ?? []).map((b) => b.badgeId))
+  const previewBadges = [
+    ...BADGE_CATALOG.filter((b) => earnedSet.has(b.id)),
+    ...BADGE_CATALOG.filter((b) => !earnedSet.has(b.id)),
+  ].slice(0, 6)
+
+  const facts: { label: string; value: string }[] = [
+    (profile.city || profile.country) && canSee(prefs.showLocation)
+      ? {
+          label: "Location",
+          value: [profile.city, profile.country].filter(Boolean).join(", "),
+        }
+      : null,
+    profile.affiliation && canSee(prefs.showAffiliation)
+      ? { label: "Affiliation", value: profile.affiliation }
+      : null,
+    profile.jobTitle ? { label: "Role", value: profile.jobTitle } : null,
+    profile.languages?.length
+      ? {
+          label: "Languages",
+          value: profile.languages.map((l) => l.code.toUpperCase()).join(" · "),
+        }
+      : null,
+  ].filter(Boolean) as { label: string; value: string }[]
 
   const links: { icon: string; label: string; href: string }[] = []
   if (profile.website)
@@ -214,708 +108,316 @@ export function OverviewSection({ profile }: { profile: UserProfile }) {
       href: `https://linkedin.com/in/${profile.linkedin}`,
     })
 
-  const facts: { label: string; value: string }[] = [
-    profile.city || profile.country
-      ? {
-          label: "Location",
-          value: [profile.city, profile.country].filter(Boolean).join(", "),
-        }
-      : null,
-    profile.affiliation
-      ? { label: "Affiliation", value: profile.affiliation }
-      : null,
-    profile.jobTitle ? { label: "Role", value: profile.jobTitle } : null,
-    { label: "Member since", value: `${memberSince} (${memberYears} yrs)` },
-    profile.languages?.length
-      ? {
-          label: "Languages",
-          value: profile.languages.map((l) => l.code.toUpperCase()).join(" · "),
-        }
-      : null,
-    profile.interests?.length
-      ? {
-          label: "Interests",
-          value: profile.interests
-            .map((i) => i.name)
-            .slice(0, 3)
-            .join(" · "),
-        }
-      : null,
-    profile.timezone ? { label: "Timezone", value: profile.timezone } : null,
-  ].filter(Boolean) as { label: string; value: string }[]
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-      {/* Stats row */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-          gap: "1px",
-          border: `1px solid ${T.border.line}`,
-          borderRadius: "18px",
-          overflow: "hidden",
-          background: T.border.line,
-        }}
-      >
-        <StatCell
-          label="Contributions"
-          value="—"
-          sub="Edits & additions · lifetime"
+    <div className="flex flex-col gap-6">
+      {/* Stat cards */}
+      <h2 className="sr-only">Contribution summary</h2>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard
+          label="Changes accepted"
+          value={String(stats.accepted)}
+          bg="var(--tint-public-bg)"
+          fg="var(--tint-public-fg)"
+          icon="mdi:check-circle-outline"
         />
-        <StatCell
-          label="Libraries Indexed"
-          value="—"
-          sub="Added from scratch"
+        <StatCard
+          label="In review"
+          value={String(stats.inReview)}
+          bg="var(--tint-academic-bg)"
+          fg="var(--tint-academic-fg)"
+          icon="mdi:clock-outline"
         />
-        <StatCell label="Reputation" value="—" sub="Reputation score / 10" />
-        {(profile.streak ?? 0) > 0 ? (
-          <StatCell label="Day streak" value={String(profile.streak)} />
-        ) : (
-          <StatCell label="Streak" value="—" sub="Current consecutive days" />
-        )}
-        {profile.tier != null && <StatCell label="Tier" value={profile.tier} />}
-        {profile.points != null && (
-          <StatCell
-            label="Total points"
-            value={profile.points.toLocaleString()}
-          />
-        )}
+        <StatCard
+          label="Libraries stewarded"
+          value={String(profile.claimedLibraries?.length ?? 0)}
+          bg="var(--tint-national-bg)"
+          fg="var(--tint-national-fg)"
+          icon="mdi:shield-check-outline"
+        />
+        <StatCard
+          label="Libraries added"
+          value={String(stats.added)}
+          bg="#F5EEDC"
+          fg="#6B5420"
+          icon="mdi:book-plus-outline"
+        />
       </div>
 
       {/* Two-column layout */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_272px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
         {/* Left column */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          {/* Activity heatmap */}
-          <ContributionHeatmap submissions={allContribs} now={now} />
+        <div className="flex min-w-0 flex-col gap-6">
+          {canSee(prefs.showActivity) ? (
+            <>
+              <h2 className="sr-only">Activity</h2>
+              <ContributionHeatmap submissions={allContribs} now={now} />
+            </>
+          ) : null}
 
           {/* Recent contributions */}
-          <div
-            style={{
-              border: `1px solid ${T.border.line}`,
-              borderRadius: "16px",
-              overflow: "hidden",
-              background: T.bg.surface,
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "18px 20px 14px",
-              }}
-            >
-              <p
-                style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  color: T.ink.base,
-                  margin: 0,
-                }}
-              >
-                Recent contributions
-              </p>
+          <section aria-labelledby="ov-contribs" style={CARD}>
+            <div className="flex items-center justify-between px-6 pt-5 pb-3">
+              <span id="ov-contribs">
+                <SectionTitle>Contributions</SectionTitle>
+              </span>
               <Link
                 href={`/profile/${profile.username}/contributions`}
-                style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  letterSpacing: ".12em",
-                  textTransform: "uppercase",
-                  color: T.accent.aurora,
-                  opacity: 0.7,
-                  textDecoration: "none",
-                }}
+                className="text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+                style={{ color: T.accent.primary }}
               >
-                See all →
+                See all
               </Link>
             </div>
-
             {recentContribs.length === 0 ? (
-              <div
-                style={{
-                  padding: "24px 20px",
-                  borderTop: `1px solid ${T.border.line}`,
-                  textAlign: "center",
-                }}
+              <p
+                className="m-0 border-t px-6 py-6 text-[15px]"
+                style={{ borderTopColor: T.border.divider, color: T.ink.dim }}
               >
-                <p
-                  style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".12em",
-                    textTransform: "uppercase",
-                    color: T.ink.faint,
-                    margin: 0,
-                  }}
-                >
-                  No contributions yet
-                </p>
-              </div>
+                No contributions yet.
+              </p>
             ) : (
-              <div>
-                {recentContribs.map((item) => {
-                  const t =
-                    CONTRIB_TYPE_META[item.submissionType] ?? CONTRIB_FALLBACK
-                  const pts = approxPoints(item.submissionType)
-
-                  return (
-                    <div
-                      key={item.documentId}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "14px",
-                        padding: "12px 20px",
-                        borderTop: `1px solid ${T.border.line}`,
-                      }}
-                    >
-                      {/* Icon */}
-                      <div
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          borderRadius: "10px",
-                          border: `1px solid ${t.border}`,
-                          background: t.bg,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Icon
-                          icon={t.icon}
-                          width={17}
-                          height={17}
-                          style={{ color: t.color }}
-                        />
-                      </div>
-
-                      {/* Content */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                            marginBottom: "3px",
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontFamily: T.font.mono,
-                              fontSize: "7px",
-                              letterSpacing: ".14em",
-                              textTransform: "uppercase",
-                              color: t.color,
-                              padding: "1px 6px",
-                              borderRadius: "4px",
-                              border: `1px solid ${t.border}`,
-                              background: t.bg,
-                            }}
-                          >
-                            {t.label}
-                          </span>
-                          <span
-                            style={{
-                              fontSize: "12px",
-                              color: T.ink.base,
-                              fontWeight: 500,
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {item.targetLabel ??
-                              item.targetSlug ??
-                              item.submissionType}
-                          </span>
-                        </div>
-                        {item.editSummary && (
-                          <p
-                            style={{
-                              fontFamily: T.font.mono,
-                              fontSize: "10px",
-                              letterSpacing: ".06em",
-                              color: T.ink.faint,
-                              margin: 0,
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {item.editSummary}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Right: time + points */}
-                      <div style={{ flexShrink: 0, textAlign: "right" }}>
-                        <p
-                          style={{
-                            fontFamily: T.font.mono,
-                            fontSize: "10px",
-                            color: T.ink.faint,
-                            margin: "0 0 2px",
-                            textTransform: "uppercase",
-                            letterSpacing: ".06em",
-                          }}
-                        >
-                          {relativeTime(item.createdAt)}
-                        </p>
-                        {item.status === "approved" && pts !== null && (
-                          <p
-                            style={{
-                              fontFamily: T.font.mono,
-                              fontSize: "10px",
-                              color: T.accent.ok,
-                              margin: 0,
-                              fontWeight: 600,
-                            }}
-                          >
-                            +{pts} pts
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Following libraries */}
-          <div
-            style={{
-              border: `1px solid ${T.border.line}`,
-              borderRadius: "16px",
-              padding: "20px 22px 22px",
-              background: T.bg.surface,
-            }}
-          >
-            <p
-              style={{
-                fontFamily: T.font.serif,
-                fontSize: "16px",
-                fontWeight: 600,
-                color: T.ink.base,
-                margin: "0 0 16px",
-              }}
-            >
-              Following libraries
-            </p>
-            <FollowedLibrariesGrid
-              libraries={profile.followedLibraries ?? []}
-              username={profile.username}
-              variant="compact"
-              max={6}
-            />
-          </div>
-
-          {/* Claimed libraries */}
-          {(profile.claimedLibraries ?? []).length > 0 && (
-            <div
-              style={{
-                border: `1px solid ${T.border.line}`,
-                borderRadius: "16px",
-                padding: "20px 22px 22px",
-                background: T.bg.surface,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: "16px",
-                }}
-              >
-                <p
-                  style={{
-                    fontFamily: T.font.serif,
-                    fontSize: "16px",
-                    fontWeight: 600,
-                    color: T.ink.base,
-                    margin: 0,
-                  }}
-                >
-                  Claimed libraries
-                </p>
-                <span
-                  style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".12em",
-                    textTransform: "uppercase",
-                    color: T.ink.faint,
-                  }}
-                >
-                  {profile.claimedLibraries!.length} managed
-                </span>
-              </div>
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: "6px" }}
-              >
-                {profile.claimedLibraries!.map((lib) => (
-                  <Link
-                    key={lib.entityRef ?? lib.documentId}
-                    href={lib.slug ? `/library/${lib.slug}` : "#"}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "12px 16px",
-                      border: `1px solid ${T.border.line}`,
-                      borderRadius: "10px",
-                      background: T.bg.surface,
-                      textDecoration: "none",
-                      transition: "background 150ms, border-color 150ms",
-                    }}
-                    onMouseEnter={(e) => {
-                      const el = e.currentTarget as HTMLAnchorElement
-                      el.style.background = "rgba(127,223,255,0.04)"
-                      el.style.borderColor = "rgba(127,223,255,0.22)"
-                    }}
-                    onMouseLeave={(e) => {
-                      const el = e.currentTarget as HTMLAnchorElement
-                      el.style.background = "var(--t-bg-surface)"
-                      el.style.borderColor = T.border.line
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "4px",
-                        minWidth: 0,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontFamily: T.font.sans,
-                          fontSize: "13px",
-                          fontWeight: 500,
-                          color: T.ink.base,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {lib.name}
-                      </span>
-                      {lib.entityRef && (
-                        <span
-                          style={{
-                            fontFamily: T.font.mono,
-                            fontSize: "10px",
-                            letterSpacing: ".10em",
-                            textTransform: "uppercase",
-                            color: T.ink.faint,
-                          }}
-                        >
-                          {lib.entityRef}
-                        </span>
-                      )}
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        flexShrink: 0,
-                        marginLeft: "12px",
-                      }}
-                    >
-                      {lib.libraryType && (
-                        <span
-                          style={{
-                            fontFamily: T.font.mono,
-                            fontSize: "10px",
-                            letterSpacing: ".10em",
-                            textTransform: "uppercase",
-                            color: T.ink.faint,
-                            border: `1px solid ${T.border.line}`,
-                            borderRadius: "5px",
-                            padding: "3px 8px",
-                          }}
-                        >
-                          {lib.libraryType}
-                        </span>
-                      )}
-                      <span
-                        style={{
-                          fontFamily: T.font.mono,
-                          fontSize: "10px",
-                          letterSpacing: ".10em",
-                          textTransform: "uppercase",
-                          color: T.accent.ok,
-                          border: `1px solid ${T.accent.ok}30`,
-                          borderRadius: "5px",
-                          padding: "3px 8px",
-                        }}
-                      >
-                        Manager
-                      </span>
-                    </div>
-                  </Link>
+              <ul className="m-0 list-none p-0">
+                {recentContribs.map((item) => (
+                  <ContributionRow key={item.documentId} item={item} />
                 ))}
-              </div>
+              </ul>
+            )}
+          </section>
+
+          {/* Recognition preview */}
+          <section
+            aria-labelledby="ov-recognition"
+            style={{ ...CARD, padding: "20px 24px 24px" }}
+          >
+            <div className="flex items-center justify-between pb-4">
+              <span id="ov-recognition">
+                <SectionTitle>Recognition</SectionTitle>
+              </span>
+              <Link
+                href={`/profile/${profile.username}/badges`}
+                className="text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+                style={{ color: T.accent.primary }}
+              >
+                All badges
+              </Link>
             </div>
-          )}
+            <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 xl:grid-cols-3">
+              {previewBadges.map((b) => (
+                <BadgeTile key={b.id} badge={b} earned={earnedSet.has(b.id)} />
+              ))}
+            </ul>
+          </section>
         </div>
 
-        {/* Right sidebar */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          {/* Facts */}
-          {facts.length > 0 && (
-            <div
-              style={{
-                border: `1px solid ${T.border.line}`,
-                borderRadius: "16px",
-                padding: "18px 20px",
-                background: T.bg.surface,
-              }}
+        {/* Sidebar */}
+        <aside className="flex flex-col gap-4">
+          {/* Libraries */}
+          <section
+            aria-labelledby="ov-libraries"
+            style={{ ...CARD, padding: "20px 22px" }}
+          >
+            <h3
+              id="ov-libraries"
+              className="m-0 mb-3 text-[14px] font-semibold"
+              style={{ color: T.ink.base }}
             >
-              <p
-                style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "15px",
-                  fontWeight: 400,
-                  color: T.ink.base,
-                  margin: "0 0 14px",
-                  letterSpacing: "-0.015em",
-                }}
-              >
-                Facts
-              </p>
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                {facts.map((f, i) => (
-                  <div
-                    key={f.label}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "100px 1fr",
-                      gap: "10px",
-                      padding: "8px 0",
-                      borderBottom:
-                        i < facts.length - 1
-                          ? `1px dashed ${T.border.line}`
-                          : undefined,
-                    }}
+              Libraries
+            </h3>
+            {(profile.claimedLibraries?.length ?? 0) > 0 ? (
+              <div className="mb-3">
+                <p
+                  className="m-0 mb-1 text-[13px] font-semibold tracking-wide uppercase"
+                  style={{ color: T.ink.low }}
+                >
+                  Represents
+                </p>
+                {profile.claimedLibraries!.map((lib) => (
+                  <p
+                    key={lib.documentId ?? lib.entityRef}
+                    className="m-0 py-0.5"
                   >
                     <span
-                      style={{
-                        fontFamily: T.font.mono,
-                        fontSize: "10px",
-                        letterSpacing: ".14em",
-                        textTransform: "uppercase",
-                        color: T.ink.faint,
-                        paddingTop: "1px",
-                      }}
+                      className="text-[15px] font-semibold"
+                      style={{ color: T.ink.base }}
                     >
-                      {f.label}
-                    </span>
+                      {lib.name}
+                    </span>{" "}
                     <span
-                      style={{
-                        fontSize: "12px",
-                        color: T.ink.base,
-                        lineHeight: "1.5",
-                      }}
+                      className="text-[13px]"
+                      style={{ color: "var(--tint-public-fg)" }}
                     >
-                      {f.value}
+                      · steward
                     </span>
-                  </div>
+                  </p>
                 ))}
               </div>
-            </div>
-          )}
+            ) : null}
+            {canSee(prefs.showFollows) ? (
+              <>
+                <p
+                  className="m-0 mb-1 text-[13px] font-semibold tracking-wide uppercase"
+                  style={{ color: T.ink.low }}
+                >
+                  Follows
+                </p>
+                {(profile.followedLibraries?.length ?? 0) === 0 ? (
+                  <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+                    Not following any libraries yet.
+                  </p>
+                ) : (
+                  <>
+                    {profile.followedLibraries!.slice(0, 4).map((lib) => (
+                      <p key={lib.documentId} className="m-0 truncate py-0.5">
+                        <span
+                          className="text-[15px]"
+                          style={{ color: T.ink.base }}
+                        >
+                          {lib.name}
+                        </span>
+                      </p>
+                    ))}
+                    <Link
+                      href={`/profile/${profile.username}/following`}
+                      className="mt-1 inline-block text-[14px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+                      style={{ color: T.accent.primary }}
+                    >
+                      All {profile.followedLibraries!.length} followed
+                    </Link>
+                  </>
+                )}
+              </>
+            ) : null}
+          </section>
 
-          {/* Badges */}
-          <div
-            style={{
-              border: `1px solid ${T.border.line}`,
-              borderRadius: "16px",
-              padding: "18px 20px",
-              background: T.bg.surface,
-            }}
-          >
-            <div
+          {/* Contributor level */}
+          {(profile.tier || profile.points != null) && (
+            <section
+              aria-labelledby="ov-level"
               style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "14px",
+                border: "1px solid transparent",
+                borderRadius: "20px",
+                background: "var(--tint-national-bg)",
+                padding: "20px 22px",
               }}
             >
+              <h3
+                id="ov-level"
+                className="m-0 mb-2 text-[14px] font-semibold"
+                style={{ color: "var(--tint-national-fg)" }}
+              >
+                Contributor level
+              </h3>
               <p
+                className="m-0"
                 style={{
                   fontFamily: T.font.serif,
-                  fontSize: "15px",
-                  fontWeight: 400,
+                  fontSize: "30px",
+                  fontWeight: 500,
                   color: T.ink.base,
-                  margin: 0,
-                  letterSpacing: "-0.015em",
                 }}
               >
-                Badges earned
+                {profile.tier ?? "Contributor"}
               </p>
-              <span
-                style={{
-                  fontFamily: T.font.mono,
-                  fontSize: "10px",
-                  color: T.ink.faint,
-                  letterSpacing: ".12em",
-                }}
+              {profile.points != null ? (
+                <p
+                  className="m-0 mt-1 text-[15px]"
+                  style={{ color: T.ink.dim }}
+                >
+                  {profile.points.toLocaleString()} points
+                  {profile.streak ? ` · ${profile.streak}-day streak` : ""}
+                </p>
+              ) : null}
+              <Link
+                href="/docs"
+                className="mt-2 inline-block text-[14px] font-semibold underline underline-offset-[3px]"
+                style={{ color: T.accent.primary }}
               >
-                {(profile.earnedBadges ?? []).length} of {BADGE_CATALOG.length}
-              </span>
-            </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, 1fr)",
-                gap: "10px",
-              }}
+                How levels work
+              </Link>
+            </section>
+          )}
+
+          {/* Facts */}
+          {facts.length > 0 && (
+            <section
+              aria-labelledby="ov-facts"
+              style={{ ...CARD, padding: "20px 22px" }}
             >
-              {(() => {
-                const earnedSet = new Set(
-                  (profile.earnedBadges ?? []).map((b) => b.badgeId)
-                )
-                const displayed = [
-                  ...BADGE_CATALOG.filter((b) => earnedSet.has(b.id)),
-                  ...BADGE_CATALOG.filter((b) => !earnedSet.has(b.id)),
-                ].slice(0, BADGE_WIDGET_COUNT)
-
-                return displayed.map((b) => {
-                  const earned = earnedSet.has(b.id)
-                  const vs = earned
-                    ? BADGE_VARIANT_STYLES[b.variant]
-                    : {
-                        border: T.border.line,
-                        bg: T.bg.surface,
-                        color: T.ink.faint,
-                      }
-
-                  return (
-                    <div
-                      key={b.id}
-                      title={b.name}
-                      className="transition-transform duration-150 hover:-translate-y-0.5"
-                      style={{
-                        aspectRatio: "1",
-                        borderRadius: "12px",
-                        border: `1px solid ${vs.border}`,
-                        background: vs.bg,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        opacity: earned ? 1 : 0.35,
-                      }}
+              <h3
+                id="ov-facts"
+                className="m-0 mb-2 text-[14px] font-semibold"
+                style={{ color: T.ink.base }}
+              >
+                About
+              </h3>
+              <dl className="m-0">
+                {facts.map((f) => (
+                  <div
+                    key={f.label}
+                    className="grid grid-cols-[96px_1fr] gap-2.5 border-b py-2 last:border-b-0"
+                    style={{ borderBottomColor: T.border.divider }}
+                  >
+                    <dt
+                      className="text-[13px] font-semibold"
+                      style={{ color: T.ink.low }}
                     >
-                      <Icon
-                        icon={earned ? b.icon : "mdi:lock-outline"}
-                        width={18}
-                        height={18}
-                        style={{ color: vs.color }}
-                      />
-                    </div>
-                  )
-                })
-              })()}
-            </div>
-          </div>
+                      {f.label}
+                    </dt>
+                    <dd
+                      className="m-0 text-[15px]"
+                      style={{ color: T.ink.base }}
+                    >
+                      {f.value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
 
           {/* Links */}
           {links.length > 0 && (
-            <div
+            <section
+              aria-labelledby="ov-links"
               style={{
-                border: `1px solid ${T.border.line}`,
-                borderRadius: "16px",
-                padding: "18px 20px",
-                background: T.bg.surface,
+                border: "1px solid transparent",
+                borderRadius: "20px",
+                background: "var(--tint-national-bg)",
+                padding: "20px 22px",
               }}
             >
-              <p
-                style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "15px",
-                  fontWeight: 400,
-                  color: T.ink.base,
-                  margin: "0 0 12px",
-                  letterSpacing: "-0.015em",
-                }}
+              <h3
+                id="ov-links"
+                className="m-0 mb-2 text-[14px] font-semibold"
+                style={{ color: "var(--tint-national-fg)" }}
               >
                 Links
-              </p>
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: "2px" }}
-              >
+              </h3>
+              <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
                 {links.map((l) => (
-                  <a
-                    key={l.href}
-                    href={l.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "8px 10px",
-                      borderRadius: "10px",
-                      textDecoration: "none",
-                      background: "transparent",
-                      transition: "background 150ms",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "var(--t-bg-surface)"
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent"
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                      }}
+                  <li key={l.href}>
+                    <a
+                      href={l.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-[15px] font-semibold underline underline-offset-[3px]"
+                      style={{ color: T.accent.primary }}
                     >
                       <Icon
                         icon={l.icon}
-                        width={14}
-                        height={14}
-                        style={{ color: T.ink.faint, flexShrink: 0 }}
+                        width={16}
+                        height={16}
+                        aria-hidden="true"
                       />
-                      <span
-                        style={{
-                          fontFamily: T.font.sans,
-                          fontSize: "11px",
-                          color: T.ink.dim,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          maxWidth: "160px",
-                        }}
-                      >
-                        {l.label}
-                      </span>
-                    </div>
-                    <Icon
-                      icon="mdi:arrow-top-right"
-                      width={11}
-                      height={11}
-                      style={{ color: T.ink.faint, flexShrink: 0 }}
-                    />
-                  </a>
+                      <span className="max-w-[200px] truncate">{l.label}</span>
+                      <span aria-hidden="true">↗</span>
+                    </a>
+                  </li>
                 ))}
-              </div>
-            </div>
+              </ul>
+            </section>
           )}
-        </div>
+        </aside>
       </div>
     </div>
   )

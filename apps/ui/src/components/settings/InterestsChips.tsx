@@ -72,20 +72,26 @@ export function InterestsChips({
             <button
               key={topic.documentId}
               type="button"
+              aria-pressed={active}
               onClick={() => toggle(topic.documentId)}
               style={{
-                padding: "5px 12px",
+                padding: "6px 14px",
                 borderRadius: "999px",
-                border: `1px solid ${active ? "rgba(127,223,255,0.5)" : T.border.line}`,
-                background: active ? "rgba(127,223,255,0.1)" : T.bg.surface,
-                color: active ? T.accent.aurora : T.ink.dim,
-                fontSize: "12px",
-                fontFamily: T.font.mono,
-                letterSpacing: "0.04em",
+                border: `1px solid ${active ? T.accent.primary : T.border.hi}`,
+                background: active ? T.accent.chip : T.bg.deep,
+                color: active ? T.accent.primaryHover : T.ink.base,
+                fontSize: "14px",
+                fontFamily: T.font.sans,
+                fontWeight: active ? 600 : 400,
                 cursor: "pointer",
                 transition: "all 150ms",
               }}
             >
+              {active ? (
+                <span aria-hidden="true" style={{ marginRight: "6px" }}>
+                  ✓
+                </span>
+              ) : null}
               {topic.name}
             </button>
           )
@@ -106,14 +112,13 @@ export function InterestsChips({
           }}
           style={{
             flex: 1,
-            padding: "8px 12px",
-            borderRadius: "6px",
+            padding: "9px 14px",
+            borderRadius: "12px",
             border: `1px solid ${T.border.line}`,
-            background: T.bg.surface,
+            background: T.bg.deep,
             color: T.ink.base,
-            fontSize: "12px",
+            fontSize: "15px",
             fontFamily: T.font.sans,
-            outline: "none",
           }}
         />
         <button
@@ -121,13 +126,14 @@ export function InterestsChips({
           onClick={() => void suggest()}
           disabled={suggesting || suggestInput.trim().length < 2}
           style={{
-            padding: "8px 14px",
-            borderRadius: "6px",
-            border: `1px solid ${T.border.line}`,
+            padding: "9px 18px",
+            borderRadius: "999px",
+            border: `1px solid ${T.border.hi}`,
             background: T.bg.deep,
-            color: T.ink.dim,
-            fontSize: "12px",
+            color: T.ink.base,
+            fontSize: "14px",
             fontFamily: T.font.sans,
+            fontWeight: 600,
             cursor: suggesting ? "not-allowed" : "pointer",
             opacity: suggesting ? 0.6 : 1,
           }}

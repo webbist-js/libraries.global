@@ -3,55 +3,31 @@
 import { Icon } from "@iconify/react"
 import { useEffect, useRef, useState } from "react"
 
+import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import type { BetterAuthUser } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 import type { UserProfile } from "@/lib/types/profile"
 
-import { AppearanceSection } from "./AppearanceSection"
-import { ConnectionsSection } from "./ConnectionsSection"
-import { DangerZoneSection } from "./DangerZoneSection"
+import { DataAccountSection } from "./DataAccountSection"
 import { NotificationsSection } from "./NotificationsSection"
+import { PrivacySection } from "./PrivacySection"
 import { PublicProfileSection } from "./PublicProfileSection"
-import { SecuritySection } from "./SecuritySection"
-import { SettingsDotHero } from "./SettingsDotHero"
+import { SignInSecuritySection } from "./SignInSecuritySection"
 
 const SIDEBAR_ITEMS = [
-  {
-    id: "profile",
-    label: "Profile",
-    icon: "mdi:account-circle-outline",
-    danger: false,
-  },
-  {
-    id: "appearance",
-    label: "Appearance",
-    icon: "mdi:palette-outline",
-    danger: false,
-  },
-  {
-    id: "notifications",
-    label: "Notifications",
-    icon: "mdi:bell-outline",
-    danger: false,
-  },
+  { id: "profile", label: "Profile", icon: "mdi:account-outline" },
+  { id: "privacy", label: "Privacy", icon: "mdi:eye-outline" },
+  { id: "notifications", label: "Notifications", icon: "mdi:bell-outline" },
   {
     id: "security",
-    label: "Security",
-    icon: "mdi:shield-check-outline",
-    danger: false,
+    label: "Sign-in & security",
+    icon: "mdi:lock-outline",
   },
   {
-    id: "connections",
-    label: "Connections",
-    icon: "mdi:link-variant",
-    danger: false,
-  },
-  {
-    id: "danger",
-    label: "Danger zone",
-    icon: "mdi:alert-circle-outline",
-    danger: true,
+    id: "data",
+    label: "Your data & account",
+    icon: "mdi:tray-arrow-down",
   },
 ] as const
 
@@ -74,7 +50,6 @@ export function SettingsShell({
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        // Pick the topmost intersecting section
         const visible = entries
           .filter((e) => e.isIntersecting)
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
@@ -82,7 +57,7 @@ export function SettingsShell({
           setActiveSection(visible[0].target.id as SectionId)
         }
       },
-      { rootMargin: "-20% 0px -60% 0px", threshold: 0 }
+      { rootMargin: "-15% 0px -65% 0px", threshold: 0 }
     )
 
     sections.forEach((el) => observerRef.current!.observe(el))
@@ -99,160 +74,76 @@ export function SettingsShell({
       className="relative isolate flex min-h-screen w-full flex-col"
       style={{ background: T.bg.void }}
     >
-      {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <section
-        data-transparent-header=""
-        className="relative -mt-14 overflow-hidden"
-        style={{
-          background: T.bg.space,
-          height: "316px",
-          borderBottom: `1px solid ${T.border.line}`,
-        }}
-      >
-        <SettingsDotHero />
-
-        {/* Radial depth overlay */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 80% 100% at 30% 60%, var(--t-aurora-soft) 0%, transparent 60%), linear-gradient(to bottom, transparent 0%, var(--t-bg-space) 100%)",
-          }}
+      {/* ── Header ────────────────────────────────────────────────────── */}
+      <section className="mx-auto w-full max-w-[1360px] px-4 pt-6 pb-2 sm:px-8 sm:pt-10">
+        <Breadcrumb
+          className="mb-5"
+          items={[
+            { label: "Home", href: "/" },
+            ...(profile?.username
+              ? [
+                  {
+                    label: `@${profile.username}`,
+                    href: `/profile/${profile.username}`,
+                  },
+                ]
+              : []),
+            { label: "Settings" },
+          ]}
         />
-
-        {/* Hero content — constrained to match body container */}
-        <div className="relative z-10 flex h-full flex-col justify-end pb-8">
-          <div className="mx-auto w-full max-w-[1296px] px-6 md:px-10">
-            {/* Eyebrow */}
-            <p
-              style={{
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".22em",
-                textTransform: "uppercase",
-                color: T.ink.faint,
-                margin: "0 0 10px",
-              }}
-            >
-              § Account settings
-            </p>
-
-            {/* Title */}
-            <h1
-              style={{
-                fontFamily: T.font.serif,
-                fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)",
-                fontWeight: 700,
-                letterSpacing: "-0.03em",
-                lineHeight: 1.05,
-                color: T.ink.base,
-                margin: "0 0 10px",
-              }}
-            >
-              Welcome back,{" "}
-              <em
-                style={{
-                  fontStyle: "italic",
-                  fontWeight: 400,
-                  color: T.ink.dim,
-                }}
-              >
-                {displayName}.
-              </em>
-            </h1>
-
-            <p
-              style={{
-                fontSize: "14px",
-                color: T.ink.faint,
-                margin: "0 0 16px",
-                maxWidth: "52ch",
-              }}
-            >
-              Manage your profile, notifications, security, and data. Changes
-              save automatically unless otherwise noted.
-            </p>
-
-            {profile?.username && (
-              <Link
-                href={`/profile/${profile.username}`}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  fontSize: "12px",
-                  color: T.accent.aurora,
-                  textDecoration: "none",
-                  fontFamily: T.font.mono,
-                  letterSpacing: ".08em",
-                  opacity: 0.85,
-                }}
-              >
-                <Icon icon="mdi:arrow-top-right" width={13} height={13} />
-                {profile?.profileVisibility === "private"
-                  ? "View private profile"
-                  : profile?.profileVisibility === "limited"
-                    ? "View limited profile"
-                    : "View public profile"}
-              </Link>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Body: sidebar + content ───────────────────────────────────── */}
-      <div className="mx-auto w-full max-w-[1296px] px-6 py-10 md:px-10">
-        <div className="flex gap-8">
-          {/* Sticky sidebar nav */}
-          <nav
-            className="sticky hidden md:flex"
+        <p
+          className="m-0 mb-2 text-[15px] font-medium"
+          style={{ color: T.ink.dim }}
+        >
+          Account settings
+        </p>
+        <h1
+          className="m-0"
+          style={{
+            fontFamily: T.font.serif,
+            fontSize: "clamp(2.1rem, 3.8vw, 3rem)",
+            fontWeight: 500,
+            letterSpacing: "-0.02em",
+            lineHeight: 1.05,
+            color: T.ink.base,
+          }}
+        >
+          Welcome back,{" "}
+          <em
             style={{
-              top: "80px",
-              width: "200px",
-              flexShrink: 0,
-              alignSelf: "flex-start",
-              flexDirection: "column",
-              gap: "2px",
+              fontStyle: "italic",
+              fontWeight: 400,
+              color: T.accent.primary,
             }}
           >
-            {/* Link to public profile */}
-            {profile?.username && (
-              <Link
-                href={`/profile/${profile.username}`}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  padding: "8px 12px",
-                  borderRadius: "10px",
-                  background: "transparent",
-                  color: T.accent.aurora,
-                  fontFamily: T.font.sans,
-                  fontSize: "13px",
-                  textDecoration: "none",
-                  marginBottom: "10px",
-                  borderBottom: `1px solid ${T.border.line}`,
-                  paddingBottom: "14px",
-                  marginLeft: "-2px",
-                }}
-              >
-                <Icon
-                  icon="mdi:account-box-outline"
-                  width={15}
-                  height={15}
-                  style={{ flexShrink: 0 }}
-                />
-                View profile
-                <Icon
-                  icon="mdi:arrow-top-right"
-                  width={11}
-                  height={11}
-                  style={{ marginLeft: "auto", opacity: 0.6 }}
-                />
-              </Link>
-            )}
+            {displayName}.
+          </em>
+        </h1>
+        <p
+          className="mt-3 mb-0 text-[16px]"
+          style={{ color: T.ink.dim, maxWidth: "60ch" }}
+        >
+          Manage your profile, privacy, notifications and account.{" "}
+          {profile?.username ? (
+            <Link
+              href={`/profile/${profile.username}`}
+              className="underline underline-offset-[3px]"
+              style={{ color: T.accent.primary, fontWeight: 600 }}
+            >
+              View your public profile
+            </Link>
+          ) : null}
+        </p>
+      </section>
 
+      {/* ── Body: sidebar + stacked cards ─────────────────────────────── */}
+      <div className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8">
+        <div className="flex gap-8">
+          <nav
+            aria-label="Settings sections"
+            className="sticky hidden w-[210px] shrink-0 flex-col gap-1 self-start md:flex"
+            style={{ top: "80px" }}
+          >
             {SIDEBAR_ITEMS.map((item) => {
               const active = activeSection === item.id
 
@@ -260,37 +151,21 @@ export function SettingsShell({
                 <a
                   key={item.id}
                   href={`#${item.id}`}
+                  aria-current={active ? "true" : undefined}
+                  className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2 text-[14px] no-underline transition-colors"
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    padding: "8px 12px",
-                    borderRadius: "10px",
-                    background: active
-                      ? item.danger
-                        ? "var(--t-danger-soft)"
-                        : "var(--t-aurora-soft)"
-                      : "transparent",
-                    border: `1px solid ${active ? (item.danger ? "var(--t-danger-edge)" : "var(--t-aurora-edge)") : "transparent"}`,
-                    color: item.danger
-                      ? active
-                        ? T.accent.danger
-                        : "rgba(176,52,52,0.5)"
-                      : active
-                        ? T.accent.aurora
-                        : T.ink.dim,
+                    background: active ? T.accent.chip : "transparent",
+                    color: active ? T.accent.primaryHover : T.ink.dim,
+                    fontWeight: active ? 600 : 500,
                     fontFamily: T.font.sans,
-                    fontSize: "13px",
-                    textDecoration: "none",
-                    transition: "background 150ms, color 150ms",
-                    width: "100%",
                   }}
                 >
                   <Icon
                     icon={item.icon}
-                    width={15}
-                    height={15}
-                    style={{ flexShrink: 0, opacity: active ? 1 : 0.6 }}
+                    width={17}
+                    height={17}
+                    aria-hidden="true"
+                    style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }}
                   />
                   {item.label}
                 </a>
@@ -298,12 +173,8 @@ export function SettingsShell({
             })}
           </nav>
 
-          {/* All sections rendered simultaneously, scrollable */}
-          <div
-            className="min-w-0 flex-1"
-            style={{ display: "flex", flexDirection: "column", gap: "20px" }}
-          >
-            <section id="profile">
+          <div className="flex min-w-0 flex-1 flex-col gap-6">
+            <section id="profile" className="scroll-mt-20">
               <div className="settings-card">
                 <PublicProfileSection
                   profile={profile}
@@ -311,35 +182,24 @@ export function SettingsShell({
                 />
               </div>
             </section>
-            <section id="appearance">
+            <section id="privacy" className="scroll-mt-20">
               <div className="settings-card">
-                <AppearanceSection profile={profile} />
+                <PrivacySection profile={profile} />
               </div>
             </section>
-            <section id="notifications">
+            <section id="notifications" className="scroll-mt-20">
               <div className="settings-card">
                 <NotificationsSection profile={profile} />
               </div>
             </section>
-            <section id="security">
+            <section id="security" className="scroll-mt-20">
               <div className="settings-card">
-                <SecuritySection sessionUser={sessionUser} />
+                <SignInSecuritySection />
               </div>
             </section>
-            <section id="connections">
+            <section id="data" className="scroll-mt-20">
               <div className="settings-card">
-                <ConnectionsSection />
-              </div>
-            </section>
-            <section id="danger">
-              <div
-                className="settings-card"
-                style={{
-                  borderColor: "var(--t-danger-edge)",
-                  background: `linear-gradient(180deg, var(--t-bg-deep) 0%, var(--t-danger-soft) 100%)`,
-                }}
-              >
-                <DangerZoneSection sessionUser={sessionUser} />
+                <DataAccountSection sessionUser={sessionUser} />
               </div>
             </section>
           </div>

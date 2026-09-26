@@ -3,35 +3,11 @@ import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ username: string }>
-}): Promise<Metadata> {
-  const { username } = await params
-
-  return {
-    title: `${username}'s Profile`,
-    description: `View ${username}'s library contributions, collections, and activity on Libraries Global.`,
-    robots: "index, follow",
-    alternates: { canonical: `/profile/${username}` },
-    openGraph: {
-      title: `${username} on Libraries Global`,
-      description: `View ${username}'s library contributions, collections, and activity on Libraries Global.`,
-      type: "profile",
-      url: `/profile/${username}`,
-    },
-    twitter: {
-      card: "summary",
-      title: `${username} on Libraries Global`,
-      description: `View ${username}'s library contributions, collections, and activity on Libraries Global.`,
-    },
-  }
-}
-
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
+import { buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
+import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 import type { UserProfile } from "@/lib/types/profile"
 
 import { ProfileHero } from "./_components/ProfileHero"
@@ -86,6 +62,61 @@ async function fetchOwnProfile(baUserId: string): Promise<UserProfile | null> {
   }
 }
 
+async function fetchContributionCount(username: string): Promise<number> {
+  if (!BRIDGE_SECRET) return 0
+  try {
+    const res = await fetch(
+      `${STRAPI}/api/content-moderation/submissions/by-username/${encodeURIComponent(username)}`,
+      { cache: "no-store", headers: { "X-Service-Secret": BRIDGE_SECRET } }
+    )
+    if (!res.ok) return 0
+    const json = (await res.json()) as { data?: unknown[] }
+
+    return json.data?.length ?? 0
+  } catch {
+    return 0
+  }
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; username: string }>
+}): Promise<Metadata> {
+  const { locale, username } = await params
+  // Anonymous fetch — what a crawler sees. Only "public" profiles are
+  // indexable; private (403), limited and missing profiles are noindex.
+  // Tab sub-pages inherit this, so their canonical is the overview URL.
+  const profile = await fetchProfile(username)
+
+  if (profile === null) {
+    return { title: "Profile not found", robots: { index: false } }
+  }
+  if (profile === "private" || profile.profileVisibility !== "public") {
+    return {
+      title: `${username}'s profile`,
+      robots: { index: false, follow: false },
+    }
+  }
+
+  const fullName = [profile.firstName, profile.lastName]
+    .filter(Boolean)
+    .join(" ")
+  const name = fullName || username
+
+  return buildMetadata({
+    title: fullName ? `${fullName} (@${username})` : `@${username}`,
+    description:
+      profile.bio ??
+      `${name}'s library contributions, collections and activity on ${SITE_NAME}.`,
+    path: `profile/${username}`,
+    locale,
+    type: "profile",
+    image: formatStrapiMediaUrl(profile.avatar?.url),
+    imageAlt: name,
+  })
+}
+
 export default async function ProfileLayout({
   children,
   params,
@@ -95,9 +126,10 @@ export default async function ProfileLayout({
 }) {
   const [{ locale, username }, hdrs] = await Promise.all([params, headers()])
 
-  const [publicProfile, session] = await Promise.all([
+  const [publicProfile, session, contributionCount] = await Promise.all([
     fetchProfile(username),
     getSessionSSR(hdrs),
+    fetchContributionCount(username),
   ])
 
   let profile: UserProfile | "private" | null = publicProfile
@@ -147,7 +179,7 @@ export default async function ProfileLayout({
       <GlobalHeader locale={locale as Locale} />
       <div
         className="relative isolate flex min-h-screen w-full flex-col"
-        style={{ background: T.bg.space }}
+        style={{ background: T.bg.void }}
       >
         <ProfileHero
           profile={profile}
@@ -156,9 +188,15 @@ export default async function ProfileLayout({
         />
         <ProfileTabNav
           username={username}
-          profileVisibility={profile.profileVisibility}
+          counts={{
+            contributions: contributionCount,
+            libraries:
+              (profile.followedLibraries?.length ?? 0) +
+              (profile.claimedLibraries?.length ?? 0),
+            recognition: profile.earnedBadges?.length ?? 0,
+          }}
         />
-        <main className="mx-auto w-full max-w-[1296px] px-6 py-8 md:px-10">
+        <main className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8">
           {children}
         </main>
       </div>

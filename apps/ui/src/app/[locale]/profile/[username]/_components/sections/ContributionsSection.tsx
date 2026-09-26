@@ -1,93 +1,17 @@
 "use client"
 
-import { Icon } from "@iconify/react"
 import { useEffect, useMemo, useState } from "react"
 
 import type { PublicSubmission } from "@/app/api/profile/[username]/contributions/route"
 import { T } from "@/lib/design-tokens"
 
-// ── Type config ───────────────────────────────────────────────────────────────
-
-const TYPE_META: Record<
-  string,
-  { label: string; icon: string; color: string; bg: string; border: string }
-> = {
-  new_library: {
-    label: "Added",
-    icon: "mdi:book-plus-outline",
-    color: T.accent.ok,
-    bg: "rgba(142,240,179,0.08)",
-    border: "rgba(142,240,179,0.22)",
-  },
-  library_edit: {
-    label: "Edited",
-    icon: "mdi:pencil-outline",
-    color: T.accent.aurora,
-    bg: "rgba(127,223,255,0.08)",
-    border: "rgba(127,223,255,0.22)",
-  },
-  correction: {
-    label: "Correction",
-    icon: "mdi:flag-outline",
-    color: T.accent.gold,
-    bg: "rgba(232,201,138,0.08)",
-    border: "rgba(232,201,138,0.22)",
-  },
-  wiki_edit: {
-    label: "Wiki",
-    icon: "mdi:book-edit-outline",
-    color: T.accent.violet,
-    bg: "rgba(163,144,255,0.08)",
-    border: "rgba(163,144,255,0.22)",
-  },
-  library_claim: {
-    label: "Claimed",
-    icon: "mdi:shield-check-outline",
-    color: T.accent.gold,
-    bg: "rgba(232,201,138,0.08)",
-    border: "rgba(232,201,138,0.22)",
-  },
-  topic_suggestion: {
-    label: "Topic",
-    icon: "mdi:tag-outline",
-    color: T.ink.dim,
-    bg: T.bg.deep,
-    border: T.border.line,
-  },
-  blog_submission: {
-    label: "Article",
-    icon: "mdi:newspaper-variant-outline",
-    color: T.ink.dim,
-    bg: T.bg.deep,
-    border: T.border.line,
-  },
-}
-
-const STATUS_META: Record<
-  string,
-  { label: string; color: string; border: string }
-> = {
-  approved: {
-    label: "Approved",
-    color: T.accent.ok,
-    border: "rgba(142,240,179,0.3)",
-  },
-  pending: {
-    label: "Under review",
-    color: T.accent.warn,
-    border: "rgba(255,207,122,0.3)",
-  },
-  needs_info: {
-    label: "Changes requested",
-    color: T.accent.ember,
-    border: "rgba(255,184,138,0.3)",
-  },
-  rejected: {
-    label: "Declined",
-    color: T.accent.danger,
-    border: "rgba(255,138,138,0.3)",
-  },
-}
+import {
+  CARD,
+  ContributionRow,
+  SectionTitle,
+  StatCard,
+  TextLink,
+} from "../ProfileSectionUI"
 
 // Estimated points per type/status (mirrors rewards plugin)
 function estimatePoints(s: PublicSubmission): number | null {
@@ -105,20 +29,6 @@ function estimatePoints(s: PublicSubmission): number | null {
     default:
       return null
   }
-}
-
-// ── Date helpers ──────────────────────────────────────────────────────────────
-
-function formatRelativeDate(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime()
-  const days = Math.floor(diff / 86_400_000)
-  if (days === 0) return "Today"
-  if (days === 1) return "Yesterday"
-  if (days < 7) return `${days} days ago`
-  if (days < 30) return `${Math.floor(days / 7)} weeks ago`
-  if (days < 365) return `${Math.floor(days / 30)} months ago`
-
-  return `${Math.floor(days / 365)} years ago`
 }
 
 function groupByDay(
@@ -139,7 +49,7 @@ function groupByDay(
   return [...groups.entries()].map(([label, items]) => ({ label, items }))
 }
 
-// ── Filter tabs ───────────────────────────────────────────────────────────────
+// ── Filters ───────────────────────────────────────────────────────────────
 
 const FILTER_TABS = [
   { id: "all", label: "All" },
@@ -164,202 +74,6 @@ function matchesFilter(s: PublicSubmission, filter: FilterId): boolean {
 
   return s.submissionType === filter
 }
-
-// ── Components ────────────────────────────────────────────────────────────────
-
-function StatCell({
-  label,
-  value,
-  accent,
-}: {
-  label: string
-  value: string | number
-  accent?: string
-}) {
-  return (
-    <div
-      style={{
-        padding: "16px 20px",
-        background: T.bg.surface,
-        display: "flex",
-        flexDirection: "column",
-        gap: "6px",
-      }}
-    >
-      <span
-        style={{
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".14em",
-          textTransform: "uppercase",
-          color: T.ink.faint,
-        }}
-      >
-        {label}
-      </span>
-      <span
-        style={{
-          fontFamily: T.font.serif,
-          fontSize: "28px",
-          fontWeight: 700,
-          color: accent ?? T.ink.base,
-          lineHeight: 1,
-        }}
-      >
-        {value}
-      </span>
-    </div>
-  )
-}
-
-const FALLBACK_TYPE = TYPE_META.correction!
-const FALLBACK_STATUS = STATUS_META.pending!
-
-function ContributionRow({ sub }: { sub: PublicSubmission }) {
-  const meta = TYPE_META[sub.submissionType] ?? FALLBACK_TYPE
-  const statusMeta = STATUS_META[sub.status] ?? FALLBACK_STATUS
-  const pts = estimatePoints(sub)
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "14px",
-        padding: "14px 20px",
-        borderTop: `1px solid ${T.border.line}`,
-      }}
-    >
-      {/* Icon */}
-      <div
-        style={{
-          width: "34px",
-          height: "34px",
-          borderRadius: "10px",
-          border: `1px solid ${meta.border}`,
-          background: meta.bg,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        <Icon icon={meta.icon} width={16} style={{ color: meta.color }} />
-      </div>
-
-      {/* Content */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            marginBottom: "4px",
-            flexWrap: "wrap",
-          }}
-        >
-          <span
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".12em",
-              textTransform: "uppercase",
-              color: meta.color,
-              padding: "2px 7px",
-              borderRadius: "5px",
-              border: `1px solid ${meta.border}`,
-              background: meta.bg,
-              flexShrink: 0,
-            }}
-          >
-            {meta.label}
-          </span>
-          <span
-            style={{
-              fontSize: "13px",
-              fontWeight: 500,
-              color: T.ink.base,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {sub.targetLabel ?? sub.targetSlug ?? sub.submissionType}
-          </span>
-        </div>
-        {sub.editSummary && (
-          <p
-            style={{
-              fontFamily: T.font.sans,
-              fontSize: "11px",
-              color: T.ink.faint,
-              margin: 0,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {sub.editSummary}
-          </p>
-        )}
-      </div>
-
-      {/* Right: status + date + points */}
-      <div
-        style={{
-          flexShrink: 0,
-          textAlign: "right",
-          display: "flex",
-          flexDirection: "column",
-          gap: "5px",
-          alignItems: "flex-end",
-        }}
-      >
-        {statusMeta && (
-          <span
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".10em",
-              textTransform: "uppercase",
-              color: statusMeta.color,
-              padding: "2px 7px",
-              borderRadius: "5px",
-              border: `1px solid ${statusMeta.border}`,
-            }}
-          >
-            {statusMeta.label}
-          </span>
-        )}
-        <span
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            color: T.ink.faint,
-            textTransform: "uppercase",
-            letterSpacing: ".06em",
-          }}
-        >
-          {formatRelativeDate(sub.createdAt)}
-        </span>
-        {pts !== null && (
-          <span
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              color: T.accent.ok,
-              fontWeight: 600,
-            }}
-          >
-            +{pts} pts
-          </span>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ── Main component ────────────────────────────────────────────────────────────
 
 export function ContributionsSection({ username }: { username: string }) {
   const [submissions, setSubmissions] = useState<PublicSubmission[]>([])
@@ -388,6 +102,23 @@ export function ContributionsSection({ username }: { username: string }) {
   const pending = submissions.filter(
     (s) => s.status === "pending" || s.status === "needs_info"
   ).length
+  const counts = useMemo(() => {
+    const c: Record<FilterId, number> = {
+      all: 0,
+      new_library: 0,
+      library_edit: 0,
+      wiki_edit: 0,
+      library_claim: 0,
+      other: 0,
+    }
+    for (const tab of FILTER_TABS) {
+      c[tab.id] = submissions.filter((s) => matchesFilter(s, tab.id)).length
+    }
+
+    return c
+  }, [submissions])
+  const activeLabel =
+    FILTER_TABS.find((t) => t.id === activeFilter)?.label ?? "All"
   const totalPts = submissions
     .map(estimatePoints)
     .filter((p): p is number => p !== null)
@@ -396,49 +127,30 @@ export function ContributionsSection({ username }: { username: string }) {
   if (loading) {
     return (
       <div
-        style={{
-          border: `1px solid ${T.border.line}`,
-          borderRadius: "12px",
-          overflow: "hidden",
-        }}
+        aria-busy="true"
+        aria-label="Loading contributions"
+        style={{ ...CARD, overflow: "hidden" }}
       >
         {[0, 1, 2].map((i) => (
           <div
             key={i}
+            className="flex items-center gap-3.5 px-6 py-4"
             style={{
-              padding: "14px 20px",
-              borderTop: i ? `1px solid ${T.border.line}` : undefined,
-              display: "flex",
-              gap: "14px",
-              alignItems: "center",
+              borderTop: i ? `1px solid ${T.border.divider}` : undefined,
             }}
           >
             <div
-              style={{
-                width: "34px",
-                height: "34px",
-                borderRadius: "10px",
-                background: T.bg.surface,
-                flexShrink: 0,
-              }}
+              className="size-11 shrink-0 rounded-[14px]"
+              style={{ background: T.bg.muted }}
             />
-            <div style={{ flex: 1 }}>
+            <div className="flex-1">
               <div
-                style={{
-                  height: "12px",
-                  borderRadius: "4px",
-                  background: T.bg.surface,
-                  width: "60%",
-                  marginBottom: "6px",
-                }}
+                className="mb-2 h-3 w-3/5 rounded"
+                style={{ background: T.bg.muted }}
               />
               <div
-                style={{
-                  height: "10px",
-                  borderRadius: "4px",
-                  background: T.bg.surface,
-                  width: "40%",
-                }}
+                className="h-2.5 w-2/5 rounded"
+                style={{ background: T.bg.muted }}
               />
             </div>
           </div>
@@ -449,187 +161,148 @@ export function ContributionsSection({ username }: { username: string }) {
 
   if (submissions.length === 0) {
     return (
-      <div
-        style={{
-          border: `1px solid ${T.border.line}`,
-          borderRadius: "12px",
-          padding: "48px",
-          textAlign: "center",
-          background: T.bg.surface,
-        }}
-      >
-        <p
-          style={{
-            fontFamily: T.font.mono,
-            fontSize: "10px",
-            letterSpacing: ".18em",
-            textTransform: "uppercase",
-            color: T.ink.faint,
-            margin: "0 0 8px",
-          }}
-        >
-          No contributions yet
+      <section aria-labelledby="ct-empty" style={{ ...CARD, padding: "24px" }}>
+        <SectionTitle as="h2" id="ct-empty">
+          Contributions
+        </SectionTitle>
+        <p className="m-0 mt-2 text-[15px]" style={{ color: T.ink.dim }}>
+          No contributions yet. Added libraries, edits and wiki changes will
+          appear here once submitted.
         </p>
-        <p style={{ fontSize: "13px", color: T.ink.faint, margin: 0 }}>
-          Submitted additions, edits, and wiki changes will appear here once
-          approved or under review.
+        <p className="m-0 mt-3">
+          <TextLink href="/contribute">Start contributing</TextLink>
         </p>
-      </div>
+      </section>
     )
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      {/* Stats */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "1px",
-          border: `1px solid ${T.border.line}`,
-          borderRadius: "12px",
-          overflow: "hidden",
-          background: T.border.line,
-        }}
-      >
-        <StatCell label="Total" value={total} />
-        <StatCell label="Approved" value={approved} accent={T.accent.ok} />
-        <StatCell label="Under review" value={pending} accent={T.accent.warn} />
-        <StatCell
+    <div className="flex flex-col gap-6">
+      {/* Stat cards */}
+      <h2 className="sr-only">Contribution summary</h2>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard
+          label="Total"
+          value={String(total)}
+          bg="var(--tint-neutral-bg)"
+          fg="var(--tint-neutral-fg)"
+          icon="mdi:format-list-bulleted"
+        />
+        <StatCard
+          label="Accepted"
+          value={String(approved)}
+          bg="var(--tint-public-bg)"
+          fg="var(--tint-public-fg)"
+          icon="mdi:check-circle-outline"
+        />
+        <StatCard
+          label="In review"
+          value={String(pending)}
+          bg="var(--tint-academic-bg)"
+          fg="var(--tint-academic-fg)"
+          icon="mdi:clock-outline"
+        />
+        <StatCard
           label="Points earned"
-          value={totalPts}
-          accent={T.accent.aurora}
+          value={totalPts.toLocaleString()}
+          bg="var(--tint-national-bg)"
+          fg="var(--tint-national-fg)"
+          icon="mdi:star-four-points-outline"
         />
       </div>
 
-      {/* Filter tabs */}
-      <div
-        style={{
-          display: "flex",
-          gap: "0",
-          borderBottom: `1px solid ${T.border.line}`,
-          overflowX: "auto",
-        }}
-      >
-        {FILTER_TABS.map((tab) => {
-          const count =
-            tab.id === "all"
-              ? submissions.length
-              : tab.id === "other"
-                ? submissions.filter(
-                    (s) =>
-                      ![
-                        "new_library",
-                        "library_edit",
-                        "wiki_edit",
-                        "library_claim",
-                      ].includes(s.submissionType)
-                  ).length
-                : submissions.filter((s) => s.submissionType === tab.id).length
-
-          const active = activeFilter === tab.id
-
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveFilter(tab.id)}
-              style={{
-                padding: "10px 16px",
-                fontFamily: T.font.mono,
-                fontSize: "10px",
-                letterSpacing: ".14em",
-                textTransform: "uppercase",
-                color: active ? T.ink.base : T.ink.faint,
-                background: "transparent",
-                border: "none",
-                borderBottom: active
-                  ? `2px solid ${T.accent.aurora}`
-                  : "2px solid transparent",
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-              }}
+      {/* List */}
+      <section aria-labelledby="ct-list" style={CARD}>
+        <div className="flex flex-col gap-4 px-6 pt-5 pb-4">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <SectionTitle as="h2" id="ct-list">
+              All contributions
+            </SectionTitle>
+            <span
+              className="text-[15px]"
+              style={{ color: T.ink.dim }}
+              aria-live="polite"
             >
-              {tab.label}
-              {count > 0 && (
-                <span
-                  style={{
-                    fontSize: "10px",
-                    color: active ? T.accent.aurora : T.ink.faint,
-                    opacity: 0.8,
-                  }}
-                >
-                  {count}
-                </span>
-              )}
-            </button>
-          )
-        })}
-      </div>
+              {filtered.length}{" "}
+              {filtered.length === 1 ? "contribution" : "contributions"}
+              {activeFilter === "all" ? "" : ` · ${activeLabel}`}
+            </span>
+          </div>
 
-      {/* Grouped list */}
-      {grouped.length === 0 ? (
-        <div
-          style={{
-            padding: "32px",
-            textAlign: "center",
-            border: `1px solid ${T.border.line}`,
-            borderRadius: "12px",
-          }}
-        >
-          <p
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "10px",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
-              color: T.ink.faint,
-              margin: 0,
-            }}
-          >
-            No contributions in this category
-          </p>
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          {grouped.map((group) => (
-            <div
-              key={group.label}
-              style={{
-                border: `1px solid ${T.border.line}`,
-                borderRadius: "12px",
-                overflow: "hidden",
-                background: T.bg.surface,
-              }}
-            >
-              <div
-                style={{
-                  padding: "10px 20px",
-                  background: T.bg.surface,
-                  borderBottom: `1px solid ${T.border.line}`,
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "10px",
-                    letterSpacing: ".14em",
-                    textTransform: "uppercase",
-                    color: T.ink.faint,
-                  }}
-                >
-                  {group.label}
-                </span>
-              </div>
-              {group.items.map((sub) => (
-                <ContributionRow key={sub.documentId} sub={sub} />
-              ))}
+          <fieldset className="m-0 border-0 p-0">
+            <legend className="sr-only">Filter by type</legend>
+            <div className="flex flex-wrap gap-2">
+              {FILTER_TABS.map((tab) => {
+                const active = activeFilter === tab.id
+                const count = counts[tab.id]
+
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setActiveFilter(tab.id)}
+                    className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[14px] font-semibold transition-colors"
+                    style={
+                      active
+                        ? {
+                            background: T.accent.chip,
+                            borderColor: T.accent.primary,
+                            color: T.accent.primaryHover,
+                          }
+                        : {
+                            background: T.bg.deep,
+                            borderColor: T.border.hi,
+                            color: T.ink.base,
+                          }
+                    }
+                  >
+                    {tab.label}
+                    <span
+                      className="text-[13px] font-medium"
+                      style={{
+                        color: active ? T.accent.primaryHover : T.ink.low,
+                      }}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
-          ))}
+          </fieldset>
         </div>
-      )}
+
+        {grouped.length === 0 ? (
+          <p
+            className="m-0 border-t px-6 py-6 text-[15px]"
+            style={{ borderTopColor: T.border.divider, color: T.ink.dim }}
+          >
+            No contributions of this type yet.
+          </p>
+        ) : (
+          grouped.map((group) => (
+            <div key={group.label}>
+              <h3
+                className="m-0 border-t px-6 pt-4 pb-1 text-[14px] font-semibold"
+                style={{ borderTopColor: T.border.line, color: T.ink.low }}
+              >
+                {group.label}
+              </h3>
+              <ul className="m-0 list-none p-0">
+                {group.items.map((sub) => (
+                  <ContributionRow
+                    key={sub.documentId}
+                    item={sub}
+                    points={estimatePoints(sub)}
+                    showStatusIcon
+                  />
+                ))}
+              </ul>
+            </div>
+          ))
+        )}
+      </section>
     </div>
   )
 }
