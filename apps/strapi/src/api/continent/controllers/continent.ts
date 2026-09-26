@@ -57,7 +57,6 @@ export default factories.createCoreController(
             "sections.quick-links": { populate: { links: true } },
           },
         },
-        seo: { populate: { metaImage: true } },
       }
 
       const results = await strapi

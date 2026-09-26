@@ -37,7 +37,6 @@ export default factories.createCoreController(
             ],
             populate: { heroImage: true },
           },
-          seo: { populate: { metaImage: true } },
         } as never,
         locale,
         status,

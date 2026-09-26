@@ -17,7 +17,6 @@ export default factories.createCoreController(
             continent: { fields: ["name", "slug", "code"] },
           },
         },
-        seo: { populate: { metaImage: true } },
       }
 
       const extendedPopulate: Record<string, unknown> = {
