@@ -24,6 +24,12 @@ module.exports = {
   RW_POINT_EVENTS_TABLE: "rw_point_events",
   CM_SUBMISSION_UPLOADS_TABLE: "cm_submission_uploads",
 
+  // Index names, so a caller (the bootstrap fallback) can check
+  // `pg_indexes` for existence before running the CREATE/DEDUPE statements,
+  // instead of relying only on `IF NOT EXISTS` inside them.
+  RW_POINT_EVENTS_INDEX_NAME: "rw_point_events_idempotency_key_uq",
+  CM_SUBMISSION_UPLOADS_INDEX_NAME: "cm_submission_uploads_file_id_uq",
+
   RW_POINT_EVENTS_INDEX_SQL:
     "CREATE UNIQUE INDEX IF NOT EXISTS rw_point_events_idempotency_key_uq " +
     "ON rw_point_events (idempotency_key) WHERE idempotency_key IS NOT NULL",

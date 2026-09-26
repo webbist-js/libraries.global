@@ -25,10 +25,24 @@ function loadIdempotencySql(appRoot: string) {
   return require(modulePath) as {
     RW_POINT_EVENTS_TABLE: string
     CM_SUBMISSION_UPLOADS_TABLE: string
+    RW_POINT_EVENTS_INDEX_NAME: string
+    CM_SUBMISSION_UPLOADS_INDEX_NAME: string
     RW_POINT_EVENTS_INDEX_SQL: string
     CM_SUBMISSION_UPLOADS_DEDUPE_SQL: string
     CM_SUBMISSION_UPLOADS_INDEX_SQL: string
   }
+}
+
+type Txn = { raw: (sql: string, bindings?: unknown[]) => Promise<unknown> }
+
+/** True when `indexName` already exists, checked directly against `pg_indexes` rather than trusting `IF NOT EXISTS` alone — so a caller can also skip work (the upload dedupe) that only needs to run once. */
+async function indexExists(trx: Txn, indexName: string): Promise<boolean> {
+  const result = (await trx.raw(
+    "select 1 from pg_indexes where indexname = ?",
+    [indexName]
+  )) as { rows?: unknown[] } | undefined
+
+  return Array.isArray(result?.rows) && result.rows.length > 0
 }
 
 /**
@@ -49,6 +63,14 @@ function loadIdempotencySql(appRoot: string) {
  * on Postgres. It's a no-op every subsequent boot, and a no-op on any
  * non-Postgres database (sqlite in tests/dev).
  *
+ * Every boot re-checks `pg_indexes` directly rather than only relying on
+ * `IF NOT EXISTS`: that lets the upload dedupe (a self-join delete over the
+ * whole table) be skipped entirely once its index exists, instead of
+ * re-scanning the table on every restart for nothing. The statements run
+ * inside a transaction with `SET LOCAL lock_timeout`, so if another
+ * migration or a long-running query is holding a conflicting lock,
+ * bootstrap fails fast (and only logs) instead of hanging indefinitely.
+ *
  * This is a sanctioned raw-SQL use per constraints.md: DB-level uniqueness
  * isn't expressible through the Document Service, and it's the same
  * raw-SQL shape the migration already uses for the same reason.
@@ -61,21 +83,42 @@ export async function ensureUniqueIndexes(strapi: Core.Strapi): Promise<void> {
     const {
       RW_POINT_EVENTS_TABLE,
       CM_SUBMISSION_UPLOADS_TABLE,
+      RW_POINT_EVENTS_INDEX_NAME,
+      CM_SUBMISSION_UPLOADS_INDEX_NAME,
       RW_POINT_EVENTS_INDEX_SQL,
       CM_SUBMISSION_UPLOADS_DEDUPE_SQL,
       CM_SUBMISSION_UPLOADS_INDEX_SQL,
     } = loadIdempotencySql(strapi.dirs.app.root)
 
     const connection = strapi.db.connection
+    const hasRwTable = await connection.schema.hasTable(RW_POINT_EVENTS_TABLE)
+    const hasUploadsTable = await connection.schema.hasTable(
+      CM_SUBMISSION_UPLOADS_TABLE
+    )
+    if (!hasRwTable && !hasUploadsTable) return
 
-    if (await connection.schema.hasTable(RW_POINT_EVENTS_TABLE)) {
-      await connection.raw(RW_POINT_EVENTS_INDEX_SQL)
-    }
+    await connection.transaction(async (trx: Txn) => {
+      // Scoped to this transaction only — it resets automatically at
+      // commit/rollback — so a slow unrelated migration or a long-running
+      // transaction elsewhere can't make bootstrap hang waiting on a DDL
+      // lock; it fails fast (and is still only logged) instead.
+      await trx.raw("SET LOCAL lock_timeout = '5s'")
 
-    if (await connection.schema.hasTable(CM_SUBMISSION_UPLOADS_TABLE)) {
-      await connection.raw(CM_SUBMISSION_UPLOADS_DEDUPE_SQL)
-      await connection.raw(CM_SUBMISSION_UPLOADS_INDEX_SQL)
-    }
+      if (hasRwTable && !(await indexExists(trx, RW_POINT_EVENTS_INDEX_NAME))) {
+        await trx.raw(RW_POINT_EVENTS_INDEX_SQL)
+      }
+
+      if (
+        hasUploadsTable &&
+        !(await indexExists(trx, CM_SUBMISSION_UPLOADS_INDEX_NAME))
+      ) {
+        // The dedupe is a self-join delete over the whole table: only run
+        // it while the index doesn't exist yet. Once it exists, file_id is
+        // already unique, so there's nothing left to dedupe.
+        await trx.raw(CM_SUBMISSION_UPLOADS_DEDUPE_SQL)
+        await trx.raw(CM_SUBMISSION_UPLOADS_INDEX_SQL)
+      }
+    })
   } catch (err) {
     strapi.log.error("[bootstrap] ensureUniqueIndexes failed", err)
   }
