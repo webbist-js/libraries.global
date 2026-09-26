@@ -16,8 +16,10 @@ export async function GET(req: Request) {
   const continent_slug = searchParams.get("continent_slug") ?? ""
 
   const filterParts: string[] = []
-  if (continent_slug) filterParts.push(`continent_slug = "${continent_slug}"`)
-  if (country_slug) filterParts.push(`country_slug = "${country_slug}"`)
+  if (continent_slug)
+    filterParts.push(`continent_slug = ${JSON.stringify(continent_slug)}`)
+  if (country_slug)
+    filterParts.push(`country_slug = ${JSON.stringify(country_slug)}`)
 
   const body: Record<string, unknown> = { q, limit: 20 }
   if (filterParts.length > 0) body.filter = filterParts.join(" AND ")

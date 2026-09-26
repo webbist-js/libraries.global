@@ -327,6 +327,126 @@ export async function searchNearbyLibraries(
   })
 }
 
+// ── Find-a-library v2 search ──────────────────────────────────────────────────
+// Additive: richer hit shape (openingTimes/timezone/iiifEndpoint) for the
+// client-side "open now" / completeness features on the Find-a-library page.
+
+export interface LibrarySearchHitV2 extends LibrarySearchHit {
+  openingTimes?: unknown
+  timezone?: string | null
+  iiifEndpoint?: string | null
+}
+
+const V2_RETRIEVE = [
+  "id",
+  "documentId",
+  "name",
+  "slug",
+  "entityRef",
+  "shortName",
+  "summary",
+  "libraryType",
+  "operationalStatus",
+  "city",
+  "featured",
+  "continent_slug",
+  "continent_name",
+  "country_slug",
+  "country_name",
+  "region_slug",
+  "region_name",
+  "foundedYear",
+  "operatorType",
+  "heroImage",
+  "openingTimes",
+  "timezone",
+  "iiifEndpoint",
+  "accessibility_names",
+  "service_names",
+  "_geo",
+]
+
+const V2_FACETS = [
+  "libraryType",
+  "operationalStatus",
+  "accessibility_names",
+  "service_names",
+  "continent_slug",
+  "country_slug",
+]
+
+export interface SearchLibrariesV2Options {
+  query?: string
+  libraryTypes?: string[]
+  accessibilityNames?: string[]
+  serviceNames?: string[]
+  nearLat?: number
+  nearLng?: number
+  /** metres; omit for no radius restriction (still sortable by distance) */
+  nearRadius?: number
+  sortByDistance?: boolean
+  sort?: "name:asc" | "featured:desc,name:asc"
+  page?: number
+  hitsPerPage?: number
+  /** fetch up to `limit` hits in one page for client-side filtering/sorting */
+  bulkLimit?: number
+  withFacets?: boolean
+}
+
+export async function searchLibrariesV2(opts: SearchLibrariesV2Options) {
+  const filterParts: string[] = []
+  if (opts.libraryTypes?.length) {
+    filterParts.push(
+      `libraryType IN [${opts.libraryTypes.map((t) => JSON.stringify(t)).join(", ")}]`
+    )
+  }
+  if (opts.accessibilityNames?.length) {
+    filterParts.push(
+      `accessibility_names IN [${opts.accessibilityNames.map((n) => JSON.stringify(n)).join(", ")}]`
+    )
+  }
+  if (opts.serviceNames?.length) {
+    filterParts.push(
+      `service_names IN [${opts.serviceNames.map((n) => JSON.stringify(n)).join(", ")}]`
+    )
+  }
+  if (opts.nearLat != null && opts.nearLng != null && opts.nearRadius != null) {
+    filterParts.push(
+      `_geoRadius(${opts.nearLat}, ${opts.nearLng}, ${opts.nearRadius})`
+    )
+  }
+
+  const sortArr: string[] = []
+  if (opts.sortByDistance && opts.nearLat != null && opts.nearLng != null) {
+    sortArr.push(`_geoPoint(${opts.nearLat}, ${opts.nearLng}):asc`)
+  } else if (opts.sort === "name:asc") {
+    sortArr.push("name:asc")
+  } else {
+    sortArr.push("featured:desc", "name:asc")
+  }
+
+  const index = meiliClient.index("library")
+
+  if (opts.bulkLimit) {
+    return index.search<LibrarySearchHitV2>(opts.query ?? "", {
+      filter: filterParts.length > 0 ? filterParts.join(" AND ") : undefined,
+      sort: sortArr,
+      limit: opts.bulkLimit,
+      facets: opts.withFacets ? V2_FACETS : undefined,
+      attributesToRetrieve: V2_RETRIEVE,
+    })
+  }
+
+  return index.search<LibrarySearchHitV2>(opts.query ?? "", {
+    filter: filterParts.length > 0 ? filterParts.join(" AND ") : undefined,
+    sort: sortArr,
+    page: (opts.page ?? 0) + 1,
+    hitsPerPage: opts.hitsPerPage ?? 24,
+    facets: opts.withFacets ? V2_FACETS : undefined,
+    attributesToRetrieve: V2_RETRIEVE,
+  })
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 export function buildLibraryPath(hit: LibrarySearchHit): string | null {
@@ -345,7 +465,7 @@ export function libraryHeroUrl(hit: LibrarySearchHit): string | null {
     hit.heroImage?.url ??
     null
 
-  return raw ? formatStrapiMediaUrl(raw) : null
+  return raw ? (formatStrapiMediaUrl(raw) ?? null) : null
 }
 
 // ── Events search ─────────────────────────────────────────────────────────────
