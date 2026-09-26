@@ -1,0 +1,2001 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head prefix="og: http://ogp.me/ns#">
+	<title>Search Results | Westminster Libraries</title><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="Content-Type" content="text/html;charset=utf-8"><meta property="og:site_name" content="Westminster Libraries"/><link type="image/x-icon" href="/files/original/favicon_6.png" rel="shortcut icon"><link rel="search" type="application/opensearchdescription+xml" title="Westminster Libraries Catalog Search" href="/Search/OpenSearch?method=describe"><link rel="stylesheet" type="text/css" href="/interface/themes/responsive/css/main.css?v=26.07.00.47" /><script src="/interface/themes/responsive/js/aspen.js?v=26.07.00.47"></script>
+	<script type="text/javascript">
+				
+			$(document).ready(function(){
+		
+			Globals.url = 'https://libraries.westminster.gov.uk';
+			Globals.loggedIn = false;
+			Globals.opac = false;
+			Globals.activeModule = 'Search';
+			Globals.activeAction = 'Results';
+			Globals.masqueradeMode = false;
+			
+																AspenDiscovery.Searches.getPreferredDisplayMode();
+																						Globals.hasOverDriveConnection = true;
+												Globals.loadingTitle = 'Loading';
+			Globals.loadingBody = 'Loading, please wait';
+			Globals.requestFailedTitle = 'Request Failed';
+			Globals.requestFailedBody = 'There was an error with this AJAX Request.';
+			Globals.rtl = false;
+			Globals.bypassAspenLoginForSSO = false;
+			Globals.ssoLoginUrl = '';
+			AspenDiscovery.Browse.browseStyle = 'masonry';
+			Globals.cookiePolicyHTML = '';
+						Globals.language = 'en';
+			Globals.jsTranslations = {"All checkout records for this title will be irreversibly deleted from your reading history. Proceed?":"All checkout records for this title will be irreversibly deleted from your reading history. Proceed?","An error occurred processing your request in Boundless.  Please try again in a few minutes.":"An error occurred processing your request in Boundless.  Please try again in a few minutes.","An error occurred processing your request in Palace Project.  Please try again in a few minutes.":"An error occurred processing your request in Palace Project.  Please try again in a few minutes.","An error occurred processing your request in cloudLibrary.  Please try again in a few minutes.":"An error occurred processing your request in cloudLibrary.  Please try again in a few minutes.","An error occurred processing your request.  Please try again in a few minutes.":"An error occurred processing your request.  Please try again in a few minutes.","Are you sure you want to break the link with this account?":"Are you sure you want to break the link with this account?","Are you sure you want to cancel this hold?":"Are you sure you want to cancel this hold?","Are you sure you want to cancel this request?":"Are you sure you want to cancel this request?","Are you sure you want to delete all items from this list? The titles will be permanently deleted.":"Are you sure you want to delete all items from this list? The titles will be permanently deleted.","Are you sure you want to delete the selected items from this list? The titles will be permanently deleted.":"Are you sure you want to delete the selected items from this list? The titles will be permanently deleted.","Are you sure you want to delete this cell (ID: {id})?":"Are you sure you want to delete this cell (ID: {id})?","Are you sure you want to delete this file?":"Are you sure you want to delete this file?","Are you sure you want to delete this list?":"Are you sure you want to delete this list?","Are you sure you want to delete this review?":"Are you sure you want to delete this review?","Are you sure you want to delete this row (ID: {id})?":"Are you sure you want to delete this row (ID: {id})?","Are you sure you want to delete this {fileName}?":"Are you sure you want to delete this {fileName}?","Are you sure you want to permanently delete ALL objects? This action cannot be undone.":"Are you sure you want to permanently delete ALL objects? This action cannot be undone.","Are you sure you want to permanently delete {count} object(s)? This action cannot be undone.":"Are you sure you want to permanently delete {count} object(s)? This action cannot be undone.","Are you sure you want to remove this event?":"Are you sure you want to remove this event?","Are you sure you want to return this title?":"Are you sure you want to return this title?","Are you sure you want to stop managing this account?":"Are you sure you want to stop managing this account?","Cancel":"Cancel","Confirm Delete":"Confirm Delete","Delete":"Delete","Delete All":"Delete All","Delete All Reading History":"Delete All Reading History","Delete All Titles?":"Delete All Titles?","Delete Cell":"Delete Cell","Delete Checkout Record":"Delete Checkout Record","Delete Failed":"Delete Failed","Delete Reading History Entry":"Delete Reading History Entry","Delete Row":"Delete Row","Delete Selected Items":"Delete Selected Items","Delete Selected Titles?":"Delete Selected Titles?","Error communicating with server.":"Error communicating with server.","Failed to Delete Reading History Entries":"Failed to Delete Reading History Entries","Failed to Delete Selected Objects":"Failed to Delete Selected Objects","Import Lists?":"Import Lists?","No":"No","No browse categories were selected":"No browse categories were selected","No titles are selected, would you like to delete all titles on this page? The titles will be permanently deleted.":"No titles are selected, would you like to delete all titles on this page? The titles will be permanently deleted.","Opt Out":"Opt Out","Opt Out of Reading History":"Opt Out of Reading History","Opting out of Reading History will also delete your entire reading history irreversibly. Proceed?":"Opting out of Reading History will also delete your entire reading history irreversibly. Proceed?","Permanently Delete All":"Permanently Delete All","Permanently Delete Selected":"Permanently Delete Selected","Please select a location to pick up your hold when it is ready.":"Please select a location to pick up your hold when it is ready.","Please select a new assignee and\/or status to update.":"Please select a new assignee and\/or status to update.","Please select a volume to place your hold on":"Please select a volume to place your hold on","Please select an item to place your hold on":"Please select an item to place your hold on","Please select at least one object to delete.":"Please select at least one object to delete.","Please select one or more items to delete.":"Please select one or more items to delete.","Please select one or more requests to update":"Please select one or more requests to update","Renew All Items?":"Renew All Items?","Renew selected Items?":"Renew selected Items?","Select at least one library to copy to":"Select at least one library to copy to","Select at least one menu link to copy":"Select at least one menu link to copy","The item will be irreversibly deleted from your reading history. Proceed?":"The item will be irreversibly deleted from your reading history. Proceed?","This checkout record will be irreversibly deleted from your reading history. Proceed?":"This checkout record will be irreversibly deleted from your reading history. Proceed?","This will import any lists you had defined in the old catalog.  This may take several minutes depending on the size of your lists. Are you sure you want to continue?":"This will import any lists you had defined in the old catalog.  This may take several minutes depending on the size of your lists. Are you sure you want to continue?","Yes":"Yes","You have not selected any items, process all items?":"You have not selected any items, process all items?","You have not selected any requests, process all requests?":"You have not selected any requests, process all requests?","You have selected {count} item(s) to delete from your reading history. This action is irreversible. Proceed?":"You have selected {count} item(s) to delete from your reading history. This action is irreversible. Proceed?","You must agree to pay any fees associated with this requests before continuing.":"You must agree to pay any fees associated with this requests before continuing.","You must provide the trigger to follow a link after logging in.":"You must provide the trigger to follow a link after logging in.","You must select at least one assignee to view.":"You must select at least one assignee to view.","You must select at least one format to view.":"You must select at least one format to view.","You must select at least one status to view.":"You must select at least one status to view.","Your entire reading history will be irreversibly deleted. Proceed?":"Your entire reading history will be irreversibly deleted. Proceed?","Your request was cancelled successfully.":"Your request was cancelled successfully."};
+		
+			});
+		
+	</script><script type="text/javascript">
+		$(document).ready(function(){
+			if (Globals.timeUntilSessionExpiration > 0) {
+				setTimeout(function (){
+					// noinspection SillyAssignmentJS
+					window.location.reload();
+				}, Globals.timeUntilSessionExpiration + 500);
+			}
+		});
+		</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat"><style>h1, h2, h3, h4, h5, .menu-bar-label, .panel-title, label,.browse-category,#browse-sub-category-menu,button,.btn,.myAccountLink,.adminMenuLink,.selected-browse-label-search,.result-label,.result-title,.label,#remove-search-label,#narrow-search-label,#library-name-header{font-family: "Montserrat", "Helvetica Neue", Helvetica, Arial, sans-serif;}h1 small, h2 small, h3 small, h4 small, h5 small{color: #6B6B6B;}#header-wrapper{background-color: #ffffff;background-image: none;color: #303030;}#library-name-header{color: #303030;}#footer-container{background-color: #f1f1f1;color: #303030;}body {background-color: #ffffff;color: #6B6B6B;}a,a:visited,.result-head,#selected-browse-label a,#selected-browse-label a:visited{color: #0b2265;}a:hover,.result-head:hover,#selected-browse-label a:hover{color: #951b81;}body .container, #home-page-browse-content{background-color: #ffffff;color: #6B6B6B;}#selected-browse-label{background-color: #ffffff;}.table-striped > tbody > tr:nth-child(2n+1) > td, .table-striped > tbody > tr:nth-child(2n+1) > th{background-color: #fafafa;}div.striped > div:nth-child(odd), div.striped > div:nth-child(odd){background-color: #fafafa;}.table-sticky thead tr th{background-color: #ffffff;}#home-page-search, #horizontal-search-box,.searchTypeHome,.searchSource,.menu-bar {background-color: #ffffff;color: #000000;}#horizontal-search-box .searchSourceHorizontal, #horizontal-search-box .searchTypeHorizontal{background-color: #ffffff;color: #333333;border: 1px solid #cccccc;}#home-search-box .input-group-addon{background-color: #0b2265;}#horizontal-menu-bar-container{background-color: #ffffff;color: #303030;position: relative;}#horizontal-menu-bar-container, #horizontal-menu-bar-container .menu-icon, #horizontal-menu-bar-container .menu-icon .menu-bar-label,#horizontal-menu-bar-container .menu-icon:visited{background-color: #ffffff;color: #303030;}#horizontal-menu-bar-container .menu-icon:hover, #horizontal-menu-bar-container .menu-icon:focus,#horizontal-menu-bar-container .menu-icon:hover .menu-bar-label, #horizontal-menu-bar-container .menu-icon:focus .menu-bar-label,#menuToggleButton.selected{background-color: #ffed8b;color: #303030;}#horizontal-search-label,#horizontal-search-box #horizontal-search-label{color: #000000;}#lookfor{border-radius: 0;background-color: #ffffff;color: #6B6B6B;border: 1px solid #6B6B6B;border-left: 0px;}#lookfor-label{color: #6B6B6B;}.dropdownMenu, #account-menu, #header-menu, .dropdown .dropdown-menu.dropdownMenu, .dropdown-menu{background-color: #ffed8b !important;color: #404040 !important;}.dropdownMenu a, .dropdownMenu a:visited, .dropdown-menu li a, .dropdown-menu li a:visited, .dropdown-menu li label{color: #404040 !important;background-color: #ffed8b !important;}.dropdownMenu a.btn{color: #333333 !important;background-color: #ffffff !important;}.modal-header, .modal-footer{background-color: #ffffff;color: #6B6B6B;}.close, .close:hover, .close:focus{color: #6B6B6B;}.modal-header{border-bottom-color: #ffffff;}.modal-footer{border-top-color: #ffffff;}.modal-content{background-color: #ffffff;color: #6B6B6B;}.exploreMoreBar .label-top, .exploreMoreBar .label-top img{background-color: #ffffff;color: #000000;}.exploreMoreBar .exploreMoreBarLabel{color: #000000;}.exploreMoreBar{border-color: #ffffff;background: #ffffff07;}.exploreMoreBar .jcarousel-control-prev, .exploreMoreBar .jcarousel-control-next{color: #6B6B6B}#home-page-search-label,#home-page-advanced-search-link,#keepFiltersSwitchLabel,.menu-bar, #horizontal-menu-bar-container {color: #000000}.facetTitle, .exploreMoreTitle, .panel-heading, .panel-heading .panel-title,.panel-default > .panel-heading, .sidebar-links .panel-heading, #account-link-accordion .panel .panel-title, #account-settings-accordion .panel .panel-title{background-color: #ffffff;border-color: #33333370;}.panel-default{border-color: #33333370;}.facetTitle, .exploreMoreTitle,.panel-title,.panel-default > .panel-heading, .sidebar-links .panel-heading, #account-link-accordion .panel .panel-title, #account-settings-accordion .panel .panel-title, .panel-title > a,.panel-default > .panel-heading{color: #333333;}.facetTitle.expanded, .exploreMoreTitle.expanded,.active .panel-heading,#more-details-accordion .active .panel-heading,#preferences-accordion .active .panel-heading,.active .panel-default > .panel-heading, .sidebar-links .active .panel-heading, #account-link-accordion .panel.active .panel-title, #account-settings-accordion .panel.active .panel-title,.active .panel-title,.active .panel-title > a,.active.panel-default > .panel-heading, .adminSection .adminPanel .adminSectionLabel{background-color: #0b2265;}.facetTitle.expanded, .exploreMoreTitle.expanded,.active .panel-heading,#more-details-accordion .active .panel-heading,#more-details-accordion .active .panel-title,#preferences-accordion .active .panel-heading,#preferences-accordion .active .panel-title,#account-link-accordion .panel.active .panel-title,.active .panel-title,.active .panel-title > a,.active.panel-default > .panel-heading,.adminSection .adminPanel .adminSectionLabel, .facetLock.pull-right a{color: #ffffff;}.panel-body,.sidebar-links .panel-body,#more-details-accordion .panel-body,#preferences-accordion .panel-body,.facetDetails,.sidebar-links .panel-body a:not(.btn), .sidebar-links .panel-body a:visited:not(.btn), .sidebar-links .panel-body a:hover:not(.btn),.adminSection .adminPanel{background-color: #ffffff;color: #404040;}.facetValue, .facetValue a,.adminSection .adminPanel .adminActionLabel,.adminSection .adminPanel .adminActionLabel a{color: #404040;}.breadcrumbs{background-color: #f5f5f5;color: #6B6B6B;}.breadcrumb > li + li::before{color: #6B6B6B;}#footer-container{border-top-color: #0b2265;}#horizontal-menu-bar-container{border-bottom-color: #0b2265;}.browse-category-feed-item .swiper{width: 100%;}.browse-category-feed-item .btn-group > .btn:focus{border-color: #000000;--webkit-box-shadow: inset 0 1px 1px #000000, 0 0 8px #000000;}.swiper-button-next, .swiper-button-prev {background-color: #0b2265 !important;color: #ffffff !important;}#home-page-browse-header{background-color: #ffffff;}.browse-category,#browse-sub-category-menu button, .manual [role="tab"], .manual .hide-browse-sub-category, .manual .more-browse-sub-category{background-color: #0b2265 !important;border-color: #65b32e !important;color: #ffffff !important;}.browse-category.selected,.browse-category.selected:hover,#browse-sub-category-menu button.selected,#browse-sub-category-menu button.selected:focus,#browse-sub-category-menu button.selected:hover,#browse-sub-category-menu button:focus,#browse-sub-category-menu button:hover, .manual [role="tab"]:focus, .manual [role="tab"]:hover, .manual [role="tab"][aria-selected="true"], .manual [role="tab"][aria-selected="true"] + .more-browse-sub-category + .hide-browse-sub-category, .manual .hide-browse-sub-category:hover, .manual .hide-browse-sub-category:focus, .manual [role="tab"][aria-selected="true"] + .more-browse-sub-category,.manual .more-browse-sub-category:hover, .manual .more-browse-sub-category:focus{border-color: #65b32e !important;background-color: #0b2265 !important;color: #ffffff !important;}.browse-thumbnail{background-color: transparent;}.results-covers-view.home-page-browse-results-grid.home-page-browse-results-grid-grid .browse-thumbnail{align-items: flex-start !important;max-height: 250px !important;}#home-page-browse-results .floating .browse-cover-badge {left: -6px !important;}#home-page-browse-results.home-page-browse-results-grid.home-page-browse-results-grid-grid .browse-thumbnail,#home-page-browse-results.home-page-browse-results-grid.home-page-browse-results-grid-grid .browse-rating{align-items: flex-start !important;}.results-covers-view.home-page-browse-results-grid.home-page-browse-results-grid-grid .browse-rating {align-self: flex-end;}#home-page-browse-results.home-page-browse-results-grid {padding-top: 1em;}.alert-success{background-color: #5cb85c;border-color: #4cae4c;color: #000000;}.alert-success a{color: #000000 !important;text-decoration: underline;}.alert-info{background-color: #ffed8b;border-color: #999999;color: #000000;}.alert-info a{color: #000000 !important;text-decoration: underline;}.alert-warning{background-color: #ffed8b;border-color: #999999;color: #000000;}.alert-warning a{color: #000000 !important;text-decoration: underline;}.alert-danger{background-color: #D50000;border-color: #999999;color: #ffffff;}.alert-danger a{color: #ffffff !important;text-decoration: underline;}#system-message-header {background-color: #ffffff;color: #6B6B6B;}.btn-default,.btn-default:visited,a.btn-default,a.btn-default:visited,.btn-default a,.btn-default a:visited{background-color: #ffffff !important;color: #333333 !important;border-color: #cccccc;}.btn-default:hover, .btn-default:focus, .btn-default a:hover, a.btn-default:hover, .btn-default a:focus, a.btn-default:focus{background-color: #eeeeee !important;color: #333333 !important;border-color: #cccccc;}.btn-default:active, .btn-default.active, .open .dropdown-toggle.btn-default{background-color: #eeeeee !important;color: #333333 !important;border-color: #cccccc;}.btn-primary,.btn-primary:visited,a.btn-primary,a.btn-primary:visited, .horizontal-format-button {background-color: #0b2265 !important;color: #ffffff !important;border-color: #0b2265;}.horizontal-format-button a {color: #ffffff !important;}.btn-primary:hover, a.btn-primary:hover, .btn-primary:focus, a.btn-primary:focus, .btn-primary:active, a.btn-primary:active, .btn-primary.active, .open .dropdown-toggle.btn-primary, .horizontal-format-button:hover, .horizontal-format-button.active, .horizontal-format-button.active:hover{background-color: #ffffff !important;color: #951b81 !important;border-color: #951b81;}.horizontal-format-button.active a, .horizontal-format-button:hover a{color: #951b81 !important;}.btn-action,.btn-action:visited,a.btn-action,a.btn-action:visited{background-color: #0b2265 !important;color: #ffffff !important;border-color: #0b2265;}.btn-action:hover, a.btn-action:hover, .btn-action:focus, a.btn-action:focus, .btn-action:active, a.btn-action:active, .btn-action.active, .open .dropdown-toggle.btn-action{background-color: #ffffff !important;color: #951b81 !important;border-color: #951b81;}.btn-success,.btn-success:visited,a.btn-success,a.btn-success:visited{background-color: #5cb85c !important;color: #000000 !important;border-color: #4cae4c;}.btn-success:hover, .btn-success:focus, .btn-success:active, .btn-success.active, .open .dropdown-toggle.btn-success{background-color: #449d44 !important;color: #000000 !important;border-color: #398439;}.btn-info,.btn-info:visited,a.btn-info,a.btn-info:visited{background-color: #ffed8b !important;color: #000000 !important;border-color: #999999;}.btn-info:hover, .btn-info:focus, .btn-info:active, .btn-info.active, .open .dropdown-toggle.btn-info{background-color: #ffffff !important;color: #951b81 !important;border-color: #951b81;}.btn-tools,.btn-tools:visited,a.btn-tools,a.btn-tools:visited{background-color: #747474 !important;color: #ffffff !important;border-color: #636363;}.btn-tools:hover, .btn-tools:focus, .btn-tools:active, .btn-tools.active, .open .dropdown-toggle.btn-tools{background-color: #636363 !important;color: #ffffff !important;border-color: #636363;}.btn-warning,.btn-warning:visited,a.btn-warning,a.btn-warning:visited{background-color: #ffed8b !important;color: #000000 !important;border-color: #999999;}.btn-warning:hover, .btn-warning:focus, .btn-warning:active, .btn-warning.active, .open .dropdown-toggle.btn-warning{background-color: #ffffff !important;color: #8d6708 !important;border-color: #8d6708;}.label-warning{background-color: #ffed8b;color: #000000;border: 1px solid #999999;}.btn-danger,.btn-danger:visited,a.btn-danger,a.btn-danger:visited{background-color: #D50000 !important;color: #ffffff !important;border-color: #999999;}.btn-danger:hover, .btn-danger:focus, .btn-danger:active, .btn-danger.active, .open .dropdown-toggle.btn-danger{background-color: #ffffff !important;color: #D50000 !important;border-color: #D50000;}.label-danger{background-color: #D50000;color: #ffffff;}.btn-editions,.btn-editions:visited{background-color: #f8f9fa !important;color: #212529 !important;border-color: #999999;}.btn-editions:hover, .btn-editions:focus, .btn-editions:active, .btn-editions.active{background-color: #ffffff !important;color: #951b81 !important;border-color: #951b81;}.badge{background-color: #666666;color: #ffffff;}#myAccountPanel .label{font-size: 10px;min-width: 10px;padding: 3px 7px;border-radius: 10px;}.form-control {background-color: #ffffff;color: #6B6B6B;border: 1px solid #6B6B6B;}#horizontal-search-box #lookfor:focus, #horizontal-search-box .searchSourceHorizontal:focus, #horizontal-search-box .searchTypeHorizontal:focus{color: #6B6B6B;border-color: #000000;--webkit-box-shadow: inset 0 1px 1px #000000, 0 0 8px #000000;}:focus {outline: 2px solid #3174AF !important;outline-offset: -2px;}.form-control:focus{color: #0b2265;border-color: #0b2265;--webkit-box-shadow: inset 0 1px 1px #0b2265, 0 0 8px #0b2265box-shadow: inset 0 1px 1px #0b2265, 0 0 8px #0b2265}.input-group-addon{background-color: #ffffff;color: #6B6B6B;border: 1px solid #6B6B6B;}legend{color: #6B6B6B;border-color: #6B6B6B;}.bootstrap-switch{border: 1px solid #6B6B6B;}.bootstrap-switch > div > label{background-color: #ffffff;color: #6B6B6B;}.bootstrap-switch > div > span.bootstrap-switch-default{background-color: #ffffff !important;color: #6B6B6B !important;}.bootstrap-switch > div > span.bootstrap-switch-primary{background-color: #0b2265 !important;color: #ffffff !important;}.input-group-btn{position: relative;font-size: 0;white-space: nowrap;}.input-group-btn > .btn {border-top-left-radius: 0 !important;border-bottom-left-radius: 0 !important;z-index: 2;margin-left: -1px;border-color: #6B6B6B}#webMenuNavBar{background-color: #ffffff;margin-bottom: 2px;color: #000000;.navbar-nav > li > a, .navbar-nav > li > a:visited {color: #000000;}}.dropdown-menu{background-color: #ffed8b;color: #404040;}.dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus{background-color: #ffed8b !important;color: #404040 !important;text-decoration: underline;}.result-label{color: #44484a}.result-value{color: #6B6B6B}.search_tools{background-color: #f5f5f5;color: #6B6B6B;}.top-link{background-color: #0b2265;color: #ffffff;}.top-link:hover{background-color: #0b2265;color: #ffffff;}.top-link i{color: #ffffff;}.top-link i:hover{color: #ffffff;}#results-sort{background-color: #ffffff;color: #333333;border: 1px solid #cccccc;}.placard{border: 1px solid #6B6B6B70;background-color: #f5f5f5;color: #6B6B6B;}.placard a{color: #6B6B6B !important;}.placard-image{}.jcarousel-pagination a{background: #0b226570;color: #6B6B6B;box-shadow: none;}.jcarousel-pagination a.active{background: #0b2265;color: #ffffff;box-shadow: none;}#browse-category-picker .jcarousel-control-prev, #browse-category-picker .jcarousel-control-next,.jcarousel-control-prev, .jcarousel-control-next{background: #ffffff;color: #6B6B6B;box-shadow: none;text-shadow: none;}#more-browse-results {background: #ffffff;color: #6B6B6B;box-shadow: none;text-shadow: none;}.panel{background-color: transparent !important;box-shadow: none;}.panel.active{margin-bottom: .5em !important;border: 1px solid #0b2265;}.panel-heading{border: 0 !important;}.panel-body{border-width: 0 !important;}.facetTitle{border-top: 0;}.striped-odd{background-color: transparent !important;}.nav-tabs > li{background-color: #ffffff;border-color: #ffffff !important;color: #6B6B6B}.nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus, .nav-tabs > li > a:hover{background-color: #e7e7e7;border-color: #e7e7e7 !important;color: #333333}.nav-tabs{border-bottom: 1px solid #e7e7e7}.nav-tabs{border-left: 0px solid #e7e7e7;border-right: 0px solid #e7e7e7}.tab-content{border-left: 1px solid #e7e7e7;border-right: 1px solid #e7e7e7;border-bottom: 1px solid #e7e7e7;}.unbound_mega_header, .unbound_header, .unbound_subhead, .unbound_author_name, .unbound_reviews_reviewdby, .unbound_review_by_text, .unbound_reviews_source, .unbound_infotext{color: #6B6B6B !important;}.unbound_tagblocktable .level2, .unbound_tagblocktable .level1, .unbound_tagblocktable td {background-color: #0b2265 !important;border-color: #0b2265 !important;color: #ffffff !important;}.unbound_lookinside_excerpt::after{background-image: none !important;}.well{background-color: #ffffff;border: 1px solid #33333370;color: #333333;}.well a{color: #333333;}.sidebar-label{background-color: #ffffff;color: #000000;margin-bottom: .75em;font-size: unset;}.sidebar-label a, .sidebar-label a:hover, .sidebar-label a:visited, .searchSettingsColor, .searchSettingsColor:hover, .searchSettingsColor:visited{color: #000000;}#side-bar.collapsed #sidebar-collapse{background-color: #ffffff;}pre{background-color: #ffffff70;border-color: #ffffff;color: #000000;}pre a{color: #000000;}.form-control[disabled], .form-control[readonly], fieldset[disabled] .form-control {background-color: #ffffff;color: #6B6B6B;border: 1px solid #6B6B6B;}.formatCategoryLabel, .share-tools-label{color: #6B6B6B;}.calendar-header-cell{background-color: #ffffff;color: #000000;border: 1px solid #6B6B6B;}.calendar-day-cell{border: 1px solid #6B6B6B;}.calendar-event{background-color: #ffffff;}.calendar-event .calendar-event-title a{color: #000000}.calendar-event-time, .calendar-event-field{color: #000000;}.calendar-event-location{color: #000000;}.stripPopup {background-color: #65b32e;}.stripPopup .btnWrap a.button {background-color: #65b32e;color: #FFFFFF;border: 1px solid #FFFFFF;}.stripPopup .btnWrap a.button:hover {background-color: #FF0000;color: #FFFFFF;}.stripPopup .cookieContainer .contentWrap span {color: #FFFFFF;}.stripPopup .cookieContainer .contentWrap abbr {color: #FFFFFF;}.btn.shimmer-fade-out {position: relative;overflow: hidden;}.btn[data-needs-refresh="true"]::before,.btn.shimmer-fade-out::before {content: '';position: absolute;top: 0;left: -100%;width: 100%;height: 100%;background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);animation: btn-shimmer 2s infinite;pointer-events: none;opacity: 1;transition: opacity 0.5s ease-out;}.btn.shimmer-fade-out::before {opacity: 0;}@keyframes btn-shimmer {0% {left: -100%;}100% {left: 100%;}}.ms-choice{border-color: #6B6B6B;color: #6B6B6B;background-color: #ffffff;}.ms-choice.disabled{background-color: #ffffff;border-color: #6B6B6B;}.ms-choice > span.ms-placeholder{color: #6B6B6B;}.ms-choice > div.icon-close:before{color: #6B6B6B;}.ms-choice > div.icon-close:hover:before{color: #0b2265;}.ms-choice > div.icon-caret{border-color: #6B6B6B transparent transparent transparent;}.ms-choice > div.icon-caret.open{border-color: transparent transparent #6B6B6B transparent;}.ms-drop{background: #ffffff;color: #6B6B6B;border-color: #6B6B6B;}.ms-search input{border-color: #6B6B6B;}.ms-filter-options{border-bottom-color: #6B6B6B;background-color: #ffffff;}.ms-filter-option{color: #6B6B6B;background-color: #ffffff;border-color: #6B6B6B;}.ms-filter-option:hover{background-color: #ffffff;border-color: #6B6B6B;}.ms-filter-option.active{background-color: #ffffff;color: #0b2265;border-color: #0b2265;}.ms-drop ul > li.hide-radio:focus, .ms-drop ul > li.hide-radio:hover{background-color: #ffffff;}.ms-drop ul > li.hide-radio.selected{color: #6B6B6B;background-color: #ffffff;}.ms-drop ul > li.option-divider{border-top-color: #6B6B6B;}/* General styling for all panels */
+[id$="Panel"] {
+    border: 1px solid #ccc; /* Adds a border */
+    border-radius: 5px; /* Rounds the corners */
+    padding: 15px; /* Adds internal spacing */
+    margin-bottom: 10px; /* Space between panels */
+    background-color: #f9f9f9; /* Light background color */
+    transition: all 0.3s ease; /* Smooth transition effect */
+    font-weight: bold; /* Makes text bold */
+}
+
+/* -------------------------------------------------- */
+/* NEW: FORCE HEADER LOGO TO CENTER ACROSS ALL SIZES */
+/* -------------------------------------------------- */
+
+/* Make the container full width and center its contents */
+#header-logo-container {
+    width: 100% !important;
+    text-align: center !important;
+}
+
+/* Override Bootstrap grid col-8 classes applied to the container */
+#header-logo-container[class*="col-"] {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+}
+
+/* Center the logo image */
+#header-logo-container img,
+#header-logo {
+    margin: 0 auto !important;
+    display: block !important;
+    max-width: 100%;
+    height: auto;
+}
+
+/* ----------------------------------------------- */
+/* FEATURED RESOURCES ROW – TARGET ONLY THIS BLOCK  */
+/* ----------------------------------------------- */
+
+/* Only rows that contain featuredResource cards */
+.row:has(.featuredResource) {
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+/* Only the cards inside THAT row */
+.row:has(.featuredResource) > .featuredResource {
+    flex: 1 1 0;
+    max-width: none;
+    padding: 5px;
+}
+
+/* Keep images responsive */
+.row:has(.featuredResource) .featuredResource img {
+    width: 100%;
+    height: auto;
+}
+
+/* ----------------------------------------------- */
+/* FEATURED RESOURCES ROW – TARGET ONLY THIS BLOCK  */
+/* ----------------------------------------------- */
+
+/* Only rows that contain featuredResource cards */
+.row:has(.featuredResource) {
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+/* Only the cards inside THAT row */
+.row:has(.featuredResource) > .featuredResource {
+    flex: 1 1 0;
+    max-width: none;
+    padding: 5px;
+}
+
+/* Keep images responsive */
+.row:has(.featuredResource) .featuredResource img {
+    width: 100%;
+    height: auto;
+}</style>
+</head>
+<body class="module_Search action_Results loggedOut" id="Search-Results" dir="auto">
+<a class="screen-reader-text" href="#main" id="skip-to-main-content"><span>Skip to main content</span></a><a class="top-link hide" href="" id="js-top"><i class="fas fa-arrow-up fa-2x fa-fw" role="presentation"></i><span class="screen-reader-text">Back to top</span></a><div  id="page-container"><div class="container-fluid" id="system-messages"><div id="system-message-header" class="row row-no-gutters">	<div class="alert alert alert-success system-message" id="system-message-2" role="alert" aria-live="polite">
+		<div class="system-message-text ">
+			<h4><a href="https://www.westminster.gov.uk/data-protection/childrens-services-privacy-notice/privacy-notice-libraries-and-archives#:~:text=Westminster%20City%20Council%20Libraries%20and,Protection%20Act%20(DPA)%202018." target="_blank" rel="noopener" title="Privacy notice for Westminster Libraries">Privacy Notice for Westminster libraries and archives</a></h4>
+		</div>
+			</div>
+	<div class=" system-message" id="system-message-8" role="alert" aria-live="polite">
+		<div class="system-message-text ">
+			
+		</div>
+			</div>
+	<div class="alert alert alert-info system-message" id="system-message-9" role="alert" aria-live="polite">
+		<div class="system-message-text ">
+			<p><span style="font-family: arial, helvetica, sans-serif; font-size: 12pt;">You can now renew your membership yourself when it expires by signing in and selecting <strong data-start="87" data-end="104">Renew your membership online</strong>. T&amp;Cs apply.</span></p>
+		</div>
+			</div>
+	<div class="alert alert alert-info system-message" id="system-message-11" role="alert" aria-live="polite">
+		<div class="system-message-text ">
+			<div><span style="font-size: 12pt;">Help shape the future of our Libraries &amp; Archives service. <a href="https://consult.rbkc.gov.uk/communities/library-strategy/" target="_blank" rel="noopener" title="Libraries &amp; Archives survey">Complete our survey</a> by <strong>16 November 2026</strong> and tell us what is important to you.</span></div>
+<p></p>
+		</div>
+			</div>
+</div></div><div class="container-fluid" id="page-header"><div id="header-wrapper" role="banner" class="row row-no-gutters fullWidth"><div class="col-tn-12 col-xs-8 col-sm-8 col-md-8 col-lg-8" id="header-logo-container"><a href="/"><img src="/files/original/discovery_logo_6.png" alt="Westminster Libraries" title="Return to Catalogue Home" id="header-logo" ></a></div><div id="language-selection-header" class="col-tn-12 col-xs-4 col-sm-4 col-md-4 col-lg-4 pull-right"><a id="theme-selection-dropdown" role="button" class="btn btn-default btn-sm"  href="#" onclick="AspenDiscovery.showDisplaySettings()">Languages & Display&nbsp;<i class="fa fa-cog" role="presentation"></i></a></div><div style="display: none"><div id="language-selection-header" class="col-tn-12 col-xs-4 col-sm-4 col-md-4 col-lg-4 pull-right"><div class="dropdown"><button class="btn btn-default btn-sm dropdown-toggle" type="button" id="language-selection-dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Languages&nbsp;<span class="caret"></span></button><ul id="select-language" class="dropdown-menu" aria-labelledby="language-selection-dropdown"><li><a onclick="return AspenDiscovery.setLanguage('de')">Allemand</a></li><li><a onclick="return AspenDiscovery.setLanguage('en')">English</a></li><li><a onclick="return AspenDiscovery.setLanguage('es')">Español</a></li><li><a onclick="return AspenDiscovery.setLanguage('fr')">Français</a></li><li><a onclick="return AspenDiscovery.setLanguage('pl')">Polski</a></li><li><a onclick="return AspenDiscovery.setLanguage('pt')">Português</a></li><li><a onclick="return AspenDiscovery.setLanguage('ru')">Russkij</a></li><li><a onclick="return AspenDiscovery.setLanguage('ar')">العربية</a></li><li><a onclick="return AspenDiscovery.setLanguage('zh')">中文</a></li><li><a onclick="return AspenDiscovery.setLanguage('ko')">한국어</a></li></ul></div><div class="dropdown"><button class="btn btn-default btn-sm dropdown-toggle" role="button" type="button" id="theme-selection-dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Display&nbsp;<span class="caret"></span></button><ul id="select-theme" class="dropdown-menu" aria-labelledby="theme-selection-dropdown"><li><a onclick="return AspenDiscovery.setTheme('6')">Standard mode</a></li><li><a onclick="return AspenDiscovery.setTheme('11')">Dark mode</a></li></ul></div></div></div></div></div><div class="container-fluid" id="page-menu-bar"><div id="horizontal-menu-bar-wrapper-fullWidth" class="row row-no-gutters"><div id="horizontal-menu-bar-container" class="col-tn-12 col-xs-12 menu-bar fullWidth" role="navigation" aria-label="Top Navigation"><h2 class="hiddenTitle" id="mobileNav">Navigation</h2><div class="menu-section menu-section-left"><a href="/" id="browseLink" class="menu-icon menu-bar-option" title="Browse the Catalogue" aria-label="Browse the Catalogue" role="link"><i class="fas fa-home fa-lg"></i></a><a href="/MyAccount/SelfReg" role="link" class="menu-icon menu-bar-option " aria-label="Join the Library (opens in a new window)" title="Join the Library (opens in a new window)" target="_blank" tabindex="0"><i class="fas fa-handshake fa-lg" role="presentation"></i><span class="menu-bar-label visible-inline-block-lg">Join the Library</span></a><a href="https://www.westminster.gov.uk/event?field_gov_event_date_value_1=&field_gov_event_date_value_2=&field_gov_event_type_target_id=35&field_gov_event_audience_target_id=All" role="link" class="menu-icon menu-bar-option " aria-label="Events (opens in a new window)" title="Events (opens in a new window)" target="_blank" tabindex="0"><i class="fas fa-calendar-week fa-lg" role="presentation"></i><span class="menu-bar-label visible-inline-block-lg">Events</span></a><a href="https://library-room-booking.westminster.gov.uk/Rooms/Index" role="link" class="menu-icon menu-bar-option " aria-label="Room Hire (opens in a new window)" title="Room Hire (opens in a new window)" target="_blank" tabindex="0"><i class="fas fa-person-booth fa-lg" role="presentation"></i><span class="menu-bar-label visible-inline-block-lg">Room Hire</span></a><a href="/WebBuilder/ResourcesList" role="link" class="menu-icon menu-bar-option " aria-label="Digital Library" title="Digital Library"  tabindex="0"><i class="fas fa-atlas fa-lg" role="presentation"></i><span class="menu-bar-label visible-inline-block-lg">Digital Library</span></a><a href="https://bookapc.westminster.gov.uk/netloan/Login.aspx" role="link" class="menu-icon menu-bar-option " aria-label="Book a PC (opens in a new window)" title="Book a PC (opens in a new window)" target="_blank" tabindex="0"><i class="fas fa-desktop fa-lg" role="presentation"></i><span class="menu-bar-label visible-inline-block-lg">Book a PC</span></a><div class="dropdown menuToggleButton collectionsMenu" style="display:inline-block;"><a id="collections-menu-trigger" tabindex="0" class="dropdown-toggle menu-icon menu-bar-option " aria-label="Collections"  aria-haspopup="true" aria-expanded="false" role="link"><i class="fas fa-book-open fa-lg" role="presentation"></i><span class="menu-bar-label visible-inline-block-lg">Collections</span></a><div id="collections-menu" class="dropdown-menu dropdownMenu" aria-labelledby="collections-menu-trigger"><div class="header-menu-option childMenuItem"><a href="" target="_blank" aria-label=" (opens in a new window)" title=" (opens in a new window)"></a></div><div class="header-menu-option childMenuItem"><a href="/artanddesign" target="_blank" aria-label="Art & Design Collection (opens in a new window)" title="Art & Design Collection (opens in a new window)">Art & Design Collection</a></div><div class="header-menu-option childMenuItem"><a href="/musiclibrary" target="_blank" aria-label="Music Library (opens in a new window)" title="Music Library (opens in a new window)">Music Library</a></div><div class="header-menu-option childMenuItem"><a href="/chinese" target="_blank" aria-label="Chinese Library (opens in a new window)" title="Chinese Library (opens in a new window)">Chinese Library</a></div><div class="header-menu-option childMenuItem"><a href="/wcclanguages" target="_blank" aria-label="Languages (opens in a new window)" title="Languages (opens in a new window)">Languages</a></div><div class="header-menu-option childMenuItem"><a href="/gameslibrary" target="_blank" aria-label="Games Library (opens in a new window)" title="Games Library (opens in a new window)">Games Library</a></div><div class="header-menu-option childMenuItem"><a href="/sherlockholmes" target="_blank" aria-label="Sherlock Holmes Collection (opens in a new window)" title="Sherlock Holmes Collection (opens in a new window)">Sherlock Holmes Collection</a></div><div class="header-menu-option childMenuItem"><a href="/health" target="_blank" aria-label="Health Information (opens in a new window)" title="Health Information (opens in a new window)">Health Information</a></div><div class="header-menu-option childMenuItem"><a href="/wcc_childrens" target="_blank" aria-label="Children's Book Collection (opens in a new window)" title="Children's Book Collection (opens in a new window)">Children's Book Collection</a></div><div class="header-menu-option childMenuItem"><a href="/wcc_archives" target="_blank" aria-label="Archives Book Collection (opens in a new window)" title="Archives Book Collection (opens in a new window)">Archives Book Collection</a></div><div class="header-menu-option childMenuItem"><a href="/book_lists" target="_blank" aria-label="Book Lists & Awards (opens in a new window)" title="Book Lists & Awards (opens in a new window)">Book Lists & Awards</a></div><div class="header-menu-option childMenuItem"><a href="/Union/Search?view=list&showCovers=on&lookfor=&searchIndex=advanced&searchSource=local" target="_blank" aria-label="Advanced Search (opens in a new window)" title="Advanced Search (opens in a new window)">Advanced Search</a></div></div></div>
+					<script type="application/javascript">
+						// fixed bootstrap custom menu toggles
+						$('div.dropdown.menuToggleButton.collectionsMenu a').on('click', function (event) {
+							$(this).parent().toggleClass('open');
+						});
+						$(document).on('click', function (e) {
+							var trigger = $('div.dropdown.menuToggleButton.collectionsMenu');
+							if (trigger !== event.target && !trigger.has(event.target).length) {
+								$('div.dropdown.menuToggleButton.collectionsMenu').removeClass('open');
+							}
+						});
+					</script>
+				<div class="dropdown menuToggleButton moreMenu" style="display:inline-block;"><a id="more-menu-trigger" tabindex="0" class="dropdown-toggle menu-icon menu-bar-option " aria-label="More"  aria-haspopup="true" aria-expanded="false" role="link"><i class="fas fa-box-open fa-lg" role="presentation"></i><span class="menu-bar-label visible-inline-block-lg">More</span></a><div id="more-menu" class="dropdown-menu dropdownMenu" aria-labelledby="more-menu-trigger"><div class="header-menu-option childMenuItem"><a href="" target="_blank" aria-label=" (opens in a new window)" title=" (opens in a new window)"></a></div><div class="header-menu-option childMenuItem"><a href="https://www.westminster.gov.uk/leisure-libraries-and-community/libraries" target="_blank" aria-label="Westminster City Council (opens in a new window)" title="Westminster City Council (opens in a new window)">Westminster City Council</a></div><div class="header-menu-option childMenuItem"><a href="https://www.westminster.gov.uk/leisure-libraries-and-community/westminster-archives" target="_blank" aria-label="Archives and Local Studies (opens in a new window)" title="Archives and Local Studies (opens in a new window)">Archives and Local Studies</a></div><div class="header-menu-option childMenuItem"><a href="https://www.westminster.gov.uk/leisure-libraries-and-community/library-opening-times-and-contact-details/westminster-business-library" target="_blank" aria-label="Business Library (opens in a new window)" title="Business Library (opens in a new window)">Business Library</a></div><div class="header-menu-option childMenuItem"><a href="https://www.westminster.gov.uk/leisure-libraries-and-community/libraries/home-library-service" target="_blank" aria-label="Home Library Service (opens in a new window)" title="Home Library Service (opens in a new window)">Home Library Service</a></div><div class="header-menu-option childMenuItem"><a href="https://www.westminster.gov.uk/leisure-libraries-and-community/libraries/schools-library-service" target="_blank" aria-label="Schools Library Service (opens in a new window)" title="Schools Library Service (opens in a new window)">Schools Library Service</a></div><div class="header-menu-option childMenuItem"><a href="https://www.westminster.gov.uk/leisure-libraries-and-community/libraries/computer-services-printing-and-photocopying/printing" target="_blank" aria-label="Printing and Photocopying (opens in a new window)" title="Printing and Photocopying (opens in a new window)">Printing and Photocopying</a></div></div></div>
+					<script type="application/javascript">
+						// fixed bootstrap custom menu toggles
+						$('div.dropdown.menuToggleButton.moreMenu a').on('click', function (event) {
+							$(this).parent().toggleClass('open');
+						});
+						$(document).on('click', function (e) {
+							var trigger = $('div.dropdown.menuToggleButton.moreMenu');
+							if (trigger !== event.target && !trigger.has(event.target).length) {
+								$('div.dropdown.menuToggleButton.moreMenu').removeClass('open');
+							}
+						});
+					</script>
+				<a href="/how-to-wcc" role="link" class="menu-icon menu-bar-option " aria-label="Help (opens in a new window)" title="Help (opens in a new window)" target="_blank" tabindex="0"><i class="fas fa-question-circle fa-lg" role="presentation"></i><span class="menu-bar-label visible-inline-block-lg">Help</span></a></div><div class="menu-section menu-section-right"> 			<a href="/MyAccount/Home" id="loginLink" onclick="return AspenDiscovery.Account.followLinkIfLoggedIn(this);" onkeypress="return AspenDiscovery.Account.followLinkIfLoggedIn(this);" data-login="true" class="menu-icon menu-bar-option" title="Login"><i class="fas fa-sign-in-alt fa-lg " role="presentation"></i><span class="menu-bar-label hidden-inline-block-xs" id="login-button-label">Sign in</span></a><div class="dropdown menuToggleButton headerMenu" style="display:inline-block;"><a class="dropdown-toggle menu-icon menu-bar-option" tabindex="0" role="button" title="Show Menu"  aria-label="Show Menu" aria-haspopup="true" aria-expanded="false" id="header-menu-dropdown"><i class="fas fa-bars fa-lg" role="presentation"></i></a><div id="header-menu" class="dropdown-menu dropdownMenu" aria-labelledby="header-menu-dropdown"><div id="hamburger-menu-my-account" class="header-menu-option"><a href="/MyAccount/Home"><i class="fas fa-user fa-fw" role="presentation"></i><span>Your Account</span></a></div><div id="home-page-home-button" class="header-menu-option"><a href="/"><i class="fas fa-landmark fa-fw" role="presentation"></i><span>Library Home Page</span></a></div><div id="home-page-hours-locations" class="header-menu-option"><a href="/AJAX/JSON?method=getHoursAndLocations" data-title="Library Hours and Locations" class="modalDialogTrigger"><i class="fas fa-map-marker-alt fa-fw" role="presentation"></i><span>Library Hours & Location</span></a></div><div class="header-menu-option"><i class="fas fa-cog fa-fw" role="presentation"></i><span><a  href="#" onclick="AspenDiscovery.showDisplaySettings()">Display Options</a></span></div><div class="header-menu-section" id="aspenLanguagesMenuSection"><i class="fas fa-globe fa-fw" role="presentation"></i> Languages</div><div class="header-menu-option languageSelect"><a tabindex="0" href="#" onclick="return AspenDiscovery.setLanguage('de')">Allemand</a></div><div class="header-menu-option languageSelected"><i class="fas fa-check fa-fw" role="presentation"></i>&nbsp;English</div><div class="header-menu-option languageSelect"><a tabindex="0" href="#" onclick="return AspenDiscovery.setLanguage('es')">Español</a></div><div class="header-menu-option languageSelect"><a tabindex="0" href="#" onclick="return AspenDiscovery.setLanguage('fr')">Français</a></div><div class="header-menu-option languageSelect"><a tabindex="0" href="#" onclick="return AspenDiscovery.setLanguage('pl')">Polski</a></div><div class="header-menu-option languageSelect"><a tabindex="0" href="#" onclick="return AspenDiscovery.setLanguage('pt')">Português</a></div><div class="header-menu-option languageSelect"><a tabindex="0" href="#" onclick="return AspenDiscovery.setLanguage('ru')">Russkij</a></div><div class="header-menu-option languageSelect"><a tabindex="0" href="#" onclick="return AspenDiscovery.setLanguage('ar')">العربية</a></div><div class="header-menu-option languageSelect"><a tabindex="0" href="#" onclick="return AspenDiscovery.setLanguage('zh')">中文</a></div><div class="header-menu-option languageSelect"><a tabindex="0" href="#" onclick="return AspenDiscovery.setLanguage('ko')">한국어</a></div><a href="/MyAccount/Logout" id="logoutLink" title="Sign Out" class="btn btn-default btn-sm btn-block" style="display:none">Sign Out</a></div>
+</div></div>
+</div><div id="horizontal-search-container" class="col-tn-12 fullWidth" role="search"><div id="horizontal-search-box" class="row row-no-gutters"><form method="get" action="/Union/Search" id="searchForm" class="form-inline"><input type="hidden" name="view" id="view" value="list"><input type="hidden" name="showCovers" value="on"><div class="col-xs-12 col-sm-10 col-md-10 col-lg-10"><div class="row"><div class="col-lg-7 col-md-7 col-sm-12 col-xs-12"><div class="input-group"><span class="input-group-addon"><label for="lookfor" class="label" id="lookfor-label"><i class="fas fa-search fa-lg" role="presentation"></i><span class="sr-only" aria-label="Look for" role="presentation">Look for</span></label></span><input type="text" class="form-control"
+							id="lookfor"
+							name="lookfor"
+							title="Enter one or more terms to search for.	Surrounding a term with quotes will limit result to only those that exactly match the term."
+							onfocus="$(this).trigger('select')"
+							autocomplete="off"
+							aria-labelledby="lookfor-label"
+							aria-required="true"
+							value="9780141439518"						><button type="button" class="input-group-addon clear-search" onclick="AspenDiscovery.resetSearchBox();" title="Clear search"><span class="sr-only">Clear search</span><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div></div><div class="col-lg-2 col-lg-offset-0 col-md-2 col-md-offset-0  col-sm-6 col-sm-offset-0 col-xs-6 col-xs-offset-0"><select name="searchIndex" class="searchTypeHorizontal form-control catalogType" id="searchIndex" title="The method of searching." aria-label="Search Index"><script type="text/javascript">
+							$(document).ready(function() {
+								AspenDiscovery.Searches.loadSearchTypes();
+							});
+							</script><option value="Keyword" selected="selected">Keyword</option><option value="Title">Title</option><option value="StartOfTitle">Start of Title</option><option value="Series">Series</option><option value="Author">Author</option><option value="Subject">Subject</option><option value="LocalCallNumber">Call Number</option><option id="advancedSearchLink" value="advanced">Advanced Search</option></select></div><div class="col-lg-3 col-md-3 col-sm-6 col-xs-6"><select name="searchSource" id="searchSource" title="Select what to search. Items marked with a * will redirect you to one of our partner sites." onchange="AspenDiscovery.Searches.loadSearchTypes();" class="searchSourceHorizontal form-control" aria-label="Collection to Search"><option data-catalog_type="catalog" value="local" title="The Westminster Libraries catalog." data-advanced_search="1" data-advanced_search_label="Advanced Search" selected="selected">in Library Catalogue</option><option data-catalog_type="catalog" value="econtent" title="Digital Media available for use online and with portable devices" data-advanced_search="1" data-advanced_search_label="Advanced Search">in Online Collection</option><option data-catalog_type="events" value="events" title="Search events at the library" data-advanced_search="" data-advanced_search_label="Advanced Search">in Events</option><option data-catalog_type="lists" value="lists" title="User Lists" data-advanced_search="" data-advanced_search_label="Advanced Search">in Lists</option><option data-catalog_type="websites" value="websites" title="Library Website" data-advanced_search="" data-advanced_search_label="Advanced Search">in Library Website</option><option data-catalog_type="combined" value="combined" title="Combined results from multiple sources." data-advanced_search="" data-advanced_search_label="Advanced Search">in Combined Results</option></select></div></div></div><div id="horizontal-search-button-container" class="col-xs-12 col-sm-2 col-md-2"><div class="row"><div class="col-tn-6 col-xs-6 col-sm-12 col-md-12 text-center"><button class="btn btn-default" type="submit" style="width: 95%"><i class="fas fa-search fas-lg" role="presentation"></i><span id="horizontal-search-box-submit-text">&nbsp;Search</span></button></div><div class="col-tn-6 col-xs-6 visible-xs text-center"><a class="btn btn-default" id="refineSearchButton" style="width: 95%" role="button" onclick="$('#side-bar').slideToggle('slow');return false;"><i class="fas fa-filter"></i> Filters</a></div></div></div></form></div>
+</div></div></div><div class="container "><div id="content-container"><div class="row"> 										<div class="col-tn-12 col-xs-12 col-sm-4 col-md-3 col-lg-3" id="side-bar" role="navigation" aria-labelledby="sidebarNav"><div class="row" id="vertical-menu-bar-container"><h2 class="hiddenTitle" id="sidebarNav">Main Navigation</h2><div class="col-xs-12" id="sidebar-content"><div id="refineSearch"><div class="row"><div id="searchFilterContainer"><h2 aria-label="Filter Results" class="hiddenTitle">Filter Results</h2><h3 id="narrow-search-label" class="sidebar-label">Narrow Your Results</h3><div id="facet-accordion" class="accordion"><div class="facetList"><div id="facetToggle_available_at" aria-controls="facetDetails_available_at" class="facetTitle panel-title expanded" tabindex="0" role="button" aria-expanded="true">Available Now At</div><div id="facetDetails_available_at" class="facetDetails"  role="region" aria-labelledby="facetToggle_available_at">						<div class="facetValue">
+			<label for="available_at_Church_Street_Library">
+				<input type="checkbox"  name="available_at_Church_Street_Library" id="available_at_Church_Street_Library"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=available_at%3A%22Church+Street+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=available_at%3A%22Church+Street+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Church Street Library&nbsp;(1)			</label>
+		</div>
+					<div class="facetValue">
+			<label for="available_at_Maida_Vale_Library">
+				<input type="checkbox"  name="available_at_Maida_Vale_Library" id="available_at_Maida_Vale_Library"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=available_at%3A%22Maida+Vale+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=available_at%3A%22Maida+Vale+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Maida Vale Library&nbsp;(1)			</label>
+		</div>
+					<div class="facetValue">
+			<label for="available_at_Mayfair_Library">
+				<input type="checkbox"  name="available_at_Mayfair_Library" id="available_at_Mayfair_Library"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=available_at%3A%22Mayfair+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=available_at%3A%22Mayfair+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Mayfair Library&nbsp;(1)			</label>
+		</div>
+					<div class="facetValue">
+			<label for="available_at_Paddington_Library">
+				<input type="checkbox"  name="available_at_Paddington_Library" id="available_at_Paddington_Library"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=available_at%3A%22Paddington+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=available_at%3A%22Paddington+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Paddington Library&nbsp;(1)			</label>
+		</div>
+					<div class="facetValue">
+			<label for="available_at_Queen_s_Park_Library">
+				<input type="checkbox"  name="available_at_Queen_s_Park_Library" id="available_at_Queen_s_Park_Library"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=available_at%3A%22Queen%27s+Park+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=available_at%3A%22Queen%27s+Park+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Queen&#039;s Park Library&nbsp;(1)			</label>
+		</div>
+									<div class="facetValue" id="moreavailable_at"><a href="#" onclick="AspenDiscovery.ResultsList.moreFacets('available_at'); return false;">more ...</a></div>
+						<div class="narrowGroupHidden" id="narrowGroupHidden_available_at" style="display:none">
+				<div class="facetValue">
+			<label for="available_at_Victoria_Library">
+				<input type="checkbox"  name="available_at_Victoria_Library" id="available_at_Victoria_Library"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=available_at%3A%22Victoria+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=available_at%3A%22Victoria+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Victoria Library&nbsp;(1)			</label>
+		</div>
+					<div class="facetValue">
+			<label for="available_at_Westminster_Home_Library_Services">
+				<input type="checkbox"  name="available_at_Westminster_Home_Library_Services" id="available_at_Westminster_Home_Library_Services"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=available_at%3A%22Westminster+Home+Library+Services%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=available_at%3A%22Westminster+Home+Library+Services%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Westminster Home Library Services&nbsp;(1)			</label>
+		</div>
+					<div class="facetValue">
+			<label for="available_at_Libby">
+				<input type="checkbox"  name="available_at_Libby" id="available_at_Libby"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=available_at%3A%22Libby%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=available_at%3A%22Libby%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Libby&nbsp;(1)			</label>
+		</div>
+				<div class="facetValue">
+			<a href="#" onclick="AspenDiscovery.ResultsList.lessFacets('available_at'); return false;">less ...</a>
+		</div>
+		</div>	</div></div><script type="text/javascript">
+							$("#facetToggle_available_at").on('click', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_available_at').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							$("#facetToggle_available_at").on('keypress', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_available_at').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							</script><div class="facetList"><div id="facetToggle_owning_location" aria-controls="facetDetails_owning_location" class="facetTitle panel-title collapsed" tabindex="0" role="button" aria-expanded="false">Library</div><div id="facetDetails_owning_location" class="facetDetails" style="display:none" role="region" aria-labelledby="facetToggle_owning_location">							<div class="facetValue">
+			<label for="owning_location_Charing_Cross_Library">
+				<input type="checkbox"  name="owning_location_Charing_Cross_Library" id="owning_location_Charing_Cross_Library"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=owning_location%3A%22Charing+Cross+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=owning_location%3A%22Charing+Cross+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Charing Cross Library&nbsp;(1)			</label>
+		</div>
+							<div class="facetValue">
+			<label for="owning_location_Church_Street_Library">
+				<input type="checkbox"  name="owning_location_Church_Street_Library" id="owning_location_Church_Street_Library"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=owning_location%3A%22Church+Street+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=owning_location%3A%22Church+Street+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Church Street Library&nbsp;(1)			</label>
+		</div>
+							<div class="facetValue">
+			<label for="owning_location_Maida_Vale_Library">
+				<input type="checkbox"  name="owning_location_Maida_Vale_Library" id="owning_location_Maida_Vale_Library"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=owning_location%3A%22Maida+Vale+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=owning_location%3A%22Maida+Vale+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Maida Vale Library&nbsp;(1)			</label>
+		</div>
+							<div class="facetValue">
+			<label for="owning_location_Marylebone_Library">
+				<input type="checkbox"  name="owning_location_Marylebone_Library" id="owning_location_Marylebone_Library"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=owning_location%3A%22Marylebone+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=owning_location%3A%22Marylebone+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Marylebone Library&nbsp;(1)			</label>
+		</div>
+							<div class="facetValue">
+			<label for="owning_location_Mayfair_Library">
+				<input type="checkbox"  name="owning_location_Mayfair_Library" id="owning_location_Mayfair_Library"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=owning_location%3A%22Mayfair+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=owning_location%3A%22Mayfair+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Mayfair Library&nbsp;(1)			</label>
+		</div>
+							<div class="facetValue" id="moreowning_location"><a href="#" onclick="return AspenDiscovery.Searches.showSearchFacetPopup('2281705', 'owning_location');">more ...</a></div>
+	</div></div><script type="text/javascript">
+							$("#facetToggle_owning_location").on('click', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_owning_location').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							$("#facetToggle_owning_location").on('keypress', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_owning_location').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							</script><div class="facetList"><div id="facetToggle_econtent_source" aria-controls="facetDetails_econtent_source" class="facetTitle panel-title collapsed" tabindex="0" role="button" aria-expanded="false">eContent Collection</div><div id="facetDetails_econtent_source" class="facetDetails" style="display:none" role="region" aria-labelledby="facetToggle_econtent_source">						<div class="facetValue">
+			<label for="econtent_source_Libby">
+				<input type="checkbox"  name="econtent_source_Libby" id="econtent_source_Libby"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=econtent_source%3A%22Libby%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=econtent_source%3A%22Libby%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Libby&nbsp;(1)			</label>
+		</div>
+		</div></div><script type="text/javascript">
+							$("#facetToggle_econtent_source").on('click', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_econtent_source').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							$("#facetToggle_econtent_source").on('keypress', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_econtent_source').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							</script><div class="facetList"><div id="facetToggle_itype" aria-controls="facetDetails_itype" class="facetTitle panel-title collapsed" tabindex="0" role="button" aria-expanded="false">Item Type</div><div id="facetDetails_itype" class="facetDetails" style="display:none" role="region" aria-labelledby="facetToggle_itype">						<div class="facetValue">
+			<label for="itype_Book">
+				<input type="checkbox"  name="itype_Book" id="itype_Book"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=itype%3A%22Book%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=itype%3A%22Book%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Book&nbsp;(1)			</label>
+		</div>
+					<div class="facetValue">
+			<label for="itype_eBook">
+				<input type="checkbox"  name="itype_eBook" id="itype_eBook"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=itype%3A%22eBook%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=itype%3A%22eBook%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				eBook&nbsp;(1)			</label>
+		</div>
+		</div></div><script type="text/javascript">
+							$("#facetToggle_itype").on('click', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_itype').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							$("#facetToggle_itype").on('keypress', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_itype').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							</script><div class="facetList"><div id="facetToggle_authorStr" aria-controls="facetDetails_authorStr" class="facetTitle panel-title expanded" tabindex="0" role="button" aria-expanded="true">Author</div><div id="facetDetails_authorStr" class="facetDetails"  role="region" aria-labelledby="facetToggle_authorStr">								<div class="facetValue"><a href="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=authorStr%3A%22Austen%2C+Jane%2C+1775-1817%22&amp;sort=relevance&amp;view=list&amp;searchSource=local">Austen, Jane, 1775-1817</a>&nbsp;(1)</div>
+				</div></div><script type="text/javascript">
+							$("#facetToggle_authorStr").on('click', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_authorStr').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							$("#facetToggle_authorStr").on('keypress', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_authorStr').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							</script><div class="facetList"><div id="facetToggle_subject_facet" aria-controls="facetDetails_subject_facet" class="facetTitle panel-title collapsed" tabindex="0" role="button" aria-expanded="false">Subject</div><div id="facetDetails_subject_facet" class="facetDetails" style="display:none" role="region" aria-labelledby="facetToggle_subject_facet">							<div class="facetValue">
+			<label for="subject_facet_Bennet__Elizabeth__Fictitious_character__--_Fiction">
+				<input type="checkbox"  name="subject_facet_Bennet__Elizabeth__Fictitious_character__--_Fiction" id="subject_facet_Bennet__Elizabeth__Fictitious_character__--_Fiction"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=subject_facet%3A%22Bennet%2C+Elizabeth+%28Fictitious+character%29+--+Fiction%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=subject_facet%3A%22Bennet%2C+Elizabeth+%28Fictitious+character%29+--+Fiction%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Bennet, Elizabeth (Fictitious character) -- Fiction&nbsp;(1)			</label>
+		</div>
+							<div class="facetValue">
+			<label for="subject_facet_Children_s_stories">
+				<input type="checkbox"  name="subject_facet_Children_s_stories" id="subject_facet_Children_s_stories"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=subject_facet%3A%22Children%27s+stories%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=subject_facet%3A%22Children%27s+stories%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Children&#039;s stories&nbsp;(1)			</label>
+		</div>
+							<div class="facetValue">
+			<label for="subject_facet_Classics">
+				<input type="checkbox"  name="subject_facet_Classics" id="subject_facet_Classics"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=subject_facet%3A%22Classics%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=subject_facet%3A%22Classics%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Classics&nbsp;(1)			</label>
+		</div>
+							<div class="facetValue">
+			<label for="subject_facet_Darcy__Fitzwilliam__Fictitious_character__--_Fiction">
+				<input type="checkbox"  name="subject_facet_Darcy__Fitzwilliam__Fictitious_character__--_Fiction" id="subject_facet_Darcy__Fitzwilliam__Fictitious_character__--_Fiction"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=subject_facet%3A%22Darcy%2C+Fitzwilliam+%28Fictitious+character%29+--+Fiction%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=subject_facet%3A%22Darcy%2C+Fitzwilliam+%28Fictitious+character%29+--+Fiction%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Darcy, Fitzwilliam (Fictitious character) -- Fiction&nbsp;(1)			</label>
+		</div>
+							<div class="facetValue">
+			<label for="subject_facet_England_--_Social_life_and_customs_--_19th_century_--_Fiction">
+				<input type="checkbox"  name="subject_facet_England_--_Social_life_and_customs_--_19th_century_--_Fiction" id="subject_facet_England_--_Social_life_and_customs_--_19th_century_--_Fiction"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=subject_facet%3A%22England+--+Social+life+and+customs+--+19th+century+--+Fiction%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=subject_facet%3A%22England+--+Social+life+and+customs+--+19th+century+--+Fiction%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				England -- Social life and customs -- 19th century -- Fiction&nbsp;(1)			</label>
+		</div>
+							<div class="facetValue" id="moresubject_facet"><a href="#" onclick="return AspenDiscovery.Searches.showSearchFacetPopup('2281705', 'subject_facet');">more ...</a></div>
+	</div></div><script type="text/javascript">
+							$("#facetToggle_subject_facet").on('click', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_subject_facet').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							$("#facetToggle_subject_facet").on('keypress', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_subject_facet').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							</script><div class="facetList"><div id="facetToggle_shelf_location" aria-controls="facetDetails_shelf_location" class="facetTitle panel-title expanded" tabindex="0" role="button" aria-expanded="true">Shelving location</div><div id="facetDetails_shelf_location" class="facetDetails"  role="region" aria-labelledby="facetToggle_shelf_location">						<div class="facetValue">
+			<label for="shelf_location_13_-_19_Zone">
+				<input type="checkbox"  name="shelf_location_13_-_19_Zone" id="shelf_location_13_-_19_Zone"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=shelf_location%3A%2213+-+19+Zone%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=shelf_location%3A%2213+-+19+Zone%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				13 - 19 Zone&nbsp;(1)			</label>
+		</div>
+					<div class="facetValue">
+			<label for="shelf_location_Adult_lending">
+				<input type="checkbox"  name="shelf_location_Adult_lending" id="shelf_location_Adult_lending"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=shelf_location%3A%22Adult+lending%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=shelf_location%3A%22Adult+lending%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Adult lending&nbsp;(1)			</label>
+		</div>
+					<div class="facetValue">
+			<label for="shelf_location_Children_s_Library">
+				<input type="checkbox"  name="shelf_location_Children_s_Library" id="shelf_location_Children_s_Library"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=shelf_location%3A%22Children%27s+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=shelf_location%3A%22Children%27s+Library%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Children&#039;s Library&nbsp;(1)			</label>
+		</div>
+					<div class="facetValue">
+			<label for="shelf_location_Home_Library_Service">
+				<input type="checkbox"  name="shelf_location_Home_Library_Service" id="shelf_location_Home_Library_Service"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=shelf_location%3A%22Home+Library+Service%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=shelf_location%3A%22Home+Library+Service%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Home Library Service&nbsp;(1)			</label>
+		</div>
+					<div class="facetValue">
+			<label for="shelf_location_Libby">
+				<input type="checkbox"  name="shelf_location_Libby" id="shelf_location_Libby"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=shelf_location%3A%22Libby%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=shelf_location%3A%22Libby%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				Libby&nbsp;(1)			</label>
+		</div>
+									<div class="facetValue" id="moreshelf_location"><a href="#" onclick="AspenDiscovery.ResultsList.moreFacets('shelf_location'); return false;">more ...</a></div>
+						<div class="narrowGroupHidden" id="narrowGroupHidden_shelf_location" style="display:none">
+				<div class="facetValue">
+			<label for="shelf_location_ZGALLSTORE">
+				<input type="checkbox"  name="shelf_location_ZGALLSTORE" id="shelf_location_ZGALLSTORE"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=shelf_location%3A%22ZGALLSTORE%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=shelf_location%3A%22ZGALLSTORE%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				ZGALLSTORE&nbsp;(1)			</label>
+		</div>
+				<div class="facetValue">
+			<a href="#" onclick="AspenDiscovery.ResultsList.lessFacets('shelf_location'); return false;">less ...</a>
+		</div>
+		</div>	</div></div><script type="text/javascript">
+							$("#facetToggle_shelf_location").on('click', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_shelf_location').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							$("#facetToggle_shelf_location").on('keypress', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_shelf_location').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							</script><div class="facetList"><div id="facetToggle_publishDateSort" aria-controls="facetDetails_publishDateSort" class="facetTitle panel-title collapsed" tabindex="0" role="button" aria-expanded="false">Publication Date</div><div id="facetDetails_publishDateSort" class="facetDetails" style="display:none" role="region" aria-labelledby="facetToggle_publishDateSort"><form id='publishDateSortFilter' action='/Union/Search?view=list&amp;lookfor=9780141439518&amp;searchIndex=Keyword&amp;searchSource=local' class="form-inline">
+	<div class="facet-form">
+		<div class="form-group">
+			<label for="publishDateSortyearfrom" class='yearboxlabel sr-only control-label'>Publication Date from</label>
+			<input type="text" size="4" maxlength="4" class="yearbox form-control" placeholder="from" name="publishDateSortyearfrom" id="publishDateSortyearfrom" value="" />
+		</div>
+		<div class="form-group">
+			<label for="publishDateSortyearto" class='yearboxlabel sr-only control-label'>Publication Date to</label>
+			<input type="text" size="4" maxlength="4" class="yearbox form-control" placeholder="to" name="publishDateSortyearto" id="publishDateSortyearto" value="" />
+		</div>
+
+											<input type="hidden" name="module" value="Union" />
+												<input type="hidden" name="action" value="Search" />
+												<input type="hidden" name="view" value="list" />
+												<input type="hidden" name="lookfor" value="9780141439518" />
+												<input type="hidden" name="searchIndex" value="Keyword" />
+												<input type="hidden" name="searchSource" value="local" />
+							<input type="submit" value="Go" class="goButton btn btn-sm btn-primary" />
+
+					<div id='yearDefaultLinks'>
+								Published in the last<br/>
+				<a onclick="$('#publishDateSortyearfrom').val('2025');$('#publishDateSortyearto').val('');" href='javascript:void(0);'>year</a>
+				&bullet; <a onclick="$('#publishDateSortyearfrom').val('2021');$('#publishDateSortyearto').val('');" href='javascript:void(0);'>5 years</a>
+				&bullet; <a onclick="$('#publishDateSortyearfrom').val('2016');$('#publishDateSortyearto').val('');" href='javascript:void(0);'>10 years</a>
+			</div>
+			</div>
+</form>
+</div></div><script type="text/javascript">
+							$("#facetToggle_publishDateSort").on('click', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_publishDateSort').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							$("#facetToggle_publishDateSort").on('keypress', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_publishDateSort').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							</script><div class="facetList"><div id="facetToggle_language" aria-controls="facetDetails_language" class="facetTitle panel-title collapsed" tabindex="0" role="button" aria-expanded="false">Language<span class="facetLock pull-right" id="facetLock_language" style="display: none" title="Locking a facet will retain the selected filters in new searches until they are cleared"><a id="facetLock_lockIcon_language"  onclick="return AspenDiscovery.Searches.lockFacet('language');"><i class="fas fa-lock-open fa-lg fa-fw" style="vertical-align: middle"></i></a><a id="facetLock_unlockIcon_language" style="display: none" onclick="return AspenDiscovery.Searches.unlockFacet('language');"><i class="fas fa-lock fa-lg fa-fw" style="vertical-align: middle"></i></a></span></div><div id="facetDetails_language" class="facetDetails" style="display:none" role="region" aria-labelledby="facetToggle_language">						<div class="facetValue">
+			<label for="language_English">
+				<input type="checkbox"  name="language_English" id="language_English"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=language%3A%22English%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=language%3A%22English%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				English&nbsp;(1)			</label>
+		</div>
+		</div></div><script type="text/javascript">
+							$("#facetToggle_language").on('click', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_language').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							$("#facetToggle_language").on('keypress', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_language').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							</script><div class="facetList"><div id="facetToggle_rating_facet" aria-controls="facetDetails_rating_facet" class="facetTitle panel-title collapsed" tabindex="0" role="button" aria-expanded="false">User Rating</div><div id="facetDetails_rating_facet" class="facetDetails" style="display:none" role="region" aria-labelledby="facetToggle_rating_facet">												<div class="facetValue"><a href="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=rating_facet%3A%22fiveStar%22&amp;sort=relevance&amp;view=list&amp;searchSource=local"><img src="/images/fiveStar.png" alt="Five Star &amp; Up" title="Five Star &amp; Up"/></a> (1)</div>
+																		<div class="facetValue"><a href="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=rating_facet%3A%22fourStar%22&amp;sort=relevance&amp;view=list&amp;searchSource=local"><img src="/images/fourStar.png" alt="Four Star &amp; Up" title="Four Star &amp; Up"/></a> (1)</div>
+																		<div class="facetValue"><a href="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=rating_facet%3A%22threeStar%22&amp;sort=relevance&amp;view=list&amp;searchSource=local"><img src="/images/threeStar.png" alt="Three Star &amp; Up" title="Three Star &amp; Up"/></a> (1)</div>
+																		<div class="facetValue"><a href="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=rating_facet%3A%22twoStar%22&amp;sort=relevance&amp;view=list&amp;searchSource=local"><img src="/images/twoStar.png" alt="Two Star &amp; Up" title="Two Star &amp; Up"/></a> (1)</div>
+																		<div class="facetValue"><a href="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=rating_facet%3A%22oneStar%22&amp;sort=relevance&amp;view=list&amp;searchSource=local"><img src="/images/oneStar.png" alt="One Star &amp; Up" title="One Star &amp; Up"/></a> (1)</div>
+									<div class="facetValue"><img src="/images/Unrated.png" alt="Unrated &amp; Up" title="Unrated &amp; Up"/> (0)</div>
+	</div></div><script type="text/javascript">
+							$("#facetToggle_rating_facet").on('click', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_rating_facet').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							$("#facetToggle_rating_facet").on('keypress', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_rating_facet').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							</script><div class="facetList"><div id="facetToggle_custom_facet_1" aria-controls="facetDetails_custom_facet_1" class="facetTitle panel-title collapsed" tabindex="0" role="button" aria-expanded="false">Paperback or Hardback?</div><div id="facetDetails_custom_facet_1" class="facetDetails" style="display:none" role="region" aria-labelledby="facetToggle_custom_facet_1">								<div class="facetValue"><a href="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=custom_facet_1%3A%22Hardback%22&amp;sort=relevance&amp;view=list&amp;searchSource=local">Hardback</a>&nbsp;(1)</div>
+										<div class="facetValue"><a href="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=custom_facet_1%3A%22Paperback%22&amp;sort=relevance&amp;view=list&amp;searchSource=local">Paperback</a>&nbsp;(1)</div>
+				</div></div><script type="text/javascript">
+							$("#facetToggle_custom_facet_1").on('click', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_custom_facet_1').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							$("#facetToggle_custom_facet_1").on('keypress', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_custom_facet_1').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							</script><div class="facetList"><div id="facetToggle_custom_facet_2" aria-controls="facetDetails_custom_facet_2" class="facetTitle panel-title collapsed" tabindex="0" role="button" aria-expanded="false">Edition information<span class="facetLock pull-right" id="facetLock_custom_facet_2" style="display: none" title="Locking a facet will retain the selected filters in new searches until they are cleared"><a id="facetLock_lockIcon_custom_facet_2"  onclick="return AspenDiscovery.Searches.lockFacet('custom_facet_2');"><i class="fas fa-lock-open fa-lg fa-fw" style="vertical-align: middle"></i></a><a id="facetLock_unlockIcon_custom_facet_2" style="display: none" onclick="return AspenDiscovery.Searches.unlockFacet('custom_facet_2');"><i class="fas fa-lock fa-lg fa-fw" style="vertical-align: middle"></i></a></span></div><div id="facetDetails_custom_facet_2" class="facetDetails" style="display:none" role="region" aria-labelledby="facetToggle_custom_facet_2">						<div class="facetValue">
+			<label for="custom_facet_2__The_Century_Jane_Austen___1__">
+				<input type="checkbox"  name="custom_facet_2__The_Century_Jane_Austen___1__" id="custom_facet_2__The_Century_Jane_Austen___1__"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=custom_facet_2%3A%22%28The+Century+Jane+Austen+%3B+1%29.%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=custom_facet_2%3A%22%28The+Century+Jane+Austen+%3B+1%29.%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				(The Century Jane Austen ; 1).&nbsp;(1)			</label>
+		</div>
+					<div class="facetValue">
+			<label for="custom_facet_2_3rd_edition__">
+				<input type="checkbox"  name="custom_facet_2_3rd_edition__" id="custom_facet_2_3rd_edition__"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=custom_facet_2%3A%223rd+edition+%2F%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=custom_facet_2%3A%223rd+edition+%2F%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				3rd edition /&nbsp;(1)			</label>
+		</div>
+					<div class="facetValue">
+			<label for="custom_facet_2_New_edition_">
+				<input type="checkbox"  name="custom_facet_2_New_edition_" id="custom_facet_2_New_edition_"
+													onclick="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=custom_facet_2%3A%22New+edition.%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';" onkeypress="document.location = '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=custom_facet_2%3A%22New+edition.%22&amp;sort=relevance&amp;view=list&amp;searchSource=local';"
+						>
+				New edition.&nbsp;(1)			</label>
+		</div>
+		</div></div><script type="text/javascript">
+							$("#facetToggle_custom_facet_2").on('click', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_custom_facet_2').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							$("#facetToggle_custom_facet_2").on('keypress', function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_custom_facet_2').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							</script></div></div>
+</div></div></div></div>
+</div><div class="col-tn-12 col-xs-12 col-sm-8 col-md-9 col-lg-9" id="main-content-with-sidebar"><div role="navigation" aria-label="Breadcrumbs"><div class="row breadcrumbs"><div class="col-xs-12"><ul class="breadcrumb small"><li><a href="/" id="browseLink" class="menu-icon menu-bar-option" title="Browse the catalogue" aria-label="Browse the catalogue"><i class="fas fa-home"></i> Browse</a></li><li><span class="divider">&raquo; </span>Catalogue Search</li><li><span class="divider">&raquo; </span>Showing 1 - 1 of 1</li></ul></div></div></div><div id="main" role="main"><h1 class="hiddenTitle">Catalogue Search Results</h1>
+<div id="searchInfo">
+		
+							<div class="topFacets"><br><div class="formatCategories top-facet" id="formatCategories"><div id="categoryValues" class="row"><div class="categoryValue categoryValue_books col-tn-2"><a href="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=format_category%3A%22Books%22&amp;sort=relevance&amp;view=list&amp;searchSource=local"><div class="row"><div class="col-xs-6"><img src="/interface/themes/responsive/images/books.png" alt="Filter Format by Books"></div><div class="col-xs-6 formatCategoryLabel">Books<br>(1)</div></div></a></div><div class="categoryValue categoryValue_ebook col-tn-2"><a href="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=format_category%3A%22eBook%22&amp;sort=relevance&amp;view=list&amp;searchSource=local"><div class="row"><div class="col-xs-6"><img src="/interface/themes/responsive/images/ebook.png" alt="Filter Format by eBook"></div><div class="col-xs-6 formatCategoryLabel">eBook<br>(1)</div></div></a></div></div><div class="clearfix"></div></div><div id="availabilityControlContainer" class="row top-facet" ><div id="availabilityControlCell" class="col-xs-12"><div id="availabilityControl" class="btn-group" data-toggle="buttons-radio" style="display: flex;align-items: center;justify-content: center;"><button aria-pressed="true" type="button" id="global" class="btn btn-primary btn-wrap" name="availabilityControls">Entire Collection (1)</button><button aria-pressed="false" type="button" id="local" class="btn btn-default btn-wrap" name="availabilityControls" data-url="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=availability_toggle%3A%22local%22&amp;sort=relevance&amp;view=list&amp;searchSource=local" onclick="window.location = $(this).data('url')" >Westminster Libraries (1)</button><button aria-pressed="false" type="button" id="available" class="btn btn-default btn-wrap" name="availabilityControls" data-url="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=availability_toggle%3A%22available%22&amp;sort=relevance&amp;view=list&amp;searchSource=local" onclick="window.location = $(this).data('url')" >Available Now (1)</button><button aria-pressed="false" type="button" id="available_online" class="btn btn-default btn-wrap" name="availabilityControls" data-url="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;filter[]=availability_toggle%3A%22available_online%22&amp;sort=relevance&amp;view=list&amp;searchSource=local" onclick="window.location = $(this).data('url')" >Available Online (1)</button></div></div></div></div>			
+		<div class="result-head">
+		
+		
+		
+		
+		
+		
+							<div class="row visible-md visible-lg"> <div class="col-md-4"><label for="results-sort" style="margin-right: .5rem">Sort by</label><select id="results-sort" name="sort" onchange="document.location.href = this.options[this.selectedIndex].value;" class="input-medium"><option value="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=relevance&amp;view=list&amp;searchSource=local" selected="selected">Best Match</option><option value="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=year+desc%2Ctitle+asc&amp;view=list&amp;searchSource=local">Publication Year Desc</option><option value="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=year+asc%2Ctitle+asc&amp;view=list&amp;searchSource=local">Publication Year Asc</option><option value="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=author+asc%2Ctitle+asc&amp;view=list&amp;searchSource=local">Author</option><option value="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=title&amp;view=list&amp;searchSource=local">Title</option><option value="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=days_since_added+asc&amp;view=list&amp;searchSource=local">Date Purchased Desc</option><option value="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=callnumber_sort&amp;view=list&amp;searchSource=local">Call Number</option><option value="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=popularity+desc&amp;view=list&amp;searchSource=local">Total Checkouts</option><option value="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=rating+asc&amp;view=list&amp;searchSource=local">User Rating (Ascending)</option><option value="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=rating+desc&amp;view=list&amp;searchSource=local">User Rating (Descending)</option><option value="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=total_holds+desc&amp;view=list&amp;searchSource=local">Number of Reservations</option></select></div><div class="col-md-8"><div id="selected-browse-label"><div class="btn-toolbar" role="toolbar" aria-label="Search Tools" style="justify-content: flex-end"><div class="btn-group form-check form-switch" id="hideSearchCoversSwitch" style="margin-right: 1rem; " onclick="AspenDiscovery.Account.toggleShowCovers(!$('#hideCovers').is(':checked'))"><input class="form-check-input" type="checkbox" id="hideCovers"  style="position: relative; top: 5px"><label class="form-check-label" for="hideCovers">Hide Covers</label></div><div class="btn-group btn-group-sm" data-toggle="buttons" style="margin-right: 1rem"><label for="covers" title="Covers" class="btn btn-sm btn-default"><input onchange="AspenDiscovery.Searches.toggleDisplayMode(this.id)" type="radio" id="covers"><i class='fas fa-th'></i> Covers</label><label for="list" title="Lists" class="btn btn-sm btn-default"><input onchange="AspenDiscovery.Searches.toggleDisplayMode(this.id)" type="radio" id="list"><i class='fas fa-list'></i> List</label></div><div class="btn-group btn-group-sm"><button data-toggle="dropdown" class="btn btn-sm btn-default dropdown-toggle" type="button" id="dropdownSearchToolsBtn"><i class="fas fa-toolbox"></i> Search Tools <span class="caret"></span></button><ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownSearchToolsBtn"><li><a href="#" onclick="return AspenDiscovery.Account.showSaveSearchForm('2281705')">Save Search</a></li><li><a href="#" onclick="return AspenDiscovery.Account.ajaxLightbox('/Search/AJAX?method=getEmailForm', true);">Email this Search</a></li><li><a href="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=relevance&amp;view=rss&amp;searchSource=local">Get RSS Feed</a></li><li><a href="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=relevance&amp;view=excel&amp;searchSource=local">Export To CSV</a></li><li><a href="/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=relevance&amp;view=ris&amp;searchSource=local">Export To RIS</a></li></ul></div></div></div></div></div><div class="row visible-sm visible-xs"><div class="col-sm-12"><button type="button" class="btn btn-default btn-sm" onclick="return AspenDiscovery.Account.showSearchToolbar('list', '1', '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=relevance&amp;view=rss&amp;searchSource=local', '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=relevance&amp;view=excel&amp;searchSource=local', '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=relevance&amp;view=ris&amp;searchSource=local', '2281705', [{'desc': 'Best Match','selected': '1', 'sortUrl': '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=relevance&amp;view=list&amp;searchSource=local'},{'desc': 'Publication Year Desc','selected': '', 'sortUrl': '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=year+desc%2Ctitle+asc&amp;view=list&amp;searchSource=local'},{'desc': 'Publication Year Asc','selected': '', 'sortUrl': '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=year+asc%2Ctitle+asc&amp;view=list&amp;searchSource=local'},{'desc': 'Author','selected': '', 'sortUrl': '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=author+asc%2Ctitle+asc&amp;view=list&amp;searchSource=local'},{'desc': 'Title','selected': '', 'sortUrl': '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=title&amp;view=list&amp;searchSource=local'},{'desc': 'Date Purchased Desc','selected': '', 'sortUrl': '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=days_since_added+asc&amp;view=list&amp;searchSource=local'},{'desc': 'sort_callnumber','selected': '', 'sortUrl': '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=callnumber_sort&amp;view=list&amp;searchSource=local'},{'desc': 'sort_popularity','selected': '', 'sortUrl': '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=popularity+desc&amp;view=list&amp;searchSource=local'},{'desc': 'User Rating (Ascending)','selected': '', 'sortUrl': '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=rating+asc&amp;view=list&amp;searchSource=local'},{'desc': 'User Rating (Descending)','selected': '', 'sortUrl': '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=rating+desc&amp;view=list&amp;searchSource=local'},{'desc': 'Number of Holds','selected': '', 'sortUrl': '/Search/Results?lookfor=9780141439518&amp;searchIndex=Keyword&amp;sort=total_holds+desc&amp;view=list&amp;searchSource=local'},]);"><i class="fas fa-toolbox"></i> Search Tools</button></div></div>
+		
+		<div class="clearer"></div>
+	</div>
+		
+			<div><div class="result  record1"><div id="groupedRecordb136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng" class="resultsList"><a id="recordb136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng"></a><div class="row"><div class="coversColumn col-xs-3 col-sm-3 text-center" aria-hidden="true" role="presentation"><div class="listResultImage img-thumbnail border"><a href="/GroupedWork/b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng/Home?searchId=2281705&amp;recordIndex=1&amp;page=1&amp;searchSource=local" tabindex="-1"><img src="/bookcover.php?id=b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng&size=medium&type=grouped_work&category=eBook" class="" alt="Pride_and_prejudice" title="Pride_and_prejudice"></a></div><div class="rateb136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng"><div class="title-rating rater" data-user_rating="" data-average_rating="5" data-id="b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng" data-show_review="0"><span class="ui-rater-starsOff" style="width:90px"><span class="ui-rater-starsOn" style="width:90px"></span></span></div></div></div><div class="col-xs-9 col-sm-9"> <div class="row"><div class="col-xs-12"><h2 style="margin:0;font-size:inherit;"><span class="result-index">1)</span>&nbsp;<a href="/GroupedWork/b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng/Home?searchId=2281705&amp;recordIndex=1&amp;page=1&amp;searchSource=local&referred=resultIndex" class="result-title notranslate" aria-label="Pride_and_prejudice ">Pride and prejudice</a></h2></div>	<div class="result-label col-sm-4 col-xs-12">Author </div>
+	<div class="result-value col-sm-8 col-xs-12 notranslate">
+					<a href='/Author/Home?author="Austen%2C%20Jane%2C%201775-1817"'>Austen, Jane, 1775-1817</a>
+			</div>
+					<div class="result-label col-sm-4 col-xs-12">Publication Date </div>
+		<div class="result-value col-sm-8 col-xs-12">
+							1985
+					</div>
+		<div class="result-label col-sm-4 col-xs-12">Language </div>
+	<div class="result-value col-sm-8 col-xs-12">
+					English
+			</div>
+		<div class="visible-xs">
+																
+
+							<div class="hidethisdivb136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng result-label col-sm-4 col-xs-12">
+				Formats
+			</div>
+			<div class="hidethisdivb136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng result-value col-sm-8 col-xs-12">
+				<a onclick="$('#relatedManifestationsValueb136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng,.hidethisdivb136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng').toggleClass('hidden-xs');return false;" role="button">
+					Book, eBook
+				</a>
+			</div>
+			</div>
+
+		<div class="hidden-xs col-xs-12 formatDisplayVertical" id="relatedManifestationsValueb136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng">
+						<div class="related-manifestations"><div class="row related-manifestation grouped " ><div class="col-xs-12"><div class="row"><div class="col-tn-4 col-xs-4 col-md-3 manifestation-format"><a class="btn btn-xs btn-primary btn-wrap" href="" onclick="return AspenDiscovery.ResultsList.showRelatedManifestations('b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng','Book','1472677');" aria-label="View Manifestations for Book">Book</a><br><a href="#" onclick="return AspenDiscovery.ResultsList.showRelatedManifestations('b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng','Book', '1472677');" aria-label="View Editions for Book"><span class="manifestation-toggle-text btn btn-xs btn-wrap btn-editions" id='manifestation-toggle-text-b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng_Book_1472677'><i class='fas fa-spinner fa-spin hidden' role='status' aria-hidden='true'></i>&nbsp;Show Editions</span></a></div><div class="col-tn-8 col-xs-8 col-md-5 col-lg-6"><div class="related-manifestation-shelf-status status-on-shelf label label-success label-wrap">On Shelf</div><div class="itemSummary row" style="margin: 0"><div class="col-lg-12 itemLocationDetails" data-shelfLocation="Church Street Library - CLA - Adult lending" data-subLocation="CLA" data-callNumber="FICTION CLA"><span class="notranslate" ><strong>Church Street Library - CLA - Adult lending</strong><br>FICTION CLA<br>3 available</span></div></div><div class="itemSummary row" style="margin: 0"><div class="col-lg-12 itemLocationDetails" data-shelfLocation="Little Venice Sports Centre Library - CLA - Adult lending" data-subLocation="CLA" data-callNumber="FICTION CLA"><span class="notranslate" ><strong>Little Venice Sports Centre Library - CLA - Adult lending</strong><br>FICTION CLA<br>1 available</span></div></div><div class="itemSummary row" style="margin: 0"><div class="col-lg-12 itemLocationDetails" data-shelfLocation="Maida Vale Library - CLA - Adult lending" data-subLocation="CLA" data-callNumber="FICTION CLA"><span class="notranslate" ><strong>Maida Vale Library - CLA - Adult lending</strong><br>FICTION CLA<br>2 available</span></div></div><div class="itemSummary"><a href="#" onclick="return AspenDiscovery.GroupedWork.showCopyDetails('b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng', 'Book', 'b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng');">Where is it?</a></div></div><div class="col-tn-8 col-tn-offset-4 col-xs-8 col-xs-offset-4 col-md-4 col-md-offset-0 col-lg-3 manifestation-actions"><div class="btn-toolbar"><div class="btn-group btn-group-vertical btn-block"><a href="#" class="btn btn-sm btn-action btn-wrap" id="actionButton42526" id="actionButton42526" onclick="return AspenDiscovery.Record.showPlaceHold('Record', 'ils', '42526', '', '1472677', this, true, 'Book');"     data-prompt-edition="true">Place Reservation</a></div></div></div></div><div class="row"><div class="col-xs-12" id="relatedRecordPopup_b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng_Book_1472677" style="display:none"></div></div></div>
+</div><div class="row related-manifestation grouped " ><div class="col-xs-12"><div class="row"><div class="col-tn-4 col-xs-4 col-md-3 manifestation-format"><a class="btn btn-xs btn-primary btn-wrap" href="/OverDrive/d1a4d036-50a9-4c74-8941-3d73dcd6dc51/Home"  aria-label="View eBook">eBook</a><br><a href="#" onclick="return AspenDiscovery.ResultsList.showRelatedManifestations('b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng','eBook', '1561303');" aria-label="View Editions for eBook"><span class="manifestation-toggle-text btn btn-xs btn-wrap btn-editions" id='manifestation-toggle-text-b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng_eBook_1561303'><i class='fas fa-spinner fa-spin hidden' role='status' aria-hidden='true'></i>&nbsp;Show Edition</span></a></div><div class="col-tn-8 col-xs-8 col-md-5 col-lg-6"><div class="related-manifestation-shelf-status status-available-online label label-success label-wrap">Available Online</div></div><div class="col-tn-8 col-tn-offset-4 col-xs-8 col-xs-offset-4 col-md-4 col-md-offset-0 col-lg-3 manifestation-actions"><div class="btn-toolbar"><div class="btn-group btn-group-vertical btn-block"><a href="#" class="btn btn-sm btn-action btn-wrap"   onclick="return AspenDiscovery.OverDrive.checkOutTitle('d1a4d036-50a9-4c74-8941-3d73dcd6dc51', this);"     data-prompt-edition="false">Borrow with Libby</a><a href="#" class="btn btn-sm btn-info btn-wrap"   onclick="return AspenDiscovery.OverDrive.showPreview('d1a4d036-50a9-4c74-8941-3d73dcd6dc51', '161408088', '1');"     data-prompt-edition="false">Preview From The Book</a></div></div></div></div><div class="row"><div class="col-xs-12" id="relatedRecordPopup_b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng_eBook_1561303" style="display:none"></div></div></div>
+</div></div>
+	</div>
+<div class="visible-xs"><div class="result-label col-sm-4 col-xs-12">Description</div><div class="result-value col-sm-8 col-xs-12"><a id="descriptionLinkb136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng" href="#" onclick="$('#descriptionValueb136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng,#descriptionLinkb136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng').toggleClass('hidden-xs');return false;">Read Description</a></div></div><div class="hidden-xs result-value col-sm-12" id="descriptionValueb136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng">'Pride and Prejudice' by Jane Austen is a timeless novel about love, class and the courage to challenge first impressions. The narrative centres on the reluctance of the sharp-witted Elizabeth Bennet to be forced into a 'suitable' marriage, and her equally strong dislike for the enigmatic Mr Darcy, a haughty and unfeeling bachelor. His pride and her prejudices are tried in equal measure until true characters are revealed.</div><div class="col-xs-12"><div class="result-tools-horizontal btn-toolbar" role="toolbar"><div class="btn-group" role="group"><a href="/GroupedWork/b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng/Home?searchId=2281705&amp;recordIndex=1&amp;page=1&amp;searchSource=local" class="btn btn-sm btn-tools" aria-label="More Info for Pride_and_prejudice record b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng">More Info</a><button onclick="return AspenDiscovery.Account.showSaveToListForm(this, 'GroupedWork', 'b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng');" onkeypress="return AspenDiscovery.Account.showSaveToListForm(this, 'GroupedWork', 'b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng');" class="btn btn-sm btn-tools addToListBtn">Add to List</button></div><div class="btn-group btn-group-sm" role="group"><div class="share-tools"><span class="share-tools-label hidden-inline-xs">SHARE</span><a href="#" onclick="return AspenDiscovery.GroupedWork.showEmailForm(this, 'b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng')" title="Share via email"><i class="fas fa-envelope-square fa-2x fa-fw"></i></a><a href="https://twitter.com/intent/tweet?text=Pride+and+prejudice+https://libraries.westminster.gov.uk/GroupedWork/b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng/Home" target="_blank" title="Share on X" aria-label="Share on X (opens in a new window)"><i class="fa-brands fa-square-x-twitter fa-2x fa-fw"></i></a><a href="http://www.facebook.com/sharer/sharer.php?u=https://libraries.westminster.gov.uk/%2FGroupedWork%2Fb136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng%2FHome%3FsearchId%3D2281705%26recordIndex%3D1%26page%3D1%26searchSource%3Dlocal" target="_blank" title="Share on Facebook" aria-label="Share Pride_and_prejudice, by Pride_and_prejudice on Facebook (opens in a new window)"><i class="fa-brands fa-square-facebook fa-2x fa-fw"></i></a><a href="http://www.pinterest.com/pin/create/button/?url=https://libraries.westminster.gov.uk//GroupedWork/b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng/Home?searchId=2281705&recordIndex=1&page=1&searchSource=local&media=https://libraries.westminster.gov.uk/bookcover.php?id=b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng&size=large&type=grouped_work&category=eBook&description=Pin%20on%20Pinterest" target="_blank" title="Pin on Pinterest" aria-label="Pin Pride_and_prejudice, by Pride_and_prejudice on Pinterest (opens in a new window)"><i class="fa-brands fa-square-pinterest fa-2x fa-fw"></i></a><a href="javascript:void(0);" onclick="navigator.clipboard.writeText('https://libraries.westminster.gov.uk//GroupedWork/b136eb5d-5be0-78f3-c3a6-0eab9eab0cb6-eng/Home?searchId=2281705&recordIndex=1&page=1&searchSource=local');AspenDiscovery.showMessage('Link Copied', 'The link for this has been copied to the clipboard. You can now share it with others by pasting the link.', true);" title="Share a link to this page"><i class="fas fa-share-alt-square fa-2x fa-fw"></i></a></div></div></div></div></div></div></div></div>
+</div><div id="explore-more-bar-placeholder"></div><script type="text/javascript">$(document).ready(function () {AspenDiscovery.Searches.loadExploreMoreBar('catalog', '9780141439518');});</script></div>
+
+	
+				
+	
+	
+	
+	
+						<div class="materialsRequestLink">
+				<h2>Didn't find it?</h2>
+				<p>
+					Can't find what you are looking for? Try our Purchase Suggestions Service. <a href="/MaterialsRequest/NewRequestIls" class="btn btn-sm btn-info" onclick="return AspenDiscovery.Account.followLinkIfLoggedIn(this);">Submit Request</a>
+				</p>
+			</div>
+			
+	</div>
+
+<script type="text/javascript">
+	$(function(){
+		if ($('#horizontal-menu-bar-container').is(':visible')) {
+			$('#home-page-search').show();  		}
+
+		
+		
+		
+								AspenDiscovery.Searches.displayMode = 'list';
+				$('#'+AspenDiscovery.Searches.displayMode).parent('label').addClass('active'); 		$('#'+AspenDiscovery.Searches.displayMode+'Modal').parent('label').addClass('active'); 
+		});
+</script>
+</div></div></div></div></div><div class="container-fluid" id="page-footer" role="contentinfo"><div id="footer-container" class="row row-no-gutters"><div class="navbar navbar-static-bottom"><div class="navbar-inner"><div class="row row-no-gutters"><div class="col-tn-12 col-sm-5 col-md-4 text-left" id="install-info"><small>Powered By Aspen Discovery supported by Open Fifth</small><br><small class='version_info'>v. 26.07.00</small>					<br><small id="ssoStaffLogin"><a href="/Authentication/SAML2?init" id="ssoStaffLoginLink">Staff Login</a></small></div><div class="col-tn-12 col-sm-3 col-md-4 text-center" id="footer-branding"><div id="footer-custom-text"><h4><a href="https://www.westminster.gov.uk/data-protection/childrens-services-privacy-notice/privacy-notice-libraries-and-archives#:~:text=Westminster%20City%20Council%20Libraries%20and,Protection%20Act%20(DPA)%202018." target="_blank" rel="noopener" title="Privacy notice for Westminster Libraries"></a><span>How was your library visit today? Let us know by completing our&nbsp;</span><a target="_blank" href="https://forms.office.com/Pages/ResponsePage.aspx?id=FcHYUH-3lUOjujtAfK8NiB8fNbhZQE9KpJ7186JCTzJUOElERkFXTTgxWUVXR1kxQ0VLWjJGUFJWUC4u" rel="noopener">short survey</a><span>.</span></h4></div></div><div class="col-tn-12 col-sm-4 col-md-4 text-right" id="connect-with-us-info"></div></div></div></div>
+</div></div></div><div class="modal fade" id="modalDialog" tabindex="-1"><div class="modal-dialog"><div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="myModalLabel"><div class="modal-header"><button type="button" class="close modalClose" data-dismiss="modal" aria-hidden="true" aria-label="Close Window"><i class="fas fa-times" role="presentation"></i></button><div class="modal-title" id="myModalLabel">Loading, please wait</div></div><div class="modal-body">...</div><div class="modal-footer"><button type="button" id="modalCloseButton" class="btn btn-default modalClose" data-dismiss="modal">Close</button><span class="modal-buttons"></span></div></div><!-- /.modal-content --></div><!-- /.modal-dialog --></div><!-- /.modal -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-SCQGXJ1CTR"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag(){dataLayer.push(arguments);}
+		gtag('js', new Date());
+		gtag('config', 'G-SCQGXJ1CTR');
+	</script>
+<script>
+// Wait until the DOM is fully loaded
+document.addEventListener("DOMContentLoaded", function() {
+    // Find the label for borrower_attribute_CONTACTSelect
+    const label = document.querySelector("label[for='borrower_attribute_CONTACTSelect']");
+    
+    if (label) {
+        // Create the helper icon element
+        const helperIcon = document.createElement("span");
+        helperIcon.innerText = "?"; // Question mark icon
+        helperIcon.style.cursor = "pointer";
+        helperIcon.style.marginLeft = "5px";
+        helperIcon.style.padding = "2px 5px";
+        helperIcon.style.backgroundColor = "#31708f"; // Background color for the icon
+        helperIcon.style.color = "#fff"; // White text color for the icon
+        helperIcon.style.borderRadius = "50%"; // Make it a circle
+        helperIcon.style.fontWeight = "bold";
+        
+        // Create the tooltip text
+        const tooltipText = "By saying yes, you will be automatically signed up for our newsletter but you will be able to unsubscribe once you receive your first email.";
+        
+        // Create the tooltip element
+        const tooltip = document.createElement("div");
+        tooltip.innerText = tooltipText;
+        tooltip.style.position = "absolute";
+        tooltip.style.backgroundColor = "#333";
+        tooltip.style.color = "#fff";
+        tooltip.style.padding = "5px";
+        tooltip.style.borderRadius = "4px";
+        tooltip.style.fontSize = "12px";
+        tooltip.style.visibility = "hidden"; // Hidden by default
+        tooltip.style.zIndex = "1000"; // Ensures tooltip is above other elements
+        
+        // Position the tooltip on hover
+        helperIcon.addEventListener("mouseenter", function() {
+            tooltip.style.visibility = "visible";
+            tooltip.style.top = (helperIcon.offsetTop + helperIcon.offsetHeight) + "px";
+            tooltip.style.left = helperIcon.offsetLeft + "px";
+        });
+        
+        // Hide the tooltip when not hovering
+        helperIcon.addEventListener("mouseleave", function() {
+            tooltip.style.visibility = "hidden";
+        });
+        
+        // Append the tooltip and icon to the label
+        label.appendChild(helperIcon);
+        label.appendChild(tooltip);
+    }
+});
+
+</script>
+<script>
+// Wait until the DOM is fully loaded
+document.addEventListener("DOMContentLoaded", function() {
+    // Find the label for borrower_attribute_COMSelect
+    const label = document.querySelector("label[for='borrower_attribute_COMSelect']");
+    
+    if (label) {
+        // Create the helper icon element
+        const helperIcon = document.createElement("span");
+        helperIcon.innerText = "?"; // Question mark icon
+        helperIcon.style.cursor = "pointer";
+        helperIcon.style.marginLeft = "5px";
+        helperIcon.style.padding = "2px 5px";
+        helperIcon.style.backgroundColor = "#31708f"; // Background color for the icon
+        helperIcon.style.color = "#fff"; // White text color for the icon
+        helperIcon.style.borderRadius = "50%"; // Make it a circle
+        helperIcon.style.fontWeight = "bold";
+        
+        // Create the tooltip text
+        const tooltipText = "Notification preferences are only available for pick up notices and advance notice of items due but it is not possible to select a preference for overdue notices which are email by default. If you do not have an email address then these will be text messages but if you do not have a mobile number then no overdue notice will be sent.";
+        
+        // Create the tooltip element
+        const tooltip = document.createElement("div");
+        tooltip.innerText = tooltipText;
+        tooltip.style.position = "absolute";
+        tooltip.style.backgroundColor = "#333";
+        tooltip.style.color = "#fff";
+        tooltip.style.padding = "5px";
+        tooltip.style.borderRadius = "4px";
+        tooltip.style.fontSize = "12px";
+        tooltip.style.visibility = "hidden"; // Hidden by default
+        tooltip.style.zIndex = "1000"; // Ensures tooltip is above other elements
+        
+        // Position the tooltip on hover
+        helperIcon.addEventListener("mouseenter", function() {
+            tooltip.style.visibility = "visible";
+            tooltip.style.top = (helperIcon.offsetTop + helperIcon.offsetHeight) + "px";
+            tooltip.style.left = helperIcon.offsetLeft + "px";
+        });
+        
+        // Hide the tooltip when not hovering
+        helperIcon.addEventListener("mouseleave", function() {
+            tooltip.style.visibility = "hidden";
+        });
+        
+        // Append the tooltip and icon to the label
+        label.appendChild(helperIcon);
+        label.appendChild(tooltip);
+    }
+});
+</script>
+<script>
+// Wait until the DOM is fully loaded
+document.addEventListener("DOMContentLoaded", function() {
+    // Find the label for borrower_attribute_GENSelect
+    const label = document.querySelector("label[for='borrower_attribute_GENSelect']");
+    
+    if (label) {
+        // Create the helper icon element
+        const helperIcon = document.createElement("span");
+        helperIcon.innerText = "?"; // Question mark icon
+        helperIcon.style.cursor = "pointer";
+        helperIcon.style.marginLeft = "5px";
+        helperIcon.style.padding = "2px 5px";
+        helperIcon.style.backgroundColor = "#31708f"; // Background color for the icon
+        helperIcon.style.color = "#fff"; // White text color for the icon
+        helperIcon.style.borderRadius = "50%"; // Make it a circle
+        helperIcon.style.fontWeight = "bold";
+        
+        // Create the tooltip text
+        const tooltipText = "'Woman or Female' includes trans women and 'Man or Male' includes trans men.";
+        
+        // Create the tooltip element
+        const tooltip = document.createElement("div");
+        tooltip.innerText = tooltipText;
+        tooltip.style.position = "absolute";
+        tooltip.style.backgroundColor = "#333";
+        tooltip.style.color = "#fff";
+        tooltip.style.padding = "5px";
+        tooltip.style.borderRadius = "4px";
+        tooltip.style.fontSize = "12px";
+        tooltip.style.visibility = "hidden"; // Hidden by default
+        tooltip.style.zIndex = "1000"; // Ensures tooltip is above other elements
+        
+        // Position the tooltip on hover
+        helperIcon.addEventListener("mouseenter", function() {
+            tooltip.style.visibility = "visible";
+            tooltip.style.top = (helperIcon.offsetTop + helperIcon.offsetHeight) + "px";
+            tooltip.style.left = helperIcon.offsetLeft + "px";
+        });
+        
+        // Hide the tooltip when not hovering
+        helperIcon.addEventListener("mouseleave", function() {
+            tooltip.style.visibility = "hidden";
+        });
+        
+        // Append the tooltip and icon to the label
+        label.appendChild(helperIcon);
+        label.appendChild(tooltip);
+    }
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Check if the current page URL matches the one we want to target
+    if (window.location.href === "https://wcc.aspendiscovery.co.uk/MyAccount/SelfReg") {
+        console.log("Correct page loaded, inserting text...");
+
+        // Create a div for the first paragraph
+        const infoTextContainer = document.createElement("div");
+        infoTextContainer.style.marginBottom = "1em"; // Add some space below the text
+
+        const firstParagraph = document.createElement("p");
+        firstParagraph.textContent = "We collect special category data such as Ethnicity and Gender as part of our inclusiveness strategy to address inequalities. It will be actively analysed anonymously for statistical reporting on trends etc.";
+        infoTextContainer.appendChild(firstParagraph);
+
+        // Second paragraph with bold and link
+        const secondParagraph = document.createElement("p");
+        secondParagraph.innerHTML = "<strong>By clicking on 'Register' I am applying for membership of Westminster Libraries and agree to observe the Code of Conduct. (Copies of all our library policies are available on our <a href='https://www.rbkc.gov.uk/libraries-0/information-and-enquiries/library-policies' target='_blank'>website</a>.) If this application is for a child then I confirm that I am a parent or legal guardian of said child.</strong>";
+        infoTextContainer.appendChild(secondParagraph);
+
+        // Add to a parent element right before the submit button
+        const submitButton = document.querySelector("button.btn.btn-primary");
+
+        // Only insert text if submit button is found
+        if (submitButton) {
+            submitButton.parentNode.insertBefore(infoTextContainer, submitButton);
+        } else {
+            console.error("Submit button not found.");
+        }
+    } else {
+        console.log("This is not the correct page.");
+    }
+});
+
+</script>
+<script>
+$(document).ready(function () {
+    const allowedPages = [
+        "libraries.westminster.gov.uk/MyAccount/SelfReg",
+        "libraries.rbkc.gov.uk/MyAccount/SelfReg"
+    ];
+
+    const currentPath = window.location.host + window.location.pathname;
+
+    if (!allowedPages.includes(currentPath)) {
+        return; // Exit if not on the allowed pages
+    }
+
+    $('#MyAccount-SelfReg').on('submit', function(event) {
+        // Get the input field for surname
+        const surnameInput = $('#borrower_surname.form-control.required');
+        
+        // Check if it contains at least one alphabetic character
+        if (!/[a-zA-Z]/.test(surnameInput.val())) {
+            // Prevent form submission
+            event.preventDefault();
+            
+            // Show an alert or error message
+            alert("Surname must contain at least one alphabetic character.");
+            
+            // Set focus on the input if needed
+            surnameInput.focus();
+        }
+    });
+});
+</script>
+<script>
+$(document).ready(function () {
+    const allowedPages = [
+        "libraries.westminster.gov.uk/MyAccount/SelfReg",
+        "libraries.rbkc.gov.uk/MyAccount/SelfReg"
+    ];
+
+    const currentPath = window.location.host + window.location.pathname;
+
+    if (!allowedPages.includes(currentPath)) {
+        return; // Exit if not on the allowed pages
+    }
+
+    $('#MyAccount-SelfReg').on('submit', function(event) {
+        // Get the input field for first name
+        const firstnameInput = $('#borrower_firstname');
+        
+        // Check if it contains at least one alphabetic character
+        if (!/[a-zA-Z]/.test(firstnameInput.val())) {
+            // Prevent form submission
+            event.preventDefault();
+            
+            // Show an alert or error message
+            alert("First name must contain at least one alphabetic character.");
+            
+            // Set focus on the input if needed
+            firstnameInput.focus();
+        }
+    });
+});
+</script>
+<script>
+$(document).ready(function () {
+    const allowedPages = [
+        "libraries.westminster.gov.uk/MyAccount/SelfReg",
+        "libraries.rbkc.gov.uk/MyAccount/SelfReg"
+    ];
+
+    const currentPath = window.location.host + window.location.pathname;
+
+    if (!allowedPages.includes(currentPath)) {
+        return; // Exit if not on the allowed pages
+    }
+
+    var $phoneInput = $('#borrower_phone');
+
+    if ($phoneInput.length) { // Only run if the element exists
+        $phoneInput.on('input', function(){
+            console.log('Before processing:', this.value); // Debug log
+
+            var filteredValue = this.value.replace(/\D/g, ''); // Remove all non-digits, including spaces
+
+            filteredValue = filteredValue.substring(0, 11); // Limit to 11 digits
+
+            console.log('After processing:', filteredValue); // Debug log
+
+            $(this).val(filteredValue);
+        });
+    }
+});
+</script>
+<script>
+if ($('#MyAccount-SelfReg').length) {
+    $('#borrower_surname, #borrower_firstname, #borrower_middle_name, #borrower_othernames, #borrower_address, #borrower_city').blur(function () {
+        let this_value = $(this).val();
+        this_value = this_value.toLowerCase()
+            .split(/([- ])/) // Split on spaces and hyphens but keep the delimiters
+            .map((s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()) // Capitalize first letter, lowercase rest
+            .join(''); // Rejoin exactly as split (preserving spaces and hyphens)
+        $(this).val(this_value);
+    });
+
+    $('#borrower_email, #borrower_repeat_email').blur(function () {
+        let this_value = $(this).val().toLowerCase();
+        $(this).val(this_value);
+    });
+}
+</script>
+<script>
+// Wait until the DOM is fully loaded
+document.addEventListener("DOMContentLoaded", function() {
+    // Find the label for borrower_attribute_BIRTHSEXSelect
+    const label = document.querySelector("label[for='borrower_attribute_BIRTHSEXSelect']");
+    
+    if (label) {
+        // Create the helper icon element
+        const helperIcon = document.createElement("span");
+        helperIcon.innerText = "?"; // Question mark icon
+        helperIcon.style.cursor = "pointer";
+        helperIcon.style.marginLeft = "5px";
+        helperIcon.style.padding = "2px 5px";
+        helperIcon.style.backgroundColor = "#31708f"; // Background color for the icon
+        helperIcon.style.color = "#fff"; // White text color for the icon
+        helperIcon.style.borderRadius = "50%"; // Make it a circle
+        helperIcon.style.fontWeight = "bold";
+        
+        // Create the tooltip text
+        const tooltipText = "'We collect special category data such as Ethnicity and Gender as part of our inclusiveness strategy to address inequalities. It will be actively analysed anonymously for statistical reporting on trends etc.";
+        
+        // Create the tooltip element
+        const tooltip = document.createElement("div");
+        tooltip.innerText = tooltipText;
+        tooltip.style.position = "absolute";
+        tooltip.style.backgroundColor = "#333";
+        tooltip.style.color = "#fff";
+        tooltip.style.padding = "5px";
+        tooltip.style.borderRadius = "4px";
+        tooltip.style.fontSize = "12px";
+        tooltip.style.visibility = "hidden"; // Hidden by default
+        tooltip.style.zIndex = "1000"; // Ensures tooltip is above other elements
+        
+        // Position the tooltip on hover
+        helperIcon.addEventListener("mouseenter", function() {
+            tooltip.style.visibility = "visible";
+            tooltip.style.top = (helperIcon.offsetTop + helperIcon.offsetHeight) + "px";
+            tooltip.style.left = helperIcon.offsetLeft + "px";
+        });
+        
+        // Hide the tooltip when not hovering
+        helperIcon.addEventListener("mouseleave", function() {
+            tooltip.style.visibility = "hidden";
+        });
+        
+        // Append the tooltip and icon to the label
+        label.appendChild(helperIcon);
+        label.appendChild(tooltip);
+    }
+});
+</script>
+<script>
+// Wait until the DOM is fully loaded
+document.addEventListener("DOMContentLoaded", function() {
+    // Find the label for borrower_attribute_CONCSelect
+    const label = document.querySelector("label[for='borrower_attribute_CONCSelect']");
+    
+    if (label) {
+        // Create the helper icon element
+        const helperIcon = document.createElement("span");
+        helperIcon.innerText = "?"; // Question mark icon
+        helperIcon.style.cursor = "pointer";
+        helperIcon.style.marginLeft = "5px";
+        helperIcon.style.padding = "2px 5px";
+        helperIcon.style.backgroundColor = "#31708f"; // Background color for the icon
+        helperIcon.style.color = "#fff"; // White text color for the icon
+        helperIcon.style.borderRadius = "50%"; // Make it a circle
+        helperIcon.style.fontWeight = "bold";
+        
+        // Create the tooltip text
+        const tooltipText = "You may be entitled to concessions if you are claiming: Universal Credit, Employment and Support Allowance (ESA), Attendance Allowance, Disabled Tax Credits, Personal Independence Payment (PIP), or 60 years old or over";
+        
+        // Create the tooltip element
+        const tooltip = document.createElement("div");
+        tooltip.innerText = tooltipText;
+        tooltip.style.position = "absolute";
+        tooltip.style.backgroundColor = "#333";
+        tooltip.style.color = "#fff";
+        tooltip.style.padding = "5px";
+        tooltip.style.borderRadius = "4px";
+        tooltip.style.fontSize = "12px";
+        tooltip.style.visibility = "hidden"; // Hidden by default
+        tooltip.style.zIndex = "1000"; // Ensures tooltip is above other elements
+        
+        // Position the tooltip on hover
+        helperIcon.addEventListener("mouseenter", function() {
+            tooltip.style.visibility = "visible";
+            tooltip.style.top = (helperIcon.offsetTop + helperIcon.offsetHeight) + "px";
+            tooltip.style.left = helperIcon.offsetLeft + "px";
+        });
+        
+        // Hide the tooltip when not hovering
+        helperIcon.addEventListener("mouseleave", function() {
+            tooltip.style.visibility = "hidden";
+        });
+        
+        // Append the tooltip and icon to the label
+        label.appendChild(helperIcon);
+        label.appendChild(tooltip);
+    }
+});
+</script>
+<script>
+if (
+  window.location.href === "https://libraries.westminster.gov.uk/MyAccount/SelfReg" ||
+  window.location.href === "https://libraries.rbkc.gov.uk/MyAccount/SelfReg"
+) {
+  // Select the borrower_password label element
+  const passwordLabel = document.querySelector("label[for='borrower_password']");
+
+  if (passwordLabel) {
+    // Create a new span element for the italicized text
+    const pinInfo = document.createElement("span");
+    pinInfo.style.fontStyle = "italic";
+    pinInfo.textContent = " - this must be four numbers only";
+
+    // Append the italicized text next to the label
+    passwordLabel.appendChild(pinInfo);
+  }
+}
+</script>
+<script>
+// Wait until the DOM is fully loaded
+document.addEventListener("DOMContentLoaded", function() {
+    // Find the label for borrower_attribute_ETHNSelect
+    const label = document.querySelector("label[for='borrower_attribute_ETHNSelect']");
+    
+    if (label) {
+        // Create the helper icon element
+        const helperIcon = document.createElement("span");
+        helperIcon.innerText = "?"; // Question mark icon
+        helperIcon.style.cursor = "pointer";
+        helperIcon.style.marginLeft = "5px";
+        helperIcon.style.padding = "2px 5px";
+        helperIcon.style.backgroundColor = "#31708f"; // Background color for the icon
+        helperIcon.style.color = "#fff"; // White text color for the icon
+        helperIcon.style.borderRadius = "50%"; // Make it a circle
+        helperIcon.style.fontWeight = "bold";
+        
+        // Create the tooltip text
+        const tooltipText = "We collect special category data such as Ethnicity and Gender as part of our inclusiveness strategy to address inequalities. It will be actively analysed anonymously for statistical reporting on trends etc.";
+        
+        // Create the tooltip element
+        const tooltip = document.createElement("div");
+        tooltip.innerText = tooltipText;
+        tooltip.style.position = "absolute";
+        tooltip.style.backgroundColor = "#333";
+        tooltip.style.color = "#fff";
+        tooltip.style.padding = "5px";
+        tooltip.style.borderRadius = "4px";
+        tooltip.style.fontSize = "12px";
+        tooltip.style.visibility = "hidden"; // Hidden by default
+        tooltip.style.zIndex = "1000"; // Ensures tooltip is above other elements
+        
+        // Position the tooltip on hover
+        helperIcon.addEventListener("mouseenter", function() {
+            tooltip.style.visibility = "visible";
+            tooltip.style.top = (helperIcon.offsetTop + helperIcon.offsetHeight) + "px";
+            tooltip.style.left = helperIcon.offsetLeft + "px";
+        });
+        
+        // Hide the tooltip when not hovering
+        helperIcon.addEventListener("mouseleave", function() {
+            tooltip.style.visibility = "hidden";
+        });
+        
+        // Append the tooltip and icon to the label
+        label.appendChild(helperIcon);
+        label.appendChild(tooltip);
+    }
+});
+</script>
+<script>
+// Wait until the DOM is fully loaded
+document.addEventListener("DOMContentLoaded", function() {
+    // Find the label for borrower_attribute_DISSelect
+    const label = document.querySelector("label[for='borrower_attribute_DISSelect']");
+    
+    if (label) {
+        // Create the helper icon element
+        const helperIcon = document.createElement("span");
+        helperIcon.innerText = "?"; // Question mark icon
+        helperIcon.style.cursor = "pointer";
+        helperIcon.style.marginLeft = "5px";
+        helperIcon.style.padding = "2px 5px";
+        helperIcon.style.backgroundColor = "#31708f"; // Background color for the icon
+        helperIcon.style.color = "#fff"; // White text color for the icon
+        helperIcon.style.borderRadius = "50%"; // Make it a circle
+        helperIcon.style.fontWeight = "bold";
+        
+        // Create the tooltip text
+        const tooltipText = "We collect special category data such as Ethnicity and Gender as part of our inclusiveness strategy to address inequalities. It will be actively analysed anonymously for statistical reporting on trends etc.";
+        
+        // Create the tooltip element
+        const tooltip = document.createElement("div");
+        tooltip.innerText = tooltipText;
+        tooltip.style.position = "absolute";
+        tooltip.style.backgroundColor = "#333";
+        tooltip.style.color = "#fff";
+        tooltip.style.padding = "5px";
+        tooltip.style.borderRadius = "4px";
+        tooltip.style.fontSize = "12px";
+        tooltip.style.visibility = "hidden"; // Hidden by default
+        tooltip.style.zIndex = "1000"; // Ensures tooltip is above other elements
+        
+        // Position the tooltip on hover
+        helperIcon.addEventListener("mouseenter", function() {
+            tooltip.style.visibility = "visible";
+            tooltip.style.top = (helperIcon.offsetTop + helperIcon.offsetHeight) + "px";
+            tooltip.style.left = helperIcon.offsetLeft + "px";
+        });
+        
+        // Hide the tooltip when not hovering
+        helperIcon.addEventListener("mouseleave", function() {
+            tooltip.style.visibility = "hidden";
+        });
+        
+        // Append the tooltip and icon to the label
+        label.appendChild(helperIcon);
+        label.appendChild(tooltip);
+    }
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const allowedPages = [
+        "libraries.westminster.gov.uk/MyAccount/SelfReg",
+        "libraries.rbkc.gov.uk/MyAccount/SelfReg"
+    ];
+
+    const currentPath = window.location.host + window.location.pathname;
+
+    if (!allowedPages.includes(currentPath)) {
+        return; // Exit if not on the allowed pages
+    }
+
+    // Select the label for borrower_attribute_COMSelect
+    var label = document.querySelector("label[for='borrower_attribute_COMSelect']");
+
+    if (label) {
+        // Create the "Required" box
+        var requiredBox = document.createElement("span");
+        requiredBox.textContent = "Required";
+        requiredBox.style.cssText = `
+            display: inline-block;
+            background-color: red;
+            color: white;
+            padding: 2px 6px;
+            margin-left: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 3px;
+            vertical-align: middle;
+        `;
+
+        // Append the box to the label
+        label.appendChild(requiredBox);
+    }
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const allowedPages = [
+        "libraries.westminster.gov.uk/MyAccount/SelfReg",
+        "libraries.rbkc.gov.uk/MyAccount/SelfReg"
+    ];
+
+    const currentPath = window.location.host + window.location.pathname;
+
+    if (!allowedPages.includes(currentPath)) {
+        return; // Exit if not on the allowed pages
+    }
+
+    // Select the label for borrower_password
+    var label = document.querySelector("label[for='borrower_password']");
+
+    if (label) {
+        // Create the "Required" box
+        var requiredBox = document.createElement("span");
+        requiredBox.textContent = "Required";
+        requiredBox.style.cssText = `
+            display: inline-block;
+            background-color: red;
+            color: white;
+            padding: 2px 6px;
+            margin-left: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 3px;
+            vertical-align: middle;
+        `;
+
+        // Append the box to the label
+        label.appendChild(requiredBox);
+    }
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const allowedPages = [
+        "libraries.westminster.gov.uk/MyAccount/SelfReg",
+        "libraries.rbkc.gov.uk/MyAccount/SelfReg"
+    ];
+
+    const currentPath = window.location.host + window.location.pathname;
+
+    if (!allowedPages.includes(currentPath)) {
+        return; // Exit if not on the allowed pages
+    }
+
+    // Select the label for borrower_password2
+    const label = document.querySelector("label[for='borrower_password2']");
+
+    if (label) {
+        // Create the "Required" box
+        const requiredBox = document.createElement("span");
+        requiredBox.textContent = "Required";
+        requiredBox.style.cssText = `
+            display: inline-block;
+            background-color: red;
+            color: white;
+            padding: 2px 6px;
+            margin-left: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 3px;
+            vertical-align: middle;
+        `;
+
+        // Append the box to the label
+        label.appendChild(requiredBox);
+    }
+});
+</script>
+<script> 
+  const selectElement = document.getElementById('borrower_titleSelect')
+  if (selectElement) {
+    let mxOption = document.createElement('option')
+    mxOption.setAttribute('value', 'Mx')
+    mxOption.textContent = 'Mx'
+    selectElement.appendChild(mxOption)
+ }
+</script>
+<script>
+$(document).ready(function () {
+    const allowedPages = [
+        "libraries.westminster.gov.uk/MyAccount/SelfReg",
+        "libraries.rbkc.gov.uk/MyAccount/SelfReg"
+    ];
+
+    const currentPath = window.location.host + window.location.pathname;
+
+    if (!allowedPages.includes(currentPath)) {
+        return; // Exit if not on the allowed pages
+    }
+
+    $('#MyAccount-SelfReg').on('submit', function(event) {
+        // Get the input field for the password
+        const passwordInput = $('#borrower_password');
+        
+        // Check if the field is blank or does not contain exactly 4 numeric digits
+        if (!/^\d{4}$/.test(passwordInput.val())) {
+            // Prevent form submission
+            event.preventDefault();
+            
+            // Show an alert or error message
+            alert("You must enter a PIN that is exactly four numeric digits.");
+            
+            // Set focus on the input field
+            passwordInput.focus();
+        }
+    });
+});
+</script>
+<script>
+$(document).ready(function () {
+    // Exit if this is a popup or iframe
+    if (window.top !== window.self) {
+        return;
+    }
+
+    const allowedPages = [
+        "libraries.westminster.gov.uk/MyAccount/SelfReg",
+        "libraries.rbkc.gov.uk/MyAccount/SelfReg"
+    ];
+
+    const currentPath = window.location.host + window.location.pathname;
+
+    if (!allowedPages.includes(currentPath)) {
+        return; // Exit if not on the allowed pages
+    }
+
+    $('#MyAccount-SelfReg').on('submit', function(event) {
+        const passwordInput = $('#borrower_password');
+        const passwordConfirmInput = $('#borrower_password2');
+
+        if (!/^\d{4}$/.test(passwordInput.val())) {
+            event.preventDefault();
+            alert("You must enter a PIN that is exactly four numeric digits.");
+            passwordInput.focus();
+            return;
+        }
+
+        if (passwordConfirmInput.val() !== passwordInput.val()) {
+            event.preventDefault();
+            alert("The confirmation PIN must match the original PIN.");
+            passwordConfirmInput.focus();
+        }
+    });
+});
+</script>
+<script>
+$(document).ready(function () {
+    const allowedPages = [
+        "libraries.westminster.gov.uk/MyAccount/SelfReg",
+        "libraries.rbkc.gov.uk/MyAccount/SelfReg"
+    ];
+
+    const currentPath = window.location.host + window.location.pathname;
+
+    if (!allowedPages.includes(currentPath)) {
+        return; // Exit if not on the allowed pages
+    }
+
+    $('#MyAccount-SelfReg').on('submit', function(event) {
+        const comValue = $('#borrower_attribute_COMSelect').val(); 
+        const emailValue = $('#borrower_emailpro').val();
+        const phoneValue = $('#borrower_phone').val();
+
+        if (comValue === "E-MAIL" && (!emailValue || emailValue.trim() === "")) {
+            event.preventDefault();
+            alert("You must provide an email address when 'Email' is chosen as the contact preference.");
+            $('#borrower_emailpro').focus();
+            return;
+        }
+
+        if (["SMS"].includes(comValue) && (!phoneValue || phoneValue.trim() === "")) {
+            event.preventDefault();
+            alert("You must provide a phone number when 'Text message' is chosen as the contact preference.");
+            $('#borrower_phone').focus();
+            return;
+        }
+    });
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const allowedURLs = [
+        "https://libraries.rbkc.gov.uk/MyAccount/SelfReg",
+        "https://librarieswestminster.gov.uk/MyAccount/SelfReg"
+    ];
+
+    if (!allowedURLs.includes(window.location.href)) return;
+
+    function removeUnwantedOptions() {
+        const comSelect = document.querySelector("#borrower_attribute_COMSelect") ||
+                          document.querySelector("select[name='borrower_attribute[COM]']");
+
+        if (comSelect) {
+            const labelsToRemove = ['Tel mobile', 'Tel work', 'Tel home', 'Post'];
+            Array.from(comSelect.options).forEach(opt => {
+                if (labelsToRemove.includes(opt.text.trim())) {
+                    opt.remove();
+                }
+            });
+        }
+    }
+
+    // Run repeatedly for a short time in case Aspen adds options late
+    const interval = setInterval(removeUnwantedOptions, 500);
+    setTimeout(() => clearInterval(interval), 5000);
+});
+</script>
+<script> 
+  const drOption = document.querySelector("option[value='Dr.']")
+  if (drOption) {
+    drOption.textContent = 'Dr'
+    drOption.value = 'Dr'
+ }
+</script>
+<script>
+     // when this script is run on any page but those using the postcode lookup, ensure that default behaviour edited by handleDynamicRequiredFields()  is reset to its default.
+     if (!window.location.href.includes("/MyAccount/SelfReg") && !window.location.href.includes("/MyAccount/ContactInformation") ) {
+            setFormSubmitting = function () {
+                   savingForm = true
+            }
+            $.validator.defaults.ignore = ":hidden"
+     }
+
+    const postCodeFieldWrapper = document.getElementById('propertyRowborrower_zipcode');                
+    const postCodeField = document.getElementById('borrower_zipcode')
+    const select = document.createElement('select')
+
+   // Aspen uses a jQuery plugin for form validation: temporarily edit it to pick up on temporarily hidden fields with a required class
+   // So that users are informed of the issue when a required dynamic fields is not filled, display the address fields on form submission
+   const handleDynamicRequiredFields = () => {
+          $.validator.defaults.ignore = ":hidden:not(.required)"
+          setFormSubmitting = function () {
+           displayAddressFields()
+           savingForm = true
+        }
+   }
+
+    const implementPostCodeLookup = () => {
+        if (!postCodeField) {
+            return
+        }
+
+        select.style.display = 'none'
+        handleDynamicRequiredFields()
+
+        document.getElementById('propertyRowborrower_address').style.display = 'none'
+        document.getElementById('propertyRowborrower_address2').style.display = 'none'
+        document.getElementById('propertyRowborrower_city').style.display = 'none'
+         // document.getElementById('propertyRowborrower_state').style.display = 'none'
+        document.getElementById('propertyRowborrower_country').style.display = 'none'
+        postCodeField.addEventListener('input', (e) => {showAddressList()})
+        document.querySelector('label[for="borrower_zipcode"]').textContent = 'Postcode Lookup'
+        postCodeFieldWrapper.append(select)
+    }
+
+    implementPostCodeLookup()
+
+    const createDropDown = (data) => {
+        if (!data || data.statusCode === 404 || data.statusCode === 500 || !data.results ) {
+               select.style.display = 'none'
+               resetMainAddressSection()
+               document.querySelector('label[for="borrower_zipcode"]').textContent = 'No address found for this postcode. Please enter it manually.'
+               displayAddressFields()
+               return
+        }
+
+        while(select.firstChild) {
+            select.removeChild(select.lastChild)
+        };
+
+        let index = 1
+        addPlaceholderOption()
+
+        data.results.forEach((address) => {
+            addOption(address, index)
+            index++
+        })
+
+        select.setAttribute('class', 'form-control')
+        select.style.display = 'block'
+        select.addEventListener('change', (e) => {setFieldValues(e.target.options[e.target.selectedIndex].value)})
+    }
+
+    const showAddressList = () => {
+        const postcode = sanitizePostCodeInput(postCodeField.value)
+        document.querySelector('label[for="borrower_zipcode"]').textContent = 'Postcode Lookup'
+        // we need, at the minimum, a valid area code
+        if (!/^[a-zA-Z]{1,2}[0-9]{1,2}/.test(postcode)) {
+            return
+        }
+        getAddresses(postcode).then(createDropDown)
+    }
+
+    // FETCH QUERIES UTILITIES
+    const getAddresses = (postcode) => {
+        const url = "/post_serve?query=" + postcode
+        return fetch(url).then(data => data.json())
+    }
+
+    // DOM EDIT UTILITES
+    const addOption = (address, index) => {
+        const option = document.createElement('option')
+        option.id = 'address_' + index.toString()
+        option.textContent = convertAllCapsToCapitalized(address.full_address)
+        option.value = JSON.stringify(address)
+        select.append(option)
+    }
+
+    const addPlaceholderOption = () => {
+        const option = document.createElement('option')
+        option.id = 'address_0'
+        option.textContent = 'Please select...'
+        option.value = 'Please select...'
+        select.append(option)
+    }
+
+    const displayAddressFields = () => {
+        document.getElementById('propertyRowborrower_address').style.display = 'block'
+        document.getElementById('propertyRowborrower_address2').style.display = 'block'
+        document.getElementById('propertyRowborrower_city').style.display = 'block'
+        // document.getElementById('propertyRowborrower_state').style.display = 'block'
+        document.getElementById('propertyRowborrower_country').style.display = 'block'
+    }
+
+    const resetMainAddressSection = () => {
+        document.getElementById('borrower_address').value = ""
+        document.getElementById('borrower_address2').value = ""
+        document.getElementById('borrower_city').value = ""
+        // document.getElementById('borrower_state').value = ""
+        document.getElementById('borrower_country').value = ""
+    }
+
+    const setFieldValues = (addressAsJson) => {
+        const address = JSON.parse(addressAsJson)
+        displayAddressFields()
+        document.getElementById('borrower_address').value = convertAllCapsToCapitalized(address.address_line_1)
+        document.getElementById('borrower_address2').value = convertAllCapsToCapitalized(address.address_line_2)
+        document.getElementById('borrower_city').value = convertAllCapsToCapitalized(address.town)
+        // document.getElementById('propertyRowborrower_state').value = convertAllCapsToCapitalized(address.county)
+        document.getElementById('borrower_country').value = convertAllCapsToCapitalized(address.country)
+        document.getElementById('borrower_zipcode').value = address.postcode
+        document.querySelector('label[for="borrower_zipcode"]').textContent = 'Postcode'
+    }
+
+    // STRING UTILITIES
+    const convertAllCapsToCapitalized = (string) => {
+        const allCapsWordArr = string.split(' ')
+        const capitalizedWordArr = allCapsWordArr.map((w) => {
+            // avoiding modifying postcodes
+            if (/^[a-zA-Z]{1,2}[0-9]{1,2}/.test(w) || /^[0-9]{1,2}[a-zA-Z]{1,2}/.test(w)) {
+                return w
+            }
+            return capitalizeWord(w)
+        })
+        return capitalizedWordArr.join(' ')
+    }
+
+    const capitalizeWord = (w) =>  {
+        return w[0].toUpperCase() + w.toLowerCase().slice(1)
+    }
+
+    const sanitizePostCodeInput = (input) => {
+        input.trim()
+        return input.slice(0, 7)
+    }
+
+</script>
+<script>
+$(document).ready(function() {
+    $("label[for='borrower_city']").text("Town or City");
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Select all dropdowns on the page
+    const dropdowns = document.querySelectorAll("select");
+
+    dropdowns.forEach(select => {
+        let found = false;
+
+        select.querySelectorAll("option").forEach(option => {
+            if (option.textContent.trim().startsWith("WCC data")) {
+                option.style.display = "none";
+                found = true;
+            }
+        });
+
+        // If no matching option was found, do nothing (this is implicit)
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const targetUrls = [
+        'https://libraries.westminster.gov.uk/MyAccount/SelfReg',
+        'https://libraries.rbkc.gov.uk/MyAccount/SelfReg'
+    ];
+
+    if (!targetUrls.includes(window.location.href)) return;
+
+    function setupBranchSelect(branchSelect) {
+        if (!branchSelect) return;
+
+        // Remove unwanted option
+        const nhgOption = branchSelect.querySelector('option[value="NHG"]');
+        if (nhgOption) nhgOption.remove();
+
+        // Add default "Select a branch" if not already there
+        let defaultOption = branchSelect.querySelector('option[value=""]');
+        if (!defaultOption) {
+            defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select a branch';
+            defaultOption.disabled = true;
+            defaultOption.selected = true; // selected by default
+            branchSelect.prepend(defaultOption);
+        }
+
+        // Make the field required
+        branchSelect.required = true;
+
+        // Add "Required" label if missing
+        if (!branchSelect.nextElementSibling || !branchSelect.nextElementSibling.classList.contains('required-label')) {
+            const requiredLabel = document.createElement('span');
+            requiredLabel.className = 'required-label';
+            requiredLabel.textContent = 'Required';
+            branchSelect.parentNode.insertBefore(requiredLabel, branchSelect.nextSibling);
+        }
+    }
+
+    // Observe the whole body for dynamic changes
+    const observer = new MutationObserver(() => {
+        const branchSelect = document.getElementById('borrower_branchcodeSelect');
+        if (branchSelect) {
+            setupBranchSelect(branchSelect);
+        }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Add CSS for the "Required" label
+    if (!document.getElementById('branch-required-style')) {
+        const style = document.createElement('style');
+        style.id = 'branch-required-style';
+        style.textContent = `
+            .required-label {
+                background-color: #D50000;
+                color: white;
+                padding: 2px 6px;
+                border-radius: 4px;
+                margin-left: 8px;
+                font-size: 12px;
+                font-weight: bold;
+                display: inline-block;
+                vertical-align: middle;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const select = document.getElementById('borrower_attribute_COMSelect');
+  if (select) {
+    const valuesToHide = ['TELEMOB', 'TELEHOME', 'TELEWORK'];
+    for (let i = select.options.length - 1; i >= 0; i--) {
+      const option = select.options[i];
+      if (valuesToHide.includes(option.value)) {
+        option.style.display = 'none';
+      }
+    }
+  }
+});
+</script>
+<script>
+// Adds underneath the Search button a hyperlink to the Advanced search page, aligned to the right with some inset.
+$('div#horizontal-search-box').append('<div style="text-align: right; margin-top: 5px; margin-right: 10px;"><a id="advancedSearch" href="https://libraries.westminster.gov.uk/Union/Search?view=list&showCovers=on&lookfor=&searchIndex=advanced&searchSource=local">Advanced search</a></div>');
+</script>
+<script>
+(function() {
+    const allowedUrls = [
+        "https://libraries.westminster.gov.uk/MyAccount/SelfReg",
+        "https://libraries.rbkc.gov.uk/MyAccount/SelfReg"
+    ];
+
+    if (!allowedUrls.includes(window.location.href)) {
+        return;
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const toggleLink = document.getElementById("panelToggle_additionalContactInformationSection");
+        const panelBody = document.querySelector("#accordion_body_Additional_Contact_Information");
+
+        if (toggleLink && panelBody) {
+            toggleLink.classList.remove("collapsed");
+            toggleLink.setAttribute("aria-expanded", "true");
+
+            panelBody.classList.add("in", "show");
+            panelBody.style.height = "auto"; // Optional: ensure it's visibly expanded
+        }
+    });
+})();
+</script>
+<script>
+$(function() {
+    var $link = $("#panelToggle_privacy_consent_newsletter");
+    var $panel = $("#accordion_body_Newsletter");
+
+    // Update link state
+    $link.attr("aria-expanded", "true").removeClass("collapsed");
+
+    // Determine which class to use to show the panel
+    if ($panel.hasClass("collapse")) {
+        if ($panel.hasClass("in")) {
+            // Bootstrap 3 already open
+            $panel.addClass("in");
+        } else {
+            // Bootstrap 4/5 uses "show"
+            $panel.addClass("show");
+        }
+    }
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Expand the main Copies panel
+    var copiesPanelBody = document.getElementById("copiesPanelBody");
+    if (copiesPanelBody) {
+        copiesPanelBody.classList.add("in");
+        copiesPanelBody.style.height = "auto";
+    }
+
+    // Expand all accordion sections inside
+    document.querySelectorAll(".accordion-body.collapse").forEach(function(el) {
+        el.classList.add("in");
+        el.style.height = "auto";
+    });
+});
+</script>
+<script>
+$(function() {
+    $('#system-message-8').hide();
+});
+</script>
+<script>
+(function() {
+    try {
+        function hideField(select) {
+            var wrapper = select.closest(".form-group") || select.parentElement;
+            if (wrapper) wrapper.style.display = "none";
+        }
+
+        function checkAndHide() {
+            var path = window.location.pathname;
+            if (path.indexOf("ContactInformation") === -1 && path.indexOf("AccountRenewal") === -1) {
+                return;
+            }
+            var com = document.querySelector("select[name='borrower_attribute_COM']");
+            var conc = document.querySelector("select[name='borrower_attribute_CONC']");
+            if (com) hideField(com);
+            if (conc) hideField(conc);
+        }
+
+        checkAndHide();
+
+        var observer = new MutationObserver(function() {
+            try { checkAndHide(); } catch (e) { console.error("hide-fields observer error:", e); }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+    } catch (e) {
+        console.error("hide-fields init error:", e);
+    }
+})();
+</script></body>
+</html>

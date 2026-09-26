@@ -1,0 +1,48 @@
+{
+  "kind": "collectionType",
+  "collectionName": "catalogue_branches",
+  "info": {
+    "singularName": "catalogue-branch",
+    "pluralName": "catalogue-branches",
+    "displayName": "Catalogue Branch",
+    "description": "A service point listed by a Catalogue, and the Library it corresponds to. Keyed to the Library by documentId so matching never touches Library drafts."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": false
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "code": {
+      "type": "string"
+    },
+    "catalogue": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::catalogue.catalogue",
+      "inversedBy": "branches"
+    },
+    "libraryDocumentId": {
+      "type": "string"
+    },
+    "matchStatus": {
+      "type": "enumeration",
+      "enum": ["confirmed", "auto", "review", "unmatched", "rejected"],
+      "default": "unmatched",
+      "required": true
+    },
+    "matchScore": {
+      "type": "decimal"
+    },
+    "lastSeenAt": {
+      "type": "datetime"
+    }
+  }
+}

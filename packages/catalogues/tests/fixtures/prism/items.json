@@ -1,0 +1,15 @@
+{
+  "https://prism.librarymanagementcloud.co.uk/barnet/items.json?query=9780141439518": {
+    "http://purl.org/dc/terms/title": [{ "type": "literal", "value": "Search results for 9780141439518" }]
+  },
+  "https://prism.librarymanagementcloud.co.uk/barnet/items/1110001": {
+    "http://purl.org/dc/terms/title": [{ "type": "literal", "value": "Pride and prejudice" }],
+    "http://purl.org/dc/elements/1.1/format": [{ "type": "literal", "value": "eBook" }],
+    "http://purl.org/dc/terms/identifier": [{ "type": "literal", "value": "1110001" }]
+  },
+  "https://prism.librarymanagementcloud.co.uk/barnet/items/1234567": {
+    "http://purl.org/dc/terms/title": [{ "type": "literal", "value": "Pride and prejudice" }],
+    "http://purl.org/dc/elements/1.1/format": [{ "type": "literal", "value": "Book" }],
+    "http://purl.org/dc/terms/identifier": [{ "type": "literal", "value": "1234567" }]
+  }
+}

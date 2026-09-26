@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<rss version="2.0" xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title><![CDATA[Warrington Libraries catalog Search: nb:9780000000002]]></title>
+    <link>https://libonline.livewirewarrington.co.uk/cgi-bin/koha/opac-search.pl?q=nb:9780000000002&amp;format=rss2</link>
+    <description><![CDATA[ Search results for 'nb:9780000000002' at Warrington Libraries catalog]]></description>
+    <opensearch:totalResults>0</opensearch:totalResults>
+    <opensearch:startIndex>0</opensearch:startIndex>
+    <opensearch:itemsPerPage>20</opensearch:itemsPerPage>
+  </channel>
+</rss>

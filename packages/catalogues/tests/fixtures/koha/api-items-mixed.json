@@ -1,0 +1,8 @@
+[
+  {"biblio_id":184213,"item_id":1,"holding_library_id":"KB","home_library_id":"KB","checked_out_date":null,"effective_not_for_loan_status":0,"not_for_loan_status":0,"lost_status":0,"withdrawn":0,"damaged_status":0},
+  {"biblio_id":184213,"item_id":2,"holding_library_id":"KB","home_library_id":"KB","checked_out_date":"2026-09-20","effective_not_for_loan_status":0,"not_for_loan_status":0,"lost_status":0,"withdrawn":0,"damaged_status":0},
+  {"biblio_id":184213,"item_id":3,"holding_library_id":"HU","home_library_id":"HU","checked_out_date":null,"effective_not_for_loan_status":1,"not_for_loan_status":1,"lost_status":0,"withdrawn":0,"damaged_status":0},
+  {"biblio_id":184213,"item_id":4,"holding_library_id":"HU","home_library_id":"HU","checked_out_date":null,"effective_not_for_loan_status":0,"not_for_loan_status":0,"lost_status":2,"withdrawn":0,"damaged_status":0},
+  {"biblio_id":184213,"item_id":5,"holding_library_id":"PT","home_library_id":"PT","checked_out_date":null,"effective_not_for_loan_status":0,"not_for_loan_status":0,"lost_status":0,"withdrawn":0,"damaged_status":1},
+  {"biblio_id":184213,"item_id":6,"holding_library_id":"ZZ","home_library_id":"ZZ","checked_out_date":null,"effective_not_for_loan_status":0,"not_for_loan_status":0,"lost_status":0,"withdrawn":1,"damaged_status":0}
+]

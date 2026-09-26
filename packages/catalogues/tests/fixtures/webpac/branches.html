@@ -1,0 +1,284 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<!-- Sierra Example Set -->
+<!-- This File Last Changed: 24 Nov 2015 -->
+<head>
+<link rel="stylesheet" type="text/css" href="/scripts/ProStyles.css" />
+<link rel="stylesheet" type="text/css" href="/screens/styles.css" />
+<script type="text/javascript" src="/scripts/elcontent.js"></script>
+<script type="text/javascript" src="/scripts/common.js"></script>
+<script type="text/javascript" src="/scripts/features.js"></script>
+<script type="text/javascript" src="/scripts/webbridge.js"></script>
+
+<title>Advanced Search Options</title>
+<script language="JavaScript">
+<!-- Hide the JS
+startTimeout(600000, "/");
+// -->
+
+</script>
+<noscript>
+<meta http-equiv="Refresh" content="600;URL=/" />
+</noscript>
+<meta http-equiv="X-UA-Compatible" content="IE=8;FF=3;OtherUA=4">
+<link rel="stylesheet" type="text/css" href="/screens/styles_print.css" media="print">
+
+</head>
+
+<meta http-equiv="refresh" content="0; url=https://sayrc.eu.iiivega.com/">
+<!--this is customized <screens/srchhelp_X.html>-->
+<div class="container-fluid search-help">
+
+
+<h2>Searching the catalogue</h2>
+<p>There are many ways to search the library's catalogue. The links and information below will give you tips on searching for specific kinds of items.</p>
+
+<h4>Search Options:</h4>
+<ul>
+<li><a href="/search/a" title="Author">Author</a></li>
+<li><a href="/search/c" title="Classification Number">Classification Number</a></li>
+<li><a href="/search/i" title="ISBN">ISBN</a></li>
+<li><a href="/search/Y" title="Keyword">Keyword</a></li>
+<li><a href="/search/q" title="Series">Series Title</a></li>
+<li><a href="/search/d" title="Subject">Subject</a></li>
+<li><a href="/search/t" title="Title">Title</a></li> 
+</ul>
+
+<h4>Advanced Keyword Search</h4>
+<div class="advmsg">
+</div>
+<script type="text/javascript">
+
+//global variables below are set by webpac
+encode = "UTF-8";
+savedScopeIndex = 9;
+//this func is created at runtime by webpac
+function AdvancedSearchForm_initLimits(ths, form)
+{
+
+ths.limitArray.lang = (form.elements["l"]) ? form.elements["l"] : "";
+ths.limitArray.mattype = (form.elements["m"]) ? form.elements["m"] : "";
+ths.limitArray.branch = (form.elements["b"]) ? form.elements["b"] : "";
+ths.limitArray.publish = (form.elements["p"]) ? form.elements["p"] : "";
+ths.limitArray.invnum = (form.elements["i"]) ? form.elements["i"] : "";
+ths.limitArray.accsprvdr = (form.elements["a"]) ? form.elements["a"] : "";
+}
+
+</script>
+<!-- FOR USE IN ADVANCED SEARCH PAGES (e.g.: srchhelp_X.html) ONLY -->
+<!-- FOR PHRASE SEARCH PAGES USE TOKEN: formbegin -->
+<form action="#" enctype="multipart/form-data: charset=UTF-8" name="search" id="search" onsubmit="return submitSearch(this, location.pathname, false);">
+<div class="form3PartAbove"> 
+<fieldset>
+<h4>Enter Search Terms</h4>
+<br />
+<div id="formEntryArea">
+<label for="fl1"  class="advSearchFieldLabel">Field 1</label>
+<select id="fl1" name="fieldLimit1" title="field limit 1">
+<option value="" selected="selected">Any Field:</option>
+<option value="a:">Author:</option>
+<option value="t:">Title:</option>
+<option value="d:">Subject:</option>
+<option value="N:">Note:</option>
+</select>
+
+<label for="st1"  class="advSearchTextLabel">Search Text 1</label>
+<input maxlength="75" size="35" name="searchText1" id="st1" title="search text 1" />
+<label for="bl1"  class="advSearchBooleanLabel">Boolean 1</label>
+<select name="boolean1" id="bl1" title="Boolean 1">
+<option value="%20and%20" selected="selected">And</option>
+<option value="%20and%20not%20">And not</option>
+<option value="%20or%20">Or</option>
+</select>
+
+<br />
+
+<label for="fl2"  class="advSearchFieldLabel">Field 2</label>
+<select id="fl2" name="fieldLimit2" title="field limit 2">
+<option value="" selected="selected">Any Field:</option>
+<option value="a:">Author:</option>
+<option value="t:">Title:</option>
+<option value="d:">Subject:</option>
+<option value="N:">Note:</option>
+</select>
+
+<label for="st2"  class="advSearchTextLabel">Search Text 2</label>
+<input maxlength="75" size="35" name="searchText2" id="st2" title="search text 2" />
+<label for="bl2"  class="advSearchBooleanLabel">Boolean 2</label>
+<select name="boolean2" id="bl2" title="Boolean 2">
+<option value="%20and%20" selected="selected">And</option>
+<option value="%20and%20not%20">And not</option>
+<option value="%20or%20">Or</option>
+</select>
+
+<br />
+
+<label for="fl3"  class="advSearchFieldLabel">Field 3</label>
+<select id="fl3" name="fieldLimit3" title="field limit 3">
+<option value="" selected="selected">Any Field:</option>
+<option value="a:">Author:</option>
+<option value="t:">Title:</option>
+<option value="d:">Subject:</option>
+<option value="N:">Note:</option>
+</select>
+
+<label for="st3"  class="advSearchTextLabel">Search Text 3</label>
+<input maxlength="75" size="35" name="searchText3" id="st3" title="search text 3" />
+<label for="bl3"  class="advSearchBooleanLabel">Boolean 3</label>
+<select name="boolean3" id="bl3" title="Boolean 3">
+<option value="%20and%20" selected="selected">And</option>
+<option value="%20and%20not%20">And not</option>
+<option value="%20or%20">Or</option>
+</select>
+
+<br />
+
+<label for="fl4"  class="advSearchFieldLabel">Field 4</label>
+<select id="fl4" name="fieldLimit4" title="field limit 4">
+<option value="" selected="selected">Any Field:</option>
+<option value="a:">Author:</option>
+<option value="t:">Title:</option>
+<option value="d:">Subject:</option>
+<option value="N:">Note:</option>
+</select>
+
+<label for="st4"  class="advSearchTextLabel">Search Text 4</label>
+<input maxlength="75" size="35" name="searchText4" id="st4" title="search text 4" />
+</div>
+<input type="hidden" name="startLimit" >
+<br />
+ <!-- form3PartAbove -->
+
+<h4>Add Limits (Optional)</h4>
+<br />
+<div class="formEntryArea">
+<input type="checkbox" name="availlim" id="availlim" value="1" />
+<span class="availLimMessage">Limit search to available items</span></div>
+<br />
+<!-- Optional Scopes section -->
+<div class="formEntryArea"> 
+<p>
+<label for="searchscope">Library:</label></p>
+<label for="searchscope" style="display:none;">Search Scope</label><select name="searchscope" id="searchscope">
+<option value="8"> Adult Books</option> <option value="4"> Audio Books</option> <option value="6"> Children's Books</option> <option value="9"> Fiction</option> <option value="2"> Large Print</option> <option value="5"> Local History</option> <option value="10"> School Libraries Collections</option> <option value="11"> Non-Fiction</option> <option value="1" selected="selected"> View Entire Collection</option> <option value="7"> Young Adult Collection</option> <option value="12"> Alloway Library</option> <option value="13"> Ballantrae Library</option> <option value="14"> Carnegie Library</option> <option value="15"> Forehill Library</option> <option value="16"> John Rodie Library, Mossblown</option> <option value="17"> Maybole Library</option> <option value="18"> Prestwick Library</option> <option value="19"> Symington Library</option> <option value="20"> Tarbolton Library</option> <option value="21"> Troon Library</option> <option value="22"> Marr Educational Resources Centre</option> <option value="23"> Ayr Academy</option> <option value="24"> Belmont Academy</option> <option value="25"> Carrick Academy</option> <option value="26"> Girvan Academy</option> <option value="27"> Kyle Academy</option> <option value="28"> Marr College</option> <option value="29"> Prestwick Academy</option> <option value="30"> Queen Margaret Academy</option> </select>
+
+</div>
+<br clear="left" />
+<div class="formEntryArea">
+<table border="0">
+<tr><td><label for="m">Material Type:</label></td>
+<td><select id="m" name="m" size="5" multiple="multiple">
+<option value="">ANY</option>
+<option value="a">Book</option>
+<option value="g">DVD</option>
+<option value="i">Audiobook</option>
+</select>
+</td>
+</tr></table>
+
+</div>
+<br clear="left" />
+<div class="formEntryArea"> 
+<table border="0">
+<tr><td><label for="p">Publisher:</label></td>
+<td><input type="text" size="20" name="p" id="p" value="" />
+</td>
+</tr></table>
+
+</div>
+<br clear="left" />
+<div class="formEntryArea" id="form3PartAdvLimitSort">
+<label for="SORT"> Search and Sort:</label><select name="SORT" id="SORT">
+<option value="D" selected="selected">sorted by relevance</option><option value="DX">sorted by date</option><option value="AX">sorted by title</option></select>
+<br clear="left" /><!-- div formEntryArea -->
+</br>
+<span>
+<a href="#" onClick='iiiDoReset_1();' >Clear Form</a>
+</span>
+</fieldset>
+<input type="hidden" name="endLimit" >
+<br />
+<div class="formButtonArea">
+<span>
+<script  type="text/JavaScript">
+function iiiAdvSubmit()
+{
+obj = getObj("search");
+submitSearch(obj, location.pathname, false);
+}
+if (document.layers)
+  document.captureEvents(Event.KEYDOWN);
+document.onkeydown =
+  function (evt) {
+    var keyCode = evt ? (evt.which ? evt.which : evt.keyCode) : event.keyCode;
+    if (keyCode == 13) 
+      iiiAdvSubmit(); };
+</script>
+<a href="#" onclick="iiiAdvSubmit();"><button type="button" class="btn btn-success">Submit</button></a>
+</span>
+</div>
+
+</form>
+</div> <!-- form3Part -->
+</div> <!-- container-fluid -->
+
+<!-- begin botlogo.html file -->
+<!-- Sierra Example Set -->
+<!-- Updated: 06 Oct 2015 -->
+</div> <!-- pageContent  -->
+<!DOCTYPE html>
+<html lang="en">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<div class="container-fluid bg-social text-center">
+<p class="lead">Follow Us</p>
+  <div class="row">
+  <div class="col-sm-12">
+<span><a href="https://twitter.com/salibraries" class="fa fa-twitter fa-2x"></a></span>  
+<span><a href="https://www.facebook.com/salibraries" class="fa fa-facebook fa-2x"></a></span>
+<span><a href="https://www.pinterest.co.uk/salibraries/pins" class="fa fa-pinterest fa-2x"></a></span>
+<span><a href="https://sayrshirelib.wordpress.com" class="fa fa-wordpress fa-2x"></a></span>   
+   </div>
+   </div>
+</div>
+
+
+<div class="col-container bg-footer">
+  
+<div class="col">
+    <h4>Contact Us</h4>
+      <p><a href="mailto:carnegie.library@south-ayrshire.gov.uk">Email</a></p>
+      <p><a href="https://forms.office.com/r/08yZbi3Hnt" >Feedback</a></p>
+      <p><a href="http://www.south-ayrshire.gov.uk/libraries" >Library website</a></p>
+      <p><a href="https://www.south-ayrshire.gov.uk/article/27329/Library-Services-privacy-notice">Privacy policy, privacy notice and cookies</a></p>
+      </div>
+
+  <div class="col">
+    <h4>Main Library</h4>
+    <p><a href="https://www.south-ayrshire.gov.uk/carnegie-library" >Carnegie Library</a><br>12 Main Street<br>
+      Ayr <br>KA8 8ED <br> Phone: 01292 286385</p>
+     </div>
+
+  <div class="col">
+    <h4>Help</h4>
+    <p><a href="https://help.overdrive.com">eBook help</a></p>
+    <p><a href="https://care.pressreader.com/hc/en-us/articles/211272703-Library-Card-Sign-In">PressReader help</a></p>
+    <p><a href="/help#renewals">Renewals help</a></p>
+    <p><a href="/help#signinhelp">Sign in help</a></p>
+    </div>
+
+
+</div>
+
+
+
+
+
+
+ <!-- fullPage (toplogo.html) -->
+ <!-- end botlogo.html file -->
+
+</body>
+</html>
+

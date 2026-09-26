@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en"><head><title>Results of search &rsaquo; Warrington Libraries catalog</title></head>
+<body id="results" class="scrollto">
+<div id="wrapper">
+<form name="searchform" method="get" action="/cgi-bin/koha/opac-search.pl" id="searchform">
+  <select name="limit" id="select_library" class="form-select">
+    <option value="">All libraries</option>
+    <option value="branch:BIR">Birchwood Library</option>
+    <option value="branch:BUR">Burtonwood Library</option>
+    <option value="branch:CEN">Warrington Central Library</option>
+    <option value="multibranchlimit-NORTH">North group</option>
+  </select>
+</form>
+<div id="search-facets">
+<ul>
+  <li id="itype_id"><h3 id="facet-itemtypes">Item types</h3>
+    <ul><li><span class="facet-label"><a href="/cgi-bin/koha/opac-search.pl?do=Search&amp;limit=itype%3ABK" title="BK">Book</a></span><span class="facet-count"> (12034)</span></li></ul>
+  </li>
+  <li id="holdingbranch_id"><h3 id="facet-holdinglibrary">Current libraries</h3>
+    <ul>
+      <li><span class="facet-label"><a href="/cgi-bin/koha/opac-search.pl?do=Search&amp;limit=holdingbranch%3ABIR" title="Birchwood Library">Birchwood Library</a></span><span class="facet-count"> (4210)</span></li>
+      <li><span class="facet-label"><a href="/cgi-bin/koha/opac-search.pl?do=Search&amp;limit=holdingbranch%3ACUL" title="Culcheth Library">Culcheth Library</a></span><span class="facet-count"> (3981)</span></li>
+      <li><span class="facet-label"><a href="/cgi-bin/koha/opac-search.pl?do=Search&amp;limit=holdingbranch%3ACEN" title="Warrington Central Library">Warrington Central Library</a></span><span class="facet-count"> (21044)</span></li>
+      <li><span class="facet-label"><a href="/cgi-bin/koha/opac-search.pl?do=Search&amp;limit=holdingbranch%3APAD" title="Padgate Library">Padgate Library</a></span><span class="facet-count"> (2011)</span></li>
+    </ul>
+  </li>
+  <li id="homebranch_id"><h3 id="facet-homelibrary">Home libraries</h3>
+    <ul>
+      <li><span class="facet-label"><a href="/cgi-bin/koha/opac-search.pl?do=Search&amp;limit=homebranch%3AMOB" title="Mobile Library">Mobile Library</a></span><span class="facet-count"> (803)</span></li>
+    </ul>
+  </li>
+</ul>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,37 @@
+{
+  "name": "@repo/catalogues",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Search public library catalogues (OPACs): detect the catalogue system, list branches and check ISBN availability. Inspired by and ported from LibrariesHacked/catalogues-library.",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:live": "CATALOGUES_LIVE=1 vitest run tests/live",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0"
+  }
+}

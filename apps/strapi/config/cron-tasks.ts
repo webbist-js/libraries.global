@@ -45,7 +45,45 @@ const quickWinsRefreshJob = {
   },
 }
 
+// Re-list every catalogue's branches weekly: keeps branch→Library matches
+// fresh and flags catalogues whose sites have changed or started blocking us.
+const catalogueBranchDiscoveryJob = {
+  task: async ({ strapi }: { strapi: any }) => {
+    const catalogues = await strapi
+      .documents("api::catalogue.catalogue")
+      .findMany({
+        filters: { branchStatus: { $ne: "unsupported" } },
+        fields: ["documentId", "name"],
+        pagination: { pageSize: 1000 },
+      })
+    strapi.log.info(
+      `[catalogue] Branch discovery for ${catalogues.length} catalogues`
+    )
+    const service = strapi.service("api::catalogue.catalogue")
+    // Few at a time: these are small council sites. Per-host throttling in
+    // @repo/catalogues spaces out requests to shared hosts.
+    for (let i = 0; i < catalogues.length; i += 3) {
+      await Promise.all(
+        catalogues
+          .slice(i, i + 3)
+          .map((c: { documentId: string; name: string }) =>
+            service
+              .discoverBranches(c.documentId)
+              .catch((err: Error) =>
+                strapi.log.warn(`[catalogue] ${c.name}: ${err.message}`)
+              )
+          )
+      )
+    }
+    strapi.log.info("[catalogue] Branch discovery complete")
+  },
+  options: {
+    rule: "0 0 2 * * 1",
+  },
+}
+
 export default {
   sayHelloJob,
   quickWinsRefreshJob,
+  catalogueBranchDiscoveryJob,
 }

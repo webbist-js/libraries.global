@@ -1,0 +1,426 @@
+
+
+<!DOCTYPE html>
+<html lang="en-gb">
+<head><meta http-equiv="X-UA-Compatible" content="IE=edge" /><meta charset="utf-8" /><meta name="referrer" content="no-referrer-when-downgrade" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="format-detection" content="telephone=no" /><title>
+	Library Online: Keyword Search
+</title><link href="libraryonline.ico" rel="shortcut icon" type="image/x-icon" /><script src="/Scripts/jquery-3.7.1.js"></script>
+<script src="/Scripts/confirmbutton.js"></script>
+<script src="/Scripts/modal.js"></script>
+<script src="/Scripts/bootstrap.js"></script>
+<link href="/Content/bootstrap.css" rel="stylesheet"/>
+<link href="/Content/basket.css" rel="stylesheet"/>
+<link href="/Content/site.css" rel="stylesheet"/>
+
+    <!-- Google Analytics -->
+    <script>
+        visitor = 'Member';
+        (function (i, s, o, g, r, a, m) {
+            i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date(); a = s.createElement(o),
+            m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
+        })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+        ga('create', 'UA-5775838-1', 'auto');   // Library Online property ID
+        ga('set', 'dimension1', visitor);       // Visitor custom dimension
+        ga('send', 'pageview');
+
+    </script>
+    <!-- End Google Analytics -->
+
+
+
+    <script type="text/javascript" src="swipebox/src/js/jquery.swipebox.js?v=1.1"></script>
+    <link rel="stylesheet" href="swipebox/src/css/swipebox.css?v=1.1" type="text/css" media="screen" />
+    <script type="text/javascript">
+        jQuery(function ($) {
+            $(".swipebox").swipebox();
+        });
+    </script>
+
+    <script src="Scripts/Checkbox.js" type="text/javascript"></script>
+
+</head>
+<body>
+    <form method="post" action="./pgCatKeywordSearch.aspx" id="ctl01">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="cvus3gmwwJCWKsFSQjYT1Ln0D0qHbB/HaW03acRGEx7qQrug6Y0eVazlYXFMsUI1oNAXLivrVkZS5cJpIO17w9EUSx1/P/7YpVpLhC3OCysF6ljQkmnZkh4l3vOCgbgUrondR6kMak0Kr7U3xvkwmTWEhurpTQ/1AAm75WNAD72ko8xrbl6qoz30Ww7JhipkXazwycBe/hE+Rce0Q2ak75hIngyIi+LCelbh1qJjs2YtuZ2FwGJNKBdqfe33ZSojBLCMNeN3O7qCrC1epHNchYaXl7+i5+q4gOgt/KbChaU7DuLLn536iisLeDW6mccaTGpOij9JSK8SRFDNeDMM291Ejpzmrs0cSPBN7xSEh6FENv8jwng30ceCeHp9HTf+edV6gsGPevDqhc3j5ZBYB0lv0PTOeIJdB/KVJyyjTWJsKaP/xj9/l98tKcWhIH7/xZNDlAbJtJcl+/dEOCAHmnttsn3B8tv61HFkitO2Jj4rc9I4/l49r1DKwM8T8SoKr9fFOWouUA+7ZMF7qF6UCRIi0054BUACiiI5YSOHynjLZFwUfzM7hliCKSSbdpmTQ9KMj8XUkCF9geev+VupL8eS3iM3RYm+SPRhT9IhpJsuqUDFEyw+DmeqimQrFdWrK5tWj358tK9SWPVtQ92sucPA45bI96W/N3RbZqJncCZY0F9xum0MxcSE/9t3FKhx4HP72SKygKd5SZFc0vtXBQXRMDnZlmWMze/Ba5uRwsoTxTZdoONlvXRgqKlBGZ6yCgRiurIW5LmIJszLlvxvN1naQ7YVANewlNCSW1mDRcdwC2BIF3ljhEHFUVpjwnNeDKmF2RWtRDyiXZfxC2mROjFiihPSpIcTi2vM93Atlg9Vwx+H/hN3l1/1E7JrKzJpgGoiBHuJrdyyFAdl0ct8yXXCrTUa0NOLVNC9IBbborZwsPGTaVT9H1xOlsKtyjS1VYrJAs0Y4ZyAC2icOCUHahEAAXHO/SuxXcuVYtv5akLHpZZGoYtsuDZ2f4UDcxJEHJ29KTh8dsvtOtOFbWAZ+pXp626gA+HtZvKivFzMDY0YebF7F55PFn8WEi/R6DKdbuki3qWYZlwgMQe8cXk6arSJ7FWNIYFn9PY4lRpp51qQ93eaPC57ciYMx63F2TVPQj8CQAmYLP7E8CgWJX0NIMShohnESdiG3BXmeaOlf6mXqVEvPGScenqFDuXDrdSkDWzRQ0rBWG8tMF6H+FFxOBwGV3NMwbYvNDpS/Co+a9XodWy+TYCieFNK1KRQ8xK7E+bCRvY2d0nC/JqKBotU7MI2J6p0n5t9RtIl66ydqq7qaPu3bENpcNpb8JRVCB+iZ8qBCYGA7rM2m86EeBkrxeUql873qSphY4s4XW3FHZWJPPgOtSMecc4bI8+SFBhuG3R4eI3hN4d3RYGUHno2NktGkfcA/L/hYh5Ex/5T66IyCwp1/BM7cwkpxWayDI2PpY3RWDOCSglTTD2hDbgcliHymXUvPJnuI5UbLC2Rr9XAhbtdoxR9vK8y0qjE5sMxUg6iUdIsvMf7NXzF2gT80C05CDjsL907BZ6tLu6qAnYcRRKmg6eOHPZu0xAlgDO3sQs7ETnc8aFXqSq+orAh0YcQeDRgv0HNr6StzTdSwKVONOFm4kYz+ytA8mZNelBKxwCn1205tA00QyjW/XfB9rpQoVltqkiSUDcwpXjR0e+oXNFDasosfGm1OtDRacFQrQpZzpcI5xxMqXOpTlbBuzuZkYaZBMrP2iV6VnKklbkUkItKGzlgaBIRlMIEbdNbP2Pls6snhN7FTjDEOPJMUXVt73YBOvV9oUPsG9q9YNswVmjfOzJqhp65BFwGOotr6GThsl4pIa34ty8zrcX7VRrcrJb2LbnBOnAbLXkfnbY2bAdh0tZlillExonCBJ4l0s8qCEg7C0VcmB40KD5x4M96zxDBBNZrvJ5voC6Syl9lSyg/iQ6g19ydo7fnGQzhDD8sO6WvoLqoMOE5J9jK9Rn0tTMcREU/56bDyUg90XTETgAPwUJwLP49btVZ9TQKSu/Vo6uqyXAsyszMdmWgz346itaVTeCpQn9vxLSHtChi6PUz/yaewaHhWJ0gGpg8DzxDEjWBUuVuqw0jjuKChZnRadMsvKbJERODE3mRNiomBTIiclbhUTXxIKY9lOLRV3p0iyqAtpFj9MBThOdCpMOWOYbDKCzQDl9YpttonP4xWNQW0NbZumcXFS70s/wEXJqFeeh5eH5NmkbdnjXaAkhbInRLqdrZws3GNKSoO9jOuiMyIvDaJzpVO+0COYemAtac/B+3xy9TnInvCrBkGJHJH8/BNEhJ26hZQw5DOvl3ORfOpKAEqF1jpPGdLBIXrvn/2tlBMJCq/orn9R6Bb8becbZBFeAlOHRJWDVg525vbEhPfG3KRi0l1gXp2c1LaAGk9W6EQHepBfuRMx3UI/L9ybv3riKXlVK1755mEd/HyTev9ZaYyV6XgWLT7nKvYS5fCKgt8iAKdLeyhaaotDBzDDwnFTnN3az8H3O8y2L2LFiqeNcFAB49jQKMpXJRd1sLtehk4TLTlgH2kNdVwYSAvDAc8IPug0SAQo4P3MSQ1WovB3oNVKdKpVeVkopj6XLWq0kdbiy6HkVRBUwFgcmFrHMZKUCvmNdqn7+4n8dNp9hN36eWJnWl1V5FedShbK2NAmmiHi7qOIsSLfO/Zq3Ls5Bu65aSF8J1x81PV4WFMG+MJlG/7JVMzFT0ceCaengzdxtpabLeE5H4jnmNmh40iBis+6oZTDvLrDcoP3lvKRt1wQKnaB5zpphKUbBMqdVpAE9XRdHYjZFBgdsijvkUfVJwTe5tmvSIOWOQ9dGkJwpTanSgCo8rsfM5yZ/qABuBlR2TURDIKxksUkg9C1ASntI6C7lU6dl5KweqjENZGQJLiZrAcchtkh8ir0Y+eQ2gBUipVgCVuwp/qi1Z6wuQbV+Nsqv3+GYVYZ9oC5vTsdpMUWzOyTFAz6vWN8AsGE1fHNH1vJjruG+FkWJ/cX9KSpvhENKqv9M+RqUKzybnD8CLKY/r0yprCcTvRS8PRgdrFQNSNM3o/0p+R+crKhutQwahv4shIU9JRNLfaxUpDapS2ujhw35H3ok1LLwxzS+EbEljpBR019kUMfNSIWrxu2WFI6cDRgu6jZbacJHFV1+25zfTcIuTtqNGp6lOj+bUV70h4o6Cgu6e+lGPn7o0klJQzpO3Lzns//lXQNmG2vsUDTJsCL+BKZlGseJwCs6zBB3/ogg8sAYbGiNMABLlZGig/9C8OjGuigvaGLttUIaRZhAG/nhOu7+KqtOEyq3QFkDPfflWRdzAagr/MNV/afn39J8bHuVGYBHF9te7bOTTJ35YF4yTiEhaztvRQEmOIMx+fQw5r1lpKaXeaYjpIckQFW3QQfBvq+1zK+/U6eYVxjhjFHJrBxRJoyDOatnXCZQ4zESaKVn5kYW2JxcOA8YpiQGPL7Se/EUWb4Q=" />
+
+
+<script type="text/javascript">
+//<![CDATA[
+function TickValidate() {x=document.forms[0];if ((x.cph1_cph2_cbBooks.checked   || x.cph1_cph2_cbEBooks.checked   || x.cph1_cph2_cbEAudiobooks.checked   || x.cph1_cph2_cbEMagazines.checked   || x.cph1_cph2_cbSD.checked   || x.cph1_cph2_cbSW.checked   || x.cph1_cph2_cbLPBooks.checked)   && x.cph1_cph2_Keywords.value != '') {  return true;  }else { cph1_cph2_labError.innerHTML = 'Please tick one or more boxes and enter one or more keywords.';  return false;  }}//]]>
+</script>
+
+<script src="/ScriptResource.axd?d=nnHyWnZ5bTPuYszCeiYmKwv3pygxoQZX3xNAbw7fFMe07jehXJwYrXT1BaIKoE_XfQR34KCwL9OGm3uVVEugMxPB7XiKLkNdbSp5WLnee0xPrnsiV9o_9G9ZPMvwnLWqtMbtBmAOd_43uSMb4KiGPzLYivYYyqkzMr4A0CY7rl01&amp;t=ffffffffbec1863d" type="text/javascript"></script>
+<script type="text/javascript">
+//<![CDATA[
+if (typeof(Sys) === 'undefined') throw new Error('ASP.NET Ajax client-side framework failed to load.');
+//]]>
+</script>
+
+<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="CBC25F92" />
+<input type="hidden" name="__VIEWSTATEENCRYPTED" id="__VIEWSTATEENCRYPTED" value="" />
+<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="2zQZ4vdWHloxuYgwxfwamSX52ErPtUrnf82iE5Pxk7QJCgEM6HNW/5Si1pf0UMU4fk/KQIiA3CCnjfUOBkgpqS8sjpV7ZU33nhZhf8/vAHR7eS/A96yYN836Clz/dL2El7OBNWoPcKVvJtypdrohGiMXyfFwGMBOkxMkhnQqgmYXApT6IbJSJA9F0LKzA2KNiXDltgsgYVUSfQ8k5noEQy62btCnOhOGhki+1u/fJk3hOCpTJMl3nZhDxUF7RVvlJMJPQd247qUCHULBszywFs6Astr0GloozMjqFHxySIpSPbsQSB7Yicjp9QyNDmpF" />
+        <div class="navbar navbar-default" style="border-width: 0; padding: 0; margin: 0; background-color: #f8f8f8;">
+            
+            <img class="d-none d-sm-block" src="Images/library_online_header.gif" alt="Library Online" />
+            <div style="clear: both; text-align: center; float: right; margin-top: 5px;">
+                <div id="updpanBasket">
+	
+                        <!-- basket component [start]-->
+                        
+                        <!-- basket component [end]-->
+                    
+</div>
+            </div>
+            <div style="display: none">
+                
+
+<fieldset>
+    
+            There are no items in your basket.
+        
+</fieldset>
+
+
+            </div>
+            <div class="container" style="border-width: 0; padding: 15px; margin: 0;">
+                
+                <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                    <a id="hlLibraryOnline" class="navbar-brand" href="./">Library Online</a>
+
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        
+                        
+                        <div id="panNeither">
+	
+                            <ul class="navbar-nav mr-auto">
+                                <li class="nav-item"><a href="pgLogin.aspx" class="nav-link">Log In</a></li>
+                                <li class="nav-item"></li>
+                            </ul>
+                        
+</div>
+                    </div>
+                </nav>
+                
+            </div>
+        </div>
+
+        <div class="container">
+            
+    <h1>Catalogue</h1>
+    <div class="row">
+        <div class="col-sm-3 col-md-3">
+            <section id="SubMenu">
+                
+<div id="sidebar">
+    
+    Search:
+    <br />
+    <div style="text-align: left; margin-left: 15px;">
+        <a id="cph1_ucCatalog_hlKeywordSearch" title="Keyword Search" href="pgCatKeywordSearch.aspx#Detail">Keyword Search</a>&nbsp;
+            <br />
+        <a id="cph1_ucCatalog_hlAdvancedSearch" title="Advanced Search" href="pgCatAdvancedSearch.aspx#Detail">Advanced&nbsp;Search</a>
+        <br />
+
+    </div>
+    Browse:
+        <br />
+    <div style="text-align: left; margin-left: 15px;">
+        <a id="cph1_ucCatalog_hlCollections" title="Collections" href="pgCatCollections.aspx#Detail">Collections</a>
+        <br />
+        <a id="cph1_ucCatalog_hlSubjectSearch" title="Subjects" href="pgCatSubject.aspx?&amp;SUB=A#Detail">Subjects</a><br />
+        <a id="cph1_ucCatalog_hlNovelists" title="Favourite Novelists" href="pgCatNov.aspx?&amp;AZ=A&amp;TYPE=AF#Detail">Favourite Novelists</a>
+        <br />
+        <a id="cph1_ucCatalog_hlChildrensAuthors" title="Children&#39;s Authors" href="pgCatNov.aspx?&amp;AZ=A&amp;TYPE=JF#Detail">Children's Authors</a><br />
+        <a id="cph1_ucCatalog_hlNewStock" title="New Stock" href="pgCatNewStock.aspx#Detail">New Stock</a><br />
+        
+        <a id="cph1_ucCatalog_hlEbook" title="eBook Genres" href="pgCatEBook.aspx#Detail">eBook Genres</a><br />
+        <a id="cph1_ucCatalog_hlEAudiobook" title="eAudioBook Genres" href="pgCatEAudioBook.aspx#Detail">eAudioBook Genres</a><br />
+        <a id="cph1_ucCatalog_hlEAMagazine" title="eMagazine Genres" href="pgCatEMagazine.aspx#Detail">eMagazine Genres</a><br />
+    </div>
+    Recommendations:
+        <br />
+    <div style="text-align: left; margin-left: 15px;">
+        <a id="cph1_ucCatalog_hlTopTen" title="Top Ten" href="pgCatTopTen.aspx#Detail">Top Ten</a><br />
+        
+                <div>
+                    
+                <a href="pgCatReadinglist.aspx?LIST=First Experiences#Detail"
+                    title="First Experiences">
+                    First Experiences</a>
+                <br />
+            
+                <a href="pgCatReadinglist.aspx?LIST=Teen Reads#Detail"
+                    title="Teen Reads">
+                    Teen Reads</a>
+                <br />
+            
+                </div>
+            
+    </div>
+    <div>
+        
+                <div>
+                    My Catalogues:
+                        <br />
+                    <div style="text-align: left; margin-left: 15px;">
+                        
+                <a href="pgCatMyCat.aspx?MYCAT=Abigail#Detail"
+                    title="Abigail">
+                    Abigail</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=Aria#Detail"
+                    title="Aria">
+                    Aria</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=David#Detail"
+                    title="David">
+                    David</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=Den#Detail"
+                    title="Den">
+                    Den</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=Guitar #Detail"
+                    title="Guitar ">
+                    Guitar </a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=Harwood#Detail"
+                    title="Harwood">
+                    Harwood</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=Hazel#Detail"
+                    title="Hazel">
+                    Hazel</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=Irish ancestry #Detail"
+                    title="Irish ancestry ">
+                    Irish ancestry </a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=Kate#Detail"
+                    title="Kate">
+                    Kate</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=LM#Detail"
+                    title="LM">
+                    LM</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=Lesley#Detail"
+                    title="Lesley">
+                    Lesley</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=Marion#Detail"
+                    title="Marion">
+                    Marion</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=Monica#Detail"
+                    title="Monica">
+                    Monica</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=Oconnor#Detail"
+                    title="Oconnor">
+                    Oconnor</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=Poet#Detail"
+                    title="Poet">
+                    Poet</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=Potter#Detail"
+                    title="Potter">
+                    Potter</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=Rivers#Detail"
+                    title="Rivers">
+                    Rivers</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=Spartacus#Detail"
+                    title="Spartacus">
+                    Spartacus</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=Want to Read#Detail"
+                    title="Want to Read">
+                    Want to Read</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=eileen#Detail"
+                    title="eileen">
+                    eileen</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=francesca#Detail"
+                    title="francesca">
+                    francesca</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=mills#Detail"
+                    title="mills">
+                    mills</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=my catalogue#Detail"
+                    title="my catalogue">
+                    my catalogue</a>
+                <br />
+            
+                <a href="pgCatMyCat.aspx?MYCAT=sophia#Detail"
+                    title="sophia">
+                    sophia</a>
+                <br />
+            
+                    </div>
+                </div>
+            
+    </div>
+</div>
+
+
+
+            </section>
+        </div>
+        <div class="col-sm-9 col-md-9">
+            <a class="anchor d-block d-sm-none" name="Detail" id="Detail"></a>
+            
+    
+    <link href="Content/Checkbox.css?v=1.01" rel="stylesheet" lang="en" />
+    <script type="application/javascript">
+        function setFocus(tbName) {
+            document.all(tbName).focus();
+            return false;
+        }
+    </script>
+    <section id="KeywordSearch">
+        <h2>Keyword Search</h2>
+        <p>
+            Please tick the type of items you want to search for and enter up to 5 keywords
+    (separated by spaces).
+        </p>
+        <p>
+            A keyword can be a word from the title, the author's surname or the item's ISBN.
+        </p>
+        <div id="cph1_cph2_panSearch" class="form-horizontal">
+	
+            <div class="row mb-3 form-group">
+                <span class="col-md-2 control-label"><strong>Types</strong></span>
+                <div class="col-md-10 columns">
+
+                    <div id="cph1_cph2_panBooks" class="type-selected" class="type-selected">
+		
+                        <span class="mycheckbox checkbox-inline checked"><input id="cph1_cph2_cbBooks" type="checkbox" name="ctl00$ctl00$cph1$cph2$cbBooks" checked="checked" /><label for="cph1_cph2_cbBooks">Standard print books</label></span>
+                    
+	</div>
+                    <div id="cph1_cph2_panLPBooks" class="type-not-selected" class="type-selected">
+		
+                        <span class="mycheckbox checkbox-inline checked"><input id="cph1_cph2_cbLPBooks" type="checkbox" name="ctl00$ctl00$cph1$cph2$cbLPBooks" /><label for="cph1_cph2_cbLPBooks">Large print books</label></span>
+                    
+	</div>
+
+                    <div id="cph1_cph2_panEBooks" class="type-not-selected" class="type-selected">
+		
+                        <span class="mycheckbox checkbox-inline checked"><input id="cph1_cph2_cbEBooks" type="checkbox" name="ctl00$ctl00$cph1$cph2$cbEBooks" /><label for="cph1_cph2_cbEBooks">eBooks</label></span>
+                    
+	</div>
+                    <div id="cph1_cph2_panEAudiobooks" class="type-not-selected" class="type-selected">
+		
+                        <span class="mycheckbox checkbox-inline checked"><input id="cph1_cph2_cbEAudiobooks" type="checkbox" name="ctl00$ctl00$cph1$cph2$cbEAudiobooks" /><label for="cph1_cph2_cbEAudiobooks">eAudioBooks</label></span>
+                    
+	</div>
+                    <div id="cph1_cph2_panEMagazines" class="type-not-selected" class="type-not-selected">
+		
+                        <span class="mycheckbox checkbox-inline checked"><input id="cph1_cph2_cbEMagazines" type="checkbox" name="ctl00$ctl00$cph1$cph2$cbEMagazines" /><label for="cph1_cph2_cbEMagazines">eMagazines</label></span>
+                    
+	</div>
+
+                    <div id="cph1_cph2_panSW" class="type-not-selected" class="type-not-selected">
+		
+                        <span class="mycheckbox checkbox-inline checked"><input id="cph1_cph2_cbSW" type="checkbox" name="ctl00$ctl00$cph1$cph2$cbSW" /><label for="cph1_cph2_cbSW">Spoken word cassettes</label></span>
+                    
+	</div>
+                    <div id="cph1_cph2_panSD" class="type-not-selected" class="type-not-selected">
+		
+                        <span class="mycheckbox checkbox-inline checked"><input id="cph1_cph2_cbSD" type="checkbox" name="ctl00$ctl00$cph1$cph2$cbSD" /><label for="cph1_cph2_cbSD">Spoken word CDs</label></span>
+                    
+	</div>
+                    
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="cph1_cph2_Keywords" class="col-sm-2 col-md-2 control-label"><strong>Keywords</strong></label>
+                <div class="col-sm-10 col-md-10">
+                    <input name="ctl00$ctl00$cph1$cph2$Keywords" type="text" value="9799999999990" maxlength="80" size="50" id="cph1_cph2_Keywords" class="form-control" />
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-sm-12">
+                    <span id="cph1_cph2_labError"><font color="Red">Sorry: Your search has not found anything. Please try again.</font></span>
+                    <span id="cph1_cph2_labCount"></span>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-sm-2 col-md-2"></div>
+                <div class="col-sm-10 col-md-10">
+                    <input type="submit" name="ctl00$ctl00$cph1$cph2$btSearch" value="Search" onclick="if (TickValidate() == false) {return false;};" id="cph1_cph2_btSearch" title="Search" class="btn btn-primary" />&nbsp;&nbsp;
+                    <input type="submit" name="ctl00$ctl00$cph1$cph2$btReset" value="Reset" id="cph1_cph2_btReset" title="Reset" class="btn btn-secondary" />
+                </div>
+            </div>
+        
+</div>
+
+        <p>
+            If you cannot find the item you require, try amending your keywords or check your
+        spelling (or see our
+        <a id="cph1_cph2_hlUsefulTips" title="useful tips" href="pgUsefulTips.aspx">useful tips</a>
+            for more advice).
+        </p>
+        <p>
+            If you are still unsuccessful, it may be because the item is not in the county stock
+        or has not been published yet. If you would like Library staff to search for an
+        item, please contact your
+        <a id="cph1_cph2_HyperLink1" title="local library" href="pgLib.aspx">local library</a>
+            in person or by telephone.
+        </p>
+    </section>
+
+        </div>
+    </div>
+
+            <hr />
+            <footer>
+                <p>
+                    <a class="highcon" href="https://www.durham.gov.uk/article/3157/Accessibility-statement">Accessibility Statement</a>
+                    <span style="float: right;">&copy; 2026 - Durham County Council</span>
+                </p>
+            </footer>
+        </div>
+    
+
+<script type="text/javascript">
+//<![CDATA[
+location.hash = '#Detail';//]]>
+</script>
+</form>
+</body>
+</html>

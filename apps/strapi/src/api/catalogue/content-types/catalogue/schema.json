@@ -1,0 +1,104 @@
+{
+  "kind": "collectionType",
+  "collectionName": "catalogues",
+  "info": {
+    "singularName": "catalogue",
+    "pluralName": "catalogues",
+    "displayName": "Catalogue",
+    "description": "A library service's online catalogue (OPAC) and how to talk to it. Operational data maintained by the catalogue sync; not editorial content."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": false
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "system": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "arena",
+        "aspen",
+        "durham",
+        "enterprise",
+        "iguana",
+        "koha",
+        "luci",
+        "prism",
+        "spydus",
+        "webpac"
+      ]
+    },
+    "baseUrl": {
+      "type": "string",
+      "required": true
+    },
+    "version": {
+      "type": "string"
+    },
+    "settings": {
+      "type": "json"
+    },
+    "gssCode": {
+      "type": "string"
+    },
+    "countryCode": {
+      "type": "string",
+      "maxLength": 2
+    },
+    "availabilityStatus": {
+      "type": "enumeration",
+      "enum": [
+        "unverified",
+        "active",
+        "failing",
+        "unsupported"
+      ],
+      "default": "unverified",
+      "required": true
+    },
+    "branchStatus": {
+      "type": "enumeration",
+      "enum": [
+        "unverified",
+        "active",
+        "failing",
+        "unsupported"
+      ],
+      "default": "unverified",
+      "required": true
+    },
+    "source": {
+      "type": "enumeration",
+      "enum": [
+        "librarieshacked",
+        "detected",
+        "manual"
+      ],
+      "default": "manual",
+      "required": true
+    },
+    "missingSettings": {
+      "type": "json"
+    },
+    "lastCheckedAt": {
+      "type": "datetime"
+    },
+    "lastError": {
+      "type": "text"
+    },
+    "branches": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::catalogue-branch.catalogue-branch",
+      "mappedBy": "catalogue"
+    }
+  }
+}

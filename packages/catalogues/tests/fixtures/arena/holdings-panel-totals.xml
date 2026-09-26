@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?><ajax-response><component id="id__crDetailWicket__WAR__arenaportlet____2a" ><![CDATA[<div class="arena-holdings">
+<div class="arena-holding-child-container">
+  <span class="arena-holding-link">Kempston Library</span>
+  <div class="arena-holding-nof-total"><span class="arena-label">Total</span> <span class="arena-value">4</span></div>
+  <div class="arena-holding-nof-checked-out"><span class="arena-label">On loan</span> <span class="arena-value">1</span></div>
+</div>
+<div class="arena-holding-child-container">
+  <span class="arena-holding-link">Bromham Library</span>
+  <div class="arena-holding-nof-available-for-loan"><span class="arena-label">Available</span> <span class="arena-value">2</span></div>
+  <div class="arena-holding-nof-checked-out"><span class="arena-label">On loan</span> <span class="arena-value">2</span></div>
+</div>
+</div>]]></component></ajax-response>

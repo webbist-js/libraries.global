@@ -1,0 +1,1151 @@
+<html   dir="LTR">
+<head>
+<title>South Ayrshire Libraries                                        / All Locations</title>
+<base target="_self"/>
+<link rel="stylesheet" type="text/css" href="/scripts/ProStyles.css" />
+<link rel="stylesheet" type="text/css" href="/screens/styles.css" />
+<link rel="icon" type="image/x-icon" href="/screens/favicon.ico" />
+<script type="text/javascript" src="/scripts/common.js"></script>
+<script type="text/javascript" src="/scripts/features.js"></script>
+<script type="text/javascript" src="/scripts/webbridge.js"></script>
+<script type="text/javascript" src="/scripts/elcontent.js"></script>
+
+<script type="text/javascript" src="/screens/bibdisplay.js"></script>
+</head>
+<body bgcolor="#FFFFFF" >
+<meta http-equiv="refresh" content="0; url=https://sayrc.eu.iiivega.com/">
+<script type="text/JavaScript">
+<!-- Hide the JS
+startTimeout(6000000, "/");
+// -->
+</script>
+<div id="TimeoutPopup" tabindex="0" class="modal" onkeypress="refreshSession(event)">
+<div class="modal-content">
+Your session will expire automatically in <span id=TimeoutSeconds>0</span> seconds.<br>
+<br>
+<button id="CancelTimeout" onclick="refreshSession()">Continue session</button>
+<button id="DoTimeout" onclick="endSession()">End session now</button></div>
+</div>
+<noscript>
+<meta http-equiv="Refresh" content="6000;URL=/" />
+</noscript>
+<!--this is customized <screens/bib_display.html>-->
+<!-- start ifbibdisplay token -->
+<!-- end ifbibdisplay token -->
+<!-- start catedit token -->
+<!-- end catedit token -->
+
+<div class="container-fluid">
+
+<div id="bibDisplayContent">
+
+<div class="browseSearchtoolCenter">
+<!-- start searchtool token -->
+
+<script type="text/JavaScript">
+<!-- Hide the JS
+var savedScope;
+var savedTag;
+var savedSearch;
+var sortButtonText = null;
+var savedExactSearch = null;
+var sortButtonEvent = null;
+var sortExactBrowseURL = null;
+var sortTypes = new Array();
+var sortLabels = new Array();
+sortTypes[0] = "t";
+sortLabels[0] = "Title";
+sortTypes[1] = "a";
+sortLabels[1] = "Author";
+sortTypes[2] = "c";
+sortLabels[2] = "Year";
+sortTypes[3] = "r";
+sortLabels[3] = "Reverse Year";
+sortTypes[4] = "n";
+sortLabels[4] = "Call Number";
+sortTypes[5] = "m";
+sortLabels[5] = "Material Type";
+sortLabels[6] = "System Sorted";
+sortTypes[6] = "-";
+var sortSelectedValue = "6";
+var nonSortTags = "XYZPHJQILprWw"
+// Unhide the JS -->
+</script>
+<form name="searchtool" target="_self" action="/search~S1/" method='GET'>
+      <label for="searchtype" style="display:none;">SearchType</label> <select name="searchtype" id="searchtype" onChange="initSort()">
+        <option value="X"> Keyword</option>
+        <option value="t"> Title</option>
+        <option value="s"> Series Title</option>
+        <option value="a"> Author</option>
+        <option value="d"> Subject</option>
+        <option value="c"> Classification No.</option>
+        <option value="i" selected="selected"> ISBN/ISSN</option>
+      </select>
+      &nbsp;
+      <label for="searcharg" style="display:none;">Search</label><input type="text" name="searcharg" id="searcharg" size="30" onchange='return searchtoolSubmitAction()'maxlength="75" value="9780141187761" />
+      &nbsp;
+      <label for="searchscope" style="display:none;">Search Scope</label><select name="searchscope" id="searchscope">
+        <option value="8"> Adult Books</option>
+        <option value="4"> Audio Books</option>
+        <option value="6"> Children's Books</option>
+        <option value="9"> Fiction</option>
+        <option value="2"> Large Print</option>
+        <option value="5"> Local History</option>
+        <option value="10"> School Libraries Collections</option>
+        <option value="11"> Non-Fiction</option>
+        <option value="1" selected="selected"> View Entire Collection</option>
+        <option value="7"> Young Adult Collection</option>
+        <option value="12"> Alloway Library</option>
+        <option value="13"> Ballantrae Library</option>
+        <option value="14"> Carnegie Library</option>
+        <option value="15"> Forehill Library</option>
+        <option value="16"> John Rodie Library, Mossblown</option>
+        <option value="17"> Maybole Library</option>
+        <option value="18"> Prestwick Library</option>
+        <option value="19"> Symington Library</option>
+        <option value="20"> Tarbolton Library</option>
+        <option value="21"> Troon Library</option>
+        <option value="22"> Marr Educational Resources Centre</option>
+        <option value="23"> Ayr Academy</option>
+        <option value="24"> Belmont Academy</option>
+        <option value="25"> Carrick Academy</option>
+        <option value="26"> Girvan Academy</option>
+        <option value="27"> Kyle Academy</option>
+        <option value="28"> Marr College</option>
+        <option value="29"> Prestwick Academy</option>
+        <option value="30"> Queen Margaret Academy</option>
+      </select>
+      &nbsp;
+
+<span id="sort_cell">
+</span>
+
+<script type="text/JavaScript">
+<!-- Hide the JS
+initSort();
+// Unhide the JS -->
+</script>
+      <input type="hidden" name="SORT" value="D" /><input type="hidden" name="extended" value="1" />      <input type="submit" name="SUBMIT" value="Search" onclick='return searchtoolSubmitAction();' />
+<div>
+      <input type="checkbox" name="availlim" value="1"  /> <span class="availLimMessage">Limit search to available items</span><br/>
+</div>
+<div>
+      <input type="hidden" name="searchlimits" value="" />
+      <input type="hidden" name="searchorigarg" value="i9780141187761" />
+</div>
+</form>
+<!-- end searchtool token -->
+
+<div class="navigationRowRecord">
+<!-- start navrow token -->
+<a href="/search~S1"><button type="button" class="btn btn-primary btn-sm">Start Over</button></a>
+<a href="/search~S1?/i9780141187761/i9780141187761/1%2C1%2C1%2CE/request~b1200817&FF=i9780141187761&1%2C1%2C"><button type="button" class="btn btn-success btn-sm">Request</button></a>
+<a href="/search~S1?/i9780141187761/i9780141187761/1,1,1,E/?save_func=save_to_mylist&save=b1200817&returnurl=/search~S1?/i9780141187761/i9780141187761/1%2C1%2C1%2CE/frameset&FF=i9780141187761&1%2C1%2C"><button type="button" class="btn btn-primary btn-sm">Add to My Lists</button></a>
+<a href="/search~S1?/i9780141187761/i9780141187761/1,1,1,E/frameset&FF=i9780141187761&1,1,?save=b1200817"><button type="button" class="btn btn-primary btn-sm">Save Records</button></a>
+<a href="/search~S1?/i9780141187761/i9780141187761/1%2C1%2C1%2CE/marc&FF=i9780141187761&1%2C1%2C"><button type="button" class="btn btn-primary btn-sm">Marc Display</button></a>
+<a href="/search~S1/i"><button type="button" class="btn btn-primary btn-sm">Another Search</button></a>
+<!-- end navrow token -->
+</div> <!-- navigationRowRecord -->
+
+<div class="bibSearchHistory">
+<form>
+<!-- start searchhistory token -->
+<!-- end searchhistory token -->
+</form>
+</div> <!-- bibSearch -->
+</div> <!-- bibSearchHistory --> 
+
+
+<div class="bibPager">
+<!-- start pager token -->
+
+Result page:
+<a href="/search~S1?/i9780141187761/i9780141187761/1%2C1%2C1%2CE/frameset&FF=i9780141187693pbk&0%2C0%2C"><button type="button" class="btn btn-info btn-xs">Previous Record</button></a>
+<a href="/search~S1?/i9780141187761/i9780141187761/1%2C1%2C1%2CE/frameset&FF=i9780141187839pbk&1%2C1%2C"><button type="button" class="btn btn-info btn-xs">Next Record</button></a>
+<!-- end pager token -->
+</div> <!-- bibPager -->
+
+<div class="bibClear"></div>
+
+<div class="bibResourceSidebar">
+<!-- start resourcetable token -->
+<!-- end resourcetable token -->
+
+<!--Optional INNReach resources.-->
+<!-- start innreach token -->
+<!-- end innreach token -->
+<!-- start relsearch token -->
+<!-- end relsearch token -->
+</div> <!-- bibResourceSidebar -->
+
+<div class="bibDisplayJacket">
+<!-- start bibimage token -->
+<a href="https://syndetics.com/index.aspx?isbn=9780141187761/index.html&client=sayrshirels&type=rn12" target="_parent"><img src="https://syndetics.com/index.aspx?isbn=9780141187761/SC.GIF&client=sayrshirels&showCaptionBelow=t&caption=More+info&type=hwwesterkid" border="0" alt="book jacket"></a><!-- end bibimage token -->
+<div class="bibMedia">
+<!-- start media token -->
+ <img src="/screens/media_book.gif" alt="Books"><!-- end media token -->
+</div> <!-- bibMedia -->
+</div> <!-- bibDisplayJacket -->
+
+<div class="bibDisplayContentMain">
+
+<div class="bibDisplayTitle">
+<!-- start recordinfo:t token -->
+<style type="text/css">
+<!--
+#rategroup-48 { display: inline }
+#rateneed-48  { display: none }
+#rategroupMy-48 { display: none }
+#ratemy-48      { display: inline }
+#rategroup-47 { display: inline }
+#rateneed-47  { display: none }
+#rategroupMy-47 { display: none }
+#ratemy-47      { display: inline }
+#rategroup-46 { display: inline }
+#rateneed-46  { display: none }
+#rategroupMy-46 { display: none }
+#ratemy-46      { display: inline }
+#rategroup-45 { display: inline }
+#rateneed-45  { display: none }
+#rategroupMy-45 { display: none }
+#ratemy-45      { display: inline }
+#rategroup-44 { display: inline }
+#rateneed-44  { display: none }
+#rategroupMy-44 { display: none }
+#ratemy-44      { display: inline }
+#rategroup-43 { display: inline }
+#rateneed-43  { display: none }
+#rategroupMy-43 { display: none }
+#ratemy-43      { display: inline }
+#rategroup-42 { display: inline }
+#rateneed-42  { display: none }
+#rategroupMy-42 { display: none }
+#ratemy-42      { display: inline }
+#rategroup-41 { display: inline }
+#rateneed-41  { display: none }
+#rategroupMy-41 { display: none }
+#ratemy-41      { display: inline }
+#rategroup-40 { display: inline }
+#rateneed-40  { display: none }
+#rategroupMy-40 { display: none }
+#ratemy-40      { display: inline }
+#rategroup-39 { display: inline }
+#rateneed-39  { display: none }
+#rategroupMy-39 { display: none }
+#ratemy-39      { display: inline }
+#rategroup-38 { display: inline }
+#rateneed-38  { display: none }
+#rategroupMy-38 { display: none }
+#ratemy-38      { display: inline }
+#rategroup-37 { display: inline }
+#rateneed-37  { display: none }
+#rategroupMy-37 { display: none }
+#ratemy-37      { display: inline }
+#rategroup-36 { display: inline }
+#rateneed-36  { display: none }
+#rategroupMy-36 { display: none }
+#ratemy-36      { display: inline }
+#rategroup-35 { display: inline }
+#rateneed-35  { display: none }
+#rategroupMy-35 { display: none }
+#ratemy-35      { display: inline }
+#rategroup-34 { display: inline }
+#rateneed-34  { display: none }
+#rategroupMy-34 { display: none }
+#ratemy-34      { display: inline }
+#rategroup-33 { display: inline }
+#rateneed-33  { display: none }
+#rategroupMy-33 { display: none }
+#ratemy-33      { display: inline }
+#rategroup-32 { display: inline }
+#rateneed-32  { display: none }
+#rategroupMy-32 { display: none }
+#ratemy-32      { display: inline }
+#rategroup-31 { display: inline }
+#rateneed-31  { display: none }
+#rategroupMy-31 { display: none }
+#ratemy-31      { display: inline }
+#rategroup-30 { display: inline }
+#rateneed-30  { display: none }
+#rategroupMy-30 { display: none }
+#ratemy-30      { display: inline }
+#rategroup-29 { display: inline }
+#rateneed-29  { display: none }
+#rategroupMy-29 { display: none }
+#ratemy-29      { display: inline }
+#rategroup-28 { display: inline }
+#rateneed-28  { display: none }
+#rategroupMy-28 { display: none }
+#ratemy-28      { display: inline }
+#rategroup-27 { display: inline }
+#rateneed-27  { display: none }
+#rategroupMy-27 { display: none }
+#ratemy-27      { display: inline }
+#rategroup-26 { display: inline }
+#rateneed-26  { display: none }
+#rategroupMy-26 { display: none }
+#ratemy-26      { display: inline }
+#rategroup-25 { display: inline }
+#rateneed-25  { display: none }
+#rategroupMy-25 { display: none }
+#ratemy-25      { display: inline }
+#rategroup-24 { display: inline }
+#rateneed-24  { display: none }
+#rategroupMy-24 { display: none }
+#ratemy-24      { display: inline }
+#rategroup-23 { display: inline }
+#rateneed-23  { display: none }
+#rategroupMy-23 { display: none }
+#ratemy-23      { display: inline }
+#rategroup-22 { display: inline }
+#rateneed-22  { display: none }
+#rategroupMy-22 { display: none }
+#ratemy-22      { display: inline }
+#rategroup-21 { display: inline }
+#rateneed-21  { display: none }
+#rategroupMy-21 { display: none }
+#ratemy-21      { display: inline }
+#rategroup-20 { display: inline }
+#rateneed-20  { display: none }
+#rategroupMy-20 { display: none }
+#ratemy-20      { display: inline }
+#rategroup-19 { display: inline }
+#rateneed-19  { display: none }
+#rategroupMy-19 { display: none }
+#ratemy-19      { display: inline }
+#rategroup-18 { display: inline }
+#rateneed-18  { display: none }
+#rategroupMy-18 { display: none }
+#ratemy-18      { display: inline }
+#rategroup-17 { display: inline }
+#rateneed-17  { display: none }
+#rategroupMy-17 { display: none }
+#ratemy-17      { display: inline }
+#rategroup-16 { display: inline }
+#rateneed-16  { display: none }
+#rategroupMy-16 { display: none }
+#ratemy-16      { display: inline }
+#rategroup-15 { display: inline }
+#rateneed-15  { display: none }
+#rategroupMy-15 { display: none }
+#ratemy-15      { display: inline }
+#rategroup-14 { display: inline }
+#rateneed-14  { display: none }
+#rategroupMy-14 { display: none }
+#ratemy-14      { display: inline }
+#rategroup-13 { display: inline }
+#rateneed-13  { display: none }
+#rategroupMy-13 { display: none }
+#ratemy-13      { display: inline }
+#rategroup-12 { display: inline }
+#rateneed-12  { display: none }
+#rategroupMy-12 { display: none }
+#ratemy-12      { display: inline }
+#rategroup-11 { display: inline }
+#rateneed-11  { display: none }
+#rategroupMy-11 { display: none }
+#ratemy-11      { display: inline }
+#rategroup-10 { display: inline }
+#rateneed-10  { display: none }
+#rategroupMy-10 { display: none }
+#ratemy-10      { display: inline }
+#rategroup-9 { display: inline }
+#rateneed-9  { display: none }
+#rategroupMy-9 { display: none }
+#ratemy-9      { display: inline }
+#rategroup-8 { display: inline }
+#rateneed-8  { display: none }
+#rategroupMy-8 { display: none }
+#ratemy-8      { display: inline }
+#rategroup-7 { display: inline }
+#rateneed-7  { display: none }
+#rategroupMy-7 { display: none }
+#ratemy-7      { display: inline }
+#rategroup-6 { display: inline }
+#rateneed-6  { display: none }
+#rategroupMy-6 { display: none }
+#ratemy-6      { display: inline }
+#rategroup-5 { display: inline }
+#rateneed-5  { display: none }
+#rategroupMy-5 { display: none }
+#ratemy-5      { display: inline }
+#rategroup-4 { display: inline }
+#rateneed-4  { display: none }
+#rategroupMy-4 { display: none }
+#ratemy-4      { display: inline }
+#rategroup-3 { display: inline }
+#rateneed-3  { display: none }
+#rategroupMy-3 { display: none }
+#ratemy-3      { display: inline }
+#rategroup-2 { display: inline }
+#rateneed-2  { display: none }
+#rategroupMy-2 { display: none }
+#ratemy-2      { display: inline }
+#rategroup-1 { display: inline }
+#rateneed-1  { display: none }
+#rategroupMy-1 { display: none }
+#ratemy-1      { display: inline }
+#rategroup0 { display: inline }
+#rateneed0  { display: none }
+#rategroupMy0 { display: none }
+#ratemy0      { display: inline }
+#rategroup1 { display: inline }
+#rateneed1  { display: none }
+#rategroupMy1 { display: none }
+#ratemy1      { display: inline }
+-->
+</style>
+<!-- BEGIN BIBDETAIL TABLE BORDER -->
+<table width="100%" border="0" cellspacing="1" cellpadding="2"  class="bibDetail">
+<tr  class="bibInfoEntry" ><td>
+<!-- BEGIN INNER BIB TABLE -->
+<table width="100%" cellspacing="3" cellpadding="0">
+<tr><!-- next row for fieldtag=t -->
+<td valign="top" width="20%"  class="bibInfoLabel">Title</td>
+<td class="bibInfoData">
+<strong>Nineteen eighty-four / George Orwell&#59; Introduction by Thomas Pynchon.</strong></td></tr>
+</table>
+<!-- END INNER BIB TABLE -->
+</td></tr>
+</table>
+<!-- END BIBDETAIL TABLE -->
+<!-- end recordinfo:t token -->
+</div>
+<div class="bibDisplayAuthor">
+<!-- start recordinfo:a token -->
+<style type="text/css">
+<!--
+#rategroup-48 { display: inline }
+#rateneed-48  { display: none }
+#rategroupMy-48 { display: none }
+#ratemy-48      { display: inline }
+#rategroup-47 { display: inline }
+#rateneed-47  { display: none }
+#rategroupMy-47 { display: none }
+#ratemy-47      { display: inline }
+#rategroup-46 { display: inline }
+#rateneed-46  { display: none }
+#rategroupMy-46 { display: none }
+#ratemy-46      { display: inline }
+#rategroup-45 { display: inline }
+#rateneed-45  { display: none }
+#rategroupMy-45 { display: none }
+#ratemy-45      { display: inline }
+#rategroup-44 { display: inline }
+#rateneed-44  { display: none }
+#rategroupMy-44 { display: none }
+#ratemy-44      { display: inline }
+#rategroup-43 { display: inline }
+#rateneed-43  { display: none }
+#rategroupMy-43 { display: none }
+#ratemy-43      { display: inline }
+#rategroup-42 { display: inline }
+#rateneed-42  { display: none }
+#rategroupMy-42 { display: none }
+#ratemy-42      { display: inline }
+#rategroup-41 { display: inline }
+#rateneed-41  { display: none }
+#rategroupMy-41 { display: none }
+#ratemy-41      { display: inline }
+#rategroup-40 { display: inline }
+#rateneed-40  { display: none }
+#rategroupMy-40 { display: none }
+#ratemy-40      { display: inline }
+#rategroup-39 { display: inline }
+#rateneed-39  { display: none }
+#rategroupMy-39 { display: none }
+#ratemy-39      { display: inline }
+#rategroup-38 { display: inline }
+#rateneed-38  { display: none }
+#rategroupMy-38 { display: none }
+#ratemy-38      { display: inline }
+#rategroup-37 { display: inline }
+#rateneed-37  { display: none }
+#rategroupMy-37 { display: none }
+#ratemy-37      { display: inline }
+#rategroup-36 { display: inline }
+#rateneed-36  { display: none }
+#rategroupMy-36 { display: none }
+#ratemy-36      { display: inline }
+#rategroup-35 { display: inline }
+#rateneed-35  { display: none }
+#rategroupMy-35 { display: none }
+#ratemy-35      { display: inline }
+#rategroup-34 { display: inline }
+#rateneed-34  { display: none }
+#rategroupMy-34 { display: none }
+#ratemy-34      { display: inline }
+#rategroup-33 { display: inline }
+#rateneed-33  { display: none }
+#rategroupMy-33 { display: none }
+#ratemy-33      { display: inline }
+#rategroup-32 { display: inline }
+#rateneed-32  { display: none }
+#rategroupMy-32 { display: none }
+#ratemy-32      { display: inline }
+#rategroup-31 { display: inline }
+#rateneed-31  { display: none }
+#rategroupMy-31 { display: none }
+#ratemy-31      { display: inline }
+#rategroup-30 { display: inline }
+#rateneed-30  { display: none }
+#rategroupMy-30 { display: none }
+#ratemy-30      { display: inline }
+#rategroup-29 { display: inline }
+#rateneed-29  { display: none }
+#rategroupMy-29 { display: none }
+#ratemy-29      { display: inline }
+#rategroup-28 { display: inline }
+#rateneed-28  { display: none }
+#rategroupMy-28 { display: none }
+#ratemy-28      { display: inline }
+#rategroup-27 { display: inline }
+#rateneed-27  { display: none }
+#rategroupMy-27 { display: none }
+#ratemy-27      { display: inline }
+#rategroup-26 { display: inline }
+#rateneed-26  { display: none }
+#rategroupMy-26 { display: none }
+#ratemy-26      { display: inline }
+#rategroup-25 { display: inline }
+#rateneed-25  { display: none }
+#rategroupMy-25 { display: none }
+#ratemy-25      { display: inline }
+#rategroup-24 { display: inline }
+#rateneed-24  { display: none }
+#rategroupMy-24 { display: none }
+#ratemy-24      { display: inline }
+#rategroup-23 { display: inline }
+#rateneed-23  { display: none }
+#rategroupMy-23 { display: none }
+#ratemy-23      { display: inline }
+#rategroup-22 { display: inline }
+#rateneed-22  { display: none }
+#rategroupMy-22 { display: none }
+#ratemy-22      { display: inline }
+#rategroup-21 { display: inline }
+#rateneed-21  { display: none }
+#rategroupMy-21 { display: none }
+#ratemy-21      { display: inline }
+#rategroup-20 { display: inline }
+#rateneed-20  { display: none }
+#rategroupMy-20 { display: none }
+#ratemy-20      { display: inline }
+#rategroup-19 { display: inline }
+#rateneed-19  { display: none }
+#rategroupMy-19 { display: none }
+#ratemy-19      { display: inline }
+#rategroup-18 { display: inline }
+#rateneed-18  { display: none }
+#rategroupMy-18 { display: none }
+#ratemy-18      { display: inline }
+#rategroup-17 { display: inline }
+#rateneed-17  { display: none }
+#rategroupMy-17 { display: none }
+#ratemy-17      { display: inline }
+#rategroup-16 { display: inline }
+#rateneed-16  { display: none }
+#rategroupMy-16 { display: none }
+#ratemy-16      { display: inline }
+#rategroup-15 { display: inline }
+#rateneed-15  { display: none }
+#rategroupMy-15 { display: none }
+#ratemy-15      { display: inline }
+#rategroup-14 { display: inline }
+#rateneed-14  { display: none }
+#rategroupMy-14 { display: none }
+#ratemy-14      { display: inline }
+#rategroup-13 { display: inline }
+#rateneed-13  { display: none }
+#rategroupMy-13 { display: none }
+#ratemy-13      { display: inline }
+#rategroup-12 { display: inline }
+#rateneed-12  { display: none }
+#rategroupMy-12 { display: none }
+#ratemy-12      { display: inline }
+#rategroup-11 { display: inline }
+#rateneed-11  { display: none }
+#rategroupMy-11 { display: none }
+#ratemy-11      { display: inline }
+#rategroup-10 { display: inline }
+#rateneed-10  { display: none }
+#rategroupMy-10 { display: none }
+#ratemy-10      { display: inline }
+#rategroup-9 { display: inline }
+#rateneed-9  { display: none }
+#rategroupMy-9 { display: none }
+#ratemy-9      { display: inline }
+#rategroup-8 { display: inline }
+#rateneed-8  { display: none }
+#rategroupMy-8 { display: none }
+#ratemy-8      { display: inline }
+#rategroup-7 { display: inline }
+#rateneed-7  { display: none }
+#rategroupMy-7 { display: none }
+#ratemy-7      { display: inline }
+#rategroup-6 { display: inline }
+#rateneed-6  { display: none }
+#rategroupMy-6 { display: none }
+#ratemy-6      { display: inline }
+#rategroup-5 { display: inline }
+#rateneed-5  { display: none }
+#rategroupMy-5 { display: none }
+#ratemy-5      { display: inline }
+#rategroup-4 { display: inline }
+#rateneed-4  { display: none }
+#rategroupMy-4 { display: none }
+#ratemy-4      { display: inline }
+#rategroup-3 { display: inline }
+#rateneed-3  { display: none }
+#rategroupMy-3 { display: none }
+#ratemy-3      { display: inline }
+#rategroup-2 { display: inline }
+#rateneed-2  { display: none }
+#rategroupMy-2 { display: none }
+#ratemy-2      { display: inline }
+#rategroup-1 { display: inline }
+#rateneed-1  { display: none }
+#rategroupMy-1 { display: none }
+#ratemy-1      { display: inline }
+#rategroup0 { display: inline }
+#rateneed0  { display: none }
+#rategroupMy0 { display: none }
+#ratemy0      { display: inline }
+#rategroup1 { display: inline }
+#rateneed1  { display: none }
+#rategroupMy1 { display: none }
+#ratemy1      { display: inline }
+-->
+</style>
+<!-- BEGIN BIBDETAIL TABLE BORDER -->
+<table width="100%" border="0" cellspacing="1" cellpadding="2"  class="bibDetail">
+<tr  class="bibInfoEntry" ><td>
+<!-- BEGIN INNER BIB TABLE -->
+<table width="100%" cellspacing="3" cellpadding="0">
+<tr><!-- next row for fieldtag=a -->
+<td valign="top" width="20%"  class="bibInfoLabel">Author</td>
+<td class="bibInfoData">
+<a href="/search~S1?/aOrwell%2C+George%2C+1903-1950./aorwell+george+++++1903+++++1950/-3,-1,0,B/browse">Orwell, George, 1903-1950.</a>
+
+</td></tr>
+</table>
+<!-- END INNER BIB TABLE -->
+</td></tr>
+</table>
+<!-- END BIBDETAIL TABLE -->
+<!-- end recordinfo:a token -->
+</div>
+<div class="bibDisplayPublisher">
+<!-- start recordinfo:pR token -->
+<style type="text/css">
+<!--
+#rategroup-48 { display: inline }
+#rateneed-48  { display: none }
+#rategroupMy-48 { display: none }
+#ratemy-48      { display: inline }
+#rategroup-47 { display: inline }
+#rateneed-47  { display: none }
+#rategroupMy-47 { display: none }
+#ratemy-47      { display: inline }
+#rategroup-46 { display: inline }
+#rateneed-46  { display: none }
+#rategroupMy-46 { display: none }
+#ratemy-46      { display: inline }
+#rategroup-45 { display: inline }
+#rateneed-45  { display: none }
+#rategroupMy-45 { display: none }
+#ratemy-45      { display: inline }
+#rategroup-44 { display: inline }
+#rateneed-44  { display: none }
+#rategroupMy-44 { display: none }
+#ratemy-44      { display: inline }
+#rategroup-43 { display: inline }
+#rateneed-43  { display: none }
+#rategroupMy-43 { display: none }
+#ratemy-43      { display: inline }
+#rategroup-42 { display: inline }
+#rateneed-42  { display: none }
+#rategroupMy-42 { display: none }
+#ratemy-42      { display: inline }
+#rategroup-41 { display: inline }
+#rateneed-41  { display: none }
+#rategroupMy-41 { display: none }
+#ratemy-41      { display: inline }
+#rategroup-40 { display: inline }
+#rateneed-40  { display: none }
+#rategroupMy-40 { display: none }
+#ratemy-40      { display: inline }
+#rategroup-39 { display: inline }
+#rateneed-39  { display: none }
+#rategroupMy-39 { display: none }
+#ratemy-39      { display: inline }
+#rategroup-38 { display: inline }
+#rateneed-38  { display: none }
+#rategroupMy-38 { display: none }
+#ratemy-38      { display: inline }
+#rategroup-37 { display: inline }
+#rateneed-37  { display: none }
+#rategroupMy-37 { display: none }
+#ratemy-37      { display: inline }
+#rategroup-36 { display: inline }
+#rateneed-36  { display: none }
+#rategroupMy-36 { display: none }
+#ratemy-36      { display: inline }
+#rategroup-35 { display: inline }
+#rateneed-35  { display: none }
+#rategroupMy-35 { display: none }
+#ratemy-35      { display: inline }
+#rategroup-34 { display: inline }
+#rateneed-34  { display: none }
+#rategroupMy-34 { display: none }
+#ratemy-34      { display: inline }
+#rategroup-33 { display: inline }
+#rateneed-33  { display: none }
+#rategroupMy-33 { display: none }
+#ratemy-33      { display: inline }
+#rategroup-32 { display: inline }
+#rateneed-32  { display: none }
+#rategroupMy-32 { display: none }
+#ratemy-32      { display: inline }
+#rategroup-31 { display: inline }
+#rateneed-31  { display: none }
+#rategroupMy-31 { display: none }
+#ratemy-31      { display: inline }
+#rategroup-30 { display: inline }
+#rateneed-30  { display: none }
+#rategroupMy-30 { display: none }
+#ratemy-30      { display: inline }
+#rategroup-29 { display: inline }
+#rateneed-29  { display: none }
+#rategroupMy-29 { display: none }
+#ratemy-29      { display: inline }
+#rategroup-28 { display: inline }
+#rateneed-28  { display: none }
+#rategroupMy-28 { display: none }
+#ratemy-28      { display: inline }
+#rategroup-27 { display: inline }
+#rateneed-27  { display: none }
+#rategroupMy-27 { display: none }
+#ratemy-27      { display: inline }
+#rategroup-26 { display: inline }
+#rateneed-26  { display: none }
+#rategroupMy-26 { display: none }
+#ratemy-26      { display: inline }
+#rategroup-25 { display: inline }
+#rateneed-25  { display: none }
+#rategroupMy-25 { display: none }
+#ratemy-25      { display: inline }
+#rategroup-24 { display: inline }
+#rateneed-24  { display: none }
+#rategroupMy-24 { display: none }
+#ratemy-24      { display: inline }
+#rategroup-23 { display: inline }
+#rateneed-23  { display: none }
+#rategroupMy-23 { display: none }
+#ratemy-23      { display: inline }
+#rategroup-22 { display: inline }
+#rateneed-22  { display: none }
+#rategroupMy-22 { display: none }
+#ratemy-22      { display: inline }
+#rategroup-21 { display: inline }
+#rateneed-21  { display: none }
+#rategroupMy-21 { display: none }
+#ratemy-21      { display: inline }
+#rategroup-20 { display: inline }
+#rateneed-20  { display: none }
+#rategroupMy-20 { display: none }
+#ratemy-20      { display: inline }
+#rategroup-19 { display: inline }
+#rateneed-19  { display: none }
+#rategroupMy-19 { display: none }
+#ratemy-19      { display: inline }
+#rategroup-18 { display: inline }
+#rateneed-18  { display: none }
+#rategroupMy-18 { display: none }
+#ratemy-18      { display: inline }
+#rategroup-17 { display: inline }
+#rateneed-17  { display: none }
+#rategroupMy-17 { display: none }
+#ratemy-17      { display: inline }
+#rategroup-16 { display: inline }
+#rateneed-16  { display: none }
+#rategroupMy-16 { display: none }
+#ratemy-16      { display: inline }
+#rategroup-15 { display: inline }
+#rateneed-15  { display: none }
+#rategroupMy-15 { display: none }
+#ratemy-15      { display: inline }
+#rategroup-14 { display: inline }
+#rateneed-14  { display: none }
+#rategroupMy-14 { display: none }
+#ratemy-14      { display: inline }
+#rategroup-13 { display: inline }
+#rateneed-13  { display: none }
+#rategroupMy-13 { display: none }
+#ratemy-13      { display: inline }
+#rategroup-12 { display: inline }
+#rateneed-12  { display: none }
+#rategroupMy-12 { display: none }
+#ratemy-12      { display: inline }
+#rategroup-11 { display: inline }
+#rateneed-11  { display: none }
+#rategroupMy-11 { display: none }
+#ratemy-11      { display: inline }
+#rategroup-10 { display: inline }
+#rateneed-10  { display: none }
+#rategroupMy-10 { display: none }
+#ratemy-10      { display: inline }
+#rategroup-9 { display: inline }
+#rateneed-9  { display: none }
+#rategroupMy-9 { display: none }
+#ratemy-9      { display: inline }
+#rategroup-8 { display: inline }
+#rateneed-8  { display: none }
+#rategroupMy-8 { display: none }
+#ratemy-8      { display: inline }
+#rategroup-7 { display: inline }
+#rateneed-7  { display: none }
+#rategroupMy-7 { display: none }
+#ratemy-7      { display: inline }
+#rategroup-6 { display: inline }
+#rateneed-6  { display: none }
+#rategroupMy-6 { display: none }
+#ratemy-6      { display: inline }
+#rategroup-5 { display: inline }
+#rateneed-5  { display: none }
+#rategroupMy-5 { display: none }
+#ratemy-5      { display: inline }
+#rategroup-4 { display: inline }
+#rateneed-4  { display: none }
+#rategroupMy-4 { display: none }
+#ratemy-4      { display: inline }
+#rategroup-3 { display: inline }
+#rateneed-3  { display: none }
+#rategroupMy-3 { display: none }
+#ratemy-3      { display: inline }
+#rategroup-2 { display: inline }
+#rateneed-2  { display: none }
+#rategroupMy-2 { display: none }
+#ratemy-2      { display: inline }
+#rategroup-1 { display: inline }
+#rateneed-1  { display: none }
+#rategroupMy-1 { display: none }
+#ratemy-1      { display: inline }
+#rategroup0 { display: inline }
+#rateneed0  { display: none }
+#rategroupMy0 { display: none }
+#ratemy0      { display: inline }
+#rategroup1 { display: inline }
+#rateneed1  { display: none }
+#rategroupMy1 { display: none }
+#ratemy1      { display: inline }
+-->
+</style>
+<!-- BEGIN BIBDETAIL TABLE BORDER -->
+<table width="100%" border="0" cellspacing="1" cellpadding="2"  class="bibDetail">
+<tr  class="bibInfoEntry" ><td>
+<!-- BEGIN INNER BIB TABLE -->
+<table width="100%" cellspacing="3" cellpadding="0">
+<tr><!-- next row for fieldtag=p -->
+<td valign="top" width="20%"  class="bibInfoLabel">Imprint</td>
+<td class="bibInfoData">
+London : Penguin Classics :, 2004.</td></tr>
+</table>
+<!-- END INNER BIB TABLE -->
+</td></tr>
+</table>
+<!-- END BIBDETAIL TABLE -->
+<!-- end recordinfo:pR token -->
+</div>
+
+
+<!-- start booking token -->
+<br />
+<!-- end booking token -->
+<!-- start holdingslink token -->
+<!-- end holdingslink token -->
+<div class="testlinkeddocs">
+<!-- start linkeddocs token -->
+<!-- end linkeddocs token -->
+</div> <!-- testlinkeddocs -->
+
+
+<div class="bibDisplayUrls">
+<!-- start URLS token -->
+<!-- end URLS token -->
+</div> <!-- bibDisplayUrls -->
+
+<!-- start bloblinks token -->
+<!-- end bloblinks token -->
+<!-- start imagelinks token -->
+<!-- end imagelinks token -->
+<!-- start artthumb token -->
+<!-- end artthumb token -->
+<!-- start xmlframe token -->
+<!-- end xmlframe token -->
+
+<!-- start holds token -->
+<!-- end holds token -->
+<!-- start holdings token -->
+<!-- end holdings token -->
+
+<div class="bibDisplayItems">
+<div class="bibDisplayItemsMain">
+<!-- start items token -->
+<table width="100%" border="0" cellspacing="1" cellpadding="2" class="bibItems">
+<tr  class="bibItemsHeader">
+<th width="29%"  class="bibItemsHeader">
+Location
+</th>
+<th width="29%"  class="bibItemsHeader">
+Classification No.
+</th>
+<th width="23%"  class="bibItemsHeader">
+NOTE
+</th>
+<th width="19%"  class="bibItemsHeader">
+Status
+</th>
+</tr>
+<tr  class="bibItemsEntry">
+
+<td width="29%" ><!-- field 1 -->&nbsp;Ayr Classics 
+</td>
+<td width="29%" ><!-- field C --><!-- field v --><!-- field # -->&nbsp;</td>
+<td width="23%" ><!-- field z --></td>
+<td width="19%" ><!-- field % -->&nbsp;IN TRANSIT </td></tr>
+<tr  class="bibItemsEntry">
+
+<td width="29%" ><!-- field 1 -->&nbsp;Forehill Adult Fiction 
+</td>
+<td width="29%" ><!-- field C --><!-- field v --><!-- field # -->&nbsp;</td>
+<td width="23%" ><!-- field z --></td>
+<td width="19%" ><!-- field % -->&nbsp;FOR LOAN </td></tr>
+<tr  class="bibItemsEntry">
+
+<td width="29%" ><!-- field 1 -->&nbsp;Kyle Academy Adult Fiction 
+</td>
+<td width="29%" ><!-- field C --><!-- field v --><!-- field # -->&nbsp;</td>
+<td width="23%" ><!-- field z --></td>
+<td width="19%" ><!-- field % -->&nbsp;DUE 06-10-26 LIB USE ONLY </td></tr>
+<tr  class="bibItemsEntry">
+
+<td width="29%" ><!-- field 1 -->&nbsp;Mobile Adult Fiction Reserve 
+</td>
+<td width="29%" ><!-- field C --><!-- field v --><!-- field # -->&nbsp;</td>
+<td width="23%" ><!-- field z --></td>
+<td width="19%" ><!-- field % -->&nbsp;FOR LOAN </td></tr>
+<tr  class="bibItemsEntry">
+
+<td width="29%" ><!-- field 1 -->&nbsp;Queen Margaret Academy Young Adult 
+</td>
+<td width="29%" ><!-- field C --><!-- field v --><!-- field # -->&nbsp;</td>
+<td width="23%" ><!-- field z --></td>
+<td width="19%" ><!-- field % -->&nbsp;DUE 09-01-23 +1 HOLD </td></tr>
+</table>
+<!-- end items token -->
+</div> <!-- bibDisplayItems -->
+</div> <!-- bibDisplayItemsMain -->
+
+<!-- start course reserves token -->
+<!-- end course reserves token -->
+
+<!-- start orders token -->
+<!-- end orders token -->
+
+
+<div class="bibDisplayPermLink">
+<!-- start recordlink token -->
+<div class="bibRecordLink"><img src="/screens/permlink.gif"/>&nbsp;<a id="recordnum" href="/record=b1200817~S1">Bookmark link for this record</a></div><!-- end recordlink token -->
+</div> <!-- bibDisplayPermLink -->
+
+
+<div class="bibDisplayContentMore">
+<!-- start recordinfo:# token -->
+<!-- BEGIN BIBDETAIL TABLE BORDER -->
+<table width="100%" border="0" cellspacing="1" cellpadding="2"  class="bibDetail">
+<tr  class="bibInfoEntry" ><td>
+<!-- BEGIN INNER BIB TABLE -->
+<table width="100%" cellspacing="3" cellpadding="0">
+<tr><!-- next row for fieldtag=r -->
+<td valign="top" width="20%"  class="bibInfoLabel">Phys. Description</td>
+<td class="bibInfoData">
+400 p. &#59; 20x13x2 cm.</td></tr>
+<tr><!-- next row for fieldtag=n -->
+<td valign="top" width="20%"  class="bibInfoLabel">Note</td>
+<td class="bibInfoData">
+Paperback / softback.</td></tr>
+<tr><!-- next row for fieldtag=n -->
+<td></td>
+<td class="bibInfoData">
+Originally published in: 2004.</td></tr>
+<tr><!-- next row for fieldtag=n -->
+<td valign="top" width="20%"  class="bibInfoLabel">Summary</td>
+<td class="bibInfoData">
+'Who controls the past controls the future: who controls the present controls the past'    Hidden away in the Record Department of the sprawling Ministry of Truth, Winston Smith skilfully rewrites the past to suit the needs of the Party. Yet he inwardly rebels against the totalitarian world he lives in, which demands absolute obedience and controls him through the all-seeing telescreens and the watchful eye of Big Brother, symbolic head of the Party. In his longing for truth and liberty, Smith begins a secret love affair with a fellow-worker Julia, but soon discovers the true price of freedom is betrayal.    George Orwell's dystopian masterpiece, Nineteen Eighty-Four is perhaps the most pervasively influential book of the twentieth century.</td></tr>
+<tr><!-- next row for fieldtag=n -->
+<td valign="top" width="20%"  class="bibInfoLabel">Note</td>
+<td class="bibInfoData">
+Eric Arthur Blair (1903-1950), better known by his pen-name, George Orwell, was born in India, where his father worked for the Civil Service. An author and journalist, Orwell was one of the most prominent and influential figures in twentieth-century literature. His unique political allegory Animal Farm was published in 1945, and it was this novel, together with the dystopia of Nineteen Eighty-Four (1949), which brought him world-wide fame. His novels and non-fiction include Burmese Days, Down and Out in Paris and London, The Road to Wigan Pier and Homage to Catalonia.</td></tr>
+<tr><!-- next row for fieldtag=d -->
+<td valign="top" width="20%"  class="bibInfoLabel">Subject</td>
+<td class="bibInfoData">
+<a href="/search~S1?/dTotalitarianism+--+Fiction./dtotalitarianism+fiction/-3,-1,0,B/browse">Totalitarianism -- Fiction.</a>
+
+</td></tr>
+<tr><!-- next row for fieldtag=d -->
+<td></td>
+<td class="bibInfoData">
+General. ukslc</td></tr>
+<tr><!-- next row for fieldtag=d -->
+<td valign="top" width="20%"  class="bibInfoLabel">Genre</td>
+<td class="bibInfoData">
+<a href="/search~S1?/dDystopias./ddystopias/-3,-1,0,B/browse">Dystopias. gsafd</a>
+
+</td></tr>
+<tr><!-- next row for fieldtag=d -->
+<td></td>
+<td class="bibInfoData">
+<a href="/search~S1?/dModern+%26+contemporary+fiction+%28post+c+1945%29./dmodern+and+contemporary+fiction+post+c+++++1945/-3,-1,0,B/browse">Modern & contemporary fiction (post c 1945). bicssc</a>
+
+</td></tr>
+<tr><!-- next row for fieldtag=d -->
+<td></td>
+<td class="bibInfoData">
+<a href="/search~S1?/dModern+%26+contemporary+fiction+%28post+c+1945%29./dmodern+and+contemporary+fiction+post+c+++++1945/-3,-1,0,B/browse">Modern & contemporary fiction (post c 1945). thema</a>
+
+</td></tr>
+<tr><!-- next row for fieldtag=d -->
+<td></td>
+<td class="bibInfoData">
+<a href="/search~S1?/dDystopian+%26+utopian+fiction./ddystopian+and+utopian+fiction/-3,-1,0,B/browse">Dystopian & utopian fiction. thema</a>
+
+</td></tr>
+<tr><!-- next row for fieldtag=d -->
+<td></td>
+<td class="bibInfoData">
+<a href="/search~S1?/dNarrative+theme%3A+Politics./dnarrative+theme+politics/-3,-1,0,B/browse">Narrative theme: Politics. thema</a>
+
+</td></tr>
+<tr><!-- next row for fieldtag=b -->
+<td valign="top" width="20%"  class="bibInfoLabel">Alt Author</td>
+<td class="bibInfoData">
+<a href="/search~S1?/aPynchon%2C+Thomas./apynchon+thomas/-3,-1,0,B/browse">Pynchon, Thomas.</a>
+
+</td></tr>
+<tr><!-- next row for fieldtag=i -->
+<td valign="top" width="20%"  class="bibInfoLabel">ISBN</td>
+<td class="bibInfoData">
+9780141187761 (pbk.) : £8.99</td></tr>
+</table>
+<!-- END INNER BIB TABLE -->
+</td></tr>
+</table>
+<!-- END BIBDETAIL TABLE -->
+<!-- end recordinfo:# token -->
+</div> <!-- bibDisplayContentMore -->
+
+
+
+
+<div class="bibDisplayContentMore bibDisplayReviews">
+<!-- start patronreviewsfull token -->
+<!-- end patronreviewsfull token -->
+
+</div> <!-- bibDisplayContentMore -->
+
+
+</div> <!-- bibDisplayContentMain -->
+
+<div class="bibClear"></div>
+
+<div class="bibPager">
+<!-- start pager token -->
+
+Result page:
+<a href="/search~S1?/i9780141187761/i9780141187761/1%2C1%2C1%2CE/frameset&FF=i9780141187693pbk&0%2C0%2C"><button type="button" class="btn btn-info btn-xs">Previous Record</button></a>
+<a href="/search~S1?/i9780141187761/i9780141187761/1%2C1%2C1%2CE/frameset&FF=i9780141187839pbk&1%2C1%2C"><button type="button" class="btn btn-info btn-xs">Next Record</button></a>
+<!-- end pager token -->
+</div> <!-- bibPager -->
+
+
+<div class="bibClear"></div>
+<div class="clear"></div>
+</div><!-- bibDisplayContent -->
+
+<div id="ltfl_series" class="ltfl"></div>
+<div id="ltfl_awards" class="ltfl"></div>
+<div id="ltfl_related" class="ltfl"></div>
+<div id="ltfl_similars" class="ltfl"></div>
+<div id="ltfl_lexile" class="ltfl"></div>
+<div id="ltfl_tagbrowse" class="ltfl"></div>
+
+</div><!-- bibDisplayBody -->
+<script src="https://ltfl.librarything.com/forlibraries/widget.js?id=427-2314102048" type="text/javascript"></script><noscript>This page contains enriched content visible when JavaScript is enabled or by clicking <a href="https://ltfl.librarything.com/forlibraries/noscript.php?id=427-2314102048&accessibility=1">here</a>.</noscript>
+<!-- start botlogo token -->
+<br />
+
+<!-- begin botlogo.html file -->
+<!-- Sierra Example Set -->
+<!-- Updated: 06 Oct 2015 -->
+</div> <!-- pageContent  -->
+<!DOCTYPE html>
+<html lang="en">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<div class="container-fluid bg-social text-center">
+<p class="lead">Follow Us</p>
+  <div class="row">
+  <div class="col-sm-12">
+<span><a href="https://twitter.com/salibraries" class="fa fa-twitter fa-2x"></a></span>  
+<span><a href="https://www.facebook.com/salibraries" class="fa fa-facebook fa-2x"></a></span>
+<span><a href="https://www.pinterest.co.uk/salibraries/pins" class="fa fa-pinterest fa-2x"></a></span>
+<span><a href="https://sayrshirelib.wordpress.com" class="fa fa-wordpress fa-2x"></a></span>   
+   </div>
+   </div>
+</div>
+
+
+<div class="col-container bg-footer">
+  
+<div class="col">
+    <h4>Contact Us</h4>
+      <p><a href="mailto:carnegie.library@south-ayrshire.gov.uk">Email</a></p>
+      <p><a href="https://forms.office.com/r/08yZbi3Hnt" >Feedback</a></p>
+      <p><a href="http://www.south-ayrshire.gov.uk/libraries" >Library website</a></p>
+      <p><a href="https://www.south-ayrshire.gov.uk/article/27329/Library-Services-privacy-notice">Privacy policy, privacy notice and cookies</a></p>
+      </div>
+
+  <div class="col">
+    <h4>Main Library</h4>
+    <p><a href="https://www.south-ayrshire.gov.uk/carnegie-library" >Carnegie Library</a><br>12 Main Street<br>
+      Ayr <br>KA8 8ED <br> Phone: 01292 286385</p>
+     </div>
+
+  <div class="col">
+    <h4>Help</h4>
+    <p><a href="https://help.overdrive.com">eBook help</a></p>
+    <p><a href="https://care.pressreader.com/hc/en-us/articles/211272703-Library-Card-Sign-In">PressReader help</a></p>
+    <p><a href="/help#renewals">Renewals help</a></p>
+    <p><a href="/help#signinhelp">Sign in help</a></p>
+    </div>
+
+
+</div>
+
+
+
+
+
+
+ <!-- fullPage (toplogo.html) -->
+ <!-- end botlogo.html file -->
+
+</body>
+</html>
+<!-- end botlogo token -->
+
+
+
+
