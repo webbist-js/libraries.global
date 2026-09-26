@@ -35,20 +35,12 @@ export function WikiEditorSidebar({
         padding: "20px",
         background: T.bg.deep,
         border: `1px solid ${T.border.line}`,
-        borderRadius: "10px",
+        borderRadius: "18px",
         position: "sticky",
         top: "80px",
       }}
     >
-      <span
-        style={{
-          fontFamily: T.font.mono,
-          fontSize: "10px",
-          letterSpacing: ".14em",
-          textTransform: "uppercase",
-          color: T.ink.faint,
-        }}
-      >
+      <span className="text-[14px] font-semibold" style={{ color: T.ink.base }}>
         Edit session
       </span>
 
