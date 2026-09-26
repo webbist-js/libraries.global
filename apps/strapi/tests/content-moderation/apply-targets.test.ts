@@ -154,4 +154,16 @@ describe("recordUpload", () => {
       baUserId: "u1",
     })
   })
+
+  it("is a no-op when the same uploader records the same file again", async () => {
+    const { strapi, store } = makeFakeStrapi({
+      "plugin::content-moderation.submission-upload": [],
+    })
+    const svc = createService({ strapi })
+    await svc.recordUpload(5, "u1")
+    await svc.recordUpload(5, "u1")
+    expect(store["plugin::content-moderation.submission-upload"]).toHaveLength(
+      1
+    )
+  })
 })

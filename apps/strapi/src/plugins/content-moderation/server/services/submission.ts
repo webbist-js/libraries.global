@@ -1011,6 +1011,16 @@ export default ({ strapi }: { strapi: any }) => ({
 
   /** Records that `baUserId` uploaded `fileId` through the submission flow. */
   async recordUpload(fileId: number, baUserId: string) {
+    // file_id is unique in the DB (I2 migration): a retried record by the
+    // same uploader is a no-op rather than a unique-violation 500.
+    const [existing] = (await strapi
+      .documents("plugin::content-moderation.submission-upload" as any)
+      .findMany({
+        filters: { fileId: { $eq: fileId } } as any,
+        limit: 1,
+      })) as { baUserId: string }[]
+    if (existing && existing.baUserId === baUserId) return existing
+
     return strapi
       .documents("plugin::content-moderation.submission-upload" as any)
       .create({ data: { fileId, baUserId } })
