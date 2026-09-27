@@ -13,10 +13,14 @@
  * user-profile exposes only find/findOne, and library-affiliation has no
  * routes at all (P-A hardening). So this calls load() and writes through
  * the Document Service, the same way the moderation service does on claim
- * approval. It never calls listen(), so no HTTP server starts. load() does
- * run bootstrap, which schedules and starts config/cron-tasks; the writer
- * destroys the cron service straight after load() so no task can fire
- * during the writes (a task due in that instant could still start).
+ * approval. It never calls listen(), so no HTTP server starts. load() runs
+ * bootstrap, which starts the cron service. So the writer:
+ *   - sets server.cron.enabled = false before load(), so config/cron-tasks
+ *     are never scheduled even if CRON_ENABLED=true in apps/strapi/.env;
+ *   - destroys the cron service straight after load(). Core and plugins
+ *     add their own jobs with strapi.cron.add whatever that flag says
+ *     (telemetry, upload's weekly job, the rewards leaderboard snapshot),
+ *     and destroy() stops those. A job due in that instant could still run.
  *
  * Run by the seed with cwd = apps/strapi, so Strapi loads its own .env.
  * Input: ACCESS_SEED_PLAN (JSON array). Output: one line prefixed
@@ -165,9 +169,13 @@ async function main() {
   const plan = JSON.parse(process.env.ACCESS_SEED_PLAN ?? "[]")
   const instance = createStrapi({ appDir, distDir: path.join(appDir, "dist") })
   assertLocalDatabase(instance)
+  // A second instance must not run scheduled tasks alongside `strapi
+  // develop`. Config is loaded in createStrapi(), so this lands before
+  // bootstrap reads it.
+  instance.config.set("server.cron.enabled", false)
   const strapi = await instance.load()
-  // Stop the cron jobs bootstrap just started: a second instance must not
-  // run the app's scheduled tasks alongside `strapi develop`.
+  // Bootstrap still starts the cron service with the jobs core and plugins
+  // added themselves; stop them all.
   strapi.cron?.destroy?.()
   strapi.log.level = "error"
   const result = []
