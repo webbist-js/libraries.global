@@ -34,6 +34,19 @@ const MATRIX = [
 // Any existing docs slug works for the gate check; the GET only reads a draft.
 const DOC_SLUG = process.env.ACCESS_DOC_SLUG || "how-to-contribute"
 
+// /api/submissions has no capability pre-check: it forwards the body to
+// Strapi as the signed-in user, so these requests reach the submission
+// policy, which stays authoritative. A wiki_edit whose draftData carries
+// `body` is a direct edit (docs.directEdit); without it, it's a suggestion
+// (submit.docSuggestion). asDraft keeps an accepted one out of the queue.
+const wikiEdit = (extra: Record<string, unknown>) => ({
+  submissionType: "wiki_edit",
+  targetEntityType: "wiki_article",
+  targetSlug: DOC_SLUG,
+  asDraft: true,
+  ...extra,
+})
+
 // Better Auth allows 5 sign-ins per minute per IP. This file signs in 5
 // times, but back-to-back runs share the window, so a test may wait out a
 // 429. Give every test room for that.
@@ -124,7 +137,7 @@ test.describe("access role matrix (API)", () => {
     })
   }
 
-  test("server refuses a reader's direct wiki edit even if the UI is bypassed", async ({
+  test("the Next route gate refuses a reader's direct wiki edit", async ({
     baseURL,
   }) => {
     const api = await signedIn(baseURL!, "reader")
@@ -132,5 +145,34 @@ test.describe("access role matrix (API)", () => {
       data: { draftData: { body: [] } },
     })
     expect(res.status()).toBe(403)
+  })
+
+  test("Strapi refuses a reader's direct wiki edit sent past the UI", async ({
+    baseURL,
+  }) => {
+    const api = await signedIn(baseURL!, "reader")
+    const res = await api.post("/api/submissions", {
+      data: wikiEdit({ draftData: { body: [] } }),
+    })
+    expect(res.status()).toBe(403)
+    // The submission policy's refusal, passed through unchanged by Next.
+    expect((await res.json())?.error?.message).toBe(
+      "You can't submit this type of change."
+    )
+  })
+
+  test("Strapi still lets a reader suggest a docs change", async ({
+    baseURL,
+  }) => {
+    const api = await signedIn(baseURL!, "reader")
+    const res = await api.post("/api/submissions", {
+      data: wikiEdit({
+        fields: { category: "Other", proposal: "Access E2E probe" },
+      }),
+    })
+    // Past the capability check. Each run saves one draft, so many runs in
+    // an hour can meet the reader's hourly quota (429), which is fine here.
+    expect(res.status()).not.toBe(403)
+    expect([200, 429]).toContain(res.status())
   })
 })
