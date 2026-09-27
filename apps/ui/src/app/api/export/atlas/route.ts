@@ -8,16 +8,15 @@ import {
   MAX_ID_LENGTH,
   readJsonCapped,
 } from "@/lib/bridge-params"
-import { getEnvVar } from "@/lib/env-vars"
 import {
   ATLAS_EXPORT_COLUMNS,
   atlasExportRow,
   EXPORT_ATTRIBUTION,
-  type LibraryExportSource,
   MAX_EXPORT_IDS,
   toCsv,
   toGeoJson,
 } from "@/lib/export-format"
+import { fetchExportRows } from "@/lib/library-export-bridge"
 import { routing } from "@/lib/navigation"
 import { absoluteUrl } from "@/lib/seo/metadata"
 
@@ -53,37 +52,6 @@ function exportRowCap(user: { limits?: unknown }): number {
     ?.exportRows
 
   return typeof cap === "number" && Number.isFinite(cap) ? cap : 0
-}
-
-/**
- * The requested rows from Strapi's bridge-gated export action, keyed by id.
- * Null when Strapi answers with a non-2xx status or the request fails
- * outright; the caller turns that into a 502 without echoing anything back.
- */
-async function fetchExportRows(
-  ids: readonly string[],
-  secret: string
-): Promise<Record<string, LibraryExportSource> | null> {
-  try {
-    const strapiUrl = getEnvVar("STRAPI_URL", true)!.replace(/\/$/, "")
-    const res = await fetch(`${strapiUrl}/api/libraries/export`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Service-Secret": secret,
-      },
-      body: JSON.stringify({ ids }),
-      cache: "no-store",
-    })
-    if (!res.ok) return null
-    const json = (await res.json()) as {
-      data?: Record<string, LibraryExportSource>
-    }
-
-    return json.data ?? {}
-  } catch {
-    return null
-  }
 }
 
 /**
@@ -126,11 +94,13 @@ export async function POST(req: Request) {
       { status: 503 }
     )
 
-  const byId = await fetchExportRows(ids, secret)
+  // Each id once, at its first place in the request: the file's row order.
+  const unique = [...new Set(ids)]
+  const byId = await fetchExportRows(unique, secret)
   if (!byId) return Response.json(UNAVAILABLE, { status: 502 })
 
-  const rows = [...new Set(ids)].flatMap((id) => {
-    const lib = byId[id]
+  const rows = unique.flatMap((id) => {
+    const lib = byId.get(id)
 
     return lib ? [atlasExportRow(lib, pageUrl)] : []
   })

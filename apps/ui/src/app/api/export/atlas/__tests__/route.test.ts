@@ -36,6 +36,10 @@ const C = docId(3)
 /** Well-formed, but not a library Strapi has. */
 const UNKNOWN = docId(999)
 
+/** `n` distinct documentIds, each as long as a documentId can be. */
+const many = (n: number) =>
+  Array.from({ length: n }, (_, i) => docId(i, MAX_ID_LENGTH))
+
 /** One Strapi export row, shaped as `POST /api/libraries/export` returns it. */
 function row(slug: string, name: string, lng: number, lat: number) {
   return {
@@ -64,15 +68,24 @@ const EXPORT_ROWS: Record<string, unknown> = {
   [C]: row("c", "=Gamma", -1.4, 53.6),
 }
 
-/** Strapi's export action: rows for the requested ids it has, keyed by id. */
+/**
+ * Strapi's export action: rows for the requested ids it has, keyed by id.
+ * Like Strapi, it doesn't answer in request order (here, it's reversed).
+ */
 function bridge(rows: Record<string, unknown> = EXPORT_ROWS) {
   return async (_url: string, init: RequestInit) => {
     const { ids } = JSON.parse(init.body as string) as { ids: string[] }
     const found = ids.filter((id) => id in rows).map((id) => [id, rows[id]])
 
-    return Response.json({ data: Object.fromEntries(found) })
+    return Response.json({ data: Object.fromEntries(found.reverse()) })
   }
 }
+
+/** The ids each bridge call carried, in call order. */
+const bridgeCalls = () =>
+  fetchMock.mock.calls.map(
+    ([, init]) => (JSON.parse(init.body as string) as { ids: string[] }).ids
+  )
 
 const PRO_FIELDS = { limits: { exportRows: 10_000 } }
 
@@ -92,6 +105,10 @@ const post = (body: unknown) =>
 
 const csvLines = async (res: Response) =>
   (await res.text()).split("\r\n").filter(Boolean)
+
+/** The CSV's first column (the library names), without the header. */
+const csvNames = async (res: Response) =>
+  (await csvLines(res)).slice(1).map((line) => line.split(",")[0])
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -217,9 +234,7 @@ describe("POST /api/export/atlas: body size", () => {
   const MAX_BODY_BYTES = MAX_EXPORT_IDS * (MAX_ID_LENGTH + 3) + 1024
   const largest = JSON.stringify({
     format: "geojson",
-    ids: Array.from({ length: MAX_EXPORT_IDS }, (_, i) =>
-      docId(i, MAX_ID_LENGTH)
-    ),
+    ids: many(MAX_EXPORT_IDS),
   })
   // JSON allows trailing whitespace, so padding keeps the body legal.
   const padded = (bytes: number) => largest + " ".repeat(bytes - largest.length)
@@ -289,6 +304,149 @@ describe("POST /api/export/atlas: the Strapi bridge", () => {
     const res = await post({ format: "csv", ids: [A] })
 
     expect(res.status).toBe(502)
+  })
+})
+
+describe("POST /api/export/atlas: chunked bridge calls", () => {
+  const TEAM = proUser({ limits: { exportRows: 50_000 } })
+
+  beforeEach(() => getSession.mockResolvedValue(TEAM))
+
+  it("sends 50,000 ids from a Team user in 10 calls, each under 1 MiB", async () => {
+    const ids = many(50_000)
+
+    const res = await post({ format: "csv", ids })
+
+    expect(res.status).toBe(200)
+    expect(fetchMock).toHaveBeenCalledTimes(10)
+    for (const [, init] of fetchMock.mock.calls)
+      expect(new TextEncoder().encode(init.body as string).length).toBeLessThan(
+        1024 * 1024
+      )
+    expect(bridgeCalls().map((chunk) => chunk.length)).toEqual(
+      Array.from({ length: 10 }, () => 5000)
+    )
+    expect(bridgeCalls().flat()).toEqual(ids)
+  })
+
+  it("sends a duplicated id once, but keeps the requested order", async () => {
+    const res = await post({ format: "csv", ids: [C, A, C, B, A] })
+
+    expect(bridgeCalls()).toEqual([[C, A, B]])
+    expect(await csvNames(res)).toEqual(["'=Gamma", "Alpha", "Beta"])
+  })
+
+  it("keeps the requested order across chunks, whichever answers first", async () => {
+    const answer = bridge()
+    // The first chunk answers last.
+    fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+      if (fetchMock.mock.calls.length === 1)
+        await new Promise((resolve) => setTimeout(resolve, 20))
+
+      return answer(url, init)
+    })
+
+    const res = await post({ format: "csv", ids: [B, ...many(5000), A] })
+
+    expect(bridgeCalls().map((chunk) => chunk.length)).toEqual([5000, 2])
+    expect(await csvNames(res)).toEqual(["Beta", "Alpha"])
+  })
+
+  it("has at most two bridge calls in flight at once", async () => {
+    const answer = bridge()
+    let inFlight = 0
+    let most = 0
+    fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+      inFlight += 1
+      most = Math.max(most, inFlight)
+      await new Promise((resolve) => setTimeout(resolve, 5))
+      inFlight -= 1
+
+      return answer(url, init)
+    })
+
+    const res = await post({ format: "csv", ids: many(30_000) })
+
+    expect(res.status).toBe(200)
+    expect(fetchMock).toHaveBeenCalledTimes(6)
+    expect(most).toBeLessThanOrEqual(2)
+  })
+
+  it("returns 502 when one chunk fails, without echoing its body", async () => {
+    const answer = bridge()
+    fetchMock.mockImplementation(async (url: string, init: RequestInit) =>
+      fetchMock.mock.calls.length === 2
+        ? new Response("classified upstream detail", { status: 500 })
+        : answer(url, init)
+    )
+
+    const res = await post({ format: "csv", ids: [A, ...many(15000), B] })
+
+    expect(res.status).toBe(502)
+    expect(await res.text()).not.toContain("classified upstream detail")
+  })
+})
+
+describe("POST /api/export/atlas: the bridge response", () => {
+  const { lat: _lat, ...noLat } = row("b", "Beta", -1.5, 53.7)
+
+  beforeEach(() => getSession.mockResolvedValue(proUser()))
+
+  it.each([
+    ["a latitude that isn't a number", { ...noLat, lat: "53.7" }],
+    ["a missing field", noLat],
+    ["a name that isn't a string", { ...noLat, lat: 53.7, name: 42 }],
+    ["a null row", null],
+  ])("skips a row with %s and keeps the rest", async (_label, bad) => {
+    fetchMock.mockImplementation(bridge({ ...EXPORT_ROWS, [B]: bad }))
+
+    const res = await post({ format: "csv", ids: [A, B, C] })
+
+    expect(res.status).toBe(200)
+    expect(await csvNames(res)).toEqual(["Alpha", "'=Gamma"])
+  })
+
+  it("returns 502 when a renamed field makes every row invalid", async () => {
+    const renamed = Object.fromEntries(
+      Object.entries(EXPORT_ROWS).map(([id, value]) => {
+        const { libraryType, ...rest } = value as Record<string, unknown>
+
+        return [id, { ...rest, type: libraryType }]
+      })
+    )
+    fetchMock.mockImplementation(bridge(renamed))
+
+    const res = await post({ format: "csv", ids: [A, B] })
+
+    expect(res.status).toBe(502)
+  })
+
+  it.each([
+    ["no data", {}],
+    ["data that isn't an object", { data: "rows" }],
+    ["a list of rows", [EXPORT_ROWS[A]]],
+  ])("returns 502 for a bridge body with %s", async (_label, json) => {
+    fetchMock.mockResolvedValue(Response.json(json))
+
+    const res = await post({ format: "csv", ids: [A] })
+
+    expect(res.status).toBe(502)
+  })
+
+  it("returns 502 for a bridge body that isn't JSON", async () => {
+    fetchMock.mockResolvedValue(new Response("<html>Bad gateway</html>"))
+
+    const res = await post({ format: "csv", ids: [A] })
+
+    expect(res.status).toBe(502)
+    expect(await res.text()).not.toContain("Bad gateway")
+  })
+
+  it("exports an empty file when Strapi has none of the ids", async () => {
+    const res = await post({ format: "csv", ids: [UNKNOWN] })
+
+    expect(res.status).toBe(200)
+    expect(await csvLines(res)).toHaveLength(1)
   })
 })
 
