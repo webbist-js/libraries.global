@@ -738,6 +738,7 @@ export function OnboardingShell({
                   )}
                 </label>
                 <input
+                  aria-label="Username"
                   style={{
                     ...input,
                     borderColor:
@@ -767,6 +768,7 @@ export function OnboardingShell({
                 <div>
                   <label style={label}>Pronouns *</label>
                   <select
+                    aria-label="Pronouns"
                     style={{ ...input, cursor: "pointer" }}
                     value={pronouns ?? ""}
                     onChange={(e) => setPronouns(e.target.value)}
