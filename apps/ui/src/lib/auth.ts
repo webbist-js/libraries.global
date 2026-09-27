@@ -1,14 +1,17 @@
 import "server-only"
 
 import { betterAuth } from "better-auth"
+import { APIError, createAuthMiddleware, getOAuthState } from "better-auth/api"
 import { customSession, magicLink } from "better-auth/plugins"
 import { Pool } from "pg"
 
+import { PASSWORD_MIN_LENGTH } from "./constants"
 import {
   sendMagicLinkEmail,
   sendResetPasswordEmail,
   sendVerificationEmail,
 } from "./email"
+import { TERMS_VERSION } from "./legal-consent"
 import { buildSessionAccess } from "./session-access"
 import { fetchSessionProfile } from "./session-profile"
 
@@ -18,6 +21,29 @@ const pool =
   globalForPg._baPool ??
   new Pool({ connectionString: process.env.DATABASE_URL })
 if (process.env.NODE_ENV !== "production") globalForPg._baPool = pool
+
+/** The Better Auth database, for maintenance jobs such as retention cleanup. */
+export const authDbPool = pool
+
+const TERMS_REQUIRED_MESSAGE =
+  "Confirm you're 18 or over and accept the terms to create an account."
+
+/**
+ * The terms version a new user accepted: sent in the sign-up body for email
+ * accounts, or carried through the OAuth state for Google sign-up.
+ */
+async function acceptedTermsVersion(
+  user: Record<string, unknown>
+): Promise<unknown> {
+  if (user.termsVersion) return user.termsVersion
+  try {
+    const state = (await getOAuthState()) as { termsVersion?: unknown } | null
+
+    return state?.termsVersion
+  } catch {
+    return undefined
+  }
+}
 
 /**
  * Called by databaseHooks.user.create.after for every new BA user.
@@ -72,12 +98,28 @@ export const auth = betterAuth({
   database: pool,
   user: {
     deleteUser: { enabled: true },
+    // Record of the terms and 18+ confirmation each account accepted.
+    additionalFields: {
+      termsVersion: { type: "string", required: false, input: true },
+      termsAcceptedAt: { type: "date", required: false, input: false },
+    },
+  },
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (
+        ctx.path === "/sign-up/email" &&
+        ctx.body?.termsVersion !== TERMS_VERSION
+      ) {
+        throw new APIError("BAD_REQUEST", { message: TERMS_REQUIRED_MESSAGE })
+      }
+    }),
   },
   emailAndPassword: {
     enabled: true,
     // Unverified password accounts cannot sign in. Without this, anyone could
     // register someone else's address and pre-claim the account.
     requireEmailVerification: true,
+    minPasswordLength: PASSWORD_MIN_LENGTH,
     sendResetPassword: async ({ user, token }) => {
       const base = process.env.APP_PUBLIC_URL ?? "http://localhost:3000"
       const url = `${base}/auth/reset-password?token=${encodeURIComponent(token)}`
@@ -115,6 +157,9 @@ export const auth = betterAuth({
   },
   plugins: [
     magicLink({
+      // Sign-in only: new accounts must come through a flow that shows the
+      // terms and the 18+ confirmation.
+      disableSignUp: true,
       sendMagicLink: async ({ email, url }) => {
         await sendMagicLinkEmail(email, url)
       },
@@ -161,6 +206,20 @@ export const auth = betterAuth({
     },
     user: {
       create: {
+        // No account without accepting the current terms (which include the
+        // 18+ requirement). Returning false aborts the creation.
+        before: async (user) => {
+          const version = await acceptedTermsVersion(user)
+          if (version !== TERMS_VERSION) return false
+
+          return {
+            data: {
+              ...user,
+              termsVersion: TERMS_VERSION,
+              termsAcceptedAt: new Date(),
+            },
+          }
+        },
         after: async (user) => {
           // Sync every new BA user to Strapi's up_users table.
           // Fires for email/password registration and all OAuth providers.
