@@ -3,6 +3,8 @@ import { setRequestLocale } from "next-intl/server"
 
 import { privateMetadata } from "@/lib/seo/metadata"
 
+import { AuthLeftPanel } from "../_components/AuthLeftPanel"
+import { AuthShell } from "../_components/AuthShell"
 import { RegisterForm } from "./_components/RegisterForm"
 
 export const metadata = privateMetadata("Create an account")
@@ -14,9 +16,12 @@ export default async function RegisterPage({
   setRequestLocale(locale)
 
   return (
-    <>
-      <span data-hide-footer="true" hidden />
+    <AuthShell
+      locale={locale}
+      aside={<AuthLeftPanel mode="register" />}
+      footnote="We never share your email."
+    >
       <RegisterForm />
-    </>
+    </AuthShell>
   )
 }

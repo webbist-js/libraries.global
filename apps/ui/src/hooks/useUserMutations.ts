@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query"
 
 import { useCreateSubmission } from "@/hooks/useSubmissions"
 import { authClient } from "@/lib/auth-client"
+import { TERMS_VERSION } from "@/lib/legal-consent"
 
 export function useUserMutations() {
   const signInMutation = useMutation({
@@ -19,14 +20,21 @@ export function useUserMutations() {
   })
 
   const registerMutation = useMutation({
-    mutationFn: async (values: { email: string; password: string }) => {
+    mutationFn: async (values: {
+      name: string
+      email: string
+      password: string
+    }) => {
       const result = await authClient.signUp.email({
         email: values.email,
         password: values.password,
-        name: values.email,
+        // Strapi's user sync splits this into the profile's first/last name.
+        name: values.name,
         // Where the email-verification link lands; post-signin routes new
         // users to onboarding.
         callbackURL: "/auth/post-signin",
+        // The server refuses sign-up without the current terms version.
+        termsVersion: TERMS_VERSION,
       })
 
       return unwrapBetterAuth(result)

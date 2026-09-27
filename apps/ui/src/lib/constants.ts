@@ -1,5 +1,5 @@
 export const FALLBACK_IMAGE_PATH = "/images/broken-image.png"
-export const PASSWORD_MIN_LENGTH = 6 // this value is in sync with Strapi
+export const PASSWORD_MIN_LENGTH = 10 // enforced server-side by Better Auth (lib/auth.ts)
 export const KOFI_URL = "https://ko-fi.com/libraries"
 
 /**

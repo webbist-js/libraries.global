@@ -1,58 +1,52 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import * as z from "zod"
 
-import { AuthLeftPanel } from "@/app/[locale]/auth/_components/AuthLeftPanel"
+import {
+  AuthDivider,
+  AuthField,
+  AuthHeading,
+  authInputClassName,
+  authInputStyle,
+  AuthPrimaryButton,
+  AuthSwitchPrompt,
+  FieldError,
+  fieldA11y,
+  PasswordInput,
+} from "@/app/[locale]/auth/_components/AuthFormParts"
 import { AuthOAuthButtons } from "@/app/[locale]/auth/_components/AuthOAuthButtons"
 import GlobalLink from "@/components/global/GlobalLink"
 import { useUserMutations } from "@/hooks/useUserMutations"
 import { PASSWORD_MIN_LENGTH } from "@/lib/constants"
 import { T } from "@/lib/design-tokens"
+import { MINIMUM_ACCOUNT_AGE } from "@/lib/legal-consent"
+import { passwordStrength } from "@/lib/password-strength"
 
-const inputStyle = {
-  width: "100%",
-  padding: "11px 14px",
-  borderRadius: "10px",
-  border: `1px solid ${T.border.hi}`,
-  background: T.bg.surface,
-  color: T.ink.base,
-  fontSize: "14px",
-  fontFamily: T.font.sans,
-  outline: "none",
-  boxSizing: "border-box" as const,
-}
+const RegisterFormSchema = z.object({
+  displayName: z
+    .string()
+    .trim()
+    .min(1, "Enter the name to show on your profile")
+    .max(60, "Keep it to 60 characters or fewer"),
+  email: z
+    .string()
+    .min(1, "Enter your email address")
+    .email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(PASSWORD_MIN_LENGTH, `Use at least ${PASSWORD_MIN_LENGTH} characters`),
+  terms: z
+    .boolean()
+    .refine(
+      (v) => v === true,
+      "Confirm you're 18 or over and accept the terms and privacy notice"
+    ),
+})
 
-const labelStyle = {
-  fontFamily: T.font.sans,
-  fontSize: "13px",
-  color: T.ink.low,
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: "6px",
-}
-
-const RegisterFormSchema = z
-  .object({
-    email: z.string().email(),
-    password: z
-      .string()
-      .min(PASSWORD_MIN_LENGTH, `Minimum ${PASSWORD_MIN_LENGTH} characters`),
-    passwordConfirmation: z.string().min(PASSWORD_MIN_LENGTH),
-    terms: z.boolean().refine((v) => v === true, "You must accept the terms"),
-  })
-  .superRefine((data, ctx) => {
-    if (data.password !== data.passwordConfirmation) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Passwords do not match",
-        path: ["passwordConfirmation"],
-      })
-    }
-  })
+type RegisterFormValues = z.infer<typeof RegisterFormSchema>
 
 export function RegisterForm() {
   const { registerMutation } = useUserMutations()
@@ -60,20 +54,26 @@ export function RegisterForm() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
-  } = useForm<z.infer<typeof RegisterFormSchema>>({
+  } = useForm<RegisterFormValues>({
     resolver: zodResolver(RegisterFormSchema),
     defaultValues: {
+      displayName: "",
       email: "",
       password: "",
-      passwordConfirmation: "",
       terms: false,
     },
   })
+  const password = useWatch({ control, name: "password" })
 
   const onSubmit = handleSubmit(async (values) => {
     registerMutation.mutate(
-      { email: values.email, password: values.password },
+      {
+        name: values.displayName,
+        email: values.email,
+        password: values.password,
+      },
       {
         onSuccess: () => {
           // Email verification is required before the first sign-in.
@@ -90,297 +90,185 @@ export function RegisterForm() {
     )
   })
 
+  const passwordDescribedBy = [
+    "password-strength",
+    errors.password && "password-error",
+  ]
+    .filter(Boolean)
+    .join(" ")
+
   return (
     <>
-      <AuthLeftPanel mode="register" />
+      <AuthHeading
+        title="Join the"
+        italic="index."
+        subtitle="Free for readers, librarians and researchers."
+      />
 
-      {/* Right panel */}
-      <div
-        className="flex flex-1 flex-col justify-center px-8 py-12 lg:px-16"
-        style={{ background: "var(--t-bg-space)" }}
+      <form
+        onSubmit={onSubmit}
+        noValidate
+        style={{ display: "flex", flexDirection: "column", gap: "20px" }}
       >
-        {/* Top nav */}
-        <div className="mb-10 flex items-center justify-between">
-          <GlobalLink
-            href="/"
+        <AuthField
+          id="displayName"
+          label="Display name"
+          hint="(shown on your profile)"
+          error={errors.displayName?.message}
+        >
+          <input
+            id="displayName"
+            type="text"
+            autoComplete="name"
+            placeholder="e.g. Morag R."
+            style={authInputStyle}
+            className={authInputClassName}
+            {...fieldA11y("displayName", errors.displayName?.message)}
+            {...register("displayName")}
+          />
+        </AuthField>
+
+        <AuthField
+          id="email"
+          label="Email address"
+          error={errors.email?.message}
+        >
+          <input
+            id="email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.org"
+            style={authInputStyle}
+            className={authInputClassName}
+            {...fieldA11y("email", errors.email?.message)}
+            {...register("email")}
+          />
+        </AuthField>
+
+        <AuthField
+          id="password"
+          label="Create a password"
+          error={errors.password?.message}
+        >
+          <PasswordInput
+            id="password"
+            autoComplete="new-password"
+            aria-invalid={errors.password ? true : undefined}
+            aria-describedby={passwordDescribedBy}
+            {...register("password")}
+          />
+          <PasswordStrengthMeter password={password} />
+        </AuthField>
+
+        <div>
+          <label
             style={{
-              fontFamily: T.font.sans,
-              fontSize: "13px",
-              color: T.ink.faint,
-              textDecoration: "none",
               display: "flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-            className="transition-colors hover:text-(--t-ink-base)"
-          >
-            ← Back to atlas
-          </GlobalLink>
-          <GlobalLink
-            href="/auth/signin"
-            style={{
-              fontFamily: T.font.sans,
-              fontSize: "13px",
-              color: T.ink.faint,
-              textDecoration: "none",
-            }}
-            className="transition-colors hover:text-(--t-ink-base)"
-          >
-            Have an account?{" "}
-            <span style={{ color: T.accent.aurora }}>Sign in</span>
-          </GlobalLink>
-        </div>
-
-        <div style={{ maxWidth: "380px", width: "100%", margin: "0 auto" }}>
-          {/* Eyebrow */}
-          <p
-            style={{
-              fontFamily: T.font.sans,
-              fontSize: "13px",
-              color: T.ink.faint,
-              marginBottom: "12px",
-            }}
-          >
-            Create account
-          </p>
-
-          {/* Heading */}
-          <h1
-            style={{
-              fontFamily: T.font.serif,
-              fontSize: "clamp(2rem,4vw,2.8rem)",
-              fontWeight: 400,
-              letterSpacing: "-0.02em",
-              lineHeight: 1.05,
+              alignItems: "flex-start",
+              gap: "12px",
+              cursor: "pointer",
+              fontSize: "15px",
+              lineHeight: 1.5,
               color: T.ink.base,
-              margin: "0 0 8px",
             }}
           >
-            Join the <em style={{ fontStyle: "italic" }}>index.</em>
-          </h1>
-          <p
-            style={{
-              fontSize: "14px",
-              color: T.ink.low,
-              marginBottom: "28px",
-              fontWeight: 300,
-              lineHeight: "1.6",
-            }}
-          >
-            Free forever for readers and librarians. Two minutes, no card
-            required.
-          </p>
-
-          {/* OAuth */}
-          <AuthOAuthButtons mode="register" />
-
-          {/* Form */}
-          <form
-            onSubmit={onSubmit}
-            style={{ display: "flex", flexDirection: "column", gap: "14px" }}
-          >
-            <div>
-              <label style={labelStyle} htmlFor="email">
-                <span>Email address</span>
-                <span style={{ color: T.accent.aurora, fontSize: "13px" }}>
-                  *
-                </span>
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                placeholder="you@library.org"
-                style={inputStyle}
-                className="focus:border-(--t-aurora-edge) focus:bg-(--t-aurora-soft)"
-                {...register("email")}
-              />
-              {errors.email && (
-                <p
-                  style={{
-                    fontSize: "13px",
-                    color: T.accent.danger,
-                    marginTop: "4px",
-                  }}
-                >
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label style={labelStyle} htmlFor="password">
-                <span>Create password</span>
-                <span style={{ color: T.ink.faint, fontSize: "13px" }}>
-                  Minimum {PASSWORD_MIN_LENGTH} characters
-                </span>
-              </label>
-              <input
-                id="password"
-                type="password"
-                autoComplete="new-password"
-                placeholder="••••••••••••"
-                style={inputStyle}
-                className="focus:border-(--t-aurora-edge) focus:bg-(--t-aurora-soft)"
-                {...register("password")}
-              />
-              {errors.password && (
-                <p
-                  style={{
-                    fontSize: "13px",
-                    color: T.accent.danger,
-                    marginTop: "4px",
-                  }}
-                >
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label style={labelStyle} htmlFor="passwordConfirmation">
-                <span>Confirm password</span>
-                <span style={{ color: T.accent.aurora, fontSize: "13px" }}>
-                  *
-                </span>
-              </label>
-              <input
-                id="passwordConfirmation"
-                type="password"
-                autoComplete="new-password"
-                placeholder="••••••••••••"
-                style={inputStyle}
-                className="focus:border-(--t-aurora-edge) focus:bg-(--t-aurora-soft)"
-                {...register("passwordConfirmation")}
-              />
-              {errors.passwordConfirmation && (
-                <p
-                  style={{
-                    fontSize: "13px",
-                    color: T.accent.danger,
-                    marginTop: "4px",
-                  }}
-                >
-                  {errors.passwordConfirmation.message}
-                </p>
-              )}
-            </div>
-
-            {/* Terms */}
-            <label
+            <input
+              type="checkbox"
               style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "10px",
-                cursor: "pointer",
+                width: "20px",
+                height: "20px",
+                marginTop: "1px",
+                accentColor: T.accent.primary,
+                flexShrink: 0,
               }}
-            >
-              <input
-                type="checkbox"
-                style={{
-                  marginTop: "2px",
-                  accentColor: T.accent.aurora,
-                  flexShrink: 0,
-                }}
-                {...register("terms")}
-              />
-              <span
-                style={{
-                  fontSize: "12px",
-                  color: T.ink.low,
-                  lineHeight: "1.55",
-                }}
+              {...fieldA11y("terms", errors.terms?.message)}
+              {...register("terms")}
+            />
+            <span>
+              I&rsquo;m {MINIMUM_ACCOUNT_AGE} or over, and I agree to the{" "}
+              <GlobalLink
+                href="/legal/terms"
+                style={{ color: T.accent.primary }}
+                className="underline underline-offset-[3px]"
               >
-                I agree to the{" "}
-                <GlobalLink
-                  href="/terms"
-                  style={{ color: T.accent.aurora, textDecoration: "none" }}
-                  className="hover:underline"
-                >
-                  Terms
-                </GlobalLink>{" "}
-                &amp;{" "}
-                <GlobalLink
-                  href="/privacy"
-                  style={{ color: T.accent.aurora, textDecoration: "none" }}
-                  className="hover:underline"
-                >
-                  Privacy Policy
-                </GlobalLink>
-              </span>
-            </label>
-            {errors.terms && (
-              <p
-                style={{
-                  fontSize: "13px",
-                  color: T.accent.danger,
-                  marginTop: "-8px",
-                }}
+                terms of use
+              </GlobalLink>{" "}
+              and{" "}
+              <GlobalLink
+                href="/legal/privacy"
+                style={{ color: T.accent.primary }}
+                className="underline underline-offset-[3px]"
               >
-                {errors.terms.message}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={registerMutation.isPending || isSubmitting}
-              style={{
-                marginTop: "6px",
-                width: "100%",
-                padding: "13px",
-                borderRadius: "999px",
-                background: T.accent.primary,
-                color: "#fff",
-                fontFamily: T.font.sans,
-                fontWeight: 600,
-                fontSize: "14px",
-                border: "none",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px",
-                transition: "opacity 150ms",
-                opacity: registerMutation.isPending || isSubmitting ? 0.6 : 1,
-              }}
-            >
-              {registerMutation.isPending
-                ? "Creating account…"
-                : "Create account →"}
-            </button>
-          </form>
-
-          <p
-            style={{
-              textAlign: "center",
-              marginTop: "20px",
-              fontSize: "13px",
-              color: T.ink.faint,
-            }}
-          >
-            Already have an account?{" "}
-            <GlobalLink
-              href="/auth/signin"
-              style={{ color: T.accent.aurora, textDecoration: "none" }}
-              className="hover:underline"
-            >
-              Sign in
-            </GlobalLink>
-          </p>
-
-          <p
-            style={{
-              textAlign: "center",
-              marginTop: "12px",
-              fontFamily: T.font.sans,
-              fontSize: "13px",
-              color: T.ink.faint,
-            }}
-          >
-            Your email is never shared
-          </p>
+                privacy notice
+              </GlobalLink>
+              .
+            </span>
+          </label>
+          <FieldError id="terms" message={errors.terms?.message} />
         </div>
-      </div>
+
+        <AuthPrimaryButton
+          disabled={registerMutation.isPending || isSubmitting}
+        >
+          {registerMutation.isPending ? "Creating account…" : "Continue"}
+        </AuthPrimaryButton>
+      </form>
+
+      <AuthSwitchPrompt
+        prompt="Already have an account?"
+        linkLabel="Sign in"
+        href="/auth/signin"
+      />
+
+      <AuthDivider />
+
+      <AuthOAuthButtons mode="register" />
     </>
+  )
+}
+
+// Filled-segment colour per score; the label text carries the same meaning.
+const STRENGTH_COLOR = [
+  T.bg.muted2,
+  T.accent.danger,
+  T.accent.warn,
+  T.accent.ok,
+  T.accent.ok,
+]
+
+function PasswordStrengthMeter({ password }: { password: string }) {
+  const { score, label } = passwordStrength(password, PASSWORD_MIN_LENGTH)
+
+  return (
+    <div style={{ marginTop: "10px" }}>
+      <div aria-hidden="true" className="grid grid-cols-4 gap-1.5">
+        {[1, 2, 3, 4].map((segment) => (
+          <span
+            key={segment}
+            style={{
+              height: "6px",
+              borderRadius: "999px",
+              background:
+                segment <= score ? STRENGTH_COLOR[score] : T.bg.muted2,
+              transition: "background 150ms",
+            }}
+          />
+        ))}
+      </div>
+      <p
+        id="password-strength"
+        aria-live="polite"
+        style={{
+          marginTop: "8px",
+          fontSize: "14px",
+          lineHeight: 1.5,
+          color: T.ink.dim,
+        }}
+      >
+        <strong style={{ fontWeight: 600, color: T.ink.base }}>{label}.</strong>{" "}
+        At least {PASSWORD_MIN_LENGTH} characters. A few unrelated words works
+        well.
+      </p>
+    </div>
   )
 }
