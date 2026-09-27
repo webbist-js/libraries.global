@@ -171,7 +171,7 @@ export function WikiEditDiffPanel({ sub }: { sub: Submission }) {
             variant="pi"
             style={{ color: "#9ca3af", marginTop: "6px", display: "block" }}
           >
-            Compare against the live article at /wiki/{targetSlug} to review
+            Compare against the live Knowledge article ({targetSlug}) to review
             changes.
           </Typography>
         </Box>
