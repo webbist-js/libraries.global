@@ -24,12 +24,14 @@ function Toaster({ ...props }: ToasterProps) {
         error: <OctagonXIcon className="size-4" />,
         loading: <Loader2Icon className="size-4 animate-spin" />,
       }}
+      // v2 tokens; the shadcn --popover/--border/--radius vars aren't
+      // defined, which left toasts with a transparent background.
       style={
         {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
-          "--border-radius": "var(--radius)",
+          "--normal-bg": "var(--t-bg-deep)",
+          "--normal-text": "var(--t-ink-base)",
+          "--normal-border": "var(--t-border-line)",
+          "--border-radius": "14px",
         } as React.CSSProperties
       }
       {...props}
