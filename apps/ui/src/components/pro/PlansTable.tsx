@@ -4,14 +4,13 @@ import GlobalLink from "@/components/global/GlobalLink"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import {
   type PlanCard,
+  type PlanInclude,
   type PlanPrice,
   PLANS,
   PRICES_ARE_PLACEHOLDERS,
   priceHeadline,
   showPlanCta,
 } from "@/lib/plans"
-
-const SOON_SUFFIX = " (coming soon)"
 
 function Price({ price }: { readonly price: PlanPrice }) {
   const headline = (
@@ -44,31 +43,54 @@ function Price({ price }: { readonly price: PlanPrice }) {
   )
 }
 
-function IncludesList({ lines }: { readonly lines: readonly string[] }) {
-  return (
-    <ul className="m-0 flex list-none flex-col gap-2 p-0">
-      {lines.map((line) => {
-        const soon = line.endsWith(SOON_SUFFIX)
+/** Built items get a check; unbuilt ones a clock (their text says so too). */
+function IncludesList({ items }: { readonly items: readonly PlanInclude[] }) {
+  const lines = items.filter((i) => i.kind !== "note")
+  const notes = items.filter((i) => i.kind === "note")
 
-        return (
-          <li
-            key={line}
-            className="flex gap-2 text-[14.5px] leading-[1.45]"
-            style={{ color: soon ? T.ink.dim : T.ink.base }}
-          >
-            <Icon
-              aria-hidden="true"
-              className="mt-0.5 shrink-0"
-              height={16}
-              icon={soon ? "mdi:clock-outline" : "mdi:check"}
-              style={{ color: soon ? T.ink.dim : T.accent.ok }}
-              width={16}
-            />
-            <span>{line}</span>
-          </li>
-        )
-      })}
-    </ul>
+  return (
+    <div className="flex flex-col gap-3">
+      <ul className="m-0 flex list-none flex-col gap-2 p-0">
+        {lines.map((item) => {
+          const soon = item.kind === "soon"
+
+          return (
+            <li
+              key={item.text}
+              className="flex gap-2 text-[14.5px] leading-[1.45]"
+              style={{ color: soon ? T.ink.dim : T.ink.base }}
+            >
+              <Icon
+                aria-hidden="true"
+                className="mt-0.5 shrink-0"
+                height={16}
+                icon={soon ? "mdi:clock-outline" : "mdi:check"}
+                style={{ color: soon ? T.ink.dim : T.accent.ok }}
+                width={16}
+              />
+              <span>{item.text}</span>
+            </li>
+          )
+        })}
+      </ul>
+      {/* Notes are context, not inclusions: plain dim text, outside the list. */}
+      {notes.map((item) => (
+        <p
+          key={item.text}
+          className="m-0 flex gap-2 text-[14px] leading-[1.45]"
+          style={{ color: T.ink.dim }}
+        >
+          <Icon
+            aria-hidden="true"
+            className="mt-0.5 shrink-0"
+            height={16}
+            icon="mdi:information-outline"
+            width={16}
+          />
+          <span>{item.text}</span>
+        </p>
+      ))}
+    </div>
   )
 }
 
@@ -190,7 +212,7 @@ export function PlansTable({ currentPlan }: { readonly currentPlan?: string }) {
                 className="border-t pt-4"
                 style={{ borderColor: T.border.divider }}
               >
-                <IncludesList lines={plan.includes} />
+                <IncludesList items={plan.includes} />
               </div>
 
               {showPlanCta(plan, currentPlan) ? (

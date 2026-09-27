@@ -20,12 +20,19 @@ export type PlanCta = {
   href?: string
 }
 
+/**
+ * One line of a plan's list. "feature" is built; "soon" isn't yet, and its
+ * text says "(coming soon)" so it reads honestly anywhere; "note" is context
+ * rather than something the plan includes.
+ */
+export type PlanInclude = { text: string; kind: "feature" | "soon" | "note" }
+
 export type PlanCard = {
   key: PlanCardKey
   name: string
   price: PlanPrice
   who: string
-  includes: string[]
+  includes: PlanInclude[]
   cta: PlanCta
 }
 
@@ -96,14 +103,20 @@ function featuresOf(plan: "pro" | "team"): Feature[] {
   return FEATURES.filter((f) => features.has(f))
 }
 
+const feature = (text: string): PlanInclude => ({ text, kind: "feature" })
+const soon = (text: string): PlanInclude => ({
+  text: `${text} (coming soon)`,
+  kind: "soon",
+})
+const note = (text: string): PlanInclude => ({ text, kind: "note" })
+
 /** Live features first, listed plainly; the rest flagged "(coming soon)". */
-function featureLines(features: readonly Feature[]): string[] {
-  const live = features.filter((f) => PRO_FEATURE_COPY[f].status === "live")
-  const soon = features.filter((f) => PRO_FEATURE_COPY[f].status === "soon")
+function featureItems(features: readonly Feature[]): PlanInclude[] {
+  const copy = features.map((f) => PRO_FEATURE_COPY[f])
 
   return [
-    ...live.map((f) => PRO_FEATURE_COPY[f].label),
-    ...soon.map((f) => `${PRO_FEATURE_COPY[f].label} (coming soon)`),
+    ...copy.filter((c) => c.status === "live").map((c) => feature(c.label)),
+    ...copy.filter((c) => c.status === "soon").map((c) => soon(c.label)),
   ]
 }
 
@@ -119,9 +132,9 @@ export const PLANS: readonly PlanCard[] = [
     price: "free",
     who: "Anyone",
     includes: [
-      "Every library record, with hours and services",
-      "Search, the map and lists",
-      "Open-data downloads",
+      feature("Every library record, with hours and services"),
+      feature("Search, the map and lists"),
+      feature("Open-data downloads"),
     ],
     cta: { kind: "none", label: "No account needed" },
   },
@@ -131,11 +144,11 @@ export const PLANS: readonly PlanCard[] = [
     price: "free",
     who: "Anyone who signs up",
     includes: [
-      "Everything in Public",
-      "Contribute corrections, photos and new libraries",
-      "Follow libraries and save events",
-      "3 saved views and 3 saved searches (coming soon)",
-      "A weekly digest of followed libraries (coming soon)",
+      feature("Everything in Public"),
+      feature("Contribute corrections, photos and new libraries"),
+      feature("Follow libraries and save events"),
+      soon("3 saved views and 3 saved searches"),
+      soon("A weekly digest of followed libraries"),
     ],
     cta: {
       kind: "signup",
@@ -149,10 +162,10 @@ export const PLANS: readonly PlanCard[] = [
     price: { monthly: "£3/month", yearly: "£30/year" },
     who: "People who value the index and want to keep it running",
     includes: [
-      "Everything in Free",
-      "An optional Supporter mark you can hide",
-      "Credit on the supporters page",
-      "No extra features and no extra trust: it’s patronage",
+      feature("Everything in Free"),
+      feature("An optional Supporter mark you can hide"),
+      feature("Credit on the supporters page"),
+      note("No extra features and no extra trust: it’s patronage."),
     ],
     cta: { kind: "soon", label: "Coming soon" },
   },
@@ -165,7 +178,7 @@ export const PLANS: readonly PlanCard[] = [
       note: "Founding price, held while your membership continues. Standard £8/month or £80/year once per-capita and Reach ship.",
     },
     who: "Researchers, journalists, consultants, enthusiasts",
-    includes: ["Everything in Supporter", ...featureLines(PRO_ONLY)],
+    includes: [feature("Everything in Supporter"), ...featureItems(PRO_ONLY)],
     cta: { kind: "soon", label: "Coming soon" },
   },
   {
@@ -177,9 +190,9 @@ export const PLANS: readonly PlanCard[] = [
     },
     who: "Library services, councils, universities, consultancies",
     includes: [
-      "Pro for every seat",
-      "Invoiced yearly; we set up your seats",
-      ...featureLines(TEAM_ONLY),
+      feature("Pro for every seat"),
+      feature("Invoiced yearly; we set up your seats"),
+      ...featureItems(TEAM_ONLY),
     ],
     cta: { kind: "contact", label: "Talk to us", href: TEAM_CONTACT_HREF },
   },

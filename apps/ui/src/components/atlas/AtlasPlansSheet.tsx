@@ -31,6 +31,18 @@ const FEATURES: [string, boolean, boolean, boolean, boolean][] = [
   ["Shared projects and branded reports", false, false, false, true],
 ]
 
+function SeeAllPlansLink() {
+  return (
+    <GlobalLink
+      href="/pro"
+      className="text-[14px] font-semibold underline underline-offset-[3px]"
+      style={{ color: T.accent.primary }}
+    >
+      See all plans
+    </GlobalLink>
+  )
+}
+
 export function AtlasPlansSheet({
   tier,
   onClose,
@@ -186,11 +198,16 @@ export function AtlasPlansSheet({
                     }}
                   >
                     {p.key === current ? (
-                      <span
-                        className="text-[14px]"
-                        style={{ color: T.ink.dim }}
-                      >
-                        You’re here
+                      <span className="inline-flex flex-col items-center gap-1">
+                        <span
+                          className="text-[14px]"
+                          style={{ color: T.ink.dim }}
+                        >
+                          You’re here
+                        </span>
+                        {/* Pro and Team members land on the Pro column, which
+                            would otherwise lose its link to the plans page. */}
+                        {p.cta.kind === "soon" ? <SeeAllPlansLink /> : null}
                       </span>
                     ) : p.key === "free" && tier === "public" ? (
                       <GlobalLink
@@ -216,13 +233,7 @@ export function AtlasPlansSheet({
                           <Icon name="clock" size={15} />
                           {p.cta.label}
                         </span>
-                        <GlobalLink
-                          href="/pro"
-                          className="text-[14px] font-semibold underline underline-offset-[3px]"
-                          style={{ color: T.accent.primary }}
-                        >
-                          See all plans
-                        </GlobalLink>
+                        <SeeAllPlansLink />
                       </span>
                     ) : null}
                   </td>

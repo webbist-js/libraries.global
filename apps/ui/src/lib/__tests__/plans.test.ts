@@ -49,8 +49,20 @@ describe("PLANS", () => {
 
   it("gives Supporter no Pro feature: patronage buys nothing", () => {
     const labels = Object.values(PRO_FEATURE_COPY).map((c) => c.label)
-    for (const line of plan("supporter").includes)
-      for (const label of labels) expect(line).not.toContain(label)
+    for (const item of plan("supporter").includes)
+      for (const label of labels) expect(item.text).not.toContain(label)
+  })
+
+  it("keeps Supporter's patronage line a note, not an include", () => {
+    const notes = plan("supporter").includes.filter((i) => i.kind === "note")
+    expect(notes).toHaveLength(1)
+    expect(notes[0]?.text).toContain("patronage")
+  })
+
+  it("tags exactly the unbuilt items as coming soon", () => {
+    for (const card of PLANS)
+      for (const item of card.includes)
+        expect(item.text.endsWith(" (coming soon)")).toBe(item.kind === "soon")
   })
 
   it("never offers checkout: paid plans are coming soon, Team is a chat", () => {
@@ -75,16 +87,21 @@ describe("PLANS", () => {
 
   it("builds Pro's list from the feature copy, flagging what isn't built", () => {
     const includes = plan("pro").includes
-    expect(includes).toContain(PRO_FEATURE_COPY["atlas.export"].label)
-    expect(includes).toContain(
-      `${PRO_FEATURE_COPY["library.notes"].label} (coming soon)`
-    )
-    const joined = includes.join("\n")
-    expect(joined).not.toContain(PRO_FEATURE_COPY["team.workspace"].label)
-    expect(joined).not.toContain(PRO_FEATURE_COPY["api.key"].label)
-    expect(plan("team").includes.join("\n")).toContain(
-      PRO_FEATURE_COPY["team.workspace"].label
-    )
+    expect(includes).toContainEqual({
+      text: PRO_FEATURE_COPY["atlas.export"].label,
+      kind: "feature",
+    })
+    expect(includes).toContainEqual({
+      text: `${PRO_FEATURE_COPY["library.notes"].label} (coming soon)`,
+      kind: "soon",
+    })
+    const texts = (key: string) =>
+      plan(key)
+        .includes.map((i) => i.text)
+        .join("\n")
+    expect(texts("pro")).not.toContain(PRO_FEATURE_COPY["team.workspace"].label)
+    expect(texts("pro")).not.toContain(PRO_FEATURE_COPY["api.key"].label)
+    expect(texts("team")).toContain(PRO_FEATURE_COPY["team.workspace"].label)
   })
 })
 
