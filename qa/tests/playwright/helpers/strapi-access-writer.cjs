@@ -11,9 +11,12 @@
  *
  * Why it exists: Strapi REST cannot make these writes, by design.
  * user-profile exposes only find/findOne, and library-affiliation has no
- * routes at all (P-A hardening). So this calls load() (never listen(); cron
- * stays off) and writes through the Document Service, the same way the
- * moderation service does on claim approval.
+ * routes at all (P-A hardening). So this calls load() and writes through
+ * the Document Service, the same way the moderation service does on claim
+ * approval. It never calls listen(), so no HTTP server starts. load() does
+ * run bootstrap, which schedules and starts config/cron-tasks; the writer
+ * destroys the cron service straight after load() so no task can fire
+ * during the writes (a task due in that instant could still start).
  *
  * Run by the seed with cwd = apps/strapi, so Strapi loads its own .env.
  * Input: ACCESS_SEED_PLAN (JSON array). Output: one line prefixed
@@ -163,6 +166,9 @@ async function main() {
   const instance = createStrapi({ appDir, distDir: path.join(appDir, "dist") })
   assertLocalDatabase(instance)
   const strapi = await instance.load()
+  // Stop the cron jobs bootstrap just started: a second instance must not
+  // run the app's scheduled tasks alongside `strapi develop`.
+  strapi.cron?.destroy?.()
   strapi.log.level = "error"
   const result = []
   try {
