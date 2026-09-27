@@ -1,3 +1,4 @@
+import sharp from "sharp"
 import { describe, expect, it, vi } from "vitest"
 
 vi.mock("server-only", () => ({}))
@@ -33,12 +34,44 @@ describe("sniffImageType", () => {
   })
 })
 
+const blank = () =>
+  sharp({
+    create: { width: 4, height: 4, channels: 3, background: "#ffffff" },
+  })
+
+async function metadataOf(file: File) {
+  return sharp(Buffer.from(await file.arrayBuffer())).metadata()
+}
+
 describe("toSafeImageFile", () => {
   it("rewrites the name and type from the content", async () => {
-    const file = new File([PNG], "evil.html", { type: "image/png" })
+    const png = await blank().png().toBuffer()
+    const file = new File([new Uint8Array(png)], "evil.html", {
+      type: "image/png",
+    })
     const safe = await toSafeImageFile(file, ["image/png"])
     expect(safe?.type).toBe("image/png")
     expect(safe?.name).toMatch(/^upload-[\da-f-]+\.png$/)
+  })
+
+  it("strips EXIF metadata such as location from photos", async () => {
+    const jpeg = await blank()
+      .jpeg()
+      .withExif({ IFD0: { Copyright: "Alice", Artist: "Alice" } })
+      .toBuffer()
+    expect((await sharp(jpeg).metadata()).exif).toBeDefined()
+
+    const safe = await toSafeImageFile(
+      new File([new Uint8Array(jpeg)], "photo.jpg", { type: "image/jpeg" }),
+      ["image/jpeg"]
+    )
+    expect(safe?.type).toBe("image/jpeg")
+    expect((await metadataOf(safe!)).exif).toBeUndefined()
+  })
+
+  it("rejects a file that looks like an image but can't be decoded", async () => {
+    const file = new File([PNG], "x.png", { type: "image/png" })
+    expect(await toSafeImageFile(file, ["image/png"])).toBeNull()
   })
 
   it("rejects HTML disguised as PNG", async () => {

@@ -1,5 +1,7 @@
 import "server-only"
 
+import sharp from "sharp"
+
 export type SniffedImageType =
   | "image/jpeg"
   | "image/png"
@@ -34,9 +36,37 @@ export function sniffImageType(bytes: Uint8Array): SniffedImageType | null {
 }
 
 /**
+ * Re-encode the image so EXIF and XMP metadata (GPS position, camera serial,
+ * owner name) aren't published with it. The EXIF orientation is applied
+ * first so the picture still displays the right way up. GIFs carry no EXIF
+ * and pass through unchanged. Returns null if the bytes can't be decoded.
+ */
+async function stripMetadata(
+  buffer: Uint8Array<ArrayBuffer>,
+  type: SniffedImageType
+): Promise<Uint8Array<ArrayBuffer> | null> {
+  if (type === "image/gif") return buffer
+  try {
+    // sharp drops all metadata unless asked to keep it.
+    const image = sharp(buffer).rotate()
+    const encoded =
+      type === "image/jpeg"
+        ? image.jpeg({ quality: 90, mozjpeg: true })
+        : type === "image/png"
+          ? image.png()
+          : image.webp({ quality: 90 })
+
+    return new Uint8Array(await encoded.toBuffer())
+  } catch {
+    return null
+  }
+}
+
+/**
  * Validate an uploaded file by content (not the client-declared MIME type or
- * filename) and return a copy with a safe, server-chosen name and type, ready
- * to forward to Strapi. Returns null if the bytes are not an allowed image.
+ * filename) and return a metadata-free copy with a safe, server-chosen name
+ * and type, ready to forward to Strapi. Returns null if the bytes are not an
+ * allowed, decodable image.
  */
 export async function toSafeImageFile(
   file: File,
@@ -46,11 +76,10 @@ export async function toSafeImageFile(
   const type = sniffImageType(buffer)
   if (!type || !allowed.includes(type)) return null
 
-  return new File(
-    [buffer],
-    `upload-${crypto.randomUUID()}.${EXTENSION[type]}`,
-    {
-      type,
-    }
-  )
+  const clean = await stripMetadata(buffer, type)
+  if (!clean) return null
+
+  return new File([clean], `upload-${crypto.randomUUID()}.${EXTENSION[type]}`, {
+    type,
+  })
 }
