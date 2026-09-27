@@ -61,7 +61,11 @@ export function ForgotPasswordForm() {
         subtitle="Enter the email you signed up with and we'll send a reset link."
       />
 
+      {/* A native submit (before hydration) POSTs to this page instead of
+          putting the email address in a query string. */}
       <form
+        method="post"
+        action="/auth/forgot-password"
         onSubmit={onSubmit}
         noValidate
         style={{ display: "flex", flexDirection: "column", gap: "20px" }}

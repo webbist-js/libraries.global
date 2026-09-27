@@ -22,6 +22,12 @@ interface Props<T extends FieldValues = FieldValues> {
   readonly className?: string
   readonly id?: string
   readonly disabled?: boolean
+  /**
+   * Set both on a form with a secret field, so a native submit before
+   * hydration is a POST to `action`, not a GET with the values in the URL.
+   */
+  readonly method?: "get" | "post"
+  readonly action?: string
 }
 
 export function AppForm<T extends FieldValues = FieldValues>({
@@ -34,6 +40,8 @@ export function AppForm<T extends FieldValues = FieldValues>({
   id,
   form,
   disabled,
+  method,
+  action,
 }: Props<T>) {
   removeThisWhenYouNeedMe("AppForm")
 
@@ -42,6 +50,8 @@ export function AppForm<T extends FieldValues = FieldValues>({
   return (
     <FormProvider {...form}>
       <form
+        method={method}
+        action={action}
         onSubmit={handleSubmit(onSubmit, onError)}
         className={className}
         id={id}

@@ -15,6 +15,7 @@ import {
 } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
+import { useMounted } from "@/hooks/useMounted"
 import { T } from "@/lib/design-tokens"
 
 // No `outline: none` — the global :focus-visible ring must stay visible.
@@ -205,22 +206,29 @@ const pillBase: CSSProperties = {
   cursor: "pointer",
 }
 
+/**
+ * The auth forms' submit button. It stays disabled until it has mounted, so a
+ * click or Enter before hydration can't submit the form natively.
+ */
 export function AuthPrimaryButton({
   children,
   disabled,
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement>) {
+  const mounted = useMounted()
+  const isDisabled = disabled || !mounted
+
   return (
     <button
       type="submit"
-      disabled={disabled}
+      disabled={isDisabled}
       style={{
         ...pillBase,
         background: T.accent.primary,
         color: "#fff",
         border: "none",
-        opacity: disabled ? 0.6 : 1,
-        cursor: disabled ? "default" : "pointer",
+        opacity: isDisabled ? 0.6 : 1,
+        cursor: isDisabled ? "default" : "pointer",
       }}
       className="transition-colors enabled:hover:bg-(--t-accent-primary-hover)"
       {...props}

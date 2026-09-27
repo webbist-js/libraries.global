@@ -105,7 +105,11 @@ export function RegisterForm() {
         subtitle="Free for readers, librarians and researchers."
       />
 
+      {/* A native submit (before hydration) POSTs to this page instead of
+          putting the password in a query string. */}
       <form
+        method="post"
+        action="/auth/register"
         onSubmit={onSubmit}
         noValidate
         style={{ display: "flex", flexDirection: "column", gap: "20px" }}

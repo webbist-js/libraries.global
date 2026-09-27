@@ -116,7 +116,11 @@ function SuspensedSignInForm() {
         subtitle="Sign in to suggest edits, add and follow libraries."
       />
 
+      {/* A native submit (before hydration) POSTs to this page instead of
+          putting the password in a query string. */}
       <form
+        method="post"
+        action="/auth/signin"
         onSubmit={onSubmit}
         noValidate
         style={{ display: "flex", flexDirection: "column", gap: "20px" }}

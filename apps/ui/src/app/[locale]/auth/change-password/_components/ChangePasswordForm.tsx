@@ -17,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { useMounted } from "@/hooks/useMounted"
 import { useUserMutations } from "@/hooks/useUserMutations"
 import { PASSWORD_MIN_LENGTH } from "@/lib/constants"
 import { useRouter } from "@/lib/navigation"
@@ -25,6 +26,8 @@ export function ChangePasswordForm() {
   const t = useTranslations("auth.changePassword")
   const router = useRouter()
   const { changePasswordMutation } = useUserMutations()
+  // Submit stays disabled until mounted: see useMounted.
+  const mounted = useMounted()
 
   const form = useForm<z.infer<FormSchemaType>>({
     resolver: zodResolver(ChangePasswordFormSchema),
@@ -77,7 +80,13 @@ export function ChangePasswordForm() {
         <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
       <CardContent>
-        <AppForm form={form} onSubmit={onSubmit} id={changePasswordFormName}>
+        <AppForm
+          form={form}
+          onSubmit={onSubmit}
+          id={changePasswordFormName}
+          method="post"
+          action="/auth/change-password"
+        >
           <AppField
             name="currentPassword"
             type="password"
@@ -104,7 +113,7 @@ export function ChangePasswordForm() {
           size="lg"
           variant="default"
           form={changePasswordFormName}
-          disabled={changePasswordMutation.isPending}
+          disabled={!mounted || changePasswordMutation.isPending}
         >
           {t("submit")}
         </Button>

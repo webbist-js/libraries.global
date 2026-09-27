@@ -18,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { useMounted } from "@/hooks/useMounted"
 import { useUserMutations } from "@/hooks/useUserMutations"
 import { PASSWORD_MIN_LENGTH } from "@/lib/constants"
 import { useRouter } from "@/lib/navigation"
@@ -42,6 +43,8 @@ function SuspensedSetPasswordForm({ token, accountActivation }: Props) {
     accountActivation ? "auth.accountActivation" : "auth.resetPassword"
   )
   const { resetPasswordMutation } = useUserMutations()
+  // Submit stays disabled until mounted: see useMounted.
+  const mounted = useMounted()
 
   const form = useForm<z.infer<FormSchemaType>>({
     resolver: zodResolver(SetPasswordFormSchema),
@@ -82,7 +85,13 @@ function SuspensedSetPasswordForm({ token, accountActivation }: Props) {
         <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
       <CardContent>
-        <AppForm form={form} onSubmit={onSubmit} id={setPasswordFormName}>
+        <AppForm
+          form={form}
+          onSubmit={onSubmit}
+          id={setPasswordFormName}
+          method="post"
+          action={accountActivation ? "/auth/activate" : "/auth/reset-password"}
+        >
           <AppField
             name="password"
             type="password"
@@ -103,7 +112,7 @@ function SuspensedSetPasswordForm({ token, accountActivation }: Props) {
           size="lg"
           variant="default"
           form={setPasswordFormName}
-          disabled={resetPasswordMutation.isPending}
+          disabled={!mounted || resetPasswordMutation.isPending}
         >
           {t("submit")}
         </Button>
