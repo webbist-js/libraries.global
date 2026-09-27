@@ -72,7 +72,12 @@ if (accessProjectEnabled) {
     // per IP: one worker makes the files take turns rather than race.
     workers: 1,
     retries: 0,
-    use: { ...devices["Desktop Chrome"] },
+    use: {
+      ...devices["Desktop Chrome"],
+      // A trace would record the fixture password in the sign-in POST
+      // bodies. `--trace on` still overrides this for a local debug run.
+      trace: "off",
+    },
   })
 }
 

@@ -137,6 +137,27 @@ async function oneAtlasLibraryId(api: APIRequestContext): Promise<string> {
 
 const exportBody = (ids: string[]) => ({ format: "csv", ids })
 
+/**
+ * The records of an RFC 4180 CSV. Each ends with CRLF, except a CRLF inside
+ * a quoted cell (an address can hold one), which belongs to the cell.
+ */
+function csvRecords(csv: string): string[] {
+  const records: string[] = []
+  let start = 0
+  let quoted = false
+  for (let i = 0; i < csv.length; i++) {
+    if (csv[i] === '"') quoted = !quoted
+    else if (!quoted && csv.startsWith("\r\n", i)) {
+      records.push(csv.slice(start, i))
+      start = i + 2
+      i++
+    }
+  }
+  if (start < csv.length) records.push(csv.slice(start))
+
+  return records
+}
+
 test.describe("access role matrix (API)", () => {
   test("anonymous: no session, gated routes refuse with 401", async ({
     baseURL,
@@ -247,9 +268,13 @@ test.describe("access plan matrix (API)", () => {
         expect(res.status()).toBe(200)
         expect(res.headers()["content-type"]).toContain("text/csv")
         const body = await res.body()
-        // A UTF-8 byte-order mark, then the header row.
+        // A UTF-8 byte-order mark, the header row, then exactly one data
+        // row: the one library asked for. A header-only file fails here.
         expect(body.subarray(0, 3).toString("hex")).toBe("efbbbf")
-        expect(body.subarray(3).toString("utf8")).toMatch(/^name,slug,/)
+        const records = csvRecords(body.subarray(3).toString("utf8"))
+        expect(records[0]).toMatch(/^name,slug,/)
+        expect(records).toHaveLength(2)
+        expect(records[1]).toMatch(/[^,]/)
       } else {
         expect(res.status()).toBe(402)
         expect(await res.json()).toMatchObject({ feature: "atlas.export" })
@@ -260,9 +285,13 @@ test.describe("access plan matrix (API)", () => {
   test("money never buys trust: every paid plan has the reader's access", async ({
     baseURL,
   }) => {
+    // With Strapi down every session is a reader with no capabilities, so
+    // they'd all match. A loaded profile and the reader's full signed-in set
+    // rule that out.
     const trustOf = async (key: string) => {
       const api = await signedIn(baseURL!, key)
       const { user } = await (await api.get("/api/auth/get-session")).json()
+      expect(user.profileLoaded, key).toBe(true)
 
       return {
         contributorRole: user.contributorRole,
@@ -270,6 +299,10 @@ test.describe("access plan matrix (API)", () => {
       }
     }
     const reader = await trustOf("reader")
+    expect(reader).toEqual({
+      contributorRole: "reader",
+      capabilities: [...ALL_SIGNED_IN].sort(),
+    })
     for (const row of PLAN_MATRIX.filter((r) => r.plan !== "free"))
       expect(await trustOf(row.key), row.key).toEqual(reader)
   })

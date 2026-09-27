@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page, test } from "@playwright/test"
+import { expect, type Page, test } from "@playwright/test"
 
 import {
   emailFor,
@@ -49,13 +49,6 @@ test.beforeAll(async ({ playwright }, testInfo) => {
   }
 })
 
-/** True once React has hydrated the element (it attaches its props then). */
-function hydrated(locator: Locator): Promise<boolean> {
-  return locator.evaluate((el) =>
-    Object.keys(el).some((k) => k.startsWith("__reactProps$"))
-  )
-}
-
 /**
  * Signs in through the sign-in form. A 429 only shows a toast, so it's
  * waited out and the form submitted again, the way signIn retries.
@@ -63,15 +56,15 @@ function hydrated(locator: Locator): Promise<boolean> {
  * The password is set through the input's native value setter, not fill():
  * Playwright titles a fill step with its value and logs it on failure, which
  * would put the password in the HTML report and the terminal. Nothing is
- * submitted before React hydrates the form, either: a native submit is a GET
- * that would put the password in the URL.
+ * typed until the submit is enabled, which the form holds off until React
+ * has mounted it: typed any sooner, the values wouldn't reach React.
  */
 async function signInThroughForm(page: Page, key: string) {
   await page.goto("/auth/signin")
-  const password = page.getByLabel("Password", { exact: true })
-  await expect.poll(() => hydrated(password), NAVIGATION).toBe(true)
+  const submit = page.getByRole("button", { name: "Sign in", exact: true })
+  await expect(submit).toBeEnabled(NAVIGATION)
   await page.getByLabel("Email address", { exact: true }).fill(emailFor(key))
-  await password.evaluate((el, value) => {
+  await page.getByLabel("Password", { exact: true }).evaluate((el, value) => {
     const input = el as HTMLInputElement
     Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
@@ -87,7 +80,7 @@ async function signInThroughForm(page: Page, key: string) {
         r.request().method() === "POST",
       { timeout: 30_000 }
     )
-    await page.getByRole("button", { name: "Sign in", exact: true }).click()
+    await submit.click()
     const res = await response
     if (res.status() !== 429) {
       expect(res.status(), `sign-in for ${key}`).toBe(200)
@@ -111,9 +104,18 @@ test("a new user onboards, lands on their profile and stays onboarded", async ({
 }) => {
   const username = `access_onboarded_${Date.now() % 1e6}`
 
+  // Onboarding asks for its topics from an effect, which runs only once
+  // React has hydrated the page: typed any sooner, the username wouldn't
+  // reach React. Nothing else requests them, so start listening now.
+  const onboardingHydrated = page.waitForRequest(
+    (r) => new URL(r.url()).pathname === "/api/topics",
+    NAVIGATION
+  )
+
   // A loaded profile with no username signs in to onboarding.
   await signInThroughForm(page, KEY)
   await expect(page).toHaveURL(/\/profile\/onboarding(\?|$)/, NAVIGATION)
+  await onboardingHydrated
 
   // The required fields, found by their visible labels, which proves each
   // label is tied to its field. The display name is prefilled from the
@@ -123,9 +125,9 @@ test("a new user onboards, lands on their profile and stays onboarded", async ({
     page.getByLabel("Display name *", { exact: true })
   ).not.toHaveValue("")
   const usernameInput = page.getByLabel(USERNAME_LABEL, { exact: true })
-  await expect.poll(() => hydrated(usernameInput), NAVIGATION).toBe(true)
   await usernameInput.fill(username)
-  await expect(page.getByText("Available ✓")).toBeVisible()
+  // The check's route may still be compiling on a cold dev server.
+  await expect(page.getByText("Available ✓")).toBeVisible(NAVIGATION)
   await expect(usernameInput).toHaveAccessibleDescription("Available ✓")
   await page
     .getByLabel("Pronouns *", { exact: true })

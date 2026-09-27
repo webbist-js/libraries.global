@@ -308,8 +308,26 @@ async function applyVerifications(strapi, item, now) {
   return { verificationCreated: created, verificationsRemoved: removed }
 }
 
+/**
+ * Every read, update and delete here filters on baUserId, and a missing or
+ * empty one could match other users' rows. So a bad plan is refused before
+ * Strapi loads. The message names the item's index, never its values.
+ */
+function assertPlan(plan) {
+  if (!Array.isArray(plan))
+    throw new Error("Refusing: ACCESS_SEED_PLAN is not a JSON array")
+  for (const [i, item] of plan.entries()) {
+    const id = item?.baUserId
+    if (typeof id !== "string" || id.trim() === "")
+      throw new Error(
+        `Refusing: plan item ${i} has no baUserId (a non-empty string)`
+      )
+  }
+}
+
 async function main() {
   const plan = JSON.parse(process.env.ACCESS_SEED_PLAN ?? "[]")
+  assertPlan(plan)
   const instance = createStrapi({ appDir, distDir: path.join(appDir, "dist") })
   assertLocalDatabase(instance)
   // A second instance must not run scheduled tasks alongside `strapi
