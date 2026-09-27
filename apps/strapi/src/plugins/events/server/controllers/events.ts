@@ -423,7 +423,7 @@ export default ({ strapi }: { strapi: any }) => ({
         url: (e.url as string | null) ?? null,
         location: (e.libraryEntityRef as string | null) ?? null,
       })),
-      "Libraries of the World — Events"
+      "Libraries Global — Events"
     )
 
     ctx.set("Content-Type", "text/calendar; charset=utf-8")

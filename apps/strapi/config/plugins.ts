@@ -330,8 +330,8 @@ const prepareEmailConfig = (env) => {
         url: env("MAILGUN_HOST", "https://api.eu.mailgun.net"),
       },
       settings: {
-        defaultFrom: env("MAILGUN_EMAIL") || "noreply@example.com",
-        defaultReplyTo: env("MAILGUN_EMAIL") || "noreply@example.com",
+        defaultFrom: env("MAILGUN_EMAIL") || "noreply@libraries.global",
+        defaultReplyTo: env("MAILGUN_EMAIL") || "info@libraries.global",
       },
     }
   }
@@ -348,8 +348,8 @@ const prepareEmailConfig = (env) => {
         },
       },
       settings: {
-        defaultFrom: env("MAILTRAP_EMAIL") || "noreply@example.com",
-        defaultReplyTo: env("MAILTRAP_EMAIL") || "noreply@example.com",
+        defaultFrom: env("MAILTRAP_EMAIL") || "noreply@libraries.global",
+        defaultReplyTo: env("MAILTRAP_EMAIL") || "info@libraries.global",
       },
     }
   }
