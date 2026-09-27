@@ -1081,33 +1081,12 @@ export type WikiSection = {
   order?: number | null
 }
 
-export type WikiSectionNav = WikiSection & {
-  articles: WikiNavArticle[]
-}
-
 export type WikiArticleStatus =
   | "stable"
   | "beta"
   | "experimental"
   | "draft"
   | "deprecated"
-
-export type WikiNavArticle = {
-  documentId: string
-  title?: string | null
-  slug?: string | null
-  priority?: number | null
-  articleStatus?: WikiArticleStatus | null
-  category?: CategorySummary | null
-}
-
-export type WikiNavCategory = {
-  documentId: string
-  name?: string | null
-  slug?: string | null
-  order?: number | null
-  articles?: WikiNavArticle[]
-}
 
 export type WikiArticleSummary = {
   documentId: string
@@ -1131,44 +1110,11 @@ export type WikiContributor = {
   avatar?: { url?: string | null } | null
 }
 
-export type WikiTopContributor = {
-  documentId: string
-  username?: string | null
-  avatar?: { url?: string | null } | null
-}
-
 export type WikiArticleDetail = WikiArticleSummary & {
   body?: ArticleBodyBlock[] | null
   contributors?: WikiContributor[] | null
   relatedArticles?: WikiArticleSummary[] | null
   seo?: LibrarySeoData | null
-}
-
-export type WikiLandingData = {
-  heroEyebrow?: string | null
-  heroTitle?: string | null
-  heroText?: string | null
-  version?: string | null
-  quickStartCards?: WikiArticleSummary[] | null
-  seo?: LibrarySeoData | null
-}
-
-export async function fetchWikiLanding(locale: Locale) {
-  const dm = await draftMode()
-  try {
-    return (await PublicStrapiClient.fetchAPI("/wiki-landing", {
-      locale,
-      status: dm.isEnabled ? "draft" : "published",
-    })) as APIResponse<WikiLandingData>
-  } catch (e: unknown) {
-    logNonBlockingError({
-      message: `Error fetching wiki landing for locale '${locale}'`,
-      error: {
-        error: e instanceof Error ? e.message : String(e),
-        stack: e instanceof Error ? e.stack : undefined,
-      },
-    })
-  }
 }
 
 export async function fetchWikiArticle(slug: string, locale: Locale) {
@@ -1192,51 +1138,10 @@ export async function fetchWikiArticle(slug: string, locale: Locale) {
   }
 }
 
-export async function fetchPopularWikiArticles(locale: Locale) {
-  const dm = await draftMode()
-  try {
-    return (await PublicStrapiClient.fetchAPI("/wiki-articles", {
-      locale,
-      status: dm.isEnabled ? "draft" : "published",
-
-      populate: {
-        heroImage: true,
-        section: { fields: ["name", "slug"] },
-        category: { fields: ["name", "slug"] },
-      } as any,
-
-      fields: [
-        "title",
-        "slug",
-        "summary",
-        "author",
-        "featured",
-        "priority",
-        "publishedAt",
-        "updatedAt",
-      ] as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      sort: ["priority:asc", "publishedAt:desc"] as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      pagination: { pageSize: 12 } as any,
-    })) as APIResponseCollection<WikiArticleSummary>
-  } catch (e: unknown) {
-    logNonBlockingError({
-      message: `Error fetching popular wiki articles for locale '${locale}'`,
-      error: {
-        error: e instanceof Error ? e.message : String(e),
-        stack: e instanceof Error ? e.stack : undefined,
-      },
-    })
-
-    return { data: [] }
-  }
-}
-
 export type DocsWikiArticle = WikiArticleSummary & { body?: unknown }
 
 /**
- * Every published wiki article with its body — the /docs front door maps
+ * Every published wiki article with its body — the /knowledge front door maps
  * these into the fixed docs taxonomy and derives reading time from the body.
  */
 export async function fetchDocsWikiArticles(locale: Locale) {
@@ -1275,87 +1180,6 @@ export async function fetchDocsWikiArticles(locale: Locale) {
   } catch (e: unknown) {
     logNonBlockingError({
       message: `Error fetching docs wiki articles for locale '${locale}'`,
-      error: {
-        error: e instanceof Error ? e.message : String(e),
-        stack: e instanceof Error ? e.stack : undefined,
-      },
-    })
-
-    return { data: [] }
-  }
-}
-
-export async function fetchAllWikiArticleSlugs(locale: Locale) {
-  try {
-    return (await PublicStrapiClient.fetchAPI("/wiki-articles/slugs", {
-      locale,
-      status: "published",
-    })) as {
-      data: {
-        slug: string
-        locale?: string | null
-        category?: { slug?: string | null } | null
-        section?: { slug?: string | null } | null
-      }[]
-    }
-  } catch (e: unknown) {
-    logNonBlockingError({
-      message: `Error fetching all wiki article slugs for locale '${locale}'`,
-      error: {
-        error: e instanceof Error ? e.message : String(e),
-        stack: e instanceof Error ? e.stack : undefined,
-      },
-    })
-
-    return { data: [] }
-  }
-}
-
-export async function fetchWikiTopContributors() {
-  try {
-    return (await PublicStrapiClient.fetchAPI(
-      "/wiki-articles/top-contributors",
-      {}
-    )) as { data: WikiTopContributor[] }
-  } catch (e: unknown) {
-    logNonBlockingError({
-      message: "Error fetching wiki top contributors",
-      error: {
-        error: e instanceof Error ? e.message : String(e),
-        stack: e instanceof Error ? e.stack : undefined,
-      },
-    })
-
-    return { data: [] }
-  }
-}
-
-export async function fetchWikiNavigation(locale: Locale) {
-  try {
-    return (await PublicStrapiClient.fetchAPI("/categories/nav", {
-      locale,
-    })) as { data: WikiNavCategory[] }
-  } catch (e: unknown) {
-    logNonBlockingError({
-      message: `Error fetching wiki navigation for locale '${locale}'`,
-      error: {
-        error: e instanceof Error ? e.message : String(e),
-        stack: e instanceof Error ? e.stack : undefined,
-      },
-    })
-
-    return { data: [] }
-  }
-}
-
-export async function fetchWikiSections(locale: Locale) {
-  try {
-    return (await PublicStrapiClient.fetchAPI("/wiki-sections/nav", {
-      locale,
-    })) as { data: WikiSectionNav[] }
-  } catch (e: unknown) {
-    logNonBlockingError({
-      message: `Error fetching wiki sections for locale '${locale}'`,
       error: {
         error: e instanceof Error ? e.message : String(e),
         stack: e instanceof Error ? e.stack : undefined,
