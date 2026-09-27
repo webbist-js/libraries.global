@@ -14,7 +14,7 @@ import { T } from "@/lib/design-tokens"
 const LEGAL_LINKS = [
   { label: "Privacy", href: "/legal/privacy" },
   { label: "Terms", href: "/legal/terms" },
-  { label: "Help", href: "/docs" },
+  { label: "Help", href: "/knowledge" },
 ]
 
 export function AuthShell({

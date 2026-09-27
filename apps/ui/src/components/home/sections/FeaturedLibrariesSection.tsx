@@ -82,7 +82,7 @@ export function FeaturedLibrariesSection({
         intro={intro}
         action={
           <GlobalLink
-            href="/index"
+            href="/libraries"
             className="font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >

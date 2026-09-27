@@ -13,10 +13,10 @@ import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 
 const NAV_LINKS: NavLink[] = [
-  { label: "Find libraries", href: "/index" },
-  { label: "Journal", href: "/blog" },
+  { label: "Find libraries", href: "/libraries" },
+  { label: "Journal", href: "/journal" },
   { label: "Events", href: "/events" },
-  { label: "Docs", href: "/docs" },
+  { label: "Knowledge", href: "/knowledge" },
 ]
 
 type ProfileSnippet = {

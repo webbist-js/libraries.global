@@ -111,18 +111,18 @@ export function DocsPage({
 
       <main className="relative z-10 flex-1">
         <PageHero
-          breadcrumb={[{ label: "Home", href: "/" }, { label: "Docs" }]}
-          eyebrow="Documentation"
+          breadcrumb={[{ label: "Home", href: "/" }, { label: "Knowledge" }]}
+          eyebrow="Knowledge base"
           eyebrowAccent={DOCS_VERSION}
           eyebrowIcon="mdi:book-open-outline"
           lead="How to improve library records, run the platform locally, use the open data, and build on our design system."
           title="Build, contribute, *extend the index.*"
         >
-          <form action={`/${locale}/docs/search`} method="get">
+          <form action={`/${locale}/knowledge/search`} method="get">
             <SearchField
               id="docs-search"
-              label="Search the docs"
-              placeholder="Search the docs — e.g. contribute, API, run locally"
+              label="Search the knowledge base"
+              placeholder="Search the knowledge base — e.g. contribute, API, run locally"
               inputProps={{ name: "q" }}
             />
           </form>
@@ -255,7 +255,7 @@ export function DocsPage({
                   id="docs-open-source"
                   style={{ fontFamily: T.font.serif, fontWeight: 500 }}
                 >
-                  The docs are open source too
+                  These articles are open source too
                 </h2>
                 <p
                   className="mt-2 mb-0 text-[14px] leading-[1.55]"

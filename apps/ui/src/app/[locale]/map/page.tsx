@@ -11,7 +11,7 @@ export async function generateMetadata({
   const { locale } = await params
 
   return buildMetadata({
-    title: "Atlas Explorer",
+    title: "Atlas: map of the world's libraries",
     description:
       "Find libraries anywhere on one interactive map. Filter by type, opening hours and facilities, and add data layers such as library density and record completeness.",
     path: "map",

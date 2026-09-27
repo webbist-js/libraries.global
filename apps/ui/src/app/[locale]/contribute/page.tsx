@@ -230,7 +230,7 @@ export default async function ContributePage({
         <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
           Community maintained, every change reviewed. New here? Read{" "}
           <GlobalLink
-            href="/docs"
+            href="/knowledge"
             className="font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
@@ -283,7 +283,7 @@ export default async function ContributePage({
           <BottomLinkCard
             title="Contribution guide"
             copy="What makes a good source, and how to write clear changes."
-            href="/docs"
+            href="/knowledge"
           />
           <BottomLinkCard
             title="Code of conduct"

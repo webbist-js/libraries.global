@@ -8,7 +8,7 @@ import { Breadcrumb, type BreadcrumbItem } from "./Breadcrumb"
 
 /**
  * The one hero band for primary section pages (Find libraries, Journal,
- * Events, Docs, Contribute) and their search/sub pages. Tinted paper band with
+ * Events, Knowledge, Contribute) and their search/sub pages. Tinted paper band with
  * a hairline rule below; eyebrow pill + serif title on the left, lead +
  * optional slot (search, status) on the right. Don't hand-roll a hero — add a
  * prop here instead so every section stays in step.

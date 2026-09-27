@@ -25,10 +25,10 @@ export function DocsSidebarTree({ tree }: { readonly tree: DocsTree }) {
   const query = filter.trim().toLowerCase()
 
   return (
-    <nav aria-label="Docs" className="flex flex-col gap-5">
+    <nav aria-label="Knowledge" className="flex flex-col gap-5">
       <SearchField
         id="docs-filter"
-        placeholder="Filter docs"
+        placeholder="Filter articles"
         size="sm"
         onClear={() => setFilter("")}
         inputProps={{
@@ -40,10 +40,10 @@ export function DocsSidebarTree({ tree }: { readonly tree: DocsTree }) {
 
       <GlobalLink
         className="text-[14px] font-medium transition-colors hover:text-(--t-ink-base)"
-        href="/docs"
+        href="/knowledge"
         style={{ color: T.ink.dim }}
       >
-        ← All docs
+        ← All articles
       </GlobalLink>
 
       <ul className="m-0 flex list-none flex-col gap-5 p-0">

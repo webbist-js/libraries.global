@@ -19,7 +19,7 @@ export function ArticleShareButtons({
     })
   }
 
-  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title ?? "")}&url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : `/blog/${slug ?? ""}`)}`
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title ?? "")}&url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : `/journal/${slug ?? ""}`)}`
 
   return (
     <div className="flex items-center gap-2">

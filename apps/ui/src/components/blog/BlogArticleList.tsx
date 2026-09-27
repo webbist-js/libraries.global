@@ -17,7 +17,7 @@ function SidebarArticleRow({
 
   return (
     <GlobalLink
-      href={`/blog/${article.section?.slug ?? "general"}/${article.slug}`}
+      href={`/journal/${article.section?.slug ?? "general"}/${article.slug}`}
       className="group block border-b py-4 last:border-0"
       style={{ borderColor: T.border.divider }}
     >

@@ -25,7 +25,7 @@ export function FeaturedArticleCard({
 
   return (
     <GlobalLink
-      href={`/blog/${article.section?.slug ?? "general"}/${article.slug}`}
+      href={`/journal/${article.section?.slug ?? "general"}/${article.slug}`}
       className="group block overflow-hidden rounded-[24px] border transition-[border-color,box-shadow] duration-300 hover:border-[#B9B4F5] hover:shadow-[0_12px_28px_rgba(23,22,43,.08)]"
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >

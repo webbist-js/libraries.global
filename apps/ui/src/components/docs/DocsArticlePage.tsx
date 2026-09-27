@@ -123,7 +123,7 @@ export function DocsArticlePage({
             <Breadcrumb
               items={[
                 { label: "Home", href: "/" },
-                { label: "Docs", href: "/docs" },
+                { label: "Knowledge", href: "/knowledge" },
                 ...(section?.title ? [{ label: section.title }] : []),
                 { label: title },
               ]}
@@ -214,7 +214,7 @@ export function DocsArticlePage({
               <div className="flex flex-wrap items-center gap-2">
                 <GlobalLink
                   className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-muted)"
-                  href={`/contribute/docs/${article.slug}`}
+                  href={`/contribute/knowledge/${article.slug}`}
                   style={{
                     background: T.bg.deep,
                     borderColor: T.border.hi,
@@ -231,7 +231,7 @@ export function DocsArticlePage({
                 </GlobalLink>
                 <GlobalLink
                   className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-muted)"
-                  href={`/contribute/docs/${article.slug}?mode=report`}
+                  href={`/contribute/knowledge/${article.slug}?mode=report`}
                   style={{
                     background: T.bg.deep,
                     borderColor: T.border.hi,

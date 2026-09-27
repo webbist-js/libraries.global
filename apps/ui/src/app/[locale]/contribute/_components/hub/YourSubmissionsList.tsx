@@ -14,7 +14,7 @@ const ACTION_LABEL: Record<string, string> = {
   correction: "Suggested a correction",
   library_edit: "Edited a record",
   library_claim: "Staff verification",
-  wiki_edit: "Docs edit",
+  wiki_edit: "Knowledge edit",
   blog_submission: "Journal pitch",
   topic_suggestion: "Suggested a topic",
 }

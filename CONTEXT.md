@@ -25,8 +25,8 @@ An external system that supplies Event data — either a ticketing/aggregation p
 _Avoid_: integration, feed, data source
 
 **Wiki**:
-Public-facing technical documentation for the platform — API usage, data scope, how to contribute, how to interpret the data model. Editable by the community via the Submission system (`wiki_edit`). Not a subject-matter encyclopaedia about libraries.
-_Avoid_: knowledge base, encyclopaedia, docs site
+Public-facing technical documentation for the platform — API usage, data scope, how to contribute, how to interpret the data model. Editable by the community via the Submission system (`wiki_edit`). Not a subject-matter encyclopaedia about libraries. Users see it as **Knowledge** (`/knowledge`, pages are "Knowledge articles"); code, CMS and Submission types keep the `wiki` names.
+_Avoid_: encyclopaedia, docs, docs site
 
 **Wiki Author**:
 The original editorial author of a Wiki article — a freetext name, used for guest writers, historical attributions, or staff editors who predate the user account system. Stored as a plain string on the article. Not linked to a user profile.
@@ -37,8 +37,8 @@ Any user whose `wiki_edit` Submission has been approved on a given article. Stor
 _Avoid_: author (that is the original editorial attribution), editor
 
 **Blog**:
-Editorial and narrative content — stories, features, guest pieces — managed exclusively by editors and invited guest editors. Not community-editable; guest posts are submitted via the Submission system (`blog_submission`) and curated by editors.
-_Avoid_: articles, posts, news
+Editorial and narrative content — stories, features, guest pieces — managed exclusively by editors and invited guest editors. Not community-editable; guest posts are submitted via the Submission system (`blog_submission`) and curated by editors. Users see it as the **Journal** (`/journal`); code and CMS keep the `blog` names.
+_Avoid_: posts, news
 
 **Submission**:
 A user-initiated change request that enters a moderation queue before any data is altered. Covers corrections to existing entries, new Library proposals, Library Claims, wiki and blog contributions, and topic suggestions. All submissions go through review regardless of the submitter's trust level.
@@ -127,7 +127,6 @@ _Avoid_: province, state, county (those are display names; the concept is Region
 ## Flagged ambiguities
 
 - The `library` relation on the Event schema is not marked `required`, but every Event must belong to a Library — this is a schema gap to fix.
-- CLAUDE.md describes the Wiki as "editorial knowledge base (library history, classification systems)" — this is wrong. The Wiki is platform technical documentation (API usage, data scope, how-tos). CLAUDE.md should be updated.
 - `correction` and `library_edit` are both Submission types that change Library data. Resolved: `library_edit` is a comprehensive multi-field diff produced by the full edit wizard and requires a Library Claim; `correction` is a targeted single-issue report (category picker + freetext) available to any logged-in user with no claim required, produced by the inline correction CTA on library detail pages. Non-logged-in users see a "Sign in to suggest a correction" prompt. Library stewards (claimants) bypass corrections entirely — they use the full edit diff flow.
 - `pendingReview` on Event is dead code — filtering happens at the import layer, not in Strapi. Candidate for removal.
 - Library `entityRef` auto-generation is not yet implemented (lifecycle hook exists for Country/Region/Area but not Library). The current format (`GB-BL-001`) in the CLAUDE.md is a relic of manual entry; the intended scheme is hierarchically composed from parent entityRefs + the Library's short name.

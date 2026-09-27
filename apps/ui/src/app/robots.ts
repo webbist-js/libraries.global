@@ -17,11 +17,11 @@ const PRIVATE_PATHS = [
   "/contribute/correct",
   "/contribute/claim",
   "/contribute/submissions",
-  "/contribute/docs/",
+  "/contribute/knowledge/",
   "/contribute/events",
   "/dev/",
-  "/blog/search",
-  "/docs/search",
+  "/journal/search",
+  "/knowledge/search",
 ]
 
 export default function robots(): MetadataRoute.Robots {

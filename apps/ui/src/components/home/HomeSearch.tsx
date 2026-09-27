@@ -66,18 +66,18 @@ export default function HomeSearch() {
 
   function goToIndex() {
     const q = query.trim()
-    router.push(q ? `/index?q=${encodeURIComponent(q)}` : "/index")
+    router.push(q ? `/libraries?q=${encodeURIComponent(q)}` : "/libraries")
   }
 
   function pickHit(hit: LibrarySearchHit) {
     setOpen(false)
     const path = buildLibraryPath(hit)
-    router.push(path ?? `/index?q=${encodeURIComponent(hit.name)}`)
+    router.push(path ?? `/libraries?q=${encodeURIComponent(hit.name)}`)
   }
 
   function nearMe() {
     if (!navigator.geolocation) {
-      router.push("/index")
+      router.push("/libraries")
 
       return
     }
@@ -88,12 +88,12 @@ export default function HomeSearch() {
       (pos) => {
         setLocating(false)
         router.push(
-          `/index?lat=${pos.coords.latitude.toFixed(4)}&lng=${pos.coords.longitude.toFixed(4)}`
+          `/libraries?lat=${pos.coords.latitude.toFixed(4)}&lng=${pos.coords.longitude.toFixed(4)}`
         )
       },
       () => {
         setLocating(false)
-        router.push("/index")
+        router.push("/libraries")
       },
       { timeout: 8000 }
     )

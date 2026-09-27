@@ -9,7 +9,7 @@ import type { BlogArticleSummary } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 function articleHref(article: BlogArticleSummary): string {
-  return `/blog/${article.section?.slug ?? "general"}/${article.slug}`
+  return `/journal/${article.section?.slug ?? "general"}/${article.slug}`
 }
 
 export function JournalSection({
@@ -37,7 +37,7 @@ export function JournalSection({
         intro={intro}
         action={
           <GlobalLink
-            href="/blog"
+            href="/journal"
             className="font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >

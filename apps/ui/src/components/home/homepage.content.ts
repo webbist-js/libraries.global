@@ -84,7 +84,7 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
       title: "Represent a library",
       text: "Work at a library? Keep its information accurate and tell its story.",
       ctaLabel: "Find your library",
-      ctaHref: "/index",
+      ctaHref: "/libraries",
     },
   ],
 
@@ -109,7 +109,7 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
     title: "Is this your library?",
     text: "Library staff can become verified stewards of their library’s record: add collections and services, publish photographs and keep information accurate. The community can still suggest edits — stewards add institutional attribution.",
     primaryLabel: "Find your library",
-    primaryHref: "/index",
+    primaryHref: "/libraries",
     secondaryLabel: "Can’t find it? Add it to the index",
     secondaryHref: "/contribute/add",
   },
@@ -162,12 +162,12 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
     {
       title: "Contribution guide",
       text: "How to add and edit records, and what counts as a good source.",
-      href: "/docs/contributing/how-to-contribute",
+      href: "/knowledge/contributing/how-to-contribute",
     },
     {
       title: "Governance",
       text: "Who reviews changes and how decisions are made.",
-      href: "/docs",
+      href: "/knowledge",
     },
     {
       title: "Data licence & export",
@@ -177,12 +177,12 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
     {
       title: "API",
       text: "Query libraries by place, type and services.",
-      href: "/docs",
+      href: "/knowledge",
     },
     {
       title: "Methodology",
       text: "What we include, how we verify, and known gaps.",
-      href: "/docs",
+      href: "/knowledge",
     },
   ],
 

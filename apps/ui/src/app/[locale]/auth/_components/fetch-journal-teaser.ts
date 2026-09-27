@@ -16,6 +16,6 @@ export async function fetchJournalTeaser(
 
   return {
     title: article.title,
-    href: `/blog/${article.section?.slug ?? "general"}/${article.slug}`,
+    href: `/journal/${article.section?.slug ?? "general"}/${article.slug}`,
   }
 }

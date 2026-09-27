@@ -51,7 +51,7 @@ export function LocationContributeCTA({
         ? `/contribute/edit/${librarySlug}`
         : `/contribute/edit`
       : `/auth/signin?callbackUrl=${encodeURIComponent(librarySlug ? `/contribute/edit/${librarySlug}` : `/contribute/edit`)}`
-    : "/docs/contributing/how-to-contribute"
+    : "/knowledge/contributing/how-to-contribute"
 
   return (
     <section className="py-14 sm:py-18">

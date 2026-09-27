@@ -11,8 +11,8 @@ This is not a search engine or aggregator. It is an atlas. The aesthetic and UX 
 1. **Atlas** — hierarchical location-based browsing (continent → country → region → area → library)
 2. **Map** — interactive MapLibre GL globe with drill-down, clustering, and pin detail panels
 3. **Search** — MeiliSearch-powered full-text search across all libraries
-4. **Wiki** — editorial knowledge base (library history, classification systems, etc.)
-5. **Blog** — editorial content
+4. **Knowledge** (`/knowledge`, formerly Docs/Wiki) — platform knowledge base: how-tos, contribution guides, data and API. Stored as Strapi `wiki-article`
+5. **Journal** (`/journal`) — editorial content. Stored as Strapi `blog-article`
 
 **Planned pillars (not yet built):** 6. **Events** — library events calendar with provider integration (see Future Goals) 7. **Contribute** — user-submitted corrections and additions through a moderated layer 8. **User profiles** — saved libraries, visit logs, collection notes
 
@@ -118,14 +118,15 @@ All routes are under `app/[locale]/`. Key routes:
 | Route                                       | Component                                                  |
 | ------------------------------------------- | ---------------------------------------------------------- |
 | `/`                                         | HomePage                                                   |
-| `/index`                                    | FindLibraryPage (faceted search/browse — "Find libraries") |
+| `/libraries`                                | FindLibraryPage (faceted search/browse — "Find libraries") |
 | `/[continent]`                              | ContinentDetailPage                                        |
 | `/[continent]/[country]`                    | CountryDetailPage                                          |
 | `/[continent]/[country]/[region]`           | RegionDetailPage                                           |
 | `/[continent]/[country]/[region]/[library]` | LibraryDetailPage                                          |
-| `/map`                                      | FullMapPage (MapLibre GL full-screen)                      |
-| `/wiki/[section]/[slug]`                    | WikiArticlePage                                            |
-| `/blog/[slug]`                              | BlogArticlePage                                            |
+| `/map`                                      | Atlas: AtlasExplorer (MapLibre GL full-screen)             |
+| `/knowledge/[section]/[slug]`               | DocsArticlePage (Knowledge article)                        |
+| `/journal/[section]/[slug]`                 | BlogArticlePage (Journal article)                          |
+| `/contribute/knowledge/new`, `/[slug]`      | Knowledge editor (new article / edit)                      |
 | `/auth/*`                                   | Auth flows (sign in, register, OAuth, reset password)      |
 
 ### Data fetching
@@ -216,7 +217,6 @@ All shared UI primitives live here. Always check `ds/index.ts` before building a
 | `MetaRow`               | Key-value metadata row                                                                   |
 | `EmptyState`            | Empty/not-found state                                                                    |
 | `Pager`                 | Pagination control                                                                       |
-| `WikiCards`             | Wiki article card layouts                                                                |
 
 ### Primary CTA pattern
 
@@ -234,7 +234,7 @@ v2 pages use normal in-flow light heroes — the header renders solid from the s
 
 ### Section hero pattern (PageHero)
 
-Every primary page — Find libraries (`/index`), Journal, Events, Docs, Contribute — and their search/sub pages open with `PageHero` from `components/ds`. Tinted `T.bg.space` band with a hairline rule; breadcrumb, then an eyebrow pill (Iconify icon + label + optional indigo accent) and a serif `title` on the left (`*italic*` markup renders indigo italic via `parseHeroText`); `lead` plus the children slot on the right. Put the section's primary control in the slot: a `SearchField` first, then any status line. Use `compact` for task/search pages. Never hand-roll a hero h1/band; if a page needs something `PageHero` can't do, add a prop to it. The page wrapper is a plain `T.bg.void` div (`relative isolate flex min-h-screen w-full flex-col`).
+Every primary page — Find libraries (`/libraries`), Journal, Events, Knowledge, Contribute — and their search/sub pages open with `PageHero` from `components/ds`. Tinted `T.bg.space` band with a hairline rule; breadcrumb, then an eyebrow pill (Iconify icon + label + optional indigo accent) and a serif `title` on the left (`*italic*` markup renders indigo italic via `parseHeroText`); `lead` plus the children slot on the right. Put the section's primary control in the slot: a `SearchField` first, then any status line. Use `compact` for task/search pages. Never hand-roll a hero h1/band; if a page needs something `PageHero` can't do, add a prop to it. The page wrapper is a plain `T.bg.void` div (`relative isolate flex min-h-screen w-full flex-col`).
 
 ### Page shell pattern (v2)
 

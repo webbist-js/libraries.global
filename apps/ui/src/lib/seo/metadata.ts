@@ -77,7 +77,7 @@ export interface BuildMetadataOptions {
   /** Use this exact <title> (bypasses the template, e.g. homepage). */
   absoluteTitle?: string
   description?: string | null
-  /** Unlocalised path, e.g. "europe/france" or "/blog/news/foo". */
+  /** Unlocalised path, e.g. "europe/france" or "/journal/news/foo". */
   path?: string
   locale: string
   /** Absolute (or metadataBase-relative) image URL. */

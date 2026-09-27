@@ -151,7 +151,7 @@ const TYPE_CONFIG: Record<string, { label: string; bg: string; fg: string }> = {
   library_edit: { label: "Edit", ...TYPE_TINT.academic },
   correction: { label: "Correction", ...TYPE_TINT.academic },
   library_claim: { label: "Claim", ...TYPE_TINT.national },
-  wiki_edit: { label: "Docs", ...TYPE_TINT.national },
+  wiki_edit: { label: "Knowledge", ...TYPE_TINT.national },
   blog_submission: { label: "Journal", ...TYPE_TINT.special },
   topic_suggestion: { label: "Topic", ...TYPE_TINT.neutral },
 }

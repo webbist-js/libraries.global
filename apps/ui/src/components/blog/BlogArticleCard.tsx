@@ -24,7 +24,7 @@ export function BlogArticleCard({
 
   return (
     <GlobalLink
-      href={`/blog/${article.section?.slug ?? "general"}/${article.slug}`}
+      href={`/journal/${article.section?.slug ?? "general"}/${article.slug}`}
       className={cn(
         "group flex flex-col overflow-hidden rounded-[20px] border transition-[border-color,box-shadow] duration-300 hover:border-[#B9B4F5] hover:shadow-[0_12px_28px_rgba(23,22,43,.08)]",
         className

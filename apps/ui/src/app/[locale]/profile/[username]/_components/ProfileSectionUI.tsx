@@ -137,7 +137,7 @@ export const KIND_META: Record<
   wiki_edit: {
     tint: "national",
     icon: "mdi:book-edit-outline",
-    label: "Wiki edit",
+    label: "Knowledge edit",
   },
   library_claim: {
     tint: "national",

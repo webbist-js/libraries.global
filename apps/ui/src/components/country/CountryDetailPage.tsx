@@ -183,7 +183,7 @@ export function CountryDetailPage({
                   below.
                 </p>
                 <GlobalLink
-                  href={`/index?q=${encodeURIComponent(country.name ?? "")}`}
+                  href={`/libraries?q=${encodeURIComponent(country.name ?? "")}`}
                   className="inline-flex items-center rounded-full px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
                   style={{ background: T.accent.primary }}
                 >

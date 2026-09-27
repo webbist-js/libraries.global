@@ -73,7 +73,7 @@ export function DocsSectionsExplorer({
     <div>
       {/* Section tabs */}
       <div
-        aria-label="Docs sections"
+        aria-label="Knowledge sections"
         className="flex flex-wrap gap-x-1 gap-y-1 border-b"
         role="tablist"
         style={{ borderColor: T.border.line }}
@@ -168,7 +168,7 @@ export function DocsSectionsExplorer({
                   </p>
                   <GlobalLink
                     className="inline-flex items-center gap-1 text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
-                    href={`/contribute/docs/new?section=${section.key}`}
+                    href={`/contribute/knowledge/new?section=${section.key}`}
                     style={{ color: T.accent.primary }}
                   >
                     Write the first page

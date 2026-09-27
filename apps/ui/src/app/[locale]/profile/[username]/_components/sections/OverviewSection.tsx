@@ -328,7 +328,7 @@ export function OverviewSection({
                 </p>
               ) : null}
               <Link
-                href="/docs"
+                href="/knowledge"
                 className="mt-2 inline-block text-[14px] font-semibold underline underline-offset-[3px]"
                 style={{ color: T.accent.primary }}
               >

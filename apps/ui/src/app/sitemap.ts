@@ -25,11 +25,11 @@ const STATIC_ROUTES: {
   priority: number
 }[] = [
   { path: "", changeFrequency: "daily", priority: 1 },
-  { path: "index", changeFrequency: "daily", priority: 0.9 },
+  { path: "libraries", changeFrequency: "daily", priority: 0.9 },
   { path: "map", changeFrequency: "weekly", priority: 0.7 },
   { path: "events", changeFrequency: "daily", priority: 0.7 },
-  { path: "blog", changeFrequency: "weekly", priority: 0.6 },
-  { path: "docs", changeFrequency: "weekly", priority: 0.6 },
+  { path: "journal", changeFrequency: "weekly", priority: 0.6 },
+  { path: "knowledge", changeFrequency: "weekly", priority: 0.6 },
   { path: "contribute", changeFrequency: "monthly", priority: 0.5 },
 ]
 

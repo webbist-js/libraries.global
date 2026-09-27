@@ -94,12 +94,12 @@ export function BlogArticlePage({
         <Breadcrumb
           items={[
             { label: "Home", href: "/" },
-            { label: "Journal", href: "/blog" },
+            { label: "Journal", href: "/journal" },
             ...(article.section?.slug
               ? [
                   {
                     label: article.section.name ?? article.section.slug,
-                    href: `/blog?section=${article.section.slug}`,
+                    href: `/journal?section=${article.section.slug}`,
                   },
                 ]
               : []),
@@ -270,7 +270,7 @@ export function BlogArticlePage({
 
             {/* Back link */}
             <GlobalLink
-              href="/blog"
+              href="/journal"
               className="mt-1 inline-flex w-fit items-center gap-2 text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
               style={{ color: T.accent.primary }}
             >

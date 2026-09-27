@@ -97,7 +97,7 @@ export function CoverageSection({
         <p className="mt-4 text-[14px]" style={{ color: T.ink.dim }}>
           Counts are published records only.{" "}
           <GlobalLink
-            href="/docs"
+            href="/knowledge"
             className="underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >

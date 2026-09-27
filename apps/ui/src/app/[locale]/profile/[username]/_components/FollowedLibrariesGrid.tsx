@@ -196,7 +196,7 @@ export function FollowedLibrariesGrid({
         <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
           Not following any libraries yet.{" "}
           <Link
-            href="/index"
+            href="/libraries"
             className="font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
             style={{ color: T.accent.primary }}
           >

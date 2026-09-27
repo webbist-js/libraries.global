@@ -19,7 +19,7 @@ Four pieces of work, one plan:
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | **A. Hardening**           | Fix the verified security and correctness defects in moderation, rewards and the API proxies                                                          | Pro puts money and entitlements behind the same session, bridge and moderation code. It can't sit on top of known holes.  |
 | **B. Access model**        | One package that resolves **capabilities** (what you may contribute) and **entitlements** (what you've paid for or been granted), kept strictly apart | The contribution section, the Atlas and checkout all need to answer "what can this user do?" the same way, on the server. |
-| **C. Contribution tracks** | Library data first, then Docs and Journal curation. A contribute section that adapts to your role. All of it goes through moderation and rewards.     | The hidden `/contribute/docs` editor is broken and undiscoverable. Approved library edits are never applied.              |
+| **C. Contribution tracks** | Library data first, then Docs and Journal curation. A contribute section that adapts to your role. All of it goes through moderation and rewards.     | The hidden `/contribute/knowledge` editor is broken and undiscoverable. Approved library edits are never applied.         |
 | **D. Pro and checkout**    | The Atlas Pro screens, plans, checkout (C1–C6, CM1–CM2), free-Pro verification and Team invoicing                                                     | New design. It depends on A and B.                                                                                        |
 
 Personalisation for signed-in and signed-out visitors is the fifth track (§8). Some of it needs B, and some of it shares the upsell surfaces in D. The codebase is open source, but the service is gated. §11 explains how gating works with an open codebase: server enforcement, private data and compute, licence, trademark and self-hosting mode.
@@ -161,7 +161,7 @@ A doc is a `wiki-article`, served at `/docs`. Anyone signed in can suggest a cha
   - IDs are `documentId` strings end to end. The numeric-id check in `api/contribute/wiki/[slug]/route.ts:104` is removed.
   - `targetSlug` is stored top-level and used by `applyWikiEdit` (A2).
   - Resume the existing draft on revisit (`GET /draft/wiki_edit?targetSlug=`).
-- **C-D2: `/contribute/docs` hub.**
+- **C-D2: `/contribute/knowledge` hub.**
   - A list of articles with search.
   - "Your open doc suggestions".
   - "Propose a new doc" (`NewDocShell`).

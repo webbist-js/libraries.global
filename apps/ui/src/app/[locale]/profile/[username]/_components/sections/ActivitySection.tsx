@@ -33,7 +33,7 @@ const ACTIVITY_META: Record<
     verb: "flagged correction",
   },
   wiki_edit: {
-    label: "Wiki",
+    label: "Knowledge",
     icon: "mdi:book-edit-outline",
     color: T.accent.violet,
     verb: "edited wiki",

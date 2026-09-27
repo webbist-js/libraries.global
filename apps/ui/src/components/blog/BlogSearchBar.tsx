@@ -61,7 +61,7 @@ export function BlogSearchBar({ inputId }: { readonly inputId?: string }) {
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter" && query.trim()) {
-      router.push(`/blog/search?q=${encodeURIComponent(query.trim())}`)
+      router.push(`/journal/search?q=${encodeURIComponent(query.trim())}`)
       setOpen(false)
     }
   }
@@ -106,7 +106,7 @@ export function BlogSearchBar({ inputId }: { readonly inputId?: string }) {
           {results.map((hit, i) => (
             <GlobalLink
               key={hit.documentId}
-              href={`/blog/${hit.section_slug ?? "general"}/${hit.slug}`}
+              href={`/journal/${hit.section_slug ?? "general"}/${hit.slug}`}
               onClick={() => setOpen(false)}
               style={{
                 display: "flex",
@@ -140,7 +140,7 @@ export function BlogSearchBar({ inputId }: { readonly inputId?: string }) {
           ))}
           {query.trim() && (
             <GlobalLink
-              href={`/blog/search?q=${encodeURIComponent(query.trim())}`}
+              href={`/journal/search?q=${encodeURIComponent(query.trim())}`}
               onClick={() => setOpen(false)}
               style={{
                 display: "flex",

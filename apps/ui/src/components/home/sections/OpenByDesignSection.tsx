@@ -39,7 +39,7 @@ export function OpenByDesignSection({
         {links.map((link) => (
           <GlobalLink
             key={link.title}
-            href={link.href ?? "/docs"}
+            href={link.href ?? "/knowledge"}
             className="flex flex-col gap-1.5 rounded-[18px] border bg-white p-5 no-underline transition-colors hover:border-(--t-accent-primary)"
             style={{ borderColor: T.border.line }}
           >

@@ -55,7 +55,7 @@ const FILTER_TABS = [
   { id: "all", label: "All" },
   { id: "new_library", label: "Added" },
   { id: "library_edit", label: "Edited" },
-  { id: "wiki_edit", label: "Wiki" },
+  { id: "wiki_edit", label: "Knowledge" },
   { id: "library_claim", label: "Claimed" },
   { id: "other", label: "Other" },
 ] as const

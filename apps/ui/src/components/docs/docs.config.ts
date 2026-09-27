@@ -114,7 +114,7 @@ export function docsSectionForArticle(
 
 /** Canonical docs path for a wiki article, under its mapped docs section. */
 export function docsArticlePath(article: WikiArticleSummary): string {
-  return `/docs/${docsSectionForArticle(article)}/${article.slug ?? ""}`
+  return `/knowledge/${docsSectionForArticle(article)}/${article.slug ?? ""}`
 }
 
 /** Same, but from a MeiliSearch wiki-article hit (flat section/category slugs). */
