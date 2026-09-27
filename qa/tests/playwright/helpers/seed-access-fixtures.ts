@@ -29,6 +29,8 @@ import {
 
 // The UI caches each user's session profile for 60 s (SESSION_PROFILE_TTL_MS).
 const SESSION_CACHE_TTL_MS = 60_000
+// Sign-up is refused without the current terms version (TERMS_VERSION).
+const TERMS_VERSION = "2026-09-27"
 const STRAPI_APP_DIR = path.resolve(__dirname, "../../../../apps/strapi")
 const UI_APP_DIR = path.resolve(__dirname, "../../../../apps/ui")
 const WRITER = path.resolve(__dirname, "strapi-access-writer.cjs")
@@ -119,6 +121,7 @@ async function signUp(
         email,
         password,
         name: `Access ${key}`,
+        termsVersion: TERMS_VERSION,
       }),
     })
     if (res.ok) return true
