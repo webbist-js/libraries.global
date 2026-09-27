@@ -3,7 +3,11 @@ import { z } from "zod"
 
 import { requireEntitlement } from "@/lib/access-server"
 import { auth } from "@/lib/auth"
-import { readJsonCapped } from "@/lib/bridge-params"
+import {
+  DOCUMENT_ID_PATTERN,
+  MAX_ID_LENGTH,
+  readJsonCapped,
+} from "@/lib/bridge-params"
 import { getEnvVar } from "@/lib/env-vars"
 import {
   ATLAS_EXPORT_COLUMNS,
@@ -17,12 +21,18 @@ import {
 import { routing } from "@/lib/navigation"
 import { absoluteUrl } from "@/lib/seo/metadata"
 
-// 50,000 ids of up to 64 characters, as JSON, need about 3.4 MB; round up.
-const MAX_BODY_BYTES = 4 * 1024 * 1024
+// Every id at the longest documentId, quoted and comma-separated, plus 1 KB
+// for the rest: about 1.75 MB, under Vercel's 4.5 MB request body limit.
+const MAX_BODY_BYTES = MAX_EXPORT_IDS * (MAX_ID_LENGTH + 3) + 1024
 
 const ExportBody = z.object({
   format: z.enum(["csv", "geojson"]),
-  ids: z.array(z.string().min(1).max(64)).min(1).max(MAX_EXPORT_IDS),
+  // Strapi's documentId rule, so a malformed id is a 400 here rather than a
+  // failed bridge call. Well-formed ids Strapi doesn't have are skipped.
+  ids: z
+    .array(z.string().regex(DOCUMENT_ID_PATTERN))
+    .min(1)
+    .max(MAX_EXPORT_IDS),
 })
 
 const FILE_TYPES = {
@@ -34,7 +44,7 @@ const UNAVAILABLE = {
   error: "Library data is unavailable. Try again shortly.",
 } as const
 
-/** A library page's absolute URL, from the path the Atlas links to. */
+/** Makes a `buildLibraryPath` path absolute, on the default locale. */
 const pageUrl = (path: string) => absoluteUrl(path, routing.defaultLocale)
 
 /** The plan's export row cap. Missing or malformed limits mean 0. */
