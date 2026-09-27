@@ -173,13 +173,40 @@ describe("user-profile badge endpoints follow profile visibility", () => {
   describe("findByUsername (shared limited rule)", () => {
     const call = async (
       query: Record<string, unknown> = {},
-      secret?: string
+      secret?: string,
+      username = "lim"
     ) => {
-      const c = ctx({ username: "lim" }, query, secret)
+      const c = ctx({ username }, query, secret)
       await controller.findByUsername(c)
 
       return c
     }
+    const LIM_BADGES = [{ badgeId: "first", awardedAt: "y" }]
+
+    it("sends a limited profile's badges only to the owner or a member", async () => {
+      expect((await call()).body.data.earnedBadges).toEqual([])
+      expect(
+        (await call({ viewerBaUserId: "uOther" }, "s3cret")).body.data
+          .earnedBadges
+      ).toEqual([])
+      // Ids without the secret are not trusted.
+      expect(
+        (await call({ viewerBaUserId: "uMember" })).body.data.earnedBadges
+      ).toEqual([])
+      expect(
+        (await call({ viewerBaUserId: "uMember" }, "s3cret")).body.data
+          .earnedBadges
+      ).toEqual(LIM_BADGES)
+      expect(
+        (await call({ ownerBaUserId: "uLim" }, "s3cret")).body.data.earnedBadges
+      ).toEqual(LIM_BADGES)
+    })
+
+    it("still sends a public profile's badges to anyone", async () => {
+      expect((await call({}, undefined, "pub")).body.data.earnedBadges).toEqual(
+        [{ badgeId: "first", awardedAt: "x" }]
+      )
+    })
 
     it("strips contact details unless the viewer is the owner or affiliated", async () => {
       const anon = await call()
@@ -194,6 +221,38 @@ describe("user-profile badge endpoints follow profile visibility", () => {
       expect(
         (await call({ ownerBaUserId: "uLim" }, "s3cret")).body.data.city
       ).toBe("Leeds")
+    })
+  })
+
+  describe("findByDocumentId (no owner or viewer bypass)", () => {
+    const call = async (
+      documentId: string,
+      query: Record<string, unknown> = {},
+      secret?: string
+    ) => {
+      const c = ctx({ documentId }, query, secret)
+      await controller.findByDocumentId(c)
+
+      return c
+    }
+
+    it("never sends a limited profile's badges", async () => {
+      for (const [query, secret] of [
+        [{}, undefined],
+        [{ viewerBaUserId: "uMember" }, "s3cret"],
+        [{ ownerBaUserId: "uLim" }, "s3cret"],
+      ] as const) {
+        const c = await call("pLim", query, secret)
+        expect(c.status).toBe(200)
+        expect(c.body.data.earnedBadges).toEqual([])
+        expect(c.body.data.city).toBeUndefined()
+      }
+    })
+
+    it("sends a public profile's badges", async () => {
+      expect((await call("pPub")).body.data.earnedBadges).toEqual([
+        { badgeId: "first", awardedAt: "x" },
+      ])
     })
   })
 })

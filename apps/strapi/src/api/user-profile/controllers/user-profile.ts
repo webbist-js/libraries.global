@@ -265,7 +265,11 @@ export default factories.createCoreController(
         !isOwnerRequest &&
         !viewerIsLibraryMember
 
-      const earnedBadges = await loadEarnedBadges(profile.baUserId)
+      // Badges follow the activity rule: a limited profile's are for the
+      // owner and fellow library members only.
+      const earnedBadges = limitedForViewer
+        ? []
+        : await loadEarnedBadges(profile.baUserId)
 
       // followedLibraries + followedProfiles are written via db.query
       // connect/disconnect; re-fetch via db.query so we see the same data.
@@ -399,7 +403,12 @@ export default factories.createCoreController(
           path: buildLibraryPath(a.library),
         }))
 
-      const earnedBadges = await loadEarnedBadges(profile.baUserId)
+      // This endpoint has no owner or viewer bypass, so a limited profile
+      // never shows its badges here (they follow the activity rule).
+      const earnedBadges =
+        profile.profileVisibility === "limited"
+          ? []
+          : await loadEarnedBadges(profile.baUserId)
 
       const profileWithFollows2 = profile.baUserId
         ? await strapi.db.query("api::user-profile.user-profile").findOne({
