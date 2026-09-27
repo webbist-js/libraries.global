@@ -151,6 +151,45 @@ async function canSeeLimitedProfile(
   return viewerSharesLibrary(ownerAffiliations as any[], viewerBaUserId)
 }
 
+const BADGE_AWARD = "plugin::rewards.badge-award"
+
+type EarnedBadge = { badgeId: string; awardedAt: string }
+
+/** A profile holder's earned badges, in the shape every endpoint returns. */
+async function loadEarnedBadges(
+  baUserId: string | null | undefined
+): Promise<EarnedBadge[]> {
+  if (!baUserId) return []
+  const awards = await strapi.db
+    .query(BADGE_AWARD)
+    .findMany({ where: { baUserId } })
+
+  return (awards as any[]).map((a: any) => ({
+    badgeId: a.badgeId,
+    awardedAt: a.awardedAt,
+  }))
+}
+
+/**
+ * The badge endpoints' gate. Badges follow the activity rule: a private
+ * profile's are for its owner (where the endpoint allows an owner bypass at
+ * all), and a limited profile's for the owner or an affiliated viewer.
+ */
+async function mayShowBadges(
+  ctx: any,
+  profile: { baUserId?: string | null; profileVisibility?: string | null },
+  { ownerSeesPrivate }: { ownerSeesPrivate: boolean }
+): Promise<boolean> {
+  if (profile.profileVisibility === "private")
+    return (
+      ownerSeesPrivate && requestIdentity(ctx, profile.baUserId).isOwnerRequest
+    )
+  if (profile.profileVisibility === "limited")
+    return canSeeLimitedProfile(ctx, profile.baUserId)
+
+  return true
+}
+
 export default factories.createCoreController(
   "api::user-profile.user-profile",
   () => ({
@@ -215,22 +254,18 @@ export default factories.createCoreController(
 
       // For limited profiles, check whether the viewer is affiliated with any of
       // the same libraries as the profile owner — if so, they see the full profile
+      // (The affiliations are already loaded, so this uses the membership
+      // check directly rather than canSeeLimitedProfile, which would re-read them.)
       const viewerIsLibraryMember =
         profile.profileVisibility === "limited" && !isOwnerRequest
           ? await viewerSharesLibrary(affiliations as any[], viewerBaUserId)
           : false
+      const limitedForViewer =
+        profile.profileVisibility === "limited" &&
+        !isOwnerRequest &&
+        !viewerIsLibraryMember
 
-      // Fetch earned badges for this profile
-      const badgeAwards = profile.baUserId
-        ? await strapi.db
-            .query("plugin::rewards.badge-award")
-            .findMany({ where: { baUserId: profile.baUserId } })
-        : []
-
-      const earnedBadges = (badgeAwards as any[]).map((a: any) => ({
-        badgeId: a.badgeId,
-        awardedAt: a.awardedAt,
-      }))
+      const earnedBadges = await loadEarnedBadges(profile.baUserId)
 
       // followedLibraries + followedProfiles are written via db.query
       // connect/disconnect; re-fetch via db.query so we see the same data.
@@ -287,11 +322,7 @@ export default factories.createCoreController(
 
       // Limited profiles hide contact/location details unless the requester is the
       // owner or a fellow library member
-      if (
-        profile.profileVisibility === "limited" &&
-        !isOwnerRequest &&
-        !viewerIsLibraryMember
-      ) {
+      if (limitedForViewer) {
         const {
           website,
           orcid,
@@ -368,16 +399,7 @@ export default factories.createCoreController(
           path: buildLibraryPath(a.library),
         }))
 
-      const badgeAwards = profile.baUserId
-        ? await strapi.db
-            .query("plugin::rewards.badge-award")
-            .findMany({ where: { baUserId: profile.baUserId } })
-        : []
-
-      const earnedBadges = (badgeAwards as any[]).map((a: any) => ({
-        badgeId: a.badgeId,
-        awardedAt: a.awardedAt,
-      }))
+      const earnedBadges = await loadEarnedBadges(profile.baUserId)
 
       const profileWithFollows2 = profile.baUserId
         ? await strapi.db.query("api::user-profile.user-profile").findOne({
@@ -450,29 +472,15 @@ export default factories.createCoreController(
           fields: ["baUserId", "profileVisibility"] as any,
         })
 
-      if (!profile || profile.profileVisibility === "private") {
-        return ctx.notFound("Profile not found")
-      }
-      // Same rule as the profile endpoints: a limited profile's badges are
-      // for the owner and affiliated viewers only.
+      // No owner bypass for a private profile on this endpoint.
       if (
-        profile.profileVisibility === "limited" &&
-        !(await canSeeLimitedProfile(ctx, profile.baUserId))
+        !profile ||
+        !(await mayShowBadges(ctx, profile, { ownerSeesPrivate: false }))
       ) {
         return ctx.notFound("Profile not found")
       }
-      if (!profile.baUserId) return ctx.send({ data: [] })
 
-      const awards = await strapi.db
-        .query("plugin::rewards.badge-award")
-        .findMany({ where: { baUserId: profile.baUserId } })
-
-      const data = (awards as any[]).map((a: any) => ({
-        badgeId: a.badgeId,
-        awardedAt: a.awardedAt,
-      }))
-
-      return ctx.send({ data })
+      return ctx.send({ data: await loadEarnedBadges(profile.baUserId) })
     },
 
     async findBadgesByUsername(ctx: any) {
@@ -485,32 +493,14 @@ export default factories.createCoreController(
           limit: 1,
         })
       const profile = results[0] ?? null
-      if (!profile) return ctx.notFound("Profile not found")
-
-      const { isOwnerRequest } = requestIdentity(ctx, profile.baUserId)
-      if (profile.profileVisibility === "private" && !isOwnerRequest) {
-        return ctx.notFound("Profile not found")
-      }
-      // Same rule as the profile endpoints: a limited profile's badges are
-      // for the owner and affiliated viewers only.
       if (
-        profile.profileVisibility === "limited" &&
-        !(await canSeeLimitedProfile(ctx, profile.baUserId))
+        !profile ||
+        !(await mayShowBadges(ctx, profile, { ownerSeesPrivate: true }))
       ) {
         return ctx.notFound("Profile not found")
       }
-      if (!profile.baUserId) return ctx.send({ data: [] })
 
-      const awards = await strapi.db
-        .query("plugin::rewards.badge-award")
-        .findMany({ where: { baUserId: profile.baUserId } })
-
-      const data = (awards as any[]).map((a: any) => ({
-        badgeId: a.badgeId,
-        awardedAt: a.awardedAt,
-      }))
-
-      return ctx.send({ data })
+      return ctx.send({ data: await loadEarnedBadges(profile.baUserId) })
     },
   })
 )
