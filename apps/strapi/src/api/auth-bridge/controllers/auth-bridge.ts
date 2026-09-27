@@ -549,21 +549,46 @@ export default {
     if (typeof baUserId !== "string" || baUserId.length === 0)
       return ctx.badRequest("Missing baUserId")
 
-    const [profile] = (await strapi
-      .documents("api::user-profile.user-profile")
-      .findMany({
-        filters: { baUserId: { $eq: baUserId } },
-        fields: ["contributorRole", "username", "tier"],
-        limit: 1,
-      })) as { contributorRole?: string; username?: string; tier?: string }[]
+    const [[profile], affiliations, grantRows, verificationRows] =
+      await Promise.all([
+        strapi.documents("api::user-profile.user-profile").findMany({
+          filters: { baUserId: { $eq: baUserId } },
+          fields: ["contributorRole", "username", "tier", "earnedProUntil"],
+          limit: 1,
+        }) as Promise<
+          {
+            contributorRole?: string
+            username?: string
+            tier?: string
+            earnedProUntil?: string | null
+          }[]
+        >,
+        strapi
+          .documents("api::library-affiliation.library-affiliation")
+          .findMany({
+            filters: { baUserId: { $eq: baUserId } },
+            populate: { library: { fields: ["documentId"] } },
+            limit: SESSION_PROFILE_MAX_CLAIMS,
+          }) as Promise<{ library?: { documentId?: string } }[]>,
+        strapi
+          .documents("api::entitlement-grant.entitlement-grant" as any)
+          .findMany({
+            filters: { baUserId: { $eq: baUserId } },
+            fields: ["plan", "expiresAt"],
+            limit: 20,
+          }) as Promise<{ plan?: string; expiresAt?: string | null }[]>,
+        strapi
+          .documents("api::pro-verification.pro-verification" as any)
+          .findMany({
+            filters: { baUserId: { $eq: baUserId } },
+            fields: ["expiresAt"],
+            limit: 20,
+          }) as Promise<{ expiresAt?: string | null }[]>,
+      ])
 
-    const affiliations = (await strapi
-      .documents("api::library-affiliation.library-affiliation")
-      .findMany({
-        filters: { baUserId: { $eq: baUserId } },
-        populate: { library: { fields: ["documentId"] } },
-        limit: SESSION_PROFILE_MAX_CLAIMS,
-      })) as { library?: { documentId?: string } }[]
+    const now = Date.now()
+    const isUnexpired = (expiresAt: string | null | undefined) =>
+      expiresAt == null || Date.parse(expiresAt) > now
 
     return ctx.send({
       contributorRole: profile?.contributorRole ?? "reader",
@@ -572,6 +597,17 @@ export default {
       claims: affiliations
         .map((a) => a.library?.documentId)
         .filter((id): id is string => !!id),
+      grants: grantRows
+        .filter((g) => isUnexpired(g.expiresAt))
+        .filter(
+          (g): g is { plan: "pro" | "team"; expiresAt: string | null } =>
+            g.plan === "pro" || g.plan === "team"
+        )
+        .map((g) => ({ plan: g.plan, expiresAt: g.expiresAt ?? null })),
+      verifications: verificationRows
+        .filter((v) => isUnexpired(v.expiresAt))
+        .map((v) => ({ expiresAt: v.expiresAt ?? null })),
+      earnedProUntil: profile?.earnedProUntil ?? null,
     })
   },
 

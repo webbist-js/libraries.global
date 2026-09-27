@@ -6,6 +6,8 @@ import controller from "../src/api/auth-bridge/controllers/auth-bridge"
 
 const PROFILE = "api::user-profile.user-profile"
 const AFF = "api::library-affiliation.library-affiliation"
+const GRANT = "api::entitlement-grant.entitlement-grant"
+const VERIFY = "api::pro-verification.pro-verification"
 
 function ctx(query: Record<string, unknown>, secret = "s3cret") {
   const c: any = {
@@ -19,6 +21,8 @@ function ctx(query: Record<string, unknown>, secret = "s3cret") {
   return c
 }
 
+const FUTURE_ISO = "2099-01-01T00:00:00Z"
+
 describe("auth-bridge sessionProfile", () => {
   let fake: any
   beforeEach(() => {
@@ -31,11 +35,30 @@ describe("auth-bridge sessionProfile", () => {
           contributorRole: "verified_librarian",
           username: "ada",
           tier: "Indexer",
+          earnedProUntil: FUTURE_ISO,
         },
       ],
       [AFF]: [
         { documentId: "a1", baUserId: "u1", library: { documentId: "libA" } },
         { documentId: "a2", baUserId: "u2", library: { documentId: "libB" } },
+      ],
+      [GRANT]: [
+        { documentId: "g1", baUserId: "u1", plan: "pro", expiresAt: null },
+        {
+          documentId: "g2",
+          baUserId: "u1",
+          plan: "team",
+          expiresAt: "2020-01-01T00:00:00Z",
+        },
+        { documentId: "g3", baUserId: "u2", plan: "pro", expiresAt: null },
+      ],
+      [VERIFY]: [
+        {
+          documentId: "v1",
+          baUserId: "u1",
+          kind: "student",
+          expiresAt: FUTURE_ISO,
+        },
       ],
     })
     ;(globalThis as any).strapi = strapi
@@ -59,6 +82,9 @@ describe("auth-bridge sessionProfile", () => {
       username: "ada",
       tier: "Indexer",
       claims: ["libA"],
+      grants: [{ plan: "pro", expiresAt: null }],
+      verifications: [{ expiresAt: FUTURE_ISO }],
+      earnedProUntil: FUTURE_ISO,
     })
   })
 
@@ -70,6 +96,9 @@ describe("auth-bridge sessionProfile", () => {
       username: null,
       tier: null,
       claims: [],
+      grants: [],
+      verifications: [],
+      earnedProUntil: null,
     })
   })
 
@@ -91,5 +120,18 @@ describe("auth-bridge sessionProfile", () => {
     )
     const { findMany } = fake.documents.mock.results[i].value
     expect(findMany.mock.calls[0][0].limit).toBe(SESSION_PROFILE_MAX_CLAIMS)
+  })
+
+  it.each([
+    ["grants", GRANT],
+    ["verifications", VERIFY],
+  ])("reads at most 20 %s, scoped to this user", async (_label, uid) => {
+    await controller.sessionProfile(ctx({ baUserId: "u1" }))
+    const i = fake.documents.mock.calls.findIndex(([u]: [string]) => u === uid)
+    const { findMany } = fake.documents.mock.results[i].value
+    expect(findMany.mock.calls[0][0].limit).toBe(20)
+    expect(findMany.mock.calls[0][0].filters).toEqual({
+      baUserId: { $eq: "u1" },
+    })
   })
 })
