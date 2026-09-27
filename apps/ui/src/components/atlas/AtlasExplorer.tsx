@@ -21,6 +21,7 @@ import {
   loosenSuggestions,
   parseUrlState,
   type Tier,
+  tierForPlan,
   toggleLayer,
   toUrlParams,
   typeGroupOf,
@@ -87,9 +88,7 @@ function useIsMobile(): boolean {
 }
 
 function useTier(): Tier {
-  const { plan } = useEntitlements()
-
-  return plan === "public" ? "public" : plan === "free" ? "free" : "pro"
+  return tierForPlan(useEntitlements().plan)
 }
 
 export function AtlasExplorer() {

@@ -401,6 +401,16 @@ export function loosenSuggestions(
 
 export type Tier = "public" | "free" | "pro"
 
+/**
+ * The atlas tier for a session plan. Fails closed: only a known paid plan
+ * (pro or team) unlocks "pro", and anything unexpected is treated as free.
+ */
+export function tierForPlan(plan: string | null | undefined): Tier {
+  if (plan === "pro" || plan === "team") return "pro"
+
+  return plan === "public" ? "public" : "free"
+}
+
 export type LayerId =
   | "density"
   | "openLate"

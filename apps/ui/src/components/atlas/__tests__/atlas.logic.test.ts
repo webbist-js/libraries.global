@@ -12,6 +12,7 @@ import {
   loosenSuggestions,
   mergeRanges,
   parseUrlState,
+  tierForPlan,
   toggleLayer,
   toUrlParams,
   typeGroupOf,
@@ -214,5 +215,16 @@ describe("url state", () => {
     expect(s.filters.types).toEqual([])
     expect(s.layers).toEqual(["density"])
     expect(s.filters.opening).toBe("any")
+  })
+})
+
+describe("tierForPlan", () => {
+  it("maps known plans and fails closed on anything else", () => {
+    expect(tierForPlan("public")).toBe("public")
+    expect(tierForPlan("free")).toBe("free")
+    expect(tierForPlan("pro")).toBe("pro")
+    expect(tierForPlan("team")).toBe("pro")
+    for (const plan of ["platinum", "PRO", "", null, undefined])
+      expect(tierForPlan(plan)).toBe("free")
   })
 })
