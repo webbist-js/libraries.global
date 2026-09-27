@@ -1,10 +1,6 @@
 import { headers } from "next/headers"
 import { z } from "zod"
 
-import {
-  type AtlasLibrary,
-  fromFeatureCollection,
-} from "@/components/atlas/atlas.logic"
 import { requireEntitlement } from "@/lib/access-server"
 import { auth } from "@/lib/auth"
 import { readJsonCapped } from "@/lib/bridge-params"
@@ -13,16 +9,16 @@ import {
   ATLAS_EXPORT_COLUMNS,
   atlasExportRow,
   EXPORT_ATTRIBUTION,
+  type LibraryExportSource,
   MAX_EXPORT_IDS,
   toCsv,
   toGeoJson,
 } from "@/lib/export-format"
 import { routing } from "@/lib/navigation"
 import { absoluteUrl } from "@/lib/seo/metadata"
-import { createStrapiAuthHeader } from "@/lib/strapi-api/request-auth"
 
-// 10,000 ids of 64 characters, as JSON, fit comfortably.
-const MAX_BODY_BYTES = 1024 * 1024
+// 50,000 ids of up to 64 characters, as JSON, need about 3.4 MB; round up.
+const MAX_BODY_BYTES = 4 * 1024 * 1024
 
 const ExportBody = z.object({
   format: z.enum(["csv", "geojson"]),
@@ -32,6 +28,10 @@ const ExportBody = z.object({
 const FILE_TYPES = {
   csv: "text/csv; charset=utf-8",
   geojson: "application/geo+json",
+} as const
+
+const UNAVAILABLE = {
+  error: "Library data is unavailable. Try again shortly.",
 } as const
 
 /** A library page's absolute URL, from the path the Atlas links to. */
@@ -46,25 +46,31 @@ function exportRowCap(user: { limits?: unknown }): number {
 }
 
 /**
- * Every published library, as the Atlas loads it, through the same read key
- * the public proxy adds. Cached for five minutes. Null when Strapi fails.
+ * The requested rows from Strapi's bridge-gated export action, keyed by id.
+ * Null when Strapi answers with a non-2xx status or the request fails
+ * outright; the caller turns that into a 502 without echoing anything back.
  */
-async function loadAtlas(): Promise<AtlasLibrary[] | null> {
+async function fetchExportRows(
+  ids: readonly string[],
+  secret: string
+): Promise<Record<string, LibraryExportSource> | null> {
   try {
     const strapiUrl = getEnvVar("STRAPI_URL", true)!.replace(/\/$/, "")
-    const res = await fetch(`${strapiUrl}/api/libraries/atlas`, {
+    const res = await fetch(`${strapiUrl}/api/libraries/export`, {
+      method: "POST",
       headers: {
-        accept: "application/json",
-        ...(await createStrapiAuthHeader({
-          isReadOnly: true,
-          isPrivate: false,
-        })),
+        "Content-Type": "application/json",
+        "X-Service-Secret": secret,
       },
-      next: { revalidate: 300 },
+      body: JSON.stringify({ ids }),
+      cache: "no-store",
     })
     if (!res.ok) return null
+    const json = (await res.json()) as {
+      data?: Record<string, LibraryExportSource>
+    }
 
-    return fromFeatureCollection(await res.json())
+    return json.data ?? {}
   } catch {
     return null
   }
@@ -72,7 +78,8 @@ async function loadAtlas(): Promise<AtlasLibrary[] | null> {
 
 /**
  * POST /api/export/atlas: the libraries in view as CSV or GeoJSON, for Pro.
- * Only ids come from the client; every value is read from our own dataset.
+ * Only ids come from the client; every value is read from Strapi's
+ * bridge-gated export action, never trusted from the request body.
  */
 export async function POST(req: Request) {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -102,16 +109,18 @@ export async function POST(req: Request) {
       { status: 413 }
     )
 
-  const libraries = await loadAtlas()
-  if (!libraries)
+  const secret = process.env.STRAPI_BRIDGE_SECRET
+  if (!secret)
     return Response.json(
-      { error: "Library data is unavailable. Try again shortly." },
-      { status: 502 }
+      { error: "Export is not configured." },
+      { status: 503 }
     )
 
-  const byId = new Map(libraries.map((l) => [l.id, l]))
+  const byId = await fetchExportRows(ids, secret)
+  if (!byId) return Response.json(UNAVAILABLE, { status: 502 })
+
   const rows = [...new Set(ids)].flatMap((id) => {
-    const lib = byId.get(id)
+    const lib = byId[id]
 
     return lib ? [atlasExportRow(lib, pageUrl)] : []
   })

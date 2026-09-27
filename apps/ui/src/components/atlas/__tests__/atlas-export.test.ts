@@ -11,6 +11,8 @@ import * as React from "react"
 import { createElement } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { MAX_EXPORT_IDS } from "@/lib/export-format"
+
 import type { AtlasLibrary } from "../atlas.logic"
 
 // vitest.config has no JSX runtime, so .tsx compiles to React.createElement.
@@ -136,7 +138,7 @@ describe("useAtlasExport", () => {
     await act(() =>
       result.current.run(
         "csv",
-        Array.from({ length: 10_001 }, (_, i) => `${i}`)
+        Array.from({ length: MAX_EXPORT_IDS + 1 }, (_, i) => `${i}`)
       )
     )
 

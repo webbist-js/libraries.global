@@ -11,7 +11,6 @@ vi.mock("@/lib/auth", () => ({ auth: { api: { getSession } } }))
 
 const ENV: Record<string, string> = {
   STRAPI_URL: "http://strapi.test/",
-  STRAPI_REST_READONLY_API_KEY: "read-key",
   APP_PUBLIC_URL: "https://libraries.global",
 }
 vi.mock("@/lib/env-vars", () => ({
@@ -25,41 +24,32 @@ vi.mock("@/lib/navigation", () => ({
 
 const { POST } = await import("../route")
 
-function feature(id: string, name: string, lng: number, lat: number) {
+/** One Strapi export row, shaped as `POST /api/libraries/export` returns it. */
+function row(id: string, name: string, lng: number, lat: number) {
   return {
-    type: "Feature",
-    geometry: { type: "Point", coordinates: [lng, lat] },
-    properties: {
-      id,
-      name,
-      slug: `${id}-library`,
-      type: "Public",
-      status: "open",
-      operator: "Municipality",
-      city: "Leeds",
-      country: "England",
-      region: "West Yorkshire",
-      path: `/europe/england/west-yorkshire/${id}-library`,
-      tz: "Europe/London",
-      hours: null,
-      founded: null,
-      closed: null,
-      events: false,
-      catalogue: false,
-      access: [],
-      services: [],
-      complete: 50,
-    },
+    name,
+    slug: `${id}-library`,
+    libraryType: "Public",
+    operationalStatus: "open",
+    streetAddress: null,
+    city: "Leeds",
+    region: "West Yorkshire",
+    country: "England",
+    lat,
+    lng,
+    website: null,
+    phone: null,
+    email: null,
+    continentSlug: "europe",
+    countrySlug: "england",
+    regionSlug: "west-yorkshire",
   }
 }
 
-const ATLAS = {
-  type: "FeatureCollection",
-  features: [
-    feature("a", "Alpha", -1.55, 53.8),
-    feature("b", "Beta", -1.5, 53.7),
-    feature("c", "=Gamma", -1.4, 53.6),
-  ],
+const EXPORT_ROWS: Record<string, unknown> = {
+  a: row("a", "Alpha", -1.55, 53.8),
+  b: row("b", "Beta", -1.5, 53.7),
+  c: row("c", "=Gamma", -1.4, 53.6),
 }
 
 const PRO_FIELDS = { limits: { exportRows: 10_000 } }
@@ -86,12 +76,14 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] })
   vi.setSystemTime(new Date("2026-09-27T10:00:00Z"))
   vi.stubGlobal("fetch", fetchMock)
-  fetchMock.mockResolvedValue(Response.json(ATLAS))
+  vi.stubEnv("STRAPI_BRIDGE_SECRET", "s3cret")
+  fetchMock.mockResolvedValue(Response.json({ data: EXPORT_ROWS }))
 })
 
 afterEach(() => {
   vi.useRealTimers()
   vi.unstubAllGlobals()
+  vi.unstubAllEnvs()
 })
 
 describe("POST /api/export/atlas: access", () => {
@@ -127,6 +119,29 @@ describe("POST /api/export/atlas: access", () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
+  it("returns 413 for 10,001 ids from a Pro user (cap 10,000)", async () => {
+    getSession.mockResolvedValue(proUser({ limits: { exportRows: 10_000 } }))
+
+    const res = await post({
+      format: "csv",
+      ids: Array.from({ length: 10_001 }, (_, i) => `id${i}`),
+    })
+
+    expect(res.status).toBe(413)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("returns 200 for 10,001 ids from a Team user (cap 50,000)", async () => {
+    getSession.mockResolvedValue(proUser({ limits: { exportRows: 50_000 } }))
+
+    const res = await post({
+      format: "csv",
+      ids: Array.from({ length: 10_001 }, (_, i) => `id${i}`),
+    })
+
+    expect(res.status).toBe(200)
+  })
+
   it.each([
     ["missing", {}],
     ["null", { limits: null }],
@@ -152,8 +167,8 @@ describe("POST /api/export/atlas: body", () => {
     ["an over-long id", { format: "csv", ids: ["x".repeat(65)] }],
     ["no ids", { format: "csv", ids: [] }],
     [
-      "more than 10,000 ids",
-      { format: "csv", ids: Array.from({ length: 10_001 }, (_, i) => `${i}`) },
+      "more than 50,000 ids",
+      { format: "csv", ids: Array.from({ length: 50_001 }, (_, i) => `${i}`) },
     ],
     ["a body that isn't JSON", "format=csv"],
   ])("returns 400 for %s", async (_label, body) => {
@@ -163,12 +178,59 @@ describe("POST /api/export/atlas: body", () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it("returns 413 for a body over 1 MiB, before parsing it", async () => {
-    const res = await post({ format: "csv", ids: ["a"], pad: "x".repeat(2e6) })
+  it("returns 413 for a body over the size cap, before parsing it", async () => {
+    const res = await post({
+      format: "csv",
+      ids: ["a"],
+      pad: "x".repeat(4_300_000),
+    })
 
     expect(res.status).toBe(413)
     expect(await res.json()).toEqual({ error: "Request body too large" })
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+})
+
+describe("POST /api/export/atlas: the Strapi bridge", () => {
+  beforeEach(() => getSession.mockResolvedValue(proUser()))
+
+  it("calls the bridge with the service secret, the ids and no-store", async () => {
+    await post({ format: "csv", ids: ["a"] })
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const [url, init] = fetchMock.mock.calls[0]!
+    expect(url).toBe("http://strapi.test/api/libraries/export")
+    expect(init).toMatchObject({ method: "POST", cache: "no-store" })
+    expect(init.headers).toMatchObject({ "X-Service-Secret": "s3cret" })
+    expect(JSON.parse(init.body as string)).toEqual({ ids: ["a"] })
+  })
+
+  it("returns 503 without calling Strapi when the bridge secret isn't configured", async () => {
+    vi.stubEnv("STRAPI_BRIDGE_SECRET", "")
+
+    const res = await post({ format: "csv", ids: ["a"] })
+
+    expect(res.status).toBe(503)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("returns 502 when Strapi answers with a non-2xx status, without echoing its body", async () => {
+    fetchMock.mockResolvedValue(
+      new Response("classified upstream detail", { status: 500 })
+    )
+
+    const res = await post({ format: "csv", ids: ["a"] })
+
+    expect(res.status).toBe(502)
+    expect(await res.text()).not.toContain("classified upstream detail")
+  })
+
+  it("returns 502 when the bridge request fails outright", async () => {
+    fetchMock.mockRejectedValue(new TypeError("fetch failed"))
+
+    const res = await post({ format: "csv", ids: ["a"] })
+
+    expect(res.status).toBe(502)
   })
 })
 
@@ -187,9 +249,9 @@ describe("POST /api/export/atlas: the file", () => {
       "libraries.global contributors; see /knowledge for licences"
     )
     expect(await csvLines(res)).toEqual([
-      "name,slug,libraryType,operationalStatus,city,region,country,lat,lng,url",
-      "'=Gamma,c-library,Public,open,Leeds,West Yorkshire,England,53.6,-1.4,https://libraries.global/europe/england/west-yorkshire/c-library",
-      "Alpha,a-library,Public,open,Leeds,West Yorkshire,England,53.8,-1.55,https://libraries.global/europe/england/west-yorkshire/a-library",
+      "name,slug,libraryType,operationalStatus,streetAddress,city,region,country,lat,lng,website,phone,email,url",
+      "'=Gamma,c-library,Public,open,,Leeds,West Yorkshire,England,53.6,-1.4,,,,https://libraries.global/europe/england/west-yorkshire/c-library",
+      "Alpha,a-library,Public,open,,Leeds,West Yorkshire,England,53.8,-1.55,,,,https://libraries.global/europe/england/west-yorkshire/a-library",
     ])
   })
 
@@ -233,23 +295,5 @@ describe("POST /api/export/atlas: the file", () => {
       type: "Point",
       coordinates: [-1.5, 53.7],
     })
-  })
-
-  it("reads the Atlas dataset from Strapi with the public read key, cached", async () => {
-    await post({ format: "csv", ids: ["a"] })
-
-    expect(fetchMock).toHaveBeenCalledTimes(1)
-    const [url, init] = fetchMock.mock.calls[0]!
-    expect(url).toBe("http://strapi.test/api/libraries/atlas")
-    expect(init.headers).toMatchObject({ Authorization: "Bearer read-key" })
-    expect(init.next).toEqual({ revalidate: 300 })
-  })
-
-  it("returns 502 when the dataset can't be loaded", async () => {
-    fetchMock.mockResolvedValue(new Response("down", { status: 503 }))
-
-    const res = await post({ format: "csv", ids: ["a"] })
-
-    expect(res.status).toBe(502)
   })
 })
