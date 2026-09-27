@@ -8,7 +8,7 @@ We take the security of our project seriously. If you discover a security vulner
 
 Instead, please send an email to:
 
-`hello@libraries.global`
+`info@libraries.global`
 
 In your email, please provide as much information as possible to help us understand and reproduce the issue, including:
 

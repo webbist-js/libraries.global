@@ -8,8 +8,8 @@ assignees: ""
 
 Thanks for asking a question! Before you submit, please make sure you have:
 
-- [ ] Searched the [documentation](https://github.com/notum-cz/strapi-next-monorepo-starter/#readme).
-- [ ] Searched for existing [GitHub issues](https://github.com/notum-cz/strapi-next-monorepo-starter/issues).
+- [ ] Searched the [documentation](https://github.com/webbist-js/libraries.global#readme).
+- [ ] Searched for existing [GitHub issues](https://github.com/webbist-js/libraries.global/issues).
 
 ## Description
 
