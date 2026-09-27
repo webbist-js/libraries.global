@@ -1,6 +1,10 @@
 import "server-only"
 
-import { type ContributorRole, isContributorRole } from "@repo/access"
+import {
+  type ContributorRole,
+  isContributorRole,
+  SESSION_PROFILE_MAX_CLAIMS,
+} from "@repo/access"
 import { z } from "zod"
 
 export const SESSION_PROFILE_TTL_MS = 60_000
@@ -16,12 +20,16 @@ const Body = z.object({
   contributorRole: z.string(),
   username: z.string().nullable().optional(),
   tier: z.string().nullable().optional(),
-  claims: z.array(z.string()).max(100).optional(),
+  claims: z.array(z.string()).max(SESSION_PROFILE_MAX_CLAIMS).optional(),
 })
 
 export const SESSION_PROFILE_MAX_ENTRIES = 5000
 
 type CacheEntry = { at: number; value: SessionProfile }
+type InFlight = {
+  gen: number | undefined
+  promise: Promise<SessionProfile | null>
+}
 
 // Per-process cache. On serverless each instance has its own; the TTL bounds
 // how long a revoked role or claim survives anywhere (spec §3.2: 60 s). Kept
@@ -30,6 +38,7 @@ const globalForSessionProfile = globalThis as typeof globalThis & {
   _sessionProfileCache?: Map<string, CacheEntry>
   _sessionProfileGen?: Map<string, number>
   _sessionProfileSeq?: number
+  _sessionProfileInFlight?: Map<string, InFlight>
 }
 const cache = (globalForSessionProfile._sessionProfileCache ??= new Map())
 // Generation per id, bumped on invalidate. A fetch that started before an
@@ -37,6 +46,11 @@ const cache = (globalForSessionProfile._sessionProfileCache ??= new Map())
 // Values come from one monotonic sequence, so an evicted and re-created
 // entry can never match a generation captured earlier.
 const generations = (globalForSessionProfile._sessionProfileGen ??= new Map())
+// One bridge request per id at a time: concurrent callers share it, but only
+// while no invalidate has happened since it started. Entries leave when the
+// request settles, so this is bounded by concurrency, not by users. Failures
+// are not cached; the next call after one simply asks again.
+const inFlight = (globalForSessionProfile._sessionProfileInFlight ??= new Map())
 
 function setBounded<V>(map: Map<string, V>, key: string, value: V): void {
   map.delete(key)
@@ -60,10 +74,28 @@ export async function fetchSessionProfile(
   const hit = cache.get(baUserId)
   if (hit && Date.now() - hit.at < SESSION_PROFILE_TTL_MS) return hit.value
 
+  const gen = generations.get(baUserId)
+  const pending = inFlight.get(baUserId)
+  if (pending && pending.gen === gen) return pending.promise
+
+  const promise = loadSessionProfile(baUserId, gen).finally(() => {
+    if (inFlight.get(baUserId)?.promise === promise) inFlight.delete(baUserId)
+  })
+  inFlight.set(baUserId, { gen, promise })
+
+  return promise
+}
+
+async function loadSessionProfile(
+  baUserId: string,
+  gen: number | undefined
+): Promise<SessionProfile | null> {
   const secret = process.env.STRAPI_BRIDGE_SECRET
   if (!secret) return null
   const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
-  const gen = generations.get(baUserId)
+  // The TTL runs from before the DB read, not from when the answer arrived,
+  // so a slow bridge can't stretch how long a revoked role survives.
+  const startedAt = Date.now()
   try {
     const res = await fetch(
       `${strapiUrl}/api/auth-bridge/session-profile?baUserId=${encodeURIComponent(baUserId)}`,
@@ -94,7 +126,7 @@ export async function fetchSessionProfile(
       claims: d.claims ?? [],
     }
     if (generations.get(baUserId) === gen) {
-      setBounded(cache, baUserId, { at: Date.now(), value })
+      setBounded(cache, baUserId, { at: startedAt, value })
     }
 
     return value
