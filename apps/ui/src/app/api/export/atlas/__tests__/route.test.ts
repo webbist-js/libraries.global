@@ -106,6 +106,21 @@ const post = (body: unknown) =>
 const csvLines = async (res: Response) =>
   (await res.text()).split("\r\n").filter(Boolean)
 
+/** A streamed body's chunks, as they arrive. */
+async function bodyChunks(res: Response): Promise<Uint8Array[]> {
+  const chunks: Uint8Array[] = []
+  const reader = res.body!.getReader()
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) return chunks
+    chunks.push(value)
+  }
+}
+
+/** A streamed body's chunks, decoded as one text. */
+const decode = (chunks: Uint8Array[]) =>
+  new TextDecoder().decode(Buffer.concat(chunks))
+
 /** The CSV's first column (the library names), without the header. */
 const csvNames = async (res: Response) =>
   (await csvLines(res)).slice(1).map((line) => line.split(",")[0])
@@ -511,5 +526,60 @@ describe("POST /api/export/atlas: the file", () => {
       type: "Point",
       coordinates: [-1.5, 53.7],
     })
+  })
+
+  it("starts the CSV with a UTF-8 byte-order mark", async () => {
+    const res = await post({ format: "csv", ids: [A] })
+
+    const bytes = new Uint8Array(await res.arrayBuffer())
+    expect(bytes.slice(0, 3)).toEqual(new Uint8Array([0xef, 0xbb, 0xbf]))
+    expect(new TextDecoder().decode(bytes.slice(3, 8))).toBe("name,")
+  })
+
+  it("returns valid GeoJSON with no byte-order mark when no ids are found", async () => {
+    const res = await post({ format: "geojson", ids: [UNKNOWN] })
+
+    const text = new TextDecoder("utf-8", { ignoreBOM: true }).decode(
+      await res.arrayBuffer()
+    )
+    expect(text[0]).toBe("{")
+    expect(JSON.parse(text)).toEqual({
+      type: "FeatureCollection",
+      attribution: "libraries.global contributors; see /knowledge for licences",
+      features: [],
+    })
+  })
+})
+
+describe("POST /api/export/atlas: streaming", () => {
+  const ids = many(1001)
+  const rows = Object.fromEntries(
+    ids.map((id, i) => [id, row(`l${i}`, `Library ${i}`, -1.5, 53.8)])
+  )
+  const names = ids.map((_, i) => `Library ${i}`)
+
+  beforeEach(() => {
+    getSession.mockResolvedValue(proUser())
+    fetchMock.mockImplementation(bridge(rows))
+  })
+
+  it("streams a CSV in several chunks, with every row in request order", async () => {
+    const res = await post({ format: "csv", ids })
+
+    const chunks = await bodyChunks(res)
+    expect(chunks.length).toBeGreaterThan(1)
+    const lines = decode(chunks).split("\r\n").filter(Boolean)
+    expect(lines.slice(1).map((line) => line.split(",")[0])).toEqual(names)
+  })
+
+  it("streams GeoJSON in several chunks that make one valid document", async () => {
+    const res = await post({ format: "geojson", ids })
+
+    const chunks = await bodyChunks(res)
+    expect(chunks.length).toBeGreaterThan(1)
+    const fc = JSON.parse(decode(chunks)) as {
+      features: { properties: { name: string } }[]
+    }
+    expect(fc.features.map((f) => f.properties.name)).toEqual(names)
   })
 })

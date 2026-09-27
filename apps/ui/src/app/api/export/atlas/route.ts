@@ -11,10 +11,10 @@ import {
 import {
   ATLAS_EXPORT_COLUMNS,
   atlasExportRow,
+  csvChunks,
   EXPORT_ATTRIBUTION,
+  geoJsonChunks,
   MAX_EXPORT_IDS,
-  toCsv,
-  toGeoJson,
 } from "@/lib/export-format"
 import { fetchExportRows } from "@/lib/library-export-bridge"
 import { routing } from "@/lib/navigation"
@@ -45,6 +45,22 @@ const UNAVAILABLE = {
 
 /** Makes a `buildLibraryPath` path absolute, on the default locale. */
 const pageUrl = (path: string) => absoluteUrl(path, routing.defaultLocale)
+
+/** The encoder's text chunks as bytes, encoding one chunk per read. */
+function byteStream(chunks: Iterator<string>): ReadableStream<Uint8Array> {
+  const encoder = new TextEncoder()
+
+  return new ReadableStream({
+    pull(controller) {
+      const next = chunks.next()
+      if (next.done) controller.close()
+      else controller.enqueue(encoder.encode(next.value))
+    },
+    cancel() {
+      chunks.return?.()
+    },
+  })
+}
 
 /** The plan's export row cap. Missing or malformed limits mean 0. */
 function exportRowCap(user: { limits?: unknown }): number {
@@ -105,13 +121,15 @@ export async function POST(req: Request) {
     return lib ? [atlasExportRow(lib, pageUrl)] : []
   })
 
-  const body =
+  const chunks =
     format === "csv"
-      ? toCsv(rows, ATLAS_EXPORT_COLUMNS)
-      : JSON.stringify(toGeoJson(rows))
+      ? csvChunks(rows, ATLAS_EXPORT_COLUMNS)
+      : geoJsonChunks(rows)
   const date = new Date().toISOString().slice(0, 10)
 
-  return new Response(body, {
+  // Streamed, as a big file passes Vercel's 4.5 MB limit on buffered bodies.
+  // Before go-live, try one large export once on a Vercel preview deploy.
+  return new Response(byteStream(chunks), {
     headers: {
       "Content-Type": FILE_TYPES[format],
       "Content-Disposition": `attachment; filename="libraries-global-atlas-${date}.${format}"`,

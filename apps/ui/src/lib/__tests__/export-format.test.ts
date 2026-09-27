@@ -3,14 +3,44 @@ import { describe, expect, it } from "vitest"
 import {
   ATLAS_EXPORT_COLUMNS,
   atlasExportRow,
+  type Cell,
+  csvChunks,
   EXPORT_ATTRIBUTION,
+  EXPORT_CHUNK_ROWS,
+  geoJsonChunks,
   type LibraryExportSource,
   MAX_EXPORT_IDS,
-  toCsv,
-  toGeoJson,
 } from "../export-format"
 
-const lines = (csv: string) => csv.split("\r\n").filter(Boolean)
+const BOM = "\uFEFF"
+
+/** The whole CSV: every chunk, concatenated. */
+const toCsv = <C extends string>(
+  rows: Partial<Record<C, Cell>>[],
+  columns: C[]
+) => [...csvChunks(rows, columns)].join("")
+
+/** The whole GeoJSON text: every chunk, concatenated. */
+const geoJsonText = (rows: Record<string, Cell>[]) =>
+  [...geoJsonChunks(rows)].join("")
+
+const toGeoJson = (rows: Record<string, Cell>[]) =>
+  JSON.parse(geoJsonText(rows)) as {
+    type: string
+    attribution: string
+    features: {
+      type: string
+      geometry: { type: string; coordinates: number[] }
+      properties: Record<string, unknown>
+    }[]
+  }
+
+/** The CSV's records, without the byte-order mark. */
+const lines = (csv: string) =>
+  csv
+    .replace(/^\uFEFF/, "")
+    .split("\r\n")
+    .filter(Boolean)
 
 function lib(p: Partial<LibraryExportSource> = {}): LibraryExportSource {
   return {
@@ -34,11 +64,19 @@ function lib(p: Partial<LibraryExportSource> = {}): LibraryExportSource {
   }
 }
 
-describe("toCsv", () => {
-  it("writes a header row in the given column order", () => {
-    const csv = toCsv([{ b: "2", a: "1" }], ["b", "a"])
+describe("csvChunks", () => {
+  it("writes a byte-order mark, then a header row in the given column order", () => {
+    expect(toCsv([{ b: "2", a: "1" }], ["b", "a"])).toBe(`${BOM}b,a\r\n2,1\r\n`)
+  })
 
-    expect(lines(csv)).toEqual(["b,a", "2,1"])
+  it("starts with the UTF-8 byte-order mark, so Excel reads non-ASCII names", () => {
+    const csv = toCsv([{ name: "Biblioteca Nacional de España" }], ["name"])
+
+    expect(csv.codePointAt(0)).toBe(0xfe_ff)
+    expect(csv.indexOf(BOM, 1)).toBe(-1)
+    expect(new TextEncoder().encode(csv).slice(0, 3)).toEqual(
+      new Uint8Array([0xef, 0xbb, 0xbf])
+    )
   })
 
   it("quotes fields with commas, quotes or newlines and doubles quotes", () => {
@@ -53,14 +91,15 @@ describe("toCsv", () => {
     )
 
     expect(csv).toBe(
-      [
-        "v",
-        '"Leeds, Central"',
-        '"The ""Old"" Library"',
-        '"line one\nline two"',
-        '"carriage\rreturn"',
-        "",
-      ].join("\r\n")
+      BOM +
+        [
+          "v",
+          '"Leeds, Central"',
+          '"The ""Old"" Library"',
+          '"line one\nline two"',
+          '"carriage\rreturn"',
+          "",
+        ].join("\r\n")
     )
   })
 
@@ -78,7 +117,7 @@ describe("toCsv", () => {
     expect(lines(toCsv([{ v: '=HYPERLINK("x")' }], ["v"]))[1]).toBe(
       `"'=HYPERLINK(""x"")"`
     )
-    expect(toCsv([{ v: "\rcmd" }], ["v"])).toBe('v\r\n"\'\rcmd"\r\n')
+    expect(toCsv([{ v: "\rcmd" }], ["v"])).toBe(`${BOM}v\r\n"'\rcmd"\r\n`)
   })
 
   it("writes numbers as numbers, so negative coordinates stay numeric", () => {
@@ -92,9 +131,56 @@ describe("toCsv", () => {
 
     expect(lines(csv)).toEqual(["a,b,c", ",,"])
   })
+
+  it("is just the byte-order mark and the header when there are no rows", () => {
+    expect([...csvChunks([], ["a", "b"])]).toEqual([`${BOM}a,b\r\n`])
+  })
+
+  it("yields the header, then the rows in batches, with the same text as one string", () => {
+    const n = 2 * EXPORT_CHUNK_ROWS + 1
+    const rows = Array.from({ length: n }, (_, i) => ({ n: i, name: `L${i}` }))
+    // Values that need quoting or escaping, either side of a batch edge.
+    rows[EXPORT_CHUNK_ROWS - 1]!.name = 'The "Old", Library'
+    rows[EXPORT_CHUNK_ROWS]!.name = "=cmd\nnext"
+
+    const chunks = [...csvChunks(rows, ["n", "name"])]
+
+    expect(chunks).toHaveLength(4)
+    expect(chunks[0]).toBe(`${BOM}n,name\r\n`)
+    // Rows per chunk, counted by their CRLFs (the quoted value's is a bare LF).
+    expect(chunks.slice(1).map((c) => c.split("\r\n").length - 1)).toEqual([
+      EXPORT_CHUNK_ROWS,
+      EXPORT_CHUNK_ROWS,
+      1,
+    ])
+    const expected = rows.map(({ n: i, name }) =>
+      i === EXPORT_CHUNK_ROWS - 1
+        ? `${i},"The ""Old"", Library"\r\n`
+        : i === EXPORT_CHUNK_ROWS
+          ? `${i},"'=cmd\nnext"\r\n`
+          : `${i},${name}\r\n`
+    )
+    expect(chunks.join("")).toBe(`${BOM}n,name\r\n${expected.join("")}`)
+  })
+
+  it("reads rows only as its chunks are asked for", () => {
+    let read = 0
+    function* rows() {
+      for (let i = 0; i < 10 * EXPORT_CHUNK_ROWS; i += 1) {
+        read += 1
+        yield { n: i }
+      }
+    }
+    const chunks = csvChunks(rows(), ["n"])
+
+    chunks.next()
+    chunks.next()
+
+    expect(read).toBe(EXPORT_CHUNK_ROWS)
+  })
 })
 
-describe("toGeoJson", () => {
+describe("geoJsonChunks", () => {
   it("returns a FeatureCollection of [lng, lat] points with attribution", () => {
     const fc = toGeoJson([
       { name: "A", lat: 51.5, lng: -0.12 },
@@ -132,6 +218,77 @@ describe("toGeoJson", () => {
     const fc = toGeoJson([{ name: "A", city: undefined, lat: 1, lng: 2 }])
 
     expect(fc.features[0]?.properties).toEqual({ name: "A", city: null })
+  })
+
+  it("has no byte-order mark", () => {
+    expect(geoJsonText([{ name: "A", lat: 1, lng: 2 }])[0]).toBe("{")
+  })
+
+  it.each([0, 1, 2 * EXPORT_CHUNK_ROWS + 1])(
+    "is valid JSON with %i features",
+    (n) => {
+      const rows = Array.from({ length: n }, (_, i) => ({
+        name: `L${i}`,
+        lat: i / 100,
+        lng: -i / 100,
+      }))
+
+      const fc = toGeoJson(rows)
+
+      expect(fc.type).toBe("FeatureCollection")
+      expect(fc.features.map((f) => f.properties.name)).toEqual(
+        rows.map((r) => r.name)
+      )
+    }
+  )
+
+  it("stays valid when rows are skipped at the start, the end and a batch edge", () => {
+    const n = 2 * EXPORT_CHUNK_ROWS + 2
+    const skipped = new Set([
+      0,
+      EXPORT_CHUNK_ROWS - 1,
+      EXPORT_CHUNK_ROWS,
+      n - 1,
+    ])
+    const rows = Array.from({ length: n }, (_, i) => ({
+      name: `L${i}`,
+      lat: skipped.has(i) ? null : 1,
+      lng: 2,
+    }))
+
+    const fc = toGeoJson(rows)
+
+    expect(fc.features.map((f) => f.properties.name)).toEqual(
+      rows.filter((_, i) => !skipped.has(i)).map((r) => r.name)
+    )
+  })
+
+  it("yields the opening, the features in batches, then the close, as one JSON text", () => {
+    const rows = Array.from({ length: EXPORT_CHUNK_ROWS + 1 }, (_, i) => ({
+      name: `L${i}`,
+      city: null,
+      lat: 51.5,
+      lng: -0.12,
+    }))
+
+    const chunks = [...geoJsonChunks(rows)]
+
+    expect(chunks[0]).toBe(
+      `{"type":"FeatureCollection","attribution":${JSON.stringify(EXPORT_ATTRIBUTION)},"features":[`
+    )
+    expect(chunks.at(-1)).toBe("]}")
+    expect(chunks).toHaveLength(4)
+    expect(chunks.join("")).toBe(
+      JSON.stringify({
+        type: "FeatureCollection",
+        attribution: EXPORT_ATTRIBUTION,
+        features: rows.map(({ name, city, lat, lng }) => ({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [lng, lat] },
+          properties: { name, city },
+        })),
+      })
+    )
   })
 })
 

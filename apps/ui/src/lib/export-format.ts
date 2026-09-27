@@ -1,7 +1,8 @@
 /**
- * Pure builders for the Pro Atlas export: CSV and GeoJSON. No Next or server
- * imports, so the route and the tests share them. The route supplies the rows
- * (read from our own dataset, never from the client) and the page-URL builder.
+ * Pure encoders for the Pro Atlas export: CSV and GeoJSON, as generators of
+ * text chunks the route streams. No Next or server imports, so the route and
+ * the tests share them. The route supplies the rows (read from our own
+ * dataset, never from the client) and the page-URL builder.
  */
 import { buildLibraryPath } from "@/lib/library-helpers"
 
@@ -14,6 +15,9 @@ export const EXPORT_ATTRIBUTION =
  * Each plan's own, smaller cap is enforced separately from `limits.exportRows`.
  */
 export const MAX_EXPORT_IDS = 50_000
+
+/** Rows per chunk the encoders yield, so a big file is written in pieces. */
+export const EXPORT_CHUNK_ROWS = 500
 
 export type Cell = string | number | null | undefined
 
@@ -108,54 +112,89 @@ function csvCell(value: Cell): string {
   return NEEDS_QUOTES.test(safe) ? `"${safe.replaceAll('"', '""')}"` : safe
 }
 
-/** RFC 4180 CSV: a header row in `columns` order, then one row per record. */
-export function toCsv<C extends string>(
-  rows: readonly Partial<Record<C, Cell>>[],
-  columns: readonly C[]
-): string {
-  const records = [
-    columns.map((c) => csvCell(c)),
-    ...rows.map((row) => columns.map((c) => csvCell(row[c]))),
-  ]
+const csvRecord = (cells: readonly Cell[]) =>
+  `${cells.map((cell) => csvCell(cell)).join(",")}\r\n`
 
-  return records.map((cells) => `${cells.join(",")}\r\n`).join("")
+/**
+ * The rows `encode`d and joined, EXPORT_CHUNK_ROWS at a time. Rows `encode`
+ * turns into null are skipped. Rows are read only as chunks are asked for.
+ */
+function* batches<R>(
+  rows: Iterable<R>,
+  encode: (row: R) => string | null
+): Generator<string, void, undefined> {
+  let batch = ""
+  let count = 0
+  for (const row of rows) {
+    const text = encode(row)
+    if (text === null) continue
+    batch += text
+    count += 1
+    if (count === EXPORT_CHUNK_ROWS) {
+      yield batch
+      batch = ""
+      count = 0
+    }
+  }
+  if (batch) yield batch
 }
 
-export type ExportFeature = {
+// A UTF-8 byte-order mark, so Excel on Windows reads non-ASCII names right.
+const BOM = "\uFEFF"
+
+/**
+ * RFC 4180 CSV in chunks: the byte-order mark and a header row in `columns`
+ * order, then the rows in batches.
+ */
+export function* csvChunks<C extends string>(
+  rows: Iterable<Partial<Record<C, Cell>>>,
+  columns: readonly C[]
+): Generator<string, void, undefined> {
+  yield BOM + csvRecord(columns)
+  yield* batches(rows, (row) => csvRecord(columns.map((c) => row[c])))
+}
+
+type ExportFeature = {
   type: "Feature"
   geometry: { type: "Point"; coordinates: [number, number] }
   properties: Record<string, string | number | null>
 }
 
-export type ExportFeatureCollection = {
-  type: "FeatureCollection"
-  attribution: string
-  features: ExportFeature[]
-}
-
 const isCoordinate = (v: Cell): v is number =>
   typeof v === "number" && Number.isFinite(v)
 
-/** Point features at [lng, lat]; rows without both coordinates are skipped. */
-export function toGeoJson(
-  rows: readonly Record<string, Cell>[],
-  attribution: string = EXPORT_ATTRIBUTION
-): ExportFeatureCollection {
-  const features = rows.flatMap((row): ExportFeature[] => {
-    const { lat, lng, ...rest } = row
-    if (!isCoordinate(lat) || !isCoordinate(lng)) return []
-    const properties = Object.fromEntries(
-      Object.entries(rest).map(([k, v]) => [k, v ?? null])
-    )
+/** A point at [lng, lat], or null without both coordinates. */
+function toFeature(row: Record<string, Cell>): ExportFeature | null {
+  const { lat, lng, ...rest } = row
+  if (!isCoordinate(lat) || !isCoordinate(lng)) return null
+  const properties = Object.fromEntries(
+    Object.entries(rest).map(([k, v]) => [k, v ?? null])
+  )
 
-    return [
-      {
-        type: "Feature",
-        geometry: { type: "Point", coordinates: [lng, lat] },
-        properties,
-      },
-    ]
+  return {
+    type: "Feature",
+    geometry: { type: "Point", coordinates: [lng, lat] },
+    properties,
+  }
+}
+
+/**
+ * A GeoJSON FeatureCollection in chunks: the opening with the attribution,
+ * the features in batches, then the close. Rows without both coordinates are
+ * skipped.
+ */
+export function* geoJsonChunks(
+  rows: Iterable<Record<string, Cell>>
+): Generator<string, void, undefined> {
+  yield `{"type":"FeatureCollection","attribution":${JSON.stringify(EXPORT_ATTRIBUTION)},"features":[`
+  let separator = ""
+  yield* batches(rows, (row) => {
+    const feature = toFeature(row)
+    if (!feature) return null
+    const text = separator + JSON.stringify(feature)
+    separator = ","
+
+    return text
   })
-
-  return { type: "FeatureCollection", attribution, features }
+  yield "]}"
 }
