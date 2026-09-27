@@ -1,10 +1,6 @@
 import { type APIRequestContext, expect, request, test } from "@playwright/test"
 
-import {
-  emailFor,
-  fixturePassword,
-  retryAfterMs,
-} from "../../helpers/access-fixtures"
+import { signIn } from "../../helpers/access-fixtures"
 
 // Local only, opt-in: run with `pnpm playwright-access-tests` after
 // `pnpm seed:access`. The seed waits out the UI's 60 s session cache
@@ -31,6 +27,46 @@ const MATRIX = [
   { key: "editorial", extra: ["docs.directEdit"], directEdit: true },
 ] as const
 
+// One row per way of holding a plan (see FIXTURES). Every plan fixture is a
+// reader with no claims, so apart from its plan it must look like the reader.
+const PLAN_MATRIX = [
+  {
+    key: "reader",
+    plan: "free",
+    planSource: "none",
+    canExport: false,
+    exportRows: 0,
+  },
+  {
+    key: "pro-grant",
+    plan: "pro",
+    planSource: "grant",
+    canExport: true,
+    exportRows: 10_000,
+  },
+  {
+    key: "pro-earned",
+    plan: "pro",
+    planSource: "earned",
+    canExport: true,
+    exportRows: 10_000,
+  },
+  {
+    key: "pro-verified",
+    plan: "pro",
+    planSource: "verified",
+    canExport: true,
+    exportRows: 10_000,
+  },
+  {
+    key: "team",
+    plan: "team",
+    planSource: "grant",
+    canExport: true,
+    exportRows: 50_000,
+  },
+] as const
+
 // Any existing docs slug works for the gate check; the GET only reads a draft.
 const DOC_SLUG = process.env.ACCESS_DOC_SLUG || "how-to-contribute"
 
@@ -47,26 +83,13 @@ const wikiEdit = (extra: Record<string, unknown>) => ({
   ...extra,
 })
 
-// Better Auth allows 5 sign-ins per minute per IP. This file signs in 5
-// times, but back-to-back runs share the window, so a test may wait out a
-// 429. Give every test room for that.
+// Better Auth allows 5 sign-ins per minute per IP. This file signs in once
+// per fixture (9 times), and onboarding.spec.ts 3 more. The access project
+// runs one worker, so the files take turns, and signIn waits out each 429:
+// a cold run of the whole project waits out the limit about twice, so it
+// takes roughly 2 to 3 minutes. Back-to-back runs share the window, so a
+// test may wait out a 429 twice. Give every test room for that.
 test.describe.configure({ timeout: 150_000 })
-
-const SIGN_IN_ATTEMPTS = 3
-
-async function signIn(api: APIRequestContext, baseURL: string, key: string) {
-  for (let attempt = 1; attempt <= SIGN_IN_ATTEMPTS; attempt++) {
-    const res = await api.post("/api/auth/sign-in/email", {
-      data: { email: emailFor(key), password: fixturePassword() },
-      headers: { Origin: baseURL },
-    })
-    if (res.status() !== 429) return res
-    if (attempt === SIGN_IN_ATTEMPTS) break
-    const wait = retryAfterMs(res.headers()["x-retry-after"])
-    await new Promise((r) => setTimeout(r, wait))
-  }
-  throw new Error(`sign-in for ${key} stayed rate-limited`)
-}
 
 // One signed-in context per fixture, created on first use and shared, so the
 // reader's matrix row and the bypass test cost a single sign-in. If a failure
@@ -92,6 +115,28 @@ test.afterAll(async () => {
   contexts.clear()
 })
 
+// The export probe needs one real library. The atlas feed is a GeoJSON
+// FeatureCollection whose features carry the library's documentId as
+// properties.id, which is what the export takes. Read once per worker.
+let atlasLibraryId: string | undefined
+
+async function oneAtlasLibraryId(api: APIRequestContext): Promise<string> {
+  if (atlasLibraryId) return atlasLibraryId
+  const res = await api.get("/api/public-proxy/api/libraries/atlas")
+  expect(res.status()).toBe(200)
+  const feed = (await res.json()) as {
+    features?: { properties?: { id?: unknown } }[]
+  }
+  const id = feed.features?.[0]?.properties?.id
+  if (typeof id !== "string" || !/^[a-z0-9]{20,32}$/.test(id))
+    throw new Error("The atlas feed has no library documentId to export")
+  atlasLibraryId = id
+
+  return id
+}
+
+const exportBody = (ids: string[]) => ({ format: "csv", ids })
+
 test.describe("access role matrix (API)", () => {
   test("anonymous: no session, gated routes refuse with 401", async ({
     baseURL,
@@ -106,6 +151,10 @@ test.describe("access role matrix (API)", () => {
       expect((await api.post("/api/upload", { multipart: {} })).status()).toBe(
         401
       )
+      const exported = await api.post("/api/export/atlas", {
+        data: exportBody([await oneAtlasLibraryId(api)]),
+      })
+      expect(exported.status()).toBe(401)
     } finally {
       await api.dispose()
     }
@@ -174,5 +223,54 @@ test.describe("access role matrix (API)", () => {
     // an hour can meet the reader's hourly quota (429), which is fine here.
     expect(res.status()).not.toBe(403)
     expect([200, 429]).toContain(res.status())
+  })
+})
+
+test.describe("access plan matrix (API)", () => {
+  for (const row of PLAN_MATRIX) {
+    test(`${row.key}: plan ${row.plan} (${row.planSource}), export ${
+      row.canExport ? "allowed" : "refused"
+    }`, async ({ baseURL }) => {
+      const api = await signedIn(baseURL!, row.key)
+
+      const { user } = await (await api.get("/api/auth/get-session")).json()
+      expect(user.profileLoaded).toBe(true)
+      expect(user.plan).toBe(row.plan)
+      expect(user.planSource).toBe(row.planSource)
+      expect(user.features.includes("atlas.export")).toBe(row.canExport)
+      expect(user.limits.exportRows).toBe(row.exportRows)
+
+      const res = await api.post("/api/export/atlas", {
+        data: exportBody([await oneAtlasLibraryId(api)]),
+      })
+      if (row.canExport) {
+        expect(res.status()).toBe(200)
+        expect(res.headers()["content-type"]).toContain("text/csv")
+        const body = await res.body()
+        // A UTF-8 byte-order mark, then the header row.
+        expect(body.subarray(0, 3).toString("hex")).toBe("efbbbf")
+        expect(body.subarray(3).toString("utf8")).toMatch(/^name,slug,/)
+      } else {
+        expect(res.status()).toBe(402)
+        expect(await res.json()).toMatchObject({ feature: "atlas.export" })
+      }
+    })
+  }
+
+  test("money never buys trust: every paid plan has the reader's access", async ({
+    baseURL,
+  }) => {
+    const trustOf = async (key: string) => {
+      const api = await signedIn(baseURL!, key)
+      const { user } = await (await api.get("/api/auth/get-session")).json()
+
+      return {
+        contributorRole: user.contributorRole,
+        capabilities: [...user.capabilities].sort(),
+      }
+    }
+    const reader = await trustOf("reader")
+    for (const row of PLAN_MATRIX.filter((r) => r.plan !== "free"))
+      expect(await trustOf(row.key), row.key).toEqual(reader)
   })
 })

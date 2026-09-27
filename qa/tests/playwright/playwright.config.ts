@@ -68,6 +68,9 @@ if (accessProjectEnabled) {
     name: "access",
     testMatch: ["e2e/access/**/*.spec.ts"],
     fullyParallel: false,
+    // Every spec here signs in, and Better Auth allows 5 sign-ins a minute
+    // per IP: one worker makes the files take turns rather than race.
+    workers: 1,
     retries: 0,
     use: { ...devices["Desktop Chrome"] },
   })
