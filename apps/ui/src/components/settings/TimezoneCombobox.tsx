@@ -132,6 +132,7 @@ export function TimezoneCombobox({
           <input
             ref={inputRef}
             type="text"
+            aria-label="Search timezones"
             placeholder="Search timezones… (e.g. London, Paris)"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

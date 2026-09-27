@@ -1,6 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useSyncExternalStore } from "react"
+
+const noop = () => () => {}
 
 /**
  * False on the server and until the component has mounted in the browser.
@@ -10,9 +12,9 @@ import { useEffect, useState } from "react"
  * without the JS handler that would have sent it with fetch.
  */
 export function useMounted() {
-  const [mounted, setMounted] = useState(false)
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- the one extra render after mount is the point (React's two-pass rendering)
-  useEffect(() => setMounted(true), [])
-
-  return mounted
+  return useSyncExternalStore(
+    noop,
+    () => true,
+    () => false
+  )
 }

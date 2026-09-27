@@ -11,6 +11,7 @@ import { CountryCombobox } from "@/components/settings/CountryCombobox"
 import { InterestsChips } from "@/components/settings/InterestsChips"
 import { TimezoneCombobox } from "@/components/settings/TimezoneCombobox"
 import { VisibilityCards } from "@/components/settings/VisibilityCards"
+import { useMounted } from "@/hooks/useMounted"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 import type { UserProfile } from "@/lib/types/profile"
@@ -126,6 +127,7 @@ function SectionHeading({
   subtitle,
   required,
   optional,
+  requiredId,
 }: {
   /** The heading's id, so a group of options can be labelled by it. */
   id?: string
@@ -134,6 +136,8 @@ function SectionHeading({
   subtitle?: string
   required?: boolean
   optional?: boolean
+  /** id for the "Required" pill, so a group can point to it via aria-describedby. */
+  requiredId?: string
 }) {
   return (
     <div style={{ marginBottom: "20px" }}>
@@ -178,6 +182,7 @@ function SectionHeading({
         </div>
         {required && (
           <span
+            id={requiredId}
             style={{
               fontSize: "13px",
               fontWeight: 600,
@@ -232,6 +237,9 @@ export function OnboardingShell({
 }) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
+  // The primary and "finish later" buttons stay disabled until mounted: see
+  // useMounted. Typed any sooner, the values wouldn't reach React either.
+  const mounted = useMounted()
 
   // Stable ids that tie each visible label to its control.
   const uid = useId()
@@ -250,6 +258,7 @@ export function OnboardingShell({
     bioCount: `${uid}-bio-count`,
     bioHelp: `${uid}-bio-help`,
     affiliation: `${uid}-affiliation`,
+    affiliationRequired: `${uid}-affiliation-required`,
     interests: `${uid}-interests`,
     language: `${uid}-language`,
     website: `${uid}-website`,
@@ -937,6 +946,7 @@ export function OnboardingShell({
             >
               <SectionHeading
                 id={ids.affiliation}
+                requiredId={ids.affiliationRequired}
                 icon="mdi:domain"
                 title="Affiliation"
                 required
@@ -946,6 +956,7 @@ export function OnboardingShell({
               <div
                 role="group"
                 aria-labelledby={ids.affiliation}
+                aria-describedby={ids.affiliationRequired}
                 style={{
                   display: "grid",
                   gridTemplateColumns: "1fr 1fr",
@@ -1476,6 +1487,7 @@ export function OnboardingShell({
           >
             <button
               type="button"
+              disabled={!mounted}
               onClick={() => void handleSave("home")}
               style={{
                 padding: "9px 20px",
@@ -1485,14 +1497,15 @@ export function OnboardingShell({
                 color: T.ink.base,
                 fontSize: "14px",
                 fontFamily: T.font.sans,
-                cursor: "pointer",
+                cursor: mounted ? "pointer" : "not-allowed",
+                opacity: mounted ? 1 : 0.6,
               }}
             >
               Save &amp; finish later
             </button>
             <button
               type="button"
-              disabled={saving || usernameStatus === "taken"}
+              disabled={!mounted || saving || usernameStatus === "taken"}
               onClick={() => void handleSave("profile")}
               style={{
                 padding: "10px 24px",
@@ -1504,10 +1517,11 @@ export function OnboardingShell({
                 fontFamily: T.font.sans,
                 fontWeight: 600,
                 cursor:
-                  saving || usernameStatus === "taken"
+                  !mounted || saving || usernameStatus === "taken"
                     ? "not-allowed"
                     : "pointer",
-                opacity: saving || usernameStatus === "taken" ? 0.6 : 1,
+                opacity:
+                  !mounted || saving || usernameStatus === "taken" ? 0.6 : 1,
                 display: "flex",
                 alignItems: "center",
                 gap: "7px",

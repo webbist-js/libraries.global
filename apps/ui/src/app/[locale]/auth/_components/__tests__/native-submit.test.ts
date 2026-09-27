@@ -106,13 +106,13 @@ function serverRender(element: ReactElement) {
   return container
 }
 
-function submitButton(container: HTMLElement) {
-  const buttons = container.querySelectorAll<HTMLButtonElement>(
-    'button[type="submit"]'
-  )
-  expect(buttons).toHaveLength(1)
+function submitControls(container: HTMLElement) {
+  const controls = container.querySelectorAll<
+    HTMLButtonElement | HTMLInputElement
+  >('button[type="submit"], button:not([type]), input[type="submit"]')
+  expect(controls.length).toBeGreaterThan(0)
 
-  return buttons[0]!
+  return [...controls]
 }
 
 describe.each(FORMS)("the %s form", (_name, element, action) => {
@@ -130,10 +130,14 @@ describe.each(FORMS)("the %s form", (_name, element, action) => {
 
   it("keeps its submit disabled until mounted, then enables it", () => {
     const container = serverRender(element())
-    expect(submitButton(container).disabled).toBe(true)
+    for (const control of submitControls(container)) {
+      expect(control.disabled).toBe(true)
+    }
 
     render(element(), { container, hydrate: true })
 
-    expect(submitButton(container).disabled).toBe(false)
+    for (const control of submitControls(container)) {
+      expect(control.disabled).toBe(false)
+    }
   })
 })

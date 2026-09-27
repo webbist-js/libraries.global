@@ -101,6 +101,7 @@ export function InterestsChips({
       <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
         <input
           type="text"
+          aria-label="Suggest a topic"
           placeholder="Suggest a topic…"
           value={suggestInput}
           onChange={(e) => setSuggestInput(e.target.value)}

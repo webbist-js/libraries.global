@@ -112,6 +112,7 @@ export function CountryCombobox({
           <input
             ref={inputRef}
             type="text"
+            aria-label="Search countries"
             placeholder="Search countries…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

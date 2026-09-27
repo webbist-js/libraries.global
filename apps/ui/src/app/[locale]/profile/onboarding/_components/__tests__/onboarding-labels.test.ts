@@ -137,7 +137,10 @@ describe("OnboardingShell", () => {
   it("labels each group of options and says which are selected", async () => {
     await renderShell()
 
-    const affiliation = screen.getByRole("group", { name: "Affiliation" })
+    const affiliation = screen.getByRole("group", {
+      name: "Affiliation",
+      description: /Required/,
+    })
     const reader = within(affiliation).getByRole("button", {
       name: /^Reader \/ enthusiast/,
       pressed: false,
