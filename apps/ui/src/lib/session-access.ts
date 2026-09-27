@@ -3,6 +3,7 @@ import {
   type ContributorRole,
   type Feature,
   isContributorRole,
+  type Limit,
   type PlanKey,
   type PlanSource,
   resolveCapabilities,
@@ -21,6 +22,7 @@ export type SessionAccess = {
   plan: PlanKey
   planSource: PlanSource
   features: Feature[]
+  limits: Record<Limit, number>
 }
 
 /**
@@ -45,9 +47,14 @@ export function buildSessionAccess(
         })),
       })
     : null
-  // P-B: no subscription, grant, verification or tier input, so this is
-  // always "free" for a signed-in user. P-D wires the real inputs.
-  const ent = resolveEntitlements({ signedIn: true, now })
+  const ent = resolveEntitlements({
+    signedIn: true,
+    now,
+    grants: profile?.grants ?? [],
+    verifications: profile?.verifications ?? [],
+    rewardsTier: profile?.tier ?? null,
+    earnedProUntil: profile?.earnedProUntil ?? null,
+  })
 
   return {
     profileLoaded: profile !== null,
@@ -58,5 +65,6 @@ export function buildSessionAccess(
     plan: ent.plan,
     planSource: ent.source,
     features: [...ent.features],
+    limits: { ...ent.limits },
   }
 }

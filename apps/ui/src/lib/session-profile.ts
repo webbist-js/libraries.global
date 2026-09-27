@@ -9,11 +9,17 @@ import { z } from "zod"
 
 export const SESSION_PROFILE_TTL_MS = 60_000
 
+export type SessionGrant = { plan: "pro" | "team"; expiresAt: string | null }
+export type SessionVerification = { expiresAt: string | null }
+
 export type SessionProfile = {
   contributorRole: ContributorRole
   username: string | null
   tier: string | null
   claims: string[]
+  grants: SessionGrant[]
+  verifications: SessionVerification[]
+  earnedProUntil: string | null
 }
 
 const Body = z.object({
@@ -21,6 +27,15 @@ const Body = z.object({
   username: z.string().nullable().optional(),
   tier: z.string().nullable().optional(),
   claims: z.array(z.string()).max(SESSION_PROFILE_MAX_CLAIMS).optional(),
+  grants: z
+    .array(z.object({ plan: z.string(), expiresAt: z.string().nullable() }))
+    .max(20)
+    .optional(),
+  verifications: z
+    .array(z.object({ expiresAt: z.string().nullable() }))
+    .max(20)
+    .optional(),
+  earnedProUntil: z.string().nullable().optional(),
 })
 
 export const SESSION_PROFILE_MAX_ENTRIES = 5000
@@ -124,6 +139,11 @@ async function loadSessionProfile(
       username: d.username ?? null,
       tier: d.tier ?? null,
       claims: d.claims ?? [],
+      grants: (d.grants ?? []).filter(
+        (g): g is SessionGrant => g.plan === "pro" || g.plan === "team"
+      ),
+      verifications: d.verifications ?? [],
+      earnedProUntil: d.earnedProUntil ?? null,
     }
     if (generations.get(baUserId) === gen) {
       setBounded(cache, baUserId, { at: startedAt, value })

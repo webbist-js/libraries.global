@@ -41,6 +41,9 @@ describe("fetchSessionProfile", () => {
       username: "ada",
       tier: "Reader",
       claims: [],
+      grants: [],
+      verifications: [],
+      earnedProUntil: null,
     }
     expect(await fetchSessionProfile("u1")).toEqual(expected)
     expect(await fetchSessionProfile("u1")).toEqual(expected)
@@ -160,6 +163,54 @@ describe("fetchSessionProfile", () => {
       vi.fn(async () => Response.json({ ...body, contributorRole: "overlord" }))
     )
     expect((await fetchSessionProfile("u1"))?.contributorRole).toBe("reader")
+  })
+
+  it("parses grants, verifications and earnedProUntil", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          ...body,
+          grants: [{ plan: "pro", expiresAt: null }],
+          verifications: [{ expiresAt: "2099-01-01T00:00:00Z" }],
+          earnedProUntil: "2099-01-01T00:00:00Z",
+        })
+      )
+    )
+    const profile = await fetchSessionProfile("u1")
+    expect(profile?.grants).toEqual([{ plan: "pro", expiresAt: null }])
+    expect(profile?.verifications).toEqual([
+      { expiresAt: "2099-01-01T00:00:00Z" },
+    ])
+    expect(profile?.earnedProUntil).toBe("2099-01-01T00:00:00Z")
+  })
+
+  it("defaults grants, verifications and earnedProUntil when the bridge omits them", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json(body))
+    )
+    const profile = await fetchSessionProfile("u1")
+    expect(profile?.grants).toEqual([])
+    expect(profile?.verifications).toEqual([])
+    expect(profile?.earnedProUntil).toBeNull()
+  })
+
+  it("drops a grant with an unknown plan at parse time", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          ...body,
+          grants: [
+            { plan: "pro", expiresAt: null },
+            { plan: "enterprise", expiresAt: null },
+          ],
+        })
+      )
+    )
+    const profile = await fetchSessionProfile("u1")
+    expect(profile?.grants).toEqual([{ plan: "pro", expiresAt: null }])
   })
 
   it("returns null, warns and caches nothing on failure", async () => {
