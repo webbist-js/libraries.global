@@ -1,3 +1,4 @@
+import { SITE_NAME } from "@/lib/constants"
 import { savedEventsBridgeHeaders, STRAPI } from "@/lib/saved-events-bridge"
 
 const API_TOKEN = process.env.STRAPI_REST_READONLY_API_KEY
@@ -23,7 +24,7 @@ export async function GET() {
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
       "PRODID:-//libraries.global//Events//EN",
-      "X-WR-CALNAME:My Saved Events — Libraries of the World",
+      `X-WR-CALNAME:My Saved Events — ${SITE_NAME}`,
       "CALSCALE:GREGORIAN",
       "METHOD:PUBLISH",
       "END:VCALENDAR",
@@ -62,7 +63,7 @@ export async function GET() {
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
     "PRODID:-//libraries.global//Events//EN",
-    "X-WR-CALNAME:My Saved Events — Libraries of the World",
+    `X-WR-CALNAME:My Saved Events — ${SITE_NAME}`,
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     ...events.flatMap((e) => {

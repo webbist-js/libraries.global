@@ -13,7 +13,7 @@ import { JsonLd } from "@/components/seo/JsonLd"
 import { isDevelopment } from "@/lib/general-helpers"
 import { redirect } from "@/lib/navigation"
 import { buildArticleSchema, buildBreadcrumbSchema } from "@/lib/seo/json-ld"
-import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
+import { absoluteUrl, buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
 import {
   fetchDocsWikiArticles,
   fetchWikiArticle,
@@ -57,7 +57,7 @@ export async function generateMetadata({
     description:
       article.seo?.metaDescription ??
       article.summary ??
-      `${article.title ?? "Documentation"} — libraries.global documentation.`,
+      `${article.title ?? "Documentation"} — ${SITE_NAME} documentation.`,
     // Canonical lives under the article's mapped docs section.
     path: docsArticlePath(article),
     locale,

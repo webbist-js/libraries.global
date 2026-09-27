@@ -134,8 +134,7 @@ export async function GlobalHeader({
               className="text-[1.2rem] leading-none font-medium whitespace-nowrap text-(--t-ink-base)"
               style={{ fontFamily: T.font.serif }}
             >
-              Libraries <em className="font-normal italic">of the </em>
-              World
+              Libraries <em className="font-normal italic">Global</em>
             </span>
           </GlobalLink>
         </div>

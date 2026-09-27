@@ -1,17 +1,11 @@
 import type { Metadata } from "next"
 
+import { SITE_NAME } from "@/lib/constants"
 import { getEnvVar } from "@/lib/env-vars"
 import { routing } from "@/lib/navigation"
 
-/**
- * Brand name used in <title> template, og:site_name and JSON-LD publisher.
- *
- * NOTE: the visible header/footer brand is "Libraries of the World" while
- * metadata has always used "Libraries Global" (matches the libraries.global
- * domain). Keep this the single source of truth — change it here once the
- * intended brand is confirmed.
- */
-export const SITE_NAME = "Libraries Global"
+/** Brand name used in <title> template, og:site_name and JSON-LD publisher. */
+export { SITE_NAME }
 
 export const DEFAULT_TITLE = `${SITE_NAME} — Index of the World's Libraries`
 

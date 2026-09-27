@@ -3,7 +3,7 @@ import type { Locale } from "next-intl"
 import { use } from "react"
 
 import DocsPage from "@/components/docs/DocsPage"
-import { buildMetadata } from "@/lib/seo/metadata"
+import { buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
 import { fetchDocsWikiArticles } from "@/lib/strapi-api/content/server"
 
 export const dynamic = "force-static"
@@ -18,8 +18,7 @@ export async function generateMetadata({
 
   return buildMetadata({
     title: "Docs",
-    description:
-      "How to improve library records, run the platform locally, use the open data, and build on the libraries.global design system.",
+    description: `How to improve library records, run the platform locally, use the open data, and build on the ${SITE_NAME} design system.`,
     path: "docs",
     locale,
   })
