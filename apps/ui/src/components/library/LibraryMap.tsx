@@ -31,7 +31,9 @@ function buildMapboxStaticUrl(lat: number, lng: number, token: string): string {
   // Request tall image; CSS object-cover fills whatever height the container needs
   const size = "800x600@2x"
 
-  return `https://api.mapbox.com/styles/v1/mapbox/light-v11/static/${marker}/${center}/${size}?access_token=${token}`
+  // object-cover can crop the image's corners, so the text attribution is
+  // rendered as a visible credit below the image instead of inside it.
+  return `https://api.mapbox.com/styles/v1/mapbox/light-v11/static/${marker}/${center}/${size}?attribution=false&access_token=${token}`
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -83,12 +85,33 @@ export function LibraryMap({
       {/* Map image — flex-1 so it grows to fill whatever height the container has */}
       <div className="relative min-h-48 flex-1">
         {mapImageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={mapImageUrl}
-            alt={`Map showing the location of ${library.name}`}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
+          <>
+            <img
+              src={mapImageUrl}
+              alt={`Map showing the location of ${library.name}`}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <p className="absolute right-0 bottom-0 rounded-tl-md bg-white/85 px-2 py-0.5 text-[11px] leading-4 text-(--t-ink-dim)">
+              ©{" "}
+              <a
+                href="https://www.mapbox.com/about/maps/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-2"
+              >
+                Mapbox
+              </a>{" "}
+              ©{" "}
+              <a
+                href="https://www.openstreetmap.org/copyright"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-2"
+              >
+                OpenStreetMap
+              </a>
+            </p>
+          </>
         ) : (
           <div className="flex h-full items-center justify-center bg-(--t-bg-muted)">
             <Icon

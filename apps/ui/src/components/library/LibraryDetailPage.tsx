@@ -241,7 +241,7 @@ export function LibraryDetailPage({
               >
                 Add a photo you took or have permission to share
               </GlobalLink>{" "}
-              (CC BY or CC BY-SA).
+              (published under CC BY-SA 4.0).
             </p>
 
             <LibraryVisitSection library={library} />

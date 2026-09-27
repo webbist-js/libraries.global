@@ -21,6 +21,7 @@ import {
   type LayerId,
   typeGroupOf,
 } from "./atlas.logic"
+import { BASEMAP_ATTRIBUTION } from "../map/map.helpers"
 
 // v2 is light-only — Voyager's warm tones sit well on the paper palette
 const BASEMAP =
@@ -217,7 +218,10 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
             style: BASEMAP,
             center: v ? [v.lng, v.lat] : [10, 30],
             zoom: v ? v.zoom : 1.6,
-            attributionControl: { compact: true },
+            attributionControl: {
+              compact: true,
+              customAttribution: BASEMAP_ATTRIBUTION,
+            },
             dragRotate: false,
             pitchWithRotate: false,
           })

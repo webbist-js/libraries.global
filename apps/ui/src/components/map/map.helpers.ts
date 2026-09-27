@@ -12,6 +12,15 @@ export const LIBRARY_SOURCES = ["libraries"] as const
 export const GEO_LAYERS = ["geo-fills", "geo-outlines"] as const
 export const GEO_SOURCES = ["geo-areas"] as const
 
+// ── Basemap ───────────────────────────────────────────────────────────────────
+
+/**
+ * Credit for the CARTO Voyager basemap. Its style JSON carries no attribution,
+ * and both OpenStreetMap (ODbL) and CARTO's terms require one on the map.
+ */
+export const BASEMAP_ATTRIBUTION =
+  '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>'
+
 // ── Label maps ────────────────────────────────────────────────────────────────
 
 export const TYPE_LABELS: Record<string, string> = {

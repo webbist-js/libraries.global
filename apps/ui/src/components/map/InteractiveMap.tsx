@@ -8,6 +8,7 @@ import { cn } from "@/lib/styles"
 
 import { LibraryPinPanel } from "./LibraryPinPanel"
 import {
+  BASEMAP_ATTRIBUTION,
   fetchMapPins,
   GEO_LAYERS,
   GEO_SOURCES,
@@ -116,7 +117,10 @@ export function InteractiveMap({
         style: mapStyle,
         center: [centerLng, centerLat],
         zoom: defaultZoom,
-        attributionControl: false,
+        attributionControl: {
+          compact: true,
+          customAttribution: BASEMAP_ATTRIBUTION,
+        },
       })
 
       map.addControl(
