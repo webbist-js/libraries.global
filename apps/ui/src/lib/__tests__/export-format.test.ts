@@ -1,40 +1,35 @@
 import { describe, expect, it } from "vitest"
 
-import type { AtlasLibrary } from "@/components/atlas/atlas.logic"
-
 import {
   ATLAS_EXPORT_COLUMNS,
   atlasExportRow,
   EXPORT_ATTRIBUTION,
+  type LibraryExportSource,
+  MAX_EXPORT_IDS,
   toCsv,
   toGeoJson,
 } from "../export-format"
 
 const lines = (csv: string) => csv.split("\r\n").filter(Boolean)
 
-function lib(p: Partial<AtlasLibrary> = {}): AtlasLibrary {
+function lib(p: Partial<LibraryExportSource> = {}): LibraryExportSource {
   return {
-    id: "doc1",
     name: "Loddon Library",
     slug: "loddon-library",
-    type: "Public",
-    status: "open",
-    operator: "Municipality",
+    libraryType: "Public",
+    operationalStatus: "open",
+    streetAddress: "Church Plain",
     city: "Loddon",
-    country: "England",
     region: "Norfolk",
-    path: "/europe/england/norfolk/loddon-library",
-    tz: "Europe/London",
-    hours: null,
-    founded: null,
-    closed: null,
-    events: false,
-    catalogue: false,
-    access: [],
-    services: [],
-    complete: 50,
+    country: "England",
     lat: 52.53,
     lng: 1.48,
+    website: "https://www.norfolk.gov.uk/libraries",
+    phone: "01508 520 745",
+    email: "loddon.lib@norfolk.gov.uk",
+    continentSlug: "europe",
+    countrySlug: "england",
+    regionSlug: "norfolk",
     ...p,
   }
 }
@@ -143,28 +138,43 @@ describe("toGeoJson", () => {
 const pageUrl = (path: string) => `https://libraries.global${path}`
 
 describe("atlasExportRow", () => {
-  it("maps an Atlas library onto the export columns", () => {
+  it("maps a Strapi export row onto the export columns", () => {
     expect(atlasExportRow(lib(), pageUrl)).toEqual({
       name: "Loddon Library",
       slug: "loddon-library",
       libraryType: "Public",
       operationalStatus: "open",
+      streetAddress: "Church Plain",
       city: "Loddon",
       region: "Norfolk",
       country: "England",
       lat: 52.53,
       lng: 1.48,
+      website: "https://www.norfolk.gov.uk/libraries",
+      phone: "01508 520 745",
+      email: "loddon.lib@norfolk.gov.uk",
       url: "https://libraries.global/europe/england/norfolk/loddon-library",
     })
   })
 
-  it("leaves the url empty when the library has no page path", () => {
-    expect(atlasExportRow(lib({ path: null }), pageUrl).url).toBeNull()
+  it.each([
+    ["slug", { slug: null }],
+    ["continent slug", { continentSlug: null }],
+    ["country slug", { countrySlug: null }],
+    ["region slug", { regionSlug: null }],
+  ])("leaves the url empty when the %s is missing", (_label, p) => {
+    expect(atlasExportRow(lib(p), pageUrl).url).toBeNull()
   })
 
   it("fills every export column, in order", () => {
     expect(Object.keys(atlasExportRow(lib(), pageUrl))).toEqual([
       ...ATLAS_EXPORT_COLUMNS,
     ])
+  })
+})
+
+describe("MAX_EXPORT_IDS", () => {
+  it("caps one export request at the Team plan's row limit", () => {
+    expect(MAX_EXPORT_IDS).toBe(50_000)
   })
 })

@@ -3,53 +3,94 @@
  * imports, so the route and the tests share them. The route supplies the rows
  * (read from our own dataset, never from the client) and the page-URL builder.
  */
-import type { AtlasLibrary } from "@/components/atlas/atlas.logic"
+import { buildLibraryPath } from "@/lib/library-helpers"
 
 /** Sent with every export, as a header and on the GeoJSON collection. */
 export const EXPORT_ATTRIBUTION =
   "libraries.global contributors; see /knowledge for licences"
 
-/** Most ids one export request may carry, whatever the plan's row cap. */
-export const MAX_EXPORT_IDS = 10_000
+/**
+ * Most ids one export request may carry: the largest plan's row cap (Team).
+ * Each plan's own, smaller cap is enforced separately from `limits.exportRows`.
+ */
+export const MAX_EXPORT_IDS = 50_000
 
 export type Cell = string | number | null | undefined
 
 /**
- * The export's columns, in file order. Only fields GET /api/libraries/atlas
- * returns: it has no street address, website, phone or email.
+ * The export's columns, in file order.
  */
 export const ATLAS_EXPORT_COLUMNS = [
   "name",
   "slug",
   "libraryType",
   "operationalStatus",
+  "streetAddress",
   "city",
   "region",
   "country",
   "lat",
   "lng",
+  "website",
+  "phone",
+  "email",
   "url",
 ] as const
 
 export type AtlasExportColumn = (typeof ATLAS_EXPORT_COLUMNS)[number]
 export type AtlasExportRow = Record<AtlasExportColumn, Cell>
 
-/** One export row for an Atlas library; `pageUrl` makes its path absolute. */
+/** One library row as the Strapi bridge (`POST /api/libraries/export`) returns it. */
+export type LibraryExportSource = {
+  name: string | null
+  slug: string | null
+  libraryType: string | null
+  operationalStatus: string | null
+  streetAddress: string | null
+  city: string | null
+  region: string | null
+  country: string | null
+  lat: number | null
+  lng: number | null
+  website: string | null
+  phone: string | null
+  email: string | null
+  continentSlug: string | null
+  countrySlug: string | null
+  regionSlug: string | null
+}
+
+/**
+ * One export row for a library; `pageUrl` makes its path absolute. `url` is
+ * built from the three location slugs with the same helper the library
+ * detail page uses, so it's null when any of them (or the slug) is missing.
+ */
 export function atlasExportRow(
-  lib: AtlasLibrary,
+  lib: LibraryExportSource,
   pageUrl: (path: string) => string
 ): AtlasExportRow {
+  const path = buildLibraryPath({
+    slug: lib.slug,
+    continent: { slug: lib.continentSlug },
+    country: { slug: lib.countrySlug },
+    region: { slug: lib.regionSlug },
+  })
+
   return {
     name: lib.name,
     slug: lib.slug,
-    libraryType: lib.type,
-    operationalStatus: lib.status,
+    libraryType: lib.libraryType,
+    operationalStatus: lib.operationalStatus,
+    streetAddress: lib.streetAddress,
     city: lib.city,
     region: lib.region,
     country: lib.country,
     lat: lib.lat,
     lng: lib.lng,
-    url: lib.path ? pageUrl(lib.path) : null,
+    website: lib.website,
+    phone: lib.phone,
+    email: lib.email,
+    url: path ? pageUrl(path) : null,
   }
 }
 
