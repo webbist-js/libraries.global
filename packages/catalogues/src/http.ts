@@ -17,7 +17,7 @@ import { CatalogueError } from "./types"
  */
 
 export const DEFAULT_USER_AGENT =
-  "libraries.global-catalogue-bot/0.1 (+https://www.libraries.global/wiki/catalogues)"
+  "libraries.global-catalogue-bot/0.1 (+https://libraries.global/knowledge)"
 
 const MAX_REDIRECTS = 8
 const MAX_BODY_BYTES = 5 * 1024 * 1024
