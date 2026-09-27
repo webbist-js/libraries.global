@@ -12,7 +12,7 @@ import { useEntitlements } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
 import { MAX_EXPORT_IDS } from "@/lib/export-format"
 
-import { Icon, ProChip } from "./atlas-ui"
+import { Icon } from "./atlas-ui"
 import type { AtlasLibrary } from "./atlas.logic"
 
 export type ExportFormat = "csv" | "geojson"
@@ -106,7 +106,7 @@ export function useAtlasExport(onUpgrade: () => void) {
 
 /**
  * Exports the libraries in the list, in its order. Pro members get a CSV or
- * GeoJSON menu; everyone else gets the same button with a Pro chip, which
+ * GeoJSON menu; everyone else gets a locked "Export · Pro" button, which
  * opens the plans sheet. The lock only explains: the route enforces it.
  */
 export function AtlasExportButton({
@@ -116,11 +116,20 @@ export function AtlasExportButton({
   readonly libraries: AtlasLibrary[]
   readonly onSeePlans: () => void
 }) {
-  const { can } = useEntitlements()
+  const { can, ready } = useEntitlements()
   const { busy, outcome, run } = useAtlasExport(onSeePlans)
   const [open, setOpen] = useState(false)
   const noteId = useId()
   const style = { borderColor: T.border.hi, color: T.ink.base }
+
+  // Neutral until the session loads, so Pro members never see the lock flash.
+  if (!ready)
+    return (
+      <button type="button" disabled className={BUTTON} style={style}>
+        <Icon name="download" size={16} />
+        Export
+      </button>
+    )
 
   if (!can("atlas.export"))
     return (
@@ -129,17 +138,19 @@ export function AtlasExportButton({
           type="button"
           onClick={onSeePlans}
           aria-describedby={noteId}
-          title="Export is a Pro feature."
           className={BUTTON}
           style={style}
         >
-          <Icon name="download" size={16} />
-          Export
-          <ProChip />
+          <Icon name="lock" size={16} />
+          Export · Pro
         </button>
-        <span id={noteId} className="sr-only">
+        <p
+          id={noteId}
+          className="order-last m-0 basis-full text-[14px]"
+          style={{ color: T.ink.dim }}
+        >
           Export is a Pro feature.
-        </span>
+        </p>
       </>
     )
 
