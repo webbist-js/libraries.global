@@ -26,7 +26,10 @@ import {
   SITE_NAME,
   TWITTER_SITE,
 } from "@/lib/seo/metadata"
-import { fetchFooter } from "@/lib/strapi-api/content/server"
+import {
+  fetchFooter,
+  fetchLegalDocuments,
+} from "@/lib/strapi-api/content/server"
 import { cn } from "@/lib/styles"
 
 export function generateStaticParams() {
@@ -60,7 +63,11 @@ export default async function RootLayout({
   params,
 }: LayoutProps<"/[locale]">) {
   const { locale } = (await params) as { locale: Locale }
-  const footer = (await fetchFooter(locale))?.data
+  const [footerRes, legalRes] = await Promise.all([
+    fetchFooter(locale),
+    fetchLegalDocuments(locale, "published"),
+  ])
+  const footer = footerRes?.data
 
   // Enable static rendering
   // https://next-intl-docs.vercel.app/docs/getting-started/app-router/with-i18n-routing#static-rendering
@@ -138,7 +145,11 @@ export default async function RootLayout({
 
                 <div className="strapi-layout-footer">
                   <ErrorBoundary hideFallback>
-                    <GlobalFooter locale={locale} footer={footer} />
+                    <GlobalFooter
+                      locale={locale}
+                      footer={footer}
+                      legalDocuments={legalRes.data}
+                    />
                   </ErrorBoundary>
                 </div>
               </div>

@@ -13,6 +13,7 @@ import {
   fetchAllLibraries,
   fetchAllRegions,
   fetchDocsWikiArticles,
+  fetchLegalDocuments,
 } from "@/lib/strapi-api/content/server"
 
 export const dynamic = "force-dynamic"
@@ -61,7 +62,7 @@ async function generateLocalizedSitemap(
 ): Promise<MetadataRoute.Sitemap> {
   const url = (path: string) => absoluteUrl(path, locale)
 
-  const [continents, countries, regions, libraries, blog, docs, events] =
+  const [continents, countries, regions, libraries, blog, docs, events, legal] =
     await Promise.all([
       settle(fetchAllContinents(locale), { data: [] }),
       settle(fetchAllCountries(locale), { data: [] }),
@@ -70,6 +71,7 @@ async function generateLocalizedSitemap(
       settle(fetchAllBlogArticleSlugs(locale), { data: [] }),
       settle(fetchDocsWikiArticles(locale), undefined),
       settle(fetchUpcomingEventIds(), []),
+      settle(fetchLegalDocuments(locale), { data: [] }),
     ])
 
   // Location pages are listed only once they have published records — empty
@@ -154,6 +156,16 @@ async function generateLocalizedSitemap(
       ...(a.updatedAt ? { lastModified: a.updatedAt } : {}),
       changeFrequency: "monthly",
       priority: 0.5,
+    })
+  }
+
+  // ── Legal documents ───────────────────────────────────────────────────────
+  for (const d of legal.data) {
+    if (!d.slug) continue
+    entries.push({
+      url: url(`legal/${d.slug}`),
+      changeFrequency: "yearly",
+      priority: 0.3,
     })
   }
 

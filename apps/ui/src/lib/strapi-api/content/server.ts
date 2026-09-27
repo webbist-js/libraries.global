@@ -1366,6 +1366,100 @@ export async function fetchWikiSections(locale: Locale) {
   }
 }
 
+// ------ Legal document fetching functions
+
+export type LegalDocumentNavItem = {
+  documentId: string
+  title?: string | null
+  navLabel?: string | null
+  slug?: string | null
+  order?: number | null
+}
+
+export type LegalSection = {
+  id: number
+  heading: string
+  inShort?: string | null
+  /** Strapi blocks JSON. */
+  body?: unknown[] | null
+}
+
+export type LegalRevision = {
+  id: number
+  version: string
+  /** Date-only ISO string, e.g. "2026-09-01". */
+  date: string
+  summary: string
+  changesUrl?: string | null
+}
+
+export type LegalDocumentDetail = LegalDocumentNavItem & {
+  heroTitle?: string | null
+  lead?: string | null
+  updatedAt?: string | null
+  publishedAt?: string | null
+  summaryPoints?: { id: number; text: string }[] | null
+  sections?: LegalSection[] | null
+  revisions?: LegalRevision[] | null
+  seo?: LibrarySeoData | null
+}
+
+/** draftMode() throws outside a request scope (generateStaticParams). */
+async function isDraftRequest() {
+  try {
+    return (await draftMode()).isEnabled
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Every legal document's tab label and slug, in display order. Pass `status`
+ * to skip the draft-mode check (the root layout's footer always wants
+ * published documents).
+ */
+export async function fetchLegalDocuments(
+  locale: Locale,
+  status?: "draft" | "published"
+) {
+  try {
+    return (await PublicStrapiClient.fetchAPI("/legal-documents/nav", {
+      locale,
+      status: status ?? ((await isDraftRequest()) ? "draft" : "published"),
+    })) as APIResponseCollection<LegalDocumentNavItem>
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching legal documents for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return { data: [] }
+  }
+}
+
+export async function fetchLegalDocument(slug: string, locale: Locale) {
+  try {
+    return (await PublicStrapiClient.fetchAPI(
+      `/legal-documents/detail/${encodeURIComponent(slug)}`,
+      {
+        locale,
+        status: (await isDraftRequest()) ? "draft" : "published",
+      }
+    )) as APIResponse<LegalDocumentDetail>
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching legal document '${slug}' for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+  }
+}
+
 // ------ Footer fetching functions
 
 export async function fetchFooter(locale: Locale) {

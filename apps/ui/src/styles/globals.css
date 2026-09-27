@@ -155,6 +155,14 @@
   }
 }
 
+/* Legal documents print (or save to PDF) without the site chrome. */
+@media print {
+  body:has([data-legal-document])
+    :is([data-global-header], .strapi-layout-footer) {
+    display: none;
+  }
+}
+
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still

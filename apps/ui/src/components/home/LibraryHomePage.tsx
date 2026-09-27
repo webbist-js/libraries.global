@@ -15,6 +15,7 @@ import {
   fetchHomepageContinents,
   fetchHomepageStats,
   fetchIncompleteLibraries,
+  fetchLegalDocuments,
   fetchRecentBlogArticles,
 } from "@/lib/strapi-api/content/server"
 
@@ -22,6 +23,7 @@ export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
   const homepagePromise = fetchHomepage(locale)
   const continentSummariesPromise = fetchHomepageContinents(locale)
   const footerPromise = fetchFooter(locale)
+  const legalDocumentsPromise = fetchLegalDocuments(locale, "published")
   const blogArticlesPromise = fetchRecentBlogArticles(locale)
   const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 
@@ -40,6 +42,7 @@ export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
   const homepage = use(homepagePromise)?.data
   const continentSummaries = use(continentSummariesPromise)?.data ?? []
   const footer = use(footerPromise)?.data
+  const legalDocuments = use(legalDocumentsPromise).data
   const blogArticles = use(blogArticlesPromise)?.data ?? []
   const stats = use(statsPromise)
   const tasks = pickTasks(use(incompletePromise), 3)
@@ -129,7 +132,11 @@ export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
           />
         </main>
 
-        <GlobalFooter locale={locale} footer={footer} />
+        <GlobalFooter
+          footer={footer}
+          legalDocuments={legalDocuments}
+          locale={locale}
+        />
       </div>
     </div>
   )

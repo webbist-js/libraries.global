@@ -172,7 +172,7 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
     {
       title: "Data licence & export",
       text: "Download the index under an open licence, with provenance.",
-      href: "/docs",
+      href: "/legal/data-licence",
     },
     {
       title: "API",

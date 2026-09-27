@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
+import { CODE_OF_CONDUCT_URL } from "@/components/legal/legal.helpers"
 import { AvatarUpload } from "@/components/settings/AvatarUpload"
 import { CountryCombobox } from "@/components/settings/CountryCombobox"
 import { InterestsChips } from "@/components/settings/InterestsChips"
@@ -1325,12 +1326,15 @@ export function OnboardingShell({
               }}
             >
               By continuing, you agree to the{" "}
-              <Link
-                href="/legal/contributor-covenant"
+              <a
+                href={CODE_OF_CONDUCT_URL}
+                rel="noopener noreferrer"
                 style={{ color: T.ink.faint, textDecoration: "underline" }}
+                target="_blank"
               >
                 Contributor Covenant
-              </Link>{" "}
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>{" "}
               and acknowledge that your profile data will be processed as
               described in the{" "}
               <Link

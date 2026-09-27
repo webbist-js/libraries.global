@@ -1,3 +1,4 @@
+import GlobalLink from "@/components/global/GlobalLink"
 import { cn } from "@/lib/styles"
 
 type BlockTextNode = {
@@ -10,7 +11,17 @@ type BlockTextNode = {
   code?: boolean
 }
 
-type BlockInlineNode = BlockTextNode
+type BlockLinkNode = {
+  type: "link"
+  url: string
+  children: BlockTextNode[]
+}
+
+type BlockInlineNode = BlockTextNode | BlockLinkNode
+
+// Block content can come from moderated community edits — only render links
+// with a known-safe scheme (or a relative path / in-page anchor).
+const SAFE_LINK = /^(https?:\/\/|mailto:|tel:|\/(?!\/)|#)/i
 
 type BlockNode =
   | { type: "paragraph"; children: BlockInlineNode[] }
@@ -28,6 +39,21 @@ type BlockNode =
   | { type: "code"; children: [{ type: "text"; text: string }] }
 
 function renderInlineNode(node: BlockInlineNode, index: number) {
+  if (node.type === "link") {
+    const label = node.children.map(renderInlineNode)
+    if (!SAFE_LINK.test(node.url)) return <span key={index}>{label}</span>
+
+    return (
+      <GlobalLink
+        key={index}
+        href={node.url}
+        className="text-(--t-accent-primary) underline underline-offset-[3px] hover:text-(--t-accent-primary-hover)"
+      >
+        {label}
+      </GlobalLink>
+    )
+  }
+
   let content: React.ReactNode = node.text
 
   if (node.bold) content = <strong key={index}>{content}</strong>

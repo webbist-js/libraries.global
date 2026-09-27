@@ -54,8 +54,14 @@ function SubscribeCard() {
         undefined,
         {
           method: "POST",
+          // `message` plus the entry's createdAt is the consent record: what
+          // the person agreed to, and when.
           body: JSON.stringify({
-            data: { email: email.trim(), message: "Journal newsletter" },
+            data: {
+              email: email.trim(),
+              message:
+                "Journal newsletter: agreed to receive new Journal articles by email, at most monthly",
+            },
           }),
         },
         { useProxy: true }
@@ -108,6 +114,7 @@ function SubscribeCard() {
               id="journal-subscribe"
               type="email"
               required
+              aria-describedby="journal-subscribe-note"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="min-w-0 flex-1 rounded-[10px] border px-3 py-2 text-[15px]"
@@ -138,8 +145,22 @@ function SubscribeCard() {
         </form>
       )}
 
-      <p className="m-0 mt-3 text-[13px]" style={{ color: T.ink.low }}>
-        Monthly at most.
+      <p
+        id="journal-subscribe-note"
+        className="m-0 mt-3 text-[13px]"
+        style={{ color: T.ink.dim }}
+      >
+        Monthly at most. We only use your email to send new Journal articles.
+        Unsubscribe at any time by replying to an email or writing to
+        legal@libraries.global. See our{" "}
+        <GlobalLink
+          href="/legal/privacy"
+          className="underline underline-offset-[3px]"
+          style={{ color: T.accent.primary }}
+        >
+          privacy notice
+        </GlobalLink>
+        .
       </p>
     </div>
   )
