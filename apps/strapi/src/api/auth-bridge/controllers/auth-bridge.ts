@@ -4,6 +4,7 @@ import {
   grantVerifiedLibrarian,
   upsertAffiliation,
 } from "../../../utils/affiliations"
+import { eraseAccount } from "../../../utils/erase-account"
 import { isValidServiceSecret } from "../../../utils/service-secret"
 import { isValidUsername } from "../../../utils/username"
 
@@ -274,69 +275,7 @@ export default {
     }
     if (!baUserId) return ctx.badRequest("Missing baUserId")
 
-    const profile = await strapi
-      .query("api::user-profile.user-profile")
-      .findOne({ where: { baUserId } })
-
-    if (profile) {
-      const anonUsername = `deleted-${profile.contributorNumber ?? profile.id}`
-      await strapi.query("api::user-profile.user-profile").update({
-        where: { baUserId },
-        data: {
-          username: anonUsername,
-          firstName: "Deleted",
-          lastName: "User",
-          bio: null,
-          pronouns: null,
-          affiliation: null,
-          affiliationType: null,
-          jobTitle: null,
-          city: null,
-          country: null,
-          timezone: null,
-          website: null,
-          orcid: null,
-          mastodon: null,
-          linkedin: null,
-          avatar: null,
-          profileVisibility: "private",
-          baUserId: `deleted-${baUserId}`,
-        },
-      })
-    }
-
-    // Scrub PII left on moderation and rewards records. These types all have
-    // draftAndPublish: false, so bulk db.query updates are consistent with
-    // the Document Service (see Global Constraints).
-    await strapi.db.query("plugin::content-moderation.submission").updateMany({
-      where: { submittedByUserId: baUserId },
-      data: {
-        submittedByEmail: "deleted@invalid",
-        submittedByName: null,
-        submittedByUserId: `deleted-${baUserId}`,
-      },
-    })
-    await strapi.db.query("plugin::rewards.point-event").updateMany({
-      where: { baUserId },
-      data: { baUserId: `deleted-${baUserId}` },
-    })
-    await strapi.db
-      .query("api::library-affiliation.library-affiliation")
-      .deleteMany({ where: { baUserId } })
-    await strapi.db
-      .query("plugin::content-moderation.submission-upload")
-      .deleteMany({ where: { baUserId } })
-
-    const upUser = email
-      ? await strapi
-          .query("plugin::users-permissions.user")
-          .findOne({ where: { email } })
-      : null
-    if (upUser) {
-      await strapi
-        .query("plugin::users-permissions.user")
-        .delete({ where: { id: upUser.id } })
-    }
+    await eraseAccount(strapi, { baUserId, email })
 
     return ctx.send({ ok: true })
   },

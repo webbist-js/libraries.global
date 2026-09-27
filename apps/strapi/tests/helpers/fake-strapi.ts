@@ -115,6 +115,37 @@ export function makeFakeStrapi(seed: Record<string, Doc[]> = {}) {
       findMany: vi.fn(async ({ where }: { where?: Record<string, any> } = {}) =>
         table(uid).filter((d) => match(d, where))
       ),
+      update: vi.fn(
+        async ({
+          where,
+          data,
+        }: {
+          where: Record<string, any>
+          data: Record<string, any>
+        }) => {
+          const row = table(uid).find((d) => match(d, where))
+          if (!row) return null
+          Object.assign(row, data)
+
+          return row
+        }
+      ),
+      delete: vi.fn(async ({ where }: { where: Record<string, any> }) => {
+        const rows = table(uid)
+        const idx = rows.findIndex((d) => match(d, where))
+        if (idx === -1) return null
+        const [removed] = rows.splice(idx, 1)
+
+        return removed
+      }),
+      deleteMany: vi.fn(async ({ where }: { where: Record<string, any> }) => {
+        const rows = table(uid)
+        const kept = rows.filter((d) => !match(d, where))
+        const count = rows.length - kept.length
+        rows.splice(0, rows.length, ...kept)
+
+        return { count }
+      }),
     })),
   }
 
