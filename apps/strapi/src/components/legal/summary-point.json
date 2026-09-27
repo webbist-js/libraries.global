@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_legal_summary_points",
+  "info": {
+    "displayName": "Summary Point",
+    "description": "One bullet of a legal document's plain-language short version",
+    "icon": "bulletList"
+  },
+  "options": {},
+  "attributes": {
+    "text": {
+      "type": "text",
+      "required": true
+    }
+  }
+}

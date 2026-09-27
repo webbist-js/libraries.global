@@ -224,6 +224,47 @@ export interface HomepageStep extends Struct.ComponentSchema {
   }
 }
 
+export interface LegalRevision extends Struct.ComponentSchema {
+  collectionName: "components_legal_revisions"
+  info: {
+    description: "A published version of a legal document. The newest revision sets the document's version and last-updated date."
+    displayName: "Revision"
+    icon: "clock"
+  }
+  attributes: {
+    changesUrl: Schema.Attribute.String
+    date: Schema.Attribute.Date & Schema.Attribute.Required
+    summary: Schema.Attribute.Text & Schema.Attribute.Required
+    version: Schema.Attribute.String & Schema.Attribute.Required
+  }
+}
+
+export interface LegalSection extends Struct.ComponentSchema {
+  collectionName: "components_legal_sections"
+  info: {
+    description: "A numbered section of a legal document: heading, one-line summary and full text"
+    displayName: "Legal Section"
+    icon: "layer"
+  }
+  attributes: {
+    body: Schema.Attribute.Blocks & Schema.Attribute.Required
+    heading: Schema.Attribute.String & Schema.Attribute.Required
+    inShort: Schema.Attribute.Text
+  }
+}
+
+export interface LegalSummaryPoint extends Struct.ComponentSchema {
+  collectionName: "components_legal_summary_points"
+  info: {
+    description: "One bullet of a legal document's plain-language short version"
+    displayName: "Summary Point"
+    icon: "bulletList"
+  }
+  attributes: {
+    text: Schema.Attribute.Text & Schema.Attribute.Required
+  }
+}
+
 export interface LibraryCollectionStat extends Struct.ComponentSchema {
   collectionName: "components_library_collection_stats"
   info: {
@@ -771,6 +812,9 @@ declare module "@strapi/strapi" {
       "homepage.link-card": HomepageLinkCard
       "homepage.section-intro": HomepageSectionIntro
       "homepage.step": HomepageStep
+      "legal.revision": LegalRevision
+      "legal.section": LegalSection
+      "legal.summary-point": LegalSummaryPoint
       "library.collection-stat": LibraryCollectionStat
       "library.library-stat": LibraryLibraryStat
       "profile.language-entry": ProfileLanguageEntry

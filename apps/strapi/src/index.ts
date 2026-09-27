@@ -8,6 +8,7 @@ import { registerAdminUserSubscriber } from "./lifeCycles/adminUser"
 import { registerEntityRefSubscriber } from "./lifeCycles/entityRef"
 import { registerUserSubscriber } from "./lifeCycles/user"
 import { getPopulateDynamicZoneConfig } from "./populateDynamicZone"
+import { seedLegalDocuments } from "./seeds/legal-documents"
 import { ensureUniqueIndexes } from "./utils/ensure-unique-indexes"
 
 const SEED_TOPICS = [
@@ -99,6 +100,9 @@ export default {
 
     // Import the LibrariesHacked UK catalogue list once (idempotent)
     await seedCatalogues(strapi)
+
+    // Draft legal documents with placeholder copy on first boot (idempotent)
+    await seedLegalDocuments(strapi)
 
     // I2 fresh-DB follow-up: re-ensure the unique indexes the migration
     // creates, in case this is a first deploy where the migration ran

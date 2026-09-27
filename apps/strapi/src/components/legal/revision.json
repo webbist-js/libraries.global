@@ -1,0 +1,26 @@
+{
+  "collectionName": "components_legal_revisions",
+  "info": {
+    "displayName": "Revision",
+    "description": "A published version of a legal document. The newest revision sets the document's version and last-updated date.",
+    "icon": "clock"
+  },
+  "options": {},
+  "attributes": {
+    "version": {
+      "type": "string",
+      "required": true
+    },
+    "date": {
+      "type": "date",
+      "required": true
+    },
+    "summary": {
+      "type": "text",
+      "required": true
+    },
+    "changesUrl": {
+      "type": "string"
+    }
+  }
+}
