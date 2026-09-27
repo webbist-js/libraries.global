@@ -10,11 +10,12 @@
  *     must never run while a content-type schema is mid-edit.
  *
  * Why it exists: Strapi REST cannot make these writes, by design.
- * user-profile exposes only find/findOne, and library-affiliation has no
- * routes at all (P-A hardening). So this calls load() and writes through
- * the Document Service, the same way the moderation service does on claim
- * approval. It never calls listen(), so no HTTP server starts. load() runs
- * bootstrap, which starts the cron service. So the writer:
+ * user-profile exposes only find/findOne, and library-affiliation,
+ * entitlement-grant and pro-verification have no routes at all (P-A
+ * hardening; the last two are admin-only). So this calls load() and writes
+ * through the Document Service, the same way the moderation service does on
+ * claim approval. It never calls listen(), so no HTTP server starts. load()
+ * runs bootstrap, which starts the cron service. So the writer:
  *   - sets server.cron.enabled = false before load(), so config/cron-tasks
  *     are never scheduled even if CRON_ENABLED=true in apps/strapi/.env;
  *   - destroys the cron service straight after load(). Core and plugins
@@ -23,8 +24,14 @@
  *     and destroy() stops those. A job due in that instant could still run.
  *
  * Run by the seed with cwd = apps/strapi, so Strapi loads its own .env.
- * Input: ACCESS_SEED_PLAN (JSON array). Output: one line prefixed
+ * Input: ACCESS_SEED_PLAN, a JSON array of { baUserId, role, username,
+ * plan, claimLibrary } (see FIXTURES in access-fixtures.ts; a null username
+ * marks the onboarding fixture). Output: one line prefixed
  * ACCESS_SEED_RESULT with a JSON summary of what changed.
+ *
+ * Every fixture converges in both directions: rows it should have are
+ * created, rows it shouldn't are deleted, and nothing that already matches
+ * is written, so a re-run is a no-op.
  */
 const { createRequire } = require("node:module")
 const path = require("node:path")
@@ -35,6 +42,55 @@ const { createStrapi } = requireFromStrapi("@strapi/strapi")
 
 const PROFILE = "api::user-profile.user-profile"
 const AFFILIATION = "api::library-affiliation.library-affiliation"
+const GRANT = "api::entitlement-grant.entitlement-grant"
+const VERIFICATION = "api::pro-verification.pro-verification"
+
+const DAY_MS = 86_400_000
+// pro-verified's verification runs a year. One with under 30 days left is
+// replaced, so it never lapses between seeds and a re-run stays a no-op.
+const VERIFICATION_DAYS = 365
+const VERIFICATION_RENEW_DAYS = 30
+
+/**
+ * What onboarding writes: OnboardingShell's handleSave body, less avatarUrl,
+ * which the PUT /api/profile/me allowlist drops. The onboarding fixture has
+ * them cleared on every run (its username too, in applyProfile), so it
+ * onboards from scratch. profileVisibility stays private, like every
+ * fixture's.
+ */
+const ONBOARDING_CLEARED = {
+  firstName: null,
+  lastName: null,
+  pronouns: null,
+  bio: null,
+  city: null,
+  country: null,
+  timezone: null,
+  affiliationType: null,
+  interests: null,
+  languages: [],
+  website: null,
+  orcid: null,
+  mastodon: null,
+  linkedin: null,
+}
+
+/**
+ * Rewards standing. pro-earned sits at Archivist (1500 points), the lowest
+ * tier that earns Pro; every other fixture starts from zero. Nobody holds
+ * the 90-day earned-Pro hold, which only a drop below Archivist sets.
+ */
+function standing(plan) {
+  return plan === "pro-earned"
+    ? { points: 1500, tier: "Archivist", earnedProUntil: null }
+    : { points: 0, tier: "Reader", earnedProUntil: null }
+}
+
+// null, undefined and an empty list all count as cleared.
+const isCleared = (v) => v == null || (Array.isArray(v) && v.length === 0)
+
+const matches = (current, target) =>
+  isCleared(target) ? isCleared(current) : current === target
 
 // Loopback destinations. 0.0.0.0 is included because the local
 // apps/strapi/.env uses DATABASE_HOST=0.0.0.0, which as a destination
@@ -94,15 +150,11 @@ function assertLocalDatabase(strapi) {
 }
 
 async function applyProfile(strapi, item) {
+  // No `fields`: every scalar comes back, private earnedProUntil included
+  // (the Document Service doesn't sanitise), plus the languages component.
   const [profile] = await strapi.documents(PROFILE).findMany({
     filters: { baUserId: { $eq: item.baUserId } },
-    fields: [
-      "documentId",
-      "contributorRole",
-      "username",
-      "profileVisibility",
-      "isVerifiedLibrarian",
-    ],
+    populate: { languages: true },
     limit: 1,
   })
   if (!profile) throw new Error(`No user-profile for ${item.baUserId}`)
@@ -114,8 +166,10 @@ async function applyProfile(strapi, item) {
     // Mirror a real claim approval (grantVerifiedLibrarian): only the
     // claiming fixture is a verified librarian.
     isVerifiedLibrarian: !!item.claimLibrary,
+    ...standing(item.plan),
+    ...(item.username === null ? ONBOARDING_CLEARED : {}),
   }
-  const changed = Object.keys(data).some((k) => profile[k] !== data[k])
+  const changed = Object.keys(data).some((k) => !matches(profile[k], data[k]))
   if (changed)
     await strapi
       .documents(PROFILE)
@@ -165,6 +219,95 @@ async function applyClaim(strapi, item) {
   return { claimCreated: created, claimsRemoved: removed }
 }
 
+/** The one entitlement-grant a fixture's plan wants, or null for none. */
+function wantedGrant(plan) {
+  if (plan === "pro-grant")
+    return { plan: "pro", source: "admin", reason: "access fixture" }
+  if (plan === "team-grant")
+    return { plan: "team", source: "team", reason: "access fixture" }
+
+  return null
+}
+
+/**
+ * Converges entitlement-grants: a granted fixture ends with exactly its one
+ * unexpiring grant; every other fixture ends with none.
+ */
+async function applyGrants(strapi, item) {
+  const want = wantedGrant(item.plan)
+  const existing = await strapi.documents(GRANT).findMany({
+    filters: { baUserId: { $eq: item.baUserId } },
+    limit: 100,
+  })
+  let kept = false
+  let removed = 0
+  for (const g of existing) {
+    if (
+      want &&
+      !kept &&
+      g.plan === want.plan &&
+      g.source === want.source &&
+      g.reason === want.reason &&
+      g.expiresAt == null
+    ) {
+      kept = true
+      continue
+    }
+    await strapi.documents(GRANT).delete({ documentId: g.documentId })
+    removed++
+  }
+  const created = !!want && !kept
+  if (created)
+    await strapi.documents(GRANT).create({
+      data: { baUserId: item.baUserId, ...want, expiresAt: null },
+    })
+
+  return { grantCreated: created, grantsRemoved: removed }
+}
+
+/**
+ * Converges pro-verifications: pro-verified ends with exactly one
+ * library_staff verification that has at least VERIFICATION_RENEW_DAYS to
+ * run; every other fixture ends with none.
+ */
+async function applyVerifications(strapi, item, now) {
+  const want = item.plan === "pro-verified"
+  const existing = await strapi.documents(VERIFICATION).findMany({
+    filters: { baUserId: { $eq: item.baUserId } },
+    limit: 100,
+  })
+  let kept = false
+  let removed = 0
+  for (const v of existing) {
+    // A verification with no expiry isn't the fixture's shape: replace it.
+    const msLeft = v.expiresAt ? new Date(v.expiresAt).getTime() - now : 0
+    if (
+      want &&
+      !kept &&
+      v.kind === "library_staff" &&
+      v.verifiedAt != null &&
+      msLeft >= VERIFICATION_RENEW_DAYS * DAY_MS
+    ) {
+      kept = true
+      continue
+    }
+    await strapi.documents(VERIFICATION).delete({ documentId: v.documentId })
+    removed++
+  }
+  const created = want && !kept
+  if (created)
+    await strapi.documents(VERIFICATION).create({
+      data: {
+        baUserId: item.baUserId,
+        kind: "library_staff",
+        verifiedAt: new Date(now).toISOString(),
+        expiresAt: new Date(now + VERIFICATION_DAYS * DAY_MS).toISOString(),
+      },
+    })
+
+  return { verificationCreated: created, verificationsRemoved: removed }
+}
+
 async function main() {
   const plan = JSON.parse(process.env.ACCESS_SEED_PLAN ?? "[]")
   const instance = createStrapi({ appDir, distDir: path.join(appDir, "dist") })
@@ -179,11 +322,20 @@ async function main() {
   strapi.cron?.destroy?.()
   strapi.log.level = "error"
   const result = []
+  const now = Date.now()
   try {
     for (const item of plan) {
       const profileChanged = await applyProfile(strapi, item)
       const claim = await applyClaim(strapi, item)
-      result.push({ baUserId: item.baUserId, profileChanged, ...claim })
+      const grant = await applyGrants(strapi, item)
+      const verification = await applyVerifications(strapi, item, now)
+      result.push({
+        baUserId: item.baUserId,
+        profileChanged,
+        ...claim,
+        ...grant,
+        ...verification,
+      })
     }
   } finally {
     await strapi.destroy()

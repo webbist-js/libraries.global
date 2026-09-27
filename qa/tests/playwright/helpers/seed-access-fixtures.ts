@@ -1,15 +1,22 @@
 /**
- * Seeds one Better Auth user per Contributor Role for the access E2E.
- * Local only: refuses to run in production or against a non-local host.
+ * Seeds the Better Auth users for the access E2E (FIXTURES): one per
+ * Contributor Role, one per way of holding a paid plan, and one that hasn't
+ * onboarded yet. Local only: refuses to run in production or against a
+ * non-local host.
  *
  * Strapi REST is used for reads only (STRAPI_SEED_TOKEN can be read-only).
  * Writes can't use REST: it exposes no update for user-profile and no routes
- * for library-affiliation (P-A hardening), so they go through the Document
- * Service in a headless Strapi process (strapi-access-writer.cjs).
+ * for library-affiliation, entitlement-grant or pro-verification (P-A
+ * hardening), so they go through the Document Service in a headless Strapi
+ * process (strapi-access-writer.cjs).
  *
  * The password comes from ACCESS_FIXTURE_PASSWORD. An existing fixture whose
  * stored credential doesn't match it is reset to it (hashed with the UI's
  * own Better Auth), so changing the value and re-running the seed is enough.
+ *
+ * A re-run changes nothing that already matches. The one exception is the
+ * onboarding fixture: once the onboarding spec has given it a username, the
+ * next seed clears it again.
  */
 import { execFile } from "node:child_process"
 import { createRequire } from "node:module"
@@ -22,15 +29,18 @@ import { Client } from "pg"
 
 import {
   emailFor,
+  type FixturePlan,
   fixturePassword,
   FIXTURES,
   retryAfterMs,
+  sleep,
 } from "./access-fixtures"
+// Sign-up is refused without the current terms version, so read the UI's own
+// constant rather than a copy that could drift.
+import { TERMS_VERSION } from "../../../../apps/ui/src/lib/legal-consent"
 
 // The UI caches each user's session profile for 60 s (SESSION_PROFILE_TTL_MS).
 const SESSION_CACHE_TTL_MS = 60_000
-// Sign-up is refused without the current terms version (TERMS_VERSION).
-const TERMS_VERSION = "2026-09-27"
 const STRAPI_APP_DIR = path.resolve(__dirname, "../../../../apps/strapi")
 const UI_APP_DIR = path.resolve(__dirname, "../../../../apps/ui")
 const WRITER = path.resolve(__dirname, "strapi-access-writer.cjs")
@@ -40,7 +50,9 @@ type PlanItem = {
   email: string
   baUserId: string
   role: string
-  username: string
+  /** null for the onboarding fixture, which the writer resets. */
+  username: string | null
+  plan: FixturePlan | null
   claimLibrary: string | null
   signedUpNow: boolean
   passwordReset: boolean
@@ -50,6 +62,10 @@ type WriteResult = {
   profileChanged: boolean
   claimCreated: boolean
   claimsRemoved: number
+  grantCreated: boolean
+  grantsRemoved: number
+  verificationCreated: boolean
+  verificationsRemoved: number
 }
 
 function assertLocal(): void {
@@ -85,8 +101,6 @@ async function strapiGet(pathAndQuery: string) {
 
   return res.json()
 }
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 /** The sign-up hook creates the profile via the auth-bridge; allow it a moment. */
 async function waitForProfile(baUserId: string, email: string): Promise<void> {
@@ -185,11 +199,12 @@ async function runWriter(plan: PlanItem[]): Promise<WriteResult[]> {
       PATH: process.env.PATH,
       HOME: process.env.HOME,
       ACCESS_SEED_PLAN: JSON.stringify(
-        plan.map(({ baUserId, role, username, claimLibrary }) => ({
-          baUserId,
-          role,
-          username,
-          claimLibrary,
+        plan.map((item) => ({
+          baUserId: item.baUserId,
+          role: item.role,
+          username: item.username,
+          plan: item.plan,
+          claimLibrary: item.claimLibrary,
         }))
       ),
     },
@@ -201,6 +216,38 @@ async function runWriter(plan: PlanItem[]): Promise<WriteResult[]> {
   if (!line) throw new Error(`Strapi writer gave no result:\n${stdout}`)
 
   return JSON.parse(line.slice("ACCESS_SEED_RESULT ".length))
+}
+
+const createdOrPresent = (created: boolean) => (created ? "created" : "present")
+
+/** One line per fixture: its state, and what this run changed. */
+function describeResult(item: PlanItem, r: WriteResult): string {
+  const head =
+    `${item.signedUpNow ? "created" : "existing"}, role ${item.role}` +
+    `${item.passwordReset ? " (password reset)" : ""}` +
+    `${r.profileChanged ? " (updated)" : ""}`
+  const granted = item.plan === "pro-grant" || item.plan === "team-grant"
+  const notes: [boolean, string][] = [
+    [
+      item.username === null,
+      `onboarding ${r.profileChanged ? "reset" : "pending"}`,
+    ],
+    [item.claimLibrary !== null, `claim ${createdOrPresent(r.claimCreated)}`],
+    [granted, `grant ${createdOrPresent(r.grantCreated)}`],
+    [
+      item.plan === "pro-verified",
+      `verification ${createdOrPresent(r.verificationCreated)}`,
+    ],
+    [r.claimsRemoved > 0, `${r.claimsRemoved} stray claim(s) removed`],
+    [r.grantsRemoved > 0, `${r.grantsRemoved} stray grant(s) removed`],
+    [
+      r.verificationsRemoved > 0,
+      `${r.verificationsRemoved} stray verification(s) removed`,
+    ],
+  ]
+  const shown = notes.filter(([on]) => on).map(([, text]) => text)
+
+  return `${item.email}: ${[head, `plan ${item.plan ?? "free"}`, ...shown].join(", ")}`
 }
 
 export async function seedAccessFixtures(): Promise<void> {
@@ -243,7 +290,9 @@ export async function seedAccessFixtures(): Promise<void> {
         email,
         baUserId,
         role: f.role,
-        username: `access_${f.key.replace("-", "_")}`,
+        username:
+          f.username === null ? null : `access_${f.key.replaceAll("-", "_")}`,
+        plan: f.plan ?? null,
         claimLibrary: f.claim ? claimLibrary : null,
         signedUpNow,
         passwordReset,
@@ -258,14 +307,15 @@ export async function seedAccessFixtures(): Promise<void> {
   for (const item of plan) {
     const r = results.find((x) => x.baUserId === item.baUserId)
     if (!r) throw new Error(`Strapi writer skipped ${item.email}`)
-    const changed = r.profileChanged || r.claimCreated || r.claimsRemoved > 0
-    console.log(
-      `${item.email}: ${item.signedUpNow ? "created" : "existing"}, role ${item.role}` +
-        `${item.passwordReset ? " (password reset)" : ""}` +
-        `${r.profileChanged ? " (updated)" : ""}` +
-        `${item.claimLibrary ? `, claim ${r.claimCreated ? "created" : "present"}` : ""}` +
-        `${r.claimsRemoved ? `, ${r.claimsRemoved} stray claim(s) removed` : ""}`
-    )
+    const changed =
+      r.profileChanged ||
+      r.claimCreated ||
+      r.claimsRemoved > 0 ||
+      r.grantCreated ||
+      r.grantsRemoved > 0 ||
+      r.verificationCreated ||
+      r.verificationsRemoved > 0
+    console.log(describeResult(item, r))
     // A user created in this run has never had a session read, so nothing
     // is cached for them. An existing one might, and the cache only expires.
     if (changed && !item.signedUpNow) mayBeStale = true
