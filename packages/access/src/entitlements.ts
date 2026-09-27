@@ -112,9 +112,16 @@ const PLAN_LIMITS: Record<PlanKey, Record<Limit, number>> = {
 }
 
 const PAST_DUE_GRACE_MS = 7 * 86_400_000
+
+/** End of the 90-day hold after dropping below Archivist (D-P4). */
+export const EARNED_PRO_HOLD_DAYS = 90
 const EARNED_PRO_TIERS: ReadonlySet<string> = new Set(
   TIER_NAMES.slice(TIER_NAMES.indexOf("Archivist"))
 )
+
+export function isEarnedProTier(tier: string | null | undefined): boolean {
+  return EARNED_PRO_TIERS.has(tier ?? "")
+}
 const PLAN_RANK: Record<PlanKey, number> = {
   public: 0,
   free: 1,
@@ -181,7 +188,7 @@ export function resolveEntitlements(i: EntitlementInput): Entitlements {
   if ((i.verifications ?? []).some((v) => notExpired(v.expiresAt, i.now)))
     candidates.push({ plan: "pro", source: "verified" })
   if (
-    EARNED_PRO_TIERS.has(i.rewardsTier ?? "") ||
+    isEarnedProTier(i.rewardsTier) ||
     (i.earnedProUntil != null && notExpired(i.earnedProUntil, i.now))
   )
     candidates.push({ plan: "pro", source: "earned" })

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest"
 
 import {
   can,
+  EARNED_PRO_HOLD_DAYS,
+  isEarnedProTier,
   limitOf,
   resolveEntitlements,
   type EntitlementInput,
@@ -149,6 +151,20 @@ describe("resolveEntitlements: grants, verifications and earned Pro", () => {
     const b = resolveEntitlements(input)
     expect([...a.features]).toEqual([...b.features])
     expect(a.limits).toEqual(b.limits)
+  })
+})
+
+describe("isEarnedProTier", () => {
+  it("is true from Archivist up and false below or unknown", () => {
+    expect(isEarnedProTier("Archivist")).toBe(true)
+    expect(isEarnedProTier("Scholar")).toBe(true)
+    expect(isEarnedProTier("Curator")).toBe(true)
+    expect(isEarnedProTier("Cartographer")).toBe(false)
+    expect(isEarnedProTier(null)).toBe(false)
+    expect(isEarnedProTier("archivist")).toBe(false)
+  })
+  it("holds for 90 days", () => {
+    expect(EARNED_PRO_HOLD_DAYS).toBe(90)
   })
 })
 
