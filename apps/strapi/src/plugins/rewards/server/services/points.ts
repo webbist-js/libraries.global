@@ -202,13 +202,18 @@ export default ({ strapi }: { strapi: any }) => ({
     const tier = computeTier(fresh?.points ?? 0)
     const wasEarned = isEarnedProTier(fresh?.tier)
     const isEarned = isEarnedProTier(tier.name)
-    // D-P4: dropping below Archivist keeps earned Pro for 90 days. The hold is
-    // set once, on the downward crossing, and cleared on reaching it again.
-    const earnedProUntil = isEarned
-      ? null
-      : wasEarned
-        ? new Date(Date.now() + EARNED_PRO_HOLD_DAYS * 86_400_000).toISOString()
-        : undefined
+    // D-P4: dropping below Archivist keeps earned Pro for 90 days. The hold
+    // is set once, on the downward crossing, and cleared once, on the
+    // upward crossing — no write at all on either side of a non-crossing
+    // award, since earnedProUntil is already correct there.
+    const earnedProUntil =
+      isEarned && !wasEarned
+        ? null
+        : !isEarned && wasEarned
+          ? new Date(
+              Date.now() + EARNED_PRO_HOLD_DAYS * 86_400_000
+            ).toISOString()
+          : undefined
 
     await strapi.db.query("api::user-profile.user-profile").update({
       where: { baUserId },

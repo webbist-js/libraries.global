@@ -118,4 +118,24 @@ describe("points.award: earned-Pro hold (D-P4)", () => {
     expect(data.tier).toBe("Reader")
     expect("earnedProUntil" in data).toBe(false)
   })
+
+  it("leaves earnedProUntil out of the update when staying at or above Archivist", async () => {
+    // Previous tier is already earned (Archivist); this award crosses into
+    // Scholar, still earned. There's no downward-to-upward crossing here,
+    // so the hold column is already correct (null) and must not be
+    // rewritten on every award while a contributor climbs the top tiers.
+    const { strapi, profileUpdate } = fakeStrapi({
+      points: 3000,
+      tier: "Archivist",
+    })
+    const svc: any = createPoints({ strapi })
+    svc.updateStreak = vi.fn(async () => 1)
+
+    await svc.award("u1", "manual_award", 2000, {}, "award-2")
+
+    expect(profileUpdate).toHaveBeenCalledTimes(1)
+    const data = profileUpdate.mock.calls[0][0].data
+    expect(data.tier).toBe("Scholar")
+    expect("earnedProUntil" in data).toBe(false)
+  })
 })

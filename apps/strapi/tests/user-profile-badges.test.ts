@@ -43,7 +43,14 @@ describe("user-profile badge endpoints follow profile visibility", () => {
     process.env.STRAPI_BRIDGE_SECRET = "s3cret"
     const { strapi } = makeFakeStrapi({
       [PROFILE]: [
-        profile("pPub", "pub", "uPub", "public"),
+        {
+          ...profile("pPub", "pub", "uPub", "public"),
+          // Fields that must never reach a custom-action response, however
+          // it's requested (private:true only protects core find/findOne).
+          notifPrefs: { weeklyDigest: true },
+          contributorNumber: 7,
+          earnedProUntil: "2099-01-01T00:00:00.000Z",
+        },
         { ...profile("pLim", "lim", "uLim", "limited"), city: "Leeds" },
         profile("pPriv", "priv", "uPriv", "private"),
       ],
@@ -253,6 +260,35 @@ describe("user-profile badge endpoints follow profile visibility", () => {
       expect((await call("pPub")).body.data.earnedBadges).toEqual([
         { badgeId: "first", awardedAt: "x" },
       ])
+    })
+  })
+
+  describe("private fields never leak (findByUsername / findByDocumentId)", () => {
+    const PRIVATE_FIELDS = [
+      "earnedProUntil",
+      "baUserId",
+      "notifPrefs",
+      "contributorNumber",
+    ] as const
+
+    it("strips them from findByUsername", async () => {
+      const c = ctx({ username: "pub" }, {})
+      await controller.findByUsername(c)
+      expect(c.status).toBe(200)
+      for (const field of PRIVATE_FIELDS) {
+        expect(c.body.data[field]).toBeUndefined()
+        expect(Object.hasOwn(c.body.data, field)).toBe(false)
+      }
+    })
+
+    it("strips them from findByDocumentId", async () => {
+      const c = ctx({ documentId: "pPub" }, {})
+      await controller.findByDocumentId(c)
+      expect(c.status).toBe(200)
+      for (const field of PRIVATE_FIELDS) {
+        expect(c.body.data[field]).toBeUndefined()
+        expect(Object.hasOwn(c.body.data, field)).toBe(false)
+      }
     })
   })
 })

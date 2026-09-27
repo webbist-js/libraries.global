@@ -74,6 +74,31 @@ function applyPublicPrefs(
   return out
 }
 
+/**
+ * Fields no custom action may ever spread into a response, regardless of
+ * requester. `private: true` on the schema only protects the core
+ * find/findOne actions' own sanitizer — every hand-built `ctx.send` here
+ * bypasses that, so this list is the single place a new private field
+ * must be added to stay out of `findByUsername`/`findByDocumentId` (and
+ * anything else built the same way).
+ */
+const PRIVATE_PROFILE_FIELDS = [
+  "baUserId",
+  "notifPrefs",
+  "contributorNumber",
+  "earnedProUntil",
+] as const
+
+/** Strip every field in `PRIVATE_PROFILE_FIELDS` from a profile-shaped object. */
+function publicProfile<T extends Record<string, any>>(
+  profile: T
+): Omit<T, (typeof PRIVATE_PROFILE_FIELDS)[number]> {
+  const out = { ...profile }
+  for (const field of PRIVATE_PROFILE_FIELDS) delete out[field]
+
+  return out
+}
+
 const AFFILIATION = "api::library-affiliation.library-affiliation"
 
 /**
@@ -317,12 +342,11 @@ export default factories.createCoreController(
         }))
 
       // Fields always stripped from public responses
-      const {
-        baUserId: _baUserId,
-        notifPrefs: _notifPrefs,
-        contributorNumber: _contribNum,
-        ...safe
-      } = { ...profile, followedLibraries, followedProfiles } as any
+      const safe = publicProfile({
+        ...profile,
+        followedLibraries,
+        followedProfiles,
+      } as any)
 
       // Limited profiles hide contact/location details unless the requester is the
       // owner or a fellow library member
@@ -437,12 +461,7 @@ export default factories.createCoreController(
         path: buildLibraryPath(lib),
       }))
 
-      const {
-        baUserId: _baUserId,
-        notifPrefs: _notifPrefs,
-        contributorNumber: _contribNum,
-        ...safe
-      } = { ...profile, followedLibraries } as any
+      const safe = publicProfile({ ...profile, followedLibraries } as any)
 
       if (profile.profileVisibility === "limited") {
         const {
