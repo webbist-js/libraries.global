@@ -16,16 +16,13 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   try {
+    // interests is a JSON field, so it comes back without populating.
     const params = new URLSearchParams({
       "filters[baUserId][$eq]": session.user.id,
-      "populate[avatar]": "*",
-      "populate[languages]": "*",
-      "populate[interests][fields][0]": "name",
-      "populate[interests][fields][1]": "slug",
+      "populate[avatar]": "true",
+      "populate[languages]": "true",
       "populate[followedLibraries][fields][0]": "name",
       "populate[followedLibraries][fields][1]": "slug",
-      "populate[claimedLibraries][fields][0]": "name",
-      "populate[claimedLibraries][fields][1]": "slug",
     })
     const res = await fetch(`${STRAPI}/api/user-profiles?${params}`, {
       cache: "no-store",
@@ -42,9 +39,20 @@ export async function GET() {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 })
 
     const { baUserId: _omit, ...rest } = profile
+    // Additional user fields are on the session user at runtime, but the
+    // customSession type doesn't carry them.
+    const user = session.user as typeof session.user & {
+      termsVersion?: string | null
+      termsAcceptedAt?: Date | string | null
+    }
     const payload = {
       exportedAt: new Date().toISOString(),
-      account: { email: session.user.email },
+      account: {
+        email: user.email,
+        createdAt: user.createdAt,
+        termsVersion: user.termsVersion ?? null,
+        termsAcceptedAt: user.termsAcceptedAt ?? null,
+      },
       profile: rest,
     }
 

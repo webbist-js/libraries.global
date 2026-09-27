@@ -205,10 +205,23 @@ export async function DELETE() {
   }
   invalidateSessionProfile(session.user.id)
 
+  // Delete the sign-in record directly (sessions, linked accounts, user).
+  // The public deleteUser endpoint can refuse an older session, and the
+  // privacy notice promises sign-in details are deleted, so a failure here
+  // must reach the user rather than be swallowed.
   try {
-    await auth.api.deleteUser({ body: {}, headers: await headers() })
+    const context = await auth.$context
+    await context.internalAdapter.deleteUser(session.user.id)
   } catch (err) {
-    console.warn("[deleteUser] BA deletion error (non-fatal):", err)
+    console.error("[deleteUser] sign-in record not deleted:", err)
+
+    return NextResponse.json(
+      {
+        error:
+          "Your profile was removed, but we couldn't finish deleting your sign-in details. Please email legal@libraries.global and we'll complete it.",
+      },
+      { status: 500 }
+    )
   }
 
   return NextResponse.json({ ok: true })
