@@ -3,6 +3,8 @@ import type { Locale } from "next-intl"
 
 import AppLink from "@/components/elementary/AppLink"
 import LocaleSwitcher from "@/components/elementary/LocaleSwitcher"
+import GlobalContributeMenu from "@/components/global/GlobalContributeMenu"
+import GlobalContributorShortcuts from "@/components/global/GlobalContributorShortcuts"
 import GlobalLink from "@/components/global/GlobalLink"
 import GlobalMobileMenu from "@/components/global/GlobalMobileMenu"
 import { GlobalNavbarAuthSection } from "@/components/global/GlobalNavbarAuthSection"
@@ -13,6 +15,7 @@ import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 
 const NAV_LINKS: NavLink[] = [
+  { label: "Atlas", href: "/map" },
   { label: "Find libraries", href: "/libraries" },
   { label: "Journal", href: "/journal" },
   { label: "Events", href: "/events" },
@@ -65,12 +68,6 @@ async function fetchProfileSnippet(
   }
 }
 
-/** The map's app header also links the Atlas itself, first. */
-const APP_NAV_LINKS: NavLink[] = [
-  { label: "Atlas", href: "/map" },
-  ...NAV_LINKS,
-]
-
 export async function GlobalHeader({
   locale,
   variant = "site",
@@ -87,7 +84,6 @@ export async function GlobalHeader({
     ? await fetchProfileSnippet(sessionSSR.user.id)
     : null
   const app = variant === "app"
-  const links = app ? APP_NAV_LINKS : NAV_LINKS
 
   const localeSwitcher = (
     <LocaleSwitcher
@@ -100,15 +96,6 @@ export async function GlobalHeader({
       sessionSSR={sessionSSR}
       profileSnippet={profileSnippet}
     />
-  )
-  const contribute = (className = "") => (
-    <AppLink
-      href="/contribute"
-      size="sm"
-      className={`h-9 rounded-full border-0 bg-(--t-accent-primary) px-4 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) ${className}`}
-    >
-      Contribute
-    </AppLink>
   )
 
   return (
@@ -140,7 +127,7 @@ export async function GlobalHeader({
         </div>
 
         {/* Centre (or beside the logo in the app header): main nav, lg and up */}
-        <GlobalNavLinks links={links} align={app ? "start" : "center"} />
+        <GlobalNavLinks links={NAV_LINKS} align={app ? "start" : "center"} />
 
         {/* Pushes the actions right when the nav is collapsed */}
         <span className="flex-1 lg:hidden" aria-hidden="true" />
@@ -152,19 +139,27 @@ export async function GlobalHeader({
         >
           {localeSwitcher}
           {auth}
-          {contribute()}
+          <GlobalContributeMenu />
         </div>
 
         {/* Below lg: Contribute stays visible from sm; everything else is in the menu */}
         <div className="flex shrink-0 items-center gap-2 lg:hidden">
-          {contribute("hidden sm:inline-flex")}
+          <GlobalContributeMenu className="hidden sm:inline-flex" />
           <GlobalMobileMenu
-            links={links}
+            links={NAV_LINKS}
+            shortcuts={<GlobalContributorShortcuts variant="mobile" />}
             actions={
               <>
                 {localeSwitcher}
                 {auth}
-                {contribute("sm:hidden")}
+                {/* A plain link here: a dropdown would open under the panel */}
+                <AppLink
+                  href="/contribute"
+                  size="sm"
+                  className="h-9 rounded-full border-0 bg-(--t-accent-primary) px-4 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) sm:hidden"
+                >
+                  Contribute
+                </AppLink>
               </>
             }
           />

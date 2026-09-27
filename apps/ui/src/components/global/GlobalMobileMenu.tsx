@@ -19,9 +19,12 @@ function normalizePathname(pathname: string): string {
  */
 export function GlobalMobileMenu({
   links,
+  shortcuts,
   actions,
 }: {
   readonly links: NavLink[]
+  /** Role shortcuts, shown under the main links when the user has any. */
+  readonly shortcuts?: React.ReactNode
   /** Server-rendered actions (locale switcher, auth, Contribute). */
   readonly actions: React.ReactNode
 }) {
@@ -128,6 +131,7 @@ export function GlobalMobileMenu({
                 })}
               </ul>
             </nav>
+            {shortcuts}
             <div
               className="mt-3 flex flex-wrap items-center gap-3 border-t pt-4"
               style={{ borderColor: T.border.divider }}

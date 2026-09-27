@@ -3,6 +3,7 @@ import type { Data } from "@repo/strapi-types"
 import type { Locale } from "next-intl"
 
 import { Container } from "@/components/elementary/Container"
+import GlobalContributorShortcuts from "@/components/global/GlobalContributorShortcuts"
 import GlobalLink from "@/components/global/GlobalLink"
 import { getStrapiLinkHref } from "@/components/page-builder/components/utilities/StrapiLink"
 import { KOFI_URL, SITE_NAME } from "@/lib/constants"
@@ -91,36 +92,41 @@ export function GlobalFooter({
             </GlobalLink>
           </div>
 
-          {/* Nav sections */}
-          {sections.length > 0 ? (
-            <div className="grid gap-10 sm:grid-cols-3">
-              {sections.map((section) => (
-                <div
-                  key={section.id ?? section.title}
-                  className="flex flex-col gap-5"
-                >
-                  <p
-                    className="m-0 text-[18px] font-bold"
-                    style={{ color: T.ink.dim }}
+          <div className="flex flex-col gap-10">
+            {/* Nav sections */}
+            {sections.length > 0 ? (
+              <div className="grid gap-10 sm:grid-cols-3">
+                {sections.map((section) => (
+                  <div
+                    key={section.id ?? section.title}
+                    className="flex flex-col gap-5"
                   >
-                    {section.title}
-                  </p>
+                    <p
+                      className="m-0 text-[18px] font-bold"
+                      style={{ color: T.ink.dim }}
+                    >
+                      {section.title}
+                    </p>
 
-                  <div className="space-y-2.5">
-                    {section.links?.map((link, index) => (
-                      <GlobalLink
-                        key={link.id ?? link.page?.slug ?? link.href ?? index}
-                        href={getStrapiLinkHref(link)}
-                        className="block w-fit text-[17px] text-(--t-ink-base) transition-colors hover:text-(--t-accent-primary)"
-                      >
-                        {link.label}
-                      </GlobalLink>
-                    ))}
+                    <div className="space-y-2.5">
+                      {section.links?.map((link, index) => (
+                        <GlobalLink
+                          key={link.id ?? link.page?.slug ?? link.href ?? index}
+                          href={getStrapiLinkHref(link)}
+                          className="block w-fit text-[17px] text-(--t-ink-base) transition-colors hover:text-(--t-accent-primary)"
+                        >
+                          {link.label}
+                        </GlobalLink>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : null}
+                ))}
+              </div>
+            ) : null}
+
+            {/* Signed-in editors: the tools their role unlocks */}
+            <GlobalContributorShortcuts variant="footer" />
+          </div>
         </div>
 
         {/* Bottom bar */}
