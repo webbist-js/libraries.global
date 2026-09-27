@@ -42,6 +42,7 @@ const PATHS = {
   sort: "M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4",
   cmp: "M12 3v18M4 7h5M4 12h5M4 17h5M15 7h5M15 12h5M15 17h5",
   panel: "M4 5h16v14H4zM9 5v14",
+  download: "M12 4v11M7 10l5 5 5-5M5 20h14",
 } as const
 
 export type IconName = keyof typeof PATHS

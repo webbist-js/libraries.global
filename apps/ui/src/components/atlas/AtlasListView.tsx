@@ -14,6 +14,7 @@ import {
   typeGroupOf,
 } from "./atlas.logic"
 import { AtlasCount, ViewToggle } from "./AtlasBottomBar"
+import { AtlasExportButton } from "./AtlasExportButton"
 
 type SortKey = "distance" | "name" | "place"
 const PAGE = 20
@@ -28,6 +29,7 @@ export function AtlasListView({
   now,
   onHover,
   onShowMap,
+  onSeePlans,
   compact = false,
 }: {
   readonly libraries: AtlasLibrary[]
@@ -35,6 +37,8 @@ export function AtlasListView({
   readonly now: Date
   readonly onHover: (lib: AtlasLibrary | null) => void
   readonly onShowMap: () => void
+  /** Opens the plans sheet from the Pro-locked export button. */
+  readonly onSeePlans: () => void
   readonly compact?: boolean
 }) {
   const [sort, setSort] = useState<SortKey>("distance")
@@ -109,6 +113,7 @@ export function AtlasListView({
             <option value="place">Place</option>
           </select>
         </label>
+        <AtlasExportButton libraries={sorted} onSeePlans={onSeePlans} />
         <ViewToggle list onChange={(list) => !list && onShowMap()} />
       </div>
 

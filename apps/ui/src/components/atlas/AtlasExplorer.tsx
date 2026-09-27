@@ -610,6 +610,7 @@ export function AtlasExplorer() {
                 now={now}
                 onHover={setHovered}
                 onShowMap={() => setList(false)}
+                onSeePlans={() => setPlansOpen(true)}
               />
             ) : selected ? (
               <AtlasLibraryPanel
@@ -835,6 +836,7 @@ export function AtlasExplorer() {
             now={now}
             onHover={setHovered}
             onShowMap={() => setList(false)}
+            onSeePlans={() => setPlansOpen(true)}
           />
         </div>
       ) : (
