@@ -104,18 +104,16 @@ test("a new user onboards, lands on their profile and stays onboarded", async ({
 }) => {
   const username = `access_onboarded_${Date.now() % 1e6}`
 
-  // Onboarding asks for its topics from an effect, which runs only once
-  // React has hydrated the page: typed any sooner, the username wouldn't
-  // reach React. Nothing else requests them, so start listening now.
-  const onboardingHydrated = page.waitForRequest(
-    (r) => new URL(r.url()).pathname === "/api/topics",
-    NAVIGATION
-  )
-
   // A loaded profile with no username signs in to onboarding.
   await signInThroughForm(page, KEY)
   await expect(page).toHaveURL(/\/profile\/onboarding(\?|$)/, NAVIGATION)
-  await onboardingHydrated
+
+  // The primary button stays disabled until the page has hydrated (see
+  // OnboardingShell/useMounted). Waiting for it to enable is a stable
+  // hydration signal: a sign-in that waits out a 429 could otherwise eat
+  // most of a request-based wait's budget before it even starts listening.
+  const enterProfile = page.getByRole("button", { name: "Enter your profile" })
+  await expect(enterProfile).toBeEnabled(NAVIGATION)
 
   // The required fields, found by their visible labels, which proves each
   // label is tied to its field. The display name is prefilled from the
@@ -137,7 +135,7 @@ test("a new user onboards, lands on their profile and stays onboarded", async ({
     .getByRole("button", { name: "Reader / enthusiast" })
   await reader.click()
   await expect(reader).toHaveAttribute("aria-pressed", "true")
-  await page.getByRole("button", { name: "Enter your profile" }).click()
+  await enterProfile.click()
 
   await expect(page).toHaveURL(new RegExp(`/profile/${username}$`), NAVIGATION)
 
