@@ -1,0 +1,28 @@
+{
+  "kind": "collectionType",
+  "collectionName": "entitlement_grants",
+  "info": {
+    "singularName": "entitlement-grant",
+    "pluralName": "entitlement-grants",
+    "displayName": "Entitlement Grant",
+    "description": "Complimentary Pro or Team, granted by staff. Read only by the session-profile bridge."
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "baUserId": { "type": "string", "required": true },
+    "plan": {
+      "type": "enumeration",
+      "enum": ["pro", "team"],
+      "required": true,
+      "default": "pro"
+    },
+    "source": {
+      "type": "enumeration",
+      "enum": ["admin", "press", "partner", "team", "grant_funder"],
+      "default": "admin"
+    },
+    "reason": { "type": "text" },
+    "expiresAt": { "type": "datetime" },
+    "grantedBy": { "type": "string" }
+  }
+}

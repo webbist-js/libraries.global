@@ -1533,6 +1533,46 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface ApiEntitlementGrantEntitlementGrant
+  extends Struct.CollectionTypeSchema {
+  collectionName: "entitlement_grants"
+  info: {
+    description: "Complimentary Pro or Team, granted by staff. Read only by the session-profile bridge."
+    displayName: "Entitlement Grant"
+    pluralName: "entitlement-grants"
+    singularName: "entitlement-grant"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  attributes: {
+    baUserId: Schema.Attribute.String & Schema.Attribute.Required
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    expiresAt: Schema.Attribute.DateTime
+    grantedBy: Schema.Attribute.String
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::entitlement-grant.entitlement-grant"
+    > &
+      Schema.Attribute.Private
+    plan: Schema.Attribute.Enumeration<["pro", "team"]> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"pro">
+    publishedAt: Schema.Attribute.DateTime
+    reason: Schema.Attribute.Text
+    source: Schema.Attribute.Enumeration<
+      ["admin", "press", "partner", "team", "grant_funder"]
+    > &
+      Schema.Attribute.DefaultTo<"admin">
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface ApiFooterFooter extends Struct.SingleTypeSchema {
   collectionName: "footers"
   info: {
@@ -2445,6 +2485,43 @@ export interface ApiPagePage extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface ApiProVerificationProVerification
+  extends Struct.CollectionTypeSchema {
+  collectionName: "pro_verifications"
+  info: {
+    description: "Verified library staff, student or charity. Complimentary Pro while unexpired (spec \u00A76.5). Self-serve C5 flow comes in P-D1; staff create rows by hand until then."
+    displayName: "Pro Verification"
+    pluralName: "pro-verifications"
+    singularName: "pro-verification"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  attributes: {
+    baUserId: Schema.Attribute.String & Schema.Attribute.Required
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    expiresAt: Schema.Attribute.DateTime
+    kind: Schema.Attribute.Enumeration<
+      ["library_staff", "student", "charity"]
+    > &
+      Schema.Attribute.Required
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::pro-verification.pro-verification"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    verifiedAt: Schema.Attribute.DateTime
+    verifiedEmail: Schema.Attribute.Email
+  }
+}
+
 export interface ApiRedirectRedirect extends Struct.CollectionTypeSchema {
   collectionName: "redirects"
   info: {
@@ -2850,6 +2927,7 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+    earnedProUntil: Schema.Attribute.DateTime & Schema.Attribute.Private
     firstName: Schema.Attribute.String
     followedLibraries: Schema.Attribute.Relation<
       "manyToMany",
@@ -4207,12 +4285,14 @@ declare module "@strapi/strapi" {
       "api::category.category": ApiCategoryCategory
       "api::continent.continent": ApiContinentContinent
       "api::country.country": ApiCountryCountry
+      "api::entitlement-grant.entitlement-grant": ApiEntitlementGrantEntitlementGrant
       "api::footer.footer": ApiFooterFooter
       "api::homepage.homepage": ApiHomepageHomepage
       "api::legal-document.legal-document": ApiLegalDocumentLegalDocument
       "api::library-affiliation.library-affiliation": ApiLibraryAffiliationLibraryAffiliation
       "api::library.library": ApiLibraryLibrary
       "api::page.page": ApiPagePage
+      "api::pro-verification.pro-verification": ApiProVerificationProVerification
       "api::redirect.redirect": ApiRedirectRedirect
       "api::region.region": ApiRegionRegion
       "api::saved-event.saved-event": ApiSavedEventSavedEvent

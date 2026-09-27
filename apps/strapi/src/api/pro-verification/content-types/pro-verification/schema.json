@@ -1,0 +1,22 @@
+{
+  "kind": "collectionType",
+  "collectionName": "pro_verifications",
+  "info": {
+    "singularName": "pro-verification",
+    "pluralName": "pro-verifications",
+    "displayName": "Pro Verification",
+    "description": "Verified library staff, student or charity. Complimentary Pro while unexpired (spec §6.5). Self-serve C5 flow comes in P-D1; staff create rows by hand until then."
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "baUserId": { "type": "string", "required": true },
+    "kind": {
+      "type": "enumeration",
+      "enum": ["library_staff", "student", "charity"],
+      "required": true
+    },
+    "verifiedEmail": { "type": "email" },
+    "verifiedAt": { "type": "datetime" },
+    "expiresAt": { "type": "datetime" }
+  }
+}

@@ -1,3 +1,5 @@
+import { EARNED_PRO_HOLD_DAYS, isEarnedProTier } from "@repo/access"
+
 export type PointAction =
   | "new_library_approved"
   | "edit_accepted_minor"
@@ -198,6 +200,15 @@ export default ({ strapi }: { strapi: any }) => ({
       .findOne({ where: { baUserId } })
     const newStreak = await (this as any).updateStreak(baUserId)
     const tier = computeTier(fresh?.points ?? 0)
+    const wasEarned = isEarnedProTier(fresh?.tier)
+    const isEarned = isEarnedProTier(tier.name)
+    // D-P4: dropping below Archivist keeps earned Pro for 90 days. The hold is
+    // set once, on the downward crossing, and cleared on reaching it again.
+    const earnedProUntil = isEarned
+      ? null
+      : wasEarned
+        ? new Date(Date.now() + EARNED_PRO_HOLD_DAYS * 86_400_000).toISOString()
+        : undefined
 
     await strapi.db.query("api::user-profile.user-profile").update({
       where: { baUserId },
@@ -205,6 +216,7 @@ export default ({ strapi }: { strapi: any }) => ({
         tier: tier.name,
         streak: newStreak,
         lastActivityDate: today,
+        ...(earnedProUntil !== undefined ? { earnedProUntil } : {}),
       },
     })
 
