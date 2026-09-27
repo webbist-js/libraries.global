@@ -124,6 +124,10 @@ export function GlobalLoggedUserMenu({
   const avatarSrc = profileSnippet?.avatarUrl ?? user.image ?? null
   const username = profileSnippet?.username ?? null
   const isVerifiedLibrarian = profileSnippet?.isVerifiedLibrarian ?? false
+  // Missing plan means free (missing session fields deny).
+  const hasPro = user.plan === "pro" || user.plan === "team"
+  const planName =
+    user.plan === "team" ? "Team" : user.plan === "pro" ? "Pro" : "Free"
 
   return (
     <DropdownMenu>
@@ -238,6 +242,25 @@ export function GlobalLoggedUserMenu({
           style={{ background: T.border.divider }}
         />
 
+        <MenuLink
+          href="/pro"
+          icon="mdi:star-circle-outline"
+          trailing={
+            hasPro ? (
+              <span
+                className="ml-auto rounded-full px-2 py-0.5 text-[12px] font-semibold"
+                style={{
+                  background: T.accent.chip,
+                  color: T.accent.primaryHover,
+                }}
+              >
+                Pro
+              </span>
+            ) : undefined
+          }
+        >
+          Plan: {planName}
+        </MenuLink>
         <MenuLink href="/profile/settings" icon="mdi:cog-outline">
           Settings
         </MenuLink>

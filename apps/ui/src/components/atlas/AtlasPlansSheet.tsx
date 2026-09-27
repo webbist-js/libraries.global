@@ -4,21 +4,13 @@ import { useEffect, useRef } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
+import { planCard, PRICES_ARE_PLACEHOLDERS, priceHeadline } from "@/lib/plans"
 
 import { Icon } from "./atlas-ui"
 import type { Tier } from "./atlas.logic"
 
-const PLANS = [
-  { key: "public", name: "Public", price: "Free", who: "No account" },
-  { key: "free", name: "Free account", price: "Free", who: "Sign in" },
-  { key: "pro", name: "Pro", price: "Coming soon", who: "For researchers" },
-  {
-    key: "team",
-    name: "Team",
-    price: "Coming soon",
-    who: "Libraries & councils",
-  },
-] as const
+// Names, prices and "who" come from lib/plans; the columns stay the sheet's own.
+const PLANS = (["public", "free", "pro", "team"] as const).map(planCard)
 
 // [feature, public, free, pro, team]
 const FEATURES: [string, boolean, boolean, boolean, boolean][] = [
@@ -137,7 +129,7 @@ export function AtlasPlansSheet({
                       className="my-1 block text-[20px] font-medium"
                       style={{ fontFamily: T.font.serif }}
                     >
-                      {p.price}
+                      {priceHeadline(p.price)}
                     </span>
                     <span className="font-medium" style={{ color: T.ink.dim }}>
                       {p.who}
@@ -208,12 +200,29 @@ export function AtlasPlansSheet({
                       >
                         Sign in
                       </GlobalLink>
-                    ) : p.key === "pro" || p.key === "team" ? (
-                      <span
-                        className="text-[14px] font-semibold"
-                        style={{ color: T.ink.dim }}
+                    ) : p.cta.kind === "contact" && p.cta.href ? (
+                      <a
+                        href={p.cta.href}
+                        className="inline-flex h-9 items-center rounded-full bg-(--t-accent-primary) px-3.5 text-[14px] font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
                       >
-                        Not yet available
+                        {p.cta.label}
+                      </a>
+                    ) : p.cta.kind === "soon" ? (
+                      <span className="inline-flex flex-col items-center gap-1">
+                        <span
+                          className="inline-flex items-center gap-1 text-[14px] font-semibold"
+                          style={{ color: T.ink.dim }}
+                        >
+                          <Icon name="clock" size={15} />
+                          {p.cta.label}
+                        </span>
+                        <GlobalLink
+                          href="/pro"
+                          className="text-[14px] font-semibold underline underline-offset-[3px]"
+                          style={{ color: T.accent.primary }}
+                        >
+                          See all plans
+                        </GlobalLink>
                       </span>
                     ) : null}
                   </td>
@@ -233,7 +242,8 @@ export function AtlasPlansSheet({
               Open source, open data.
             </strong>{" "}
             Library records are community-maintained open data, and the atlas
-            code will be published openly. Pricing hasn’t been set yet.
+            code will be published openly.
+            {PRICES_ARE_PLACEHOLDERS ? " Prices are placeholders." : null}
           </span>
         </p>
       </aside>

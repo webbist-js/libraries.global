@@ -8,3 +8,6 @@ export const KOFI_URL = "https://ko-fi.com/libraries"
  * sets the same words as "Libraries *Global*".
  */
 export const SITE_NAME = "Libraries Global"
+
+/** General enquiries (see SECURITY.md and CODE_OF_CONDUCT.md). */
+export const CONTACT_EMAIL = "info@libraries.global"
