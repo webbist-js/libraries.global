@@ -17,6 +17,9 @@ import {
 
 const KEY = "onboarding"
 
+/** The username field's visible label, the whole of its accessible name. */
+const USERNAME_LABEL = "Username * → libraries.global/@handle"
+
 // Pages compile on first visit to a dev server, and a sign-in may wait out
 // a 429 twice, so navigations get a minute and the test five.
 const NAVIGATION = { timeout: 60_000 }
@@ -112,16 +115,26 @@ test("a new user onboards, lands on their profile and stays onboarded", async ({
   await signInThroughForm(page, KEY)
   await expect(page).toHaveURL(/\/profile\/onboarding(\?|$)/, NAVIGATION)
 
-  // The required fields. The display name is prefilled from the account
-  // name; the username is checked for availability as it's typed.
-  const usernameInput = page.getByLabel("Username", { exact: true })
+  // The required fields, found by their visible labels, which proves each
+  // label is tied to its field. The display name is prefilled from the
+  // account name. The username is checked for availability as it's typed,
+  // and the status is the field's description, not part of its name.
+  await expect(
+    page.getByLabel("Display name *", { exact: true })
+  ).not.toHaveValue("")
+  const usernameInput = page.getByLabel(USERNAME_LABEL, { exact: true })
   await expect.poll(() => hydrated(usernameInput), NAVIGATION).toBe(true)
   await usernameInput.fill(username)
   await expect(page.getByText("Available ✓")).toBeVisible()
+  await expect(usernameInput).toHaveAccessibleDescription("Available ✓")
   await page
-    .getByLabel("Pronouns", { exact: true })
+    .getByLabel("Pronouns *", { exact: true })
     .selectOption({ label: "Prefer not to say" })
-  await page.getByRole("button", { name: "Reader / enthusiast" }).click()
+  const reader = page
+    .getByRole("group", { name: "Affiliation" })
+    .getByRole("button", { name: "Reader / enthusiast" })
+  await reader.click()
+  await expect(reader).toHaveAttribute("aria-pressed", "true")
   await page.getByRole("button", { name: "Enter your profile" }).click()
 
   await expect(page).toHaveURL(new RegExp(`/profile/${username}$`), NAVIGATION)

@@ -56,6 +56,7 @@ export function VisibilityCards({
           <button
             key={opt.value}
             type="button"
+            aria-pressed={selected}
             onClick={() => onChange(opt.value)}
             style={{
               flex: layout === "horizontal" ? "1 1 0" : undefined,

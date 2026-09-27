@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { SearchField } from "@/components/ds"
@@ -28,11 +28,20 @@ function CountrySlugCombobox({
   value,
   onChange,
   disabled,
+  id,
+  labelledBy,
 }: {
   countries: { slug: string; name: string; code: string }[]
   value: string
   onChange: (slug: string) => void
   disabled?: boolean
+  /** The trigger button's id, for a `<label htmlFor>`. */
+  id: string
+  /**
+   * The visible label's id. The trigger is named by the label and its
+   * current value; a `<label htmlFor>` alone would drop the value.
+   */
+  labelledBy: string
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
@@ -87,15 +96,25 @@ function CountrySlugCombobox({
   return (
     <div ref={containerRef} style={{ position: "relative" }}>
       <button
+        id={id}
         type="button"
+        aria-labelledby={`${labelledBy} ${id}-value`}
         style={triggerStyle}
         disabled={disabled}
         onClick={() => !disabled && setOpen((o) => !o)}
       >
-        <span style={{ color: selected ? T.ink.base : T.ink.faint }}>
+        <span
+          id={`${id}-value`}
+          style={{ color: selected ? T.ink.base : T.ink.faint }}
+        >
           {selected ? selected.name : "Select country…"}
         </span>
-        <span style={{ color: T.ink.faint, fontSize: "10px" }}>▾</span>
+        <span
+          aria-hidden="true"
+          style={{ color: T.ink.faint, fontSize: "10px" }}
+        >
+          ▾
+        </span>
       </button>
 
       {open && (
@@ -218,6 +237,16 @@ export function LibraryClaimSearch({
   const [department, setDepartment] = useState("")
   const [claiming, setClaiming] = useState(false)
   const [claimResult, setClaimResult] = useState<ClaimResult | null>(null)
+
+  // Stable ids that tie each visible label to its control.
+  const uid = useId()
+  const ids = {
+    continent: `${uid}-continent`,
+    country: `${uid}-country`,
+    countryLabel: `${uid}-country-label`,
+    role: `${uid}-role`,
+    department: `${uid}-department`,
+  }
 
   // Countries filtered to the selected continent
   const continentIsoCodes = continentSlug
@@ -365,8 +394,11 @@ export function LibraryClaimSearch({
         }}
       >
         <div>
-          <label style={labelStyle}>Continent</label>
+          <label htmlFor={ids.continent} style={labelStyle}>
+            Continent
+          </label>
           <select
+            id={ids.continent}
             style={{ ...inputStyle, cursor: "pointer" }}
             value={continentSlug}
             onChange={(e) => handleContinentChange(e.target.value)}
@@ -387,8 +419,12 @@ export function LibraryClaimSearch({
         </div>
 
         <div>
-          <label style={labelStyle}>Country</label>
+          <label id={ids.countryLabel} htmlFor={ids.country} style={labelStyle}>
+            Country
+          </label>
           <CountrySlugCombobox
+            id={ids.country}
+            labelledBy={ids.countryLabel}
             countries={filteredCountries}
             value={countrySlug}
             onChange={handleCountryChange}
@@ -533,8 +569,11 @@ export function LibraryClaimSearch({
           </div>
 
           <div>
-            <label style={labelStyle}>Your role</label>
+            <label htmlFor={ids.role} style={labelStyle}>
+              Your role
+            </label>
             <input
+              id={ids.role}
               style={inputStyle}
               type="text"
               value={role}
@@ -544,8 +583,11 @@ export function LibraryClaimSearch({
           </div>
 
           <div>
-            <label style={labelStyle}>Department (optional)</label>
+            <label htmlFor={ids.department} style={labelStyle}>
+              Department (optional)
+            </label>
             <input
+              id={ids.department}
               style={inputStyle}
               type="text"
               value={department}

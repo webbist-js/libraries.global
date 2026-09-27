@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect, useMemo } from "react"
+import { useState, useRef, useEffect, useId, useMemo } from "react"
 
 import { T } from "@/lib/design-tokens"
 
@@ -42,14 +42,24 @@ const triggerStyle = {
 export function TimezoneCombobox({
   value,
   onChange,
+  id,
+  labelledBy,
 }: {
   value: string
   onChange: (tz: string) => void
+  /** The trigger button's id, for a `<label htmlFor>`. */
+  id?: string
+  /**
+   * The visible label's id. The trigger is then named by the label and its
+   * current value; a `<label htmlFor>` alone would drop the value.
+   */
+  labelledBy?: string
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const valueId = useId()
   const timezones = useMemo(() => getTimezones(), [])
 
   const filtered = useMemo(() => {
@@ -87,14 +97,21 @@ export function TimezoneCombobox({
   return (
     <div ref={containerRef} style={{ position: "relative" }}>
       <button
+        id={id}
         type="button"
+        aria-labelledby={labelledBy ? `${labelledBy} ${valueId}` : undefined}
         style={triggerStyle}
         onClick={() => setOpen((o) => !o)}
       >
-        <span style={{ color: value ? T.ink.base : T.ink.faint }}>
+        <span id={valueId} style={{ color: value ? T.ink.base : T.ink.faint }}>
           {displayValue || "Select timezone…"}
         </span>
-        <span style={{ color: T.ink.faint, fontSize: "10px" }}>▾</span>
+        <span
+          aria-hidden="true"
+          style={{ color: T.ink.faint, fontSize: "10px" }}
+        >
+          ▾
+        </span>
       </button>
 
       {open && (

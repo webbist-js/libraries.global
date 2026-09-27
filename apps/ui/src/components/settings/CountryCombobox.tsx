@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useId } from "react"
 
 import { COUNTRIES } from "@/lib/data/countries"
 import { T } from "@/lib/design-tokens"
@@ -26,14 +26,24 @@ const triggerStyle = {
 export function CountryCombobox({
   value,
   onChange,
+  id,
+  labelledBy,
 }: {
   value: string
   onChange: (code: string) => void
+  /** The trigger button's id, for a `<label htmlFor>`. */
+  id?: string
+  /**
+   * The visible label's id. The trigger is then named by the label and its
+   * current value; a `<label htmlFor>` alone would drop the value.
+   */
+  labelledBy?: string
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const valueId = useId()
 
   const selected = COUNTRIES.find((c) => c.code === value)
   const filtered = query
@@ -64,14 +74,24 @@ export function CountryCombobox({
   return (
     <div ref={containerRef} style={{ position: "relative" }}>
       <button
+        id={id}
         type="button"
+        aria-labelledby={labelledBy ? `${labelledBy} ${valueId}` : undefined}
         style={triggerStyle}
         onClick={() => setOpen((o) => !o)}
       >
-        <span style={{ color: selected ? T.ink.base : T.ink.faint }}>
+        <span
+          id={valueId}
+          style={{ color: selected ? T.ink.base : T.ink.faint }}
+        >
           {selected ? selected.name : "Select country…"}
         </span>
-        <span style={{ color: T.ink.faint, fontSize: "10px" }}>▾</span>
+        <span
+          aria-hidden="true"
+          style={{ color: T.ink.faint, fontSize: "10px" }}
+        >
+          ▾
+        </span>
       </button>
 
       {open && (

@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useId, useState } from "react"
 import { toast } from "sonner"
 
 import { CODE_OF_CONDUCT_URL } from "@/components/legal/legal.helpers"
@@ -120,12 +120,15 @@ const PROFICIENCY = ["native", "fluent", "conversational"] as const
 // ── Section header component ──────────────────────────────────────────────────
 
 function SectionHeading({
+  id,
   icon,
   title,
   subtitle,
   required,
   optional,
 }: {
+  /** The heading's id, so a group of options can be labelled by it. */
+  id?: string
   icon: string
   title: string
   subtitle?: string
@@ -160,6 +163,7 @@ function SectionHeading({
             <Icon icon={icon} width={16} height={16} />
           </span>
           <h2
+            id={id}
             style={{
               fontFamily: T.font.serif,
               fontSize: "22px",
@@ -228,6 +232,32 @@ export function OnboardingShell({
 }) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
+
+  // Stable ids that tie each visible label to its control.
+  const uid = useId()
+  const ids = {
+    firstName: `${uid}-first-name`,
+    lastName: `${uid}-last-name`,
+    username: `${uid}-username`,
+    usernameStatus: `${uid}-username-status`,
+    pronouns: `${uid}-pronouns`,
+    city: `${uid}-city`,
+    country: `${uid}-country`,
+    countryLabel: `${uid}-country-label`,
+    timezone: `${uid}-timezone`,
+    timezoneLabel: `${uid}-timezone-label`,
+    bio: `${uid}-bio`,
+    bioCount: `${uid}-bio-count`,
+    bioHelp: `${uid}-bio-help`,
+    affiliation: `${uid}-affiliation`,
+    interests: `${uid}-interests`,
+    language: `${uid}-language`,
+    website: `${uid}-website`,
+    orcid: `${uid}-orcid`,
+    mastodon: `${uid}-mastodon`,
+    linkedin: `${uid}-linkedin`,
+    visibility: `${uid}-visibility`,
+  }
 
   // ── Identity state ───────────────────────────────────────────────
   const [firstName, setFirstName] = useState(
@@ -692,8 +722,11 @@ export function OnboardingShell({
                 }}
               >
                 <div>
-                  <label style={label}>Display name *</label>
+                  <label htmlFor={ids.firstName} style={label}>
+                    Display name *
+                  </label>
                   <input
+                    id={ids.firstName}
                     style={input}
                     type="text"
                     value={firstName}
@@ -702,8 +735,11 @@ export function OnboardingShell({
                   />
                 </div>
                 <div>
-                  <label style={label}>Last name</label>
+                  <label htmlFor={ids.lastName} style={label}>
+                    Last name
+                  </label>
                   <input
+                    id={ids.lastName}
                     style={input}
                     type="text"
                     value={lastName}
@@ -714,31 +750,37 @@ export function OnboardingShell({
               </div>
 
               <div style={{ marginTop: "12px" }}>
-                <label
+                {/* The status sits beside the label, not in it: it's the
+                    field's live description, not part of its name. */}
+                <div
                   style={{
                     ...label,
                     display: "flex",
                     justifyContent: "space-between",
                   }}
                 >
-                  <span>
+                  <label htmlFor={ids.username}>
                     Username *{" "}
                     <span style={{ color: T.ink.faint }}>
                       → libraries.global/@handle
                     </span>
+                  </label>
+                  <span id={ids.usernameStatus} aria-live="polite">
+                    {usernameStatus === "checking" && (
+                      <span style={{ color: T.ink.faint }}>Checking…</span>
+                    )}
+                    {usernameStatus === "available" && (
+                      <span style={{ color: T.accent.ok }}>Available ✓</span>
+                    )}
+                    {usernameStatus === "taken" && (
+                      <span style={{ color: T.accent.danger }}>Taken</span>
+                    )}
                   </span>
-                  {usernameStatus === "checking" && (
-                    <span style={{ color: T.ink.faint }}>Checking…</span>
-                  )}
-                  {usernameStatus === "available" && (
-                    <span style={{ color: T.accent.ok }}>Available ✓</span>
-                  )}
-                  {usernameStatus === "taken" && (
-                    <span style={{ color: T.accent.danger }}>Taken</span>
-                  )}
-                </label>
+                </div>
                 <input
-                  aria-label="Username"
+                  id={ids.username}
+                  aria-describedby={ids.usernameStatus}
+                  aria-invalid={usernameStatus === "taken" || undefined}
                   style={{
                     ...input,
                     borderColor:
@@ -766,9 +808,11 @@ export function OnboardingShell({
                 }}
               >
                 <div>
-                  <label style={label}>Pronouns *</label>
+                  <label htmlFor={ids.pronouns} style={label}>
+                    Pronouns *
+                  </label>
                   <select
-                    aria-label="Pronouns"
+                    id={ids.pronouns}
                     style={{ ...input, cursor: "pointer" }}
                     value={pronouns ?? ""}
                     onChange={(e) => setPronouns(e.target.value)}
@@ -785,8 +829,11 @@ export function OnboardingShell({
                   </select>
                 </div>
                 <div>
-                  <label style={label}>City · optional</label>
+                  <label htmlFor={ids.city} style={label}>
+                    City · optional
+                  </label>
                   <input
+                    id={ids.city}
                     style={input}
                     type="text"
                     value={city ?? ""}
@@ -805,27 +852,53 @@ export function OnboardingShell({
                 }}
               >
                 <div>
-                  <label style={label}>Country · optional</label>
-                  <CountryCombobox value={country} onChange={setCountry} />
+                  <label
+                    id={ids.countryLabel}
+                    htmlFor={ids.country}
+                    style={label}
+                  >
+                    Country · optional
+                  </label>
+                  <CountryCombobox
+                    id={ids.country}
+                    labelledBy={ids.countryLabel}
+                    value={country}
+                    onChange={setCountry}
+                  />
                 </div>
                 <div>
-                  <label style={label}>Timezone · optional</label>
-                  <TimezoneCombobox value={timezone} onChange={setTimezone} />
+                  <label
+                    id={ids.timezoneLabel}
+                    htmlFor={ids.timezone}
+                    style={label}
+                  >
+                    Timezone · optional
+                  </label>
+                  <TimezoneCombobox
+                    id={ids.timezone}
+                    labelledBy={ids.timezoneLabel}
+                    value={timezone}
+                    onChange={setTimezone}
+                  />
                 </div>
               </div>
 
               <div style={{ marginTop: "12px" }}>
-                <label
+                <div
                   style={{
                     ...label,
                     display: "flex",
                     justifyContent: "space-between",
                   }}
                 >
-                  <span>Short bio · optional</span>
-                  <span style={{ color: T.ink.faint }}>{bio.length} / 320</span>
-                </label>
+                  <label htmlFor={ids.bio}>Short bio · optional</label>
+                  <span id={ids.bioCount} style={{ color: T.ink.faint }}>
+                    {bio.length} / 320
+                  </span>
+                </div>
                 <textarea
+                  id={ids.bio}
+                  aria-describedby={`${ids.bioHelp} ${ids.bioCount}`}
                   style={{
                     ...input,
                     resize: "vertical",
@@ -839,6 +912,7 @@ export function OnboardingShell({
                   placeholder="Shown at the top of your profile. Plain text, no markdown."
                 />
                 <p
+                  id={ids.bioHelp}
                   style={{
                     margin: "4px 0 0",
                     fontSize: "13px",
@@ -862,6 +936,7 @@ export function OnboardingShell({
               }}
             >
               <SectionHeading
+                id={ids.affiliation}
                 icon="mdi:domain"
                 title="Affiliation"
                 required
@@ -869,6 +944,8 @@ export function OnboardingShell({
               />
 
               <div
+                role="group"
+                aria-labelledby={ids.affiliation}
                 style={{
                   display: "grid",
                   gridTemplateColumns: "1fr 1fr",
@@ -882,6 +959,7 @@ export function OnboardingShell({
                     <button
                       key={type.value}
                       type="button"
+                      aria-pressed={active}
                       onClick={() => setAffiliationType(type.value)}
                       style={{
                         padding: "14px 16px",
@@ -1080,6 +1158,7 @@ export function OnboardingShell({
               />
 
               <p
+                id={ids.interests}
                 style={{
                   margin: "0 0 10px",
                   fontSize: "14px",
@@ -1089,10 +1168,14 @@ export function OnboardingShell({
               >
                 Topics you care about
               </p>
-              <InterestsChips selected={interests} onChange={setInterests} />
+              <div role="group" aria-labelledby={ids.interests}>
+                <InterestsChips selected={interests} onChange={setInterests} />
+              </div>
 
-              <p
+              <label
+                htmlFor={ids.language}
                 style={{
+                  display: "block",
                   margin: "20px 0 10px",
                   fontSize: "14px",
                   fontWeight: 500,
@@ -1100,7 +1183,7 @@ export function OnboardingShell({
                 }}
               >
                 Languages you can review in
-              </p>
+              </label>
 
               <div
                 style={{
@@ -1135,6 +1218,7 @@ export function OnboardingShell({
                       {name} · {lang.proficiency}
                       <button
                         type="button"
+                        aria-label={`Remove ${name}`}
                         onClick={() =>
                           setLanguages((prev) =>
                             prev.filter((l) => l.code !== lang.code)
@@ -1161,6 +1245,7 @@ export function OnboardingShell({
                 style={{ display: "flex", gap: "10px", alignItems: "center" }}
               >
                 <select
+                  id={ids.language}
                   style={{
                     padding: "8px 12px",
                     borderRadius: "6px",
@@ -1189,7 +1274,9 @@ export function OnboardingShell({
                     </option>
                   ))}
                 </select>
+                {/* No visible label to point at, so it's named here. */}
                 <select
+                  aria-label="Proficiency"
                   style={{
                     padding: "8px 12px",
                     borderRadius: "6px",
@@ -1256,8 +1343,11 @@ export function OnboardingShell({
                 }}
               >
                 <div>
-                  <label style={label}>Website</label>
+                  <label htmlFor={ids.website} style={label}>
+                    Website
+                  </label>
                   <input
+                    id={ids.website}
                     style={input}
                     type="url"
                     value={website}
@@ -1266,8 +1356,11 @@ export function OnboardingShell({
                   />
                 </div>
                 <div>
-                  <label style={label}>ORCID</label>
+                  <label htmlFor={ids.orcid} style={label}>
+                    ORCID
+                  </label>
                   <input
+                    id={ids.orcid}
                     style={input}
                     type="text"
                     value={orcid}
@@ -1276,8 +1369,11 @@ export function OnboardingShell({
                   />
                 </div>
                 <div>
-                  <label style={label}>Mastodon / Bluesky</label>
+                  <label htmlFor={ids.mastodon} style={label}>
+                    Mastodon / Bluesky
+                  </label>
                   <input
+                    id={ids.mastodon}
                     style={input}
                     type="text"
                     value={mastodon}
@@ -1286,8 +1382,11 @@ export function OnboardingShell({
                   />
                 </div>
                 <div>
-                  <label style={label}>LinkedIn</label>
+                  <label htmlFor={ids.linkedin} style={label}>
+                    LinkedIn
+                  </label>
                   <input
+                    id={ids.linkedin}
                     style={input}
                     type="url"
                     value={linkedin}
@@ -1310,12 +1409,15 @@ export function OnboardingShell({
               }}
             >
               <SectionHeading
+                id={ids.visibility}
                 icon="mdi:eye-outline"
                 title="Profile visibility"
                 subtitle="You can change this any time from settings. Affiliation badge shows up regardless once verified."
               />
 
-              <VisibilityCards value={visibility} onChange={setVisibility} />
+              <div role="group" aria-labelledby={ids.visibility}>
+                <VisibilityCards value={visibility} onChange={setVisibility} />
+              </div>
             </section>
 
             {/* Fine print */}
