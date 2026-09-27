@@ -9,3 +9,5 @@ node_modules/
 /axe/reports/
 /perfo/.lighthouseci/
 /visual/visual.spec.ts-snapshots
+# Local notes with credentials (never commit)
+*.local.md
