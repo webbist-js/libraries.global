@@ -4,7 +4,22 @@
  * spec can import it without pulling in the seed's machinery.
  */
 
-export const FIXTURE_PASSWORD = "Access-fixture-2026!"
+/**
+ * The fixture users' password, from ACCESS_FIXTURE_PASSWORD (qa .env). No
+ * default: a password committed to the repo would sign in to any database
+ * the fixtures were ever seeded into. Read lazily so importing this module
+ * never throws.
+ */
+export function fixturePassword(): string {
+  const password = process.env.ACCESS_FIXTURE_PASSWORD
+  if (!password)
+    throw new Error(
+      "ACCESS_FIXTURE_PASSWORD is not set. Add it to qa/tests/playwright/.env " +
+        "(see .env.example), then run `pnpm seed:access`."
+    )
+
+  return password
+}
 
 export const FIXTURES = [
   { key: "reader", role: "reader", claim: false },

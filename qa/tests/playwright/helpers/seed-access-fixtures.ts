@@ -6,9 +6,15 @@
  * Writes can't use REST: it exposes no update for user-profile and no routes
  * for library-affiliation (P-A hardening), so they go through the Document
  * Service in a headless Strapi process (strapi-access-writer.cjs).
+ *
+ * The password comes from ACCESS_FIXTURE_PASSWORD. An existing fixture whose
+ * stored credential doesn't match it is reset to it (hashed with the UI's
+ * own Better Auth), so changing the value and re-running the seed is enough.
  */
 import { execFile } from "node:child_process"
+import { createRequire } from "node:module"
 import path from "node:path"
+import { pathToFileURL } from "node:url"
 import { promisify } from "node:util"
 
 import dotenv from "dotenv"
@@ -16,7 +22,7 @@ import { Client } from "pg"
 
 import {
   emailFor,
-  FIXTURE_PASSWORD,
+  fixturePassword,
   FIXTURES,
   retryAfterMs,
 } from "./access-fixtures"
@@ -24,6 +30,7 @@ import {
 // The UI caches each user's session profile for 60 s (SESSION_PROFILE_TTL_MS).
 const SESSION_CACHE_TTL_MS = 60_000
 const STRAPI_APP_DIR = path.resolve(__dirname, "../../../../apps/strapi")
+const UI_APP_DIR = path.resolve(__dirname, "../../../../apps/ui")
 const WRITER = path.resolve(__dirname, "strapi-access-writer.cjs")
 const LOCAL = /^(localhost|127\.0\.0\.1)$/
 
@@ -34,6 +41,7 @@ type PlanItem = {
   username: string
   claimLibrary: string | null
   signedUpNow: boolean
+  passwordReset: boolean
 }
 type WriteResult = {
   baUserId: string
@@ -95,7 +103,11 @@ async function waitForProfile(baUserId: string, email: string): Promise<void> {
  */
 const SIGN_UP_ATTEMPTS = 3
 
-async function signUp(email: string, key: string): Promise<boolean> {
+async function signUp(
+  email: string,
+  key: string,
+  password: string
+): Promise<boolean> {
   for (let attempt = 1; attempt <= SIGN_UP_ATTEMPTS; attempt++) {
     const res = await fetch(`${process.env.BASE_URL}/api/auth/sign-up/email`, {
       method: "POST",
@@ -105,7 +117,7 @@ async function signUp(email: string, key: string): Promise<boolean> {
       },
       body: JSON.stringify({
         email,
-        password: FIXTURE_PASSWORD,
+        password,
         name: `Access ${key}`,
       }),
     })
@@ -122,6 +134,44 @@ async function signUp(email: string, key: string): Promise<boolean> {
     await sleep(wait)
   }
   throw new Error(`sign-up ${email} still rate-limited`)
+}
+
+type PasswordHasher = {
+  hashPassword: (password: string) => Promise<string>
+  verifyPassword: (data: { hash: string; password: string }) => Promise<boolean>
+}
+
+/** Better Auth's own hasher, resolved from the UI app, so hashes match sign-in. */
+async function loadPasswordHasher(): Promise<PasswordHasher> {
+  const fromUi = createRequire(path.join(UI_APP_DIR, "package.json"))
+
+  return import(pathToFileURL(fromUi.resolve("better-auth/crypto")).href)
+}
+
+/**
+ * Sets an existing fixture's credential to `password` if it doesn't already
+ * match. Only touches the credential row of this one fixture user.
+ */
+async function convergePassword(
+  db: Client,
+  hasher: PasswordHasher,
+  baUserId: string,
+  email: string,
+  password: string
+): Promise<boolean> {
+  const { rows } = await db.query<{ id: string; password: string | null }>(
+    `SELECT id, password FROM "account" WHERE "userId" = $1 AND "providerId" = 'credential'`,
+    [baUserId]
+  )
+  if (!rows[0]) throw new Error(`No password credential for ${email}`)
+  const { id, password: hash } = rows[0]
+  if (hash && (await hasher.verifyPassword({ hash, password }))) return false
+  await db.query(
+    `UPDATE "account" SET password = $1, "updatedAt" = now() WHERE id = $2`,
+    [await hasher.hashPassword(password), id]
+  )
+
+  return true
 }
 
 async function runWriter(plan: PlanItem[]): Promise<WriteResult[]> {
@@ -152,6 +202,8 @@ async function runWriter(plan: PlanItem[]): Promise<WriteResult[]> {
 
 export async function seedAccessFixtures(): Promise<void> {
   assertLocal()
+  const password = fixturePassword()
+  const hasher = await loadPasswordHasher()
   const db = new Client({ connectionString: process.env.BA_DATABASE_URL })
   await db.connect()
   const plan: PlanItem[] = []
@@ -170,13 +222,19 @@ export async function seedAccessFixtures(): Promise<void> {
         `SELECT 1 FROM "user" WHERE email = $1`,
         [email]
       )
-      const signedUpNow = rowCount ? false : await signUp(email, f.key)
+      const signedUpNow = rowCount
+        ? false
+        : await signUp(email, f.key, password)
       const { rows } = await db.query(
         `UPDATE "user" SET "emailVerified" = true WHERE email = $1 RETURNING id`,
         [email]
       )
       if (!rows[0]) throw new Error(`No Better Auth user for ${email}`)
       const baUserId: string = rows[0].id
+      // A user that already existed (sign-up 422) may predate the password.
+      const passwordReset = signedUpNow
+        ? false
+        : await convergePassword(db, hasher, baUserId, email, password)
       await waitForProfile(baUserId, email)
       plan.push({
         email,
@@ -185,6 +243,7 @@ export async function seedAccessFixtures(): Promise<void> {
         username: `access_${f.key.replace("-", "_")}`,
         claimLibrary: f.claim ? claimLibrary : null,
         signedUpNow,
+        passwordReset,
       })
     }
   } finally {
@@ -199,6 +258,7 @@ export async function seedAccessFixtures(): Promise<void> {
     const changed = r.profileChanged || r.claimCreated || r.claimsRemoved > 0
     console.log(
       `${item.email}: ${item.signedUpNow ? "created" : "existing"}, role ${item.role}` +
+        `${item.passwordReset ? " (password reset)" : ""}` +
         `${r.profileChanged ? " (updated)" : ""}` +
         `${item.claimLibrary ? `, claim ${r.claimCreated ? "created" : "present"}` : ""}` +
         `${r.claimsRemoved ? `, ${r.claimsRemoved} stray claim(s) removed` : ""}`

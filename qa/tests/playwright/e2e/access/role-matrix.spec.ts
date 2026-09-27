@@ -2,7 +2,7 @@ import { type APIRequestContext, expect, request, test } from "@playwright/test"
 
 import {
   emailFor,
-  FIXTURE_PASSWORD,
+  fixturePassword,
   retryAfterMs,
 } from "../../helpers/access-fixtures"
 
@@ -44,7 +44,7 @@ const SIGN_IN_ATTEMPTS = 3
 async function signIn(api: APIRequestContext, baseURL: string, key: string) {
   for (let attempt = 1; attempt <= SIGN_IN_ATTEMPTS; attempt++) {
     const res = await api.post("/api/auth/sign-in/email", {
-      data: { email: emailFor(key), password: FIXTURE_PASSWORD },
+      data: { email: emailFor(key), password: fixturePassword() },
       headers: { Origin: baseURL },
     })
     if (res.status() !== 429) return res
