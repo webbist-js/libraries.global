@@ -177,6 +177,17 @@ export function EventsPageClient() {
         lead="Author talks, exhibitions, classes, storytime and archive tours, gathered from library calendars and ticketing sites."
         title="What’s on at the world’s *libraries*"
       >
+        <SearchField
+          id="events-search"
+          label="Search events by title, library or topic"
+          placeholder="Search events by title, library or topic"
+          onClear={() => setFilters({ ...filters, search: "" })}
+          inputProps={{
+            value: filters.search,
+            onChange: (e) => setFilters({ ...filters, search: e.target.value }),
+            autoComplete: "off",
+          }}
+        />
         {state === "ready" ? (
           <p
             aria-live="polite"
@@ -204,21 +215,8 @@ export function EventsPageClient() {
           </div>
         ) : null}
 
-        {/* Search — above the two-column area, as on /index */}
-        <SearchField
-          id="events-search"
-          label="Search events by title, library or topic"
-          placeholder="Search events by title, library or topic"
-          onClear={() => setFilters({ ...filters, search: "" })}
-          inputProps={{
-            value: filters.search,
-            onChange: (e) => setFilters({ ...filters, search: e.target.value }),
-            autoComplete: "off",
-          }}
-        />
-
         {/* Filters + agenda */}
-        <div className="mt-8 flex items-start gap-8">
+        <div className="flex items-start gap-8">
           {/* Sidebar — static on desktop */}
           <aside
             aria-label="Filters"

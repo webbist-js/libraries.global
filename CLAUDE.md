@@ -199,28 +199,24 @@ Library-type tint pairs live in `TYPE_TINT` / `tintForLibraryType()` (same file)
 
 All shared UI primitives live here. Always check `ds/index.ts` before building a new component.
 
-| Component               | Purpose                                                                          |
-| ----------------------- | -------------------------------------------------------------------------------- |
-| `Eyebrow`               | Section label with optional index number and extending bar rule                  |
-| `SectionHeader`         | Section heading with italic serif suffix (`italic` prop)                         |
-| `HeroTitle`             | Full-bleed serif hero title                                                      |
-| `HeroEyebrow`           | Hero-scale eyebrow label                                                         |
-| `HeroStat`              | Single stat cell — mono label + serif 40px value + optional note                 |
-| `HeroStatsGrid`         | Glassmorphic grid wrapping `HeroStat` cells (blur, border, backdrop)             |
-| `HeroInlineTabNav`      | Inline anchor-link tab nav with aurora-tinted first tab                          |
-| `EditorialSection`      | Two-column image + rich-text editorial block from CMS                            |
-| `CtaBannerSection`      | Full-width CTA banner with radial gradient and aurora CTA link                   |
-| `LocationGridBrowser`   | Bordered grid of location cards — rank prefix, serif name, subtitle, hover arrow |
-| `MapSectionHeader`      | Standard map section heading (Eyebrow + SectionHeader + descriptive p)           |
-| `LocationContributeCTA` | Contribute / correction prompt banner                                            |
-| `Breadcrumb`            | Location breadcrumb trail                                                        |
-| `Card`                  | General-purpose content card                                                     |
-| `Badge`                 | Status/type badge                                                                |
-| `StatBlock`             | Stat display block                                                               |
-| `MetaRow`               | Key-value metadata row                                                           |
-| `EmptyState`            | Empty/not-found state                                                            |
-| `Pager`                 | Pagination control                                                               |
-| `WikiCards`             | Wiki article card layouts                                                        |
+| Component               | Purpose                                                                                  |
+| ----------------------- | ---------------------------------------------------------------------------------------- |
+| `Eyebrow`               | Section label with optional index number and extending bar rule                          |
+| `SectionHeader`         | Section heading with italic serif suffix (`italic` prop)                                 |
+| `PageHero`              | The only hero band for primary pages — breadcrumb, eyebrow pill, serif title, lead, slot |
+| `SearchField`           | Site-wide search pill (magnifier, sr-only label, clear button) — use in hero slots       |
+| `EditorialSection`      | Two-column image + rich-text editorial block from CMS                                    |
+| `CtaBannerSection`      | Full-width CTA banner with radial gradient and aurora CTA link                           |
+| `LocationGridBrowser`   | Bordered grid of location cards — rank prefix, serif name, subtitle, hover arrow         |
+| `LocationContributeCTA` | Contribute / correction prompt banner                                                    |
+| `Breadcrumb`            | Location breadcrumb trail                                                                |
+| `Card`                  | General-purpose content card                                                             |
+| `Badge`                 | Status/type badge                                                                        |
+| `StatBlock`             | Stat display block                                                                       |
+| `MetaRow`               | Key-value metadata row                                                                   |
+| `EmptyState`            | Empty/not-found state                                                                    |
+| `Pager`                 | Pagination control                                                                       |
+| `WikiCards`             | Wiki article card layouts                                                                |
 
 ### Primary CTA pattern
 
@@ -235,6 +231,10 @@ Primary CTAs are indigo pills: `bg-(--t-accent-primary) hover:bg-(--t-accent-pri
 ### Header pattern
 
 v2 pages use normal in-flow light heroes — the header renders solid from the start. The legacy `data-transparent-header` + `-mt-14` scroll-reveal pattern is retired for v2 pages (the CSS machinery still exists in globals.css for any stragglers). **Never add `overflow-x-hidden` or `overflow: hidden` to the page wrapper or `<main>`** — it breaks `position: sticky`.
+
+### Section hero pattern (PageHero)
+
+Every primary page — Find libraries (`/index`), Journal, Events, Docs, Contribute — and their search/sub pages open with `PageHero` from `components/ds`. Tinted `T.bg.space` band with a hairline rule; breadcrumb, then an eyebrow pill (Iconify icon + label + optional indigo accent) and a serif `title` on the left (`*italic*` markup renders indigo italic via `parseHeroText`); `lead` plus the children slot on the right. Put the section's primary control in the slot: a `SearchField` first, then any status line. Use `compact` for task/search pages. Never hand-roll a hero h1/band; if a page needs something `PageHero` can't do, add a prop to it. The page wrapper is a plain `T.bg.void` div (`relative isolate flex min-h-screen w-full flex-col`).
 
 ### Page shell pattern (v2)
 
@@ -261,7 +261,7 @@ Selected-pin panels are white v2 cards (`#fff` bg, `#E7E3DB` border, 20px radius
 ### Naming
 
 - Page components: `{Entity}DetailPage` (e.g. `LibraryDetailPage`, `CountryDetailPage`)
-- DS components: PascalCase noun (`HeroStat`, `LocationGridBrowser`)
+- DS components: PascalCase noun (`PageHero`, `LocationGridBrowser`)
 - Always export named (not default) from DS files; default export is for Next.js page files only
 
 ### Strapi data fetching

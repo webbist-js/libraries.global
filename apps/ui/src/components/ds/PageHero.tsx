@@ -5,12 +5,13 @@ import { Container } from "@/components/elementary/Container"
 import { T } from "@/lib/design-tokens"
 
 import { Breadcrumb, type BreadcrumbItem } from "./Breadcrumb"
-import { parseHeroText } from "./HeroTitle"
 
 /**
- * Canonical v2 hero band for top-level section landings (Docs, Journal,
- * Events). Tinted paper band with a hairline rule below; eyebrow pill +
- * serif title on the left, lead + optional slot (search, status) on the right.
+ * The one hero band for primary section pages (Find libraries, Journal,
+ * Events, Docs, Contribute) and their search/sub pages. Tinted paper band with
+ * a hairline rule below; eyebrow pill + serif title on the left, lead +
+ * optional slot (search, status) on the right. Don't hand-roll a hero — add a
+ * prop here instead so every section stays in step.
  *
  * `title` accepts `*italic*` markup, rendered as indigo italic.
  */
@@ -121,4 +122,31 @@ export function PageHero({
   )
 }
 
-/** Shared visual for hero search fields so every section's search box matches. */
+/**
+ * Parse a hero title string that uses *word* markup for italic spans; every
+ * span renders as an indigo italic em (the homepage hero's emphasis).
+ *
+ * Example: "Field notes *from the stacks.*"
+ */
+export function parseHeroText(text: string): ReactNode[] {
+  const parts = text.split(/(\*[^*]+\*)/g)
+
+  return parts.map((part, i) => {
+    if (part.startsWith("*") && part.endsWith("*")) {
+      return (
+        <em
+          key={i}
+          style={{
+            fontStyle: "italic",
+            fontWeight: 400,
+            color: T.accent.primary,
+          }}
+        >
+          {part.slice(1, -1)}
+        </em>
+      )
+    }
+
+    return <span key={i}>{part}</span>
+  })
+}

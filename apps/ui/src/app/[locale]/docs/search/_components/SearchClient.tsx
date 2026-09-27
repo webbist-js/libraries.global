@@ -3,8 +3,11 @@
 import { useSearchParams } from "next/navigation"
 import { Suspense, useEffect, useRef, useState } from "react"
 
-import { docsPathForSearchHit } from "@/components/docs/docs.config"
-import { Breadcrumb } from "@/components/ds/Breadcrumb"
+import {
+  DOCS_VERSION,
+  docsPathForSearchHit,
+} from "@/components/docs/docs.config"
+import { PageHero, SearchField } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
@@ -175,45 +178,31 @@ function SearchPageInner() {
 
   return (
     <main className="relative z-10 flex-1">
-      <section
-        style={{
-          padding: "48px 0 36px",
-          borderBottom: `1px solid ${T.border.line}`,
-        }}
+      <PageHero
+        breadcrumb={[
+          { label: "Home", href: "/" },
+          { label: "Docs", href: "/docs" },
+          { label: "Search" },
+        ]}
+        compact
+        eyebrow="Documentation"
+        eyebrowAccent={DOCS_VERSION}
+        eyebrowIcon="mdi:book-open-outline"
+        title={
+          query
+            ? `Results for *“${query.replaceAll("*", "")}”*`
+            : "Search the *docs*"
+        }
       >
-        <Container>
-          <Breadcrumb
-            items={[
-              { label: "Home", href: "/" },
-              { label: "Docs", href: "/docs" },
-              { label: "Search" },
-            ]}
+        <form method="get">
+          <SearchField
+            id="docs-search"
+            label="Search the docs"
+            placeholder="Search the docs — e.g. contribute, API, run locally"
+            inputProps={{ name: "q", defaultValue: query, autoComplete: "off" }}
           />
-          <h1
-            style={{
-              fontFamily: T.font.serif,
-              fontSize: "clamp(2rem, 5vw, 3.5rem)",
-              fontWeight: 500,
-              letterSpacing: "-.02em",
-              lineHeight: 1.05,
-              color: T.ink.base,
-              marginTop: "16px",
-              marginBottom: 0,
-            }}
-          >
-            {query ? (
-              <>
-                Results for{" "}
-                <em style={{ fontStyle: "italic", color: T.accent.primary }}>
-                  &ldquo;{query}&rdquo;
-                </em>
-              </>
-            ) : (
-              "Search the docs"
-            )}
-          </h1>
-        </Container>
-      </section>
+        </form>
+      </PageHero>
 
       <section style={{ padding: "48px 0 80px" }}>
         <Container>

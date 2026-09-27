@@ -31,7 +31,7 @@ export function FindSearchBar({
     <div className="flex flex-wrap gap-3">
       <SearchField
         id="find-q"
-        className="min-w-[280px] flex-[3]"
+        className="min-w-[280px] flex-3"
         label="Search by library name, city, region or country"
         placeholder="Library name, city, region or country"
         onClear={() => onQuery("")}
@@ -46,7 +46,7 @@ export function FindSearchBar({
         type="button"
         onClick={onNearMe}
         aria-pressed={nearActive}
-        className="flex min-w-[190px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-[14px] px-4 py-3 text-[16px] font-semibold transition-colors"
+        className="flex min-w-[190px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-3 text-[16px] font-semibold transition-colors"
         style={{
           background: nearActive ? T.ink.base : T.bg.deep,
           color: nearActive ? "#fff" : T.ink.base,

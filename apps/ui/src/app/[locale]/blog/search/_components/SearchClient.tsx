@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation"
 import { Suspense, useEffect, useRef, useState } from "react"
 
-import { Breadcrumb } from "@/components/ds/Breadcrumb"
+import { PageHero, SearchField } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
@@ -143,58 +143,29 @@ function SearchPageInner() {
 
   return (
     <main className="relative z-10 flex-1">
-      <section
-        style={{
-          padding: "48px 0 36px",
-          borderBottom: `1px solid ${T.border.line}`,
-        }}
+      <PageHero
+        breadcrumb={[
+          { label: "Home", href: "/" },
+          { label: "Journal", href: "/blog" },
+          { label: "Search" },
+        ]}
+        compact
+        eyebrow="The Library Journal"
+        eyebrowIcon="mdi:notebook-outline"
+        title={
+          query
+            ? `Results for *“${query.replaceAll("*", "")}”*`
+            : "Search the *journal*"
+        }
       >
-        <Container>
-          <Breadcrumb
-            className="mb-6"
-            items={[
-              { label: "Home", href: "/" },
-              { label: "Journal", href: "/blog" },
-              { label: "Search" },
-            ]}
+        <form method="get">
+          <SearchField
+            id="journal-search"
+            placeholder="Search articles, authors or topics"
+            inputProps={{ name: "q", defaultValue: query, autoComplete: "off" }}
           />
-          <p
-            style={{
-              fontSize: "15px",
-              fontWeight: 600,
-              color: T.ink.dim,
-              margin: 0,
-            }}
-          >
-            The Library Journal
-          </p>
-          <h1
-            style={{
-              fontFamily: T.font.serif,
-              fontSize: "clamp(2rem, 5vw, 3.5rem)",
-              fontWeight: 500,
-              letterSpacing: "-.02em",
-              lineHeight: 1.05,
-              color: T.ink.base,
-              marginTop: "16px",
-              marginBottom: 0,
-            }}
-          >
-            {query ? (
-              <>
-                Results for{" "}
-                <em style={{ fontStyle: "italic", color: T.ink.dim }}>
-                  &ldquo;{query}&rdquo;
-                </em>
-              </>
-            ) : (
-              <em style={{ fontStyle: "italic", color: T.ink.dim }}>
-                Search the journal
-              </em>
-            )}
-          </h1>
-        </Container>
-      </section>
+        </form>
+      </PageHero>
 
       <section style={{ padding: "48px 0 80px" }}>
         <Container>

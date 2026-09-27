@@ -4,7 +4,8 @@
 import { useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { Breadcrumb, FilterDrawer } from "@/components/ds"
+import { FilterDrawer, PageHero } from "@/components/ds"
+import { Container } from "@/components/elementary/Container"
 import { T } from "@/lib/design-tokens"
 import { type LibrarySearchHitV2, searchLibrariesV2 } from "@/lib/meilisearch"
 import { usePathname, useRouter } from "@/lib/navigation"
@@ -251,51 +252,24 @@ export function FindLibraryPage({
   )
 
   return (
-    <div
-      className="mx-auto w-full max-w-[1360px] flex-1 px-4 pb-[88px] sm:px-8"
-      style={{ color: T.ink.base }}
-    >
-      {/* Breadcrumb */}
-      <Breadcrumb
-        className="pt-6 sm:pt-10"
-        items={[{ label: "Home", href: "/" }, { label: "Find libraries" }]}
-      />
-
-      {/* Hero */}
-      <header className="mt-4 max-w-[760px]">
-        <h1
-          className="m-0"
-          style={{
-            fontFamily: T.font.serif,
-            fontSize: "clamp(40px, 5vw, 64px)",
-            fontWeight: 500,
-            lineHeight: 1.05,
-            letterSpacing: "-0.02em",
-          }}
-        >
-          Find a library
-        </h1>
-        <p
-          className="mt-3 mb-0 text-[18px] leading-[1.55]"
-          style={{ color: T.ink.dim }}
-        >
-          Search {statsTotal.toLocaleString("en-GB")} published records by name,
-          place, type and facilities. The index grows as contributors document
-          more libraries.
-        </p>
-      </header>
-
-      <div className="mt-6">
+    <>
+      <PageHero
+        breadcrumb={[{ label: "Home", href: "/" }, { label: "Find libraries" }]}
+        eyebrow="Library index"
+        eyebrowIcon="mdi:map-search-outline"
+        lead={`Search ${statsTotal.toLocaleString("en-GB")} published records by name, place, type and facilities. The index grows as contributors document more libraries.`}
+        title="Find a library, *anywhere.*"
+      >
         <FindSearchBar
           state={state}
           onQuery={(q) => patch({ q, page: 0 })}
           onNearMe={handleNearMe}
           locating={locating}
         />
-      </div>
+      </PageHero>
 
       {/* Main two-column area */}
-      <div className="mt-8 flex items-start gap-8">
+      <Container className="flex flex-1 items-start gap-8 pt-8 pb-[88px]">
         {/* Sidebar — static on desktop */}
         <aside
           aria-label="Filters"
@@ -438,8 +412,8 @@ export function FindLibraryPage({
             </nav>
           ) : null}
         </section>
-      </div>
-    </div>
+      </Container>
+    </>
   )
 }
 
