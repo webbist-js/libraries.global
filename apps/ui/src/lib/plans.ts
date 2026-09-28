@@ -134,7 +134,7 @@ export const PLANS: readonly PlanCard[] = [
     includes: [
       feature("Every library record, with hours and services"),
       feature("Search, the map and lists"),
-      feature("Open-data downloads"),
+      soon("Open-data downloads"),
     ],
     cta: { kind: "none", label: "No account needed" },
   },
@@ -145,7 +145,7 @@ export const PLANS: readonly PlanCard[] = [
     who: "Anyone who signs up",
     includes: [
       feature("Everything in Public"),
-      feature("Contribute corrections, photos and new libraries"),
+      feature("Contribute corrections and new libraries"),
       feature("Follow libraries and save events"),
       soon("3 saved views and 3 saved searches"),
       soon("A weekly digest of followed libraries"),
