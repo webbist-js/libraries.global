@@ -3,6 +3,7 @@ import type { Locale } from "next-intl"
 
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import { parseHeroText } from "@/components/ds/PageHero"
+import { SectionTabs } from "@/components/ds/SectionTabs"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -35,40 +36,17 @@ function LegalTabs({
   readonly documents: LegalDocumentNavItem[]
   readonly activeSlug: string
 }) {
-  if (documents.length < 2) return null
-
   return (
-    <nav
-      aria-label="Legal documents"
-      className="-mb-px flex gap-1 overflow-x-auto [scrollbar-width:none] print:hidden [&::-webkit-scrollbar]:hidden"
-    >
-      {documents.map((doc) => {
-        const active = doc.slug === activeSlug
-
-        return (
-          <GlobalLink
-            aria-current={active ? "page" : undefined}
-            className={[
-              "inline-flex shrink-0 items-center gap-2 rounded-t-[14px] border border-b-0 px-4 py-2.5 text-[14px] font-semibold whitespace-nowrap transition-colors",
-              active
-                ? "border-(--t-border-line) bg-(--t-bg-void) text-(--t-ink-base)"
-                : "border-transparent text-(--t-ink-dim) hover:text-(--t-ink-base)",
-            ].join(" ")}
-            href={`/legal/${doc.slug}`}
-            key={doc.documentId}
-          >
-            <Icon
-              aria-hidden="true"
-              height={15}
-              icon={legalIcon(doc.slug)}
-              style={active ? { color: T.accent.primary } : undefined}
-              width={15}
-            />
-            {doc.navLabel || doc.title}
-          </GlobalLink>
-        )
-      })}
-    </nav>
+    <SectionTabs
+      activeId={activeSlug}
+      label="Legal documents"
+      tabs={documents.map((doc) => ({
+        id: doc.slug ?? doc.documentId,
+        label: doc.navLabel || doc.title,
+        href: `/legal/${doc.slug}`,
+        icon: legalIcon(doc.slug),
+      }))}
+    />
   )
 }
 

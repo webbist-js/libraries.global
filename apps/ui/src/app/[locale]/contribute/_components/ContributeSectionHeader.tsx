@@ -6,8 +6,8 @@ import { ContributeNavBar } from "./ContributeNavBar"
 
 /**
  * Shared header for every /contribute route: the v2 PageHero band (breadcrumb,
- * "Contribute" pill, serif title, lead) followed by the section's sticky tab
- * bar. Landing tabs use the full band; task pages (forms, wizards) pass
+ * "Contribute" pill, serif title, lead) with the section's tabs on its
+ * bottom edge. Landing tabs use the full band; task pages (forms, wizards) pass
  * `compact` so the work starts higher up the page.
  *
  * `title` accepts `*italic*` markup, rendered as indigo italic.
@@ -28,26 +28,24 @@ export function ContributeSectionHeader({
   readonly children?: ReactNode
 }) {
   return (
-    <>
-      <PageHero
-        breadcrumb={
-          section
-            ? [
-                { label: "Home", href: "/" },
-                { label: "Contribute", href: "/contribute" },
-                { label: section },
-              ]
-            : [{ label: "Home", href: "/" }, { label: "Contribute" }]
-        }
-        eyebrow="Contribute"
-        eyebrowIcon="mdi:account-group-outline"
-        title={title}
-        lead={lead}
-        compact={compact}
-      >
-        {children}
-      </PageHero>
-      <ContributeNavBar />
-    </>
+    <PageHero
+      breadcrumb={
+        section
+          ? [
+              { label: "Home", href: "/" },
+              { label: "Contribute", href: "/contribute" },
+              { label: section },
+            ]
+          : [{ label: "Home", href: "/" }, { label: "Contribute" }]
+      }
+      eyebrow="Contribute"
+      eyebrowIcon="mdi:account-group-outline"
+      title={title}
+      lead={lead}
+      compact={compact}
+      tabs={<ContributeNavBar />}
+    >
+      {children}
+    </PageHero>
   )
 }

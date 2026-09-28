@@ -14,6 +14,7 @@ import { Breadcrumb, type BreadcrumbItem } from "./Breadcrumb"
  * prop here instead so every section stays in step.
  *
  * `title` accepts `*italic*` markup, rendered as indigo italic.
+ * `tabs` takes a `SectionTabs` row for sections with sub-pages.
  */
 export function PageHero({
   breadcrumb,
@@ -23,6 +24,7 @@ export function PageHero({
   title,
   lead,
   compact = false,
+  tabs,
   children,
 }: {
   /** Optional breadcrumb trail rendered above the eyebrow pill. */
@@ -38,6 +40,11 @@ export function PageHero({
   readonly compact?: boolean
   /** Rendered under the lead in the right column (search field, status line). */
   readonly children?: ReactNode
+  /**
+   * Section tabs (`SectionTabs`) on the band's bottom edge, for sections
+   * with sub-pages (Contribute, Knowledge).
+   */
+  readonly tabs?: ReactNode
 }) {
   return (
     <section
@@ -53,13 +60,11 @@ export function PageHero({
         className={[
           "grid gap-x-16 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-end",
           compact ? "gap-y-5" : "gap-y-8",
-          breadcrumb?.length
-            ? compact
-              ? "pt-5 pb-[clamp(28px,4vw,44px)]"
-              : "pt-[clamp(24px,3.5vw,40px)] pb-[clamp(40px,6vw,72px)]"
-            : compact
-              ? "py-[clamp(28px,4vw,44px)]"
-              : "py-[clamp(40px,6vw,72px)]",
+          bandPadding({
+            breadcrumb: Boolean(breadcrumb?.length),
+            compact,
+            tabs: Boolean(tabs),
+          }),
         ].join(" ")}
       >
         <div>
@@ -118,8 +123,37 @@ export function PageHero({
           </div>
         ) : null}
       </Container>
+      {tabs ? <Container>{tabs}</Container> : null}
     </section>
   )
+}
+
+/** Band padding: tighter under a breadcrumb, and above a row of tabs. */
+function bandPadding({
+  breadcrumb,
+  compact,
+  tabs,
+}: {
+  breadcrumb: boolean
+  compact: boolean
+  tabs: boolean
+}): string {
+  const top = compact
+    ? breadcrumb
+      ? "pt-5"
+      : "pt-[clamp(28px,4vw,44px)]"
+    : breadcrumb
+      ? "pt-[clamp(24px,3.5vw,40px)]"
+      : "pt-[clamp(40px,6vw,72px)]"
+  const bottom = compact
+    ? tabs
+      ? "pb-6"
+      : "pb-[clamp(28px,4vw,44px)]"
+    : tabs
+      ? "pb-[clamp(28px,4vw,48px)]"
+      : "pb-[clamp(40px,6vw,72px)]"
+
+  return `${top} ${bottom}`
 }
 
 /**

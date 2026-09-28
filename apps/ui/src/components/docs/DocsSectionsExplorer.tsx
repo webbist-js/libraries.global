@@ -1,7 +1,8 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 
 import {
   DOCS_SECTIONS,
@@ -9,6 +10,8 @@ import {
 } from "@/components/docs/docs.config"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
+
+import { activeDocsSection } from "./docs-sections"
 
 export type DocsPageRow = {
   documentId: string
@@ -43,13 +46,32 @@ function SectionChip({ count }: { readonly count: number }) {
   )
 }
 
+/** Section cards; which ones show follows ?section= (the hero's tabs). */
 export function DocsSectionsExplorer({
   sections,
 }: {
   readonly sections: DocsSectionData
 }) {
-  const [active, setActive] = useState<"all" | DocsSectionKey>("all")
+  return (
+    <Suspense fallback={<SectionsBody active="all" sections={sections} />}>
+      <SectionsFromUrl sections={sections} />
+    </Suspense>
+  )
+}
 
+function SectionsFromUrl({ sections }: { readonly sections: DocsSectionData }) {
+  const active = activeDocsSection(useSearchParams().get("section"))
+
+  return <SectionsBody active={active} sections={sections} />
+}
+
+function SectionsBody({
+  sections,
+  active,
+}: {
+  readonly sections: DocsSectionData
+  readonly active: "all" | DocsSectionKey
+}) {
   const totalPages = DOCS_SECTIONS.reduce(
     (sum, s) => sum + sections[s.key].length,
     0
@@ -59,52 +81,9 @@ export function DocsSectionsExplorer({
       ? DOCS_SECTIONS
       : DOCS_SECTIONS.filter((s) => s.key === active)
 
-  const tabs: { key: "all" | DocsSectionKey; label: string; count: number }[] =
-    [
-      { key: "all", label: "All sections", count: totalPages },
-      ...DOCS_SECTIONS.map((s) => ({
-        key: s.key,
-        label: s.title,
-        count: sections[s.key].length,
-      })),
-    ]
-
   return (
     <div>
-      {/* Section tabs */}
-      <div
-        aria-label="Knowledge sections"
-        className="flex flex-wrap gap-x-1 gap-y-1 border-b"
-        role="tablist"
-        style={{ borderColor: T.border.line }}
-      >
-        {tabs.map((tab) => {
-          const selected = active === tab.key
-
-          return (
-            <button
-              key={tab.key}
-              aria-selected={selected}
-              className="-mb-px flex items-center gap-1.5 border-b-[3px] px-3 pt-1 pb-2.5 text-[15px] transition-colors"
-              onClick={() => setActive(tab.key)}
-              role="tab"
-              style={{
-                borderColor: selected ? T.accent.primary : "transparent",
-                color: T.ink.base,
-                fontWeight: selected ? 700 : 500,
-              }}
-              type="button"
-            >
-              {tab.label}
-              <span style={{ color: T.ink.low, fontWeight: 500 }}>
-                {tab.count}
-              </span>
-            </button>
-          )
-        })}
-      </div>
-
-      <p className="mt-3 mb-0 text-[15px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
         {totalPages} page{totalPages === 1 ? "" : "s"} so far. Most sections
         still need writing.
       </p>

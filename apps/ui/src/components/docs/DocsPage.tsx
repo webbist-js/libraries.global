@@ -14,6 +14,7 @@ import {
   type DocsPageRow,
   type DocsSectionData,
 } from "@/components/docs/DocsSectionsExplorer"
+import { DocsSectionTabs } from "@/components/docs/DocsSectionTabs"
 import { SearchField } from "@/components/ds"
 import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
@@ -117,6 +118,13 @@ export function DocsPage({
           eyebrowIcon="mdi:book-open-outline"
           lead="How to improve library records, run the platform locally, use the open data, and build on our design system."
           title="Build, contribute, *extend the index.*"
+          tabs={
+            <DocsSectionTabs
+              counts={Object.fromEntries(
+                DOCS_SECTIONS.map((s) => [s.key, sections[s.key].length])
+              )}
+            />
+          }
         >
           <form action={`/${locale}/knowledge/search`} method="get">
             <SearchField
