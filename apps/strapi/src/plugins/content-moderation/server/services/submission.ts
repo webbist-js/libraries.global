@@ -3,6 +3,7 @@ import {
   grantVerifiedLibrarian,
   upsertAffiliation,
 } from "../../../../utils/affiliations"
+import { applyFacilityAnswers } from "../utils/facility-answers"
 import { payloadHash } from "../utils/payload-hash"
 import { canTransition } from "../utils/transitions"
 import { sanitizeWikiBody } from "../utils/wiki-body"
@@ -533,6 +534,12 @@ export default ({ strapi }: { strapi: any }) => ({
           `[content-moderation] topic_suggestion ${documentId} has no topic targetDocumentId; nothing applied`
         )
       }
+
+      // Side-effect: an approved correction carrying "Tap Yes or No"
+      // facility answers is applied to the library and published. Other
+      // corrections still only award points (C-L1).
+      if (status === "approved" && submission?.submissionType === "correction")
+        await (this as any).applyFacilityAnswers(submission)
 
       // ── wiki_edit approval ─────────────────────────────────────────────
       if (status === "approved" && submission?.submissionType === "wiki_edit") {
@@ -1103,6 +1110,11 @@ export default ({ strapi }: { strapi: any }) => ({
       })
 
     return toClient(results[0] ?? null)
+  },
+
+  /** Applies an approved facilities correction (see utils/facility-answers). */
+  async applyFacilityAnswers(submission: any): Promise<"applied" | "noop"> {
+    return applyFacilityAnswers(strapi, submission)
   },
 
   async applyWikiEdit(

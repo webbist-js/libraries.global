@@ -41,6 +41,7 @@
   ],
   "dependencies": {
     "@repo/access": "workspace:*",
+    "@repo/shared-data": "workspace:*",
     "diff": "^9.0.0"
   },
   "devDependencies": {

@@ -2066,6 +2066,12 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
     }
   }
   attributes: {
+    absentFacilities: Schema.Attribute.JSON &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     accessibility: Schema.Attribute.Relation<
       "manyToMany",
       "api::accessibility.accessibility"

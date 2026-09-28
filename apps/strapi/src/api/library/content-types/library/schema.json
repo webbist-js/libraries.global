@@ -377,6 +377,14 @@
         }
       }
     },
+    "absentFacilities": {
+      "type": "json",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
     "heroImage": {
       "type": "media",
       "multiple": false,
