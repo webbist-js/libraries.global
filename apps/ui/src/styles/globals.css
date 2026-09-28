@@ -211,6 +211,13 @@
   scrollbar-width: none; /* Firefox */
 }
 
+/* Quiet scrollbar for panels that scroll inside the page (filter sidebar,
+   drawers): thin warm-grey thumb on a transparent track. */
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--t-border-hi) transparent;
+}
+
 @utility container {
   margin-inline: auto;
   padding: 2rem;

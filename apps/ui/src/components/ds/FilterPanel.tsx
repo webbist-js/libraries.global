@@ -2,14 +2,15 @@
 //
 // Shared faceted-filter sidebar primitives (the /index "Find libraries"
 // style): no card wrapper, a "Filters" header with an underlined Reset,
-// fieldset groups with an indigo stroke-icon legend, 35px option rows with
-// native inputs and right-aligned counts (long lists scroll inside their
-// group), a sticky desktop sidebar that can be hidden, and a left slide-in
-// drawer + toggle button for mobile.
+// collapsible fieldset groups with an indigo stroke-icon legend, 35px option
+// rows with native inputs and right-aligned counts (long lists cut to a
+// preview with "Show all"), a sticky desktop sidebar that can be hidden, and
+// a left slide-in drawer + toggle button for mobile.
 "use client"
 
 import {
   Children,
+  isValidElement,
   type ReactNode,
   useCallback,
   useEffect,
@@ -105,61 +106,136 @@ export function FilterHelper({
   )
 }
 
-/**
- * A fieldset filter group. `icon` is the inner SVG markup (paths etc.) of a
- * 24×24 stroke icon — it is rendered inside an indigo stroke <svg>.
- */
-/** More options than this and the list scrolls inside its group. */
+/** More options than this and the list is cut to PREVIEW_OPTIONS. */
 const MAX_VISIBLE_OPTIONS = 7
+const PREVIEW_OPTIONS = 5
 
+/**
+ * Whether an option narrows the results: a ticked checkbox, or a chosen
+ * radio other than the first (the first radio is the "any" default).
+ */
+function isActiveOption(child: ReactNode, index: number): boolean {
+  if (!isValidElement<FilterOptionProps>(child) || !child.props.checked) {
+    return false
+  }
+
+  return child.props.type === "checkbox" || index > 0
+}
+
+/**
+ * A collapsible fieldset filter group: the title is a button that opens and
+ * closes it. A group with an active option starts open whatever
+ * `defaultOpen` says, and a closed group shows how many options are active.
+ * Long lists show the first few with a "Show all" toggle, and stay expanded
+ * while a ticked option sits past the cut. `icon` is the inner SVG markup
+ * (paths etc.) of a 24×24 stroke icon, rendered inside an indigo stroke <svg>.
+ */
 export function FilterGroup({
   title,
   icon,
   children,
   helper,
   dimmed = false,
+  defaultOpen = true,
 }: {
   readonly title: string
   readonly icon: React.ReactNode
   readonly children?: React.ReactNode
   readonly helper?: React.ReactNode
   readonly dimmed?: boolean
+  readonly defaultOpen?: boolean
 }) {
-  const count = Children.count(children)
-  const scrolls = count > MAX_VISIBLE_OPTIONS
+  const options = Children.toArray(children)
+  const activeFlags = options.map(isActiveOption)
+  const active = activeFlags.filter(Boolean).length
+  const long = options.length > MAX_VISIBLE_OPTIONS
+  const hiddenChecked = long && activeFlags.slice(PREVIEW_OPTIONS).some(Boolean)
+
+  const [open, setOpen] = useState(() => defaultOpen || active > 0)
+  const [showAll, setShowAll] = useState(false)
+  const bodyId = useId()
+  const handleToggle = () => setOpen((o) => !o)
+  const handleShowAll = () => setShowAll((s) => !s)
+  const expanded = !long || showAll || hiddenChecked
 
   return (
     <fieldset
-      className="m-0 border-0 p-0 pt-5 pb-4"
-      style={{
-        borderBottom: `1px solid ${T.border.divider}`,
-        opacity: dimmed ? 0.55 : 1,
-      }}
+      className="m-0 border-0 p-0 pt-4 pb-3"
+      style={{ borderBottom: `1px solid ${T.border.divider}` }}
     >
       {/* float pulls the legend out of the border slot so the fieldset's
           top padding sits above the title instead of below it */}
-      <legend className="float-left mb-1.5 flex w-full items-center gap-2 p-0 text-[16px] font-semibold">
-        <svg {...LEGEND_ICON_PROPS}>{icon}</svg>
-        {title}
+      <legend className="float-left w-full p-0">
+        <button
+          type="button"
+          onClick={handleToggle}
+          aria-expanded={open}
+          aria-controls={bodyId}
+          className="flex min-h-10 w-full cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-left text-[16px] font-semibold text-(--t-ink-base) transition-colors hover:text-(--t-accent-primary)"
+          style={{ opacity: dimmed ? 0.55 : 1 }}
+        >
+          <svg {...LEGEND_ICON_PROPS}>{icon}</svg>
+          <span className="min-w-0 flex-1">{title}</span>
+          {!open && active > 0 ? (
+            <span
+              className="rounded-full px-2 py-0.5 text-[12px] font-semibold"
+              style={{ background: T.accent.chip, color: T.accent.primary }}
+            >
+              {active} selected
+            </span>
+          ) : null}
+          <ChevronIcon open={open} />
+        </button>
       </legend>
-      {scrolls ? (
-        <>
-          {/* ~6.5 rows, so the cut-off row shows there's more. Inner
-              padding keeps focus rings inside the scroll box. */}
-          <div
-            className="clear-both -mx-1 max-h-[232px] overflow-y-auto overscroll-contain border-b px-1 pb-1"
-            style={{ borderColor: T.border.divider }}
+      <div
+        id={bodyId}
+        hidden={!open}
+        className="clear-both pt-1"
+        style={{ opacity: dimmed ? 0.55 : 1 }}
+      >
+        <div className="flex flex-col">
+          {expanded ? options : options.slice(0, PREVIEW_OPTIONS)}
+        </div>
+        {long && !hiddenChecked ? (
+          <button
+            type="button"
+            onClick={handleShowAll}
+            aria-expanded={showAll}
+            className="mt-1 cursor-pointer rounded-full border-0 bg-transparent p-0 text-[14px] font-semibold underline"
+            style={{ color: T.accent.primary, textUnderlineOffset: 3 }}
           >
-            {children}
-          </div>
-          <FilterHelper>{count} options · scroll for more</FilterHelper>
-        </>
-      ) : (
-        <div className="clear-both flex flex-col">{children}</div>
-      )}
-      {helper ? <FilterHelper>{helper}</FilterHelper> : null}
+            {showAll ? "Show fewer" : `Show all ${options.length}`}
+          </button>
+        ) : null}
+        {helper ? <FilterHelper>{helper}</FilterHelper> : null}
+      </div>
     </fieldset>
   )
+}
+
+function ChevronIcon({ open }: { readonly open: boolean }) {
+  return (
+    <svg
+      {...LEGEND_ICON_PROPS}
+      stroke={T.ink.low}
+      width={16}
+      height={16}
+      className="shrink-0 transition-transform"
+      style={{ transform: open ? "rotate(180deg)" : undefined }}
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  )
+}
+
+type FilterOptionProps = {
+  readonly type: "checkbox" | "radio"
+  readonly name: string
+  readonly label: string
+  readonly checked: boolean
+  readonly count?: number | null
+  readonly disabled?: boolean
+  readonly onChange: () => void
 }
 
 /** A 35px checkbox/radio option row with an optional right-aligned count. */
@@ -171,15 +247,7 @@ export function FilterOption({
   count,
   disabled = false,
   onChange,
-}: {
-  readonly type: "checkbox" | "radio"
-  readonly name: string
-  readonly label: string
-  readonly checked: boolean
-  readonly count?: number | null
-  readonly disabled?: boolean
-  readonly onChange: () => void
-}) {
+}: FilterOptionProps) {
   return (
     <label
       className="flex h-[35px] items-center gap-2.5 text-[15px]"
@@ -386,7 +454,7 @@ export function FilterSidebar({
       id={sidebar.sidebarId}
       aria-label="Filters"
       className={[
-        "sticky top-[90px] w-[290px] shrink-0 overflow-y-auto overscroll-contain",
+        "scrollbar-thin sticky top-[90px] w-[290px] shrink-0 overflow-x-hidden overflow-y-auto overscroll-contain",
         // Inner padding keeps focus rings clear of the scroll box's edge.
         "-mx-1 max-h-[calc(100dvh-110px)] px-1 pb-4",
         sidebar.collapsed ? "hidden" : "hidden lg:block",
@@ -424,7 +492,7 @@ export function FilterDrawer({
         style={{ background: "rgba(23,22,43,.4)" }}
       />
       <div
-        className="absolute inset-y-0 left-0 w-[min(340px,88vw)] overflow-y-auto p-5"
+        className="scrollbar-thin absolute inset-y-0 left-0 w-[min(340px,88vw)] overflow-y-auto p-5"
         style={{ background: T.bg.void }}
       >
         <div className="mb-2 flex justify-end">

@@ -156,6 +156,7 @@ export function FindFilterSidebar({
       {serviceOptions.length > 0 ? (
         <FilterGroup
           title="Facilities & services"
+          defaultOpen={false}
           icon={
             <>
               <path d="M5 12a7 7 0 0 1 14 0" />
@@ -182,6 +183,7 @@ export function FindFilterSidebar({
 
       <FilterGroup
         title="Collections"
+        defaultOpen={false}
         icon={
           <>
             <rect x="3" y="4" width="18" height="16" rx="2" />
@@ -202,6 +204,7 @@ export function FindFilterSidebar({
 
       <FilterGroup
         title="Needs contributions"
+        defaultOpen={false}
         icon={
           <>
             <path d="M12 20h9" />
@@ -232,6 +235,7 @@ export function FindFilterSidebar({
 
       <FilterGroup
         title="Distance"
+        defaultOpen={false}
         dimmed={state.nearLat == null}
         icon={
           <>
