@@ -18,7 +18,7 @@ export function BlogFilterBar({
   onSortChange,
 }: BlogFilterBarProps) {
   return (
-    <div className="mx-auto flex w-full max-w-[1360px] flex-wrap items-center gap-2 px-4 pt-2 pb-1 sm:px-8">
+    <div className="mx-auto flex w-full max-w-[1360px] flex-wrap items-center gap-2 px-4 pt-8 sm:px-8">
       <div
         aria-label="Filter by section"
         className="flex flex-wrap items-center gap-2"

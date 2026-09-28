@@ -97,6 +97,7 @@ function BlogFeedInner({
 
   // A young journal shows an invitation instead of padding a one-item grid.
   const youngJournal = articles.length < 4
+  const featured = activeSection === "All" ? featuredArticle : null
 
   return (
     <>
@@ -109,10 +110,10 @@ function BlogFeedInner({
       />
 
       {/* ── Featured article ───────────────────────────────────────────── */}
-      {featuredArticle && activeSection === "All" ? (
-        <section className="pt-6 pb-4">
+      {featured ? (
+        <section className="pt-5 pb-4">
           <Container>
-            <FeaturedArticleCard article={featuredArticle} />
+            <FeaturedArticleCard article={featured} />
           </Container>
         </section>
       ) : null}
@@ -120,7 +121,11 @@ function BlogFeedInner({
       {youngJournal && activeSection === "All" ? (
         <MoreToCome articleCount={articles.length} />
       ) : (
-        <section className="py-14 sm:py-20">
+        <section
+          className={
+            featured ? "py-14 sm:py-20" : "pt-8 pb-14 sm:pt-10 sm:pb-20"
+          }
+        >
           <Container>
             <div className="mb-10">
               <h2
