@@ -154,7 +154,8 @@ Open licences aren't granted or registered: you apply one by publishing a clear 
 
 - [x] Licence stated on `/legal/data-licence`. The terms license contributions under CC BY-SA 4.0 and grant a wider licence so the index can be relicensed or moved to a charity.
 - [ ] **Get libraryOn's licence confirmed in writing.** The site footer says "Except where otherwise noted, content on this site is licensed under a Creative Commons Attribution 4.0 International license", but it doesn't mention the CMS API we imported from. Email the British Library data team. CC BY 4.0 data can be republished under CC BY-SA, provided the credit is kept.
-- [ ] Show the libraryOn credit ("Contains information from LibraryOn, published by the British Library under CC BY 4.0") on records with `source: "libraryon"`.
+- [x] Show the libraryOn credit ("Contains information from LibraryOn, published by the British Library under CC BY 4.0") on records with `source: "libraryon"`. Done 2026-09-28: the credit comes from the `dataset` registry (`apps/strapi/src/seeds/datasets.ts`) and renders in "Sources & history of this record".
+- [ ] When the libraryOn licence is confirmed, set the `libraryon` dataset's `licenceStatus` to `confirmed_in_writing` in the admin and note the date and correspondent in its `notes`.
 - [ ] When bulk downloads ship, include a licence file and an attribution file.
 - [ ] Never import OpenStreetMap-derived library records: ODbL data can't be republished as CC BY-SA.
 - [ ] Decide D-P6 for good (keep CC BY-SA 4.0, or move to ODbL or CC BY). CC BY-SA 4.0 covers database rights and is compatible with our current sources.
@@ -171,6 +172,22 @@ Open licences aren't granted or registered: you apply one by publishing a clear 
 - [ ] **ICO data protection fee.** Likely required, since there's no sole-trader exemption and the site has user accounts. It's tier 1, around £52 a year; check with https://ico.org.uk/fee-checker. Once registered, the number can go in the privacy notice.
 - [ ] Optional: register "Libraries Global" as a UK trademark with the UKIPO (about £170 for one class online).
 - [ ] Optional, for later: EU GDPR Article 27 says a non-EU controller serving EU users may need an EU representative. Most small UK sites don't appoint one.
+
+### 7f. First-publication review of the legal documents
+
+The six legal documents and the independence statement in Strapi are pre-launch drafts, versioned 0.x with a "Pre-launch draft" notice rendered by `LegalDocumentPage` whenever the newest revision is 0.x. They have never been presented to or accepted by a user. Immediately before launch, in one pass:
+
+- [ ] Review each document's text a final time (terms, privacy, cookies, data-licence, ai-statement, accessibility, independence).
+- [ ] Verify the operator identity in Terms §2, the independence statement and the privacy notice (still Alexander Bennett, or the charity if it exists by then).
+- [ ] Verify the software licence: `LICENSE`, every `package.json` `license` field, Terms §14, Data licence §5 and the independence statement all say MIT (or whatever D-O1 decided), and the starter notice question in 7a is settled.
+- [ ] Verify the data licences and attribution: every `dataset` row has a licence, a licence URL and attribution text; the libraryOn licence is confirmed in writing (7b); GADM is replaced or licensed (7c); the credits render on imported records.
+- [ ] Verify the privacy and contact details: legal@libraries.global exists and is monitored; the ICO registration number is in the privacy notice if registered (7d); the providers list in 7e matches production.
+- [ ] Check that every legal and footer link resolves on the production host, including `/legal/independence` and the code of conduct link to the repository.
+- [ ] Confirm no wording implies affiliation with, endorsement by, or succession to the British Library or LibraryOn, beyond the data credit that CC BY 4.0 requires.
+- [ ] Add a `1.0` revision to each document with the actual publication date and the summary "First published version", so the draft notice disappears and "Version" reads v1.0. Keep the 0.x entries: they're the honest history of the drafts.
+- [ ] Set `TERMS_VERSION` in `apps/ui/src/lib/legal-consent.ts` to the publication date, then publish all documents together and re-run the legal Playwright checks.
+
+Don't perform this pass early: the drafts must stay marked as drafts until the service opens.
 
 ### 7e. Providers named in the privacy notice
 

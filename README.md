@@ -207,7 +207,11 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) and the [code of conduct](./CODE_OF_CON
 
 ## Licence
 
-The code is MIT licensed; see [LICENSE](./LICENSE). Library data on the site is published under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). The terms are on the site at `/legal/data-licence`.
+The code is MIT licensed; see [LICENSE](./LICENSE). Library data and Knowledge documentation on the site are published under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/); the terms are on the site at `/legal/data-licence`, and CC BY-SA does not apply to the code. The name "Libraries Global", the logo and other original brand assets are not covered by either licence. Third-party library names and logos belong to their owners.
+
+Every imported dataset is registered as a `Dataset` in Strapi with its publisher, licence, attribution and import details (seeded from `apps/strapi/src/seeds/datasets.ts`), and records point at it through their `source` field. The site's independence and provenance statement is at `/legal/independence`.
+
+The legal documents in Strapi are pre-launch drafts (version 0.x). The first-publication review in [docs/pre-golive-checklist.md](./docs/pre-golive-checklist.md) §7f assigns v1.0 and the effective date at launch.
 
 ## Acknowledgements
 

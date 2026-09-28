@@ -1,4 +1,4 @@
-# Contributing to Strapi & Next.js Starter
+# Contributing to Libraries Global
 
 First off, thanks for taking the time to contribute! ❤️
 
@@ -39,6 +39,16 @@ We will then take care of the issue as soon as possible.
 > ### Legal Notice
 >
 > When contributing to this project, you must agree that you have authored 100% of the content, that you have the necessary rights to the content and that the content you contribute may be provided under the project licence.
+>
+> Code and documentation in this repository are contributed under the [MIT licence](./LICENSE). Contributions made on the site itself (library records, corrections, photos and Knowledge edits) are licensed under CC BY-SA 4.0 as the site's [terms of use](https://www.libraries.global/legal/terms) and [data licence](https://www.libraries.global/legal/data-licence) describe. The two licences are separate: CC BY-SA does not apply to the code.
+
+### Provenance
+
+Every library record must be traceable to where it came from.
+
+- **Imported datasets** are registered in Strapi as a `Dataset` (publisher, source URL, licence and its URL, whether the licence has been confirmed, redistribution status, attribution text, coverage, import mechanism, dates and notes). Records point at their dataset through the `source` field, which must equal the dataset's `key`. Register the dataset before running an import (the known ones are seeded from `apps/strapi/src/seeds/datasets.ts`), and never import a dataset whose licence does not allow republication under CC BY-SA 4.0.
+- **Site contributions** are recorded as submissions with the contributor, the time, the evidence they supplied, the reviewer's decision and when it was made. Approved submissions form the record's public revision history. Deleting an account anonymises the contributor but keeps the contribution, as the privacy notice explains.
+- Give a source when you change a fact, and cite the library's own website or a public document where you can.
 
 ### Reporting Bugs
 
@@ -73,7 +83,7 @@ Once it's filed:
 
 ### Suggesting Enhancements
 
-This section guides you through submitting an enhancement suggestion for Strapi & Next.js Starter, **including completely new features and minor improvements to existing functionality**. Following these guidelines will help maintainers and the community to understand your suggestion and find related suggestions.
+This section guides you through submitting an enhancement suggestion for Libraries Global, **including completely new features and minor improvements to existing functionality**. Following these guidelines will help maintainers and the community to understand your suggestion and find related suggestions.
 
 #### Before Submitting an Enhancement
 
@@ -90,7 +100,7 @@ Enhancement suggestions are tracked as [Feature request GitHub issues](https://g
 - Provide a **step-by-step description of the suggested enhancement** in as many details as possible.
 - **Describe the current behavior** and **explain which behavior you expected to see instead** and why. At this point you can also tell which alternatives do not work for you.
 - You may want to **include screenshots or screen recordings** which help you demonstrate the steps or point out the part which the suggestion is related to. You can use [LICEcap](https://www.cockos.com/licecap/) to record GIFs on macOS and Windows, and the built-in [screen recorder in GNOME](https://help.gnome.org/users/gnome-help/stable/screen-shot-record.html.en) or [SimpleScreenRecorder](https://github.com/MaartenBaert/ssr) on Linux.
-- **Explain why this enhancement would be useful** to most Strapi & Next.js Starter users. You may also want to point out the other projects that solved it better and which could serve as inspiration.
+- **Explain why this enhancement would be useful** to most Libraries Global users. You may also want to point out the other projects that solved it better and which could serve as inspiration.
 
 ### Your First Code Contribution
 
