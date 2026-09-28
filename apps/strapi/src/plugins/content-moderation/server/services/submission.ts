@@ -12,6 +12,20 @@ import { sanitizeWikiBody } from "../utils/wiki-body"
 // that nothing was auto-applied and it needs a manual pass.
 const SUGGESTION_MARKER = " [Suggestion — not auto-applied; apply manually]"
 
+// Evidence types that point at a public document. Only these are shown in a
+// library's public revision history; the rest may identify a person.
+const PUBLIC_EVIDENCE_TYPES = new Set(["institutional_url", "press_release"])
+
+export function publicEvidenceUrl(
+  evidenceType: string | null | undefined,
+  evidenceUrl: string | null | undefined
+): string | null {
+  if (!evidenceType || !PUBLIC_EVIDENCE_TYPES.has(evidenceType)) return null
+  const url = evidenceUrl?.trim()
+
+  return url && /^https?:\/\//i.test(url) ? url : null
+}
+
 // Library schema fields that count toward the library_edit points tier.
 // Anything else in `fields` (unknown keys, typos, injected junk) is ignored
 // so points can't be inflated by padding the payload.
@@ -861,7 +875,9 @@ export default ({ strapi }: { strapi: any }) => ({
   /**
    * Public revision history for a library: the most recent approved
    * submissions targeting that library, sanitized for anonymous display.
-   * Never exposes emails, reviewer identity, or review notes.
+   * Never exposes emails, reviewer identity, or review notes. The source a
+   * contributor supplied is included only when it's a public document (an
+   * institutional page or a press release), never a personal communication.
    */
   async findLibraryRevisions(libraryDocumentId: string, limit = 10) {
     const submissions = await strapi
@@ -921,6 +937,7 @@ export default ({ strapi }: { strapi: any }) => ({
         ? (usernameByBaUserId[s.submittedByUserId] ?? null)
         : null,
       decidedAt: s.reviewedAt ?? s.updatedAt ?? null,
+      sourceUrl: publicEvidenceUrl(s.evidenceType, s.evidenceUrl),
     }))
   },
 

@@ -8,6 +8,7 @@ import { registerAdminUserSubscriber } from "./lifeCycles/adminUser"
 import { registerEntityRefSubscriber } from "./lifeCycles/entityRef"
 import { registerUserSubscriber } from "./lifeCycles/user"
 import { getPopulateDynamicZoneConfig } from "./populateDynamicZone"
+import { seedDatasets } from "./seeds/datasets"
 import { seedLegalDocuments } from "./seeds/legal-documents"
 import { ensureUniqueIndexes } from "./utils/ensure-unique-indexes"
 
@@ -103,6 +104,9 @@ export default {
 
     // Draft legal documents with placeholder copy on first boot (idempotent)
     await seedLegalDocuments(strapi)
+
+    // Provenance registry for imported datasets (idempotent, by key)
+    await seedDatasets(strapi)
 
     // I2 fresh-DB follow-up: re-ensure the unique indexes the migration
     // creates, in case this is a first deploy where the migration ran

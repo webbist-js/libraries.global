@@ -1533,6 +1533,64 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface ApiDatasetDataset extends Struct.CollectionTypeSchema {
+  collectionName: "datasets"
+  info: {
+    description: "A dataset imported into Libraries Global: who published it, under what licence, how and when it was obtained, and how it must be credited. Records link to it through their `source` key, which equals the dataset `key`."
+    displayName: "Dataset"
+    pluralName: "datasets"
+    singularName: "dataset"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    i18n: {
+      localized: false
+    }
+  }
+  attributes: {
+    attribution: Schema.Attribute.Text
+    coverage: Schema.Attribute.String
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    importMechanism: Schema.Attribute.String
+    key: Schema.Attribute.UID & Schema.Attribute.Required
+    licence: Schema.Attribute.String
+    licenceStatus: Schema.Attribute.Enumeration<
+      ["confirmed_in_writing", "stated_by_publisher", "unconfirmed"]
+    > &
+      Schema.Attribute.DefaultTo<"unconfirmed">
+    licenceUrl: Schema.Attribute.String
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::dataset.dataset"
+    > &
+      Schema.Attribute.Private
+    name: Schema.Attribute.String & Schema.Attribute.Required
+    notes: Schema.Attribute.Text
+    obtainedAt: Schema.Attribute.Date
+    publishedAt: Schema.Attribute.DateTime
+    publisher: Schema.Attribute.String
+    redistribution: Schema.Attribute.Enumeration<
+      [
+        "permitted",
+        "permitted_with_attribution",
+        "not_permitted",
+        "unconfirmed",
+      ]
+    > &
+      Schema.Attribute.DefaultTo<"unconfirmed">
+    sourceUpdatedAt: Schema.Attribute.Date
+    sourceUrl: Schema.Attribute.String
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface ApiEntitlementGrantEntitlementGrant
   extends Struct.CollectionTypeSchema {
   collectionName: "entitlement_grants"
@@ -4285,6 +4343,7 @@ declare module "@strapi/strapi" {
       "api::category.category": ApiCategoryCategory
       "api::continent.continent": ApiContinentContinent
       "api::country.country": ApiCountryCountry
+      "api::dataset.dataset": ApiDatasetDataset
       "api::entitlement-grant.entitlement-grant": ApiEntitlementGrantEntitlementGrant
       "api::footer.footer": ApiFooterFooter
       "api::homepage.homepage": ApiHomepageHomepage

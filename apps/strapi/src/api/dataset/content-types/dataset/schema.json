@@ -1,0 +1,73 @@
+{
+  "kind": "collectionType",
+  "collectionName": "datasets",
+  "info": {
+    "singularName": "dataset",
+    "pluralName": "datasets",
+    "displayName": "Dataset",
+    "description": "A dataset imported into Libraries Global: who published it, under what licence, how and when it was obtained, and how it must be credited. Records link to it through their `source` key, which equals the dataset `key`."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": false
+    }
+  },
+  "attributes": {
+    "key": {
+      "type": "uid",
+      "required": true
+    },
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "publisher": {
+      "type": "string"
+    },
+    "sourceUrl": {
+      "type": "string"
+    },
+    "licence": {
+      "type": "string"
+    },
+    "licenceUrl": {
+      "type": "string"
+    },
+    "licenceStatus": {
+      "type": "enumeration",
+      "default": "unconfirmed",
+      "enum": ["confirmed_in_writing", "stated_by_publisher", "unconfirmed"]
+    },
+    "redistribution": {
+      "type": "enumeration",
+      "default": "unconfirmed",
+      "enum": [
+        "permitted",
+        "permitted_with_attribution",
+        "not_permitted",
+        "unconfirmed"
+      ]
+    },
+    "attribution": {
+      "type": "text"
+    },
+    "coverage": {
+      "type": "string"
+    },
+    "importMechanism": {
+      "type": "string"
+    },
+    "obtainedAt": {
+      "type": "date"
+    },
+    "sourceUpdatedAt": {
+      "type": "date"
+    },
+    "notes": {
+      "type": "text"
+    }
+  }
+}
