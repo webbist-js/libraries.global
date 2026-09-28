@@ -65,6 +65,25 @@ export const DATASET_SEED: DatasetSeed[] = [
     notes:
       'Ported from upstream commit 443861d49c174f0dd181864d69be7b68f7686ff9; the full notice is in packages/catalogues/NOTICE. These records are catalogues (catalogue.source = "librarieshacked"), not libraries.',
   },
+  {
+    key: "imls-pls",
+    name: "Public Libraries Survey",
+    publisher: "Institute of Museum and Library Services",
+    sourceUrl:
+      "https://www.imls.gov/research-evaluation/surveys/public-libraries-survey-pls",
+    licence: "Public domain (US federal government work)",
+    licenceUrl: "https://www.usa.gov/government-copyright",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted",
+    attribution:
+      "Contains data from the Public Libraries Survey, published by the Institute of Museum and Library Services.",
+    coverage:
+      "Public library outlets (central libraries, branches and bookmobiles) in the 50 US states and the District of Columbia",
+    importMechanism:
+      "apps/strapi/scripts/ingests/usa/imls-pls/ingest.ts, reading the FY 2023 public-use outlet and administrative entity CSV files (pls_fy2023_csv.zip) and mapping each outlet with map.ts",
+    notes:
+      'Works of the US federal government have no copyright (17 U.S.C. § 105), and the FY 2023 data file documentation says "all information contained herein is in the public domain and may be used and reprinted without special permission". The FY 2023 file covers the year to mid-2023, so opening status reflects that year. Only values IMLS marks as reported are used; imputed values are dropped. Outlying areas and books-by-mail services are not imported. Records carry source "imls-pls" and a source record whose ID is FSCSKEY-FSCS_SEQ.',
+  },
 ]
 
 const UID = "api::dataset.dataset"

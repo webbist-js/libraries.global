@@ -117,6 +117,14 @@ export interface AmenityCreateData {
   featured?: boolean
 }
 
+/** The record a library matches in an imported dataset (library.source-record). */
+export interface SourceRecordData {
+  dataset: string
+  recordId: string
+  retrievedAt?: string
+  url?: string
+}
+
 export interface LibraryCreateData {
   name: string
   libraryType: string
@@ -151,6 +159,8 @@ export interface LibraryCreateData {
   iiifEndpoint?: string
   source?: string
   sourceUrl?: string
+  sourceRecords?: SourceRecordData[]
+  libraryStats?: { value: string; label: string; note?: string }[]
   featured?: boolean
   contentUpdatedAt?: string
   socialLinks?: { platform: string; label?: string; url: string }[]
@@ -551,6 +561,31 @@ export class StrapiClient {
     })
 
     return res.data[0]?.documentId ?? null
+  }
+
+  /**
+   * Every library already matched to a record in `dataset`, as
+   * recordId → documentId. Ingests load this once and skip what's there.
+   */
+  async librariesBySourceRecord(dataset: string): Promise<Map<string, string>> {
+    const libraries = await this.findAll<
+      StrapiEntity & { sourceRecords?: SourceRecordData[] }
+    >("libraries", {
+      filters: { sourceRecords: { dataset: { $eq: dataset } } },
+      fields: ["documentId"],
+      populate: ["sourceRecords"],
+      status: "draft",
+    })
+
+    const byRecordId = new Map<string, string>()
+    for (const lib of libraries) {
+      for (const record of lib.sourceRecords ?? []) {
+        if (record.dataset === dataset)
+          byRecordId.set(record.recordId, lib.documentId)
+      }
+    }
+
+    return byRecordId
   }
 
   async libraryExistsByEntityRef(entityRef: string): Promise<string | null> {

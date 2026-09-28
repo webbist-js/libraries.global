@@ -1,0 +1,25 @@
+{
+  "collectionName": "components_library_source_records",
+  "info": {
+    "displayName": "Source Record",
+    "icon": "database",
+    "description": "The record this library matches in an imported dataset, so a re-run updates it and other datasets can find it."
+  },
+  "options": {},
+  "attributes": {
+    "dataset": {
+      "type": "string",
+      "required": true
+    },
+    "recordId": {
+      "type": "string",
+      "required": true
+    },
+    "retrievedAt": {
+      "type": "date"
+    },
+    "url": {
+      "type": "string"
+    }
+  }
+}

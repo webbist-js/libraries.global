@@ -508,6 +508,16 @@
         }
       }
     },
+    "sourceRecords": {
+      "type": "component",
+      "repeatable": true,
+      "component": "library.source-record",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
     "lastVerifiedAt": {
       "type": "datetime",
       "pluginOptions": {

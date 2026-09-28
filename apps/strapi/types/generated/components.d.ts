@@ -291,6 +291,21 @@ export interface LibraryLibraryStat extends Struct.ComponentSchema {
   }
 }
 
+export interface LibrarySourceRecord extends Struct.ComponentSchema {
+  collectionName: "components_library_source_records"
+  info: {
+    description: "The record this library matches in an imported dataset, so a re-run updates it and other datasets can find it."
+    displayName: "Source Record"
+    icon: "database"
+  }
+  attributes: {
+    dataset: Schema.Attribute.String & Schema.Attribute.Required
+    recordId: Schema.Attribute.String & Schema.Attribute.Required
+    retrievedAt: Schema.Attribute.Date
+    url: Schema.Attribute.String
+  }
+}
+
 export interface ProfileLanguageEntry extends Struct.ComponentSchema {
   collectionName: "components_profile_language_entries"
   info: {
@@ -817,6 +832,7 @@ declare module "@strapi/strapi" {
       "legal.summary-point": LegalSummaryPoint
       "library.collection-stat": LibraryCollectionStat
       "library.library-stat": LibraryLibraryStat
+      "library.source-record": LibrarySourceRecord
       "profile.language-entry": ProfileLanguageEntry
       "sections.cta-banner": SectionsCtaBanner
       "sections.editorial-block": SectionsEditorialBlock

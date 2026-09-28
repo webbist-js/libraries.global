@@ -46,7 +46,7 @@ We will then take care of the issue as soon as possible.
 
 Every library record must be traceable to where it came from.
 
-- **Imported datasets** are registered in Strapi as a `Dataset` (publisher, source URL, licence and its URL, whether the licence has been confirmed, redistribution status, attribution text, coverage, import mechanism, dates and notes). Records point at their dataset through the `source` field, which must equal the dataset's `key`. Register the dataset before running an import (the known ones are seeded from `apps/strapi/src/seeds/datasets.ts`), and never import a dataset whose licence does not allow republication under CC BY-SA 4.0.
+- **Imported datasets** are registered in Strapi as a `Dataset` (publisher, source URL, licence and its URL, whether the licence has been confirmed, redistribution status, attribution text, coverage, import mechanism, dates and notes). Records point at their dataset through the `source` field, which must equal the dataset's `key`, and keep the dataset's own ID for them in `sourceRecords`. Ingests live in `apps/strapi/scripts/ingests/` (see its README). Register the dataset before running an import (the known ones are seeded from `apps/strapi/src/seeds/datasets.ts`), and never import a dataset whose licence does not allow republication under CC BY-SA 4.0.
 - **Site contributions** are recorded as submissions with the contributor, the time, the evidence they supplied, the reviewer's decision and when it was made. Approved submissions form the record's public revision history. Deleting an account anonymises the contributor but keeps the contribution, as the privacy notice explains.
 - Give a source when you change a fact, and cite the library's own website or a public document where you can.
 

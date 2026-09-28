@@ -2432,6 +2432,12 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    sourceRecords: Schema.Attribute.Component<"library.source-record", true> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     sourceUrl: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {

@@ -52,3 +52,6 @@ next-env.d.ts
 # Local ingest run logs
 ingest-log.json
 ingest-dry-log.json
+*.ingest-log.json
+# Downloaded dataset files (ingests fetch them on demand)
+apps/strapi/scripts/ingests/**/.cache/

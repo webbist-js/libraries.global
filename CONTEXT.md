@@ -28,6 +28,10 @@ _Avoid_: integration, feed, data source
 An external body of data imported into the index — a published list of libraries or catalogues — registered in Strapi with its publisher, source address, licence and licence URL, whether that licence has been confirmed in writing, whether redistribution is permitted, the credit it requires, its coverage, the import mechanism, dates and notes. A record points at the Dataset it came from through its `source` field, which equals the Dataset's `key`. Distinct from a Source Provider, which supplies Events, not records.
 _Avoid_: data source, feed, import (for the registry entry itself)
 
+**Source Record**:
+The row in a Dataset that a library corresponds to, stored on the library as the Dataset's `key` and that row's own ID (for the IMLS survey, `FSCSKEY-FSCS_SEQ`). A library can have one from each Dataset that describes it. Re-running an import matches libraries by Source Record, not by name or slug, and a second Dataset uses it to add to a record that already exists.
+_Avoid_: external ID, foreign key
+
 **Wiki**:
 Public-facing technical documentation for the platform — API usage, data scope, how to contribute, how to interpret the data model. Editable by the community via the Submission system (`wiki_edit`). Not a subject-matter encyclopaedia about libraries. Users see it as **Knowledge** (`/knowledge`, pages are "Knowledge articles"); code, CMS and Submission types keep the `wiki` names.
 _Avoid_: encyclopaedia, docs, docs site
