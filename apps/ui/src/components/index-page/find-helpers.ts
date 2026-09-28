@@ -160,8 +160,16 @@ export function hitNeeds(hit: LibrarySearchHitV2): NeedKey[] {
 export type ViewMode = "grid" | "list" | "map"
 export type SortKey = "complete" | "gaps" | "name" | "near"
 
+/** Location scope, set by `?continent=` / `?country=` / `?region=` (slugs). */
+export type PlaceLevel = "continent" | "country" | "region"
+export type FindPlace = { level: PlaceLevel; slug: string }
+
+// Narrowest first: a region link wins over its country.
+const PLACE_LEVELS: readonly PlaceLevel[] = ["region", "country", "continent"]
+
 export interface FindState {
   q: string
+  place: FindPlace | null
   groups: TypeGroupKey[]
   access: string[]
   services: string[]
@@ -180,6 +188,7 @@ export interface FindState {
 
 export const DEFAULT_FIND_STATE: FindState = {
   q: "",
+  place: null,
   groups: [],
   access: [],
   services: [],
@@ -205,9 +214,13 @@ export function findStateFromParams(params: URLSearchParams): FindState {
     .filter((n): n is NeedKey => needKeys.includes(n))
   const sort = params.get("sort")
   const view = params.get("view")
+  const placeLevel = PLACE_LEVELS.find((level) => params.get(level))
 
   return {
     q: params.get("q") ?? "",
+    place: placeLevel
+      ? { level: placeLevel, slug: params.get(placeLevel)! }
+      : null,
     groups,
     access: (params.get("access") ?? "").split(",").filter(Boolean),
     services: (params.get("service") ?? "").split(",").filter(Boolean),
@@ -232,6 +245,7 @@ export function findStateFromParams(params: URLSearchParams): FindState {
 export function findStateToParams(s: FindState): URLSearchParams {
   const p = new URLSearchParams()
   if (s.q) p.set("q", s.q)
+  if (s.place) p.set(s.place.level, s.place.slug)
   if (s.groups.length > 0) p.set("tg", s.groups.join(","))
   if (s.access.length > 0) p.set("access", s.access.join(","))
   if (s.services.length > 0) p.set("service", s.services.join(","))
@@ -251,6 +265,7 @@ export function findStateToParams(s: FindState): URLSearchParams {
 export function hasActiveFindFilters(s: FindState): boolean {
   return (
     s.q !== "" ||
+    s.place !== null ||
     s.groups.length > 0 ||
     s.access.length > 0 ||
     s.services.length > 0 ||

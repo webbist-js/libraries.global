@@ -85,14 +85,24 @@ export function FindSearchBar({
 
 export function FindFilterChips({
   state,
+  placeName,
   onChange,
   onClearAll,
 }: {
   state: FindState
+  /** Display name for `state.place`, e.g. "England". */
+  placeName?: string | null
   onChange: (patch: Partial<FindState>) => void
   onClearAll: () => void
 }) {
   const chips: { label: string; onRemove: () => void }[] = []
+
+  if (state.place) {
+    chips.push({
+      label: `In ${placeName ?? state.place.slug}`,
+      onRemove: () => onChange({ place: null, page: 0 }),
+    })
+  }
 
   for (const key of state.groups) {
     const group = TYPE_GROUPS.find((g) => g.key === key)

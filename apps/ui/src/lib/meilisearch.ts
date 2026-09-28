@@ -377,6 +377,8 @@ const V2_FACETS = [
 
 export interface SearchLibrariesV2Options {
   query?: string
+  /** Only libraries in this continent / country / region (slug). */
+  place?: { level: "continent" | "country" | "region"; slug: string }
   libraryTypes?: string[]
   accessibilityNames?: string[]
   serviceNames?: string[]
@@ -395,6 +397,11 @@ export interface SearchLibrariesV2Options {
 
 export async function searchLibrariesV2(opts: SearchLibrariesV2Options) {
   const filterParts: string[] = []
+  if (opts.place) {
+    filterParts.push(
+      `${opts.place.level}_slug = ${JSON.stringify(opts.place.slug)}`
+    )
+  }
   if (opts.libraryTypes?.length) {
     filterParts.push(
       `libraryType IN [${opts.libraryTypes.map((t) => JSON.stringify(t)).join(", ")}]`

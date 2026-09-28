@@ -67,15 +67,19 @@ export function FindLibraryPage({
   const [state, setState] = useState<FindState>(() =>
     findStateFromParams(new URLSearchParams(searchParams.toString()))
   )
+  // The server's hits are unfiltered: only show them for the default state.
+  const [initialMatches] = useState(
+    () => initialHits !== null && !hasActiveFindFilters(state)
+  )
   const [result, setResult] = useState<FetchResult | null>(() =>
-    initialHits
+    initialHits && initialMatches
       ? {
           all: initialHits,
           facets: facetsFrom(initialFacetDistribution, initialHits),
         }
       : null
   )
-  const [loading, setLoading] = useState(initialHits === null)
+  const [loading, setLoading] = useState(!initialMatches)
   const [error, setError] = useState(false)
   const [locating, setLocating] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -111,6 +115,7 @@ export function FindLibraryPage({
     try {
       const res = await searchLibrariesV2({
         query: s.q,
+        place: s.place ?? undefined,
         libraryTypes: s.groups.flatMap(
           (key) => TYPE_GROUPS.find((g) => g.key === key)?.types ?? []
         ),
@@ -193,6 +198,21 @@ export function FindLibraryPage({
     return hits
   }, [result, state.openNow, state.digital, state.needs, state.sort, now])
 
+  // "In England": the place's name from any hit, else its slug.
+  const placeName = useMemo(() => {
+    const place = state.place
+    if (!place) return null
+    const hit = result?.all.find((h) => h[`${place.level}_slug`] === place.slug)
+
+    return (
+      hit?.[`${place.level}_name`] ??
+      place.slug
+        .split("-")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ")
+    )
+  }, [result, state.place])
+
   const pageCount = Math.max(1, Math.ceil(refined.length / PAGE_SIZE))
   const page = Math.min(state.page, pageCount - 1)
   const pageHits = refined.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
@@ -204,7 +224,8 @@ export function FindLibraryPage({
     (state.openNow ? 1 : 0) +
     (state.digital ? 1 : 0) +
     state.needs.length +
-    (state.nearLat != null ? 1 : 0)
+    (state.nearLat != null ? 1 : 0) +
+    (state.place ? 1 : 0)
 
   const clearAll = useCallback(() => {
     setState((s) => ({
@@ -311,6 +332,7 @@ export function FindLibraryPage({
           <div className="mt-4">
             <FindFilterChips
               state={state}
+              placeName={placeName}
               onChange={patch}
               onClearAll={clearAll}
             />
