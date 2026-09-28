@@ -410,6 +410,9 @@ importers:
       lucide-react:
         specifier: ^0.563.0
         version: 0.563.0(react@19.2.4)
+      mailtrap:
+        specifier: ^4.10.0
+        version: 4.10.0(@types/nodemailer@6.4.23)(nodemailer@7.0.13)
       maplibre-gl:
         specifier: ^5.22.0
         version: 5.22.0
@@ -10037,15 +10040,6 @@ packages:
   fn.name@1.1.0:
     resolution: {integrity: sha512-GRnmB5gPyJpAhTQdSZTSp9uaPSvl09KoYcMQtsB9rQoOmzs9dH6ffeccH+Z+cv6P68Hu5bC6JjRh4Ah/mHSNRw==}
 
-  follow-redirects@1.15.11:
-    resolution: {integrity: sha512-deG2P0JfjrTxl50XGCDyfI97ZGVCxIpfKYmfyrQ54n5FO/0gfIES8C/Psl6kWVDolizcaaxZJnTS0QSMxvnsBQ==}
-    engines: {node: '>=4.0'}
-    peerDependencies:
-      debug: '*'
-    peerDependenciesMeta:
-      debug:
-        optional: true
-
   follow-redirects@1.16.0:
     resolution: {integrity: sha512-y5rN/uOsadFT/JfYwhxRS5R7Qce+g3zG97+JrtFZlC9klX/W5hD7iiLzScI4nZqUS7DNUdhPgw4xI8W2LuXlUw==}
     engines: {node: '>=4.0'}
@@ -11955,6 +11949,18 @@ packages:
   mailgun.js@10.2.1:
     resolution: {integrity: sha512-lslXpLdwtLyavJGHsPKlpXLnd3XEuwWY5X/KaTAvv2UvHiOWSlUzqkGW21vVgcQQ9AKw0s5ayS5V9Cv8Ze2OIw==}
     engines: {node: '>=18.0.0'}
+
+  mailtrap@4.10.0:
+    resolution: {integrity: sha512-WgLKOmgy8HhvjXMb4S+E2NVjgJLbDUC17lMFKsKNwBxTBteD2sin2m2wuEVbdppluq5YL5A1saNhSW8FvUdm/g==}
+    engines: {node: '>=16.20.1', yarn: '>=1.22.17'}
+    peerDependencies:
+      '@types/nodemailer': ^6.4.9
+      nodemailer: ^9.0.1
+    peerDependenciesMeta:
+      '@types/nodemailer':
+        optional: true
+      nodemailer:
+        optional: true
 
   make-asynchronous@1.0.1:
     resolution: {integrity: sha512-T9BPOmEOhp6SmV25SwLVcHK4E6JyG/coH3C6F1NjNXSziv/fd4GmsqMk8YR6qpPOswfaOCApSNkZv6fxoaYFcQ==}
@@ -28611,7 +28617,7 @@ snapshots:
 
   axios@0.21.4:
     dependencies:
-      follow-redirects: 1.15.11
+      follow-redirects: 1.16.0(debug@4.3.4)
     transitivePeerDependencies:
       - debug
 
@@ -30215,7 +30221,7 @@ snapshots:
       has-property-descriptors: 1.0.2
       has-proto: 1.2.0
       has-symbols: 1.1.0
-      hasown: 2.0.2
+      hasown: 2.0.4
       internal-slot: 1.1.0
       is-array-buffer: 3.0.5
       is-callable: 1.2.7
@@ -30286,11 +30292,11 @@ snapshots:
       es-errors: 1.3.0
       get-intrinsic: 1.3.0
       has-tostringtag: 1.0.2
-      hasown: 2.0.2
+      hasown: 2.0.4
 
   es-shim-unscopables@1.1.0:
     dependencies:
-      hasown: 2.0.2
+      hasown: 2.0.4
 
   es-to-primitive@1.3.0:
     dependencies:
@@ -31119,8 +31125,6 @@ snapshots:
 
   fn.name@1.1.0: {}
 
-  follow-redirects@1.15.11: {}
-
   follow-redirects@1.16.0(debug@4.3.4):
     optionalDependencies:
       debug: 4.3.4
@@ -31168,7 +31172,7 @@ snapshots:
       asynckit: 0.4.0
       combined-stream: 1.0.8
       es-set-tostringtag: 2.1.0
-      hasown: 2.0.2
+      hasown: 2.0.4
       mime-types: 2.1.35
 
   form-data@4.0.6:
@@ -31298,7 +31302,7 @@ snapshots:
       call-bound: 1.0.4
       define-properties: 1.2.1
       functions-have-names: 1.2.3
-      hasown: 2.0.2
+      hasown: 2.0.4
       is-callable: 1.2.7
 
   functional-red-black-tree@1.0.1: {}
@@ -31325,7 +31329,7 @@ snapshots:
       get-proto: 1.0.1
       gopd: 1.2.0
       has-symbols: 1.1.0
-      hasown: 2.0.2
+      hasown: 2.0.4
       math-intrinsics: 1.1.0
 
   get-it@8.7.0:
@@ -32145,8 +32149,8 @@ snapshots:
   internal-slot@1.1.0:
     dependencies:
       es-errors: 1.3.0
-      hasown: 2.0.2
-      side-channel: 1.1.0
+      hasown: 2.0.4
+      side-channel: 1.1.1
 
   interpret@1.4.0: {}
 
@@ -32254,7 +32258,7 @@ snapshots:
 
   is-core-module@2.16.1:
     dependencies:
-      hasown: 2.0.2
+      hasown: 2.0.4
 
   is-data-view@1.0.2:
     dependencies:
@@ -32364,7 +32368,7 @@ snapshots:
       call-bound: 1.0.4
       gopd: 1.2.0
       has-tostringtag: 1.0.2
-      hasown: 2.0.2
+      hasown: 2.0.4
 
   is-regexp@1.0.0: {}
 
@@ -33256,9 +33260,20 @@ snapshots:
 
   mailgun.js@10.2.1:
     dependencies:
-      axios: 1.16.1
+      axios: 1.19.0(debug@4.3.4)
       base-64: 1.0.0
       url-join: 4.0.1
+    transitivePeerDependencies:
+      - debug
+      - supports-color
+
+  mailtrap@4.10.0(@types/nodemailer@6.4.23)(nodemailer@7.0.13):
+    dependencies:
+      axios: 1.19.0(debug@4.3.4)
+      qs: 6.15.3
+    optionalDependencies:
+      '@types/nodemailer': 6.4.23
+      nodemailer: 7.0.13
     transitivePeerDependencies:
       - debug
       - supports-color
@@ -37434,7 +37449,7 @@ snapshots:
       internal-slot: 1.1.0
       regexp.prototype.flags: 1.5.4
       set-function-name: 2.0.2
-      side-channel: 1.1.0
+      side-channel: 1.1.1
 
   string.prototype.repeat@1.0.0:
     dependencies:
