@@ -64,6 +64,9 @@ export const FIXTURES: readonly Fixture[] = [
   { key: "wiki-editor", role: "wiki_editor", claim: false },
   { key: "editorial", role: "editorial_board", claim: false },
   { key: "onboarding", role: "reader", claim: false, username: null },
+  // Never onboarded, like `onboarding`, but only signed in by magic link
+  // (magic-link.spec.ts), which leaves it un-onboarded, so it needs no reset.
+  { key: "magic-link", role: "reader", claim: false, username: null },
   { key: "pro-grant", role: "reader", claim: false, plan: "pro-grant" },
   { key: "pro-earned", role: "reader", claim: false, plan: "pro-earned" },
   { key: "pro-verified", role: "reader", claim: false, plan: "pro-verified" },

@@ -1,6 +1,6 @@
 /**
  * Seeds the Better Auth users for the access E2E (FIXTURES): one per
- * Contributor Role, one per way of holding a paid plan, and one that hasn't
+ * Contributor Role, one per way of holding a paid plan, and two that haven't
  * onboarded yet. Local only: refuses to run in production or against a
  * non-local host.
  *

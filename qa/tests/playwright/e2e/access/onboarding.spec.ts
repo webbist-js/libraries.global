@@ -1,13 +1,12 @@
-import { expect, type Page, test } from "@playwright/test"
+import { expect, test } from "@playwright/test"
 
+import { emailFor, signIn } from "../../helpers/access-fixtures"
 import {
-  emailFor,
-  fixturePassword,
-  retryAfterMs,
-  SIGN_IN_ATTEMPTS,
-  signIn,
-  sleep,
-} from "../../helpers/access-fixtures"
+  completeOnboarding,
+  NAVIGATION,
+  sessionUser,
+  signInThroughForm,
+} from "../../helpers/ui-flows"
 
 // Local only, opt-in (the access project). Run it after `pnpm seed:access`,
 // which clears this fixture's username on every run: the test onboards it,
@@ -17,12 +16,6 @@ import {
 
 const KEY = "onboarding"
 
-/** The username field's visible label, the whole of its accessible name. */
-const USERNAME_LABEL = "Username * → libraries.global/@handle"
-
-// Pages compile on first visit to a dev server, and a sign-in may wait out
-// a 429 twice, so navigations get a minute and the test five.
-const NAVIGATION = { timeout: 60_000 }
 test.describe.configure({ mode: "serial", timeout: 300_000 })
 
 test.beforeAll(async ({ playwright }, testInfo) => {
@@ -49,95 +42,15 @@ test.beforeAll(async ({ playwright }, testInfo) => {
   }
 })
 
-/**
- * Signs in through the sign-in form. A 429 only shows a toast, so it's
- * waited out and the form submitted again, the way signIn retries.
- *
- * The password is set through the input's native value setter, not fill():
- * Playwright titles a fill step with its value and logs it on failure, which
- * would put the password in the HTML report and the terminal. Nothing is
- * typed until the submit is enabled, which the form holds off until React
- * has mounted it: typed any sooner, the values wouldn't reach React.
- */
-async function signInThroughForm(page: Page, key: string) {
-  await page.goto("/auth/signin")
-  const submit = page.getByRole("button", { name: "Sign in", exact: true })
-  await expect(submit).toBeEnabled(NAVIGATION)
-  await page.getByLabel("Email address", { exact: true }).fill(emailFor(key))
-  await page.getByLabel("Password", { exact: true }).evaluate((el, value) => {
-    const input = el as HTMLInputElement
-    Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      "value"
-    )?.set?.call(input, value)
-    input.dispatchEvent(new Event("input", { bubbles: true }))
-  }, fixturePassword())
-
-  for (let attempt = 1; attempt <= SIGN_IN_ATTEMPTS; attempt++) {
-    const response = page.waitForResponse(
-      (r) =>
-        new URL(r.url()).pathname === "/api/auth/sign-in/email" &&
-        r.request().method() === "POST",
-      { timeout: 30_000 }
-    )
-    await submit.click()
-    const res = await response
-    if (res.status() !== 429) {
-      expect(res.status(), `sign-in for ${key}`).toBe(200)
-
-      return
-    }
-    if (attempt < SIGN_IN_ATTEMPTS)
-      await sleep(retryAfterMs(res.headers()["x-retry-after"]))
-  }
-  throw new Error(`sign-in for ${key} stayed rate-limited`)
-}
-
-async function sessionUser(page: Page) {
-  const res = await page.request.get("/api/auth/get-session")
-
-  return (await res.json())?.user ?? null
-}
-
 test("a new user onboards, lands on their profile and stays onboarded", async ({
   page,
 }) => {
   const username = `access_onboarded_${Date.now() % 1e6}`
 
   // A loaded profile with no username signs in to onboarding.
-  await signInThroughForm(page, KEY)
-  await expect(page).toHaveURL(/\/profile\/onboarding(\?|$)/, NAVIGATION)
-
-  // The primary button stays disabled until the page has hydrated (see
-  // OnboardingShell/useMounted). Waiting for it to enable is a stable
-  // hydration signal: a sign-in that waits out a 429 could otherwise eat
-  // most of a request-based wait's budget before it even starts listening.
-  const enterProfile = page.getByRole("button", { name: "Enter your profile" })
-  await expect(enterProfile).toBeEnabled(NAVIGATION)
-
-  // The required fields, found by their visible labels, which proves each
-  // label is tied to its field. The display name is prefilled from the
-  // account name. The username is checked for availability as it's typed,
-  // and the status is the field's description, not part of its name.
-  await expect(
-    page.getByLabel("Display name *", { exact: true })
-  ).not.toHaveValue("")
-  const usernameInput = page.getByLabel(USERNAME_LABEL, { exact: true })
-  await usernameInput.fill(username)
-  // The check's route may still be compiling on a cold dev server.
-  await expect(page.getByText("Available ✓")).toBeVisible(NAVIGATION)
-  await expect(usernameInput).toHaveAccessibleDescription("Available ✓")
-  await page
-    .getByLabel("Pronouns *", { exact: true })
-    .selectOption({ label: "Prefer not to say" })
-  const reader = page
-    .getByRole("group", { name: "Affiliation" })
-    .getByRole("button", { name: "Reader / enthusiast" })
-  await reader.click()
-  await expect(reader).toHaveAttribute("aria-pressed", "true")
-  await enterProfile.click()
-
-  await expect(page).toHaveURL(new RegExp(`/profile/${username}$`), NAVIGATION)
+  const first = await signInThroughForm(page, emailFor(KEY))
+  expect(first.status()).toBe(200)
+  await completeOnboarding(page, username)
 
   // The same browser context's session now carries the username.
   const user = await sessionUser(page)
@@ -150,7 +63,8 @@ test("a new user onboards, lands on their profile and stays onboarded", async ({
   await page.goto("/auth/signout")
   await page.waitForURL((url) => url.pathname === "/", NAVIGATION)
   await expect.poll(() => sessionUser(page)).toBeNull()
-  await signInThroughForm(page, KEY)
+  const second = await signInThroughForm(page, emailFor(KEY))
+  expect(second.status()).toBe(200)
   await expect(page).not.toHaveURL(/\/auth\/signin/, NAVIGATION)
   await expect(page).not.toHaveURL(/\/profile\/onboarding/)
 })
