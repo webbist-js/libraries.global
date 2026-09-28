@@ -39,6 +39,7 @@ import {
   LibraryRecordPanel,
 } from "@/components/library/LibrarySidebar"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
+import type { DatasetRecord } from "@/lib/strapi-api/content/datasets"
 import type {
   LibraryCatalogueSummary,
   LibraryRevision,
@@ -52,6 +53,8 @@ interface LibraryDetailPageProps {
   readonly nearbyLibraries?: PopulatedLibraryData[]
   readonly revisions?: LibraryRevision[]
   readonly catalogue?: LibraryCatalogueSummary | null
+  /** The dataset this record was imported from, if any. */
+  readonly dataset?: DatasetRecord | null
 }
 
 export function LibraryDetailPage({
@@ -60,6 +63,7 @@ export function LibraryDetailPage({
   nearbyLibraries = [],
   revisions = [],
   catalogue = null,
+  dataset = null,
 }: LibraryDetailPageProps) {
   if (!library) {
     return (
@@ -307,7 +311,11 @@ export function LibraryDetailPage({
                 </LibrarySectionCard>
               )}
 
-              <LibrarySourcesSection library={library} revisions={revisions} />
+              <LibrarySourcesSection
+                library={library}
+                revisions={revisions}
+                dataset={dataset}
+              />
 
               {/* Nearby */}
               {nearbyLibraries.length > 0 ? (

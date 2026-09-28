@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   formatLegalDate,
   formatVersion,
+  isPreLaunchDraft,
   legalReadingMinutes,
   revisionsNewestFirst,
   sectionAnchors,
@@ -118,5 +119,22 @@ describe("legalReadingMinutes", () => {
 
   it("never reports less than a minute", () => {
     expect(legalReadingMinutes({ sections: [] })).toBe(1)
+  })
+})
+
+describe("isPreLaunchDraft", () => {
+  it("treats 0.x and anything called draft as a pre-launch draft", () => {
+    expect(isPreLaunchDraft("0.1")).toBe(true)
+    expect(isPreLaunchDraft("v0.3")).toBe(true)
+    expect(isPreLaunchDraft("0")).toBe(true)
+    expect(isPreLaunchDraft("1.0-draft")).toBe(true)
+  })
+
+  it("treats 1.0 and later as published", () => {
+    expect(isPreLaunchDraft("1.0")).toBe(false)
+    expect(isPreLaunchDraft("v1.2")).toBe(false)
+    expect(isPreLaunchDraft("10.0")).toBe(false)
+    expect(isPreLaunchDraft(null)).toBe(false)
+    expect(isPreLaunchDraft(undefined)).toBe(false)
   })
 })

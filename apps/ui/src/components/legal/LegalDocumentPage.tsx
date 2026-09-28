@@ -17,6 +17,7 @@ import type {
 import {
   formatLegalDate,
   formatVersion,
+  isPreLaunchDraft,
   LEGAL_CONTACT_EMAIL,
   LEGAL_FORUM_URL,
   legalIcon,
@@ -65,6 +66,7 @@ export function LegalDocumentPage({
   const summaryPoints = doc.summaryPoints ?? []
   const revisions = revisionsNewestFirst(doc.revisions)
   const current = revisions[0]
+  const draft = isPreLaunchDraft(current?.version)
 
   const meta = [
     {
@@ -73,7 +75,9 @@ export function LegalDocumentPage({
     },
     {
       label: "Version",
-      value: current ? formatVersion(current.version) : null,
+      value: current
+        ? `${formatVersion(current.version)}${draft ? " (draft)" : ""}`
+        : null,
       mono: true,
     },
     { label: "Reading time", value: `${legalReadingMinutes(doc)} min` },
@@ -208,6 +212,47 @@ export function LegalDocumentPage({
 
             {/* ── Main: the document ── */}
             <article className="min-w-0">
+              {draft ? (
+                <aside
+                  aria-labelledby="legal-draft-notice"
+                  className="mb-6 flex gap-3 rounded-[20px] border p-5 sm:p-6"
+                  data-legal-draft=""
+                  style={{
+                    background: TYPE_TINT.special.bg,
+                    borderColor:
+                      "color-mix(in srgb, var(--tint-special-fg) 25%, transparent)",
+                  }}
+                >
+                  <Icon
+                    aria-hidden="true"
+                    className="mt-0.5 shrink-0"
+                    height={18}
+                    icon="mdi:file-document-edit-outline"
+                    style={{ color: TYPE_TINT.special.fg }}
+                    width={18}
+                  />
+                  <div>
+                    <h2
+                      className="m-0 text-[15px] font-semibold"
+                      id="legal-draft-notice"
+                      style={{ color: T.ink.base }}
+                    >
+                      Pre-launch draft
+                    </h2>
+                    <p
+                      className="mt-1 mb-0 text-[15px] leading-[1.55]"
+                      style={{ color: T.ink.base }}
+                    >
+                      Libraries Global hasn’t launched yet. This is a working
+                      draft: it hasn’t been published as terms governing public
+                      use of the service, and nobody has been asked to accept
+                      it. The final text will be published as version 1.0, with
+                      its effective date, before the service opens.
+                    </p>
+                  </div>
+                </aside>
+              ) : null}
+
               {summaryPoints.length > 0 ? (
                 <aside
                   aria-labelledby="legal-short-version"

@@ -400,8 +400,15 @@ export async function seedLegalDocuments(strapi: Core.Strapi) {
     await strapi.documents(UID).create({
       data: {
         ...doc,
+        // 0.x marks a pre-launch draft. The first publication pass before
+        // launch assigns 1.0 and the real effective date.
         revisions: [
-          { version: "1.0", date: today, summary: "First published version." },
+          {
+            version: "0.1",
+            date: today,
+            summary:
+              "Pre-launch draft. Not yet published as terms governing public use of Libraries Global.",
+          },
         ],
         // The seed's block shapes are narrower than Strapi's BlocksValue union.
       } as any,

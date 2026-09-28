@@ -9,6 +9,7 @@ import { JsonLd } from "@/components/seo/JsonLd"
 import { isDevelopment } from "@/lib/general-helpers"
 import { buildBreadcrumbSchema, buildLibrarySchema } from "@/lib/seo/json-ld"
 import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
+import { fetchDataset } from "@/lib/strapi-api/content/datasets"
 import {
   fetchAllLibraries,
   fetchLibrary,
@@ -145,6 +146,7 @@ export default function LibraryRoutePage(props: {
   )
   const revisions = use(fetchLibraryRevisions(library.documentId))
   const catalogue = use(fetchLibraryCatalogue(library.documentId))
+  const dataset = use(fetchDataset(library.source))
 
   const crumbs = libraryPath(library, {
     continent: params.continent,
@@ -205,6 +207,7 @@ export default function LibraryRoutePage(props: {
         nearbyLibraries={nearbyLibraries}
         revisions={revisions}
         catalogue={catalogue}
+        dataset={dataset}
       />
     </>
   )

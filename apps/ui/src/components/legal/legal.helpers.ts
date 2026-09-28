@@ -13,6 +13,7 @@ const LEGAL_ICONS: Record<string, string> = {
   privacy: "mdi:shield-outline",
   "data-licence": "mdi:web",
   cookies: "mdi:cookie-outline",
+  independence: "mdi:source-branch",
 }
 
 export function legalIcon(slug?: string | null): string {
@@ -49,6 +50,17 @@ export function revisionsNewestFirst<T extends { date: string }>(
   revisions?: readonly T[] | null
 ): T[] {
   return [...(revisions ?? [])].sort((a, b) => b.date.localeCompare(a.date))
+}
+
+/**
+ * A 0.x version (or one that says "draft") is a pre-launch draft: written
+ * before the service opened and never presented to any user. The first
+ * publication pass before launch assigns 1.0 and the effective date.
+ */
+export function isPreLaunchDraft(version?: string | null): boolean {
+  const trimmed = version?.trim() ?? ""
+
+  return /^v?0(\.|$)/i.test(trimmed) || /draft/i.test(trimmed)
 }
 
 export function formatVersion(version: string): string {

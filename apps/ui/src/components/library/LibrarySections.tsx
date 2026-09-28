@@ -21,6 +21,7 @@ import {
 } from "@/components/library/LibrarySectionCard"
 import StrapiBlocksContent from "@/components/library/StrapiBlocksContent"
 import { T } from "@/lib/design-tokens"
+import type { DatasetRecord } from "@/lib/strapi-api/content/datasets"
 import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
 
 type Lib = PopulatedLibraryData
@@ -449,14 +450,19 @@ export interface LibraryRevisionItem {
   summary: string
   submittedByUsername: string | null
   decidedAt: string | null
+  /** A public source the contributor supplied, when there was one. */
+  sourceUrl?: string | null
 }
 
 export function LibrarySourcesSection({
   library,
   revisions = [],
+  dataset = null,
 }: {
   readonly library: Lib
   readonly revisions?: readonly LibraryRevisionItem[]
+  /** The dataset the record was imported from, from the dataset registry. */
+  readonly dataset?: DatasetRecord | null
 }) {
   const rec = asRecord(library)
   const source = rec.source as string | null
@@ -481,7 +487,45 @@ export function LibrarySourcesSection({
       iconPath={LIB_ICONS.list}
     >
       <ul className="m-0 pl-5 text-[16px] leading-loose">
-        {source ? (
+        {source && dataset ? (
+          <li>
+            Imported from{" "}
+            {sourceUrl || dataset.sourceUrl ? (
+              <a
+                href={sourceUrl || dataset.sourceUrl || undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {dataset.name}
+              </a>
+            ) : (
+              dataset.name
+            )}
+            {dataset.publisher ? `, published by ${dataset.publisher}` : ""}
+            {dataset.licence ? (
+              <>
+                {" under "}
+                {dataset.licenceUrl ? (
+                  <a
+                    href={dataset.licenceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {dataset.licence}
+                  </a>
+                ) : (
+                  dataset.licence
+                )}
+              </>
+            ) : null}
+            {fmt(createdAt) ? `, ${fmt(createdAt)}` : ""}
+            {dataset.attribution ? (
+              <span className="block text-[14px]" style={{ color: T.ink.dim }}>
+                {dataset.attribution}
+              </span>
+            ) : null}
+          </li>
+        ) : source ? (
           <li>
             Imported from{" "}
             {sourceUrl ? (
@@ -546,6 +590,18 @@ export function LibrarySourcesSection({
                         {" · "}
                         <a href={`/profile/${r.submittedByUsername}`}>
                           {r.submittedByUsername}
+                        </a>
+                      </>
+                    ) : null}
+                    {r.sourceUrl ? (
+                      <>
+                        {" · "}
+                        <a
+                          href={r.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          source ↗
                         </a>
                       </>
                     ) : null}
