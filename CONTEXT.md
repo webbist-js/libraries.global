@@ -44,6 +44,10 @@ _Avoid_: posts, news
 A user-initiated change request that enters a moderation queue before any data is altered. Covers corrections to existing entries, new Library proposals, Library Claims, wiki and blog contributions, and topic suggestions. All submissions go through review regardless of the submitter's trust level.
 _Avoid_: edit, change request, contribution (alone — too generic; use the specific type)
 
+**Submission State**:
+Where a Submission is in moderation: `draft` (saved, not sent) → `pending` (waiting for review) → `approved`, `rejected` or `needs_info` (the reviewer asked for more). `needs_info` returns to `pending` when the submitter resubmits (their edit-and-resubmit flow is still to come, C-M1); a moderator can also approve or reject it directly. `approved` and `rejected` are final. Only these transitions are allowed (content-moderation `utils/transitions.ts`), and approval side effects (applying the change, awarding Points) run once. Users see Draft, Submitted, Needs changes, Accepted and Not accepted.
+_Avoid_: status (alone — clashes with Strapi's document `status`, which the content-manager shows as `published` for every Submission)
+
 **Library Claim**:
 A Submission in which a user asserts a trusted relationship to a specific Library — either as an employee or institutional affiliate, or as a verified community member who wants to steward that Library's data. Approval grants the claimant a trusted-contributor signal on future Submissions, not a bypass of moderation.
 _Avoid_: ownership claim, takeover
@@ -57,7 +61,7 @@ The unit of contribution credit awarded when a Submission is approved. Drive Tie
 _Avoid_: credits, score, karma
 
 **Tier**:
-A prestige level computed from a user's all-time Points — Reader (0), Indexer (100), Cartographer (500), Archivist (1 500), Scholar (4 000), Curator (9 000). Currently cosmetic; intended to carry functional trust benefits (reduced moderation friction, elevated review priority) in future.
+A prestige level computed from a user's all-time Points — Reader (0), Indexer (100), Cartographer (500), Archivist (1 500), Scholar (4 000), Curator (9 000). Scales contribution limits only (pending submissions, submissions per hour, uploads per day: `contributionLimits` in `@repo/access`; `wiki_editor` and `editorial_board` get Curator limits) and, from Archivist up, earns Pro (see Plan Source). Never confers trust: no Tier skips review or grants a Capability.
 _Avoid_: level, rank, grade
 
 **Badge**:
@@ -73,8 +77,24 @@ A community member or staff editor with authority to approve, reject, or request
 _Avoid_: admin, reviewer (alone — too generic)
 
 **Contributor Role**:
-A permission level stored on a user's profile that gates access to privileged platform features. Distinct from Tier (which is cosmetic and based on Points). Values in ascending privilege order: `reader` (default), `contributor`, `verified_librarian`, `wiki_editor`, `editorial_board`. `wiki_editor` and `editorial_board` can edit Wiki articles. Roles are assigned manually by staff in Strapi admin; they are not earned automatically. Stored in the user-profile record and cached in the Better Auth session (refreshed within 24 hours of a role change).
-_Avoid_: permission, access level, tier (Tier is the Points-based cosmetic system)
+A permission level stored on a user's profile that gates access to privileged platform features. Distinct from Tier (earned with Points; changes limits only) and Plan (changes Entitlements only). Values in ascending privilege order: `reader` (default), `contributor`, `verified_librarian`, `wiki_editor`, `editorial_board`. `wiki_editor` and `editorial_board` can edit Wiki articles. Roles are assigned by staff in Strapi admin, except `verified_librarian`, which an approved Library Claim (or an email-domain auto-verification) sets; that never lowers a higher role. They are never earned with Points or bought. Stored in the user-profile record and read into the Better Auth session through the `session-profile` bridge, which is cached for 60 seconds per user (spec §3.2), so a role change takes effect within a minute.
+_Avoid_: permission, access level, tier (Tier is the Points-based system)
+
+**Capability**:
+Something a signed-in user may do in the contribution system: submit a correction, a new Library, a Library Claim, a doc suggestion, a journal pitch or a topic suggestion; submit a `library_edit` or connect an event feed for a Library they have claimed; or edit Wiki articles directly (`docs.directEdit`, for `wiki_editor` and `editorial_board`). Resolved only from the Contributor Role and Library Claims (`resolveCapabilities` in `@repo/access`); Tier and Plan never feed it. Strapi's `submission-policy` is the real gate; the session's copy drives the UI and route pre-checks only.
+_Avoid_: permission (Strapi admin's word for its own roles), entitlement (that is what a Plan gives)
+
+**Entitlement**:
+A Plan-gated feature or numeric limit, such as the `atlas.export` feature or the `exportRows` limit (free 0, pro 10 000, team 50 000). Resolved by `resolveEntitlements` in `@repo/access` from the user's Plan and always enforced on the server (`requireEntitlement`); UI locks only explain. An Entitlement never grants a Capability or changes Points, Tier, Badges, Contributor Role or moderation: money never buys trust.
+_Avoid_: capability, perk, permission
+
+**Plan**:
+A user's membership level, which decides their Entitlements: `public` (signed out), `free` (any account), `supporter` (planned: patronage only, with Free's features), `pro` and `team`. Resolved on the server for every session; when several Plan Sources apply, the highest Plan wins. Library facts are free on every Plan, including `public`.
+_Avoid_: tier (Tier is the Points ladder), subscription (only one way to hold a Plan)
+
+**Plan Source**:
+How a user holds their Plan: `grant` (an admin Entitlement Grant, for example for press, partners or a Team), `verified` (a Pro Verification for library staff, students and charities), `earned` (Archivist Tier or above, plus a 90-day hold after dropping below) or `paid` (reserved: there is no checkout yet). `public` and `free` have the source `none`. At equal Plan, `paid` beats `grant`, which beats `verified`, which beats `earned`. Grants and verifications live in the admin-only `entitlement-grant` and `pro-verification` collections.
+_Avoid_: reason, plan type
 
 **Collection Stat**:
 A single data point describing what a Library _holds_ — volumes, manuscripts, maps, incunabula, digital objects, etc. Free-form `category` + `value` pairs today, with potential to become a structured collections API in the future.
@@ -111,6 +131,8 @@ _Avoid_: province, state, county (those are display names; the concept is Region
 - An **Area** belongs to exactly one **Region**; not every **Region** has **Areas**
 - A **Library Claim** links a user to a specific **Library** and, when approved, elevates their trust signal on future **Submissions** against that Library
 - **Points** accumulate per approved **Submission** and determine a user's **Tier** and **Badge** eligibility
+- A user's **Capabilities** come only from their **Contributor Role** and **Library Claims**, and their **Entitlements** only from their **Plan**. The two never feed each other; **Tier** feeds only contribution limits and earned Pro
+- Every **Submission** moves through the **Submission States**; no **Plan**, **Tier** or **Contributor Role** lets it skip review
 - A **Pillar Institution** is a **Library** flagged `featured: true` by editorial choice; there is no maximum per Region or Country
 
 ## Example dialogue

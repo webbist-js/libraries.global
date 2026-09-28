@@ -14,7 +14,10 @@ This is not a search engine or aggregator. It is an atlas. The aesthetic and UX 
 4. **Knowledge** (`/knowledge`, formerly Docs/Wiki) — platform knowledge base: how-tos, contribution guides, data and API. Stored as Strapi `wiki-article`
 5. **Journal** (`/journal`) — editorial content. Stored as Strapi `blog-article`
 
-**Planned pillars (not yet built):** 6. **Events** — library events calendar with provider integration (see Future Goals) 7. **Contribute** — user-submitted corrections and additions through a moderated layer 8. **User profiles** — saved libraries, visit logs, collection notes
+6. **Contribute** (`/contribute`) — moderated corrections, new libraries, library claims and edits, and Knowledge suggestions; the hub adapts to the user's capabilities (see Future Goals §3)
+7. **User profiles** (`/profile/[username]`) — tier, points, streaks, badges, activity and followed libraries, with Public / Limited / Private visibility and per-part privacy toggles
+
+**Planned pillars (not yet built):** 8. **Events** — library events calendar with provider integration (see Future Goals)
 
 ---
 
@@ -29,6 +32,7 @@ libraries.global/
 │   └── sync-worker/   — events provider sync worker (Eventbrite, Spydus, Solus,
 │                        Aspen, iCal, TicketSource, WeGotTickets)
 └── packages/
+    ├── access/         — @repo/access: capabilities, entitlements, limits (pure TS)
     ├── strapi-types/   — Generated TypeScript types from Strapi schemas
     ├── events-crypto/  — AES-256-GCM shared encryption for provider credentials
     ├── design-system/  — shared theme css consumed by both apps
@@ -43,7 +47,7 @@ libraries.global/
 
 ### Frontend (`apps/ui`)
 
-- **Next.js 15** — App Router, RSC-first, `server-only` guards on data fetching
+- **Next.js 16** — App Router, RSC-first, `server-only` guards on data fetching
 - **TypeScript** — strict mode
 - **Tailwind CSS v4** — utility classes; avoid arbitrary values unless necessary; use `T` tokens for inline styles
 - **Better Auth** — authentication layer, backed by Strapi users-permissions; supports credentials + OAuth (GitHub, Google)
@@ -143,6 +147,30 @@ All routes are under `app/[locale]/`. Key routes:
 - Custom plugins: `strapiAuthPlugin` (credentials), `strapiOAuthPlugin` (OAuth → Strapi JWT sync), `strapiSessionPlugin` (validates Strapi JWT on every session access)
 - Session includes `strapiJWT` for making authenticated Strapi API calls on behalf of the user
 - Auth pages: `/auth/signin`, `/auth/register`, `/auth/forgot-password`, `/auth/change-password`
+
+---
+
+## Access model
+
+Three axes that never mix (spec: `docs/superpowers/specs/2026-09-26-access-contribution-pro-implementation-design.md` §3; pricing: `docs/superpowers/specs/2026-09-27-pricing-and-membership.md`):
+
+| Axis                                                            | Source                                                | Governs                                                         |
+| --------------------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------- |
+| **Contributor Role** + **Library Claims**                       | `user-profile.contributorRole`, `library-affiliation` | **Capabilities**: what you may submit, edit directly or connect |
+| **Tier** (Points)                                               | rewards plugin                                        | Contribution quotas and earned Pro only. Never trust.           |
+| **Plan** (`public`, `free`, `pro`, `team`; `supporter` planned) | Grants, verifications, earned Pro; `paid` later       | **Entitlements**: Pro features and limits                       |
+
+**Money never buys trust:** no plan or entitlement changes a role, points, tier, badges or moderation. `CapabilityInput` has no plan fields, and type-level tests in `packages/access` fail if one is added.
+
+- **`@repo/access`** (`packages/access`, pure TS, imported by the UI and Strapi) exports `resolveCapabilities`, `canSubmit`, `SUBMISSION_TYPES`, `Capability`; `resolveEntitlements`, `can`, `limitOf`, `FEATURES`, `PlanKey`, `PlanSource`, `Feature`, `Limit`, `EARNED_PRO_HOLD_DAYS`, `isEarnedProTier`; `contributionLimits`, `TIER_NAMES`; `CONTRIBUTOR_ROLES`, `promoteRole`. Rebuild after changes (`pnpm --filter @repo/access build`); test with `cd packages/access && pnpm test`.
+- **Session fields** (Better Auth `customSession`, built by `buildSessionAccess` in `lib/session-access.ts`): `capabilities`, `claimedLibraryIds`, `plan`, `planSource`, `features`, `limits` (e.g. `exportRows`: free 0, pro 10,000, team 50,000) and `profileLoaded`. They come from the Strapi `session-profile` bridge (`lib/session-profile.ts`), cached per user for 60 s; a profile write (`/api/profile/me`) calls `invalidateSessionProfile`, and changes made in Strapi admin take effect within 60 s. `profileLoaded: false` means the bridge failed: no capabilities, plan `free`.
+- **Server helpers** (`lib/access-server.ts`): `requireCapability(user, cap)` returns 401/403; `requireEntitlement(user, feature)` returns 401/402 with `{ feature, upgradeUrl: "/pro" }`. Gate every Pro route with `requireEntitlement`. Missing session fields mean deny; missing `limits` mean a cap of 0.
+- **Client hooks** (`lib/access-client.ts`): `useCapabilities()` → `{ has, claimedLibraryIds, ready }` and `useEntitlements()` → `{ plan, can, ready }`. UI only: they hide or explain, and the server decides.
+- **Strapi is authoritative.** The content-moderation `submission-policy` runs `canSubmit` and the tier quotas in `create`, `saveDraft` and `finalize`. Next route checks are fast pre-checks, never the only gate.
+- **Pro sources** (`planSource`): `grant` (an `entitlement-grant` row: plan `pro` or `team`, optional `expiresAt`), `verified` (a `pro-verification` row: library staff, student or charity; staff create these by hand until self-serve verification ships), `earned` (Archivist tier or above, 1,500 points, plus a 90-day hold in `user-profile.earnedProUntil` after dropping below) and `paid` (reserved: no checkout until P-D1). The highest plan wins; at equal plan the order is paid, grant, verified, earned.
+- **Admin-only collections:** `entitlement-grant` and `pro-verification` have `routes: []` (no REST). They're visible in the content-manager and read only by the secret-gated `session-profile` bridge.
+- **Plans page:** `/pro` (`app/[locale]/pro/page.tsx`). All plan copy and prices come from `lib/plans.ts`, labelled "Prices are placeholders"; never hard-code an amount elsewhere.
+- **First Pro feature:** Atlas export, CSV or GeoJSON from the Atlas list view. `POST /api/export/atlas` is gated by `requireEntitlement("atlas.export")` and capped at `limits.exportRows`; its rows come from the bridge-secret-gated Strapi action `POST /api/libraries/export`. Every other Pro feature is "coming soon" (`PRO_FEATURE_COPY` in `lib/plans.ts`).
 
 ---
 
@@ -294,25 +322,21 @@ Libraries host events (talks, exhibitions, reading groups). The plan:
 
 ### 2. User Accounts & Profiles
 
-Auth infrastructure is already built (Better Auth + Strapi users). The next layer:
+Built: accounts (Better Auth + Strapi users) and profile pages at `/profile/[username]` with avatar, bio, followed libraries, and Public / Limited / Private visibility plus per-part toggles (`publicPrefs`). Still to come:
 
-- **My Libraries** — save/bookmark libraries (stored in Strapi as user-library relations)
 - **Visit log** — record libraries visited with date and notes
 - **Collection notes** — personal annotation layer on library entries
-- Profile pages at `/profile/{username}` (public or private toggle)
-- User avatar and bio stored in Strapi user profile
 
-### 3. Content Submission & Moderated Contribution Layer
+### 3. Contribution & moderation (built)
 
-The core differentiator — community-verified accuracy:
+Community-verified accuracy, moderated in Strapi admin. Hardened in P-A; spec: `docs/superpowers/specs/2026-09-26-access-contribution-pro-implementation-design.md` §4–5.
 
-- **Correction submissions** — any user can flag incorrect data (wrong hours, closed status, wrong address)
-- **Addition submissions** — propose a new library entry
-- **Moderation queue** — submissions land in a Strapi draft queue; editors review and publish
-- Strapi content type: `Submission` (type: correction|addition, targetLibrary relation, fields JSON, status: pending|approved|rejected, submittedBy user relation)
-- UI: `/contribute` route with submission forms; authenticated users only
-- Notification system: email confirmation on submission, email on review decision
-- Build on top of existing `LocationContributeCTA` component which already links to `/contribute`
+- **Plugins:** `content-moderation` (the Submission collection, the admin review panel and `submission-policy`), `rewards` (points, streaks, tiers, badges, leaderboard) and `topics` (curated topics, fed by `topic_suggestion`).
+- **Submission types:** `correction`, `new_library`, `library_claim`, `library_edit` (claimants only), `wiki_edit` (a suggestion, or a direct block edit for `wiki_editor`/`editorial_board`), `blog_submission` and `topic_suggestion`.
+- **State machine** (`content-moderation/server/utils/transitions.ts`): `draft → pending → approved | rejected | needs_info`, and `needs_info → pending | approved | rejected`; `approved` and `rejected` are final. Drafts are editable only while `draft`, finalizing pins a `reviewedPayloadHash`, approval runs once, and point awards are idempotent. No self-approval; the admin routes check permissions.
+- **On approval:** `new_library` creates a draft library; `library_claim` upserts a `library-affiliation` and raises the role to `verified_librarian` (never lowers it); `wiki_edit` applies the blocks to the article; `topic_suggestion` approves the topic. Every type awards points.
+- **UI:** the `/contribute` hub adapts to `useCapabilities()`; sub-routes `add`, `correct/[slug]`, `edit/[slug]`, `claim`, `events`, `knowledge`, `submissions` and `community`.
+- **Still to come (P-C):** the `needs_info` thread and resubmission (C-M1, C-M2); applying approved `library_edit` and `correction` changes to the record (C-L1: today approval awards points but doesn't change the library); and the journal pitch form for `blog_submission` (C-J1).
 
 ### 4. Search Enhancements
 
@@ -348,6 +372,13 @@ Libraries with `iiifEndpoint` can expose their digital collections. Plan:
 - **`-mt-14` hero pattern** requires the parent chain to have no `overflow: hidden` ancestors
 - Always use `formatStrapiMediaUrl()` for Strapi media URLs — it handles relative `/uploads/` paths and absolute CDN paths
 - The `entityRef` field (e.g. `GB-BL-001`) is the stable external identifier for a library — use it for cross-referencing and data imports
+
+### Testing access
+
+- `cd qa/tests/playwright && pnpm seed:access` seeds 10 local fixture users: one per Contributor Role, one each for granted, earned and verified Pro, one Team and one not yet onboarded. Run it from that directory only (it reads `qa/tests/playwright/.env`; keys are in `.env.example`), with the local UI and Strapi running. It's safe to re-run.
+- **Local-only guard:** the seed refuses `NODE_ENV=production` and any non-local `BASE_URL`, `STRAPI_URL` or `BA_DATABASE_URL`. Grants, verifications and profiles are written through a headless Strapi Document Service process, never REST.
+- `npx playwright test --project=access` (same directory) runs the role, plan, export and onboarding E2E. The project only exists when asked for, so it stays out of CI and the default runs.
+- Fixture credentials are in the git-ignored `qa/tests/playwright/TEST-USERS.local.md`. Never commit it or paste from it.
 
 ---
 

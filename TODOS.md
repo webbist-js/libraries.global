@@ -1,8 +1,10 @@
 # libraries.global — Open TODOs & Unfinished Work
 
-_Last audited: 2026-09-24_
+_Last audited: 2026-09-28_
 
-The v2 light/accessible UI rework is **done** across all routes (homepage, find-a-library `/index`, library detail, atlas pages, profile, blog/journal, wiki, events, auth, contribute, settings, map). Strapi is on 5.55.1. The monorepo typechecks with zero errors. What remains:
+The v2 light/accessible UI rework is **done** across all routes (homepage, find-a-library `/libraries`, library detail, atlas pages, profile, journal, knowledge, events, auth, contribute, settings, map). Strapi is on 5.55.1. The monorepo typechecks with zero errors.
+
+**Phases done:** P-A security hardening (A1–A13), P-B access model and session (`@repo/access`, session capabilities and entitlements, the Strapi `submission-policy`, the 60 s bridge cache, the role-matrix E2E) and P-D0 Pro without payments (admin grants, verifications and earned Pro; `/pro`; Atlas export). What remains:
 
 ---
 
@@ -16,13 +18,13 @@ The source dies when the British Library shuts libraryOn down on 15 Oct. Dry run
 
 - Local instance is `librariesglobal-meilisearch` on **:7701** (the :7700 container belongs to a different project). `library` index seeded via `apps/strapi/scripts/seed-meilisearch.mjs`.
 - `blog-article` and `wiki-article` indexes not yet seeded on the new instance (blog/wiki search returns errors until then).
-- After the UK ingest (>1,000 records), `/index`'s client-side "Open now" / "Has digital collections" / "Most complete first" computations hit MeiliSearch's fetch ceiling — index a completeness score and a filterable open-now-friendly schedule encoding, then move those to real facets.
+- After the UK ingest (>1,000 records), `/libraries`' client-side "Open now" / "Has digital collections" / "Most complete first" computations hit MeiliSearch's fetch ceiling — index a completeness score and a filterable open-now-friendly schedule encoding, then move those to real facets.
 
 ### 3. CMS content tasks (Strapi admin)
 
-- Populate homepage `featuredLibraries` — "Libraries worth knowing" is hidden while empty
-- Add Wiki/knowledge-base link to a footer section (nav dropped it by design)
-- Optionally set homepage heroTitle to the POC copy ("Every library has a story. _Find yours._") — code falls back to it if the field is emptied
+- ~~Populate homepage `featuredLibraries`~~ — done (populated in the local CMS)
+- ~~Add Wiki/knowledge-base link to a footer section~~ — done ("Knowledge" under Contribute; "Plans & Pro" added under Explore on 2026-09-28)
+- ~~Optionally set homepage heroTitle to the POC copy~~ — resolved: heroTitle is set to its own copy; code still falls back to the POC line if emptied
 
 ### 4. Production deploy
 
@@ -32,21 +34,34 @@ Vercel (UI) + Strapi Cloud (backend) + production MeiliSearch. Full list: `docs/
 
 ## MEDIUM — Post-POC functional gaps
 
-### 5. Revision history on library pages
+### 5. ~~Revision history on library pages~~ — done
 
-POC's "Recent changes" list (Edit/Steward/Import badges) needs a per-library submissions read endpoint in the content-moderation plugin. UI slot exists (Sources section covers provenance meanwhile).
+The content-moderation plugin serves `GET /libraries/:documentId/revisions`, and the library page's Sources section lists "Recent changes". P-A (A10) keeps rejected submissions and private or limited profiles out of public history.
 
-### 6. Profile privacy toggles
+### 6. ~~Profile privacy toggles~~ — done
 
-POC's "Manage what's public" fieldset needs a `publicPrefs` JSON field on `user-profile` (only the coarse `profileVisibility` enum exists). Banner currently links to settings.
+`user-profile.publicPrefs` (location, verified affiliation, activity graph, libraries followed) is live, with the owner-only "Manage what's public" fieldset on the profile. Strapi enforces it (`applyPublicPrefs`, `isActivityPublic`). On top of `profileVisibility`, a `limited` profile hides activity and badges from anyone who doesn't share a library with the owner (P-A A10 and P-B, decision I8).
 
 ### 7. Schema nice-to-haves from the POC
 
-`nearestStation` (using `transitInfo` meanwhile), `wikidataId` (using `sourceUrl`), steward-user relation on Library (record status hardcoded "Community maintained"), "contributed to" relation for profile Libraries tab.
+Done: `nearestStation` and `wikidataId` (schema and library page). Still open: a steward-user relation on Library (record status is hardcoded "Community maintained"), and a "contributed to" relation for the profile Libraries tab.
 
 ### 8. Real-browser WebGL check
 
 Headless screenshots can't verify: map Voyager tiles + indigo pins, drill-down shelf, homepage/atlas globe canvases (dark-disc treatment on light bg — consider a lighter globe variant).
+
+---
+
+## Deferred to P-C (from the P-B review)
+
+- `topContributors` slices before it filters out hidden profiles; also the owner's own history path (M7)
+- `/api/upload`: a Strapi-side gate and the `uploadsPerDay` quota (M11)
+- A library-scoped `hasCapability`, and a `{ user } | { response }` route helper (M12)
+- I6: the wiki editor still sends a numeric `submissionId`
+- The event-feed page checks `isVerifiedLibrarian` instead of the `events.feed` capability
+- The access E2E leaves one reader draft per run
+- The fixture writer should fall back to `PGHOST` before `localhost` when the host is empty
+- `--project=access` detection is case-sensitive
 
 ---
 
@@ -63,12 +78,14 @@ Headless screenshots can't verify: map Voyager tiles + indigo pins, drill-down s
 
 ## Feature backlog (unchanged priorities)
 
-| Feature                         | Status                                             |
-| ------------------------------- | -------------------------------------------------- |
-| Events (sync-worker + UI)       | Sync-worker phase 1 done, typechecks; not launched |
-| Collections content type        | Not started                                        |
-| IIIF viewer on library detail   | Not started (external links shipped)               |
-| 2FA (Better Auth twoFactor)     | Not started                                        |
-| i18n expansion (FR, ES, AR, JA) | Not started                                        |
-| Notification email delivery     | Prefs saved, no delivery mechanism                 |
-| Visit log / annotations         | Not started                                        |
+| Feature                          | Status                                                                     |
+| -------------------------------- | -------------------------------------------------------------------------- |
+| Events (sync-worker + UI)        | Sync-worker phase 1 done, typechecks; not launched                         |
+| Collections content type         | Not started                                                                |
+| IIIF viewer on library detail    | Not started (external links shipped)                                       |
+| 2FA (Better Auth twoFactor)      | Not started                                                                |
+| i18n expansion (FR, ES, AR, JA)  | Not started                                                                |
+| Notification email delivery      | Prefs saved, no delivery mechanism                                         |
+| Visit log / annotations          | Not started                                                                |
+| Pro checkout (Stripe, P-D1)      | Not started; Pro comes only from grants, verification and earned Archivist |
+| Self-serve Pro verification (C5) | Not started; staff create `pro-verification` rows by hand                  |
