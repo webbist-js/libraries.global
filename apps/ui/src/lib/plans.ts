@@ -1,8 +1,9 @@
 /**
- * The one source of plan copy and prices for the /pro page, the Atlas plans
- * sheet and the account menu. Amounts are display strings only and are
- * placeholders until the owner confirms them (pricing spec, 2026-09-27); P-D
- * swaps them for Stripe prices. No other code may hard-code an amount.
+ * The one source of plan copy and prices for the Membership page
+ * (/contribute/membership), the Atlas plans sheet and the account menu.
+ * Amounts are display strings only and are placeholders until the owner
+ * confirms them (pricing spec, 2026-09-27); P-D swaps them for Stripe prices.
+ * No other code may hard-code an amount.
  */
 import { type Feature, FEATURES, resolveEntitlements } from "@repo/access"
 
@@ -93,7 +94,7 @@ export const PRO_FEATURE_COPY: Record<
 }
 
 /** A plan's features, read from the resolver so the copy can't drift from it. */
-function featuresOf(plan: "pro" | "team"): Feature[] {
+export function featuresOf(plan: "pro" | "team"): Feature[] {
   const { features } = resolveEntitlements({
     signedIn: true,
     now: new Date(0),
@@ -153,7 +154,7 @@ export const PLANS: readonly PlanCard[] = [
     cta: {
       kind: "signup",
       label: "Create a free account",
-      href: "/auth/register?callbackUrl=/pro",
+      href: "/auth/register?callbackUrl=/contribute/membership",
     },
   },
   {

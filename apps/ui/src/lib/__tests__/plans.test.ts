@@ -81,7 +81,7 @@ describe("PLANS", () => {
     expect(plan("team").cta.href).toMatch(/^mailto:[^?]+@libraries\.global\?/)
     expect(plan("free").cta).toMatchObject({
       kind: "signup",
-      href: "/auth/register?callbackUrl=/pro",
+      href: "/auth/register?callbackUrl=/contribute/membership",
     })
   })
 
