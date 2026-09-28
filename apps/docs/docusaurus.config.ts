@@ -1,6 +1,6 @@
-import { themes as prismThemes } from "prism-react-renderer"
-import type { Config } from "@docusaurus/types"
 import type * as Preset from "@docusaurus/preset-classic"
+import type { Config } from "@docusaurus/types"
+import { themes as prismThemes } from "prism-react-renderer"
 
 const url = process.env.DOCUSAURUS_URL ?? "https://libraries.global"
 const baseUrl = process.env.DOCUSAURUS_BASE_URL ?? "/"
@@ -43,7 +43,7 @@ const config: Config = {
         docs: {
           sidebarPath: "./sidebars.ts",
           editUrl:
-            "https://github.com/libraries-global/libraries.global/edit/main/apps/docs/",
+            "https://github.com/webbist-js/libraries.global/edit/main/apps/docs/",
           lastVersion: "3.1.1",
           versions: {
             current: {

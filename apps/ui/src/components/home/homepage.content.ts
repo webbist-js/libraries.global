@@ -157,7 +157,7 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
     {
       title: "Source code",
       text: "The whole platform is open source. Read it, fork it, improve it.",
-      href: "https://github.com/libraries-global/libraries.global",
+      href: "https://github.com/webbist-js/libraries.global",
     },
     {
       title: "Contribution guide",

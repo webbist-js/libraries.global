@@ -195,7 +195,7 @@ Custom CKEditor plugins and heading styles are configured in `src/admin/ckeditor
 A JSON-based rich text editor. Content is stored as structured JSON (ProseMirror format) and rendered on the frontend using `tiptap-react-renderer` with full control over node/mark mapping.
 
 > [!WARNING]
-> We've just released the Tip tap editor plugin and it's still in early stages. The editor is stable and works well for basic use cases, but it may require some adjustments and improvements in the future. If you want to use it in production, please test it thoroughly with your content and report any issues you find in the [Github repository](https://github.com/libraries-global/libraries.global/issues). We are actively working on improving the plugin and adding new features, so your feedback is very valuable.
+> We've just released the Tip tap editor plugin and it's still in early stages. The editor is stable and works well for basic use cases, but it may require some adjustments and improvements in the future. If you want to use it in production, please test it thoroughly with your content and report any issues you find in the [Github repository](https://github.com/notum-cz/strapi-next-monorepo-starter/issues). We are actively working on improving the plugin and adding new features, so your feedback is very valuable.
 
 **Strapi component:** `utilities.tip-tap-rich-text`
 

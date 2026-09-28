@@ -1,7 +1,6 @@
 import type { WikiArticleSummary } from "@/lib/strapi-api/content/server"
 
-export const DOCS_REPO_URL =
-  "https://github.com/libraries-global/libraries.global"
+export const DOCS_REPO_URL = "https://github.com/webbist-js/libraries.global"
 export const DOCS_VERSION = "v1.0.0"
 
 export type DocsSectionKey =

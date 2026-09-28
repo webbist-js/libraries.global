@@ -2,10 +2,10 @@
 
 export const LEGAL_CONTACT_EMAIL = "legal@libraries.global"
 export const LEGAL_FORUM_URL =
-  "https://github.com/libraries-global/libraries.global/discussions"
+  "https://github.com/webbist-js/libraries.global/discussions"
 /** The Contributor Covenant lives in the repo, not in the CMS. */
 export const CODE_OF_CONDUCT_URL =
-  "https://github.com/libraries-global/libraries.global/blob/main/CODE_OF_CONDUCT.md"
+  "https://github.com/webbist-js/libraries.global/blob/main/CODE_OF_CONDUCT.md"
 
 /** Tab icons by slug; documents added later in the CMS get the default. */
 const LEGAL_ICONS: Record<string, string> = {
