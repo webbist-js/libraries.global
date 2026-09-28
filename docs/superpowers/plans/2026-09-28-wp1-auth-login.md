@@ -1149,17 +1149,20 @@ git commit -m "fix(ui): give every profile settings field an accessible name" --
 
 ---
 
-### Task 5: Email delivery: provider selection under test, and the production env documented
+### Task 5: Email delivery through Mailtrap's SDK, under test, with the production env documented
 
 **Files:**
 
 - Modify: `apps/ui/src/lib/email.ts`
 - Test: `apps/ui/src/lib/__tests__/email.test.ts`
+- Commit (already changed by the controller's `pnpm add mailtrap`): `apps/ui/package.json`, `pnpm-lock.yaml`
 - Modify: `docs/pre-golive-checklist.md` §4 and §5
+
+**Background.** The owner uses Mailtrap's Email API, not its SMTP sandbox. `mailtrap@4.10.0` is installed in `apps/ui`; it exports `MailtrapTransport(options)` for nodemailer, where `options` is `{ token: string; sandbox?: boolean; testInboxId?: number; bulk?: boolean }` (`node_modules/mailtrap/dist/types/mailtrap.d.ts`). With `sandbox: true` plus `testInboxId`, mail lands in the sandbox inbox; without them, the same token sends live mail (the owner's plan allows 4,000 a month; the sender domain must be verified in Mailtrap first). The env holds `MAILTRAP_API_TOKEN` and, for the sandbox, `MAILTRAP_TEST_INBOX_ID`. The old `MAILTRAP_USER`/`MAILTRAP_PASS` SMTP branch goes away. Never print either value; the local `.env.local` already has both (the dev server must be restarted by the owner to read them).
 
 **Interfaces:**
 
-- Produces: `createTransporter()` becomes an exported function `emailTransport(): { name: "mailtrap" | "mailgun"; transporter: Transporter } | null` so the test can assert which provider was chosen without sending.
+- Produces: `emailTransport(): { name: "mailtrap" | "mailgun"; sandbox: boolean; transporter: Transporter } | null`, exported from `@/lib/email`, so the test can assert which provider and mode were chosen without sending.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1172,11 +1175,17 @@ const sendMail = vi.fn(async () => ({}))
 const createTransport = vi.fn(() => ({ sendMail }))
 vi.mock("nodemailer", () => ({ default: { createTransport } }))
 
+const MailtrapTransport = vi.fn((options: Record<string, unknown>) => ({
+  name: "Mailtrap",
+  version: "test",
+  send: vi.fn(),
+  options,
+}))
+vi.mock("mailtrap", () => ({ MailtrapTransport }))
+
 const ENV_KEYS = [
-  "MAILTRAP_HOST",
-  "MAILTRAP_PORT",
-  "MAILTRAP_USER",
-  "MAILTRAP_PASS",
+  "MAILTRAP_API_TOKEN",
+  "MAILTRAP_TEST_INBOX_ID",
   "MAILGUN_SMTP_HOST",
   "MAILGUN_SMTP_USER",
   "MAILGUN_SMTP_PASS",
@@ -1186,6 +1195,7 @@ const ENV_KEYS = [
 beforeEach(() => {
   vi.resetModules()
   createTransport.mockClear()
+  MailtrapTransport.mockClear()
   sendMail.mockClear()
   for (const key of ENV_KEYS) vi.stubEnv(key, "")
   vi.stubEnv("NODE_ENV", "test")
@@ -1201,17 +1211,34 @@ async function load() {
 }
 
 describe("email delivery", () => {
-  it("prefers Mailtrap when its credentials are set", async () => {
-    vi.stubEnv("MAILTRAP_USER", "u")
-    vi.stubEnv("MAILTRAP_PASS", "p")
+  it("uses the Mailtrap sandbox when a test inbox is set", async () => {
+    vi.stubEnv("MAILTRAP_API_TOKEN", "t")
+    vi.stubEnv("MAILTRAP_TEST_INBOX_ID", "4930967")
     vi.stubEnv("MAILGUN_SMTP_USER", "mu")
     vi.stubEnv("MAILGUN_SMTP_PASS", "mp")
     const { emailTransport } = await load()
 
-    expect(emailTransport()?.name).toBe("mailtrap")
+    const transport = emailTransport()
+    expect(transport?.name).toBe("mailtrap")
+    expect(transport?.sandbox).toBe(true)
+    expect(MailtrapTransport).toHaveBeenCalledWith({
+      token: "t",
+      sandbox: true,
+      testInboxId: 4930967,
+    })
     expect(createTransport).toHaveBeenCalledWith(
-      expect.objectContaining({ host: "sandbox.smtp.mailtrap.io", port: 2525 })
+      MailtrapTransport.mock.results[0]!.value
     )
+  })
+
+  it("sends live through Mailtrap when only the token is set", async () => {
+    vi.stubEnv("MAILTRAP_API_TOKEN", "t")
+    const { emailTransport } = await load()
+
+    const transport = emailTransport()
+    expect(transport?.name).toBe("mailtrap")
+    expect(transport?.sandbox).toBe(false)
+    expect(MailtrapTransport).toHaveBeenCalledWith({ token: "t" })
   })
 
   it("uses Mailgun on port 587 when only Mailgun is set", async () => {
@@ -1221,14 +1248,15 @@ describe("email delivery", () => {
     const { emailTransport } = await load()
 
     expect(emailTransport()?.name).toBe("mailgun")
+    expect(MailtrapTransport).not.toHaveBeenCalled()
     expect(createTransport).toHaveBeenCalledWith(
       expect.objectContaining({ host: "smtp.eu.mailgun.org", port: 587 })
     )
   })
 
   it("sends each message from EMAIL_FROM with the link in the body", async () => {
-    vi.stubEnv("MAILTRAP_USER", "u")
-    vi.stubEnv("MAILTRAP_PASS", "p")
+    vi.stubEnv("MAILTRAP_API_TOKEN", "t")
+    vi.stubEnv("MAILTRAP_TEST_INBOX_ID", "1")
     vi.stubEnv("EMAIL_FROM", "Libraries Global <noreply@example.test>")
     const {
       sendMagicLinkEmail,
@@ -1277,7 +1305,7 @@ describe("email delivery", () => {
 
     await expect(
       sendVerificationEmail("a@example.test", "https://x.test/v")
-    ).rejects.toThrow(/MAILGUN_SMTP_USER|MAILTRAP_USER/)
+    ).rejects.toThrow(/MAILTRAP_API_TOKEN|MAILGUN_SMTP_USER/)
     expect(sendMail).not.toHaveBeenCalled()
   })
 })
@@ -1288,38 +1316,44 @@ describe("email delivery", () => {
 Run: `cd apps/ui && npx vitest run src/lib/__tests__/email.test.ts`
 Expected: FAIL, `emailTransport` is not exported.
 
-- [ ] **Step 3: Export the transport chooser and name both providers in the error**
+- [ ] **Step 3: Replace the SMTP branch with the Mailtrap transport**
 
-In `email.ts`, replace `createTransporter` with:
+In `email.ts`, add `import { MailtrapTransport } from "mailtrap"` and replace `createTransporter` with:
 
 ```ts
 export type EmailTransport = {
   name: "mailtrap" | "mailgun"
+  /** True when mail is caught by a Mailtrap test inbox instead of delivered. */
+  sandbox: boolean
   transporter: Transporter
 }
 
 /**
- * Mailtrap (a sandbox that catches mail) wins over Mailgun when both are set,
- * so a staging deploy can keep production's Mailgun keys without sending.
+ * Mailtrap (Email API) wins over Mailgun when both are set. With
+ * MAILTRAP_TEST_INBOX_ID the same token only fills that sandbox inbox, so a
+ * preview or staging deploy can carry production's keys without delivering.
  */
 export function emailTransport(): EmailTransport | null {
-  if (process.env.MAILTRAP_USER && process.env.MAILTRAP_PASS) {
+  const token = process.env.MAILTRAP_API_TOKEN
+  if (token) {
+    const inbox = Number.parseInt(process.env.MAILTRAP_TEST_INBOX_ID || "", 10)
+    const sandbox = Number.isInteger(inbox) && inbox > 0
+
     return {
       name: "mailtrap",
-      transporter: nodemailer.createTransport({
-        host: process.env.MAILTRAP_HOST || "sandbox.smtp.mailtrap.io",
-        port: Number.parseInt(process.env.MAILTRAP_PORT || "2525", 10),
-        auth: {
-          user: process.env.MAILTRAP_USER,
-          pass: process.env.MAILTRAP_PASS,
-        },
-      }),
+      sandbox,
+      transporter: nodemailer.createTransport(
+        MailtrapTransport(
+          sandbox ? { token, sandbox: true, testInboxId: inbox } : { token }
+        )
+      ),
     }
   }
 
   if (process.env.MAILGUN_SMTP_USER && process.env.MAILGUN_SMTP_PASS) {
     return {
       name: "mailgun",
+      sandbox: false,
       transporter: nodemailer.createTransport({
         // EU-region Mailgun domains must use smtp.eu.mailgun.org.
         host: process.env.MAILGUN_SMTP_HOST || "smtp.mailgun.org",
@@ -1339,13 +1373,15 @@ export function emailTransport(): EmailTransport | null {
 (`||` rather than `??` so an empty string from `vi.stubEnv` or an empty `.env` line falls back.) The three `send*` functions call `emailTransport()` and use `.transporter.sendMail(...)`; `from` becomes `process.env.EMAIL_FROM || DEFAULT_FROM`. The production error message becomes:
 
 ```ts
-"Email delivery is not configured (set MAILGUN_SMTP_USER/PASS, or MAILTRAP_USER/PASS for a sandbox)."
+"Email delivery is not configured (set MAILTRAP_API_TOKEN, or MAILGUN_SMTP_USER/PASS)."
 ```
+
+If `nodemailer.createTransport(MailtrapTransport(...))` fails to typecheck against the installed `@types/nodemailer`, cast the argument once: `MailtrapTransport(...) as unknown as Parameters<typeof nodemailer.createTransport>[0]`, with a one-line comment saying the SDK's transport predates nodemailer's current `Transport` generic.
 
 - [ ] **Step 4: Run the tests**
 
 Run: `cd apps/ui && npx vitest run src/lib/__tests__/email.test.ts && npx tsc --noEmit`
-Expected: PASS, 5 tests; no type errors.
+Expected: PASS, 6 tests; no type errors.
 
 - [ ] **Step 5: Document the production environment**
 
@@ -1358,171 +1394,54 @@ Better Auth runs inside the Next.js app (`apps/ui/src/lib/auth.ts`); Strapi is n
 
 ### 4a. UI environment (Vercel)
 
-| Variable                                                            | Purpose                                                                                                                                            |
-| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BETTER_AUTH_SECRET`                                                | Session signing. Rotate for production (`openssl rand -base64 32`).                                                                                |
-| `APP_PUBLIC_URL`                                                    | `https://libraries.global`. Better Auth `baseURL` and `trustedOrigins`; the sign-in, reset and verification links are built from it.               |
-| `NEXT_PUBLIC_APP_URL`                                               | Same value; the browser auth client and `metadataBase`.                                                                                            |
-| `DATABASE_URL`                                                      | Postgres for the Better Auth tables (`user`, `session`, `account`, `verification`, `rateLimit`).                                                   |
-| `STRAPI_URL`, `STRAPI_BRIDGE_SECRET`                                | The auth-bridge (user sync, profile, session-profile). Rotate the secret; Strapi must hold the same value.                                         |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                          | Google OAuth. Authorised redirect URI: `https://libraries.global/api/auth/callback/google`.                                                        |
-| `MAILGUN_SMTP_USER`, `MAILGUN_SMTP_PASS`, `MAILGUN_SMTP_HOST`       | Transactional email. `MAILGUN_SMTP_HOST=smtp.eu.mailgun.org` for an EU-region domain. Production refuses to send sign-in links without a provider. |
-| `MAILTRAP_USER`, `MAILTRAP_PASS` (`MAILTRAP_HOST`, `MAILTRAP_PORT`) | Sandbox provider for previews and staging; wins over Mailgun when set. Never set in production.                                                    |
-| `EMAIL_FROM`                                                        | Sender, default `"Libraries Global" <noreply@libraries.global>`. The domain must be verified with the provider.                                    |
-| `CRON_SECRET`                                                       | Authorises the daily `/api/cron/retention` job (`apps/ui/vercel.json`).                                                                            |
+| Variable                                                      | Purpose                                                                                                                                                                                                                                             |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BETTER_AUTH_SECRET`                                          | Session signing. Rotate for production (`openssl rand -base64 32`).                                                                                                                                                                                 |
+| `APP_PUBLIC_URL`                                              | `https://libraries.global`. Better Auth `baseURL` and `trustedOrigins`; the sign-in, reset and verification links are built from it.                                                                                                                |
+| `NEXT_PUBLIC_APP_URL`                                         | Same value; the browser auth client and `metadataBase`.                                                                                                                                                                                             |
+| `DATABASE_URL`                                                | Postgres for the Better Auth tables (`user`, `session`, `account`, `verification`, `rateLimit`).                                                                                                                                                    |
+| `STRAPI_URL`, `STRAPI_BRIDGE_SECRET`                          | The auth-bridge (user sync, profile, session-profile). Rotate the secret; Strapi must hold the same value.                                                                                                                                          |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                    | Google OAuth. Authorised redirect URI: `https://libraries.global/api/auth/callback/google`.                                                                                                                                                         |
+| `MAILTRAP_API_TOKEN`                                          | Transactional email through Mailtrap's Email API (verify the sending domain in Mailtrap first). Wins over Mailgun when both are set. Production refuses to send sign-in links without a provider. Sent mail: https://mailtrap.io/sending/email_logs |
+| `MAILTRAP_TEST_INBOX_ID`                                      | Preview and staging only: the same token then fills this sandbox inbox instead of delivering. Never set in production.                                                                                                                              |
+| `MAILGUN_SMTP_USER`, `MAILGUN_SMTP_PASS`, `MAILGUN_SMTP_HOST` | Alternative SMTP provider. `MAILGUN_SMTP_HOST=smtp.eu.mailgun.org` for an EU-region domain.                                                                                                                                                         |
+| `EMAIL_FROM`                                                  | Sender, default `"Libraries Global" <noreply@libraries.global>`. The domain must be verified with the provider.                                                                                                                                     |
+| `CRON_SECRET`                                                 | Authorises the daily `/api/cron/retention` job (`apps/ui/vercel.json`).                                                                                                                                                                             |
 
 ### 4b. Checks
 
 - [ ] Google OAuth end to end on the production domain (new account: terms carried through the OAuth state, lands on onboarding; existing account: lands on its destination). See `qa/tests/manual/auth-checklist.md`.
 - [ ] The three emails arrive from `EMAIL_FROM` with working links: verification (register), password reset, magic link.
 - [ ] Verify Strapi Roles & Permissions for the `Public` role match `docs/strapi-role-permissions.md`.
-- [ ] `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` are not read by the app; remove them from every environment unless GitHub sign-in is wired (WP1 Task 6).
+- [ ] `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` are not read by the app (GitHub sign-in is deferred; see TODOS.md). Remove them from every environment.
 ```
 
-and delete the now-duplicated `MAILGUN_*` and `CRON_SECRET` bullets from §5. If Task 6a (GitHub) has been done by the time this runs, add the GitHub row and callback URL instead of the removal bullet.
+and delete the now-duplicated `MAILGUN_*` and `CRON_SECRET` bullets from §5.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add apps/ui/src/lib/email.ts apps/ui/src/lib/__tests__/email.test.ts docs/pre-golive-checklist.md
-git commit -m "fix(ui): name both email providers and test provider selection" -- apps/ui/src/lib/email.ts apps/ui/src/lib/__tests__/email.test.ts docs/pre-golive-checklist.md
+git add apps/ui/src/lib/email.ts apps/ui/src/lib/__tests__/email.test.ts apps/ui/package.json pnpm-lock.yaml docs/pre-golive-checklist.md
+git commit -m "feat(ui): send transactional email through mailtrap's api" -- apps/ui/src/lib/email.ts apps/ui/src/lib/__tests__/email.test.ts apps/ui/package.json pnpm-lock.yaml docs/pre-golive-checklist.md
 ```
+
+Before committing, `git diff --stat -- pnpm-lock.yaml` must show only the `mailtrap` addition and its dependencies (axios); if other packages moved, stop and report.
 
 ---
 
-### Task 6: GitHub OAuth — wire it or drop the claim (owner's decision)
+### Task 6: GitHub OAuth is deferred: drop the claim, record the TODO
 
-Ask the owner before dispatching. Exactly one of 6a or 6b runs.
+The owner decided (2026-09-28): skip GitHub for now. Only Google is wired.
 
-#### 6a: Wire GitHub (if wanted)
+**Files:** `CLAUDE.md:53`, `TODOS.md` ("Feature backlog" table)
 
-**Files:**
-
-- Modify: `apps/ui/src/lib/auth.ts:153-158`
-- Modify: `apps/ui/src/app/[locale]/auth/_components/AuthOAuthButtons.tsx`
-- Test: `apps/ui/src/app/[locale]/auth/_components/__tests__/oauth-buttons.test.ts`
-- Modify: `docs/pre-golive-checklist.md` §4a (GitHub row: callback `https://libraries.global/api/auth/callback/github`)
-
-- [ ] **Step 1: Write the failing test**
-
-```ts
-// @vitest-environment happy-dom
-import { cleanup, render, screen } from "@testing-library/react"
-import * as React from "react"
-import { createElement } from "react"
-import { afterEach, describe, expect, it, vi } from "vitest"
-
-Object.assign(globalThis, { React })
-vi.mock("sonner", () => ({ toast: { error: vi.fn() } }))
-vi.mock("@/lib/auth-client", () => ({
-  authClient: { signIn: { social: vi.fn() } },
-}))
-vi.mock("@/lib/navigation", async () => {
-  const { createElement: h } = await import("react")
-
-  return {
-    Link: ({ href, children }: { href: string; children?: React.ReactNode }) =>
-      h("a", { href }, children),
-  }
-})
-
-const { AuthOAuthButtons } = await import("../AuthOAuthButtons")
-
-afterEach(cleanup)
-
-describe("AuthOAuthButtons", () => {
-  it("offers Google and GitHub, each described by the terms notice", () => {
-    render(createElement(AuthOAuthButtons, { mode: "signin" }))
-
-    for (const name of ["Continue with Google", "Continue with GitHub"]) {
-      const button = screen.getByRole("button", { name })
-      expect(button.getAttribute("aria-describedby")).toBe("oauth-terms")
-    }
-    expect(screen.getByText(/By continuing with Google or GitHub/)).toBeTruthy()
-  })
-
-  it("uses sign-up wording on the register page", () => {
-    render(createElement(AuthOAuthButtons, { mode: "register" }))
-
-    screen.getByRole("button", { name: "Sign up with Google" })
-    screen.getByRole("button", { name: "Sign up with GitHub" })
-  })
-})
-```
-
-- [ ] **Step 2: Run it to verify it fails**
-
-Run: `cd apps/ui && npx vitest run "src/app/\[locale\]/auth/_components/__tests__/oauth-buttons.test.ts"`
-Expected: FAIL, no "Continue with GitHub" button.
-
-- [ ] **Step 3: Add the provider server-side**
-
-In `auth.ts` `socialProviders`, after `google`:
-
-```ts
-    github: {
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    },
-```
-
-The `account.create.before` pre-hijack guard and `user.create.before` terms check already cover every non-credential provider; nothing else changes server-side.
-
-- [ ] **Step 4: Add the button**
-
-In `AuthOAuthButtons.tsx`: `type Provider = "google" | "github"`; `useState<Provider | null>`; `handleOAuth(provider: Provider)`; render `<GoogleButton …/>` then `<GitHubButton mode={mode} loading={loading} onClick={() => handleOAuth("github")} />`; the notice reads "By continuing with Google or GitHub, you confirm you're 18 or over and agree to our terms of use and privacy notice." `GitHubButton` mirrors `GoogleButton` with the GitHub mark:
-
-```tsx
-function GitHubButton({
-  mode,
-  loading,
-  onClick,
-}: {
-  mode: AuthOAuthButtonsProps["mode"]
-  loading: Provider | null
-  onClick: () => void
-}) {
-  return (
-    <AuthSecondaryButton
-      disabled={loading !== null}
-      onClick={onClick}
-      aria-describedby="oauth-terms"
-    >
-      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          fill="currentColor"
-          d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-2.17c-3.2.7-3.87-1.37-3.87-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.8 1.19 1.83 1.19 3.09 0 4.42-2.7 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"
-        />
-      </svg>
-      {loading === "github" && "Redirecting…"}
-      {loading !== "github" &&
-        (mode === "signin" ? "Continue with GitHub" : "Sign up with GitHub")}
-    </AuthSecondaryButton>
-  )
-}
-```
-
-- [ ] **Step 5: Run the tests, typecheck, commit**
-
-Run: `cd apps/ui && npx vitest run && npx tsc --noEmit`
-Expected: PASS (the new file's 2 tests; `native-submit.test.ts` mocks `signIn.social` so it still renders).
+- [ ] **Step 1:** `git status --short -- CLAUDE.md TODOS.md` must be clean of other agents' edits; if not, stop and report.
+- [ ] **Step 2:** In `CLAUDE.md` line 53 change "supports credentials + OAuth (GitHub, Google)" to "supports credentials, magic links and Google OAuth".
+- [ ] **Step 3:** In `TODOS.md`'s "Feature backlog" table add the row `| GitHub OAuth | Deferred (owner, 2026-09-28). Client keys exist in env but nothing reads them; wiring is one `socialProviders`entry plus a button in`AuthOAuthButtons.tsx` |`.
+- [ ] **Step 4:** Commit:
 
 ```bash
-git add apps/ui/src/lib/auth.ts "apps/ui/src/app/[locale]/auth/_components/AuthOAuthButtons.tsx" "apps/ui/src/app/[locale]/auth/_components/__tests__/oauth-buttons.test.ts" docs/pre-golive-checklist.md
-git commit -m "feat(ui): sign in with github" -- apps/ui/src/lib/auth.ts "apps/ui/src/app/[locale]/auth/_components/AuthOAuthButtons.tsx" "apps/ui/src/app/[locale]/auth/_components/__tests__/oauth-buttons.test.ts" docs/pre-golive-checklist.md
-```
-
-Then the owner registers the GitHub OAuth app callback `${APP_PUBLIC_URL}/api/auth/callback/github` for local (`http://localhost:3000/...`) and production, and the manual checklist (Task 7) covers the run.
-
-#### 6b: Drop the claim (if not wanted)
-
-**Files:** `CLAUDE.md:53`, `docs/pre-golive-checklist.md` (§4b bullet already added in Task 5 says GitHub is unused: keep it).
-
-- [ ] **Step 1:** In `CLAUDE.md` line 53 change "supports credentials + OAuth (GitHub, Google)" to "supports credentials, magic links and Google OAuth".
-- [ ] **Step 2:** `git status --short -- CLAUDE.md` must be clean of other agents' edits first. Commit:
-
-```bash
-git commit -m "docs: auth supports google oauth only, not github" -- CLAUDE.md
+git commit -m "docs: defer github oauth; auth is google only" -- CLAUDE.md TODOS.md
 ```
 
 ---
@@ -1544,9 +1463,9 @@ Run against local (`http://localhost:3000`, Strapi `:1337`) before go-live, then
 
 ## A. Email delivery (Mailtrap sandbox)
 
-Set `MAILTRAP_USER` / `MAILTRAP_PASS` in `apps/ui/.env.local` (and `EMAIL_FROM` if you want to see the production sender), restart the UI.
+`MAILTRAP_API_TOKEN` and `MAILTRAP_TEST_INBOX_ID` are already in `apps/ui/.env.local`; restart the UI so it reads them. Caught mail appears in the Mailtrap sandbox inbox; live sends (no inbox id) appear at https://mailtrap.io/sending/email_logs.
 
-- [ ] **Verification.** Register at `/auth/register` with a new address. Mailtrap shows "Confirm your Libraries Global email address" from `EMAIL_FROM`; the link opens `/auth/post-signin` and lands on `/profile/onboarding`.
+- [ ] **Verification.** Register at `/auth/register` with a new address. The sandbox inbox shows "Confirm your Libraries Global email address" from `EMAIL_FROM`; the link opens `/auth/post-signin` and lands on `/profile/onboarding`.
 - [ ] **Password reset.** `/auth/forgot-password` for that address. The email "Reset your Libraries Global password" links to `/auth/reset-password?token=…`; a new password signs in.
 - [ ] **Magic link.** `/auth/signin` → "Email me a sign-in link". The email "Your Libraries Global sign-in link" says 5 minutes; the link lands on the destination (or onboarding for a first sign-in). Clicking it a second time shows `/auth/magic-link?error=INVALID_TOKEN` with plain copy.
 - [ ] **Unknown address.** Request a magic link for an address with no account: the link's page says there is no account yet (no account is created: `magicLink({ disableSignUp: true })`).
@@ -1597,7 +1516,7 @@ Then hand the checklist to the owner, with the Mailtrap step first, and record t
 - Modify: `docs/superpowers/handoffs/2026-09-28-pro-auth-contribution-handoff.md` §4 (add "WP1 done" with commits) and §6 WP1 (strike items done)
 - Append: `.git/sdd/progress.md`
 
-- [ ] **Step 1:** In `CLAUDE.md`'s Auth section, add a bullet: "Every sign-in path ends on `/auth/post-signin`, which sends a user with a loaded profile and no username to onboarding; magic links use `magicLinkCallbacks` (`lib/auth-redirects.ts`) to get there." Update the OAuth provider list per Task 6.
+- [ ] **Step 1:** In `CLAUDE.md`'s Auth section, add a bullet: "Every sign-in path ends on `/auth/post-signin`, which sends a user with a loaded profile and no username to onboarding; magic links use `magicLinkCallbacks` (`lib/auth-redirects.ts`) to get there." The OAuth provider list was fixed in Task 6.
 - [ ] **Step 2:** In `TODOS.md` "Phases done", add WP1 (auth) with a one-line summary; under "Feature backlog", leave 2FA and notification email as they are.
 - [ ] **Step 3:** In the handoff §4, add a "WP1: auth and login" block listing the commits and the manual items still owed; in §6 WP1, mark items 1, 4, 7 and 8 done, 2 and 3 "code done; manual checks owed", 5 and 6 "manual / WP2".
 - [ ] **Step 4:** `git status --short -- CLAUDE.md TODOS.md docs/superpowers/handoffs/…` must show only your changes, then:
@@ -1625,4 +1544,4 @@ git commit -m "docs: record wp1 auth work and the manual checks owed" -- CLAUDE.
 
 **Placeholder scan:** none; every code step carries its code. Task 3 has one conditional ("if `GET /api/profile/[username]` doesn't exist") with both branches spelled out.
 
-**Type consistency:** `magicLinkCallbacks` (Task 1) ↔ the literal expected in Task 2; `signInThroughForm(page, email, callbackUrl?)` returns the response and is used that way in Tasks 2 and 3; `completeOnboarding(page, username)` in Tasks 2 and 3; `AvatarUpload` `label` default `"Profile photo"` ↔ the test name `"Profile photo: add a photo"`; `emailTransport().name` ↔ the email test.
+**Type consistency:** `magicLinkCallbacks` (Task 1) ↔ the literal expected in Task 2; `signInThroughForm(page, email, callbackUrl?)` returns the response and is used that way in Tasks 2 and 3; `completeOnboarding(page, username)` in Tasks 2 and 3; `AvatarUpload` `label` default `"Profile photo"` ↔ the test name `"Profile photo: add a photo"`; `emailTransport().name`/`.sandbox` ↔ the email test.
