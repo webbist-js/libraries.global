@@ -1,5 +1,12 @@
 // Server-rendered content sections for the library detail page (v2).
 
+import { Icon } from "@iconify/react"
+
+import {
+  facilityIcon,
+  type FacilityKind,
+  sameFacility,
+} from "@/components/library/facility-icons"
 import {
   formatCoordinates,
   type OpeningTimesValue,
@@ -154,27 +161,46 @@ export function LibraryFacilitiesSection({
 }: {
   readonly library: Lib
 }) {
-  type TagItem = { name?: string | null; summary?: string | null }
+  type TagItem = {
+    name?: string | null
+    summary?: string | null
+    icon?: { iconName?: string | null } | null
+  }
+  const tagged = (items: unknown, kind: FacilityKind) =>
+    ((items ?? []) as TagItem[]).flatMap((item) =>
+      item.name
+        ? [
+            {
+              label: item.name,
+              icon: facilityIcon(item.name, kind, item.icon?.iconName),
+            },
+          ]
+        : []
+    )
   const documented = [
-    ...((library.accessibility ?? []) as TagItem[]),
-    ...((library.services ?? []) as TagItem[]),
-    ...((library.amenities ?? []) as TagItem[]),
+    ...tagged(library.accessibility, "accessibility"),
+    ...tagged(library.services, "service"),
+    ...tagged(library.amenities, "amenity"),
   ]
-    .map((i) => i.name)
-    .filter(Boolean) as string[]
 
-  const normalized = new Set(documented.map((n) => n.toLowerCase()))
+  const normalized = documented.map((d) => d.label.toLowerCase())
   const missing = FACILITY_CHECKLIST.filter(
     (item) =>
-      ![...normalized].some(
+      !normalized.some(
         (doc) =>
-          doc.includes(item.toLowerCase()) || item.toLowerCase().includes(doc)
+          doc.includes(item.toLowerCase()) ||
+          item.toLowerCase().includes(doc) ||
+          sameFacility(item, doc)
       )
   )
 
   const rows = [
-    ...documented.map((label) => ({ label, documented: true })),
-    ...missing.map((label) => ({ label, documented: false })),
+    ...documented.map((d) => ({ ...d, documented: true })),
+    ...missing.map((label) => ({
+      label,
+      icon: facilityIcon(label, "accessibility"),
+      documented: false,
+    })),
   ]
 
   return (
@@ -185,7 +211,7 @@ export function LibraryFacilitiesSection({
       intro="Please check with the library before visiting if something matters to you."
     >
       <ul className="m-0 grid list-none gap-x-6 p-0 md:grid-cols-2">
-        {rows.map(({ label, documented: isDocumented }) => (
+        {rows.map(({ label, icon, documented: isDocumented }) => (
           <li
             key={label}
             className="flex items-center gap-3 py-2.5 text-[16px]"
@@ -203,7 +229,7 @@ export function LibraryFacilitiesSection({
                   : "var(--tint-neutral-fg)",
               }}
             >
-              <LibIcon d={LIB_ICONS.access} size={19} />
+              <Icon height={20} icon={icon} width={20} />
             </span>
             <span className="flex-1">{label}</span>
             <span
