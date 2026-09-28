@@ -1,3 +1,4 @@
+import { hubHref } from "@/components/contribute/wizard.logic"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 
@@ -122,7 +123,11 @@ export function RecordsThatNeedYou({
                 </div>
 
                 <GlobalLink
-                  href={`/contribute/edit/${record.slug}`}
+                  href={hubHref("correction", {
+                    slug: record.slug,
+                    name: record.name,
+                    place: record.place,
+                  })}
                   className="shrink-0 rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface)"
                   style={{
                     borderColor: T.border.hi,

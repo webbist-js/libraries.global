@@ -46,7 +46,7 @@ export async function generateMetadata({
 }
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
-const GITHUB_REPO = "https://github.com/libraries-global/libraries.global"
+const GITHUB_REPO = "https://github.com/webbist-js/libraries.global"
 
 const MISSING_LABELS: Record<string, string> = {
   hours: "Opening hours",
@@ -255,9 +255,13 @@ export default async function ContributePage({
           What would you like to do?
         </h2>
         <p className="mt-2 mb-6 text-[15px]" style={{ color: T.ink.dim }}>
-          Choose one to start. You can save and come back later.
+          Choose one to start. Drafts save on this device, so you can come back
+          later.
         </p>
-        <HubActionChooser publishedCount={libraryCount} />
+        <HubActionChooser
+          publishedCount={libraryCount}
+          suggestions={incompleteRecords}
+        />
       </section>
 
       {incompleteRecords.length > 0 ? (
