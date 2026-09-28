@@ -26,7 +26,7 @@ export type CtaBand = SectionIntro & {
   secondaryHref?: string | null
 }
 
-export type JourneyTone = "explore" | "contribute" | "steward"
+export type JourneyTone = "explore" | "contribute" | "analyse" | "steward"
 
 export type Journey = {
   tone?: JourneyTone | null
@@ -35,14 +35,6 @@ export type Journey = {
   text?: string | null
   ctaLabel?: string | null
   ctaHref?: string | null
-}
-
-export type Citation = {
-  lead?: string | null
-  quote?: string | null
-  attribution?: string | null
-  sourceLabel?: string | null
-  sourceUrl?: string | null
 }
 
 export type Step = { title?: string | null; text?: string | null }

@@ -1,4 +1,4 @@
-import { type LucideIcon, Globe2, ShieldCheck, Users } from "lucide-react"
+import { type LucideIcon, Map, Plus, Search, ShieldCheck } from "lucide-react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import type {
@@ -17,13 +17,19 @@ const TONES: Record<
     bg: "#fff",
     border: "var(--t-border-line)",
     eyebrow: T.accent.primary,
-    Icon: Globe2,
+    Icon: Search,
   },
   contribute: {
-    bg: "#F8EEDC",
-    border: "#EBDDC0",
-    eyebrow: "#8A5A16",
-    Icon: Users,
+    bg: "#E6EFE6",
+    border: "#D3E2D3",
+    eyebrow: "#2F5D3A",
+    Icon: Plus,
+  },
+  analyse: {
+    bg: "#E4ECF5",
+    border: "#CFDCEB",
+    eyebrow: "#28496E",
+    Icon: Map,
   },
   steward: {
     bg: "#E4ECF5",
@@ -33,7 +39,8 @@ const TONES: Record<
   },
 }
 
-/** The three primary journeys: explore, contribute, represent a library. */
+/** The three primary journeys: find a library, help build the index, analyse
+ * access. */
 export function JourneysSection({
   intro,
   journeys,
@@ -97,16 +104,18 @@ export function JourneysSection({
                   </span>
                 ) : null}
                 {journey.ctaLabel ? (
-                  <span
-                    className="mt-auto pt-3 text-[15px] font-semibold"
-                    style={{ color: T.ink.base }}
-                  >
-                    {journey.ctaLabel}{" "}
+                  <span className="mt-auto pt-4">
                     <span
-                      aria-hidden="true"
-                      className="inline-block transition-transform group-hover:translate-x-0.5"
+                      className="inline-flex items-center gap-1.5 rounded-full border bg-white px-4 py-2 text-[15px] font-semibold transition-colors group-hover:border-(--t-accent-primary)"
+                      style={{ borderColor: T.border.hi, color: T.ink.base }}
                     >
-                      →
+                      {journey.ctaLabel}
+                      <span
+                        aria-hidden="true"
+                        className="inline-block transition-transform group-hover:translate-x-0.5"
+                      >
+                        →
+                      </span>
                     </span>
                   </span>
                 ) : null}

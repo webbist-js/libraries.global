@@ -199,6 +199,39 @@ export const PLANS: readonly PlanCard[] = [
   },
 ]
 
+/**
+ * The homepage's short take on each plan: a one-line "who pays" and a
+ * sentence on what it's for. Kept here so homepage copy can't drift from
+ * the Membership page, and honest about what's built today.
+ */
+export const PLAN_TEASERS: readonly {
+  key: Exclude<PlanCardKey, "supporter">
+  tagline: string
+  summary: string
+}[] = [
+  {
+    key: "public",
+    tagline: "Free, no account",
+    summary: "Search, browse and read every library record.",
+  },
+  {
+    key: "free",
+    tagline: "Free",
+    summary: "Contribute, follow libraries and switch on more atlas layers.",
+  },
+  {
+    key: "pro",
+    tagline: "Free for regular contributors",
+    summary: "Atlas export today, with reach and coverage analysis on the way.",
+  },
+  {
+    key: "team",
+    tagline: "For library services",
+    summary:
+      "Pro for every seat, invoiced yearly, with shared workspaces to come.",
+  },
+]
+
 export function planCard(key: PlanCardKey): PlanCard {
   return PLANS.find((p) => p.key === key)!
 }

@@ -2,7 +2,6 @@ import GlobalLink from "@/components/global/GlobalLink"
 import Emphasis from "@/components/home/Emphasis"
 import type {
   HomepageContinentSummary,
-  HomepageStats,
   SectionIntro,
 } from "@/components/home/homepage.types"
 import { T } from "@/lib/design-tokens"
@@ -12,19 +11,13 @@ const BAR_SHADES = ["#2F5D3A", "#4C7A56", "#7FA886", "#A9C7AD", "#CBDCCB"]
 
 export type CountryBreakdown = Record<string, { name: string; count: number }[]>
 
-function plural(n: number, one: string, many: string): string {
-  return `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`
-}
-
 export function CoverageSection({
   intro,
-  stats,
   continents,
   countryBreakdown = {},
   totalCountriesByContinent = {},
 }: {
   readonly intro: SectionIntro
-  readonly stats: HomepageStats | null
   readonly continents: HomepageContinentSummary[]
   readonly countryBreakdown?: CountryBreakdown
   readonly totalCountriesByContinent?: Record<string, number>
@@ -36,22 +29,10 @@ export function CoverageSection({
     .sort((a, b) => b.libraryCount - a.libraryCount)
   const empty = continents.filter((c) => c.libraryCount === 0)
 
-  const statsLine = stats
-    ? [
-        plural(stats.libraries, "library", "libraries"),
-        plural(stats.countries, "country", "countries"),
-        stats.contributors > 0
-          ? plural(stats.contributors, "contributor", "contributors")
-          : null,
-      ]
-        .filter(Boolean)
-        .join(" · ")
-    : null
-
   return (
     <section
       aria-labelledby="coverage-title"
-      className="mx-auto grid w-full max-w-[1360px] grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] items-start gap-[clamp(24px,4vw,56px)] px-4 pt-[clamp(64px,8vw,104px)] sm:px-8"
+      className="mx-auto grid w-full max-w-[1360px] grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] items-center gap-[clamp(24px,4vw,56px)] px-4 pt-[clamp(64px,8vw,104px)] sm:px-8"
     >
       <div>
         <h2
@@ -79,31 +60,13 @@ export function CoverageSection({
             {intro.text}
           </p>
         ) : null}
-        {statsLine ? (
-          <p
-            className="mt-4 text-[16px] font-semibold"
-            style={{ color: T.ink.base }}
-          >
-            {statsLine}
-          </p>
-        ) : null}
         <GlobalLink
           href="/contribute/add"
-          className="mt-5 inline-block rounded-full px-5 py-3 font-semibold text-white no-underline transition-colors hover:bg-[#2C2A48]"
-          style={{ background: T.ink.base }}
+          className="mt-6 inline-block rounded-full border bg-white px-5 py-3 font-semibold no-underline transition-colors hover:border-(--t-accent-primary)"
+          style={{ borderColor: T.border.hi, color: T.ink.base }}
         >
-          Find somewhere missing
+          Add the first library in your country
         </GlobalLink>
-        <p className="mt-4 text-[14px]" style={{ color: T.ink.dim }}>
-          Counts are published records only.{" "}
-          <GlobalLink
-            href="/knowledge"
-            className="underline underline-offset-[3px]"
-            style={{ color: T.accent.primary }}
-          >
-            How we count
-          </GlobalLink>
-        </p>
       </div>
 
       <div className="flex flex-col gap-4">
@@ -197,7 +160,7 @@ export function CoverageSection({
               className="m-0 mb-3 text-[15px] font-semibold"
               style={{ color: T.ink.base }}
             >
-              Waiting for their first contributor
+              Waiting for a first record
             </p>
             <div className="flex flex-wrap gap-2">
               {empty.map((continent) => (

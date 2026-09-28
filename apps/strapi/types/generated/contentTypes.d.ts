@@ -1713,6 +1713,12 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
     }
   }
   attributes: {
+    atlasBand: Schema.Attribute.Component<"homepage.cta-band", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     communityBand: Schema.Attribute.Component<"homepage.cta-band", false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1779,12 +1785,6 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
           localized: false
         }
       }>
-    featuredPrompt: Schema.Attribute.Component<"homepage.cta-band", false> &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true
-        }
-      }>
     featuredServices: Schema.Attribute.Relation<
       "manyToMany",
       "api::service.service"
@@ -1800,19 +1800,7 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
           localized: true
         }
       }>
-    finalBenefitsTitle: Schema.Attribute.String &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true
-        }
-      }>
     finalCta: Schema.Attribute.Component<"homepage.cta-band", false> &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true
-        }
-      }>
-    finalProgression: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true
@@ -1860,12 +1848,6 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
       "oneToMany",
       "api::homepage.homepage"
     >
-    openDataDefinition: Schema.Attribute.Component<"homepage.citation", false> &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true
-        }
-      }>
     openIntro: Schema.Attribute.Component<"homepage.section-intro", false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1878,7 +1860,7 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
           localized: true
         }
       }>
-    proofIntro: Schema.Attribute.Component<"homepage.section-intro", false> &
+    plansIntro: Schema.Attribute.Component<"homepage.section-intro", false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true

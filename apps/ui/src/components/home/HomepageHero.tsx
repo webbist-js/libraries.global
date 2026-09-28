@@ -1,5 +1,3 @@
-import { Map, Plus } from "lucide-react"
-
 import GlobalLink from "@/components/global/GlobalLink"
 import Emphasis from "@/components/home/Emphasis"
 import HomeSearch from "@/components/home/HomeSearch"
@@ -7,19 +5,18 @@ import type { LibraryMarker } from "@/components/home/knowledge-globe-data"
 import KnowledgeGlobeCanvas from "@/components/home/KnowledgeGlobeCanvas"
 import { T } from "@/lib/design-tokens"
 
-const PILL =
-  "inline-flex items-center gap-2 rounded-full border bg-white px-4 py-2.5 text-[15px] font-semibold no-underline transition-colors hover:border-(--t-accent-primary)"
-
 export function HomepageHero({
   eyebrow,
   title,
   text,
   markers,
+  signedIn,
 }: {
   readonly eyebrow: string
   readonly title: string
   readonly text: string
   readonly markers?: LibraryMarker[]
+  readonly signedIn: boolean
 }) {
   return (
     <section
@@ -36,11 +33,38 @@ export function HomepageHero({
         }}
       />
 
-      <div className="relative z-10 mx-auto grid w-full max-w-[1360px] items-center gap-10 px-4 py-[clamp(48px,8vh,104px)] sm:px-8 md:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+      {/* Globe — every published record, plotted. Oversized and pinned to
+          the bottom-right corner so the section edges crop it. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 right-0 w-full md:w-[64%]"
+        style={{
+          // Feather the canvas's left edge so orbital dust never ends in a seam
+          maskImage: "linear-gradient(to right, transparent, #000 14%)",
+          WebkitMaskImage: "linear-gradient(to right, transparent, #000 14%)",
+        }}
+      >
+        <KnowledgeGlobeCanvas
+          markers={markers}
+          overrides={{
+            anchor: { x: 0.8, y: 1.02, radius: 0.84, maxRadiusW: 0.62 },
+            autoRotateSpeed: 0.018,
+            cameraY: 0,
+            dprMax: 1.25,
+            globePitch: 10,
+            globeTilt: 22,
+            interactive: false,
+            showSatellites: false,
+            showStars: false,
+          }}
+        />
+      </div>
+
+      <div className="relative z-10 mx-auto w-full max-w-[1360px] px-4 pt-[clamp(48px,8vh,104px)] pb-72 sm:px-8 md:pb-[clamp(48px,8vh,104px)]">
         <div className="max-w-[660px]">
           <p
-            className="mb-4 flex items-center gap-2 text-[15px] font-semibold"
-            style={{ color: T.accent.ok }}
+            className="mb-5 inline-flex items-center gap-2 rounded-full border bg-white px-3.5 py-1.5 text-[14px] font-semibold"
+            style={{ borderColor: T.border.line, color: T.ink.base }}
           >
             <span
               aria-hidden="true"
@@ -71,61 +95,20 @@ export function HomepageHero({
 
           <HomeSearch />
 
-          <div className="mt-5 flex flex-wrap gap-2.5">
+          <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2">
             <GlobalLink
-              href="/map"
-              className={PILL}
-              style={{ borderColor: T.border.hi, color: T.ink.base }}
+              href={signedIn ? "/map" : "/auth/register"}
+              className="rounded-full px-5 py-3 text-[15px] font-semibold text-white no-underline transition-colors hover:bg-[#2C2A48]"
+              style={{ background: T.ink.base }}
             >
-              <Map
-                aria-hidden="true"
-                className="size-4"
-                strokeWidth={1.8}
-                style={{ color: T.accent.primary }}
-              />
-              Explore the map
+              {signedIn ? "Open the atlas" : "Create a free account"}
             </GlobalLink>
-            <GlobalLink
-              href="/contribute/add"
-              className={PILL}
-              style={{ borderColor: T.border.hi, color: T.ink.base }}
-            >
-              <Plus
-                aria-hidden="true"
-                className="size-4"
-                strokeWidth={1.8}
-                style={{ color: T.accent.primary }}
-              />
-              Add a library
-            </GlobalLink>
+            <span className="text-[15px]" style={{ color: T.ink.dim }}>
+              {signedIn
+                ? "Every published library on one map."
+                : "Follow libraries, suggest edits, get credit."}
+            </span>
           </div>
-        </div>
-
-        {/* Globe — every published record, plotted */}
-        <div
-          aria-hidden
-          className="mx-auto aspect-square w-[min(100%,340px)] md:w-full md:max-w-[560px]"
-          style={{
-            // Keep the canvas's own backdrop from reading as a square
-            maskImage: "radial-gradient(circle, #000 58%, transparent 71%)",
-            WebkitMaskImage:
-              "radial-gradient(circle, #000 58%, transparent 71%)",
-          }}
-        >
-          <KnowledgeGlobeCanvas
-            markers={markers}
-            overrides={{
-              globeY: 0,
-              cameraY: 0,
-              cameraZ: 17.5,
-              autoRotateSpeed: 0.025,
-              dprMax: 1.25,
-              globeTilt: 24,
-              interactive: false,
-              showSatellites: false,
-              showStars: false,
-            }}
-          />
         </div>
       </div>
     </section>

@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
+import { headers } from "next/headers"
 import type { Locale } from "next-intl"
-import { use } from "react"
 
 import { LibraryHomePage } from "@/components/home/LibraryHomePage"
 import { JsonLd } from "@/components/seo/JsonLd"
+import { getSessionSSR } from "@/lib/auth-server"
 import { buildWebSiteSchema } from "@/lib/seo/json-ld"
 import {
   absoluteUrl,
@@ -31,11 +32,13 @@ export async function generateMetadata(props: {
   })
 }
 
-export default function HomePage(props: {
+export default async function HomePage(props: {
   params: Promise<{ locale: string }>
 }) {
-  const params = use(props.params)
-  const locale = params.locale as Locale
+  const locale = (await props.params).locale as Locale
+  const user = (await getSessionSSR(await headers()))?.user
+  // Signed in without a loaded profile still counts as a member, on "free"
+  const viewerPlan = user ? (user.plan ?? "free") : undefined
 
   return (
     <>
@@ -45,7 +48,7 @@ export default function HomePage(props: {
           searchUrlTemplate: `${absoluteUrl("index", locale)}?q={search_term_string}`,
         })}
       />
-      <LibraryHomePage locale={locale} />
+      <LibraryHomePage locale={locale} viewerPlan={viewerPlan} />
     </>
   )
 }

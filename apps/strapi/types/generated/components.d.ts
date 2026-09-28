@@ -132,22 +132,6 @@ export interface FormsNewsletterForm extends Struct.ComponentSchema {
   }
 }
 
-export interface HomepageCitation extends Struct.ComponentSchema {
-  collectionName: "components_homepage_citations"
-  info: {
-    description: "A quoted definition or statement with its source."
-    displayName: "Citation"
-    icon: "quote"
-  }
-  attributes: {
-    attribution: Schema.Attribute.String
-    lead: Schema.Attribute.String
-    quote: Schema.Attribute.Text & Schema.Attribute.Required
-    sourceLabel: Schema.Attribute.String
-    sourceUrl: Schema.Attribute.String
-  }
-}
-
 export interface HomepageCtaBand extends Struct.ComponentSchema {
   collectionName: "components_homepage_cta_bands"
   info: {
@@ -168,7 +152,7 @@ export interface HomepageCtaBand extends Struct.ComponentSchema {
 export interface HomepageJourney extends Struct.ComponentSchema {
   collectionName: "components_homepage_journeys"
   info: {
-    description: "One of the primary homepage journeys (explore / contribute / represent a library)."
+    description: "One of the primary homepage journeys (explore / contribute / analyse / represent a library)."
     displayName: "Journey"
     icon: "walk"
   }
@@ -178,7 +162,9 @@ export interface HomepageJourney extends Struct.ComponentSchema {
     eyebrow: Schema.Attribute.String
     text: Schema.Attribute.Text
     title: Schema.Attribute.String & Schema.Attribute.Required
-    tone: Schema.Attribute.Enumeration<["explore", "contribute", "steward"]> &
+    tone: Schema.Attribute.Enumeration<
+      ["explore", "contribute", "analyse", "steward"]
+    > &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<"explore">
   }
@@ -821,7 +807,6 @@ declare module "@strapi/strapi" {
       "elements.footer-item": ElementsFooterItem
       "forms.contact-form": FormsContactForm
       "forms.newsletter-form": FormsNewsletterForm
-      "homepage.citation": HomepageCitation
       "homepage.cta-band": HomepageCtaBand
       "homepage.journey": HomepageJourney
       "homepage.link-card": HomepageLinkCard

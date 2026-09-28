@@ -127,22 +127,21 @@ export async function fetchSeo(
 /** Editable homepage section copy (flat `homepage.*` components). */
 const HOMEPAGE_SECTION_POPULATE = Object.fromEntries(
   [
-    "proofIntro",
-    "openDataDefinition",
     "journeysIntro",
     "journeys",
     "featuredIntro",
-    "featuredPrompt",
-    "tasksIntro",
-    "stewardBand",
-    "coverageIntro",
-    "journalIntro",
     "communityBand",
     "communitySteps",
-    "openIntro",
-    "openLinks",
+    "tasksIntro",
+    "atlasBand",
+    "plansIntro",
+    "coverageIntro",
+    "stewardBand",
+    "journalIntro",
     "finalCta",
     "finalBenefits",
+    "openIntro",
+    "openLinks",
   ].map((key) => [key, true])
 )
 

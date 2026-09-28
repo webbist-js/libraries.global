@@ -1,8 +1,8 @@
-import { Clock, Landmark } from "lucide-react"
+import { Clock, ImageOff } from "lucide-react"
 import Image from "next/image"
 
 import GlobalLink from "@/components/global/GlobalLink"
-import type { CtaBand, SectionIntro } from "@/components/home/homepage.types"
+import type { SectionIntro } from "@/components/home/homepage.types"
 import SectionHeader from "@/components/home/sections/SectionHeader"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
 import type { PopulatedFeaturedLibraryData } from "@/lib/strapi-api/content/server"
@@ -61,11 +61,12 @@ function hoursLine(library: PopulatedFeaturedLibraryData): string {
 export function FeaturedLibrariesSection({
   libraries,
   intro,
-  prompt,
+  total,
 }: {
   readonly libraries?: PopulatedFeaturedLibraryData[] | null
   readonly intro: SectionIntro
-  readonly prompt: CtaBand
+  /** Published records in the index, for the "Browse all" link. */
+  readonly total?: number | null
 }) {
   if (!Array.isArray(libraries) || libraries.length === 0) return null
 
@@ -86,7 +87,9 @@ export function FeaturedLibrariesSection({
             className="font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
-            Browse all libraries
+            {total
+              ? `Browse all ${total.toLocaleString("en-US")} libraries`
+              : "Browse all libraries"}
           </GlobalLink>
         }
       />
@@ -117,20 +120,17 @@ export function FeaturedLibrariesSection({
                   />
                 ) : (
                   <div
-                    className="h-full w-full"
-                    style={{ background: tint.bg }}
-                  />
+                    className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-[14px] font-medium"
+                    style={{ background: tint.bg, color: tint.fg }}
+                  >
+                    <ImageOff
+                      aria-hidden="true"
+                      className="size-5"
+                      strokeWidth={1.6}
+                    />
+                    No photo yet
+                  </div>
                 )}
-                <span
-                  aria-hidden="true"
-                  className="absolute top-3 left-3 flex size-8 items-center justify-center rounded-full bg-white/85"
-                >
-                  <Landmark
-                    className="size-4"
-                    strokeWidth={1.7}
-                    style={{ color: tint.fg }}
-                  />
-                </span>
               </div>
 
               <div className="flex flex-1 flex-col gap-2.5 p-[14px_20px_22px]">
@@ -189,27 +189,6 @@ export function FeaturedLibrariesSection({
           )
         })}
       </div>
-
-      {prompt.title ? (
-        <div
-          className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-[18px] border px-5 py-4"
-          style={{ background: T.bg.muted, borderColor: T.border.line }}
-        >
-          <p className="m-0 text-[16px]" style={{ color: T.ink.dim }}>
-            <strong style={{ color: T.ink.base }}>{prompt.title}</strong>
-            {prompt.text ? ` ${prompt.text}` : null}
-          </p>
-          {prompt.primaryLabel && prompt.primaryHref ? (
-            <GlobalLink
-              href={prompt.primaryHref}
-              className="rounded-full px-4 py-2.5 text-[15px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
-              style={{ background: T.accent.primary }}
-            >
-              {prompt.primaryLabel}
-            </GlobalLink>
-          ) : null}
-        </div>
-      ) : null}
     </section>
   )
 }

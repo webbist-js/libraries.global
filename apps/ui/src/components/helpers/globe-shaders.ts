@@ -1,7 +1,6 @@
 // ── Globe Shader Library ───────────────────────────────────────────────────
 //
-// All GLSL shaders used by KnowledgeGlobeCanvas (and by extension
-// ContinentHeroGlobe which wraps it). Centralised here so the rendering
+// All GLSL shaders used by KnowledgeGlobeCanvas. Centralised here so the rendering
 // layers can be audited and tuned in one place without navigating the larger
 // canvas file.
 
@@ -445,13 +444,23 @@ export const DUST_VERTEX_SHADER = `
   attribute float aPhase;
   attribute float aSize;
 
+  uniform float uPlanetRadius;
   uniform float uSizeScale;
   uniform float uTime;
 
+  varying float vDiscMask;
   varying float vTwinkle;
 
   void main() {
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+
+    // Hide motes whose line of sight crosses the planet's disc, in front or
+    // behind — otherwise they read as specks seen through a solid globe.
+    vec3 center = (modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+    float radius = length((modelViewMatrix * vec4(uPlanetRadius, 0.0, 0.0, 0.0)).xyz);
+    vec3 ray = normalize(mvPosition.xyz);
+    float miss = length(center - ray * max(dot(center, ray), 0.0));
+    vDiscMask = smoothstep(radius * 1.0, radius * 1.08, miss);
 
     vTwinkle = 0.35 + 0.65 * (0.5 + 0.5 * sin(uTime * 0.7 + aPhase));
     gl_PointSize = aSize * uSizeScale * (0.7 + vTwinkle * 0.5) * (120.0 / -mvPosition.z);
@@ -463,11 +472,12 @@ export const DUST_FRAGMENT_SHADER = `
   uniform vec3 uColor;
   uniform float uOpacity;
 
+  varying float vDiscMask;
   varying float vTwinkle;
 
   void main() {
     float d = length(gl_PointCoord - vec2(0.5)) * 2.0;
-    float alpha = exp(-d * d * 4.0) * vTwinkle * uOpacity;
+    float alpha = exp(-d * d * 4.0) * vTwinkle * uOpacity * vDiscMask;
 
     if (alpha < 0.01) discard;
 

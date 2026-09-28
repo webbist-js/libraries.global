@@ -1,5 +1,4 @@
 import type {
-  Citation,
   CtaBand,
   Journey,
   LinkCard,
@@ -16,45 +15,28 @@ type HomepageDefaults = {
   heroEyebrow: string
   heroTitle: string
   heroText: string
-  proofIntro: SectionIntro
-  openDataDefinition: Citation
   journeysIntro: SectionIntro
   journeys: Journey[]
   featuredIntro: SectionIntro
-  featuredPrompt: CtaBand
-  tasksIntro: SectionIntro
-  stewardBand: CtaBand
-  coverageIntro: SectionIntro
-  journalIntro: SectionIntro
   communityBand: CtaBand
   communitySteps: Step[]
+  tasksIntro: SectionIntro
+  atlasBand: CtaBand
+  plansIntro: SectionIntro
+  coverageIntro: SectionIntro
+  stewardBand: CtaBand
+  journalIntro: SectionIntro
+  finalCta: CtaBand
+  finalBenefits: Step[]
   openIntro: SectionIntro
   openLinks: LinkCard[]
-  finalCta: CtaBand
-  finalBenefitsTitle: string
-  finalBenefits: Step[]
-  finalProgression: string
 }
 
 export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
-  heroEyebrow: "Open data · Open source · Built in public",
+  heroEyebrow: "Open data · Open source · Free to use",
   heroTitle: "The world’s libraries, *documented together.*",
   heroText:
-    "Discover libraries, collections and services around the world — and help build an open, community-maintained record of them.",
-
-  proofIntro: {
-    title: "Open data. Open source. Built in public.",
-    text: "The index belongs to everyone. Explore it, correct it, download it and reuse it. The software behind it is open source too.",
-  },
-
-  openDataDefinition: {
-    lead: "We follow the Open Data Institute’s definition of open data:",
-    quote: "Open data is data that anyone can access, use and share.",
-    attribution: "Open Data Institute",
-    sourceLabel: "What is open data and why should we care?",
-    sourceUrl:
-      "https://theodi.org/insights/explainers/what-is-open-data-and-why-should-we-care/",
-  },
+    "Find a library, explore the atlas, and help build an open record anyone can use.",
 
   journeysIntro: {
     title: "Find them. Learn about them. *Help document them.*",
@@ -64,59 +46,84 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
   journeys: [
     {
       tone: "explore",
-      eyebrow: "Explore",
-      title: "Explore the world",
-      text: "Discover libraries, collections and stories across the globe.",
-      ctaLabel: "Explore the map",
-      ctaHref: "/map",
+      eyebrow: "For visitors",
+      title: "Find a library",
+      text: "Search by name or place, check hours and access, and plan a visit.",
+      ctaLabel: "Browse the index",
+      ctaHref: "/libraries",
     },
     {
       tone: "contribute",
-      eyebrow: "Contribute",
+      eyebrow: "For everyone who knows a library",
       title: "Help build the index",
-      text: "Add missing libraries, improve records and share what you know.",
+      text: "Add missing libraries, fix details and share photos. Reviewers check every change.",
       ctaLabel: "Start contributing",
       ctaHref: "/contribute",
     },
     {
-      tone: "steward",
-      eyebrow: "Your library",
-      title: "Represent a library",
-      text: "Work at a library? Keep its information accurate and tell its story.",
-      ctaLabel: "Find your library",
-      ctaHref: "/libraries",
+      tone: "analyse",
+      eyebrow: "For researchers and planners",
+      title: "Analyse access",
+      text: "Map where libraries are, when they open and how step-free they are. Deeper analysis is coming with Pro.",
+      ctaLabel: "Open the atlas",
+      ctaHref: "/map",
     },
   ],
 
   featuredIntro: {
     title: "Libraries worth knowing",
-    text: "Remarkable buildings, collections and histories from the growing index.",
+    text: "Buildings, collections and histories from the growing index.",
   },
 
-  featuredPrompt: {
-    title: "Know a library we should include?",
-    text: "Thousands are still missing.",
-    primaryLabel: "Add a library",
-    primaryHref: "/contribute/add",
+  communityBand: {
+    title: "Two minutes can finish a record.",
+    text: "You don’t need to be a librarian. Pick a gap, add what you know with a source, and a reviewer checks it. Every accepted change is credited to you.",
+    primaryLabel: "Start contributing",
+    primaryHref: "/contribute",
+    secondaryLabel: "Add a missing library",
+    secondaryHref: "/contribute/add",
   },
+
+  communitySteps: [
+    { title: "Pick a gap.", text: "Hours, photos, access." },
+    { title: "Add it with a source.", text: "A website or your own visit." },
+    {
+      title: "A reviewer checks it.",
+      text: "Then it’s published, with credit.",
+    },
+  ],
 
   tasksIntro: {
-    title: "Help complete the map",
-    text: "The index grows one contribution at a time. You don’t need to be a librarian or an expert — just add what you know.",
+    title: "Open tasks",
+    text: null,
+  },
+
+  atlasBand: {
+    title: "See how places are served.",
+    text: "The atlas puts every library on one map. Filter by type, opening hours or services, then switch on layers for step-free access, events and record completeness.",
+    primaryLabel: "Open the atlas",
+    primaryHref: "/map",
+    secondaryLabel: "What Pro adds",
+    secondaryHref: "/contribute/membership",
+  },
+
+  plansIntro: {
+    title: "Library facts are always free.",
+    text: "Plans pay for analysis and extra data, and keep the index independent. No ads, and money never buys a place in the index.",
+  },
+
+  coverageIntro: {
+    title: "Where we are so far",
+    text: "There’s no complete open record of the world’s libraries. We’re building one, country by country. Counts are published records only.",
   },
 
   stewardBand: {
     title: "Is this your library?",
-    text: "Library staff can become verified stewards of their library’s record: add collections and services, publish photographs and keep information accurate. The community can still suggest edits — stewards add institutional attribution.",
+    text: "Staff can become verified stewards of their library’s record: add collections and photos and keep information accurate. The community can still suggest edits.",
     primaryLabel: "Find your library",
     primaryHref: "/libraries",
-    secondaryLabel: "Can’t find it? Add it to the index",
-    secondaryHref: "/contribute/add",
-  },
-
-  coverageIntro: {
-    title: "A map we’re building together",
-    text: "No complete, open record of the world’s libraries exists. We’re building one — country by country, library by library, with the people who know them.",
+    secondaryLabel: "Team plans for library services",
+    secondaryHref: "/contribute/membership",
   },
 
   journalIntro: {
@@ -124,33 +131,37 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
     text: null,
   },
 
-  communityBand: {
-    title: "The index is only as good as the people who care for it.",
-    text: "Librarians, researchers, travellers and local communities all know something about the libraries around them. Bring that knowledge together and we can build a record no single organisation could maintain alone.",
-    primaryLabel: "Make your first contribution",
-    primaryHref: "/contribute",
-    secondaryLabel: "Create a contributor profile",
-    secondaryHref: "/auth/register",
+  finalCta: {
+    title: "Know a library? *Put it on the map.*",
+    text: "A free account takes a minute. You get credit for every accepted change, and regular contributors get Pro free.",
+    primaryLabel: "Create a free account",
+    primaryHref: "/auth/register",
+    secondaryLabel: "Make your first contribution",
+    secondaryHref: "/contribute",
   },
 
-  communitySteps: [
+  finalBenefits: [
     {
-      title: "Contribute",
-      text: "Add a library, photo, collection or correction.",
+      title: "Suggest and publish improvements",
+      text: "Reviewed, sourced, credited to you.",
     },
     {
-      title: "Review",
-      text: "Sources and community review keep information trustworthy.",
+      title: "Follow the libraries you care about",
+      text: "Hear about changes and events.",
     },
     {
-      title: "Publish",
-      text: "Accepted contributions join the open global record, with attribution.",
+      title: "Earn trust over time",
+      text: "From contributor to reviewer or steward.",
+    },
+    {
+      title: "Pro free for regular contributors",
+      text: "Unlock atlas analysis by helping out.",
     },
   ],
 
   openIntro: {
     title: "Open by design",
-    text: "Open-source software, open data as the Open Data Institute defines it, a public methodology and community editing — with libraries themselves taking part.",
+    text: null,
   },
 
   openLinks: [
@@ -170,7 +181,7 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
       href: "/knowledge",
     },
     {
-      title: "Data licence & export",
+      title: "Data licence",
       text: "Download the index under an open licence, with provenance.",
       href: "/legal/data-licence",
     },
@@ -185,28 +196,6 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
       href: "/knowledge",
     },
   ],
-
-  finalCta: {
-    title: "Know a library? *Put it on the map.*",
-    text: "Your workplace, your childhood library, an extraordinary collection you’ve visited or the library around the corner: help make sure it has a place in the world’s open library index.",
-    primaryLabel: "Add a library",
-    primaryHref: "/contribute/add",
-    secondaryLabel: "Create your contributor profile",
-    secondaryHref: "/auth/register",
-  },
-
-  finalBenefitsTitle: "A free contributor profile lets you",
-
-  finalBenefits: [
-    { title: "Suggest and publish improvements" },
-    { title: "Follow the libraries you care about" },
-    { title: "See your contribution history" },
-    { title: "Earn credit for every accepted change" },
-    { title: "Grow into reviewing community changes" },
-  ],
-
-  finalProgression:
-    "Visitor → Contributor → Trusted contributor → Reviewer or steward",
 }
 
 type Nullable<T> = { [K in keyof T]?: T[K] | null }
@@ -236,24 +225,21 @@ type HomepageCms = {
   heroEyebrow?: string | null
   heroTitle?: string | null
   heroText?: string | null
-  proofIntro?: SectionIntro | null
-  openDataDefinition?: Citation | null
   journeysIntro?: SectionIntro | null
   journeys?: Journey[] | null
   featuredIntro?: SectionIntro | null
-  featuredPrompt?: CtaBand | null
-  tasksIntro?: SectionIntro | null
-  stewardBand?: CtaBand | null
-  coverageIntro?: SectionIntro | null
-  journalIntro?: SectionIntro | null
   communityBand?: CtaBand | null
   communitySteps?: Step[] | null
+  tasksIntro?: SectionIntro | null
+  atlasBand?: CtaBand | null
+  plansIntro?: SectionIntro | null
+  coverageIntro?: SectionIntro | null
+  stewardBand?: CtaBand | null
+  journalIntro?: SectionIntro | null
+  finalCta?: CtaBand | null
+  finalBenefits?: Step[] | null
   openIntro?: SectionIntro | null
   openLinks?: LinkCard[] | null
-  finalCta?: CtaBand | null
-  finalBenefitsTitle?: string | null
-  finalBenefits?: Step[] | null
-  finalProgression?: string | null
 }
 
 export type HomepageContent = {
@@ -272,26 +258,20 @@ export function resolveHomepageContent(
     heroEyebrow: cms?.heroEyebrow || d.heroEyebrow,
     heroTitle: cms?.heroTitle || d.heroTitle,
     heroText: cms?.heroText || d.heroText,
-    proofIntro: withFallback(cms?.proofIntro, d.proofIntro),
-    openDataDefinition: withFallback(
-      cms?.openDataDefinition,
-      d.openDataDefinition
-    ),
     journeysIntro: withFallback(cms?.journeysIntro, d.journeysIntro),
     journeys: listOrFallback(cms?.journeys, d.journeys),
     featuredIntro: withFallback(cms?.featuredIntro, d.featuredIntro),
-    featuredPrompt: withFallback(cms?.featuredPrompt, d.featuredPrompt),
-    tasksIntro: withFallback(cms?.tasksIntro, d.tasksIntro),
-    stewardBand: withFallback(cms?.stewardBand, d.stewardBand),
-    coverageIntro: withFallback(cms?.coverageIntro, d.coverageIntro),
-    journalIntro: withFallback(cms?.journalIntro, d.journalIntro),
     communityBand: withFallback(cms?.communityBand, d.communityBand),
     communitySteps: listOrFallback(cms?.communitySteps, d.communitySteps),
+    tasksIntro: withFallback(cms?.tasksIntro, d.tasksIntro),
+    atlasBand: withFallback(cms?.atlasBand, d.atlasBand),
+    plansIntro: withFallback(cms?.plansIntro, d.plansIntro),
+    coverageIntro: withFallback(cms?.coverageIntro, d.coverageIntro),
+    stewardBand: withFallback(cms?.stewardBand, d.stewardBand),
+    journalIntro: withFallback(cms?.journalIntro, d.journalIntro),
+    finalCta: withFallback(cms?.finalCta, d.finalCta),
+    finalBenefits: listOrFallback(cms?.finalBenefits, d.finalBenefits),
     openIntro: withFallback(cms?.openIntro, d.openIntro),
     openLinks: listOrFallback(cms?.openLinks, d.openLinks),
-    finalCta: withFallback(cms?.finalCta, d.finalCta),
-    finalBenefitsTitle: cms?.finalBenefitsTitle || d.finalBenefitsTitle,
-    finalBenefits: listOrFallback(cms?.finalBenefits, d.finalBenefits),
-    finalProgression: cms?.finalProgression || d.finalProgression,
   }
 }

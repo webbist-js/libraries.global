@@ -1,30 +1,31 @@
-import ContributeBand from "@/components/home/ContributeBand"
 import type { HomepageContent } from "@/components/home/homepage.content"
 import type {
   ContributionTask,
   HomepageContinentSummary,
   HomepageStats,
 } from "@/components/home/homepage.types"
+import AtlasSection from "@/components/home/sections/AtlasSection"
+import ContributeSection from "@/components/home/sections/ContributeSection"
 import CoverageSection, {
   type CountryBreakdown,
 } from "@/components/home/sections/CoverageSection"
 import FeaturedLibrariesSection from "@/components/home/sections/FeaturedLibrariesSection"
 import FinalCtaSection from "@/components/home/sections/FinalCtaSection"
-import JournalSection from "@/components/home/sections/JournalSection"
+import JournalCard from "@/components/home/sections/JournalCard"
 import JourneysSection from "@/components/home/sections/JourneysSection"
 import OpenByDesignSection from "@/components/home/sections/OpenByDesignSection"
-import ProofStrip from "@/components/home/sections/ProofStrip"
-import StewardBand from "@/components/home/sections/StewardBand"
-import TasksSection from "@/components/home/sections/TasksSection"
+import PlansSection from "@/components/home/sections/PlansSection"
+import StatsStrip from "@/components/home/sections/StatsStrip"
+import StewardCard from "@/components/home/sections/StewardCard"
 import type {
   BlogArticleSummary,
   PopulatedFeaturedLibraryData,
 } from "@/lib/strapi-api/content/server"
 
 /**
- * Homepage narrative, below the hero: prove it's a shared project, offer the
- * three journeys, give a moment of discovery, then hand the visitor something
- * small to do — and close on how the community model works.
+ * Homepage narrative, below the hero: prove the index is real, offer the
+ * three journeys, a moment of discovery, then something small to do. After
+ * that, what the atlas and plans add, how far we've got, and the ask.
  */
 export function HomepageSections({
   content,
@@ -35,6 +36,7 @@ export function HomepageSections({
   countryBreakdown,
   totalCountriesByContinent,
   blogArticles,
+  viewerPlan,
 }: {
   readonly content: HomepageContent
   readonly stats: HomepageStats | null
@@ -44,14 +46,14 @@ export function HomepageSections({
   readonly countryBreakdown?: CountryBreakdown
   readonly totalCountriesByContinent?: Record<string, number>
   readonly blogArticles: BlogArticleSummary[]
+  /** The signed-in viewer's plan key; undefined for a visitor. */
+  readonly viewerPlan?: string
 }) {
+  const latestArticle = blogArticles[0]
+
   return (
     <div id="homepage-content">
-      <ProofStrip
-        intro={content.proofIntro}
-        definition={content.openDataDefinition}
-        stats={stats}
-      />
+      <StatsStrip stats={stats} />
       <JourneysSection
         intro={content.journeysIntro}
         journeys={content.journeys}
@@ -59,31 +61,40 @@ export function HomepageSections({
       <FeaturedLibrariesSection
         libraries={featuredLibraries}
         intro={content.featuredIntro}
-        prompt={content.featuredPrompt}
+        total={stats?.libraries}
       />
-      <TasksSection intro={content.tasksIntro} tasks={tasks} />
-      <StewardBand band={content.stewardBand} />
+      <ContributeSection
+        band={content.communityBand}
+        steps={content.communitySteps}
+        tasksIntro={content.tasksIntro}
+        tasks={tasks}
+      />
+      <AtlasSection band={content.atlasBand} />
+      <PlansSection intro={content.plansIntro} viewerPlan={viewerPlan} />
       <CoverageSection
         intro={content.coverageIntro}
-        stats={stats}
         continents={continents}
         countryBreakdown={countryBreakdown}
         totalCountriesByContinent={totalCountriesByContinent}
       />
-      <JournalSection intro={content.journalIntro} articles={blogArticles} />
-      <ContributeBand
-        band={content.communityBand}
-        steps={content.communitySteps}
+      <div
+        className={`mx-auto grid w-full max-w-[1360px] gap-5 px-4 pt-[clamp(64px,8vw,104px)] sm:px-8 ${
+          latestArticle ? "lg:grid-cols-2" : ""
+        }`}
+      >
+        <StewardCard band={content.stewardBand} />
+        {latestArticle ? (
+          <JournalCard intro={content.journalIntro} article={latestArticle} />
+        ) : null}
+      </div>
+      <FinalCtaSection
+        band={content.finalCta}
+        benefits={content.finalBenefits}
+        signedIn={viewerPlan !== undefined}
       />
       <OpenByDesignSection
         intro={content.openIntro}
         links={content.openLinks}
-      />
-      <FinalCtaSection
-        band={content.finalCta}
-        benefitsTitle={content.finalBenefitsTitle}
-        benefits={content.finalBenefits}
-        progression={content.finalProgression}
       />
     </div>
   )

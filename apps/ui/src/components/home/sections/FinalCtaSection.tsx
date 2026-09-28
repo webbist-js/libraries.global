@@ -1,10 +1,9 @@
 import {
   type LucideIcon,
-  Award,
   Bookmark,
-  CheckCheck,
-  History,
   PencilLine,
+  ShieldCheck,
+  Sparkles,
 } from "lucide-react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -16,34 +15,45 @@ import { T } from "@/lib/design-tokens"
 const BENEFIT_ICONS: LucideIcon[] = [
   PencilLine,
   Bookmark,
-  History,
-  Award,
-  CheckCheck,
+  ShieldCheck,
+  Sparkles,
 ]
 
+const LAVENDER = "#B9B4F5"
+const MUTED = "#D6D4E4"
+
 /** Closing ask: "Know a library? Put it on the map." — with a reason for an
- * account (what a contributor profile unlocks) instead of a bare sign-up. */
+ * account (what it gets you) instead of a bare sign-up. Members skip the
+ * sign-up and go straight to contributing. */
 export function FinalCtaSection({
   band,
-  benefitsTitle,
   benefits,
-  progression,
+  signedIn,
 }: {
   readonly band: CtaBand
-  readonly benefitsTitle: string
   readonly benefits: readonly Step[]
-  readonly progression: string
+  readonly signedIn: boolean
 }) {
   if (!band.title) return null
+
+  const primary = signedIn
+    ? { label: "Start contributing", href: band.secondaryHref ?? "/contribute" }
+    : band.primaryLabel && band.primaryHref
+      ? { label: band.primaryLabel, href: band.primaryHref }
+      : null
+  const secondary =
+    !signedIn && band.secondaryLabel && band.secondaryHref
+      ? { label: band.secondaryLabel, href: band.secondaryHref }
+      : null
 
   return (
     <section
       aria-labelledby="final-cta-title"
-      className="mx-auto w-full max-w-[1360px] px-4 pt-[clamp(64px,8vw,104px)] pb-[clamp(64px,8vw,104px)] sm:px-8"
+      className="mx-auto w-full max-w-[1360px] px-4 pt-[clamp(64px,8vw,104px)] sm:px-8"
     >
       <div
-        className="grid items-center gap-[clamp(28px,4vw,56px)] rounded-[32px] border p-[clamp(28px,5vw,64px)] lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]"
-        style={{ background: "#EEEBFA", borderColor: "#DEDAF3" }}
+        className="grid items-center gap-[clamp(28px,4vw,56px)] rounded-[32px] p-[clamp(28px,5vw,64px)] text-white lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]"
+        style={{ background: "#17162B" }}
       >
         <div>
           <h2
@@ -52,92 +62,78 @@ export function FinalCtaSection({
             style={{
               fontFamily: T.font.serif,
               fontWeight: 500,
-              fontSize: "clamp(40px,5vw,66px)",
-              lineHeight: 1.02,
+              fontSize: "clamp(38px,4.6vw,60px)",
+              lineHeight: 1.04,
               letterSpacing: "-0.02em",
-              color: T.ink.base,
             }}
           >
-            <Emphasis
-              text={band.title}
-              emStyle={{ color: T.accent.primary, display: "block" }}
-            />
+            <Emphasis text={band.title} emStyle={{ color: LAVENDER }} />
           </h2>
           {band.text ? (
             <p
-              className="mt-5 max-w-[540px] text-[18px] leading-[1.6] text-pretty"
-              style={{ color: T.ink.dim }}
+              className="mt-5 max-w-[520px] text-[18px] leading-[1.6] text-pretty"
+              style={{ color: MUTED }}
             >
               {band.text}
             </p>
           ) : null}
           <div className="mt-7 flex flex-wrap gap-2.5">
-            {band.primaryLabel && band.primaryHref ? (
+            {primary ? (
               <GlobalLink
-                href={band.primaryHref}
-                className="rounded-full px-5 py-3.5 font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
-                style={{ background: T.accent.primary }}
+                href={primary.href}
+                className="rounded-full px-5 py-3.5 font-semibold no-underline transition-colors hover:bg-(--t-accent-chip)"
+                style={{ background: "#fff", color: "#17162B" }}
               >
-                {band.primaryLabel}
+                {primary.label}
               </GlobalLink>
             ) : null}
-            {band.secondaryLabel && band.secondaryHref ? (
+            {secondary ? (
               <GlobalLink
-                href={band.secondaryHref}
-                className="rounded-full border bg-white px-5 py-3.5 font-semibold no-underline transition-colors hover:border-(--t-accent-primary)"
-                style={{ borderColor: T.border.hi, color: T.ink.base }}
+                href={secondary.href}
+                className="rounded-full border px-5 py-3.5 font-semibold text-white no-underline transition-colors hover:bg-[#2C2A48]"
+                style={{ borderColor: "#6E6B8C" }}
               >
-                {band.secondaryLabel}
+                {secondary.label}
               </GlobalLink>
             ) : null}
           </div>
         </div>
 
         {benefits.length > 0 ? (
-          <div
-            className="rounded-[22px] border bg-white p-[clamp(20px,3vw,32px)]"
-            style={{ borderColor: T.border.line }}
-          >
-            <p
-              className="m-0 text-[17px] font-bold"
-              style={{ color: T.ink.base }}
-            >
-              {benefitsTitle}
-            </p>
-            <ul className="m-0 mt-4 flex list-none flex-col gap-3 p-0">
-              {benefits.map((benefit, i) => {
-                const Icon = BENEFIT_ICONS[i % BENEFIT_ICONS.length]!
+          <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
+            {benefits.map((benefit, i) => {
+              const Icon = BENEFIT_ICONS[i % BENEFIT_ICONS.length]!
 
-                return (
-                  <li
-                    key={benefit.title}
-                    className="flex items-center gap-3 text-[16px]"
-                    style={{ color: T.ink.base }}
+              return (
+                <li
+                  key={benefit.title}
+                  className="flex items-center gap-4 rounded-[16px] border px-4 py-3.5"
+                  style={{ background: "#23213C", borderColor: "#34315A" }}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="flex size-9 shrink-0 items-center justify-center rounded-full"
+                    style={{ background: "#2E2B52", color: LAVENDER }}
                   >
-                    <span
-                      aria-hidden="true"
-                      className="flex size-8 shrink-0 items-center justify-center rounded-full"
-                      style={{
-                        background: T.accent.chip,
-                        color: T.accent.primary,
-                      }}
-                    >
-                      <Icon className="size-4" strokeWidth={1.8} />
-                    </span>
-                    {benefit.title}
-                  </li>
-                )
-              })}
-            </ul>
-            {progression ? (
-              <p
-                className="m-0 mt-5 border-t pt-4 text-[14px] leading-[1.5]"
-                style={{ color: T.ink.dim, borderColor: T.border.divider }}
-              >
-                {progression}
-              </p>
-            ) : null}
-          </div>
+                    <Icon className="size-4" strokeWidth={1.8} />
+                  </span>
+                  <span>
+                    <strong className="block text-[16px]">
+                      {benefit.title}
+                    </strong>
+                    {benefit.text ? (
+                      <span
+                        className="text-[15px] leading-[1.5]"
+                        style={{ color: MUTED }}
+                      >
+                        {benefit.text}
+                      </span>
+                    ) : null}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
         ) : null}
       </div>
     </section>

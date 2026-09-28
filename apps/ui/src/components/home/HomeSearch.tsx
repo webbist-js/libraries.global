@@ -12,12 +12,12 @@ import {
 } from "@/lib/meilisearch"
 import { Link, useRouter } from "@/lib/navigation"
 
-const POPULAR_SEARCHES = [
-  "British Library",
-  "London",
-  "Scotland",
-  "National libraries",
-  "Public libraries",
+/** Starting points that open the index already filtered. */
+const TRY_SEARCHES = [
+  { label: "Glasgow", href: "/libraries?q=Glasgow" },
+  { label: "Cardiff", href: "/libraries?q=Cardiff" },
+  { label: "National libraries", href: "/libraries?tg=national" },
+  { label: "Open now", href: "/libraries?open=1" },
 ]
 
 export default function HomeSearch() {
@@ -88,7 +88,7 @@ export default function HomeSearch() {
       (pos) => {
         setLocating(false)
         router.push(
-          `/libraries?lat=${pos.coords.latitude.toFixed(4)}&lng=${pos.coords.longitude.toFixed(4)}`
+          `/libraries?nlat=${pos.coords.latitude.toFixed(4)}&nlng=${pos.coords.longitude.toFixed(4)}&sort=near`
         )
       },
       () => {
@@ -149,7 +149,7 @@ export default function HomeSearch() {
             autoComplete="off"
             className="min-w-0 flex-1 bg-transparent py-3 text-[17px] font-medium outline-none"
             style={{ color: T.ink.base }}
-            placeholder="Search libraries, cities or countries"
+            placeholder="Search libraries, towns or countries"
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -168,8 +168,7 @@ export default function HomeSearch() {
           <button
             type="button"
             onClick={goToIndex}
-            className="shrink-0 rounded-full px-6 py-3 text-[16px] font-semibold text-white transition-colors"
-            style={{ background: T.ink.base }}
+            className="shrink-0 rounded-full bg-(--t-accent-primary) px-6 py-3 text-[16px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
           >
             Search
           </button>
@@ -246,18 +245,17 @@ export default function HomeSearch() {
 
       <div className="mt-3.5 flex flex-wrap items-center gap-2">
         <span className="mr-0.5 text-[15px]" style={{ color: T.ink.dim }}>
-          Popular searches:
+          Try
         </span>
-        {POPULAR_SEARCHES.map((label) => (
-          <button
+        {TRY_SEARCHES.map(({ label, href }) => (
+          <Link
             key={label}
-            type="button"
-            onClick={() => setQuery(label)}
-            className="rounded-full border bg-white px-3.5 py-2 text-[14px] font-medium transition-colors hover:border-(--t-accent-primary) hover:text-(--t-accent-primary-hover)"
+            href={href}
+            className="rounded-full border bg-white px-3.5 py-2 text-[14px] font-medium no-underline transition-colors hover:border-(--t-accent-primary) hover:text-(--t-accent-primary-hover)"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
             {label}
-          </button>
+          </Link>
         ))}
       </div>
     </div>

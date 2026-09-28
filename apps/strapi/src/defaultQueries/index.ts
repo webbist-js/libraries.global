@@ -48,22 +48,21 @@ export const pageDefaultQuery = {
 
 /** Editable homepage section copy — flat components, no nested relations. */
 export const homepageSectionPopulate = {
-  proofIntro: true,
-  openDataDefinition: true,
   journeysIntro: true,
   journeys: true,
   featuredIntro: true,
-  featuredPrompt: true,
-  tasksIntro: true,
-  stewardBand: true,
-  coverageIntro: true,
-  journalIntro: true,
   communityBand: true,
   communitySteps: true,
-  openIntro: true,
-  openLinks: true,
+  tasksIntro: true,
+  atlasBand: true,
+  plansIntro: true,
+  coverageIntro: true,
+  stewardBand: true,
+  journalIntro: true,
   finalCta: true,
   finalBenefits: true,
+  openIntro: true,
+  openLinks: true,
 }
 
 export const homepageDefaultQuery = {

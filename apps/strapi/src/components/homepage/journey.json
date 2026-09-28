@@ -3,13 +3,13 @@
   "info": {
     "displayName": "Journey",
     "icon": "walk",
-    "description": "One of the primary homepage journeys (explore / contribute / represent a library)."
+    "description": "One of the primary homepage journeys (explore / contribute / analyse / represent a library)."
   },
   "options": {},
   "attributes": {
     "tone": {
       "type": "enumeration",
-      "enum": ["explore", "contribute", "steward"],
+      "enum": ["explore", "contribute", "analyse", "steward"],
       "default": "explore",
       "required": true
     },

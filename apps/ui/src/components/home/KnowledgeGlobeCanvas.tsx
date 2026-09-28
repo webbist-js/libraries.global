@@ -782,6 +782,7 @@ function OrbitalDust() {
     () => ({
       uColor: { value: new THREE.Color("#8a80ea") },
       uOpacity: { value: 0.6 },
+      uPlanetRadius: { value: EARTH_RADIUS },
       uSizeScale: { value: 0.9 },
       uTime: { value: 0 },
     }),
@@ -1144,8 +1145,14 @@ function PolarSpin({
   readonly speed: number
 }) {
   const ref = useRef<THREE.Group>(null)
+  const reducedMotion = useMemo(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    []
+  )
   useFrame((_, delta) => {
-    if (ref.current) ref.current.rotation.y += delta * speed
+    if (ref.current && !reducedMotion) ref.current.rotation.y += delta * speed
   })
 
   return <group ref={ref}>{children}</group>
@@ -1371,6 +1378,7 @@ export function KnowledgeGlobeCanvas({
   const cameraZ = overrides?.cameraZ ?? GLOBE_SETTINGS.cameraZ
   const cameraY = overrides?.cameraY ?? 0.06
   const anchor = overrides?.anchor
+  const interactive = overrides?.interactive ?? true
 
   return (
     <div className={cn("relative h-full w-full", className)}>
@@ -1390,7 +1398,9 @@ export function KnowledgeGlobeCanvas({
           fov,
           position: [0, cameraY, cameraZ],
         }}
-        className="h-full w-full touch-none"
+        className={cn("h-full w-full", interactive && "touch-none")}
+        // A decorative globe must never swallow clicks or touch-scrolling
+        style={interactive ? undefined : { pointerEvents: "none" }}
         dpr={[1, overrides?.dprMax ?? GLOBE_QUALITY.dprMax]}
         gl={{
           alpha: true,

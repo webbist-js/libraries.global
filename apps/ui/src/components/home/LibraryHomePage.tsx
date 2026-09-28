@@ -6,7 +6,7 @@ import GlobalHeader from "@/components/global/GlobalHeader"
 import { resolveHomepageContent } from "@/components/home/homepage.content"
 import HomepageHero from "@/components/home/HomepageHero"
 import HomepageSections from "@/components/home/HomepageSections"
-import { pickTasks } from "@/components/home/sections/TasksSection"
+import { pickTasks } from "@/components/home/sections/ContributeSection"
 import StrapiStructuredData from "@/components/page-builder/components/seo-utilities/StrapiStructuredData"
 import { T } from "@/lib/design-tokens"
 import {
@@ -19,7 +19,14 @@ import {
   fetchRecentBlogArticles,
 } from "@/lib/strapi-api/content/server"
 
-export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
+export function LibraryHomePage({
+  locale,
+  viewerPlan,
+}: {
+  readonly locale: Locale
+  /** The signed-in viewer's plan key; undefined for a visitor. */
+  readonly viewerPlan?: string
+}) {
   const homepagePromise = fetchHomepage(locale)
   const continentSummariesPromise = fetchHomepageContinents(locale)
   const footerPromise = fetchFooter(locale)
@@ -118,6 +125,7 @@ export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
             title={content.heroTitle}
             text={content.heroText}
             markers={globeMarkers}
+            signedIn={viewerPlan !== undefined}
           />
 
           <HomepageSections
@@ -129,6 +137,7 @@ export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
             countryBreakdown={countryBreakdown}
             totalCountriesByContinent={totalCountriesByContinent}
             blogArticles={blogArticles}
+            viewerPlan={viewerPlan}
           />
         </main>
 
