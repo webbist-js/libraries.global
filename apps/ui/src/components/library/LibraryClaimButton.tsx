@@ -1,10 +1,10 @@
 "use client"
 
-import Link from "next/link"
 import { useEffect, useState } from "react"
 
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
+import { Link } from "@/lib/navigation"
 
 interface LibraryClaimButtonProps {
   readonly libraryDocumentId: string
@@ -13,6 +13,10 @@ interface LibraryClaimButtonProps {
   readonly libraryEntityRef?: string
 }
 
+/**
+ * The sidebar's "Work here?" line: a link to ask to look after the record
+ * (through sign-in when needed). Hidden for someone who already does.
+ */
 export function LibraryClaimButton({
   libraryDocumentId,
   librarySlug,
@@ -39,48 +43,29 @@ export function LibraryClaimButton({
       .catch(() => setIsClaimed(false))
   }, [session?.user, libraryEntityRef])
 
-  if (sessionPending || isClaimed === null) return null
-
-  if (isClaimed) {
-    return (
-      <Link
-        href={`/contribute/edit/${librarySlug}`}
-        style={{
-          fontSize: "15px",
-          fontWeight: 600,
-          color: "var(--tint-public-fg)",
-          textDecoration: "none",
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "6px",
-          border: `1px solid var(--tint-public-fg)`,
-          borderRadius: "999px",
-          padding: "8px 14px",
-          background: "var(--tint-public-bg)",
-        }}
-      >
-        ✓ You manage this library
-      </Link>
-    )
-  }
+  if (sessionPending || isClaimed === null || isClaimed) return null
 
   const claimUrl = `/contribute/claim?librarySlug=${encodeURIComponent(librarySlug)}&libraryName=${encodeURIComponent(libraryName)}&libraryDocumentId=${encodeURIComponent(libraryDocumentId)}${refParam}`
 
   return (
-    <Link
-      href={
-        session?.user
-          ? claimUrl
-          : `/auth/signin?callbackUrl=${encodeURIComponent(claimUrl)}`
-      }
-      style={{
-        fontSize: "15px",
-        fontWeight: 600,
-        color: T.accent.primary,
-        textUnderlineOffset: "3px",
-      }}
+    <p
+      className="m-0 px-1 text-[13.5px] leading-normal"
+      style={{ color: T.ink.dim }}
     >
-      Work here? Request stewardship
-    </Link>
+      Work here?{" "}
+      <Link
+        href={
+          session?.user
+            ? claimUrl
+            : `/auth/signin?callbackUrl=${encodeURIComponent(claimUrl)}`
+        }
+        className="font-semibold underline underline-offset-[3px]"
+        style={{ color: T.accent.primary }}
+      >
+        Ask to look after this record
+      </Link>
+      . A reviewer checks with the library first. Claiming a record
+      doesn&rsquo;t mean the library endorses Libraries Global.
+    </p>
   )
 }

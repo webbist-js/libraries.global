@@ -291,42 +291,6 @@ export async function searchWikiArticles(
   })
 }
 
-// ── Geo search ────────────────────────────────────────────────────────────────
-
-export async function searchNearbyLibraries(
-  lat: number,
-  lng: number,
-  excludeSlug: string,
-  radiusMeters = 50_000,
-  limit = 4
-) {
-  const index = meiliClient.index("library")
-
-  return index.search<LibrarySearchHit>("", {
-    filter: [
-      `_geoRadius(${lat}, ${lng}, ${radiusMeters})`,
-      `slug != "${excludeSlug}"`,
-    ],
-    limit,
-    sort: [`_geoPoint(${lat}, ${lng}):asc`],
-    attributesToRetrieve: [
-      "id",
-      "documentId",
-      "name",
-      "slug",
-      "summary",
-      "libraryType",
-      "operationalStatus",
-      "city",
-      "continent_slug",
-      "country_slug",
-      "region_slug",
-      "heroImage",
-      "_geo",
-    ],
-  })
-}
-
 // ── Find-a-library v2 search ──────────────────────────────────────────────────
 // Additive: richer hit shape (openingTimes/timezone/iiifEndpoint) for the
 // client-side "open now" / completeness features on the Find-a-library page.

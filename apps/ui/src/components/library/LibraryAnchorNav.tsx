@@ -1,49 +1,85 @@
-import { LIB_ICONS, LibIcon } from "@/components/library/LibrarySectionCard"
+"use client"
+
+import { useEffect, useState } from "react"
+
+import { Container } from "@/components/elementary/Container"
+import type { AnchorItem } from "@/components/library/library-anchors"
+import { LibIcon } from "@/components/library/LibrarySectionCard"
 import { T } from "@/lib/design-tokens"
 
-export interface AnchorItem {
-  href: string
-  label: string
-  icon: string
-}
-
-export const LIBRARY_ANCHORS = {
-  photos: { href: "#photos", label: "Photos", icon: LIB_ICONS.photos },
-  visit: { href: "#visit", label: "Visit & hours", icon: LIB_ICONS.pin },
-  access: { href: "#access", label: "Accessibility", icon: LIB_ICONS.access },
-  collections: {
-    href: "#collections",
-    label: "Collections",
-    icon: LIB_ICONS.book,
-  },
-  history: { href: "#history", label: "History", icon: LIB_ICONS.clock },
-  events: { href: "#events", label: "Events", icon: LIB_ICONS.calendar },
-  sources: { href: "#sources", label: "Sources", icon: LIB_ICONS.list },
-} as const
-
-/** Sticky "On this page" pill nav (POC pattern). Sits below the 56px header. */
+/**
+ * Sticky "On this page" tabs under the 56px header, on the hero band's
+ * colour. The tab for the section in view is marked as current.
+ */
 export function LibraryAnchorNav({ items }: { readonly items: AnchorItem[] }) {
+  const [current, setCurrent] = useState<string | null>(null)
+
+  useEffect(() => {
+    const sections = items
+      .map((item) => document.getElementById(item.href.slice(1)))
+      .filter((el): el is HTMLElement => el !== null)
+    if (sections.length === 0) return
+    const visible = new Map<string, number>()
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting)
+            visible.set(entry.target.id, entry.boundingClientRect.top)
+          else visible.delete(entry.target.id)
+        }
+        // The topmost section in the reading band wins.
+        const first = sections.find((s) => visible.has(s.id))
+        setCurrent(first ? `#${first.id}` : null)
+      },
+      { rootMargin: "-120px 0px -55% 0px" }
+    )
+    for (const s of sections) observer.observe(s)
+
+    return () => observer.disconnect()
+  }, [items])
+
   return (
     <nav
       aria-label="On this page"
-      className="sticky top-14 z-5 mt-7 flex flex-wrap gap-1.5 py-2.5"
-      style={{
-        borderTop: `1px solid ${T.border.line}`,
-        borderBottom: `1px solid ${T.border.line}`,
-        background: T.bg.void,
-      }}
+      className="sticky top-14 z-5 border-b"
+      style={{ background: T.bg.space, borderColor: T.border.line }}
     >
-      {items.map((item) => (
-        <a
-          key={item.href}
-          href={item.href}
-          className="flex items-center gap-[7px] rounded-full px-3 py-2 text-[15px] font-medium no-underline transition-colors hover:bg-(--t-bg-muted-2)"
-          style={{ color: T.ink.base }}
-        >
-          <LibIcon d={item.icon} />
-          {item.label}
-        </a>
-      ))}
+      <Container>
+        <ul className="m-0 -mx-1 flex list-none gap-1 overflow-x-auto p-0 py-2 [scrollbar-width:none]">
+          {items.map((item) => {
+            const active = current === item.href
+
+            return (
+              <li key={item.href} className="shrink-0">
+                <a
+                  href={item.href}
+                  aria-current={active ? "location" : undefined}
+                  className="flex items-center gap-[7px] rounded-full border px-3 py-1.5 text-[14px] font-medium whitespace-nowrap no-underline transition-colors hover:bg-(--t-bg-muted-2)"
+                  style={{
+                    color: T.ink.base,
+                    background: active ? T.bg.deep : "transparent",
+                    borderColor: active ? T.border.line : "transparent",
+                  }}
+                >
+                  <LibIcon d={item.icon} size={15} />
+                  {item.label}
+                  {item.pro ? (
+                    <span
+                      className="rounded-full px-1.5 text-[11px] font-bold"
+                      style={{
+                        background: T.accent.chip,
+                        color: T.accent.primary,
+                      }}
+                    >
+                      Pro
+                    </span>
+                  ) : null}
+                </a>
+              </li>
+            )
+          })}
+        </ul>
+      </Container>
     </nav>
   )
 }

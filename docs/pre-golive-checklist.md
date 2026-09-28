@@ -163,9 +163,9 @@ Open licences aren't granted or registered: you apply one by publishing a clear 
 ### 7c. Maps and boundaries
 
 - [ ] **Replace the GADM boundaries** (`apps/ui/public/boundaries/countries/*`, 41 files from `scripts/download-boundaries.mjs`). GADM's licence reads: "Redistribution or commercial use is not allowed without prior permission". We serve these files publicly, and Pro would be commercial. The candidate replacement is geoBoundaries ADM1 (CC BY 4.0; credit "geoBoundaries" with a link, and check each country's own licence field). Replacing means regenerating the files and re-matching Region slugs in Strapi. The alternative is written permission from GADM.
-- [x] OpenStreetMap/CARTO credit shown on both MapLibre maps (`BASEMAP_ATTRIBUTION` in `components/map/map.helpers.ts`); Mapbox and OpenStreetMap credit under the static map.
+- [x] OpenStreetMap/CARTO credit shown on every MapLibre map (`BASEMAP_ATTRIBUTION` in `components/map/map.helpers.ts`; the location and library hero maps use the Voyager style's own credit). Mapbox is no longer used.
 - [ ] **CARTO basemap limits.** Free for non-commercial use up to 5M requests a month. Once Pro launches it's commercial: free up to 1M a month, then $500 a month (up to 10M). Before Pro, either self-host tiles (OpenFreeMap or Protomaps) or budget for the paid plan.
-- [ ] Mapbox Static Images: stay within the free tier, and keep the token restricted to our domains.
+- [ ] Revoke the old `NEXT_PUBLIC_MAPBOX_TOKEN` in the Mapbox dashboard and remove it from Vercel; nothing reads it now.
 
 ### 7d. Registrations
 

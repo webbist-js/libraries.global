@@ -3,19 +3,23 @@ import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
 import { use } from "react"
 
-import type { OpeningTimesValue } from "@/components/library/library-page.helpers"
+import {
+  type OpeningTimesValue,
+  toLatLng,
+} from "@/components/library/library-page.helpers"
 import LibraryDetailPage from "@/components/library/LibraryDetailPage"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { isDevelopment } from "@/lib/general-helpers"
 import { buildBreadcrumbSchema, buildLibrarySchema } from "@/lib/seo/json-ld"
 import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
 import { fetchDataset } from "@/lib/strapi-api/content/datasets"
+import { fetchLibraryArea } from "@/lib/strapi-api/content/library-area"
 import {
   fetchAllLibraries,
   fetchLibrary,
   fetchLibraryCatalogue,
+  fetchLibraryFollowerCount,
   fetchLibraryRevisions,
-  fetchNearbyLibraries,
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
@@ -137,16 +141,18 @@ export default function LibraryRoutePage(props: {
     notFound()
   }
 
-  const nearbyLibraries = use(
-    fetchNearbyLibraries(
-      librarySlug,
-      library.region?.slug,
-      library.location as { lat?: unknown; lng?: unknown } | null
-    )
+  const area = use(
+    fetchLibraryArea({
+      slug: librarySlug,
+      regionSlug: library.region?.slug,
+      location: toLatLng(library.location),
+      openingTimes: library.openingTimes as OpeningTimesValue | null,
+    })
   )
   const revisions = use(fetchLibraryRevisions(library.documentId))
   const catalogue = use(fetchLibraryCatalogue(library.documentId))
   const dataset = use(fetchDataset(library.source))
+  const followers = use(fetchLibraryFollowerCount(library.documentId))
 
   const crumbs = libraryPath(library, {
     continent: params.continent,
@@ -204,10 +210,12 @@ export default function LibraryRoutePage(props: {
       <LibraryDetailPage
         library={library}
         locale={locale}
-        nearbyLibraries={nearbyLibraries}
+        area={area}
         revisions={revisions}
         catalogue={catalogue}
         dataset={dataset}
+        canonicalUrl={url}
+        followers={followers}
       />
     </>
   )

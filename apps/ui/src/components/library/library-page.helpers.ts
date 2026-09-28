@@ -241,3 +241,292 @@ export function computeCompleteness(library: {
 
   return { filled, total: sections.length, sections }
 }
+
+// ── Hours summaries (hero fact cards, timeline) ──────────────────────────────
+
+export const DAY_SHORT: Record<DayKey, string> = {
+  monday: "Mon",
+  tuesday: "Tue",
+  wednesday: "Wed",
+  thursday: "Thu",
+  friday: "Fri",
+  saturday: "Sat",
+  sunday: "Sun",
+}
+
+/** Closing at or after this counts as "open late". */
+const LATE_MINUTES = 19 * 60
+
+const openFrames = (day: OpeningTimesDay | undefined) =>
+  day?.enabled ? (day.timeframes ?? []) : []
+
+/** Earliest opening and latest closing of one day, or null when closed. */
+export function daySpan(
+  day: OpeningTimesDay | undefined
+): { start: string; end: string } | null {
+  const frames = openFrames(day)
+  if (frames.length === 0) return null
+  const sorted = [...frames].sort(
+    (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
+  )
+  const end = frames.reduce(
+    (latest, tf) =>
+      timeToMinutes(tf.endTime) > timeToMinutes(latest) ? tf.endTime : latest,
+    frames[0]!.endTime
+  )
+
+  return { start: sorted[0]!.startTime, end }
+}
+
+/** "Mon–Fri", "Tue, Thu", "Every day" for a set of days in week order. */
+export function formatDayList(days: readonly DayKey[]): string {
+  const ordered = DAY_ORDER.filter((d) => days.includes(d))
+  if (ordered.length === 7) return "Every day"
+  const idx = ordered.map((d) => DAY_ORDER.indexOf(d))
+  const runs: DayKey[][] = []
+  idx.forEach((n, i) => {
+    if (i > 0 && n === idx[i - 1]! + 1) runs.at(-1)!.push(DAY_ORDER[n]!)
+    else runs.push([DAY_ORDER[n]!])
+  })
+
+  return runs
+    .map((run) =>
+      run.length >= 3
+        ? `${DAY_SHORT[run[0]!]}–${DAY_SHORT[run.at(-1)!]}`
+        : run.map((d) => DAY_SHORT[d]).join(", ")
+    )
+    .join(", ")
+}
+
+export interface HoursSummary {
+  /** "Open late" when a day closes at 19:00 or after, else "Latest closing". */
+  lateLabel: string
+  /** "Every day until 20:00", "Tue, Thu until 19:00". */
+  lateValue: string
+  /** "Open 10:00–16:00" or "Closed". */
+  sunday: string
+}
+
+/** The hero's hours facts, or null when no hours are recorded. */
+export function summariseHours(
+  openingTimes: OpeningTimesValue | null | undefined
+): HoursSummary | null {
+  const days = openingTimes?.days ?? []
+  const spans = DAY_ORDER.map((key) => ({
+    key,
+    span: daySpan(days.find((d) => d.day === key)),
+  })).filter((s): s is { key: DayKey; span: NonNullable<typeof s.span> } =>
+    Boolean(s.span)
+  )
+  if (spans.length === 0) return null
+
+  const latest = Math.max(...spans.map((s) => timeToMinutes(s.span.end)))
+  const latestDays = spans.filter((s) => timeToMinutes(s.span.end) === latest)
+  const latestTime = latestDays[0]!.span.end
+  const sunday = spans.find((s) => s.key === "sunday")
+
+  return {
+    lateLabel: latest >= LATE_MINUTES ? "Open late" : "Latest closing",
+    lateValue: `${formatDayList(latestDays.map((s) => s.key))} until ${latestTime}`,
+    sunday: sunday ? `Open ${sunday.span.start}–${sunday.span.end}` : "Closed",
+  }
+}
+
+/** Whether the library opens at all on this day of the week. */
+export function opensOn(
+  openingTimes: OpeningTimesValue | null | undefined,
+  day: DayKey
+): boolean {
+  return openFrames(openingTimes?.days?.find((d) => d.day === day)).length > 0
+}
+
+/**
+ * Whole-hour window for the hours timeline: the week's earliest opening
+ * rounded down and latest closing rounded up, at least 8 hours wide.
+ */
+export function timelineWindow(
+  openingTimes: OpeningTimesValue | null | undefined
+): { startHour: number; endHour: number } {
+  const frames = (openingTimes?.days ?? []).flatMap(openFrames)
+  if (frames.length === 0) return { startHour: 8, endHour: 18 }
+  let startHour = Math.floor(
+    Math.min(...frames.map((tf) => timeToMinutes(tf.startTime))) / 60
+  )
+  let endHour = Math.ceil(
+    Math.max(...frames.map((tf) => timeToMinutes(tf.endTime))) / 60
+  )
+  while (endHour - startHour < 8) {
+    if (startHour > 0) startHour -= 1
+    if (endHour - startHour < 8 && endHour < 24) endHour += 1
+  }
+
+  return { startHour, endHour: Math.min(endHour, 24) }
+}
+
+/** A time's position along the timeline window, 0–100. */
+export function timelinePercent(
+  time: string,
+  window: { startHour: number; endHour: number }
+): number {
+  const span = (window.endHour - window.startHour) * 60
+  const at = timeToMinutes(time) - window.startHour * 60
+
+  return Math.min(100, Math.max(0, (at / span) * 100))
+}
+
+/** Whether any timeframe says if it's staffed or self-service. */
+export function hasStaffingDetail(
+  openingTimes: OpeningTimesValue | null | undefined
+): boolean {
+  return (openingTimes?.days ?? []).some((d) =>
+    openFrames(d).some((tf) => tf.staffing === "self_service")
+  )
+}
+
+// ── Distances ────────────────────────────────────────────────────────────────
+
+export type LatLng = { lat: number; lng: number }
+
+/** A usable {lat, lng} from a location-picker value, or null. */
+export function toLatLng(value: unknown): LatLng | null {
+  if (!value || typeof value !== "object") return null
+  const { lat, lng } = value as { lat?: unknown; lng?: unknown }
+  const la = typeof lat === "string" ? Number.parseFloat(lat) : lat
+  const ln = typeof lng === "string" ? Number.parseFloat(lng) : lng
+  if (typeof la !== "number" || typeof ln !== "number") return null
+  if (!Number.isFinite(la) || !Number.isFinite(ln)) return null
+
+  return { lat: la, lng: ln }
+}
+
+/** Straight-line (great-circle) distance in kilometres. */
+export function distanceKm(a: LatLng, b: LatLng): number {
+  const rad = (d: number) => (d * Math.PI) / 180
+  const dLat = rad(b.lat - a.lat)
+  const dLng = rad(b.lng - a.lng)
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2
+
+  return 2 * 6371 * Math.asin(Math.sqrt(h))
+}
+
+/** "650 m", "2.9 km", "38 km". */
+export function formatDistance(km: number): string {
+  if (km < 1) return `${Math.max(10, Math.round((km * 1000) / 10) * 10)} m`
+  if (km < 10) return `${km.toFixed(1)} km`
+
+  return `${Math.round(km)} km`
+}
+
+// ── Record checklist (sidebar) ───────────────────────────────────────────────
+
+export type ChecklistKey =
+  | "name"
+  | "address"
+  | "hours"
+  | "history"
+  | "links"
+  | "accessibility"
+  | "collections"
+  | "photos"
+
+export interface ChecklistItem {
+  key: ChecklistKey
+  label: string
+  done: boolean
+}
+
+/**
+ * The sidebar's "Completeness" checklist: the eight parts a reader looks
+ * for, in the order they're shown (two columns, read across).
+ */
+export function recordChecklist(library: {
+  name?: string | null
+  streetAddress?: string | null
+  openingTimes?: OpeningTimesValue | null
+  foundedYear?: string | null
+  openedYear?: string | null
+  website?: string | null
+  catalogueUrl?: string | null
+  accessibility?: unknown[] | null
+  summary?: string | null
+  description?: unknown
+  collectionStats?: unknown[] | null
+  heroImage?: unknown
+}): { done: number; total: number; items: ChecklistItem[] } {
+  const items: ChecklistItem[] = [
+    { key: "name", label: "Name", done: Boolean(library.name) },
+    { key: "address", label: "Address", done: Boolean(library.streetAddress) },
+    {
+      key: "hours",
+      label: "Hours",
+      done: Boolean(
+        library.openingTimes?.days?.some(
+          (d) => d.enabled && d.timeframes?.length
+        )
+      ),
+    },
+    {
+      key: "history",
+      label: "History",
+      done: Boolean(library.foundedYear || library.openedYear),
+    },
+    {
+      key: "links",
+      label: "Links",
+      done: Boolean(library.website || library.catalogueUrl),
+    },
+    {
+      key: "accessibility",
+      label: "Accessibility",
+      done: Boolean(library.accessibility?.length),
+    },
+    {
+      key: "collections",
+      label: "Collections",
+      done: Boolean(
+        library.summary ||
+        (Array.isArray(library.description) && library.description.length) ||
+        library.collectionStats?.length
+      ),
+    },
+    { key: "photos", label: "Photos", done: Boolean(library.heroImage) },
+  ]
+
+  return {
+    done: items.filter((i) => i.done).length,
+    total: items.length,
+    items,
+  }
+}
+
+// ── Citation ─────────────────────────────────────────────────────────────────
+
+/** "Nailsea Library." Libraries Global, record GB-…, updated 19 May 2026. URL */
+export function buildCitation({
+  name,
+  entityRef,
+  updatedAt,
+  url,
+}: {
+  name: string
+  entityRef?: string | null
+  updatedAt?: string | null
+  url: string
+}): string {
+  const date = updatedAt
+    ? new Date(updatedAt).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC",
+      })
+    : null
+  const parts = [
+    entityRef ? `record ${entityRef}` : null,
+    date ? `updated ${date}` : null,
+  ].filter(Boolean)
+
+  return `“${name}.” Libraries Global${parts.length ? `, ${parts.join(", ")}` : ""}. ${url}`
+}

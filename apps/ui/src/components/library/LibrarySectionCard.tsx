@@ -55,31 +55,56 @@ export const LIB_ICONS = {
   bars: "M4 20V10M10 20V4M16 20v-7M22 20H2",
   train:
     "M7 3h10a2 2 0 012 2v9a3 3 0 01-3 3H8a3 3 0 01-3-3V5a2 2 0 012-2zM5 10h14M8 21l2-4M16 21l-2-4M9 14h.01M15 14h.01",
+  map: "M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14",
+  download: "M12 4v11M7 10l5 5 5-5M5 20h14",
+  plus: "M12 5v14M5 12h14",
 } as const
 
+/** Icon-square tints for section headings. */
+const TONES = {
+  indigo: { bg: T.accent.chip, fg: T.accent.primary },
+  public: { bg: "var(--tint-public-bg)", fg: "var(--tint-public-fg)" },
+  special: { bg: "var(--tint-special-bg)", fg: "var(--tint-special-fg)" },
+  neutral: { bg: "var(--tint-neutral-bg)", fg: "var(--tint-neutral-fg)" },
+} as const
+
+export type SectionTone = keyof typeof TONES
+
 /**
- * White section card with the POC's serif heading + indigo icon circle.
- * `dashed` renders the empty-state variant (Events with no data).
+ * White section card: a tinted icon square beside a serif heading, an
+ * optional intro line, then the body. `dashed` is the empty-state border;
+ * `compact` is the smaller card used three to a row.
  */
 export function LibrarySectionCard({
   id,
   title,
   iconPath,
   intro,
+  tone = "indigo",
   dashed = false,
+  compact = false,
   children,
 }: {
   readonly id: string
   readonly title: string
   readonly iconPath: string
-  readonly intro?: string
+  readonly intro?: React.ReactNode
+  readonly tone?: SectionTone
   readonly dashed?: boolean
+  readonly compact?: boolean
   readonly children: React.ReactNode
 }) {
+  const t = TONES[tone]
+
   return (
     <section
       id={id}
-      className="scroll-mt-32 rounded-3xl p-5 sm:p-8"
+      aria-labelledby={`${id}-h`}
+      className={
+        compact
+          ? "flex scroll-mt-32 flex-col rounded-3xl p-5"
+          : "scroll-mt-32 rounded-3xl p-5 sm:p-7"
+      }
       style={{
         background: T.bg.deep,
         border: dashed
@@ -87,25 +112,47 @@ export function LibrarySectionCard({
           : `1px solid ${T.border.line}`,
       }}
     >
-      <h2
-        className="m-0 flex items-center gap-3 text-[28px] sm:text-[32px]"
-        style={{ fontFamily: T.font.serif, fontWeight: 500, color: T.ink.base }}
-      >
+      <div className="flex items-start gap-3">
         <span
           aria-hidden="true"
-          className="flex size-10 shrink-0 items-center justify-center rounded-full"
-          style={{ background: T.accent.chip, color: T.accent.primary }}
+          className={
+            compact
+              ? "flex size-8 shrink-0 items-center justify-center rounded-[10px]"
+              : "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-[11px]"
+          }
+          style={{ background: t.bg, color: t.fg }}
         >
-          <LibIcon d={iconPath} size={21} />
+          <LibIcon d={iconPath} size={compact ? 17 : 19} />
         </span>
-        {title}
-      </h2>
-      {intro ? (
-        <p className="mt-1.5 mb-0 text-[16px]" style={{ color: T.ink.dim }}>
-          {intro}
-        </p>
-      ) : null}
-      <div className="mt-4">{children}</div>
+        <div className="min-w-0">
+          <h2
+            id={`${id}-h`}
+            className={
+              compact
+                ? "m-0 text-[22px] leading-tight"
+                : "m-0 text-[26px] leading-tight sm:text-[28px]"
+            }
+            style={{
+              fontFamily: T.font.serif,
+              fontWeight: 500,
+              color: T.ink.base,
+            }}
+          >
+            {title}
+          </h2>
+          {intro ? (
+            <p
+              className="mt-1 mb-0 text-[14.5px] leading-normal"
+              style={{ color: T.ink.dim }}
+            >
+              {intro}
+            </p>
+          ) : null}
+        </div>
+      </div>
+      <div className={compact ? "mt-3 flex flex-1 flex-col" : "mt-5"}>
+        {children}
+      </div>
     </section>
   )
 }

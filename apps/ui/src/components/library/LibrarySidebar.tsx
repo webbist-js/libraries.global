@@ -1,11 +1,15 @@
-// Sticky sidebar for the library detail page (v2): record panel + links.
+// Sticky sidebar for the library detail page (v2): record, tasks and links.
+
+import { Icon } from "@iconify/react"
 
 import {
-  computeCompleteness,
   type OpeningTimesValue,
+  recordChecklist,
 } from "@/components/library/library-page.helpers"
-import LibraryMap from "@/components/library/LibraryMap"
-import { LibraryRecordCta } from "@/components/library/LibraryRecordCta"
+import { LibraryClaimButton } from "@/components/library/LibraryClaimButton"
+import { OpenCorrectionLink } from "@/components/library/LibraryCorrection"
+import { LibraryFollowerCount } from "@/components/library/LibraryFollowerCount"
+import { LibraryHelpPanel } from "@/components/library/LibraryHelpPanel"
 import { LIB_ICONS, LibIcon } from "@/components/library/LibrarySectionCard"
 import { T } from "@/lib/design-tokens"
 import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
@@ -13,138 +17,180 @@ import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
 type Lib = PopulatedLibraryData
 const asRecord = (l: Lib) => l as unknown as Record<string, unknown>
 
-function DtRow({
-  icon,
-  label,
-  children,
-}: {
-  readonly icon: string
-  readonly label: string
-  readonly children: React.ReactNode
-}) {
-  return (
-    <div>
-      <dt
-        className="flex items-center gap-1.5 text-[14px]"
-        style={{ color: T.ink.dim }}
-      >
-        <LibIcon d={icon} size={16} />
-        {label}
-      </dt>
-      <dd className="mx-0 mt-1 mb-0 text-[16px]">{children}</dd>
-    </div>
-  )
+const PANEL = "rounded-3xl p-5"
+const panelStyle = {
+  background: T.bg.deep,
+  border: `1px solid ${T.border.line}`,
+}
+
+/** The sidebar's checklist, shared by the record panel and the tasks. */
+export function libraryChecklist(library: Lib) {
+  const rec = asRecord(library)
+
+  return recordChecklist({
+    name: library.name,
+    streetAddress: library.streetAddress,
+    openingTimes: library.openingTimes as OpeningTimesValue | null,
+    foundedYear: rec.foundedYear as string | null,
+    openedYear: rec.openedYear as string | null,
+    website: rec.website as string | null,
+    catalogueUrl: rec.catalogueUrl as string | null,
+    accessibility: library.accessibility as unknown[] | null,
+    summary: library.summary,
+    description: library.description,
+    collectionStats: rec.collectionStats as unknown[] | null,
+    heroImage: library.heroImage,
+  })
 }
 
 export function LibraryRecordPanel({
   library,
-  path,
+  followers = null,
 }: {
   readonly library: Lib
-  /** This library's page path, for sign-in to return to. */
-  readonly path: string
+  /** People following the library; null leaves the count out. */
+  readonly followers?: number | null
 }) {
   const rec = asRecord(library)
-  const { filled, total } = computeCompleteness({
-    heroImage: library.heroImage,
-    openingTimes: library.openingTimes as OpeningTimesValue | null,
-    streetAddress: library.streetAddress,
-    location: library.location,
-    accessibility: library.accessibility as unknown[] | null,
-    services: library.services as unknown[] | null,
-    amenities: library.amenities as unknown[] | null,
-    description: library.description,
-    summary: library.summary,
-    collectionStats: rec.collectionStats as unknown[] | null,
-    foundedYear: rec.foundedYear as string | null,
-    openedYear: rec.openedYear as string | null,
-    website: rec.website as string | null,
-    phone: rec.phone as string | null,
-    email: rec.email as string | null,
-  })
-  const pct = Math.round((filled / total) * 100)
-  const lastVerifiedAt = rec.lastVerifiedAt as string | null
-  const updatedAt = rec.updatedAt as string | null
-  const reviewed = lastVerifiedAt ?? updatedAt
+  const { done, total, items } = libraryChecklist(library)
+  const reviewed =
+    (rec.lastVerifiedAt as string | null) ?? (rec.updatedAt as string | null)
 
   return (
-    <section
-      aria-labelledby="rec-h"
-      className="rounded-3xl p-[22px]"
-      style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
-    >
+    <section aria-labelledby="rec-h" className={PANEL} style={panelStyle}>
       <h2
         id="rec-h"
-        className="m-0 mb-3.5 text-[18px] font-bold"
+        className="m-0 mb-3 text-[15px] font-bold"
         style={{ color: T.ink.base }}
       >
         About this record
       </h2>
-      <dl className="m-0 flex flex-col gap-3.5">
-        <DtRow icon={LIB_ICONS.people} label="Record status">
-          <span className="font-semibold">◐ Community maintained</span>
-        </DtRow>
-        <DtRow icon={LIB_ICONS.bars} label="Completeness">
-          <span
-            aria-hidden="true"
-            className="block h-2 overflow-hidden rounded-full"
-            style={{ background: T.border.divider }}
-          >
-            <span
-              className="block h-full"
-              style={{
-                width: `${pct}%`,
-                background: "var(--tint-public-fg)",
-              }}
-            />
-          </span>
-          <span className="mt-1.5 block text-[15px]">
-            {filled} of {total} sections documented
-          </span>
-        </DtRow>
-        <DtRow icon={LIB_ICONS.calendar} label="Last reviewed">
-          {reviewed
-            ? new Date(reviewed).toLocaleDateString("en-GB", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })
-            : "Not yet reviewed"}
-        </DtRow>
-      </dl>
       <div
-        className="mt-5 border-t pt-5"
-        style={{ borderColor: T.border.divider }}
+        className="flex gap-2.5 rounded-2xl px-3 py-2.5 text-[13.5px] leading-normal"
+        style={{
+          background: T.bg.surface,
+          border: `1px solid ${T.border.line}`,
+        }}
       >
-        <LibraryRecordCta
-          gaps={total - filled}
-          libraryDocumentId={library.documentId ?? ""}
-          libraryEntityRef={library.entityRef ?? undefined}
-          libraryName={library.name ?? ""}
-          libraryPath={path}
-          librarySlug={library.slug ?? ""}
-        />
+        <span className="mt-0.5 shrink-0" style={{ color: T.ink.dim }}>
+          <LibIcon d={LIB_ICONS.people} size={16} />
+        </span>
+        <p className="m-0" style={{ color: T.ink.dim }}>
+          <strong style={{ color: T.ink.base }}>Community maintained.</strong>{" "}
+          No verified staff yet. Changes are checked by reviewers against
+          sources.
+        </p>
       </div>
+
+      <div className="mt-4 flex items-baseline justify-between">
+        <h3 className="m-0 text-[14px] font-bold" style={{ color: T.ink.base }}>
+          Completeness
+        </h3>
+        <span
+          className="text-[14px] font-semibold"
+          style={{ color: T.ink.base }}
+        >
+          {done} of {total}
+        </span>
+      </div>
+      <div aria-hidden="true" className="mt-2 flex gap-1">
+        {items.map((item) => (
+          <span
+            key={item.key}
+            className="h-1.5 flex-1 rounded-full"
+            style={{
+              background: item.done ? "var(--tint-public-fg)" : T.bg.muted2,
+            }}
+          />
+        ))}
+      </div>
+      <ul className="m-0 mt-3 grid list-none grid-cols-2 gap-x-3 gap-y-1.5 p-0 text-[13.5px]">
+        {items.map((item) => (
+          <li
+            key={item.key}
+            className="flex items-center gap-1.5"
+            style={{ color: item.done ? T.ink.base : T.ink.dim }}
+          >
+            <Icon
+              aria-hidden="true"
+              height={15}
+              icon={item.done ? "mdi:check" : "mdi:circle-outline"}
+              style={{
+                color: item.done ? "var(--tint-public-fg)" : T.ink.low,
+              }}
+              width={15}
+            />
+            {item.label}
+            <span className="sr-only">
+              {item.done ? ": added" : ": not added yet"}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <p
+        className="mt-4 mb-0 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[13px]"
+        style={{ color: T.ink.dim }}
+      >
+        <LibIcon d={LIB_ICONS.calendar} size={14} />
+        {reviewed
+          ? `Last reviewed ${new Date(reviewed).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}`
+          : "Not yet reviewed"}
+        {followers !== null && library.documentId ? (
+          <>
+            <span aria-hidden="true">·</span>
+            <LibraryFollowerCount
+              initial={followers}
+              libraryDocumentId={library.documentId}
+            />
+          </>
+        ) : null}
+      </p>
     </section>
   )
 }
 
+export function LibraryTasksPanel({
+  library,
+  facilityQuestions,
+}: {
+  readonly library: Lib
+  readonly facilityQuestions: number
+}) {
+  const { items } = libraryChecklist(library)
+  const gaps = items.filter((i) => !i.done).map((i) => i.key)
+
+  return (
+    <LibraryHelpPanel
+      facilityQuestions={facilityQuestions}
+      gaps={gaps}
+      libraryDocumentId={library.documentId ?? ""}
+      libraryName={library.name ?? ""}
+      librarySlug={library.slug ?? ""}
+    />
+  )
+}
+
+const hostname = (url: string) => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "")
+  } catch {
+    return url
+  }
+}
+
 export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
   const rec = asRecord(library)
-  const candidates: { href: string | null; label: string; icon: string }[] = [
-    {
-      href: (rec.website as string | null) ?? null,
-      label: "Website",
-      icon: LIB_ICONS.globe,
-    },
-    {
-      href: (rec.catalogueUrl as string | null) ?? null,
-      label: "Catalogue",
-      icon: LIB_ICONS.search,
-    },
+  const website = (rec.website as string | null) ?? null
+  const catalogueUrl = (rec.catalogueUrl as string | null) ?? null
+  const others: { href: string | null; label: string; icon: string }[] = [
     {
       href: (rec.membershipUrl as string | null) ?? null,
-      label: "Membership",
+      label: "Join the library",
       icon: LIB_ICONS.people,
     },
     {
@@ -158,11 +204,6 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
       icon: LIB_ICONS.pin,
     },
     {
-      href: (rec.sourceUrl as string | null) ?? null,
-      label: "Source record",
-      icon: LIB_ICONS.db,
-    },
-    {
       href: (rec.wikidataId as string | null)
         ? `https://www.wikidata.org/wiki/${rec.wikidataId as string}`
         : null,
@@ -170,65 +211,68 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
       icon: LIB_ICONS.db,
     },
   ]
-  const links = candidates.flatMap((l) =>
-    l.href ? [{ href: l.href, label: l.label, icon: l.icon }] : []
+
+  const missing = (label: string, icon: string) => (
+    <li className="flex items-center gap-2" style={{ color: T.ink.dim }}>
+      <LibIcon d={icon} size={16} />
+      <span>
+        {label} not added yet ·{" "}
+        <OpenCorrectionLink
+          category="Something else"
+          className="underline underline-offset-2"
+        >
+          Add
+        </OpenCorrectionLink>
+      </span>
+    </li>
   )
 
-  if (links.length === 0) return null
-
-  const domain = (url: string) => {
-    try {
-      return new URL(url).hostname.replace(/^www\./, "")
-    } catch {
-      return null
-    }
-  }
+  const link = (href: string, label: string, icon: string) => (
+    <li key={label} className="flex items-center gap-2">
+      <span style={{ color: T.accent.primary }}>
+        <LibIcon d={icon} size={16} />
+      </span>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="min-w-0 truncate font-semibold underline underline-offset-2"
+        style={{ color: T.accent.primary }}
+      >
+        {label} ↗<span className="sr-only"> (opens in a new tab)</span>
+      </a>
+    </li>
+  )
 
   return (
-    <section
-      aria-labelledby="links-h"
-      className="rounded-3xl p-[22px]"
-      style={{ background: "var(--tint-national-bg)" }}
-    >
+    <section aria-labelledby="links-h" className={PANEL} style={panelStyle}>
       <h2
         id="links-h"
-        className="m-0 mb-2.5 text-[18px] font-bold"
+        className="m-0 mb-2.5 text-[15px] font-bold"
         style={{ color: T.ink.base }}
       >
         Official links
       </h2>
-      <ul className="m-0 flex list-none flex-col gap-2.5 p-0 text-[16px] font-semibold">
-        {links.map((l) => (
-          <li
-            key={l.label}
-            className="flex items-center gap-2"
-            style={{ color: T.accent.primary }}
-          >
-            <LibIcon d={l.icon} size={18} />
-            <a href={l.href} target="_blank" rel="noopener noreferrer">
-              {l.label}
-              {l.label === "Website" && domain(l.href)
-                ? `: ${domain(l.href)}`
-                : ""}{" "}
-              ↗
-            </a>
-          </li>
-        ))}
+      <ul className="m-0 flex list-none flex-col gap-2 p-0 text-[14px]">
+        {website
+          ? link(website, hostname(website), LIB_ICONS.globe)
+          : missing("Website", LIB_ICONS.globe)}
+        {catalogueUrl
+          ? link(catalogueUrl, "Search the catalogue", LIB_ICONS.book)
+          : missing("Catalogue link", LIB_ICONS.book)}
+        {others.flatMap((l) => (l.href ? [link(l.href, l.label, l.icon)] : []))}
       </ul>
     </section>
   )
 }
 
-export function LibraryMapPanel({ library }: { readonly library: Lib }) {
-  if (!library.location) return null
-
+export function LibraryClaimNote({ library }: { readonly library: Lib }) {
   return (
-    <section
-      aria-label="Map"
-      className="overflow-hidden rounded-3xl"
-      style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
-    >
-      <LibraryMap library={library} className="h-64" />
-    </section>
+    <LibraryClaimButton
+      libraryDocumentId={library.documentId ?? ""}
+      libraryEntityRef={library.entityRef ?? undefined}
+      libraryName={library.name ?? ""}
+      librarySlug={library.slug ?? ""}
+    />
   )
 }

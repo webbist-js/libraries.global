@@ -1,10 +1,18 @@
 "use client"
 
+import { Icon } from "@iconify/react"
 import { useState } from "react"
 
 import { T } from "@/lib/design-tokens"
 
-export function LibraryCopyButton({ text }: { readonly text: string }) {
+/** A small white pill that copies `text` and says so for a moment. */
+export function LibraryCopyButton({
+  text,
+  label = "Copy address",
+}: {
+  readonly text: string
+  readonly label?: string
+}) {
   const [copied, setCopied] = useState(false)
 
   return (
@@ -19,10 +27,16 @@ export function LibraryCopyButton({ text }: { readonly text: string }) {
           // clipboard unavailable — ignore
         }
       }}
-      className="border-0 bg-transparent p-0 text-[16px] font-semibold underline underline-offset-[3px]"
-      style={{ color: T.accent.primary, cursor: "pointer" }}
+      className="inline-flex items-center gap-1.5 rounded-full border bg-white px-3 py-1.5 text-[13.5px] font-semibold transition-colors hover:bg-(--t-bg-surface)"
+      style={{ borderColor: T.border.hi, color: T.ink.base }}
     >
-      {copied ? "Copied ✓" : "Copy address"}
+      <Icon
+        aria-hidden="true"
+        height={15}
+        icon={copied ? "mdi:check" : "mdi:content-copy"}
+        width={15}
+      />
+      <span aria-live="polite">{copied ? "Copied" : label}</span>
     </button>
   )
 }

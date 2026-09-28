@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 
 import { hubHref } from "@/components/contribute/wizard.logic"
+import { announceFollow } from "@/components/library/follow-events"
 import { useCorrectionDrawer } from "@/components/library/LibraryCorrection"
 import { LIB_ICONS, LibIcon } from "@/components/library/LibrarySectionCard"
 import { authClient } from "@/lib/auth-client"
@@ -14,16 +15,16 @@ const pillBase: React.CSSProperties = {
   alignItems: "center",
   gap: "8px",
   borderRadius: "999px",
-  padding: "12px 18px",
-  fontSize: "15px",
+  padding: "9px 16px",
+  fontSize: "14px",
   fontWeight: 600,
   cursor: "pointer",
 }
 
 /**
- * Hero action row: Follow, Suggest a correction (opens the correction
- * drawer, see LibraryCorrection) and Add photos (the photo form on the
- * Contribute hub, with this library chosen).
+ * Hero action row: Follow, Add photos (the photo form on the Contribute
+ * hub, with this library chosen) and Suggest a correction (opens the
+ * correction drawer, see LibraryCorrection).
  */
 export function LibraryHeroActions({
   librarySlug,
@@ -42,6 +43,21 @@ export function LibraryHeroActions({
         libraryDocumentId={libraryDocumentId}
         libraryName={libraryName}
       />
+      <Link
+        href={hubHref("photo", { slug: librarySlug, name: libraryName })}
+        style={{
+          ...pillBase,
+          padding: "8px 16px",
+          border: `1px solid ${T.border.hi}`,
+          background: T.bg.deep,
+          color: T.ink.base,
+          textDecoration: "none",
+        }}
+        className="transition-colors hover:!bg-(--t-bg-surface)"
+      >
+        <LibIcon d={LIB_ICONS.camera} />
+        Add photos
+      </Link>
       <button
         type="button"
         onClick={() => open()}
@@ -56,21 +72,6 @@ export function LibraryHeroActions({
         <LibIcon d={LIB_ICONS.pencil} />
         Suggest a correction
       </button>
-      <Link
-        href={hubHref("photo", { slug: librarySlug, name: libraryName })}
-        style={{
-          ...pillBase,
-          padding: "11px 18px",
-          border: `1px solid ${T.border.hi}`,
-          background: T.bg.deep,
-          color: T.ink.base,
-          textDecoration: "none",
-        }}
-        className="transition-colors hover:!bg-(--t-bg-surface)"
-      >
-        <LibIcon d={LIB_ICONS.camera} />
-        Add photos
-      </Link>
     </div>
   )
 }
@@ -113,6 +114,8 @@ function FollowPill({
       })
       if (res.ok) {
         const json = (await res.json()) as { following: boolean }
+        if (json.following !== following)
+          announceFollow({ libraryDocumentId, following: json.following })
         setFollowing(json.following)
       }
     } finally {

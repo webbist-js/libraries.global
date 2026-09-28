@@ -1,45 +1,41 @@
 import Image from "next/image"
 import type { Locale } from "next-intl"
 
-import { hubHref } from "@/components/contribute/wizard.logic"
-import {
-  Breadcrumb,
-  type BreadcrumbItem,
-  LocationContributeCTA,
-} from "@/components/ds"
+import type { BreadcrumbItem } from "@/components/ds"
+import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
-import GlobalLink from "@/components/global/GlobalLink"
-import type { OpeningTimesValue } from "@/components/library/library-page.helpers"
-import {
-  LIBRARY_ANCHORS,
-  LibraryAnchorNav,
-  type AnchorItem,
-} from "@/components/library/LibraryAnchorNav"
+import { facilityRows } from "@/components/library/facility-rows"
+import { LIBRARY_ANCHORS } from "@/components/library/library-anchors"
+import { toLatLng } from "@/components/library/library-page.helpers"
+import { LibraryAnchorNav } from "@/components/library/LibraryAnchorNav"
+import { LibraryAreaSection } from "@/components/library/LibraryArea"
 import { LibraryCatalogueCheck } from "@/components/library/LibraryCatalogueCheck"
 import { LibraryCorrectionProvider } from "@/components/library/LibraryCorrection"
 import { LibraryEvents } from "@/components/library/LibraryEvents"
-import LibraryExploreNearby from "@/components/library/LibraryExploreNearby"
-import { LibraryHeroActions } from "@/components/library/LibraryHeroActions"
-import { LibraryOpenStatusBadge } from "@/components/library/LibraryHoursTable"
+import { LibraryHero } from "@/components/library/LibraryHero"
 import {
   LIB_ICONS,
-  LibIcon,
   LibrarySectionCard,
 } from "@/components/library/LibrarySectionCard"
 import {
+  hasCollections,
   LibraryCollectionsSection,
+  LibraryEventsEmpty,
   LibraryFacilitiesSection,
   LibraryHistorySection,
+  LibraryReuseSection,
   LibrarySourcesSection,
   LibraryVisitSection,
 } from "@/components/library/LibrarySections"
 import {
+  LibraryClaimNote,
   LibraryLinksPanel,
-  LibraryMapPanel,
   LibraryRecordPanel,
+  LibraryTasksPanel,
 } from "@/components/library/LibrarySidebar"
-import { T, tintForLibraryType } from "@/lib/design-tokens"
+import { T } from "@/lib/design-tokens"
 import type { DatasetRecord } from "@/lib/strapi-api/content/datasets"
+import type { LibraryAreaData } from "@/lib/strapi-api/content/library-area"
 import type {
   LibraryCatalogueSummary,
   LibraryRevision,
@@ -47,23 +43,37 @@ import type {
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
+const NO_AREA: LibraryAreaData = {
+  neighbours: [],
+  regionTotal: null,
+  withinRadius: null,
+  sundays: null,
+}
+
 interface LibraryDetailPageProps {
   readonly library: PopulatedLibraryData | null
   readonly locale: Locale
-  readonly nearbyLibraries?: PopulatedLibraryData[]
+  /** Nearby libraries and area figures, from the index. */
+  readonly area?: LibraryAreaData
   readonly revisions?: LibraryRevision[]
   readonly catalogue?: LibraryCatalogueSummary | null
   /** The dataset this record was imported from, if any. */
   readonly dataset?: DatasetRecord | null
+  /** The record's canonical, absolute URL (for the citation). */
+  readonly canonicalUrl?: string
+  /** People following the library; null leaves the count out. */
+  readonly followers?: number | null
 }
 
 export function LibraryDetailPage({
   library,
   locale,
-  nearbyLibraries = [],
+  area = NO_AREA,
   revisions = [],
   catalogue = null,
   dataset = null,
+  canonicalUrl,
+  followers = null,
 }: LibraryDetailPageProps) {
   if (!library) {
     return (
@@ -80,16 +90,8 @@ export function LibraryDetailPage({
   }
 
   const rec = library as unknown as Record<string, unknown>
-  const tint = tintForLibraryType(library.libraryType)
-  const typeLabel = library.libraryType
-    ? library.libraryType === "Other"
-      ? "Library"
-      : `${library.libraryType} library`
-    : null
   const heroUrl = formatStrapiMediaUrl(library.heroImage?.url)
-  const openingTimes =
-    (library.openingTimes as OpeningTimesValue | null) ?? null
-  const timezone = (rec.timezone as string | null) ?? null
+  const coords = toLatLng(library.location)
 
   const locationLine = [
     library.city,
@@ -98,20 +100,6 @@ export function LibraryDetailPage({
   ]
     .filter(Boolean)
     .join(", ")
-
-  const shortName = (rec.shortName as string | null) ?? null
-
-  const hasHistory = Boolean(rec.foundedYear || rec.openedYear)
-  const anchors: AnchorItem[] = [
-    LIBRARY_ANCHORS.photos,
-    LIBRARY_ANCHORS.visit,
-    LIBRARY_ANCHORS.access,
-    LIBRARY_ANCHORS.collections,
-    ...(hasHistory ? [LIBRARY_ANCHORS.history] : []),
-    LIBRARY_ANCHORS.events,
-    LIBRARY_ANCHORS.sources,
-  ]
-
   const path =
     library.continent?.slug &&
     library.country?.slug &&
@@ -154,6 +142,29 @@ export function LibraryDetailPage({
     { label: library.name ?? "" },
   ]
 
+  const facilities = facilityRows(library)
+  const unanswered = facilities.filter((r) => r.state === "unknown")
+  const stepFree =
+    facilities.find((r) => r.label === "Step-free entrance")?.state ?? "yes"
+  const hasFeed = Boolean(rec.hasActiveFeed)
+  const collectionsFull = hasCollections(library)
+  const mapNeighbours = area.neighbours.flatMap((n) =>
+    n.lat !== null && n.lng !== null
+      ? [{ id: n.id, name: n.name, href: n.href, lat: n.lat, lng: n.lng }]
+      : []
+  )
+
+  const anchors = [
+    LIBRARY_ANCHORS.visit,
+    LIBRARY_ANCHORS.access,
+    LIBRARY_ANCHORS.history,
+    LIBRARY_ANCHORS.collections,
+    LIBRARY_ANCHORS.events,
+    LIBRARY_ANCHORS.area,
+    LIBRARY_ANCHORS.sources,
+    LIBRARY_ANCHORS.reuse,
+  ]
+
   return (
     <div
       className="relative flex min-h-screen w-full flex-col"
@@ -162,190 +173,104 @@ export function LibraryDetailPage({
       <GlobalHeader locale={locale} />
 
       <LibraryCorrectionProvider library={wizardLibrary} path={path}>
-        <main className="relative z-10 mx-auto w-full max-w-[1360px] flex-1 px-4 pt-6 pb-22 sm:px-8 sm:pt-10">
-          {/* Breadcrumb */}
-          <Breadcrumb items={crumbs} />
+        <main className="flex-1">
+          <LibraryHero
+            coords={coords}
+            crumbs={crumbs}
+            hasPhoto={Boolean(heroUrl)}
+            library={library}
+            neighbours={mapNeighbours}
+            stepFree={stepFree}
+            wizardLibrary={wizardLibrary}
+          />
 
-          {/* Hero */}
-          <div className="mt-4 flex flex-wrap items-end justify-between gap-6">
-            <div className="min-w-0 flex-[1_1_520px]">
-              <div className="mb-3.5 flex flex-wrap gap-2">
-                {typeLabel ? (
-                  <span
-                    className="flex items-center gap-1.5 rounded-full px-3 py-[5px] text-[14px] font-semibold"
-                    style={{ background: tint.bg, color: tint.fg }}
-                  >
-                    <LibIcon d={LIB_ICONS.building} size={16} />
-                    {typeLabel}
-                  </span>
-                ) : null}
-                <LibraryOpenStatusBadge
-                  openingTimes={openingTimes}
-                  timezone={timezone}
-                />
-              </div>
-              <h1
-                className="m-0 text-[clamp(44px,6vw,76px)] leading-none tracking-[-0.02em]"
-                style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-              >
-                {library.name}
-              </h1>
-              <p
-                className="mt-3 mb-0 flex flex-wrap items-center gap-1.5 text-[17px]"
-                style={{ color: T.ink.dim }}
-              >
-                <LibIcon d={LIB_ICONS.pin} size={18} />
-                {shortName ? (
-                  <>
-                    Also known as{" "}
-                    <span style={{ color: T.ink.base }}>{shortName}</span>
-                    {locationLine ? " · " : ""}
-                  </>
-                ) : null}
-                {locationLine}
-              </p>
-            </div>
-
-            <LibraryHeroActions
-              librarySlug={library.slug ?? ""}
-              libraryName={library.name ?? ""}
-              libraryDocumentId={library.documentId ?? ""}
-            />
-          </div>
-
-          {/* On this page */}
           <LibraryAnchorNav items={anchors} />
 
-          {/* Content: main column + sidebar */}
-          <div className="mt-7 flex flex-wrap items-start gap-7">
-            <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-5">
-              {/* Photos */}
-              <div
-                id="photos"
-                className="relative scroll-mt-32 overflow-hidden rounded-3xl"
-                style={{
-                  aspectRatio: "16/8",
-                  background: T.bg.deep,
-                  border: `1px solid ${T.border.line}`,
-                }}
-              >
+          <Container className="pt-7 pb-22">
+            <div className="flex flex-wrap items-start gap-6">
+              <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-5">
                 {heroUrl ? (
-                  <Image
-                    src={heroUrl}
-                    alt={
-                      library.heroImage?.alternativeText ?? library.name ?? ""
-                    }
-                    fill
-                    sizes="(max-width: 900px) 100vw, 60vw"
-                    className="rounded-[18px] object-cover p-2"
-                  />
-                ) : (
-                  <div
-                    className="absolute inset-2 flex items-center justify-center rounded-[18px]"
-                    style={{ background: tint.bg }}
+                  <figure
+                    className="relative m-0 overflow-hidden rounded-3xl"
+                    style={{
+                      aspectRatio: "16/7",
+                      border: `1px solid ${T.border.line}`,
+                      background: T.bg.deep,
+                    }}
                   >
-                    <span
-                      aria-hidden="true"
-                      className="text-[64px]"
-                      style={{ fontFamily: T.font.serif, color: tint.fg }}
-                    >
-                      {(library.name ?? "?").charAt(0)}
-                    </span>
-                  </div>
-                )}
+                    <Image
+                      src={heroUrl}
+                      alt={
+                        library.heroImage?.alternativeText ?? library.name ?? ""
+                      }
+                      fill
+                      sizes="(max-width: 900px) 100vw, 60vw"
+                      className="object-cover"
+                    />
+                  </figure>
+                ) : null}
+
+                <LibraryVisitSection library={library} />
+                <LibraryFacilitiesSection library={library} path={path} />
+
+                <div className="grid gap-4 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
+                  <LibraryHistorySection library={library} />
+                  {collectionsFull ? null : (
+                    <LibraryCollectionsSection library={library} />
+                  )}
+                  {hasFeed ? null : <LibraryEventsEmpty />}
+                </div>
+
+                {collectionsFull ? (
+                  <LibraryCollectionsSection library={library} />
+                ) : null}
+                <CatalogueSection library={library} catalogue={catalogue} />
+                {hasFeed ? (
+                  <LibrarySectionCard
+                    id="events"
+                    title="Events"
+                    iconPath={LIB_ICONS.calendar}
+                    tone="neutral"
+                  >
+                    <LibraryEvents
+                      entityRef={library.entityRef}
+                      hasActiveFeed
+                    />
+                  </LibrarySectionCard>
+                ) : null}
+
+                <LibraryAreaSection
+                  area={area}
+                  libraryName={library.name ?? "This library"}
+                  regionName={library.region?.name}
+                />
+                <LibrarySourcesSection
+                  library={library}
+                  revisions={revisions}
+                  dataset={dataset}
+                />
+                <LibraryReuseSection
+                  library={library}
+                  url={canonicalUrl ?? path}
+                />
               </div>
-              <p
-                className="-mt-2 mb-0 text-[15px]"
-                style={{ color: T.ink.dim }}
+
+              <aside
+                aria-label="About this record"
+                className="top-32 flex flex-[1_1_280px] flex-col gap-4 lg:sticky lg:max-h-[calc(100dvh-9rem)] lg:overflow-y-auto lg:overscroll-contain"
               >
-                {heroUrl
-                  ? "Have a better photo? "
-                  : "No community photos yet. "}
-                <GlobalLink
-                  href={hubHref("photo", wizardLibrary)}
-                  className="underline underline-offset-[3px]"
-                  style={{ color: T.accent.primary }}
-                >
-                  Add a photo you took or have permission to share
-                </GlobalLink>{" "}
-                (published under CC BY-SA 4.0).
-              </p>
-
-              <LibraryVisitSection library={library} />
-              <LibraryFacilitiesSection library={library} />
-              <LibraryCollectionsSection library={library} />
-
-              <CatalogueSection library={library} catalogue={catalogue} />
-              <LibraryHistorySection library={library} />
-
-              {/* Events */}
-              {(rec.hasActiveFeed as boolean) ? (
-                <LibrarySectionCard
-                  id="events"
-                  title="Events"
-                  iconPath={LIB_ICONS.calendar}
-                >
-                  <LibraryEvents entityRef={library.entityRef} hasActiveFeed />
-                </LibrarySectionCard>
-              ) : (
-                <LibrarySectionCard
-                  id="events"
-                  title="Events"
-                  iconPath={LIB_ICONS.calendar}
-                  dashed
-                >
-                  <p
-                    className="m-0 text-[17px] leading-normal"
-                    style={{ color: T.ink.dim }}
-                  >
-                    No events listed. If you run events here, you can add them
-                    or link your events calendar.
-                  </p>
-                  <GlobalLink
-                    href="/contribute/event-feed"
-                    className="mt-3 inline-block font-semibold underline underline-offset-[3px]"
-                    style={{ color: T.accent.primary }}
-                  >
-                    Add an event
-                  </GlobalLink>
-                </LibrarySectionCard>
-              )}
-
-              <LibrarySourcesSection
-                library={library}
-                revisions={revisions}
-                dataset={dataset}
-              />
-
-              {/* Nearby */}
-              {nearbyLibraries.length > 0 ? (
-                <LibrarySectionCard
-                  id="nearby"
-                  title="Nearby libraries"
-                  iconPath={LIB_ICONS.pin}
-                >
-                  <LibraryExploreNearby
-                    libraries={nearbyLibraries}
-                    regionName={library.region?.name}
-                  />
-                </LibrarySectionCard>
-              ) : null}
+                <LibraryRecordPanel followers={followers} library={library} />
+                <LibraryTasksPanel
+                  facilityQuestions={unanswered.length}
+                  library={library}
+                />
+                <LibraryLinksPanel library={library} />
+                <LibraryClaimNote library={library} />
+              </aside>
             </div>
-
-            {/* Sidebar */}
-            <aside className="top-24 flex flex-[1_1_300px] flex-col gap-4 lg:sticky lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto lg:overscroll-contain">
-              <LibraryRecordPanel library={library} path={path} />
-              <LibraryLinksPanel library={library} />
-              <LibraryMapPanel library={library} />
-            </aside>
-          </div>
+          </Container>
         </main>
       </LibraryCorrectionProvider>
-
-      <LocationContributeCTA
-        entityType="library"
-        locationName={library.name ?? "this library"}
-      />
     </div>
   )
 }

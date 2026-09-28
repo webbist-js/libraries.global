@@ -2,17 +2,17 @@
 
 import { Icon } from "@iconify/react"
 
+import GlobalLink from "@/components/global/GlobalLink"
+import { facilityRows } from "@/components/library/facility-rows"
 import {
-  facilityIcon,
-  type FacilityKind,
-  sameFacility,
-} from "@/components/library/facility-icons"
-import {
+  buildCitation,
   formatCoordinates,
+  hasStaffingDetail,
   type OpeningTimesValue,
 } from "@/components/library/library-page.helpers"
 import { LibraryCopyButton } from "@/components/library/LibraryCopyButton"
 import { OpenCorrectionLink } from "@/components/library/LibraryCorrection"
+import { LibraryFacilityAnswers } from "@/components/library/LibraryFacilityAnswers"
 import { LibraryHoursTable } from "@/components/library/LibraryHoursTable"
 import {
   LIB_ICONS,
@@ -27,17 +27,57 @@ import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
 type Lib = PopulatedLibraryData
 const asRecord = (l: Lib) => l as unknown as Record<string, unknown>
 
-function externalLink(href: string, label: string) {
+const LINK =
+  "font-semibold underline underline-offset-[3px] decoration-1 hover:decoration-2"
+
+const fmtDate = (
+  d: string | null | undefined,
+  month: "short" | "long" = "short"
+) =>
+  d
+    ? new Date(d).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month,
+        year: "numeric",
+      })
+    : null
+
+function ExternalLink({
+  href,
+  children,
+}: {
+  readonly href: string
+  readonly children: React.ReactNode
+}) {
   return (
     <a
-      key={href}
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="font-semibold"
+      className={LINK}
+      style={{ color: T.accent.primary }}
     >
-      {label} ↗
+      {children} ↗<span className="sr-only"> (opens in a new tab)</span>
     </a>
+  )
+}
+
+/** A dim note line with an info icon. */
+function Note({ children }: { readonly children: React.ReactNode }) {
+  return (
+    <p
+      className="mt-3 mb-0 flex gap-2 text-[13.5px] leading-normal"
+      style={{ color: T.ink.dim }}
+    >
+      <Icon
+        aria-hidden="true"
+        className="mt-[2px] shrink-0"
+        height={15}
+        icon="mdi:information-outline"
+        width={15}
+      />
+      <span>{children}</span>
+    </p>
   )
 }
 
@@ -53,31 +93,37 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
     [library.city, library.postalCode].filter(Boolean).join(" "),
     library.country?.name,
   ].filter(Boolean) as string[]
-  const fullAddress = addressLines.join(", ")
-  const loc = library.location as { lat?: number; lng?: number } | null
-  const directionsUrl =
-    loc?.lat != null && loc?.lng != null
-      ? `https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}`
-      : null
   const transitInfo = rec.transitInfo as string | null
+  const nearestStation = rec.nearestStation as string | null
   const timezone = (rec.timezone as string | null) ?? null
   const openingTimes =
     (library.openingTimes as OpeningTimesValue | null) ?? null
   const lastVerifiedAt = rec.lastVerifiedAt as string | null
+  const staffing = hasStaffingDetail(openingTimes)
+  const manyRanges =
+    !staffing &&
+    (openingTimes?.days ?? []).some(
+      (d) => d.enabled && (d.timeframes?.length ?? 0) >= 3
+    )
+  const hasHours = Boolean(
+    openingTimes?.days?.some((d) => d.enabled && d.timeframes?.length)
+  )
 
   return (
     <LibrarySectionCard id="visit" title="Visit" iconPath={LIB_ICONS.pin}>
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-x-8 gap-y-7 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
         <div>
           <h3
-            className="mb-2 flex items-center gap-1.5 text-[16px] font-bold"
+            className="m-0 mb-2 text-[15px] font-bold"
             style={{ color: T.ink.base }}
           >
-            <LibIcon d={LIB_ICONS.pin} />
             Address
           </h3>
           {addressLines.length > 0 ? (
-            <address className="text-[17px] leading-relaxed not-italic">
+            <address
+              className="text-[15.5px] leading-relaxed not-italic"
+              style={{ color: T.ink.base }}
+            >
               {addressLines.map((line) => (
                 <span key={line} className="block">
                   {line}
@@ -85,60 +131,87 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
               ))}
             </address>
           ) : (
-            <p className="m-0 text-[16px]" style={{ color: T.ink.dim }}>
-              Address not added yet.
+            <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+              Address not added yet.{" "}
+              <OpenCorrectionLink
+                category="Address or location"
+                className={LINK}
+              >
+                Add it
+              </OpenCorrectionLink>
             </p>
           )}
           {coords ? (
             <p
-              className="mt-2 mb-0 text-[13px]"
+              className="mt-2 mb-0 text-[12.5px]"
               style={{ fontFamily: T.font.mono, color: T.ink.dim }}
             >
               {coords}
             </p>
           ) : null}
-          <div className="mt-3 flex flex-wrap gap-3.5 text-[16px] font-semibold">
-            {directionsUrl
-              ? externalLink(directionsUrl, "Get directions")
-              : null}
-            {fullAddress ? <LibraryCopyButton text={fullAddress} /> : null}
-          </div>
-          {(rec.nearestStation as string | null) ? (
-            <p className="mt-3.5 mb-0 flex flex-wrap items-center gap-2 text-[16px] leading-normal">
-              <LibIcon d={LIB_ICONS.train} size={18} />
-              <strong>Nearest station:</strong> {rec.nearestStation as string}
+          {addressLines.length > 0 ? (
+            <div className="mt-3">
+              <LibraryCopyButton text={addressLines.join(", ")} />
+            </div>
+          ) : null}
+          {nearestStation ? (
+            <p className="mt-4 mb-0 flex gap-2 text-[14.5px] leading-normal">
+              <LibIcon d={LIB_ICONS.train} size={17} />
+              <span>
+                <strong>Nearest station:</strong> {nearestStation}
+              </span>
             </p>
           ) : null}
           {transitInfo ? (
-            <p className="mt-3.5 mb-0 flex flex-wrap items-center gap-2 text-[16px] leading-normal">
-              <LibIcon d={LIB_ICONS.train} size={18} />
-              <strong>Getting there:</strong> {transitInfo}
+            <p className="mt-3 mb-0 flex gap-2 text-[14.5px] leading-normal">
+              <LibIcon d={LIB_ICONS.train} size={17} />
+              <span>
+                <strong>Getting there:</strong> {transitInfo}
+              </span>
             </p>
           ) : null}
         </div>
+
         <div>
           <h3
-            className="mb-2 flex flex-wrap items-center gap-1.5 text-[16px] font-bold"
+            className="m-0 mb-1 text-[15px] font-bold"
             style={{ color: T.ink.base }}
           >
-            <LibIcon d={LIB_ICONS.clock} />
             Opening hours{" "}
             {timezone ? (
               <span className="font-normal" style={{ color: T.ink.dim }}>
-                ({timezone})
+                {timezone}
               </span>
             ) : null}
           </h3>
           <LibraryHoursTable openingTimes={openingTimes} timezone={timezone} />
-          <p
-            className="mt-2.5 mb-0 text-[14px] leading-normal"
-            style={{ color: T.ink.dim }}
-          >
-            {lastVerifiedAt
-              ? `Checked ${new Date(lastVerifiedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} by a contributor. `
-              : "Not yet verified by a contributor. "}
-            No temporary closures reported.
-          </p>
+          <Note>
+            {staffing
+              ? "Self-service hours: the building is open but no staff are on hand, and you may need a registered library card to get in. "
+              : null}
+            {manyRanges ? (
+              <>
+                Some days list three time ranges, possibly staffed and
+                self-service hours.{" "}
+                <OpenCorrectionLink category="Opening hours" className={LINK}>
+                  Help clarify
+                </OpenCorrectionLink>
+                .{" "}
+              </>
+            ) : null}
+            {!hasHours ? (
+              <>
+                <OpenCorrectionLink category="Opening hours" className={LINK}>
+                  Add the opening hours
+                </OpenCorrectionLink>
+                .{" "}
+              </>
+            ) : lastVerifiedAt ? (
+              `Checked ${fmtDate(lastVerifiedAt)} by a contributor; no temporary closures reported.`
+            ) : (
+              "Not yet checked by a contributor; no temporary closures reported."
+            )}
+          </Note>
         </div>
       </div>
     </LibrarySectionCard>
@@ -147,223 +220,59 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
 
 // ── Accessibility & facilities ───────────────────────────────────────────────
 
-const FACILITY_CHECKLIST = [
-  "Step-free entrance",
-  "Accessible toilets",
-  "Hearing loop",
-  "Quiet study space",
-  "Wi-Fi",
-  "Public computers",
-  "Café",
-  "Large-print materials",
-]
-
 export function LibraryFacilitiesSection({
   library,
+  path,
 }: {
   readonly library: Lib
+  readonly path: string
 }) {
-  type TagItem = {
-    name?: string | null
-    summary?: string | null
-    icon?: { iconName?: string | null } | null
-  }
-  const tagged = (items: unknown, kind: FacilityKind) =>
-    ((items ?? []) as TagItem[]).flatMap((item) =>
-      item.name
-        ? [
-            {
-              label: item.name,
-              icon: facilityIcon(item.name, kind, item.icon?.iconName),
-            },
-          ]
-        : []
+  const rows = facilityRows(library)
+  const unknown = rows.filter((r) => r.state === "unknown").length
+  const known = rows.length - unknown
+  const intro =
+    known === 0 ? (
+      "None of these are documented yet. Know the answer? Tap Yes or No."
+    ) : unknown > 0 ? (
+      `${known} answered. Know the others? Tap Yes or No.`
+    ) : (
+      <>
+        Spotted something wrong?{" "}
+        <OpenCorrectionLink category="Accessibility" className={LINK}>
+          Suggest a correction
+        </OpenCorrectionLink>
+        .
+      </>
     )
-  const documented = [
-    ...tagged(library.accessibility, "accessibility"),
-    ...tagged(library.services, "service"),
-    ...tagged(library.amenities, "amenity"),
-  ]
-
-  const normalized = documented.map((d) => d.label.toLowerCase())
-  const missing = FACILITY_CHECKLIST.filter(
-    (item) =>
-      !normalized.some(
-        (doc) =>
-          doc.includes(item.toLowerCase()) ||
-          item.toLowerCase().includes(doc) ||
-          sameFacility(item, doc)
-      )
-  )
-
-  const rows = [
-    ...documented.map((d) => ({ ...d, documented: true })),
-    ...missing.map((label) => ({
-      label,
-      icon: facilityIcon(label, "accessibility"),
-      documented: false,
-    })),
-  ]
 
   return (
     <LibrarySectionCard
       id="access"
-      title="Accessibility & facilities"
+      title="Accessibility and facilities"
       iconPath={LIB_ICONS.access}
-      intro="Please check with the library before visiting if something matters to you."
+      intro={intro}
     >
-      <ul className="m-0 grid list-none gap-x-6 p-0 md:grid-cols-2">
-        {rows.map(({ label, icon, documented: isDocumented }) => (
-          <li
-            key={label}
-            className="flex items-center gap-3 py-2.5 text-[16px]"
-            style={{ borderBottom: `1px solid ${T.border.divider}` }}
-          >
-            <span
-              aria-hidden="true"
-              className="flex size-9 shrink-0 items-center justify-center rounded-[10px]"
-              style={{
-                background: isDocumented
-                  ? "var(--tint-public-bg)"
-                  : "var(--tint-neutral-bg)",
-                color: isDocumented
-                  ? "var(--tint-public-fg)"
-                  : "var(--tint-neutral-fg)",
-              }}
-            >
-              <Icon height={20} icon={icon} width={20} />
-            </span>
-            <span className="flex-1">{label}</span>
-            <span
-              className="text-[15px] font-semibold"
-              style={{
-                color: isDocumented
-                  ? "var(--tint-public-fg)"
-                  : "var(--tint-neutral-fg)",
-              }}
-            >
-              {isDocumented ? "✓ Yes" : "? Not documented"}
-            </span>
-          </li>
-        ))}
-      </ul>
-      <OpenCorrectionLink
-        category="Accessibility"
-        className="mt-3.5 inline-block font-semibold underline-offset-[3px] hover:underline"
-      >
-        Add missing accessibility details
-      </OpenCorrectionLink>
+      <LibraryFacilityAnswers
+        libraryName={library.name ?? ""}
+        libraryPath={path}
+        librarySlug={library.slug ?? ""}
+        rows={rows}
+      />
+      <p className="mt-3 mb-0 text-[13.5px]" style={{ color: T.ink.dim }}>
+        {unknown > 0
+          ? "Your answer goes to a reviewer before it’s shown. "
+          : null}
+        Please check with the library before visiting if something matters to
+        you.
+      </p>
     </LibrarySectionCard>
   )
 }
 
-// ── Collections ──────────────────────────────────────────────────────────────
+// ── History / Collections / Events ───────────────────────────────────────────
 
-export function LibraryCollectionsSection({
-  library,
-}: {
-  readonly library: Lib
-}) {
-  const rec = asRecord(library)
-  const description = library.description as unknown[] | null
-  const summary = library.summary as string | null
-  const collectionStats = (rec.collectionStats ?? []) as {
-    value: string
-    category?: string | null
-    description?: string | null
-  }[]
-  const catalogueUrl = rec.catalogueUrl as string | null
-  const iiifEndpoint = rec.iiifEndpoint as string | null
-
-  const hasContent =
-    Boolean(summary) ||
-    (Array.isArray(description) && description.length > 0) ||
-    collectionStats.length > 0 ||
-    Boolean(catalogueUrl) ||
-    Boolean(iiifEndpoint)
-
-  return (
-    <LibrarySectionCard
-      id="collections"
-      title="Collections"
-      iconPath={LIB_ICONS.book}
-      dashed={!hasContent}
-    >
-      {Array.isArray(description) && description.length > 0 ? (
-        <div className="max-w-[68ch] text-[18px] leading-relaxed">
-          <StrapiBlocksContent
-            blocks={
-              description as Parameters<typeof StrapiBlocksContent>[0]["blocks"]
-            }
-          />
-        </div>
-      ) : summary ? (
-        <p className="m-0 max-w-[68ch] text-[18px] leading-relaxed">
-          {summary}
-        </p>
-      ) : (
-        <p
-          className="m-0 text-[17px] leading-normal"
-          style={{ color: T.ink.dim }}
-        >
-          Collections not yet documented. Know this library?{" "}
-          <a href="#correct">Add a description</a>.
-        </p>
-      )}
-
-      {collectionStats.length > 0 ? (
-        <>
-          <h3
-            className="mt-5 mb-2.5 text-[16px] font-bold"
-            style={{ color: T.ink.base }}
-          >
-            Highlights
-          </h3>
-          <ul className="m-0 grid gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
-            {collectionStats.map((stat, i) => (
-              <li
-                key={i}
-                className="list-none rounded-2xl px-4 py-3.5"
-                style={{
-                  background: T.bg.surface,
-                  border: `1px solid ${T.border.line}`,
-                }}
-              >
-                <span
-                  className="block text-[26px] leading-tight"
-                  style={{ fontFamily: T.font.serif, color: T.ink.base }}
-                >
-                  {stat.value}
-                </span>
-                <span
-                  className="block text-[14px]"
-                  style={{ color: T.ink.dim }}
-                >
-                  {stat.category ?? stat.description ?? ""}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : null}
-
-      {catalogueUrl || iiifEndpoint ? (
-        <div className="mt-4 flex flex-wrap gap-3.5 font-semibold">
-          {catalogueUrl
-            ? externalLink(catalogueUrl, "Search the catalogue")
-            : null}
-          {iiifEndpoint
-            ? externalLink(iiifEndpoint, "Digitised collections")
-            : null}
-        </div>
-      ) : null}
-    </LibrarySectionCard>
-  )
-}
-
-// ── History ──────────────────────────────────────────────────────────────────
-
-export function LibraryHistorySection({ library }: { readonly library: Lib }) {
+/** Timeline entries from the record's year and building fields. */
+export function historyEntries(library: Lib): { year: string; text: string }[] {
   const rec = asRecord(library)
   const entries: { year: string; text: string }[] = []
   const foundedYear = rec.foundedYear as string | null
@@ -377,72 +286,257 @@ export function LibraryHistorySection({ library }: { readonly library: Lib }) {
     entries.push({
       year: openedYear,
       text: architect
-        ? `Building opened${buildingInfo ? ` — ${buildingInfo}` : ""}, designed by ${architect}.`
+        ? `Building opened${buildingInfo ? `: ${buildingInfo}` : ""}, designed by ${architect}.`
         : "Building opened to readers.",
     })
   if (closedYear) entries.push({ year: closedYear, text: "Closed." })
   if (!openedYear && (architect || buildingInfo)) {
     entries.push({
-      year: "—",
+      year: "",
       text: [buildingInfo, architect ? `Architect: ${architect}` : null]
         .filter(Boolean)
         .join(" · "),
     })
   }
 
-  if (entries.length === 0) return null
+  return entries
+}
+
+function CardAction({ children }: { readonly children: React.ReactNode }) {
+  return <div className="mt-auto pt-4 text-[14px]">{children}</div>
+}
+
+export function LibraryHistorySection({ library }: { readonly library: Lib }) {
+  const entries = historyEntries(library)
 
   return (
-    <LibrarySectionCard id="history" title="History" iconPath={LIB_ICONS.clock}>
-      <ol className="m-0 flex list-none flex-col gap-3.5 p-0">
-        {entries.map((e, i) => (
-          <li key={i} className="flex gap-4">
-            <span
-              className="min-w-16 text-[24px]"
-              style={{ fontFamily: T.font.serif, color: T.accent.primary }}
-            >
-              {e.year}
-            </span>
-            <span className="text-[17px] leading-normal">{e.text}</span>
-          </li>
-        ))}
-      </ol>
+    <LibrarySectionCard
+      id="history"
+      title="History"
+      iconPath={LIB_ICONS.clock}
+      tone="special"
+      compact
+      dashed={entries.length === 0}
+    >
+      {entries.length > 0 ? (
+        <ol className="m-0 flex list-none flex-col p-0">
+          {entries.map((e, i) => (
+            <li key={i} className="relative flex gap-3 pb-3 last:pb-0">
+              <span
+                aria-hidden="true"
+                className="relative mt-[9px] flex w-3 shrink-0 justify-center"
+              >
+                <span
+                  className="size-2.5 rounded-full border-2"
+                  style={{ borderColor: "var(--tint-special-fg)" }}
+                />
+                {i < entries.length - 1 ? (
+                  <span
+                    className="absolute top-3.5 h-[calc(100%+4px)] w-px"
+                    style={{ background: T.border.hi }}
+                  />
+                ) : null}
+              </span>
+              <span>
+                {e.year ? (
+                  <span
+                    className="block text-[22px] leading-tight"
+                    style={{
+                      fontFamily: T.font.serif,
+                      color: "var(--tint-special-fg)",
+                    }}
+                  >
+                    {e.year}
+                  </span>
+                ) : null}
+                <span className="block text-[14.5px] leading-snug">
+                  {e.text}
+                </span>
+              </span>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p
+          className="m-0 text-[14.5px] leading-normal"
+          style={{ color: T.ink.dim }}
+        >
+          Not documented yet. When it opened, moved or was rebuilt all help.
+        </p>
+      )}
+      <CardAction>
+        <OpenCorrectionLink category="Something else" className={LINK}>
+          Add a date or event
+        </OpenCorrectionLink>
+      </CardAction>
     </LibrarySectionCard>
   )
 }
 
-// ── Sources & record history ─────────────────────────────────────────────────
+/** Whether the Collections section has anything to show beyond its prompt. */
+export function hasCollections(library: Lib): boolean {
+  const rec = asRecord(library)
+  const description = library.description as unknown[] | null
+
+  return (
+    Boolean(library.summary) ||
+    (Array.isArray(description) && description.length > 0) ||
+    ((rec.collectionStats as unknown[] | null)?.length ?? 0) > 0 ||
+    Boolean(rec.catalogueUrl) ||
+    Boolean(rec.iiifEndpoint)
+  )
+}
+
+export function LibraryCollectionsSection({
+  library,
+}: {
+  readonly library: Lib
+}) {
+  const rec = asRecord(library)
+
+  if (!hasCollections(library))
+    return (
+      <LibrarySectionCard
+        id="collections"
+        title="Collections"
+        iconPath={LIB_ICONS.book}
+        tone="neutral"
+        compact
+        dashed
+      >
+        <p
+          className="m-0 text-[14.5px] leading-normal"
+          style={{ color: T.ink.dim }}
+        >
+          Not documented yet. Local studies, languages and special holdings are
+          especially useful.
+        </p>
+        <CardAction>
+          <OpenCorrectionLink category="Collections" className={LINK}>
+            Describe the collections
+          </OpenCorrectionLink>
+        </CardAction>
+      </LibrarySectionCard>
+    )
+
+  const description = library.description as unknown[] | null
+  const summary = library.summary as string | null
+  const collectionStats = (rec.collectionStats ?? []) as {
+    value: string
+    category?: string | null
+    description?: string | null
+  }[]
+  const catalogueUrl = rec.catalogueUrl as string | null
+  const iiifEndpoint = rec.iiifEndpoint as string | null
+
+  return (
+    <LibrarySectionCard
+      id="collections"
+      title="Collections"
+      iconPath={LIB_ICONS.book}
+      tone="neutral"
+    >
+      {Array.isArray(description) && description.length > 0 ? (
+        <div className="max-w-[68ch] text-[17px] leading-relaxed">
+          <StrapiBlocksContent
+            blocks={
+              description as Parameters<typeof StrapiBlocksContent>[0]["blocks"]
+            }
+          />
+        </div>
+      ) : summary ? (
+        <p className="m-0 max-w-[68ch] text-[17px] leading-relaxed">
+          {summary}
+        </p>
+      ) : null}
+
+      {collectionStats.length > 0 ? (
+        <ul className="mt-5 mb-0 grid gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
+          {collectionStats.map((stat, i) => (
+            <li
+              key={i}
+              className="list-none rounded-2xl px-4 py-3.5"
+              style={{
+                background: T.bg.surface,
+                border: `1px solid ${T.border.line}`,
+              }}
+            >
+              <span
+                className="block text-[26px] leading-tight"
+                style={{ fontFamily: T.font.serif, color: T.ink.base }}
+              >
+                {stat.value}
+              </span>
+              <span className="block text-[14px]" style={{ color: T.ink.dim }}>
+                {stat.category ?? stat.description ?? ""}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {catalogueUrl || iiifEndpoint ? (
+        <div className="mt-4 flex flex-wrap gap-4 text-[15px]">
+          {catalogueUrl ? (
+            <ExternalLink href={catalogueUrl}>
+              Search the catalogue
+            </ExternalLink>
+          ) : null}
+          {iiifEndpoint ? (
+            <ExternalLink href={iiifEndpoint}>
+              Digitised collections
+            </ExternalLink>
+          ) : null}
+        </div>
+      ) : null}
+    </LibrarySectionCard>
+  )
+}
+
+/** The compact Events card for a library without an event feed. */
+export function LibraryEventsEmpty() {
+  return (
+    <LibrarySectionCard
+      id="events"
+      title="Events"
+      iconPath={LIB_ICONS.calendar}
+      tone="neutral"
+      compact
+      dashed
+    >
+      <p
+        className="m-0 text-[14.5px] leading-normal"
+        style={{ color: T.ink.dim }}
+      >
+        No events listed. Staff can add events or link the library&rsquo;s
+        calendar.
+      </p>
+      <CardAction>
+        <GlobalLink
+          href="/contribute/event-feed"
+          className={LINK}
+          style={{ color: T.accent.primary }}
+        >
+          Add an event
+        </GlobalLink>
+      </CardAction>
+    </LibrarySectionCard>
+  )
+}
+
+// ── Sources & changes ────────────────────────────────────────────────────────
 
 const SOURCE_LABELS: Record<string, string> = {
-  libraryon: "libraryOn (British Library)",
+  libraryon: "libraryOn, published by the British Library",
   wikidata: "Wikidata",
   manual: "a contributor",
 }
 
-const REVISION_KIND_META: Record<
-  string,
-  { label: string; bg: string; fg: string }
-> = {
-  edit: {
-    label: "Edit",
-    bg: "var(--tint-academic-bg)",
-    fg: "var(--tint-academic-fg)",
-  },
-  addition: {
-    label: "Added",
-    bg: "var(--tint-public-bg)",
-    fg: "var(--tint-public-fg)",
-  },
-  import: {
-    label: "Import",
-    bg: "var(--tint-neutral-bg)",
-    fg: "var(--tint-neutral-fg)",
-  },
-  steward: {
-    label: "Steward",
-    bg: "var(--tint-national-bg)",
-    fg: "var(--tint-national-fg)",
-  },
+const REVISION_KIND_META: Record<string, { verb: string; icon: string }> = {
+  edit: { verb: "Changed", icon: LIB_ICONS.pencil },
+  addition: { verb: "Added", icon: LIB_ICONS.plus },
+  import: { verb: "Imported", icon: LIB_ICONS.download },
+  steward: { verb: "Updated by staff", icon: LIB_ICONS.shield },
 }
 
 export interface LibraryRevisionItem {
@@ -452,6 +546,51 @@ export interface LibraryRevisionItem {
   decidedAt: string | null
   /** A public source the contributor supplied, when there was one. */
   sourceUrl?: string | null
+}
+
+function SourceRow({
+  icon,
+  title,
+  children,
+  meta,
+}: {
+  readonly icon: string
+  readonly title: React.ReactNode
+  readonly children?: React.ReactNode
+  readonly meta: React.ReactNode[]
+}) {
+  const parts = meta.filter(Boolean)
+
+  return (
+    <li
+      className="flex gap-3.5 py-3.5"
+      style={{ borderTop: `1px solid ${T.border.divider}` }}
+    >
+      <span
+        aria-hidden="true"
+        className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full"
+        style={{ background: T.bg.muted, color: T.ink.dim }}
+      >
+        <LibIcon d={icon} size={15} />
+      </span>
+      <div className="min-w-0 text-[15px] leading-normal">
+        <p className="m-0" style={{ color: T.ink.base }}>
+          {title}
+          {children ? <> {children}</> : null}
+        </p>
+        {parts.length > 0 ? (
+          <p className="mt-0.5 mb-0 text-[13px]" style={{ color: T.ink.dim }}>
+            {parts.map((p, i) => (
+              <span key={i}>
+                {i > 0 ? " · " : ""}
+                {p}
+              </span>
+            ))}
+          </p>
+        ) : null}
+      </div>
+    </li>
+  )
 }
 
 export function LibrarySourcesSection({
@@ -471,152 +610,248 @@ export function LibrarySourcesSection({
   const createdAt = rec.createdAt as string | null
   const website = rec.website as string | null
 
-  const fmt = (d: string | null) =>
-    d
-      ? new Date(d).toLocaleDateString("en-GB", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
-      : null
+  const datasetLink = sourceUrl || dataset?.sourceUrl || null
+  const licence = dataset?.licence ? (
+    dataset.licenceUrl ? (
+      <a
+        href={dataset.licenceUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline underline-offset-2"
+      >
+        {dataset.licence}
+      </a>
+    ) : (
+      dataset.licence
+    )
+  ) : null
 
   return (
     <LibrarySectionCard
       id="sources"
-      title="Sources & history of this record"
+      title="Sources and changes"
       iconPath={LIB_ICONS.list}
+      tone="neutral"
+      intro="Where each detail comes from, and every change to this record."
     >
-      <ul className="m-0 pl-5 text-[16px] leading-loose">
+      <ul className="m-0 list-none p-0">
+        {revisions.map((r, i) => {
+          const meta = REVISION_KIND_META[r.kind] ?? REVISION_KIND_META.edit!
+
+          return (
+            <SourceRow
+              key={`${r.decidedAt ?? i}-${r.summary}`}
+              icon={meta.icon}
+              meta={[
+                r.submittedByUsername ? (
+                  <GlobalLink
+                    href={`/profile/${r.submittedByUsername}`}
+                    className="underline underline-offset-2"
+                  >
+                    {r.submittedByUsername}
+                  </GlobalLink>
+                ) : (
+                  "A contributor"
+                ),
+                fmtDate(r.decidedAt),
+                r.sourceUrl ? (
+                  <a
+                    href={r.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-2"
+                  >
+                    Source ↗
+                  </a>
+                ) : null,
+              ]}
+              title={<strong>{meta.verb}</strong>}
+            >
+              {r.summary}
+            </SourceRow>
+          )
+        })}
+
+        {website ? (
+          <SourceRow
+            icon={LIB_ICONS.globe}
+            meta={[
+              lastVerifiedAt
+                ? `Checked ${fmtDate(lastVerifiedAt)}`
+                : "Not yet checked",
+            ]}
+            title={<strong>Details</strong>}
+          >
+            from the{" "}
+            <a
+              href={website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2"
+            >
+              official website
+            </a>
+            .
+          </SourceRow>
+        ) : null}
+
         {source && dataset ? (
-          <li>
-            Imported from{" "}
-            {sourceUrl || dataset.sourceUrl ? (
+          <SourceRow
+            icon={LIB_ICONS.download}
+            meta={["Import", fmtDate(createdAt), licence]}
+            title={<strong>Record created</strong>}
+          >
+            from{" "}
+            {datasetLink ? (
               <a
-                href={sourceUrl || dataset.sourceUrl || undefined}
+                href={datasetLink}
                 target="_blank"
                 rel="noopener noreferrer"
+                className="underline underline-offset-2"
               >
                 {dataset.name}
               </a>
             ) : (
               dataset.name
             )}
-            {dataset.publisher ? `, published by ${dataset.publisher}` : ""}
-            {dataset.licence ? (
-              <>
-                {" under "}
-                {dataset.licenceUrl ? (
-                  <a
-                    href={dataset.licenceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {dataset.licence}
-                  </a>
-                ) : (
-                  dataset.licence
-                )}
-              </>
-            ) : null}
-            {fmt(createdAt) ? `, ${fmt(createdAt)}` : ""}
+            {dataset.publisher ? `, published by ${dataset.publisher}` : ""}.
             {dataset.attribution ? (
-              <span className="block text-[14px]" style={{ color: T.ink.dim }}>
+              <span className="block text-[13px]" style={{ color: T.ink.dim }}>
                 {dataset.attribution}
               </span>
             ) : null}
-          </li>
+          </SourceRow>
         ) : source ? (
-          <li>
-            Imported from{" "}
+          <SourceRow
+            icon={LIB_ICONS.download}
+            meta={["Import", fmtDate(createdAt)]}
+            title={<strong>Record created</strong>}
+          >
+            from{" "}
             {sourceUrl ? (
-              <a href={sourceUrl} target="_blank" rel="noopener noreferrer">
+              <a
+                href={sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-2"
+              >
                 {SOURCE_LABELS[source] ?? source}
               </a>
             ) : (
               (SOURCE_LABELS[source] ?? source)
             )}
-            {fmt(createdAt) ? `, ${fmt(createdAt)}` : ""}
-          </li>
+            .
+          </SourceRow>
         ) : (
-          <li>
-            Created by a contributor
-            {fmt(createdAt) ? `, ${fmt(createdAt)}` : ""}
-          </li>
-        )}
-        {website ? (
-          <li>
-            Details:{" "}
-            <a href={website} target="_blank" rel="noopener noreferrer">
-              official website
-            </a>
-            {lastVerifiedAt
-              ? `, checked ${fmt(lastVerifiedAt)}`
-              : ", not yet verified"}
-          </li>
-        ) : null}
-      </ul>
-
-      {revisions.length > 0 ? (
-        <>
-          <h3
-            className="mt-5 mb-2 text-[16px] font-bold"
-            style={{ color: T.ink.base }}
+          <SourceRow
+            icon={LIB_ICONS.plus}
+            meta={[fmtDate(createdAt)]}
+            title={<strong>Record created</strong>}
           >
-            Recent changes
-          </h3>
-          <ol className="m-0 list-none p-0">
-            {revisions.map((r, i) => {
-              const meta =
-                REVISION_KIND_META[r.kind] ?? REVISION_KIND_META.edit!
-
-              return (
-                <li
-                  key={`${r.decidedAt ?? i}-${r.summary}`}
-                  className="flex flex-wrap items-center gap-2.5 py-2.5"
-                  style={{
-                    borderTop: i > 0 ? `1px solid ${T.border.divider}` : "none",
-                  }}
-                >
-                  <span
-                    className="rounded-full px-2.5 py-0.5 text-[13px] font-semibold"
-                    style={{ background: meta.bg, color: meta.fg }}
-                  >
-                    {meta.label}
-                  </span>
-                  <span className="min-w-0 flex-1 text-[15px]">
-                    {r.summary}
-                    {r.submittedByUsername ? (
-                      <>
-                        {" · "}
-                        <a href={`/profile/${r.submittedByUsername}`}>
-                          {r.submittedByUsername}
-                        </a>
-                      </>
-                    ) : null}
-                    {r.sourceUrl ? (
-                      <>
-                        {" · "}
-                        <a
-                          href={r.sourceUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          source ↗
-                        </a>
-                      </>
-                    ) : null}
-                  </span>
-                  {r.decidedAt ? (
-                    <span className="text-[14px]" style={{ color: T.ink.dim }}>
-                      {fmt(r.decidedAt)}
-                    </span>
-                  ) : null}
-                </li>
-              )
-            })}
-          </ol>
-        </>
-      ) : null}
+            by a contributor.
+          </SourceRow>
+        )}
+      </ul>
     </LibrarySectionCard>
+  )
+}
+
+// ── Cite or reuse ────────────────────────────────────────────────────────────
+
+const REUSE_PILL =
+  "inline-flex items-center gap-1.5 rounded-full border bg-white px-4 py-2 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+
+export function LibraryReuseSection({
+  library,
+  url,
+}: {
+  readonly library: Lib
+  /** The record's canonical, absolute URL. */
+  readonly url: string
+}) {
+  const rec = asRecord(library)
+  const citation = buildCitation({
+    name: library.name ?? "Library",
+    entityRef: library.entityRef,
+    updatedAt:
+      (rec.contentUpdatedAt as string | null) ??
+      (rec.updatedAt as string | null),
+    url,
+  })
+  const recordHref = `/api/libraries/${encodeURIComponent(library.slug ?? "")}/record`
+
+  return (
+    <section
+      id="reuse"
+      aria-labelledby="reuse-h"
+      className="grid scroll-mt-32 gap-6 rounded-3xl p-5 sm:p-7 md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] md:items-center"
+      style={{ background: T.bg.space, border: `1px solid ${T.border.line}` }}
+    >
+      <div>
+        <h2
+          id="reuse-h"
+          className="m-0 text-[26px] leading-tight sm:text-[28px]"
+          style={{
+            fontFamily: T.font.serif,
+            fontWeight: 500,
+            color: T.ink.base,
+          }}
+        >
+          Cite or reuse this record
+        </h2>
+        <p
+          className="mt-2 mb-0 text-[14.5px] leading-normal"
+          style={{ color: T.ink.dim }}
+        >
+          Open data under{" "}
+          <GlobalLink
+            href="/legal/data-licence"
+            className="underline underline-offset-2"
+          >
+            CC BY-SA 4.0
+          </GlobalLink>
+          . Imported details keep their original licence and credit.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <a
+            className={REUSE_PILL}
+            download
+            href={`${recordHref}?format=json`}
+            style={{ borderColor: T.border.hi, color: T.ink.base }}
+          >
+            JSON
+          </a>
+          <a
+            className={REUSE_PILL}
+            download
+            href={`${recordHref}?format=csv`}
+            style={{ borderColor: T.border.hi, color: T.ink.base }}
+          >
+            CSV
+          </a>
+          <GlobalLink
+            className={REUSE_PILL}
+            href="/knowledge/data-api/the-public-api"
+            style={{ borderColor: T.border.hi, color: T.ink.base }}
+          >
+            API docs
+          </GlobalLink>
+        </div>
+      </div>
+      <figure
+        className="m-0 rounded-2xl p-4"
+        style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
+      >
+        <blockquote
+          className="m-0 text-[14px] leading-relaxed wrap-break-word"
+          style={{ color: T.ink.base }}
+        >
+          {citation}
+        </blockquote>
+        <figcaption className="mt-3">
+          <LibraryCopyButton label="Copy citation" text={citation} />
+        </figcaption>
+      </figure>
+    </section>
   )
 }
