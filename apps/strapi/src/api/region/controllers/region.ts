@@ -1,7 +1,11 @@
 import { factories } from "@strapi/strapi"
 
+import { centerFor, tallyLibrariesByChild } from "../../../utils/library-tally"
 import { countLibrariesByType } from "../../../utils/library-type-counts"
 import { readStatus } from "../../../utils/read-status"
+
+/** Library rows returned with a region — enough for its list and gap chips. */
+const REGION_LIBRARY_LIMIT = 100
 
 export default factories.createCoreController(
   "api::region.region",
@@ -106,9 +110,121 @@ export default factories.createCoreController(
         }
       }
 
+      // ── Libraries (list, map pins, missing-detail chips) ──────────────────
+      const libraries =
+        libraryCount > 0 && region?.documentId
+          ? await strapi
+              .documents("api::library.library")
+              .findMany({
+                filters: {
+                  region: { documentId: { $eq: region.documentId } },
+                } as never,
+                fields: [
+                  "name",
+                  "slug",
+                  "libraryType",
+                  "city",
+                  "district",
+                  "summary",
+                  "openingTimes",
+                  "timezone",
+                  "location",
+                  "website",
+                  "phone",
+                  "email",
+                  "streetAddress",
+                  "operationalStatus",
+                  "featured",
+                ] as never,
+                populate: {
+                  heroImage: { fields: ["url", "alternativeText", "formats"] },
+                  accessibility: { fields: ["documentId"] },
+                  services: { fields: ["documentId"] },
+                  amenities: { fields: ["documentId"] },
+                } as never,
+                sort: [{ featured: "desc" }, { name: "asc" }] as never,
+                limit: REGION_LIBRARY_LIMIT,
+                locale,
+                status,
+              })
+              .catch(() => [])
+          : []
+
+      // ── Sibling regions with counts + centres (the "Nearby" card) ────────
+      const countryDocumentId = (
+        region as { country?: { documentId?: string } | null } | null
+      )?.country?.documentId
+      let center: { lat: number; lng: number } | null = null
+      let siblings: {
+        name: string
+        slug: string
+        typeLabel: string | null
+        libraryCount: number
+        center: { lat: number; lng: number } | null
+      }[] = []
+
+      if (region?.documentId && countryDocumentId) {
+        try {
+          const [tallies, rows] = await Promise.all([
+            tallyLibrariesByChild(strapi, {
+              parent: "country",
+              parentDocumentId: countryDocumentId,
+              child: "region",
+              locale,
+              status,
+            }),
+            strapi.documents("api::region.region").findMany({
+              filters: {
+                country: { documentId: { $eq: countryDocumentId } },
+              } as never,
+              fields: ["name", "slug", "typeLabel"] as never,
+              populate: { mapConfig: true } as never,
+              locale,
+              status,
+            }),
+          ])
+
+          type SiblingRow = {
+            documentId: string
+            name: string
+            slug: string
+            typeLabel?: string | null
+            mapConfig?: { centerLat?: unknown; centerLng?: unknown } | null
+          }
+
+          center = centerFor(
+            (region as { mapConfig?: SiblingRow["mapConfig"] }).mapConfig,
+            tallies.get(region.documentId)
+          )
+          siblings = (rows as unknown as SiblingRow[])
+            .filter((row) => row.documentId !== region.documentId)
+            .map((row) => {
+              const tally = tallies.get(row.documentId)
+
+              return {
+                name: row.name,
+                slug: row.slug,
+                typeLabel: row.typeLabel ?? null,
+                libraryCount: tally?.count ?? 0,
+                center: centerFor(row.mapConfig, tally),
+              }
+            })
+        } catch {
+          // non-critical — the page renders without the "Nearby" card
+        }
+      }
+
       ctx.body = {
         data: region
-          ? { ...region, libraryCount, areaCount, libraryTypeCounts }
+          ? {
+              ...region,
+              libraryCount,
+              areaCount,
+              libraryTypeCounts,
+              libraries,
+              center,
+              siblings,
+            }
           : null,
         meta: {},
       }

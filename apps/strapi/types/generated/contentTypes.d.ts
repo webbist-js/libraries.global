@@ -2725,6 +2725,37 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
+    population: Schema.Attribute.Integer &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0
+        },
+        number
+      >
+    populationSource: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationYear: Schema.Attribute.Integer &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 2100
+          min: 1900
+        },
+        number
+      >
     publishedAt: Schema.Attribute.DateTime
     seo: Schema.Attribute.Component<"shared.seo", false> &
       Schema.Attribute.SetPluginOptions<{

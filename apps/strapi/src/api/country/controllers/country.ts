@@ -1,5 +1,6 @@
 import { factories } from "@strapi/strapi"
 
+import { centerFor, tallyLibrariesByChild } from "../../../utils/library-tally"
 import { countLibrariesByType } from "../../../utils/library-type-counts"
 import { readStatus } from "../../../utils/read-status"
 
@@ -15,7 +16,10 @@ export default factories.createCoreController(
 
       const basePopulate: Record<string, unknown> = {
         continent: { fields: ["name", "slug", "code"] },
-        regions: { fields: ["name", "slug", "summary", "typeLabel"] },
+        regions: {
+          fields: ["name", "slug", "summary", "typeLabel"],
+          populate: { mapConfig: true },
+        },
       }
 
       const extendedPopulate: Record<string, unknown> = {
@@ -108,9 +112,44 @@ export default factories.createCoreController(
         }
       }
 
+      // Per-region library counts and map centres (hero map + region grid).
+      const tallies =
+        libraryCount > 0 && country?.documentId
+          ? await tallyLibrariesByChild(strapi, {
+              parent: "country",
+              parentDocumentId: country.documentId,
+              child: "region",
+              locale,
+              status,
+            }).catch(() => new Map())
+          : new Map()
+
+      type RegionRow = {
+        documentId: string
+        mapConfig?: { centerLat?: unknown; centerLng?: unknown } | null
+      } & Record<string, unknown>
+
+      const regions = (
+        (country as { regions?: RegionRow[] } | null)?.regions ?? []
+      ).map(({ mapConfig, ...region }) => {
+        const tally = tallies.get(region.documentId)
+
+        return {
+          ...region,
+          libraryCount: tally?.count ?? 0,
+          center: centerFor(mapConfig, tally),
+        }
+      })
+
       ctx.body = {
         data: country
-          ? { ...country, libraryCount, regionCount, libraryTypeCounts }
+          ? {
+              ...country,
+              regions,
+              libraryCount,
+              regionCount,
+              libraryTypeCounts,
+            }
           : null,
         meta: {},
       }

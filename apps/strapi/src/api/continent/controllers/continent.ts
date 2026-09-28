@@ -1,5 +1,6 @@
 import { factories } from "@strapi/strapi"
 
+import { centerFor, tallyLibrariesByChild } from "../../../utils/library-tally"
 import { countLibrariesByType } from "../../../utils/library-type-counts"
 import { readStatus } from "../../../utils/read-status"
 
@@ -39,7 +40,10 @@ export default factories.createCoreController(
 
       // Base populate — always safe (fields exist in original schema)
       const basePopulate: Record<string, unknown> = {
-        countries: { fields: ["name", "slug", "capitalCity"] },
+        countries: {
+          fields: ["name", "slug", "capitalCity", "iso2"],
+          populate: { mapConfig: true },
+        },
       }
 
       const extendedPopulate: Record<string, unknown> = {
@@ -117,9 +121,44 @@ export default factories.createCoreController(
         }
       }
 
+      // Per-country library counts and map centres (hero map + country grid).
+      const tallies =
+        libraryCount > 0 && continent?.documentId
+          ? await tallyLibrariesByChild(strapi, {
+              parent: "continent",
+              parentDocumentId: continent.documentId,
+              child: "country",
+              locale,
+              status,
+            }).catch(() => new Map())
+          : new Map()
+
+      type CountryRow = {
+        documentId: string
+        mapConfig?: { centerLat?: unknown; centerLng?: unknown } | null
+      } & Record<string, unknown>
+
+      const countries = (
+        (continent as { countries?: CountryRow[] } | null)?.countries ?? []
+      ).map(({ mapConfig, ...country }) => {
+        const tally = tallies.get(country.documentId)
+
+        return {
+          ...country,
+          libraryCount: tally?.count ?? 0,
+          center: centerFor(mapConfig, tally),
+        }
+      })
+
       ctx.body = {
         data: continent
-          ? { ...continent, libraryCount, regionCount, libraryTypeCounts }
+          ? {
+              ...continent,
+              countries,
+              libraryCount,
+              regionCount,
+              libraryTypeCounts,
+            }
           : null,
         meta: {},
       }
