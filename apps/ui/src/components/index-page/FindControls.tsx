@@ -1,7 +1,12 @@
 // apps/ui/src/components/index-page/FindControls.tsx
 "use client"
 
-import { FilterToggleButton, SearchField } from "@/components/ds"
+import {
+  FilterShowButton,
+  type FilterSidebarState,
+  FilterToggleButton,
+  SearchField,
+} from "@/components/ds"
 import { T } from "@/lib/design-tokens"
 
 import {
@@ -231,6 +236,7 @@ export function FindResultsControls({
   onChange,
   onOpenFilters,
   activeFilterCount,
+  sidebar,
 }: {
   state: FindState
   total: number
@@ -238,13 +244,15 @@ export function FindResultsControls({
   onChange: (patch: Partial<FindState>) => void
   onOpenFilters: () => void
   activeFilterCount: number
+  sidebar: FilterSidebarState
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex min-h-11 flex-wrap items-center gap-3">
       <FilterToggleButton
         onClick={onOpenFilters}
         activeCount={activeFilterCount}
       />
+      <FilterShowButton sidebar={sidebar} activeCount={activeFilterCount} />
 
       <p
         aria-live="polite"

@@ -13,7 +13,11 @@ export {
   FilterHelper,
   FilterOption,
   FilterPanelHeader,
+  FilterShowButton,
+  FilterSidebar,
+  type FilterSidebarState,
   FilterToggleButton,
+  useFilterSidebar,
 } from "./FilterPanel"
 export { Eyebrow } from "./Eyebrow"
 export { IndexPager } from "./IndexPager"

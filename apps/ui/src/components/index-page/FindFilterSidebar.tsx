@@ -1,7 +1,12 @@
 // apps/ui/src/components/index-page/FindFilterSidebar.tsx
 "use client"
 
-import { FilterGroup, FilterOption, FilterPanelHeader } from "@/components/ds"
+import {
+  FilterGroup,
+  FilterOption,
+  FilterPanelHeader,
+  type FilterSidebarState,
+} from "@/components/ds"
 
 import {
   type FindState,
@@ -28,11 +33,14 @@ export function FindFilterSidebar({
   facets,
   onChange,
   onReset,
+  sidebar,
 }: {
   state: FindState
   facets: FindFacets
   onChange: (patch: Partial<FindState>) => void
   onReset: () => void
+  /** Adds the desktop Hide control to the header. */
+  sidebar?: FilterSidebarState
 }) {
   const groupCount = (key: TypeGroupKey) => {
     const group = TYPE_GROUPS.find((g) => g.key === key)
@@ -62,7 +70,7 @@ export function FindFilterSidebar({
 
   return (
     <div>
-      <FilterPanelHeader onReset={onReset} />
+      <FilterPanelHeader onReset={onReset} sidebar={sidebar} />
 
       <FilterGroup
         title="Opening status"

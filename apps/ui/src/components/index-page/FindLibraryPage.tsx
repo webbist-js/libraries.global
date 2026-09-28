@@ -4,7 +4,12 @@
 import { useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { FilterDrawer, PageHero } from "@/components/ds"
+import {
+  FilterDrawer,
+  FilterSidebar,
+  PageHero,
+  useFilterSidebar,
+} from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import { T } from "@/lib/design-tokens"
 import { type LibrarySearchHitV2, searchLibrariesV2 } from "@/lib/meilisearch"
@@ -74,6 +79,7 @@ export function FindLibraryPage({
   const [error, setError] = useState(false)
   const [locating, setLocating] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const filterSidebar = useFilterSidebar("find")
   const fetchSeq = useRef(0)
   const didMount = useRef(false)
 
@@ -240,16 +246,11 @@ export function FindLibraryPage({
     )
   }, [state.nearLat, state.sort, patch])
 
-  const sidebar = (
-    <FindFilterSidebar
-      state={state}
-      facets={
-        result?.facets ?? { libraryType: {}, accessibility: {}, services: {} }
-      }
-      onChange={patch}
-      onReset={clearAll}
-    />
-  )
+  const facets = result?.facets ?? {
+    libraryType: {},
+    accessibility: {},
+    services: {},
+  }
 
   return (
     <>
@@ -270,13 +271,16 @@ export function FindLibraryPage({
 
       {/* Main two-column area */}
       <Container className="flex flex-1 items-start gap-8 pt-8 pb-[88px]">
-        {/* Sidebar — static on desktop */}
-        <aside
-          aria-label="Filters"
-          className="sticky top-[90px] hidden w-[290px] shrink-0 lg:block"
-        >
-          {sidebar}
-        </aside>
+        {/* Sidebar — sticky on desktop, can be hidden */}
+        <FilterSidebar sidebar={filterSidebar}>
+          <FindFilterSidebar
+            state={state}
+            facets={facets}
+            onChange={patch}
+            onReset={clearAll}
+            sidebar={filterSidebar}
+          />
+        </FilterSidebar>
 
         {/* Sidebar — drawer on mobile */}
         <FilterDrawer
@@ -284,7 +288,12 @@ export function FindLibraryPage({
           onClose={() => setFiltersOpen(false)}
           showLabel={`Show ${refined.length.toLocaleString("en-GB")} results`}
         >
-          {sidebar}
+          <FindFilterSidebar
+            state={state}
+            facets={facets}
+            onChange={patch}
+            onReset={clearAll}
+          />
         </FilterDrawer>
 
         {/* Results */}
@@ -296,6 +305,7 @@ export function FindLibraryPage({
             onChange={patch}
             onOpenFilters={() => setFiltersOpen(true)}
             activeFilterCount={activeFilterCount}
+            sidebar={filterSidebar}
           />
 
           <div className="mt-4">

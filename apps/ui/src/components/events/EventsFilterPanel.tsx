@@ -5,6 +5,7 @@ import {
   FilterHelper,
   FilterOption,
   FilterPanelHeader,
+  type FilterSidebarState,
 } from "@/components/ds"
 import {
   type EventsFilters,
@@ -41,7 +42,10 @@ export function EventsFilterPanel({
   typeCounts,
   timeCounts,
   freeCount,
+  sidebar,
 }: {
+  /** Adds the desktop Hide control to the header. */
+  readonly sidebar?: FilterSidebarState
   readonly filters: EventsFilters
   readonly onChange: (next: EventsFilters) => void
   readonly typeCounts: Map<string, number>
@@ -71,7 +75,10 @@ export function EventsFilterPanel({
 
   return (
     <div>
-      <FilterPanelHeader onReset={() => onChange(DEFAULT_EVENTS_FILTERS)} />
+      <FilterPanelHeader
+        onReset={() => onChange(DEFAULT_EVENTS_FILTERS)}
+        sidebar={sidebar}
+      />
 
       <FilterGroup
         title="When"

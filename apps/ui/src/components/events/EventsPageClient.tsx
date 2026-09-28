@@ -3,7 +3,14 @@
 import { Icon } from "@iconify/react"
 import { useEffect, useMemo, useState } from "react"
 
-import { FilterDrawer, FilterToggleButton, SearchField } from "@/components/ds"
+import {
+  FilterDrawer,
+  FilterShowButton,
+  FilterSidebar,
+  FilterToggleButton,
+  SearchField,
+  useFilterSidebar,
+} from "@/components/ds"
 import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
 import {
@@ -87,6 +94,7 @@ export function EventsPageClient() {
   const [state, setState] = useState<LoadState>("loading")
   const [filters, setFilters] = useState<EventsFilters>(DEFAULT_EVENTS_FILTERS)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const filterSidebar = useFilterSidebar("events")
   const [now] = useState(() => new Date())
 
   useEffect(() => {
@@ -158,13 +166,14 @@ export function EventsPageClient() {
     }
   }, [upcoming, filters, now])
 
-  const filterPanel = (
+  const filterPanel = (withHide: boolean) => (
     <EventsFilterPanel
       filters={filters}
       onChange={setFilters}
       typeCounts={typeCounts}
       timeCounts={timeCounts}
       freeCount={freeCount}
+      sidebar={withHide ? filterSidebar : undefined}
     />
   )
 
@@ -217,13 +226,10 @@ export function EventsPageClient() {
 
         {/* Filters + agenda */}
         <div className="flex items-start gap-8">
-          {/* Sidebar — static on desktop */}
-          <aside
-            aria-label="Filters"
-            className="sticky top-[90px] hidden w-[290px] shrink-0 lg:block"
-          >
-            {filterPanel}
-          </aside>
+          {/* Sidebar — sticky on desktop, can be hidden */}
+          <FilterSidebar sidebar={filterSidebar}>
+            {filterPanel(true)}
+          </FilterSidebar>
 
           {/* Sidebar — drawer on mobile */}
           <FilterDrawer
@@ -231,14 +237,18 @@ export function EventsPageClient() {
             onClose={() => setFiltersOpen(false)}
             showLabel={`Show ${filtered.length} ${filtered.length === 1 ? "event" : "events"}`}
           >
-            {filterPanel}
+            {filterPanel(false)}
           </FilterDrawer>
 
           <section aria-label="Events" className="min-w-0 flex-1">
-            <div className="mb-4 flex flex-wrap items-center gap-3">
+            <div className="mb-4 flex min-h-11 flex-wrap items-center gap-3">
               <FilterToggleButton
                 onClick={() => setFiltersOpen(true)}
                 expanded={filtersOpen}
+                activeCount={activeEventsFilterCount(filters)}
+              />
+              <FilterShowButton
+                sidebar={filterSidebar}
                 activeCount={activeEventsFilterCount(filters)}
               />
               <h2
