@@ -89,10 +89,13 @@ export function ProfileHero({
   profile,
   isOwnProfile,
   isSignedIn,
+  tabs,
 }: {
   profile: UserProfile
   isOwnProfile: boolean
   isSignedIn: boolean
+  /** Section tabs (`ProfileTabNav`) on the band's bottom edge. */
+  tabs?: ReactNode
 }) {
   const initials = getInitials(profile)
   const prefs = resolvePublicPrefs(profile.publicPrefs)
@@ -121,7 +124,10 @@ export function ProfileHero({
         : "public"
 
   return (
-    <section style={{ background: T.bg.void }}>
+    <section
+      className="border-b"
+      style={{ background: T.bg.space, borderColor: T.border.line }}
+    >
       <div className="mx-auto w-full max-w-[1360px] px-4 pt-6 sm:px-8 sm:pt-10">
         <Breadcrumb
           className="mb-5"
@@ -169,14 +175,11 @@ export function ProfileHero({
         <div className="flex flex-wrap items-start gap-7 pb-8">
           {/* Avatar */}
           <div
-            className="flex shrink-0 items-center justify-center overflow-hidden rounded-full"
+            className="flex size-[80px] shrink-0 items-center justify-center overflow-hidden rounded-full text-[32px] sm:size-[128px] sm:text-[50px]"
             style={{
-              width: "128px",
-              height: "128px",
               background: "var(--tint-national-bg)",
               color: "var(--tint-national-fg)",
               fontFamily: T.font.serif,
-              fontSize: "50px",
               fontWeight: 500,
             }}
           >
@@ -193,7 +196,8 @@ export function ProfileHero({
           </div>
 
           {/* Identity */}
-          <div className="min-w-0 flex-1">
+          {/* Wraps under the avatar on narrow screens */}
+          <div className="min-w-0 flex-1 basis-[min(100%,420px)]">
             <h1
               className="m-0"
               style={{
@@ -283,6 +287,7 @@ export function ProfileHero({
             </div>
           )}
         </div>
+        {tabs}
       </div>
     </section>
   )

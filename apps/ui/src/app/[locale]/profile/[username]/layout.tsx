@@ -185,16 +185,18 @@ export default async function ProfileLayout({
           profile={profile}
           isOwnProfile={isOwnProfile}
           isSignedIn={!!session?.user}
-        />
-        <ProfileTabNav
-          username={username}
-          counts={{
-            contributions: contributionCount,
-            libraries:
-              (profile.followedLibraries?.length ?? 0) +
-              (profile.claimedLibraries?.length ?? 0),
-            recognition: profile.earnedBadges?.length ?? 0,
-          }}
+          tabs={
+            <ProfileTabNav
+              username={username}
+              counts={{
+                contributions: contributionCount,
+                libraries:
+                  (profile.followedLibraries?.length ?? 0) +
+                  (profile.claimedLibraries?.length ?? 0),
+                recognition: profile.earnedBadges?.length ?? 0,
+              }}
+            />
+          }
         />
         <main className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8">
           {children}
