@@ -4,8 +4,8 @@ import {
   computeCompleteness,
   type OpeningTimesValue,
 } from "@/components/library/library-page.helpers"
-import { LibraryClaimButton } from "@/components/library/LibraryClaimButton"
 import LibraryMap from "@/components/library/LibraryMap"
+import { LibraryRecordCta } from "@/components/library/LibraryRecordCta"
 import { LIB_ICONS, LibIcon } from "@/components/library/LibrarySectionCard"
 import { T } from "@/lib/design-tokens"
 import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
@@ -36,7 +36,14 @@ function DtRow({
   )
 }
 
-export function LibraryRecordPanel({ library }: { readonly library: Lib }) {
+export function LibraryRecordPanel({
+  library,
+  path,
+}: {
+  readonly library: Lib
+  /** This library's page path, for sign-in to return to. */
+  readonly path: string
+}) {
   const rec = asRecord(library)
   const { filled, total } = computeCompleteness({
     heroImage: library.heroImage,
@@ -105,12 +112,17 @@ export function LibraryRecordPanel({ library }: { readonly library: Lib }) {
             : "Not yet reviewed"}
         </DtRow>
       </dl>
-      <div className="mt-4">
-        <LibraryClaimButton
+      <div
+        className="mt-5 border-t pt-5"
+        style={{ borderColor: T.border.divider }}
+      >
+        <LibraryRecordCta
+          gaps={total - filled}
           libraryDocumentId={library.documentId ?? ""}
-          librarySlug={library.slug ?? ""}
-          libraryName={library.name ?? ""}
           libraryEntityRef={library.entityRef ?? undefined}
+          libraryName={library.name ?? ""}
+          libraryPath={path}
+          librarySlug={library.slug ?? ""}
         />
       </div>
     </section>

@@ -1,6 +1,7 @@
 import Image from "next/image"
 import type { Locale } from "next-intl"
 
+import { hubHref } from "@/components/contribute/wizard.logic"
 import {
   Breadcrumb,
   type BreadcrumbItem,
@@ -15,6 +16,7 @@ import {
   type AnchorItem,
 } from "@/components/library/LibraryAnchorNav"
 import { LibraryCatalogueCheck } from "@/components/library/LibraryCatalogueCheck"
+import { LibraryCorrectionProvider } from "@/components/library/LibraryCorrection"
 import { LibraryEvents } from "@/components/library/LibraryEvents"
 import LibraryExploreNearby from "@/components/library/LibraryExploreNearby"
 import { LibraryHeroActions } from "@/components/library/LibraryHeroActions"
@@ -106,6 +108,19 @@ export function LibraryDetailPage({
     LIBRARY_ANCHORS.sources,
   ]
 
+  const path =
+    library.continent?.slug &&
+    library.country?.slug &&
+    library.region?.slug &&
+    library.slug
+      ? `/${library.continent.slug}/${library.country.slug}/${library.region.slug}/${library.slug}`
+      : "/libraries"
+  const wizardLibrary = {
+    slug: library.slug ?? "",
+    name: library.name ?? "",
+    ...(locationLine ? { place: locationLine } : {}),
+  }
+
   const crumbs: BreadcrumbItem[] = [
     { href: "/", label: "Home" },
     ...(library.continent?.slug
@@ -142,173 +157,182 @@ export function LibraryDetailPage({
     >
       <GlobalHeader locale={locale} />
 
-      <main className="relative z-10 mx-auto w-full max-w-[1360px] flex-1 px-4 pt-6 pb-22 sm:px-8 sm:pt-10">
-        {/* Breadcrumb */}
-        <Breadcrumb items={crumbs} />
+      <LibraryCorrectionProvider library={wizardLibrary} path={path}>
+        <main className="relative z-10 mx-auto w-full max-w-[1360px] flex-1 px-4 pt-6 pb-22 sm:px-8 sm:pt-10">
+          {/* Breadcrumb */}
+          <Breadcrumb items={crumbs} />
 
-        {/* Hero */}
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-6">
-          <div className="min-w-0 flex-[1_1_520px]">
-            <div className="mb-3.5 flex flex-wrap gap-2">
-              {typeLabel ? (
-                <span
-                  className="flex items-center gap-1.5 rounded-full px-3 py-[5px] text-[14px] font-semibold"
-                  style={{ background: tint.bg, color: tint.fg }}
-                >
-                  <LibIcon d={LIB_ICONS.building} size={16} />
-                  {typeLabel}
-                </span>
-              ) : null}
-              <LibraryOpenStatusBadge
-                openingTimes={openingTimes}
-                timezone={timezone}
-              />
+          {/* Hero */}
+          <div className="mt-4 flex flex-wrap items-end justify-between gap-6">
+            <div className="min-w-0 flex-[1_1_520px]">
+              <div className="mb-3.5 flex flex-wrap gap-2">
+                {typeLabel ? (
+                  <span
+                    className="flex items-center gap-1.5 rounded-full px-3 py-[5px] text-[14px] font-semibold"
+                    style={{ background: tint.bg, color: tint.fg }}
+                  >
+                    <LibIcon d={LIB_ICONS.building} size={16} />
+                    {typeLabel}
+                  </span>
+                ) : null}
+                <LibraryOpenStatusBadge
+                  openingTimes={openingTimes}
+                  timezone={timezone}
+                />
+              </div>
+              <h1
+                className="m-0 text-[clamp(44px,6vw,76px)] leading-none tracking-[-0.02em]"
+                style={{ fontFamily: T.font.serif, fontWeight: 500 }}
+              >
+                {library.name}
+              </h1>
+              <p
+                className="mt-3 mb-0 flex flex-wrap items-center gap-1.5 text-[17px]"
+                style={{ color: T.ink.dim }}
+              >
+                <LibIcon d={LIB_ICONS.pin} size={18} />
+                {shortName ? (
+                  <>
+                    Also known as{" "}
+                    <span style={{ color: T.ink.base }}>{shortName}</span>
+                    {locationLine ? " · " : ""}
+                  </>
+                ) : null}
+                {locationLine}
+              </p>
             </div>
-            <h1
-              className="m-0 text-[clamp(44px,6vw,76px)] leading-none tracking-[-0.02em]"
-              style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-            >
-              {library.name}
-            </h1>
-            <p
-              className="mt-3 mb-0 flex flex-wrap items-center gap-1.5 text-[17px]"
-              style={{ color: T.ink.dim }}
-            >
-              <LibIcon d={LIB_ICONS.pin} size={18} />
-              {shortName ? (
-                <>
-                  Also known as{" "}
-                  <span style={{ color: T.ink.base }}>{shortName}</span>
-                  {locationLine ? " · " : ""}
-                </>
-              ) : null}
-              {locationLine}
-            </p>
+
+            <LibraryHeroActions
+              librarySlug={library.slug ?? ""}
+              libraryName={library.name ?? ""}
+              libraryDocumentId={library.documentId ?? ""}
+            />
           </div>
 
-          <LibraryHeroActions
-            librarySlug={library.slug ?? ""}
-            libraryName={library.name ?? ""}
-            libraryDocumentId={library.documentId ?? ""}
-          />
-        </div>
+          {/* On this page */}
+          <LibraryAnchorNav items={anchors} />
 
-        {/* On this page */}
-        <LibraryAnchorNav items={anchors} />
-
-        {/* Content: main column + sidebar */}
-        <div className="mt-7 flex flex-wrap items-start gap-7">
-          <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-5">
-            {/* Photos */}
-            <div
-              id="photos"
-              className="relative scroll-mt-32 overflow-hidden rounded-3xl"
-              style={{
-                aspectRatio: "16/8",
-                background: T.bg.deep,
-                border: `1px solid ${T.border.line}`,
-              }}
-            >
-              {heroUrl ? (
-                <Image
-                  src={heroUrl}
-                  alt={library.heroImage?.alternativeText ?? library.name ?? ""}
-                  fill
-                  sizes="(max-width: 900px) 100vw, 60vw"
-                  className="rounded-[18px] object-cover p-2"
-                />
-              ) : (
-                <div
-                  className="absolute inset-2 flex items-center justify-center rounded-[18px]"
-                  style={{ background: tint.bg }}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="text-[64px]"
-                    style={{ fontFamily: T.font.serif, color: tint.fg }}
+          {/* Content: main column + sidebar */}
+          <div className="mt-7 flex flex-wrap items-start gap-7">
+            <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-5">
+              {/* Photos */}
+              <div
+                id="photos"
+                className="relative scroll-mt-32 overflow-hidden rounded-3xl"
+                style={{
+                  aspectRatio: "16/8",
+                  background: T.bg.deep,
+                  border: `1px solid ${T.border.line}`,
+                }}
+              >
+                {heroUrl ? (
+                  <Image
+                    src={heroUrl}
+                    alt={
+                      library.heroImage?.alternativeText ?? library.name ?? ""
+                    }
+                    fill
+                    sizes="(max-width: 900px) 100vw, 60vw"
+                    className="rounded-[18px] object-cover p-2"
+                  />
+                ) : (
+                  <div
+                    className="absolute inset-2 flex items-center justify-center rounded-[18px]"
+                    style={{ background: tint.bg }}
                   >
-                    {(library.name ?? "?").charAt(0)}
-                  </span>
-                </div>
-              )}
-            </div>
-            <p className="-mt-2 mb-0 text-[15px]" style={{ color: T.ink.dim }}>
-              {heroUrl ? "Have a better photo? " : "No community photos yet. "}
-              <GlobalLink
-                href="/contribute"
-                className="underline underline-offset-[3px]"
-                style={{ color: T.accent.primary }}
+                    <span
+                      aria-hidden="true"
+                      className="text-[64px]"
+                      style={{ fontFamily: T.font.serif, color: tint.fg }}
+                    >
+                      {(library.name ?? "?").charAt(0)}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <p
+                className="-mt-2 mb-0 text-[15px]"
+                style={{ color: T.ink.dim }}
               >
-                Add a photo you took or have permission to share
-              </GlobalLink>{" "}
-              (published under CC BY-SA 4.0).
-            </p>
-
-            <LibraryVisitSection library={library} />
-            <LibraryFacilitiesSection library={library} />
-            <LibraryCollectionsSection library={library} />
-
-            <CatalogueSection library={library} catalogue={catalogue} />
-            <LibraryHistorySection library={library} />
-
-            {/* Events */}
-            {(rec.hasActiveFeed as boolean) ? (
-              <LibrarySectionCard
-                id="events"
-                title="Events"
-                iconPath={LIB_ICONS.calendar}
-              >
-                <LibraryEvents entityRef={library.entityRef} hasActiveFeed />
-              </LibrarySectionCard>
-            ) : (
-              <LibrarySectionCard
-                id="events"
-                title="Events"
-                iconPath={LIB_ICONS.calendar}
-                dashed
-              >
-                <p
-                  className="m-0 text-[17px] leading-normal"
-                  style={{ color: T.ink.dim }}
-                >
-                  No events listed. If you run events here, you can add them or
-                  link your events calendar.
-                </p>
+                {heroUrl
+                  ? "Have a better photo? "
+                  : "No community photos yet. "}
                 <GlobalLink
-                  href="/contribute/event-feed"
-                  className="mt-3 inline-block font-semibold underline underline-offset-[3px]"
+                  href={hubHref("photo", wizardLibrary)}
+                  className="underline underline-offset-[3px]"
                   style={{ color: T.accent.primary }}
                 >
-                  Add an event
-                </GlobalLink>
-              </LibrarySectionCard>
-            )}
+                  Add a photo you took or have permission to share
+                </GlobalLink>{" "}
+                (published under CC BY-SA 4.0).
+              </p>
 
-            <LibrarySourcesSection library={library} revisions={revisions} />
+              <LibraryVisitSection library={library} />
+              <LibraryFacilitiesSection library={library} />
+              <LibraryCollectionsSection library={library} />
 
-            {/* Nearby */}
-            {nearbyLibraries.length > 0 ? (
-              <LibrarySectionCard
-                id="nearby"
-                title="Nearby libraries"
-                iconPath={LIB_ICONS.pin}
-              >
-                <LibraryExploreNearby
-                  libraries={nearbyLibraries}
-                  regionName={library.region?.name}
-                />
-              </LibrarySectionCard>
-            ) : null}
+              <CatalogueSection library={library} catalogue={catalogue} />
+              <LibraryHistorySection library={library} />
+
+              {/* Events */}
+              {(rec.hasActiveFeed as boolean) ? (
+                <LibrarySectionCard
+                  id="events"
+                  title="Events"
+                  iconPath={LIB_ICONS.calendar}
+                >
+                  <LibraryEvents entityRef={library.entityRef} hasActiveFeed />
+                </LibrarySectionCard>
+              ) : (
+                <LibrarySectionCard
+                  id="events"
+                  title="Events"
+                  iconPath={LIB_ICONS.calendar}
+                  dashed
+                >
+                  <p
+                    className="m-0 text-[17px] leading-normal"
+                    style={{ color: T.ink.dim }}
+                  >
+                    No events listed. If you run events here, you can add them
+                    or link your events calendar.
+                  </p>
+                  <GlobalLink
+                    href="/contribute/event-feed"
+                    className="mt-3 inline-block font-semibold underline underline-offset-[3px]"
+                    style={{ color: T.accent.primary }}
+                  >
+                    Add an event
+                  </GlobalLink>
+                </LibrarySectionCard>
+              )}
+
+              <LibrarySourcesSection library={library} revisions={revisions} />
+
+              {/* Nearby */}
+              {nearbyLibraries.length > 0 ? (
+                <LibrarySectionCard
+                  id="nearby"
+                  title="Nearby libraries"
+                  iconPath={LIB_ICONS.pin}
+                >
+                  <LibraryExploreNearby
+                    libraries={nearbyLibraries}
+                    regionName={library.region?.name}
+                  />
+                </LibrarySectionCard>
+              ) : null}
+            </div>
+
+            {/* Sidebar */}
+            <aside className="top-24 flex flex-[1_1_300px] flex-col gap-4 lg:sticky lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto lg:overscroll-contain">
+              <LibraryRecordPanel library={library} path={path} />
+              <LibraryLinksPanel library={library} />
+              <LibraryMapPanel library={library} />
+            </aside>
           </div>
-
-          {/* Sidebar */}
-          <aside className="top-24 flex flex-[1_1_300px] flex-col gap-4 lg:sticky">
-            <LibraryRecordPanel library={library} />
-            <LibraryLinksPanel library={library} />
-            <LibraryMapPanel library={library} />
-          </aside>
-        </div>
-      </main>
+        </main>
+      </LibraryCorrectionProvider>
 
       <LocationContributeCTA
         entityType="library"

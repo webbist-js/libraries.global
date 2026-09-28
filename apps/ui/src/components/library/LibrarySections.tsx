@@ -12,6 +12,7 @@ import {
   type OpeningTimesValue,
 } from "@/components/library/library-page.helpers"
 import { LibraryCopyButton } from "@/components/library/LibraryCopyButton"
+import { OpenCorrectionLink } from "@/components/library/LibraryCorrection"
 import { LibraryHoursTable } from "@/components/library/LibraryHoursTable"
 import {
   LIB_ICONS,
@@ -245,9 +246,12 @@ export function LibraryFacilitiesSection({
           </li>
         ))}
       </ul>
-      <a href="#correct" className="mt-3.5 inline-block font-semibold">
+      <OpenCorrectionLink
+        category="Accessibility"
+        className="mt-3.5 inline-block font-semibold underline-offset-[3px] hover:underline"
+      >
         Add missing accessibility details
-      </a>
+      </OpenCorrectionLink>
     </LibrarySectionCard>
   )
 }

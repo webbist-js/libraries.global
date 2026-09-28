@@ -1,20 +1,13 @@
 "use client"
 
-import Link from "next/link"
 import { useEffect, useState } from "react"
 
+import { hubHref } from "@/components/contribute/wizard.logic"
+import { useCorrectionDrawer } from "@/components/library/LibraryCorrection"
 import { LIB_ICONS, LibIcon } from "@/components/library/LibrarySectionCard"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
-
-const CATEGORIES = [
-  "Opening hours",
-  "Address or location",
-  "Accessibility",
-  "Collections",
-  "Name or other names",
-  "Something else",
-]
+import { Link } from "@/lib/navigation"
 
 const pillBase: React.CSSProperties = {
   display: "inline-flex",
@@ -28,8 +21,9 @@ const pillBase: React.CSSProperties = {
 }
 
 /**
- * Hero action row (Follow · Suggest a correction · Add photos) plus the
- * inline correction form (POC pattern). Corrections post to /api/submissions.
+ * Hero action row: Follow, Suggest a correction (opens the correction
+ * drawer, see LibraryCorrection) and Add photos (the photo form on the
+ * Contribute hub, with this library chosen).
  */
 export function LibraryHeroActions({
   librarySlug,
@@ -40,271 +34,44 @@ export function LibraryHeroActions({
   readonly libraryName: string
   readonly libraryDocumentId: string
 }) {
-  const { data: session } = authClient.useSession()
-  const [formOpen, setFormOpen] = useState(false)
-  const [sent, setSent] = useState(false)
-  const [category, setCategory] = useState(CATEGORIES[0])
-  const [fix, setFix] = useState("")
-  const [source, setSource] = useState("")
-  const [err, setErr] = useState<string | null>(null)
-  const [pending, setPending] = useState(false)
-
-  const submit = async () => {
-    if (!fix.trim()) {
-      setErr("Please describe the correct information.")
-
-      return
-    }
-    setPending(true)
-    setErr(null)
-    try {
-      const res = await fetch("/api/submissions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          submissionType: "correction",
-          targetEntityType: "library",
-          targetSlug: librarySlug,
-          fields: {
-            category,
-            libraryName,
-            ...(source.trim() ? { sourceUrl: source.trim() } : {}),
-          },
-          note: fix.trim(),
-        }),
-      })
-      if (!res.ok) {
-        const data = (await res.json()) as { error?: string }
-        setErr(data.error ?? "Failed to submit. Please try again.")
-      } else {
-        setSent(true)
-        setFix("")
-        setSource("")
-      }
-    } catch {
-      setErr("Network error. Please try again.")
-    } finally {
-      setPending(false)
-    }
-  }
-
-  const close = () => {
-    setFormOpen(false)
-    setSent(false)
-    setErr(null)
-  }
+  const { open } = useCorrectionDrawer()
 
   return (
-    <>
-      <div className="flex flex-wrap gap-2">
-        <FollowPill
-          libraryDocumentId={libraryDocumentId}
-          libraryName={libraryName}
-        />
-        {session?.user ? (
-          <button
-            type="button"
-            onClick={() => {
-              setFormOpen(true)
-              setSent(false)
-            }}
-            style={{
-              ...pillBase,
-              border: 0,
-              background: T.accent.primary,
-              color: "#fff",
-            }}
-            className="transition-colors hover:!bg-(--t-accent-primary-hover)"
-          >
-            <LibIcon d={LIB_ICONS.pencil} />
-            Suggest a correction
-          </button>
-        ) : (
-          <Link
-            href={`/auth/signin?callbackUrl=${encodeURIComponent(`/contribute/correct/${librarySlug}`)}`}
-            style={{
-              ...pillBase,
-              border: 0,
-              background: T.accent.primary,
-              color: "#fff",
-              textDecoration: "none",
-            }}
-            className="transition-colors hover:!bg-(--t-accent-primary-hover)"
-          >
-            <LibIcon d={LIB_ICONS.pencil} />
-            Suggest a correction
-          </Link>
-        )}
-        <a
-          href="#photos"
-          style={{
-            ...pillBase,
-            padding: "11px 18px",
-            border: `1px solid ${T.border.hi}`,
-            background: T.bg.deep,
-            color: T.ink.base,
-            textDecoration: "none",
-          }}
-          className="transition-colors hover:!bg-(--t-bg-surface)"
-        >
-          <LibIcon d={LIB_ICONS.camera} />
-          Add photos
-        </a>
-      </div>
-
-      {formOpen ? (
-        <section
-          aria-labelledby="fix-h"
-          className="mt-5 max-w-[760px] rounded-[20px] p-6"
-          style={{
-            background: T.bg.deep,
-            border: `2px solid ${T.accent.primary}`,
-          }}
-        >
-          {sent ? (
-            <div role="status" className="flex flex-col gap-2">
-              <strong
-                id="fix-h"
-                className="text-[20px]"
-                style={{ color: T.accent.ok }}
-              >
-                ✓ Thanks, your suggestion is in review
-              </strong>
-              <span
-                className="text-[16px] leading-normal"
-                style={{ color: T.ink.dim }}
-              >
-                A trusted contributor will check it against your source, usually
-                within a few days. You can follow its status in your
-                contributions.
-              </span>
-              <button
-                type="button"
-                onClick={close}
-                className="mt-1.5 self-start rounded-full px-4 py-2.5 text-[15px] font-semibold"
-                style={{
-                  border: `1px solid ${T.border.hi}`,
-                  background: T.bg.deep,
-                  color: T.ink.base,
-                  cursor: "pointer",
-                }}
-              >
-                Close
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center justify-between gap-3">
-                <h2
-                  id="fix-h"
-                  className="m-0 text-[20px] font-bold"
-                  style={{ color: T.ink.base }}
-                >
-                  Suggest a correction
-                </h2>
-                <button
-                  type="button"
-                  onClick={close}
-                  aria-label="Close"
-                  className="size-9 rounded-full border-0 text-[18px]"
-                  style={{
-                    background: T.border.divider,
-                    color: T.ink.base,
-                    cursor: "pointer",
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-              <div className="mt-4 grid gap-4">
-                <label className="flex flex-col gap-1.5 text-[15px] font-semibold">
-                  What needs changing?
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="rounded-[10px] px-3 py-2.5 text-[16px] font-medium"
-                    style={{
-                      border: `1px solid ${T.border.hi}`,
-                      background: T.bg.deep,
-                      color: T.ink.base,
-                    }}
-                  >
-                    {CATEGORIES.map((c) => (
-                      <option key={c}>{c}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="flex flex-col gap-1.5 text-[15px] font-semibold">
-                  <span>
-                    What&rsquo;s correct?{" "}
-                    <span className="font-normal" style={{ color: T.ink.dim }}>
-                      Required
-                    </span>
-                  </span>
-                  <textarea
-                    value={fix}
-                    onChange={(e) => {
-                      setFix(e.target.value)
-                      setErr(null)
-                    }}
-                    aria-invalid={Boolean(err)}
-                    aria-describedby="fix-err"
-                    rows={3}
-                    className="resize-y rounded-[10px] px-3 py-2.5 text-[16px] font-medium"
-                    style={{
-                      border: `1px solid ${err ? T.accent.danger : T.border.hi}`,
-                      color: T.ink.base,
-                    }}
-                  />
-                  {err ? (
-                    <span
-                      id="fix-err"
-                      role="alert"
-                      className="font-semibold"
-                      style={{ color: T.accent.danger }}
-                    >
-                      {err}
-                    </span>
-                  ) : null}
-                </label>
-                <label className="flex flex-col gap-1.5 text-[15px] font-semibold">
-                  <span>
-                    Source{" "}
-                    <span className="font-normal" style={{ color: T.ink.dim }}>
-                      A link or reference helps reviewers accept changes faster
-                    </span>
-                  </span>
-                  <input
-                    value={source}
-                    onChange={(e) => setSource(e.target.value)}
-                    placeholder="https://"
-                    className="rounded-[10px] px-3 py-2.5 text-[16px] font-medium"
-                    style={{
-                      border: `1px solid ${T.border.hi}`,
-                      color: T.ink.base,
-                    }}
-                  />
-                </label>
-                <button
-                  type="button"
-                  onClick={submit}
-                  disabled={pending}
-                  className="justify-self-start rounded-full border-0 px-5 py-3 text-[16px] font-semibold"
-                  style={{
-                    background: T.ink.base,
-                    color: "#fff",
-                    cursor: pending ? "default" : "pointer",
-                    opacity: pending ? 0.7 : 1,
-                  }}
-                >
-                  {pending ? "Sending…" : "Send for review"}
-                </button>
-              </div>
-            </>
-          )}
-        </section>
-      ) : null}
-    </>
+    <div className="flex flex-wrap gap-2">
+      <FollowPill
+        libraryDocumentId={libraryDocumentId}
+        libraryName={libraryName}
+      />
+      <button
+        type="button"
+        onClick={() => open()}
+        style={{
+          ...pillBase,
+          border: 0,
+          background: T.accent.primary,
+          color: "#fff",
+        }}
+        className="transition-colors hover:!bg-(--t-accent-primary-hover)"
+      >
+        <LibIcon d={LIB_ICONS.pencil} />
+        Suggest a correction
+      </button>
+      <Link
+        href={hubHref("photo", { slug: librarySlug, name: libraryName })}
+        style={{
+          ...pillBase,
+          padding: "11px 18px",
+          border: `1px solid ${T.border.hi}`,
+          background: T.bg.deep,
+          color: T.ink.base,
+          textDecoration: "none",
+        }}
+        className="transition-colors hover:!bg-(--t-bg-surface)"
+      >
+        <LibIcon d={LIB_ICONS.camera} />
+        Add photos
+      </Link>
+    </div>
   )
 }
 
