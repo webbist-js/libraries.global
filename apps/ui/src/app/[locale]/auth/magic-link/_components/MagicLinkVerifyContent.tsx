@@ -7,6 +7,25 @@ import GlobalLink from "@/components/global/GlobalLink"
 import { UseSearchParamsWrapper } from "@/components/helpers/UseSearchParamsWrapper"
 import { T } from "@/lib/design-tokens"
 
+/** Better Auth's magic-link error codes, in plain words. */
+const ERROR_COPY: Record<string, string> = {
+  INVALID_TOKEN:
+    "This sign-in link isn't valid. It may have been used already.",
+  EXPIRED_TOKEN: "This sign-in link has expired.",
+  new_user_signup_disabled:
+    "There's no account for that email address yet. Create an account first.",
+  failed_to_create_session: "We couldn't sign you in. Please try again.",
+}
+
+function describeError(error: string): string {
+  if (ERROR_COPY[error]) return ERROR_COPY[error]
+  try {
+    return decodeURIComponent(error)
+  } catch {
+    return error
+  }
+}
+
 export function MagicLinkVerifyContent() {
   return (
     <UseSearchParamsWrapper>
@@ -79,20 +98,14 @@ function SuspensedMagicLinkVerifyContent() {
             className="mb-2 text-base leading-relaxed"
             style={{ fontFamily: T.font.sans, color: T.ink.dim }}
           >
-            {(() => {
-              try {
-                return decodeURIComponent(error)
-              } catch {
-                return error
-              }
-            })()}
+            {describeError(error)}
           </p>
 
           <p
             className="mb-8 text-sm"
             style={{ fontFamily: T.font.sans, color: T.ink.low }}
           >
-            Magic links expire after 10 minutes and can only be used once.
+            Sign-in links expire after 5 minutes and can only be used once.
             Please request a new link to continue.
           </p>
         </>
@@ -102,8 +115,8 @@ function SuspensedMagicLinkVerifyContent() {
           <div
             className="mb-6 flex h-14 w-14 items-center justify-center rounded-full"
             style={{
-              background: "var(--t-aurora-soft)",
-              border: `1px solid var(--t-aurora-edge)`,
+              background: T.accent.chip,
+              border: `1px solid ${T.border.hi}`,
               fontSize: "24px",
             }}
             aria-hidden="true"
@@ -152,11 +165,11 @@ function SuspensedMagicLinkVerifyContent() {
         style={{
           fontFamily: T.font.sans,
           fontSize: "13px",
-          color: T.accent.aurora,
+          color: T.accent.primary,
           textDecoration: "none",
         }}
       >
-        ← Back to sign in
+        ← Back to sign in and request a new link
       </GlobalLink>
     </div>
   )

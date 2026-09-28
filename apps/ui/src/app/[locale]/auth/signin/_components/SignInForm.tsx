@@ -25,6 +25,7 @@ import { AuthOAuthButtons } from "@/app/[locale]/auth/_components/AuthOAuthButto
 import { UseSearchParamsWrapper } from "@/components/helpers/UseSearchParamsWrapper"
 import { useUserMutations } from "@/hooks/useUserMutations"
 import { authClient } from "@/lib/auth-client"
+import { magicLinkCallbacks } from "@/lib/auth-redirects"
 import { T } from "@/lib/design-tokens"
 import { safeRedirectPath } from "@/lib/safe-redirect"
 
@@ -85,6 +86,8 @@ function SuspensedSignInForm() {
   })
 
   // The sign-in link reuses the email field above instead of a second input.
+  // The link lands on post-signin (onboarding for a first sign-in), never on
+  // the destination directly.
   const sendMagicLink = async () => {
     const valid = await form.trigger("email", { shouldFocus: true })
     if (!valid) return
@@ -92,7 +95,7 @@ function SuspensedSignInForm() {
     try {
       const result = await authClient.signIn.magicLink({
         email: form.getValues("email"),
-        callbackURL: callbackUrl,
+        ...magicLinkCallbacks(callbackUrl),
       })
       if (result?.error) {
         toast.error(result.error.message ?? "Failed to send magic link")
