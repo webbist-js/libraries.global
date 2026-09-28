@@ -30,6 +30,7 @@ export function AtlasListView({
   onHover,
   onShowMap,
   onSeePlans,
+  notice,
   compact = false,
 }: {
   readonly libraries: AtlasLibrary[]
@@ -39,6 +40,8 @@ export function AtlasListView({
   readonly onShowMap: () => void
   /** Opens the plans sheet from the Pro-locked export button. */
   readonly onSeePlans: () => void
+  /** Data notices (offline, load errors) shown above the table. */
+  readonly notice?: React.ReactNode
   readonly compact?: boolean
 }) {
   const [sort, setSort] = useState<SortKey>("distance")
@@ -116,6 +119,15 @@ export function AtlasListView({
         <AtlasExportButton libraries={sorted} onSeePlans={onSeePlans} />
         <ViewToggle list onChange={(list) => !list && onShowMap()} />
       </div>
+
+      {notice ? (
+        <div
+          className="flex flex-col gap-2 border-b px-[18px] py-3"
+          style={{ borderColor: T.border.divider }}
+        >
+          {notice}
+        </div>
+      ) : null}
 
       {libraries.length === 0 ? (
         <p className="m-0 p-6 text-[16px]" style={{ color: T.ink.dim }}>

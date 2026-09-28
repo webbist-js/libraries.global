@@ -443,7 +443,9 @@ export function AtlasExplorer() {
   const countSub = view ? "libraries in view" : "libraries"
   const center = view ?? { lat: 30, lng: 10 }
 
-  const overlays = (
+  // Notices about the data, shown over the map or inside the list.
+  const hasDataNotice = !online || loadError || mapError === "webgl"
+  const dataNotices = hasDataNotice ? (
     <>
       {!online ? (
         <AtlasBanner
@@ -471,16 +473,19 @@ export function AtlasExplorer() {
           body="It needs WebGL, which is turned off or unavailable here. Every library is still in the list."
         />
       ) : null}
+    </>
+  ) : null
+
+  // Over the map only: the list view shows dataNotices inline instead.
+  const overlays = (
+    <>
+      {dataNotices}
       {mapError === "style" ? (
         <AtlasBanner
           tone="info"
           title="The basemap didn’t load."
           body="Library data is still available in the list view."
-          action={
-            list
-              ? undefined
-              : { label: "Open list", onClick: () => setList(true) }
-          }
+          action={{ label: "Open list", onClick: () => setList(true) }}
         />
       ) : null}
       {replaced ? (
@@ -577,9 +582,11 @@ export function AtlasExplorer() {
             onLocate={() => mapRef.current?.locate()}
           />
         </div>
-        <div className="pointer-events-none absolute inset-x-3 top-3 right-16 z-20 flex flex-col gap-2 [&>*]:pointer-events-auto">
-          {overlays}
-        </div>
+        {list ? null : (
+          <div className="pointer-events-none absolute inset-x-3 top-3 right-16 z-20 flex flex-col gap-2 [&>*]:pointer-events-auto">
+            {overlays}
+          </div>
+        )}
         {noMatch && size === "peek" ? (
           <div className="absolute inset-x-3 top-1/4 z-20 flex justify-center">
             {noMatch}
@@ -605,6 +612,7 @@ export function AtlasExplorer() {
             {list ? (
               <AtlasListView
                 compact
+                notice={dataNotices}
                 libraries={inView}
                 center={center}
                 now={now}
@@ -796,23 +804,20 @@ export function AtlasExplorer() {
         </div>
       ) : null}
 
-      <div
-        className="pointer-events-none absolute top-4 z-20 flex max-w-[560px] flex-col items-start gap-2 [&>*]:pointer-events-auto"
-        // In list view the map strip on the right is the free space.
-        style={
-          list
-            ? { right: GAP, width: 320 }
-            : { left: leftEdge, right: rightEdge + 90 }
-        }
-      >
-        {overlays}
-        {!mapReady && !mapError && !list ? (
-          <AtlasLoading
-            listReady={Boolean(all)}
-            onOpenList={() => setList(true)}
-          />
-        ) : null}
-      </div>
+      {list ? null : (
+        <div
+          className="pointer-events-none absolute top-4 z-20 flex max-w-[560px] flex-col items-start gap-2 [&>*]:pointer-events-auto"
+          style={{ left: leftEdge, right: rightEdge + 90 }}
+        >
+          {overlays}
+          {!mapReady && !mapError ? (
+            <AtlasLoading
+              listReady={Boolean(all)}
+              onOpenList={() => setList(true)}
+            />
+          ) : null}
+        </div>
+      )}
 
       {noMatch && !list ? (
         <div
@@ -828,9 +833,10 @@ export function AtlasExplorer() {
       {list ? (
         <div
           className="absolute top-4 bottom-4 z-20 overflow-hidden rounded-[22px]"
-          style={{ ...PANEL_STYLE, left: leftEdge, right: 352 }}
+          style={{ ...PANEL_STYLE, left: leftEdge, right: GAP }}
         >
           <AtlasListView
+            notice={dataNotices}
             libraries={inView}
             center={center}
             now={now}
