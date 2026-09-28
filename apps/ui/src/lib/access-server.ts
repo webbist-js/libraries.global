@@ -28,7 +28,11 @@ export function requireEntitlement(
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 })
   if (!listHas(user.features, feature))
     return Response.json(
-      { error: "Upgrade required", feature, upgradeUrl: "/pro" },
+      {
+        error: "Upgrade required",
+        feature,
+        upgradeUrl: "/contribute/membership",
+      },
       { status: 402 }
     )
 

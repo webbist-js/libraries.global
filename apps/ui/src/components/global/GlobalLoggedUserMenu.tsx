@@ -243,7 +243,7 @@ export function GlobalLoggedUserMenu({
         />
 
         <MenuLink
-          href="/pro"
+          href="/contribute/membership"
           icon="mdi:star-circle-outline"
           trailing={
             hasPro ? (

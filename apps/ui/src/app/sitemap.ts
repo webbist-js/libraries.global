@@ -31,7 +31,11 @@ const STATIC_ROUTES: {
   { path: "journal", changeFrequency: "weekly", priority: 0.6 },
   { path: "knowledge", changeFrequency: "weekly", priority: 0.6 },
   { path: "contribute", changeFrequency: "monthly", priority: 0.5 },
-  { path: "pro", changeFrequency: "monthly", priority: 0.5 },
+  {
+    path: "contribute/membership",
+    changeFrequency: "monthly",
+    priority: 0.5,
+  },
 ]
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
