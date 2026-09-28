@@ -5,7 +5,10 @@ import { draftMode } from "next/headers"
 import type { Locale } from "next-intl"
 
 import type { HomepageContinentSummary } from "@/components/home/homepage.types"
-import { computeCompleteness } from "@/components/library/library-page.helpers"
+import {
+  computeCompleteness,
+  type OpeningTimesValue,
+} from "@/components/library/library-page.helpers"
 import { logNonBlockingError } from "@/lib/logging"
 import { PublicStrapiClient } from "@/lib/strapi-api"
 import type {
@@ -400,34 +403,52 @@ type LocationCmsFields = {
   libraryTypeCounts?: LibraryTypeCount[]
 }
 
+// ── Child locations (computed by Strapi) ─────────────────────────────────────
+
+export type LatLng = { lat: number; lng: number }
+
+/** A country or region listed on its parent's page, with its library tally. */
+export type LocationChildCount = {
+  /** Published libraries in this child. */
+  libraryCount?: number
+  /** Its map centre, else the mean position of its libraries. */
+  center?: LatLng | null
+}
+
 // ── Continent ─────────────────────────────────────────────────────────────────
 
-export type PopulatedContinentData =
-  Data.ContentType<"api::continent.continent"> & {
-    quickLinks?: QuickLink[]
-    libraryCount?: number
-    regionCount?: number
-    countries?: {
-      name: string
-      slug: string
-      capitalCity?: string | null
-    }[]
-    featuredLibraries?: PopulatedFeaturedLibraryData[]
-  } & LocationCmsFields
+export type PopulatedContinentData = Omit<
+  Data.ContentType<"api::continent.continent">,
+  "countries"
+> & {
+  quickLinks?: QuickLink[]
+  libraryCount?: number
+  regionCount?: number
+  countries?: ({
+    name: string
+    slug: string
+    capitalCity?: string | null
+    iso2?: string | null
+  } & LocationChildCount)[]
+  featuredLibraries?: PopulatedFeaturedLibraryData[]
+} & LocationCmsFields
 
 // ── Country ───────────────────────────────────────────────────────────────────
 
-export type PopulatedCountryData = Data.ContentType<"api::country.country"> & {
+export type PopulatedCountryData = Omit<
+  Data.ContentType<"api::country.country">,
+  "regions"
+> & {
   heroImage?: Data.ContentType<"plugin::upload.file"> | null
   heroTagline?: string | null
   featured?: boolean | null
   continent?: { name: string; slug: string; code?: string | null } | null
-  regions?: {
+  regions?: ({
     name: string
     slug: string
     summary?: string | null
     typeLabel?: string | null
-  }[]
+  } & LocationChildCount)[]
   nationalLibrary?: {
     name: string
     slug: string
@@ -452,7 +473,10 @@ export type AreaSummary = {
   typeLabel?: string | null
 }
 
-export type PopulatedRegionData = Data.ContentType<"api::region.region"> & {
+export type PopulatedRegionData = Omit<
+  Data.ContentType<"api::region.region">,
+  "libraries"
+> & {
   heroImage?: Data.ContentType<"plugin::upload.file"> | null
   heroTagline?: string | null
   featured?: boolean | null
@@ -470,7 +494,52 @@ export type PopulatedRegionData = Data.ContentType<"api::region.region"> & {
   mapConfig?: MapConfig | null
   libraryCount?: number
   areaCount?: number
+  /** Up to 100 of the region's libraries, featured first. */
+  libraries?: RegionLibrary[]
+  /** Map centre, else the mean position of its libraries. */
+  center?: LatLng | null
+  /** The other regions of its country, for the "Nearby" card. */
+  siblings?: RegionSibling[]
 } & LocationCmsFields
+
+/** A library row on its region's page. */
+export type RegionLibrary = {
+  documentId: string
+  name: string
+  slug: string
+  libraryType?: string | null
+  city?: string | null
+  district?: string | null
+  summary?: string | null
+  openingTimes?: OpeningTimesValue | null
+  timezone?: string | null
+  location?: {
+    lat?: number | string | null
+    lng?: number | string | null
+  } | null
+  website?: string | null
+  phone?: string | null
+  email?: string | null
+  streetAddress?: string | null
+  operationalStatus?: string | null
+  featured?: boolean | null
+  heroImage?: {
+    url?: string | null
+    alternativeText?: string | null
+    formats?: { small?: { url?: string | null } | null } | null
+  } | null
+  accessibility?: { documentId: string }[] | null
+  services?: { documentId: string }[] | null
+  amenities?: { documentId: string }[] | null
+}
+
+export type RegionSibling = {
+  name: string
+  slug: string
+  typeLabel?: string | null
+  libraryCount: number
+  center?: LatLng | null
+}
 
 // ── Area ──────────────────────────────────────────────────────────────────────
 

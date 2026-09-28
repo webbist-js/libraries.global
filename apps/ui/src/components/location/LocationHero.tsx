@@ -1,9 +1,11 @@
+import { Icon } from "@iconify/react"
 import type React from "react"
 
 import { Breadcrumb } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
+import { cn } from "@/lib/styles"
 
 export interface LocationHeroStat {
   label: string
@@ -11,28 +13,27 @@ export interface LocationHeroStat {
   note?: string
 }
 
-/** White stat chip with a serif value — v2 replacement for the dark HeroStat. */
-export function LocationStatChip({
-  stat,
-}: {
-  readonly stat: LocationHeroStat
-}) {
+/** White stat card with a serif value. */
+function LocationStatCard({ stat }: { readonly stat: LocationHeroStat }) {
   return (
     <div
-      className="flex min-w-[132px] flex-col gap-0.5 rounded-2xl px-5 py-4"
+      className="flex min-w-0 flex-col gap-1.5 rounded-2xl px-4 py-3.5"
       style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
     >
       <span
-        className="text-[40px] leading-none"
+        className="text-[30px] leading-none tracking-[-0.01em]"
         style={{ fontFamily: T.font.serif, fontWeight: 500, color: T.ink.base }}
       >
         {stat.value}
       </span>
-      <span className="text-[14px] font-semibold" style={{ color: T.ink.dim }}>
+      <span
+        className="text-[13.5px] leading-[1.35] font-semibold"
+        style={{ color: T.ink.base }}
+      >
         {stat.label}
       </span>
       {stat.note ? (
-        <span className="text-[12px]" style={{ color: T.ink.low }}>
+        <span className="text-[12.5px]" style={{ color: T.ink.low }}>
           {stat.note}
         </span>
       ) : null}
@@ -41,79 +42,157 @@ export function LocationStatChip({
 }
 
 /**
- * v2 in-flow light hero for atlas location pages (continent / country /
- * region / area). Replaces the dark full-bleed `-mt-14` hero pattern.
+ * v2 hero band for atlas location pages (continent / country / region /
+ * area): breadcrumb, then the type pill, serif title, lead, stat cards and
+ * actions on the left, with an optional figure (the hero map) on the right.
  */
 export function LocationHero({
   breadcrumbLabels,
   typeLabel,
+  typeIcon,
+  code,
   title,
   intro,
   stats = [],
+  actions,
   aside,
 }: {
   readonly breadcrumbLabels?: Record<string, string>
   readonly typeLabel?: string | null
+  /** Iconify id for the type pill, e.g. "mdi:earth". */
+  readonly typeIcon?: string
+  /** Short technical code shown in the pill, e.g. "GB-ENG". */
+  readonly code?: string | null
   readonly title: string
   readonly intro?: string | null
   readonly stats?: LocationHeroStat[]
-  /** Optional right-column figure (globe disc, hero image). */
+  /** Buttons under the stats (search, add). */
+  readonly actions?: React.ReactNode
+  /** Optional right-column figure (the hero map). */
   readonly aside?: React.ReactNode
 }) {
   return (
-    <section id="overview" className="scroll-mt-24">
-      <Container>
-        <div className="pt-6 sm:pt-8">
-          {breadcrumbLabels ? <Breadcrumb labels={breadcrumbLabels} /> : null}
+    <section
+      id="overview"
+      className="scroll-mt-24 border-b"
+      style={{ background: T.bg.space, borderColor: T.border.line }}
+    >
+      <Container className="pt-6 pb-[clamp(36px,5vw,56px)] sm:pt-8">
+        {breadcrumbLabels ? <Breadcrumb labels={breadcrumbLabels} /> : null}
 
-          <div className="mt-5 flex flex-wrap items-end justify-between gap-x-10 gap-y-8">
-            <div className="max-w-[720px] min-w-0">
-              {typeLabel ? (
+        <div
+          className={cn(
+            "mt-6 grid gap-x-12 gap-y-8 lg:items-center",
+            aside && "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]"
+          )}
+        >
+          <div className="min-w-0">
+            {typeLabel ? (
+              <p className="m-0 mb-4">
                 <span
-                  className="inline-flex items-center rounded-full px-3 py-1 text-[14px] font-semibold"
+                  className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[14px] font-semibold"
                   style={{
-                    background: "var(--tint-national-bg)",
-                    color: "var(--tint-national-fg)",
+                    background: T.bg.deep,
+                    borderColor: T.border.line,
+                    color: T.ink.base,
                   }}
                 >
+                  {typeIcon ? (
+                    <Icon
+                      aria-hidden="true"
+                      height={15}
+                      icon={typeIcon}
+                      style={{ color: T.accent.primary }}
+                      width={15}
+                    />
+                  ) : null}
                   {typeLabel}
+                  {code ? (
+                    <span
+                      className="text-[12px] font-medium"
+                      style={{ fontFamily: T.font.mono, color: T.ink.dim }}
+                    >
+                      {code}
+                    </span>
+                  ) : null}
                 </span>
-              ) : null}
+              </p>
+            ) : null}
 
-              <h1
-                className="m-0 mt-3 text-[clamp(40px,5.4vw,68px)] leading-[1.02] tracking-[-0.02em]"
-                style={{
-                  fontFamily: T.font.serif,
-                  fontWeight: 500,
-                  color: T.ink.base,
-                }}
+            <h1
+              className="m-0 text-[clamp(44px,6vw,76px)] leading-[1.02] tracking-[-0.02em] text-balance"
+              style={{
+                fontFamily: T.font.serif,
+                fontWeight: 500,
+                color: T.ink.base,
+              }}
+            >
+              {title}
+            </h1>
+
+            {intro ? (
+              <p
+                className="mt-4 mb-0 max-w-[58ch] text-[17px] leading-[1.6]"
+                style={{ color: T.ink.dim }}
               >
-                {title}
-              </h1>
+                {intro}
+              </p>
+            ) : null}
 
-              {intro ? (
-                <p
-                  className="mt-4 mb-0 max-w-[62ch] text-[18px] leading-[1.6]"
-                  style={{ color: T.ink.dim }}
-                >
-                  {intro}
-                </p>
-              ) : null}
-            </div>
+            {stats.length > 0 ? (
+              <div
+                className={cn(
+                  "mt-6 grid gap-2.5",
+                  stats.length >= 3
+                    ? "grid-cols-2 sm:grid-cols-3"
+                    : "grid-cols-2"
+                )}
+              >
+                {stats.map((stat) => (
+                  <LocationStatCard key={stat.label} stat={stat} />
+                ))}
+              </div>
+            ) : null}
 
-            {aside ? <div className="shrink-0">{aside}</div> : null}
+            {actions ? (
+              <div className="mt-6 flex flex-wrap items-center gap-2.5">
+                {actions}
+              </div>
+            ) : null}
           </div>
 
-          {stats.length > 0 ? (
-            <div className="mt-8 flex flex-wrap gap-3">
-              {stats.map((stat) => (
-                <LocationStatChip key={stat.label} stat={stat} />
-              ))}
-            </div>
-          ) : null}
+          {aside ? <div className="min-w-0">{aside}</div> : null}
         </div>
       </Container>
     </section>
+  )
+}
+
+/** Primary / secondary pill buttons for the hero's action row. */
+export function LocationHeroAction({
+  href,
+  icon,
+  children,
+  primary = false,
+}: {
+  readonly href: string
+  readonly icon: string
+  readonly children: React.ReactNode
+  readonly primary?: boolean
+}) {
+  return (
+    <GlobalLink
+      href={href}
+      className={cn(
+        "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[15px] font-semibold transition-colors",
+        primary
+          ? "bg-(--t-accent-primary) text-white hover:bg-(--t-accent-primary-hover)"
+          : "border border-(--t-border-hi) bg-(--t-bg-deep) text-(--t-ink-base) hover:bg-(--t-bg-surface)"
+      )}
+    >
+      <Icon aria-hidden="true" height={16} icon={icon} width={16} />
+      {children}
+    </GlobalLink>
   )
 }
 

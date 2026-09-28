@@ -1,27 +1,44 @@
 import { Icon } from "@iconify/react"
-import Image from "next/image"
 import type { Locale } from "next-intl"
 
-import { LocationContributeCTA, LocationGridBrowser } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import { LocationEventsStrip } from "@/components/events/LocationEventsStrip"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
-import FeaturedLibraryCards from "@/components/home/FeaturedLibraryCards"
 import {
-  LocationEmptyState,
+  countNoun,
+  describeGaps,
+  formatCount,
+  GAP_DEFS,
+  type GapKey,
+  lowerFirst,
+  pickNearby,
+  recordGaps,
+  regionLabels,
+} from "@/components/location/location-page.helpers"
+import {
+  locationHelpActions,
+  LocationHelpPanel,
+} from "@/components/location/LocationHelpPanel"
+import {
   LocationHero,
+  LocationHeroAction,
+  type LocationHeroStat,
   LocationSectionHeading,
 } from "@/components/location/LocationHero"
-import { LocationTabBar } from "@/components/location/LocationTabBar"
-import { InteractiveMap } from "@/components/map/InteractiveMap"
+import {
+  type HeroMapLibraryPin,
+  LocationHeroMap,
+} from "@/components/location/LocationHeroMap"
+import {
+  NearbyRegions,
+  RegionLibraryList,
+} from "@/components/region/RegionLibraryList"
 import { T } from "@/lib/design-tokens"
-import { buildLocationDescription } from "@/lib/seo/location"
 import type {
   PopulatedRegionData,
   QuickLink,
 } from "@/lib/strapi-api/content/server"
-import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 // ── Quick link card ──────────────────────────────────────────────────────────
 
@@ -57,6 +74,12 @@ function QuickLinkCard({ link }: { link: QuickLink }) {
   )
 }
 
+const toCoord = (value: unknown): number | null => {
+  const n = typeof value === "string" ? Number.parseFloat(value) : value
+
+  return typeof n === "number" && Number.isFinite(n) ? n : null
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export function RegionDetailPage({
@@ -72,39 +95,107 @@ export function RegionDetailPage({
   countrySlug: string
   continentSlug: string
 }) {
-  const hasFeaturedLibraries =
-    Array.isArray(region.featuredLibraries) &&
-    region.featuredLibraries.length > 0
-  const hasQuickLinks =
-    Array.isArray(region.quickLinks) && region.quickLinks.length > 0
-  const hasAreas = Array.isArray(region.areas) && region.areas.length > 0
-
-  const heroImageUrl = (
-    region.heroImage as { url?: string | null } | null | undefined
-  )?.url
-    ? formatStrapiMediaUrl((region.heroImage as { url: string }).url)
-    : null
-
+  const name = region.name ?? ""
   const countryName = region.country?.name
   const continentName =
     region.continent?.name ?? region.country?.continent?.name
+  const basePath = `/${continentSlug}/${countrySlug}/${slug}`
+  const libraryCount = region.libraryCount ?? 0
+  const libraries = region.libraries ?? []
+  const hasQuickLinks = Boolean(region.quickLinks?.length)
 
-  const areaTypeLabel = hasAreas
-    ? ((region.areas![0] as { typeLabel?: string | null }).typeLabel ?? "Areas")
-    : "Areas"
-  const libraryCount =
-    typeof region.libraryCount === "number" && region.libraryCount > 0
-      ? region.libraryCount
-      : null
+  // ── Record gaps ─────────────────────────────────────────────────────────────
+  const gapsBySlug: Record<string, GapKey[]> = Object.fromEntries(
+    libraries.map((library) => [library.slug, recordGaps(library)])
+  )
+  const withGaps = libraries.filter((l) => gapsBySlug[l.slug]!.length > 0)
+  const missingCount = withGaps.reduce(
+    (sum, l) => sum + gapsBySlug[l.slug]!.length,
+    0
+  )
+  const firstWith = (gap: GapKey) =>
+    libraries.find((l) => gapsBySlug[l.slug]!.includes(gap))
+  const asWizardLibrary = (l: (typeof libraries)[number] | undefined) =>
+    l ? { slug: l.slug, name: l.name, place: l.city ?? undefined } : null
 
-  const tabs = [
-    { id: "overview", label: "Overview" },
-    ...(hasFeaturedLibraries
-      ? [{ id: "institutions", label: "Libraries" }]
-      : []),
-    ...(hasAreas ? [{ id: "areas", label: areaTypeLabel }] : []),
-    { id: "map", label: "Map" },
+  let helpBody: string
+  if (libraries.length === 0) {
+    helpBody = `Know a library in ${name}? Add it with a source and a reviewer will check it before it’s published.`
+  } else if (withGaps.length === 0) {
+    helpBody =
+      "Every record here has its core details. Know a library that’s missing? Add it and we’ll review it."
+  } else if (withGaps.length === 1) {
+    const only = withGaps[0]!
+    helpBody = `${only.name}’s record is missing ${describeGaps(gapsBySlug[only.slug]!)}. Start there, or add another library.`
+  } else {
+    const common = GAP_DEFS.map((g) => ({
+      key: g.key,
+      n: withGaps.filter((l) => gapsBySlug[l.slug]!.includes(g.key)).length,
+    }))
+      .filter((g) => g.n > 0)
+      .sort((a, b) => b.n - a.n)
+      .slice(0, 2)
+      .map((g) => g.key)
+    helpBody = `${formatCount(withGaps.length)} of ${formatCount(libraries.length)} records here are missing details, most often ${describeGaps(common)}. Start there, or add another library.`
+  }
+
+  // ── Hero ────────────────────────────────────────────────────────────────────
+  const intro =
+    region.heroTagline ??
+    region.summary ??
+    (libraryCount === 0
+      ? `No libraries in ${name} are documented yet. Know one? Add it and we’ll review it.`
+      : `${libraryCount === 1 ? "One library" : `${formatCount(libraryCount)} libraries`} in ${name} ${libraryCount === 1 ? "is" : "are"} documented so far. Know another? Add it and we’ll review it.`)
+
+  const stats: LocationHeroStat[] = [
+    {
+      value: formatCount(libraryCount),
+      label: `${countNoun(libraryCount, "Library", "Libraries")} documented`,
+    },
   ]
+  if (libraries.length > 0) {
+    stats.push({
+      value: formatCount(missingCount),
+      label: `${countNoun(missingCount, "Detail", "Details")} still missing`,
+      note:
+        libraryCount > libraries.length
+          ? `Across the first ${formatCount(libraries.length)} records`
+          : undefined,
+    })
+  }
+
+  const pins: HeroMapLibraryPin[] = libraries.flatMap((l) => {
+    const lat = toCoord(l.location?.lat)
+    const lng = toCoord(l.location?.lng)
+
+    return lat !== null && lng !== null
+      ? [
+          {
+            id: l.documentId,
+            name: l.name,
+            href: `${basePath}/${l.slug}`,
+            lat,
+            lng,
+            libraryType: l.libraryType,
+          },
+        ]
+      : []
+  })
+  const bounds = {
+    ne: region.mapConfig?.boundingBoxNE,
+    sw: region.mapConfig?.boundingBoxSW,
+  }
+  const hasMap = pins.length > 0 || Boolean(bounds.ne && bounds.sw)
+
+  // ── Nearby ──────────────────────────────────────────────────────────────────
+  const labels = regionLabels({
+    regionTypeLabel: region.country?.regionTypeLabel,
+  })
+  const nearby = pickNearby(region.center, region.siblings ?? [])
+  const nearbyTitle =
+    nearby.mode === "nearby"
+      ? `Nearby ${lowerFirst(labels.plural)}`
+      : `More in ${countryName ?? "this country"}`
 
   return (
     <div
@@ -113,7 +204,7 @@ export function RegionDetailPage({
     >
       <GlobalHeader locale={locale} />
 
-      <main className="relative z-10 flex-1 pb-16">
+      <main className="relative z-10 flex-1">
         <LocationHero
           breadcrumbLabels={{
             ...(continentSlug && continentName
@@ -122,148 +213,81 @@ export function RegionDetailPage({
             ...(countrySlug && countryName
               ? { [countrySlug]: countryName }
               : {}),
-            [slug]: region.name ?? "",
+            [slug]: name,
           }}
           typeLabel={region.typeLabel ?? "Region"}
-          title={region.name ?? ""}
-          intro={
-            region.heroTagline ??
-            region.summary ??
-            buildLocationDescription({
-              name: region.name ?? "",
-              libraryCount: region.libraryCount,
-              typeCounts: region.libraryTypeCounts,
-              childLabel: hasAreas ? areaTypeLabel : null,
-            })
-          }
-          stats={[
-            {
-              label: "Libraries",
-              value: libraryCount
-                ? new Intl.NumberFormat().format(libraryCount)
-                : "—",
-              note: libraryCount ? undefined : "None documented yet",
-            },
-            {
-              label: areaTypeLabel,
-              value:
-                typeof region.areaCount === "number" && region.areaCount > 0
-                  ? new Intl.NumberFormat().format(region.areaCount)
-                  : "—",
-            },
-          ]}
-          aside={
-            heroImageUrl ? (
-              <figure
-                className="relative m-0 hidden h-[200px] w-[300px] overflow-hidden rounded-3xl lg:block"
-                style={{ border: `1px solid ${T.border.line}` }}
+          typeIcon="mdi:map-outline"
+          title={name}
+          intro={intro}
+          stats={stats}
+          actions={
+            <>
+              <LocationHeroAction
+                primary
+                href={`/libraries?region=${encodeURIComponent(slug)}`}
+                icon="mdi:magnify"
               >
-                <Image
-                  src={heroImageUrl}
-                  alt={region.name ?? ""}
-                  fill
-                  priority
-                  className="object-cover"
-                />
-              </figure>
+                Search libraries in {name}
+              </LocationHeroAction>
+              <LocationHeroAction href="/contribute/add" icon="mdi:plus">
+                Add a library
+              </LocationHeroAction>
+            </>
+          }
+          aside={
+            hasMap ? (
+              <LocationHeroMap
+                label={`Map of libraries documented in ${name}`}
+                caption={
+                  pins.length > 0
+                    ? `${countNoun(pins.length, "Library", "Libraries")} documented in ${name}`
+                    : `No libraries documented in ${name} yet.`
+                }
+                pins={pins}
+                bounds={bounds}
+              />
             ) : undefined
           }
         />
 
-        <LocationTabBar tabs={tabs} />
-
         <Container>
-          <div className="flex flex-col gap-12 pt-10">
-            {/* ── Pillar Institutions ─────────────────────────────────────── */}
-            {hasFeaturedLibraries ? (
-              <section id="institutions" className="scroll-mt-28">
-                <LocationSectionHeading
-                  title="Libraries worth knowing"
-                  description={`The most significant institutions across ${region.name}.`}
-                />
-                <FeaturedLibraryCards libraries={region.featuredLibraries} />
-              </section>
-            ) : null}
-
-            {/* ── Areas grid ──────────────────────────────────────────────── */}
-            {hasAreas ? (
-              <section id="areas" className="scroll-mt-28">
-                <LocationSectionHeading
-                  title={`Browse by ${areaTypeLabel.toLowerCase()}`}
-                  count={
-                    typeof region.areaCount === "number" && region.areaCount > 0
-                      ? `${region.areaCount} ${areaTypeLabel.toLowerCase()}`
-                      : null
-                  }
-                />
-                <LocationGridBrowser
-                  items={region.areas!.map((area) => ({
-                    slug: (area as { slug?: string }).slug ?? "",
-                    name: (area as { name?: string }).name ?? "",
-                    subtitle:
-                      (area as { typeLabel?: string | null }).typeLabel ?? null,
-                    href: `/${continentSlug}/${countrySlug}/${slug}/${(area as { slug?: string }).slug}`,
-                  }))}
+          <div className="flex flex-col gap-16 pt-14 pb-20">
+            <div className="grid items-start gap-x-8 gap-y-10 lg:grid-cols-[minmax(0,1fr)_320px]">
+              <section id="libraries" className="scroll-mt-24">
+                <LocationSectionHeading title={`Libraries in ${name}`} />
+                {libraries.length === 0 ? (
+                  <p
+                    className="mt-0 mb-4 text-[16px]"
+                    style={{ color: T.ink.dim }}
+                  >
+                    No libraries in {name} are documented yet.
+                  </p>
+                ) : null}
+                <RegionLibraryList
+                  regionName={name}
+                  basePath={basePath}
+                  libraries={libraries}
+                  gapsBySlug={gapsBySlug}
+                  total={libraryCount}
+                  findHref={`/libraries?region=${encodeURIComponent(slug)}`}
                 />
               </section>
-            ) : libraryCount ? (
-              <div
-                className="flex flex-wrap items-center justify-between gap-4 rounded-3xl px-7 py-6"
-                style={{
-                  background: T.bg.deep,
-                  border: `1px solid ${T.border.line}`,
-                }}
-              >
-                <p className="m-0 text-[16px]" style={{ color: T.ink.dim }}>
-                  {libraryCount}{" "}
-                  {libraryCount === 1 ? "library is" : "libraries are"}{" "}
-                  documented in {region.name} — find them by name or on the map
-                  below.
-                </p>
-                <GlobalLink
-                  href={`/libraries?q=${encodeURIComponent(region.name ?? "")}`}
-                  className="inline-flex items-center rounded-full px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
-                  style={{ background: T.accent.primary }}
-                >
-                  Find libraries in {region.name}
-                </GlobalLink>
-              </div>
-            ) : (
-              <LocationEmptyState name={region.name ?? "this region"} />
-            )}
 
-            {/* ── Map ─────────────────────────────────────────────────────── */}
-            <section id="map" className="scroll-mt-28">
-              <LocationSectionHeading
-                title={`Map of ${region.name ?? "this region"}`}
-                description="Every documented library, plotted. Zoom in to drill down."
-              />
-              <div
-                className="overflow-hidden rounded-3xl"
-                style={{ border: `1px solid ${T.border.line}` }}
-              >
-                <InteractiveMap
-                  mapConfig={region.mapConfig}
-                  mode="region"
-                  regionSlug={slug}
-                  countrySlug={countrySlug}
-                  continentSlug={continentSlug}
-                  locale={locale}
-                />
-              </div>
-            </section>
+              {nearby.items.length > 0 ? (
+                <aside className="lg:sticky lg:top-20">
+                  <NearbyRegions
+                    title={nearbyTitle}
+                    regions={nearby.items}
+                    basePath={`/${continentSlug}/${countrySlug}`}
+                  />
+                </aside>
+              ) : null}
+            </div>
 
-            {/* ── Events strip ────────────────────────────────────────────── */}
-            <section className="scroll-mt-28">
-              <LocationEventsStrip
-                regionSlug={slug}
-                locationLabel={region.name ?? ""}
-              />
-            </section>
+            <LocationEventsStrip regionSlug={slug} locationLabel={name} />
 
-            {/* ── Quick Links ─────────────────────────────────────────────── */}
             {hasQuickLinks ? (
-              <section className="scroll-mt-28">
+              <section className="scroll-mt-24">
                 <LocationSectionHeading title="Quick links" />
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {region.quickLinks!.map((link, i) => (
@@ -275,15 +299,17 @@ export function RegionDetailPage({
                 </div>
               </section>
             ) : null}
+
+            <LocationHelpPanel
+              name={name}
+              body={helpBody}
+              actions={locationHelpActions({
+                hoursLibrary: asWizardLibrary(firstWith("hours")),
+                photoLibrary: asWizardLibrary(firstWith("photo")),
+              })}
+            />
           </div>
         </Container>
-
-        <div className="mt-14">
-          <LocationContributeCTA
-            locationName={region.name ?? undefined}
-            entityType="region"
-          />
-        </div>
       </main>
     </div>
   )
