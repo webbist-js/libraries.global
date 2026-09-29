@@ -12,6 +12,7 @@ import {
   useState,
 } from "react"
 
+import { actionMeta } from "@/components/contribute/actions"
 import { ContributionWizard } from "@/components/contribute/ContributionWizard"
 import type { WizardLibrary } from "@/components/contribute/wizard.logic"
 import { T } from "@/lib/design-tokens"
@@ -43,14 +44,16 @@ function CorrectionDrawer({
   readonly onClose: () => void
 }) {
   const panel = useRef<HTMLDivElement>(null)
+  const meta = actionMeta("correction")
 
   useEffect(() => {
     const returnFocus = document.activeElement as HTMLElement | null
     const root = document.documentElement
     const overflow = root.style.overflow
     root.style.overflow = "hidden"
-    // Start on the first field; the Close button comes before it.
+    // Start on the chosen card (or the first one); Close comes before it.
     const start =
+      panel.current?.querySelector<HTMLElement>("input[type=radio]:checked") ??
       panel.current?.querySelector<HTMLElement>("select, textarea, input") ??
       panel.current?.querySelector<HTMLElement>("button")
     start?.focus()
@@ -100,23 +103,49 @@ function CorrectionDrawer({
         ref={panel}
         aria-labelledby="correction-drawer-title"
         aria-modal="true"
-        className="absolute inset-y-0 right-0 flex w-full flex-col overflow-y-auto border-l sm:w-[min(580px,100vw)]"
+        className="absolute inset-y-0 right-0 flex w-full flex-col border-l sm:w-[min(760px,100vw)]"
         role="dialog"
         style={{ background: T.bg.void, borderColor: T.border.hi }}
       >
         <div
-          className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b px-6 py-3 sm:px-8"
-          style={{ background: T.bg.void, borderColor: T.border.line }}
+          className="flex shrink-0 items-center justify-between gap-4 border-b px-5 py-4 sm:px-6"
+          style={{ background: T.bg.deep, borderColor: T.border.line }}
         >
-          <p
-            className="m-0 text-[14px] font-semibold"
-            style={{ color: T.ink.dim }}
-          >
-            {library.name}
-          </p>
+          <div className="flex min-w-0 items-center gap-3.5">
+            <span
+              aria-hidden="true"
+              className="flex size-11 shrink-0 items-center justify-center rounded-full"
+              style={{ background: meta.tintBg, color: meta.tintFg }}
+            >
+              <Icon height={20} icon={meta.icon} width={20} />
+            </span>
+            <div className="min-w-0">
+              <h2
+                id="correction-drawer-title"
+                className="m-0"
+                style={{
+                  fontFamily: T.font.serif,
+                  fontSize: "clamp(22px,3vw,28px)",
+                  fontWeight: 500,
+                  lineHeight: 1.15,
+                  letterSpacing: "-0.01em",
+                  color: T.ink.base,
+                }}
+              >
+                {meta.title}
+              </h2>
+              <p
+                className="m-0 mt-0.5 truncate text-[15px]"
+                style={{ color: T.ink.dim }}
+              >
+                {library.name}
+                {library.place ? ` · ${library.place}` : ""}
+              </p>
+            </div>
+          </div>
           <button
             aria-label="Close"
-            className="flex size-10 shrink-0 items-center justify-center rounded-full border bg-white"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full border bg-white hover:bg-(--t-bg-surface)"
             onClick={onClose}
             style={{ borderColor: T.border.line, color: T.ink.base }}
             type="button"
@@ -124,16 +153,15 @@ function CorrectionDrawer({
             <Icon aria-hidden="true" height={20} icon="mdi:close" width={20} />
           </button>
         </div>
-        <div className="px-6 py-7 sm:px-8">
-          <ContributionWizard
-            action="correction"
-            headingId="correction-drawer-title"
-            initialCategory={category}
-            initialLibrary={library}
-            lockLibrary
-            returnTo={`${path}?${REOPEN_PARAM}=correction`}
-          />
-        </div>
+        <ContributionWizard
+          action="correction"
+          headingId="correction-drawer-title"
+          initialCategory={category}
+          initialLibrary={library}
+          layout="drawer"
+          lockLibrary
+          returnTo={`${path}?${REOPEN_PARAM}=correction`}
+        />
       </div>
     </div>
   )
