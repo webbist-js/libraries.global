@@ -795,6 +795,15 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    contributors: Schema.Attribute.Relation<
+      "manyToMany",
+      "api::user-profile.user-profile"
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -806,6 +815,12 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
       }> &
       Schema.Attribute.DefaultTo<false>
     heroImage: Schema.Attribute.Media<"images"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    libraries: Schema.Attribute.Relation<"manyToMany", "api::library.library"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
@@ -860,6 +875,12 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true
+        }
+      }>
+    topics: Schema.Attribute.Relation<"manyToMany", "api::topic.topic"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
         }
       }>
     updatedAt: Schema.Attribute.DateTime
@@ -3002,6 +3023,7 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
         "contributor",
         "verified_librarian",
         "wiki_editor",
+        "journal_editor",
         "editorial_board",
       ]
     > &
@@ -3135,6 +3157,12 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+    docsSections: Schema.Attribute.JSON &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     featured: Schema.Attribute.Boolean &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -3143,6 +3171,12 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
       }> &
       Schema.Attribute.DefaultTo<false>
     heroImage: Schema.Attribute.Media<"images"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    libraries: Schema.Attribute.Relation<"manyToMany", "api::library.library"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
@@ -3202,6 +3236,12 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true
+        }
+      }>
+    topics: Schema.Attribute.Relation<"manyToMany", "api::topic.topic"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
         }
       }>
     updatedAt: Schema.Attribute.DateTime
@@ -4054,6 +4094,11 @@ export interface PluginRewardsPointEvent extends Struct.CollectionTypeSchema {
         "hours_verified",
         "status_verified",
         "wiki_translated",
+        "journal_accepted",
+        "journal_edit_accepted",
+        "knowledge_article_published",
+        "knowledge_edit_accepted",
+        "source_added",
         "daily_streak",
         "manual_award",
         "manual_deduct",

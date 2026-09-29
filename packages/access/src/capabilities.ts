@@ -19,6 +19,7 @@ export type Capability =
   | "submit.docSuggestion"
   | "docs.directEdit"
   | "submit.journalPitch"
+  | "journal.directEdit"
   | "submit.topicSuggestion"
   | "events.feed"
 
@@ -40,8 +41,15 @@ export interface Capabilities {
   claimedLibraryIds: ReadonlySet<string>
 }
 
-const EDITOR_ROLES: ReadonlySet<ContributorRole> = new Set([
+/** Roles whose approved Knowledge edits publish without a second pass. */
+const DOCS_EDITOR_ROLES: ReadonlySet<ContributorRole> = new Set([
   "wiki_editor",
+  "editorial_board",
+])
+
+/** Roles whose approved Journal articles publish without a second pass. */
+const JOURNAL_EDITOR_ROLES: ReadonlySet<ContributorRole> = new Set([
+  "journal_editor",
   "editorial_board",
 ])
 
@@ -62,8 +70,10 @@ export function resolveCapabilities(input: CapabilityInput): Capabilities {
     set.add("submit.libraryEdit")
     set.add("events.feed")
   }
-  if (input.contributorRole && EDITOR_ROLES.has(input.contributorRole))
+  if (input.contributorRole && DOCS_EDITOR_ROLES.has(input.contributorRole))
     set.add("docs.directEdit")
+  if (input.contributorRole && JOURNAL_EDITOR_ROLES.has(input.contributorRole))
+    set.add("journal.directEdit")
 
   return { set, claimedLibraryIds }
 }
@@ -74,10 +84,22 @@ export function isSubmissionType(v: unknown): v is SubmissionType {
   )
 }
 
+/**
+ * Whether these capabilities allow a submission of `type`.
+ *
+ * `directWikiEdit` / `directJournalEdit` mark a submission whose approval
+ * publishes the article straight away (a body edit to an existing article
+ * by an editor). Suggestions and new-article drafts from any signed-in
+ * contributor don't set them: their approval only writes a Strapi draft.
+ */
 export function canSubmit(
   c: Capabilities,
   type: SubmissionType,
-  opts: { libraryDocumentId?: string; directWikiEdit?: boolean } = {}
+  opts: {
+    libraryDocumentId?: string
+    directWikiEdit?: boolean
+    directJournalEdit?: boolean
+  } = {}
 ): boolean {
   switch (type) {
     case "correction":
@@ -97,7 +119,9 @@ export function canSubmit(
         ? c.set.has("docs.directEdit")
         : c.set.has("submit.docSuggestion")
     case "blog_submission":
-      return c.set.has("submit.journalPitch")
+      return opts.directJournalEdit
+        ? c.set.has("journal.directEdit")
+        : c.set.has("submit.journalPitch")
     case "topic_suggestion":
       return c.set.has("submit.topicSuggestion")
 

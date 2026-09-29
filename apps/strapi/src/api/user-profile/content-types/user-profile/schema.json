@@ -130,6 +130,7 @@
         "contributor",
         "verified_librarian",
         "wiki_editor",
+        "journal_editor",
         "editorial_board"
       ],
       "default": "reader"

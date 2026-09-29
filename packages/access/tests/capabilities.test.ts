@@ -35,6 +35,10 @@ describe("resolveCapabilities", () => {
       expect(canSubmit(c, t)).toBe(true)
     expect(canSubmit(c, "wiki_edit")).toBe(true) // free-text suggestion
     expect(canSubmit(c, "wiki_edit", { directWikiEdit: true })).toBe(false)
+    expect(canSubmit(c, "blog_submission")).toBe(true) // pitch or draft
+    expect(canSubmit(c, "blog_submission", { directJournalEdit: true })).toBe(
+      false
+    )
   })
 
   it("only allows library_edit on claimed libraries", () => {
@@ -69,7 +73,12 @@ describe("resolveCapabilities", () => {
           { directWikiEdit: true }
         )
       ).toBe(true)
-    for (const role of ["reader", "contributor", "verified_librarian"] as const)
+    for (const role of [
+      "reader",
+      "contributor",
+      "verified_librarian",
+      "journal_editor",
+    ] as const)
       expect(
         canSubmit(
           resolveCapabilities(input({ contributorRole: role })),
@@ -77,6 +86,39 @@ describe("resolveCapabilities", () => {
           { directWikiEdit: true }
         )
       ).toBe(false)
+  })
+
+  it("grants direct journal editing to journal_editor and editorial_board only", () => {
+    for (const role of ["journal_editor", "editorial_board"] as const) {
+      const c = resolveCapabilities(input({ contributorRole: role }))
+      expect(c.set.has("journal.directEdit")).toBe(true)
+      expect(canSubmit(c, "blog_submission", { directJournalEdit: true })).toBe(
+        true
+      )
+    }
+    for (const role of [
+      "reader",
+      "contributor",
+      "verified_librarian",
+      "wiki_editor",
+    ] as const) {
+      const c = resolveCapabilities(input({ contributorRole: role }))
+      expect(c.set.has("journal.directEdit")).toBe(false)
+      expect(canSubmit(c, "blog_submission", { directJournalEdit: true })).toBe(
+        false
+      )
+    }
+  })
+
+  it("splits Knowledge and Journal editing between wiki_editor and journal_editor", () => {
+    const wiki = resolveCapabilities(input({ contributorRole: "wiki_editor" }))
+    const journal = resolveCapabilities(
+      input({ contributorRole: "journal_editor" })
+    )
+    expect(wiki.set.has("docs.directEdit")).toBe(true)
+    expect(wiki.set.has("journal.directEdit")).toBe(false)
+    expect(journal.set.has("docs.directEdit")).toBe(false)
+    expect(journal.set.has("journal.directEdit")).toBe(true)
   })
 
   it("rejects unknown submission types", () => {
@@ -98,6 +140,9 @@ describe("promoteRole", () => {
     )
     expect(promoteRole(null, "verified_librarian")).toBe("verified_librarian")
     expect(promoteRole("wiki_editor", "verified_librarian")).toBe("wiki_editor")
+    expect(promoteRole("journal_editor", "verified_librarian")).toBe(
+      "journal_editor"
+    )
     expect(promoteRole("editorial_board", "verified_librarian")).toBe(
       "editorial_board"
     )

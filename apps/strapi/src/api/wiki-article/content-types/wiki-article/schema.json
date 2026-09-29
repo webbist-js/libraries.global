@@ -19,17 +19,29 @@
     "title": {
       "type": "string",
       "required": true,
-      "pluginOptions": { "i18n": { "localized": true } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "slug": {
       "type": "uid",
       "targetField": "title",
       "required": true,
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "summary": {
       "type": "text",
-      "pluginOptions": { "i18n": { "localized": true } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "body": {
       "type": "dynamiczone",
@@ -40,65 +52,145 @@
         "content.quote-block",
         "content.callout"
       ],
-      "pluginOptions": { "i18n": { "localized": true } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "heroImage": {
       "type": "media",
       "multiple": false,
       "required": false,
-      "allowedTypes": ["images"],
-      "pluginOptions": { "i18n": { "localized": false } }
+      "allowedTypes": [
+        "images"
+      ],
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "section": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::wiki-section.wiki-section",
       "inversedBy": "articles",
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "category": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::category.category",
       "inversedBy": "wikiArticles",
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "author": {
       "type": "string",
-      "pluginOptions": { "i18n": { "localized": true } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "featured": {
       "type": "boolean",
       "default": false,
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "priority": {
       "type": "integer",
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "relatedArticles": {
       "type": "relation",
       "relation": "manyToMany",
       "target": "api::wiki-article.wiki-article",
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "articleStatus": {
       "type": "enumeration",
-      "enum": ["stable", "beta", "experimental", "draft", "deprecated"],
+      "enum": [
+        "stable",
+        "beta",
+        "experimental",
+        "draft",
+        "deprecated"
+      ],
       "default": "stable",
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     },
     "seo": {
       "type": "component",
       "component": "shared.seo",
       "repeatable": false,
-      "pluginOptions": { "i18n": { "localized": true } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "contributors": {
       "type": "relation",
       "relation": "manyToMany",
       "target": "api::user-profile.user-profile",
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
+    "docsSections": {
+      "type": "json",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
+    "topics": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::topic.topic",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
+    "libraries": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::library.library",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     }
   }
 }

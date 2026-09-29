@@ -3,6 +3,7 @@ export const CONTRIBUTOR_ROLES = [
   "contributor",
   "verified_librarian",
   "wiki_editor",
+  "journal_editor",
   "editorial_board",
 ] as const
 export type ContributorRole = (typeof CONTRIBUTOR_ROLES)[number]
