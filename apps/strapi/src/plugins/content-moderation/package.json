@@ -1,7 +1,7 @@
 {
   "name": "content-moderation",
   "version": "0.1.0",
-  "description": "Content moderation plugin for libraries.global — manages submission queue",
+  "description": "Content moderation plugin for libraries.global \u2014 manages submission queue",
   "strapi": {
     "kind": "plugin",
     "name": "content-moderation",
@@ -30,6 +30,7 @@
   },
   "peerDependencies": {
     "@strapi/design-system": "^2.0.0",
+    "@strapi/icons": "^2.0.0",
     "@strapi/strapi": "^5.0.0",
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
@@ -42,6 +43,8 @@
   "dependencies": {
     "@repo/access": "workspace:*",
     "@repo/shared-data": "workspace:*",
+    "@strapi/design-system": "2.2.4",
+    "@strapi/icons": "2.2.4",
     "diff": "^9.0.0"
   },
   "devDependencies": {
