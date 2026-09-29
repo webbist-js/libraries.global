@@ -5,58 +5,25 @@ import { useMemo } from "react"
 
 import { T } from "@/lib/design-tokens"
 
-// ---------------------------------------------------------------------------
-// Types — canonical format matching the global::opening-times custom field
-// ---------------------------------------------------------------------------
+import {
+  DAY_LABELS,
+  DAY_ORDER,
+  type OpeningTimeframe,
+  type OpeningTimesData,
+  type OpeningTimesDay,
+  type OpeningTimesDayKey,
+} from "./opening-times.types"
 
-export const DAY_ORDER = [
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
-] as const
-
-export type OpeningTimesDayKey = (typeof DAY_ORDER)[number]
-
-export const DAY_LABELS: Record<OpeningTimesDayKey, string> = {
-  monday: "Monday",
-  tuesday: "Tuesday",
-  wednesday: "Wednesday",
-  thursday: "Thursday",
-  friday: "Friday",
-  saturday: "Saturday",
-  sunday: "Sunday",
-}
-
-export type OpeningTimesStaffing = "staffed" | "volunteer" | "self_service"
-
-export interface OpeningTimeframe {
-  id: string
-  startTime: string
-  endTime: string
-  staffing: OpeningTimesStaffing
-}
-
-export interface OpeningTimesDay {
-  day: OpeningTimesDayKey
-  enabled: boolean
-  timeframes: OpeningTimeframe[]
-}
-
-export interface OpeningTimesData {
-  version: number
-  days: OpeningTimesDay[]
-}
-
-export function emptyOpeningTimes(): OpeningTimesData {
-  return {
-    version: 1,
-    days: DAY_ORDER.map((day) => ({ day, enabled: false, timeframes: [] })),
-  }
-}
+export {
+  DAY_LABELS,
+  DAY_ORDER,
+  emptyOpeningTimes,
+  type OpeningTimeframe,
+  type OpeningTimesData,
+  type OpeningTimesDay,
+  type OpeningTimesDayKey,
+  type OpeningTimesStaffing,
+} from "./opening-times.types"
 
 // ---------------------------------------------------------------------------
 // Time utilities — 15-min intervals

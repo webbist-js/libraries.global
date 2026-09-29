@@ -179,7 +179,7 @@ export function LibraryHelpPanel({
       {steward ? (
         <div className="mb-3 flex flex-col gap-2">
           <Link
-            href={`/contribute/edit/${librarySlug}`}
+            href={`/contribute/index/${librarySlug}`}
             className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-4 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
           >
             <Icon

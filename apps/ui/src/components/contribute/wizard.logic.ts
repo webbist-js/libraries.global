@@ -4,7 +4,25 @@
  * blocks each step, the submission body, draft keys and hub prefill links.
  */
 
-export type ActionId = "add" | "correction" | "photo" | "source"
+export type ActionId =
+  | "add"
+  | "correction"
+  | "photo"
+  | "source"
+  | "journal"
+  | "knowledge"
+
+/** Actions that hand off to a full editor elsewhere instead of the wizard. */
+export type HandoffActionId = "add" | "journal" | "knowledge"
+
+const HANDOFF: ReadonlySet<ActionId> = new Set<HandoffActionId>([
+  "add",
+  "journal",
+  "knowledge",
+])
+
+export const isHandoff = (action: ActionId): action is HandoffActionId =>
+  HANDOFF.has(action)
 
 export type WizardLibrary = { slug: string; name: string; place?: string }
 
@@ -28,14 +46,59 @@ export const EMPTY_DRAFT: WizardDraft = {
   licence: false,
 }
 
-export const CATEGORIES = [
-  "Opening hours",
-  "Address or location",
-  "Accessibility",
-  "Collections",
-  "Name or other names",
-  "Something else",
+/** What a correction is about: a card in the drawer, an option in the hub. */
+export const CATEGORY_OPTIONS = [
+  {
+    value: "Opening hours",
+    icon: "mdi:clock-outline",
+    placeholder: "e.g. Open until 8pm on Thursdays since September",
+  },
+  {
+    value: "Address or location",
+    icon: "mdi:map-marker-outline",
+    placeholder: "e.g. The entrance moved to Church Street in 2025",
+  },
+  {
+    value: "Accessibility",
+    icon: "mdi:wheelchair-accessibility",
+    placeholder: "e.g. There’s now a lift to the first floor",
+  },
+  {
+    value: "Name",
+    icon: "mdi:format-letter-case",
+    placeholder: "e.g. It’s now called the Central Library",
+  },
+  {
+    value: "Website or catalogue",
+    icon: "mdi:web",
+    placeholder: "e.g. The catalogue moved to a new address",
+  },
+  {
+    value: "Open or closed",
+    icon: "mdi:door-open",
+    placeholder: "e.g. Closed for refurbishment until spring",
+  },
+  {
+    value: "Services and facilities",
+    icon: "mdi:star-four-points-outline",
+    placeholder: "e.g. Printing and scanning are now available",
+  },
+  {
+    value: "Collections",
+    icon: "mdi:bookshelf",
+    placeholder: "e.g. It holds the town’s local history archive",
+  },
+  {
+    value: "Something else",
+    icon: "mdi:dots-horizontal",
+    placeholder: "Tell us what’s wrong or missing",
+  },
 ] as const
+
+export const CATEGORIES = CATEGORY_OPTIONS.map((c) => c.value)
+
+export const categoryOption = (value: string) =>
+  CATEGORY_OPTIONS.find((c) => c.value === value)
 
 export const PHOTO_LICENCE = "CC BY-SA 4.0"
 
@@ -44,7 +107,84 @@ export const STEP_LABELS: Record<ActionId, [string, string, string]> = {
   correction: ["Choose the library", "Details", "Source & send"],
   photo: ["Choose the library", "Photo", "Licence & send"],
   source: ["Choose the library", "Details", "Source & send"],
+  journal: ["Pitch or draft", "Write", "Send for review"],
+  knowledge: ["Pick a page", "Write", "Send for review"],
 }
+
+/** One line under each step in the wizard's rail. */
+export const STEP_HINTS: Record<ActionId, [string, string, string]> = {
+  add: [
+    "Name, type and place",
+    "Hours, access and collections",
+    "Evidence, then send",
+  ],
+  correction: [
+    "Search or pick a record below",
+    "Tell us what’s changed",
+    "Link a source, then send",
+  ],
+  photo: [
+    "Search or pick a record below",
+    "Upload the photo",
+    "Confirm the licence, then send",
+  ],
+  source: [
+    "Search or pick a record below",
+    "What the source confirms",
+    "Add the link, then send",
+  ],
+  journal: [
+    "A title and a short summary",
+    "The story, with sections and tags",
+    "An editor reviews it",
+  ],
+  knowledge: [
+    "Improve, write new or translate",
+    "Edit in the article editor",
+    "An editor reviews it",
+  ],
+}
+
+/** The visible question at the top of each step, in the hub's panel layout. */
+export const STEP_TITLES: Record<ActionId, [string, string, string]> = {
+  add: ["Start a new library record", "Details", "Sources & send"],
+  correction: [
+    "Which library is this about?",
+    "What’s changed?",
+    "How do you know?",
+  ],
+  photo: [
+    "Which library is this about?",
+    "Add your photo",
+    "Confirm the licence",
+  ],
+  source: [
+    "Which library is this about?",
+    "What does the source confirm?",
+    "Add the source",
+  ],
+  journal: ["Pitch or draft a story", "Write", "Send for review"],
+  knowledge: ["Pick a page to improve", "Write", "Send for review"],
+}
+
+/**
+ * The library page's drawer: the library is already known, so step 1 picks
+ * the part of the record instead.
+ */
+export const DRAWER_STEPS = {
+  labels: ["What needs changing", "The correction", "Source & send"],
+  hints: [
+    "Pick a part of the record",
+    "What’s right now",
+    "Link a source, then send",
+  ],
+  titles: ["What needs changing?", "What’s right now?", "How do you know?"],
+  leads: [
+    "Pick the part of the record that’s wrong or missing.",
+    "Tell us what the record should say. Plain words are fine.",
+    "A link, or where you saw it, helps a reviewer accept it faster.",
+  ],
+} as const
 
 export type Step = 1 | 2 | 3
 
@@ -55,9 +195,13 @@ export function blockerFor(
   action: ActionId,
   step: Step,
   library: WizardLibrary | null,
-  draft: WizardDraft
+  draft: WizardDraft,
+  /** The drawer: the library is fixed and step 1 picks the category. */
+  locked = false
 ): string | null {
-  if (action === "add") return null
+  if (isHandoff(action)) return null
+  if (step === 1 && locked)
+    return draft.category ? null : "Pick what needs changing to continue."
   if (step === 1) return library ? null : "Choose a library to continue."
   if (action === "photo") {
     if (!draft.photo) return "Upload a photo to continue."
@@ -86,7 +230,7 @@ type SubmissionBody = {
 
 /** The /api/submissions body. Photos and sources travel as tagged corrections. */
 export function buildSubmission(
-  action: Exclude<ActionId, "add">,
+  action: Exclude<ActionId, HandoffActionId>,
   library: WizardLibrary,
   draft: WizardDraft
 ): SubmissionBody {
@@ -144,6 +288,8 @@ const ACTIONS: ReadonlySet<string> = new Set<ActionId>([
   "correction",
   "photo",
   "source",
+  "journal",
+  "knowledge",
 ])
 
 /** A link to the hub with the wizard set up, e.g. from a library page. */

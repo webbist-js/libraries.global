@@ -106,25 +106,49 @@ const TIPS: Record<number, { title: string; body: string }> = {
   },
 }
 
+const IMPROVE_TIPS: Record<number, { title: string; body: string }> = {
+  1: {
+    title: "Change only what you can source",
+    body: "Each changed field is marked. Leave the rest as it is; a reviewer checks every change against your source.",
+  },
+  7: {
+    title: "Say what changed and why",
+    body: "A one-line summary and a link to the source speed up review. Changes without a source are usually sent back.",
+  },
+}
+
 interface WizardCompletionSidebarProps {
   formData: FormData
   step: number
+  /** Improve mode shows the change count first, then record completeness. */
+  mode?: "new" | "improve"
+  changedCount?: number
 }
 
 export function WizardCompletionSidebar({
   formData,
   step,
+  mode = "new",
+  changedCount = 0,
 }: WizardCompletionSidebarProps) {
+  const improve = mode === "improve"
   const checks = SECTION_CHECKS(formData)
   const total = checks.length
   const doneCount = checks.filter((c) => c.done).length
   const requiredLeft = checks.filter((c) => c.required && !c.done).length
   const pct = Math.round((doneCount / total) * 100)
   const isComplete = doneCount === total
-  const tip = TIPS[step] ?? TIPS[1]!
+  const tip = (improve ? IMPROVE_TIPS[step] : null) ?? TIPS[step] ?? TIPS[1]!
 
   let helper = "Ready to send."
-  if (requiredLeft > 0) {
+  if (improve) {
+    helper =
+      changedCount === 0
+        ? `Record is ${doneCount} of ${total} sections complete.`
+        : requiredLeft > 0
+          ? `${requiredLeft} required section${requiredLeft === 1 ? "" : "s"} still empty. Record is ${doneCount} of ${total} sections complete.`
+          : `Record is ${doneCount} of ${total} sections complete.`
+  } else if (requiredLeft > 0) {
     helper = `${requiredLeft} required section${requiredLeft === 1 ? "" : "s"} left before you send.`
   }
 
@@ -158,7 +182,7 @@ export function WizardCompletionSidebar({
               margin: 0,
             }}
           >
-            Record completeness
+            {improve ? "Your changes" : "Record completeness"}
           </h2>
           <p
             aria-live="polite"
@@ -174,7 +198,7 @@ export function WizardCompletionSidebar({
                 lineHeight: 1,
               }}
             >
-              {doneCount}
+              {improve ? changedCount : doneCount}
             </span>
             <span
               style={{
@@ -183,8 +207,9 @@ export function WizardCompletionSidebar({
                 color: T.ink.dim,
               }}
             >
-              {" "}
-              of {total}
+              {improve
+                ? ` field${changedCount === 1 ? "" : "s"}`
+                : ` of ${total}`}
             </span>
           </p>
         </div>
@@ -218,8 +243,8 @@ export function WizardCompletionSidebar({
           style={{
             fontFamily: T.font.sans,
             fontSize: "15px",
-            color: requiredLeft === 0 ? T.accent.ok : T.ink.dim,
-            fontWeight: requiredLeft === 0 ? 600 : 400,
+            color: !improve && requiredLeft === 0 ? T.accent.ok : T.ink.dim,
+            fontWeight: !improve && requiredLeft === 0 ? 600 : 400,
             margin: "14px 0 8px",
             lineHeight: 1.5,
           }}

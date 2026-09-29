@@ -121,7 +121,7 @@ export default ({ strapi }: { strapi: any }) => ({
             points: 50,
             estimatedMinutes: 10,
             rewardLabel: "CARTOGRAPHER",
-            actionUrl: "/contribute/add",
+            actionUrl: "/contribute/index/new",
             computedForCountry: profile.country,
           })
         }
@@ -138,7 +138,7 @@ export default ({ strapi }: { strapi: any }) => ({
       points: 50,
       estimatedMinutes: 10,
       rewardLabel: "CARTOGRAPHER",
-      actionUrl: "/contribute/add",
+      actionUrl: "/contribute/index/new",
     })
 
     return wins
@@ -165,7 +165,7 @@ export default ({ strapi }: { strapi: any }) => ({
       points: 12,
       estimatedMinutes: 2,
       rewardLabel: "PIN",
-      actionUrl: "/contribute/add",
+      actionUrl: "/contribute/index/new",
       targetEntityRef: lib.entityRef ?? undefined,
       computedForCountry: profile.country ?? undefined,
     }))
@@ -217,7 +217,7 @@ export default ({ strapi }: { strapi: any }) => ({
         points: 5,
         estimatedMinutes: 1,
         rewardLabel: "VERIFIER",
-        actionUrl: `/contribute/edit/${lib.slug}`,
+        actionUrl: `/contribute/index/${lib.slug}`,
         targetEntityRef: lib.entityRef ?? undefined,
         computedForCountry: profile.country ?? undefined,
       }
@@ -253,7 +253,7 @@ export default ({ strapi }: { strapi: any }) => ({
       points: 8,
       estimatedMinutes: 3,
       rewardLabel: "PHOTOGRAPHER",
-      actionUrl: `/contribute/edit/${lib.slug}`,
+      actionUrl: `/contribute/index/${lib.slug}`,
       targetEntityRef: lib.entityRef ?? undefined,
       computedForCountry: profile.country ?? undefined,
     }))

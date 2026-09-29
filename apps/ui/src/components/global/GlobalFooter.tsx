@@ -143,7 +143,7 @@ export function GlobalFooter({
                 <GlobalLink
                   key={link.key}
                   href={link.href}
-                  className="text-[15px] text-(--t-ink-dim) underline underline-offset-4 transition-colors hover:text-(--t-accent-primary)"
+                  className="text-[13px] text-(--t-ink-dim) underline underline-offset-4 transition-colors hover:text-(--t-accent-primary)"
                 >
                   {link.label}
                 </GlobalLink>

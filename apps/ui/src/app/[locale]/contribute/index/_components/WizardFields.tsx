@@ -1,5 +1,6 @@
 "use client"
 
+import { Icon } from "@iconify/react"
 import type React from "react"
 import { useEffect, useState } from "react"
 
@@ -12,12 +13,55 @@ import {
 } from "@/components/ui/select"
 import { T } from "@/lib/design-tokens"
 
+import { useIsChanged } from "./ChangedFieldsContext"
 import {
   fieldHintStyle,
   fieldInputStyle,
   fieldLabelStyle,
 } from "./wizard.constants"
 import type { FormData } from "./wizard.types"
+
+// ── ChangedTag — improve mode marks fields that differ from the record ───────
+
+export function ChangedTag() {
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12.5px] font-semibold"
+      style={{ background: T.accent.chip, color: T.accent.primary }}
+    >
+      <Icon icon="mdi:pencil" width={12} aria-hidden="true" />
+      Changed
+    </span>
+  )
+}
+
+/** Wraps a field so a changed one carries an indigo rule and tag. */
+function FieldFrame({
+  changed,
+  children,
+}: {
+  changed: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "8px",
+        ...(changed
+          ? {
+              borderLeft: `3px solid ${T.accent.primary}`,
+              paddingLeft: "14px",
+              marginLeft: "-17px",
+            }
+          : {}),
+      }}
+    >
+      {children}
+    </div>
+  )
+}
 
 // ── RequiredTag — subtle rust "required" marker next to a label ──────────────
 
@@ -60,12 +104,14 @@ export function Field({
   autoComplete?: string
 }) {
   const hintId = hint ? `${id}-hint` : undefined
+  const changed = useIsChanged(id)
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+    <FieldFrame changed={changed}>
       <label htmlFor={id} style={fieldLabelStyle}>
         {label}
         {required && <RequiredTag />}
+        {changed && <ChangedTag />}
       </label>
       <input
         id={id}
@@ -85,7 +131,7 @@ export function Field({
           {hint}
         </p>
       )}
-    </div>
+    </FieldFrame>
   )
 }
 
@@ -106,12 +152,15 @@ export function WizardSelect({
   options: { value: string; label: string }[]
   required?: boolean
 }) {
+  const changed = useIsChanged(id)
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+    <FieldFrame changed={changed}>
       {/* Radix Select doesn't support htmlFor; aria-labelledby used instead */}
       <span id={`${id}-label`} style={fieldLabelStyle}>
         {label}
         {required && <RequiredTag />}
+        {changed && <ChangedTag />}
       </span>
       <RadixSelect
         value={value}
@@ -155,7 +204,7 @@ export function WizardSelect({
           ))}
         </SelectContent>
       </RadixSelect>
-    </div>
+    </FieldFrame>
   )
 }
 
@@ -181,12 +230,14 @@ export function TextareaField({
   required?: boolean
 }) {
   const hintId = hint ? `${id}-hint` : undefined
+  const changed = useIsChanged(id)
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+    <FieldFrame changed={changed}>
       <label htmlFor={id} style={fieldLabelStyle}>
         {label}
         {required && <RequiredTag />}
+        {changed && <ChangedTag />}
       </label>
       <textarea
         id={id}
@@ -203,7 +254,7 @@ export function TextareaField({
           {hint}
         </p>
       )}
-    </div>
+    </FieldFrame>
   )
 }
 
@@ -215,13 +266,17 @@ export function TagSelector({
   value,
   onChange,
   hint,
+  fieldKey,
 }: {
   label: string
   endpoint: string
   value: string[]
   onChange: (ids: string[]) => void
   hint?: string
+  /** The form field this selects, for improve-mode change marking. */
+  fieldKey?: keyof FormData
 }) {
+  const changed = useIsChanged(fieldKey ?? "services") && !!fieldKey
   const [options, setOptions] = useState<
     { documentId: string; name: string }[]
   >([])
@@ -262,9 +317,23 @@ export function TagSelector({
     <div
       role="group"
       aria-label={label}
-      style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "10px",
+        ...(changed
+          ? {
+              borderLeft: `3px solid ${T.accent.primary}`,
+              paddingLeft: "14px",
+              marginLeft: "-17px",
+            }
+          : {}),
+      }}
     >
-      <span style={fieldLabelStyle}>{label}</span>
+      <span style={fieldLabelStyle}>
+        {label}
+        {changed && <ChangedTag />}
+      </span>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
         {selected.map((o) => (
           <button

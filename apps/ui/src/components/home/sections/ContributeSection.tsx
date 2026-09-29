@@ -303,7 +303,7 @@ export function ContributeSection({
             {tasks.length === 0 ? (
               <li>
                 <GlobalLink
-                  href="/contribute/add"
+                  href="/contribute/index/new"
                   className={ROW}
                   style={{ borderColor: T.border.hi, background: T.bg.surface }}
                 >

@@ -57,7 +57,7 @@ export function RegionLibraryList({
       ) : null}
 
       <GlobalLink
-        href="/contribute/add"
+        href="/contribute/index/new"
         className="flex items-center gap-3.5 rounded-[20px] border border-dashed px-5 py-4 transition-colors hover:border-(--t-accent-primary) hover:bg-white"
         style={{ borderColor: T.border.hi }}
       >

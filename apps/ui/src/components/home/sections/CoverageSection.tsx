@@ -61,7 +61,7 @@ export function CoverageSection({
           </p>
         ) : null}
         <GlobalLink
-          href="/contribute/add"
+          href="/contribute/index/new"
           className="mt-6 inline-block rounded-full border bg-white px-5 py-3 font-semibold no-underline transition-colors hover:border-(--t-accent-primary)"
           style={{ borderColor: T.border.hi, color: T.ink.base }}
         >

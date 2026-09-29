@@ -185,7 +185,7 @@ export function LibraryAreaSection({
         <p className="m-0 text-[14.5px]" style={{ color: T.ink.dim }}>
           No other libraries in the index nearby yet.{" "}
           <Link
-            href="/contribute/add"
+            href="/contribute/index/new"
             className="font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >

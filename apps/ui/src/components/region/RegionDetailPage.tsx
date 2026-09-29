@@ -229,7 +229,7 @@ export function RegionDetailPage({
               >
                 Search libraries in {name}
               </LocationHeroAction>
-              <LocationHeroAction href="/contribute/add" icon="mdi:plus">
+              <LocationHeroAction href="/contribute/index/new" icon="mdi:plus">
                 Add a library
               </LocationHeroAction>
             </>

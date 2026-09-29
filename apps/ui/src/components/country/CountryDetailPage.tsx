@@ -161,7 +161,7 @@ export function CountryDetailPage({
               >
                 Search libraries in {name}
               </LocationHeroAction>
-              <LocationHeroAction href="/contribute/add" icon="mdi:plus">
+              <LocationHeroAction href="/contribute/index/new" icon="mdi:plus">
                 Add a library
               </LocationHeroAction>
             </>
@@ -191,7 +191,7 @@ export function CountryDetailPage({
                 title={labels.plural}
                 description={country.systemDescription}
                 noun={{ singular: labels.singular, plural: pluralLower }}
-                addHref="/contribute/add"
+                addHref="/contribute/index/new"
                 items={regions.map((r) => ({
                   slug: r.slug,
                   name: r.name,

@@ -1,6 +1,6 @@
 import type React from "react"
 
-import { emptyOpeningTimes, type OpeningTimesData } from "./OpeningTimesEditor"
+import { emptyOpeningTimes, type OpeningTimesData } from "./opening-times.types"
 
 export interface SocialLink {
   platform: string
@@ -155,12 +155,30 @@ export type StepProps = {
   setFormData: React.Dispatch<React.SetStateAction<FormData>>
 }
 
-export interface AddLibraryWizardProps {
-  sessionUser: { id: string; name: string | null; email: string }
-  /** Edit mode: pre-populate the form with an existing library's data */
-  initialData?: Partial<FormData>
-  /** documentId of the library being edited (sets submissionType = library_edit) */
-  targetDocumentId?: string
-  /** slug of the library being edited */
-  targetSlug?: string
+/** The record the Index editor is improving. */
+export interface WizardTarget {
+  documentId: string
+  slug: string
+  name: string
+  entityRef: string | null
+  /** The signed-in user holds a claim on it: edits go in as `library_edit`. */
+  isClaimed: boolean
+  /** Record-completeness keys the record already has (see computeCompleteness). */
+  completeSections: string[]
 }
+
+export interface IndexRecordWizardProps {
+  /** `new` adds a library; `improve` edits the given target. */
+  mode: "new" | "improve"
+  /** Improve mode: the record's current values. New mode: optional prefill. */
+  initialData?: Partial<FormData>
+  target?: WizardTarget
+}
+
+/** Form keys that aren't library fields: they describe the submission itself. */
+export const SUBMISSION_META_KEYS = [
+  "editSummary",
+  "evidenceType",
+  "evidenceUrl",
+  "note",
+] as const satisfies readonly (keyof FormData)[]

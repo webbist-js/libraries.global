@@ -18,16 +18,16 @@ const NAV_ITEMS = [
     icon: "mdi:account-group-outline",
   },
   {
-    id: "add",
-    href: "/contribute/add",
-    label: "Add to the index",
-    icon: "mdi:map-marker-plus-outline",
+    id: "index",
+    href: "/contribute/index",
+    label: "Index editor",
+    icon: "mdi:map-marker-outline",
   },
   {
-    id: "edit",
-    href: "/contribute/edit",
-    label: "Edit the index",
-    icon: "mdi:pencil-outline",
+    id: "knowledge",
+    href: "/contribute/knowledge",
+    label: "Knowledge editor",
+    icon: "mdi:book-open-page-variant-outline",
   },
   {
     id: "submissions",
@@ -46,21 +46,21 @@ const NAV_ITEMS = [
 /** Sub-routes that belong under a tab without being the tab's own page. */
 const SEGMENT_TO_TAB: Record<string, (typeof NAV_ITEMS)[number]["id"]> = {
   community: "community",
-  add: "add",
-  claim: "add",
-  edit: "edit",
-  correct: "edit",
+  index: "index",
+  claim: "index",
+  correct: "index",
+  knowledge: "knowledge",
   submissions: "submissions",
   membership: "membership",
 }
 
-function activeTab(pathname: string): string | null {
+export function activeContributeTab(pathname: string): string | null {
   const match = /\/contribute(?:\/([^/?#]+))?/.exec(pathname)
   if (!match) return null
   const segment = match[1]
   if (!segment) return "hub"
 
-  // docs/, events/ etc. sit in the section but under no tab
+  // events/ sits in the section but under no tab
   return SEGMENT_TO_TAB[segment] ?? null
 }
 
@@ -70,7 +70,7 @@ export function ContributeNavBar() {
 
   return (
     <SectionTabs
-      activeId={activeTab(pathname)}
+      activeId={activeContributeTab(pathname)}
       label="Contribute"
       tabs={NAV_ITEMS}
     />

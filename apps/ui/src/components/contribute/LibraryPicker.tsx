@@ -99,7 +99,17 @@ export function LibraryPicker({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h3 className="m-0 text-[20px] font-bold" style={{ color: T.ink.base }}>
+        <h3
+          className="m-0"
+          style={{
+            fontFamily: T.font.serif,
+            fontSize: "clamp(28px,3vw,36px)",
+            fontWeight: 500,
+            lineHeight: 1.1,
+            letterSpacing: "-0.015em",
+            color: T.ink.base,
+          }}
+        >
           Which library is this about?
         </h3>
         {publishedCount ? (
@@ -210,7 +220,7 @@ export function LibraryPicker({
                 >
                   No records match. Try another spelling, or{" "}
                   <Link
-                    href="/contribute/add"
+                    href="/contribute/index/new"
                     style={{ color: T.accent.primary }}
                   >
                     add it as a new library
@@ -249,7 +259,7 @@ export function LibraryPicker({
           >
             Records with missing details
           </p>
-          <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 xl:grid-cols-3">
+          <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 2xl:grid-cols-4">
             {suggestions.map((s) => (
               <li key={s.slug}>
                 <button
@@ -259,7 +269,7 @@ export function LibraryPicker({
                   }
                   className="flex h-full w-full flex-col items-start gap-1 rounded-[16px] border p-4 text-left transition-colors hover:border-(--t-accent-primary)"
                   style={{
-                    background: T.bg.surface,
+                    background: T.bg.deep,
                     borderColor: T.border.line,
                   }}
                 >

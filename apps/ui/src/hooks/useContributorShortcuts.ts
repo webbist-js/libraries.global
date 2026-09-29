@@ -10,8 +10,6 @@ import {
   type ContributorShortcutGroup,
 } from "@/lib/contributor-shortcuts"
 
-const CMS_URL = process.env.NEXT_PUBLIC_STRAPI_URL ?? null
-
 const noop = () => () => {}
 
 /**
@@ -47,9 +45,5 @@ export function useContributorShortcuts(): ContributorShortcutGroup[] {
 
   if (!hydrated) return []
 
-  return buildContributorShortcuts({
-    capabilities,
-    claimedLibraries,
-    cmsUrl: CMS_URL,
-  })
+  return buildContributorShortcuts({ capabilities, claimedLibraries })
 }

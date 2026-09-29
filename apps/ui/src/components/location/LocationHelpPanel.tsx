@@ -34,7 +34,7 @@ export function locationHelpActions({
       tintFg: T.accent.primary,
       title: "Add a missing library",
       description: "With a website or other source.",
-      href: "/contribute/add",
+      href: "/contribute/index/new",
     },
     {
       icon: "mdi:clock-outline",

@@ -1089,6 +1089,8 @@ export type WikiArticleSummary = {
   section?: WikiSection | null
   category?: CategorySummary | null
   articleStatus?: WikiArticleStatus | null
+  /** Docs section keys from the editor, home first. */
+  docsSections?: string[] | null
 }
 
 export type WikiContributor = {
@@ -1158,6 +1160,7 @@ export async function fetchDocsWikiArticles(locale: Locale) {
         "author",
         "publishedAt",
         "updatedAt",
+        "docsSections",
       ] as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       sort: ["updatedAt:desc"] as any,
@@ -1501,6 +1504,124 @@ export async function fetchLibraryCatalogue(
   } catch (e: unknown) {
     logNonBlockingError({
       message: `Error fetching catalogue for library '${documentId}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return null
+  }
+}
+
+// ── Index editor ───────────────────────────────────────────────────────────
+
+export type LibraryForEditing = Record<string, unknown> & {
+  documentId: string
+  slug?: string | null
+  name?: string | null
+  entityRef?: string | null
+  continent?: { documentId: string; name?: string | null } | null
+  country?: { documentId: string; name?: string | null } | null
+  region?: { documentId: string; name?: string | null } | null
+  area?: { documentId: string; name?: string | null } | null
+  services?: { documentId: string }[] | null
+  amenities?: { documentId: string }[] | null
+  accessibility?: { documentId: string }[] | null
+  socialLinks?:
+    | { platform: string; url: string; label?: string | null }[]
+    | null
+  heroImage?: MediaItem | null
+}
+
+/**
+ * A published library with everything the Index editor prefills: the atlas
+ * hierarchy, facility relations, social links, hours and the hero image.
+ */
+export async function fetchLibraryForEditing(slug: string, locale: Locale) {
+  try {
+    return (await PublicStrapiClient.fetchOneBySlug(
+      "api::library.library",
+      slug,
+      {
+        locale,
+        status: "published",
+        populate: {
+          heroImage: { fields: ["url", "alternativeText"] },
+          continent: { fields: ["name", "slug"] },
+          country: { fields: ["name", "slug"] },
+          region: { fields: ["name", "slug"] },
+          area: { fields: ["name", "slug"] },
+          services: { fields: ["name"] },
+          amenities: { fields: ["name"] },
+          accessibility: { fields: ["name"] },
+          socialLinks: true,
+        },
+      } as Parameters<typeof PublicStrapiClient.fetchOneBySlug>[2]
+    )) as APIResponse<LibraryForEditing>
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching library '${slug}' for editing`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+  }
+}
+
+// ── Knowledge editor ───────────────────────────────────────────────────────
+
+export type ArticleForEditing = {
+  documentId: string
+  slug: string
+  locale?: string | null
+  title?: string | null
+  summary?: string | null
+  body?: unknown
+  docsSections?: unknown
+  section?: { slug?: string | null } | null
+  topics?:
+    | { documentId: string; name?: string | null; slug?: string | null }[]
+    | null
+  libraries?:
+    | { documentId: string; name?: string | null; slug?: string | null }[]
+    | null
+  localizations?: { locale?: string | null }[] | null
+  contributors?: { username?: string | null }[] | null
+  updatedAt?: string | null
+}
+
+/**
+ * One Knowledge or Journal article with everything the editor prefills:
+ * body, taxonomy, tags and which languages it already exists in.
+ */
+export async function fetchArticleForEditing(
+  kind: "knowledge" | "journal",
+  slug: string,
+  locale: Locale
+) {
+  const path = kind === "knowledge" ? "/wiki-articles" : "/blog-articles"
+  try {
+    const res = (await PublicStrapiClient.fetchAPI(path, {
+      locale,
+      status: "published",
+      filters: { slug: { $eq: slug } } as any,
+      populate: {
+        body: { populate: "*" },
+        section: { fields: ["name", "slug"] },
+        topics: { fields: ["name", "slug"] },
+        libraries: { fields: ["name", "slug"] },
+        localizations: { fields: ["locale"] },
+        contributors: { fields: ["username"] },
+      } as any,
+      pagination: { pageSize: 1 } as any,
+    })) as APIResponseCollection<ArticleForEditing>
+
+    return res.data?.[0] ?? null
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching ${kind} article '${slug}' for editing`,
       error: {
         error: e instanceof Error ? e.message : String(e),
         stack: e instanceof Error ? e.stack : undefined,

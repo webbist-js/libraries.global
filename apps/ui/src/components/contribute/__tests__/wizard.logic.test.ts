@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest"
 import {
   blockerFor,
   buildSubmission,
+  CATEGORIES,
+  CATEGORY_OPTIONS,
+  DRAWER_STEPS,
   draftKey,
   EMPTY_DRAFT,
   hubHref,
@@ -24,7 +27,47 @@ describe("STEP_LABELS", () => {
   })
 })
 
+describe("DRAWER_STEPS", () => {
+  it("has a label, hint, title and lead for each of the three steps", () => {
+    for (const copy of Object.values(DRAWER_STEPS)) expect(copy).toHaveLength(3)
+  })
+})
+
+describe("CATEGORY_OPTIONS", () => {
+  it("gives every category an icon and a placeholder, with no repeats", () => {
+    expect(new Set(CATEGORIES).size).toBe(CATEGORY_OPTIONS.length)
+    for (const c of CATEGORY_OPTIONS) {
+      expect(c.icon).toMatch(/^mdi:/)
+      expect(c.placeholder.length).toBeGreaterThan(0)
+    }
+  })
+
+  it("keeps the categories the library page links to", () => {
+    for (const linked of [
+      "Opening hours",
+      "Address or location",
+      "Accessibility",
+      "Collections",
+      "Something else",
+    ])
+      expect(CATEGORIES).toContain(linked)
+  })
+})
+
 describe("blockerFor", () => {
+  it("asks the drawer for a category first, not a library", () => {
+    const none = draft({ category: "" })
+    expect(blockerFor("correction", 1, library, none, true)).toBe(
+      "Pick what needs changing to continue."
+    )
+    expect(
+      blockerFor("correction", 1, library, draft({ category: "Name" }), true)
+    ).toBeNull()
+    expect(blockerFor("correction", 2, library, none, true)).toBe(
+      "Describe what’s correct to continue."
+    )
+  })
+
   it("asks for a library first", () => {
     expect(blockerFor("correction", 1, null, EMPTY_DRAFT)).toBe(
       "Choose a library to continue."

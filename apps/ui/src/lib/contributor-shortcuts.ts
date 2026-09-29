@@ -10,7 +10,7 @@ export type ContributorShortcut = {
   href: string
   /** Iconify name. */
   icon: string
-  /** Opens outside the site (the Strapi admin), in a new tab. */
+  /** Opens outside the site, in a new tab. */
   external?: boolean
 }
 
@@ -27,9 +27,6 @@ export type ShortcutLibrary = {
 
 const MAX_NAMED_LIBRARIES = 3
 
-const JOURNAL_ADMIN_PATH =
-  "/admin/content-manager/collection-types/api::blog-article.blog-article"
-
 function libraryGroup(
   capabilities: readonly string[],
   claimedLibraries: readonly ShortcutLibrary[]
@@ -41,20 +38,20 @@ function libraryGroup(
     .slice(0, MAX_NAMED_LIBRARIES)
     .map((lib) => ({
       label: `Edit ${lib.name}`,
-      href: `/contribute/edit/${encodeURIComponent(lib.slug)}`,
+      href: `/contribute/index/${encodeURIComponent(lib.slug)}`,
       icon: "mdi:pencil-outline",
     }))
 
   if (named.length === 0) {
     items.push({
       label: "Edit your library",
-      href: "/contribute/edit",
+      href: "/contribute/index",
       icon: "mdi:pencil-outline",
     })
   } else if (named.length > MAX_NAMED_LIBRARIES) {
     items.push({
       label: "Edit another library",
-      href: "/contribute/edit",
+      href: "/contribute/index",
       icon: "mdi:pencil-outline",
     })
   }
@@ -68,7 +65,7 @@ function libraryGroup(
   }
   items.push({
     label: "Add a library",
-    href: "/contribute/add",
+    href: "/contribute/index/new",
     icon: "mdi:map-marker-plus-outline",
   })
 
@@ -79,58 +76,63 @@ function libraryGroup(
   }
 }
 
-function knowledgeGroup(cmsUrl: string | null): ContributorShortcutGroup {
-  const items: ContributorShortcut[] = [
-    {
-      label: "Write a Knowledge article",
-      href: "/contribute/knowledge/new",
-      icon: "mdi:file-document-plus-outline",
-    },
-    {
-      label: "Edit Knowledge articles",
-      href: "/knowledge",
-      icon: "mdi:file-document-edit-outline",
-    },
-  ]
+/** Knowledge editors curate the knowledge base; Journal editors the Journal. */
+function knowledgeGroup(
+  capabilities: readonly string[]
+): ContributorShortcutGroup | null {
+  const docs = capabilities.includes("docs.directEdit")
+  const journal = capabilities.includes("journal.directEdit")
+  if (!docs && !journal) return null
 
-  // Journal authoring lives in the Strapi admin (spec D-C3).
-  if (cmsUrl) {
+  const items: ContributorShortcut[] = []
+  if (docs)
+    items.push(
+      {
+        label: "Write a Knowledge article",
+        href: "/contribute/knowledge/new?type=knowledge",
+        icon: "mdi:file-document-plus-outline",
+      },
+      {
+        label: "Edit Knowledge articles",
+        href: "/contribute/knowledge",
+        icon: "mdi:file-document-edit-outline",
+      }
+    )
+  if (journal)
     items.push(
       {
         label: "Write a Journal article",
-        href: `${cmsUrl}${JOURNAL_ADMIN_PATH}/create`,
+        href: "/contribute/knowledge/new?type=journal",
         icon: "mdi:newspaper-plus",
-        external: true,
       },
       {
         label: "Edit Journal articles",
-        href: `${cmsUrl}${JOURNAL_ADMIN_PATH}`,
+        href: "/contribute/knowledge?type=journal",
         icon: "mdi:newspaper-variant-outline",
-        external: true,
       }
     )
-  }
 
-  return { key: "knowledge", title: "Knowledge & Journal", items }
+  return {
+    key: "knowledge",
+    title:
+      docs && journal ? "Knowledge & Journal" : docs ? "Knowledge" : "Journal",
+    items,
+  }
 }
 
 export function buildContributorShortcuts({
   capabilities,
   claimedLibraries,
-  cmsUrl,
 }: {
   capabilities: readonly string[]
   claimedLibraries: readonly ShortcutLibrary[]
-  /** Public Strapi origin; without it the Journal links are left out. */
-  cmsUrl?: string | null
 }): ContributorShortcutGroup[] {
   const groups: ContributorShortcutGroup[] = []
   // Library editors: anyone holding a claim (spec D-C2).
   if (capabilities.includes("submit.libraryEdit"))
     groups.push(libraryGroup(capabilities, claimedLibraries))
-  // Doc editors: wiki_editor and editorial_board curate Knowledge and the Journal.
-  if (capabilities.includes("docs.directEdit"))
-    groups.push(knowledgeGroup(cmsUrl?.replace(/\/+$/, "") || null))
+  const knowledge = knowledgeGroup(capabilities)
+  if (knowledge) groups.push(knowledge)
 
   return groups
 }

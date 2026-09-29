@@ -371,18 +371,21 @@ function StepVisit({ f, set, setFormData }: StepProps) {
       <TagSelector
         label="Services"
         endpoint="/api/relations/services"
+        fieldKey="services"
         value={f.services}
         onChange={(ids) => setFormData((prev) => ({ ...prev, services: ids }))}
       />
       <TagSelector
         label="Amenities"
         endpoint="/api/relations/amenities"
+        fieldKey="amenities"
         value={f.amenities}
         onChange={(ids) => setFormData((prev) => ({ ...prev, amenities: ids }))}
       />
       <TagSelector
         label="Accessibility features"
         endpoint="/api/relations/accessibility"
+        fieldKey="accessibility"
         value={f.accessibility}
         onChange={(ids) =>
           setFormData((prev) => ({ ...prev, accessibility: ids }))

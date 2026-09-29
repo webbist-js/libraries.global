@@ -12,6 +12,37 @@ const TYPE_MAP: Record<string, string> = {
   countries: "countries",
   regions: "regions",
   areas: "areas",
+  "blog-sections": "blog-sections",
+}
+
+/** Curated, approved topics from the topics plugin (its own route shape). */
+async function approvedTopics() {
+  const res = await fetch(`${STRAPI}/api/topics/approved`, {
+    next: { revalidate: 300 },
+  })
+  if (!res.ok) return NextResponse.json({ data: [] })
+  const json = (await res.json()) as {
+    data?: { documentId?: string; name?: string; slug?: string }[]
+  }
+
+  return NextResponse.json({
+    data: (json.data ?? [])
+      .filter((t) => t.name && t.slug)
+      .map((t) => ({ documentId: t.documentId, name: t.name, slug: t.slug })),
+  })
+}
+
+/** Strapi's configured locales, for the article editor's language picker. */
+async function locales() {
+  const res = await fetch(`${STRAPI}/api/content-moderation/locales`, {
+    next: { revalidate: 3600 },
+  })
+  if (!res.ok) return NextResponse.json({ data: [] })
+  const json = (await res.json()) as {
+    data?: { code: string; name: string; isDefault: boolean }[]
+  }
+
+  return NextResponse.json({ data: json.data ?? [] })
 }
 
 export async function GET(
@@ -19,6 +50,8 @@ export async function GET(
   { params }: { params: Promise<{ type: string }> }
 ) {
   const { type } = await params
+  if (type === "topics") return approvedTopics()
+  if (type === "locales") return locales()
   const strapiPlural = TYPE_MAP[type]
   if (!strapiPlural)
     return NextResponse.json({ error: "Not found" }, { status: 404 })
@@ -38,7 +71,9 @@ export async function GET(
   }
 
   const limit = type === "countries" ? 300 : 500
-  const url = `${STRAPI}/api/${strapiPlural}?sort=name:asc&pagination[limit]=${limit}&status=published&fields[0]=name&fields[1]=documentId${filterParam}`
+  const status = type === "blog-sections" ? "" : "&status=published"
+  const extraFields = type === "blog-sections" ? "&fields[2]=slug" : ""
+  const url = `${STRAPI}/api/${strapiPlural}?sort=name:asc&pagination[limit]=${limit}${status}&fields[0]=name&fields[1]=documentId${extraFields}${filterParam}`
 
   const res = await fetch(url, {
     headers: {

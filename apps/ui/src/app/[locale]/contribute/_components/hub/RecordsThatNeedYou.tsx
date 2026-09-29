@@ -196,7 +196,7 @@ export function RecordsThatNeedYou({
           </dl>
 
           <GlobalLink
-            href="/contribute/add"
+            href="/contribute/index/new"
             className="mt-5 self-start rounded-full px-5 py-2.5 text-[14px] font-semibold transition-opacity hover:opacity-90"
             style={{ background: "#fff", color: T.ink.base }}
           >

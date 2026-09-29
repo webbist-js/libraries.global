@@ -15,8 +15,8 @@ import {
   fieldHintStyle,
   fieldInputStyle,
   fieldLabelStyle,
-} from "../../add/_components/wizard.constants"
-import { RequiredTag } from "../../add/_components/WizardFields"
+} from "../../index/_components/wizard.constants"
+import { RequiredTag } from "../../index/_components/WizardFields"
 
 interface ClaimLibraryFormProps {
   libraryDocumentId: string

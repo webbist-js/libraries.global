@@ -42,15 +42,15 @@ export function LocationContributeCTA({
   const primaryHref = isSignedIn
     ? isLibrary
       ? correctionPath
-      : `/contribute/add`
-    : `/auth/signin?callbackUrl=${encodeURIComponent(isLibrary ? correctionPath : `/contribute/add`)}`
+      : `/contribute/index/new`
+    : `/auth/signin?callbackUrl=${encodeURIComponent(isLibrary ? correctionPath : `/contribute/index/new`)}`
 
   const secondaryHref = isLibrary
     ? isSignedIn
       ? librarySlug
-        ? `/contribute/edit/${librarySlug}`
-        : `/contribute/edit`
-      : `/auth/signin?callbackUrl=${encodeURIComponent(librarySlug ? `/contribute/edit/${librarySlug}` : `/contribute/edit`)}`
+        ? `/contribute/index/${librarySlug}`
+        : `/contribute/index`
+      : `/auth/signin?callbackUrl=${encodeURIComponent(librarySlug ? `/contribute/index/${librarySlug}` : `/contribute/index`)}`
     : "/knowledge/contributing/how-to-contribute"
 
   return (

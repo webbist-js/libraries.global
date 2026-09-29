@@ -18,33 +18,49 @@ describe("buildContributorShortcuts", () => {
     ).toEqual([])
   })
 
-  it("links doc editors to the Knowledge editor, and to the CMS for the Journal", () => {
+  it("links Knowledge editors to the Knowledge editor only", () => {
     const groups = buildContributorShortcuts({
       capabilities: ["docs.directEdit"],
       claimedLibraries: [],
-      cmsUrl: "https://cms.example.org/",
     })
+    expect(groups[0]?.title).toBe("Knowledge")
+    expect(hrefs(groups)).toEqual([
+      [
+        "knowledge",
+        ["/contribute/knowledge/new?type=knowledge", "/contribute/knowledge"],
+      ],
+    ])
+    expect(groups[0]?.items.some((i) => i.external)).toBe(false)
+  })
+
+  it("links Journal editors to the Journal side of the editor only", () => {
+    const groups = buildContributorShortcuts({
+      capabilities: ["journal.directEdit"],
+      claimedLibraries: [],
+    })
+    expect(groups[0]?.title).toBe("Journal")
     expect(hrefs(groups)).toEqual([
       [
         "knowledge",
         [
-          "/contribute/knowledge/new",
-          "/knowledge",
-          "https://cms.example.org/admin/content-manager/collection-types/api::blog-article.blog-article/create",
-          "https://cms.example.org/admin/content-manager/collection-types/api::blog-article.blog-article",
+          "/contribute/knowledge/new?type=journal",
+          "/contribute/knowledge?type=journal",
         ],
       ],
     ])
-    expect(groups[0]?.items.filter((i) => i.external)).toHaveLength(2)
   })
 
-  it("leaves the Journal out when no CMS URL is configured", () => {
+  it("gives the editorial board both, Knowledge first", () => {
     const groups = buildContributorShortcuts({
-      capabilities: ["docs.directEdit"],
+      capabilities: ["docs.directEdit", "journal.directEdit"],
       claimedLibraries: [],
     })
-    expect(hrefs(groups)).toEqual([
-      ["knowledge", ["/contribute/knowledge/new", "/knowledge"]],
+    expect(groups[0]?.title).toBe("Knowledge & Journal")
+    expect(groups[0]?.items.map((i) => i.label)).toEqual([
+      "Write a Knowledge article",
+      "Edit Knowledge articles",
+      "Write a Journal article",
+      "Edit Journal articles",
     ])
   })
 
@@ -58,10 +74,10 @@ describe("buildContributorShortcuts", () => {
     })
     expect(groups[0]?.title).toBe("Your libraries")
     expect(groups[0]?.items.map((i) => [i.label, i.href])).toEqual([
-      ["Edit British Library", "/contribute/edit/british-library"],
-      ["Edit Bodleian", "/contribute/edit/bodleian"],
+      ["Edit British Library", "/contribute/index/british-library"],
+      ["Edit Bodleian", "/contribute/index/bodleian"],
       ["Connect an event feed", "/contribute/events"],
-      ["Add a library", "/contribute/add"],
+      ["Add a library", "/contribute/index/new"],
     ])
   })
 
@@ -72,7 +88,7 @@ describe("buildContributorShortcuts", () => {
     })
     expect(groups[0]?.title).toBe("Your library")
     expect(hrefs(groups)).toEqual([
-      ["libraries", ["/contribute/edit/bodleian", "/contribute/add"]],
+      ["libraries", ["/contribute/index/bodleian", "/contribute/index/new"]],
     ])
   })
 
@@ -83,7 +99,7 @@ describe("buildContributorShortcuts", () => {
     })
     expect(groups[0]?.items[0]).toMatchObject({
       label: "Edit your library",
-      href: "/contribute/edit",
+      href: "/contribute/index",
     })
   })
 
@@ -97,11 +113,11 @@ describe("buildContributorShortcuts", () => {
       [
         "libraries",
         [
-          "/contribute/edit/a",
-          "/contribute/edit/b",
-          "/contribute/edit/c",
-          "/contribute/edit",
-          "/contribute/add",
+          "/contribute/index/a",
+          "/contribute/index/b",
+          "/contribute/index/c",
+          "/contribute/index",
+          "/contribute/index/new",
         ],
       ],
     ])

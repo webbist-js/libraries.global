@@ -143,7 +143,7 @@ export async function ContinentDetailPage({
               >
                 Search libraries in {name}
               </LocationHeroAction>
-              <LocationHeroAction href="/contribute/add" icon="mdi:plus">
+              <LocationHeroAction href="/contribute/index/new" icon="mdi:plus">
                 Add a library
               </LocationHeroAction>
             </>
@@ -173,7 +173,7 @@ export async function ContinentDetailPage({
                 title="Countries"
                 description={countriesNote}
                 noun={{ singular: "country", plural: "countries" }}
-                addHref="/contribute/add"
+                addHref="/contribute/index/new"
                 items={countries.map((c) => ({
                   slug: c.slug,
                   name: c.name,

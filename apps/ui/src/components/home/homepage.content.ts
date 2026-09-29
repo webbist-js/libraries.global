@@ -81,7 +81,7 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
     primaryLabel: "Start contributing",
     primaryHref: "/contribute",
     secondaryLabel: "Add a missing library",
-    secondaryHref: "/contribute/add",
+    secondaryHref: "/contribute/index/new",
   },
 
   communitySteps: [
