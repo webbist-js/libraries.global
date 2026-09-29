@@ -1,1664 +1,409 @@
-import { Box, Button, Flex, Tabs, Typography } from "@strapi/design-system"
-import { useFetchClient, useNotification } from "@strapi/strapi/admin"
+import {
+  Alert,
+  Badge,
+  Box,
+  Button,
+  EmptyStateLayout,
+  Flex,
+  IconButton,
+  Loader,
+  Searchbar,
+  SingleSelect,
+  SingleSelectOption,
+  Table,
+  Tabs,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+  Typography,
+} from "@strapi/design-system"
+import { ArrowClockwise, Eye } from "@strapi/icons"
+import { EmptyDocuments } from "@strapi/icons/symbols"
+import { Layouts, useFetchClient, useNotification } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
-import { WikiEditDiffPanel } from "../components/WikiEditDiffPanel"
-
-// ── Inline SVG icons ──────────────────────────────────────────────────────────
-
-function IconCheck() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  )
-}
-function IconX() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  )
-}
-function IconInfo() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <line x1="12" y1="8" x2="12" y2="12" />
-      <line x1="12" y1="16" x2="12.01" y2="16" />
-    </svg>
-  )
-}
-function IconChevron({ open }: { open: boolean }) {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      style={{
-        transform: open ? "rotate(180deg)" : "rotate(0deg)",
-        transition: "transform 0.2s",
-      }}
-    >
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  )
-}
-function IconLoader() {
-  return (
-    <span
-      style={{ display: "inline-block", animation: "spin 1s linear infinite" }}
-    >
-      ⟳
-    </span>
-  )
-}
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-interface UploadedImage {
-  strapiId: number
-  url: string
-  isHero: boolean
-}
-
-interface SocialLink {
-  platform: string
-  url: string
-  label?: string
-}
-
-type Submission = {
-  documentId: string
-  submissionType: string
-  status: string
-  targetEntityType?: string
-  targetSlug?: string
-  targetDocumentId?: string
-  fields?: Record<string, unknown>
-  draftData?: Record<string, unknown> | null
-  note?: string
-  reviewNote?: string
-  submittedByEmail: string
-  submittedByName?: string
-  submittedByUserId: string
-  reviewedAt?: string
-  createdAt: string
-  editSummary?: string
-  evidenceType?: string
-  evidenceUrl?: string
-}
-
-// ── Config ────────────────────────────────────────────────────────────────────
-
-const STATUS_TABS = [
-  { id: "pending", label: "Pending" },
-  { id: "needs_info", label: "Needs Info" },
-  { id: "approved", label: "Approved" },
-  { id: "rejected", label: "Rejected" },
-]
-
-const TYPE_LABELS: Record<string, string> = {
-  correction: "Correction",
-  new_library: "New Library",
-  library_edit: "Library Edit",
-  library_claim: "Library Claim",
-  wiki_edit: "Wiki Edit",
-  blog_submission: "Blog",
-  topic_suggestion: "Topic",
-}
-
-// Strapi DS badge colors: neutral, primary, success, warning, danger, secondary
-const TYPE_COLORS: Record<
-  string,
-  { bg: string; text: string; border: string }
-> = {
-  new_library: { bg: "#eaf5ff", text: "#0c75af", border: "#b8dff8" },
-  library_edit: { bg: "#f0f0ff", text: "#4945ff", border: "#c4c4ff" },
-  library_claim: { bg: "#fff3e0", text: "#d97706", border: "#fcd34d" },
-  correction: { bg: "#ffeaea", text: "#d02b20", border: "#f5c0be" },
-  wiki_edit: { bg: "#eafbf2", text: "#1b7c3a", border: "#a5dfc0" },
-  blog_submission: { bg: "#f6ecfc", text: "#7b2d8b", border: "#dbb8eb" },
-  topic_suggestion: { bg: "#f0f8ee", text: "#2d6a2a", border: "#b3d9b0" },
-}
-
-// ── Field grouping for FieldsPanel ────────────────────────────────────────────
-
-const FIELD_GROUPS: { label: string; keys: string[] }[] = [
-  {
-    label: "Identity",
-    keys: [
-      "name",
-      "shortName",
-      "officialName",
-      "libraryType",
-      "operatorType",
-      "operationalStatus",
-      "closureReason",
-      "summary",
-    ],
-  },
-  {
-    label: "Location",
-    keys: [
-      "streetAddress",
-      "district",
-      "city",
-      "postalCode",
-      "country",
-      "lat",
-      "lng",
-    ],
-  },
-  {
-    label: "Contact & Web",
-    keys: [
-      "website",
-      "email",
-      "phone",
-      "catalogueUrl",
-      "planVisitUrl",
-      "bookingUrl",
-      "membershipUrl",
-      "virtualTourUrl",
-      "virtualTourEmbed",
-      "donationUrl",
-      "iiifEndpoint",
-    ],
-  },
-  {
-    label: "Visit",
-    keys: [
-      "admissionInfo",
-      "transitInfo",
-      "languagesServed",
-      "accessibilityNotes",
-      "visitNotes",
-    ],
-  },
-  {
-    label: "Collections",
-    keys: [
-      "collectionSize",
-      "collectionTypes",
-      "specialCollections",
-      "classificationSystem",
-    ],
-  },
-  {
-    label: "Building & History",
-    keys: [
-      "foundedYear",
-      "openedYear",
-      "closedYear",
-      "architect",
-      "architecturalStyle",
-      "buildingInfo",
-    ],
-  },
-  {
-    label: "Media",
-    keys: ["imageUrl", "imageNote", "imageCredit"],
-  },
-]
-
-// Fields that have dedicated render paths and must not appear in "Other"
-const EXCLUDE_FROM_OTHER = new Set([
-  "continentDocumentId",
-  "countryDocumentId",
-  "regionDocumentId",
-  "areaDocumentId",
-  "uploadedImages",
-  "socialLinks",
-  "services",
-  "amenities",
-  "accessibility",
-  "openingTimes",
-  "source",
-  "sourceUrl",
-])
-
-const EVIDENCE_TYPE_LABELS: Record<string, string> = {
-  institutional_url: "Institutional URL",
-  on_site_photo: "On-site Photo",
-  press_release: "Press Release",
-  personal_communication: "Personal Communication",
-  my_institutional_affiliation: "My Institutional Affiliation",
-  other: "Other",
-}
-
-function renderValue(v: unknown): { text: string; isUrl: boolean } {
-  if (v === null || v === undefined || v === "")
-    return { text: "—", isUrl: false }
-  if (Array.isArray(v)) {
-    if (v.length === 0) return { text: "—", isUrl: false }
-
-    return { text: v.join(", "), isUrl: false }
-  }
-  if (typeof v === "object") return { text: JSON.stringify(v), isUrl: false }
-  const s = String(v)
-  const isUrl = s.startsWith("http://") || s.startsWith("https://")
-
-  return { text: s, isUrl }
-}
-
-// ── Shared styles ─────────────────────────────────────────────────────────────
-
-const sectionHeaderStyle: React.CSSProperties = {
-  fontSize: "11px",
-  fontWeight: 600,
-  letterSpacing: "0.06em",
-  textTransform: "uppercase",
-  color: "#666687",
-  marginBottom: "8px",
-  paddingBottom: "6px",
-  borderBottom: "1px solid #f0f0ff",
-}
-
-const fieldLabelStyle: React.CSSProperties = {
-  fontSize: "11px",
-  color: "#8e8ea9",
-  fontWeight: 500,
-  marginBottom: "2px",
-  textTransform: "capitalize",
-}
-
-const fieldValueStyle: React.CSSProperties = {
-  fontSize: "13px",
-  color: "#32324d",
-  fontWeight: 500,
-  wordBreak: "break-word",
-}
-
-const fieldValueEmptyStyle: React.CSSProperties = {
-  ...fieldValueStyle,
-  color: "#c0c0cf",
-  fontWeight: 400,
-}
-
-// ── TypeBadge ─────────────────────────────────────────────────────────────────
-
-function TypeBadge({ type }: { type: string }) {
-  const colors = TYPE_COLORS[type] ?? {
-    bg: "#f0f0ff",
-    text: "#4945ff",
-    border: "#c4c4ff",
-  }
-
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        padding: "3px 8px",
-        borderRadius: "4px",
-        fontSize: "11px",
-        fontWeight: 600,
-        letterSpacing: "0.04em",
-        background: colors.bg,
-        color: colors.text,
-        border: `1px solid ${colors.border}`,
-        whiteSpace: "nowrap",
-      }}
-    >
-      {TYPE_LABELS[type] ?? type}
-    </span>
-  )
-}
-
-// ── StatusBadge ───────────────────────────────────────────────────────────────
-
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { bg: string; text: string }> = {
-    pending: { bg: "#fff3e0", text: "#d97706" },
-    needs_info: { bg: "#eaf5ff", text: "#0c75af" },
-    approved: { bg: "#eafbf2", text: "#1b7c3a" },
-    rejected: { bg: "#ffeaea", text: "#d02b20" },
-    draft: { bg: "#f0f0ff", text: "#8e8ea9" },
-  }
-  const colors = map[status] ?? { bg: "#f0f0ff", text: "#4945ff" }
-
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        padding: "2px 8px",
-        borderRadius: "100px",
-        fontSize: "11px",
-        fontWeight: 600,
-        background: colors.bg,
-        color: colors.text,
-      }}
-    >
-      {status.replaceAll("_", " ")}
-    </span>
-  )
-}
-
-// ── Submitter avatar ──────────────────────────────────────────────────────────
-
-function Avatar({ name, email }: { name?: string; email: string }) {
-  const initials = name
-    ? name
-        .split(" ")
-        .map((p) => p[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
-    : email.slice(0, 2).toUpperCase()
-
-  return (
-    <div
-      style={{
-        width: "28px",
-        height: "28px",
-        borderRadius: "50%",
-        background: "linear-gradient(135deg, #4945ff, #7b72ff)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "11px",
-        fontWeight: 700,
-        color: "#fff",
-        flexShrink: 0,
-      }}
-    >
-      {initials}
-    </div>
-  )
-}
-
-// ── InlineNoteInput ───────────────────────────────────────────────────────────
-
-function InlineNoteInput({
-  label,
-  placeholder,
-  onConfirm,
-  onCancel,
-  loading,
-}: {
-  label: string
-  placeholder: string
-  onConfirm: (note: string) => void
-  onCancel: () => void
-  loading: boolean
-}) {
-  const [value, setValue] = useState("")
-
-  return (
-    <div
-      style={{
-        marginTop: "12px",
-        padding: "12px 14px",
-        background: "#f6f6f9",
-        borderRadius: "8px",
-        border: "1px solid #dcdce4",
-      }}
-    >
-      <label style={{ ...sectionHeaderStyle, display: "block" }}>{label}</label>
-      <textarea
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder={placeholder}
-        rows={3}
-        autoFocus
-        style={{
-          width: "100%",
-          padding: "8px 10px",
-          borderRadius: "6px",
-          border: "1px solid #dcdce4",
-          fontSize: "13px",
-          fontFamily: "inherit",
-          color: "#32324d",
-          background: "#fff",
-          resize: "vertical",
-          outline: "none",
-          boxSizing: "border-box",
-        }}
-      />
-      <Flex gap={2} marginTop={2}>
-        <Button
-          size="S"
-          variant="default"
-          disabled={loading}
-          onClick={() => onConfirm(value)}
-        >
-          Confirm
-        </Button>
-        <Button size="S" variant="ghost" disabled={loading} onClick={onCancel}>
-          Cancel
-        </Button>
-      </Flex>
-    </div>
-  )
-}
-
-// ── LibraryClaimPanel ─────────────────────────────────────────────────────────
-
-function LibraryClaimPanel({ sub }: { sub: Submission }) {
-  const fields = sub.fields ?? {}
-  const domainMatch =
-    fields.userEmailDomain &&
-    fields.libraryWebsiteDomain &&
-    fields.userEmailDomain === fields.libraryWebsiteDomain
-
-  const allRows = [
-    { label: "Library", value: String(fields.name ?? sub.targetSlug ?? "") },
-    { label: "Entity Ref", value: String(fields.entityRef ?? "") },
-    { label: "Role", value: String(fields.role ?? "") },
-    { label: "Department", value: String(fields.department ?? "") },
-    { label: "Submitter email", value: sub.submittedByEmail },
-    {
-      label: "Verification method",
-      value: String(fields.verificationMethod ?? ""),
-    },
-    ...(fields.userEmailDomain
-      ? [{ label: "User email domain", value: String(fields.userEmailDomain) }]
-      : []),
-    ...(fields.libraryWebsiteDomain
-      ? [
-          {
-            // Legacy claims: this was typed by the claimant, not looked up.
-            label: "Website given by claimant (unverified)",
-            value: String(fields.libraryWebsiteDomain),
-          },
-        ]
-      : []),
-    ...(fields.claimedWebsiteDomain
-      ? [
-          {
-            label: "Website given by claimant (unverified)",
-            value: String(fields.claimedWebsiteDomain),
-          },
-        ]
-      : []),
-  ]
-  // Only show rows that have a real value
-  const rows = allRows.filter(({ value }) => value && value !== "—")
-
-  return (
-    <div style={{ marginTop: "16px" }}>
-      <p style={sectionHeaderStyle}>Claim details</p>
-
-      {/* Domain match banner */}
-      {fields.userEmailDomain && fields.libraryWebsiteDomain && (
-        <div
-          style={{
-            padding: "10px 14px",
-            borderRadius: "6px",
-            background: domainMatch ? "#eafbf2" : "#fff3e0",
-            border: `1px solid ${domainMatch ? "#a5dfc0" : "#fcd34d"}`,
-            marginBottom: "12px",
-            fontSize: "13px",
-            fontWeight: 600,
-            color: domainMatch ? "#1b7c3a" : "#d97706",
-          }}
-        >
-          {domainMatch
-            ? "✓ Domain match — auto-verification eligible"
-            : "⚠ Domain mismatch — manual review required"}
-        </div>
-      )}
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "0 24px",
-        }}
-      >
-        {rows.map(({ label, value }) => (
-          <div
-            key={label}
-            style={{ padding: "10px 0", borderBottom: "1px solid #f0f0ff" }}
-          >
-            <div style={fieldLabelStyle}>{label}</div>
-            <div style={fieldValueStyle}>{value}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ── RelationTagsDisplay ───────────────────────────────────────────────────────
-
-function RelationTagsDisplay({ type, ids }: { type: string; ids: unknown }) {
-  const { get } = useFetchClient()
-  const [labels, setLabels] = useState<Record<string, string>>({})
-  const idArr = Array.isArray(ids) ? (ids as string[]) : []
-
-  useEffect(() => {
-    if (idArr.length === 0) return
-    get(`/content-moderation/relation-labels?type=${encodeURIComponent(type)}`)
-      .then(({ data }) => {
-        const map = (data as { data?: Record<string, string> })?.data ?? {}
-        setLabels(map)
-      })
-      .catch(() => {})
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type])
-
-  if (idArr.length === 0) return <span style={fieldValueEmptyStyle}>—</span>
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: "4px",
-        marginTop: "4px",
-      }}
-    >
-      {idArr.map((id) => (
-        <span
-          key={id}
-          style={{
-            padding: "2px 9px",
-            borderRadius: "100px",
-            background: "#f0f0ff",
-            border: "1px solid #c4c4ff",
-            fontSize: "11px",
-            color: "#4945ff",
-            fontWeight: 500,
-          }}
-        >
-          {labels[id] ?? `${id.slice(0, 8)}…`}
-        </span>
-      ))}
-    </div>
-  )
-}
-
-// ── PhotosPanel ───────────────────────────────────────────────────────────────
-
-/** Strip the origin so images load relative to the current Strapi admin host. */
-function toRelativeUrl(url: string): string {
-  try {
-    return new URL(url).pathname
-  } catch {
-    return url
-  }
-}
-
-function PhotosPanel({ images }: { images: UploadedImage[] }) {
-  if (images.length === 0) return null
-
-  return (
-    <div>
-      <p style={sectionHeaderStyle}>Photos</p>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-        {images.map((img, i) => (
-          <div
-            key={img.strapiId ?? i}
-            style={{ position: "relative", flexShrink: 0 }}
-          >
-            <a
-              href={toRelativeUrl(img.url)}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                src={toRelativeUrl(img.url)}
-                alt=""
-                style={{
-                  width: "120px",
-                  height: "80px",
-                  objectFit: "cover",
-                  borderRadius: "6px",
-                  border: "1px solid #dcdce4",
-                  display: "block",
-                }}
-              />
-            </a>
-            {img.isHero && (
-              <span
-                style={{
-                  position: "absolute",
-                  top: "4px",
-                  left: "4px",
-                  background: "#4945ff",
-                  color: "#fff",
-                  fontSize: "9px",
-                  fontWeight: 700,
-                  letterSpacing: "0.06em",
-                  padding: "2px 6px",
-                  borderRadius: "4px",
-                  textTransform: "uppercase",
-                }}
-              >
-                Hero
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ── SocialLinksPanel ──────────────────────────────────────────────────────────
-
-function SocialLinksPanel({ links }: { links: SocialLink[] }) {
-  const active = links.filter((l) => l.url)
-  if (active.length === 0) return null
-
-  return (
-    <div>
-      <p style={sectionHeaderStyle}>Social Links</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-        {active.map((l, i) => (
-          <div
-            key={i}
-            style={{ display: "flex", alignItems: "center", gap: "8px" }}
-          >
-            <span
-              style={{
-                fontSize: "11px",
-                fontWeight: 600,
-                color: "#666687",
-                textTransform: "capitalize",
-                minWidth: "80px",
-              }}
-            >
-              {l.platform}
-            </span>
-            <a
-              href={l.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                color: "#4945ff",
-                fontSize: "13px",
-                wordBreak: "break-all",
-              }}
-            >
-              {l.url}
-            </a>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ── OpeningTimesPanel ─────────────────────────────────────────────────────────
-
-interface CanonicalTimeframe {
-  startTime?: string
-  endTime?: string
-}
-
-interface CanonicalDay {
-  day: string
-  enabled: boolean
-  timeframes: CanonicalTimeframe[]
-}
-
-interface CanonicalOpeningTimes {
-  days: CanonicalDay[]
-}
-
-function normaliseOpeningTimes(data: unknown): CanonicalDay[] | null {
-  if (!data || typeof data !== "object" || Array.isArray(data)) return null
-  const record = data as Record<string, unknown>
-  if (!Array.isArray(record.days)) return null
-
-  return (record as CanonicalOpeningTimes).days
-}
-
-function OpeningTimesPanel({ data }: { data: unknown }) {
-  const days = normaliseOpeningTimes(data)
-  if (!days) return null
-
-  return (
-    <div>
-      <p style={sectionHeaderStyle}>Opening Times</p>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "6px 16px",
-        }}
-      >
-        {days.map((day) => {
-          const label = day.day.charAt(0).toUpperCase() + day.day.slice(1)
-
-          let hoursText = "Closed"
-          if (day.enabled) {
-            hoursText =
-              day.timeframes.length > 0
-                ? day.timeframes
-                    .map((tf) => `${tf.startTime ?? "?"}–${tf.endTime ?? "?"}`)
-                    .join(", ")
-                : "Open"
-          }
-
-          return (
-            <div
-              key={day.day}
-              style={{ padding: "6px 0", borderBottom: "1px solid #f6f6f9" }}
-            >
-              <div style={fieldLabelStyle}>{label}</div>
-              <div
-                style={{
-                  ...fieldValueStyle,
-                  fontSize: "12px",
-                  color: day.enabled ? "#32324d" : "#c0c0cf",
-                  fontWeight: day.enabled ? 500 : 400,
-                }}
-              >
-                {hoursText}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-// ── FieldsPanel ───────────────────────────────────────────────────────────────
-
-function FieldsPanel({ sub }: { sub: Submission }) {
-  const fields = sub.fields ?? {}
-  if (Object.keys(fields).length === 0) return null
-
-  const allUsedKeys = new Set(FIELD_GROUPS.flatMap((g) => g.keys))
-  const ungrouped = Object.entries(fields).filter(
-    ([k]) => !allUsedKeys.has(k) && !EXCLUDE_FROM_OTHER.has(k)
-  )
-
-  const uploadedImages = Array.isArray(fields.uploadedImages)
-    ? (fields.uploadedImages as UploadedImage[])
-    : []
-  const socialLinks = Array.isArray(fields.socialLinks)
-    ? (fields.socialLinks as SocialLink[])
-    : []
-
-  return (
-    <div
-      style={{
-        marginTop: "16px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "20px",
-      }}
-    >
-      {FIELD_GROUPS.map((group) => {
-        const entries = group.keys
-          .map((k) => ({ key: k, val: fields[k] }))
-          .filter(({ val }) => val !== undefined && val !== null && val !== "")
-        if (entries.length === 0) return null
-
-        return (
-          <div key={group.label}>
-            <p style={sectionHeaderStyle}>{group.label}</p>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: "8px 20px",
-              }}
-            >
-              {entries.map(({ key, val }) => {
-                const { text, isUrl } = renderValue(val)
-                const isEmpty = text === "—"
-
-                return (
-                  <div
-                    key={key}
-                    style={{
-                      padding: "6px 0",
-                      borderBottom: "1px solid #f6f6f9",
-                    }}
-                  >
-                    <div style={fieldLabelStyle}>
-                      {key.replaceAll(/([A-Z])/g, " $1").toLowerCase()}
-                    </div>
-                    <div
-                      style={isEmpty ? fieldValueEmptyStyle : fieldValueStyle}
-                    >
-                      {isUrl ? (
-                        <a
-                          href={text}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            color: "#4945ff",
-                            fontSize: "13px",
-                            wordBreak: "break-all",
-                          }}
-                        >
-                          {text.length > 50 ? text.slice(0, 50) + "…" : text}
-                        </a>
-                      ) : (
-                        text
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )
-      })}
-
-      {/* Ungrouped fields */}
-      {ungrouped.length > 0 && (
-        <div>
-          <p style={sectionHeaderStyle}>Other</p>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: "8px 20px",
-            }}
-          >
-            {ungrouped.map(([k, v]) => {
-              const { text, isUrl } = renderValue(v)
-
-              return (
-                <div
-                  key={k}
-                  style={{
-                    padding: "6px 0",
-                    borderBottom: "1px solid #f6f6f9",
-                  }}
-                >
-                  <div style={fieldLabelStyle}>
-                    {k.replaceAll(/([A-Z])/g, " $1").toLowerCase()}
-                  </div>
-                  <div style={fieldValueStyle}>
-                    {isUrl ? (
-                      <a
-                        href={text}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: "#4945ff", fontSize: "13px" }}
-                      >
-                        {text.length > 50 ? text.slice(0, 50) + "…" : text}
-                      </a>
-                    ) : (
-                      text
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Services, Amenities, Accessibility — resolved from Strapi */}
-      {(["services", "amenities", "accessibility"] as const).map((key) => {
-        const ids = fields[key]
-        if (!Array.isArray(ids) || ids.length === 0) return null
-
-        return (
-          <div key={key}>
-            <p style={sectionHeaderStyle}>
-              {key.charAt(0).toUpperCase() + key.slice(1)}
-            </p>
-            <RelationTagsDisplay type={key} ids={ids} />
-          </div>
-        )
-      })}
-
-      {/* Uploaded photos */}
-      <PhotosPanel images={uploadedImages} />
-
-      {/* Social links */}
-      <SocialLinksPanel links={socialLinks} />
-
-      {/* Opening times */}
-      <OpeningTimesPanel data={fields.openingTimes} />
-
-      {/* Sources */}
-      {sub.evidenceUrl && (
-        <div>
-          <p style={sectionHeaderStyle}>Sources</p>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: "8px 20px",
-            }}
-          >
-            {sub.evidenceType && (
-              <div
-                style={{ padding: "6px 0", borderBottom: "1px solid #f6f6f9" }}
-              >
-                <div style={fieldLabelStyle}>Evidence type</div>
-                <div style={fieldValueStyle}>
-                  {EVIDENCE_TYPE_LABELS[sub.evidenceType] ?? sub.evidenceType}
-                </div>
-              </div>
-            )}
-            <div
-              style={{ padding: "6px 0", borderBottom: "1px solid #f6f6f9" }}
-            >
-              <div style={fieldLabelStyle}>Evidence URL</div>
-              <div style={fieldValueStyle}>
-                <a
-                  href={sub.evidenceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    color: "#4945ff",
-                    fontSize: "13px",
-                    wordBreak: "break-all",
-                  }}
-                >
-                  {sub.evidenceUrl.length > 50
-                    ? sub.evidenceUrl.slice(0, 50) + "…"
-                    : sub.evidenceUrl}
-                </a>
-              </div>
-            </div>
-            {(fields.source || fields.sourceUrl) && (
-              <>
-                {fields.source && (
-                  <div
-                    style={{
-                      padding: "6px 0",
-                      borderBottom: "1px solid #f6f6f9",
-                    }}
-                  >
-                    <div style={fieldLabelStyle}>Source</div>
-                    <div style={fieldValueStyle}>{String(fields.source)}</div>
-                  </div>
-                )}
-                {fields.sourceUrl && (
-                  <div
-                    style={{
-                      padding: "6px 0",
-                      borderBottom: "1px solid #f6f6f9",
-                    }}
-                  >
-                    <div style={fieldLabelStyle}>Source URL</div>
-                    <div style={fieldValueStyle}>
-                      <a
-                        href={String(fields.sourceUrl)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          color: "#4945ff",
-                          fontSize: "13px",
-                          wordBreak: "break-all",
-                        }}
-                      >
-                        {String(fields.sourceUrl).length > 50
-                          ? String(fields.sourceUrl).slice(0, 50) + "…"
-                          : String(fields.sourceUrl)}
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ── Quick summary strip (always visible) ──────────────────────────────────────
-
-function QuickSummary({ sub }: { sub: Submission }) {
-  const f = sub.fields ?? {}
-  const chips: { label: string; value: string }[] = []
-
-  if (sub.submissionType === "library_claim") {
-    if (f.name) chips.push({ label: "Library", value: String(f.name) })
-    if (f.entityRef) chips.push({ label: "Ref", value: String(f.entityRef) })
-    if (f.role)
-      chips.push({ label: "Role", value: String(f.role).replaceAll("_", " ") })
-    if (f.department) chips.push({ label: "Dept", value: String(f.department) })
-  } else {
-    if (f.name) chips.push({ label: "Name", value: String(f.name) })
-    if (f.city) chips.push({ label: "City", value: String(f.city) })
-    if (f.libraryType)
-      chips.push({ label: "Type", value: String(f.libraryType) })
-    if (f.operationalStatus)
-      chips.push({ label: "Status", value: String(f.operationalStatus) })
-  }
-
-  if (chips.length === 0) return null
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: "6px",
-        marginTop: "10px",
-      }}
-    >
-      {chips.map(({ label, value }) => (
-        <span
-          key={label}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "4px",
-            padding: "3px 9px",
-            borderRadius: "100px",
-            background: "#f6f6f9",
-            border: "1px solid #eaeaef",
-            fontSize: "12px",
-            color: "#32324d",
-          }}
-        >
-          <span style={{ color: "#8e8ea9", fontSize: "11px" }}>{label}</span>
-          <span style={{ fontWeight: 600 }}>{value}</span>
-        </span>
-      ))}
-    </div>
-  )
-}
-
-// ── Submission card ───────────────────────────────────────────────────────────
-
-type PendingAction = "rejected" | "needs_info" | null
-
-function SubmissionCard({
-  sub,
-  onUpdate,
-}: {
-  sub: Submission
-  onUpdate: (id: string, status: string, note?: string) => Promise<void>
-}) {
-  const [expanded, setExpanded] = useState(false)
-  const [updating, setUpdating] = useState(false)
-  const [pendingAction, setPendingAction] = useState<PendingAction>(null)
-
-  const dateStr = new Date(sub.createdAt).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  })
-  const timeStr = new Date(sub.createdAt).toLocaleTimeString("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-  })
-
-  const handleAction = async (status: string, note?: string) => {
-    setUpdating(true)
-    setPendingAction(null)
-    try {
-      await onUpdate(sub.documentId, status, note)
-    } finally {
-      setUpdating(false)
-    }
-  }
-
-  return (
-    <div
-      style={{
-        background: "#fff",
-        border: "1px solid #dcdce4",
-        borderRadius: "8px",
-        marginBottom: "16px",
-        overflow: "hidden",
-        boxShadow: "0 1px 6px rgba(33,33,52,0.07)",
-      }}
-    >
-      {/* Card header */}
-      <div
-        style={{
-          padding: "18px 22px",
-          borderBottom: expanded ? "1px solid #f0f0ff" : "none",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            gap: "12px",
-          }}
-        >
-          {/* Left side */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            {/* Type + target + status */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                flexWrap: "wrap",
-              }}
-            >
-              <TypeBadge type={sub.submissionType} />
-              {sub.targetSlug && (
-                <span
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "#32324d",
-                  }}
-                >
-                  {sub.targetSlug}
-                </span>
-              )}
-              {sub.status !== "pending" && <StatusBadge status={sub.status} />}
-            </div>
-
-            {/* Submitter + date */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                marginTop: "8px",
-              }}
-            >
-              <Avatar name={sub.submittedByName} email={sub.submittedByEmail} />
-              <div>
-                <div
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "#32324d",
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {sub.submittedByName ?? sub.submittedByEmail}
-                </div>
-                {sub.submittedByName && (
-                  <div style={{ fontSize: "11px", color: "#8e8ea9" }}>
-                    {sub.submittedByEmail}
-                  </div>
-                )}
-              </div>
-              <span
-                style={{
-                  fontSize: "11px",
-                  color: "#c0c0cf",
-                  marginLeft: "4px",
-                }}
-              >
-                ·
-              </span>
-              <span style={{ fontSize: "11px", color: "#8e8ea9" }}>
-                {dateStr} at {timeStr}
-              </span>
-            </div>
-
-            {/* Always-visible quick summary */}
-            <QuickSummary sub={sub} />
-
-            {/* Note / edit summary */}
-            {(sub.note || sub.editSummary) && (
-              <div
-                style={{
-                  marginTop: "10px",
-                  padding: "8px 12px",
-                  background: "#f6f6f9",
-                  borderRadius: "6px",
-                  fontSize: "13px",
-                  color: "#32324d",
-                  lineHeight: 1.5,
-                  borderLeft: "3px solid #dcdce4",
-                }}
-              >
-                {sub.editSummary ?? sub.note}
-              </div>
-            )}
-          </div>
-
-          {/* Right side — expand toggle */}
-          <button
-            onClick={() => setExpanded((e) => !e)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              padding: "6px 10px",
-              borderRadius: "6px",
-              border: "1px solid #dcdce4",
-              background: expanded ? "#f0f0ff" : "#fff",
-              color: expanded ? "#4945ff" : "#666687",
-              fontSize: "12px",
-              fontWeight: 500,
-              cursor: "pointer",
-              flexShrink: 0,
-              transition: "all 0.15s",
-            }}
-          >
-            {expanded ? "Collapse" : "Review"}
-            <IconChevron open={expanded} />
-          </button>
-        </div>
-      </div>
-
-      {/* Expanded detail panel */}
-      {expanded && (
-        <div
-          style={{
-            padding: "20px 22px",
-            background: "#fafafa",
-            borderBottom: "1px solid #f0f0ff",
-          }}
-        >
-          {sub.submissionType === "library_claim" ? (
-            <LibraryClaimPanel sub={sub} />
-          ) : sub.submissionType === "wiki_edit" ? (
-            <WikiEditDiffPanel sub={sub} />
-          ) : (
-            <FieldsPanel sub={sub} />
-          )}
-
-          {/* Moderator review note */}
-          {sub.reviewNote && (
-            <div
-              style={{
-                marginTop: "16px",
-                padding: "10px 14px",
-                background: "#fff3e0",
-                border: "1px solid #fcd34d",
-                borderRadius: "6px",
-                fontSize: "13px",
-                color: "#92400e",
-                fontStyle: "italic",
-              }}
-            >
-              <span style={{ fontWeight: 600, fontStyle: "normal" }}>
-                Moderator note:{" "}
-              </span>
-              {sub.reviewNote}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Inline note input */}
-      {pendingAction && (
-        <div style={{ padding: "0 22px 16px", background: "#fafafa" }}>
-          <InlineNoteInput
-            label={
-              pendingAction === "rejected"
-                ? "Rejection reason (shown to submitter)"
-                : "What information is needed?"
-            }
-            placeholder={
-              pendingAction === "rejected"
-                ? "Explain why this submission cannot be approved…"
-                : "Describe what additional information or evidence is required…"
-            }
-            onConfirm={(note) =>
-              void handleAction(pendingAction, note || undefined)
-            }
-            onCancel={() => setPendingAction(null)}
-            loading={updating}
-          />
-        </div>
-      )}
-
-      {/* Action footer */}
-      {(sub.status === "pending" || sub.status === "needs_info") &&
-        !pendingAction && (
-          <div
-            style={{
-              padding: "12px 22px",
-              background: "#fff",
-              borderTop: "1px solid #f0f0ff",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <Button
-              startIcon={<IconCheck />}
-              variant="success-light"
-              size="S"
-              disabled={updating}
-              onClick={() => void handleAction("approved")}
-            >
-              {sub.submissionType === "library_claim"
-                ? "Approve & Verify"
-                : "Approve"}
-            </Button>
-            <Button
-              startIcon={<IconX />}
-              variant="danger-light"
-              size="S"
-              disabled={updating}
-              onClick={() => setPendingAction("rejected")}
-            >
-              Reject
-            </Button>
-            <Button
-              startIcon={<IconInfo />}
-              variant="secondary"
-              size="S"
-              disabled={updating}
-              onClick={() => setPendingAction("needs_info")}
-            >
-              Needs Info
-            </Button>
-            {updating && (
-              <span
-                style={{
-                  marginLeft: "8px",
-                  color: "#8e8ea9",
-                  fontSize: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                }}
-              >
-                <IconLoader /> Saving…
-              </span>
-            )}
-          </div>
-        )}
-    </div>
-  )
-}
-
-// ── Summary count chip ────────────────────────────────────────────────────────
-
-function CountChip({ count }: { count: number }) {
-  if (count === 0) return null
-
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        minWidth: "18px",
-        height: "18px",
-        padding: "0 5px",
-        borderRadius: "9px",
-        background: "#4945ff",
-        color: "#fff",
-        fontSize: "10px",
-        fontWeight: 700,
-        marginLeft: "6px",
-      }}
-    >
-      {count}
-    </span>
-  )
-}
-
-// ── Main dashboard ────────────────────────────────────────────────────────────
-
+import { ReviewModal, StatusPill, TypeBadge } from "../components/ReviewModal"
+import {
+  detailOf,
+  type ModerationStatus,
+  relativeTime,
+  STATUS_TABS,
+  type Submission,
+  summaryOf,
+  TYPE_LABELS,
+} from "../components/submissionMeta"
+
+type Decision = "approved" | "rejected" | "needs_info"
+
+/**
+ * The moderation queue: one tab per status, a filterable table of
+ * submissions, and a review dialog that shows everything a moderator needs
+ * before approving, rejecting or asking for more information.
+ */
 export function ModerationDashboard() {
   const { get, put } = useFetchClient()
   const { toggleNotification } = useNotification()
-  const [submissions, setSubmissions] = useState<Submission[]>([])
+  const [byStatus, setByStatus] = useState<
+    Partial<Record<ModerationStatus, Submission[]>>
+  >({})
   const [loading, setLoading] = useState(true)
-  const [statusFilter, setStatusFilter] = useState("pending")
-  const [typeFilter, setTypeFilter] = useState("all")
   const [error, setError] = useState<string | null>(null)
-  const [counts, setCounts] = useState<Record<string, number>>({})
+  const [status, setStatus] = useState<ModerationStatus>("pending")
+  const [typeFilter, setTypeFilter] = useState("all")
+  const [query, setQuery] = useState("")
+  const [openId, setOpenId] = useState<string | null>(null)
 
-  const load = useCallback(
-    async (status: string) => {
-      setLoading(true)
-      setError(null)
-      try {
-        const { data } = await get(
-          `/content-moderation/submissions?status=${encodeURIComponent(status)}`
-        )
-        const items = Array.isArray((data as { data?: unknown })?.data)
-          ? (data as { data: Submission[] }).data
-          : []
-        setSubmissions(items)
-        setCounts((prev) => ({ ...prev, [status]: items.length }))
-      } catch (err) {
-        setError("Failed to load submissions.")
-        console.error(err)
-      } finally {
-        setLoading(false)
-      }
-    },
-    [get]
-  )
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const results = await Promise.all(
+        STATUS_TABS.map(async (tab) => {
+          const { data } = await get(
+            `/content-moderation/submissions?status=${tab.id}`
+          )
+          const items = Array.isArray((data as { data?: unknown })?.data)
+            ? (data as { data: Submission[] }).data
+            : []
+
+          return [tab.id, items] as const
+        })
+      )
+      setByStatus(Object.fromEntries(results))
+    } catch (err) {
+      setError(
+        "The queue couldn't be loaded. Check that you have the moderation permission and try again."
+      )
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }, [get])
 
   useEffect(() => {
-    void load(statusFilter)
-  }, [statusFilter, load])
+    void load()
+  }, [load])
 
-  const updateStatus = useCallback(
-    async (id: string, status: string, reviewNote?: string) => {
+  const decide = useCallback(
+    async (
+      id: string,
+      next: Decision,
+      reviewNote?: string
+    ): Promise<boolean> => {
       try {
         await put(`/content-moderation/submissions/${id}/status`, {
-          status,
+          status: next,
           reviewNote,
         })
+        toggleNotification({
+          type: "success",
+          message:
+            next === "approved"
+              ? "Approved and applied."
+              : next === "rejected"
+                ? "Rejected. The contributor has been told why."
+                : "Sent back for more information.",
+        })
+        void load()
+
+        return true
       } catch (err) {
         const message =
           (err as { response?: { data?: { error?: { message?: string } } } })
-            ?.response?.data?.error?.message ?? "Failed to update submission."
+            ?.response?.data?.error?.message ??
+          "The decision couldn't be saved."
         toggleNotification({ type: "danger", message })
         console.error(err)
+
+        return false
       }
-      void load(statusFilter)
     },
-    [put, load, statusFilter, toggleNotification]
+    [put, load, toggleNotification]
   )
 
-  const allTypes = useMemo(
-    () => Array.from(new Set(submissions.map((s) => s.submissionType))),
-    [submissions]
+  const current = byStatus[status] ?? []
+  const types = useMemo(
+    () => Array.from(new Set(current.map((s) => s.submissionType))),
+    [current]
   )
-
-  const filtered =
-    typeFilter === "all"
-      ? submissions
-      : submissions.filter((s) => s.submissionType === typeFilter)
+  const q = query.trim().toLowerCase()
+  const rows = current.filter(
+    (s) =>
+      (typeFilter === "all" || s.submissionType === typeFilter) &&
+      (!q ||
+        [
+          summaryOf(s),
+          s.submittedByEmail,
+          s.submittedByName ?? "",
+          s.targetSlug ?? "",
+          detailOf(s) ?? "",
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(q))
+  )
+  const open = openId
+    ? (Object.values(byStatus)
+        .flat()
+        .find((s) => s?.documentId === openId) ?? null)
+    : null
+  const pendingCount = byStatus.pending?.length ?? 0
 
   return (
-    <Box padding={8} background="neutral100" minHeight="100vh">
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-      {/* Page header */}
-      <Flex
-        justifyContent="space-between"
-        alignItems="flex-start"
-        marginBottom={6}
-      >
-        <div>
-          <Typography variant="alpha" fontWeight="bold">
-            Moderation Queue
-          </Typography>
-          <Box marginTop={1}>
-            <Typography variant="epsilon" textColor="neutral500">
-              Review and action user-submitted library data. Approving a library
-              claim automatically sets the user&apos;s verified librarian
-              status.
-            </Typography>
+    <Layouts.Root>
+      <Layouts.Header
+        title="Moderation queue"
+        subtitle={
+          loading
+            ? "Loading submissions…"
+            : `${pendingCount} waiting for review · ${byStatus.needs_info?.length ?? 0} waiting on contributors`
+        }
+        primaryAction={
+          <Button
+            variant="secondary"
+            startIcon={<ArrowClockwise />}
+            onClick={() => void load()}
+            loading={loading}
+          >
+            Refresh
+          </Button>
+        }
+      />
+      <Layouts.Content>
+        {error && (
+          <Box paddingBottom={4}>
+            <Alert
+              variant="danger"
+              title="Couldn't load"
+              closeLabel="Dismiss"
+              onClose={() => setError(null)}
+            >
+              {error}
+            </Alert>
           </Box>
-        </div>
-        <Button
-          variant="ghost"
-          size="S"
-          onClick={() => void load(statusFilter)}
+        )}
+        <Tabs.Root
+          value={status}
+          onValueChange={(v) => {
+            setStatus(v as ModerationStatus)
+            setTypeFilter("all")
+          }}
         >
-          ↻ Refresh
-        </Button>
-      </Flex>
-
-      {/* Status tabs */}
-      <Tabs.Root
-        value={statusFilter}
-        onValueChange={(val) => {
-          setStatusFilter(val)
-          setTypeFilter("all")
-        }}
-      >
-        <Tabs.List aria-label="Submission status filter">
+          <Tabs.List aria-label="Submission status">
+            {STATUS_TABS.map((tab) => (
+              <Tabs.Trigger key={tab.id} value={tab.id}>
+                <Flex gap={2} alignItems="center">
+                  {tab.label}
+                  {(byStatus[tab.id]?.length ?? 0) > 0 && (
+                    <Badge size="S" active={tab.id === "pending"}>
+                      {byStatus[tab.id]!.length}
+                    </Badge>
+                  )}
+                </Flex>
+              </Tabs.Trigger>
+            ))}
+          </Tabs.List>
           {STATUS_TABS.map((tab) => (
-            <Tabs.Trigger key={tab.id} value={tab.id}>
-              <span style={{ display: "flex", alignItems: "center" }}>
-                {tab.label}
-                {counts[tab.id] ? <CountChip count={counts[tab.id]!} /> : null}
-              </span>
-            </Tabs.Trigger>
-          ))}
-        </Tabs.List>
-
-        {STATUS_TABS.map((tab) => (
-          <Tabs.Content key={tab.id} value={tab.id}>
-            <Box padding={6}>
-              {/* Type filter pills */}
-              {!loading && allTypes.length > 1 && (
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "6px",
-                    marginBottom: "20px",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  {[
-                    { id: "all", label: "All types" },
-                    ...allTypes.map((t) => ({
-                      id: t,
-                      label: TYPE_LABELS[t] ?? t,
-                    })),
-                  ].map(({ id, label }) => (
-                    <button
-                      key={id}
-                      onClick={() => setTypeFilter(id)}
-                      style={{
-                        padding: "4px 12px",
-                        borderRadius: "100px",
-                        fontSize: "12px",
-                        fontWeight: 500,
-                        border: "1px solid",
-                        cursor: "pointer",
-                        transition: "all 0.12s",
-                        borderColor: typeFilter === id ? "#4945ff" : "#dcdce4",
-                        background: typeFilter === id ? "#f0f0ff" : "#fff",
-                        color: typeFilter === id ? "#4945ff" : "#666687",
-                      }}
+            <Tabs.Content key={tab.id} value={tab.id}>
+              <Box
+                background="neutral0"
+                padding={6}
+                hasRadius
+                shadow="tableShadow"
+              >
+                <Flex gap={3} paddingBottom={4} wrap="wrap" alignItems="center">
+                  <Box width="28rem">
+                    <Searchbar
+                      name="queue-search"
+                      size="S"
+                      value={query}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setQuery(e.target.value)
+                      }
+                      onClear={() => setQuery("")}
+                      clearLabel="Clear search"
+                      placeholder="Search by title, target or contributor"
                     >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Result count */}
-              {!loading && !error && filtered.length > 0 && (
-                <div style={{ marginBottom: "16px" }}>
-                  <Typography variant="pi" textColor="neutral500">
-                    {filtered.length} submission
-                    {filtered.length !== 1 ? "s" : ""}
-                    {typeFilter !== "all"
-                      ? ` · ${TYPE_LABELS[typeFilter] ?? typeFilter}`
-                      : ""}
-                  </Typography>
-                </div>
-              )}
-
-              {/* Loading */}
-              {loading && (
-                <Flex justifyContent="center" padding={8} gap={2}>
-                  <IconLoader />
-                  <Typography textColor="neutral500">
-                    Loading submissions…
+                      Search submissions
+                    </Searchbar>
+                  </Box>
+                  <Box width="20rem">
+                    <SingleSelect
+                      aria-label="Submission type"
+                      size="S"
+                      value={typeFilter}
+                      onChange={(v) => setTypeFilter(String(v))}
+                    >
+                      <SingleSelectOption value="all">
+                        All types
+                      </SingleSelectOption>
+                      {types.map((t) => (
+                        <SingleSelectOption key={t} value={t}>
+                          {TYPE_LABELS[t] ?? t}
+                        </SingleSelectOption>
+                      ))}
+                    </SingleSelect>
+                  </Box>
+                  <Typography variant="pi" textColor="neutral600">
+                    {rows.length} of {current.length} {tab.label.toLowerCase()}
                   </Typography>
                 </Flex>
-              )}
 
-              {/* Error */}
-              {error && (
-                <div
-                  style={{
-                    padding: "14px 16px",
-                    background: "#ffeaea",
-                    border: "1px solid #f5c0be",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <Typography textColor="danger600">{error}</Typography>
-                </div>
-              )}
+                {loading ? (
+                  <Flex justifyContent="center" padding={8}>
+                    <Loader>Loading submissions</Loader>
+                  </Flex>
+                ) : rows.length === 0 ? (
+                  <EmptyStateLayout
+                    icon={<EmptyDocuments width="16rem" />}
+                    content={
+                      current.length === 0
+                        ? `Nothing ${tab.label.toLowerCase()} right now.`
+                        : "Nothing matches these filters."
+                    }
+                    action={
+                      current.length > 0 ? (
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            setQuery("")
+                            setTypeFilter("all")
+                          }}
+                        >
+                          Clear filters
+                        </Button>
+                      ) : undefined
+                    }
+                  />
+                ) : (
+                  <Table colCount={6} rowCount={rows.length + 1}>
+                    <Thead>
+                      <Tr>
+                        <Th>
+                          <Typography variant="sigma">Type</Typography>
+                        </Th>
+                        <Th>
+                          <Typography variant="sigma">Submission</Typography>
+                        </Th>
+                        <Th>
+                          <Typography variant="sigma">Contributor</Typography>
+                        </Th>
+                        <Th>
+                          <Typography variant="sigma">Submitted</Typography>
+                        </Th>
+                        <Th>
+                          <Typography variant="sigma">Status</Typography>
+                        </Th>
+                        <Th>
+                          <Typography
+                            variant="sigma"
+                            style={{
+                              position: "absolute",
+                              clip: "rect(0 0 0 0)",
+                            }}
+                          >
+                            Actions
+                          </Typography>
+                        </Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {rows.map((sub) => {
+                        const detail = detailOf(sub)
 
-              {/* Empty state */}
-              {!loading && !error && filtered.length === 0 && (
-                <div
-                  style={{
-                    padding: "48px 24px",
-                    textAlign: "center",
-                    background: "#fff",
-                    border: "1px solid #dcdce4",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <div style={{ fontSize: "32px", marginBottom: "8px" }}>✓</div>
-                  <Typography variant="delta" textColor="neutral600">
-                    All clear
-                  </Typography>
-                  <Box marginTop={1}>
-                    <Typography textColor="neutral400">
-                      No {tab.label.toLowerCase()} submissions
-                      {typeFilter !== "all"
-                        ? ` of type "${TYPE_LABELS[typeFilter] ?? typeFilter}"`
-                        : ""}
-                      .
-                    </Typography>
-                  </Box>
-                </div>
-              )}
-
-              {/* Cards */}
-              {!loading && !error && (
-                <div style={{ maxWidth: "960px" }}>
-                  {filtered.map((sub) => (
-                    <SubmissionCard
-                      key={sub.documentId}
-                      sub={sub}
-                      onUpdate={updateStatus}
-                    />
-                  ))}
-                </div>
-              )}
-            </Box>
-          </Tabs.Content>
-        ))}
-      </Tabs.Root>
-    </Box>
+                        return (
+                          <Tr
+                            key={sub.documentId}
+                            onClick={() => setOpenId(sub.documentId)}
+                            style={{ cursor: "pointer" }}
+                          >
+                            <Td>
+                              <TypeBadge type={sub.submissionType} />
+                            </Td>
+                            <Td>
+                              <Flex
+                                direction="column"
+                                alignItems="flex-start"
+                                gap={0}
+                              >
+                                <Typography
+                                  fontWeight="semiBold"
+                                  textColor="neutral800"
+                                >
+                                  {summaryOf(sub)}
+                                </Typography>
+                                {detail && (
+                                  <Typography
+                                    variant="pi"
+                                    textColor="neutral600"
+                                  >
+                                    {detail}
+                                  </Typography>
+                                )}
+                              </Flex>
+                            </Td>
+                            <Td>
+                              <Flex
+                                direction="column"
+                                alignItems="flex-start"
+                                gap={0}
+                              >
+                                <Typography textColor="neutral800">
+                                  {sub.submittedByName ?? sub.submittedByEmail}
+                                </Typography>
+                                {sub.submittedByName && (
+                                  <Typography
+                                    variant="pi"
+                                    textColor="neutral600"
+                                  >
+                                    {sub.submittedByEmail}
+                                  </Typography>
+                                )}
+                              </Flex>
+                            </Td>
+                            <Td>
+                              <Typography
+                                textColor="neutral800"
+                                title={sub.createdAt}
+                              >
+                                {relativeTime(sub.createdAt)}
+                              </Typography>
+                            </Td>
+                            <Td>
+                              <StatusPill status={sub.status} />
+                            </Td>
+                            <Td>
+                              <Flex justifyContent="flex-end">
+                                <IconButton
+                                  label="Review"
+                                  variant="ghost"
+                                  onClick={(e: React.MouseEvent) => {
+                                    e.stopPropagation()
+                                    setOpenId(sub.documentId)
+                                  }}
+                                >
+                                  <Eye />
+                                </IconButton>
+                              </Flex>
+                            </Td>
+                          </Tr>
+                        )
+                      })}
+                    </Tbody>
+                  </Table>
+                )}
+              </Box>
+            </Tabs.Content>
+          ))}
+        </Tabs.Root>
+      </Layouts.Content>
+      <ReviewModal
+        sub={open}
+        onClose={() => setOpenId(null)}
+        onDecide={decide}
+      />
+    </Layouts.Root>
   )
 }
