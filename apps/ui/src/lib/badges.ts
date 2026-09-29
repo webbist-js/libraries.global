@@ -148,6 +148,15 @@ export const BADGE_CATALOG: BadgeDefinition[] = [
 
   // ── Photography ──────────────────────────────────────────────────────────
   {
+    id: "first_exposure",
+    name: "First Exposure",
+    description:
+      "Your first CC-licensed photo accepted. Hold still, it’s a long exposure.",
+    rarity: "COMMON",
+    icon: "mdi:camera-iris",
+    variant: "aurora",
+  },
+  {
     id: "photographer",
     name: "Photographer",
     description:
@@ -182,6 +191,119 @@ export const BADGE_CATALOG: BadgeDefinition[] = [
     rarity: "RARE",
     icon: "mdi:earth",
     variant: "violet",
+  },
+
+  // ── Sources ──────────────────────────────────────────────────────────────────
+  {
+    id: "footnote",
+    name: "Footnote",
+    description:
+      "Your first source added to a record. Small print, big difference.",
+    rarity: "COMMON",
+    icon: "mdi:format-superscript",
+    variant: "aurora",
+  },
+  {
+    id: "ibid",
+    name: "Ibid.",
+    description:
+      "10 sources added. Same as above, and above that, and above that.",
+    rarity: "UNCOMMON",
+    icon: "mdi:format-quote-close",
+    variant: "violet",
+  },
+  {
+    id: "bibliographer",
+    name: "Bibliographer",
+    description:
+      "50 sources added. Every claim in the atlas has your fingerprints on it.",
+    rarity: "RARE",
+    icon: "mdi:bookmark-multiple-outline",
+    variant: "violet",
+  },
+
+  // ── Knowledge ────────────────────────────────────────────────────────────────
+  {
+    id: "marginalia",
+    name: "Marginalia",
+    description:
+      "First Knowledge edit approved. The best notes are in the margins.",
+    rarity: "COMMON",
+    icon: "mdi:note-edit-outline",
+    variant: "aurora",
+  },
+  {
+    id: "reference_desk",
+    name: "Reference Desk",
+    description:
+      "10 Knowledge edits approved. People ask you where things are.",
+    rarity: "UNCOMMON",
+    icon: "mdi:help-circle-outline",
+    variant: "violet",
+  },
+  {
+    id: "first_edition",
+    name: "First Edition",
+    description:
+      "Your first Knowledge article published. Collectors will want this one.",
+    rarity: "UNCOMMON",
+    icon: "mdi:book-open-page-variant-outline",
+    variant: "violet",
+  },
+  {
+    id: "encyclopedist",
+    name: "Encyclopédiste",
+    description: "5 Knowledge articles published. Diderot would like a word.",
+    rarity: "RARE",
+    icon: "mdi:bookshelf",
+    variant: "gold",
+  },
+
+  // ── Journal ──────────────────────────────────────────────────────────────────
+  {
+    id: "byline",
+    name: "Byline",
+    description: "Your first Journal article accepted. Your name, in print.",
+    rarity: "COMMON",
+    icon: "mdi:newspaper-variant-outline",
+    variant: "ember",
+  },
+  {
+    id: "contributing_editor",
+    name: "Contributing Editor",
+    description: "5 Journal articles accepted. We’ve saved you a desk.",
+    rarity: "UNCOMMON",
+    icon: "mdi:typewriter",
+    variant: "ember",
+  },
+  {
+    id: "serialised",
+    name: "Serialised",
+    description:
+      "12 Journal articles accepted. A year of issues, bound in one volume.",
+    rarity: "RARE",
+    icon: "mdi:book-multiple-outline",
+    variant: "gold",
+  },
+  {
+    id: "copy_editor",
+    name: "Copy Editor",
+    description:
+      "10 Journal edits or translations approved. Not one stray semicolon.",
+    rarity: "UNCOMMON",
+    icon: "mdi:spellcheck",
+    variant: "ember",
+  },
+
+  // ── All-rounder ──────────────────────────────────────────────────────────────
+  {
+    id: "polymath",
+    name: "Polymath",
+    description:
+      "Added a library, fixed a record, shared a photo, cited a source, and wrote for Knowledge and the Journal. The whole library, in one person.",
+    rarity: "STATUS",
+    icon: "mdi:star-four-points-outline",
+    variant: "gold",
   },
 
   // ── Streaks ──────────────────────────────────────────────────────────────

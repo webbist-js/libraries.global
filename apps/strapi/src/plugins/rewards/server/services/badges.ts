@@ -147,6 +147,15 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
 
   // ── Photography ──────────────────────────────────────────────────────────
   {
+    id: "first_exposure",
+    name: "First Exposure",
+    description:
+      "Your first CC-licensed photo accepted. Hold still, it’s a long exposure.",
+    rarity: "COMMON",
+    icon: "FE",
+    check: (c) => (c.photo_licensed_cc ?? 0) >= 1,
+  },
+  {
     id: "photographer",
     name: "Photographer",
     description:
@@ -181,6 +190,131 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     rarity: "RARE",
     icon: "BL",
     check: (c) => (c.wiki_translated ?? 0) >= 10,
+  },
+
+  // ── Sources ──────────────────────────────────────────────────────────────────
+  {
+    id: "footnote",
+    name: "Footnote",
+    description:
+      "Your first source added to a record. Small print, big difference.",
+    rarity: "COMMON",
+    icon: "FN",
+    check: (c) => (c.source_added ?? 0) >= 1,
+  },
+  {
+    id: "ibid",
+    name: "Ibid.",
+    description:
+      "10 sources added. Same as above, and above that, and above that.",
+    rarity: "UNCOMMON",
+    icon: "IB",
+    check: (c) => (c.source_added ?? 0) >= 10,
+  },
+  {
+    id: "bibliographer",
+    name: "Bibliographer",
+    description:
+      "50 sources added. Every claim in the atlas has your fingerprints on it.",
+    rarity: "RARE",
+    icon: "BG",
+    check: (c) => (c.source_added ?? 0) >= 50,
+  },
+
+  // ── Knowledge ────────────────────────────────────────────────────────────────
+  {
+    id: "marginalia",
+    name: "Marginalia",
+    description:
+      "First Knowledge edit approved. The best notes are in the margins.",
+    rarity: "COMMON",
+    icon: "MG",
+    check: (c) => (c.knowledge_edit_accepted ?? 0) >= 1,
+  },
+  {
+    id: "reference_desk",
+    name: "Reference Desk",
+    description:
+      "10 Knowledge edits approved. People ask you where things are.",
+    rarity: "UNCOMMON",
+    icon: "RD",
+    check: (c) => (c.knowledge_edit_accepted ?? 0) >= 10,
+  },
+  {
+    id: "first_edition",
+    name: "First Edition",
+    description:
+      "Your first Knowledge article published. Collectors will want this one.",
+    rarity: "UNCOMMON",
+    icon: "1E",
+    check: (c) => (c.knowledge_article_published ?? 0) >= 1,
+  },
+  {
+    id: "encyclopedist",
+    name: "Encyclopédiste",
+    description: "5 Knowledge articles published. Diderot would like a word.",
+    rarity: "RARE",
+    icon: "EN",
+    check: (c) => (c.knowledge_article_published ?? 0) >= 5,
+  },
+
+  // ── Journal ──────────────────────────────────────────────────────────────────
+  {
+    id: "byline",
+    name: "Byline",
+    description: "Your first Journal article accepted. Your name, in print.",
+    rarity: "COMMON",
+    icon: "BY",
+    check: (c) => (c.journal_accepted ?? 0) >= 1,
+  },
+  {
+    id: "contributing_editor",
+    name: "Contributing Editor",
+    description: "5 Journal articles accepted. We’ve saved you a desk.",
+    rarity: "UNCOMMON",
+    icon: "CE",
+    check: (c) => (c.journal_accepted ?? 0) >= 5,
+  },
+  {
+    id: "serialised",
+    name: "Serialised",
+    description:
+      "12 Journal articles accepted. A year of issues, bound in one volume.",
+    rarity: "RARE",
+    icon: "SR",
+    check: (c) => (c.journal_accepted ?? 0) >= 12,
+  },
+  {
+    id: "copy_editor",
+    name: "Copy Editor",
+    description:
+      "10 Journal edits or translations approved. Not one stray semicolon.",
+    rarity: "UNCOMMON",
+    icon: "CP",
+    check: (c) => (c.journal_edit_accepted ?? 0) >= 10,
+  },
+
+  // ── All-rounder ──────────────────────────────────────────────────────────────
+  {
+    id: "polymath",
+    name: "Polymath",
+    description:
+      "Added a library, fixed a record, shared a photo, cited a source, and wrote for Knowledge and the Journal. The whole library, in one person.",
+    rarity: "STATUS",
+    icon: "PM",
+    check: (c) =>
+      (c.new_library_approved ?? 0) >= 1 &&
+      (c.correction_approved ?? 0) +
+        (c.edit_accepted_minor ?? 0) +
+        (c.edit_accepted_major ?? 0) >=
+        1 &&
+      (c.photo_licensed_cc ?? 0) >= 1 &&
+      (c.source_added ?? 0) >= 1 &&
+      (c.knowledge_edit_accepted ?? 0) +
+        (c.knowledge_article_published ?? 0) +
+        (c.wiki_translated ?? 0) >=
+        1 &&
+      (c.journal_accepted ?? 0) >= 1,
   },
 
   // ── Streaks ──────────────────────────────────────────────────────────────

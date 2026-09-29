@@ -118,6 +118,41 @@ export default ({ strapi }: { strapi: any }) => ({
             points: 15,
           },
           {
+            action: "correction_approved",
+            label: "Correction approved",
+            points: 2,
+          },
+          {
+            action: "source_added",
+            label: "Source added to a record",
+            points: 3,
+          },
+          {
+            action: "claim_approved",
+            label: "Library claim approved",
+            points: 10,
+          },
+          {
+            action: "knowledge_edit_accepted",
+            label: "Knowledge page edit approved",
+            points: 8,
+          },
+          {
+            action: "knowledge_article_published",
+            label: "New Knowledge article approved",
+            points: 25,
+          },
+          {
+            action: "journal_accepted",
+            label: "Journal article accepted",
+            points: 30,
+          },
+          {
+            action: "journal_edit_accepted",
+            label: "Journal article edit or translation approved",
+            points: 8,
+          },
+          {
             action: "daily_streak",
             label: "Daily contribution streak",
             points: 1,
