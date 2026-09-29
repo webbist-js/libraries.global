@@ -46,6 +46,7 @@ export type Fixture = {
     | "contributor"
     | "verified_librarian"
     | "wiki_editor"
+    | "journal_editor"
     | "editorial_board"
   /** Holds one approved library claim (a library-affiliation). */
   claim: boolean
@@ -62,6 +63,7 @@ export const FIXTURES: readonly Fixture[] = [
   { key: "contributor", role: "contributor", claim: false },
   { key: "librarian", role: "verified_librarian", claim: true },
   { key: "wiki-editor", role: "wiki_editor", claim: false },
+  { key: "journal-editor", role: "journal_editor", claim: false },
   { key: "editorial", role: "editorial_board", claim: false },
   { key: "onboarding", role: "reader", claim: false, username: null },
   // Never onboarded, like `onboarding`, but only signed in by magic link

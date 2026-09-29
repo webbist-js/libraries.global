@@ -15,16 +15,36 @@ const ALL_SIGNED_IN = [
   "submit.topicSuggestion",
 ]
 
+// `directEdit`: Knowledge editing (docs.directEdit); `journalEdit`: Journal
+// editing (journal.directEdit). The editorial board holds both; wiki and
+// journal editors one each.
 const MATRIX = [
-  { key: "reader", extra: [], directEdit: false },
-  { key: "contributor", extra: [], directEdit: false },
+  { key: "reader", extra: [], directEdit: false, journalEdit: false },
+  { key: "contributor", extra: [], directEdit: false, journalEdit: false },
   {
     key: "librarian",
     extra: ["submit.libraryEdit", "events.feed"],
     directEdit: false,
+    journalEdit: false,
   },
-  { key: "wiki-editor", extra: ["docs.directEdit"], directEdit: true },
-  { key: "editorial", extra: ["docs.directEdit"], directEdit: true },
+  {
+    key: "wiki-editor",
+    extra: ["docs.directEdit"],
+    directEdit: true,
+    journalEdit: false,
+  },
+  {
+    key: "journal-editor",
+    extra: ["journal.directEdit"],
+    directEdit: false,
+    journalEdit: true,
+  },
+  {
+    key: "editorial",
+    extra: ["docs.directEdit", "journal.directEdit"],
+    directEdit: true,
+    journalEdit: true,
+  },
 ] as const
 
 // One row per way of holding a plan (see FIXTURES). Every plan fixture is a
@@ -69,6 +89,8 @@ const PLAN_MATRIX = [
 
 // Any existing docs slug works for the gate check; the GET only reads a draft.
 const DOC_SLUG = process.env.ACCESS_DOC_SLUG || "how-to-contribute"
+// Likewise for the Journal draft gate.
+const JOURNAL_SLUG = process.env.ACCESS_JOURNAL_SLUG || "welcome"
 
 // /api/submissions has no capability pre-check: it forwards the body to
 // Strapi as the signed-in user, so these requests reach the submission
@@ -84,7 +106,7 @@ const wikiEdit = (extra: Record<string, unknown>) => ({
 })
 
 // Better Auth allows 5 sign-ins per minute per IP. This file signs in once
-// per fixture (9 times), and onboarding.spec.ts 3 more. The access project
+// per fixture (10 times), and onboarding.spec.ts 3 more. The access project
 // runs one worker, so the files take turns, and signIn waits out each 429:
 // a cold run of the whole project waits out the limit about twice, so it
 // takes roughly 2 to 3 minutes. Back-to-back runs share the window, so a
@@ -201,6 +223,10 @@ test.describe("access role matrix (API)", () => {
       if (row.directEdit) expect(wiki.status()).toBe(200)
       else expect(wiki.status()).toBe(403)
 
+      const journal = await api.get(`/api/contribute/journal/${JOURNAL_SLUG}`)
+      if (row.journalEdit) expect(journal.status()).toBe(200)
+      else expect(journal.status()).toBe(403)
+
       const upload = await api.post("/api/upload", { multipart: {} })
       // Allowed callers get past the gate and fail validation (400); others get 403.
       expect(upload.status()).toBe(row.directEdit ? 400 : 403)
@@ -229,6 +255,35 @@ test.describe("access role matrix (API)", () => {
     expect((await res.json())?.error?.message).toBe(
       "You can't submit this type of change."
     )
+  })
+
+  test("Strapi refuses a reader's direct journal edit, but takes a pitch and a new-article draft", async ({
+    baseURL,
+  }) => {
+    const api = await signedIn(baseURL!, "reader")
+    const direct = await api.post("/api/submissions", {
+      data: {
+        submissionType: "blog_submission",
+        targetEntityType: "blog_article",
+        targetSlug: JOURNAL_SLUG,
+        asDraft: true,
+        draftData: { body: [] },
+      },
+    })
+    expect(direct.status()).toBe(403)
+
+    // A new article from anyone is a draft the editors publish, never a
+    // direct edit, so it passes the capability check (quota may 429).
+    const fresh = await api.post("/api/submissions", {
+      data: {
+        submissionType: "blog_submission",
+        targetEntityType: "blog_article",
+        asDraft: true,
+        draftData: { kind: "new_article", title: "Access E2E probe", body: [] },
+      },
+    })
+    expect(fresh.status()).not.toBe(403)
+    expect([200, 429]).toContain(fresh.status())
   })
 
   test("Strapi still lets a reader suggest a docs change", async ({

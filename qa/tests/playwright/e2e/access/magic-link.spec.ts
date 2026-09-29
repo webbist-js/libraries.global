@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test"
 import { emailFor } from "../../helpers/access-fixtures"
 import { latestMagicLinkToken } from "../../helpers/auth-db"
 import {
-  magicLinkVerifyUrl,
+  followMagicLink,
   NAVIGATION,
   requestMagicLinkThroughForm,
   sessionUser,
@@ -34,7 +34,7 @@ test("a first magic-link sign-in lands on onboarding, keeping its destination", 
   expect(callbacks.errorCallbackURL).toBe("/auth/magic-link")
 
   const token = await latestMagicLinkToken(email)
-  await page.goto(magicLinkVerifyUrl(token, callbacks))
+  await followMagicLink(page, token, callbacks)
 
   await expect(page).toHaveURL(
     "/profile/onboarding?next=%2Flibraries%3Fview%3Dlist%26sort%3Dname",
@@ -52,7 +52,7 @@ test("an onboarded user's magic link lands on the destination", async ({
   const email = emailFor("reader")
   const callbacks = await requestMagicLinkThroughForm(page, email, "/pro")
   const token = await latestMagicLinkToken(email)
-  await page.goto(magicLinkVerifyUrl(token, callbacks))
+  await followMagicLink(page, token, callbacks)
 
   await expect(page).toHaveURL(/\/pro$/, NAVIGATION)
   const user = await sessionUser(page)
@@ -63,12 +63,10 @@ test("an onboarded user's magic link lands on the destination", async ({
 test("a bad token shows the magic-link error page, signed out", async ({
   page,
 }) => {
-  await page.goto(
-    magicLinkVerifyUrl("not-a-real-token", {
-      callbackURL: "/auth/post-signin",
-      errorCallbackURL: "/auth/magic-link",
-    })
-  )
+  await followMagicLink(page, "not-a-real-token", {
+    callbackURL: "/auth/post-signin",
+    errorCallbackURL: "/auth/magic-link",
+  })
 
   await expect(page).toHaveURL(
     /\/auth\/magic-link\?error=INVALID_TOKEN$/,

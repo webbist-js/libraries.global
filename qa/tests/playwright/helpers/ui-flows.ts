@@ -106,18 +106,32 @@ export async function requestMagicLinkThroughForm(
   }
 }
 
-/** The link Better Auth would have emailed, rebuilt from its parts. */
-export function magicLinkVerifyUrl(
+/**
+ * Follows the sign-in link Better Auth would have emailed, rebuilt from its
+ * parts, without the token appearing in the report: page.goto titles its
+ * step with the URL, so the navigation runs inside page.evaluate, whose
+ * arguments the reporter doesn't show (the same reason setSecretValue exists).
+ * Resolves once the browser has left the verify endpoint.
+ */
+export async function followMagicLink(
+  page: Page,
   token: string,
   callbacks: { callbackURL: string; errorCallbackURL: string }
-): string {
+) {
   const params = new URLSearchParams({
     token,
     callbackURL: callbacks.callbackURL,
     errorCallbackURL: callbacks.errorCallbackURL,
   })
-
-  return `/api/auth/magic-link/verify?${params.toString()}`
+  const verifyUrl = `/api/auth/magic-link/verify?${params.toString()}`
+  await page.goto("/auth/magic-link-sent")
+  await page.evaluate((url) => {
+    globalThis.location.assign(url)
+  }, verifyUrl)
+  await page.waitForURL(
+    (url) => !url.pathname.startsWith("/api/auth/magic-link/verify"),
+    NAVIGATION
+  )
 }
 
 export async function sessionUser(page: Page) {

@@ -119,19 +119,22 @@ Continent
 
 All routes are under `app/[locale]/`. Key routes:
 
-| Route                                       | Component                                                  |
-| ------------------------------------------- | ---------------------------------------------------------- |
-| `/`                                         | HomePage                                                   |
-| `/libraries`                                | FindLibraryPage (faceted search/browse — "Find libraries") |
-| `/[continent]`                              | ContinentDetailPage                                        |
-| `/[continent]/[country]`                    | CountryDetailPage                                          |
-| `/[continent]/[country]/[region]`           | RegionDetailPage                                           |
-| `/[continent]/[country]/[region]/[library]` | LibraryDetailPage                                          |
-| `/map`                                      | Atlas: AtlasExplorer (MapLibre GL full-screen)             |
-| `/knowledge/[section]/[slug]`               | DocsArticlePage (Knowledge article)                        |
-| `/journal/[section]/[slug]`                 | BlogArticlePage (Journal article)                          |
-| `/contribute/knowledge/new`, `/[slug]`      | Knowledge editor (new article / edit)                      |
-| `/auth/*`                                   | Auth flows (sign in, register, OAuth, reset password)      |
+| Route                                             | Component                                                      |
+| ------------------------------------------------- | -------------------------------------------------------------- |
+| `/`                                               | HomePage                                                       |
+| `/libraries`                                      | FindLibraryPage (faceted search/browse — "Find libraries")     |
+| `/[continent]`                                    | ContinentDetailPage                                            |
+| `/[continent]/[country]`                          | CountryDetailPage                                              |
+| `/[continent]/[country]/[region]`                 | RegionDetailPage                                               |
+| `/[continent]/[country]/[region]/[library]`       | LibraryDetailPage                                              |
+| `/map`                                            | Atlas: AtlasExplorer (MapLibre GL full-screen)                 |
+| `/knowledge/[section]/[slug]`                     | DocsArticlePage (Knowledge article)                            |
+| `/journal/[section]/[slug]`                       | BlogArticlePage (Journal article)                              |
+| `/contribute/index`, `/new`, `/[slug]`            | Index editor: find a library, add one, improve a record        |
+| `/contribute/knowledge`                           | Knowledge editor landing: write new / edit existing            |
+| `/contribute/knowledge/new?type=`                 | Article editor (TipTap) for a new Knowledge or Journal article |
+| `/contribute/knowledge/[slug]`, `/journal/[slug]` | Article editor for an existing article, incl. translations     |
+| `/auth/*`                                         | Auth flows (sign in, register, OAuth, reset password)          |
 
 ### Data fetching
 
@@ -162,6 +165,8 @@ Three axes that never mix (spec: `docs/superpowers/specs/2026-09-26-access-contr
 
 **Money never buys trust:** no plan or entitlement changes a role, points, tier, badges or moderation. `CapabilityInput` has no plan fields, and type-level tests in `packages/access` fail if one is added.
 
+- **Roles live on `user-profile.contributorRole`**, not on Strapi Users & Permissions roles (every account holds the U&P `Authenticated` role) and not on Strapi admin roles. Moderators are Strapi admin users whose admin role has the `content-moderation` plugin's "Access the moderation queue" and "Update submission status" permissions (Settings → Administration panel → Roles).
+- **Contributor roles:** `reader`, `contributor`, `verified_librarian`, `wiki_editor` (Knowledge: `docs.directEdit`), `journal_editor` (Journal: `journal.directEdit`), `editorial_board` (both). Editors' approved article changes publish at once; anyone else's approved article lands as a Strapi draft (or a new draft article) for an admin to publish from the Content Manager.
 - **`@repo/access`** (`packages/access`, pure TS, imported by the UI and Strapi) exports `resolveCapabilities`, `canSubmit`, `SUBMISSION_TYPES`, `Capability`; `resolveEntitlements`, `can`, `limitOf`, `FEATURES`, `PlanKey`, `PlanSource`, `Feature`, `Limit`, `EARNED_PRO_HOLD_DAYS`, `isEarnedProTier`; `contributionLimits`, `TIER_NAMES`; `CONTRIBUTOR_ROLES`, `promoteRole`. Rebuild after changes (`pnpm --filter @repo/access build`); test with `cd packages/access && pnpm test`.
 - **Session fields** (Better Auth `customSession`, built by `buildSessionAccess` in `lib/session-access.ts`): `capabilities`, `claimedLibraryIds`, `plan`, `planSource`, `features`, `limits` (e.g. `exportRows`: free 0, pro 10,000, team 50,000) and `profileLoaded`. They come from the Strapi `session-profile` bridge (`lib/session-profile.ts`), cached per user for 60 s; a profile write (`/api/profile/me`) calls `invalidateSessionProfile`, and changes made in Strapi admin take effect within 60 s. `profileLoaded: false` means the bridge failed: no capabilities, plan `free`.
 - **Server helpers** (`lib/access-server.ts`): `requireCapability(user, cap)` returns 401/403; `requireEntitlement(user, feature)` returns 401/402 with `{ feature, upgradeUrl: "/contribute/membership" }`. Gate every Pro route with `requireEntitlement`. Missing session fields mean deny; missing `limits` mean a cap of 0.
@@ -331,12 +336,12 @@ Built: accounts (Better Auth + Strapi users) and profile pages at `/profile/[use
 
 Community-verified accuracy, moderated in Strapi admin. Hardened in P-A; spec: `docs/superpowers/specs/2026-09-26-access-contribution-pro-implementation-design.md` §4–5.
 
-- **Plugins:** `content-moderation` (the Submission collection, the admin review panel and `submission-policy`), `rewards` (points, streaks, tiers, badges, leaderboard) and `topics` (curated topics, fed by `topic_suggestion`).
+- **Plugins:** `content-moderation` (the Submission collection, the admin moderation queue in `admin/src/pages/ModerationDashboard.tsx` with its review modal and per-type panels in `admin/src/components/`, and `submission-policy`), `rewards` (points, streaks, tiers, badges, leaderboard) and `topics` (curated topics, fed by `topic_suggestion`).
 - **Submission types:** `correction`, `new_library`, `library_claim`, `library_edit` (claimants only), `wiki_edit` (a suggestion, or a direct block edit for `wiki_editor`/`editorial_board`), `blog_submission` and `topic_suggestion`.
 - **State machine** (`content-moderation/server/utils/transitions.ts`): `draft → pending → approved | rejected | needs_info`, and `needs_info → pending | approved | rejected`; `approved` and `rejected` are final. Drafts are editable only while `draft`, finalizing pins a `reviewedPayloadHash`, approval runs once, and point awards are idempotent. No self-approval; the admin routes check permissions.
-- **On approval:** `new_library` creates a draft library; `library_claim` upserts a `library-affiliation` and raises the role to `verified_librarian` (never lowers it); `wiki_edit` applies the blocks to the article; `topic_suggestion` approves the topic; a `correction` carrying the library page's Yes/No facility answers (`fields.kind: "facilities"`) connects or disconnects the mapped accessibility/amenity/service entries (`FACILITY_CHECKLIST` in `@repo/shared-data`), records confirmed "No"s in `library.absentFacilities`, and publishes. Every type awards points.
-- **UI:** the `/contribute` hub adapts to `useCapabilities()`; sub-routes `add`, `correct/[slug]`, `edit/[slug]`, `claim`, `events`, `knowledge`, `submissions` and `community`.
-- **Still to come (P-C):** the `needs_info` thread and resubmission (C-M1, C-M2); applying approved `library_edit` and free-text `correction` changes to the record (C-L1: today only facility answers are applied; other approvals award points but don't change the library); and the journal pitch form for `blog_submission` (C-J1).
+- **On approval:** `new_library` creates a draft library; `library_claim` upserts a `library-affiliation` and raises the role to `verified_librarian` (never lowers it); `library_edit` and a record `correction` from the Index editor (`fields.kind: "record"`, only the changed fields plus `previous`) are applied to the library through the allowlist in `utils/library-record.ts` and published (C-L1); a `correction` carrying the library page's Yes/No facility answers (`fields.kind: "facilities"`) connects or disconnects the mapped accessibility/amenity/service entries (`FACILITY_CHECKLIST` in `@repo/shared-data`), records confirmed "No"s in `library.absentFacilities`, and publishes; `wiki_edit` and `blog_submission` go through `utils/article-apply.ts`: a new article (`draftData.kind: "new_article"`) is created, a direct edit (`body`/`title`, editors only) is published, a suggestion with content (`proposedBody`) is written to the article's draft version, and `draftData.locale` picks the language, so a translation creates that locale version; `topic_suggestion` approves the topic. Every type awards points (`journal_accepted` for Journal).
+- **UI:** the `/contribute` hub adapts to `useCapabilities()`; tabs Hub, Community, Index editor (`index`, `index/new`, `index/[slug]`, plus `correct/[slug]` and `claim`), Knowledge editor (`knowledge`, `knowledge/new`, `knowledge/[slug]`, `knowledge/journal/[slug]`), My submissions and Membership; `events` sits under no tab. The article editor lives in `components/contribute/article-editor/` (TipTap; `articleBlocks.ts` converts to and from the Strapi dynamic zone).
+- **Still to come (P-C):** the `needs_info` thread and resubmission (C-M1, C-M2); applying free-text `correction` changes (they still only award points).
 
 ### 4. Search Enhancements
 
