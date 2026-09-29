@@ -66,6 +66,7 @@ export default ({ strapi }: { strapi: any }) => ({
     submissionType: unknown
     targetDocumentId?: unknown
     directWikiEdit?: boolean
+    directJournalEdit?: boolean
     verificationMethod?: unknown
     // Finalize re-checks the quota against the same row that's about to be
     // promoted out of `draft`; excluding it here avoids counting it against
@@ -95,6 +96,7 @@ export default ({ strapi }: { strapi: any }) => ({
             ? input.targetDocumentId
             : undefined,
         directWikiEdit: !!input.directWikiEdit,
+        directJournalEdit: !!input.directJournalEdit,
       })
     )
       return {

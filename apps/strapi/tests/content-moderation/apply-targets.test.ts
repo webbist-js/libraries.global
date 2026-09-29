@@ -81,7 +81,7 @@ describe("applyWikiEdit", () => {
       draftData: { targetSlug: "article-b", title: "Hijacked", locale: "en" },
       submittedByUserId: "u1",
     })
-    expect(outcome).toBe("applied")
+    expect(outcome).toBe("published")
     expect(store[WIKI][0].title).toBe("Hijacked")
     expect(store[WIKI][1].title).toBe("B")
   })

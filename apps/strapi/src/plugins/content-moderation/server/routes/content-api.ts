@@ -1,6 +1,12 @@
 export default [
   {
     method: "GET",
+    path: "/locales",
+    handler: "submission.locales",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
     path: "/submissions/stats",
     handler: "submission.stats",
     config: { auth: false, policies: [] },

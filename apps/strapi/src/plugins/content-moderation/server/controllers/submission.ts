@@ -1,4 +1,5 @@
 import {
+  isDirectJournalEdit,
   isDirectWikiEdit,
   isDocumentId,
   isValidDraftData,
@@ -27,6 +28,21 @@ export default ({ strapi }: { strapi: any }) => ({
       .service("submission")
       .findAll(status)
     ctx.body = { data: submissions }
+  },
+
+  // GET /api/content-moderation/locales  (content-api route, public)
+  // The languages an article can be written or translated in: Strapi's
+  // configured locales, so the editor's language picker never drifts.
+  async locales(ctx: any) {
+    const locales: { code: string; name: string; isDefault?: boolean }[] =
+      await strapi.plugin("i18n").service("locales").find()
+    ctx.body = {
+      data: locales.map((l) => ({
+        code: l.code,
+        name: l.name,
+        isDefault: !!l.isDefault,
+      })),
+    }
   },
 
   // GET /api/content-moderation/submissions/stats  (content-api route, public)
@@ -103,6 +119,8 @@ export default ({ strapi }: { strapi: any }) => ({
 
     const directWikiEdit =
       submissionType === "wiki_edit" && isDirectWikiEdit(draftData)
+    const directJournalEdit =
+      submissionType === "blog_submission" && isDirectJournalEdit(draftData)
     const verdict = await strapi
       .plugin("content-moderation")
       .service("submission-policy")
@@ -111,6 +129,7 @@ export default ({ strapi }: { strapi: any }) => ({
         submissionType,
         targetDocumentId,
         directWikiEdit,
+        directJournalEdit,
         verificationMethod,
       })
     if (!verdict.ok) {
@@ -348,6 +367,9 @@ export default ({ strapi }: { strapi: any }) => ({
             directWikiEdit:
               existing.submissionType === "wiki_edit" &&
               isDirectWikiEdit(existing.draftData),
+            directJournalEdit:
+              existing.submissionType === "blog_submission" &&
+              isDirectJournalEdit(existing.draftData),
             // C-4: this draft isn't `pending` yet, but excluding it keeps a
             // retried finalize from counting the row against its own quota.
             excludeDocumentId: id,

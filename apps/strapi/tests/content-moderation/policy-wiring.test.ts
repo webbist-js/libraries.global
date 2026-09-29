@@ -269,7 +269,7 @@ describe("(iii) applyWikiEdit re-checks capabilities at apply time", () => {
       submittedByUserId: "u1",
       draftData: { title: "Updated", locale: "en" },
     })
-    expect(outcome).toBe("applied")
+    expect(outcome).toBe("published")
     expect(store[WIKI][0].title).toBe("Updated")
   })
 })

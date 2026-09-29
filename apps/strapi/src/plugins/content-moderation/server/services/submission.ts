@@ -3,15 +3,35 @@ import {
   grantVerifiedLibrarian,
   upsertAffiliation,
 } from "../../../../utils/affiliations"
+import {
+  type ApplyArticleOutcome,
+  applyArticleSubmission,
+} from "../utils/article-apply"
 import { applyFacilityAnswers } from "../utils/facility-answers"
+import { applyLibraryRecord, isRecordCorrection } from "../utils/library-record"
+import { isNewArticleDraft } from "../utils/params"
 import { payloadHash } from "../utils/payload-hash"
 import { canTransition } from "../utils/transitions"
-import { sanitizeWikiBody } from "../utils/wiki-body"
+import { ownedUploadIds } from "../utils/uploads"
 
-// Appended to reviewNote when a reader's wiki_edit is approved but skipped
-// (docs.directEdit re-check fails at apply time): flags for the moderator
-// that nothing was auto-applied and it needs a manual pass.
-const SUGGESTION_MARKER = " [Suggestion — not auto-applied; apply manually]"
+// Appended to reviewNote when an article approval didn't publish anything
+// by itself, so the moderator knows the next step. `skipped_suggestion`:
+// a reader's wiki_edit carried a direct-edit body (docs.directEdit re-check
+// failed at apply time), nothing was applied. `drafted` / `created_draft`:
+// the change was written to the article's draft version (or a new draft
+// article) and needs publishing from the Content Manager.
+export const SUGGESTION_MARKER =
+  " [Suggestion — not auto-applied; apply manually]"
+export const DRAFTED_MARKER =
+  " [Applied to the article's draft; publish it from the Content Manager]"
+export const CREATED_DRAFT_MARKER =
+  " [Created as a draft article; publish it from the Content Manager]"
+
+const ARTICLE_MARKERS: Partial<Record<ApplyArticleOutcome, string>> = {
+  skipped_suggestion: SUGGESTION_MARKER,
+  drafted: DRAFTED_MARKER,
+  created_draft: CREATED_DRAFT_MARKER,
+}
 
 // Evidence types that point at a public document. Only these are shown in a
 // library's public revision history; the rest may identify a person.
@@ -535,23 +555,47 @@ export default ({ strapi }: { strapi: any }) => ({
         )
       }
 
-      // Side-effect: an approved correction carrying "Tap Yes or No"
-      // facility answers is applied to the library and published. Other
-      // corrections still only award points (C-L1).
-      if (status === "approved" && submission?.submissionType === "correction")
-        await (this as any).applyFacilityAnswers(submission)
+      // Side-effect: an approved correction is applied to the library and
+      // published: "Tap Yes or No" facility answers connect facilities, and
+      // a record correction from the Index editor (fields.kind "record")
+      // writes the changed fields (C-L1). Free-text corrections still only
+      // award points.
+      if (
+        status === "approved" &&
+        submission?.submissionType === "correction"
+      ) {
+        await (isRecordCorrection(submission.fields)
+          ? (this as any).applyLibraryRecord(submission)
+          : (this as any).applyFacilityAnswers(submission))
+      }
 
-      // ── wiki_edit approval ─────────────────────────────────────────────
-      if (status === "approved" && submission?.submissionType === "wiki_edit") {
-        const outcome = await (this as any).applyWikiEdit(submission)
-        if (outcome === "skipped_suggestion") {
+      // Side-effect: a claimant's approved library_edit is applied to the
+      // library and published (C-L1).
+      if (
+        status === "approved" &&
+        submission?.submissionType === "library_edit"
+      )
+        await (this as any).applyLibraryRecord(submission)
+
+      // ── wiki_edit / blog_submission approval ──────────────────────────
+      if (
+        status === "approved" &&
+        (submission?.submissionType === "wiki_edit" ||
+          submission?.submissionType === "blog_submission")
+      ) {
+        const outcome: ApplyArticleOutcome =
+          submission.submissionType === "wiki_edit"
+            ? await (this as any).applyWikiEdit(submission)
+            : await (this as any).applyJournalSubmission(submission)
+        const marker = ARTICLE_MARKERS[outcome]
+        if (marker) {
           // `reviewNote` here is the argument this call received — the
           // moderator's note the compare-and-set above just wrote. Reading
           // it off the pre-CAS `submission` snapshot instead would silently
           // discard that note, since the snapshot predates the write.
-          const noted = (reviewNote ?? "").includes(SUGGESTION_MARKER)
+          const noted = (reviewNote ?? "").includes(marker)
             ? (reviewNote ?? "")
-            : `${reviewNote ?? ""}${SUGGESTION_MARKER}`
+            : `${reviewNote ?? ""}${marker}`
           await strapi
             .documents("plugin::content-moderation.submission")
             .update({ documentId, data: { reviewNote: noted } })
@@ -621,20 +665,29 @@ export default ({ strapi }: { strapi: any }) => ({
         }
       }
 
-      // Award points for correction approval — 2pts
+      // Award points for correction approval. Hub photos and sources travel
+      // as tagged corrections, so score them for what they are: a CC photo
+      // 8pts, a source 3pts, anything else 2pts.
       if (
         status === "approved" &&
         submission?.submissionType === "correction"
       ) {
         try {
+          const kind = (submission.fields as Record<string, unknown>)?.kind
+          const [action, pts] =
+            kind === "photo"
+              ? (["photo_licensed_cc", 8] as const)
+              : kind === "source"
+                ? (["source_added", 3] as const)
+                : (["correction_approved", 2] as const)
           await strapi.plugin("rewards").service("points").award(
             submission.submittedByUserId,
-            "correction_approved",
-            2,
+            action,
+            pts,
             {
               submissionId: documentId,
             },
-            `${documentId}:correction_approved`
+            `${documentId}:${action}`
           )
         } catch (err) {
           strapi.log.warn(
@@ -667,27 +720,42 @@ export default ({ strapi }: { strapi: any }) => ({
         }
       }
 
-      // Award points for wiki_edit approval
-      if (status === "approved" && submission?.submissionType === "wiki_edit") {
+      // Award points for Knowledge and Journal approvals: a new article
+      // earns the most, a translation next, an edit to an existing one least.
+      if (
+        status === "approved" &&
+        (submission?.submissionType === "wiki_edit" ||
+          submission?.submissionType === "blog_submission")
+      ) {
         try {
           const fields = (submission.fields ?? {}) as Record<string, unknown>
+          const isNew =
+            isNewArticleDraft(submission.draftData) ||
+            fields.kind === "new_article"
           const isTranslation = fields.isTranslation === true
-          const wikiAction = isTranslation
-            ? "wiki_translated"
-            : "edit_accepted_minor"
+          const [action, pts] =
+            submission.submissionType === "wiki_edit"
+              ? isNew
+                ? (["knowledge_article_published", 25] as const)
+                : isTranslation
+                  ? (["wiki_translated", 15] as const)
+                  : (["knowledge_edit_accepted", 8] as const)
+              : isNew
+                ? (["journal_accepted", 30] as const)
+                : (["journal_edit_accepted", 8] as const)
           await strapi
             .plugin("rewards")
             .service("points")
             .award(
               submission.submittedByUserId,
-              wikiAction,
-              isTranslation ? 15 : 5,
+              action,
+              pts,
               { submissionId: documentId },
-              `${documentId}:${wikiAction}`
+              `${documentId}:${action}`
             )
         } catch (err) {
           strapi.log.warn(
-            "[content-moderation] rewards.award (wiki) failed:",
+            "[content-moderation] rewards.award (article) failed:",
             err
           )
         }
@@ -1020,15 +1088,20 @@ export default ({ strapi }: { strapi: any }) => ({
             null
           break
         case "wiki_edit":
-          targetLabel = s.targetSlug
-            ? s.targetSlug
-                .split("-")
-                .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
-                .join(" ")
-            : null
+          targetLabel =
+            (f.title as string) ??
+            (s.targetSlug
+              ? s.targetSlug
+                  .split("-")
+                  .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+                  .join(" ")
+              : null)
           break
         case "topic_suggestion":
           targetLabel = (f.name as string) ?? s.targetSlug ?? null
+          break
+        case "blog_submission":
+          targetLabel = (f.title as string) ?? s.targetSlug ?? null
           break
 
         default:
@@ -1083,15 +1156,7 @@ export default ({ strapi }: { strapi: any }) => ({
 
   /** A2: only files this submitter actually uploaded may be attached to their submission. */
   async ownedUploadIds(baUserId: string, ids: number[]): Promise<Set<number>> {
-    if (ids.length === 0) return new Set()
-    const rows = (await strapi
-      .documents("plugin::content-moderation.submission-upload" as any)
-      .findMany({
-        filters: { baUserId: { $eq: baUserId }, fileId: { $in: ids } } as any,
-        limit: ids.length,
-      })) as { fileId: number }[]
-
-    return new Set(rows.map((r) => r.fileId))
+    return ownedUploadIds(strapi, baUserId, ids)
   },
 
   async findDraft(userId: string, submissionType: string, targetSlug?: string) {
@@ -1117,92 +1182,28 @@ export default ({ strapi }: { strapi: any }) => ({
     return applyFacilityAnswers(strapi, submission)
   },
 
-  async applyWikiEdit(
-    submission: any
-  ): Promise<"applied" | "skipped_suggestion" | "noop"> {
-    // I1: "noop" only for genuine no-ops (no slug, no article, unknown
-    // locale, nothing to write). Any other error propagates, so
-    // updateStatus reverts the approval instead of spending it.
-    // A2: the target is whatever the moderator saw, never draftData.
-    const slug: string | undefined = submission.targetSlug ?? undefined
-    if (!slug) return "noop"
+  /** Applies an approved library_edit or record correction (see utils/library-record). */
+  async applyLibraryRecord(submission: any): Promise<"applied" | "noop"> {
+    const f = (submission.fields ?? {}) as Record<string, unknown>
+    const claimed = Array.isArray(f.uploadedImages)
+      ? (f.uploadedImages as { strapiId?: unknown }[])
+      : []
+    // A2: only files this submitter uploaded through the submission flow.
+    const owned = await (this as any).ownedUploadIds(
+      submission.submittedByUserId,
+      claimed.map((i) => Number(i.strapiId)).filter(Number.isInteger)
+    )
 
-    // Critical: re-check the submitter's rights at apply time, before
-    // applying anything. A reader's suggestion draft can be turned into a
-    // direct-edit body (title/blocks) after creation; the create-time
-    // policy check alone can't see that. This is defence in depth
-    // alongside the saveDraft/finalizeDraft compare-and-set above.
-    const { caps } = await strapi
-      .plugin("content-moderation")
-      .service("submission-policy")
-      .loadCapabilities(submission.submittedByUserId)
-    if (!caps.set.has("docs.directEdit")) {
-      strapi.log.warn(
-        `[content-moderation] wiki_edit ${submission.documentId} is a suggestion; apply it manually`
-      )
+    return applyLibraryRecord(strapi, submission, owned)
+  },
 
-      // The reviewNote write for this case is the caller's (updateStatus)
-      // responsibility: it's the only one holding the moderator's actual
-      // reviewNote argument, not a possibly-stale snapshot of it.
-      return "skipped_suggestion"
-    }
+  /** Applies an approved Knowledge submission (see utils/article-apply). */
+  async applyWikiEdit(submission: any): Promise<ApplyArticleOutcome> {
+    return applyArticleSubmission(strapi, submission, "wiki")
+  },
 
-    const draftData = (submission.draftData ?? {}) as Record<string, unknown>
-
-    const locales: { code: string }[] = await strapi
-      .plugin("i18n")
-      .service("locales")
-      .find()
-    const locale =
-      typeof draftData.locale === "string" ? draftData.locale : "en"
-    if (!locales.some((l) => l.code === locale)) {
-      strapi.log.warn(
-        `[content-moderation] applyWikiEdit: unknown locale ${locale}`
-      )
-
-      return "noop"
-    }
-
-    const [article] = (await strapi
-      .documents("api::wiki-article.wiki-article" as any)
-      .findMany({
-        filters: { slug: { $eq: slug } } as any,
-        limit: 1,
-      })) as any[]
-    if (!article) return "noop"
-
-    const updateData: Record<string, unknown> = {}
-    if (typeof draftData.title === "string" && draftData.title.trim())
-      updateData.title = draftData.title.trim().slice(0, 200)
-    const body = sanitizeWikiBody(draftData.body)
-    if (body) updateData.body = body
-    if (Object.keys(updateData).length === 0) return "noop"
-
-    await strapi.documents("api::wiki-article.wiki-article" as any).update({
-      documentId: article.documentId,
-      locale,
-      status: "published",
-      data: updateData,
-    })
-
-    if (submission.submittedByUserId) {
-      const [profile] = (await strapi
-        .documents("api::user-profile.user-profile")
-        .findMany({
-          filters: { baUserId: { $eq: submission.submittedByUserId } } as any,
-          fields: ["documentId"] as any,
-          limit: 1,
-        })) as any[]
-      if (profile)
-        await strapi.documents("api::wiki-article.wiki-article" as any).update({
-          documentId: article.documentId,
-          locale,
-          data: {
-            contributors: { connect: [{ documentId: profile.documentId }] },
-          },
-        })
-    }
-
-    return "applied"
+  /** Applies an approved Journal submission (see utils/article-apply). */
+  async applyJournalSubmission(submission: any): Promise<ApplyArticleOutcome> {
+    return applyArticleSubmission(strapi, submission, "journal")
   },
 })
