@@ -387,6 +387,30 @@ function StatusPanelRow({
 const PANEL_CLASS =
   "m-0 flex shrink-0 flex-col gap-3 border-t pt-4 sm:w-[200px] sm:border-t-0 sm:border-l sm:pt-0 sm:pl-6"
 
+/** Where an unsent draft continues: the record wizard or the article editor. */
+function continueHref(submission: Submission): string {
+  const { submissionType, targetSlug, documentId, draftData } = submission
+  if (submissionType === "wiki_edit" || submissionType === "blog_submission") {
+    const kind = submissionType === "wiki_edit" ? "knowledge" : "journal"
+    if (
+      (draftData as { kind?: unknown } | null)?.kind === "new_article" ||
+      !targetSlug
+    )
+      return `/contribute/knowledge/new?type=${kind}&draft=${encodeURIComponent(documentId)}`
+
+    return kind === "knowledge"
+      ? `/contribute/knowledge/${encodeURIComponent(targetSlug)}`
+      : `/contribute/knowledge/journal/${encodeURIComponent(targetSlug)}`
+  }
+  if (
+    (submissionType === "library_edit" || submissionType === "correction") &&
+    targetSlug
+  )
+    return `/contribute/index/${encodeURIComponent(targetSlug)}`
+
+  return "/contribute/index/new"
+}
+
 function StatusPanel({ submission }: { submission: Submission }) {
   const { status, updatedAt, createdAt, reviewedAt } = submission
 
@@ -403,7 +427,7 @@ function StatusPanel({ submission }: { submission: Submission }) {
 
         <div className="mt-1">
           <Link
-            href="/contribute/add"
+            href={continueHref(submission)}
             className="inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-[15px] font-semibold whitespace-nowrap text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
             style={{ background: T.accent.primary }}
           >

@@ -7,6 +7,7 @@ import { Container } from "@/components/elementary/Container"
 import type { BlogArticleSummary } from "@/lib/strapi-api/content/server"
 
 import BlogArticleList from "./BlogArticleList"
+import { buildFeedLayout } from "./blogFeed.helpers"
 import { BlogFilterBar } from "./BlogFilterBar"
 import { FeaturedArticleCard } from "./FeaturedArticleCard"
 import { MoreToCome } from "./MoreToCome"
@@ -95,9 +96,16 @@ function BlogFeedInner({
     return result
   }, [articles, activeSection, sortOrder])
 
-  // A young journal shows an invitation instead of padding a one-item grid.
-  const youngJournal = articles.length < 4
   const featured = activeSection === "All" ? featuredArticle : null
+
+  // The featured card is not repeated in the list, and a young journal
+  // follows its articles with an invitation rather than replacing them.
+  const { listed, showList, showMoreToCome } = buildFeedLayout({
+    processedArticles,
+    featured,
+    activeSection,
+    totalArticles: articles.length,
+  })
 
   return (
     <>
@@ -118,9 +126,7 @@ function BlogFeedInner({
         </section>
       ) : null}
 
-      {youngJournal && activeSection === "All" ? (
-        <MoreToCome articleCount={articles.length} />
-      ) : (
+      {showList ? (
         <section
           className={
             featured ? "py-14 sm:py-20" : "pt-8 pb-14 sm:pt-10 sm:pb-20"
@@ -145,10 +151,12 @@ function BlogFeedInner({
                 </em>
               </h2>
             </div>
-            <BlogArticleList articles={processedArticles} />
+            <BlogArticleList articles={listed} />
           </Container>
         </section>
-      )}
+      ) : null}
+
+      {showMoreToCome ? <MoreToCome articleCount={articles.length} /> : null}
     </>
   )
 }

@@ -83,12 +83,28 @@ const MATCHERS: { key: DocsSectionKey; pattern: RegExp }[] = [
   },
 ]
 
-/** Map a wiki article into the docs taxonomy. Title and category signal
- * first; the wiki section only counts when it isn't a generic catch-all.
- * Everything unmatched lands in Getting started. */
+const SECTION_KEYS = new Set<string>(DOCS_SECTIONS.map((s) => s.key))
+
+/** The sections an article was tagged to in the editor (home first), if any. */
+export function docsSectionsOf(article: WikiArticleSummary): DocsSectionKey[] {
+  const raw = (article as { docsSections?: unknown }).docsSections
+
+  return Array.isArray(raw)
+    ? raw.filter(
+        (k): k is DocsSectionKey => typeof k === "string" && SECTION_KEYS.has(k)
+      )
+    : []
+}
+
+/** Map a wiki article into the docs taxonomy. An article tagged in the
+ * editor uses its home section. Otherwise title and category signal first;
+ * the wiki section only counts when it isn't a generic catch-all, and
+ * everything unmatched lands in Getting started. */
 export function docsSectionForArticle(
   article: WikiArticleSummary
 ): DocsSectionKey {
+  const tagged = docsSectionsOf(article)[0]
+  if (tagged) return tagged
   const sectionSlug = article.section?.slug?.toLowerCase() ?? ""
   const primary = [
     article.title ?? "",

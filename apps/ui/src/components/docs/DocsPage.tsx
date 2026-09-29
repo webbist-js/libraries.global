@@ -7,6 +7,7 @@ import {
   DOCS_VERSION,
   docsArticlePath,
   docsSectionForArticle,
+  docsSectionsOf,
   readingTimeMinutes,
 } from "@/components/docs/docs.config"
 import {
@@ -20,8 +21,12 @@ import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
+import { CONTACT_EMAIL } from "@/lib/constants"
 import { T } from "@/lib/design-tokens"
 import type { DocsWikiArticle } from "@/lib/strapi-api/content/server"
+
+// Wiki editor is given by hand for now (see "Roles and permissions").
+const WIKI_EDITOR_APPLY_HREF = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Wiki editor application")}`
 
 const ENTRY_CARDS = [
   {
@@ -89,7 +94,12 @@ export function DocsPage({
     governance: [],
   }
   articles.forEach((article) => {
-    sections[docsSectionForArticle(article)].push(toRow(article))
+    // Home section first; an article tagged to more sections is listed in each.
+    const keys = new Set([
+      docsSectionForArticle(article),
+      ...docsSectionsOf(article),
+    ])
+    keys.forEach((key) => sections[key].push(toRow(article)))
   })
 
   // Recent changes — articles are already sorted by updatedAt desc
@@ -254,55 +264,46 @@ export function DocsPage({
               </section>
 
               <section
-                aria-labelledby="docs-open-source"
+                aria-labelledby="docs-write-with-us"
                 className="rounded-[20px] p-5"
                 style={{ background: T.ink.base, color: "#fff" }}
               >
                 <h2
                   className="m-0 text-[20px]"
-                  id="docs-open-source"
+                  id="docs-write-with-us"
                   style={{ fontFamily: T.font.serif, fontWeight: 500 }}
                 >
-                  These articles are open source too
+                  Help write these articles
                 </h2>
                 <p
                   className="mt-2 mb-0 text-[14px] leading-[1.55]"
                   style={{ color: "rgba(255,255,255,.75)" }}
                 >
-                  Every page lives in the repository. Spot a mistake? Open a
-                  pull request, or start a discussion.
+                  Spot a mistake? Anyone with an account can suggest a change to
+                  a page. To write, edit and translate articles yourself, apply
+                  to become a wiki editor.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <a
+                  <GlobalLink
                     className="inline-flex items-center gap-1 rounded-full px-4 py-2 text-[14px] font-semibold transition-opacity hover:opacity-90"
-                    href={DOCS_REPO_URL}
-                    rel="noopener noreferrer"
+                    href="/contribute/knowledge"
                     style={{ background: "#fff", color: T.ink.base }}
-                    target="_blank"
                   >
-                    View source
-                    <Icon
-                      aria-hidden="true"
-                      height={13}
-                      icon="mdi:arrow-top-right"
-                      width={13}
-                    />
-                  </a>
+                    Suggest a change
+                  </GlobalLink>
                   <a
                     className="inline-flex items-center gap-1 rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-white/10"
-                    href={`${DOCS_REPO_URL}/releases`}
-                    rel="noopener noreferrer"
+                    href={WIKI_EDITOR_APPLY_HREF}
                     style={{
                       borderColor: "rgba(255,255,255,.35)",
                       color: "#fff",
                     }}
-                    target="_blank"
                   >
-                    Watch releases
+                    Apply to edit
                     <Icon
                       aria-hidden="true"
                       height={13}
-                      icon="mdi:arrow-top-right"
+                      icon="mdi:email-outline"
                       width={13}
                     />
                   </a>

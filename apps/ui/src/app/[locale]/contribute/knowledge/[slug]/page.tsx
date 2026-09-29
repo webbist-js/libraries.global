@@ -2,12 +2,18 @@ import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import type { Locale } from "next-intl"
 
-import { docsSectionForArticle } from "@/components/docs/docs.config"
-import { hasCapability } from "@/lib/access-server"
+import { ARTICLE_KIND_META } from "@/components/contribute/article-editor/article.types"
+import { ArticleEditorShell } from "@/components/contribute/article-editor/ArticleEditorShell"
+import {
+  fetchArticleLocales,
+  loadArticleForEditor,
+} from "@/lib/article-editor-server"
 import { getSessionSSR } from "@/lib/auth-server"
-import { fetchDocsWikiArticles } from "@/lib/strapi-api/content/server"
+import { T } from "@/lib/design-tokens"
+import { privateMetadata } from "@/lib/seo/metadata"
 
-import { DocsEditShell } from "./_components/DocsEditShell"
+import { ReportProblemForm } from "./_components/ReportProblemForm"
+import { ContributeSectionHeader } from "../../_components/ContributeSectionHeader"
 
 export const dynamic = "force-dynamic"
 
@@ -18,40 +24,68 @@ export async function generateMetadata({
 }) {
   const { slug } = await params
 
-  return {
-    title: `Edit article: ${slug} / Knowledge`,
-    robots: "noindex, nofollow",
-  }
+  return privateMetadata(`Edit article: ${slug}`)
 }
 
-export default async function EditDocPage({
+export default async function EditKnowledgeArticlePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>
+  searchParams: Promise<{ mode?: string }>
 }) {
-  const { locale, slug } = await params
-  const session = await getSessionSSR(await headers())
-
+  const [{ locale, slug }, { mode }, session] = await Promise.all([
+    params,
+    searchParams,
+    getSessionSSR(await headers()),
+  ])
   if (!session?.user)
-    redirect(`/auth/signin?callbackUrl=/contribute/knowledge/${slug}`)
+    redirect(
+      `/auth/signin?callbackUrl=${encodeURIComponent(`/contribute/knowledge/${slug}`)}`
+    )
 
-  const articles = (await fetchDocsWikiArticles(locale as Locale))?.data ?? []
-  const article = articles.find((a) => a.slug === slug)
+  const [article, locales] = await Promise.all([
+    loadArticleForEditor("knowledge", slug, locale as Locale),
+    fetchArticleLocales(),
+  ])
   if (!article) notFound()
-
-  const canDirectEdit = hasCapability(session.user, "docs.directEdit")
+  const report = mode === "report"
 
   return (
-    <DocsEditShell
-      article={{
-        title: article.title ?? article.slug ?? "Untitled",
-        slug: article.slug!,
-        summary: article.summary ?? null,
-        body: (article.body ?? []) as Record<string, unknown>[],
-        sectionKey: docsSectionForArticle(article),
-      }}
-      canDirectEdit={canDirectEdit}
-      locale={locale}
-    />
+    <div
+      style={{ background: T.bg.void, minHeight: "100vh", color: T.ink.base }}
+    >
+      <ContributeSectionHeader
+        compact
+        section="Knowledge editor"
+        title={
+          report
+            ? `Something wrong in *${article.title}?*`
+            : `Improve *${article.title}.*`
+        }
+        lead={
+          report
+            ? "Describe the problem. A reviewer checks it against your source, and accepted changes are credited to you."
+            : "Edit the article, or add a translation. Editors review every change before it’s published, and each contributor is credited."
+        }
+      />
+      {report ? (
+        <main className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
+          <ReportProblemForm
+            slug={slug}
+            title={article.title}
+            editHref={ARTICLE_KIND_META.knowledge.editPath(slug)}
+          />
+        </main>
+      ) : (
+        <ArticleEditorShell
+          kind="knowledge"
+          mode="edit"
+          article={article}
+          locales={locales}
+          uiLocale={locale}
+        />
+      )}
+    </div>
   )
 }
