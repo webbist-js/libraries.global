@@ -17,7 +17,6 @@ import { fetchLibraryArea } from "@/lib/strapi-api/content/library-area"
 import {
   fetchFeaturedLibraryPaths,
   fetchLibrary,
-  fetchLibraryCatalogue,
   fetchLibraryFollowerCount,
   fetchLibraryRevisions,
 } from "@/lib/strapi-api/content/server"
@@ -153,13 +152,11 @@ export default function LibraryRoutePage(props: {
     openingTimes: library.openingTimes as OpeningTimesValue | null,
   })
   const revisionsPromise = fetchLibraryRevisions(library.documentId)
-  const cataloguePromise = fetchLibraryCatalogue(library.documentId)
   const datasetPromise = fetchDataset(library.source)
   const followersPromise = fetchLibraryFollowerCount(library.documentId)
 
   const area = use(areaPromise)
   const revisions = use(revisionsPromise)
-  const catalogue = use(cataloguePromise)
   const dataset = use(datasetPromise)
   const followers = use(followersPromise)
 
@@ -221,7 +218,6 @@ export default function LibraryRoutePage(props: {
         locale={locale}
         area={area}
         revisions={revisions}
-        catalogue={catalogue}
         dataset={dataset}
         canonicalUrl={url}
         followers={followers}

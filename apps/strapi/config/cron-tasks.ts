@@ -35,44 +35,6 @@ const quickWinsRefreshJob = {
   },
 }
 
-// Re-list every catalogue's branches weekly: keeps branch→Library matches
-// fresh and flags catalogues whose sites have changed or started blocking us.
-const catalogueBranchDiscoveryJob = {
-  task: async ({ strapi }: { strapi: any }) => {
-    const catalogues = await strapi
-      .documents("api::catalogue.catalogue")
-      .findMany({
-        filters: { branchStatus: { $ne: "unsupported" } },
-        fields: ["documentId", "name"],
-        // findMany ignores `pagination` in Strapi 5.55: flat start/limit.
-        start: 0,
-        limit: 1000,
-        sort: ["id:asc"],
-      })
-    strapi.log.info(
-      `[catalogue] Branch discovery for ${catalogues.length} catalogues`
-    )
-    const service = strapi.service("api::catalogue.catalogue")
-    // Few at a time: these are small council sites. Per-host throttling in
-    // @repo/catalogues spaces out requests to shared hosts.
-    await mapLimit(
-      catalogues as { documentId: string; name: string }[],
-      3,
-      (c) =>
-        service
-          .discoverBranches(c.documentId)
-          .catch((err: Error) =>
-            strapi.log.warn(`[catalogue] ${c.name}: ${err.message}`)
-          )
-    )
-    strapi.log.info("[catalogue] Branch discovery complete")
-  },
-  options: {
-    rule: "0 0 2 * * 1",
-  },
-}
-
 export default {
   quickWinsRefreshJob,
-  catalogueBranchDiscoveryJob,
 }

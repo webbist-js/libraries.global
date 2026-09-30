@@ -8,10 +8,7 @@ describe("config/cron-tasks", () => {
   it("has no sayHelloJob", () => {
     expect(Object.keys(cronTasks)).not.toContain("sayHelloJob")
     expect(Object.keys(cronTasks)).toEqual(
-      expect.arrayContaining([
-        "quickWinsRefreshJob",
-        "catalogueBranchDiscoveryJob",
-      ])
+      expect.arrayContaining(["quickWinsRefreshJob"])
     )
   })
 
@@ -43,20 +40,5 @@ describe("config/cron-tasks", () => {
     expect(peak).toBe(5)
     expect(done).toHaveLength(11)
     expect(strapi.log.warn).toHaveBeenCalledTimes(1)
-  })
-
-  it("lists catalogues with start/limit and a stable sort, not pagination", async () => {
-    const findMany = vi.fn(async () => [])
-    const strapi: any = {
-      log: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
-      documents: vi.fn(() => ({ findMany })),
-      service: vi.fn(() => ({ discoverBranches: vi.fn() })),
-    }
-    await (cronTasks as any).catalogueBranchDiscoveryJob.task({ strapi })
-    const params = (findMany.mock.calls[0] as any)[0]
-    expect(params.pagination).toBeUndefined()
-    expect(params.start).toBe(0)
-    expect(params.limit).toBe(1000)
-    expect(params.sort).toEqual(["id:asc"])
   })
 })

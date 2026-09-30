@@ -25,7 +25,6 @@ This is a pnpm workspace run with Turborepo.
 | `apps/sync-worker`                                                       | Node service that pulls library events from Eventbrite, Spydus, Solus, Aspen, iCal feeds, TicketSource and WeGotTickets, matches them to libraries and writes them to Postgres |
 | `apps/docs`                                                              | Docusaurus developer docs inherited from the starter. Mostly not yet rewritten for this project                                                                                |
 | `packages/access`                                                        | Contributor roles, capabilities, entitlements and limits, shared by the UI and Strapi                                                                                          |
-| `packages/catalogues`                                                    | Detects library catalogue systems, lists branches and checks ISBN availability. [README](./packages/catalogues/README.md)                                                      |
 | `packages/events-crypto`                                                 | AES-256-GCM encryption for event provider credentials, shared by Strapi and the sync worker                                                                                    |
 | `packages/strapi-types`                                                  | TypeScript types generated from the Strapi schemas. [README](./packages/strapi-types/README.md)                                                                                |
 | `packages/design-system`                                                 | Theme CSS shared by the UI and the Strapi admin                                                                                                                                |
@@ -115,7 +114,7 @@ In development, sign-in and verification emails are logged to the console instea
 pnpm dev:strapi
 ```
 
-This starts Postgres with `docker compose` and then runs `strapi develop`. Open [localhost:1337/admin](http://localhost:1337/admin), create the first admin user, then create the API tokens from step 3 under **Settings → API Tokens**. On every boot Strapi seeds, where missing, the approved topics, the Libraries Hacked list of UK catalogues and draft legal documents. There are no libraries or places until you load them in step 6.
+This starts Postgres with `docker compose` and then runs `strapi develop`. Open [localhost:1337/admin](http://localhost:1337/admin), create the first admin user, then create the API tokens from step 3 under **Settings → API Tokens**. On every boot Strapi seeds, where missing, the approved topics and draft legal documents. There are no libraries or places until you load them in step 6.
 
 ### 5. Run the site
 
@@ -156,7 +155,7 @@ pnpm format:check     # Prettier on CSS, SCSS and Markdown
 pnpm commit           # Commitizen prompt for a conventional commit
 ```
 
-For one workspace, use a filter: `pnpm -F @repo/ui test`, `pnpm -F @repo/catalogues test:live`.
+For one workspace, use a filter: `pnpm -F @repo/ui test`.
 
 After changing a Strapi schema, regenerate the types so the UI sees the change:
 
@@ -197,7 +196,6 @@ The UI will deploy to Vercel and Strapi to Strapi Cloud. The production Meilisea
 | [docs/community-and-points-system.md](./docs/community-and-points-system.md) | Contributor roles and rewards         |
 | [docs/search-assessment.md](./docs/search-assessment.md)                     | Search design and Meilisearch setup   |
 | [docs/user-touchpoints.md](./docs/user-touchpoints.md)                       | Every place the site talks to users   |
-| [docs/catalogues.md](./docs/catalogues.md)                                   | Catalogue integration                 |
 | [TODOS.md](./TODOS.md)                                                       | Open work, by priority                |
 | [CLAUDE.md](./CLAUDE.md), [AGENTS.md](./AGENTS.md)                           | Notes for coding agents               |
 
@@ -215,5 +213,4 @@ The legal documents in Strapi are pre-launch drafts (version 0.x). The first-pub
 
 ## Acknowledgements
 
-- [Libraries Hacked](https://www.librarieshacked.org/). `packages/catalogues` is a port of their [catalogues-library](https://github.com/LibrariesHacked/catalogues-library), and the UK library service catalogue list comes from their dataset. Both are MIT licensed; see [packages/catalogues/NOTICE](./packages/catalogues/NOTICE).
 - The monorepo began as [notum-cz/strapi-next-monorepo-starter](https://github.com/notum-cz/strapi-next-monorepo-starter) (MIT).

@@ -25,7 +25,7 @@ An external system that supplies Event data — either a ticketing/aggregation p
 _Avoid_: integration, feed, data source
 
 **Dataset**:
-An external body of data imported into the index — a published list of libraries or catalogues — registered in Strapi with its publisher, source address, licence and licence URL, whether that licence has been confirmed in writing, whether redistribution is permitted, the credit it requires, its coverage, the import mechanism, dates and notes. A record points at the Dataset it came from through its `source` field, which equals the Dataset's `key`. Distinct from a Source Provider, which supplies Events, not records.
+An external body of data imported into the index — a published list of libraries — registered in Strapi with its publisher, source address, licence and licence URL, whether that licence has been confirmed in writing, whether redistribution is permitted, the credit it requires, its coverage, the import mechanism, dates and notes. A record points at the Dataset it came from through its `source` field, which equals the Dataset's `key`. Distinct from a Source Provider, which supplies Events, not records.
 _Avoid_: data source, feed, import (for the registry entry itself)
 
 **Source Record**:

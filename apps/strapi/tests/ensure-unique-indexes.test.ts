@@ -270,7 +270,6 @@ describe("hot-path index list", () => {
       "ON rw_point_events (awarded_at)",
       "ON rw_badge_awards (ba_user_id, badge_id)",
       "ON rw_leaderboard_snapshots (period, period_type)",
-      "ON catalogue_branches (library_document_id)",
     ]) {
       expect(bySql.some((s) => s.includes(expected))).toBe(true)
     }
@@ -327,7 +326,7 @@ describe("ensureHotPathIndexes", () => {
     const { strapi, rawFn } = fakeHotPathStrapi({
       client: "postgres",
       existingIndexes: new Set(rest.map((i) => i.name)),
-      missingTables: new Set(["catalogue_branches"]),
+      missingTables: new Set(["rw_leaderboard_snapshots"]),
     })
 
     await ensureHotPathIndexes(strapi)
@@ -337,9 +336,11 @@ describe("ensureHotPathIndexes", () => {
       (s) => s.startsWith("CREATE") && / INDEX /.test(s)
     )
     expect(creates).toEqual([first.sql])
-    expect(sqls.some((s) => s.includes("ON catalogue_branches"))).toBe(false)
+    expect(sqls.some((s) => s.includes("ON rw_leaderboard_snapshots"))).toBe(
+      false
+    )
     expect(strapi.log.warn).toHaveBeenCalledWith(
-      expect.stringContaining("catalogue_branches")
+      expect.stringContaining("rw_leaderboard_snapshots")
     )
   })
 

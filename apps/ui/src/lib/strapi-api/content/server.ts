@@ -1555,46 +1555,6 @@ export async function fetchIncompleteLibraries(): Promise<IncompleteLibrary[]> {
   }
 }
 
-// ------ Library catalogue (live availability via @repo/catalogues in Strapi)
-
-export interface LibraryCatalogueSummary {
-  name: string
-  system: string
-  url: string
-  status: "unverified" | "active" | "failing" | "unsupported"
-  /** The catalogue's name for this Library's branch, when matched. */
-  branch: string | null
-}
-
-/**
- * The online catalogue a Library belongs to, if we know it. Drives the
- * "Check the catalogue" section; null hides it.
- */
-export async function fetchLibraryCatalogue(
-  documentId: string
-): Promise<LibraryCatalogueSummary | null> {
-  const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
-  try {
-    const res = await fetch(
-      `${strapiUrl}/api/catalogues/for-library/${documentId}`,
-      { next: { revalidate: 3600 } }
-    )
-    if (!res.ok) return null
-
-    return ((await res.json()) as LibraryCatalogueSummary | null) ?? null
-  } catch (e: unknown) {
-    logNonBlockingError({
-      message: `Error fetching catalogue for library '${documentId}'`,
-      error: {
-        error: e instanceof Error ? e.message : String(e),
-        stack: e instanceof Error ? e.stack : undefined,
-      },
-    })
-
-    return null
-  }
-}
-
 // ── Index editor ───────────────────────────────────────────────────────────
 
 export type LibraryForEditing = Record<string, unknown> & {

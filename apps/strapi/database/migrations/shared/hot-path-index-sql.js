@@ -106,9 +106,6 @@ const HOT_PATH_INDEXES = [
       dedupe("rw_leaderboard_snapshots", ["period", "period_type"], "highest"),
     ],
   }),
-
-  // Catalogue branch → library match lookups.
-  index("catalogue_branches", ["library_document_id"]),
 ]
 
 /**

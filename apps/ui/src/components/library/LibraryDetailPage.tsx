@@ -9,7 +9,6 @@ import { LIBRARY_ANCHORS } from "@/components/library/library-anchors"
 import { toLatLng } from "@/components/library/library-page.helpers"
 import { LibraryAnchorNav } from "@/components/library/LibraryAnchorNav"
 import { LibraryAreaSection } from "@/components/library/LibraryArea"
-import { LibraryCatalogueCheck } from "@/components/library/LibraryCatalogueCheck"
 import { LibraryCorrectionProvider } from "@/components/library/LibraryCorrection"
 import { LibraryEvents } from "@/components/library/LibraryEvents"
 import { LibraryHero } from "@/components/library/LibraryHero"
@@ -37,7 +36,6 @@ import { T } from "@/lib/design-tokens"
 import type { DatasetRecord } from "@/lib/strapi-api/content/datasets"
 import type { LibraryAreaData } from "@/lib/strapi-api/content/library-area"
 import type {
-  LibraryCatalogueSummary,
   LibraryRevision,
   PopulatedLibraryData,
 } from "@/lib/strapi-api/content/server"
@@ -56,7 +54,6 @@ interface LibraryDetailPageProps {
   /** Nearby libraries and area figures, from the index. */
   readonly area?: LibraryAreaData
   readonly revisions?: LibraryRevision[]
-  readonly catalogue?: LibraryCatalogueSummary | null
   /** The dataset this record was imported from, if any. */
   readonly dataset?: DatasetRecord | null
   /** The record's canonical, absolute URL (for the citation). */
@@ -70,7 +67,6 @@ export function LibraryDetailPage({
   locale,
   area = NO_AREA,
   revisions = [],
-  catalogue = null,
   dataset = null,
   canonicalUrl,
   followers = null,
@@ -224,7 +220,6 @@ export function LibraryDetailPage({
                 {collectionsFull ? (
                   <LibraryCollectionsSection library={library} />
                 ) : null}
-                <CatalogueSection library={library} catalogue={catalogue} />
                 {hasFeed ? (
                   <LibrarySectionCard
                     id="events"
@@ -272,33 +267,6 @@ export function LibraryDetailPage({
         </main>
       </LibraryCorrectionProvider>
     </div>
-  )
-}
-
-/** Live availability check, shown when the Library's catalogue is connected. */
-function CatalogueSection({
-  library,
-  catalogue,
-}: {
-  readonly library: PopulatedLibraryData
-  readonly catalogue: LibraryCatalogueSummary | null
-}) {
-  if (!catalogue || catalogue.status === "unsupported" || !library.documentId)
-    return null
-
-  return (
-    <LibrarySectionCard
-      id="catalogue"
-      title="Check the catalogue"
-      iconPath={LIB_ICONS.search}
-      intro="See whether a book is on the shelf here, or at another branch."
-    >
-      <LibraryCatalogueCheck
-        libraryDocumentId={library.documentId}
-        catalogueName={catalogue.name}
-        catalogueUrl={catalogue.url}
-      />
-    </LibrarySectionCard>
   )
 }
 

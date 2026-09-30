@@ -2,7 +2,6 @@ import type { Core } from "@strapi/strapi"
 
 import { LOCATION_PICKER_FIELD_NAME } from "./customFields/locationPicker/shared"
 import { OPENING_TIMES_FIELD_NAME } from "./customFields/openingTimes/shared"
-import { registerCatalogueLinkMiddleware } from "./documentMiddlewares/catalogue"
 import { registerAdminUserSubscriber } from "./lifeCycles/adminUser"
 import { registerEntityRefSubscriber } from "./lifeCycles/entityRef"
 import { registerUserSubscriber } from "./lifeCycles/user"
@@ -87,14 +86,8 @@ export default {
     registerUserSubscriber({ strapi })
     registerEntityRefSubscriber({ strapi })
 
-    // Detect and link a Library's catalogue when its catalogueUrl is set
-    registerCatalogueLinkMiddleware({ strapi })
-
     // Seed approved topics (idempotent — skips existing names)
     await seedTopics(strapi)
-
-    // Import the LibrariesHacked UK catalogue list once (idempotent)
-    await seedCatalogues(strapi)
 
     // Draft legal documents with placeholder copy on first boot (idempotent)
     await seedLegalDocuments(strapi)
@@ -119,19 +112,6 @@ export default {
     // nobody can mint a Strapi JWT by POSTing to /api/auth/local/register.
     await disableUsersPermissionsRegistration(strapi)
   },
-}
-
-async function seedCatalogues(strapi: Core.Strapi) {
-  const count = await strapi
-    .documents("api::catalogue.catalogue" as any)
-    .count({ filters: { source: "librarieshacked" } } as any)
-  if (count > 0) return
-  const created = await (
-    strapi.service("api::catalogue.catalogue") as any
-  ).importUkServices()
-  strapi.log.info(
-    `[catalogue] Imported ${created} UK library service catalogues`
-  )
 }
 
 async function disableUsersPermissionsRegistration(strapi: Core.Strapi) {

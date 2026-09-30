@@ -113,11 +113,7 @@ export function AtlasLibraryPanel({
   const facilities = [...library.services, ...library.access].slice(0, 6)
   const closedForGood = library.status === "permanently_closed"
   const updated = relative(detail?.updatedAt)
-  const catalogueHref = library.path
-    ? library.catalogue
-      ? `${library.path}#catalogue`
-      : (detail?.catalogueUrl ?? null)
-    : null
+  const catalogueHref = library.path ? (detail?.catalogueUrl ?? null) : null
 
   const statusBox =
     status.state === "open"
@@ -311,11 +307,7 @@ export function AtlasLibraryPanel({
         {library.path ? (
           <div className="flex gap-2">
             {catalogueHref ? (
-              <SecondaryLink
-                href={catalogueHref}
-                external={!library.catalogue}
-                icon="ext"
-              >
+              <SecondaryLink href={catalogueHref} external icon="ext">
                 {compact ? "Catalogue" : "Check the catalogue"}
               </SecondaryLink>
             ) : null}
