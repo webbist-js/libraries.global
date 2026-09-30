@@ -2,6 +2,7 @@ import {
   type Capability,
   type ContributorRole,
   type Feature,
+  grantsFromLegacyRole,
   isContributorRole,
   type Limit,
   type PlanKey,
@@ -41,7 +42,7 @@ export function buildSessionAccess(
   const caps = profile
     ? resolveCapabilities({
         signedIn: true,
-        contributorRole: role,
+        grants: grantsFromLegacyRole(role),
         claims: profile.claims.map((libraryDocumentId) => ({
           libraryDocumentId,
         })),

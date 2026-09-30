@@ -2,6 +2,7 @@ import {
   canSubmit,
   type Capabilities,
   contributionLimits,
+  grantsFromLegacyRole,
   isContributorRole,
   isSubmissionType,
   resolveCapabilities,
@@ -77,9 +78,11 @@ export default ({ strapi }: { strapi: any }) => ({
 
     const caps = resolveCapabilities({
       signedIn: true,
-      contributorRole: isContributorRole(profile?.contributorRole)
-        ? (profile!.contributorRole as any)
-        : "reader",
+      grants: grantsFromLegacyRole(
+        isContributorRole(profile?.contributorRole)
+          ? profile!.contributorRole
+          : "reader"
+      ),
       claims: affiliations
         .map((a) => a.library?.documentId)
         .filter((id): id is string => !!id)

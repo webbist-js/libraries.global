@@ -22,7 +22,9 @@
         "library_edit",
         "wiki_edit",
         "blog_submission",
-        "topic_suggestion"
+        "topic_suggestion",
+        "role_application",
+        "location_request"
       ]
     },
     "status": {

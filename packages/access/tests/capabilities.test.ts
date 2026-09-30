@@ -1,18 +1,31 @@
 import { describe, expect, expectTypeOf, it } from "vitest"
 
 import {
+  canDirectEdit,
   canSubmit,
+  grantsFromLegacyRole,
   promoteRole,
   resolveCapabilities,
   type CapabilityInput,
+  type ContributorRole,
+  type RoleGrant,
 } from "../src"
 
-const input = (over: Partial<CapabilityInput> = {}): CapabilityInput => ({
-  signedIn: true,
-  contributorRole: "reader",
-  claims: [],
-  ...over,
-})
+const input = (
+  over: Partial<Omit<CapabilityInput, "grants">> & {
+    contributorRole?: ContributorRole | null
+    grants?: RoleGrant[]
+  } = {}
+): CapabilityInput => {
+  const { contributorRole = "reader", grants, ...rest } = over
+
+  return {
+    signedIn: true,
+    claims: [],
+    ...rest,
+    grants: grants ?? grantsFromLegacyRole(contributorRole),
+  }
+}
 
 describe("resolveCapabilities", () => {
   it("gives anonymous users nothing", () => {
@@ -124,6 +137,91 @@ describe("resolveCapabilities", () => {
   it("rejects unknown submission types", () => {
     const c = resolveCapabilities(input({ contributorRole: "editorial_board" }))
     expect(canSubmit(c, "pro_upgrade" as never)).toBe(false)
+  })
+
+  it("gives every signed-in user role applications and location requests", () => {
+    const c = resolveCapabilities(input({ grants: [] }))
+    expect(c.set.has("submit.roleApplication")).toBe(true)
+    expect(c.set.has("submit.locationRequest")).toBe(true)
+    expect(canSubmit(c, "role_application")).toBe(true)
+    expect(canSubmit(c, "location_request")).toBe(true)
+    expect(c.moderation).toEqual([])
+    expect(c.set.has("moderate.queue")).toBe(false)
+  })
+
+  it("gives signed-out users empty editor locales and no moderation", () => {
+    const c = resolveCapabilities(input({ signedIn: false, grants: [] }))
+    expect(c.moderation).toEqual([])
+    expect(c.editorLocales.docs).not.toBe("all")
+    expect(c.editorLocales.journal).not.toBe("all")
+    expect([...(c.editorLocales.docs as ReadonlySet<string>)]).toEqual([])
+    expect([...(c.editorLocales.journal as ReadonlySet<string>)]).toEqual([])
+    expect(canSubmit(c, "role_application")).toBe(false)
+    expect(canSubmit(c, "location_request")).toBe(false)
+  })
+
+  it("scopes a wiki_editor grant to its locale", () => {
+    const c = resolveCapabilities(
+      input({ grants: [{ role: "wiki_editor", queue: "all", locale: "fr" }] })
+    )
+    expect(c.set.has("docs.directEdit")).toBe(true)
+    expect(c.set.has("journal.directEdit")).toBe(false)
+    expect(canDirectEdit(c, "docs", "fr")).toBe(true)
+    expect(canDirectEdit(c, "docs", "en")).toBe(false)
+    expect(
+      canSubmit(c, "wiki_edit", { directWikiEdit: true, locale: "en" })
+    ).toBe(false)
+    expect(
+      canSubmit(c, "wiki_edit", { directWikiEdit: true, locale: "fr" })
+    ).toBe(true)
+  })
+
+  it("lets a null-locale journal_editor edit every locale", () => {
+    const c = resolveCapabilities(
+      input({
+        grants: [{ role: "journal_editor", queue: "all", locale: null }],
+      })
+    )
+    expect(c.editorLocales.journal).toBe("all")
+    expect(canDirectEdit(c, "journal", "cs")).toBe(true)
+    expect(canDirectEdit(c, "docs", "cs")).toBe(false)
+    expect(
+      canSubmit(c, "blog_submission", { directJournalEdit: true, locale: "cs" })
+    ).toBe(true)
+  })
+
+  it("gives editorial_board every locale and a global moderation scope", () => {
+    const c = resolveCapabilities(
+      input({
+        grants: [{ role: "editorial_board", queue: "all", locale: null }],
+      })
+    )
+    expect(c.editorLocales.docs).toBe("all")
+    expect(c.editorLocales.journal).toBe("all")
+    expect(c.set.has("moderate.queue")).toBe(true)
+    expect(c.moderation).toEqual([{ queue: "all", locale: null }])
+  })
+
+  it("adds nothing for contributor and verified_librarian grants", () => {
+    const base = resolveCapabilities(input({ grants: [] }))
+    const c = resolveCapabilities(
+      input({
+        grants: [
+          { role: "contributor", queue: "all", locale: null },
+          { role: "verified_librarian", queue: "all", locale: null },
+        ],
+      })
+    )
+    expect([...c.set].sort()).toEqual([...base.set].sort())
+    expect(c.moderation).toEqual([])
+  })
+
+  it("maps legacy roles to one global grant, and none for reader", () => {
+    expect(grantsFromLegacyRole(null)).toEqual([])
+    expect(grantsFromLegacyRole("reader")).toEqual([])
+    expect(grantsFromLegacyRole("moderator")).toEqual([
+      { role: "moderator", queue: "all", locale: null },
+    ])
   })
 
   it("has no plan or entitlement inputs (money never buys trust)", () => {

@@ -8,6 +8,7 @@ import {
   resolveEntitlements,
   type CapabilityInput,
   type EntitlementInput,
+  type RoleGrant,
 } from "../src"
 
 type Equals<A, B> =
@@ -18,9 +19,10 @@ const assertTrue = <T extends true>() => undefined as unknown as T
 
 // Invariant 1: CapabilityInput has exactly these keys. An allowlist, so any new
 // field (plan-like or not) has to be added here on purpose.
-assertTrue<
-  Equals<keyof CapabilityInput, "signedIn" | "contributorRole" | "claims">
->()
+assertTrue<Equals<keyof CapabilityInput, "signedIn" | "grants" | "claims">>()
+
+// A Role Grant carries a role and its scope, nothing plan-like.
+assertTrue<Equals<keyof RoleGrant, "role" | "queue" | "locale">>()
 
 // ...and the reverse: EntitlementInput carries no role, claim or capability
 // fields, so trust never feeds the plan either.

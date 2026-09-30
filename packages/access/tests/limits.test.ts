@@ -24,6 +24,8 @@ describe("contributionLimits for editorial staff", () => {
     const curator = contributionLimits("Curator", null)
     expect(contributionLimits("Reader", "wiki_editor")).toEqual(curator)
     expect(contributionLimits(null, "editorial_board")).toEqual(curator)
+    expect(contributionLimits("Reader", "journal_editor")).toEqual(curator)
+    expect(contributionLimits("Reader", "moderator")).toEqual(curator)
   })
 
   it("leaves non-editor roles on their tier quotas", () => {

@@ -45,8 +45,13 @@ const LIMITS: Record<TierName, Limits> = {
 
 const STAFF_ROLES: ReadonlySet<string> = new Set([
   "wiki_editor",
+  "journal_editor",
+  "moderator",
   "editorial_board",
 ])
+
+/** Accepted submissions a user needs before they may apply for a role. */
+export const ROLE_APPLICATION_MIN_ACCEPTED = 5
 
 /**
  * Tier-scaled contribution quotas. Tiers raise limits; they never skip review.

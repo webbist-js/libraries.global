@@ -134,6 +134,7 @@
         "verified_librarian",
         "wiki_editor",
         "journal_editor",
+        "moderator",
         "editorial_board"
       ],
       "default": "reader"
