@@ -127,7 +127,7 @@ describe("claim approval", () => {
           baUserId: "u3",
           role: "wiki_editor",
           queue: "all",
-          locale: null,
+          scopeLocale: null,
         },
       ],
       [LIB]: [{ documentId: "lib0000000000000000000001", id: 7 }],

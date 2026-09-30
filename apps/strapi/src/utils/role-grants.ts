@@ -27,6 +27,10 @@ export type RoleGrantRow = RoleGrant & {
   expiresAt: string | null
 }
 
+/**
+ * `RoleGrant.locale` is stored as `scopeLocale`: `locale` is a reserved
+ * Strapi attribute (i18n overwrites it as private on every content type).
+ */
 const QUEUES: ReadonlySet<string> = new Set(["all", ...MODERATION_QUEUES])
 
 const isQueue = (v: unknown): v is RoleGrant["queue"] =>
@@ -55,17 +59,17 @@ export async function activeGrants(
 ): Promise<RoleGrant[]> {
   const rows = (await strapi.documents(ROLE_GRANT as any).findMany({
     filters: { baUserId: { $eq: baUserId }, ...unexpiredFilter(now) },
-    fields: ["role", "queue", "locale", "expiresAt"],
+    fields: ["role", "queue", "scopeLocale", "expiresAt"],
     sort: ["createdAt:asc", "id:asc"],
     limit: MAX_ACTIVE_GRANTS,
-  })) as { role?: unknown; queue?: unknown; locale?: unknown }[]
+  })) as { role?: unknown; queue?: unknown; scopeLocale?: unknown }[]
 
   return rows.flatMap((row): RoleGrant[] => {
     if (!isGrantableRole(row.role)) return []
     const queue = row.queue ?? "all"
     if (!isQueue(queue)) return []
 
-    return [{ role: row.role, queue, locale: normaliseLocale(row.locale) }]
+    return [{ role: row.role, queue, locale: normaliseLocale(row.scopeLocale) }]
   })
 }
 
@@ -95,7 +99,7 @@ export async function createGrant(
       baUserId: { $eq: input.baUserId },
       role: { $eq: input.role },
       queue: { $eq: queue },
-      locale: locale === null ? { $null: true } : { $eq: locale },
+      scopeLocale: locale === null ? { $null: true } : { $eq: locale },
       ...unexpiredFilter(new Date()),
     },
     fields: ["documentId"],
@@ -109,7 +113,7 @@ export async function createGrant(
       baUserId: input.baUserId,
       role: input.role,
       queue,
-      locale,
+      scopeLocale: locale,
       source: input.source,
       grantedBy: input.grantedBy ?? null,
       reason: input.reason ?? null,

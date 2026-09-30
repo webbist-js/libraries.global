@@ -12,7 +12,15 @@ const ROLE_GRANT = "api::role-grant.role-grant"
 const grantsFor = (role: string, baUserId = "u1") =>
   role === "reader"
     ? []
-    : [{ documentId: `rg-${role}`, baUserId, role, queue: "all", locale: null }]
+    : [
+        {
+          documentId: `rg-${role}`,
+          baUserId,
+          role,
+          queue: "all",
+          scopeLocale: null,
+        },
+      ]
 
 function setup(role = "reader", claims: string[] = [], pending = 0) {
   const { strapi } = makeFakeStrapi({

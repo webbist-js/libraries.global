@@ -23,7 +23,15 @@ const ROLE_GRANT = "api::role-grant.role-grant"
 const grantsFor = (role: string, baUserId = "u1") =>
   role === "reader"
     ? []
-    : [{ documentId: `rg-${role}`, baUserId, role, queue: "all", locale: null }]
+    : [
+        {
+          documentId: `rg-${role}`,
+          baUserId,
+          role,
+          queue: "all",
+          scopeLocale: null,
+        },
+      ]
 const AFF = "api::library-affiliation.library-affiliation"
 
 const body = [

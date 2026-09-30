@@ -106,6 +106,12 @@ const HOT_PATH_INDEXES = [
       dedupe("rw_leaderboard_snapshots", ["period", "period_type"], "highest"),
     ],
   }),
+
+  // Role Grants: the session bridge and the submission policy read a user's
+  // grants by ba_user_id on every session refresh and every submission.
+  // Added after the E1 migration ran, so it has its own migration
+  // (2026.09.30T00.00.03.role-grants-index.js); bootstrap covers fresh DBs.
+  index("role_grants", ["ba_user_id"]),
 ]
 
 /**

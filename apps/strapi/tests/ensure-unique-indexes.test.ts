@@ -270,6 +270,7 @@ describe("hot-path index list", () => {
       "ON rw_point_events (awarded_at)",
       "ON rw_badge_awards (ba_user_id, badge_id)",
       "ON rw_leaderboard_snapshots (period, period_type)",
+      "ON role_grants (ba_user_id)",
     ]) {
       expect(bySql.some((s) => s.includes(expected))).toBe(true)
     }
@@ -369,5 +370,48 @@ describe("ensureHotPathIndexes", () => {
       "[bootstrap] ensureHotPathIndexes failed",
       expect.any(Error)
     )
+  })
+})
+
+describe("role-grants index migration", () => {
+  const MIGRATION =
+    "../database/migrations/2026.09.30T00.00.03.role-grants-index"
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const migration = require(MIGRATION) as {
+    up: (knex: any) => Promise<void>
+    down: (knex: any) => Promise<void>
+  }
+  const knexFor = (client: string, hasTable = true) => {
+    const raw = vi.fn(async () => ({}))
+
+    return {
+      raw,
+      knex: {
+        client: { config: { client } },
+        schema: { hasTable: vi.fn(async () => hasTable) },
+        raw,
+      },
+    }
+  }
+
+  it("creates only the role_grants.ba_user_id index on Postgres", async () => {
+    const { knex, raw } = knexFor("postgres")
+    await migration.up(knex)
+
+    expect(raw.mock.calls).toEqual([
+      [
+        "CREATE INDEX IF NOT EXISTS role_grants_ba_user_id_idx ON role_grants (ba_user_id)",
+      ],
+    ])
+  })
+
+  it("skips a missing table and non-Postgres clients", async () => {
+    const missing = knexFor("postgres", false)
+    await migration.up(missing.knex)
+    expect(missing.raw).not.toHaveBeenCalled()
+
+    const sqlite = knexFor("sqlite")
+    await migration.up(sqlite.knex)
+    expect(sqlite.raw).not.toHaveBeenCalled()
   })
 })

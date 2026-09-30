@@ -86,7 +86,7 @@ describe("auth-bridge createAffiliation: email-domain auto-claim (E6)", () => {
       baUserId: "u1",
       role: "verified_librarian",
       queue: "all",
-      locale: null,
+      scopeLocale: null,
       source: "claim",
       reason: "Approved Library Claim",
     })

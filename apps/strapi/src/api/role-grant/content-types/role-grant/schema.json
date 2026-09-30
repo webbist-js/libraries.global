@@ -5,7 +5,7 @@
     "singularName": "role-grant",
     "pluralName": "role-grants",
     "displayName": "Role Grant",
-    "description": "A Contributor Role held by a user, optionally scoped to a moderation queue and locale. The user-profile contributorRole is derived from these."
+    "description": "A Contributor Role held by a user, optionally scoped to a moderation queue and a locale (scopeLocale; `locale` is reserved by Strapi). The user-profile contributorRole is derived from these."
   },
   "options": { "draftAndPublish": false },
   "attributes": {
@@ -27,7 +27,7 @@
       "enum": ["all", "index", "knowledge", "journal", "applications"],
       "default": "all"
     },
-    "locale": { "type": "string" },
+    "scopeLocale": { "type": "string" },
     "source": {
       "type": "enumeration",
       "enum": ["admin", "claim", "application", "migration"],

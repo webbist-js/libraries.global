@@ -44,7 +44,7 @@ const grant = (
   baUserId: "u1",
   role,
   queue: "all",
-  locale: null,
+  scopeLocale: null,
   source: "admin",
   expiresAt: null,
   ...extra,
@@ -75,7 +75,7 @@ describe("createGrant", () => {
       baUserId: "u1",
       role: "moderator",
       queue: "knowledge",
-      locale: "fr",
+      scopeLocale: "fr",
       source: "admin",
       grantedBy: null,
       reason: null,
@@ -103,7 +103,10 @@ describe("createGrant", () => {
     })
 
     expect(store[ROLE_GRANT]).toHaveLength(2)
-    expect(store[ROLE_GRANT][0]).toMatchObject({ queue: "all", locale: null })
+    expect(store[ROLE_GRANT][0]).toMatchObject({
+      queue: "all",
+      scopeLocale: null,
+    })
   })
 })
 
@@ -111,7 +114,7 @@ describe("activeGrants", () => {
   it("excludes expired rows and returns the RoleGrant shape", async () => {
     const { strapi } = makeFakeStrapi({
       [ROLE_GRANT]: [
-        grant("g1", "wiki_editor", { locale: "fr" }),
+        grant("g1", "wiki_editor", { scopeLocale: "fr" }),
         grant("g2", "moderator", { expiresAt: PAST }),
         grant("g3", "journal_editor", { expiresAt: FUTURE }),
         { ...grant("g4", "moderator"), baUserId: "u2" },
@@ -124,10 +127,20 @@ describe("activeGrants", () => {
     ])
   })
 
+  it("reads the locale from scopeLocale, never Strapi's reserved locale", async () => {
+    const { strapi } = makeFakeStrapi({
+      [ROLE_GRANT]: [grant("g1", "moderator", { locale: "de" })],
+    })
+
+    expect(await activeGrants(strapi, "u1")).toEqual([
+      { role: "moderator", queue: "all", locale: null },
+    ])
+  })
+
   it("caps at 50 grants", async () => {
     const { strapi } = makeFakeStrapi({
       [ROLE_GRANT]: Array.from({ length: 60 }, (_, i) =>
-        grant(`g${i}`, "wiki_editor", { locale: `l${i}` })
+        grant(`g${i}`, "wiki_editor", { scopeLocale: `l${i}` })
       ),
     })
 
@@ -260,7 +273,7 @@ describe("migrateContributorRolesToGrants", () => {
     ])
     expect(store[ROLE_GRANT][0]).toMatchObject({
       queue: "all",
-      locale: null,
+      scopeLocale: null,
       reason: "Backfilled from user-profile.contributorRole",
     })
 
@@ -443,10 +456,75 @@ describe("role-grant lifecycle", () => {
     expect(strapi.log.error).toHaveBeenCalled()
   })
 
+  it("does not notify the app for a grant created by the migration", async () => {
+    process.env.APP_PUBLIC_URL = "https://app.example"
+    process.env.STRAPI_BRIDGE_SECRET = "s3cret"
+    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }))
+    vi.stubGlobal("fetch", fetchMock)
+    const { strapi, store } = makeFakeStrapi({
+      [PROFILE]: [
+        { documentId: "p1", baUserId: "u1", contributorRole: "reader" },
+      ],
+      [ROLE_GRANT]: [grant("g1", "wiki_editor", { source: "migration" })],
+    })
+
+    await roleGrantLifecycles(strapi).afterCreate({
+      result: store[ROLE_GRANT][0],
+    })
+    await new Promise((r) => setTimeout(r, 0))
+
+    expect(store[PROFILE][0].contributorRole).toBe("wiki_editor")
+    expect(fetchMock).not.toHaveBeenCalled()
+
+    // An admin editing that grant later is still pushed to the app.
+    await roleGrantLifecycles(strapi).afterUpdate({
+      result: store[ROLE_GRANT][0],
+    })
+    await new Promise((r) => setTimeout(r, 0))
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("re-syncs the previous holder when an update moves a grant to another user", async () => {
+    const { strapi, store } = makeFakeStrapi({
+      [PROFILE]: [
+        { documentId: "p1", baUserId: "u1", contributorRole: "moderator" },
+        { documentId: "p2", baUserId: "u2", contributorRole: "reader" },
+      ],
+      [ROLE_GRANT]: [{ ...grant("g1", "moderator"), id: 9 }],
+    })
+    delete process.env.APP_PUBLIC_URL
+    const lifecycles = roleGrantLifecycles(strapi)
+    const event: any = {
+      params: { where: { id: 9 }, data: { baUserId: "u2" } },
+      state: {},
+    }
+
+    await lifecycles.beforeUpdate(event)
+    store[ROLE_GRANT][0].baUserId = "u2"
+    event.result = store[ROLE_GRANT][0]
+    await lifecycles.afterUpdate(event)
+
+    expect(store[PROFILE].map((p) => p.contributorRole)).toEqual([
+      "reader",
+      "moderator",
+    ])
+  })
+
+  it("skips the previous-holder lookup when an update leaves baUserId alone", async () => {
+    const { strapi } = makeFakeStrapi()
+    const event: any = {
+      params: { where: { id: 9 }, data: { role: "moderator" } },
+      state: {},
+    }
+    await roleGrantLifecycles(strapi).beforeUpdate(event)
+    expect(strapi.db.query).not.toHaveBeenCalled()
+  })
+
   it("subscribes afterCreate, afterUpdate and afterDelete on the role-grant model", () => {
     const { strapi } = makeFakeStrapi()
     const lifecycles = roleGrantLifecycles(strapi)
     expect(lifecycles.models).toEqual([ROLE_GRANT])
+    expect(typeof lifecycles.beforeUpdate).toBe("function")
     expect(typeof lifecycles.afterCreate).toBe("function")
     expect(typeof lifecycles.afterUpdate).toBe("function")
     expect(typeof lifecycles.afterDelete).toBe("function")

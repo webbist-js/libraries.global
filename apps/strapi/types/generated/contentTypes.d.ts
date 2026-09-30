@@ -2684,6 +2684,58 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface ApiRoleGrantRoleGrant extends Struct.CollectionTypeSchema {
+  collectionName: "role_grants"
+  info: {
+    description: "A Contributor Role held by a user, optionally scoped to a moderation queue and a locale (scopeLocale; `locale` is reserved by Strapi). The user-profile contributorRole is derived from these."
+    displayName: "Role Grant"
+    pluralName: "role-grants"
+    singularName: "role-grant"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  attributes: {
+    baUserId: Schema.Attribute.String & Schema.Attribute.Required
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    expiresAt: Schema.Attribute.DateTime
+    grantedBy: Schema.Attribute.String
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::role-grant.role-grant"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    queue: Schema.Attribute.Enumeration<
+      ["all", "index", "knowledge", "journal", "applications"]
+    > &
+      Schema.Attribute.DefaultTo<"all">
+    reason: Schema.Attribute.Text
+    role: Schema.Attribute.Enumeration<
+      [
+        "contributor",
+        "verified_librarian",
+        "wiki_editor",
+        "journal_editor",
+        "moderator",
+        "editorial_board",
+      ]
+    > &
+      Schema.Attribute.Required
+    scopeLocale: Schema.Attribute.String
+    source: Schema.Attribute.Enumeration<
+      ["admin", "claim", "application", "migration"]
+    > &
+      Schema.Attribute.DefaultTo<"admin">
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface ApiSavedEventSavedEvent extends Struct.CollectionTypeSchema {
   collectionName: "saved_events"
   info: {
@@ -2906,6 +2958,7 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
         "verified_librarian",
         "wiki_editor",
         "journal_editor",
+        "moderator",
         "editorial_board",
       ]
     > &
@@ -4406,6 +4459,7 @@ declare module "@strapi/strapi" {
       "api::pro-verification.pro-verification": ApiProVerificationProVerification
       "api::redirect.redirect": ApiRedirectRedirect
       "api::region.region": ApiRegionRegion
+      "api::role-grant.role-grant": ApiRoleGrantRoleGrant
       "api::saved-event.saved-event": ApiSavedEventSavedEvent
       "api::service.service": ApiServiceService
       "api::subscriber.subscriber": ApiSubscriberSubscriber

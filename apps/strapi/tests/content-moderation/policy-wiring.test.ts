@@ -290,7 +290,7 @@ describe("(iii) applyWikiEdit re-checks capabilities at apply time", () => {
                 baUserId: "u1",
                 role,
                 queue: "all",
-                locale: null,
+                scopeLocale: null,
               },
             ],
       [AFF]: [],

@@ -74,7 +74,7 @@ describe("auth-bridge sessionProfile", () => {
           baUserId: "u1",
           role: "verified_librarian",
           queue: "all",
-          locale: null,
+          scopeLocale: null,
           expiresAt: null,
         },
         {
@@ -82,7 +82,7 @@ describe("auth-bridge sessionProfile", () => {
           baUserId: "u1",
           role: "moderator",
           queue: "knowledge",
-          locale: "fr",
+          scopeLocale: "fr",
           expiresAt: FUTURE_ISO,
         },
         {
@@ -90,7 +90,7 @@ describe("auth-bridge sessionProfile", () => {
           baUserId: "u1",
           role: "editorial_board",
           queue: "all",
-          locale: null,
+          scopeLocale: null,
           expiresAt: "2020-01-01T00:00:00Z",
         },
         {
@@ -98,7 +98,7 @@ describe("auth-bridge sessionProfile", () => {
           baUserId: "u2",
           role: "wiki_editor",
           queue: "all",
-          locale: null,
+          scopeLocale: null,
           expiresAt: null,
         },
       ],
