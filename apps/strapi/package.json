@@ -6,7 +6,7 @@
   "types": "./types",
   "scripts": {
     "build": "pnpm run build:plugins && strapi build",
-    "build:plugins": "cd src/plugins/content-moderation && pnpm exec strapi-plugin build && cd - && cd src/plugins/topics && pnpm exec strapi-plugin build && cd - && cd src/plugins/rewards && pnpm exec strapi-plugin build && cd - && cd src/plugins/events && pnpm exec strapi-plugin build && cd -",
+    "build:plugins": "cd src/plugins/content-moderation && pnpm exec strapi-plugin build && cd - && cd src/plugins/rewards && pnpm exec strapi-plugin build && cd - && cd src/plugins/events && pnpm exec strapi-plugin build && cd -",
     "config:dump": "strapi configuration:dump -f dump.json",
     "config:restore": "strapi configuration:restore -f dump.json",
     "dev": "pnpm run run:db && pnpm run develop",
@@ -51,6 +51,7 @@
     "axios": "^1.16.1",
     "ckeditor5": "45.2.2",
     "diff": "^9.0.0",
+    "free-email-domains": "1.12.13",
     "jsonwebtoken": "9.0.3",
     "lodash": "^4.17.21",
     "nodemailer": "^7.0.12",
