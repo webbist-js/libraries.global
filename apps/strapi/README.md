@@ -73,7 +73,7 @@ Another way is to run **Strapi in docker** container too. Currently, an availabl
 
 ### 3. Init database (first run)
 
-There is `strapi-export.tar.gz` file in this directory with required initial data. **You should import** it to your local database with:
+No data export is committed to the repository (a bundled `strapi-export.tar.gz` used to grant Public `users-permissions.user.find` and `auth.register`; exports are git-ignored). If a teammate hands you a fresh `strapi-export.tar.gz`, drop it in this directory and import it with:
 
 ```bash
 # in this directory
