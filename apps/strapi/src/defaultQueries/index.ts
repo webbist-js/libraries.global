@@ -40,7 +40,6 @@ export const homepageLibraryPopulate = {
 }
 
 export const pageDefaultQuery = {
-  localizations: true,
   populate: {
     seo: seoPopulate,
   },
@@ -66,7 +65,6 @@ export const homepageSectionPopulate = {
 }
 
 export const homepageDefaultQuery = {
-  localizations: true,
   populate: {
     seo: seoPopulate,
     featuredLibraries: homepageLibraryPopulate,

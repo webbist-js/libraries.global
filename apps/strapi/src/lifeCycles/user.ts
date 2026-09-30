@@ -25,12 +25,15 @@ export const registerUserSubscriber = async ({
  *  - if the user is created via "/auth/local/register" - `confirmed` is always set to true by default
  */
 const sendEmail = async (strapi: Core.Strapi, event: Event) => {
-  const { email, documentId, firstName, lastName, confirmed } =
+  const { id, email, documentId, firstName, lastName, confirmed } =
     event.result ?? {}
 
   if (confirmed) {
-    // do not send email if the user is already confirmed
-    console.warn(`User ${email} is already confirmed. Skipping email.`)
+    // do not send email if the user is already confirmed (log the id, never
+    // the address)
+    console.warn(
+      `User ${id ?? documentId} is already confirmed. Skipping email.`
+    )
 
     return
   }

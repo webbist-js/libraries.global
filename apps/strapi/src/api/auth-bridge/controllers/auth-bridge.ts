@@ -1,14 +1,22 @@
 import { SESSION_PROFILE_MAX_CLAIMS } from "@repo/access"
+import freeEmailDomains from "free-email-domains"
 
 import {
+  claimAffiliationFilter,
   grantVerifiedLibrarian,
   upsertAffiliation,
 } from "../../../utils/affiliations"
 import { eraseAccount } from "../../../utils/erase-account"
 import { isValidServiceSecret } from "../../../utils/service-secret"
-import { isValidUsername } from "../../../utils/username"
+import { isValidUsername, nextContributorNumber } from "../../../utils/username"
 
+/**
+ * Mailboxes anyone can register: the `free-email-domains` list (14k+
+ * providers, e.g. btinternet.com) plus a few well-known ones kept here in
+ * case the package ever drops them. A match on one of these never verifies.
+ */
 const FREE_MAIL_DOMAINS = new Set([
+  ...(freeEmailDomains as string[]).map((d) => d.toLowerCase()),
   "gmail.com",
   "googlemail.com",
   "outlook.com",
@@ -78,29 +86,21 @@ export default {
         const nameParts = (name ?? "").trim().split(/\s+/)
         const firstName = nameParts[0] ?? ""
         const lastName = nameParts.slice(1).join(" ") || ""
-        const count = await strapi
-          .query("api::user-profile.user-profile")
-          .count()
         // username is intentionally left null — set during onboarding
         await strapi.documents("api::user-profile.user-profile").create({
           data: {
             baUserId,
             firstName,
             lastName,
-            contributorNumber: count + 1,
+            contributorNumber: await nextContributorNumber(strapi),
           } as any,
         })
       }
     }
 
-    const jwt = strapi
-      .plugin("users-permissions")
-      .service("jwt")
-      .issue({ id: user.id })
-
+    // Better Auth owns the session; the bridge never mints a Strapi JWT.
     return ctx.send({
       user: { id: user.id, email: user.email, username: user.username },
-      jwt,
     })
   },
 
@@ -305,29 +305,30 @@ export default {
     if (!baUserId || !entityRef)
       return ctx.badRequest("Missing baUserId or entityRef")
 
-    const library = await strapi.db.query("api::library.library").findOne({
-      where: { entityRef },
-      select: ["id", "documentId", "website", "email"],
-    })
+    const library = (await strapi.documents("api::library.library").findFirst({
+      status: "published",
+      filters: { entityRef: { $eq: entityRef } } as any,
+      fields: ["documentId", "website"] as any,
+    })) as { documentId: string; website?: string | null } | null
     if (!library) return ctx.notFound("Library not found")
 
-    // This endpoint only handles email-domain auto-verification. The domain is
-    // checked here against the library's *stored* website/email — never a
-    // domain supplied by the caller. Moderated claims create affiliations in
-    // the content-moderation service on approval.
+    // This endpoint only handles email-domain auto-verification. The domain
+    // is checked against the library's *stored* website — never a domain
+    // supplied by the caller, and never the library's contact email (a
+    // shared mail host such as a council or a hosting provider would
+    // otherwise verify every one of its users). Moderated claims create
+    // affiliations in the content-moderation service on approval.
     if (verificationMethod !== "email_domain")
       return ctx.badRequest("Unsupported verificationMethod")
     if (emailVerified !== true || !userEmail)
       return ctx.forbidden("email_not_verified")
     const emailDomain = userEmail.split("@")[1]?.toLowerCase() ?? ""
-    const libraryDomains = [
-      domainOf(library.website),
-      library.email?.split("@")[1]?.toLowerCase() ?? "",
-    ].filter(Boolean)
+    const websiteDomain = domainOf(library.website)
     if (
       !emailDomain ||
+      !websiteDomain ||
       FREE_MAIL_DOMAINS.has(emailDomain) ||
-      !libraryDomains.includes(emailDomain)
+      emailDomain !== websiteDomain
     ) {
       return ctx.forbidden("domain_mismatch")
     }
@@ -354,13 +355,11 @@ export default {
     const { entityRef } = ctx.query as { entityRef?: string }
     if (!entityRef) return ctx.badRequest("Missing entityRef")
 
-    const affiliations = await strapi.db
-      .query("api::library-affiliation.library-affiliation")
-      .findMany({ where: {}, populate: { library: true } })
-
-    const count = affiliations.filter(
-      (a: any) => a.library?.entityRef === entityRef
-    ).length
+    const count = await strapi
+      .documents("api::library-affiliation.library-affiliation")
+      .count({
+        filters: { library: { entityRef: { $eq: entityRef } } } as any,
+      })
 
     return ctx.send({ count })
   },
@@ -450,9 +449,11 @@ export default {
       .findOne({ where: { baUserId } })
     if (!profile) return ctx.notFound("Profile not found")
 
-    const library = await strapi.db
-      .query("api::library.library")
-      .findOne({ where: { documentId: libraryDocumentId } })
+    // Only a published row can be followed: the relation links to a row id,
+    // so linking a draft would make the follow vanish from every read.
+    const library = await strapi.db.query("api::library.library").findOne({
+      where: { documentId: libraryDocumentId, publishedAt: { $notNull: true } },
+    })
     if (!library) return ctx.notFound("Library not found")
 
     await strapi.db.query("api::user-profile.user-profile").update({
@@ -566,7 +567,7 @@ export default {
         strapi
           .documents("api::library-affiliation.library-affiliation")
           .findMany({
-            filters: { baUserId: { $eq: baUserId } },
+            filters: claimAffiliationFilter(baUserId) as any,
             populate: { library: { fields: ["documentId"] } },
             limit: SESSION_PROFILE_MAX_CLAIMS,
           }) as Promise<{ library?: { documentId?: string } }[]>,

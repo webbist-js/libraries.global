@@ -14,7 +14,8 @@
     "baUserId": {
       "type": "string",
       "unique": true,
-      "required": true
+      "required": true,
+      "private": true
     },
     "username": {
       "type": "string",
@@ -99,7 +100,8 @@
       "default": false
     },
     "contributorNumber": {
-      "type": "integer"
+      "type": "integer",
+      "private": true
     },
     "languages": {
       "type": "component",
@@ -118,7 +120,8 @@
         "editorialMessages": true,
         "soundOn": false,
         "marketing": false
-      }
+      },
+      "private": true
     },
     "publicPrefs": {
       "type": "json"

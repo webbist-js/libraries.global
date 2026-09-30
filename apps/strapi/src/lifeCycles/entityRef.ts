@@ -1,5 +1,11 @@
 import type { Core } from "@strapi/strapi"
 
+import { invalidateAtlasCache } from "../utils/atlas-cache"
+import {
+  COMPLETENESS_TRIGGER_KEYS,
+  refreshLibraryCompleteness,
+} from "../utils/library-completeness"
+
 type TrackedUID =
   | "api::country.country"
   | "api::region.region"
@@ -12,6 +18,45 @@ const TRACKED_UIDS: TrackedUID[] = [
   "api::area.area",
   "api::library.library",
 ]
+
+const LIBRARY = "api::library.library"
+const REGION = "api::region.region"
+
+/** Writes to these keys can change an entityRef. */
+const REF_TRIGGER_KEYS = ["slug", "continent", "country", "region", "area"]
+
+/**
+ * Keys this subscriber writes itself (plus what Strapi adds to any write).
+ * A write touching nothing else is one of ours and must not start another
+ * recompute, or the entityRef and completeness updates would loop.
+ */
+const SELF_WRITE_KEYS = new Set([
+  "entityRef",
+  "completeness",
+  "id",
+  "documentId",
+  "locale",
+  "updatedAt",
+  "updatedBy",
+  "createdBy",
+  "publishedAt",
+])
+
+const touches = (data: Record<string, unknown>, keys: readonly string[]) =>
+  keys.some((k) => k in data)
+
+const isSelfWrite = (data: Record<string, unknown>) =>
+  Object.keys(data).every((k) => SELF_WRITE_KEYS.has(k))
+
+type Row = {
+  id?: number
+  documentId?: string
+  entityRef?: string
+  slug?: string
+  locale?: string | null
+  publishedAt?: string | null
+  completeness?: number | null
+}
 
 async function computeEntityRef(
   strapi: Core.Strapi,
@@ -120,7 +165,7 @@ async function computeEntityRef(
 async function maybeUpdateEntityRef(
   strapi: Core.Strapi,
   uid: TrackedUID,
-  result: { documentId?: string; entityRef?: string } | null
+  result: Row | null
 ) {
   const documentId = result?.documentId
   if (!documentId) return
@@ -138,6 +183,40 @@ async function maybeUpdateEntityRef(
   }
 }
 
+const REGION_LIBRARY_PAGE = 200
+
+/**
+ * A region's slug is part of every one of its libraries' refs. Walk them in
+ * pages and let `maybeUpdateEntityRef` rewrite only the ones that changed.
+ */
+async function refreshRegionLibraryRefs(
+  strapi: Core.Strapi,
+  regionDocumentId: string
+) {
+  for (let start = 0; ; start += REGION_LIBRARY_PAGE) {
+    const rows = (await strapi.documents(LIBRARY).findMany({
+      filters: { region: { documentId: { $eq: regionDocumentId } } } as never,
+      fields: ["documentId", "entityRef"] as never,
+      sort: "id:asc" as never,
+      start,
+      limit: REGION_LIBRARY_PAGE,
+    })) as unknown as Row[]
+    for (const row of rows) await maybeUpdateEntityRef(strapi, LIBRARY, row)
+    if (rows.length < REGION_LIBRARY_PAGE) break
+  }
+}
+
+async function maybeUpdateCompleteness(strapi: Core.Strapi, result: Row) {
+  if (typeof result.id !== "number" || !result.documentId) return
+  await refreshLibraryCompleteness(strapi, {
+    id: result.id,
+    documentId: result.documentId,
+    locale: result.locale,
+    publishedAt: result.publishedAt,
+    completeness: result.completeness,
+  })
+}
+
 export const registerEntityRefSubscriber = ({
   strapi,
 }: {
@@ -146,22 +225,60 @@ export const registerEntityRefSubscriber = ({
   strapi.db.lifecycles.subscribe({
     models: TRACKED_UIDS as unknown as string[],
 
+    async beforeUpdate(event) {
+      // Remember the region's slug so afterUpdate can tell a real change
+      // from a save that merely re-sends it.
+      const data = (event.params?.data ?? {}) as Record<string, unknown>
+      if (event.model.uid !== REGION || !("slug" in data)) return
+      try {
+        const previous = (await strapi.db
+          .query(REGION)
+          .findOne({ where: event.params.where, select: ["slug"] })) as {
+          slug?: string
+        } | null
+        ;(event.state as Record<string, unknown>).previousSlug =
+          previous?.slug ?? null
+      } catch {
+        // non-critical: without it the refs are refreshed on the next save
+      }
+    },
+
     async afterCreate(event) {
       const uid = event.model.uid as TrackedUID
-      await maybeUpdateEntityRef(
-        strapi,
-        uid,
-        event.result as { documentId?: string; entityRef?: string }
-      )
+      const result = event.result as Row
+      if (uid === LIBRARY) invalidateAtlasCache()
+      await maybeUpdateEntityRef(strapi, uid, result)
+      if (uid === LIBRARY) await maybeUpdateCompleteness(strapi, result)
     },
 
     async afterUpdate(event) {
       const uid = event.model.uid as TrackedUID
-      await maybeUpdateEntityRef(
-        strapi,
-        uid,
-        event.result as { documentId?: string; entityRef?: string }
-      )
+      const result = event.result as Row
+      const data = (event.params?.data ?? {}) as Record<string, unknown>
+      if (uid === LIBRARY) invalidateAtlasCache()
+      if (isSelfWrite(data)) return
+
+      if (touches(data, REF_TRIGGER_KEYS)) {
+        await maybeUpdateEntityRef(strapi, uid, result)
+      }
+      if (uid === LIBRARY && touches(data, COMPLETENESS_TRIGGER_KEYS)) {
+        await maybeUpdateCompleteness(strapi, result)
+      }
+      if (uid === REGION && result?.documentId) {
+        const previous = (event.state as { previousSlug?: string | null })
+          .previousSlug
+        if (
+          previous !== undefined &&
+          previous !== null &&
+          previous !== result.slug
+        ) {
+          await refreshRegionLibraryRefs(strapi, result.documentId)
+        }
+      }
+    },
+
+    afterDelete(event) {
+      if (event.model.uid === LIBRARY) invalidateAtlasCache()
     },
   })
 }

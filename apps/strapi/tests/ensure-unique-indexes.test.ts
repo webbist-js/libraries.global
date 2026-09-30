@@ -2,6 +2,7 @@ import path from "node:path"
 
 import { describe, expect, it, vi } from "vitest"
 
+import { ensureHotPathIndexes } from "../src/utils/ensure-hot-path-indexes"
 import { ensureUniqueIndexes } from "../src/utils/ensure-unique-indexes"
 
 const RW_INDEX = "rw_point_events_idempotency_key_uq"
@@ -157,6 +158,214 @@ describe("ensureUniqueIndexes", () => {
     await expect(ensureUniqueIndexes(strapi)).resolves.toBeUndefined()
     expect(strapi.log.error).toHaveBeenCalledWith(
       "[bootstrap] ensureUniqueIndexes failed",
+      expect.any(Error)
+    )
+  })
+})
+
+// ── E1: hot-path indexes (fresh-DB fallback) ────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const hotPath = require("../database/migrations/shared/hot-path-index-sql") as {
+  HOT_PATH_INDEXES: {
+    name: string
+    table: string
+    unique?: boolean
+    before?: string[]
+    sql: string
+  }[]
+  CONTRIBUTOR_NUMBER_SEQUENCE: { name: string; table: string; sql: string[] }
+}
+
+function fakeHotPathStrapi({
+  client,
+  missingTables = new Set<string>(),
+  existingIndexes = new Set<string>(),
+  existingSequences = new Set<string>(),
+}: {
+  client: string | undefined
+  missingTables?: Set<string>
+  existingIndexes?: Set<string>
+  existingSequences?: Set<string>
+}) {
+  const hasTableFn = vi.fn(async (t: string) => !missingTables.has(t))
+  const rawFn = vi.fn(async (sql: string, bindings?: unknown[]) => {
+    if (sql.startsWith("select 1 from pg_indexes")) {
+      const name = bindings?.[0] as string
+
+      return { rows: existingIndexes.has(name) ? [{ "?column?": 1 }] : [] }
+    }
+    if (sql.startsWith("select 1 from pg_class")) {
+      const name = bindings?.[0] as string
+
+      return { rows: existingSequences.has(name) ? [{ "?column?": 1 }] : [] }
+    }
+
+    return {}
+  })
+  const transactionFn = vi.fn(
+    async (cb: (trx: { raw: typeof rawFn }) => Promise<void>) => {
+      await cb({ raw: rawFn })
+    }
+  )
+  const strapi: any = {
+    dirs: { app: { root: path.join(__dirname, "..") } },
+    db: {
+      dialect: { client },
+      connection: {
+        schema: { hasTable: hasTableFn },
+        transaction: transactionFn,
+      },
+    },
+    log: { error: vi.fn(), warn: vi.fn() },
+  }
+
+  return { strapi, hasTableFn, rawFn, transactionFn }
+}
+
+describe("hot-path index list", () => {
+  const { HOT_PATH_INDEXES, CONTRIBUTOR_NUMBER_SEQUENCE } = hotPath
+
+  it("names every index uniquely and every statement is IF NOT EXISTS", () => {
+    const names = HOT_PATH_INDEXES.map((i) => i.name)
+    expect(new Set(names).size).toBe(names.length)
+    for (const entry of HOT_PATH_INDEXES) {
+      expect(entry.name.length).toBeLessThanOrEqual(63)
+      expect(entry.sql).toMatch(
+        entry.unique
+          ? /^CREATE UNIQUE INDEX IF NOT EXISTS /
+          : /^CREATE INDEX IF NOT EXISTS /
+      )
+      expect(entry.sql).toContain(` ${entry.name} ON ${entry.table} (`)
+    }
+    expect(CONTRIBUTOR_NUMBER_SEQUENCE.sql[0]).toMatch(
+      /^CREATE SEQUENCE IF NOT EXISTS user_profiles_contributor_number_seq/
+    )
+    expect(CONTRIBUTOR_NUMBER_SEQUENCE.sql[1]).toMatch(
+      /setval\('user_profiles_contributor_number_seq'/
+    )
+  })
+
+  it("covers the reviewed hot paths", () => {
+    const bySql = HOT_PATH_INDEXES.map((i) => i.sql)
+    for (const expected of [
+      "ON libraries (slug, locale, published_at)",
+      "ON regions (slug, locale, published_at)",
+      "ON countries (slug, locale, published_at)",
+      "ON continents (slug, locale, published_at)",
+      "ON areas (slug, locale, published_at)",
+      "ON wiki_articles (slug, locale, published_at)",
+      "ON blog_articles (slug, locale, published_at)",
+      "ON libraries (entity_ref)",
+      "ON libraries (library_type)",
+      "ON user_profiles (ba_user_id)",
+      "ON user_profiles (points DESC)",
+      "ON user_profiles (country, points DESC)",
+      "ON cm_submissions (submitted_by_user_id, status, created_at)",
+      "ON cm_submissions (target_document_id, status)",
+      "ON cm_submissions (submission_type, status)",
+      "ON cm_option_votes (suggestion_document_id, ba_user_id)",
+      "ON cm_option_votes (suggestion_document_id)",
+      "ON rw_point_events (ba_user_id, awarded_at)",
+      "ON rw_point_events (awarded_at)",
+      "ON rw_badge_awards (ba_user_id, badge_id)",
+      "ON rw_leaderboard_snapshots (period, period_type)",
+      "ON catalogue_branches (library_document_id)",
+    ]) {
+      expect(bySql.some((s) => s.includes(expected))).toBe(true)
+    }
+  })
+
+  it("dedupes before every unique index", () => {
+    for (const entry of HOT_PATH_INDEXES.filter((i) => i.unique)) {
+      expect(entry.before?.length).toBeGreaterThan(0)
+      for (const s of entry.before!) expect(s).toMatch(/^DELETE FROM /)
+    }
+  })
+})
+
+describe("ensureHotPathIndexes", () => {
+  const { HOT_PATH_INDEXES, CONTRIBUTOR_NUMBER_SEQUENCE } = hotPath
+
+  it("applies every index (dedupe first for unique ones) and creates the sequence on Postgres", async () => {
+    const { strapi, rawFn, transactionFn } = fakeHotPathStrapi({
+      client: "postgres",
+    })
+
+    await ensureHotPathIndexes(strapi)
+
+    expect(transactionFn).toHaveBeenCalledTimes(1)
+    const sqls = rawFn.mock.calls.map((c) => c[0] as string)
+    expect(sqls[0]).toMatch(/SET LOCAL lock_timeout/)
+    for (const entry of HOT_PATH_INDEXES) {
+      expect(sqls).toContain(entry.sql)
+      for (const before of entry.before ?? []) {
+        expect(sqls.indexOf(before)).toBeLessThan(sqls.indexOf(entry.sql))
+      }
+    }
+    for (const s of CONTRIBUTOR_NUMBER_SEQUENCE.sql) expect(sqls).toContain(s)
+  })
+
+  it("skips the CREATE and the dedupe for indexes that already exist, and never re-seeds an existing sequence", async () => {
+    const existing = new Set(HOT_PATH_INDEXES.map((i) => i.name))
+    const { strapi, rawFn } = fakeHotPathStrapi({
+      client: "postgres",
+      existingIndexes: existing,
+      existingSequences: new Set([CONTRIBUTOR_NUMBER_SEQUENCE.name]),
+    })
+
+    await ensureHotPathIndexes(strapi)
+
+    const sqls = rawFn.mock.calls.map((c) => c[0] as string)
+    expect(sqls.some((s) => s.startsWith("CREATE"))).toBe(false)
+    expect(sqls.some((s) => s.startsWith("DELETE"))).toBe(false)
+    expect(sqls.some((s) => /setval/.test(s))).toBe(false)
+  })
+
+  it("creates only the missing indexes and skips tables that don't exist yet", async () => {
+    const [first, ...rest] = HOT_PATH_INDEXES
+    const { strapi, rawFn } = fakeHotPathStrapi({
+      client: "postgres",
+      existingIndexes: new Set(rest.map((i) => i.name)),
+      missingTables: new Set(["catalogue_branches"]),
+    })
+
+    await ensureHotPathIndexes(strapi)
+
+    const sqls = rawFn.mock.calls.map((c) => c[0] as string)
+    const creates = sqls.filter(
+      (s) => s.startsWith("CREATE") && / INDEX /.test(s)
+    )
+    expect(creates).toEqual([first.sql])
+    expect(sqls.some((s) => s.includes("ON catalogue_branches"))).toBe(false)
+    expect(strapi.log.warn).toHaveBeenCalledWith(
+      expect.stringContaining("catalogue_branches")
+    )
+  })
+
+  it("skips everything when no table exists yet (fresh database) and on sqlite", async () => {
+    const fresh = fakeHotPathStrapi({
+      client: "postgres",
+      missingTables: new Set([
+        ...HOT_PATH_INDEXES.map((i) => i.table),
+        CONTRIBUTOR_NUMBER_SEQUENCE.table,
+      ]),
+    })
+    await ensureHotPathIndexes(fresh.strapi)
+    expect(fresh.transactionFn).not.toHaveBeenCalled()
+
+    const sqlite = fakeHotPathStrapi({ client: "sqlite" })
+    await ensureHotPathIndexes(sqlite.strapi)
+    expect(sqlite.hasTableFn).not.toHaveBeenCalled()
+  })
+
+  it("logs and never throws when a statement fails", async () => {
+    const { strapi, rawFn } = fakeHotPathStrapi({ client: "postgres" })
+    rawFn.mockRejectedValueOnce(new Error("boom"))
+
+    await expect(ensureHotPathIndexes(strapi)).resolves.toBeUndefined()
+    expect(strapi.log.error).toHaveBeenCalledWith(
+      "[bootstrap] ensureHotPathIndexes failed",
       expect.any(Error)
     )
   })

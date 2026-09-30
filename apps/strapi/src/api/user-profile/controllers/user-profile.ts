@@ -42,6 +42,15 @@ function resolvePublicPrefs(raw: unknown): PublicPrefs {
   return prefs
 }
 
+/** The activity block: points, streak, tier, badges and when they last did something. */
+const ACTIVITY_FIELDS = [
+  "points",
+  "pointsThisMonth",
+  "streak",
+  "tier",
+  "lastActivityDate",
+] as const
+
 /**
  * Enforce the owner's public-visibility toggles server-side. The UI also hides
  * these, but this endpoint is unauthenticated, so the data must never leave
@@ -70,8 +79,31 @@ function applyPublicPrefs(
     out.followedLibraries = []
     out.followedProfiles = []
   }
+  if (!prefs.showActivity) {
+    for (const field of ACTIVITY_FIELDS) out[field] = null
+    out.earnedBadges = []
+  }
 
   return out
+}
+
+/** True when the owner has switched their activity (and so their badges) off. */
+const activityHidden = (profile: { publicPrefs?: unknown }) =>
+  !resolvePublicPrefs(profile.publicPrefs).showActivity
+
+/** Only published libraries, in the shape every profile endpoint returns. */
+function publishedFollowedLibraries(rows: unknown): Record<string, unknown>[] {
+  return ((rows ?? []) as any[])
+    .filter((lib: any) => lib?.publishedAt)
+    .map((lib: any) => ({
+      id: lib.id,
+      documentId: lib.documentId ?? null,
+      name: lib.name ?? null,
+      slug: lib.slug ?? null,
+      libraryType: lib.libraryType ?? null,
+      heroImageUrl: lib.heroImage?.url ?? null,
+      path: buildLibraryPath(lib),
+    }))
 }
 
 /**
@@ -198,17 +230,23 @@ async function loadEarnedBadges(
 /**
  * The badge endpoints' gate. Badges follow the activity rule: a private
  * profile's are for its owner (where the endpoint allows an owner bypass at
- * all), and a limited profile's for the owner or an affiliated viewer.
+ * all), a limited profile's for the owner or an affiliated viewer, and a
+ * profile whose owner hid their activity (`publicPrefs.showActivity`) shows
+ * them to the owner only.
  */
 async function mayShowBadges(
   ctx: any,
-  profile: { baUserId?: string | null; profileVisibility?: string | null },
+  profile: {
+    baUserId?: string | null
+    profileVisibility?: string | null
+    publicPrefs?: unknown
+  },
   { ownerSeesPrivate }: { ownerSeesPrivate: boolean }
 ): Promise<boolean> {
+  const isOwner = requestIdentity(ctx, profile.baUserId).isOwnerRequest
   if (profile.profileVisibility === "private")
-    return (
-      ownerSeesPrivate && requestIdentity(ctx, profile.baUserId).isOwnerRequest
-    )
+    return ownerSeesPrivate && isOwner
+  if (activityHidden(profile)) return ownerSeesPrivate && isOwner
   if (profile.profileVisibility === "limited")
     return canSeeLimitedProfile(ctx, profile.baUserId)
 
@@ -299,11 +337,14 @@ export default factories.createCoreController(
       // followedLibraries + followedProfiles are written via db.query
       // connect/disconnect; re-fetch via db.query so we see the same data.
       // Document Service populate does not reliably reflect db.query relation writes.
+      // Published libraries only: a row that was unpublished since it was
+      // followed must not surface on a public page.
       const profileWithFollows = profile.baUserId
         ? await strapi.db.query("api::user-profile.user-profile").findOne({
             where: { baUserId: profile.baUserId },
             populate: {
               followedLibraries: {
+                where: { publishedAt: { $notNull: true } },
                 populate: {
                   heroImage: true,
                   continent: true,
@@ -315,17 +356,9 @@ export default factories.createCoreController(
             },
           })
         : null
-      const followedLibraries = (
-        (profileWithFollows?.followedLibraries ?? []) as any[]
-      ).map((lib: any) => ({
-        id: lib.id,
-        documentId: lib.documentId ?? null,
-        name: lib.name ?? null,
-        slug: lib.slug ?? null,
-        libraryType: lib.libraryType ?? null,
-        heroImageUrl: lib.heroImage?.url ?? null,
-        path: buildLibraryPath(lib),
-      }))
+      const followedLibraries = publishedFollowedLibraries(
+        profileWithFollows?.followedLibraries
+      )
       // Only surface public followed profiles — never expose private/limited ones
       const followedProfiles = (
         (profileWithFollows?.followedProfiles ?? []) as any[]
@@ -439,6 +472,7 @@ export default factories.createCoreController(
             where: { baUserId: profile.baUserId },
             populate: {
               followedLibraries: {
+                where: { publishedAt: { $notNull: true } },
                 populate: {
                   heroImage: true,
                   continent: true,
@@ -449,17 +483,9 @@ export default factories.createCoreController(
             },
           })
         : null
-      const followedLibraries = (
-        (profileWithFollows2?.followedLibraries ?? []) as any[]
-      ).map((lib: any) => ({
-        id: lib.id,
-        documentId: lib.documentId ?? null,
-        name: lib.name ?? null,
-        slug: lib.slug ?? null,
-        libraryType: lib.libraryType ?? null,
-        heroImageUrl: lib.heroImage?.url ?? null,
-        path: buildLibraryPath(lib),
-      }))
+      const followedLibraries = publishedFollowedLibraries(
+        profileWithFollows2?.followedLibraries
+      )
 
       const safe = publicProfile({ ...profile, followedLibraries } as any)
 
@@ -497,7 +523,7 @@ export default factories.createCoreController(
         .documents("api::user-profile.user-profile")
         .findOne({
           documentId,
-          fields: ["baUserId", "profileVisibility"] as any,
+          fields: ["baUserId", "profileVisibility", "publicPrefs"] as any,
         })
 
       // No owner bypass for a private profile on this endpoint.
@@ -517,7 +543,7 @@ export default factories.createCoreController(
         .documents("api::user-profile.user-profile")
         .findMany({
           filters: { username: { $eq: username } } as any,
-          fields: ["baUserId", "profileVisibility"] as any,
+          fields: ["baUserId", "profileVisibility", "publicPrefs"] as any,
           limit: 1,
         })
       const profile = results[0] ?? null

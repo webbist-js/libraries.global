@@ -2,7 +2,13 @@ import { factories } from "@strapi/strapi"
 
 import { centerFor, tallyLibrariesByChild } from "../../../utils/library-tally"
 import { countLibrariesByType } from "../../../utils/library-type-counts"
+import {
+  FEATURED_LIBRARY_POPULATE,
+  MAP_CONFIG_POPULATE,
+  SEO_POPULATE,
+} from "../../../utils/populate-shapes"
 import { readStatus } from "../../../utils/read-status"
+import { scopedWhere } from "../../../utils/scoped-where"
 
 export default factories.createCoreController(
   "api::continent.continent",
@@ -42,21 +48,14 @@ export default factories.createCoreController(
       const basePopulate: Record<string, unknown> = {
         countries: {
           fields: ["name", "slug", "capitalCity", "iso2"],
-          populate: { mapConfig: true },
+          populate: { mapConfig: MAP_CONFIG_POPULATE },
         },
       }
 
       const extendedPopulate: Record<string, unknown> = {
-        mapConfig: true,
-        featuredLibraries: {
-          populate: {
-            heroImage: true,
-            continent: { fields: ["name", "slug", "code"] },
-            country: { fields: ["name", "slug"] },
-            region: { fields: ["name", "slug"] },
-          },
-        },
-        seo: { populate: { metaImage: true } },
+        mapConfig: MAP_CONFIG_POPULATE,
+        featuredLibraries: FEATURED_LIBRARY_POPULATE,
+        seo: SEO_POPULATE,
       }
 
       const results = await strapi
@@ -83,55 +82,42 @@ export default factories.createCoreController(
       let libraryCount = 0
       let libraryTypeCounts: { type: string; count: number }[] = []
       let regionCount = 0
+      let tallies = new Map<string, { count: number; center: unknown }>()
 
       if (continent?.id) {
-        try {
-          libraryCount = await strapi.db.query("api::library.library").count({
-            where: {
-              continent: { id: { $eq: continent.id } },
-              ...(status === "published"
-                ? { publishedAt: { $notNull: true } }
-                : {}),
-            },
-          })
-        } catch {
-          // non-critical
-        }
+        const scope = scopedWhere(status, locale)
+        ;[libraryCount, regionCount] = await Promise.all([
+          strapi.db
+            .query("api::library.library")
+            .count({
+              where: { continent: { id: { $eq: continent.id } }, ...scope },
+            })
+            .catch(() => 0),
+          strapi.db
+            .query("api::region.region")
+            .count({
+              where: { continent: { id: { $eq: continent.id } }, ...scope },
+            })
+            .catch(() => 0),
+        ])
 
         if (libraryCount > 0 && continent.documentId) {
-          libraryTypeCounts = await countLibrariesByType(
-            strapi,
-            "continent",
-            continent.documentId,
-            { locale, status }
-          )
-        }
-
-        try {
-          regionCount = await strapi.db.query("api::region.region").count({
-            where: {
-              continent: { id: { $eq: continent.id } },
-              ...(status === "published"
-                ? { publishedAt: { $notNull: true } }
-                : {}),
-            },
-          })
-        } catch {
-          // non-critical
-        }
-      }
-
-      // Per-country library counts and map centres (hero map + country grid).
-      const tallies =
-        libraryCount > 0 && continent?.documentId
-          ? await tallyLibrariesByChild(strapi, {
+          // Per-type counts and per-country tallies / map centres.
+          ;[libraryTypeCounts, tallies] = await Promise.all([
+            countLibrariesByType(strapi, "continent", continent.documentId, {
+              locale,
+              status,
+            }).catch(() => []),
+            tallyLibrariesByChild(strapi, {
               parent: "continent",
               parentDocumentId: continent.documentId,
               child: "country",
               locale,
               status,
-            }).catch(() => new Map())
-          : new Map()
+            }).catch(() => new Map()),
+          ])
+        }
+      }
 
       type CountryRow = {
         documentId: string
@@ -141,7 +127,9 @@ export default factories.createCoreController(
       const countries = (
         (continent as { countries?: CountryRow[] } | null)?.countries ?? []
       ).map(({ mapConfig, ...country }) => {
-        const tally = tallies.get(country.documentId)
+        const tally = tallies.get(country.documentId) as
+          | { count: number; center: { lat: number; lng: number } | null }
+          | undefined
 
         return {
           ...country,
@@ -175,7 +163,7 @@ export default factories.createCoreController(
         .documents("api::continent.continent")
         .findMany({
           fields: ["name", "slug", "boundaryUrl"],
-          populate: { mapConfig: true } as never,
+          populate: { mapConfig: MAP_CONFIG_POPULATE } as never,
           locale,
           status,
         })

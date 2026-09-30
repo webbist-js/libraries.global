@@ -1,10 +1,20 @@
 import { factories } from "@strapi/strapi"
 
+import {
+  ATLAS_CACHE_CONTROL,
+  getAtlasCache,
+  setAtlasCache,
+} from "../../../utils/atlas-cache"
+import {
+  compactHours,
+  type OpeningTimes,
+} from "../../../utils/library-completeness"
 import { readStatus } from "../../../utils/read-status"
 
 // ── Atlas helpers ──────────────────────────────────────────────────────────
 
 interface AtlasSource {
+  id: number
   documentId: string
   name?: string
   slug?: string
@@ -13,65 +23,20 @@ interface AtlasSource {
   operatorType?: string | null
   city?: string | null
   location?: unknown
-  openingTimes?: {
-    days?: {
-      day: string
-      enabled?: boolean
-      timeframes?: { startTime: string; endTime: string }[]
-    }[]
-  } | null
+  openingTimes?: OpeningTimes
   timezone?: string | null
   foundedYear?: string | null
   openedYear?: string | null
   closedYear?: string | null
   hasActiveFeed?: boolean | null
   catalogueUrl?: string | null
-  streetAddress?: string | null
-  summary?: string | null
-  description?: unknown
-  website?: string | null
-  phone?: string | null
-  email?: string | null
+  completeness?: number | null
   continent?: { slug?: string } | null
   country?: { slug?: string; name?: string } | null
   region?: { slug?: string; name?: string } | null
-  heroImage?: { url?: string } | null
   accessibility?: { name?: string }[] | null
   services?: { name?: string }[] | null
   amenities?: { name?: string }[] | null
-  collectionStats?: unknown[] | null
-}
-
-const DAYS = [
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
-]
-
-function minutes(t: string): number {
-  const [h, m] = t.split(":").map(Number)
-
-  return (h ?? 0) * 60 + (m ?? 0)
-}
-
-/** Opening hours as 7 arrays (Mon–Sun) of [startMin, endMin]; null when unknown. */
-function compactHours(o: AtlasSource["openingTimes"]): number[][][] | null {
-  const days = o?.days
-  if (!Array.isArray(days)) return null
-  const out = DAYS.map((key) => {
-    const d = days.find((x) => x.day === key)
-    if (!d?.enabled) return []
-
-    return (d.timeframes ?? [])
-      .filter((tf) => tf.startTime && tf.endTime)
-      .map((tf) => [minutes(tf.startTime), minutes(tf.endTime)])
-  })
-
-  return out.some((d) => d.length > 0) ? out : null
 }
 
 function year(v?: string | null): number | null {
@@ -80,34 +45,10 @@ function year(v?: string | null): number | null {
   return m ? Number(m[0]) : null
 }
 
-/** Same eight sections as the library page's "About this record" panel. */
-function completeness(l: AtlasSource, hours: unknown): number {
-  const sections = [
-    Boolean(l.heroImage),
-    Boolean(hours),
-    Boolean(l.streetAddress),
-    Boolean(l.location),
-    Boolean(
-      l.accessibility?.length || l.services?.length || l.amenities?.length
-    ),
-    Boolean(
-      l.summary ||
-      (Array.isArray(l.description) && l.description.length) ||
-      l.collectionStats?.length
-    ),
-    Boolean(l.foundedYear || l.openedYear),
-    Boolean(l.website || l.phone || l.email),
-  ]
-
-  return Math.round((sections.filter(Boolean).length / sections.length) * 100)
-}
-
 const names = (xs?: { name?: string }[] | null) =>
   (xs ?? []).map((x) => x.name).filter(Boolean)
 
 function toAtlasProperties(l: AtlasSource) {
-  const hours = compactHours(l.openingTimes)
-
   return {
     id: l.documentId,
     name: l.name ?? "",
@@ -123,16 +64,59 @@ function toAtlasProperties(l: AtlasSource) {
         ? `/${l.continent.slug}/${l.country.slug}/${l.region.slug}/${l.slug}`
         : null,
     tz: l.timezone ?? null,
-    hours,
+    hours: compactHours(l.openingTimes),
     founded: year(l.foundedYear) ?? year(l.openedYear),
     closed: year(l.closedYear),
     events: Boolean(l.hasActiveFeed),
     catalogue: Boolean(l.catalogueUrl),
     access: names(l.accessibility),
     services: [...names(l.services), ...names(l.amenities)],
-    complete: completeness(l, hours),
+    // Stored on the record (see utils/library-completeness.ts); a row the
+    // bootstrap backfill hasn't reached yet reads as 0.
+    complete: l.completeness ?? 0,
   }
 }
+
+type AtlasFeature = {
+  type: "Feature"
+  geometry: { type: "Point"; coordinates: [number, number] }
+  properties: ReturnType<typeof toAtlasProperties>
+}
+
+/** Map-pin payload cap; the response says when it was hit. */
+const MAP_PINS_LIMIT = 500
+/** Atlas keyset page. */
+const ATLAS_PAGE = 1000
+
+/**
+ * The query parameters these endpoints read. Each must be absent or a single
+ * string: a repeated key (`?locale=a&locale=b`) or a bracketed object is
+ * refused rather than silently ignored.
+ */
+function stringQuery(
+  q: Record<string, unknown>,
+  keys: readonly string[]
+): Record<string, string | undefined> | null {
+  const out: Record<string, string | undefined> = {}
+  for (const key of keys) {
+    const value = q[key]
+    if (value === undefined) continue
+    if (typeof value !== "string") return null
+    out[key] = value
+  }
+
+  return out
+}
+
+const MAP_PIN_PARAMS = [
+  "locale",
+  "areaSlug",
+  "regionSlug",
+  "countrySlug",
+  "continentSlug",
+  "libraryTypes",
+  "operationalStatuses",
+] as const
 
 export default factories.createCoreController(
   "api::library.library",
@@ -140,11 +124,15 @@ export default factories.createCoreController(
     /**
      * GET /libraries/map-pins
      * Returns libraries with location data for map rendering.
-     * Accepts one of: regionSlug, countrySlug, continentSlug
+     * Accepts one of: areaSlug, regionSlug, countrySlug, continentSlug
      */
     async mapPins(ctx) {
-      const q = ctx.query as Record<string, string | undefined>
-      const locale = typeof q.locale === "string" ? q.locale : undefined
+      const q = stringQuery(
+        ctx.query as Record<string, unknown>,
+        MAP_PIN_PARAMS
+      )
+      if (!q) return ctx.badRequest("Query parameters must be single strings")
+      const locale = q.locale
       const status = readStatus(ctx)
 
       const filters: Record<string, unknown> = {}
@@ -187,7 +175,8 @@ export default factories.createCoreController(
         } as never,
         locale,
         status,
-        pagination: { pageSize: 500, page: 1 },
+        sort: ["id:asc"] as never,
+        limit: MAP_PINS_LIMIT,
       })
 
       // Only return entries that have valid { lat, lng } location data
@@ -204,7 +193,13 @@ export default factories.createCoreController(
         return typeof lat === "number" && typeof lng === "number"
       })
 
-      ctx.body = { data: pins, meta: { total: pins.length } }
+      ctx.body = {
+        data: pins,
+        meta: {
+          total: pins.length,
+          truncated: results.length >= MAP_PINS_LIMIT,
+        },
+      }
     },
 
     /**
@@ -214,70 +209,139 @@ export default factories.createCoreController(
      * filterable fields (type, status, operator, hours, facilities…) rather
      * than display copy. Detail comes from the normal library endpoints when a
      * pin is opened.
+     *
+     * The collection is built by walking the table in id order and memoised
+     * for five minutes per locale (cleared by any library write).
      */
     async atlas(ctx) {
-      const q = ctx.query as Record<string, string | undefined>
-      const locale = typeof q.locale === "string" ? q.locale : undefined
-      const PAGE = 500
-      const rows: AtlasSource[] = []
-      for (let page = 1; page <= 200; page++) {
-        const batch = (await strapi.documents("api::library.library").findMany({
-          fields: [
-            "name",
-            "slug",
-            "libraryType",
-            "operationalStatus",
-            "operatorType",
-            "city",
-            "location",
-            "openingTimes",
-            "timezone",
-            "foundedYear",
-            "openedYear",
-            "closedYear",
-            "hasActiveFeed",
-            "catalogueUrl",
-            "streetAddress",
-            "summary",
-            "description",
-            "website",
-            "phone",
-            "email",
-          ],
-          populate: {
-            continent: { fields: ["slug"] },
-            country: { fields: ["slug", "name"] },
-            region: { fields: ["slug", "name"] },
-            heroImage: { fields: ["url"] },
-            accessibility: { fields: ["name"] },
-            services: { fields: ["name"] },
-            amenities: { fields: ["name"] },
-            collectionStats: true,
-          } as never,
-          locale,
-          status: "published",
-          pagination: { page, pageSize: PAGE },
-        })) as unknown as AtlasSource[]
-        rows.push(...batch)
-        if (batch.length < PAGE) break
+      const q = stringQuery(ctx.query as Record<string, unknown>, ["locale"])
+      if (!q) return ctx.badRequest("Query parameters must be single strings")
+      const locale = q.locale
+
+      const build = async () => {
+        const rows: AtlasSource[] = []
+        let lastId = 0
+        for (;;) {
+          const batch = (await strapi
+            .documents("api::library.library")
+            .findMany({
+              filters: { id: { $gt: lastId } } as never,
+              fields: [
+                "name",
+                "slug",
+                "libraryType",
+                "operationalStatus",
+                "operatorType",
+                "city",
+                "location",
+                "openingTimes",
+                "timezone",
+                "foundedYear",
+                "openedYear",
+                "closedYear",
+                "hasActiveFeed",
+                "catalogueUrl",
+                "completeness",
+              ] as never,
+              populate: {
+                continent: { fields: ["slug"] },
+                country: { fields: ["slug", "name"] },
+                region: { fields: ["slug", "name"] },
+                accessibility: { fields: ["name"] },
+                services: { fields: ["name"] },
+                amenities: { fields: ["name"] },
+              } as never,
+              locale,
+              status: "published",
+              sort: "id:asc" as never,
+              limit: ATLAS_PAGE,
+            })) as unknown as AtlasSource[]
+          rows.push(...batch)
+          const last = batch.at(-1)
+          if (batch.length < ATLAS_PAGE || typeof last?.id !== "number") break
+          lastId = last.id
+        }
+
+        const features = rows.flatMap((lib): AtlasFeature[] => {
+          const loc = lib.location as { lat?: unknown; lng?: unknown } | null
+          if (typeof loc?.lat !== "number" || typeof loc?.lng !== "number")
+            return []
+
+          return [
+            {
+              type: "Feature",
+              geometry: { type: "Point", coordinates: [loc.lng, loc.lat] },
+              properties: toAtlasProperties(lib),
+            },
+          ]
+        })
+
+        return { type: "FeatureCollection" as const, features }
       }
 
-      const features = rows.flatMap((lib) => {
-        const loc = lib.location as { lat?: unknown; lng?: unknown } | null
-        if (typeof loc?.lat !== "number" || typeof loc?.lng !== "number")
-          return []
+      const key = locale ?? ""
+      const collection = await (getAtlasCache<
+        Awaited<ReturnType<typeof build>>
+      >(key) ?? setAtlasCache(key, build()))
 
-        return [
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [loc.lng, loc.lat] },
-            properties: toAtlasProperties(lib),
-          },
-        ]
+      ctx.set("Cache-Control", ATLAS_CACHE_CONTROL)
+      ctx.body = collection
+    },
+
+    /**
+     * GET /libraries/slugs?start=0&limit=1000
+     * Slug, locale and location slugs for every library, in id order, for
+     * sitemaps and static params. `limit` is capped at SLUGS_MAX_LIMIT; the
+     * caller pages with `start`.
+     */
+    async slugs(ctx) {
+      const q = stringQuery(ctx.query as Record<string, unknown>, [
+        "locale",
+        "start",
+        "limit",
+      ])
+      if (!q) return ctx.badRequest("Query parameters must be single strings")
+      const start = pageInt(q.start, 0, 0)
+      const limit = pageInt(q.limit, SLUGS_MAX_LIMIT, 1, SLUGS_MAX_LIMIT)
+      if (start === null || limit === null)
+        return ctx.badRequest("start must be >= 0 and limit between 1 and 1000")
+      const status = readStatus(ctx)
+
+      const results = await strapi.documents("api::library.library").findMany({
+        fields: ["slug", "locale", "updatedAt"],
+        populate: {
+          continent: { fields: ["slug"] },
+          country: { fields: ["slug"] },
+          region: { fields: ["slug"] },
+        } as never,
+        locale: q.locale,
+        status,
+        sort: "id:asc" as never,
+        start,
+        limit,
       })
 
-      ctx.set("Cache-Control", "public, max-age=300")
-      ctx.body = { type: "FeatureCollection", features }
+      ctx.body = {
+        data: results,
+        meta: { start, limit, count: results.length },
+      }
     },
   })
 )
+
+/** The most slugs one page returns. */
+const SLUGS_MAX_LIMIT = 1000
+
+/** A non-negative integer query value: `fallback` when absent, null below `min` or malformed, clamped to `max`. */
+function pageInt(
+  raw: string | undefined,
+  fallback: number,
+  min: number,
+  max = Number.MAX_SAFE_INTEGER
+): number | null {
+  if (raw === undefined || raw === "") return fallback
+  if (!/^\d+$/.test(raw)) return null
+  const n = Number(raw)
+
+  return n >= min ? Math.min(n, max) : null
+}

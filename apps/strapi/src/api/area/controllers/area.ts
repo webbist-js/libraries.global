@@ -1,6 +1,14 @@
 import { factories } from "@strapi/strapi"
 
+import {
+  MAP_CONFIG_POPULATE,
+  mediaPopulate,
+} from "../../../utils/populate-shapes"
 import { readStatus } from "../../../utils/read-status"
+import { scopedWhere } from "../../../utils/scoped-where"
+
+/** Library rows returned with an area — its list is read separately and capped. */
+const AREA_LIBRARY_LIMIT = 100
 
 export default factories.createCoreController(
   "api::area.area",
@@ -16,7 +24,7 @@ export default factories.createCoreController(
         filters: { slug: { $eq: slug } } as never,
         fields: ["name", "slug", "shortName", "typeLabel", "summary"],
         populate: {
-          mapConfig: true,
+          mapConfig: MAP_CONFIG_POPULATE,
           region: {
             fields: ["name", "slug", "typeLabel"],
             populate: {
@@ -29,16 +37,6 @@ export default factories.createCoreController(
             },
           },
           country: { fields: ["name", "slug"] },
-          libraries: {
-            fields: [
-              "name",
-              "slug",
-              "summary",
-              "libraryType",
-              "operationalStatus",
-            ],
-            populate: { heroImage: true },
-          },
         } as never,
         locale,
         status,
@@ -47,23 +45,45 @@ export default factories.createCoreController(
       const area = results[0] ?? null
 
       let libraryCount = 0
-      if (area?.id) {
-        try {
-          libraryCount = await strapi.db.query("api::library.library").count({
-            where: {
-              area: { id: { $eq: area.id } },
-              ...(status === "published"
-                ? { publishedAt: { $notNull: true } }
-                : {}),
-            },
-          })
-        } catch {
-          // non-critical
-        }
+      let libraries: unknown[] = []
+      if (area?.id && area.documentId) {
+        // The count and the (capped) list are independent of each other.
+        ;[libraryCount, libraries] = await Promise.all([
+          strapi.db
+            .query("api::library.library")
+            .count({
+              where: {
+                area: { id: { $eq: area.id } },
+                ...scopedWhere(status, locale),
+              },
+            })
+            .catch(() => 0),
+          strapi
+            .documents("api::library.library")
+            .findMany({
+              filters: {
+                area: { documentId: { $eq: area.documentId } },
+              } as never,
+              fields: [
+                "name",
+                "slug",
+                "summary",
+                "libraryType",
+                "operationalStatus",
+                "city",
+              ] as never,
+              populate: { heroImage: mediaPopulate } as never,
+              sort: [{ featured: "desc" }, { name: "asc" }] as never,
+              limit: AREA_LIBRARY_LIMIT,
+              locale,
+              status,
+            })
+            .catch(() => []),
+        ])
       }
 
       ctx.body = {
-        data: area ? { ...area, libraryCount } : null,
+        data: area ? { ...area, libraries, libraryCount } : null,
         meta: {},
       }
     },
@@ -102,7 +122,7 @@ export default factories.createCoreController(
         filters: filters as never,
         fields: ["name", "slug", "boundaryUrl"],
         populate: {
-          mapConfig: true,
+          mapConfig: MAP_CONFIG_POPULATE,
           region: { fields: ["slug"] },
           country: { fields: ["slug"] },
         } as never,

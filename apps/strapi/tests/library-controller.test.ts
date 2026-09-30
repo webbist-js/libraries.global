@@ -1,0 +1,222 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+import { makeFakeStrapi } from "./helpers/fake-strapi"
+import factory from "../src/api/library/controllers/library"
+import { registerEntityRefSubscriber } from "../src/lifeCycles/entityRef"
+import { invalidateAtlasCache } from "../src/utils/atlas-cache"
+
+const LIBRARY = "api::library.library"
+
+function library(i: number, extra: Record<string, unknown> = {}) {
+  return {
+    id: i,
+    documentId: `lib${i}`,
+    name: `Library ${i}`,
+    slug: `library-${i}`,
+    libraryType: "Public",
+    operationalStatus: "open",
+    location: { lat: 51 + i / 1000, lng: -1 },
+    continent: { slug: "europe" },
+    country: { slug: "united-kingdom", name: "United Kingdom" },
+    region: { slug: "england", name: "England" },
+    completeness: 75,
+    publishedAt: "2026-09-01T00:00:00.000Z",
+    ...extra,
+  }
+}
+
+function ctx(query: Record<string, unknown> = {}) {
+  const c: any = {
+    query,
+    set: vi.fn(),
+    badRequest: (m: string) => ((c.status = 400), (c.body = m)),
+  }
+
+  return c
+}
+
+function build(rows: Record<string, unknown>[]) {
+  const faked = makeFakeStrapi({ [LIBRARY]: rows as any })
+  const controller = factory({
+    strapi: { ...faked.strapi, contentType: () => ({ uid: LIBRARY }) },
+  } as any)
+  // Every `strapi.documents(LIBRARY)` call hands out its own findMany mock:
+  // gather the params of all of them, in call order.
+  const findManyParams = () =>
+    faked.strapi.documents.mock.calls.flatMap(([uid]: [string], i: number) =>
+      uid === LIBRARY
+        ? faked.strapi.documents.mock.results[i].value.findMany.mock.calls.map(
+            (c: any[]) => c[0]
+          )
+        : []
+    )
+
+  return { ...faked, controller, findManyParams }
+}
+
+describe("library.mapPins (E2)", () => {
+  it("reads with a flat limit and a stable sort, never `pagination`", async () => {
+    const { controller, findManyParams } = build([library(1), library(2)])
+    const c = ctx({ regionSlug: "england" })
+    await controller.mapPins(c)
+
+    const [params] = findManyParams()
+    expect(params.pagination).toBeUndefined()
+    expect(params.limit).toBe(500)
+    expect(params.sort).toEqual(["id:asc"])
+    expect(c.body.meta).toEqual({ total: 2, truncated: false })
+  })
+
+  it("flags the payload as truncated when the cap is hit", async () => {
+    const rows = Array.from({ length: 500 }, (_, i) => library(i + 1))
+    const { controller } = build(rows)
+    const c = ctx({})
+    await controller.mapPins(c)
+
+    expect(c.body.data).toHaveLength(500)
+    expect(c.body.meta.truncated).toBe(true)
+  })
+
+  it.each([
+    ["libraryTypes", ["Public", "National"]],
+    ["operationalStatuses", ["open", "closed"]],
+    ["areaSlug", ["a", "b"]],
+    ["regionSlug", { $ne: "x" }],
+    ["countrySlug", ["a"]],
+    ["continentSlug", ["a"]],
+    ["locale", ["en", "fr"]],
+  ])("returns 400 when %s is not a string", async (key, value) => {
+    const { controller, strapi } = build([library(1)])
+    const c = ctx({ [key]: value })
+    await controller.mapPins(c)
+
+    expect(c.status).toBe(400)
+    expect(strapi.documents).not.toHaveBeenCalled()
+  })
+})
+
+describe("library.atlas (E2, E3)", () => {
+  beforeEach(() => invalidateAtlasCache())
+  afterEach(() => invalidateAtlasCache())
+
+  it("walks the table by id keyset with a flat limit, never `pagination`", async () => {
+    const rows = Array.from({ length: 1001 }, (_, i) => library(i + 1))
+    const { controller, findManyParams } = build(rows)
+    const c = ctx({})
+    await controller.atlas(c)
+
+    const calls = findManyParams()
+    expect(calls).toHaveLength(2)
+    for (const params of calls) {
+      expect(params.pagination).toBeUndefined()
+      expect(params.limit).toBe(1000)
+      expect(params.sort).toBe("id:asc")
+      expect(params.status).toBe("published")
+    }
+    expect(calls[0].filters).toEqual({ id: { $gt: 0 } })
+    expect(calls[1].filters).toEqual({ id: { $gt: 1000 } })
+    expect(c.body.features).toHaveLength(1001)
+  })
+
+  it("reads the stored completeness instead of description and collection stats", async () => {
+    const { controller, findManyParams } = build([
+      library(1, { completeness: 38 }),
+    ])
+    const c = ctx({})
+    await controller.atlas(c)
+
+    const [params] = findManyParams()
+    expect(params.fields).toContain("completeness")
+    expect(params.fields).not.toContain("description")
+    expect(params.populate.collectionStats).toBeUndefined()
+    expect(c.body.features[0].properties.complete).toBe(38)
+    expect(c.body.features[0].properties.path).toBe(
+      "/europe/united-kingdom/england/library-1"
+    )
+  })
+
+  it("serves the second call within the TTL from memory and sets a CDN cache header", async () => {
+    const { controller, findManyParams } = build([library(1)])
+    const first = ctx({})
+    await controller.atlas(first)
+    const second = ctx({})
+    await controller.atlas(second)
+
+    expect(findManyParams()).toHaveLength(1)
+    expect(second.body).toEqual(first.body)
+    expect(second.set).toHaveBeenCalledWith(
+      "Cache-Control",
+      "public, s-maxage=300, stale-while-revalidate=3600"
+    )
+  })
+
+  it("keeps one entry per locale", async () => {
+    const { controller, findManyParams } = build([library(1)])
+    await controller.atlas(ctx({ locale: "en" }))
+    await controller.atlas(ctx({ locale: "fr" }))
+    await controller.atlas(ctx({ locale: "en" }))
+
+    expect(findManyParams()).toHaveLength(2)
+  })
+
+  it("is cleared when a library is written (the publish lifecycle)", async () => {
+    const { controller, strapi, findManyParams } = build([library(1)])
+    let hooks: any = null
+    strapi.db.lifecycles = { subscribe: vi.fn((h: any) => (hooks = h)) }
+    registerEntityRefSubscriber({ strapi })
+
+    await controller.atlas(ctx({}))
+    await hooks.afterUpdate({
+      model: { uid: LIBRARY },
+      result: { id: 1, documentId: "lib1", publishedAt: "2026-09-30" },
+      params: { data: { publishedAt: "2026-09-30" } },
+    })
+    await controller.atlas(ctx({}))
+
+    expect(findManyParams()).toHaveLength(2)
+  })
+
+  it("rejects a non-string locale", async () => {
+    const { controller, strapi } = build([library(1)])
+    const c = ctx({ locale: ["en", "fr"] })
+    await controller.atlas(c)
+
+    expect(c.status).toBe(400)
+    expect(strapi.documents).not.toHaveBeenCalled()
+  })
+})
+
+describe("library.slugs (E5)", () => {
+  it("pages in id order with start and a limit capped at 1000", async () => {
+    const rows = Array.from({ length: 1201 }, (_, i) => library(i + 1))
+    const { controller, findManyParams } = build(rows)
+    const first = ctx({ limit: "5000" })
+    await controller.slugs(first)
+    const second = ctx({ start: "1000", limit: "1000" })
+    await controller.slugs(second)
+
+    const [p1, p2] = findManyParams()
+    expect(p1).toMatchObject({ start: 0, limit: 1000, sort: "id:asc" })
+    expect(p1.pagination).toBeUndefined()
+    expect(p1.fields).toEqual(["slug", "locale", "updatedAt"])
+    expect(p2).toMatchObject({ start: 1000, limit: 1000 })
+    expect(first.body.data).toHaveLength(1000)
+    expect(first.body.meta).toEqual({ start: 0, limit: 1000, count: 1000 })
+    expect(second.body.data).toHaveLength(201)
+    expect(second.body.data[0].slug).toBe("library-1001")
+  })
+
+  it.each([
+    ["start", "-1"],
+    ["start", "x"],
+    ["limit", "0"],
+    ["limit", ["10", "20"]],
+  ])("returns 400 for an invalid %s", async (key, value) => {
+    const { controller, strapi } = build([library(1)])
+    const c = ctx({ [key]: value })
+    await controller.slugs(c)
+
+    expect(c.status).toBe(400)
+    expect(strapi.documents).not.toHaveBeenCalled()
+  })
+})

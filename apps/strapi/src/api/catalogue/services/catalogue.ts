@@ -143,7 +143,13 @@ export default factories.createCoreService(CATALOGUE, ({ strapi }) => {
     catalogue: CatalogueRecord
   ): Promise<{ documentId: string; name: string }[]> {
     const fields = ["documentId", "name", "shortName", "catalogueUrl"]
-    const base = { fields, status: "published", pagination: { pageSize: 2000 } }
+    // Flat `limit` + stable sort: Strapi 5 drops a `pagination` object here.
+    const base = {
+      fields,
+      status: "published",
+      sort: ["id:asc"],
+      limit: 2000,
+    }
 
     // Narrowest scope first: the service's own Area (by GSS code), then
     // libraries pointing at the same catalogue host, then the whole country.
@@ -206,7 +212,8 @@ export default factories.createCoreService(CATALOGUE, ({ strapi }) => {
       if (!detected) return null
       const matches: CatalogueRecord[] = await docs(CATALOGUE).findMany({
         filters: { system: detected.system, baseUrl: detected.baseUrl },
-        pagination: { pageSize: 2 },
+        sort: ["id:asc"],
+        limit: 2,
       })
 
       // Shared catalogues (several services on one URL) are ambiguous here.
@@ -281,7 +288,8 @@ export default factories.createCoreService(CATALOGUE, ({ strapi }) => {
       const libraries = await candidateLibraries(catalogue)
       const existing: BranchRecord[] = await docs(BRANCH).findMany({
         filters: { catalogue: { documentId: catalogueDocumentId } },
-        pagination: { pageSize: 1000 },
+        sort: ["id:asc"],
+        limit: 1000,
       })
       const byName = new Map(existing.map((b) => [b.name.toLowerCase(), b]))
       // A Library that's already claimed by an editor-confirmed branch

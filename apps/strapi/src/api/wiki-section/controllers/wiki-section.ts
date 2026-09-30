@@ -10,6 +10,7 @@ export default factories.createCoreController(
         .documents("api::wiki-section.wiki-section")
         .findMany({
           fields: ["name", "label", "slug", "description", "order"],
+          status: "published",
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           sort: ["order:asc", "name:asc"] as any,
           populate: {

@@ -85,10 +85,10 @@ export default factories.createCoreController(
               category: { fields: ["name", "slug"] },
             } as Record<string, unknown>,
             status: "published",
+            // `id` breaks ties so the three are stable across pages.
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            sort: ["publishedAt:desc"] as any,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            pagination: { pageSize: 3 } as any,
+            sort: ["publishedAt:desc", "id:asc"] as any,
+            limit: 3,
           })
         ;(article as Record<string, unknown>).relatedArticles = fallback
       }

@@ -3,14 +3,14 @@ import type { Core } from "@strapi/strapi"
 import { LOCATION_PICKER_FIELD_NAME } from "./customFields/locationPicker/shared"
 import { OPENING_TIMES_FIELD_NAME } from "./customFields/openingTimes/shared"
 import { registerCatalogueLinkMiddleware } from "./documentMiddlewares/catalogue"
-import { registerPopulatePageMiddleware } from "./documentMiddlewares/page"
 import { registerAdminUserSubscriber } from "./lifeCycles/adminUser"
 import { registerEntityRefSubscriber } from "./lifeCycles/entityRef"
 import { registerUserSubscriber } from "./lifeCycles/user"
-import { getPopulateDynamicZoneConfig } from "./populateDynamicZone"
 import { seedDatasets } from "./seeds/datasets"
 import { seedLegalDocuments } from "./seeds/legal-documents"
+import { ensureHotPathIndexes } from "./utils/ensure-hot-path-indexes"
 import { ensureUniqueIndexes } from "./utils/ensure-unique-indexes"
+import { backfillLibraryCompleteness } from "./utils/library-completeness"
 
 const SEED_TOPICS = [
   "Rare Books",
@@ -87,12 +87,6 @@ export default {
     registerUserSubscriber({ strapi })
     registerEntityRefSubscriber({ strapi })
 
-    // Generate dynamic zone populate configuration at startup to avoid doing it on the fly during requests.
-    getPopulateDynamicZoneConfig()
-
-    // Register Documents API middleware for dynamic zone population
-    registerPopulatePageMiddleware({ strapi })
-
     // Detect and link a Library's catalogue when its catalogueUrl is set
     registerCatalogueLinkMiddleware({ strapi })
 
@@ -112,6 +106,13 @@ export default {
     // creates, in case this is a first deploy where the migration ran
     // before schema sync created the tables. See ensure-unique-indexes.ts.
     await ensureUniqueIndexes(strapi)
+
+    // E1 fresh-DB follow-up for the hot-path indexes migration, same reason.
+    await ensureHotPathIndexes(strapi)
+
+    // One-off: store `completeness` on every library row that lacks it
+    // (the lifecycle keeps it current from here on).
+    await backfillLibraryCompleteness(strapi)
 
     // Accounts are owned by Better Auth; Strapi users are created only via the
     // auth-bridge. Keep users-permissions self-registration off everywhere so

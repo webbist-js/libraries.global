@@ -1,6 +1,28 @@
 import { isContributorRole, promoteRole } from "@repo/access"
 
 /**
+ * Affiliation roles that are not claims. A `proposer` row records who
+ * suggested a new library; it grants no capabilities and must never appear
+ * in the session's `claimedLibraryIds`.
+ */
+export const NON_CLAIM_AFFILIATION_ROLES: readonly string[] = ["proposer"]
+
+/**
+ * Document Service filter for a user's real claims. `role NOT IN (...)`
+ * alone would drop rows whose role is NULL (every email-domain auto-claim),
+ * so a null role is allowed explicitly.
+ */
+export function claimAffiliationFilter(baUserId: string) {
+  return {
+    baUserId: { $eq: baUserId },
+    $or: [
+      { role: { $null: true } },
+      { role: { $notIn: [...NON_CLAIM_AFFILIATION_ROLES] } },
+    ],
+  }
+}
+
+/**
  * Approving a Library Claim (or an email-domain auto-verification) may only
  * *raise* the submitter's contributor role, never overwrite a higher one
  * (e.g. wiki_editor, editorial_board) with verified_librarian.

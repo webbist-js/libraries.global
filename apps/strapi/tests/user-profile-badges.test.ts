@@ -53,6 +53,31 @@ describe("user-profile badge endpoints follow profile visibility", () => {
         },
         { ...profile("pLim", "lim", "uLim", "limited"), city: "Leeds" },
         profile("pPriv", "priv", "uPriv", "private"),
+        {
+          ...profile("pQuiet", "quiet", "uQuiet", "public"),
+          publicPrefs: { showActivity: false },
+          points: 50,
+          pointsThisMonth: 5,
+          tier: "Indexer",
+          streak: 3,
+          lastActivityDate: "2026-09-29",
+          followedLibraries: [
+            {
+              id: 1,
+              documentId: "libA",
+              name: "A",
+              slug: "a",
+              publishedAt: "2026-01-01",
+            },
+            {
+              id: 2,
+              documentId: "libB",
+              name: "B",
+              slug: "b",
+              publishedAt: null,
+            },
+          ],
+        },
       ],
       [AFF]: [
         { documentId: "a1", baUserId: "uLim", library: LIB_A },
@@ -77,6 +102,12 @@ describe("user-profile badge endpoints follow profile visibility", () => {
           baUserId: "uPriv",
           badgeId: "first",
           awardedAt: "z",
+        },
+        {
+          documentId: "b4",
+          baUserId: "uQuiet",
+          badgeId: "first",
+          awardedAt: "q",
         },
       ],
     })
@@ -289,6 +320,75 @@ describe("user-profile badge endpoints follow profile visibility", () => {
         expect(c.body.data[field]).toBeUndefined()
         expect(Object.hasOwn(c.body.data, field)).toBe(false)
       }
+    })
+  })
+
+  describe("publicPrefs.showActivity = false (E6)", () => {
+    const ACTIVITY = [
+      "points",
+      "pointsThisMonth",
+      "streak",
+      "tier",
+      "lastActivityDate",
+    ] as const
+
+    it("nulls the activity fields and badges for everyone but the owner", async () => {
+      const anon = ctx({ username: "quiet" }, {})
+      await controller.findByUsername(anon)
+      expect(anon.status).toBe(200)
+      for (const field of ACTIVITY) expect(anon.body.data[field]).toBeNull()
+      expect(anon.body.data.earnedBadges).toEqual([])
+
+      const owner = ctx(
+        { username: "quiet" },
+        { ownerBaUserId: "uQuiet" },
+        "s3cret"
+      )
+      await controller.findByUsername(owner)
+      expect(owner.body.data.points).toBe(50)
+      expect(owner.body.data.tier).toBe("Indexer")
+      expect(owner.body.data.earnedBadges).toEqual([
+        { badgeId: "first", awardedAt: "q" },
+      ])
+
+      const byId = ctx({ documentId: "pQuiet" }, {})
+      await controller.findByDocumentId(byId)
+      for (const field of ACTIVITY) expect(byId.body.data[field]).toBeNull()
+      expect(byId.body.data.earnedBadges).toEqual([])
+    })
+
+    it("hides the badge endpoints too, except from the owner", async () => {
+      const anon = ctx({ username: "quiet" }, {})
+      await controller.findBadgesByUsername(anon)
+      expect(anon.status).toBe(404)
+
+      const owner = ctx(
+        { username: "quiet" },
+        { ownerBaUserId: "uQuiet" },
+        "s3cret"
+      )
+      await controller.findBadgesByUsername(owner)
+      expect(owner.status).toBe(200)
+
+      const byId = ctx({ documentId: "pQuiet" }, {})
+      await controller.findBadgesByDocumentId(byId)
+      expect(byId.status).toBe(404)
+    })
+  })
+
+  describe("followedLibraries (E6)", () => {
+    it("lists published libraries only", async () => {
+      const c = ctx({ username: "quiet" }, {})
+      await controller.findByUsername(c)
+      expect(
+        c.body.data.followedLibraries.map((l: any) => l.documentId)
+      ).toEqual(["libA"])
+
+      const byId = ctx({ documentId: "pQuiet" }, {})
+      await controller.findByDocumentId(byId)
+      expect(
+        byId.body.data.followedLibraries.map((l: any) => l.documentId)
+      ).toEqual(["libA"])
     })
   })
 })

@@ -1591,7 +1591,7 @@ export interface ApiDatasetDataset extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private
     name: Schema.Attribute.String & Schema.Attribute.Required
-    notes: Schema.Attribute.Text
+    notes: Schema.Attribute.Text & Schema.Attribute.Private
     obtainedAt: Schema.Attribute.Date
     publishedAt: Schema.Attribute.DateTime
     publisher: Schema.Attribute.String
@@ -2166,6 +2166,14 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    completeness: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 100
+          min: 0
+        },
+        number
+      >
     contentUpdatedAt: Schema.Attribute.DateTime &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -3013,10 +3021,11 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     avatar: Schema.Attribute.Media<"images">
     baUserId: Schema.Attribute.String &
       Schema.Attribute.Required &
+      Schema.Attribute.Private &
       Schema.Attribute.Unique
     bio: Schema.Attribute.Text
     city: Schema.Attribute.String
-    contributorNumber: Schema.Attribute.Integer
+    contributorNumber: Schema.Attribute.Integer & Schema.Attribute.Private
     contributorRole: Schema.Attribute.Enumeration<
       [
         "reader",
@@ -3058,6 +3067,7 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private
     mastodon: Schema.Attribute.String
     notifPrefs: Schema.Attribute.JSON &
+      Schema.Attribute.Private &
       Schema.Attribute.DefaultTo<{
         editorialMessages: true
         editsReviewed: true
@@ -3358,6 +3368,106 @@ export interface ApiWikiSectionWikiSection extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface PluginContentModerationOptionSuggestion
+  extends Struct.CollectionTypeSchema {
+  collectionName: "cm_option_suggestions"
+  info: {
+    description: "A new accessibility feature, service or amenity that contributors asked for. The editorial board accepts or declines these monthly."
+    displayName: "Option Suggestion"
+    pluralName: "option-suggestions"
+    singularName: "option-suggestion"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    acceptedOptionDocumentId: Schema.Attribute.String
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    decidedAt: Schema.Attribute.DateTime
+    decidedBy: Schema.Attribute.String
+    decisionNote: Schema.Attribute.Text
+    libraries: Schema.Attribute.JSON
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::content-moderation.option-suggestion"
+    > &
+      Schema.Attribute.Private
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 80
+      }>
+    nameKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 80
+      }>
+    optionKey: Schema.Attribute.Enumeration<
+      ["accessibility", "amenities", "services"]
+    > &
+      Schema.Attribute.Required
+    publishedAt: Schema.Attribute.DateTime
+    requests: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
+    status: Schema.Attribute.Enumeration<["open", "accepted", "declined"]> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"open">
+    submissionIds: Schema.Attribute.JSON
+    unlinkedLibraries: Schema.Attribute.JSON
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginContentModerationOptionVote
+  extends Struct.CollectionTypeSchema {
+  collectionName: "cm_option_votes"
+  info: {
+    displayName: "Option Vote"
+    pluralName: "option-votes"
+    singularName: "option-vote"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    baUserId: Schema.Attribute.String & Schema.Attribute.Required
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::content-moderation.option-vote"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    suggestionDocumentId: Schema.Attribute.String & Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface PluginContentModerationSubmission
   extends Struct.CollectionTypeSchema {
   collectionName: "cm_submissions"
@@ -3371,7 +3481,7 @@ export interface PluginContentModerationSubmission
   }
   pluginOptions: {
     "content-manager": {
-      visible: true
+      visible: false
     }
     "content-type-builder": {
       visible: false
@@ -3639,6 +3749,7 @@ export interface PluginEventsEvent extends Struct.CollectionTypeSchema {
     isFree: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
     lastSeenAt: Schema.Attribute.DateTime & Schema.Attribute.Required
     library: Schema.Attribute.Relation<"manyToOne", "api::library.library">
+    libraryEntityRef: Schema.Attribute.String
     locale: Schema.Attribute.String & Schema.Attribute.Private
     localizations: Schema.Attribute.Relation<
       "oneToMany",
@@ -3997,7 +4108,7 @@ export interface PluginRewardsBadgeAward extends Struct.CollectionTypeSchema {
   }
   pluginOptions: {
     "content-manager": {
-      visible: true
+      visible: false
     }
     "content-type-builder": {
       visible: false
@@ -4076,7 +4187,7 @@ export interface PluginRewardsPointEvent extends Struct.CollectionTypeSchema {
   }
   pluginOptions: {
     "content-manager": {
-      visible: true
+      visible: false
     }
     "content-type-builder": {
       visible: false
@@ -4432,6 +4543,8 @@ declare module "@strapi/strapi" {
       "api::wiki-article.wiki-article": ApiWikiArticleWikiArticle
       "api::wiki-landing.wiki-landing": ApiWikiLandingWikiLanding
       "api::wiki-section.wiki-section": ApiWikiSectionWikiSection
+      "plugin::content-moderation.option-suggestion": PluginContentModerationOptionSuggestion
+      "plugin::content-moderation.option-vote": PluginContentModerationOptionVote
       "plugin::content-moderation.submission": PluginContentModerationSubmission
       "plugin::content-moderation.submission-upload": PluginContentModerationSubmissionUpload
       "plugin::content-releases.release": PluginContentReleasesRelease

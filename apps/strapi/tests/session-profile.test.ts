@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
 import { makeFakeStrapi } from "./helpers/fake-strapi"
 import controller from "../src/api/auth-bridge/controllers/auth-bridge"
+import { NON_CLAIM_AFFILIATION_ROLES } from "../src/utils/affiliations"
 
 const PROFILE = "api::user-profile.user-profile"
 const AFF = "api::library-affiliation.library-affiliation"
@@ -41,6 +42,20 @@ describe("auth-bridge sessionProfile", () => {
       [AFF]: [
         { documentId: "a1", baUserId: "u1", library: { documentId: "libA" } },
         { documentId: "a2", baUserId: "u2", library: { documentId: "libB" } },
+        // A proposer row (from a new-library submission) is not a claim.
+        {
+          documentId: "a3",
+          baUserId: "u1",
+          role: "proposer",
+          library: { documentId: "libC" },
+        },
+        // A row with no role at all (an email-domain auto-claim) still is.
+        {
+          documentId: "a4",
+          baUserId: "u1",
+          role: null,
+          library: { documentId: "libD" },
+        },
       ],
       [GRANT]: [
         { documentId: "g1", baUserId: "u1", plan: "pro", expiresAt: null },
@@ -81,7 +96,7 @@ describe("auth-bridge sessionProfile", () => {
       contributorRole: "verified_librarian",
       username: "ada",
       tier: "Indexer",
-      claims: ["libA"],
+      claims: ["libA", "libD"],
       grants: [{ plan: "pro", expiresAt: null }],
       verifications: [{ expiresAt: FUTURE_ISO }],
       earnedProUntil: FUTURE_ISO,
@@ -133,5 +148,11 @@ describe("auth-bridge sessionProfile", () => {
     expect(findMany.mock.calls[0][0].filters).toEqual({
       baUserId: { $eq: "u1" },
     })
+  })
+})
+
+describe("NON_CLAIM_AFFILIATION_ROLES", () => {
+  it("names the proposer role, the one affiliation that is not a claim", () => {
+    expect(NON_CLAIM_AFFILIATION_ROLES).toEqual(["proposer"])
   })
 })

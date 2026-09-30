@@ -14,6 +14,7 @@ export default factories.createCoreController(
         .findMany({
           fields: ["name", "slug", "order"],
           locale,
+          status: "published",
           populate: {
             wikiArticles: {
               fields: ["title", "slug", "priority", "articleStatus"],

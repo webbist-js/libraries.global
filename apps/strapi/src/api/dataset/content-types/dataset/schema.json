@@ -39,7 +39,11 @@
     "licenceStatus": {
       "type": "enumeration",
       "default": "unconfirmed",
-      "enum": ["confirmed_in_writing", "stated_by_publisher", "unconfirmed"]
+      "enum": [
+        "confirmed_in_writing",
+        "stated_by_publisher",
+        "unconfirmed"
+      ]
     },
     "redistribution": {
       "type": "enumeration",
@@ -67,7 +71,8 @@
       "type": "date"
     },
     "notes": {
-      "type": "text"
+      "type": "text",
+      "private": true
     }
   }
 }

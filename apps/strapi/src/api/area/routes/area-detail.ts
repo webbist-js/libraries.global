@@ -12,11 +12,5 @@ export default {
       handler: "area.slugs",
       config: { auth: false },
     },
-    {
-      method: "GET",
-      path: "/areas/map-pins",
-      handler: "area.mapPins",
-      config: { auth: false },
-    },
   ],
 }
