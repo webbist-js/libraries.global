@@ -3,22 +3,20 @@ import { NextResponse } from "next/server"
 
 import { auth } from "@/lib/auth"
 import { readJsonCapped } from "@/lib/bridge-params"
+import { userHeaders } from "@/lib/bridge-user-headers"
+import { createRateLimiter, rateLimitResponse } from "@/lib/rate-limit"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
 
-export function userHeaders(user: {
-  id: string
-  email: string
-  name?: string | null
-}) {
-  return {
-    "X-Service-Secret": SECRET ?? "",
-    "X-Ba-User-Id": user.id,
-    "X-Ba-User-Email": user.email,
-    "X-Ba-User-Name": user.name ?? "",
-  }
-}
+// Other routes import this from here; it lives in lib/bridge-user-headers.
+export { userHeaders }
+
+const limiter = createRateLimiter({
+  name: "submissions",
+  max: 30,
+  windowMs: 60_000,
+})
 
 // POST /api/submissions — create a new submission
 export async function POST(req: Request) {
@@ -30,6 +28,9 @@ export async function POST(req: Request) {
       { error: "Bridge not configured" },
       { status: 500 }
     )
+
+  const limit = await limiter.check(session.user.id)
+  if (!limit.ok) return rateLimitResponse(limit)
 
   const parsed = await readJsonCapped(req, 512 * 1024)
   if (!parsed.ok)

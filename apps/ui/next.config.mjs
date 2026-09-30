@@ -2,6 +2,10 @@ import { withSentryConfig } from "@sentry/nextjs"
 import plugin from "next-intl/plugin"
 
 import { env } from "./src/env.mjs"
+import {
+  buildSecurityHeaders,
+  imageRemotePatterns,
+} from "./src/lib/security-headers.mjs"
 
 const withNextIntl = plugin("./src/lib/i18n.ts")
 
@@ -19,6 +23,18 @@ const nextConfig = {
   },
   reactCompiler: true,
   transpilePackages: ["@repo/design-system"],
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: buildSecurityHeaders({
+          // The Strapi admin embeds the site in its preview pane.
+          strapiAdminOrigin: env.NEXT_PUBLIC_STRAPI_URL ?? env.STRAPI_URL,
+          isProduction: env.NODE_ENV === "production",
+        }),
+      },
+    ]
+  },
   images: {
     // Be aware that Strapi has optimization on by default
     // Do not optimize all images by default.
@@ -38,16 +54,14 @@ const nextConfig = {
     // Please check: https://nextjs.org/docs/app/api-reference/components/image
     deviceSizes: [420, 768, 1024],
 
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "*",
-      },
-      {
-        protocol: "http",
-        hostname: "127.0.0.1",
-      },
-    ],
+    // Only the Strapi hosts and the CDN hosts in IMAGE_REMOTE_HOSTS; never "*".
+    remotePatterns: imageRemotePatterns({
+      hosts: [
+        env.STRAPI_URL ?? "http://127.0.0.1:1337",
+        env.NEXT_PUBLIC_STRAPI_URL,
+        env.IMAGE_REMOTE_HOSTS,
+      ],
+    }),
   },
 
   // Turbopack configuration (replaces webpack config)

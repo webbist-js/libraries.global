@@ -1,4 +1,5 @@
 import { SITE_NAME } from "@/lib/constants"
+import { escapeIcs, escapeIcsUri, isEventDocumentId } from "@/lib/ics"
 import { savedEventsBridgeHeaders, STRAPI } from "@/lib/saved-events-bridge"
 
 const API_TOKEN = process.env.STRAPI_REST_READONLY_API_KEY
@@ -24,7 +25,7 @@ export async function GET() {
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
       "PRODID:-//libraries.global//Events//EN",
-      `X-WR-CALNAME:My Saved Events — ${SITE_NAME}`,
+      `X-WR-CALNAME:${escapeIcs(`My Saved Events — ${SITE_NAME}`)}`,
       "CALSCALE:GREGORIAN",
       "METHOD:PUBLISH",
       "END:VCALENDAR",
@@ -38,13 +39,17 @@ export async function GET() {
     })
   }
 
-  // Fetch full event data for each saved event
+  // Fetch full event data for each saved event. Ids come from our own store,
+  // but they're still checked before going into a URL.
   const eventResults = await Promise.all(
-    saved.map(({ eventDocumentId }) =>
-      fetch(`${STRAPI}/api/events/event/${eventDocumentId}`, {
-        headers: API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {},
-      }).then((r) => (r.ok ? r.json() : null))
-    )
+    saved
+      .map(({ eventDocumentId }) => eventDocumentId)
+      .filter((id) => typeof id === "string" && isEventDocumentId(id))
+      .map((id) =>
+        fetch(`${STRAPI}/api/events/event/${encodeURIComponent(id)}`, {
+          headers: API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {},
+        }).then((r) => (r.ok ? r.json() : null))
+      )
   )
 
   const events = eventResults.filter(Boolean) as {
@@ -63,18 +68,12 @@ export async function GET() {
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
     "PRODID:-//libraries.global//Events//EN",
-    `X-WR-CALNAME:My Saved Events — ${SITE_NAME}`,
+    `X-WR-CALNAME:${escapeIcs(`My Saved Events — ${SITE_NAME}`)}`,
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     ...events.flatMap((e) => {
       const startProp = e.allDay ? "DTSTART;VALUE=DATE" : "DTSTART"
       const endProp = e.allDay ? "DTEND;VALUE=DATE" : "DTEND"
-      const esc = (s: string) =>
-        s
-          .replaceAll("\\", "\\\\")
-          .replaceAll(";", String.raw`\;`)
-          .replaceAll(",", String.raw`\,`)
-          .replaceAll("\n", String.raw`\n`)
       const dt = (iso: string) => {
         const d = new Date(iso)
         if (e.allDay)
@@ -82,16 +81,19 @@ export async function GET() {
 
         return d.toISOString().replaceAll(/[-:]/g, "").slice(0, 15) + "Z"
       }
+      const url = e.url ? escapeIcsUri(e.url) : null
 
       return [
         "BEGIN:VEVENT",
-        `UID:${e.documentId}@libraries.global`,
-        `SUMMARY:${esc(e.title)}`,
+        `UID:${escapeIcs(e.documentId)}@libraries.global`,
+        `SUMMARY:${escapeIcs(e.title)}`,
         `${startProp}:${dt(e.startTime)}`,
         ...(e.endTime ? [`${endProp}:${dt(e.endTime)}`] : []),
-        ...(e.description ? [`DESCRIPTION:${esc(e.description)}`] : []),
-        ...(e.url ? [`URL:${e.url}`] : []),
-        ...(e.libraryEntityRef ? [`LOCATION:${esc(e.libraryEntityRef)}`] : []),
+        ...(e.description ? [`DESCRIPTION:${escapeIcs(e.description)}`] : []),
+        ...(url ? [`URL:${url}`] : []),
+        ...(e.libraryEntityRef
+          ? [`LOCATION:${escapeIcs(e.libraryEntityRef)}`]
+          : []),
         "END:VEVENT",
       ]
     }),

@@ -2,6 +2,7 @@ import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/lib/auth"
+import { isSameOrigin, sameOriginResponse } from "@/lib/same-origin"
 
 export async function GET() {
   const hdrs = await headers()
@@ -22,6 +23,9 @@ export async function GET() {
 }
 
 export async function DELETE(req: Request) {
+  if (!isSameOrigin(req, process.env.APP_PUBLIC_URL))
+    return sameOriginResponse()
+
   const hdrs = await headers()
   const session = await auth.api.getSession({ headers: hdrs })
   if (!session?.user)
@@ -53,9 +57,11 @@ export async function DELETE(req: Request) {
     })
 
     return NextResponse.json({ ok: true })
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to unlink"
-
-    return NextResponse.json({ error: message }, { status: 500 })
+  } catch {
+    // Better Auth's message can name internal state; keep it out of the reply.
+    return NextResponse.json(
+      { error: "Failed to remove the connection" },
+      { status: 500 }
+    )
   }
 }

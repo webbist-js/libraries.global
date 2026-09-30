@@ -15,7 +15,7 @@ import {
 } from "@/lib/seo/location"
 import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
 import {
-  fetchAllLibraries,
+  fetchAllCountries,
   fetchCountry,
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
@@ -65,22 +65,12 @@ export async function generateStaticParams({
   if (isDevelopment()) {
     return [{ continent: "europe", country: "england" }]
   }
-  const results = await fetchAllLibraries(locale as Locale)
-  const seen = new Set<string>()
+  // One row per country from /countries/slugs, not the whole library index.
+  const results = await fetchAllCountries(locale as Locale)
 
   return results.data
-    .filter((lib) => lib.continent?.slug && lib.country?.slug)
-    .filter((lib) => {
-      const key = `${lib.continent!.slug}/${lib.country!.slug}`
-      if (seen.has(key)) return false
-      seen.add(key)
-
-      return true
-    })
-    .map((lib) => ({
-      continent: lib.continent!.slug,
-      country: lib.country!.slug,
-    }))
+    .filter((c) => c.slug && c.continent?.slug)
+    .map((c) => ({ continent: c.continent!.slug, country: c.slug }))
 }
 
 export default function CountryPage(props: {

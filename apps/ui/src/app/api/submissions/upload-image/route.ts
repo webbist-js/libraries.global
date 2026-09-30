@@ -3,9 +3,13 @@ import { NextResponse } from "next/server"
 
 import { auth } from "@/lib/auth"
 import { toSafeImageFile } from "@/lib/image-upload"
+import { formatStrapiMediaUrlForClient } from "@/lib/strapi-helpers"
+import {
+  enforceUploadQuota,
+  recordUpload,
+  rejectOversizedRequest,
+} from "@/lib/upload-quota"
 import { resolveUploadApiKey } from "@/lib/upload-token"
-
-const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 
 const MAX_SIZE = 10 * 1024 * 1024 // 10 MB
 
@@ -13,6 +17,10 @@ export async function POST(req: Request) {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  // Refuse from the declared size before the body is read at all.
+  const oversized = rejectOversizedRequest(req, MAX_SIZE)
+  if (oversized) return oversized
 
   let formData: FormData
   try {
@@ -28,8 +36,11 @@ export async function POST(req: Request) {
   if (file.size > MAX_SIZE)
     return NextResponse.json(
       { error: "File too large (max 10 MB)" },
-      { status: 400 }
+      { status: 413 }
     )
+
+  const overQuota = await enforceUploadQuota(session.user.id, file.size)
+  if (overQuota) return overQuota
 
   const safeFile = await toSafeImageFile(file, [
     "image/jpeg",
@@ -49,10 +60,11 @@ export async function POST(req: Request) {
       { status: 500 }
     )
 
+  const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
   const strapiForm = new FormData()
   strapiForm.append("files", safeFile, safeFile.name)
 
-  const uploadRes = await fetch(`${STRAPI}/api/upload`, {
+  const uploadRes = await fetch(`${strapiUrl}/api/upload`, {
     method: "POST",
     headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
     body: strapiForm,
@@ -69,12 +81,13 @@ export async function POST(req: Request) {
       { error: "Upload returned no file" },
       { status: 500 }
     )
+  recordUpload(session.user.id, safeFile.size)
 
   const secret = process.env.STRAPI_BRIDGE_SECRET
   if (secret) {
     try {
       const ownershipRes = await fetch(
-        `${STRAPI}/api/content-moderation/uploads`,
+        `${strapiUrl}/api/content-moderation/uploads`,
         {
           method: "POST",
           headers: {
@@ -98,6 +111,6 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     id: first.id,
-    url: first.url.startsWith("http") ? first.url : `${STRAPI}${first.url}`,
+    url: formatStrapiMediaUrlForClient(first.url),
   })
 }

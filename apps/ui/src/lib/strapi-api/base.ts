@@ -2,6 +2,9 @@ import type { FindFirst, FindMany, ID, Result, UID } from "@repo/strapi-types"
 
 import { getEnvVar } from "@/lib/env-vars"
 import { isDevelopment } from "@/lib/general-helpers"
+import { mapLimit } from "@/lib/map-limit"
+import { cacheTagsFor } from "@/lib/strapi-api/cache-tags"
+import { API_ENDPOINTS } from "@/lib/strapi-api/endpoints"
 import { eqOrNull } from "@/lib/strapi-api/query-builder"
 import type {
   APIResponse,
@@ -11,22 +14,28 @@ import type {
 } from "@/types/api"
 import type { AppError, CustomFetchOptions } from "@/types/general"
 
-// Add endpoints here that are queried from the frontend.
-// Mapping of Strapi content type UIDs to API endpoint paths.
-export const API_ENDPOINTS: Partial<Record<UID.ContentType, string>> = {
-  "api::page.page": "/pages",
-  "api::footer.footer": "/footer",
-  "api::homepage.homepage": "/homepage",
-  "api::subscriber.subscriber": "/subscribers",
-  "api::library.library": "/libraries",
-  "api::continent.continent": "/continents",
-  "api::country.country": "/countries",
-  "api::region.region": "/regions",
-  "api::blog-article.blog-article": "/blog-articles",
-  "api::blog-landing.blog-landing": "/blog-landing",
-  "api::wiki-article.wiki-article": "/wiki-articles",
-  "api::wiki-landing.wiki-landing": "/wiki-landing",
-} as const
+export { API_ENDPOINTS }
+
+/** Cached Strapi reads live this long unless a webhook purges them first. */
+export const DEFAULT_REVALIDATE_SECONDS = 300
+
+/** How many pages `fetchAll` asks Strapi for at once. */
+const FETCH_ALL_CONCURRENCY = 4
+
+/**
+ * A stable sort for paging: the caller's order, then documentId, so two
+ * pages never overlap or skip when rows tie on the sort key.
+ */
+function stableSort(sort: unknown): string[] {
+  const given =
+    typeof sort === "string"
+      ? [sort]
+      : Array.isArray(sort)
+        ? sort.filter((s): s is string => typeof s === "string")
+        : []
+
+  return given.includes("documentId:asc") ? given : [...given, "documentId:asc"]
+}
 
 export default abstract class BaseStrapiClient {
   public async fetchAPI(
@@ -52,7 +61,16 @@ export default abstract class BaseStrapiClient {
       next: {
         ...requestInit?.next,
         // if revalidate is set to a number since 0 implies cache: 'no-store' and a positive value implies cache: 'force-cache'.
-        revalidate: isDevelopment() ? 0 : (requestInit?.next?.revalidate ?? 60),
+        revalidate: isDevelopment()
+          ? 0
+          : (requestInit?.next?.revalidate ?? DEFAULT_REVALIDATE_SECONDS),
+        // Per-model and per-entry tags, purged by POST /api/revalidate.
+        tags: [
+          ...new Set([
+            ...cacheTagsFor(path, params),
+            ...(requestInit?.next?.tags ?? []),
+          ]),
+        ],
       },
       headers: {
         ...requestInit?.headers,
@@ -150,38 +168,37 @@ export default abstract class BaseStrapiClient {
 
     // Strapi can be configured in https://docs.strapi.io/dev-docs/configurations/api
     const maxPageSize = 100
+    const pagedParams = {
+      ...params,
+      sort: stableSort((params as { sort?: unknown } | undefined)?.sort),
+    }
 
     const firstPage: APIResponseCollection<Result<TContentTypeUID, TParams>> =
       await this.fetchAPI(
         path,
-        { ...params, pagination: { page: 1, pageSize: maxPageSize } },
+        { ...pagedParams, pagination: { page: 1, pageSize: maxPageSize } },
         requestInit,
         options
       )
 
-    if (firstPage.meta.pagination.pageCount === 1) {
+    if (firstPage.meta.pagination.pageCount <= 1) {
       return firstPage
     }
 
-    const otherPages = Array.from(
+    const pages = Array.from(
       { length: firstPage.meta.pagination.pageCount - 1 },
-      (_, i) =>
-        this.fetchAPI(
-          path,
-          {
-            ...params,
-            pagination: {
-              ...firstPage.meta.pagination,
-              page: i + 2,
-              pageSize: maxPageSize,
-            },
-          },
-          requestInit,
-          options
-        )
+      (_, i) => i + 2
+    )
+    const otherPages = await mapLimit(pages, FETCH_ALL_CONCURRENCY, (page) =>
+      this.fetchAPI(
+        path,
+        { ...pagedParams, pagination: { page, pageSize: maxPageSize } },
+        requestInit,
+        options
+      )
     )
 
-    return Promise.all(otherPages).then((res) => ({
+    return Promise.resolve(otherPages).then((res) => ({
       data: [firstPage.data, ...res.map((page) => page.data)].flat(),
       meta: {
         pagination: {

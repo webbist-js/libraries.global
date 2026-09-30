@@ -2,9 +2,16 @@ import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/lib/auth"
+import { createRateLimiter, rateLimitResponse } from "@/lib/rate-limit"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
+
+const limiter = createRateLimiter({
+  name: "follow-user",
+  max: 30,
+  windowMs: 60_000,
+})
 
 function missingSecret() {
   return NextResponse.json({ error: "Bridge not configured" }, { status: 500 })
@@ -41,6 +48,9 @@ export async function POST(req: Request) {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const limit = await limiter.check(session.user.id)
+  if (!limit.ok) return rateLimitResponse(limit)
 
   let body: { username?: string; action?: "follow" | "unfollow" }
   try {

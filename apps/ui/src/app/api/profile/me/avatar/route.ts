@@ -3,21 +3,31 @@ import { NextResponse } from "next/server"
 
 import { auth } from "@/lib/auth"
 import { toSafeImageFile } from "@/lib/image-upload"
+import { formatStrapiMediaUrlForClient } from "@/lib/strapi-helpers"
+import {
+  enforceUploadQuota,
+  recordUpload,
+  rejectOversizedRequest,
+} from "@/lib/upload-quota"
 import { resolveUploadApiKey } from "@/lib/upload-token"
 
-const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
-const SECRET = process.env.STRAPI_BRIDGE_SECRET
+const MAX_SIZE = 5 * 1024 * 1024 // 5 MB
 
 export async function POST(req: Request) {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  if (!SECRET)
+  const secret = process.env.STRAPI_BRIDGE_SECRET
+  if (!secret)
     return NextResponse.json(
       { error: "Bridge not configured" },
       { status: 500 }
     )
+
+  // Refuse from the declared size before the body is read at all.
+  const oversized = rejectOversizedRequest(req, MAX_SIZE)
+  if (oversized) return oversized
 
   let formData: FormData
   try {
@@ -29,11 +39,14 @@ export async function POST(req: Request) {
   if (!file)
     return NextResponse.json({ error: "No file provided" }, { status: 400 })
 
-  if (file.size > 5 * 1024 * 1024)
+  if (file.size > MAX_SIZE)
     return NextResponse.json(
       { error: "File too large (max 5 MB)" },
-      { status: 400 }
+      { status: 413 }
     )
+
+  const overQuota = await enforceUploadQuota(session.user.id, file.size)
+  if (overQuota) return overQuota
 
   const safeFile = await toSafeImageFile(file, [
     "image/jpeg",
@@ -52,10 +65,11 @@ export async function POST(req: Request) {
       { status: 500 }
     )
 
+  const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
   const strapiForm = new FormData()
   strapiForm.append("files", safeFile, safeFile.name)
 
-  const uploadRes = await fetch(`${STRAPI}/api/upload`, {
+  const uploadRes = await fetch(`${strapiUrl}/api/upload`, {
     method: "POST",
     headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
     body: strapiForm,
@@ -70,24 +84,30 @@ export async function POST(req: Request) {
       { error: "Upload returned no file" },
       { status: 500 }
     )
+  recordUpload(session.user.id, safeFile.size)
 
   const { id, url } = first
-  const absoluteUrl = url.startsWith("http") ? url : `${STRAPI}${url}`
 
   // Connect the uploaded file to the user's profile avatar media field
-  const profileRes = await fetch(`${STRAPI}/api/auth-bridge/upsert-profile`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Service-Secret": SECRET },
-    body: JSON.stringify({
-      baUserId: session.user.id,
-      avatarFileId: id,
-    }),
-  })
+  const profileRes = await fetch(
+    `${strapiUrl}/api/auth-bridge/upsert-profile`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Service-Secret": secret,
+      },
+      body: JSON.stringify({
+        baUserId: session.user.id,
+        avatarFileId: id,
+      }),
+    }
+  )
   if (!profileRes.ok)
     return NextResponse.json(
       { error: "Profile update failed" },
       { status: 500 }
     )
 
-  return NextResponse.json({ url: absoluteUrl })
+  return NextResponse.json({ url: formatStrapiMediaUrlForClient(url) })
 }

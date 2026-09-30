@@ -37,8 +37,12 @@ describe("isStrapiEndpointAllowed", () => {
     )
   })
 
-  it("still allows newsletter sign-up", () => {
-    expect(isStrapiEndpointAllowed("api/subscribers", "POST")).toBe(true)
+  it("no longer proxies newsletter sign-up (it has its own route)", () => {
+    expect(isStrapiEndpointAllowed("api/subscribers", "POST")).toBe(false)
+  })
+
+  it("allows no POST at all through the public proxy", () => {
+    expect(isStrapiEndpointAllowed("api/libraries", "POST")).toBe(false)
   })
 
   it("does not allow methods that are not listed", () => {

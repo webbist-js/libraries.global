@@ -160,7 +160,29 @@ export async function fetchHomepage(locale: Locale) {
         status: dm.isEnabled ? "draft" : "published",
         populate: {
           featuredLibraries: {
-            populate: ["heroImage", "continent", "country", "region"],
+            // Only what the featured cards show, not whole library records.
+            fields: [
+              "name",
+              "slug",
+              "summary",
+              "city",
+              "libraryType",
+              "openingTimes",
+            ],
+            populate: {
+              heroImage: {
+                fields: [
+                  "url",
+                  "alternativeText",
+                  "width",
+                  "height",
+                  "formats",
+                ],
+              },
+              continent: { fields: ["slug", "name"] },
+              country: { fields: ["slug", "name"] },
+              region: { fields: ["slug", "name"] },
+            },
           },
           featuredServices: true,
           seo: true,
@@ -269,6 +291,41 @@ type LibraryPathData = {
   continent?: { slug: string } | null
   country?: { slug: string } | null
   region?: { slug: string } | null
+}
+
+/**
+ * The paths of the featured ("pillar") libraries only: the set worth
+ * prerendering at build time. Everything else renders on first request
+ * (`dynamicParams = true`).
+ */
+export async function fetchFeaturedLibraryPaths(
+  locale: Locale
+): Promise<{ data: LibraryPathData[] }> {
+  try {
+    const result = await PublicStrapiClient.fetchAll("api::library.library", {
+      locale,
+      fields: ["slug", "locale"],
+      filters: { featured: true },
+      populate: {
+        continent: { fields: ["slug"] },
+        country: { fields: ["slug"] },
+        region: { fields: ["slug"] },
+      },
+      status: "published",
+    } as Parameters<typeof PublicStrapiClient.fetchAll>[1])
+
+    return result as { data: LibraryPathData[] }
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching featured library paths for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return { data: [] }
+  }
 }
 
 export async function fetchAllLibraries(
@@ -1416,9 +1473,29 @@ type IncompleteLibraryEntry = {
   country?: { name?: string | null } | null
 } & Parameters<typeof computeCompleteness>[0]
 
+/** The library fields `computeCompleteness` and the task card read. */
+const INCOMPLETE_LIBRARY_FIELDS = [
+  "slug",
+  "name",
+  "city",
+  "completeness",
+  "openingTimes",
+  "streetAddress",
+  "location",
+  "description",
+  "summary",
+  "foundedYear",
+  "openedYear",
+  "website",
+  "phone",
+  "email",
+]
+
 /**
  * Published libraries with gaps, least complete first — the raw material for
  * "help complete the map" tasks on the homepage and the contribute hub.
+ * Strapi keeps a `completeness` integer on each library, so the least
+ * complete hundred come back in one page instead of a name-sorted sample.
  */
 export async function fetchIncompleteLibraries(): Promise<IncompleteLibrary[]> {
   const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
@@ -1427,7 +1504,11 @@ export async function fetchIncompleteLibraries(): Promise<IncompleteLibrary[]> {
     const params = new URLSearchParams({
       status: "published",
       "pagination[pageSize]": "100",
-      "sort[0]": "name:asc",
+      "sort[0]": "completeness:asc",
+      "sort[1]": "name:asc",
+      ...Object.fromEntries(
+        INCOMPLETE_LIBRARY_FIELDS.map((field, i) => [`fields[${i}]`, field])
+      ),
       "populate[heroImage][fields][0]": "url",
       "populate[accessibility][fields][0]": "name",
       "populate[services][fields][0]": "name",
@@ -1437,7 +1518,7 @@ export async function fetchIncompleteLibraries(): Promise<IncompleteLibrary[]> {
       "populate[region][fields][0]": "name",
     })
     const res = await fetch(`${strapiUrl}/api/libraries?${params}`, {
-      next: { revalidate: 300 },
+      next: { revalidate: 300, tags: ["strapi", "library"] },
       headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
     })
     if (!res.ok) return []

@@ -36,3 +36,20 @@ const formatClientUrl = (imageUrl: string): string => {
 const formatServerUrl = (imageUrl: string): string => {
   return `${getEnvVar("STRAPI_URL")}${imageUrl}`
 }
+
+/**
+ * A media URL for the browser: local `/uploads/...` paths become
+ * `/api/asset/uploads/...` (the asset proxy), so the Strapi origin is never
+ * handed to the client. Absolute (CDN) URLs are returned as they are. Use this
+ * in route handlers that answer the browser; `formatStrapiMediaUrl` picks the
+ * server form when rendering on the server.
+ */
+export const formatStrapiMediaUrlForClient = (
+  imageUrl: string | undefined | null
+): string | undefined => {
+  if (!imageUrl) return undefined
+  if (!imageUrl.startsWith("http") && imageUrl.startsWith("/uploads"))
+    return formatClientUrl(imageUrl)
+
+  return imageUrl
+}

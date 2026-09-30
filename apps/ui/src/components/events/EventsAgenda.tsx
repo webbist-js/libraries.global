@@ -15,6 +15,10 @@ import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 import type { EventSearchHit } from "@/lib/meilisearch"
 
+/** Only http(s) links become anchors: an event URL comes from a third-party feed. */
+const isHttpUrl = (url: unknown): url is string =>
+  typeof url === "string" && /^https?:\/\//i.test(url.trim())
+
 function Chip({
   children,
   bg,
@@ -61,15 +65,19 @@ function AgendaRow({ event }: { readonly event: EventSearchHit }) {
       {/* Body */}
       <div className="min-w-0 flex-1">
         <p className="m-0 text-[16px] leading-snug font-semibold">
-          <a
-            href={event.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
-            style={{ color: T.ink.base }}
-          >
-            {event.title}
-          </a>
+          {isHttpUrl(event.url) ? (
+            <a
+              href={event.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+              style={{ color: T.ink.base }}
+            >
+              {event.title}
+            </a>
+          ) : (
+            <span style={{ color: T.ink.base }}>{event.title}</span>
+          )}
         </p>
         {event.library_name ? (
           <p className="m-0 mt-0.5 text-[14px]" style={{ color: T.ink.dim }}>

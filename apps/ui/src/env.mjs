@@ -22,6 +22,8 @@ export const env = createEnv({
     STRAPI_REST_READONLY_API_KEY: z.string().optional(),
     STRAPI_REST_CUSTOM_API_KEY: z.string().optional(),
     STRAPI_PREVIEW_SECRET: z.string().optional(),
+    // Comma-separated CDN hosts allowed in next/image, besides the Strapi hosts.
+    IMAGE_REMOTE_HOSTS: z.string().optional(),
 
     NEXT_OUTPUT: z.string().optional(),
 
@@ -76,6 +78,7 @@ export const env = createEnv({
     STRAPI_REST_READONLY_API_KEY: process.env.STRAPI_REST_READONLY_API_KEY,
     STRAPI_REST_CUSTOM_API_KEY: process.env.STRAPI_REST_CUSTOM_API_KEY,
     STRAPI_PREVIEW_SECRET: process.env.STRAPI_PREVIEW_SECRET,
+    IMAGE_REMOTE_HOSTS: process.env.IMAGE_REMOTE_HOSTS,
 
     NEXT_OUTPUT: process.env.NEXT_OUTPUT,
 

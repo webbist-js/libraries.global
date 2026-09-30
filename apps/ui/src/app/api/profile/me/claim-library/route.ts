@@ -2,9 +2,53 @@ import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/lib/auth"
+import { userHeaders } from "@/lib/bridge-user-headers"
+import { createRateLimiter, rateLimitResponse } from "@/lib/rate-limit"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
+
+const limiter = createRateLimiter({
+  name: "claim-library",
+  max: 30,
+  windowMs: 60_000,
+})
+
+const OPEN_STATUSES = new Set(["pending", "needs_info"])
+
+/**
+ * Whether the user already has a claim for this library waiting on
+ * moderation. Read from their own submissions listing; if that can't be read,
+ * the claim goes ahead (Strapi's policy is the final gate).
+ */
+async function hasOpenClaim(
+  user: { id: string; email: string; name?: string | null },
+  entityRef: string
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${STRAPI}/api/content-moderation/submissions/my`, {
+      headers: userHeaders(user),
+      cache: "no-store",
+    })
+    if (!res.ok) return false
+    const json = (await res.json()) as {
+      data?: {
+        submissionType?: string
+        status?: string
+        targetSlug?: string | null
+      }[]
+    }
+
+    return (json.data ?? []).some(
+      (s) =>
+        s.submissionType === "library_claim" &&
+        OPEN_STATUSES.has(s.status ?? "") &&
+        s.targetSlug === entityRef
+    )
+  } catch {
+    return false
+  }
+}
 
 function extractDomain(url: string): string {
   try {
@@ -25,6 +69,9 @@ export async function POST(req: Request) {
       { error: "Bridge not configured" },
       { status: 500 }
     )
+
+  const limit = await limiter.check(session.user.id)
+  if (!limit.ok) return rateLimitResponse(limit)
 
   let body: {
     libraryEntityRef: string
@@ -66,6 +113,17 @@ export async function POST(req: Request) {
       )
     }
   }
+
+  // One open claim per library per user: a second one would only queue up
+  // behind the first in moderation.
+  if (await hasOpenClaim(session.user, libraryEntityRef))
+    return NextResponse.json(
+      {
+        error: "claim_pending",
+        message: "Your claim for this library is already waiting for review.",
+      },
+      { status: 409 }
+    )
 
   // Email-domain auto-verification. Strapi compares the domain of this
   // (verified) session email with the library's stored website/email and

@@ -2,6 +2,8 @@ import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/lib/auth"
+import { deleteStrapiProfile } from "@/lib/delete-profile"
+import { isSameOrigin, sameOriginResponse } from "@/lib/same-origin"
 import { invalidateSessionProfile } from "@/lib/session-profile"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
@@ -175,35 +177,29 @@ export async function PATCH(req: Request) {
   return NextResponse.json({ ok: true })
 }
 
-export async function DELETE() {
+export async function DELETE(req: Request) {
+  // A cross-site page must not be able to delete the account with a cookie.
+  if (!isSameOrigin(req, process.env.APP_PUBLIC_URL))
+    return sameOriginResponse()
+
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  if (!SECRET)
-    return NextResponse.json(
-      { error: "Bridge not configured" },
-      { status: 500 }
-    )
-
-  const anonymiseRes = await fetch(`${STRAPI}/api/auth-bridge/delete-profile`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Service-Secret": SECRET,
-    },
-    body: JSON.stringify({
-      baUserId: session.user.id,
-      email: session.user.email,
-    }),
+  const removed = await deleteStrapiProfile({
+    baUserId: session.user.id,
+    email: session.user.email,
   })
-  if (!anonymiseRes.ok) {
+  if (!removed.ok)
     return NextResponse.json(
-      { error: "Failed to remove profile data" },
+      {
+        error:
+          removed.reason === "unconfigured"
+            ? "Bridge not configured"
+            : "Failed to remove profile data",
+      },
       { status: 500 }
     )
-  }
-  invalidateSessionProfile(session.user.id)
 
   // Delete the sign-in record directly (sessions, linked accounts, user).
   // The public deleteUser endpoint can refuse an older session, and the

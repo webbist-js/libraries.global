@@ -6,6 +6,7 @@ import { customSession, magicLink } from "better-auth/plugins"
 import { Pool } from "pg"
 
 import { PASSWORD_MIN_LENGTH } from "./constants"
+import { deleteStrapiProfile } from "./delete-profile"
 import {
   sendMagicLinkEmail,
   sendResetPasswordEmail,
@@ -97,7 +98,22 @@ export const auth = betterAuth({
   trustedOrigins: [process.env.APP_PUBLIC_URL ?? "http://localhost:3000"],
   database: pool,
   user: {
-    deleteUser: { enabled: true },
+    deleteUser: {
+      enabled: true,
+      // Whichever way an account is deleted, its Strapi profile goes first.
+      // Refusing here keeps the sign-in record until the profile is gone, so
+      // nothing is orphaned.
+      beforeDelete: async (user) => {
+        const result = await deleteStrapiProfile({
+          baUserId: user.id,
+          email: user.email,
+        })
+        if (!result.ok)
+          throw new APIError("INTERNAL_SERVER_ERROR", {
+            message: "Profile data could not be removed. Please try again.",
+          })
+      },
+    },
     // Record of the terms and 18+ confirmation each account accepted.
     additionalFields: {
       termsVersion: { type: "string", required: false, input: true },

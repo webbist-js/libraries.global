@@ -24,8 +24,10 @@ const ALLOWED_STRAPI_ENDPOINTS: Record<string, string[]> = {
   ],
   // Strapi's own register/password endpoints are intentionally absent: all
   // account flows go through Better Auth, and exposing them here would let
-  // anyone create users-permissions accounts directly.
-  POST: ["api/subscribers"],
+  // anyone create users-permissions accounts directly. Newsletter sign-up
+  // has its own rate-limited route (app/api/newsletter), so nothing is
+  // proxied with POST.
+  POST: [],
 }
 
 /**

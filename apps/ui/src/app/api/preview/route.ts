@@ -1,9 +1,9 @@
-import { ROOT_PAGE_PATH } from "@repo/shared-data"
 import { cookies, draftMode } from "next/headers"
 import { hasLocale } from "next-intl"
 
 import { getEnvVar } from "@/lib/env-vars"
 import { redirect, routing } from "@/lib/navigation"
+import { isValidPreviewUrl, readPreviewSecret } from "@/lib/preview"
 import { safeEqual } from "@/lib/safe-equal"
 
 export async function GET(request: Request) {
@@ -16,8 +16,9 @@ export async function GET(request: Request) {
     return new Response("Invalid Configuration", { status: 404 })
   }
   const { searchParams } = new URL(request.url)
-  // Check if the provided secret matches our secret key
-  const secret = String(searchParams.get("secret"))
+  // The secret comes in the X-Preview-Secret header, or in the query for the
+  // Strapi preview button (which can only open a URL).
+  const secret = readPreviewSecret(request)
   if (!safeEqual(secret, previewSecret)) {
     console.warn(
       "[STRAPI_PREVIEW]: Preview request received, but [secret] does not match [STRAPI_PREVIEW_SECRET]. Status: 401."
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
   }
   // Validate the URL begins with ROOT_PAGE_PATH (e.g. index, with optional / for nested pages)
   const urlParam = String(searchParams.get("url"))
-  const url = validPageUrlRegex.test(urlParam) ? urlParam : undefined
+  const url = isValidPreviewUrl(urlParam) ? urlParam : undefined
   if (!url) {
     return new Response("Invalid URL", { status: 404 })
   }
@@ -85,8 +86,3 @@ export async function GET(request: Request) {
 }
 const validPageStatusKeys = new Set(["draft", "published"])
 const draftModePrerenderCookieKey = "__prerender_bypass"
-
-const validPageUrlRegex = new RegExp(
-  String.raw`^(${ROOT_PAGE_PATH}[a-zA-Z0-9-%]*)+$`,
-  "g"
-)

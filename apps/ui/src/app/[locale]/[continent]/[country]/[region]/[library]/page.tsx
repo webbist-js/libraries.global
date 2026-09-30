@@ -15,7 +15,7 @@ import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
 import { fetchDataset } from "@/lib/strapi-api/content/datasets"
 import { fetchLibraryArea } from "@/lib/strapi-api/content/library-area"
 import {
-  fetchAllLibraries,
+  fetchFeaturedLibraryPaths,
   fetchLibrary,
   fetchLibraryCatalogue,
   fetchLibraryFollowerCount,
@@ -33,7 +33,10 @@ export async function generateStaticParams({
   params: { locale: string }
 }) {
   if (isDevelopment()) return []
-  const result = await fetchAllLibraries(locale as Locale)
+  // Featured libraries only: prerendering every library would fan out a
+  // request per page for the whole index at each build. The rest render on
+  // first request (dynamicParams) and are then cached.
+  const result = await fetchFeaturedLibraryPaths(locale as Locale)
 
   return result.data
     .filter((l) => l.continent?.slug && l.country?.slug && l.region?.slug)
@@ -141,18 +144,24 @@ export default function LibraryRoutePage(props: {
     notFound()
   }
 
-  const area = use(
-    fetchLibraryArea({
-      slug: librarySlug,
-      regionSlug: library.region?.slug,
-      location: toLatLng(library.location),
-      openingTimes: library.openingTimes as OpeningTimesValue | null,
-    })
-  )
-  const revisions = use(fetchLibraryRevisions(library.documentId))
-  const catalogue = use(fetchLibraryCatalogue(library.documentId))
-  const dataset = use(fetchDataset(library.source))
-  const followers = use(fetchLibraryFollowerCount(library.documentId))
+  // Start every dependent fetch before suspending on any of them, so they
+  // run in parallel instead of one per render pass.
+  const areaPromise = fetchLibraryArea({
+    slug: librarySlug,
+    regionSlug: library.region?.slug,
+    location: toLatLng(library.location),
+    openingTimes: library.openingTimes as OpeningTimesValue | null,
+  })
+  const revisionsPromise = fetchLibraryRevisions(library.documentId)
+  const cataloguePromise = fetchLibraryCatalogue(library.documentId)
+  const datasetPromise = fetchDataset(library.source)
+  const followersPromise = fetchLibraryFollowerCount(library.documentId)
+
+  const area = use(areaPromise)
+  const revisions = use(revisionsPromise)
+  const catalogue = use(cataloguePromise)
+  const dataset = use(datasetPromise)
+  const followers = use(followersPromise)
 
   const crumbs = libraryPath(library, {
     continent: params.continent,

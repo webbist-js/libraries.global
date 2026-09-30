@@ -7,16 +7,80 @@ import { isDevelopment, isProduction } from "@/lib/general-helpers"
 import { isIndexableLocation } from "@/lib/seo/location"
 import { absoluteUrl, LIVE_LOCALES } from "@/lib/seo/metadata"
 import {
+  chunkIds,
+  SITEMAP_CHUNK_SIZE,
+  sliceForChunk,
+} from "@/lib/sitemap-chunks"
+import {
+  fetchAllLibrarySlugs,
+  type LibrarySlugRow,
+} from "@/lib/strapi-api/content/library-slugs"
+import {
   fetchAllBlogArticleSlugs,
   fetchAllContinents,
   fetchAllCountries,
-  fetchAllLibraries,
   fetchAllRegions,
   fetchDocsWikiArticles,
   fetchLegalDocuments,
 } from "@/lib/strapi-api/content/server"
 
 export const dynamic = "force-dynamic"
+
+/**
+ * The sitemap is split: /sitemap/0.xml holds every non-library page and
+ * /sitemap/1.xml onwards hold the library pages, 40,000 a file. Library
+ * paths come from the capped GET /libraries/slugs route, never the full
+ * library index.
+ */
+export async function generateSitemaps(): Promise<{ id: number }[]> {
+  if (!sitemapEnabled()) return [{ id: 0 }]
+  const libraries = await allLibraryRows()
+
+  return chunkIds(libraries.length)
+}
+
+function sitemapEnabled(): boolean {
+  if (!isProduction() && !isDevelopment()) return false
+
+  return Boolean(getEnvVar("APP_PUBLIC_URL"))
+}
+
+type LocalisedRow = { locale: Locale; row: LibrarySlugRow }
+
+/** Every published library path, across the live locales. */
+async function allLibraryRows(): Promise<LocalisedRow[]> {
+  const perLocale = await Promise.all(
+    LIVE_LOCALES.map(async (locale) => {
+      const { data } = await settle(fetchAllLibrarySlugs(locale as Locale), {
+        data: [],
+      })
+
+      return data.map((row) => ({ locale: locale as Locale, row }))
+    })
+  )
+
+  return perLocale.flat()
+}
+
+function libraryEntry({ locale, row }: LocalisedRow): Entry | null {
+  if (
+    !row.slug ||
+    !row.continent?.slug ||
+    !row.country?.slug ||
+    !row.region?.slug
+  )
+    return null
+
+  return {
+    url: absoluteUrl(
+      `${row.continent.slug}/${row.country.slug}/${row.region.slug}/${row.slug}`,
+      locale
+    ),
+    ...(row.updatedAt ? { lastModified: row.updatedAt } : {}),
+    changeFrequency: "weekly",
+    priority: 0.9,
+  }
+}
 
 /** Public, indexable static routes (private/transactional ones are excluded). */
 const STATIC_ROUTES: {
@@ -38,9 +102,21 @@ const STATIC_ROUTES: {
   },
 ]
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  if (!isProduction() && !isDevelopment()) return []
-  if (!getEnvVar("APP_PUBLIC_URL")) return []
+export default async function sitemap({
+  id,
+}: {
+  id: Promise<string> | string | number
+}): Promise<MetadataRoute.Sitemap> {
+  if (!sitemapEnabled()) return []
+  const chunk = Number(await id)
+
+  if (chunk > 0) {
+    const libraries = await allLibraryRows()
+
+    return sliceForChunk(libraries, chunk, SITEMAP_CHUNK_SIZE)
+      .map(libraryEntry)
+      .filter((entry): entry is Entry => entry !== null)
+  }
 
   // Only locales with published content — see LIVE_LOCALES in lib/seo/metadata.
   const results = await Promise.allSettled(
@@ -72,7 +148,7 @@ async function generateLocalizedSitemap(
       settle(fetchAllContinents(locale), { data: [] }),
       settle(fetchAllCountries(locale), { data: [] }),
       settle(fetchAllRegions(locale), { data: [] }),
-      settle(fetchAllLibraries(locale), { data: [] }),
+      settle(fetchAllLibrarySlugs(locale), { data: [] }),
       settle(fetchAllBlogArticleSlugs(locale), { data: [] }),
       settle(fetchDocsWikiArticles(locale), undefined),
       settle(fetchUpcomingEventIds(), []),
@@ -122,26 +198,7 @@ async function generateLocalizedSitemap(
     })
   }
 
-  // ── Libraries ─────────────────────────────────────────────────────────────
-  for (const lib of libraries.data) {
-    if (
-      !lib.slug ||
-      !lib.continent?.slug ||
-      !lib.country?.slug ||
-      !lib.region?.slug
-    ) {
-      continue
-    }
-    const updatedAt = (lib as { updatedAt?: string | null }).updatedAt
-    entries.push({
-      url: url(
-        `${lib.continent.slug}/${lib.country.slug}/${lib.region.slug}/${lib.slug}`
-      ),
-      ...(updatedAt ? { lastModified: updatedAt } : {}),
-      changeFrequency: "weekly",
-      priority: 0.9,
-    })
-  }
+  // Library pages live in the numbered sitemap chunks (see generateSitemaps).
 
   // ── Blog articles ─────────────────────────────────────────────────────────
   for (const a of blog.data) {

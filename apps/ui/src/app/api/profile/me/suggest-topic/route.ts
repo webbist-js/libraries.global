@@ -2,9 +2,17 @@ import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/lib/auth"
+import { userHeaders } from "@/lib/bridge-user-headers"
+import { createRateLimiter, rateLimitResponse } from "@/lib/rate-limit"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
+
+const limiter = createRateLimiter({
+  name: "suggest-topic",
+  max: 30,
+  windowMs: 60_000,
+})
 
 export async function POST(req: Request) {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -15,6 +23,9 @@ export async function POST(req: Request) {
       { error: "Bridge not configured" },
       { status: 500 }
     )
+
+  const limit = await limiter.check(session.user.id)
+  if (!limit.ok) return rateLimitResponse(limit)
 
   let body: { name?: string }
   try {
@@ -46,17 +57,17 @@ export async function POST(req: Request) {
       )
   }
 
-  // Submit as moderation entry
+  // Submit as moderation entry. Strapi resolves the submitter from the
+  // X-Ba-User-* headers; a baUserId in the body is ignored.
   const res = await fetch(`${STRAPI}/api/content-moderation/submissions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Service-Secret": SECRET,
+      ...userHeaders(session.user),
     },
     body: JSON.stringify({
       submissionType: "topic_suggestion",
-      baUserId: session.user.id,
-      fields: { name: name.trim(), suggestedByEmail: session.user.email },
+      fields: { name: name.trim() },
       note: `Topic suggestion: "${name.trim()}"`,
     }),
   })
