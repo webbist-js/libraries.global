@@ -65,4 +65,22 @@ export default [
     handler: "submission.recordUpload",
     config: { auth: false, policies: [] },
   },
+  {
+    method: "GET",
+    path: "/uploads/usage",
+    handler: "submission.uploadUsage",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
+    path: "/option-suggestions",
+    handler: "option-suggestion.listOpen",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "POST",
+    path: "/option-suggestions/:id/vote",
+    handler: "option-suggestion.vote",
+    config: { auth: false, policies: [] },
+  },
 ]

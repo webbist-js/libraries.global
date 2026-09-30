@@ -5,6 +5,9 @@ import {
   type FacilityCollection,
 } from "@repo/shared-data"
 
+import type { ApplyRecordOutcome } from "./library-record"
+import { applyToPublished } from "./publish-guard"
+
 /**
  * Approved "Tap Yes or No" answers from the library page (a correction with
  * fields.kind "facilities"). A yes connects the checklist item's CMS entry
@@ -72,19 +75,21 @@ type Submission = {
   fields?: unknown
 }
 
-/** The reviewed target: targetDocumentId when set, else the slug. */
+/**
+ * The reviewed target: targetDocumentId when set, else the slug. The draft
+ * version is the base every write goes through; whether it may be
+ * published is the publish guard's call.
+ */
 async function findLibrary(strapi: any, submission: Submission) {
   const fields = ["documentId", "locale", "absentFacilities"]
   if (submission.targetDocumentId)
     return strapi.documents(LIBRARY).findOne({
       documentId: submission.targetDocumentId,
-      status: "published",
       fields,
     })
   if (!submission.targetSlug) return null
   const [library] = await strapi.documents(LIBRARY).findMany({
     filters: { slug: { $eq: submission.targetSlug } },
-    status: "published",
     fields,
     limit: 1,
   })
@@ -95,12 +100,13 @@ async function findLibrary(strapi: any, submission: Submission) {
 /**
  * Applies an approved facilities correction to the library and publishes
  * it. "noop" when the submission holds no valid answers or its library is
- * gone. Database errors propagate so the approval is reverted.
+ * gone. Database errors propagate so the approval is reverted, and so does
+ * `ApplyRefusedError` when the library has no published version.
  */
 export async function applyFacilityAnswers(
   strapi: any,
   submission: Submission
-): Promise<"applied" | "noop"> {
+): Promise<ApplyRecordOutcome> {
   const answers = parseFacilityAnswers(submission.fields)
   if (answers.length === 0) return "noop"
 
@@ -142,12 +148,13 @@ export async function applyFacilityAnswers(
     data[relation] = { connect, disconnect }
   }
 
-  await strapi.documents(LIBRARY).update({
-    documentId: library.documentId,
-    locale: library.locale ?? "en",
-    status: "published",
+  const { mode } = await applyToPublished(
+    strapi,
+    LIBRARY,
+    library.documentId,
     data,
-  })
+    { locale: library.locale ?? "en" }
+  )
 
-  return "applied"
+  return mode === "draft_only" ? "applied_draft" : "applied"
 }

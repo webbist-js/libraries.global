@@ -1,0 +1,18 @@
+{
+  "kind": "collectionType",
+  "collectionName": "cm_option_votes",
+  "info": {
+    "singularName": "option-vote",
+    "pluralName": "option-votes",
+    "displayName": "Option Vote"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": false },
+    "content-type-builder": { "visible": false }
+  },
+  "attributes": {
+    "suggestionDocumentId": { "type": "string", "required": true },
+    "baUserId": { "type": "string", "required": true }
+  }
+}

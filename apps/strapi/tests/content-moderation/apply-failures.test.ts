@@ -225,22 +225,12 @@ describe("I3: partial claim approval and revert failures", () => {
     expect(store[AFF].map((a: any) => a.documentId)).toEqual(["aff1"])
   })
 
-  it("reports unreverted when the revert matches no row", async () => {
+  it("reports unreverted when the transaction's rollback did not take", async () => {
     const sub = newLibrary()
     const { strapi, store, svc } = setup({ [SUB]: [sub], [LIB]: [] })
     failOn(strapi, LIB, "create")
-    const originalQuery = strapi.db.query
-    let calls = 0
-    strapi.db.query = vi.fn((uid: string) => {
-      const api = originalQuery(uid)
-
-      return {
-        ...api,
-        updateMany: vi.fn(async (args: any) =>
-          ++calls === 1 ? api.updateMany(args) : { count: 0 }
-        ),
-      }
-    })
+    // A transaction whose rollback fails: the callback's writes stay put.
+    strapi.db.transaction = vi.fn(async (cb: () => Promise<unknown>) => cb())
 
     const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
 
@@ -253,19 +243,20 @@ describe("I3: partial claim approval and revert failures", () => {
     )
   })
 
-  it("reports unreverted when the revert throws", async () => {
+  it("reports unreverted when the state can't be confirmed after a failure", async () => {
     const sub = newLibrary()
     const { strapi, svc } = setup({ [SUB]: [sub], [LIB]: [] })
     failOn(strapi, LIB, "create")
-    const originalQuery = strapi.db.query
-    let calls = 0
-    strapi.db.query = vi.fn((uid: string) => {
-      const api = originalQuery(uid)
+    const originalDocuments = strapi.documents
+    let reads = 0
+    strapi.documents = vi.fn((u: string) => {
+      const api = originalDocuments(u)
+      if (u !== SUB) return api
 
       return {
         ...api,
-        updateMany: vi.fn(async (args: any) => {
-          if (++calls === 1) return api.updateMany(args)
+        findOne: vi.fn(async (args: any) => {
+          if (++reads === 1) return api.findOne(args)
           throw new Error("connection lost")
         }),
       }
@@ -274,6 +265,95 @@ describe("I3: partial claim approval and revert failures", () => {
     const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
 
     expect(result).toEqual({ error: "apply_failed", unreverted: true })
+  })
+})
+
+describe("the status change and its side effects commit together", () => {
+  const LIB_ID = "lib00000000000000000001"
+
+  it("a throw in the marker update leaves the status pending and the library unchanged", async () => {
+    const sub = withHash({
+      documentId: "s0000000000000000000013",
+      submissionType: "library_edit",
+      status: "pending",
+      submittedByUserId: "u1",
+      targetDocumentId: LIB_ID,
+      fields: { name: "New" },
+      draftData: null,
+      reviewNote: null,
+    })
+    const { strapi, store, svc, award } = setup({
+      [SUB]: [sub],
+      [LIB]: [
+        {
+          documentId: LIB_ID,
+          locale: "en",
+          name: "Old",
+          city: "Draft city",
+          __published: {
+            documentId: LIB_ID,
+            locale: "en",
+            name: "Old",
+            city: "Live",
+          },
+        },
+      ],
+      "plugin::content-moderation.submission-upload": [],
+    })
+    // The apply writes the library's draft (the draft has admin edits), then
+    // the "draft only" marker is written to the submission — and that throws.
+    failOn(strapi, SUB, "update")
+
+    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+
+    expect(result).toEqual({ error: "apply_failed" })
+    expect(statusOf(store, sub.documentId)).toBe("pending")
+    expect(store[LIB][0].name).toBe("Old")
+    expect(award).not.toHaveBeenCalled()
+    expect(strapi.db.transaction).toHaveBeenCalledTimes(1)
+  })
+
+  it("awards points only after the transaction committed", async () => {
+    const sub = newLibrary()
+    const { strapi, svc, award } = setup({
+      [SUB]: [sub],
+      [LIB]: [],
+      [AFF]: [],
+    })
+    const order: string[] = []
+    const originalTx = strapi.db.transaction
+    strapi.db.transaction = vi.fn(async (cb: any) => {
+      order.push("tx:start")
+      const res = await originalTx(cb)
+      order.push("tx:end")
+
+      return res
+    })
+    award.mockImplementation(async () => {
+      order.push("award")
+    })
+
+    await svc.updateStatus(sub.documentId, "approved", "admin1")
+
+    expect(order).toEqual(["tx:start", "tx:end", "award"])
+  })
+})
+
+describe("admin findAll", () => {
+  it("accepts a review status only, never draft or a non-string", async () => {
+    const rows = [
+      { ...claim(), documentId: "c1", status: "pending" },
+      { ...claim(), documentId: "c2", status: "draft" },
+      { ...claim(), documentId: "c3", status: "approved" },
+    ]
+    const { svc } = setup({ [SUB]: rows })
+    const ids = async (status?: unknown) =>
+      (await svc.findAll(status as any)).map((r: any) => r.documentId).sort()
+    expect(await ids("approved")).toEqual(["c3"])
+    expect(await ids("draft")).toEqual(["c1", "c3"])
+    expect(await ids(["pending"])).toEqual(["c1", "c3"])
+    expect(await ids({ $ne: "x" })).toEqual(["c1", "c3"])
+    expect(await ids()).toEqual(["c1", "c3"])
   })
 })
 

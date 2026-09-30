@@ -7,12 +7,44 @@ import {
   resolveCapabilities,
   SESSION_PROFILE_MAX_CLAIMS,
 } from "@repo/access"
+import { findUnsafeContent } from "@repo/shared-data"
 
 import { isDocumentId, VERIFICATION_METHODS } from "../utils/params"
 
 type Result =
   | { ok: true }
   | { ok: false; status: 400 | 403 | 429; message: string }
+
+/** The contributor-written parts of a submission. */
+export type SubmissionContent = {
+  fields?: unknown
+  draftData?: unknown
+  note?: unknown
+  editSummary?: unknown
+  evidenceUrl?: unknown
+}
+
+const LIBRARY = "api::library.library"
+
+/**
+ * Affiliation roles that are not Library Claims. A `new_library` approval
+ * records the submitter as `proposer` (D-C5): they proposed the record, they
+ * don't work there, so it grants no `submit.libraryEdit` or `events.feed`.
+ * (`src/utils/affiliations.ts` keeps its own copy for the session bridge.)
+ */
+const NON_CLAIM_AFFILIATION_ROLES = ["proposer"] as const
+
+/**
+ * The affiliation filter for claims only. `$ne`/`$notIn` alone would also
+ * drop rows whose `role` is NULL (SQL three-valued logic), and a claim may
+ * carry no role at all, so nulls are matched explicitly.
+ */
+export const CLAIM_AFFILIATION_FILTER = {
+  $or: [
+    { role: { $null: true } },
+    { role: { $notIn: [...NON_CLAIM_AFFILIATION_ROLES] } },
+  ],
+}
 
 export default ({ strapi }: { strapi: any }) => ({
   /**
@@ -38,7 +70,7 @@ export default ({ strapi }: { strapi: any }) => ({
     const affiliations = (await strapi
       .documents("api::library-affiliation.library-affiliation")
       .findMany({
-        filters: { baUserId: { $eq: baUserId } },
+        filters: { baUserId: { $eq: baUserId }, ...CLAIM_AFFILIATION_FILTER },
         populate: { library: { fields: ["documentId"] } },
         limit: SESSION_PROFILE_MAX_CLAIMS,
       })) as { library?: { documentId?: string } }[]
@@ -59,6 +91,54 @@ export default ({ strapi }: { strapi: any }) => ({
       tier: profile?.tier ?? null,
       role: profile?.contributorRole ?? null,
     }
+  },
+
+  /**
+   * Refuses offensive language and unsafe links anywhere in what the
+   * contributor wrote. Words from the target library's own name and address
+   * are allowed, so a real place is never mistaken for a swear.
+   */
+  async checkContent(
+    content: SubmissionContent,
+    target: { targetDocumentId?: unknown; targetSlug?: unknown } = {}
+  ): Promise<Result> {
+    const allow = await (this as any).allowedTerms(target)
+    const issue = findUnsafeContent(content, allow)
+    if (!issue) return { ok: true }
+    strapi.log.info(
+      `[content-moderation] refused a submission: unsafe content at ${issue.path}`
+    )
+
+    return { ok: false, status: 400, message: issue.message }
+  },
+
+  /** The target library's name and address, as terms the checker allows. */
+  async allowedTerms(target: {
+    targetDocumentId?: unknown
+    targetSlug?: unknown
+  }): Promise<string[]> {
+    const fields = ["name", "shortName", "streetAddress", "district", "city"]
+    let library: Record<string, unknown> | null = null
+    try {
+      if (isDocumentId(target.targetDocumentId))
+        library = await strapi
+          .documents(LIBRARY)
+          .findOne({ documentId: target.targetDocumentId, fields })
+      else if (typeof target.targetSlug === "string" && target.targetSlug)
+        [library] = await strapi.documents(LIBRARY).findMany({
+          filters: { slug: { $eq: target.targetSlug } },
+          fields,
+          limit: 1,
+        })
+    } catch {
+      library = null
+    }
+
+    return library
+      ? fields
+          .map((f) => library![f])
+          .filter((v): v is string => typeof v === "string" && !!v.trim())
+      : []
   },
 
   async check(input: {

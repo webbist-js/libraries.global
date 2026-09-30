@@ -4,6 +4,8 @@ import {
   applyLibraryRecord,
   buildLibraryRecordData,
   isRecordCorrection,
+  parseSuggestedOptions,
+  sanitizeOpeningTimes,
 } from "../../src/plugins/content-moderation/server/utils/library-record"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
 
@@ -92,7 +94,7 @@ describe("buildLibraryRecordData", () => {
   })
 
   it("keeps well-formed opening times and social links only", () => {
-    const openingTimes = { version: 1, days: [] }
+    const openingTimes = sanitizeOpeningTimes({ version: 1, days: [] })
     expect(
       buildLibraryRecordData({
         openingTimes,
@@ -129,6 +131,168 @@ describe("buildLibraryRecordData", () => {
     expect(
       buildLibraryRecordData({ uploadedImages: [{ strapiId: 1 }] })
     ).toEqual({})
+  })
+})
+
+const tf = (startTime: string, endTime: string, staffing = "staffed") => ({
+  id: `${startTime}-${endTime}`,
+  startTime,
+  endTime,
+  staffing,
+})
+
+describe("sanitizeOpeningTimes", () => {
+  it("fills all seven days in order and drops invalid values", () => {
+    const hours = sanitizeOpeningTimes({
+      version: 1,
+      days: [
+        { day: "tuesday", enabled: true, timeframes: [tf("09:00", "17:00")] },
+        { day: "funday", enabled: true, timeframes: [] },
+        {
+          day: "monday",
+          enabled: true,
+          timeframes: [
+            tf("13:00", "18:00", "volunteer"),
+            tf("08:00", "12:00", "robots"),
+          ],
+        },
+      ],
+    })!
+    expect(hours.days.map((d) => d.day)).toEqual([
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday",
+    ])
+    expect(
+      hours.days[0]!.timeframes.map((t) => [t.startTime, t.staffing])
+    ).toEqual([
+      ["08:00", "staffed"],
+      ["13:00", "volunteer"],
+    ])
+    expect(hours.days[2]).toEqual({
+      day: "wednesday",
+      enabled: false,
+      timeframes: [],
+    })
+  })
+
+  it("refuses overlapping or excessive timeframes, and non-hours", () => {
+    expect(
+      sanitizeOpeningTimes({
+        days: [
+          {
+            day: "monday",
+            enabled: true,
+            timeframes: [tf("09:00", "13:00"), tf("12:00", "17:00")],
+          },
+        ],
+      })
+    ).toBeNull()
+    expect(
+      sanitizeOpeningTimes({
+        days: [
+          {
+            day: "monday",
+            enabled: true,
+            timeframes: ["01", "03", "05", "07", "09", "11", "13"].map((h) =>
+              tf(`${h}:00`, `${h}:30`)
+            ),
+          },
+        ],
+      })
+    ).toBeNull()
+    expect(sanitizeOpeningTimes({ monday: "9-5" })).toBeNull()
+  })
+})
+
+describe("relation changes and suggested options", () => {
+  const A = "acc00000000000000000001"
+  const B = "acc00000000000000000002"
+
+  it("connects and disconnects without replacing the rest", () => {
+    expect(
+      buildLibraryRecordData({
+        accessibility: { connect: [A, "bad id"], disconnect: [B, A] },
+      })
+    ).toEqual({
+      accessibility: {
+        connect: [{ documentId: A }],
+        disconnect: [{ documentId: B }],
+      },
+    })
+    expect(buildLibraryRecordData({ services: { connect: [] } })).toEqual({})
+  })
+
+  it("cleans suggested option names", () => {
+    expect(
+      parseSuggestedOptions({
+        suggestedOptions: {
+          accessibility: [
+            "  Changing   Places toilet ",
+            "changing places toilet",
+            3,
+            "",
+          ],
+          ghosts: ["Boo"],
+        },
+      })
+    ).toEqual({ accessibility: ["Changing Places toilet"] })
+  })
+
+  it("links a matching option and logs a new one for the editorial board", async () => {
+    const ACC = "api::accessibility.accessibility"
+    const SUG = "plugin::content-moderation.option-suggestion"
+    const { strapi, store } = memoised({
+      [LIBRARY]: [{ documentId: ID, slug: "lib", name: "Lib", locale: "en" }],
+      [ACC]: [{ documentId: A, name: "Hearing loop" }],
+    })
+    const outcome = await applyLibraryRecord(strapi, {
+      documentId: "s1",
+      targetDocumentId: ID,
+      fields: {
+        kind: "record",
+        accessibility: { disconnect: [B] },
+        suggestedOptions: { accessibility: ["hearing LOOP", "Quiet room"] },
+      },
+    })
+    expect(outcome).toBe("applied")
+    expect(store[ACC]).toHaveLength(1)
+    expect(store[SUG]).toMatchObject([
+      {
+        name: "Quiet room",
+        nameKey: "quiet room",
+        optionKey: "accessibility",
+        status: "open",
+        requests: 1,
+        libraries: [{ documentId: ID, name: "Lib" }],
+        submissionIds: ["s1"],
+      },
+    ])
+    const data = strapi.documents(LIBRARY).update.mock.calls[0]?.[0]?.data
+    expect(data.accessibility).toEqual({
+      disconnect: [{ documentId: B }],
+      connect: [{ documentId: A }],
+    })
+  })
+
+  it("leaves the record alone when only new names were suggested", async () => {
+    const { strapi } = memoised({
+      [LIBRARY]: [{ documentId: ID, slug: "lib", name: "Lib" }],
+    })
+    const outcome = await applyLibraryRecord(strapi, {
+      documentId: "s2",
+      targetDocumentId: ID,
+      fields: {
+        kind: "record",
+        suggestedOptions: { services: ["Seed library"] },
+      },
+    })
+    expect(outcome).toBe("applied")
+    expect(strapi.documents(LIBRARY).update).not.toHaveBeenCalled()
   })
 })
 

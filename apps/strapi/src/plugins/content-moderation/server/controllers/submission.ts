@@ -1,3 +1,4 @@
+import { splitSubmissionBody } from "../services/submission"
 import {
   isDirectJournalEdit,
   isDirectWikiEdit,
@@ -16,6 +17,22 @@ function sendVerdict(
   // A6: rate-limited callers are told when to come back (quotas are hourly).
   if (verdict.status === 429) ctx.set("Retry-After", "3600")
   ctx.body = { error: { status: verdict.status, message: verdict.message } }
+}
+
+type StatsData = {
+  submissionsToday: number
+  indexedLibraries: number
+  totalContributors: number
+  totalCountries: number
+  totalLanguages: number
+}
+
+const STATS_TTL_MS = 60_000
+let statsCache: { at: number; data: StatsData } | null = null
+
+/** Drops the memoised stats (tests). */
+export function resetStatsCache(): void {
+  statsCache = null
 }
 
 export default ({ strapi }: { strapi: any }) => ({
@@ -46,46 +63,57 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   // GET /api/content-moderation/submissions/stats  (content-api route, public)
-  // Returns aggregate counts for the homepage contribute CTA and hero stats bar.
+  // Returns aggregate counts for the homepage contribute CTA and hero stats
+  // bar. Public and unauthenticated, so the counts are memoised for a minute
+  // (see `STATS_TTL_MS`) and the response is cacheable for as long.
   async stats(ctx: any) {
-    const todayStart = new Date()
-    todayStart.setHours(0, 0, 0, 0)
+    const now = Date.now()
+    if (!statsCache || now - statsCache.at > STATS_TTL_MS) {
+      // "Today" is a UTC day, the same for every caller and every server.
+      const todayStart = `${new Date(now).toISOString().slice(0, 10)}T00:00:00.000Z`
 
-    const [
-      submissionsToday,
-      indexedLibraries,
-      totalContributors,
-      totalCountries,
-      languageRow,
-    ] = await Promise.all([
-      strapi.db.query("plugin::content-moderation.submission").count({
-        where: { status: { $ne: "draft" }, createdAt: { $gte: todayStart } },
-      }),
-      strapi.db
-        .query("api::library.library")
-        .count({ where: { published_at: { $notNull: true }, locale: "en" } }),
-      strapi.db.query("api::user-profile.user-profile").count({}),
-      strapi.db
-        .query("api::country.country")
-        .count({ where: { published_at: { $notNull: true }, locale: "en" } }),
-      // Count distinct language codes across all contributor profiles
-      strapi.db.connection
-        .table("components_profile_language_entries")
-        .countDistinct("code as count")
-        .first() as Promise<{ count: string | number } | undefined>,
-    ])
-
-    const totalLanguages = Number((languageRow as any)?.count ?? 0)
-
-    ctx.body = {
-      data: {
+      const [
         submissionsToday,
         indexedLibraries,
         totalContributors,
         totalCountries,
-        totalLanguages,
-      },
+        languageRow,
+      ] = await Promise.all([
+        strapi.documents("plugin::content-moderation.submission").count({
+          filters: {
+            status: { $ne: "draft" },
+            createdAt: { $gte: todayStart },
+          },
+        }),
+        strapi
+          .documents("api::library.library")
+          .count({ status: "published", locale: "en" }),
+        strapi.documents("api::user-profile.user-profile").count({}),
+        strapi
+          .documents("api::country.country")
+          .count({ status: "published", locale: "en" }),
+        // Distinct language codes across all contributor profiles: a
+        // component table, so an aggregate on the connection.
+        strapi.db.connection
+          .table("components_profile_language_entries")
+          .countDistinct("code as count")
+          .first() as Promise<{ count: string | number } | undefined>,
+      ])
+
+      statsCache = {
+        at: now,
+        data: {
+          submissionsToday: Number(submissionsToday ?? 0),
+          indexedLibraries: Number(indexedLibraries ?? 0),
+          totalContributors: Number(totalContributors ?? 0),
+          totalCountries: Number(totalCountries ?? 0),
+          totalLanguages: Number((languageRow as any)?.count ?? 0),
+        },
+      }
     }
+
+    ctx.set("Cache-Control", `public, max-age=${STATS_TTL_MS / 1000}`)
+    ctx.body = { data: statsCache.data }
   },
 
   // POST /api/content-moderation/submissions  (content-api route)
@@ -134,6 +162,19 @@ export default ({ strapi }: { strapi: any }) => ({
       })
     if (!verdict.ok) {
       sendVerdict(ctx, verdict)
+
+      return
+    }
+    // Drafts are private until finalize, which checks them again.
+    const safe = await strapi
+      .plugin("content-moderation")
+      .service("submission-policy")
+      .checkContent(
+        { fields, draftData, note, editSummary, evidenceUrl },
+        { targetDocumentId, targetSlug }
+      )
+    if (!safe.ok) {
+      sendVerdict(ctx, safe)
 
       return
     }
@@ -236,9 +277,13 @@ export default ({ strapi }: { strapi: any }) => ({
     }
 
     try {
+      // `findMany` ignores `pagination`; page with start/limit and a stable
+      // sort instead.
       const results = await strapi.documents(uid).findMany({
         fields: ["documentId", "name"],
-        pagination: { limit: 500 },
+        start: 0,
+        limit: 500,
+        sort: { name: "asc" },
         status: "published",
       })
 
@@ -278,12 +323,17 @@ export default ({ strapi }: { strapi: any }) => ({
     const target = await strapi
       .documents("plugin::content-moderation.submission")
       .findOne({ documentId: id })
+    // No self-approval: compared case-insensitively after trimming, so a
+    // stray space or capital can't slip past.
+    const norm = (v: unknown) =>
+      String(v ?? "")
+        .trim()
+        .toLowerCase()
     if (
       target &&
-      reviewer?.email &&
-      target.submittedByEmail &&
-      String(reviewer.email).toLowerCase() ===
-        String(target.submittedByEmail).toLowerCase()
+      norm(reviewer?.email) &&
+      norm(target.submittedByEmail) &&
+      norm(reviewer.email) === norm(target.submittedByEmail)
     )
       return ctx.forbidden("You can't review your own submission.")
 
@@ -315,6 +365,20 @@ export default ({ strapi }: { strapi: any }) => ({
             name: result.error,
             message:
               "Approval could not be applied; the submission was returned to review. Check the server log.",
+          },
+        }
+
+        return
+      }
+      if (result.error === "apply_refused") {
+        ctx.status = 409
+        ctx.body = {
+          error: {
+            status: 409,
+            name: "apply_refused",
+            reason: result.reason,
+            message:
+              "The record this change applies to is not published, so nothing was applied. Publish it in the Content Manager, then approve again. The submission is back in review.",
           },
         }
 
@@ -356,25 +420,45 @@ export default ({ strapi }: { strapi: any }) => ({
     const result = await strapi
       .plugin("content-moderation")
       .service("submission")
-      .finalizeDraft(id, user.id, body, (existing: any) =>
-        strapi
+      .finalizeDraft(id, user.id, body, async (existing: any) => {
+        const policy = strapi
           .plugin("content-moderation")
           .service("submission-policy")
-          .check({
-            baUserId: user.id,
-            submissionType: existing.submissionType,
-            targetDocumentId: existing.targetDocumentId ?? undefined,
-            directWikiEdit:
-              existing.submissionType === "wiki_edit" &&
-              isDirectWikiEdit(existing.draftData),
-            directJournalEdit:
-              existing.submissionType === "blog_submission" &&
-              isDirectJournalEdit(existing.draftData),
-            // C-4: this draft isn't `pending` yet, but excluding it keeps a
-            // retried finalize from counting the row against its own quota.
-            excludeDocumentId: id,
-          })
-      )
+        const verdict = await policy.check({
+          baUserId: user.id,
+          submissionType: existing.submissionType,
+          targetDocumentId: existing.targetDocumentId ?? undefined,
+          directWikiEdit:
+            existing.submissionType === "wiki_edit" &&
+            isDirectWikiEdit(existing.draftData),
+          directJournalEdit:
+            existing.submissionType === "blog_submission" &&
+            isDirectJournalEdit(existing.draftData),
+          // C-4: this draft isn't `pending` yet, but excluding it keeps a
+          // retried finalize from counting the row against its own quota.
+          excludeDocumentId: id,
+        })
+        if (!verdict.ok) return verdict
+
+        // What goes to review: the fields `finalizeDraft` is about to write
+        // (this body's, or the saved draft's when the body carries none)
+        // plus this request's extras.
+        const { fields, extras, hasFields } = splitSubmissionBody(body)
+
+        return policy.checkContent(
+          {
+            fields: hasFields ? fields : existing.fields,
+            draftData: existing.draftData,
+            note: extras.note ?? existing.note,
+            editSummary: extras.editSummary ?? existing.editSummary,
+            evidenceUrl: extras.evidenceUrl ?? existing.evidenceUrl,
+          },
+          {
+            targetDocumentId: existing.targetDocumentId,
+            targetSlug: existing.targetSlug,
+          }
+        )
+      })
     if (!result) {
       // `finalizeDraft` returns the same bare `null` for three different
       // reasons (missing/not-owned/no-longer-draft *before* the CAS, and a
@@ -436,6 +520,7 @@ export default ({ strapi }: { strapi: any }) => ({
       if (result.error === "not_found") return ctx.notFound()
       if (result.error === "forbidden")
         return ctx.forbidden("You do not own this submission.")
+      if (result.error === "invalid") return ctx.badRequest(result.message)
       if (typeof ctx.conflict === "function") {
         return ctx.conflict(
           "This submission is already in review and can't be edited."
@@ -467,6 +552,24 @@ export default ({ strapi }: { strapi: any }) => ({
     ctx.body = { ok: true }
   },
 
+  // GET /api/content-moderation/uploads/usage  (content-api route, secret-gated)
+  // The user's uploads so far this UTC day, for the per-user upload quota
+  // the Next.js upload routes enforce. Bridge secret only: the identity
+  // header is trusted after the secret, never on its own.
+  async uploadUsage(ctx: any) {
+    if (!isValidServiceSecret(ctx.request.headers["x-service-secret"]))
+      return ctx.unauthorized("Service secret required.")
+    const baUserId = ctx.request.headers["x-ba-user-id"]
+    if (typeof baUserId !== "string" || !baUserId.trim())
+      return ctx.badRequest("X-Ba-User-Id required")
+    const usage = await strapi
+      .plugin("content-moderation")
+      .service("submission")
+      .uploadUsage(baUserId.trim())
+    ctx.set("Cache-Control", "no-store")
+    ctx.body = usage
+  },
+
   // GET /api/content-moderation/submissions/draft/:type  (content-api route)
   async findDraft(ctx: any) {
     const user = await resolveUser(strapi, ctx)
@@ -487,7 +590,7 @@ export default ({ strapi }: { strapi: any }) => ({
 //      X-Ba-User-Id / X-Ba-User-Email / X-Ba-User-Name headers carrying identity
 //   2. Better Auth session cookie (requires strapi-better-auth plugin)
 //   3. Strapi users-permissions JWT in Authorization: Bearer header (fallback)
-async function resolveUser(
+export async function resolveUser(
   strapi: any,
   ctx: any
 ): Promise<{ id: string; email: string; name?: string } | null> {

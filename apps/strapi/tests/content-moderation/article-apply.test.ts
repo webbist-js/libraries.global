@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from "vitest"
 
+import createService from "../../src/plugins/content-moderation/server/services/submission"
 import createPolicy from "../../src/plugins/content-moderation/server/services/submission-policy"
 import {
   applyArticleSubmission,
   cleanSectionKeys,
   cleanTags,
+  isTranslationSubmission,
   slugify,
 } from "../../src/plugins/content-moderation/server/utils/article-apply"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
@@ -246,6 +248,125 @@ describe("applyArticleSubmission: new articles", () => {
         "wiki"
       )
     ).toBe("noop")
+  })
+})
+
+describe("article points come from draftData and the target, never from fields", () => {
+  const SUB = "plugin::content-moderation.submission"
+  const article = {
+    documentId: "w1",
+    slug: "existing",
+    title: "Old",
+    locale: "en",
+  }
+
+  function approve(sub: Record<string, unknown>, role = "editorial_board") {
+    const { strapi, store } = harness({ [WIKI]: [article], [SUB]: [sub] }, role)
+    const award = vi.fn(async () => {})
+    strapi.plugin = vi.fn((name: string) =>
+      name === "i18n"
+        ? {
+            service: () => ({
+              find: async () => [{ code: "en" }, { code: "fr" }],
+            }),
+          }
+        : name === "rewards"
+          ? { service: () => ({ award }) }
+          : {
+              service: () => createPolicy({ strapi }),
+            }
+    )
+    strapi.service = vi.fn(() => ({ computeAndSave: vi.fn(async () => {}) }))
+
+    return { strapi, store, award, svc: createService({ strapi }) }
+  }
+
+  it("a wiki_edit claiming fields.kind new_article but editing a target takes the edit path and edit points", async () => {
+    const sub = {
+      documentId: "s0000000000000000000050",
+      submissionType: "wiki_edit",
+      status: "pending",
+      submittedByUserId: "u1",
+      targetSlug: "existing",
+      fields: { kind: "new_article", isTranslation: true, title: "Sneaky" },
+      draftData: { locale: "en", title: "Renamed" },
+    }
+    const { store, award, svc } = approve(sub)
+    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+    expect("data" in result).toBe(true)
+    expect(store[WIKI]).toHaveLength(1)
+    expect(store[WIKI]![0]!.title).toBe("Renamed")
+    expect(award).toHaveBeenCalledTimes(1)
+    expect(award.mock.calls[0]!.slice(0, 3)).toEqual([
+      "u1",
+      "knowledge_edit_accepted",
+      8,
+    ])
+  })
+
+  it("a translation is one whose locale has no version yet", async () => {
+    const sub = {
+      documentId: "s0000000000000000000051",
+      submissionType: "wiki_edit",
+      status: "pending",
+      submittedByUserId: "u1",
+      targetSlug: "existing",
+      fields: {},
+      draftData: { locale: "fr", proposedBody: body, proposedTitle: "Ancien" },
+    }
+    const { award, svc } = approve(sub, "reader")
+    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+    expect("data" in result).toBe(true)
+    expect(award.mock.calls[0]!.slice(0, 3)).toEqual([
+      "u1",
+      "wiki_translated",
+      15,
+    ])
+  })
+
+  it("a locale Strapi doesn't know is not a translation, applies nothing and earns nothing", async () => {
+    const sub = {
+      documentId: "s0000000000000000000052",
+      submissionType: "wiki_edit",
+      status: "pending",
+      submittedByUserId: "u1",
+      targetSlug: "existing",
+      fields: {},
+      draftData: { locale: "xx", proposedBody: body, proposedTitle: "Forged" },
+    }
+    const { strapi, store, award, svc } = approve(sub, "reader")
+    expect(
+      await isTranslationSubmission(
+        strapi,
+        {
+          documentId: sub.documentId,
+          targetSlug: "existing",
+          draftData: sub.draftData,
+        },
+        "wiki"
+      )
+    ).toBe(false)
+    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+    expect("data" in result).toBe(true)
+    expect(store[WIKI]).toHaveLength(1)
+    expect(store[WIKI]![0]!.title).toBe("Old")
+    expect(award).not.toHaveBeenCalled()
+  })
+
+  it("no points for a direct edit that is only a suggestion (skipped_suggestion)", async () => {
+    const sub = {
+      documentId: "s0000000000000000000053",
+      submissionType: "wiki_edit",
+      status: "pending",
+      submittedByUserId: "u1",
+      targetSlug: "existing",
+      fields: {},
+      draftData: { locale: "en", body },
+    }
+    const { award, svc } = approve(sub, "reader")
+    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+    expect("data" in result).toBe(true)
+    expect(award).not.toHaveBeenCalled()
   })
 })
 

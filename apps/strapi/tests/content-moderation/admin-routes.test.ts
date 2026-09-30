@@ -59,4 +59,56 @@ describe("submission controller", () => {
     const submission = store["plugin::content-moderation.submission"][0]
     expect(submission.status).toBe("pending")
   })
+
+  it("blocks self-approval when the emails differ only by case and whitespace", async () => {
+    const docId = "a1b2c3d4e5f6g7h8i9j0k1l3"
+    const { strapi, store } = makeFakeStrapi({
+      "plugin::content-moderation.submission": [
+        {
+          documentId: docId,
+          status: "pending",
+          submittedByEmail: " Mod@Example.org ",
+          submittedByUserId: "user1",
+          submissionType: "correction",
+          targetEntityType: "library",
+        },
+      ],
+    })
+    const controller = submissionControllerFactory({ strapi })
+    const forbidden = vi.fn()
+    await controller.updateStatus({
+      params: { id: docId },
+      request: { body: { status: "approved" } },
+      state: { user: { id: "1", email: "mod@example.org" } },
+      badRequest: vi.fn(),
+      forbidden,
+    })
+    expect(forbidden).toHaveBeenCalled()
+    expect(store["plugin::content-moderation.submission"][0].status).toBe(
+      "pending"
+    )
+  })
+
+  it("relationLabels pages with start/limit and a stable sort, never `pagination`", async () => {
+    const { strapi } = makeFakeStrapi({
+      "api::service.service": [
+        { documentId: "svc00000000000000000001", name: "Wi-Fi" },
+      ],
+    })
+    const perUid = new Map<string, any>()
+    const fresh = strapi.documents
+    strapi.documents = vi.fn((uid: string) => {
+      if (!perUid.has(uid)) perUid.set(uid, fresh(uid))
+
+      return perUid.get(uid)
+    })
+    const controller = submissionControllerFactory({ strapi })
+    const ctx: any = { query: { type: "services" }, badRequest: vi.fn() }
+    await controller.relationLabels(ctx)
+    expect(ctx.body).toEqual({ data: { svc00000000000000000001: "Wi-Fi" } })
+    const call = strapi.documents("api::service.service").findMany.mock
+      .calls[0]?.[0]
+    expect(call).not.toHaveProperty("pagination")
+    expect(call).toMatchObject({ start: 0, limit: 500, sort: { name: "asc" } })
+  })
 })

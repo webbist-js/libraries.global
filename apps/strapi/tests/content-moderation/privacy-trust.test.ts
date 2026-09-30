@@ -61,6 +61,46 @@ describe("public activity", () => {
     const out = await createService({ strapi }).findPublicByUsername("bob")
     expect(out.map((s: any) => s.documentId)).toEqual(["s2"])
   })
+  it("shows approved submissions only, never ones still in review", async () => {
+    const { strapi } = makeFakeStrapi({
+      [PROFILE]: [
+        {
+          documentId: "p1",
+          username: "cara",
+          baUserId: "u4",
+          profileVisibility: "public",
+        },
+      ],
+      [SUB]: [
+        {
+          documentId: "s1",
+          submittedByUserId: "u4",
+          status: "pending",
+          submissionType: "correction",
+        },
+        {
+          documentId: "s2",
+          submittedByUserId: "u4",
+          status: "needs_info",
+          submissionType: "correction",
+        },
+        {
+          documentId: "s3",
+          submittedByUserId: "u4",
+          status: "draft",
+          submissionType: "correction",
+        },
+        {
+          documentId: "s4",
+          submittedByUserId: "u4",
+          status: "approved",
+          submissionType: "correction",
+        },
+      ],
+    })
+    const out = await createService({ strapi }).findPublicByUsername("cara")
+    expect(out.map((s: any) => s.documentId)).toEqual(["s4"])
+  })
 })
 
 describe("claim approval", () => {

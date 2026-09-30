@@ -95,6 +95,55 @@ describe("draftRevision compare-and-set (finalize race)", () => {
   })
 })
 
+describe("extras are validated against the schema", () => {
+  it("saveDraft rejects an unknown evidenceType and stores nothing", async () => {
+    const { strapi, store } = makeFakeStrapi({
+      [UID]: [sub({ status: "draft", evidenceType: "press_release" })],
+    })
+    const res = await createService({ strapi }).saveDraft(
+      "s0000000000000000000001",
+      "u1",
+      { title: "ok", evidenceType: "hearsay" },
+      1
+    )
+    expect(res).toMatchObject({ error: "invalid" })
+    expect((res as any).message).toMatch(/evidence/i)
+    expect(store[UID][0].evidenceType).toBe("press_release")
+    expect(store[UID][0].draftData).toEqual({})
+  })
+
+  it("finalizeDraft refuses an unknown evidenceType with a 400 verdict", async () => {
+    const { strapi, store } = makeFakeStrapi({
+      [UID]: [sub({ status: "draft" })],
+    })
+    const res = await createService({ strapi }).finalizeDraft(
+      "s0000000000000000000001",
+      "u1",
+      { title: "t", evidenceType: "hearsay" }
+    )
+    expect(res).toMatchObject({
+      error: "policy",
+      verdict: { ok: false, status: 400 },
+    })
+    expect(store[UID][0].status).toBe("draft")
+  })
+
+  it("caps editSummary at 255 and drops non-string extras", async () => {
+    const { strapi, store } = makeFakeStrapi({
+      [UID]: [sub({ status: "draft" })],
+    })
+    const res = await createService({ strapi }).saveDraft(
+      "s0000000000000000000001",
+      "u1",
+      { title: "ok", editSummary: "x".repeat(300), note: { nope: 1 } },
+      1
+    )
+    expect("data" in res).toBe(true)
+    expect(store[UID][0].editSummary).toHaveLength(255)
+    expect(store[UID][0].note).toBeUndefined()
+  })
+})
+
 describe("payloadHash on entering review", () => {
   it("is set by create when not a draft", async () => {
     const { strapi, store } = makeFakeStrapi()

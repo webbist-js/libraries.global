@@ -12,10 +12,12 @@ import { useFetchClient } from "@strapi/strapi/admin"
 import { useEffect, useState } from "react"
 
 import {
+  assetPath,
   EVIDENCE_TYPE_LABELS,
   EXCLUDE_FROM_OTHER,
   FIELD_GROUPS,
   humanise,
+  isHttpUrl,
   renderValue,
   type SocialLink,
   type Submission,
@@ -49,7 +51,11 @@ function ValueText({ value }: { value: unknown }) {
   const { text, isUrl } = renderValue(value)
   if (isUrl)
     return (
-      <Link href={text} isExternal>
+      <Link
+        href={text}
+        isExternal
+        style={{ wordBreak: "break-all", maxWidth: "100%" }}
+      >
         {text.length > 60 ? `${text.slice(0, 60)}…` : text}
       </Link>
     )
@@ -85,6 +91,7 @@ export function KeyValueGrid({
           xs={12}
           direction="column"
           alignItems="stretch"
+          style={{ minWidth: 0 }}
         >
           <Typography variant="pi" textColor="neutral600">
             {label}
@@ -130,39 +137,51 @@ function RelationTags({ type, ids }: { type: string; ids: unknown }) {
 
 // ── Photos ─────────────────────────────────────────────────────────────────
 
-/** Strip the origin so images load relative to the current Strapi admin host. */
-function toRelativeUrl(url: string): string {
-  try {
-    return new URL(url).pathname
-  } catch {
-    return url
-  }
-}
-
-function PhotosPanel({ images }: { images: UploadedImage[] }) {
+function PhotosPanel({
+  images,
+  title = "Photos",
+  note,
+}: {
+  images: UploadedImage[]
+  title?: string
+  note?: string
+}) {
   if (images.length === 0) return null
 
   return (
-    <Section title="Photos">
+    <Section title={title}>
+      {note ? (
+        <Box paddingBottom={3}>
+          <Typography variant="omega" textColor="neutral600">
+            {note}
+          </Typography>
+        </Box>
+      ) : null}
       <Flex gap={2} wrap="wrap">
         {images.map((img, i) => (
           <Box key={img.strapiId ?? i} position="relative">
-            <a
-              href={toRelativeUrl(img.url)}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Box
-                tag="img"
-                src={toRelativeUrl(img.url)}
-                alt=""
-                width="12rem"
-                height="8rem"
-                hasRadius
-                borderColor="neutral150"
-                style={{ objectFit: "cover", display: "block" }}
-              />
-            </a>
+            {assetPath(img.url) ? (
+              <a
+                href={assetPath(img.url)!}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Box
+                  tag="img"
+                  src={assetPath(img.url)!}
+                  alt=""
+                  width={images.length === 1 ? "24rem" : "12rem"}
+                  height={images.length === 1 ? "16rem" : "8rem"}
+                  hasRadius
+                  borderColor="neutral150"
+                  style={{ objectFit: "cover", display: "block" }}
+                />
+              </a>
+            ) : (
+              <Typography variant="pi" textColor="neutral600">
+                Image address not accepted
+              </Typography>
+            )}
             {img.isHero && (
               <Box position="absolute" top={1} left={1}>
                 <Badge active size="S">
@@ -197,9 +216,19 @@ function SocialLinksPanel({ links }: { links: SocialLink[] }) {
                 {l.platform}
               </Typography>
             </Box>
-            <Link href={l.url} isExternal>
-              {l.url}
-            </Link>
+            {isHttpUrl(l.url) ? (
+              <Link href={l.url} isExternal>
+                {l.url}
+              </Link>
+            ) : (
+              <Typography
+                variant="omega"
+                textColor="neutral800"
+                style={{ wordBreak: "break-all" }}
+              >
+                {String(l.url)}
+              </Typography>
+            )}
           </Flex>
         ))}
       </Flex>
@@ -343,6 +372,17 @@ export function FieldsPanel({ sub }: { sub: Submission }) {
   const uploadedImages = Array.isArray(fields.uploadedImages)
     ? (fields.uploadedImages as UploadedImage[])
     : []
+  // "Share a photo" sends one file as photoId + photoUrl.
+  const shared =
+    fields.kind === "photo" && typeof fields.photoUrl === "string"
+      ? [
+          {
+            strapiId: Number(fields.photoId) || 0,
+            url: fields.photoUrl,
+            isHero: false,
+          } satisfies UploadedImage,
+        ]
+      : []
   const socialLinks = Array.isArray(fields.socialLinks)
     ? (fields.socialLinks as SocialLink[])
     : []
@@ -378,6 +418,11 @@ export function FieldsPanel({ sub }: { sub: Submission }) {
           </Section>
         ) : null
       )}
+      <PhotosPanel
+        images={shared}
+        title="Photo"
+        note="Approving adds it to the library: as the main image if it has none, otherwise to its gallery. The credit and licence go in the image caption."
+      />
       <PhotosPanel images={uploadedImages} />
       <SocialLinksPanel links={socialLinks} />
       <OpeningTimesPanel data={fields.openingTimes} />

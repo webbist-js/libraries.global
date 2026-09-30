@@ -6,13 +6,32 @@ import {
 import {
   type ApplyArticleOutcome,
   applyArticleSubmission,
+  isTranslationSubmission,
 } from "../utils/article-apply"
 import { applyFacilityAnswers } from "../utils/facility-answers"
-import { applyLibraryRecord, isRecordCorrection } from "../utils/library-record"
-import { isNewArticleDraft } from "../utils/params"
+import {
+  applyLibraryPhoto,
+  isPhotoCorrection,
+  photoIdOf,
+} from "../utils/library-photo"
+import {
+  applyLibraryRecord,
+  type ApplyRecordOutcome,
+  isHttpUrl,
+  isRecordCorrection,
+} from "../utils/library-record"
+import { isDocumentId, isNewArticleDraft } from "../utils/params"
 import { payloadHash } from "../utils/payload-hash"
+import { ApplyRefusedError } from "../utils/publish-guard"
+import {
+  preloadRecordReviews,
+  preloadTopicReviews,
+  recordReview,
+} from "../utils/record-review"
 import { canTransition } from "../utils/transitions"
 import { ownedUploadIds } from "../utils/uploads"
+
+import submissionSchema from "../content-types/submission/schema.json"
 
 // Appended to reviewNote when an article approval didn't publish anything
 // by itself, so the moderator knows the next step. `skipped_suggestion`:
@@ -27,10 +46,46 @@ export const DRAFTED_MARKER =
 export const CREATED_DRAFT_MARKER =
   " [Created as a draft article; publish it from the Content Manager]"
 
+// The publish guard (utils/publish-guard) wrote the change to the record's
+// draft version only, because the draft already held an admin's unpublished
+// edits; publishing the draft from the Content Manager releases both.
+export const DRAFT_ONLY_MARKER =
+  " [Applied to the draft; the record has unpublished admin edits]"
+// The publish guard refused: the record has no published version, so the
+// approval was returned to review. Publish the record, then approve again.
+export const NOT_PUBLISHED_MARKER =
+  " [Not applied: the record is not published. Publish it in the Content Manager, then approve again]"
+
 const ARTICLE_MARKERS: Partial<Record<ApplyArticleOutcome, string>> = {
   skipped_suggestion: SUGGESTION_MARKER,
   drafted: DRAFTED_MARKER,
+  drafted_divergent: DRAFT_ONLY_MARKER,
   created_draft: CREATED_DRAFT_MARKER,
+}
+
+/**
+ * Article outcomes that changed something and so may earn points. `noop`
+ * (unknown locale, missing target, nothing to write) and
+ * `skipped_suggestion` (a reader's direct edit, not applied) never do.
+ */
+const APPLIED_ARTICLE_OUTCOMES: ReadonlySet<ApplyArticleOutcome> =
+  new Set<ApplyArticleOutcome>([
+    "published",
+    "drafted",
+    "drafted_divergent",
+    "created_published",
+    "created_draft",
+  ])
+
+const RECORD_MARKERS: Partial<Record<ApplyRecordOutcome, string>> = {
+  applied_draft: DRAFT_ONLY_MARKER,
+}
+
+/** `note` with `marker` appended once. */
+function withMarker(note: string | null | undefined, marker: string): string {
+  const base = note ?? ""
+
+  return base.includes(marker) ? base : `${base}${marker}`
 }
 
 // Evidence types that point at a public document. Only these are shown in a
@@ -88,6 +143,115 @@ const LIBRARY_FIELDS = new Set([
   "accessibility",
   "location",
 ])
+
+/**
+ * The keys of a draft/finalize body that are stored as their own columns
+ * rather than inside `fields`. Anything else in the body is a library (or
+ * article) field. Shared by `saveDraft`, `finalizeDraft` and the finalize
+ * controller's content check so the check always sees what gets written.
+ */
+export const SUBMISSION_EXTRA_KEYS = [
+  "editSummary",
+  "evidenceType",
+  "evidenceUrl",
+  "note",
+] as const
+
+export type SubmissionExtras = Partial<
+  Record<(typeof SUBMISSION_EXTRA_KEYS)[number], unknown>
+>
+
+const SUBMISSION_UID = "plugin::content-moderation.submission"
+
+/** The statuses an admin may filter the queue by. Never `draft`. */
+const REVIEW_STATUSES = new Set([
+  "pending",
+  "approved",
+  "rejected",
+  "needs_info",
+])
+
+/** Default column lengths when the schema names none: string 255, text 10k. */
+const STRING_MAX = 255
+const TEXT_MAX = 10_000
+
+type ExtrasVerdict =
+  | { ok: true; extras: SubmissionExtras }
+  | { ok: false; message: string }
+
+/**
+ * Checks the extras against the submission schema: `evidenceType` must be
+ * one of its enum values, strings are capped at their column length (an
+ * over-long link is refused rather than truncated into a broken one), and
+ * anything that isn't a string is dropped. Unknown keys never get here
+ * (`splitSubmissionBody` sends them to `fields`).
+ */
+export function validateSubmissionExtras(
+  strapi: any,
+  extras: SubmissionExtras
+): ExtrasVerdict {
+  const attributes: Record<string, any> =
+    strapi?.contentType?.(SUBMISSION_UID)?.attributes ??
+    submissionSchema.attributes
+  const out: SubmissionExtras = {}
+
+  if (extras.evidenceType !== undefined && extras.evidenceType !== null) {
+    const allowed: readonly string[] = attributes.evidenceType?.enum ?? []
+    if (
+      typeof extras.evidenceType !== "string" ||
+      !allowed.includes(extras.evidenceType)
+    )
+      return { ok: false, message: "Unknown evidence type." }
+    out.evidenceType = extras.evidenceType
+  }
+
+  const cap = (key: "editSummary" | "evidenceUrl" | "note") => {
+    const v = extras[key]
+    if (typeof v !== "string") return null
+    const attr = attributes[key] ?? {}
+    const max: number =
+      typeof attr.maxLength === "number"
+        ? attr.maxLength
+        : attr.type === "text"
+          ? TEXT_MAX
+          : STRING_MAX
+
+    return { v, max }
+  }
+  const summary = cap("editSummary")
+  if (summary) out.editSummary = summary.v.slice(0, summary.max)
+  const note = cap("note")
+  if (note) out.note = note.v.slice(0, note.max)
+  const url = cap("evidenceUrl")
+  if (url) {
+    if (url.v.length > url.max)
+      return { ok: false, message: "That evidence link is too long." }
+    out.evidenceUrl = url.v
+  }
+
+  return { ok: true, extras: out }
+}
+
+export function splitSubmissionBody(body: unknown): {
+  fields: Record<string, unknown>
+  extras: SubmissionExtras
+  /** True when the body carried at least one non-extra key. */
+  hasFields: boolean
+} {
+  const safe =
+    body && typeof body === "object" && !Array.isArray(body)
+      ? (body as Record<string, unknown>)
+      : {}
+  const fields: Record<string, unknown> = {}
+  const extras: SubmissionExtras = {}
+  for (const [key, value] of Object.entries(safe)) {
+    if ((SUBMISSION_EXTRA_KEYS as readonly string[]).includes(key))
+      extras[key as keyof SubmissionExtras] = value
+    else fields[key] = value
+  }
+
+  return { fields, extras, hasFields: Object.keys(fields).length > 0 }
+}
 
 /**
  * Selects the exact row `saveDraft`/`finalizeDraft` just read, by pinning
@@ -164,10 +328,15 @@ export default ({ strapi }: { strapi: any }) => ({
     return toClient(created)
   },
 
-  async findAll(status?: string) {
-    const filters: Record<string, unknown> = {
-      status: status ? status : { $ne: "draft" },
-    }
+  async findAll(status?: unknown) {
+    // A review status only: drafts are private until finalized, and a
+    // non-string (an object from `?status[$ne]=`) would be a filter, not a
+    // value. Anything else means "everything in or past review".
+    const wanted =
+      typeof status === "string" && REVIEW_STATUSES.has(status)
+        ? status
+        : { $ne: "draft" }
+    const filters: Record<string, unknown> = { status: wanted }
 
     // Default to all non-draft statuses when no filter is specified
     const rows = await strapi
@@ -178,7 +347,31 @@ export default ({ strapi }: { strapi: any }) => ({
         limit: 200,
       })
 
-    return (rows ?? []).map(toClient)
+    // Record corrections still to review get the library's live values and
+    // option names, so the moderator never relies on the contributor's; a
+    // topic suggestion gets the topic its target points at. The lookups are
+    // batched per page: one library query, one per option list, one for
+    // topics.
+    const open = (rows ?? []).filter(
+      (row: any) => row.status === "pending" || row.status === "needs_info"
+    )
+    const [preloaded, topics] = await Promise.all([
+      preloadRecordReviews(strapi, open),
+      preloadTopicReviews(strapi, open),
+    ])
+
+    return Promise.all(
+      (rows ?? []).map(async (row: any) => {
+        const client = toClient(row)
+        if (!open.includes(row)) return client
+        const review =
+          row.submissionType === "topic_suggestion"
+            ? (topics.get(row.targetDocumentId) ?? null)
+            : await recordReview(strapi, row, preloaded).catch(() => null)
+
+        return review ? { ...client, review } : client
+      })
+    )
   },
 
   async findByUser(userId: string) {
@@ -210,6 +403,9 @@ export default ({ strapi }: { strapi: any }) => ({
         // is still at the new status, with none of its side effects applied.
         unreverted?: true
       }
+    // The publish guard refused the apply (the target isn't published); the
+    // submission is back at its prior status with a reviewNote saying why.
+    | { error: "apply_refused"; reason: ApplyRefusedError["reason"] }
     | { data: unknown }
   > {
     const submission = await strapi
@@ -225,33 +421,12 @@ export default ({ strapi }: { strapi: any }) => ({
     )
       return { error: "tampered" }
 
-    // Snapshot the pre-CAS values as primitives: if a side effect later
-    // throws, we revert to exactly this, not to whatever `submission` might
-    // read after the compare-and-set has run.
+    // Snapshot the pre-CAS values as primitives: after a rollback we confirm
+    // against exactly this, not whatever `submission` might read later.
     const priorStatus = submission.status
-    const priorReviewedByUserId = submission.reviewedByUserId ?? null
     const priorReviewNote = submission.reviewNote ?? null
-    const priorReviewedAt = submission.reviewedAt ?? null
 
-    // Compare-and-set: only one concurrent request can move it out of
-    // `priorStatus`. Submissions have draftAndPublish:false, so the db layer
-    // sees the same row as documents(). Also pin the payloadHash (when one
-    // was recorded) so a request built against a stale review can't win the
-    // race either.
     const reviewedAt = new Date()
-    const { count } = await strapi.db
-      .query("plugin::content-moderation.submission")
-      .updateMany({
-        where: {
-          documentId,
-          status: priorStatus,
-          ...(submission.payloadHash
-            ? { payloadHash: submission.payloadHash }
-            : {}),
-        },
-        data: { status, reviewedByUserId, reviewNote, reviewedAt },
-      })
-    if (count !== 1) return { error: "conflict" }
 
     // Built from the pre-CAS snapshot, not re-read from the db. `payloadHash`
     // is a private field and must never be echoed back to admin clients.
@@ -262,347 +437,451 @@ export default ({ strapi }: { strapi: any }) => ({
       reviewNote,
       reviewedAt,
     })
+    let articleTranslation = false
+    // What the article apply actually did; points depend on it, never on
+    // the submission alone (a `noop` or a skipped suggestion earns nothing).
+    let articleOutcome: ApplyArticleOutcome | null = null
 
+    // The status change and everything it applies (library, article,
+    // affiliation, role, review markers) commit together: a throw anywhere
+    // rolls the lot back, so the submission can never be left "approved"
+    // with half its effects. Points and quick wins come after the commit.
+    let outcome: "ok" | "conflict"
     try {
-      // Side-effect: if approving a new_library, create a draft library entry
-      if (
-        status === "approved" &&
-        submission?.submissionType === "new_library"
-      ) {
-        const f = (submission.fields ?? {}) as Record<string, unknown>
-        const tempRef = `PENDING-${Date.now()}`
+      outcome = await strapi.db.transaction(async () => {
+        // Compare-and-set: only one concurrent request can move it out of
+        // `priorStatus`. Submissions have draftAndPublish:false, so the db
+        // layer sees the same row as documents(). Also pin the payloadHash
+        // (when one was recorded) so a request built against a stale review
+        // can't win the race either.
+        const { count } = await strapi.db
+          .query("plugin::content-moderation.submission")
+          .updateMany({
+            where: {
+              documentId,
+              status: priorStatus,
+              ...(submission.payloadHash
+                ? { payloadHash: submission.payloadHash }
+                : {}),
+            },
+            data: { status, reviewedByUserId, reviewNote, reviewedAt },
+          })
+        if (count !== 1) return "conflict" as const
 
-        // Convert plain-text notes to Strapi blocks format
-        const toBlocks = (text: unknown) =>
-          text
-            ? [
-                {
-                  type: "paragraph",
-                  children: [{ type: "text", text: String(text) }],
-                },
-              ]
-            : undefined
+        // Side-effect: if approving a new_library, create a draft library entry
+        if (
+          status === "approved" &&
+          submission?.submissionType === "new_library"
+        ) {
+          const f = (submission.fields ?? {}) as Record<string, unknown>
+          const tempRef = `PENDING-${Date.now()}`
 
-        // Uploaded images: find hero and gallery
-        type UploadedImage = { strapiId: number; url: string; isHero: boolean }
-        const claimed = Array.isArray(f.uploadedImages)
-          ? (f.uploadedImages as UploadedImage[])
-          : []
-        // A2: only attach files this submitter uploaded through the submission flow.
-        const owned = await (this as any).ownedUploadIds(
-          submission.submittedByUserId,
-          claimed.map((i) => Number(i.strapiId)).filter(Number.isInteger)
-        )
-        const uploadedImages = claimed.filter((i) =>
-          owned.has(Number(i.strapiId))
-        )
-        const heroImage =
-          uploadedImages.find((img) => img.isHero) ?? uploadedImages[0] ?? null
-        const galleryImages = uploadedImages.filter((img) => img !== heroImage)
+          // Convert plain-text notes to Strapi blocks format
+          const toBlocks = (text: unknown) =>
+            text
+              ? [
+                  {
+                    type: "paragraph",
+                    children: [{ type: "text", text: String(text) }],
+                  },
+                ]
+              : undefined
 
-        // Social links: filter to valid entries
-        const socialLinksData = Array.isArray(f.socialLinks)
-          ? (
-              f.socialLinks as {
-                platform: string
-                url: string
-                label?: string
-              }[]
-            ).filter((s) => s.platform && s.url)
-          : []
-
-        // Tracks the draft library once it's created, so the catch below
-        // can clean it up if a later step in this block (e.g. the proposer
-        // affiliation) throws — otherwise the library survives the revert
-        // and a retry creates another one alongside it.
-        let createdLibraryDocumentId: string | undefined
-        try {
-          const newLibrary = await strapi
-            .documents("api::library.library")
-            .create({
-              data: {
-                name: String(f.name ?? "Unnamed Library"),
-                libraryType: (f.libraryType as string) ?? "Other",
-                operationalStatus: (f.operationalStatus as string) ?? "unknown",
-                operatorType: (f.operatorType as string) || undefined,
-                entityRef: tempRef,
-                shortName: (f.shortName as string) || undefined,
-                summary: (f.summary as string) || undefined,
-                streetAddress: (f.streetAddress as string) || undefined,
-                city: (f.city as string) || undefined,
-                district: (f.district as string) || undefined,
-                postalCode: (f.postalCode as string) || undefined,
-                website: (f.website as string) || undefined,
-                catalogueUrl: (f.catalogueUrl as string) || undefined,
-                planVisitUrl: (f.planVisitUrl as string) || undefined,
-                membershipUrl: (f.membershipUrl as string) || undefined,
-                bookingUrl: (f.bookingUrl as string) || undefined,
-                donationUrl: (f.donationUrl as string) || undefined,
-                virtualTourUrl: (f.virtualTourUrl as string) || undefined,
-                virtualTourEmbed: (f.virtualTourEmbed as string) || undefined,
-                email: (f.email as string) || undefined,
-                phone: (f.phone as string) || undefined,
-                admissionInfo: (f.admissionInfo as string) || undefined,
-                transitInfo: (f.transitInfo as string) || undefined,
-                languagesServed: (f.languagesServed as string) || undefined,
-                foundedYear: (f.foundedYear as string) || undefined,
-                openedYear: (f.openedYear as string) || undefined,
-                closedYear: (f.closedYear as string) || undefined,
-                architect: (f.architect as string) || undefined,
-                buildingInfo: (f.buildingInfo as string) || undefined,
-                iiifEndpoint: (f.iiifEndpoint as string) || undefined,
-                classificationSystem:
-                  (f.classificationSystem as string) || undefined,
-                source: (f.source as string) || undefined,
-                sourceUrl: (f.sourceUrl as string) || undefined,
-                closureReason: (f.closureReason as string) || undefined,
-                openingTimes: f.openingTimes || undefined,
-                accessibilityNotes: toBlocks(f.accessibilityNotes),
-                visitNotes: toBlocks(f.visitNotes),
-                lastVerifiedAt: new Date(),
-                contentUpdatedAt: new Date(),
-                location:
-                  f.lat && f.lng
-                    ? {
-                        lat: Number.parseFloat(String(f.lat)),
-                        lng: Number.parseFloat(String(f.lng)),
-                      }
-                    : undefined,
-                continent: (f.continentDocumentId as string)
-                  ? {
-                      connect: [
-                        { documentId: f.continentDocumentId as string },
-                      ],
-                    }
-                  : undefined,
-                country: (f.countryDocumentId as string)
-                  ? { connect: [{ documentId: f.countryDocumentId as string }] }
-                  : undefined,
-                region: (f.regionDocumentId as string)
-                  ? { connect: [{ documentId: f.regionDocumentId as string }] }
-                  : undefined,
-                area: (f.areaDocumentId as string)
-                  ? { connect: [{ documentId: f.areaDocumentId as string }] }
-                  : undefined,
-                heroImage: heroImage
-                  ? { connect: [{ id: heroImage.strapiId }] }
-                  : undefined,
-                gallery:
-                  galleryImages.length > 0
-                    ? {
-                        connect: galleryImages.map((img) => ({
-                          id: img.strapiId,
-                        })),
-                      }
-                    : undefined,
-                socialLinks:
-                  socialLinksData.length > 0 ? socialLinksData : undefined,
-                services:
-                  Array.isArray(f.services) && f.services.length > 0
-                    ? {
-                        connect: (f.services as string[]).map((id) => ({
-                          documentId: id,
-                        })),
-                      }
-                    : undefined,
-                amenities:
-                  Array.isArray(f.amenities) && f.amenities.length > 0
-                    ? {
-                        connect: (f.amenities as string[]).map((id) => ({
-                          documentId: id,
-                        })),
-                      }
-                    : undefined,
-                accessibility:
-                  Array.isArray(f.accessibility) && f.accessibility.length > 0
-                    ? {
-                        connect: (f.accessibility as string[]).map((id) => ({
-                          documentId: id,
-                        })),
-                      }
-                    : undefined,
-              },
-              status: "draft",
-            })
-          createdLibraryDocumentId = newLibrary.documentId
-          strapi.log.info(
-            `[content-moderation] Auto-created draft library "${f.name}" from approved submission ${documentId}`
+          // Uploaded images: find hero and gallery
+          type UploadedImage = {
+            strapiId: number
+            url: string
+            isHero: boolean
+          }
+          const claimed = Array.isArray(f.uploadedImages)
+            ? (f.uploadedImages as UploadedImage[])
+            : []
+          // A2: only attach files this submitter uploaded through the submission flow.
+          const owned = await (this as any).ownedUploadIds(
+            submission.submittedByUserId,
+            claimed.map((i) => Number(i.strapiId)).filter(Number.isInteger)
+          )
+          const uploadedImages = claimed.filter((i) =>
+            owned.has(Number(i.strapiId))
+          )
+          const heroImage =
+            uploadedImages.find((img) => img.isHero) ??
+            uploadedImages[0] ??
+            null
+          const galleryImages = uploadedImages.filter(
+            (img) => img !== heroImage
           )
 
-          // Record the proposer's affiliation with the new library. D-C5:
-          // proposing a library does not make you verified staff — a role
-          // change only comes from an approved Library Claim.
-          if (submission.submittedByUserId && newLibrary?.documentId) {
-            await upsertAffiliation(strapi, {
-              baUserId: submission.submittedByUserId,
-              libraryDocumentId: newLibrary.documentId,
-              role: "proposer",
-              verificationMethod: "contact_us",
-            })
-            strapi.log.info(
-              `[content-moderation] Recorded proposer affiliation for library "${f.name}" (submitter ${submission.submittedByUserId})`
-            )
-          }
-        } catch (err) {
-          // I1: rethrow so the outer catch reverts the approval. A retry is
-          // safe: the proposer affiliation is an upsert, and — per the
-          // cleanup just below — a library this block created doesn't
-          // survive a later failure, so a retry can't leave duplicates.
-          if (createdLibraryDocumentId) {
-            // The library was created; something after it (the proposer
-            // affiliation) threw. Leaving the draft in place would orphan
-            // it: the approval reverts to pending, but a retry would create
-            // a second draft library alongside this one.
-            try {
-              await strapi
-                .documents("api::library.library")
-                .delete({ documentId: createdLibraryDocumentId })
-              strapi.log.info(
-                `[content-moderation] Removed orphaned draft library ${createdLibraryDocumentId} after submission ${documentId} approval failed`
+          // Social links: a platform and an http(s) link, nothing else (the
+          // admin renders these as links, and so does the site).
+          const socialLinksData = Array.isArray(f.socialLinks)
+            ? (
+                f.socialLinks as {
+                  platform: string
+                  url: string
+                  label?: string
+                }[]
+              ).filter(
+                (s) =>
+                  !!s &&
+                  typeof s === "object" &&
+                  typeof s.platform === "string" &&
+                  !!s.platform &&
+                  isHttpUrl(s.url)
               )
-            } catch (cleanupErr) {
-              strapi.log.error(
-                `[content-moderation] Failed to remove orphaned draft library ${createdLibraryDocumentId} after submission ${documentId} approval failed`,
-                cleanupErr
+            : []
+          // Link fields likewise: anything but http(s) is dropped.
+          const link = (v: unknown) => (isHttpUrl(v) ? v.trim() : undefined)
+          // Relation targets must be documentIds; unknown ones are dropped
+          // before `connect` so a bad id can't fail (or misdirect) the create.
+          const ids = (v: unknown) =>
+            Array.isArray(v) ? [...new Set(v.filter(isDocumentId))] : []
+          const connectIds = (v: unknown) => {
+            const list = ids(v)
+
+            return list.length > 0
+              ? { connect: list.map((documentId) => ({ documentId })) }
+              : undefined
+          }
+          const connectOne = (v: unknown) =>
+            isDocumentId(v) ? { connect: [{ documentId: v }] } : undefined
+
+          // Tracks the draft library once it's created, so the catch below
+          // can clean it up if a later step in this block (e.g. the proposer
+          // affiliation) throws — otherwise the library survives the revert
+          // and a retry creates another one alongside it.
+          let createdLibraryDocumentId: string | undefined
+          try {
+            const newLibrary = await strapi
+              .documents("api::library.library")
+              .create({
+                data: {
+                  name: String(f.name ?? "Unnamed Library"),
+                  libraryType: (f.libraryType as string) ?? "Other",
+                  operationalStatus:
+                    (f.operationalStatus as string) ?? "unknown",
+                  operatorType: (f.operatorType as string) || undefined,
+                  entityRef: tempRef,
+                  shortName: (f.shortName as string) || undefined,
+                  summary: (f.summary as string) || undefined,
+                  streetAddress: (f.streetAddress as string) || undefined,
+                  city: (f.city as string) || undefined,
+                  district: (f.district as string) || undefined,
+                  postalCode: (f.postalCode as string) || undefined,
+                  website: link(f.website),
+                  catalogueUrl: link(f.catalogueUrl),
+                  planVisitUrl: link(f.planVisitUrl),
+                  membershipUrl: link(f.membershipUrl),
+                  bookingUrl: link(f.bookingUrl),
+                  donationUrl: link(f.donationUrl),
+                  virtualTourUrl: link(f.virtualTourUrl),
+                  virtualTourEmbed: (f.virtualTourEmbed as string) || undefined,
+                  email: (f.email as string) || undefined,
+                  phone: (f.phone as string) || undefined,
+                  admissionInfo: (f.admissionInfo as string) || undefined,
+                  transitInfo: (f.transitInfo as string) || undefined,
+                  languagesServed: (f.languagesServed as string) || undefined,
+                  foundedYear: (f.foundedYear as string) || undefined,
+                  openedYear: (f.openedYear as string) || undefined,
+                  closedYear: (f.closedYear as string) || undefined,
+                  architect: (f.architect as string) || undefined,
+                  buildingInfo: (f.buildingInfo as string) || undefined,
+                  iiifEndpoint: link(f.iiifEndpoint),
+                  classificationSystem:
+                    (f.classificationSystem as string) || undefined,
+                  source: (f.source as string) || undefined,
+                  sourceUrl: link(f.sourceUrl),
+                  closureReason: (f.closureReason as string) || undefined,
+                  openingTimes: f.openingTimes || undefined,
+                  accessibilityNotes: toBlocks(f.accessibilityNotes),
+                  visitNotes: toBlocks(f.visitNotes),
+                  lastVerifiedAt: new Date(),
+                  contentUpdatedAt: new Date(),
+                  location:
+                    f.lat && f.lng
+                      ? {
+                          lat: Number.parseFloat(String(f.lat)),
+                          lng: Number.parseFloat(String(f.lng)),
+                        }
+                      : undefined,
+                  continent: connectOne(f.continentDocumentId),
+                  country: connectOne(f.countryDocumentId),
+                  region: connectOne(f.regionDocumentId),
+                  area: connectOne(f.areaDocumentId),
+                  heroImage: heroImage
+                    ? { connect: [{ id: heroImage.strapiId }] }
+                    : undefined,
+                  gallery:
+                    galleryImages.length > 0
+                      ? {
+                          connect: galleryImages.map((img) => ({
+                            id: img.strapiId,
+                          })),
+                        }
+                      : undefined,
+                  socialLinks:
+                    socialLinksData.length > 0 ? socialLinksData : undefined,
+                  services: connectIds(f.services),
+                  amenities: connectIds(f.amenities),
+                  accessibility: connectIds(f.accessibility),
+                },
+                status: "draft",
+              })
+            createdLibraryDocumentId = newLibrary.documentId
+            strapi.log.info(
+              `[content-moderation] Auto-created draft library "${f.name}" from approved submission ${documentId}`
+            )
+
+            // Record the proposer's affiliation with the new library. D-C5:
+            // proposing a library does not make you verified staff — a role
+            // change only comes from an approved Library Claim.
+            if (submission.submittedByUserId && newLibrary?.documentId) {
+              await upsertAffiliation(strapi, {
+                baUserId: submission.submittedByUserId,
+                libraryDocumentId: newLibrary.documentId,
+                role: "proposer",
+                verificationMethod: "contact_us",
+              })
+              strapi.log.info(
+                `[content-moderation] Recorded proposer affiliation for library "${f.name}" (submitter ${submission.submittedByUserId})`
               )
             }
-            strapi.log.error(
-              `[content-moderation] new_library submission ${documentId} approval failed after the library was created; reverting`,
-              err
-            )
-          } else {
-            strapi.log.error(
-              `[content-moderation] Failed to auto-create library from approved submission ${documentId}:`,
-              err
-            )
-          }
-          throw err
-        }
-      }
-
-      // Side-effect: if approving a library_claim, create affiliation record + mark profile verified
-      if (
-        status === "approved" &&
-        submission?.submissionType === "library_claim"
-      ) {
-        const fields = (submission.fields ?? {}) as Record<string, unknown>
-
-        // A2: resolve by the reviewed targetDocumentId, never fields.entityRef.
-        const targetLibrary = submission.targetDocumentId
-          ? await strapi.documents("api::library.library").findOne({
-              documentId: submission.targetDocumentId,
-              fields: ["documentId"] as any,
-            })
-          : null
-        if (!targetLibrary) {
-          strapi.log.warn(
-            `[content-moderation] claim ${documentId} has no valid targetDocumentId; skipping affiliation`
-          )
-        } else {
-          const affiliation = await upsertAffiliation(strapi, {
-            baUserId: submission.submittedByUserId,
-            libraryDocumentId: targetLibrary.documentId,
-            // Pass through undefined (not null) when the claim didn't supply
-            // a value, so an update doesn't null out an existing one.
-            role: fields.role as string | undefined,
-            department: fields.department as string | undefined,
-            verificationMethod:
-              (submission.verificationMethod as string) ?? "contact_us",
-          })
-          try {
-            await grantVerifiedLibrarian(strapi, submission.submittedByUserId)
           } catch (err) {
-            // I3: compensate — the approval is about to be reverted, so an
-            // affiliation this call created must not survive it. (An
-            // existing row that was only updated is left in place.)
-            if (affiliation?.created && affiliation.documentId) {
+            // I1: rethrow so the outer catch reverts the approval. A retry is
+            // safe: the proposer affiliation is an upsert, and — per the
+            // cleanup just below — a library this block created doesn't
+            // survive a later failure, so a retry can't leave duplicates.
+            if (createdLibraryDocumentId) {
+              // The library was created; something after it (the proposer
+              // affiliation) threw. Leaving the draft in place would orphan
+              // it: the approval reverts to pending, but a retry would create
+              // a second draft library alongside this one.
               try {
                 await strapi
-                  .documents("api::library-affiliation.library-affiliation")
-                  .delete({ documentId: affiliation.documentId })
+                  .documents("api::library.library")
+                  .delete({ documentId: createdLibraryDocumentId })
+                strapi.log.info(
+                  `[content-moderation] Removed orphaned draft library ${createdLibraryDocumentId} after submission ${documentId} approval failed`
+                )
               } catch (cleanupErr) {
                 strapi.log.error(
-                  `[content-moderation] claim ${documentId}: failed to remove affiliation ${affiliation.documentId} after grant failure`,
+                  `[content-moderation] Failed to remove orphaned draft library ${createdLibraryDocumentId} after submission ${documentId} approval failed`,
                   cleanupErr
                 )
               }
+              strapi.log.error(
+                `[content-moderation] new_library submission ${documentId} approval failed after the library was created; reverting`,
+                err
+              )
+            } else {
+              strapi.log.error(
+                `[content-moderation] Failed to auto-create library from approved submission ${documentId}:`,
+                err
+              )
             }
             throw err
           }
         }
-      }
 
-      // Side-effect: if approving a topic_suggestion, approve the topic
-      // A2: resolve by the reviewed targetDocumentId, never fields.topicDocumentId.
-      if (
-        status === "approved" &&
-        submission?.submissionType === "topic_suggestion" &&
-        submission.targetEntityType === "topic" &&
-        submission.targetDocumentId
-      ) {
-        await strapi.documents("api::topic.topic").update({
-          documentId: submission.targetDocumentId,
-          data: { status: "approved" },
-        })
-      } else if (
-        status === "approved" &&
-        submission?.submissionType === "topic_suggestion" &&
-        (submission.targetEntityType !== "topic" ||
-          !submission.targetDocumentId)
-      ) {
+        // Side-effect: if approving a library_claim, create affiliation record + mark profile verified
+        if (
+          status === "approved" &&
+          submission?.submissionType === "library_claim"
+        ) {
+          const fields = (submission.fields ?? {}) as Record<string, unknown>
+
+          // A2: resolve by the reviewed targetDocumentId, never fields.entityRef.
+          const targetLibrary = submission.targetDocumentId
+            ? await strapi.documents("api::library.library").findOne({
+                documentId: submission.targetDocumentId,
+                fields: ["documentId"] as any,
+              })
+            : null
+          if (!targetLibrary) {
+            strapi.log.warn(
+              `[content-moderation] claim ${documentId} has no valid targetDocumentId; skipping affiliation`
+            )
+          } else {
+            const affiliation = await upsertAffiliation(strapi, {
+              baUserId: submission.submittedByUserId,
+              libraryDocumentId: targetLibrary.documentId,
+              // Pass through undefined (not null) when the claim didn't supply
+              // a value, so an update doesn't null out an existing one.
+              role: fields.role as string | undefined,
+              department: fields.department as string | undefined,
+              verificationMethod:
+                (submission.verificationMethod as string) ?? "contact_us",
+            })
+            try {
+              await grantVerifiedLibrarian(strapi, submission.submittedByUserId)
+            } catch (err) {
+              // I3: compensate — the approval is about to be reverted, so an
+              // affiliation this call created must not survive it. (An
+              // existing row that was only updated is left in place.)
+              if (affiliation?.created && affiliation.documentId) {
+                try {
+                  await strapi
+                    .documents("api::library-affiliation.library-affiliation")
+                    .delete({ documentId: affiliation.documentId })
+                } catch (cleanupErr) {
+                  strapi.log.error(
+                    `[content-moderation] claim ${documentId}: failed to remove affiliation ${affiliation.documentId} after grant failure`,
+                    cleanupErr
+                  )
+                }
+              }
+              throw err
+            }
+          }
+        }
+
+        // Side-effect: if approving a topic_suggestion, approve the topic
+        // A2: resolve by the reviewed targetDocumentId, never fields.topicDocumentId.
+        if (
+          status === "approved" &&
+          submission?.submissionType === "topic_suggestion" &&
+          submission.targetEntityType === "topic" &&
+          submission.targetDocumentId
+        ) {
+          await strapi.documents("api::topic.topic").update({
+            documentId: submission.targetDocumentId,
+            data: { status: "approved" },
+          })
+        } else if (
+          status === "approved" &&
+          submission?.submissionType === "topic_suggestion" &&
+          (submission.targetEntityType !== "topic" ||
+            !submission.targetDocumentId)
+        ) {
+          strapi.log.warn(
+            `[content-moderation] topic_suggestion ${documentId} has no topic targetDocumentId; nothing applied`
+          )
+        }
+
+        // Side-effect: an approved correction is applied to the library and
+        // published: "Tap Yes or No" facility answers connect facilities, and
+        // a record correction from the Index editor (fields.kind "record")
+        // writes the changed fields (C-L1), and a shared photo joins the
+        // library's images. Free-text corrections still only award points.
+        if (
+          status === "approved" &&
+          (submission?.submissionType === "correction" ||
+            submission?.submissionType === "library_edit")
+        ) {
+          // A claimant's approved library_edit is applied the same way as a
+          // record correction (C-L1).
+          const outcome: ApplyRecordOutcome =
+            submission.submissionType === "library_edit" ||
+            isRecordCorrection(submission.fields)
+              ? await (this as any).applyLibraryRecord(submission)
+              : isPhotoCorrection(submission.fields)
+                ? await (this as any).applyLibraryPhoto(submission)
+                : await (this as any).applyFacilityAnswers(submission)
+          const marker = RECORD_MARKERS[outcome]
+          if (marker) {
+            const noted = withMarker(reviewNote, marker)
+            await strapi
+              .documents("plugin::content-moderation.submission")
+              .update({ documentId, data: { reviewNote: noted } })
+            updated.reviewNote = noted
+          }
+        }
+
+        // ── wiki_edit / blog_submission approval ──────────────────────────
+        if (
+          status === "approved" &&
+          (submission?.submissionType === "wiki_edit" ||
+            submission?.submissionType === "blog_submission")
+        ) {
+          // Decided before the apply creates the locale version (B4).
+          articleTranslation = await isTranslationSubmission(
+            strapi,
+            submission,
+            submission.submissionType === "wiki_edit" ? "wiki" : "journal"
+          )
+          const outcome: ApplyArticleOutcome =
+            submission.submissionType === "wiki_edit"
+              ? await (this as any).applyWikiEdit(submission)
+              : await (this as any).applyJournalSubmission(submission)
+          articleOutcome = outcome
+          const marker = ARTICLE_MARKERS[outcome]
+          if (marker) {
+            // `reviewNote` here is the argument this call received — the
+            // moderator's note the compare-and-set above just wrote. Reading
+            // it off the pre-CAS `submission` snapshot instead would silently
+            // discard that note, since the snapshot predates the write.
+            const noted = withMarker(reviewNote, marker)
+            await strapi
+              .documents("plugin::content-moderation.submission")
+              .update({ documentId, data: { reviewNote: noted } })
+            updated.reviewNote = noted
+          }
+        }
+
+        return "ok" as const
+      })
+    } catch (err) {
+      // A side effect threw (or the publish guard refused): the transaction
+      // rolled back the compare-and-set along with it, so the submission is
+      // back at `priorStatus` and the review can be retried. Confirm that
+      // rather than assume it: a failed rollback would leave the row stuck
+      // at `status` with none of its effects applied.
+      const refused = err instanceof ApplyRefusedError
+      if (refused)
         strapi.log.warn(
-          `[content-moderation] topic_suggestion ${documentId} has no topic targetDocumentId; nothing applied`
+          `[content-moderation] updateStatus for ${documentId} refused (${err.reason}: ${err.uid} ${err.documentId}); rolled back to "${priorStatus}"`
+        )
+      else
+        strapi.log.error(
+          `[content-moderation] updateStatus side effects failed for ${documentId}; rolled back to "${priorStatus}"`,
+          err
+        )
+      let reverted = false
+      try {
+        const after = await strapi
+          .documents("plugin::content-moderation.submission")
+          .findOne({ documentId })
+        reverted = after?.status === priorStatus
+      } catch (readErr) {
+        strapi.log.error(
+          `[content-moderation] could not confirm the rollback of ${documentId}`,
+          readErr
         )
       }
+      if (!reverted) {
+        strapi.log.error(
+          `[content-moderation] approval revert failed; submission left approved without side effects (${documentId}, status "${status}")`
+        )
 
-      // Side-effect: an approved correction is applied to the library and
-      // published: "Tap Yes or No" facility answers connect facilities, and
-      // a record correction from the Index editor (fields.kind "record")
-      // writes the changed fields (C-L1). Free-text corrections still only
-      // award points.
-      if (
-        status === "approved" &&
-        submission?.submissionType === "correction"
-      ) {
-        await (isRecordCorrection(submission.fields)
-          ? (this as any).applyLibraryRecord(submission)
-          : (this as any).applyFacilityAnswers(submission))
+        return { error: "apply_failed", unreverted: true }
       }
-
-      // Side-effect: a claimant's approved library_edit is applied to the
-      // library and published (C-L1).
-      if (
-        status === "approved" &&
-        submission?.submissionType === "library_edit"
-      )
-        await (this as any).applyLibraryRecord(submission)
-
-      // ── wiki_edit / blog_submission approval ──────────────────────────
-      if (
-        status === "approved" &&
-        (submission?.submissionType === "wiki_edit" ||
-          submission?.submissionType === "blog_submission")
-      ) {
-        const outcome: ApplyArticleOutcome =
-          submission.submissionType === "wiki_edit"
-            ? await (this as any).applyWikiEdit(submission)
-            : await (this as any).applyJournalSubmission(submission)
-        const marker = ARTICLE_MARKERS[outcome]
-        if (marker) {
-          // `reviewNote` here is the argument this call received — the
-          // moderator's note the compare-and-set above just wrote. Reading
-          // it off the pre-CAS `submission` snapshot instead would silently
-          // discard that note, since the snapshot predates the write.
-          const noted = (reviewNote ?? "").includes(marker)
-            ? (reviewNote ?? "")
-            : `${reviewNote ?? ""}${marker}`
+      if (refused) {
+        // A refusal leaves the moderator a note saying what to do. Outside
+        // the transaction: it must survive the rollback.
+        try {
           await strapi
             .documents("plugin::content-moderation.submission")
-            .update({ documentId, data: { reviewNote: noted } })
-          updated.reviewNote = noted
+            .update({
+              documentId,
+              data: {
+                reviewNote: withMarker(priorReviewNote, NOT_PUBLISHED_MARKER),
+              },
+            })
+        } catch (noteErr) {
+          strapi.log.warn(
+            `[content-moderation] could not note the refusal on ${documentId}`,
+            noteErr
+          )
         }
+
+        return { error: "apply_refused", reason: err.reason }
       }
 
+      return { error: "apply_failed" }
+    }
+    if (outcome === "conflict") return { error: "conflict" }
+
+    {
       // Award points for new_library approval — non-fatal
       if (
         status === "approved" &&
@@ -722,17 +1001,19 @@ export default ({ strapi }: { strapi: any }) => ({
 
       // Award points for Knowledge and Journal approvals: a new article
       // earns the most, a translation next, an edit to an existing one least.
+      // "New" comes from `draftData.kind` and "translation" from the target
+      // article's locales, never from contributor-controlled `fields`; and
+      // only when the apply did something (see `APPLIED_ARTICLE_OUTCOMES`).
       if (
         status === "approved" &&
         (submission?.submissionType === "wiki_edit" ||
-          submission?.submissionType === "blog_submission")
+          submission?.submissionType === "blog_submission") &&
+        articleOutcome !== null &&
+        APPLIED_ARTICLE_OUTCOMES.has(articleOutcome)
       ) {
         try {
-          const fields = (submission.fields ?? {}) as Record<string, unknown>
-          const isNew =
-            isNewArticleDraft(submission.draftData) ||
-            fields.kind === "new_article"
-          const isTranslation = fields.isTranslation === true
+          const isNew = isNewArticleDraft(submission.draftData)
+          const isTranslation = articleTranslation
           const [action, pts] =
             submission.submissionType === "wiki_edit"
               ? isNew
@@ -771,45 +1052,6 @@ export default ({ strapi }: { strapi: any }) => ({
           strapi.log.warn("[quick-wins] Post-approval recompute failed:", err)
         }
       }
-    } catch (err) {
-      // A side effect above threw without being caught by its own non-fatal
-      // try/catch. The status was already committed by the compare-and-set,
-      // so the submission would otherwise be stuck at `status` forever
-      // (canTransition(status, status) is false). Revert it to what it was
-      // before this call so the review can be retried.
-      strapi.log.error(
-        `[content-moderation] updateStatus side effects failed for ${documentId}; reverting to "${priorStatus}"`,
-        err
-      )
-      let reverted = false
-      try {
-        const { count: revertCount } = await strapi.db
-          .query("plugin::content-moderation.submission")
-          .updateMany({
-            where: { documentId, status },
-            data: {
-              status: priorStatus,
-              reviewedByUserId: priorReviewedByUserId,
-              reviewNote: priorReviewNote,
-              reviewedAt: priorReviewedAt,
-            },
-          })
-        reverted = revertCount === 1
-      } catch (revertErr) {
-        strapi.log.error(
-          `[content-moderation] revert of ${documentId} threw`,
-          revertErr
-        )
-      }
-      if (!reverted) {
-        strapi.log.error(
-          `[content-moderation] approval revert failed; submission left approved without side effects (${documentId}, status "${status}")`
-        )
-
-        return { error: "apply_failed", unreverted: true }
-      }
-
-      return { error: "apply_failed" }
     }
 
     return { data: updated }
@@ -821,7 +1063,9 @@ export default ({ strapi }: { strapi: any }) => ({
     draftData: Record<string, unknown>,
     stepCompleted: number
   ): Promise<
-    { error: "not_found" | "forbidden" | "not_draft" } | { data: unknown }
+    | { error: "not_found" | "forbidden" | "not_draft" }
+    | { error: "invalid"; message: string }
+    | { data: unknown }
   > {
     const existing = await strapi
       .documents("plugin::content-moderation.submission")
@@ -835,19 +1079,17 @@ export default ({ strapi }: { strapi: any }) => ({
       draftData && typeof draftData === "object" ? draftData : {}
     // Also sync the top-level submission fields from draftData so the
     // moderation queue always reflects the latest wizard state.
-    const { editSummary, evidenceType, evidenceUrl, note, ...libraryFields } =
-      safeDraft as Record<string, unknown>
+    const { fields: libraryFields, extras } = splitSubmissionBody(safeDraft)
+    const checked = validateSubmissionExtras(strapi, extras)
+    if (!checked.ok) return { error: "invalid", message: checked.message }
 
     const updateData: Record<string, unknown> = {
       draftData: safeDraft,
       stepCompleted,
       fields: libraryFields,
       draftRevision: (existing.draftRevision ?? 0) + 1,
+      ...checked.extras,
     }
-    if (editSummary !== undefined) updateData.editSummary = editSummary
-    if (evidenceType !== undefined) updateData.evidenceType = evidenceType
-    if (evidenceUrl !== undefined) updateData.evidenceUrl = evidenceUrl
-    if (note !== undefined) updateData.note = note
 
     // Compare-and-set pinned to status *and* the exact draftRevision this
     // call read (see `revisionWhere`): status alone would let a concurrent
@@ -904,22 +1146,33 @@ export default ({ strapi }: { strapi: any }) => ({
     // draftRevision, while `beforeTransition` is still running).
     const casRevision = revisionWhere(existing)
 
+    // The body is the full form (the UI sends everything on finalize). A body
+    // with no library fields keeps the saved draft's, so a bare finalize
+    // can't blank a submission; the controller's content check uses the
+    // same rule (see `splitSubmissionBody`).
+    const {
+      fields: libraryFields,
+      extras,
+      hasFields,
+    } = splitSubmissionBody(formData)
+    const checked = validateSubmissionExtras(strapi, extras)
+    if (!checked.ok)
+      return {
+        error: "policy",
+        verdict: { ok: false, status: 400, message: checked.message },
+      }
+
     if (beforeTransition) {
       const verdict = await beforeTransition(existing)
       if (!verdict.ok) return { error: "policy", verdict }
     }
 
-    const { editSummary, evidenceType, evidenceUrl, note, ...libraryFields } =
-      formData as Record<string, unknown>
-
     const updateData: Record<string, unknown> = {
       status: "pending",
-      fields: libraryFields,
+      fields: hasFields ? libraryFields : (existing.fields ?? {}),
     }
-    if (editSummary) updateData.editSummary = editSummary
-    if (evidenceType) updateData.evidenceType = evidenceType
-    if (evidenceUrl) updateData.evidenceUrl = evidenceUrl
-    if (note) updateData.note = note
+    for (const [key, value] of Object.entries(checked.extras))
+      if (value) updateData[key] = value
 
     // payloadHash must be computed from exactly what gets written, so it's
     // derived from `next` (existing + this updateData) before the CAS call.
@@ -1030,12 +1283,14 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   async findPublicByBaUserId(baUserId: string) {
+    // Approved only: what's still in review isn't public yet, and a
+    // rejected one never was.
     const submissions = await strapi
       .documents("plugin::content-moderation.submission")
       .findMany({
         filters: {
           submittedByUserId: baUserId,
-          status: { $in: ["pending", "approved", "needs_info"] },
+          status: { $eq: "approved" },
         },
         sort: { createdAt: "desc" },
         limit: 200,
@@ -1154,6 +1409,49 @@ export default ({ strapi }: { strapi: any }) => ({
       .create({ data: { fileId, baUserId } })
   },
 
+  /**
+   * How much `baUserId` has uploaded through the submission flow since UTC
+   * midnight: the count of ownership rows, and their files' sizes in bytes
+   * (`plugin::upload.file.size` is stored in kilobytes). A file that has
+   * since been deleted counts as a file but no bytes.
+   */
+  async uploadUsage(
+    baUserId: string
+  ): Promise<{ files: number; bytes: number }> {
+    const todayStart = `${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`
+    const rows = (await strapi
+      .documents("plugin::content-moderation.submission-upload" as any)
+      .findMany({
+        filters: {
+          baUserId: { $eq: baUserId },
+          createdAt: { $gte: todayStart },
+        } as any,
+        fields: ["fileId"] as any,
+        sort: { createdAt: "asc" } as any,
+        // Well above any quota; a runaway user is capped, not loaded whole.
+        limit: 1000,
+      })) as { fileId?: number }[]
+    const fileIds = [
+      ...new Set(
+        rows.map((r) => Number(r.fileId)).filter((id) => Number.isInteger(id))
+      ),
+    ]
+    let bytes = 0
+    if (fileIds.length > 0) {
+      const files = (await strapi.documents("plugin::upload.file").findMany({
+        filters: { id: { $in: fileIds } } as any,
+        fields: ["id", "size"] as any,
+        limit: fileIds.length,
+      })) as { id: number; size?: number | string | null }[]
+      for (const f of files) {
+        const kb = Number(f.size ?? 0)
+        if (Number.isFinite(kb) && kb > 0) bytes += Math.round(kb * 1024)
+      }
+    }
+
+    return { files: rows.length, bytes }
+  },
+
   /** A2: only files this submitter actually uploaded may be attached to their submission. */
   async ownedUploadIds(baUserId: string, ids: number[]): Promise<Set<number>> {
     return ownedUploadIds(strapi, baUserId, ids)
@@ -1178,12 +1476,12 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   /** Applies an approved facilities correction (see utils/facility-answers). */
-  async applyFacilityAnswers(submission: any): Promise<"applied" | "noop"> {
+  async applyFacilityAnswers(submission: any): Promise<ApplyRecordOutcome> {
     return applyFacilityAnswers(strapi, submission)
   },
 
   /** Applies an approved library_edit or record correction (see utils/library-record). */
-  async applyLibraryRecord(submission: any): Promise<"applied" | "noop"> {
+  async applyLibraryRecord(submission: any): Promise<ApplyRecordOutcome> {
     const f = (submission.fields ?? {}) as Record<string, unknown>
     const claimed = Array.isArray(f.uploadedImages)
       ? (f.uploadedImages as { strapiId?: unknown }[])
@@ -1195,6 +1493,17 @@ export default ({ strapi }: { strapi: any }) => ({
     )
 
     return applyLibraryRecord(strapi, submission, owned)
+  },
+
+  /** Adds an approved photo to the library (see utils/library-photo). */
+  async applyLibraryPhoto(submission: any): Promise<ApplyRecordOutcome> {
+    const id = photoIdOf(submission.fields)
+    // A2: only a file this submitter uploaded through the submission flow.
+    const owned: Set<number> = id
+      ? await (this as any).ownedUploadIds(submission.submittedByUserId, [id])
+      : new Set()
+
+    return applyLibraryPhoto(strapi, submission, owned)
   },
 
   /** Applies an approved Knowledge submission (see utils/article-apply). */

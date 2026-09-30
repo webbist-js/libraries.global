@@ -1,4 +1,5 @@
 import { isDocumentId, isNewArticleDraft } from "./params"
+import { applyToPublished } from "./publish-guard"
 import { ownedUploadIds } from "./uploads"
 import { sanitizeWikiBody } from "./wiki-body"
 
@@ -26,6 +27,8 @@ export type ArticleKind = "wiki" | "journal"
 export type ApplyArticleOutcome =
   | "published"
   | "drafted"
+  /** A direct edit written to the draft only: the draft held unpublished admin edits. */
+  | "drafted_divergent"
   | "created_published"
   | "created_draft"
   | "skipped_suggestion"
@@ -206,8 +209,12 @@ async function journalSectionTarget(strapi: any, keys: string[]) {
   return section ? { documentId: section.documentId } : null
 }
 
-async function knownLocale(strapi: any, draftData: Record<string, unknown>) {
-  const locale = typeof draftData.locale === "string" ? draftData.locale : "en"
+/** `locale` when it is one of Strapi's configured i18n locales, else null. */
+async function knownLocale(
+  strapi: any,
+  locale: unknown
+): Promise<string | null> {
+  if (typeof locale !== "string" || !locale) return null
   const locales: { code: string }[] = await strapi
     .plugin("i18n")
     .service("locales")
@@ -215,6 +222,10 @@ async function knownLocale(strapi: any, draftData: Record<string, unknown>) {
 
   return locales.some((l) => l.code === locale) ? locale : null
 }
+
+/** The locale a draft names, defaulting to `en` when it names none. */
+const draftLocale = (draftData: Record<string, unknown>) =>
+  typeof draftData.locale === "string" ? draftData.locale : "en"
 
 /** Relation data shared by creates and edits: taxonomy, tags, credit. */
 async function relationData(
@@ -272,6 +283,43 @@ function claimedImageIds(body: unknown): number[] {
   )
 }
 
+/**
+ * Whether an approved article submission is a translation: it targets an
+ * existing article, names one of Strapi's configured locales other than the
+ * article's own, and that locale has no version yet. Decided from the target
+ * and the i18n config, never from `fields.isTranslation` or an unchecked
+ * `draftData.locale`. Call it before applying: the apply creates the locale
+ * version, after which the answer would be "no". The caller must still gate
+ * points on the apply's outcome (a `noop` earns nothing).
+ */
+export async function isTranslationSubmission(
+  strapi: any,
+  submission: any,
+  kind: ArticleKind
+): Promise<boolean> {
+  const draftData = (submission?.draftData ?? {}) as Record<string, unknown>
+  if (isNewArticleDraft(draftData)) return false
+  if (typeof draftData.locale !== "string") return false
+  const locale = await knownLocale(strapi, draftData.locale)
+  const slug: string | undefined = submission?.targetSlug ?? undefined
+  if (!locale || !slug) return false
+  const uid = TARGETS[kind].uid
+  const [source] = (await strapi.documents(uid).findMany({
+    filters: { slug: { $eq: slug } },
+    fields: ["documentId", "locale"],
+    limit: 1,
+  })) as { documentId: string; locale?: string }[]
+  if (!source || source.locale === locale) return false
+  const [existing] = (await strapi.documents(uid).findMany({
+    filters: { slug: { $eq: slug } },
+    locale,
+    fields: ["documentId"],
+    limit: 1,
+  })) as { documentId: string }[]
+
+  return !existing
+}
+
 export async function applyArticleSubmission(
   strapi: any,
   submission: any,
@@ -295,7 +343,7 @@ export async function applyArticleSubmission(
     .loadCapabilities(submission.submittedByUserId)
   const canPublish = caps.set.has(target.capability)
 
-  const locale = await knownLocale(strapi, draftData)
+  const locale = await knownLocale(strapi, draftLocale(draftData))
   if (!locale) {
     strapi.log.warn(
       `[content-moderation] ${kind} ${submission.documentId}: unknown locale; nothing applied`
@@ -305,7 +353,9 @@ export async function applyArticleSubmission(
   }
 
   // ── New article ──────────────────────────────────────────────────────
-  if (isNewArticleDraft(draftData) || fields.kind === "new_article") {
+  // `draftData.kind` alone decides (never `fields.kind`, which the
+  // contributor controls and which the points tiers must not trust).
+  if (isNewArticleDraft(draftData)) {
     const title =
       cleanString(draftData.title, MAX_TITLE) ??
       cleanString(fields.title, MAX_TITLE)
@@ -389,14 +439,15 @@ export async function applyArticleSubmission(
       await relationData(strapi, kind, draftData, submission.submittedByUserId)
     )
     if (Object.keys(data).length === 0) return "noop"
-    await strapi.documents(target.uid).update({
-      documentId: article.documentId,
-      locale,
-      status: "published",
+    const { mode } = await applyToPublished(
+      strapi,
+      target.uid,
+      article.documentId,
       data,
-    })
+      { locale }
+    )
 
-    return "published"
+    return mode === "draft_only" ? "drafted_divergent" : "published"
   }
 
   if (proposed) {

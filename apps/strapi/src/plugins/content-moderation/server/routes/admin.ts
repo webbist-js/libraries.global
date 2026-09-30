@@ -25,4 +25,16 @@ export default [
     handler: "submission.relationLabels",
     config: { policies: can("read") },
   },
+  {
+    method: "GET",
+    path: "/option-suggestions",
+    handler: "option-suggestion.adminList",
+    config: { policies: can("read") },
+  },
+  {
+    method: "PUT",
+    path: "/option-suggestions/:id",
+    handler: "option-suggestion.decide",
+    config: { policies: can("update") },
+  },
 ]

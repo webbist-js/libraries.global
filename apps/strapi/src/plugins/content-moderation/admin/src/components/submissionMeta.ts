@@ -31,6 +31,11 @@ export type Submission = {
   editSummary?: string
   evidenceType?: string
   evidenceUrl?: string
+  /** Record corrections in review: the library's live values and option names. */
+  review?: {
+    current: Record<string, unknown>
+    names: Record<string, string>
+  }
 }
 
 export type ModerationStatus =
@@ -180,6 +185,9 @@ export const EXCLUDE_FROM_OTHER = new Set([
   "openingTimes",
   "source",
   "sourceUrl",
+  // A shared photo is shown as an image, not as its id and address.
+  "photoId",
+  "photoUrl",
 ])
 
 /** camelCase → words. */
@@ -189,6 +197,34 @@ export const humanise = (key: string) =>
     .replaceAll(/([A-Z])/g, " $1")
     .toLowerCase()
     .replace(/^./, (c) => c.toUpperCase())
+
+/**
+ * Whether contributor-supplied text may be rendered as a link: http(s)
+ * only. Anything else (javascript:, data:, a bare path) is shown as text,
+ * since React doesn't block dangerous schemes in `href`.
+ */
+export function isHttpUrl(v: unknown): v is string {
+  return typeof v === "string" && /^https?:\/\/\S+$/i.test(v.trim())
+}
+
+/**
+ * A same-origin path for an uploaded image, or null when the value isn't
+ * an http(s) URL or an absolute path. Strips the origin so images load
+ * relative to the current Strapi admin host.
+ */
+export function assetPath(url: unknown): string | null {
+  if (typeof url !== "string") return null
+  const raw = url.trim()
+  if (isHttpUrl(raw)) {
+    try {
+      return new URL(raw).pathname
+    } catch {
+      return null
+    }
+  }
+
+  return /^\/(?!\/)/.test(raw) ? raw : null
+}
 
 export function renderValue(v: unknown): { text: string; isUrl: boolean } {
   if (v === null || v === undefined || v === "")
@@ -210,7 +246,7 @@ export function renderValue(v: unknown): { text: string; isUrl: boolean } {
   }
   const s = String(v)
 
-  return { text: s, isUrl: /^https?:\/\//i.test(s) }
+  return { text: s, isUrl: isHttpUrl(s) }
 }
 
 /** One line describing what a submission is about, for the queue table. */

@@ -1,0 +1,38 @@
+{
+  "kind": "collectionType",
+  "collectionName": "cm_option_suggestions",
+  "info": {
+    "singularName": "option-suggestion",
+    "pluralName": "option-suggestions",
+    "displayName": "Option Suggestion",
+    "description": "A new accessibility feature, service or amenity that contributors asked for. The editorial board accepts or declines these monthly."
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": false },
+    "content-type-builder": { "visible": false }
+  },
+  "attributes": {
+    "name": { "type": "string", "required": true, "maxLength": 80 },
+    "nameKey": { "type": "string", "required": true, "maxLength": 80 },
+    "optionKey": {
+      "type": "enumeration",
+      "enum": ["accessibility", "amenities", "services"],
+      "required": true
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["open", "accepted", "declined"],
+      "default": "open",
+      "required": true
+    },
+    "requests": { "type": "integer", "default": 0 },
+    "libraries": { "type": "json" },
+    "submissionIds": { "type": "json" },
+    "acceptedOptionDocumentId": { "type": "string" },
+    "unlinkedLibraries": { "type": "json" },
+    "decidedAt": { "type": "datetime" },
+    "decidedBy": { "type": "string" },
+    "decisionNote": { "type": "text" }
+  }
+}

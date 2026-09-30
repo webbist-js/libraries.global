@@ -34,6 +34,7 @@ import {
   summaryOf,
   TYPE_LABELS,
 } from "../components/submissionMeta"
+import { SuggestionsPanel } from "../components/SuggestionsPanel"
 
 type Decision = "approved" | "rejected" | "needs_info"
 
@@ -54,6 +55,8 @@ export function ModerationDashboard() {
   const [typeFilter, setTypeFilter] = useState("all")
   const [query, setQuery] = useState("")
   const [openId, setOpenId] = useState<string | null>(null)
+  const [tab, setTab] = useState<string>("pending")
+  const [openSuggestions, setOpenSuggestions] = useState(0)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -185,10 +188,13 @@ export function ModerationDashboard() {
           </Box>
         )}
         <Tabs.Root
-          value={status}
+          value={tab}
           onValueChange={(v) => {
-            setStatus(v as ModerationStatus)
-            setTypeFilter("all")
+            setTab(v)
+            if (v !== "suggestions") {
+              setStatus(v as ModerationStatus)
+              setTypeFilter("all")
+            }
           }}
         >
           <Tabs.List aria-label="Submission status">
@@ -204,6 +210,14 @@ export function ModerationDashboard() {
                 </Flex>
               </Tabs.Trigger>
             ))}
+            <Tabs.Trigger value="suggestions">
+              <Flex gap={2} alignItems="center">
+                Suggestions
+                {openSuggestions > 0 && (
+                  <Badge size="S">{openSuggestions}</Badge>
+                )}
+              </Flex>
+            </Tabs.Trigger>
           </Tabs.List>
           {STATUS_TABS.map((tab) => (
             <Tabs.Content key={tab.id} value={tab.id}>
@@ -397,6 +411,14 @@ export function ModerationDashboard() {
               </Box>
             </Tabs.Content>
           ))}
+          {/* Mounted up front so the tab badge shows the open count. */}
+          <Tabs.Content
+            value="suggestions"
+            forceMount
+            hidden={tab !== "suggestions"}
+          >
+            <SuggestionsPanel onOpenCount={setOpenSuggestions} />
+          </Tabs.Content>
         </Tabs.Root>
       </Layouts.Content>
       <ReviewModal

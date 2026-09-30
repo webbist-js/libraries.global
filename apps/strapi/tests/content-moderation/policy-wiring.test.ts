@@ -214,6 +214,53 @@ describe("controller wiring: policy re-check closes the direct-edit race", () =>
   })
 })
 
+describe("a proposer affiliation is not a claim", () => {
+  const LIB_ID = "lib00000000000000000001"
+  const harness = (role: string | null) => {
+    const { strapi } = makeFakeStrapi({
+      [PROFILE]: [
+        {
+          documentId: "p1",
+          baUserId: "u1",
+          contributorRole: "contributor",
+          tier: "Reader",
+        },
+      ],
+      [AFF]: [
+        {
+          documentId: "aff1",
+          baUserId: "u1",
+          role,
+          library: { documentId: LIB_ID },
+        },
+      ],
+      [SUB]: [],
+    })
+
+    return createPolicy({ strapi })
+  }
+
+  it("refuses library_edit to a user whose only affiliation is as proposer", async () => {
+    const verdict = await harness("proposer").check({
+      baUserId: "u1",
+      submissionType: "library_edit",
+      targetDocumentId: LIB_ID,
+    })
+    expect(verdict).toMatchObject({ ok: false, status: 403 })
+  })
+
+  it("allows library_edit to a claimant, with or without a stated role", async () => {
+    for (const role of ["Librarian", null]) {
+      const verdict = await harness(role).check({
+        baUserId: "u1",
+        submissionType: "library_edit",
+        targetDocumentId: LIB_ID,
+      })
+      expect(verdict).toEqual({ ok: true })
+    }
+  })
+})
+
 describe("(iii) applyWikiEdit re-checks capabilities at apply time", () => {
   function wikiHarness(role: string) {
     const { strapi, store, services } = makeFakeStrapi({
@@ -370,5 +417,170 @@ describe("updateStatus keeps the moderator's reviewNote when a wiki_edit is only
     // The wiki article itself was never touched — it's a suggestion, not a
     // direct edit.
     expect(store[WIKI][0].title).toBe("Original")
+  })
+})
+
+describe("controller wiring: content checks", () => {
+  const contributor = {
+    [PROFILE]: [
+      {
+        documentId: "p1",
+        baUserId: "u1",
+        contributorRole: "contributor",
+        tier: "Reader",
+      },
+    ],
+    [AFF]: [],
+    "api::library.library": [
+      {
+        documentId: "l00000000000000000000001",
+        slug: "penistone-library",
+        name: "Penistone Library",
+        city: "Shitterton",
+      },
+    ],
+  }
+  const ctxFor = (body: Record<string, unknown>, params = {}): any => ({
+    params,
+    request: { body, headers: serviceHeaders },
+    state: {},
+    set: vi.fn(),
+    unauthorized: vi.fn(),
+    badRequest: vi.fn(),
+    notFound: vi.fn(),
+  })
+
+  it("refuses offensive language on create, and nothing is stored", async () => {
+    const { store, controller } = makeControllerHarness({
+      ...contributor,
+      [SUB]: [],
+    })
+    const ctx = ctxFor({
+      submissionType: "correction",
+      targetSlug: "penistone-library",
+      fields: { category: "Something else" },
+      note: "the staff are fucking useless",
+    })
+    await controller.create(ctx)
+
+    expect(ctx.status).toBe(400)
+    expect(ctx.body.error.message).toMatch(/offensive language/)
+    expect(store[SUB]).toHaveLength(0)
+  })
+
+  it("refuses an adult link as evidence", async () => {
+    const { controller } = makeControllerHarness({ ...contributor, [SUB]: [] })
+    const ctx = ctxFor({
+      submissionType: "correction",
+      targetSlug: "penistone-library",
+      fields: {
+        category: "Website or catalogue",
+        website: "https://xvideos.com",
+      },
+    })
+    await controller.create(ctx)
+
+    expect(ctx.status).toBe(400)
+  })
+
+  it("allows the library's own name and address", async () => {
+    const { store, controller } = makeControllerHarness({
+      ...contributor,
+      [SUB]: [],
+    })
+    const ctx = ctxFor({
+      submissionType: "correction",
+      targetSlug: "penistone-library",
+      fields: { category: "Address or location", city: "Shitterton" },
+      note: "Penistone Library moved within Shitterton",
+    })
+    await controller.create(ctx)
+
+    expect(ctx.status).toBeUndefined()
+    expect(store[SUB]).toHaveLength(1)
+  })
+
+  it("checks a draft again when it is finalized", async () => {
+    const draftId = "d000000000000000000002"
+    const { store, controller } = makeControllerHarness({
+      ...contributor,
+      [SUB]: [
+        {
+          documentId: draftId,
+          status: "draft",
+          submissionType: "correction",
+          submittedByUserId: "u1",
+          targetSlug: "penistone-library",
+          fields: { category: "Name", name: "Shit Library" },
+        },
+      ],
+    })
+    const ctx = ctxFor({}, { id: draftId })
+    await controller.finalize(ctx)
+
+    expect(ctx.status).toBe(400)
+    expect(store[SUB][0].status).toBe("draft")
+  })
+
+  it("finalize checks the fields it is about to write, not only the saved draft", async () => {
+    const draftId = "d000000000000000000005"
+    const { store, controller } = makeControllerHarness({
+      ...contributor,
+      [SUB]: [
+        {
+          documentId: draftId,
+          status: "draft",
+          submissionType: "new_library",
+          submittedByUserId: "u1",
+          fields: { name: "Fine Library" },
+          draftData: { name: "Fine Library" },
+        },
+      ],
+    })
+    const ctx = ctxFor(
+      {
+        name: "Shit Library",
+        // eslint-disable-next-line sonarjs/code-eval -- the unsafe scheme is the fixture
+        socialLinks: [{ platform: "x", url: "javascript:alert(1)" }],
+        editSummary: "renamed",
+      },
+      { id: draftId }
+    )
+    await controller.finalize(ctx)
+
+    expect(ctx.status).toBe(400)
+    expect(ctx.body.error.message).toMatch(/offensive language/)
+    expect(store[SUB][0].status).toBe("draft")
+    expect(store[SUB][0].fields).toEqual({ name: "Fine Library" })
+  })
+
+  it("finalize refuses an unsafe link scheme in the body", async () => {
+    const draftId = "d000000000000000000006"
+    const { store, controller } = makeControllerHarness({
+      ...contributor,
+      [SUB]: [
+        {
+          documentId: draftId,
+          status: "draft",
+          submissionType: "new_library",
+          submittedByUserId: "u1",
+          fields: { name: "Fine Library" },
+          draftData: { name: "Fine Library" },
+        },
+      ],
+    })
+    const ctx = ctxFor(
+      {
+        name: "Fine Library",
+        // eslint-disable-next-line sonarjs/code-eval -- the unsafe scheme is the fixture
+        socialLinks: [{ platform: "x", url: "javascript:alert(1)" }],
+      },
+      { id: draftId }
+    )
+    await controller.finalize(ctx)
+
+    expect(ctx.status).toBe(400)
+    expect(ctx.body.error.message).toMatch(/http/)
+    expect(store[SUB][0].status).toBe("draft")
   })
 })
