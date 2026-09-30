@@ -1,7 +1,7 @@
 # Community moderation, role grants, audit trail, i18n review and coverage
 
 **Date:** 2026-09-29
-**Status:** Draft for review
+**Status:** Draft for review (revised 2026-09-30 against the Strapi review remediation commits 79ab1e3..c2fffdb)
 **Supersedes in part:** `2026-09-26-access-contribution-pro-implementation-design.md` §12 ("A frontend moderator queue" is no longer out of scope) and decision I5 ("Only the owner has Strapi admin access") is kept, but moderation no longer requires admin access.
 **Related:** ADR-0003 (programmatic location pages), CONTEXT.md vocabulary, `docs/strapi-role-permissions.md` (stale; rewritten by this work).
 
@@ -69,7 +69,8 @@ New admin-only collection `api::role-grant.role-grant` (`routes: []`, visible in
 
 - `grantVerifiedLibrarian` (`apps/strapi/src/utils/affiliations.ts`) creates a `verified_librarian` grant with `source: "claim"` if the user has none; it never removes a grant.
 - Role Application approval (Workstream D) creates `wiki_editor` or `journal_editor` grants, one per requested locale, or one with `locale: null`.
-- `erase-account.ts` deletes every grant for the user.
+- `erase-account.ts` deletes every role grant for the user, next to the entitlement grants and verifications it already removes in its transaction.
+- The bridge already excludes `proposer` affiliations from claims (`claimAffiliationFilter`) and no longer mints a Strapi JWT, so nothing in Workstream A depends on U&P.
 
 ### 3.2 `@repo/access`
 
@@ -162,12 +163,14 @@ New collection `api::library-change.library-change` (`routes: []`; read through 
 | `submissionDocumentId` | string, nullable                                            |
 | `changedAt`            | datetime, indexed                                           |
 
-**Capture** is a document-service middleware registered in `src/index.ts` next to the catalogue middleware, for `api::library.library`:
+**Capture** is a document-service middleware (`strapi.documents.use`) registered in the `bootstrap` of `src/index.ts`, for `api::library.library`. The repo has no other document middleware since the catalogue port was removed, so this creates `src/documentMiddlewares/change-records.ts`. Writes made through `strapi.db.query` (the `completeness` and `entityRef` lifecycles, the submission compare-and-set) bypass it by design: they are derived fields, not content changes.
 
 - `update`: read the current document in the same `documentId`, `locale` and `status` before `next()`, diff the allowlisted attributes against the result after, write one record per changed field with a shared `batchId`. Relations are compared as sorted `documentId` lists; components and JSON as stable-stringified values. Ignored: `updatedAt`, `publishedAt`, `updatedBy`, `createdBy`, `localizations`. `contentUpdatedAt` and `lastVerifiedAt` are recorded (they feed the verification timeline).
 - `publish`: diff the previously published version against the newly published one (same rules), `action: "publish"`; a publish with no field difference writes a single `field: "*"` record.
 - `create`, `delete`, `unpublish`: one `field: "*"` record with the snapshot in `next` or `previous`.
-- The write happens after `next()` resolves and never throws into the caller; failures are logged with `[library-change]`.
+- Ignored as derived: `completeness`.
+- The record insert runs after `next()` resolves and **inside the caller's transaction** when there is one (`updateStatus` wraps the compare-and-set and every apply in `strapi.db.transaction`; Strapi's transaction context propagates to nested queries). An insert failure propagates, so an approval whose change could not be recorded rolls back and reports `apply_failed`: the audit row is part of the write. `CHANGE_RECORDS_ENABLED=false` is the kill switch for an emergency, logged loudly at boot.
+- The publish guard (`utils/publish-guard.ts`) may write an approval to the draft only when an admin has unpublished edits; that is recorded as `action: "update"` on the draft version, and the later admin publish is recorded as `publish`.
 
 **Actor resolution** (`src/utils/change-context.ts`), in priority order:
 
@@ -183,7 +186,7 @@ New collection `api::article-change.article-change`: `articleKind` (`wiki` | `bl
 
 ### 4.3 Review Events and submission links
 
-- New plugin collection `plugin::content-moderation.review-event`: `submission` (relation), `fromStatus`, `toStatus`, `reviewerId`, `reviewerKind` (`admin` | `contributor`), `note`, `createdAt`. Written inside `updateStatus` after the compare-and-set succeeds, and on `finalize` (`draft → pending`, reviewerKind `contributor`, the submitter). `reviewNote` stays as "latest note" for back-compat.
+- New plugin collection `plugin::content-moderation.review-event`: `submission` (relation), `fromStatus`, `toStatus`, `reviewerId`, `reviewerKind` (`admin` | `contributor`), `note`, `createdAt`. Written inside `updateStatus`'s transaction after the compare-and-set succeeds, and on `finalize` (`draft → pending`, reviewerKind `contributor`, the submitter). `reviewNote` stays as "latest note" for back-compat.
 - Submission gains `resultDocumentId` (string): the library, article, region or area created by approval. `new_library`, `location_request` and new-article approvals set it.
 - The old `findLibraryRevisions` is replaced by a query over `library-change` batches (§4.4). A one-off backfill script turns each existing approved library submission into a batch with `field` rows from `fields` keys (meta keys `kind` and `previous` excluded), `previous`/`next` null, `source: "submission"`, `changedAt: reviewedAt`.
 
@@ -205,15 +208,16 @@ UI:
 
 ### 5.1 Strapi content-api (bridge identity, `canModerate` re-check on every request)
 
-| Route                                                               | Purpose                                                                                                                                                                                                                                                                    |
-| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /moderation/submissions?status&type&locale&q&page&pageSize=25` | Server-side filtering, search (`submittedByName`, `submittedByEmail`, `targetSlug`, summary text), pagination. Results are filtered to the caller's Moderation Scopes and exclude their own submissions.                                                                   |
-| `GET /moderation/submissions/:documentId`                           | Full detail, plus `current`: for record corrections and library edits the live values of the changed fields in the submission locale; for article edits the live article (title, summary, body) in the submission locale and, for translations, the source-locale article. |
-| `PUT /moderation/submissions/:documentId/status`                    | `{ status, note, publish? }`. `publish: true` is accepted only for `wiki_edit`/`blog_submission` and only when the caller's scope covers that queue and locale; it makes `article-apply` publish instead of drafting.                                                      |
-| `PUT /moderation/submissions/:documentId/target`                    | For `new_library` and `location_request`: set or override `continent`/`country`/`region`/`area` document ids before approval (§9.2). Stored on `draftData.moderatorTarget`.                                                                                                |
-| `GET /moderation/relation-labels?type=`                             | Port of the admin route.                                                                                                                                                                                                                                                   |
-| `GET /moderation/stats`                                             | Counts per status per queue within the caller's scope.                                                                                                                                                                                                                     |
-| `GET /moderation/submissions/:documentId/events`                    | Review Events for the thread view.                                                                                                                                                                                                                                         |
+| Route                                                                          | Purpose                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /moderation/submissions?status&type&locale&q&page&pageSize=25`            | Server-side filtering, search (`submittedByName`, `submittedByEmail`, `targetSlug`, summary text), pagination. Results are filtered to the caller's Moderation Scopes and exclude their own submissions.                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `GET /moderation/submissions/:documentId`                                      | Full detail, plus `review`: for record corrections and library edits the live values and option names from `utils/record-review.ts` (`recordReview`, already used by the admin list) in the submission locale; for article edits the live article (title, summary, body) in the submission locale and, for translations, the source-locale article.                                                                                                                                                                                                                                                                         |
+| `PUT /moderation/submissions/:documentId/status`                               | `{ status, note, publish? }`. `publish: true` is accepted for `wiki_edit`/`blog_submission` (makes `article-apply` publish instead of drafting) and for `new_library` (publishes the created library instead of leaving a `PENDING-` draft; requires the hierarchy to be set, §8.2, and the `entityRef` lifecycle to have produced a real reference, else the approval is refused with `apply_refused: no_hierarchy`). Only when the caller's scope covers that queue and locale. The publish guard's `apply_refused: not_published` is surfaced as "This record has no published version; an admin must publish it first." |
+| `PUT /moderation/submissions/:documentId/target`                               | For `new_library` and `location_request`: set or override `continent`/`country`/`region`/`area` document ids before approval (§9.2). Stored on `draftData.moderatorTarget`.                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `GET /moderation/relation-labels?type=`                                        | Port of the admin route.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `GET /moderation/stats`                                                        | Counts per status per queue within the caller's scope.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `GET /moderation/submissions/:documentId/events`                               | Review Events for the thread view.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `GET /moderation/option-suggestions`, `PUT /moderation/option-suggestions/:id` | The Suggested Additions decisions (accept or decline a new option name), mirroring the admin routes; `editorial_board` only.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 The admin routes keep working and share the same service methods. `updateStatus` takes a `reviewer: { id: "ba:…" | "admin:…", kind, email, baUserId? }` object; the self-review check compares `baUserId` for contributors and email for admins.
 
@@ -222,7 +226,9 @@ The admin routes keep working and share the same service methods. `updateStatus`
 - Proxy routes under `apps/ui/src/app/api/moderation/*`, each gated by `requireCapability(user, "moderate.queue")` and forwarding with `userHeaders()`.
 - `/contribute/moderation` (tab **Moderation**, shown only with `moderate.queue`; `ContributeNavBar` becomes capability-driven as spec §5.4 intended, keeping the existing tabs static for everyone else). Compact `PageHero`; segmented status control (Pending, Needs changes, Decided); filters: queue/type, locale, search; table with Type, Submission, Contributor, Locale, Submitted, Status; server pagination with `Pager`.
 - `/contribute/moderation/[documentId]`: the review page. Left column: metadata card, summary/note, per-type panel (ported from `submissionMeta.ts` and the admin panels to DS components): Field / Current / Proposed table using the server's `current`; article preview with side-by-side source locale for translations; facilities Yes/No; claim domain check; role application statement and samples; location request with the hierarchy picker. Right sticky column: decision form (note required for Needs changes and Reject; **Approve**, **Approve and publish** when applicable, **Needs changes**, **Reject**), the Review Events thread, and links to the target record. Decided submissions are read-only.
-- Errors map: 403 (out of scope or own submission), 409 (conflict), 422 (tampered), 500 with `apply_failed` copy.
+- A **Suggestions** view under the tab for `editorial_board`, listing open Option Suggestions with request counts and Accept / Decline.
+- Next routes build headers with `lib/bridge-user-headers.ts` and rate-limit decisions with `lib/rate-limit.ts` (30 a minute per user), the same limiter the submission routes use. `strictParams` is on in Strapi, so every query parameter is validated and clamped (`clampInt`).
+- Errors map: 403 (out of scope or own submission), 409 (conflict), 422 (tampered), 409 `apply_refused` with the reason copy, 500 with `apply_failed` copy.
 
 ### 5.3 Fixtures and E2E
 
@@ -241,6 +247,7 @@ The admin routes keep working and share the same service methods. `updateStatus`
 - Eligibility, enforced in `submission-policy` and mirrored in the UI: signed in, at least `ROLE_APPLICATION_MIN_ACCEPTED = 5` approved submissions (constant in `@repo/access/limits.ts`), no open application for the same role, no existing grant for that role covering the requested locales. Never Plan-related.
 - Approval creates the grants (`source: "application"`, `grantedBy: reviewerId`, `reason: "Approved application <documentId>"`), sets `resultDocumentId` to the profile, invalidates the session profile, and awards no points.
 - Reviewable only by `editorial_board` or a Moderator whose scope includes `applications`.
+- `statement` and `samples` run through `submission-policy.checkContent` on create and finalize like every other submission.
 
 ### 6.2 UI
 
@@ -278,13 +285,13 @@ Templates are plain text with a minimal HTML twin in `server/utils/email-templat
 
 - `LOCALIZED_LIBRARY_FIELDS` exported from `@repo/shared-data`: `name`, `shortName`, `summary`, `description`, `city`, `district`, `streetAddress`, `closureReason`, `visitNotes`, `admissionInfo`, `accessibilityNotes`, `buildingInfo`, `transitInfo`. A test asserts it matches the schema's `localized: true` string/text/blocks attributes.
 - Index editor `/contribute/index/[slug]?locale=xx`: when `xx` is not the default locale the wizard is in **translation mode**: prefilled from the `xx` version if it exists, otherwise from the default locale with a "Translating into xx" banner; only `LOCALIZED_LIBRARY_FIELDS` are editable; the payload carries `locale: "xx"`. Without `?locale` the editor always edits the default locale, regardless of the route locale (fixes the current overwrite bug). A "Translate this record" action on the library page's help panel links to it when more than one locale is configured.
-- `library-record.ts`: `findLibrary(documentId | slug, locale)`; for a non-default locale it ignores every non-localized field server-side and creates the locale version when missing. `facility-answers.ts` and `new_library` write the default locale explicitly.
+- `library-record.ts`: `findLibrary(documentId | slug, locale)`; for a non-default locale it ignores every non-localized field server-side. `publish-guard.ts` gains an `applyToLocale` mode: when the requested locale has no version yet, the guard requires the **default-locale** version to be published and then creates the new locale version directly as published (no draft can diverge yet); otherwise the existing `applyToPublished` rules apply per locale. `facility-answers.ts` and `new_library` write the default locale explicitly.
 - `description` and `seo` remain non-editable in the Index editor (unchanged scope).
 
 ### 7.4 Rendering and search
 
 - `fetchLibrary`, `fetchWikiArticle`, `fetchBlogArticle` fall back to the default locale when the requested locale version is missing, returning `{ …doc, localeFallback: true }`. Pages render a small "Not yet translated into xx" line and emit `robots: noindex` for fallback renders. `generateStaticParams` is unchanged.
-- Meilisearch plugin config sets `entriesQuery: { locale: "all" }` for `library`, `wiki-article` and `blog-article` and adds `locale` to `filterableAttributes`; the seed script indexes every locale; UI search filters by the route locale when it is in `LIVE_LOCALES`, else the default locale.
+- Meilisearch: the three indexes already fetch `locale` and key documents by `documentId` plus `locale`. Add `entriesQuery.locale: "all"` for `library`, `wiki-article` and `blog-article`, add `locale` to their `filterableAttributes`, and extend the seed script and its parity test (`scripts/seed-meilisearch.mjs`) to index every locale; UI search filters by the route locale when it is in `LIVE_LOCALES`, else the default locale.
 - `LIVE_LOCALES` stays `[en]` until a locale has content; adding one is a one-line change and is documented.
 
 ## 8. Workstream F: Coverage and Location Requests
@@ -303,6 +310,7 @@ Script `apps/strapi/scripts/populate-world-countries.ts` (run with an `ingest-*`
 - New `SUBMISSION_TYPES` member `location_request`, queue `index`, `targetEntityType: "region" | "area"`.
 - `fields`: `{ kind: "region" | "area", name, typeLabel?, countryDocumentId, regionDocumentId? (required for areas), note?, evidenceUrl }`.
 - UI: a "Not listed?" link under the Region and Area selects in `LocationHierarchySelector` opens an inline form that creates the request on submit and stores `{ proposedRegionName | proposedAreaName, locationRequestDocumentId }` on the wizard form, so the `new_library` submission carries it. The hierarchy fields stay optional.
+- `name`, `typeLabel`, `note` and `evidenceUrl` run through `submission-policy.checkContent`.
 - Approval creates the Region or Area **published**, with `slug` from the name, `typeLabel`, parent relations, and sets `resultDocumentId`. The review page lets the moderator edit name and type label before approving.
 - `new_library` review shows `proposedRegionName` and the moderator's target picker (§5.1); approval uses `draftData.moderatorTarget` over the submitter's ids when set. Free-text `country`/`city`/`district` are kept on the library as today.
 - New `location_request` submissions email `MODERATORS_EMAIL` (§6.3).
@@ -347,7 +355,7 @@ Script `apps/strapi/scripts/populate-world-countries.ts` (run with an `ingest-*`
 2. B: library-change and article-change middleware, actor context, review-event, `resultDocumentId`, backfill script, history routes, library **Changes** section with histogram.
 3. E core: `submission.locale`, locale-scoped drafts, locale-aware article and library apply, the Index editor translation mode, fallback rendering, Meilisearch all-locale.
 4. F.1: world countries script, run locally and listed for go-live.
-5. Small fixes: staff roles, `RolesTable`, `/contribute/claim` bounce, translate-wiki quick-win URL, CONTEXT.md, stale doc.
+5. Small fixes: staff roles, `RolesTable` (rebuilt on 2026-09-30; verify the two unimplemented promises are gone), `/contribute/claim` bounce, translate-wiki quick-win URL, CONTEXT.md, stale doc.
 
 **Band 2, immediately after:** 6. C: moderation content-api, Next proxies, `/contribute/moderation` queue and review page, fixtures and E2E, ADR-0005. 7. D: role applications, notifications service, apply page. 8. F.2: location requests and the moderator target picker.
 
