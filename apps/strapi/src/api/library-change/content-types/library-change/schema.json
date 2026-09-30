@@ -1,0 +1,45 @@
+{
+  "kind": "collectionType",
+  "collectionName": "library_changes",
+  "info": {
+    "singularName": "library-change",
+    "pluralName": "library-changes",
+    "displayName": "Library Change",
+    "description": "Change Records: an append-only, field-level audit trail of every library write. Written only by the change-records document middleware."
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": true },
+    "content-type-builder": { "visible": true }
+  },
+  "attributes": {
+    "batchId": { "type": "string", "required": true },
+    "libraryDocumentId": { "type": "string", "required": true },
+    "entityRef": { "type": "string" },
+    "contentLocale": { "type": "string" },
+    "versionStatus": {
+      "type": "enumeration",
+      "enum": ["draft", "published"]
+    },
+    "action": {
+      "type": "enumeration",
+      "enum": ["create", "update", "publish", "unpublish", "delete"]
+    },
+    "field": { "type": "string", "required": true },
+    "previous": { "type": "json" },
+    "next": { "type": "json" },
+    "source": {
+      "type": "enumeration",
+      "enum": ["submission", "admin", "api_token", "import", "system"]
+    },
+    "actorKind": {
+      "type": "enumeration",
+      "enum": ["contributor", "admin", "token", "system"]
+    },
+    "actorId": { "type": "string" },
+    "actorName": { "type": "string" },
+    "reviewerId": { "type": "string" },
+    "submissionDocumentId": { "type": "string" },
+    "changedAt": { "type": "datetime", "required": true }
+  }
+}

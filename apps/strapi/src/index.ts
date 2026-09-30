@@ -2,6 +2,7 @@ import type { Core } from "@strapi/strapi"
 
 import { LOCATION_PICKER_FIELD_NAME } from "./customFields/locationPicker/shared"
 import { OPENING_TIMES_FIELD_NAME } from "./customFields/openingTimes/shared"
+import { registerChangeRecordsMiddleware } from "./documentMiddlewares/change-records"
 import { registerAdminUserSubscriber } from "./lifeCycles/adminUser"
 import { registerEntityRefSubscriber } from "./lifeCycles/entityRef"
 import { registerRoleGrantSubscriber } from "./lifeCycles/roleGrant"
@@ -88,6 +89,8 @@ export default {
     registerUserSubscriber({ strapi })
     registerEntityRefSubscriber({ strapi })
     registerRoleGrantSubscriber({ strapi })
+    // Change Records / Article Changes: audit every library and article write.
+    registerChangeRecordsMiddleware({ strapi })
 
     // Seed approved topics (idempotent — skips existing names)
     await seedTopics(strapi)

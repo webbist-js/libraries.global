@@ -1,0 +1,50 @@
+{
+  "kind": "collectionType",
+  "collectionName": "article_changes",
+  "info": {
+    "singularName": "article-change",
+    "pluralName": "article-changes",
+    "displayName": "Article Change",
+    "description": "Article Changes: one append-only row per Knowledge or Journal article write. Written only by the change-records document middleware."
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": true },
+    "content-type-builder": { "visible": true }
+  },
+  "attributes": {
+    "articleKind": {
+      "type": "enumeration",
+      "enum": ["wiki", "blog"]
+    },
+    "articleDocumentId": { "type": "string" },
+    "slug": { "type": "string" },
+    "contentLocale": { "type": "string" },
+    "versionStatus": {
+      "type": "enumeration",
+      "enum": ["draft", "published"]
+    },
+    "kind": {
+      "type": "enumeration",
+      "enum": [
+        "created",
+        "edited",
+        "translated",
+        "published",
+        "unpublished",
+        "deleted"
+      ]
+    },
+    "actorKind": {
+      "type": "enumeration",
+      "enum": ["contributor", "admin", "token", "system"]
+    },
+    "actorId": { "type": "string" },
+    "actorName": { "type": "string" },
+    "reviewerId": { "type": "string" },
+    "submissionDocumentId": { "type": "string" },
+    "editSummary": { "type": "text" },
+    "bodyHash": { "type": "string" },
+    "changedAt": { "type": "datetime" }
+  }
+}
