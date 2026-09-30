@@ -12,7 +12,6 @@ export type Feature =
   | "index.compare"
   | "library.watch"
   | "library.notes"
-  | "catalogue.editions"
   | "data.benchmark"
   | "data.explorerExport"
   | "events.personalFeed"
@@ -20,11 +19,7 @@ export type Feature =
   | "team.bulkUpload"
   | "team.embed"
   | "api.key"
-export type Limit =
-  | "savedViews"
-  | "savedSearches"
-  | "catalogueChecksPerHour"
-  | "exportRows"
+export type Limit = "savedViews" | "savedSearches" | "exportRows"
 
 export interface Entitlements {
   plan: PlanKey
@@ -62,7 +57,6 @@ const PRO_FEATURES: readonly Feature[] = [
   "index.compare",
   "library.watch",
   "library.notes",
-  "catalogue.editions",
   "data.benchmark",
   "data.explorerExport",
   "events.personalFeed",
@@ -88,25 +82,21 @@ const PLAN_LIMITS: Record<PlanKey, Record<Limit, number>> = {
   public: {
     savedViews: 0,
     savedSearches: 0,
-    catalogueChecksPerHour: 10,
     exportRows: 0,
   },
   free: {
     savedViews: 3,
     savedSearches: 3,
-    catalogueChecksPerHour: 30,
     exportRows: 0,
   },
   pro: {
     savedViews: 1000,
     savedSearches: 1000,
-    catalogueChecksPerHour: 300,
     exportRows: 10_000,
   },
   team: {
     savedViews: 1000,
     savedSearches: 1000,
-    catalogueChecksPerHour: 600,
     exportRows: 50_000,
   },
 }

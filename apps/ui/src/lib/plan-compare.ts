@@ -57,7 +57,6 @@ const FEATURE_GROUPS: Record<string, readonly Feature[]> = {
     "library.watch",
     "index.alerts",
     "index.compare",
-    "catalogue.editions",
     "library.notes",
     "events.personalFeed",
     "index.export",

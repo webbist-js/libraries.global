@@ -75,10 +75,6 @@ export const PRO_FEATURE_COPY: Record<
     status: "soon",
   },
   "library.notes": { label: "Private notes on any library", status: "soon" },
-  "catalogue.editions": {
-    label: "Catalogue checks across every edition",
-    status: "soon",
-  },
   "data.benchmark": {
     label: "Benchmark a service against similar ones",
     status: "soon",

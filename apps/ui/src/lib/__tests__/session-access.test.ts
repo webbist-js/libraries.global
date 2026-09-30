@@ -6,7 +6,6 @@ import type { SessionProfile } from "../session-profile"
 const FREE_LIMITS = {
   savedViews: 3,
   savedSearches: 3,
-  catalogueChecksPerHour: 30,
   exportRows: 0,
 }
 
