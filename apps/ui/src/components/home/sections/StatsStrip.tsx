@@ -70,7 +70,7 @@ export function StatsStrip({
           ))}
         </dl>
         <GlobalLink
-          href="/knowledge"
+          href="/knowledge/data-api/how-we-count"
           className="text-[15px] font-semibold underline underline-offset-[3px]"
           style={{ color: T.accent.primary }}
         >

@@ -11,6 +11,7 @@ import {
   type PlanCard,
   type PlanCardKey,
   PRICES_ARE_PLACEHOLDERS,
+  PRO_STANDARD_PRICE_NOTE,
 } from "@/lib/plans"
 
 import { IncludeItem, includeLabel, PlanSectionHeader } from "./PlanBits"
@@ -138,7 +139,7 @@ function Price({
       </p>
       {otherParts ? (
         <p className="m-0 mt-2 text-[14px]" style={{ color: T.ink.dim }}>
-          Or {otherParts.amount} a {otherParts.period}
+          Or {otherParts.amount} a {otherParts.period}.
         </p>
       ) : null}
     </div>
@@ -279,7 +280,9 @@ function PlanColumn({
 
   return (
     <li
-      className="flex min-w-0 flex-col gap-5 rounded-[22px] bg-white"
+      // From md up the cards share row tracks (subgrid), so each price,
+      // blurb, button and list starts at the same height in all three.
+      className="flex min-w-0 flex-col gap-5 rounded-[22px] bg-white md:row-span-4 md:grid md:grid-rows-subgrid"
       style={{
         border: current
           ? `2px solid ${T.accent.primary}`
@@ -320,17 +323,20 @@ function PlanColumn({
             {note}
           </p>
         ) : null}
-        <p
-          className="m-0 text-[14.5px] leading-[1.5]"
-          style={{ color: T.ink.base }}
-        >
-          For {plan.who.charAt(0).toLowerCase() + plan.who.slice(1)}.
-        </p>
       </div>
+      <p
+        className="m-0 text-[14.5px] leading-[1.5]"
+        style={{ color: T.ink.base }}
+      >
+        For {plan.who.charAt(0).toLowerCase() + plan.who.slice(1)}.
+      </p>
 
       <Cta current={current} plan={plan} />
 
-      <div className="flex flex-col gap-3">
+      <div
+        className="flex flex-col gap-3 border-t pt-5"
+        style={{ borderColor: T.border.divider }}
+      >
         <p className="m-0 text-[13.5px] font-bold">Included now</p>
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {live.map((item) => (
@@ -346,7 +352,9 @@ function PlanColumn({
             {item.text}
           </p>
         ))}
-        <Roadmap plan={plan} />
+        <div className="mt-auto pt-2 empty:hidden">
+          <Roadmap plan={plan} />
+        </div>
       </div>
     </li>
   )
@@ -383,7 +391,7 @@ export function MembershipPlans({
         sub="Support the project, or add analysis and export on top of the free index."
         title="Membership"
       />
-      <ul className="m-0 grid list-none grid-cols-1 items-start gap-4 p-0 md:grid-cols-3">
+      <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-3">
         {plans.map((plan) => (
           <PlanColumn
             key={plan.key}
@@ -411,7 +419,7 @@ export function MembershipPlans({
               Prices are placeholders.
             </strong>{" "}
             They may change before checkout opens, and nobody is charged until
-            then.
+            then. {PRO_STANDARD_PRICE_NOTE}
           </span>
         </p>
       ) : null}

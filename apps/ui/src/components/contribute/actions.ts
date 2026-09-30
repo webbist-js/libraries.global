@@ -63,7 +63,7 @@ export const ACTIONS: readonly ActionMeta[] = [
   {
     id: "correction",
     group: "index",
-    tip: "One change per suggestion makes it quicker to review.",
+    tip: "Multiple changes per suggestion makes it quicker to review.",
     icon: "mdi:pencil-outline",
     tintBg: "var(--t-accent-chip)",
     tintFg: "var(--t-accent-primary)",

@@ -1,14 +1,23 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { findUnsafeContent } from "@repo/shared-data"
 import { useRouter } from "next/navigation"
-import { useEffect, useId, useRef, useState } from "react"
+import { useCallback, useEffect, useId, useRef, useState } from "react"
 
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 
 import { actionMeta } from "./actions"
+import {
+  type CorrectionRecord,
+  describeChanges,
+  editorFor,
+  hasRecordChange,
+  recordChanges,
+} from "./correction.logic"
+import { CorrectionEditor } from "./CorrectionEditor"
 import { LibraryPicker, type LibrarySuggestion } from "./LibraryPicker"
 import {
   type ActionId,
@@ -57,7 +66,11 @@ function writeDraft(key: string, draft: WizardDraft | null) {
 }
 
 const isBlank = (d: WizardDraft) =>
-  !d.text.trim() && !d.source.trim() && !d.photo && !d.credit.trim()
+  !d.text.trim() &&
+  !d.source.trim() &&
+  !d.photo &&
+  !d.credit.trim() &&
+  (!d.record || Object.keys(d.record).length === 0)
 
 function Progress({
   labels,
@@ -574,6 +587,37 @@ export function ContributionWizard({
 
   const key = library ? draftKey(action, library.slug) : null
 
+  // Corrections start from the library's published values, so structured
+  // editors (hours, options, address...) can show what's there now.
+  const [current, setCurrent] = useState<{
+    slug: string
+    record: CorrectionRecord | null
+  } | null>(null)
+  const [names, setNames] = useState<Record<string, string>>({})
+  const slug = action === "correction" ? (library?.slug ?? null) : null
+  useEffect(() => {
+    if (!slug) return
+    let live = true
+    fetch(`/api/contribute/library/${encodeURIComponent(slug)}`)
+      .then((r) =>
+        r.ok ? r.json() : Promise.reject(new Error(String(r.status)))
+      )
+      .then((json: { data?: CorrectionRecord }) => {
+        if (live) setCurrent({ slug, record: json.data ?? null })
+      })
+      .catch(() => live && setCurrent({ slug, record: null }))
+
+    return () => {
+      live = false
+    }
+  }, [slug])
+  const record = current && current.slug === slug ? current.record : null
+  const addNames = useCallback(
+    (more: Record<string, string>) => setNames((n) => ({ ...n, ...more })),
+    []
+  )
+  const recordLoading = Boolean(slug) && (!current || current.slug !== slug)
+
   // Restore a saved draft once a library is known.
   useEffect(() => {
     if (!key) return
@@ -597,7 +641,34 @@ export function ContributionWizard({
 
   const patch = (next: Partial<WizardDraft>) =>
     setDraft((d) => ({ ...d, ...next }))
-  const blocker = blockerFor(action, step, library, draft, drawer)
+  const structured =
+    action === "correction" && editorFor(draft.category) !== "text"
+  // With no record to start from, a structured category falls back to text.
+  const changes =
+    structured && record
+      ? recordChanges(draft.category, record, draft.record ?? {})
+      : null
+  const unsafe = findUnsafeContent(
+    {
+      text: draft.text,
+      source: draft.source,
+      credit: draft.credit,
+      record: changes ? changes.changes : undefined,
+      suggestedOptions: changes ? changes.suggestedOptions : undefined,
+    },
+    library ? [library.name] : []
+  )
+  const blocker =
+    (step === 2 && structured && recordLoading
+      ? "Loading the record…"
+      : blockerFor(
+          action,
+          step,
+          library,
+          draft,
+          drawer,
+          changes ? { changed: hasRecordChange(changes) } : undefined
+        )) ?? (step > 1 ? (unsafe?.message ?? null) : null)
   const firstStep: Step = lockLibrary && !drawer ? 2 : 1
   const labels = drawer ? DRAWER_STEPS.labels : STEP_LABELS[action]
 
@@ -609,7 +680,9 @@ export function ContributionWizard({
       const res = await fetch("/api/submissions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildSubmission(action, library, draft)),
+        body: JSON.stringify(
+          buildSubmission(action, library, draft, changes ?? undefined)
+        ),
       })
       if (res.ok) {
         if (key) writeDraft(key, null)
@@ -788,6 +861,39 @@ export function ContributionWizard({
 
   const chosen = categoryOption(draft.category)
 
+  // A structured category: the Index editor's own fields for this part of
+  // the record, then an optional note for the reviewer.
+  const editorView =
+    changes && record ? (
+      <>
+        <CorrectionEditor
+          category={draft.category}
+          changedKeys={Object.keys(changes.changes)}
+          current={record}
+          edit={draft.record ?? {}}
+          onChange={(next) => patch({ record: next })}
+          onNames={addNames}
+        />
+        <div>
+          <Label htmlFor={`${titleId}-text`} hint="Optional">
+            Anything a reviewer should know?
+          </Label>
+          <textarea
+            className={`${FIELD} min-h-[88px] resize-y`}
+            id={`${titleId}-text`}
+            onChange={(e) => patch({ text: e.target.value })}
+            placeholder="e.g. The council changed the Thursday hours in September"
+            style={{ color: T.ink.base }}
+            value={draft.text}
+          />
+        </div>
+      </>
+    ) : structured && recordLoading ? (
+      <p className="m-0 text-[15px]" role="status" style={{ color: T.ink.dim }}>
+        Loading the record…
+      </p>
+    ) : null
+
   const formView = (
     <>
       <div>
@@ -818,7 +924,9 @@ export function ContributionWizard({
               className="m-0 mt-2 max-w-[56ch] text-[16px] leading-normal"
               style={{ color: T.ink.dim }}
             >
-              {DRAWER_STEPS.leads[step - 1]}
+              {step === 2 && changes
+                ? "Change what’s wrong. Everything else stays as it is."
+                : DRAWER_STEPS.leads[step - 1]}
             </p>
           </div>
         ) : panel && (step > 1 || meta.handoff) ? (
@@ -964,16 +1072,18 @@ export function ContributionWizard({
                     Change<span className="sr-only"> what needs changing</span>
                   </button>
                 </p>
-                <textarea
-                  aria-describedby={leadId}
-                  aria-labelledby={stepTitleId}
-                  className={`${FIELD} min-h-[180px] resize-y`}
-                  id={`${titleId}-text`}
-                  onChange={(e) => patch({ text: e.target.value })}
-                  placeholder={chosen?.placeholder}
-                  style={{ color: T.ink.base }}
-                  value={draft.text}
-                />
+                {editorView ?? (
+                  <textarea
+                    aria-describedby={leadId}
+                    aria-labelledby={stepTitleId}
+                    className={`${FIELD} min-h-[180px] resize-y`}
+                    id={`${titleId}-text`}
+                    onChange={(e) => patch({ text: e.target.value })}
+                    placeholder={chosen?.placeholder}
+                    style={{ color: T.ink.base }}
+                    value={draft.text}
+                  />
+                )}
               </>
             ) : null}
 
@@ -997,29 +1107,31 @@ export function ContributionWizard({
                     ))}
                   </select>
                 </div>
-                <div>
-                  <Label
-                    htmlFor={`${titleId}-text`}
-                    hint={action === "correction" ? "Required" : "Optional"}
-                  >
-                    {action === "correction"
-                      ? "What’s correct?"
-                      : "What does the source confirm?"}
-                  </Label>
-                  <textarea
-                    className={`${FIELD} min-h-[112px] resize-y`}
-                    id={`${titleId}-text`}
-                    onChange={(e) => patch({ text: e.target.value })}
-                    placeholder={
-                      action === "correction"
-                        ? (chosen?.placeholder ??
-                          "e.g. Open until 8pm on Thursdays since September")
-                        : "e.g. The opening hours on the council website"
-                    }
-                    style={{ color: T.ink.base }}
-                    value={draft.text}
-                  />
-                </div>
+                {(action === "correction" ? editorView : null) ?? (
+                  <div>
+                    <Label
+                      htmlFor={`${titleId}-text`}
+                      hint={action === "correction" ? "Required" : "Optional"}
+                    >
+                      {action === "correction"
+                        ? "What’s correct?"
+                        : "What does the source confirm?"}
+                    </Label>
+                    <textarea
+                      className={`${FIELD} min-h-[112px] resize-y`}
+                      id={`${titleId}-text`}
+                      onChange={(e) => patch({ text: e.target.value })}
+                      placeholder={
+                        action === "correction"
+                          ? (chosen?.placeholder ??
+                            "e.g. Open until 8pm on Thursdays since September")
+                          : "e.g. The opening hours on the council website"
+                      }
+                      style={{ color: T.ink.base }}
+                      value={draft.text}
+                    />
+                  </div>
+                )}
               </>
             ) : null}
 
@@ -1066,7 +1178,9 @@ export function ContributionWizard({
                       hint={
                         action === "source"
                           ? "Required"
-                          : "Optional, but it helps reviewers accept changes faster"
+                          : drawer
+                            ? "Optional"
+                            : "Optional, but it helps reviewers accept changes faster"
                       }
                     >
                       Source
@@ -1102,10 +1216,28 @@ export function ContributionWizard({
                     <>
                       <dt style={{ color: T.ink.dim }}>Detail</dt>
                       <dd className="m-0">{draft.category}</dd>
+                      {changes ? (
+                        <>
+                          <dt style={{ color: T.ink.dim }}>Changes</dt>
+                          <dd className="m-0">
+                            <ul className="m-0 list-none p-0">
+                              {describeChanges(changes, names).map((line) => (
+                                <li key={line} className="break-words">
+                                  {line}
+                                </li>
+                              ))}
+                            </ul>
+                          </dd>
+                        </>
+                      ) : null}
                       {draft.text.trim() ? (
                         <>
                           <dt style={{ color: T.ink.dim }}>
-                            {action === "correction" ? "Correct" : "Confirms"}
+                            {changes
+                              ? "Note"
+                              : action === "correction"
+                                ? "Correct"
+                                : "Confirms"}
                           </dt>
                           <dd className="m-0 break-words">
                             {draft.text.trim()}

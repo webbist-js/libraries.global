@@ -12,6 +12,7 @@ import {
   docsSectionsOf,
 } from "@/components/docs/docs.config"
 import { getSessionSSR } from "@/lib/auth-server"
+import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
 import { T } from "@/lib/design-tokens"
 import { privateMetadata } from "@/lib/seo/metadata"
 import {
@@ -32,19 +33,17 @@ export const dynamic = "force-dynamic"
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 
 /** The signed-in user's unsent article drafts, via the moderation bridge. */
-async function fetchArticleDrafts(
-  baUserId: string
-): Promise<ArticleDraftSummary[]> {
+async function fetchArticleDrafts(user: {
+  id: string
+  email: string
+  name?: string | null
+}): Promise<ArticleDraftSummary[]> {
   const secret = process.env.STRAPI_BRIDGE_SECRET
   if (!secret) return []
   try {
     const res = await fetch(`${STRAPI}/api/content-moderation/submissions/my`, {
       cache: "no-store",
-      headers: {
-        "X-Service-Secret": secret,
-        "X-Ba-User-Id": baUserId,
-        "X-Ba-User-Email": "",
-      },
+      headers: bridgeUserHeaders(user),
     })
     if (!res.ok) return []
     const json = (await res.json()) as {
@@ -110,7 +109,7 @@ export default async function KnowledgeEditorPage({
   const [wiki, blog, drafts] = await Promise.all([
     fetchDocsWikiArticles(locale as Locale),
     fetchRecentBlogArticles(locale as Locale),
-    fetchArticleDrafts(session.user.id),
+    fetchArticleDrafts(session.user),
   ])
 
   const sectionTitle = (key: string) =>

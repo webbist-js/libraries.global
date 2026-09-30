@@ -1,3 +1,5 @@
+import type { RecordChanges, RecordEdit } from "./correction.logic"
+
 /**
  * Pure rules for the contribution wizard (the /contribute hub and the
  * library page's correction drawer): which steps each action has, what
@@ -35,6 +37,8 @@ export type WizardDraft = {
   photo: { id: number; url: string } | null
   credit: string
   licence: boolean
+  /** A structured correction's edits (hours, options, address...). */
+  record?: RecordEdit
 }
 
 export const EMPTY_DRAFT: WizardDraft = {
@@ -197,7 +201,12 @@ export function blockerFor(
   library: WizardLibrary | null,
   draft: WizardDraft,
   /** The drawer: the library is fixed and step 1 picks the category. */
-  locked = false
+  locked = false,
+  /**
+   * Set when this category has a structured editor and the record loaded:
+   * the step needs a change to the record rather than a description.
+   */
+  structured?: { changed: boolean }
 ): string | null {
   if (isHandoff(action)) return null
   if (step === 1 && locked)
@@ -210,6 +219,8 @@ export function blockerFor(
 
     return null
   }
+  if (action === "correction" && structured)
+    return structured.changed ? null : "Change something to continue."
   if (action === "correction" && !draft.text.trim())
     return "Describe what’s correct to continue."
   if (action === "source" && step === 3 && !draft.source.trim())
@@ -232,7 +243,14 @@ type SubmissionBody = {
 export function buildSubmission(
   action: Exclude<ActionId, HandoffActionId>,
   library: WizardLibrary,
-  draft: WizardDraft
+  draft: WizardDraft,
+  /**
+   * A structured correction's changes. They travel as `fields.kind:
+   * "record"`, which the moderation plugin writes to the library on
+   * approval, so the source goes in the evidence and note, never in
+   * `fields` (where `sourceUrl` would overwrite the library's own).
+   */
+  record?: RecordChanges
 ): SubmissionBody {
   const source = draft.source.trim()
   const text = draft.text.trim()
@@ -249,6 +267,28 @@ export function buildSubmission(
       ? { sourceUrl: source }
       : { sourceReference: source }
     : {}
+
+  if (action === "correction" && record) {
+    const suggestedOptions = Object.fromEntries(
+      Object.entries(record.suggestedOptions).filter(([, l]) => l?.length)
+    )
+    const reference = source && !isUrl(source) ? `Source: ${source}` : ""
+    const note = [text, reference].filter(Boolean).join("\n\n")
+
+    return {
+      ...base,
+      fields: {
+        kind: "record",
+        category: draft.category,
+        libraryName: library.name,
+        ...record.changes,
+        previous: record.previous,
+        ...(Object.keys(suggestedOptions).length ? { suggestedOptions } : {}),
+      },
+      ...(note ? { note } : {}),
+      ...evidence,
+    }
+  }
 
   if (action === "photo")
     return {

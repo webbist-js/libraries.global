@@ -39,6 +39,10 @@ export type PlanCard = {
 
 export const PRICES_ARE_PLACEHOLDERS = true
 
+/** Pro's price after the founding offer, for the placeholders footnote. */
+export const PRO_STANDARD_PRICE_NOTE =
+  "Pro’s standard price will be £8/month or £80/year once per-capita layers and Reach ship; founding members keep £5."
+
 /** What each feature does, and whether it's built. Only built ones are "live". */
 export const PRO_FEATURE_COPY: Record<
   Feature,
@@ -131,7 +135,7 @@ export const PLANS: readonly PlanCard[] = [
     key: "public",
     name: "Public",
     price: "free",
-    who: "Anyone",
+    who: "Anyone, no account needed",
     includes: [
       feature("Every library record, with hours and services"),
       feature("Search, the map and lists"),
@@ -146,7 +150,7 @@ export const PLANS: readonly PlanCard[] = [
     who: "Anyone who signs up",
     includes: [
       feature("Everything in Public"),
-      feature("Contribute corrections and new libraries"),
+      feature("Contribute corrections, photos and new libraries"),
       feature("Follow libraries and save events"),
       soon("3 saved views and 3 saved searches"),
       soon("A weekly digest of followed libraries"),
@@ -163,7 +167,7 @@ export const PLANS: readonly PlanCard[] = [
     price: { monthly: "£3/month", yearly: "£30/year" },
     who: "People who value the index and want to keep it running",
     includes: [
-      feature("Everything in Free"),
+      feature("Everything in Free account"),
       feature("An optional Supporter mark you can hide"),
       feature("Credit on the supporters page"),
       note("No extra features and no extra trust: it’s patronage."),
@@ -176,7 +180,7 @@ export const PLANS: readonly PlanCard[] = [
     price: {
       monthly: "£5/month",
       yearly: "£50/year",
-      note: "Founding price, held while your membership continues. Standard £8/month or £80/year once per-capita and Reach ship.",
+      note: "Founding price, held while you stay a member.",
     },
     who: "Researchers, journalists, consultants, enthusiasts",
     includes: [feature("Everything in Supporter"), ...featureItems(PRO_ONLY)],
@@ -187,7 +191,7 @@ export const PLANS: readonly PlanCard[] = [
     name: "Team",
     price: {
       yearly: "£480/year ex VAT",
-      note: "5 seats; £96 per extra seat. Public library services get 20% off.",
+      note: "Includes 5 seats; £96 per extra seat. Public library services get 20% off.",
     },
     who: "Library services, councils, universities, consultancies",
     includes: [

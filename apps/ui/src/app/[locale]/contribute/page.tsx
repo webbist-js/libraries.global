@@ -4,6 +4,7 @@ import type { Locale } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { getSessionSSR } from "@/lib/auth-server"
+import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
 import { KOFI_URL } from "@/lib/constants"
 import { T } from "@/lib/design-tokens"
 import { buildMetadata } from "@/lib/seo/metadata"
@@ -21,6 +22,7 @@ import {
   type IncompleteRecord,
 } from "./_components/hub/RecordsThatNeedYou"
 import { RolesTable } from "./_components/hub/RolesTable"
+import { SuggestedAdditions } from "./_components/hub/SuggestedAdditions"
 import {
   SignInPromptCard,
   YourSubmissionsList,
@@ -90,17 +92,24 @@ async function fetchIncompleteRecords(): Promise<IncompleteRecord[]> {
     .slice(0, 4)
 }
 
-async function fetchMySubmissions(baUserId: string): Promise<HubSubmission[]> {
+/** "loddon-library" → "Loddon library", for rows with nothing better. */
+const humaniseSlug = (slug: string) => {
+  const words = slug.replaceAll("-", " ").trim()
+
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : slug
+}
+
+async function fetchMySubmissions(user: {
+  id: string
+  email: string
+  name?: string | null
+}): Promise<HubSubmission[]> {
   const secret = process.env.STRAPI_BRIDGE_SECRET
   if (!secret) return []
   try {
     const res = await fetch(`${STRAPI}/api/content-moderation/submissions/my`, {
       cache: "no-store",
-      headers: {
-        "X-Service-Secret": secret,
-        "X-Ba-User-Id": baUserId,
-        "X-Ba-User-Email": "",
-      },
+      headers: bridgeUserHeaders(user),
     })
     if (!res.ok) return []
     const json = (await res.json()) as {
@@ -109,10 +118,13 @@ async function fetchMySubmissions(baUserId: string): Promise<HubSubmission[]> {
         submissionType?: string
         status?: string
         targetSlug?: string | null
-        fields?: { name?: unknown } | null
+        fields?: Record<string, unknown> | null
+        draftData?: Record<string, unknown> | null
         createdAt?: string
       }[]
     }
+    const text = (v: unknown) =>
+      typeof v === "string" && v.trim() ? v.trim() : null
 
     return (json.data ?? [])
       .filter((item) => item.status && item.status !== "draft")
@@ -121,10 +133,14 @@ async function fetchMySubmissions(baUserId: string): Promise<HubSubmission[]> {
         documentId: item.documentId,
         submissionType: item.submissionType ?? "correction",
         status: item.status!,
+        // The library or article by name, not its slug.
         targetName:
-          typeof item.fields?.name === "string"
-            ? item.fields.name
-            : (item.targetSlug ?? null),
+          text(item.fields?.libraryName) ??
+          text(item.fields?.name) ??
+          text(item.draftData?.title) ??
+          text(item.draftData?.proposedTitle) ??
+          text(item.fields?.title) ??
+          (item.targetSlug ? humaniseSlug(item.targetSlug) : null),
         createdAt: item.createdAt ?? new Date(0).toISOString(),
       }))
   } catch {
@@ -205,7 +221,7 @@ export default async function ContributePage({
     fetchIncompleteRecords(),
     fetchHomepageContinents(locale as Locale),
     session?.user
-      ? fetchMySubmissions(session.user.id)
+      ? fetchMySubmissions(session.user)
       : Promise.resolve([] as HubSubmission[]),
     session?.user ? fetchUsername(session.user.id) : Promise.resolve(null),
   ])
@@ -275,11 +291,15 @@ export default async function ContributePage({
       <HowReviewWorks />
       <RolesTable />
 
-      {session?.user ? (
-        <YourSubmissionsList submissions={submissions} username={username} />
-      ) : (
-        <SignInPromptCard />
-      )}
+      {/* You: your submissions (3/4) beside voting on new additions (1/4). */}
+      <div className="mx-auto grid w-full max-w-[1360px] grid-cols-1 gap-6 px-4 py-12 sm:px-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
+        {session?.user ? (
+          <YourSubmissionsList submissions={submissions} username={username} />
+        ) : (
+          <SignInPromptCard />
+        )}
+        <SuggestedAdditions />
+      </div>
 
       {/* Bottom links */}
       <section className="mx-auto w-full max-w-[1360px] px-4 pt-2 pb-14 sm:px-8">

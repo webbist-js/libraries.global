@@ -1,50 +1,74 @@
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 
-type Cell = { kind: "yes"; note?: string } | { kind: "no" }
+/**
+ * What each Contributor Role can do, as `@repo/access` and the moderation
+ * plugin enforce it. Every change is reviewed whatever the role; editor
+ * roles only change what happens once an edit is approved. Points and
+ * plans never grant a role.
+ */
+type Cell =
+  | { kind: "yes"; note?: string }
+  | { kind: "no"; note?: string }
+  | { kind: "claim" }
 
-const ROWS: { label: string; cells: [Cell, Cell, Cell] }[] = [
+const YES: Cell = { kind: "yes" }
+const NO: Cell = { kind: "no" }
+const CLAIM: Cell = { kind: "claim" }
+
+type Row = { label: string; cells: [Cell, Cell, Cell, Cell, Cell] }
+
+const ROWS: Row[] = [
   {
-    label: "Suggest corrections and add libraries",
-    cells: [{ kind: "yes" }, { kind: "yes" }, { kind: "yes" }],
+    label: "Suggest corrections, photos and sources",
+    cells: [YES, YES, YES, YES, YES],
+  },
+  { label: "Add a missing library", cells: [YES, YES, YES, YES, YES] },
+  {
+    label: "Suggest Knowledge edits and translations, pitch Journal pieces",
+    cells: [YES, YES, YES, YES, YES],
   },
   {
-    label: "Share photos and sources",
-    cells: [{ kind: "yes" }, { kind: "yes" }, { kind: "yes" }],
+    label: "Vote on suggested additions",
+    cells: [YES, YES, YES, YES, YES],
   },
   {
-    label: "Review and accept others' changes",
-    cells: [
-      { kind: "no" },
-      { kind: "yes" },
-      { kind: "yes", note: "For own library" },
-    ],
+    label: "Edit a library’s record and connect its events feed",
+    cells: [NO, { kind: "yes", note: "For your library" }, CLAIM, CLAIM, CLAIM],
   },
   {
-    label: "Publish own changes without review",
-    cells: [
-      { kind: "no" },
-      { kind: "yes", note: "Minor fixes only" },
-      { kind: "yes", note: "For own library" },
-    ],
+    label: "Knowledge edits publish as soon as they’re approved",
+    cells: [NO, NO, YES, NO, YES],
   },
   {
-    label: "Steward a library record",
-    cells: [{ kind: "no" }, { kind: "no" }, { kind: "yes" }],
+    label: "Journal pieces publish as soon as they’re approved",
+    cells: [NO, NO, NO, YES, YES],
+  },
+  {
+    label: "Review changes and decide new additions",
+    cells: [NO, NO, NO, NO, { kind: "yes", note: "As moderators" }],
   },
 ]
 
 const COLUMNS = [
-  { title: "Community participant", sub: "Anyone with an account" },
-  { title: "Trusted contributor", sub: "After 10+ accepted, sourced changes" },
-  { title: "Verified library staff", sub: "Confirmed by the review team" },
+  { title: "Contributor", sub: "Anyone with an account" },
+  { title: "Verified library staff", sub: "Confirmed through a library claim" },
+  { title: "Knowledge editor", sub: "Invited by the editorial board" },
+  { title: "Journal editor", sub: "Invited by the editorial board" },
+  { title: "Editorial board", sub: "Reviews and approves changes" },
 ]
 
 function CellValue({ cell }: { cell: Cell }) {
+  if (cell.kind === "claim")
+    return (
+      <span className="text-[14px]" style={{ color: T.ink.dim }}>
+        With a library claim
+      </span>
+    )
   if (cell.kind === "no") {
     return (
       <span className="text-[14px]" style={{ color: T.ink.faint }}>
-        — No
+        — {cell.note ?? "No"}
       </span>
     )
   }
@@ -78,15 +102,16 @@ export function RolesTable() {
         className="mt-2 mb-6 max-w-[62ch] text-[16px] leading-[1.6]"
         style={{ color: T.ink.dim }}
       >
-        Roles are granted for care and accuracy, never bought with points.
-        Library staff verification is a separate check.
+        Roles are granted for care and accuracy, never bought with points or a
+        plan. Every change is reviewed, whatever your role: editor roles change
+        what happens once an edit is approved.
       </p>
 
       <div
         className="overflow-x-auto rounded-[20px]"
         style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
       >
-        <table className="w-full min-w-[720px] border-collapse text-left">
+        <table className="w-full min-w-[960px] border-collapse text-left">
           <thead>
             <tr style={{ borderBottom: `1px solid ${T.border.divider}` }}>
               <th
@@ -126,7 +151,7 @@ export function RolesTable() {
               >
                 <th
                   scope="row"
-                  className="px-6 py-3.5 text-[15px] font-normal"
+                  className="max-w-[320px] px-6 py-3.5 text-[15px] font-normal"
                   style={{ color: T.ink.base }}
                 >
                   {row.label}
@@ -143,6 +168,9 @@ export function RolesTable() {
       </div>
 
       <p className="mt-3 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
+        Points raise how much you can send at once, never your role.
+      </p>
+      <p className="mt-1.5 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
         Staff verification lets you steward your library&rsquo;s record. It
         doesn&rsquo;t mean the library endorses this project.{" "}
         <GlobalLink

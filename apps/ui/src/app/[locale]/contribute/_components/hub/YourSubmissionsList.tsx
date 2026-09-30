@@ -1,3 +1,6 @@
+import { Icon } from "@iconify/react"
+import type React from "react"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 
@@ -46,6 +49,35 @@ function formatDate(iso: string): string {
   })
 }
 
+/** The white card both halves of the hub's "you" row sit in. */
+export const HUB_CARD =
+  "flex h-full flex-col rounded-[20px] border border-(--t-border-line) bg-white"
+
+export function CardHeading({
+  id,
+  children,
+}: {
+  readonly id: string
+  readonly children: React.ReactNode
+}) {
+  return (
+    <h2
+      id={id}
+      className="m-0"
+      style={{
+        fontFamily: T.font.serif,
+        fontSize: "24px",
+        fontWeight: 500,
+        lineHeight: 1.2,
+        letterSpacing: "-0.01em",
+        color: T.ink.base,
+      }}
+    >
+      {children}
+    </h2>
+  )
+}
+
 export function YourSubmissionsList({
   submissions,
   username,
@@ -53,21 +85,26 @@ export function YourSubmissionsList({
   readonly submissions: HubSubmission[]
   readonly username?: string | null
 }) {
+  const inReview = submissions.filter(
+    (s) => s.status === "pending" || s.status === "needs_info"
+  ).length
+
   return (
-    <section className="mx-auto w-full max-w-[1360px] px-4 py-12 sm:px-8">
-      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
-        <h2
-          className="m-0"
-          style={{
-            fontFamily: T.font.serif,
-            fontSize: "clamp(26px,3vw,32px)",
-            fontWeight: 500,
-            letterSpacing: "-0.01em",
-            color: T.ink.base,
-          }}
-        >
-          Your submissions
-        </h2>
+    <section aria-labelledby="your-submissions" className={HUB_CARD}>
+      <div
+        className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b px-6 py-5"
+        style={{ borderColor: T.border.divider }}
+      >
+        <div>
+          <CardHeading id="your-submissions">Your submissions</CardHeading>
+          <p className="m-0 mt-0.5 text-[14px]" style={{ color: T.ink.dim }}>
+            {submissions.length === 0
+              ? "Your changes and their review status"
+              : inReview > 0
+                ? `Your latest changes · ${inReview} in review`
+                : "Your latest changes"}
+          </p>
+        </div>
         <GlobalLink
           href={username ? `/profile/${username}` : "/contribute/submissions"}
           className="text-[14px] font-semibold underline underline-offset-[3px]"
@@ -78,32 +115,34 @@ export function YourSubmissionsList({
       </div>
 
       {submissions.length === 0 ? (
-        <div
-          className="rounded-[20px] px-6 py-10 text-center"
-          style={{
-            background: T.bg.deep,
-            border: `1px solid ${T.border.line}`,
-          }}
-        >
-          <p className="m-0 text-[16px]" style={{ color: T.ink.dim }}>
-            Nothing submitted yet — your first change will appear here.
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
+          <span
+            aria-hidden="true"
+            className="flex size-11 items-center justify-center rounded-full"
+            style={{ background: T.bg.muted, color: T.ink.dim }}
+          >
+            <Icon height={20} icon="mdi:tray-arrow-up" width={20} />
+          </span>
+          <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+            Nothing submitted yet. Your first change will appear here.
           </p>
+          <GlobalLink
+            href="#start"
+            className="text-[14px] font-semibold underline underline-offset-[3px]"
+            style={{ color: T.accent.primary }}
+          >
+            Choose something to do
+          </GlobalLink>
         </div>
       ) : (
-        <ul
-          className="m-0 list-none overflow-hidden rounded-[20px] p-0"
-          style={{
-            background: T.bg.deep,
-            border: `1px solid ${T.border.line}`,
-          }}
-        >
+        <ul className="m-0 flex-1 list-none p-0">
           {submissions.map((submission, index) => {
             const chip = STATUS_CHIP[submission.status] ?? STATUS_CHIP.pending!
 
             return (
               <li
                 key={submission.documentId}
-                className="flex flex-wrap items-center gap-x-5 gap-y-2 px-6 py-4"
+                className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1.5 px-5 py-4 sm:grid-cols-[118px_minmax(0,1fr)_auto] sm:gap-x-5 sm:px-6"
                 style={
                   index > 0
                     ? { borderTop: `1px solid ${T.border.divider}` }
@@ -111,12 +150,12 @@ export function YourSubmissionsList({
                 }
               >
                 <span
-                  className="w-[118px] shrink-0 rounded-full px-3 py-1 text-center text-[13px] font-semibold"
+                  className="justify-self-start rounded-full px-3 py-1 text-center text-[13px] font-semibold sm:w-[118px]"
                   style={{ background: chip.bg, color: chip.fg }}
                 >
                   {chip.label}
                 </span>
-                <span className="min-w-0 flex-1">
+                <span className="order-3 col-span-2 min-w-0 sm:order-none sm:col-span-1">
                   <span
                     className="block text-[15px] font-semibold"
                     style={{ color: T.ink.base }}
@@ -125,7 +164,7 @@ export function YourSubmissionsList({
                   </span>
                   {submission.targetName ? (
                     <span
-                      className="block text-[14px]"
+                      className="block truncate text-[14px]"
                       style={{ color: T.ink.dim }}
                     >
                       {submission.targetName}
@@ -133,7 +172,7 @@ export function YourSubmissionsList({
                   ) : null}
                 </span>
                 <span
-                  className="shrink-0 text-[14px]"
+                  className="order-2 text-right text-[14px] sm:order-none"
                   style={{ color: T.ink.low }}
                 >
                   {formatDate(submission.createdAt)}
@@ -143,53 +182,85 @@ export function YourSubmissionsList({
           })}
         </ul>
       )}
+
+      {submissions.length > 0 ? (
+        <div
+          className="mt-auto flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t px-6 py-4"
+          style={{ borderColor: T.border.divider }}
+        >
+          <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+            {summaryLine(submissions)}
+          </p>
+          <GlobalLink
+            href="/contribute/submissions"
+            className="text-[14px] font-semibold underline underline-offset-[3px]"
+            style={{ color: T.accent.primary }}
+          >
+            Track them in My submissions
+          </GlobalLink>
+        </div>
+      ) : null}
     </section>
+  )
+}
+
+/** "2 accepted · 1 in review · 1 needs changes", for the card's footer. */
+function summaryLine(submissions: HubSubmission[]): string {
+  const count = (statuses: string[]) =>
+    submissions.filter((s) => statuses.includes(s.status)).length
+  const parts = [
+    [count(["approved"]), "accepted"],
+    [count(["pending"]), "in review"],
+    [count(["needs_info"]), "needs changes"],
+    [count(["rejected"]), "not accepted"],
+  ] as const
+
+  return (
+    parts
+      .filter(([n]) => n > 0)
+      .map(([n, label]) =>
+        label === "needs changes" && n > 1
+          ? `${n} need changes`
+          : `${n} ${label}`
+      )
+      .join(" · ") || "Your latest changes"
   )
 }
 
 export function SignInPromptCard() {
   return (
-    <section className="mx-auto w-full max-w-[1360px] px-4 py-12 sm:px-8">
-      <div
-        className="flex flex-wrap items-center justify-between gap-6 rounded-[20px] px-8 py-8"
-        style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
-      >
-        <div className="min-w-[260px] flex-1">
-          <h2
-            className="m-0"
-            style={{
-              fontFamily: T.font.serif,
-              fontSize: "24px",
-              fontWeight: 500,
-              color: T.ink.base,
-            }}
-          >
-            Every change starts with an account
-          </h2>
-          <p
-            className="mt-2 mb-0 max-w-[56ch] text-[15px] leading-[1.6]"
-            style={{ color: T.ink.dim }}
-          >
-            Create a free account to suggest corrections, add libraries and
-            share photos. Every accepted change is credited to you.
-          </p>
-        </div>
-        <div className="flex shrink-0 flex-col items-start gap-2">
-          <GlobalLink
-            href="/auth/register"
-            className="rounded-full px-6 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
-            style={{ background: T.accent.primary }}
-          >
-            Create a free account
-          </GlobalLink>
-          <GlobalLink
-            href="/auth/signin"
-            className="text-[14px] underline underline-offset-[3px]"
-            style={{ color: T.ink.dim }}
-          >
-            Already have an account? Sign in
-          </GlobalLink>
-        </div>
+    <section
+      aria-labelledby="hub-sign-in"
+      className={`${HUB_CARD} justify-center gap-5 px-8 py-8`}
+    >
+      <div>
+        <CardHeading id="hub-sign-in">
+          Every change starts with an account
+        </CardHeading>
+        <p
+          className="mt-2 mb-0 max-w-[56ch] text-[15px] leading-[1.6]"
+          style={{ color: T.ink.dim }}
+        >
+          Create a free account to suggest corrections, add libraries and share
+          photos. Every accepted change is credited to you, and you can vote on
+          what gets added next.
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+        <GlobalLink
+          href="/auth/register"
+          className="rounded-full px-6 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
+          style={{ background: T.accent.primary }}
+        >
+          Create a free account
+        </GlobalLink>
+        <GlobalLink
+          href="/auth/signin"
+          className="text-[14px] underline underline-offset-[3px]"
+          style={{ color: T.ink.dim }}
+        >
+          Already have an account? Sign in
+        </GlobalLink>
       </div>
     </section>
   )

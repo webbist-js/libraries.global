@@ -16,7 +16,7 @@ export function includeLabel(item: PlanInclude): string {
 export function ComingSoonChip({ label = "Coming soon" }: { label?: string }) {
   return (
     <span
-      className="inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[12px] font-semibold"
+      className="ml-1 inline-flex w-fit items-center rounded-full px-2 py-px align-[1px] text-[12px] leading-[1.4] font-semibold whitespace-nowrap"
       style={{ background: T.bg.muted, color: T.ink.dim }}
     >
       {label}
@@ -41,9 +41,14 @@ export function IncludeItem({ item }: { readonly item: PlanInclude }) {
         style={{ color: soon ? T.ink.dim : T.accent.ok }}
         width={16}
       />
-      <span className="flex flex-col gap-1">
+      <span>
         {includeLabel(item)}
-        {soon ? <ComingSoonChip /> : null}
+        {soon ? (
+          <>
+            {" "}
+            <ComingSoonChip />
+          </>
+        ) : null}
       </span>
     </li>
   )

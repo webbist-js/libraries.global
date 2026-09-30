@@ -14,10 +14,16 @@ const LOOK = {
 function Done({ children }: { readonly children: React.ReactNode }) {
   return (
     <p
-      className="m-0 flex items-center gap-2 text-[14.5px] font-semibold"
-      style={{ color: T.accent.ok }}
+      className="m-0 flex items-center gap-2 text-[14px] font-medium"
+      style={{ color: T.ink.dim }}
     >
-      <Icon aria-hidden="true" height={16} icon="mdi:check" width={16} />
+      <Icon
+        aria-hidden="true"
+        height={16}
+        icon="mdi:check"
+        style={{ color: T.accent.ok }}
+        width={16}
+      />
       {children}
     </p>
   )
@@ -60,14 +66,19 @@ function Half({
           Free
         </p>
       </div>
-      <ul className="m-0 grid list-none grid-cols-1 gap-x-6 gap-y-2.5 p-0 sm:grid-cols-2">
+      <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
         {plan.includes
           .filter((item) => item.kind !== "note")
           .map((item) => (
             <IncludeItem key={item.text} item={item} />
           ))}
       </ul>
-      <div className="mt-auto pt-1">{footer}</div>
+      <div
+        className="mt-auto border-t pt-4"
+        style={{ borderColor: T.border.divider }}
+      >
+        {footer}
+      </div>
     </div>
   )
 }
