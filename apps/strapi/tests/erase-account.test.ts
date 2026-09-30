@@ -11,6 +11,7 @@ const AFF = "api::library-affiliation.library-affiliation"
 const SAVED = "api::saved-event.saved-event"
 const GRANT = "api::entitlement-grant.entitlement-grant"
 const VERIFY = "api::pro-verification.pro-verification"
+const ROLE_GRANT = "api::role-grant.role-grant"
 const SUBSCRIBER = "api::subscriber.subscriber"
 const POINTS = "plugin::rewards.point-event"
 const BADGES = "plugin::rewards.badge-award"
@@ -119,6 +120,11 @@ function seed() {
       { documentId: "pv1", baUserId: "u1", kind: "student" },
       { documentId: "pv2", baUserId: "u2", kind: "student" },
     ],
+    [ROLE_GRANT]: [
+      { documentId: "rg1", baUserId: "u1", role: "verified_librarian" },
+      { documentId: "rg2", baUserId: "u1", role: "moderator" },
+      { documentId: "rg3", baUserId: "u2", role: "wiki_editor" },
+    ],
     [SUBSCRIBER]: [
       { documentId: "n1", email: "Alice@Example.org" },
       { documentId: "n2", email: "someone@else.org" },
@@ -212,6 +218,13 @@ describe("eraseAccount", () => {
     expect(store[VERIFY].map((v) => v.documentId)).toEqual(["pv2"])
     expect(store[SUBSCRIBER].map((n) => n.documentId)).toEqual(["n2"])
     expect(store[UP_USER]).toEqual([])
+  })
+
+  it("deletes every role grant the user holds, and only theirs", async () => {
+    const { strapi, store } = seed()
+    await eraseAccount(strapi, { baUserId: "u1", email: "alice@example.org" })
+
+    expect(store[ROLE_GRANT].map((g) => g.documentId)).toEqual(["rg3"])
   })
 
   it("anonymises submissions, blanks the unfinished ones and deletes their photos, keeps approved content", async () => {

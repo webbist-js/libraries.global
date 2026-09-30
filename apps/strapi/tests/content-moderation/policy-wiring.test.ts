@@ -9,6 +9,7 @@ process.env.STRAPI_BRIDGE_SECRET = "test-secret"
 
 const SUB = "plugin::content-moderation.submission"
 const PROFILE = "api::user-profile.user-profile"
+const ROLE_GRANT = "api::role-grant.role-grant"
 const AFF = "api::library-affiliation.library-affiliation"
 const WIKI = "api::wiki-article.wiki-article"
 
@@ -280,6 +281,18 @@ describe("(iii) applyWikiEdit re-checks capabilities at apply time", () => {
           tier: "Reader",
         },
       ],
+      [ROLE_GRANT]:
+        role === "reader"
+          ? []
+          : [
+              {
+                documentId: "rg1",
+                baUserId: "u1",
+                role,
+                queue: "all",
+                locale: null,
+              },
+            ],
       [AFF]: [],
     })
     services["content-moderation.submission-policy"] = createPolicy({ strapi })

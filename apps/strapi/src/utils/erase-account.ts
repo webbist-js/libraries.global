@@ -8,6 +8,7 @@ const AFFILIATION = "api::library-affiliation.library-affiliation"
 const SAVED_EVENT = "api::saved-event.saved-event"
 const ENTITLEMENT_GRANT = "api::entitlement-grant.entitlement-grant"
 const PRO_VERIFICATION = "api::pro-verification.pro-verification"
+const ROLE_GRANT = "api::role-grant.role-grant"
 const SUBSCRIBER = "api::subscriber.subscriber"
 const POINT_EVENT = "plugin::rewards.point-event"
 const BADGE_AWARD = "plugin::rewards.badge-award"
@@ -54,7 +55,7 @@ async function removeFile(strapi: any, file: unknown, what: string) {
  * Erase a deleted account's personal data, as the privacy notice promises:
  * the profile is anonymised and emptied (follows, languages, interests,
  * preferences, rewards, earned Pro), the avatar, saved events, claims,
- * votes, grants, verifications, upload ownership and the newsletter
+ * votes, plan and role grants, verifications, upload ownership and the newsletter
  * subscription are deleted, unfinished submissions lose their content and
  * photos, and submissions, points, badges and leaderboard snapshots are
  * re-keyed to one random id that cannot be traced back to the person.
@@ -173,6 +174,7 @@ export async function eraseAccount(
       OPTION_VOTE,
       ENTITLEMENT_GRANT,
       PRO_VERIFICATION,
+      ROLE_GRANT,
     ]) {
       await strapi.db.query(uid).deleteMany({ where: { baUserId } })
     }

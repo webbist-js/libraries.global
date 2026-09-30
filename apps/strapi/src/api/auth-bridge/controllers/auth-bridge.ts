@@ -7,6 +7,7 @@ import {
   upsertAffiliation,
 } from "../../../utils/affiliations"
 import { eraseAccount } from "../../../utils/erase-account"
+import { activeGrants } from "../../../utils/role-grants"
 import { isValidServiceSecret } from "../../../utils/service-secret"
 import { isValidUsername, nextContributorNumber } from "../../../utils/username"
 
@@ -550,7 +551,7 @@ export default {
     if (typeof baUserId !== "string" || baUserId.length === 0)
       return ctx.badRequest("Missing baUserId")
 
-    const [[profile], affiliations, grantRows, verificationRows] =
+    const [[profile], affiliations, grantRows, verificationRows, roleGrants] =
       await Promise.all([
         strapi.documents("api::user-profile.user-profile").findMany({
           filters: { baUserId: { $eq: baUserId } },
@@ -585,6 +586,9 @@ export default {
             fields: ["expiresAt"],
             limit: 20,
           }) as Promise<{ expiresAt?: string | null }[]>,
+        // Unexpired Role Grants, at most MAX_ACTIVE_GRANTS. `grants` above
+        // are plan grants; the two never mix.
+        activeGrants(strapi, baUserId),
       ])
 
     const now = Date.now()
@@ -605,6 +609,7 @@ export default {
             g.plan === "pro" || g.plan === "team"
         )
         .map((g) => ({ plan: g.plan, expiresAt: g.expiresAt ?? null })),
+      roleGrants,
       verifications: verificationRows
         .filter((v) => isUnexpired(v.expiresAt))
         .map((v) => ({ expiresAt: v.expiresAt ?? null })),

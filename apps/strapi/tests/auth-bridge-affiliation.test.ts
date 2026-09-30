@@ -6,6 +6,7 @@ import controller from "../src/api/auth-bridge/controllers/auth-bridge"
 const LIBRARY = "api::library.library"
 const PROFILE = "api::user-profile.user-profile"
 const AFF = "api::library-affiliation.library-affiliation"
+const ROLE_GRANT = "api::role-grant.role-grant"
 
 function ctx(body: Record<string, unknown>, secret = "s3cret") {
   const c: any = {
@@ -80,10 +81,25 @@ describe("auth-bridge createAffiliation: email-domain auto-claim (E6)", () => {
       verificationMethod: "email_domain",
       library: { connect: [{ documentId: "lib1" }] },
     })
-    expect(fake.store[PROFILE][0]).toMatchObject({
-      isVerifiedLibrarian: true,
-      contributorRole: "verified_librarian",
+    expect(fake.store[ROLE_GRANT]).toHaveLength(1)
+    expect(fake.store[ROLE_GRANT][0]).toMatchObject({
+      baUserId: "u1",
+      role: "verified_librarian",
+      queue: "all",
+      locale: null,
+      source: "claim",
+      reason: "Approved Library Claim",
     })
+    // The profile is not written directly: the role-grant lifecycle derives it.
+    expect(fake.store[PROFILE][0]).toMatchObject({ contributorRole: "reader" })
+    expect(fake.store[PROFILE][0].isVerifiedLibrarian).toBeUndefined()
+  })
+
+  it("does not duplicate the grant on a second verification", async () => {
+    await controller.createAffiliation(ctx(claim("ada@bl.uk")))
+    await controller.createAffiliation(ctx(claim("ada@bl.uk")))
+
+    expect(fake.store[ROLE_GRANT]).toHaveLength(1)
   })
 
   it("looks the library up as a published document by entityRef", async () => {

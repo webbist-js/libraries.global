@@ -2,10 +2,12 @@ import { describe, expect, it, vi } from "vitest"
 
 import createService from "../../src/plugins/content-moderation/server/services/submission"
 import { payloadHash } from "../../src/plugins/content-moderation/server/utils/payload-hash"
+import { syncDerivedRole } from "../../src/utils/role-grants"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
 
 const PROFILE = "api::user-profile.user-profile"
 const SUB = "plugin::content-moderation.submission"
+const ROLE_GRANT = "api::role-grant.role-grant"
 const AFF = "api::library-affiliation.library-affiliation"
 const LIB = "api::library.library"
 
@@ -119,6 +121,15 @@ describe("claim approval", () => {
       [PROFILE]: [
         { documentId: "p3", baUserId: "u3", contributorRole: "wiki_editor" },
       ],
+      [ROLE_GRANT]: [
+        {
+          documentId: "rg1",
+          baUserId: "u3",
+          role: "wiki_editor",
+          queue: "all",
+          locale: null,
+        },
+      ],
       [LIB]: [{ documentId: "lib0000000000000000000001", id: 7 }],
       [AFF]: [],
     })
@@ -133,6 +144,13 @@ describe("claim approval", () => {
       "approved",
       "admin"
     )
+    // Approval adds a claim grant and keeps the editor grant; the lifecycle
+    // (run by hand here) derives the profile from both.
+    expect(f.store[ROLE_GRANT].map((g: any) => [g.role, g.source])).toEqual([
+      ["wiki_editor", undefined],
+      ["verified_librarian", "claim"],
+    ])
+    await syncDerivedRole(f.strapi, "u3")
     expect(f.store[PROFILE][0].contributorRole).toBe("wiki_editor")
     expect(f.store[PROFILE][0].isVerifiedLibrarian).toBe(true)
     expect(f.store[AFF]).toHaveLength(1)

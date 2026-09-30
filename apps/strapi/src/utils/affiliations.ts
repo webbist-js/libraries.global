@@ -1,4 +1,4 @@
-import { isContributorRole, promoteRole } from "@repo/access"
+import { createGrant } from "./role-grants"
 
 /**
  * Affiliation roles that are not claims. A `proposer` row records who
@@ -23,30 +23,17 @@ export function claimAffiliationFilter(baUserId: string) {
 }
 
 /**
- * Approving a Library Claim (or an email-domain auto-verification) may only
- * *raise* the submitter's contributor role, never overwrite a higher one
- * (e.g. wiki_editor, editorial_board) with verified_librarian.
+ * Approving a Library Claim (or an email-domain auto-verification) gives the
+ * user a `verified_librarian` Role Grant, unless they already hold one. It
+ * never removes or lowers a grant, and never writes the profile: the
+ * role-grant lifecycle derives `contributorRole` and `isVerifiedLibrarian`.
  */
 export async function grantVerifiedLibrarian(strapi: any, baUserId: string) {
-  const [profile] = (await strapi
-    .documents("api::user-profile.user-profile")
-    .findMany({
-      filters: { baUserId: { $eq: baUserId } },
-      fields: ["documentId", "contributorRole"],
-      limit: 1,
-    })) as { documentId: string; contributorRole?: string }[]
-  if (!profile) return
-  await strapi.documents("api::user-profile.user-profile").update({
-    documentId: profile.documentId,
-    data: {
-      isVerifiedLibrarian: true,
-      contributorRole: promoteRole(
-        isContributorRole(profile.contributorRole)
-          ? profile.contributorRole
-          : null,
-        "verified_librarian"
-      ),
-    },
+  await createGrant(strapi, {
+    baUserId,
+    role: "verified_librarian",
+    source: "claim",
+    reason: "Approved Library Claim",
   })
 }
 

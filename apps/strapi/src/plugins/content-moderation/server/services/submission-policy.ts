@@ -2,14 +2,14 @@ import {
   canSubmit,
   type Capabilities,
   contributionLimits,
-  grantsFromLegacyRole,
-  isContributorRole,
+  highestRole,
   isSubmissionType,
   resolveCapabilities,
   SESSION_PROFILE_MAX_CLAIMS,
 } from "@repo/access"
 import { findUnsafeContent } from "@repo/shared-data"
 
+import { activeGrants } from "../../../../utils/role-grants"
 import { isDocumentId, VERIFICATION_METHODS } from "../utils/params"
 
 type Result =
@@ -49,7 +49,7 @@ export const CLAIM_AFFILIATION_FILTER = {
 
 export default ({ strapi }: { strapi: any }) => ({
   /**
-   * Loads the submitter's contributor role, tier and library claims, and
+   * Loads the submitter's Role Grants, tier and library claims, and
    * resolves them into `Capabilities`. Shared by `check()` (create/finalize
    * time) and `applyWikiEdit` (apply time) so the same rule governs both —
    * a role or claim that changed (or was never valid) between submission
@@ -64,9 +64,9 @@ export default ({ strapi }: { strapi: any }) => ({
       .documents("api::user-profile.user-profile")
       .findMany({
         filters: { baUserId: { $eq: baUserId } },
-        fields: ["contributorRole", "tier"],
+        fields: ["tier"],
         limit: 1,
-      })) as { contributorRole?: string; tier?: string }[]
+      })) as { tier?: string }[]
 
     const affiliations = (await strapi
       .documents("api::library-affiliation.library-affiliation")
@@ -76,13 +76,13 @@ export default ({ strapi }: { strapi: any }) => ({
         limit: SESSION_PROFILE_MAX_CLAIMS,
       })) as { library?: { documentId?: string } }[]
 
+    // Role Grants are the source of truth; `contributorRole` on the profile
+    // is only their derived display value.
+    const grants = await activeGrants(strapi, baUserId)
+
     const caps = resolveCapabilities({
       signedIn: true,
-      grants: grantsFromLegacyRole(
-        isContributorRole(profile?.contributorRole)
-          ? profile!.contributorRole
-          : "reader"
-      ),
+      grants,
       claims: affiliations
         .map((a) => a.library?.documentId)
         .filter((id): id is string => !!id)
@@ -92,7 +92,7 @@ export default ({ strapi }: { strapi: any }) => ({
     return {
       caps,
       tier: profile?.tier ?? null,
-      role: profile?.contributorRole ?? null,
+      role: highestRole(grants),
     }
   },
 

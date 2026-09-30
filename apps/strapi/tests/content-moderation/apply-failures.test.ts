@@ -20,6 +20,7 @@ const WIKI = "api::wiki-article.wiki-article"
 const LIB = "api::library.library"
 const AFF = "api::library-affiliation.library-affiliation"
 const PROFILE = "api::user-profile.user-profile"
+const ROLE_GRANT = "api::role-grant.role-grant"
 
 function withHash(s: Record<string, any>) {
   return { ...s, payloadHash: payloadHash(s as any) }
@@ -194,7 +195,7 @@ describe("I3: partial claim approval and revert failures", () => {
       [AFF]: [],
       [PROFILE]: [{ documentId: "p2", baUserId: "u2" }],
     })
-    failOn(strapi, PROFILE, "update")
+    failOn(strapi, ROLE_GRANT, "create")
 
     const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
 
@@ -217,7 +218,7 @@ describe("I3: partial claim approval and revert failures", () => {
       ],
       [PROFILE]: [{ documentId: "p2", baUserId: "u2" }],
     })
-    failOn(strapi, PROFILE, "update")
+    failOn(strapi, ROLE_GRANT, "create")
 
     const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
 

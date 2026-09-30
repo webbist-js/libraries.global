@@ -9,6 +9,7 @@ const PROFILE = "api::user-profile.user-profile"
 const AFF = "api::library-affiliation.library-affiliation"
 const GRANT = "api::entitlement-grant.entitlement-grant"
 const VERIFY = "api::pro-verification.pro-verification"
+const ROLE_GRANT = "api::role-grant.role-grant"
 
 function ctx(query: Record<string, unknown>, secret = "s3cret") {
   const c: any = {
@@ -67,6 +68,40 @@ describe("auth-bridge sessionProfile", () => {
         },
         { documentId: "g3", baUserId: "u2", plan: "pro", expiresAt: null },
       ],
+      [ROLE_GRANT]: [
+        {
+          documentId: "r1",
+          baUserId: "u1",
+          role: "verified_librarian",
+          queue: "all",
+          locale: null,
+          expiresAt: null,
+        },
+        {
+          documentId: "r2",
+          baUserId: "u1",
+          role: "moderator",
+          queue: "knowledge",
+          locale: "fr",
+          expiresAt: FUTURE_ISO,
+        },
+        {
+          documentId: "r3",
+          baUserId: "u1",
+          role: "editorial_board",
+          queue: "all",
+          locale: null,
+          expiresAt: "2020-01-01T00:00:00Z",
+        },
+        {
+          documentId: "r4",
+          baUserId: "u2",
+          role: "wiki_editor",
+          queue: "all",
+          locale: null,
+          expiresAt: null,
+        },
+      ],
       [VERIFY]: [
         {
           documentId: "v1",
@@ -98,6 +133,10 @@ describe("auth-bridge sessionProfile", () => {
       tier: "Indexer",
       claims: ["libA", "libD"],
       grants: [{ plan: "pro", expiresAt: null }],
+      roleGrants: [
+        { role: "verified_librarian", queue: "all", locale: null },
+        { role: "moderator", queue: "knowledge", locale: "fr" },
+      ],
       verifications: [{ expiresAt: FUTURE_ISO }],
       earnedProUntil: FUTURE_ISO,
     })
@@ -112,6 +151,7 @@ describe("auth-bridge sessionProfile", () => {
       tier: null,
       claims: [],
       grants: [],
+      roleGrants: [],
       verifications: [],
       earnedProUntil: null,
     })
@@ -135,6 +175,19 @@ describe("auth-bridge sessionProfile", () => {
     )
     const { findMany } = fake.documents.mock.results[i].value
     expect(findMany.mock.calls[0][0].limit).toBe(SESSION_PROFILE_MAX_CLAIMS)
+  })
+
+  it("excludes expired role grants and reads at most 50", async () => {
+    const c = ctx({ baUserId: "u1" })
+    await controller.sessionProfile(c)
+    expect(c.body.roleGrants.map((g: any) => g.role)).not.toContain(
+      "editorial_board"
+    )
+    const i = fake.documents.mock.calls.findIndex(
+      ([u]: [string]) => u === ROLE_GRANT
+    )
+    const { findMany } = fake.documents.mock.results[i].value
+    expect(findMany.mock.calls[0][0].limit).toBe(50)
   })
 
   it.each([

@@ -17,6 +17,13 @@ const BLOG_SECTION = "api::blog-section.blog-section"
 const TOPIC = "api::topic.topic"
 const LIBRARY = "api::library.library"
 const PROFILE = "api::user-profile.user-profile"
+
+const ROLE_GRANT = "api::role-grant.role-grant"
+/** A global Role Grant for `role` (none for reader), as the policy reads them. */
+const grantsFor = (role: string, baUserId = "u1") =>
+  role === "reader"
+    ? []
+    : [{ documentId: `rg-${role}`, baUserId, role, queue: "all", locale: null }]
 const AFF = "api::library-affiliation.library-affiliation"
 
 const body = [
@@ -30,6 +37,7 @@ const body = [
 function harness(seed: Record<string, any[]>, role: string) {
   const { strapi, store, services } = makeFakeStrapi({
     [PROFILE]: [{ documentId: "p1", baUserId: "u1", contributorRole: role }],
+    [ROLE_GRANT]: grantsFor(role),
     [AFF]: [],
     [TOPIC]: [],
     [LIBRARY]: [],

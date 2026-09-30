@@ -7,6 +7,13 @@ const PROFILE = "api::user-profile.user-profile"
 const AFF = "api::library-affiliation.library-affiliation"
 const SUB = "plugin::content-moderation.submission"
 
+const ROLE_GRANT = "api::role-grant.role-grant"
+/** A global Role Grant for `role` (none for reader), as the policy reads them. */
+const grantsFor = (role: string, baUserId = "u1") =>
+  role === "reader"
+    ? []
+    : [{ documentId: `rg-${role}`, baUserId, role, queue: "all", locale: null }]
+
 function setup(role = "reader", claims: string[] = [], pending = 0) {
   const { strapi } = makeFakeStrapi({
     [PROFILE]: [
@@ -17,6 +24,7 @@ function setup(role = "reader", claims: string[] = [], pending = 0) {
         tier: "Reader",
       },
     ],
+    [ROLE_GRANT]: grantsFor(role),
     [AFF]: claims.map((lib, i) => ({
       documentId: `a${i}`,
       baUserId: "u1",

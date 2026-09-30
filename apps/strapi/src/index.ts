@@ -4,12 +4,14 @@ import { LOCATION_PICKER_FIELD_NAME } from "./customFields/locationPicker/shared
 import { OPENING_TIMES_FIELD_NAME } from "./customFields/openingTimes/shared"
 import { registerAdminUserSubscriber } from "./lifeCycles/adminUser"
 import { registerEntityRefSubscriber } from "./lifeCycles/entityRef"
+import { registerRoleGrantSubscriber } from "./lifeCycles/roleGrant"
 import { registerUserSubscriber } from "./lifeCycles/user"
 import { seedDatasets } from "./seeds/datasets"
 import { seedLegalDocuments } from "./seeds/legal-documents"
 import { ensureHotPathIndexes } from "./utils/ensure-hot-path-indexes"
 import { ensureUniqueIndexes } from "./utils/ensure-unique-indexes"
 import { backfillLibraryCompleteness } from "./utils/library-completeness"
+import { migrateContributorRolesToGrants } from "./utils/role-grants"
 
 const SEED_TOPICS = [
   "Rare Books",
@@ -85,6 +87,7 @@ export default {
     registerAdminUserSubscriber({ strapi })
     registerUserSubscriber({ strapi })
     registerEntityRefSubscriber({ strapi })
+    registerRoleGrantSubscriber({ strapi })
 
     // Seed approved topics (idempotent — skips existing names)
     await seedTopics(strapi)
@@ -106,6 +109,14 @@ export default {
     // One-off: store `completeness` on every library row that lacks it
     // (the lifecycle keeps it current from here on).
     await backfillLibraryCompleteness(strapi)
+
+    // One-off: back-fill Role Grants from the legacy contributorRole enum
+    // (core-store guarded). A failure is logged and never blocks boot.
+    try {
+      await migrateContributorRolesToGrants(strapi)
+    } catch (err) {
+      strapi.log.error("[role-grants] Contributor role migration failed:", err)
+    }
 
     // Accounts are owned by Better Auth; Strapi users are created only via the
     // auth-bridge. Keep users-permissions self-registration off everywhere so

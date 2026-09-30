@@ -1,0 +1,40 @@
+{
+  "kind": "collectionType",
+  "collectionName": "role_grants",
+  "info": {
+    "singularName": "role-grant",
+    "pluralName": "role-grants",
+    "displayName": "Role Grant",
+    "description": "A Contributor Role held by a user, optionally scoped to a moderation queue and locale. The user-profile contributorRole is derived from these."
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "baUserId": { "type": "string", "required": true },
+    "role": {
+      "type": "enumeration",
+      "enum": [
+        "contributor",
+        "verified_librarian",
+        "wiki_editor",
+        "journal_editor",
+        "moderator",
+        "editorial_board"
+      ],
+      "required": true
+    },
+    "queue": {
+      "type": "enumeration",
+      "enum": ["all", "index", "knowledge", "journal", "applications"],
+      "default": "all"
+    },
+    "locale": { "type": "string" },
+    "source": {
+      "type": "enumeration",
+      "enum": ["admin", "claim", "application", "migration"],
+      "default": "admin"
+    },
+    "grantedBy": { "type": "string" },
+    "reason": { "type": "text" },
+    "expiresAt": { "type": "datetime" }
+  }
+}
