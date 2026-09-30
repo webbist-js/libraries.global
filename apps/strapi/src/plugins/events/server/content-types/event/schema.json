@@ -34,6 +34,7 @@
       "relation": "manyToOne",
       "target": "api::library.library"
     },
+    "libraryEntityRef": { "type": "string" },
     "title": { "type": "string", "required": true },
     "description": { "type": "text" },
     "summary": { "type": "text" },

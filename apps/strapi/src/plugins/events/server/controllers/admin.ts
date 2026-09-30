@@ -1,3 +1,5 @@
+import { pageWindow } from "../utils/query"
+
 export default ({ strapi }: { strapi: any }) => ({
   async listCredentials(ctx: any) {
     const items = await strapi.plugin("events").service("credentials").findAll()
@@ -69,52 +71,23 @@ export default ({ strapi }: { strapi: any }) => ({
     }
   },
 
-  async testRaw(ctx: any) {
-    const { provider, credentials } = ctx.request.body as {
-      provider: string
-      credentials: Record<string, string>
-    }
-    if (!provider || !credentials) {
-      ctx.status = 400
-      ctx.body = { ok: false, error: "provider and credentials are required" }
-
-      return
-    }
-    const workerUrl = process.env.WORKER_URL ?? "http://localhost:3100"
-    try {
-      const res = await fetch(`${workerUrl}/test-credential`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider, credentials }),
-        signal: AbortSignal.timeout(10_000),
-      })
-      if (!res.ok) {
-        ctx.body = { ok: false, error: `Worker returned ${res.status}` }
-
-        return
-      }
-      ctx.body = await res.json()
-    } catch (err: any) {
-      ctx.body = { ok: false, error: err.message ?? "Worker unreachable" }
-    }
-  },
-
   async listRuns(ctx: any) {
-    const { limit = "20", page = "1" } = ctx.query as Record<string, string>
-    const results = await strapi
-      .documents("plugin::events.import-run")
-      .findMany({
-        sort: ["startedAt:desc"],
-        pagination: { page: Number(page), pageSize: Number(limit) },
-      })
-    ctx.body = results
+    const { start, limit } = pageWindow(ctx.query as Record<string, unknown>, {
+      def: 20,
+      max: 100,
+    })
+    ctx.body = await strapi.documents("plugin::events.import-run").findMany({
+      sort: ["startedAt:desc", "id:desc"],
+      start,
+      limit,
+    })
   },
 
   async getRun(ctx: any) {
     const { runId } = ctx.params as { runId: string }
     const run = await strapi.documents("plugin::events.import-run").findMany({
       filters: { runId },
-      pagination: { pageSize: 1 },
+      limit: 1,
     })
     if (!run?.[0]) {
       ctx.status = 404
@@ -151,11 +124,15 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   async listPendingReview(ctx: any) {
-    const { limit = "20", page = "1" } = ctx.query as Record<string, string>
+    const { start, limit } = pageWindow(ctx.query as Record<string, unknown>, {
+      def: 20,
+      max: 100,
+    })
     const results = await strapi.documents("plugin::events.event").findMany({
       filters: { pendingReview: true },
-      sort: ["startTime:asc"],
-      pagination: { page: Number(page), pageSize: Number(limit) },
+      sort: ["startTime:asc", "id:asc"],
+      start,
+      limit,
       fields: [
         "title",
         "startTime",

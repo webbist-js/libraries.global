@@ -2,6 +2,19 @@
 import type { EventsStats } from "@repo/shared-data"
 import type { Core } from "@strapi/strapi"
 
+import { PUBLIC_EVENT_STATUSES, dowHourSql } from "../utils/query"
+
+const EMPTY: EventsStats = {
+  totalEvents: 0,
+  totalThisWeek: 0,
+  totalThisMonth: 0,
+  percentFree: 0,
+  peakSlot: null,
+  peakCount: 0,
+}
+
+const DOW_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+
 export async function computeEventStats(
   strapi: Core.Strapi
 ): Promise<EventsStats> {
@@ -11,45 +24,47 @@ export async function computeEventStats(
     const weekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
     const monthLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
 
-    const [totalRow] = await db("ev_events")
-      .count("* as count")
+    // One pass over the upcoming public events for all four counts
+    // (`FILTER` is supported by Postgres and sqlite >= 3.30).
+    const [countRow] = await db("ev_events")
+      .select(
+        db.raw("count(*) as total"),
+        db.raw("count(*) filter (where start_time <= ?) as week", [weekLater]),
+        db.raw("count(*) filter (where start_time <= ?) as month", [
+          monthLater,
+        ]),
+        db.raw("count(*) filter (where is_free = ?) as free", [true])
+      )
       .where("start_time", ">=", now)
-    const [weekRow] = await db("ev_events")
-      .count("* as count")
-      .where("start_time", ">=", now)
-      .where("start_time", "<=", weekLater)
-    const [freeRow] = await db("ev_events")
-      .count("* as count")
-      .where("start_time", ">=", now)
-      .where("is_free", true)
-    const [monthRow] = await db("ev_events")
-      .count("* as count")
-      .where("start_time", ">=", now)
-      .where("start_time", "<=", monthLater)
+      .where("pending_review", false)
+      .whereIn("status", [...PUBLIC_EVENT_STATUSES])
 
+    const { dow, hour } = dowHourSql(strapi)
     const peakRows = await db("ev_events")
       .select(
-        db.raw("strftime('%w', start_time) as dow"),
-        db.raw("strftime('%H', start_time) as hour"),
+        db.raw(`${dow} as dow`),
+        db.raw(`${hour} as hour`),
         db.raw("count(*) as cnt")
       )
       .where("start_time", ">=", now)
-      .groupByRaw("dow, hour")
+      .where("pending_review", false)
+      .whereIn("status", [...PUBLIC_EVENT_STATUSES])
+      .groupByRaw("1, 2")
       .orderBy("cnt", "desc")
       .limit(1)
 
     const peak = peakRows[0] as
-      | { dow: string; hour: string; cnt: string }
+      | { dow: string | number; hour: string | number; cnt: string | number }
       | undefined
-    const DOW_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     const peakLabel = peak
       ? `${DOW_LABELS[Number(peak.dow)] ?? ""} ${String(peak.hour).padStart(2, "0")}:00`
       : null
 
-    const total = Number((totalRow as { count: unknown }).count)
-    const totalThisWeek = Number((weekRow as { count: unknown }).count)
-    const freeCount = Number((freeRow as { count: unknown }).count)
-    const totalThisMonth = Number((monthRow as { count: unknown }).count)
+    const counts = (countRow ?? {}) as Record<string, unknown>
+    const total = Number(counts.total ?? 0)
+    const totalThisWeek = Number(counts.week ?? 0)
+    const totalThisMonth = Number(counts.month ?? 0)
+    const freeCount = Number(counts.free ?? 0)
 
     return {
       totalEvents: total,
@@ -59,14 +74,9 @@ export async function computeEventStats(
       peakSlot: peakLabel,
       peakCount: peak ? Number(peak.cnt) : 0,
     }
-  } catch {
-    return {
-      totalEvents: 0,
-      totalThisWeek: 0,
-      totalThisMonth: 0,
-      percentFree: 0,
-      peakSlot: null,
-      peakCount: 0,
-    }
+  } catch (err) {
+    strapi.log.error("[events] computeEventStats failed", err)
+
+    return { ...EMPTY }
   }
 }

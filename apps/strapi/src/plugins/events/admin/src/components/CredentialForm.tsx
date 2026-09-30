@@ -348,8 +348,6 @@ export function CredentialForm({
     setCredFields((prev) => ({ ...prev, [key]: value }))
   }
 
-  const allCredsPresent = providerFields.every((f) => credFields[f.key]?.trim())
-
   const handleSave = async () => {
     if (!label.trim()) {
       setSaveError("Label is required.")
@@ -388,21 +386,13 @@ export function CredentialForm({
     setSaveError(null)
     setTestResult(null)
     try {
-      let data: { ok: boolean; message?: string; error?: string }
-      if (isEdit) {
-        const res = await post(
-          `/events/admin/credentials/${credential!.documentId}/test`,
-          {}
-        )
-        data = res.data as typeof data
-      } else {
-        const res = await post("/events/admin/credentials/test-raw", {
-          provider,
-          credentials: credFields,
-        })
-        data = res.data as typeof data
-      }
-      setTestResult(data)
+      const res = await post(
+        `/events/admin/credentials/${credential!.documentId}/test`,
+        {}
+      )
+      setTestResult(
+        res.data as { ok: boolean; message?: string; error?: string }
+      )
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Test failed"
       setTestResult({ ok: false, error: message })
@@ -636,26 +626,28 @@ export function CredentialForm({
             Cancel
           </button>
 
-          <button
-            onClick={() => void handleTest()}
-            disabled={testLoading || (!isEdit && !allCredsPresent)}
-            style={{
-              padding: "8px 16px",
-              fontSize: "13px",
-              fontWeight: 600,
-              background: "#fff",
-              color: "#4945ff",
-              border: "1px solid #c4c4ff",
-              borderRadius: "6px",
-              cursor:
-                testLoading || (!isEdit && !allCredsPresent)
-                  ? "not-allowed"
-                  : "pointer",
-              opacity: testLoading || (!isEdit && !allCredsPresent) ? 0.5 : 1,
-            }}
-          >
-            {testLoading ? "Testing…" : "Test Connection"}
-          </button>
+          {/* Only a saved credential can be tested: the worker reads the
+              stored, encrypted credentials by documentId, never raw values
+              from the browser. Save first, then test. */}
+          {isEdit ? (
+            <button
+              onClick={() => void handleTest()}
+              disabled={testLoading}
+              style={{
+                padding: "8px 16px",
+                fontSize: "13px",
+                fontWeight: 600,
+                background: "#fff",
+                color: "#4945ff",
+                border: "1px solid #c4c4ff",
+                borderRadius: "6px",
+                cursor: testLoading ? "not-allowed" : "pointer",
+                opacity: testLoading ? 0.5 : 1,
+              }}
+            >
+              {testLoading ? "Testing…" : "Test Connection"}
+            </button>
+          ) : null}
 
           <button
             onClick={() => void handleSave()}
