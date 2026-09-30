@@ -37,6 +37,7 @@
 4. **Expired grants:** a daily cron re-derives `contributorRole` for users whose grants expired in the last two days. The session bridge already ignores expired grants.
 5. **Submission types are added in Task 1** (`role_application`, `location_request`) including the Submission schema enum, so the access package and schema move together. Their policies and apply branches arrive in Tasks 14 and 16; until then `canSubmit` returns false for both unless their capability is present, and approval of either is a no-op that logs.
 6. **Article history panels ship in Task 6**, not Band 3.
+7. **`locale` is a Strapi-reserved attribute name** (the i18n plugin overwrites it on every content type and hides it). No new schema may declare `locale`. Stored names: Role Grant `scopeLocale`, Submission `contentLocale`, Change Record and Article Change `contentLocale`. TypeScript interfaces and API payloads keep the name `locale` (`RoleGrant.locale`, `ModerationRow.locale`, request bodies) and map to the stored name in the service layer.
 
 ## Waves
 
@@ -111,10 +112,9 @@ export const QUEUE_OF_SUBMISSION_TYPE: Record<SubmissionType, ModerationQueue>
 //   correction,new_library,library_claim,library_edit,topic_suggestion,location_request -> "index"
 //   wiki_edit -> "knowledge"; blog_submission -> "journal"; role_application -> "applications"
 export function submissionTypesOfQueue(q: ModerationQueue): SubmissionType[]
-export type Capability = /* existing */
-  | "moderate.queue"
-  | "submit.roleApplication"
-  | "submit.locationRequest"
+export type Capability =
+  /* existing */
+  "moderate.queue" | "submit.roleApplication" | "submit.locationRequest"
 export interface RoleGrant {
   role: GrantableRole
   queue: ModerationQueue | "all"
@@ -267,7 +267,7 @@ export async function notifySessionInvalidated(
 ): Promise<void>
 ```
 
-- Session bridge response gains `grants: RoleGrant[]` (at most 50). `contributorRole` stays and is the derived value.
+- Session bridge response gains `roleGrants: RoleGrant[]` (at most 50). The existing `grants` key (plan grants) is unchanged. `contributorRole` stays and is the derived value.
 - `submission-policy.loadCapabilities(baUserId)` returns `{ caps, tier, role }` where `caps` comes from `activeGrants` and `role` is `highestRole(grants)`.
 
 **Rules:**
@@ -303,7 +303,7 @@ export async function notifySessionInvalidated(
 
 ```ts
 // session-profile.ts
-export type SessionProfile = { /* existing */ grants: RoleGrant[] }
+export type SessionProfile = { /* existing, incl. plan `grants` */ roleGrants: RoleGrant[] }
 // session-access.ts: SessionAccess gains
   moderationScopes: ModerationScope[]
   editorLocales: { docs: "all" | string[]; journal: "all" | string[] }
@@ -406,9 +406,9 @@ export function registerChangeRecordsMiddleware({
 }): void
 ```
 
-**Library-change schema** (`collectionName: "library_changes"`, `draftAndPublish: false`, visible in the Content Manager, no REST routes): `batchId` string required; `libraryDocumentId` string required; `entityRef` string; `locale` string; `versionStatus` enum `draft,published`; `action` enum `create,update,publish,unpublish,delete`; `field` string required; `previous` json; `next` json; `source` enum; `actorKind` enum; `actorId` string; `actorName` string; `reviewerId` string; `submissionDocumentId` string; `changedAt` datetime required.
+**Library-change schema** (`collectionName: "library_changes"`, `draftAndPublish: false`, visible in the Content Manager, no REST routes): `batchId` string required; `libraryDocumentId` string required; `entityRef` string; `contentLocale` string; `versionStatus` enum `draft,published`; `action` enum `create,update,publish,unpublish,delete`; `field` string required; `previous` json; `next` json; `source` enum; `actorKind` enum; `actorId` string; `actorName` string; `reviewerId` string; `submissionDocumentId` string; `changedAt` datetime required.
 
-**Article-change schema** (`collectionName: "article_changes"`): `articleKind` enum `wiki,blog`; `articleDocumentId`; `slug`; `locale`; `versionStatus`; `kind` enum `created,edited,translated,published,unpublished,deleted`; `actorKind`; `actorId`; `actorName`; `reviewerId`; `submissionDocumentId`; `editSummary` text; `bodyHash` string; `changedAt` datetime.
+**Article-change schema** (`collectionName: "article_changes"`): `articleKind` enum `wiki,blog`; `articleDocumentId`; `slug`; `contentLocale`; `versionStatus`; `kind` enum `created,edited,translated,published,unpublished,deleted`; `actorKind`; `actorId`; `actorName`; `reviewerId`; `submissionDocumentId`; `editSummary` text; `bodyHash` string; `changedAt` datetime.
 
 **Middleware rules:**
 
@@ -536,7 +536,7 @@ articleHistory(kind: "wiki" | "blog", documentId: string, o: { page: number; pag
 
 **Files:**
 
-- Modify: `apps/strapi/src/plugins/content-moderation/server/content-types/submission/schema.json` (add `locale` string, default `"en"`)
+- Modify: `apps/strapi/src/plugins/content-moderation/server/content-types/submission/schema.json` (add `contentLocale` string, default `"en"`; the service exposes it as `locale`, see Clarification 7)
 - Modify: `.../services/submission.ts` (`create`, `finalizeDraft`, `findDraft`, the points branch for journal translations), `.../controllers/submission.ts` (read `locale` from the body on create/finalize/draft lookup)
 - Modify: `.../utils/payload-hash.ts` (include `locale`), `.../utils/article-apply.ts`, `.../utils/library-record.ts`, `.../utils/facility-answers.ts`, `.../utils/publish-guard.ts`
 - Create: `.../utils/locales.ts`
@@ -566,7 +566,7 @@ export async function applyToLocale(
 
 **Rules:**
 
-- `submission.locale` set on `create` and `finalizeDraft` from `body.locale` through `normaliseLocale`; for articles, when `body.locale` is absent use `draftData.locale`. `payloadHash` includes `locale`.
+- `submission.contentLocale` (exposed as `locale`) set on `create` and `finalizeDraft` from `body.locale` through `normaliseLocale`; for articles, when `body.locale` is absent use `draftData.locale`. `payloadHash` includes `locale`.
 - `findDraft(userId, type, targetSlug, locale)`: locale-scoped; the draft lookup route accepts `?locale=`.
 - Backfill (plugin bootstrap, flag `submission-locale-v1`): set `locale` from `draftData.locale` or `fields.locale` when valid, else the default, for rows where `locale` is null.
 - `article-apply`: use `submission.locale`; find the existing article by `slug` without a locale filter (slug is shared), then write the submission locale version; `uniqueSlug` checks across all locales; direct-edit re-check becomes `canDirectEdit(caps, kind, locale)`.
@@ -735,7 +735,7 @@ type ModerationDetail = ModerationRow & {
 
 **Rules:**
 
-- Scope filter: `$or` of one clause per moderation scope: `{ submissionType: { $in: submissionTypesOfQueue(q) } }` (or no type clause for `all`), plus `{ locale: { $eq: scope.locale } }` when not null; always `submittedByUserId: { $ne: viewer }` and `status: { $ne: "draft" }`. `decided` means `approved` or `rejected`. Sort `createdAt: "desc"`, `id: "desc"`.
+- Scope filter: `$or` of one clause per moderation scope: `{ submissionType: { $in: submissionTypesOfQueue(q) } }` (or no type clause for `all`), plus `{ contentLocale: { $eq: scope.locale } }` when not null; always `submittedByUserId: { $ne: viewer }` and `status: { $ne: "draft" }`. `decided` means `approved` or `rejected`. Sort `createdAt: "desc"`, `id: "desc"`.
 - `q`: `$or` over `submittedByName`, `targetSlug`, `editSummary`, `note` with `$containsi` (never email, which is personal data not needed for search from the frontend).
 - `summary` computed server-side with a port of `summaryOf` from `admin/src/components/submissionMeta.ts` into `server/utils/submission-summary.ts` (create it; the admin keeps its own copy).
 - Rows and details never include `submittedByEmail`, `payloadHash`, `draftRevision`, `reviewerAssignedTo`.
