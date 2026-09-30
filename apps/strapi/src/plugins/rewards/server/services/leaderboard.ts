@@ -43,10 +43,39 @@ function periodStart(period: Period): Date | null {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
 }
 
+// The public leaderboard is the same for everyone, so each (period, page,
+// limit) is computed at most once a minute per process. Keyed by the strapi
+// instance so tests with their own fakes don't share memory.
+const LEADERBOARD_TTL_MS = 60_000
+const leaderboardMemo = new WeakMap<
+  object,
+  Map<string, { expires: number; value: LeaderboardEntry[] }>
+>()
+
 export default ({ strapi }: { strapi: any }) => ({
   async getLeaderboard(opts: {
     period: Period
-    region?: string
+    page: number
+    limit: number
+  }): Promise<LeaderboardEntry[]> {
+    const { period, page, limit } = opts
+    const key = `${period}:${page}:${limit}`
+    let memo = leaderboardMemo.get(strapi)
+    if (!memo) {
+      memo = new Map()
+      leaderboardMemo.set(strapi, memo)
+    }
+    const hit = memo.get(key)
+    if (hit && hit.expires > Date.now()) return hit.value
+
+    const value = await (this as any).computeLeaderboard(opts)
+    memo.set(key, { expires: Date.now() + LEADERBOARD_TTL_MS, value })
+
+    return value
+  },
+
+  async computeLeaderboard(opts: {
+    period: Period
     page: number
     limit: number
   }): Promise<LeaderboardEntry[]> {
@@ -92,11 +121,15 @@ export default ({ strapi }: { strapi: any }) => ({
 
     const profileMap = new Map(profiles.map((p) => [p.baUserId, p]))
 
-    // Load previous week's rank map for delta computation
-    const prevRankMap: Map<string, number> = await strapi
-      .plugin("rewards")
-      .service("snapshot")
-      .getPreviousWeekRankMap()
+    // The snapshot is of a full ISO week, so only the week leaderboard
+    // compares like with like; other periods carry no delta.
+    const prevRankMap: Map<string, number> =
+      period === "week"
+        ? await strapi
+            .plugin("rewards")
+            .service("snapshot")
+            .getPreviousWeekRankMap()
+        : new Map()
 
     return rows.map((row, i) => {
       const profile = profileMap.get(row.ba_user_id)
@@ -182,7 +215,7 @@ export default ({ strapi }: { strapi: any }) => ({
     }
 
     const countryRank = profile.country
-      ? await (this as any).getCountryRank(baUserId, profile.country)
+      ? await (this as any).getCountryRank(profile.points ?? 0, profile.country)
       : null
 
     return {
@@ -201,22 +234,19 @@ export default ({ strapi }: { strapi: any }) => ({
     }
   },
 
+  // Rank within a country for a profile with `points`: callers already hold
+  // the profile, so it isn't read again here.
   async getCountryRank(
-    baUserId: string,
+    points: number,
     country: string
   ): Promise<number | null> {
     if (!country) return null
-
-    const profile = await strapi.db
-      .query("api::user-profile.user-profile")
-      .findOne({ where: { baUserId } })
-    if (!profile) return null
 
     const result = (await strapi.db.connection
       .count({ count: "*" })
       .from("user_profiles")
       .where("country", country)
-      .where("points", ">", profile.points ?? 0)) as { count: string }[]
+      .where("points", ">", points ?? 0)) as { count: string }[]
 
     return Number(result[0]?.count ?? 0) + 1
   },

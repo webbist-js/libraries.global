@@ -565,6 +565,23 @@ function EventLog({ onAward }: { onAward: (baUserId: string) => void }) {
 
 // ── Manual award sidebar widget ───────────────────────────────────────────────
 
+function newClientRequestId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID()
+  }
+
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`
+}
+
+function readErrorMessage(err: unknown): string | null {
+  const e = err as {
+    response?: { data?: { error?: { message?: string } } }
+    message?: string
+  }
+
+  return e?.response?.data?.error?.message ?? e?.message ?? null
+}
+
 function ManualAwardWidget({
   prefillUserId,
   onSuccess,
@@ -585,15 +602,21 @@ function ManualAwardWidget({
     setBaUserId(prefillUserId)
   }, [prefillUserId])
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
   const submit = async () => {
     if (!baUserId || !reason || !points) return
     setStatus("loading")
+    setErrorMessage(null)
     try {
       await put(`/rewards/award`, {
         baUserId,
         action: mode === "award" ? "manual_award" : "manual_deduct",
         points,
         reason,
+        // One id per click: the server keys the award on it, so a retry
+        // or double submit of this same request never awards twice.
+        clientRequestId: newClientRequestId(),
       })
       setStatus("ok")
       setBaUserId("")
@@ -603,12 +626,20 @@ function ManualAwardWidget({
         setStatus("idle")
         onSuccess()
       }, 1800)
-    } catch {
+    } catch (err) {
+      setErrorMessage(readErrorMessage(err))
       setStatus("err")
     }
   }
 
-  const canSubmit = !!(baUserId && reason && points && status !== "loading")
+  const canSubmit = !!(
+    baUserId &&
+    reason &&
+    Number.isInteger(points) &&
+    points >= 1 &&
+    points <= 500 &&
+    status !== "loading"
+  )
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
@@ -654,6 +685,8 @@ function ManualAwardWidget({
         <input
           type="number"
           min={1}
+          max={500}
+          step={1}
           value={points}
           onChange={(e) => setPoints(Number(e.target.value))}
           style={{ ...filterInputStyle, width: "100px" }}
@@ -711,7 +744,7 @@ function ManualAwardWidget({
       )}
       {status === "err" && (
         <p style={{ fontSize: "12px", color: "#d02b20", margin: 0 }}>
-          Something went wrong. Check server logs.
+          {errorMessage ?? "Something went wrong. Check server logs."}
         </p>
       )}
     </div>

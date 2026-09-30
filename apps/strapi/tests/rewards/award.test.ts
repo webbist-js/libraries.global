@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import createPoints from "../../src/plugins/rewards/server/services/points"
 
-type Raw = { sql: string; bindings: number[] }
+type Raw = { sql: string; bindings: (number | string)[] }
 
 function fakeStrapi(initialPoints: number | null = 0) {
   const events: any[] = []
@@ -18,6 +18,21 @@ function fakeStrapi(initialPoints: number | null = 0) {
   const update = vi.fn(async (data: Record<string, number | Raw>) => {
     for (const [col, v] of Object.entries(data)) {
       if (typeof v === "object" && v && "sql" in v) {
+        if (
+          v.sql.startsWith("CASE WHEN substr(last_activity_date, 1, 7) = ?")
+        ) {
+          // Month-boundary reset: [month, add, reset]
+          const [month, add, reset] = v.bindings as unknown as [
+            string,
+            number,
+            number,
+          ]
+          profile[col] =
+            String(profile.lastActivityDate ?? "").slice(0, 7) === month
+              ? (profile[col] ?? 0) + add
+              : reset
+          continue
+        }
         const coalesce = /^COALESCE\(\w+, 0\) \+ \?$/.test(v.sql)
         const cur = profile[col]
         profile[col] =
@@ -25,10 +40,16 @@ function fakeStrapi(initialPoints: number | null = 0) {
       } else profile[col] = v
     }
   })
-  const knex: any = vi.fn(() => ({ where: () => ({ update }) }))
+  const knex: any = vi.fn(() => {
+    const b: any = { transacting: () => b, where: () => b, update }
+
+    return b
+  })
   knex.raw = (sql: string, bindings: number[]): Raw => ({ sql, bindings })
   const strapi: any = {
     db: {
+      // Same contract as the real one: run the callback, no rollback modelling.
+      transaction: vi.fn(async (cb: any) => cb({ trx: {} })),
       connection: knex,
       query: vi.fn((uid: string) => ({
         findOne: vi.fn(async ({ where }: any) =>

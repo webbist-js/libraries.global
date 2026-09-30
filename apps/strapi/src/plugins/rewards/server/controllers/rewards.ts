@@ -1,25 +1,40 @@
+import { clampInt } from "../utils/query"
 import { isValidServiceSecret } from "../utils/service-secret"
+
+const PG_CLIENTS = new Set(["pg", "postgres", "postgresql"])
+const PERIODS = new Set(["today", "week", "month", "all"])
+const PAGE = { def: 1, min: 1, max: 10_000 }
+const HISTORY_LIMIT = 50
+
+function isPostgres(strapi: any): boolean {
+  return PG_CLIENTS.has(String(strapi.db?.dialect?.client ?? "").toLowerCase())
+}
+
+function stripAwardedBy(
+  metadata: Record<string, unknown>
+): Record<string, unknown> {
+  const { awardedBy: _awardedBy, ...rest } = metadata
+
+  return rest
+}
 
 export default ({ strapi }: { strapi: any }) => ({
   // ── Content API ──────────────────────────────────────────────────────────
 
   async leaderboard(ctx: any) {
-    const {
-      period = "month",
-      region,
-      page = "1",
-      limit = "20",
-    } = ctx.query as Record<string, string>
+    const q = ctx.query as Record<string, unknown>
+    const period = PERIODS.has(String(q.period)) ? String(q.period) : "month"
 
     const entries = await strapi
       .plugin("rewards")
       .service("leaderboard")
       .getLeaderboard({
         period: period as "today" | "week" | "month" | "all",
-        region: region ?? undefined,
-        page: Number(page),
-        limit: Math.min(Number(limit), 100),
+        page: clampInt(q.page, PAGE),
+        limit: clampInt(q.limit, { def: 20, min: 1, max: 100 }),
       })
+
+    ctx.set("Cache-Control", "public, max-age=60")
 
     return ctx.send({ data: entries })
   },
@@ -54,20 +69,34 @@ export default ({ strapi }: { strapi: any }) => ({
       return ctx.unauthorized("Authentication required")
     }
 
-    const { page = "1" } = ctx.query as Record<string, string>
-    const limit = 50
-    const offset = (Number(page) - 1) * limit
+    const page = clampInt((ctx.query as Record<string, unknown>).page, PAGE)
+    const limit = HISTORY_LIMIT
+    const offset = (page - 1) * limit
 
-    const events = await strapi.db
+    const events = (await strapi.db
       .query("plugin::rewards.point-event")
       .findMany({
         where: { baUserId },
+        select: ["action", "points", "awardedAt", "metadata"],
         orderBy: { awardedAt: "desc" },
         limit,
         offset,
-      })
+      })) as {
+      action: string
+      points: number
+      awardedAt: string
+      metadata: Record<string, unknown> | null
+    }[]
 
-    return ctx.send({ data: events })
+    // Never the idempotency key, and never who awarded a manual grant.
+    return ctx.send({
+      data: events.map(({ action, points, awardedAt, metadata }) => ({
+        action,
+        points,
+        awardedAt,
+        metadata: metadata ? stripAwardedBy(metadata) : null,
+      })),
+    })
   },
 
   async howItWorks(ctx: any) {
@@ -165,15 +194,10 @@ export default ({ strapi }: { strapi: any }) => ({
   // ── Admin routes ─────────────────────────────────────────────────────────
 
   async adminEvents(ctx: any) {
-    const {
-      baUserId,
-      action,
-      from,
-      to,
-      page = "1",
-    } = ctx.query as Record<string, string>
-    const limit = 50
-    const offset = (Number(page) - 1) * limit
+    const { baUserId, action, from, to } = ctx.query as Record<string, string>
+    const page = clampInt((ctx.query as Record<string, unknown>).page, PAGE)
+    const limit = HISTORY_LIMIT
+    const offset = (page - 1) * limit
 
     const where: Record<string, unknown> = {}
     if (baUserId) where.baUserId = baUserId
@@ -200,67 +224,112 @@ export default ({ strapi }: { strapi: any }) => ({
 
     return ctx.send({
       data: events,
-      meta: { total, page: Number(page), limit },
+      meta: { total, page, limit },
     })
   },
 
   async adminAward(ctx: any) {
-    const { baUserId, action, points, reason } = ctx.request.body as {
-      baUserId: string
-      action: "manual_award" | "manual_deduct"
-      points: number
-      reason: string
+    const { baUserId, action, points, reason, clientRequestId } = (ctx.request
+      .body ?? {}) as {
+      baUserId?: unknown
+      action?: unknown
+      points?: unknown
+      reason?: unknown
+      clientRequestId?: unknown
     }
 
-    if (!baUserId || !action || points === undefined || !reason) {
+    const adminUserId = ctx.state?.user?.id ?? ctx.state?.admin?.id
+    if (adminUserId === undefined || adminUserId === null) {
+      return ctx.unauthorized("Admin identity required")
+    }
+
+    if (
+      typeof baUserId !== "string" ||
+      !baUserId ||
+      typeof reason !== "string" ||
+      !reason.trim() ||
+      typeof clientRequestId !== "string" ||
+      !/^[\w.-]{8,64}$/.test(clientRequestId)
+    ) {
       return ctx.badRequest(
-        "baUserId, action, points, and reason are all required"
+        "baUserId, action, points, reason and clientRequestId are all required"
       )
     }
-    if (!["manual_award", "manual_deduct"].includes(action)) {
+    if (action !== "manual_award" && action !== "manual_deduct") {
       return ctx.badRequest('action must be "manual_award" or "manual_deduct"')
     }
+    // A manual grant is a whole number of points, 1 to 500 per request.
+    const n =
+      typeof points === "number"
+        ? points
+        : typeof points === "string" && points.trim() !== ""
+          ? Number(points)
+          : Number.NaN
+    if (!Number.isInteger(n) || n < 1 || n > 500) {
+      return ctx.badRequest("points must be an integer between 1 and 500")
+    }
 
-    const adminUserId = ctx.state?.admin?.id ?? ctx.state?.user?.id ?? "unknown"
+    // Never auto-create a profile from the admin panel: the id must be real.
+    const profile = await strapi.db
+      .query("api::user-profile.user-profile")
+      .findOne({ where: { baUserId }, select: ["id"] })
+    if (!profile) return ctx.notFound("No profile for that baUserId")
 
-    await strapi
+    // One award per admin click: the admin UI sends a fresh uuid per click,
+    // so a retried or double-submitted request cannot award twice.
+    const idempotencyKey = `admin:${adminUserId}:${baUserId}:${clientRequestId}`
+    const { awarded } = await strapi
       .plugin("rewards")
       .service("points")
       .award(
         baUserId,
         action,
-        action === "manual_deduct" ? -Math.abs(points) : Math.abs(points),
-        {
-          reason,
-          awardedBy: String(adminUserId),
-        }
+        action === "manual_deduct" ? -n : n,
+        { reason: reason.trim(), awardedBy: String(adminUserId) },
+        idempotencyKey
       )
 
-    return ctx.send({ ok: true })
+    return ctx.send({ ok: true, awarded })
   },
 
   async adminChartData(ctx: any) {
     const days = 30
     const now = new Date()
+    const knex = strapi.db.connection
 
-    // Build daily buckets for the last N days
+    // One grouped query for the whole window, then fill the empty days.
+    const first = new Date(now)
+    first.setUTCDate(first.getUTCDate() - (days - 1))
+    const windowStart = new Date(
+      first.toISOString().slice(0, 10) + "T00:00:00.000Z"
+    )
+    const dayExpr = isPostgres(strapi)
+      ? "date_trunc('day', awarded_at)"
+      : "date(awarded_at)"
+    const dailyRows = (await knex
+      .select(knex.raw(`${dayExpr} as day`))
+      .sum({ total: "points" })
+      .from("rw_point_events")
+      .where("awarded_at", ">=", windowStart.toISOString())
+      .groupBy(knex.raw(dayExpr))) as {
+      day: Date | string
+      total: string | number | null
+    }[]
+    const byDay = new Map<string, number>()
+    for (const row of dailyRows) {
+      const key =
+        row.day instanceof Date
+          ? row.day.toISOString().slice(0, 10)
+          : String(row.day).slice(0, 10)
+      byDay.set(key, Number(row.total ?? 0))
+    }
+
     const dailyPoints: { date: string; points: number }[] = []
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(now)
       d.setUTCDate(d.getUTCDate() - i)
       const dateStr = d.toISOString().slice(0, 10)
-      const dayStart = new Date(dateStr + "T00:00:00.000Z")
-      const dayEnd = new Date(dateStr + "T23:59:59.999Z")
-
-      const rows = (await strapi.db.connection
-        .select(strapi.db.connection.raw("COALESCE(SUM(points), 0) as total"))
-        .from("rw_point_events")
-        .where("awarded_at", ">=", dayStart.toISOString())
-        .where("awarded_at", "<=", dayEnd.toISOString())) as {
-        total: string | number
-      }[]
-
-      dailyPoints.push({ date: dateStr, points: Number(rows[0]?.total ?? 0) })
+      dailyPoints.push({ date: dateStr, points: byDay.get(dateStr) ?? 0 })
     }
 
     // Action breakdown (all time)

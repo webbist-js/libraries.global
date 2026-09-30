@@ -8,8 +8,15 @@ export type BadgeDefinition = {
 }
 
 // ActionCounts maps action names → event count.
-// The virtual key "__total_points" holds the user's all-time points sum.
+// The virtual key "__total_points" holds the user's all-time points sum and
+// "__streak" the profile's current run of consecutive active days.
 type ActionCounts = Record<string, number>
+
+function isUniqueViolation(err: unknown): boolean {
+  const e = err as { code?: string; nativeError?: { code?: string } }
+
+  return e?.code === "23505" || e?.nativeError?.code === "23505"
+}
 
 export const BADGE_DEFINITIONS: BadgeDefinition[] = [
   // ── Points milestones ────────────────────────────────────────────────────
@@ -324,7 +331,7 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     description: "Active 7 days in a row. Up before the doors open.",
     rarity: "COMMON",
     icon: "DS",
-    check: (c) => (c.daily_streak ?? 0) >= 7,
+    check: (c) => (c.__streak ?? 0) >= 7,
   },
   {
     id: "streaker",
@@ -332,7 +339,7 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     description: "Active 30 days in a row. A fixture of the reading room.",
     rarity: "RARE",
     icon: "ST",
-    check: (c) => (c.daily_streak ?? 0) >= 30,
+    check: (c) => (c.__streak ?? 0) >= 30,
   },
   {
     id: "lifer",
@@ -341,14 +348,17 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
       "Active 100 days in a row. You don't check out. You live here.",
     rarity: "STATUS",
     icon: "LF",
-    check: (c) => (c.daily_streak ?? 0) >= 100,
+    check: (c) => (c.__streak ?? 0) >= 100,
   },
 ]
 
 export default ({ strapi }: { strapi: any }) => ({
   BADGE_DEFINITIONS,
 
-  async checkAndAward(baUserId: string): Promise<void> {
+  async checkAndAward(
+    baUserId: string,
+    opts: { streak?: number } = {}
+  ): Promise<void> {
     // Aggregate per-action event counts for this user
     const rows = (await strapi.db.connection
       .select("action")
@@ -369,6 +379,17 @@ export default ({ strapi }: { strapi: any }) => ({
       .where("ba_user_id", baUserId)) as { total: string | number | null }[]
     counts.__total_points = Number(ptRows[0]?.total ?? 0)
 
+    // Streak badges read the profile's current streak, not a count of
+    // daily_streak events (those accumulate across broken streaks).
+    if (typeof opts.streak === "number") {
+      counts.__streak = opts.streak
+    } else {
+      const profile = await strapi.db
+        .query("api::user-profile.user-profile")
+        .findOne({ where: { baUserId }, select: ["streak"] })
+      counts.__streak = Number(profile?.streak ?? 0)
+    }
+
     // Fetch already-awarded badge IDs to avoid duplicates
     const existing = (await strapi.db
       .query("plugin::rewards.badge-award")
@@ -379,14 +400,18 @@ export default ({ strapi }: { strapi: any }) => ({
     // Check each badge definition and create new awards
     const now = new Date()
     for (const def of BADGE_DEFINITIONS) {
-      if (!earnedSet.has(def.id) && def.check(counts)) {
+      if (earnedSet.has(def.id) || !def.check(counts)) continue
+      try {
         await strapi.documents("plugin::rewards.badge-award").create({
           data: { baUserId, badgeId: def.id, awardedAt: now },
         })
-        strapi.log.info(
-          `[rewards] Awarded badge "${def.id}" to user ${baUserId}`
-        )
+      } catch (err) {
+        // The unique (ba_user_id, badge_id) index: a concurrent check
+        // awarded it first, which is the same outcome.
+        if (isUniqueViolation(err)) continue
+        throw err
       }
+      strapi.log.info(`[rewards] Awarded badge "${def.id}" to user ${baUserId}`)
     }
   },
 })

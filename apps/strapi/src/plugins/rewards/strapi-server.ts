@@ -2,6 +2,10 @@ import contentTypes from "./server/content-types"
 import controllers from "./server/controllers"
 import routes from "./server/routes"
 import services from "./server/services"
+import {
+  REWARDS_SNAPSHOT_LOCK_KEY,
+  withLeaderLock,
+} from "./server/utils/leader-lock"
 
 export default {
   register({ strapi }: { strapi: any }) {},
@@ -23,15 +27,15 @@ export default {
 
     // Weekly leaderboard snapshot — runs every Monday at 00:05 UTC.
     // Captures the previous week's ranked list so rankChange deltas can be
-    // computed when the leaderboard is fetched.
+    // computed when the leaderboard is fetched. With several instances,
+    // only the one holding the advisory lock runs it.
     strapi.cron.add({
       "rewards-leaderboard-snapshot": {
         task: async () => {
           try {
-            await strapi
-              .plugin("rewards")
-              .service("snapshot")
-              .takeWeeklySnapshot()
+            await withLeaderLock(strapi, REWARDS_SNAPSHOT_LOCK_KEY, () =>
+              strapi.plugin("rewards").service("snapshot").takeWeeklySnapshot()
+            )
           } catch (err) {
             strapi.log.error("[rewards] Leaderboard snapshot failed:", err)
           }

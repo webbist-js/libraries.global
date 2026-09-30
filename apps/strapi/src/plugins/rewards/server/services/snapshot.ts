@@ -30,11 +30,36 @@ export function getPreviousISOWeek(date: Date = new Date()): string {
   return getISOWeek(prev)
 }
 
+// The previous full ISO week as a half-open UTC window: last Monday 00:00
+// (start) to this Monday 00:00 (end), whatever weekday `now` falls on.
+export function previousWeekWindow(now: Date = new Date()): {
+  start: Date
+  end: Date
+} {
+  const end = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  )
+  const dayOfWeek = end.getUTCDay() || 7 // Monday 1 … Sunday 7
+  end.setUTCDate(end.getUTCDate() - dayOfWeek + 1) // this Monday 00:00
+  const start = new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000)
+
+  return { start, end }
+}
+
+function isUniqueViolation(err: unknown): boolean {
+  const e = err as { code?: string; nativeError?: { code?: string } }
+
+  return e?.code === "23505" || e?.nativeError?.code === "23505"
+}
+
 export default ({ strapi }: { strapi: any }) => ({
-  // Take a weekly snapshot of the top 1000 contributors for the current ISO week.
-  // Idempotent — skips if a snapshot for this week already exists.
-  async takeWeeklySnapshot(): Promise<void> {
-    const period = getISOWeek()
+  // Snapshot the top 1000 contributors of the previous full ISO week under
+  // that week's key. Runs Monday 00:05, so the week it ranks is complete.
+  // Idempotent: skips if that week already has a snapshot, and treats a
+  // unique violation on insert (two instances racing) the same way.
+  async takeWeeklySnapshot(now: Date = new Date()): Promise<void> {
+    const { start, end } = previousWeekWindow(now)
+    const period = getISOWeek(start)
 
     const existing = await strapi.db
       .query("plugin::rewards.leaderboard-snapshot")
@@ -42,17 +67,12 @@ export default ({ strapi }: { strapi: any }) => ({
 
     if (existing) return
 
-    // Aggregate period points for the current ISO week
-    const weekStart = new Date()
-    const dayOfWeek = weekStart.getUTCDay() || 7
-    weekStart.setUTCDate(weekStart.getUTCDate() - dayOfWeek + 1) // Monday
-    weekStart.setUTCHours(0, 0, 0, 0)
-
     const rows = (await strapi.db.connection
       .select("ba_user_id")
       .sum({ periodPoints: "points" })
       .from("rw_point_events")
-      .where("awarded_at", ">=", weekStart.toISOString())
+      .where("awarded_at", ">=", start.toISOString())
+      .where("awarded_at", "<", end.toISOString())
       .groupBy("ba_user_id")
       .orderBy("periodPoints", "desc")
       .limit(1000)) as { ba_user_id: string; periodPoints: string }[]
@@ -77,14 +97,25 @@ export default ({ strapi }: { strapi: any }) => ({
       periodPoints: Number(row.periodPoints),
     }))
 
-    await strapi.db.query("plugin::rewards.leaderboard-snapshot").create({
-      data: {
-        period,
-        periodType: "weekly",
-        entries,
-        takenAt: new Date().toISOString(),
-      },
-    })
+    try {
+      await strapi.db.query("plugin::rewards.leaderboard-snapshot").create({
+        data: {
+          period,
+          periodType: "weekly",
+          entries,
+          takenAt: new Date().toISOString(),
+        },
+      })
+    } catch (err) {
+      if (isUniqueViolation(err)) {
+        strapi.log.info(
+          `[rewards] Weekly leaderboard snapshot for ${period} already taken`
+        )
+
+        return
+      }
+      throw err
+    }
 
     strapi.log.info(
       `[rewards] Weekly leaderboard snapshot taken for ${period} (${entries.length} entries)`
