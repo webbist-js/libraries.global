@@ -299,7 +299,7 @@ export default ({ strapi }: { strapi: any }) => ({
               points: 15,
               estimatedMinutes: 5,
               rewardLabel: "TRANSLATOR",
-              actionUrl: `/contribute/wiki/${article.slug}`,
+              actionUrl: `/contribute/knowledge/${encodeURIComponent(article.slug)}?locale=${encodeURIComponent(lang.code)}`,
               targetSlug: article.slug,
               computedForLanguage: lang.code,
             })

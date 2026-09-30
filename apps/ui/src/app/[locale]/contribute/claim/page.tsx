@@ -30,7 +30,7 @@ export default async function ClaimLibraryPage({
     params
 
   if (!libraryDocumentId || !librarySlug) {
-    redirect("/contribute")
+    redirect("/contribute/index?intent=claim")
   }
 
   return (

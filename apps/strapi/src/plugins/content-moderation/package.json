@@ -31,11 +31,7 @@
     "@repo/access": "workspace:*",
     "@repo/shared-data": "workspace:*",
     "@strapi/design-system": "2.2.4",
-    "@strapi/icons": "2.2.4",
-    "diff": "^9.0.0"
-  },
-  "devDependencies": {
-    "@types/diff": "^8.0.0"
+    "@strapi/icons": "2.2.4"
   },
   "peerDependencies": {
     "@strapi/design-system": "^2.0.0",

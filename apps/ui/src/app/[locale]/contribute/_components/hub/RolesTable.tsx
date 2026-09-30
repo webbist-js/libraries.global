@@ -4,8 +4,9 @@ import { T } from "@/lib/design-tokens"
 /**
  * What each Contributor Role can do, as `@repo/access` and the moderation
  * plugin enforce it. Every change is reviewed whatever the role; editor
- * roles only change what happens once an edit is approved. Points and
- * plans never grant a role.
+ * roles only change what happens once an edit is approved, and reviewing
+ * belongs to moderators (in their queue and language) and the editorial
+ * board. Points and plans never grant a role.
  */
 type Cell =
   | { kind: "yes"; note?: string }
@@ -16,37 +17,44 @@ const YES: Cell = { kind: "yes" }
 const NO: Cell = { kind: "no" }
 const CLAIM: Cell = { kind: "claim" }
 
-type Row = { label: string; cells: [Cell, Cell, Cell, Cell, Cell] }
+type Row = { label: string; cells: [Cell, Cell, Cell, Cell, Cell, Cell] }
 
 const ROWS: Row[] = [
   {
     label: "Suggest corrections, photos and sources",
-    cells: [YES, YES, YES, YES, YES],
+    cells: [YES, YES, YES, YES, YES, YES],
   },
-  { label: "Add a missing library", cells: [YES, YES, YES, YES, YES] },
+  { label: "Add a missing library", cells: [YES, YES, YES, YES, YES, YES] },
   {
     label: "Suggest Knowledge edits and translations, pitch Journal pieces",
-    cells: [YES, YES, YES, YES, YES],
+    cells: [YES, YES, YES, YES, YES, YES],
   },
   {
     label: "Vote on suggested additions",
-    cells: [YES, YES, YES, YES, YES],
+    cells: [YES, YES, YES, YES, YES, YES],
   },
   {
     label: "Edit a library’s record and connect its events feed",
-    cells: [NO, { kind: "yes", note: "For your library" }, CLAIM, CLAIM, CLAIM],
+    cells: [
+      NO,
+      { kind: "yes", note: "For your library" },
+      CLAIM,
+      CLAIM,
+      CLAIM,
+      CLAIM,
+    ],
   },
   {
-    label: "Knowledge edits publish as soon as they’re approved",
-    cells: [NO, NO, YES, NO, YES],
+    label: "Publish approved Knowledge edits directly",
+    cells: [NO, NO, YES, NO, NO, YES],
   },
   {
-    label: "Journal pieces publish as soon as they’re approved",
-    cells: [NO, NO, NO, YES, YES],
+    label: "Publish approved Journal edits directly",
+    cells: [NO, NO, NO, YES, NO, YES],
   },
   {
-    label: "Review changes and decide new additions",
-    cells: [NO, NO, NO, NO, { kind: "yes", note: "As moderators" }],
+    label: "Review submissions in their queue and language",
+    cells: [NO, NO, NO, NO, YES, { kind: "yes", note: "Every queue" }],
   },
 ]
 
@@ -55,7 +63,8 @@ const COLUMNS = [
   { title: "Verified library staff", sub: "Confirmed through a library claim" },
   { title: "Knowledge editor", sub: "Invited by the editorial board" },
   { title: "Journal editor", sub: "Invited by the editorial board" },
-  { title: "Editorial board", sub: "Reviews and approves changes" },
+  { title: "Moderator", sub: "Invited by the editorial board" },
+  { title: "Editorial board", sub: "Reviews every queue and language" },
 ]
 
 function CellValue({ cell }: { cell: Cell }) {
@@ -111,7 +120,7 @@ export function RolesTable() {
         className="overflow-x-auto rounded-[20px]"
         style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
       >
-        <table className="w-full min-w-[960px] border-collapse text-left">
+        <table className="w-full min-w-[1100px] border-collapse text-left">
           <thead>
             <tr style={{ borderBottom: `1px solid ${T.border.divider}` }}>
               <th
@@ -174,11 +183,11 @@ export function RolesTable() {
         Staff verification lets you steward your library&rsquo;s record. It
         doesn&rsquo;t mean the library endorses this project.{" "}
         <GlobalLink
-          href="/contribute/claim"
+          href="/contribute/index"
           className="underline underline-offset-[3px]"
           style={{ color: T.accent.primary }}
         >
-          Request staff verification
+          Find your library, then choose Claim
         </GlobalLink>
       </p>
     </section>
