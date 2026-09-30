@@ -39,7 +39,6 @@ export default ({ env }: { env: any }) => [
           "connect-src": ["'self'", "https:"],
           "script-src": [
             "'self'",
-            "unsafe-inline",
             "https://unpkg.com",
             "https://maps.googleapis.com",
             "https://*.basemaps.cartocdn.com",
