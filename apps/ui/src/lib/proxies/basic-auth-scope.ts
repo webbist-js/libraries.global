@@ -9,6 +9,7 @@ const EXEMPT_PREFIXES = [
   "/api/auth", // Better Auth's own endpoints and rate limits
   "/api/revalidate", // Strapi webhook, REVALIDATE_SECRET
   "/api/health", // uptime monitors; exposes nothing but liveness
+  "/api/internal", // Strapi callbacks, bridge secret
 ]
 
 const startsWithSegment = (pathname: string, prefix: string) =>

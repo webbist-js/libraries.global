@@ -1,6 +1,7 @@
 import { SESSION_PROFILE_MAX_CLAIMS } from "@repo/access"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { buildSessionAccess } from "../session-access"
 import {
   fetchSessionProfile,
   invalidateSessionProfile,
@@ -42,6 +43,7 @@ describe("fetchSessionProfile", () => {
       tier: "Reader",
       claims: [],
       grants: [],
+      roleGrants: [{ role: "contributor", queue: "all", locale: null }],
       verifications: [],
       earnedProUntil: null,
     }
@@ -289,5 +291,90 @@ describe("fetchSessionProfile", () => {
     expect(f).toHaveBeenCalledTimes(1)
     await fetchSessionProfile(`cap-${SESSION_PROFILE_MAX_ENTRIES - 1}`)
     expect(f).toHaveBeenCalledTimes(1)
+  })
+
+  it("parses role grants and drops unknown roles, queues and locales", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          ...body,
+          roleGrants: [
+            { role: "moderator", queue: "knowledge", locale: "fr" },
+            { role: "overlord", queue: "all", locale: null },
+            { role: "reader", queue: "all", locale: null },
+            { role: "wiki_editor", queue: "galaxy", locale: null },
+            { role: "wiki_editor", queue: "all", locale: 7 },
+            null,
+            { role: "journal_editor", queue: "all", locale: null },
+          ],
+        })
+      )
+    )
+    expect((await fetchSessionProfile("u1"))?.roleGrants).toEqual([
+      { role: "moderator", queue: "knowledge", locale: "fr" },
+      { role: "journal_editor", queue: "all", locale: null },
+    ])
+  })
+
+  it("keeps an empty roleGrants rather than falling back to the legacy role", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          ...body,
+          contributorRole: "wiki_editor",
+          roleGrants: [],
+        })
+      )
+    )
+    expect((await fetchSessionProfile("u1"))?.roleGrants).toEqual([])
+  })
+
+  it("falls back to the legacy role when a stale bridge omits roleGrants", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({ ...body, contributorRole: "wiki_editor" })
+      )
+    )
+    const profile = await fetchSessionProfile("u1")
+    expect(profile?.roleGrants).toEqual([
+      { role: "wiki_editor", queue: "all", locale: null },
+    ])
+    expect(buildSessionAccess(profile).capabilities).toContain(
+      "docs.directEdit"
+    )
+  })
+
+  it("rejects a body with more than 50 role grants", async () => {
+    const many = Array.from({ length: 51 }, () => ({
+      role: "contributor",
+      queue: "all",
+      locale: null,
+    }))
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ ...body, roleGrants: many }))
+    )
+    expect(await fetchSessionProfile("u1")).toBeNull()
+  })
+
+  it("keeps plan grants on grants, separate from role grants", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          ...body,
+          grants: [{ plan: "pro", expiresAt: null }],
+          roleGrants: [{ role: "contributor", queue: "all", locale: null }],
+        })
+      )
+    )
+    const p = await fetchSessionProfile("u1")
+    expect(p?.grants).toEqual([{ plan: "pro", expiresAt: null }])
+    expect(p?.roleGrants).toEqual([
+      { role: "contributor", queue: "all", locale: null },
+    ])
   })
 })

@@ -2,13 +2,14 @@ import {
   type Capability,
   type ContributorRole,
   type Feature,
-  grantsFromLegacyRole,
   isContributorRole,
   type Limit,
+  type ModerationScope,
   type PlanKey,
   type PlanSource,
   resolveCapabilities,
   resolveEntitlements,
+  toSessionCapabilities,
 } from "@repo/access"
 
 import type { SessionProfile } from "./session-profile"
@@ -20,6 +21,8 @@ export type SessionAccess = {
   username: string | null
   capabilities: Capability[]
   claimedLibraryIds: string[]
+  moderationScopes: ModerationScope[]
+  editorLocales: { docs: "all" | string[]; journal: "all" | string[] }
   plan: PlanKey
   planSource: PlanSource
   features: Feature[]
@@ -30,6 +33,8 @@ export type SessionAccess = {
  * Turns the bridge profile into the session's access fields. A missing
  * profile (bridge down) yields a reader with no capabilities: the UI hides
  * actions and route pre-checks deny, while Strapi stays the real gate.
+ * Capabilities come from the role grants only; `contributorRole` is the
+ * derived label, carried for display.
  */
 export function buildSessionAccess(
   profile: SessionProfile | null,
@@ -42,7 +47,7 @@ export function buildSessionAccess(
   const caps = profile
     ? resolveCapabilities({
         signedIn: true,
-        grants: grantsFromLegacyRole(role),
+        grants: profile.roleGrants,
         claims: profile.claims.map((libraryDocumentId) => ({
           libraryDocumentId,
         })),
@@ -61,8 +66,14 @@ export function buildSessionAccess(
     profileLoaded: profile !== null,
     contributorRole: role,
     username: profile?.username ?? null,
-    capabilities: caps ? [...caps.set] : [],
-    claimedLibraryIds: caps ? [...caps.claimedLibraryIds] : [],
+    ...(caps
+      ? toSessionCapabilities(caps)
+      : {
+          capabilities: [],
+          claimedLibraryIds: [],
+          moderationScopes: [],
+          editorLocales: { docs: [], journal: [] },
+        }),
     plan: ent.plan,
     planSource: ent.source,
     features: [...ent.features],

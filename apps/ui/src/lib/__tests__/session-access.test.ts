@@ -15,6 +15,7 @@ const baseProfile: SessionProfile = {
   tier: null,
   claims: [],
   grants: [],
+  roleGrants: [],
   verifications: [],
   earnedProUntil: null,
 }
@@ -27,6 +28,8 @@ describe("buildSessionAccess", () => {
       username: null,
       capabilities: [],
       claimedLibraryIds: [],
+      moderationScopes: [],
+      editorLocales: { docs: [], journal: [] },
       plan: "free",
       planSource: "none",
       features: [],
@@ -40,6 +43,7 @@ describe("buildSessionAccess", () => {
       contributorRole: "wiki_editor",
       username: "ed",
       tier: "Reader",
+      roleGrants: [{ role: "wiki_editor", queue: "all", locale: null }],
     })
     expect(a.profileLoaded).toBe(true)
     expect(a.capabilities).toContain("docs.directEdit")
@@ -53,6 +57,7 @@ describe("buildSessionAccess", () => {
       username: "lib",
       tier: null,
       claims: ["libA"],
+      roleGrants: [{ role: "verified_librarian", queue: "all", locale: null }],
     })
     expect(a.capabilities).toContain("submit.libraryEdit")
     expect(a.claimedLibraryIds).toEqual(["libA"])
@@ -125,15 +130,48 @@ describe("buildSessionAccess", () => {
       ...baseProfile,
       contributorRole: "verified_librarian",
       claims: ["libA"],
+      roleGrants: [{ role: "verified_librarian", queue: "all", locale: null }],
     })
     const withGrant = buildSessionAccess({
       ...baseProfile,
       contributorRole: "verified_librarian",
       claims: ["libA"],
+      roleGrants: [{ role: "verified_librarian", queue: "all", locale: null }],
       grants: [{ plan: "pro", expiresAt: null }],
     })
     expect(withGrant.capabilities).toEqual(without.capabilities)
     expect(withGrant.claimedLibraryIds).toEqual(without.claimedLibraryIds)
     expect(withGrant.plan).not.toBe(without.plan)
+  })
+
+  it("a knowledge/fr moderator grant yields moderate.queue and the scope, no editor locales", () => {
+    const a = buildSessionAccess({
+      ...baseProfile,
+      contributorRole: "moderator",
+      roleGrants: [{ role: "moderator", queue: "knowledge", locale: "fr" }],
+    })
+    expect(a.capabilities).toContain("moderate.queue")
+    expect(a.moderationScopes).toEqual([{ queue: "knowledge", locale: "fr" }])
+    expect(a.editorLocales).toEqual({ docs: [], journal: [] })
+  })
+
+  it("a wiki_editor grant for fr yields docs editor locale fr only", () => {
+    const a = buildSessionAccess({
+      ...baseProfile,
+      contributorRole: "wiki_editor",
+      roleGrants: [{ role: "wiki_editor", queue: "all", locale: "fr" }],
+    })
+    expect(a.editorLocales.docs).toEqual(["fr"])
+    expect(a.editorLocales.journal).toEqual([])
+    expect(a.moderationScopes).toEqual([])
+  })
+
+  it("grants decide capabilities, not the derived contributorRole", () => {
+    const a = buildSessionAccess({
+      ...baseProfile,
+      contributorRole: "wiki_editor",
+      roleGrants: [],
+    })
+    expect(a.capabilities).not.toContain("docs.directEdit")
   })
 })

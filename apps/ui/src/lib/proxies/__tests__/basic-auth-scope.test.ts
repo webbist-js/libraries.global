@@ -13,6 +13,7 @@ describe("needsBasicAuth", () => {
     "/api/export/atlas",
     "/api/authors", // not /api/auth
     "/api/previews", // not /api/preview
+    "/api/internals", // not /api/internal
   ])("guards %s", (path) => {
     expect(needsBasicAuth(path)).toBe(true)
   })
@@ -26,6 +27,7 @@ describe("needsBasicAuth", () => {
     "/api/auth",
     "/api/revalidate",
     "/api/health",
+    "/api/internal/session/invalidate",
   ])("exempts %s, which carries its own secret or exposes nothing", (path) => {
     expect(needsBasicAuth(path)).toBe(false)
   })

@@ -1,17 +1,30 @@
 "use client"
 
-import type { Capability, Feature, PlanKey } from "@repo/access"
+import {
+  canDirectEdit,
+  type Capability,
+  type Feature,
+  fromSessionCapabilities,
+  type ModerationScope,
+  type PlanKey,
+  type SessionCapabilities,
+} from "@repo/access"
 
 import { authClient } from "./auth-client"
 
 /** UI only: hides or shows actions. Servers re-check every one. */
 export function useCapabilities() {
   const { data, isPending } = authClient.useSession()
-  const caps = (data?.user?.capabilities ?? []) as Capability[]
+  const c = fromSessionCapabilities(
+    data?.user as Partial<SessionCapabilities> | undefined
+  )
 
   return {
-    has: (cap: Capability) => caps.includes(cap),
-    claimedLibraryIds: (data?.user?.claimedLibraryIds ?? []) as string[],
+    has: (cap: Capability) => c.set.has(cap),
+    claimedLibraryIds: [...c.claimedLibraryIds],
+    moderationScopes: c.moderation as ModerationScope[],
+    canDirectEdit: (kind: "docs" | "journal", locale: string) =>
+      canDirectEdit(c, kind, locale),
     ready: !isPending,
   }
 }

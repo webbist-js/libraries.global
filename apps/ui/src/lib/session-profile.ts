@@ -2,12 +2,17 @@ import "server-only"
 
 import {
   type ContributorRole,
+  grantsFromLegacyRole,
   isContributorRole,
+  isGrantableRole,
+  MODERATION_QUEUES,
+  type RoleGrant,
   SESSION_PROFILE_MAX_CLAIMS,
 } from "@repo/access"
 import { z } from "zod"
 
 export const SESSION_PROFILE_TTL_MS = 60_000
+export const SESSION_PROFILE_MAX_ROLE_GRANTS = 50
 
 export type SessionGrant = { plan: "pro" | "team"; expiresAt: string | null }
 export type SessionVerification = { expiresAt: string | null }
@@ -17,7 +22,10 @@ export type SessionProfile = {
   username: string | null
   tier: string | null
   claims: string[]
+  /** Plan grants (entitlements). Never feeds capabilities. */
   grants: SessionGrant[]
+  /** Contributor Role grants (capabilities). */
+  roleGrants: RoleGrant[]
   verifications: SessionVerification[]
   earnedProUntil: string | null
 }
@@ -36,7 +44,37 @@ const Body = z.object({
     .max(20)
     .optional(),
   earnedProUntil: z.string().nullable().optional(),
+  // Elements stay loose so one unknown role or queue is dropped, not fatal.
+  roleGrants: z
+    .array(z.unknown())
+    .max(SESSION_PROFILE_MAX_ROLE_GRANTS)
+    .optional(),
 })
+
+const isQueue = (v: unknown): v is RoleGrant["queue"] =>
+  v === "all" || (MODERATION_QUEUES as readonly unknown[]).includes(v)
+
+function toRoleGrant(v: unknown): RoleGrant | null {
+  if (!v || typeof v !== "object") return null
+  const { role, queue, locale } = v as Record<string, unknown>
+  if (!isGrantableRole(role) || !isQueue(queue)) return null
+  if (locale !== null && typeof locale !== "string") return null
+
+  return { role, queue, locale }
+}
+
+/**
+ * Role grants from the bridge. A stale Strapi that predates role grants
+ * omits the field; the derived legacy role stands in until it is deployed.
+ */
+function parseRoleGrants(
+  raw: unknown[] | undefined,
+  role: ContributorRole
+): RoleGrant[] {
+  if (raw === undefined) return grantsFromLegacyRole(role)
+
+  return raw.map(toRoleGrant).filter((g): g is RoleGrant => g !== null)
+}
 
 export const SESSION_PROFILE_MAX_ENTRIES = 5000
 
@@ -132,16 +170,20 @@ async function loadSessionProfile(
       return null
     }
     const d = parsed.data
+    const contributorRole: ContributorRole = isContributorRole(
+      d.contributorRole
+    )
+      ? d.contributorRole
+      : "reader"
     const value: SessionProfile = {
-      contributorRole: isContributorRole(d.contributorRole)
-        ? d.contributorRole
-        : "reader",
+      contributorRole,
       username: d.username ?? null,
       tier: d.tier ?? null,
       claims: d.claims ?? [],
       grants: (d.grants ?? []).filter(
         (g): g is SessionGrant => g.plan === "pro" || g.plan === "team"
       ),
+      roleGrants: parseRoleGrants(d.roleGrants, contributorRole),
       verifications: d.verifications ?? [],
       earnedProUntil: d.earnedProUntil ?? null,
     }
