@@ -5,6 +5,7 @@ import type {
   ProviderCredentials,
   RawEvent,
 } from "./types"
+import { parseJsonBody, safeFetchText } from "../lib/safe-fetch"
 
 const BASE = "https://api.ticketsource.io"
 const PER_PAGE = 100
@@ -54,10 +55,10 @@ async function fetchAllPages(
       page: String(page),
       ...extraParams,
     })
-    const res = await fetch(`${url}?${params}`, { headers })
-    if (!res.ok) throw new Error(`TicketSource ${res.status}: ${url}`)
+    const res = await safeFetchText(`${url}?${params}`, { headers })
+    if (!res.ok) throw new Error(`TicketSource feed returned ${res.status}`)
 
-    const data = await res.json()
+    const data = parseJsonBody(res, "TicketSource")
     const items: any[] = Array.isArray(data?.data) ? data.data : []
     out.push(...items)
 
@@ -80,7 +81,7 @@ export const ticketsourceProvider: EventProvider = {
     if (!apiKey) return { ok: false, error: "Missing apiKey" }
 
     try {
-      const res = await fetch(`${BASE}/events?per_page=1&page=1`, {
+      const res = await safeFetchText(`${BASE}/events?per_page=1&page=1`, {
         headers: {
           Authorization: `Bearer ${apiKey}`,
           Accept: "application/json",
@@ -89,7 +90,7 @@ export const ticketsourceProvider: EventProvider = {
       })
       if (res.ok) return { ok: true }
 
-      return { ok: false, error: `TicketSource returned ${res.status}` }
+      return { ok: false, error: `TicketSource feed returned ${res.status}` }
     } catch (err: unknown) {
       return { ok: false, error: (err as Error).message }
     }

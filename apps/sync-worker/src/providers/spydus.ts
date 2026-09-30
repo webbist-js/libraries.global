@@ -5,7 +5,7 @@ import type {
   ProviderCredentials,
   RawEvent,
 } from "./types"
-import { safeFetch } from "../lib/safe-fetch"
+import { parseJsonBody, safeFetchText } from "../lib/safe-fetch"
 
 const MAX_EVENTS = 5000
 const MAX_PAGES = 50
@@ -58,7 +58,7 @@ async function getAuthToken(
     return cached.token
   }
 
-  const res = await safeFetch(`${baseUrl}lcf/1.0/authorization`, {
+  const res = await safeFetchText(`${baseUrl}lcf/1.0/authorization`, {
     method: "POST",
     headers: {
       Authorization: `Basic ${Buffer.from(authString).toString("base64")}`,
@@ -68,12 +68,9 @@ async function getAuthToken(
     body: JSON.stringify({}),
   })
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => "")
-    throw new Error(`Spydus auth failed (${res.status}): ${body}`)
-  }
+  if (!res.ok) throw new Error(`Spydus feed returned ${res.status}`)
 
-  const data = await res.json()
+  const data = parseJsonBody(res, "Spydus")
   const token = data?.Access_Token as string | undefined
   if (!token) throw new Error("Spydus auth: missing Access_Token in response")
 
@@ -115,10 +112,10 @@ async function fetchSessions(
       for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v)
     }
 
-    const res = await safeFetch(url.toString(), { headers })
-    if (!res.ok) throw new Error(`Spydus sessions/search ${res.status}`)
+    const res = await safeFetchText(url.toString(), { headers })
+    if (!res.ok) throw new Error(`Spydus feed returned ${res.status}`)
 
-    const data = await res.json()
+    const data = parseJsonBody(res, "Spydus")
     const records: any[] = data?.records ?? []
     const setInfo = data?.setInfo ?? {}
 

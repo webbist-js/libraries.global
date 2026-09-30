@@ -5,6 +5,7 @@ import type {
   ProviderCredentials,
   RawEvent,
 } from "./types"
+import { parseJsonBody, safeFetchText } from "../lib/safe-fetch"
 
 const BASE = "https://www.eventbriteapi.com/v3"
 
@@ -52,12 +53,12 @@ async function fetchPage(
   page: number
 ): Promise<any> {
   const url = `${BASE}/organizations/${orgId}/events/?status=live&page=${page}&expand=venue,category`
-  const res = await fetch(url, {
+  const res = await safeFetchText(url, {
     headers: { Authorization: `Bearer ${token}` },
   })
-  if (!res.ok) throw new Error(`Eventbrite API ${res.status}`)
+  if (!res.ok) throw new Error(`Eventbrite feed returned ${res.status}`)
 
-  return res.json()
+  return parseJsonBody(res, "Eventbrite")
 }
 
 export const eventbriteProvider: EventProvider = {
@@ -66,12 +67,17 @@ export const eventbriteProvider: EventProvider = {
 
   async test(credentials: ProviderCredentials) {
     const { organizationId, accessToken } = credentials
-    const res = await fetch(`${BASE}/organizations/${organizationId}/`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-    if (res.ok) return { ok: true }
+    try {
+      const res = await safeFetchText(
+        `${BASE}/organizations/${organizationId}/`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      )
+      if (res.ok) return { ok: true }
 
-    return { ok: false, error: `Eventbrite returned ${res.status}` }
+      return { ok: false, error: `Eventbrite feed returned ${res.status}` }
+    } catch (err: unknown) {
+      return { ok: false, error: (err as Error).message }
+    }
   },
 
   async fetch(

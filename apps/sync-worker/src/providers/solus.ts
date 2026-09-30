@@ -5,7 +5,7 @@ import type {
   ProviderCredentials,
   RawEvent,
 } from "./types"
-import { safeFetch } from "../lib/safe-fetch"
+import { parseJsonBody, safeFetchText } from "../lib/safe-fetch"
 
 const MAX_FUTURE_MONTHS = 18
 const PAGE_LIMIT = 100
@@ -30,14 +30,14 @@ function normaliseEndpoint(endpoint: string): string {
 }
 
 async function getToken(endpoint: string, secretKey: string): Promise<string> {
-  const res = await safeFetch(`${endpoint}/1.0/authorization`, {
+  const res = await safeFetchText(`${endpoint}/1.0/authorization`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ secretKey }),
   })
-  if (!res.ok) throw new Error(`Solus auth failed: ${res.status}`)
+  if (!res.ok) throw new Error(`Solus feed returned ${res.status}`)
 
-  const body = await res.json()
+  const body = parseJsonBody(res, "Solus")
   const token = body?.data?.token as string | undefined
   if (!token) throw new Error("Solus auth: no token in response")
 
@@ -63,7 +63,7 @@ export const solusProvider: EventProvider = {
       const token = await getToken(base, secretKey)
 
       // Quick probe: list 1 event to confirm token works
-      const res = await safeFetch(
+      const res = await safeFetchText(
         `${base}/1.0/event/query?includeCancelled=false&limit=1`,
         {
           headers: {
@@ -73,7 +73,7 @@ export const solusProvider: EventProvider = {
         }
       )
       if (!res.ok)
-        return { ok: false, error: `Solus event query returned ${res.status}` }
+        return { ok: false, error: `Solus feed returned ${res.status}` }
 
       return { ok: true }
     } catch (err: unknown) {
@@ -112,15 +112,15 @@ export const solusProvider: EventProvider = {
         fromDate,
       })
 
-      const res = await safeFetch(`${base}/1.0/event/query?${params}`, {
+      const res = await safeFetchText(`${base}/1.0/event/query?${params}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
         },
       })
-      if (!res.ok) throw new Error(`Solus event query ${res.status}`)
+      if (!res.ok) throw new Error(`Solus feed returned ${res.status}`)
 
-      const body = await res.json()
+      const body = parseJsonBody(res, "Solus")
       const data = body?.data
 
       if (!data) break

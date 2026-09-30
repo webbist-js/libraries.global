@@ -5,7 +5,7 @@ import type {
   ProviderCredentials,
   RawEvent,
 } from "./types"
-import { safeFetch } from "../lib/safe-fetch"
+import { parseJsonBody, safeFetchText } from "../lib/safe-fetch"
 
 const PAGE_SIZE = 100
 const MAX_FUTURE_MONTHS = 18
@@ -58,12 +58,12 @@ async function fetchPage(
   url.searchParams.set("pageSize", String(PAGE_SIZE))
   url.searchParams.set("startDate", startDate)
 
-  const res = await safeFetch(url.toString(), {
+  const res = await safeFetchText(url.toString(), {
     headers: { Authorization: authHeader, Accept: "application/json" },
   })
-  if (!res.ok) throw new Error(`Aspen API ${res.status}: ${url.toString()}`)
+  if (!res.ok) throw new Error(`Aspen feed returned ${res.status}`)
 
-  const data = await res.json()
+  const data = parseJsonBody(res, "Aspen")
   const result = data?.result
   if (!result?.success || !Array.isArray(result.items)) {
     throw new Error("Aspen returned unexpected response payload")

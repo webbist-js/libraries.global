@@ -93,7 +93,7 @@ export function startHealthServer(port: number): void {
       }
 
       const row = await db("ev_event_credentials")
-        .select("provider", "credentials_encrypted")
+        .select("document_id", "provider", "credentials_encrypted")
         .where("document_id", credentialDocumentId)
         .first()
 
@@ -109,7 +109,9 @@ export function startHealthServer(port: number): void {
       let credentials: Record<string, string>
       try {
         credentials = JSON.parse(
-          decrypt(row.credentials_encrypted as string, key, prevKey)
+          decrypt(row.credentials_encrypted as string, key, prevKey, {
+            aad: row.document_id as string,
+          })
         ) as Record<string, string>
       } catch {
         res.writeHead(500)

@@ -1,5 +1,6 @@
 // apps/sync-worker/src/pipeline/write-run.ts
 import db from "../db"
+import { redactUrlsInText } from "../lib/redact-url"
 
 export interface RunSummary {
   runId: string
@@ -102,7 +103,13 @@ export async function finaliseRunRecord(summary: RunSummary): Promise<void> {
       events_pending_review: summary.eventsPendingReview,
       error_count: summary.errorCount,
       provider_breakdown: JSON.stringify(summary.providerBreakdown),
-      failed_credentials: JSON.stringify(summary.failedCredentials),
+      // Never persist a feed URL's query string or userinfo (API keys).
+      failed_credentials: JSON.stringify(
+        summary.failedCredentials.map((f) => ({
+          ...f,
+          error: redactUrlsInText(f.error),
+        }))
+      ),
       notes: `${summary.eventsCreated} new, ${summary.eventsUpdated} updated, ${summary.errorCount} errors`,
       updated_at: new Date().toISOString(),
     })
@@ -118,7 +125,8 @@ export async function updateCredentialStatus(
     .update({
       last_sync_at: new Date().toISOString(),
       last_sync_status: status,
-      last_error_message: status === "error" ? (errorMessage ?? null) : null,
+      last_error_message:
+        status === "error" ? redactUrlsInText(errorMessage ?? null) : null,
       updated_at: new Date().toISOString(),
     })
 }

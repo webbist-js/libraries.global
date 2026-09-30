@@ -7,7 +7,7 @@ import type {
   ProviderCredentials,
   RawEvent,
 } from "./types"
-import { safeFetch } from "../lib/safe-fetch"
+import { safeFetchText } from "../lib/safe-fetch"
 
 const MAX_EVENTS = 200
 
@@ -89,12 +89,13 @@ export const wegottickets: EventProvider = {
     if (!feedUrl) return { ok: false, error: "Missing feedUrl" }
 
     try {
-      const res = await safeFetch(feedUrl, {
+      const res = await safeFetchText(feedUrl, {
         headers: { Accept: "application/xml,text/xml;q=0.9,*/*;q=0.8" },
       })
-      if (!res.ok) return { ok: false, error: `Feed returned ${res.status}` }
+      if (!res.ok)
+        return { ok: false, error: `WeGotTickets feed returned ${res.status}` }
 
-      const xml = await res.text()
+      const xml = res.text
       const events = parseXml(xml)
       const usable = events.some((ev) => ev?.id && ev?.title)
       if (!usable)
@@ -113,12 +114,12 @@ export const wegottickets: EventProvider = {
     const { feedUrl } = credentials
     if (!feedUrl) throw new Error("Missing WeGotTickets feedUrl")
 
-    const res = await safeFetch(feedUrl, {
+    const res = await safeFetchText(feedUrl, {
       headers: { Accept: "application/xml,text/xml;q=0.9,*/*;q=0.8" },
     })
-    if (!res.ok) throw new Error(`WeGotTickets feed ${res.status}: ${feedUrl}`)
+    if (!res.ok) throw new Error(`WeGotTickets feed returned ${res.status}`)
 
-    const xml = await res.text()
+    const xml = res.text
     const rawEvents = parseXml(xml)
 
     const events: RawEvent[] = []

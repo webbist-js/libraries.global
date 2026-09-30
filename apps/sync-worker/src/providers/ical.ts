@@ -7,7 +7,7 @@ import type {
   ProviderCredentials,
   RawEvent,
 } from "./types"
-import { safeFetch } from "../lib/safe-fetch"
+import { safeFetchText } from "../lib/safe-fetch"
 
 const EVENT_TYPE_MAP: Record<string, EventType> = {
   READING: "reading_group",
@@ -123,10 +123,10 @@ async function fetchFeed(
   if (username && password) {
     headers.Authorization = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`
   }
-  const res = await safeFetch(feedUrl, { headers })
-  if (!res.ok) throw new Error(`iCal feed returned ${res.status}: ${feedUrl}`)
+  const res = await safeFetchText(feedUrl, { headers })
+  if (!res.ok) throw new Error(`iCal feed returned ${res.status}`)
 
-  return res.text()
+  return res.text
 }
 
 export const icalProvider: EventProvider = {

@@ -1,9 +1,16 @@
 /* eslint-disable sonarjs/no-hardcoded-ip -- SSRF guard: IP literals are the blocklist / test fixtures */
+import type * as Undici from "undici"
 import { describe, it, expect, vi } from "vitest"
 
-// Keep tests offline: the SSRF guard resolves hosts before fetching.
+const { mockFetch } = vi.hoisted(() => ({ mockFetch: vi.fn() }))
+// Keep tests offline: the SSRF guard resolves hosts before fetching, and
+// requests go through undici's own fetch (see src/lib/safe-fetch.ts).
 vi.mock("node:dns/promises", () => ({
   lookup: vi.fn(async () => [{ address: "93.184.216.34", family: 4 }]),
+}))
+vi.mock("undici", async (importOriginal) => ({
+  ...(await importOriginal<typeof Undici>()),
+  fetch: mockFetch,
 }))
 
 import { icalProvider } from "../../src/providers/ical"
@@ -19,9 +26,6 @@ DESCRIPTION:Monthly reading group for adults.
 URL:https://example.com/events/1
 END:VEVENT
 END:VCALENDAR`
-
-const mockFetch = vi.fn()
-vi.stubGlobal("fetch", mockFetch)
 
 describe("icalProvider.test()", () => {
   it("returns ok when feed URL is reachable", async () => {

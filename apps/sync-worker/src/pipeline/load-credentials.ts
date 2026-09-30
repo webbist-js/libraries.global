@@ -22,10 +22,48 @@ function getPrevKey(): string | undefined {
   return k && k.length === 64 ? k : undefined
 }
 
-export async function loadCredentials(): Promise<LoadedCredential[]> {
-  // Fetch credentials with their linked libraries via the join table.
+interface CredentialRow {
+  id: number
+  documentId: string
+  provider: string
+  label: string
+  scope: string
+  isActive: boolean
+  credentialsEncrypted: string
+}
+
+type LibraryLinkRow = LibraryHint & { credentialId: number }
+
+/** The linked libraries of every credential in `ids`, grouped by credential, in one query. */
+async function loadLibraryHints(
+  ids: number[]
+): Promise<Map<number, LibraryHint[]>> {
+  const byCredential = new Map<number, LibraryHint[]>()
+  if (ids.length === 0) return byCredential
+
   // Strapi v5 manyToMany join table naming: {collectionName}_{field}_lnk
-  const rows = await db("ev_event_credentials as ec")
+  const rows = (await db("ev_event_credentials_libraries_lnk as lnk")
+    .join("libraries as l", "l.id", "lnk.library_id")
+    .select(
+      "lnk.event_credential_id as credentialId",
+      "l.id",
+      "l.document_id as documentId",
+      "l.entity_ref as entityRef",
+      "l.name"
+    )
+    .whereIn("lnk.event_credential_id", ids)) as LibraryLinkRow[]
+
+  for (const { credentialId, ...hint } of rows) {
+    const list = byCredential.get(credentialId) ?? []
+    list.push(hint)
+    byCredential.set(credentialId, list)
+  }
+
+  return byCredential
+}
+
+export async function loadCredentials(): Promise<LoadedCredential[]> {
+  const rows = (await db("ev_event_credentials as ec")
     .select(
       "ec.id",
       "ec.document_id as documentId",
@@ -35,28 +73,19 @@ export async function loadCredentials(): Promise<LoadedCredential[]> {
       "ec.is_active as isActive",
       "ec.credentials_encrypted as credentialsEncrypted"
     )
-    .where("ec.is_active", true)
+    .where("ec.is_active", true)) as CredentialRow[]
 
   const key = getKey()
   const prevKey = getPrevKey()
+  const hints = await loadLibraryHints(rows.map((r) => r.id))
   const results: LoadedCredential[] = []
 
   for (const row of rows) {
-    // Fetch linked libraries from join table
-    const libraryRows = await db("ev_event_credentials_libraries_lnk as lnk")
-      .join("libraries as l", "l.id", "lnk.library_id")
-      .select(
-        "l.id",
-        "l.document_id as documentId",
-        "l.entity_ref as entityRef",
-        "l.name"
-      )
-      .where("lnk.event_credential_id", row.id)
-
     let credentials: Record<string, string>
     try {
+      // The blob is bound (AAD) to the credential's documentId.
       credentials = JSON.parse(
-        decrypt(row.credentialsEncrypted as string, key, prevKey)
+        decrypt(row.credentialsEncrypted, key, prevKey, { aad: row.documentId })
       ) as Record<string, string>
     } catch {
       console.error(
@@ -66,14 +95,14 @@ export async function loadCredentials(): Promise<LoadedCredential[]> {
     }
 
     results.push({
-      id: row.id as number,
-      documentId: row.documentId as string,
+      id: row.id,
+      documentId: row.documentId,
       provider: row.provider as ProviderKey,
-      label: row.label as string,
+      label: row.label,
       scope: row.scope as "library" | "group",
       isActive: true,
       credentials,
-      libraries: libraryRows as LibraryHint[],
+      libraries: hints.get(row.id) ?? [],
     })
   }
 
