@@ -318,6 +318,73 @@ describe("change-records middleware", () => {
     expect(written[0].next.name).toBe("Bibliotheque")
   })
 
+  it("records a publish with a locale array once per listed locale", async () => {
+    const published = (locale: string) => ({
+      ...lib(),
+      locale,
+      publishedAt: "2026-01-01T00:00:00Z",
+    })
+    const { store, run, rows } = setup({
+      [LIBRARY]: [
+        { ...lib(), name: "EN draft", __published: published("en") },
+        {
+          ...lib(),
+          locale: "fr",
+          name: "FR draft",
+          __published: published("fr"),
+        },
+        {
+          ...lib(),
+          locale: "de",
+          name: "DE draft",
+          __published: published("de"),
+        },
+      ],
+    })
+    await run(
+      LIBRARY,
+      "publish",
+      { documentId: "lib1", locale: ["fr", "de"] },
+      async () => {
+        for (const row of store[LIBRARY]!)
+          if (row.locale === "fr" || row.locale === "de") {
+            const { __published: _p, ...draft } = row
+            row.__published = structuredClone(draft)
+          }
+      }
+    )
+    const written = rows(LIBRARY_CHANGE)
+    expect(written.map((r) => [r.contentLocale, r.field, r.next])).toEqual([
+      ["fr", "name", "FR draft"],
+      ["de", "name", "DE draft"],
+    ])
+    expect(new Set(written.map((r) => r.batchId)).size).toBe(1)
+    expect(written.every((r) => r.action === "publish")).toBe(true)
+  })
+
+  it("takes a published delete's previous from the published version", async () => {
+    const { strapi, run, rows } = setup({
+      [LIBRARY]: [
+        {
+          ...lib(),
+          name: "Unpublished draft edit",
+          __published: { ...lib(), publishedAt: "2026-01-01T00:00:00Z" },
+        },
+      ],
+    })
+    await run(LIBRARY, "delete", { documentId: "lib1" }, () =>
+      strapi.documents(LIBRARY).delete({ documentId: "lib1" })
+    )
+    const written = rows(LIBRARY_CHANGE)
+    expect(written).toHaveLength(1)
+    expect(written[0]).toMatchObject({
+      action: "delete",
+      field: "*",
+      versionStatus: "published",
+    })
+    expect(written[0].previous.name).toBe("Old Library")
+  })
+
   it("rejects the outer write when the change-record insert fails", async () => {
     const { strapi, run } = setup({ [LIBRARY]: [lib()] })
     const base = strapi.documents.getMockImplementation()!

@@ -43,6 +43,16 @@ const SYSTEM: ChangeContext = {
   actorId: "system",
 }
 
+/**
+ * Content API token strategy names: "content-api-token" in Strapi 5.55.1
+ * (@strapi/admin server/src/strategies/content-api-token), "api-token" in
+ * earlier 5.x releases.
+ */
+const TOKEN_STRATEGIES: ReadonlySet<unknown> = new Set([
+  "content-api-token",
+  "api-token",
+])
+
 const IMPORT_TOKEN = /^(import|ingest)/i
 
 const header = (req: any, name: string): string | undefined => {
@@ -76,7 +86,10 @@ function fromRequest(req: any): ChangeContext | null {
     }
   }
 
-  const tokenName = state.auth?.credentials?.name
+  // Only an API token's credentials carry a trustworthy `name`.
+  const tokenName = TOKEN_STRATEGIES.has(strategy)
+    ? state.auth?.credentials?.name
+    : undefined
   if (typeof tokenName === "string" && tokenName.length > 0) {
     return {
       source: IMPORT_TOKEN.test(tokenName) ? "import" : "api_token",

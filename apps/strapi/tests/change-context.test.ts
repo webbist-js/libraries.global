@@ -61,7 +61,10 @@ describe("resolveChangeContext", () => {
       resolveChangeContext(
         withRequest({
           state: {
-            auth: { strategy: { name: "api-token" }, credentials: { name } },
+            auth: {
+              strategy: { name: "content-api-token" },
+              credentials: { name },
+            },
           },
         })
       )
@@ -76,6 +79,28 @@ describe("resolveChangeContext", () => {
       actorKind: "token",
       actorId: "ci-bot",
     })
+  })
+
+  it("trusts credentials.name as a token only under the content API token strategy", () => {
+    const withStrategy = (strategy: unknown) =>
+      resolveChangeContext(
+        withRequest({
+          state: { auth: { strategy, credentials: { name: "ingest-uk" } } },
+        })
+      )
+    // Strapi 5.55.1 registers the content API token strategy as
+    // "content-api-token" (@strapi/admin server/src/strategies).
+    expect(withStrategy({ name: "content-api-token" })).toMatchObject({
+      source: "import",
+      actorKind: "token",
+      actorId: "ingest-uk",
+    })
+    // Any other strategy (or none) carrying a `name` is not a token.
+    expect(withStrategy({ name: "users-permissions" })).toMatchObject({
+      source: "system",
+      actorKind: "system",
+    })
+    expect(withStrategy(undefined)).toMatchObject({ source: "system" })
   })
 
   it("resolves a bridge call with a valid secret", () => {

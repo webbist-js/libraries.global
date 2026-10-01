@@ -127,7 +127,8 @@ type RecordArgs = {
 }
 
 /**
- * The locales a write touches. A single locale (or the default); for a
+ * The locales a write touches. A single locale (or the default), each
+ * entry of a locale array; for a
  * `delete`, `publish` or `unpublish` with `locale: "*"`, every locale the
  * document has, since `findOne` cannot read `"*"`.
  */
@@ -138,6 +139,17 @@ async function localesFor(
   documentId: unknown,
   locale: unknown
 ): Promise<(string | undefined)[]> {
+  // An array of locales (Content Manager bulk publish/unpublish/delete);
+  // Strapi's checkLocale treats an empty one as no locale.
+  if (Array.isArray(locale)) {
+    const listed = [
+      ...new Set(
+        locale.filter((l): l is string => typeof l === "string" && l.length > 0)
+      ),
+    ]
+
+    return listed.length > 0 ? listed : [await defaultLocale(strapi)]
+  }
   if (locale !== "*") {
     if (typeof locale === "string" && locale.length > 0) return [locale]
 
@@ -245,7 +257,13 @@ function versionStatusFor(
 
 async function recordLibrary(args: RecordArgs & { batchId: string }) {
   const { strapi, action, attrs, documentId, after, snap, actor } = args
-  const prev = snap.before ? normaliseForDiff(snap.before, attrs) : null
+  // A delete that removes a published version is public: describe what the
+  // public saw, never unpublished draft edits.
+  const removed =
+    action === "delete" && args.versionStatus === "published"
+      ? snap.publishedBefore
+      : snap.before
+  const prev = removed ? normaliseForDiff(removed, attrs) : null
   const nextDoc = after ? normaliseForDiff(after, attrs) : null
   const changes = libraryChanges(action, prev, nextDoc, FIELD_GROUPS(attrs))
 

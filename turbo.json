@@ -34,7 +34,8 @@
     "NEXT_RUNTIME",
     "BASIC_AUTH_ENABLED",
     "BASIC_AUTH_USERNAME",
-    "BASIC_AUTH_PASSWORD"
+    "BASIC_AUTH_PASSWORD",
+    "CHANGE_RECORDS_ENABLED"
   ],
   "tasks": {
     "build": {
