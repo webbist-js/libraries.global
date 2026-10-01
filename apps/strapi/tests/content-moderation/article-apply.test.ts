@@ -323,6 +323,26 @@ describe("article points come from draftData and the target, never from fields",
     ])
   })
 
+  it("an approved new_article stores the created article as resultDocumentId", async () => {
+    const sub = {
+      documentId: "s0000000000000000000052",
+      submissionType: "wiki_edit",
+      status: "pending",
+      submittedByUserId: "u1",
+      fields: {},
+      draftData: { kind: "new_article", locale: "en", title: "Brand new" },
+    }
+    const { store, svc } = approve(sub)
+    const result = await svc.updateStatus(sub.documentId, "approved", REVIEWER)
+    const created = store[WIKI]!.find((a: any) => a.title === "Brand new")
+    expect(created?.documentId).toBeTruthy()
+    const stored = store["plugin::content-moderation.submission"]!.find(
+      (s: any) => s.documentId === sub.documentId
+    )
+    expect(stored?.resultDocumentId).toBe(created!.documentId)
+    expect((result as any).data.resultDocumentId).toBe(created!.documentId)
+  })
+
   it("a translation is one whose locale has no version yet", async () => {
     const sub = {
       documentId: "s0000000000000000000051",

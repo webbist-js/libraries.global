@@ -381,8 +381,11 @@ describe("libraryHistoryStats", () => {
     const { history, queries } = setup([], {}, "sqlite")
     await history.libraryHistoryStats(LIB, 24)
     const raw = JSON.stringify(queries.map((q) => q.ops))
-    expect(raw).toContain("strftime('%Y-%m'")
+    expect(raw).toContain("strftime('%Y-%m', changed_at)")
     expect(raw).not.toContain("date_trunc")
+    // The window filter and the month expression read changed_at the same
+    // way (ISO text): no epoch-millisecond branch in one but not the other.
+    expect(raw).not.toContain("unixepoch")
   })
 })
 
@@ -627,6 +630,130 @@ describe("library-history-backfill-v1", () => {
 
     await backfillLibraryHistory(f.strapi)
     expect(f.store[CHANGE]).toHaveLength(3)
+  })
+})
+
+describe("library-history-backfill-v1: what counts as a record edit", () => {
+  const approved = (id: number, over: Record<string, any>) => ({
+    id,
+    documentId: `s${id}`,
+    status: "approved",
+    targetEntityType: "library",
+    targetDocumentId: LIB,
+    submittedByUserId: "u1",
+    reviewedAt: "2026-01-02T00:00:00.000Z",
+    ...over,
+  })
+
+  it("backfills library_edit and record corrections only", async () => {
+    const f = makeFakeStrapi({
+      [SUB]: [
+        approved(1, {
+          submissionType: "library_claim",
+          fields: { role: "librarian", department: "Rare books" },
+        }),
+        approved(2, {
+          submissionType: "correction",
+          fields: { kind: "facilities", answers: { wifi: "yes" } },
+        }),
+        approved(3, {
+          submissionType: "correction",
+          fields: { kind: "photo", photoId: 12, caption: "Front" },
+        }),
+        approved(4, {
+          submissionType: "correction",
+          fields: { kind: "record", previous: {}, name: "A" },
+        }),
+        approved(5, { submissionType: "library_edit", fields: { phone: "1" } }),
+        approved(6, {
+          submissionType: "correction",
+          fields: { category: "hours", libraryName: "X" },
+        }),
+      ],
+    })
+    withStore(f.strapi)
+    await backfillLibraryHistory(f.strapi)
+    const bySub = (f.store[CHANGE] ?? []).map(
+      (r: any) => `${r.submissionDocumentId}:${r.field}`
+    )
+    expect(bySub.sort()).toEqual(["s4:name", "s5:phone"])
+  })
+
+  it("writes a batch atomically: a failed row leaves none of it", async () => {
+    const f = makeFakeStrapi({
+      [SUB]: [
+        approved(1, {
+          submissionType: "library_edit",
+          fields: { name: "A", city: "B" },
+        }),
+      ],
+    })
+    withStore(f.strapi)
+    const original = f.strapi.documents
+    let creates = 0
+    f.strapi.documents = vi.fn((uid: string) => {
+      const api = original(uid)
+      if (uid !== CHANGE) return api
+
+      return {
+        ...api,
+        create: vi.fn(async (args: any) => {
+          creates += 1
+          if (creates === 2) throw new Error("db down")
+
+          return api.create(args)
+        }),
+      }
+    })
+    await expect(backfillLibraryHistory(f.strapi)).rejects.toThrow("db down")
+    expect(f.store[CHANGE] ?? []).toHaveLength(0)
+  })
+
+  it("attributes a submission without a submitter to system", async () => {
+    const f = makeFakeStrapi({
+      [SUB]: [
+        approved(1, {
+          submissionType: "library_edit",
+          submittedByUserId: undefined,
+          fields: { name: "A" },
+        }),
+      ],
+    })
+    withStore(f.strapi)
+    await backfillLibraryHistory(f.strapi)
+    expect(f.store[CHANGE]![0]).toMatchObject({
+      actorKind: "system",
+      actorId: "system",
+    })
+  })
+})
+
+describe("history row cap", () => {
+  it("warns when a page of batches hits the row cap", async () => {
+    const many = Array.from({ length: 5000 }, (_, i) =>
+      row({
+        batchId: "b1",
+        field: `f${i}`,
+        changedAt: "2026-01-05T10:00:00.000Z",
+      })
+    )
+    const { history, strapi } = setup(many)
+    await history.libraryHistory(LIB, { page: 1, pageSize: 20, values: false })
+    expect(strapi.log.warn).toHaveBeenCalledWith(
+      expect.stringContaining("row cap")
+    )
+  })
+
+  it("does not warn below the cap", async () => {
+    const { history, strapi } = setup([
+      row({
+        batchId: "b1",
+        field: "name",
+        changedAt: "2026-01-05T10:00:00.000Z",
+      }),
+    ])
+    await history.libraryHistory(LIB, { page: 1, pageSize: 20, values: false })
+    expect(strapi.log.warn).not.toHaveBeenCalled()
   })
 })
 

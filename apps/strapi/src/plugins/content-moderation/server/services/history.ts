@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 
 import { isActivityPublic } from "../../../../utils/activity-visibility"
+import { isRecordCorrection } from "../utils/library-record"
 import { RECORD_META_KEYS } from "../utils/record-review"
 
 /**
@@ -52,13 +53,13 @@ function isPostgres(strapi: any): boolean {
 }
 
 /**
- * `changed_at` as `YYYY-MM`. SQLite stores Strapi datetimes either as ISO
- * text or as epoch milliseconds, so both are handled.
+ * `changed_at` as `YYYY-MM`. On SQLite this reads `changed_at` as ISO text,
+ * the same way the window filter (an ISO string comparison) does.
  */
 function monthExpr(strapi: any): string {
   return isPostgres(strapi)
     ? "to_char(date_trunc('month', changed_at), 'YYYY-MM')"
-    : "strftime('%Y-%m', CASE WHEN typeof(changed_at) IN ('integer', 'real') THEN datetime(changed_at / 1000, 'unixepoch') ELSE changed_at END)"
+    : "strftime('%Y-%m', changed_at)"
 }
 
 const iso = (v: unknown): string =>
@@ -175,6 +176,11 @@ export default ({ strapi }: { strapi: any }) => ({
       sort: [{ changedAt: "desc" }, { id: "asc" }],
       limit: ROWS_PER_PAGE,
     })) as ChangeRow[]
+
+    if ((rows ?? []).length >= ROWS_PER_PAGE)
+      strapi.log.warn(
+        `[content-moderation] library ${documentId} history page ${o.page} hit the row cap (${ROWS_PER_PAGE}); some fields are missing from its batches`
+      )
 
     const byBatch = new Map<string, ChangeRow[]>()
     for (const r of rows ?? [])
@@ -343,12 +349,21 @@ export default ({ strapi }: { strapi: any }) => ({
 })
 
 const STORE = { type: "plugin", name: "content-moderation" } as const
+
+/** A `library_edit`, or a correction from the Index editor (`kind: "record"`). */
+function isRecordEdit(s: Record<string, any>): boolean {
+  return (
+    s.submissionType === "library_edit" ||
+    (s.submissionType === "correction" && isRecordCorrection(s.fields))
+  )
+}
 const BACKFILL_KEY = "library-history-backfill-v1"
 const BACKFILL_PAGE = 200
 
 /**
- * One-off: approved library submissions from before Change Records existed
- * get one Change Batch each, so the public history isn't empty. Values were
+ * One-off: approved record edits (`library_edit`, and corrections with
+ * `fields.kind: "record"`) from before Change Records existed get one
+ * Change Batch each, so the public history isn't empty. Values were
  * never recorded, so `previous`/`next` are null. A submission that already
  * has Change Records (approved after they existed) is skipped. Guarded by a
  * core-store flag.
@@ -375,6 +390,9 @@ export async function backfillLibraryHistory(
     for (const s of subs) {
       if (typeof s.targetDocumentId !== "string" || !s.targetDocumentId)
         continue
+      // Only submissions that edited the record itself: claims, facility
+      // answers, photos and free-text corrections changed no record field.
+      if (!isRecordEdit(s)) continue
       const fields =
         s.fields && typeof s.fields === "object" && !Array.isArray(s.fields)
           ? Object.keys(s.fields).filter((k) => !RECORD_META_KEYS.has(k))
@@ -387,24 +405,33 @@ export async function backfillLibraryHistory(
 
       const batchId = randomUUID()
       const changedAt = s.reviewedAt ?? s.updatedAt ?? new Date().toISOString()
-      for (const field of fields)
-        await strapi.documents(LIBRARY_CHANGE).create({
-          data: {
-            batchId,
-            libraryDocumentId: s.targetDocumentId,
-            contentLocale: s.contentLocale ?? null,
-            versionStatus: "published",
-            action: "update",
-            field,
-            previous: null,
-            next: null,
-            source: "submission",
-            actorKind: "contributor",
-            actorId: `ba:${s.submittedByUserId}`,
-            submissionDocumentId: s.documentId,
-            changedAt,
-          },
-        })
+      const submitter =
+        typeof s.submittedByUserId === "string" && s.submittedByUserId
+          ? s.submittedByUserId
+          : null
+      // One batch commits whole or not at all; a throw stops the migration
+      // before its flag is set, and the next boot skips batches already
+      // written (the `recorded` check above).
+      await strapi.db.transaction(async () => {
+        for (const field of fields)
+          await strapi.documents(LIBRARY_CHANGE).create({
+            data: {
+              batchId,
+              libraryDocumentId: s.targetDocumentId,
+              contentLocale: s.contentLocale ?? null,
+              versionStatus: "published",
+              action: "update",
+              field,
+              previous: null,
+              next: null,
+              source: "submission",
+              actorKind: submitter ? "contributor" : "system",
+              actorId: submitter ? `ba:${submitter}` : "system",
+              submissionDocumentId: s.documentId,
+              changedAt,
+            },
+          })
+      })
       batches += 1
     }
     if (subs.length < BACKFILL_PAGE) break
