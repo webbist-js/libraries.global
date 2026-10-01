@@ -5,8 +5,11 @@ import {
   ApplyRefusedError,
   applyToPublished,
 } from "../../src/plugins/content-moderation/server/utils/publish-guard"
+import { adminReviewer } from "../../src/plugins/content-moderation/server/utils/reviewer"
 import { sanitizeWikiBody } from "../../src/plugins/content-moderation/server/utils/wiki-body"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
+
+const REVIEWER = adminReviewer({ id: 1, email: "moderator@example.org" })
 
 const WIKI = "api::wiki-article.wiki-article"
 
@@ -276,7 +279,7 @@ describe("approval against an unpublished or divergent library", () => {
     const result = await svc.updateStatus(
       "s0000000000000000000030",
       "approved",
-      "admin1",
+      REVIEWER,
       "Looks right"
     )
     expect(result).toEqual({ error: "apply_refused", reason: "not_published" })
@@ -299,7 +302,7 @@ describe("approval against an unpublished or divergent library", () => {
     const result = await svc.updateStatus(
       "s0000000000000000000030",
       "approved",
-      "admin1",
+      REVIEWER,
       "Fine"
     )
     expect("data" in result).toBe(true)
@@ -352,7 +355,7 @@ describe("new_library approval", () => {
     const result = await createService({ strapi }).updateStatus(
       sub.documentId,
       "approved",
-      "admin1"
+      REVIEWER
     )
 
     expect(result).not.toHaveProperty("error")

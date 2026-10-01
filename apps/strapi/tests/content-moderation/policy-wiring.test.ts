@@ -3,7 +3,10 @@ import { describe, expect, it, vi } from "vitest"
 import submissionControllerFactory from "../../src/plugins/content-moderation/server/controllers/submission"
 import createSubmissionService from "../../src/plugins/content-moderation/server/services/submission"
 import createPolicy from "../../src/plugins/content-moderation/server/services/submission-policy"
+import { adminReviewer } from "../../src/plugins/content-moderation/server/utils/reviewer"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
+
+const REVIEWER = adminReviewer({ id: 1, email: "moderator@example.org" })
 
 process.env.STRAPI_BRIDGE_SECRET = "test-secret"
 
@@ -413,7 +416,7 @@ describe("updateStatus keeps the moderator's reviewNote when a wiki_edit is only
     const result = await svc.updateStatus(
       documentId,
       "approved",
-      "admin",
+      REVIEWER,
       "Looks good"
     )
 

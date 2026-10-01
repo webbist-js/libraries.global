@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import submissionControllerFactory from "../../src/plugins/content-moderation/server/controllers/submission"
 import cmRoutes from "../../src/plugins/content-moderation/server/routes/admin"
+import createService from "../../src/plugins/content-moderation/server/services/submission"
 import rwRoutes from "../../src/plugins/rewards/server/routes/admin"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
 
@@ -28,7 +29,7 @@ describe("admin routes", () => {
 describe("submission controller", () => {
   it("blocks self-approval", async () => {
     const docId = "a1b2c3d4e5f6g7h8i9j0k1l2"
-    const { strapi, store } = makeFakeStrapi({
+    const { strapi, store, services } = makeFakeStrapi({
       "plugin::content-moderation.submission": [
         {
           documentId: docId,
@@ -41,6 +42,7 @@ describe("submission controller", () => {
       ],
     })
 
+    services["content-moderation.submission"] = createService({ strapi })
     const controller = submissionControllerFactory({ strapi })
     const forbidden = vi.fn()
     const ctx = {
@@ -62,7 +64,7 @@ describe("submission controller", () => {
 
   it("blocks self-approval when the emails differ only by case and whitespace", async () => {
     const docId = "a1b2c3d4e5f6g7h8i9j0k1l3"
-    const { strapi, store } = makeFakeStrapi({
+    const { strapi, store, services } = makeFakeStrapi({
       "plugin::content-moderation.submission": [
         {
           documentId: docId,
@@ -74,6 +76,7 @@ describe("submission controller", () => {
         },
       ],
     })
+    services["content-moderation.submission"] = createService({ strapi })
     const controller = submissionControllerFactory({ strapi })
     const forbidden = vi.fn()
     await controller.updateStatus({

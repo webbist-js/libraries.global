@@ -9,7 +9,10 @@ import {
   isTranslationSubmission,
   slugify,
 } from "../../src/plugins/content-moderation/server/utils/article-apply"
+import { adminReviewer } from "../../src/plugins/content-moderation/server/utils/reviewer"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
+
+const REVIEWER = adminReviewer({ id: 1, email: "moderator@example.org" })
 
 const WIKI = "api::wiki-article.wiki-article"
 const BLOG = "api::blog-article.blog-article"
@@ -308,7 +311,7 @@ describe("article points come from draftData and the target, never from fields",
       draftData: { locale: "en", title: "Renamed" },
     }
     const { store, award, svc } = approve(sub)
-    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+    const result = await svc.updateStatus(sub.documentId, "approved", REVIEWER)
     expect("data" in result).toBe(true)
     expect(store[WIKI]).toHaveLength(1)
     expect(store[WIKI]![0]!.title).toBe("Renamed")
@@ -331,7 +334,7 @@ describe("article points come from draftData and the target, never from fields",
       draftData: { locale: "fr", proposedBody: body, proposedTitle: "Ancien" },
     }
     const { award, svc } = approve(sub, "reader")
-    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+    const result = await svc.updateStatus(sub.documentId, "approved", REVIEWER)
     expect("data" in result).toBe(true)
     expect(award.mock.calls[0]!.slice(0, 3)).toEqual([
       "u1",
@@ -362,7 +365,7 @@ describe("article points come from draftData and the target, never from fields",
         "wiki"
       )
     ).toBe(false)
-    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+    const result = await svc.updateStatus(sub.documentId, "approved", REVIEWER)
     expect("data" in result).toBe(true)
     expect(store[WIKI]).toHaveLength(1)
     // Written to the default (en) draft, never to an unknown locale.
@@ -384,7 +387,7 @@ describe("article points come from draftData and the target, never from fields",
       draftData: { locale: "en", body },
     }
     const { award, svc } = approve(sub, "reader")
-    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+    const result = await svc.updateStatus(sub.documentId, "approved", REVIEWER)
     expect("data" in result).toBe(true)
     expect(award).not.toHaveBeenCalled()
   })

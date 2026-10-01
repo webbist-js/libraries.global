@@ -1,0 +1,32 @@
+{
+  "kind": "collectionType",
+  "collectionName": "cm_review_events",
+  "info": {
+    "singularName": "review-event",
+    "pluralName": "review-events",
+    "displayName": "Review Event",
+    "description": "One row per Submission State change: who moved it, from what, to what, with what note. Append-only."
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": false },
+    "content-type-builder": { "visible": false }
+  },
+  "attributes": {
+    "submissionDocumentId": { "type": "string", "required": true },
+    "fromStatus": {
+      "type": "enumeration",
+      "enum": ["draft", "pending", "approved", "rejected", "needs_info"]
+    },
+    "toStatus": {
+      "type": "enumeration",
+      "enum": ["draft", "pending", "approved", "rejected", "needs_info"]
+    },
+    "reviewerId": { "type": "string" },
+    "reviewerKind": {
+      "type": "enumeration",
+      "enum": ["admin", "contributor"]
+    },
+    "note": { "type": "text" }
+  }
+}

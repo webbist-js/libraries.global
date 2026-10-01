@@ -31,8 +31,20 @@ export default [
   },
   {
     method: "GET",
-    path: "/libraries/:documentId/revisions",
-    handler: "submission.libraryRevisions",
+    path: "/libraries/:documentId/history",
+    handler: "submission.libraryHistory",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
+    path: "/libraries/:documentId/history/stats",
+    handler: "submission.libraryHistoryStats",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
+    path: "/articles/:kind/:documentId/history",
+    handler: "submission.articleHistory",
     config: { auth: false, policies: [] },
   },
   {

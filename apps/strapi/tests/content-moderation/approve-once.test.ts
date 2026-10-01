@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from "vitest"
 
 import createService from "../../src/plugins/content-moderation/server/services/submission"
 import { payloadHash } from "../../src/plugins/content-moderation/server/utils/payload-hash"
+import { adminReviewer } from "../../src/plugins/content-moderation/server/utils/reviewer"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
+
+const REVIEWER = adminReviewer({ id: 1, email: "moderator@example.org" })
 
 const UID = "plugin::content-moderation.submission"
 const pending = () => {
@@ -52,22 +55,24 @@ describe("updateStatus", () => {
     const a = await svc.updateStatus(
       "s0000000000000000000001",
       "approved",
-      "admin1"
+      REVIEWER
     )
     const b = await svc.updateStatus(
       "s0000000000000000000001",
       "approved",
-      "admin1"
+      REVIEWER
     )
     expect("data" in a).toBe(true)
     expect(b).toEqual({ error: "invalid_transition" })
     expect(award).toHaveBeenCalledTimes(1)
+    // The reviewer is stored with its kind prefix.
+    expect((a as any).data.reviewedByUserId).toBe("admin:1")
   })
 
   it("refuses to re-open a decided submission", async () => {
     const { svc } = setup({ ...pending(), status: "approved" })
     expect(
-      await svc.updateStatus("s0000000000000000000001", "pending", "admin1")
+      await svc.updateStatus("s0000000000000000000001", "pending", REVIEWER)
     ).toEqual({ error: "invalid_transition" })
   })
 
@@ -75,14 +80,14 @@ describe("updateStatus", () => {
     const tampered = { ...pending(), fields: { a: 999 } }
     const { svc, award } = setup(tampered)
     expect(
-      await svc.updateStatus("s0000000000000000000001", "approved", "admin1")
+      await svc.updateStatus("s0000000000000000000001", "approved", REVIEWER)
     ).toEqual({ error: "tampered" })
     expect(award).not.toHaveBeenCalled()
   })
 
   it("passes an idempotency key to rewards", async () => {
     const { svc, award } = setup()
-    await svc.updateStatus("s0000000000000000000001", "approved", "admin1")
+    await svc.updateStatus("s0000000000000000000001", "approved", REVIEWER)
     expect(award).toHaveBeenCalledWith(
       "u1",
       "correction_approved",
@@ -103,7 +108,7 @@ describe("updateStatus", () => {
     const result = await svc.updateStatus(
       "s0000000000000000000001",
       "approved",
-      "admin1"
+      REVIEWER
     )
 
     expect(result).toEqual({ error: "conflict" })
@@ -129,7 +134,7 @@ describe("updateStatus", () => {
     const result = await svc.updateStatus(
       claim.documentId,
       "approved",
-      "admin1"
+      REVIEWER
     )
 
     expect(result).toEqual({ error: "apply_failed" })

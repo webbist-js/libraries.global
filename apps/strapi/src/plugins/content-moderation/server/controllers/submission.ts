@@ -8,7 +8,27 @@ import {
   isDocumentId,
   isValidDraftData,
 } from "../utils/params"
+import { adminReviewer } from "../utils/reviewer"
 import { isValidServiceSecret } from "../utils/service-secret"
+
+/** Parses a query value as an integer within [min, max]; anything else → def. */
+function clampInt(
+  value: unknown,
+  { def, min, max }: { def: number; min: number; max: number }
+): number {
+  if (typeof value !== "string" && typeof value !== "number") return def
+  if (typeof value === "string" && value.trim() === "") return def
+  const n = Math.trunc(Number(value))
+  if (Number.isNaN(n)) return def
+
+  return Math.min(max, Math.max(min, n))
+}
+
+const PAGE = { def: 1, min: 1, max: 10_000 }
+const PAGE_SIZE = { def: 20, min: 1, max: 50 }
+const MONTHS = { def: 24, min: 1, max: 60 }
+const ARTICLE_KINDS = new Set(["wiki", "blog"])
+const HISTORY_CACHE = "public, max-age=60"
 
 // One place to map a policy verdict to the response, used by both `create`
 // and `finalize`.
@@ -229,18 +249,65 @@ export default ({ strapi }: { strapi: any }) => ({
     ctx.body = { data: submissions }
   },
 
-  // GET /api/content-moderation/libraries/:documentId/revisions  (content-api route)
-  // Public, sanitized revision history for a library (approved submissions only).
-  async libraryRevisions(ctx: any) {
-    const { documentId } = ctx.params as { documentId: string }
-    if (!documentId) return ctx.badRequest("Missing documentId")
+  // GET /api/content-moderation/libraries/:documentId/history  (content-api route, public)
+  // A library's published Change Batches, newest first. Field values only
+  // with `values=1` *and* the bridge secret; everyone else gets field names.
+  async libraryHistory(ctx: any) {
+    const { documentId } = ctx.params as { documentId?: unknown }
+    if (!isDocumentId(documentId)) return ctx.badRequest("Invalid documentId")
+    const q = (ctx.query ?? {}) as Record<string, unknown>
+    const wantsValues = q.values === "1" || q.values === "true"
+    const values =
+      wantsValues &&
+      isValidServiceSecret(ctx.request?.headers?.["x-service-secret"])
 
-    const revisions = await strapi
+    const result = await strapi
       .plugin("content-moderation")
-      .service("submission")
-      .findLibraryRevisions(documentId)
+      .service("history")
+      .libraryHistory(documentId, {
+        page: clampInt(q.page, PAGE),
+        pageSize: clampInt(q.pageSize, PAGE_SIZE),
+        values,
+      })
+    ctx.set("Cache-Control", values ? "no-store" : HISTORY_CACHE)
+    ctx.body = result
+  },
 
-    ctx.body = { data: revisions }
+  // GET /api/content-moderation/libraries/:documentId/history/stats?months  (content-api route, public)
+  async libraryHistoryStats(ctx: any) {
+    const { documentId } = ctx.params as { documentId?: unknown }
+    if (!isDocumentId(documentId)) return ctx.badRequest("Invalid documentId")
+    const q = (ctx.query ?? {}) as Record<string, unknown>
+
+    const data = await strapi
+      .plugin("content-moderation")
+      .service("history")
+      .libraryHistoryStats(documentId, clampInt(q.months, MONTHS))
+    ctx.set("Cache-Control", HISTORY_CACHE)
+    ctx.body = { data }
+  },
+
+  // GET /api/content-moderation/articles/:kind/:documentId/history  (content-api route, public)
+  // `kind` is `wiki` (Knowledge) or `blog` (Journal).
+  async articleHistory(ctx: any) {
+    const { kind, documentId } = ctx.params as {
+      kind?: unknown
+      documentId?: unknown
+    }
+    if (typeof kind !== "string" || !ARTICLE_KINDS.has(kind))
+      return ctx.badRequest("kind must be wiki or blog")
+    if (!isDocumentId(documentId)) return ctx.badRequest("Invalid documentId")
+    const q = (ctx.query ?? {}) as Record<string, unknown>
+
+    const result = await strapi
+      .plugin("content-moderation")
+      .service("history")
+      .articleHistory(kind, documentId, {
+        page: clampInt(q.page, PAGE),
+        pageSize: clampInt(q.pageSize, PAGE_SIZE),
+      })
+    ctx.set("Cache-Control", HISTORY_CACHE)
+    ctx.body = result
   },
 
   // GET /api/content-moderation/submissions/by-username/:username  (content-api route)
@@ -329,33 +396,23 @@ export default ({ strapi }: { strapi: any }) => ({
       )
     }
 
-    const reviewer = ctx.state.user ?? ctx.state.admin
-    const reviewerId = String(reviewer?.id ?? "unknown")
-
-    const target = await strapi
-      .documents("plugin::content-moderation.submission")
-      .findOne({ documentId: id })
-    // No self-approval: compared case-insensitively after trimming, so a
-    // stray space or capital can't slip past.
-    const norm = (v: unknown) =>
-      String(v ?? "")
-        .trim()
-        .toLowerCase()
-    if (
-      target &&
-      norm(reviewer?.email) &&
-      norm(target.submittedByEmail) &&
-      norm(reviewer.email) === norm(target.submittedByEmail)
-    )
-      return ctx.forbidden("You can't review your own submission.")
+    // The admin user the route's policies authenticated. The service refuses
+    // self-review (see utils/reviewer).
+    const admin = ctx.state.user ?? ctx.state.admin
+    const reviewer = adminReviewer({
+      id: admin?.id ?? "unknown",
+      email: admin?.email ?? null,
+    })
 
     const result = await strapi
       .plugin("content-moderation")
       .service("submission")
-      .updateStatus(id, status, reviewerId, reviewNote)
+      .updateStatus(id, status, reviewer, reviewNote)
 
     if ("error" in result) {
       if (result.error === "not_found") return ctx.notFound()
+      if (result.error === "self_review")
+        return ctx.forbidden("You can't review your own submission.")
       if (result.error === "apply_failed" && result.unreverted) {
         ctx.status = 500
         ctx.body = {

@@ -1,4 +1,5 @@
+import history from "./history"
 import submission from "./submission"
 import submissionPolicy from "./submission-policy"
 
-export default { submission, "submission-policy": submissionPolicy }
+export default { submission, "submission-policy": submissionPolicy, history }

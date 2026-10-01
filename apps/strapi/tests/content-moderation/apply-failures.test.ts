@@ -3,7 +3,10 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import submissionControllerFactory from "../../src/plugins/content-moderation/server/controllers/submission"
 import createService from "../../src/plugins/content-moderation/server/services/submission"
 import { payloadHash } from "../../src/plugins/content-moderation/server/utils/payload-hash"
+import { adminReviewer } from "../../src/plugins/content-moderation/server/utils/reviewer"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
+
+const REVIEWER = adminReviewer({ id: 1, email: "moderator@example.org" })
 
 // The 429 Retry-After test below sets STRAPI_BRIDGE_SECRET for the
 // duration of one test; restore whatever this suite started with so it
@@ -123,7 +126,7 @@ describe("I1: side-effect errors revert the approval", () => {
     })
     failOn(strapi, WIKI, "update")
 
-    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+    const result = await svc.updateStatus(sub.documentId, "approved", REVIEWER)
 
     expect(result).toEqual({ error: "apply_failed" })
     expect(statusOf(store, sub.documentId)).toBe("pending")
@@ -135,7 +138,7 @@ describe("I1: side-effect errors revert the approval", () => {
     const { strapi, store, svc, award } = setup({ [SUB]: [sub], [LIB]: [] })
     failOn(strapi, LIB, "create")
 
-    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+    const result = await svc.updateStatus(sub.documentId, "approved", REVIEWER)
 
     expect(result).toEqual({ error: "apply_failed" })
     expect(statusOf(store, sub.documentId)).toBe("pending")
@@ -175,7 +178,7 @@ describe("I1: side-effect errors revert the approval", () => {
       }
     })
 
-    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+    const result = await svc.updateStatus(sub.documentId, "approved", REVIEWER)
 
     expect(result).toEqual({ error: "apply_failed" })
     expect(statusOf(store, sub.documentId)).toBe("pending")
@@ -201,7 +204,7 @@ describe("I3: partial claim approval and revert failures", () => {
     })
     failOn(strapi, ROLE_GRANT, "create")
 
-    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+    const result = await svc.updateStatus(sub.documentId, "approved", REVIEWER)
 
     expect(result).toEqual({ error: "apply_failed" })
     expect(store[AFF]).toHaveLength(0)
@@ -224,7 +227,7 @@ describe("I3: partial claim approval and revert failures", () => {
     })
     failOn(strapi, ROLE_GRANT, "create")
 
-    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+    const result = await svc.updateStatus(sub.documentId, "approved", REVIEWER)
 
     expect(result).toEqual({ error: "apply_failed" })
     expect(store[AFF].map((a: any) => a.documentId)).toEqual(["aff1"])
@@ -237,7 +240,7 @@ describe("I3: partial claim approval and revert failures", () => {
     // A transaction whose rollback fails: the callback's writes stay put.
     strapi.db.transaction = vi.fn(async (cb: () => Promise<unknown>) => cb())
 
-    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+    const result = await svc.updateStatus(sub.documentId, "approved", REVIEWER)
 
     expect(result).toEqual({ error: "apply_failed", unreverted: true })
     expect(statusOf(store, sub.documentId)).toBe("approved")
@@ -267,7 +270,7 @@ describe("I3: partial claim approval and revert failures", () => {
       }
     })
 
-    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+    const result = await svc.updateStatus(sub.documentId, "approved", REVIEWER)
 
     expect(result).toEqual({ error: "apply_failed", unreverted: true })
   })
@@ -309,7 +312,7 @@ describe("the status change and its side effects commit together", () => {
     // the "draft only" marker is written to the submission — and that throws.
     failOn(strapi, SUB, "update")
 
-    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+    const result = await svc.updateStatus(sub.documentId, "approved", REVIEWER)
 
     expect(result).toEqual({ error: "apply_failed" })
     expect(statusOf(store, sub.documentId)).toBe("pending")
@@ -338,7 +341,7 @@ describe("the status change and its side effects commit together", () => {
       order.push("award")
     })
 
-    await svc.updateStatus(sub.documentId, "approved", "admin1")
+    await svc.updateStatus(sub.documentId, "approved", REVIEWER)
 
     expect(order).toEqual(["tx:start", "tx:end", "award"])
   })

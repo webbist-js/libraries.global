@@ -361,10 +361,43 @@ export async function isTranslationSubmission(
   return !existing
 }
 
+/** What an article apply did, plus the article it created, if any. */
+export type ApplyArticleResult = {
+  outcome: ApplyArticleOutcome
+  /** Set for `created_published` / `created_draft`. */
+  documentId?: string
+}
+
+export type ApplyArticleOptions = {
+  /** Reserved for the publish choice (Task 11); not read yet. */
+  publish?: boolean
+  /** Called with the new article's documentId when one is created. */
+  onCreated?: (documentId: string) => void
+}
+
+/** `applyArticleSubmission`, also returning the created article's documentId. */
+export async function applyArticleSubmissionWithResult(
+  strapi: any,
+  submission: any,
+  kind: ArticleKind,
+  opts: Omit<ApplyArticleOptions, "onCreated"> = {}
+): Promise<ApplyArticleResult> {
+  let documentId: string | undefined
+  const outcome = await applyArticleSubmission(strapi, submission, kind, {
+    ...opts,
+    onCreated: (id) => {
+      documentId = id
+    },
+  })
+
+  return documentId ? { outcome, documentId } : { outcome }
+}
+
 export async function applyArticleSubmission(
   strapi: any,
   submission: any,
-  kind: ArticleKind
+  kind: ArticleKind,
+  opts: ApplyArticleOptions = {}
 ): Promise<ApplyArticleOutcome> {
   const target = TARGETS[kind]
   const draftData = (submission.draftData ?? {}) as Record<string, unknown>
@@ -430,6 +463,8 @@ export async function applyArticleSubmission(
     strapi.log.info(
       `[content-moderation] ${kind} ${submission.documentId}: created ${canPublish ? "published" : "draft"} article ${created?.documentId ?? slug}`
     )
+    if (typeof created?.documentId === "string")
+      opts.onCreated?.(created.documentId)
 
     return canPublish ? "created_published" : "created_draft"
   }

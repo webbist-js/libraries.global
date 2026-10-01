@@ -2,8 +2,11 @@ import { describe, expect, it, vi } from "vitest"
 
 import createService from "../../src/plugins/content-moderation/server/services/submission"
 import { payloadHash } from "../../src/plugins/content-moderation/server/utils/payload-hash"
+import { adminReviewer } from "../../src/plugins/content-moderation/server/utils/reviewer"
 import { syncDerivedRole } from "../../src/utils/role-grants"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
+
+const REVIEWER = adminReviewer({ id: 1, email: "moderator@example.org" })
 
 const PROFILE = "api::user-profile.user-profile"
 const SUB = "plugin::content-moderation.submission"
@@ -142,7 +145,7 @@ describe("claim approval", () => {
     await createService({ strapi: f.strapi }).updateStatus(
       "s0000000000000000000009",
       "approved",
-      "admin"
+      REVIEWER
     )
     // Approval adds a claim grant and keeps the editor grant; the lifecycle
     // (run by hand here) derives the profile from both.
@@ -188,69 +191,9 @@ describe("claim approval", () => {
     await createService({ strapi: f.strapi }).updateStatus(
       "s0000000000000000000010",
       "approved",
-      "admin"
+      REVIEWER
     )
     expect(f.store[AFF]).toHaveLength(1)
     expect(f.store[AFF][0].role).toBe("librarian")
-  })
-})
-
-describe("findLibraryRevisions", () => {
-  it("hides the submitter's username when their profile is private or opted out", async () => {
-    const { strapi } = makeFakeStrapi({
-      [SUB]: [
-        {
-          documentId: "s1",
-          targetDocumentId: "lib1",
-          status: "approved",
-          submissionType: "correction",
-          submittedByUserId: "u1",
-        },
-        {
-          documentId: "s2",
-          targetDocumentId: "lib1",
-          status: "approved",
-          submissionType: "correction",
-          submittedByUserId: "u2",
-        },
-        {
-          documentId: "s3",
-          targetDocumentId: "lib1",
-          status: "approved",
-          submissionType: "correction",
-          submittedByUserId: "u3",
-        },
-      ],
-      [PROFILE]: [
-        {
-          documentId: "p1",
-          baUserId: "u1",
-          username: "alice",
-          profileVisibility: "private",
-        },
-        {
-          documentId: "p2",
-          baUserId: "u2",
-          username: "bob",
-          publicPrefs: { showActivity: false },
-        },
-        {
-          documentId: "p3",
-          baUserId: "u3",
-          username: "carol",
-          profileVisibility: "public",
-        },
-      ],
-    })
-    const out = await createService({ strapi }).findLibraryRevisions("lib1")
-    const byId = Object.fromEntries(
-      out.map((r: any, i: number) => [
-        ["s1", "s2", "s3"][i],
-        r.submittedByUsername,
-      ])
-    )
-    expect(byId.s1).toBeNull()
-    expect(byId.s2).toBeNull()
-    expect(byId.s3).toBe("carol")
   })
 })

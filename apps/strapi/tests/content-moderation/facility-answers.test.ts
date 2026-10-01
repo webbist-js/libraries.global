@@ -3,7 +3,10 @@ import { describe, expect, it, vi } from "vitest"
 import createService from "../../src/plugins/content-moderation/server/services/submission"
 import { parseFacilityAnswers } from "../../src/plugins/content-moderation/server/utils/facility-answers"
 import { payloadHash } from "../../src/plugins/content-moderation/server/utils/payload-hash"
+import { adminReviewer } from "../../src/plugins/content-moderation/server/utils/reviewer"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
+
+const REVIEWER = adminReviewer({ id: 1, email: "moderator@example.org" })
 
 const SUB = "plugin::content-moderation.submission"
 const LIB = "api::library.library"
@@ -113,7 +116,7 @@ describe("approving facility answers", () => {
     })
     const { strapi, svc } = setup({}, sub)
 
-    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+    const result = await svc.updateStatus(sub.documentId, "approved", REVIEWER)
 
     expect(result).not.toHaveProperty("error")
     const [update] = libraryUpdates(strapi)
@@ -144,7 +147,7 @@ describe("approving facility answers", () => {
       sub
     )
 
-    await svc.updateStatus(sub.documentId, "approved", "admin1")
+    await svc.updateStatus(sub.documentId, "approved", REVIEWER)
 
     const [update] = libraryUpdates(strapi)
     expect(update.data.absentFacilities).toEqual(["Café"])
@@ -160,7 +163,7 @@ describe("approving facility answers", () => {
     )
     const { strapi, svc } = setup({}, sub)
 
-    await svc.updateStatus(sub.documentId, "approved", "admin1")
+    await svc.updateStatus(sub.documentId, "approved", REVIEWER)
 
     expect(libraryUpdates(strapi)[0].documentId).toBe(LIB_ID)
   })
@@ -169,7 +172,7 @@ describe("approving facility answers", () => {
     const sub = facilities({ "Accessible toilets": "yes", "Wi-Fi": "no" })
     const { strapi, svc } = setup({}, sub)
 
-    await svc.updateStatus(sub.documentId, "approved", "admin1")
+    await svc.updateStatus(sub.documentId, "approved", REVIEWER)
 
     const [update] = libraryUpdates(strapi)
     expect(update.data.accessibility.connect).toEqual([])
@@ -189,7 +192,7 @@ describe("approving facility answers", () => {
     })
     const { strapi, svc } = setup({}, plain)
 
-    await svc.updateStatus(plain.documentId, "approved", "admin1")
+    await svc.updateStatus(plain.documentId, "approved", REVIEWER)
 
     expect(libraryUpdates(strapi)).toEqual([])
   })
@@ -211,7 +214,7 @@ describe("approving facility answers", () => {
         : api
     })
 
-    const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
+    const result = await svc.updateStatus(sub.documentId, "approved", REVIEWER)
 
     expect(result).toEqual({ error: "apply_failed" })
     expect(

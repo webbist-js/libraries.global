@@ -76,6 +76,7 @@
     },
     "evidenceUrl": { "type": "string" },
     "reviewerAssignedTo": { "type": "string" },
+    "resultDocumentId": { "type": "string" },
     "contentLocale": { "type": "string", "default": "en" },
     "payloadHash": { "type": "string", "private": true },
     "draftRevision": { "type": "integer", "default": 0, "private": true }

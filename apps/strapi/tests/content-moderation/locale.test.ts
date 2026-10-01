@@ -21,7 +21,10 @@ import {
   applyToLocale,
   ApplyRefusedError,
 } from "../../src/plugins/content-moderation/server/utils/publish-guard"
+import { adminReviewer } from "../../src/plugins/content-moderation/server/utils/reviewer"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
+
+const REVIEWER = adminReviewer({ id: 1, email: "moderator@example.org" })
 
 const SUB = "plugin::content-moderation.submission"
 const WIKI = "api::wiki-article.wiki-article"
@@ -595,7 +598,7 @@ describe("article translations", () => {
     const res = await createService({ strapi: made.strapi }).updateStatus(
       sub.documentId,
       "approved",
-      "admin1"
+      REVIEWER
     )
     expect("data" in res).toBe(true)
     expect(made.docs[BLOG]!.rows.map((r) => r.locale)).toEqual(["en", "cs"])
@@ -624,7 +627,7 @@ describe("article translations", () => {
     await createService({ strapi: made.strapi }).updateStatus(
       sub.documentId,
       "approved",
-      "admin1"
+      REVIEWER
     )
     expect(award.mock.calls.map((c: unknown[]) => c[1])).toEqual([
       "journal_edit_accepted",
