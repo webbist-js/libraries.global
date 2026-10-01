@@ -178,8 +178,13 @@ export default ({ strapi }: { strapi: any }) => ({
           },
           {
             action: "journal_edit_accepted",
-            label: "Journal article edit or translation approved",
+            label: "Journal article edit approved",
             points: 8,
+          },
+          {
+            action: "journal_translated",
+            label: "Journal article translation approved",
+            points: 15,
           },
           {
             action: "daily_streak",

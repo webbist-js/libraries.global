@@ -1,4 +1,7 @@
-import { splitSubmissionBody } from "../services/submission"
+import {
+  resolveSubmissionLocale,
+  splitSubmissionBody,
+} from "../services/submission"
 import {
   isDirectJournalEdit,
   isDirectWikiEdit,
@@ -135,6 +138,7 @@ export default ({ strapi }: { strapi: any }) => ({
       evidenceUrl,
       asDraft,
       draftData,
+      locale,
     } = ctx.request.body as Record<string, unknown>
 
     if (!submissionType) {
@@ -145,6 +149,11 @@ export default ({ strapi }: { strapi: any }) => ({
       return ctx.badRequest("draftData must be an object under 256KB")
     }
 
+    // The locale the service will store; direct edits are checked in it.
+    const contentLocale = await resolveSubmissionLocale(strapi, locale, {
+      submissionType,
+      draftData,
+    })
     const directWikiEdit =
       submissionType === "wiki_edit" && isDirectWikiEdit(draftData)
     const directJournalEdit =
@@ -159,6 +168,7 @@ export default ({ strapi }: { strapi: any }) => ({
         directWikiEdit,
         directJournalEdit,
         verificationMethod,
+        locale: contentLocale,
       })
     if (!verdict.ok) {
       sendVerdict(ctx, verdict)
@@ -198,6 +208,8 @@ export default ({ strapi }: { strapi: any }) => ({
         submittedByEmail: user.email,
         submittedByName: user.name,
         asDraft: !!asDraft,
+        // Already normalised above; the service normalises it again.
+        locale: contentLocale,
       })
 
     ctx.body = { data: submission }
@@ -420,45 +432,55 @@ export default ({ strapi }: { strapi: any }) => ({
     const result = await strapi
       .plugin("content-moderation")
       .service("submission")
-      .finalizeDraft(id, user.id, body, async (existing: any) => {
-        const policy = strapi
-          .plugin("content-moderation")
-          .service("submission-policy")
-        const verdict = await policy.check({
-          baUserId: user.id,
-          submissionType: existing.submissionType,
-          targetDocumentId: existing.targetDocumentId ?? undefined,
-          directWikiEdit:
-            existing.submissionType === "wiki_edit" &&
-            isDirectWikiEdit(existing.draftData),
-          directJournalEdit:
-            existing.submissionType === "blog_submission" &&
-            isDirectJournalEdit(existing.draftData),
-          // C-4: this draft isn't `pending` yet, but excluding it keeps a
-          // retried finalize from counting the row against its own quota.
-          excludeDocumentId: id,
-        })
-        if (!verdict.ok) return verdict
+      .finalizeDraft(
+        id,
+        user.id,
+        body,
+        async (existing: any, next: { locale: string }) => {
+          const policy = strapi
+            .plugin("content-moderation")
+            .service("submission-policy")
+          const verdict = await policy.check({
+            baUserId: user.id,
+            submissionType: existing.submissionType,
+            targetDocumentId: existing.targetDocumentId ?? undefined,
+            directWikiEdit:
+              existing.submissionType === "wiki_edit" &&
+              isDirectWikiEdit(existing.draftData),
+            directJournalEdit:
+              existing.submissionType === "blog_submission" &&
+              isDirectJournalEdit(existing.draftData),
+            // C-4: this draft isn't `pending` yet, but excluding it keeps a
+            // retried finalize from counting the row against its own quota.
+            excludeDocumentId: id,
+            locale: next.locale,
+          })
+          if (!verdict.ok) return verdict
 
-        // What goes to review: the fields `finalizeDraft` is about to write
-        // (this body's, or the saved draft's when the body carries none)
-        // plus this request's extras.
-        const { fields, extras, hasFields } = splitSubmissionBody(body)
+          // What goes to review: the fields `finalizeDraft` is about to write
+          // (this body's, or the saved draft's when the body carries none)
+          // plus this request's extras.
+          const { locale: _locale, ...form } = (body ?? {}) as Record<
+            string,
+            unknown
+          >
+          const { fields, extras, hasFields } = splitSubmissionBody(form)
 
-        return policy.checkContent(
-          {
-            fields: hasFields ? fields : existing.fields,
-            draftData: existing.draftData,
-            note: extras.note ?? existing.note,
-            editSummary: extras.editSummary ?? existing.editSummary,
-            evidenceUrl: extras.evidenceUrl ?? existing.evidenceUrl,
-          },
-          {
-            targetDocumentId: existing.targetDocumentId,
-            targetSlug: existing.targetSlug,
-          }
-        )
-      })
+          return policy.checkContent(
+            {
+              fields: hasFields ? fields : existing.fields,
+              draftData: existing.draftData,
+              note: extras.note ?? existing.note,
+              editSummary: extras.editSummary ?? existing.editSummary,
+              evidenceUrl: extras.evidenceUrl ?? existing.evidenceUrl,
+            },
+            {
+              targetDocumentId: existing.targetDocumentId,
+              targetSlug: existing.targetSlug,
+            }
+          )
+        }
+      )
     if (!result) {
       // `finalizeDraft` returns the same bare `null` for three different
       // reasons (missing/not-owned/no-longer-draft *before* the CAS, and a
@@ -575,11 +597,20 @@ export default ({ strapi }: { strapi: any }) => ({
     const user = await resolveUser(strapi, ctx)
     if (!user) return ctx.unauthorized("You must be signed in.")
     const { type } = ctx.params as { type: string }
-    const { targetSlug } = ctx.query as { targetSlug?: string }
+    const { targetSlug, locale } = ctx.query as {
+      targetSlug?: unknown
+      locale?: unknown
+    }
     const draft = await strapi
       .plugin("content-moderation")
       .service("submission")
-      .findDraft(user.id, type, targetSlug)
+      .findDraft(
+        user.id,
+        type,
+        typeof targetSlug === "string" ? targetSlug : undefined,
+        // Strings only (an object would be a filter); unknown → default.
+        typeof locale === "string" ? locale : undefined
+      )
     ctx.body = { data: draft }
   },
 })

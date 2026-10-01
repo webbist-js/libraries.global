@@ -14,6 +14,7 @@ export type PointAction =
   | "wiki_translated"
   | "journal_accepted"
   | "journal_edit_accepted"
+  | "journal_translated"
   | "knowledge_article_published"
   | "knowledge_edit_accepted"
   | "source_added"

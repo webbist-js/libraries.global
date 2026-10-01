@@ -1,3 +1,6 @@
+import { LOCALIZED_LIBRARY_FIELDS } from "@repo/shared-data"
+
+import { defaultLocale, normaliseLocale, submissionLocale } from "./locales"
 import {
   isOptionKey,
   OPTION_UIDS,
@@ -5,7 +8,7 @@ import {
   recordSuggestion,
 } from "./option-suggestions"
 import { isDocumentId } from "./params"
-import { applyToPublished } from "./publish-guard"
+import { applyToLocale } from "./publish-guard"
 import {
   findOverlappingTimeframeIndexes,
   normalizeOpeningTimesValue,
@@ -369,24 +372,53 @@ type Submission = {
   targetDocumentId?: string | null
   targetSlug?: string | null
   fields?: unknown
+  /** Stored name of the submission's locale (service layer: `locale`). */
+  contentLocale?: string | null
+  locale?: string | null
 }
 
-/** The reviewed target: targetDocumentId when set, else the slug. */
-async function findLibrary(strapi: any, submission: Submission) {
+/**
+ * The reviewed target: targetDocumentId when set, else the slug (shared by
+ * every locale). Looked up in the default locale, which every library has;
+ * the submission's own locale version may not exist yet.
+ */
+async function findLibrary(strapi: any, submission: Submission, base: string) {
   const fields = ["documentId", "locale", "name"]
   if (submission.targetDocumentId)
     return strapi.documents(LIBRARY).findOne({
       documentId: submission.targetDocumentId,
+      locale: base,
       fields,
     })
   if (!submission.targetSlug) return null
   const [library] = await strapi.documents(LIBRARY).findMany({
     filters: { slug: { $eq: submission.targetSlug } },
+    locale: base,
     fields,
     limit: 1,
   })
 
   return library ?? null
+}
+
+/**
+ * For a non-default locale, only the fields that vary by locale: the rest
+ * are shared by every locale version and are changed in the default one.
+ * Returns the kept data and the dropped keys.
+ */
+export function localizedOnly(data: LibraryRecordData): {
+  kept: LibraryRecordData
+  dropped: string[]
+} {
+  const allowed = new Set(LOCALIZED_LIBRARY_FIELDS)
+  const kept: LibraryRecordData = {}
+  const dropped: string[] = []
+  for (const [k, v] of Object.entries(data)) {
+    if (allowed.has(k)) kept[k] = v
+    else dropped.push(k)
+  }
+
+  return { kept, dropped }
 }
 
 /**
@@ -435,12 +467,25 @@ export async function applyLibraryRecord(
   submission: Submission,
   ownedUploadIds?: Set<number>
 ): Promise<ApplyRecordOutcome> {
-  const data = buildLibraryRecordData(submission.fields, { ownedUploadIds })
-  const suggested = parseSuggestedOptions(submission.fields)
+  const base = await defaultLocale(strapi)
+  const locale = await normaliseLocale(strapi, submissionLocale(submission))
+  const localized = locale !== base
+  let data = buildLibraryRecordData(submission.fields, { ownedUploadIds })
+  // Option suggestions are shared relations: they belong to the default
+  // locale, so a translation never raises one.
+  const suggested = localized ? {} : parseSuggestedOptions(submission.fields)
+  if (localized) {
+    const { kept, dropped } = localizedOnly(data)
+    if (dropped.length > 0)
+      strapi.log.info(
+        `[content-moderation] record ${submission.documentId}: ${locale} change ignores shared fields ${dropped.join(", ")}`
+      )
+    data = kept
+  }
   if (Object.keys(data).length === 0 && Object.keys(suggested).length === 0)
     return "noop"
 
-  const library = await findLibrary(strapi, submission)
+  const library = await findLibrary(strapi, submission, base)
   if (!library) {
     strapi.log.warn(
       `[content-moderation] record ${submission.documentId}: library not found; nothing applied`
@@ -474,16 +519,18 @@ export async function applyLibraryRecord(
   // Only new names were suggested: they're logged, the record is unchanged.
   if (Object.keys(data).length === 0) return "applied"
 
+  // The timestamps are shared by every locale version: a translation leaves
+  // them to the default locale's own changes.
   const now = new Date()
-  const { mode } = await applyToPublished(
+  const { mode } = await applyToLocale(
     strapi,
     LIBRARY,
     library.documentId,
-    { ...data, contentUpdatedAt: now, lastVerifiedAt: now },
-    { locale: library.locale ?? undefined }
+    localized ? data : { ...data, contentUpdatedAt: now, lastVerifiedAt: now },
+    { locale, defaultLocale: base }
   )
   strapi.log.info(
-    `[content-moderation] record ${submission.documentId}: applied ${Object.keys(data).join(", ")} to library ${library.documentId}${mode === "draft_only" ? " (draft only)" : ""}`
+    `[content-moderation] record ${submission.documentId}: applied ${Object.keys(data).join(", ")} to library ${library.documentId} (${locale})${mode === "draft_only" ? " (draft only)" : ""}`
   )
 
   return mode === "draft_only" ? "applied_draft" : "applied"

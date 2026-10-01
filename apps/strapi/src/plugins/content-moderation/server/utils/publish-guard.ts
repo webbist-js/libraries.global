@@ -228,3 +228,95 @@ export async function applyToPublished(
 
   return { mode: "published" }
 }
+
+export type ApplyToLocaleOptions = {
+  locale: string
+  defaultLocale: string
+  fields?: readonly string[]
+}
+
+/**
+ * `applyToPublished` for one locale version of a record.
+ *
+ * The default locale, and a locale version that already exists, go through
+ * the publish guard as usual. A locale with no version yet is created,
+ * published, from `data`, but only when the default-locale version is
+ * published: a translation never goes live for a record nobody has
+ * released (`ApplyRefusedError("not_published")` otherwise).
+ */
+export async function applyToLocale(
+  strapi: any,
+  uid: string,
+  documentId: string,
+  data: Record<string, unknown>,
+  { locale, defaultLocale, fields }: ApplyToLocaleOptions
+): Promise<ApplyMode | { mode: "created_locale" }> {
+  if (locale === defaultLocale)
+    return applyToPublished(strapi, uid, documentId, data, { locale, fields })
+
+  const existing = await strapi.documents(uid).findOne({
+    documentId,
+    locale,
+    status: "published",
+    fields: ["documentId", "locale"],
+  })
+  if (existing && (existing.locale === undefined || existing.locale === locale))
+    return applyToPublished(strapi, uid, documentId, data, { locale, fields })
+
+  const draftExists = await strapi.documents(uid).findOne({
+    documentId,
+    locale,
+    status: "draft",
+    fields: ["documentId", "locale"],
+  })
+  if (
+    draftExists &&
+    (draftExists.locale === undefined || draftExists.locale === locale)
+  )
+    // An unpublished translation: someone is working on it in the admin.
+    // The guard refuses it like any unpublished record.
+    return applyToPublished(strapi, uid, documentId, data, { locale, fields })
+
+  const seeded = requiredLocalizedScalars(strapi, uid).filter(
+    (k) => !(k in data)
+  )
+  const base = await strapi.documents(uid).findOne({
+    documentId,
+    locale: defaultLocale,
+    status: "published",
+    fields: ["documentId", ...seeded],
+  })
+  if (!base) throw new ApplyRefusedError("not_published", uid, documentId)
+
+  // A new locale version must still satisfy the schema: required localized
+  // fields the change doesn't carry (a library's name) start as the default
+  // locale's, for a translator to replace.
+  const seed: Record<string, unknown> = {}
+  for (const k of seeded) if (base[k] != null) seed[k] = base[k]
+
+  await strapi.documents(uid).update({
+    documentId,
+    locale,
+    status: "published",
+    data: { ...seed, ...data },
+  })
+  strapi.log.info(
+    `[content-moderation] ${uid} ${documentId}: created the ${locale} version`
+  )
+
+  return { mode: "created_locale" }
+}
+
+/** Required, localized scalar attributes of `uid` (from its schema). */
+function requiredLocalizedScalars(strapi: any, uid: string): string[] {
+  const attributes: Record<string, any> =
+    strapi?.contentType?.(uid)?.attributes ?? {}
+
+  return Object.entries(attributes).flatMap(([k, a]) =>
+    a?.required &&
+    ["string", "text"].includes(a?.type) &&
+    a?.pluginOptions?.i18n?.localized === true
+      ? [k]
+      : []
+  )
+}

@@ -6,6 +6,7 @@ import {
 } from "@repo/shared-data"
 
 import type { ApplyRecordOutcome } from "./library-record"
+import { defaultLocale } from "./locales"
 import { applyToPublished } from "./publish-guard"
 
 /**
@@ -80,16 +81,22 @@ type Submission = {
  * version is the base every write goes through; whether it may be
  * published is the publish guard's call.
  */
-async function findLibrary(strapi: any, submission: Submission) {
+async function findLibrary(
+  strapi: any,
+  submission: Submission,
+  locale: string
+) {
   const fields = ["documentId", "locale", "absentFacilities"]
   if (submission.targetDocumentId)
     return strapi.documents(LIBRARY).findOne({
       documentId: submission.targetDocumentId,
+      locale,
       fields,
     })
   if (!submission.targetSlug) return null
   const [library] = await strapi.documents(LIBRARY).findMany({
     filters: { slug: { $eq: submission.targetSlug } },
+    locale,
     fields,
     limit: 1,
   })
@@ -110,7 +117,9 @@ export async function applyFacilityAnswers(
   const answers = parseFacilityAnswers(submission.fields)
   if (answers.length === 0) return "noop"
 
-  const library = await findLibrary(strapi, submission)
+  // Facilities are shared by every locale version: always the default one.
+  const locale = await defaultLocale(strapi)
+  const library = await findLibrary(strapi, submission, locale)
   if (!library) {
     strapi.log.warn(
       `[content-moderation] facilities ${submission.documentId}: library not found; nothing applied`
@@ -153,7 +162,7 @@ export async function applyFacilityAnswers(
     LIBRARY,
     library.documentId,
     data,
-    { locale: library.locale ?? "en" }
+    { locale }
   )
 
   return mode === "draft_only" ? "applied_draft" : "applied"

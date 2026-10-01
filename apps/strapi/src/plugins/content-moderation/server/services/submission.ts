@@ -20,6 +20,11 @@ import {
   isHttpUrl,
   isRecordCorrection,
 } from "../utils/library-record"
+import {
+  defaultLocale,
+  normaliseLocale,
+  submissionLocale,
+} from "../utils/locales"
 import { isDocumentId, isNewArticleDraft } from "../utils/params"
 import { payloadHash } from "../utils/payload-hash"
 import { ApplyRefusedError } from "../utils/publish-guard"
@@ -276,17 +281,52 @@ function revisionWhere(existing: {
 
 /**
  * M2: strips internal fields (`payloadHash`, `draftRevision`) before a
- * submission is returned to any client. Passes null/undefined through.
+ * submission is returned to any client, and names the stored
+ * `contentLocale` `locale` (Strapi reserves `locale` as an attribute name).
+ * Passes null/undefined through.
  */
 export function toClient<T>(sub: T): T {
   if (!sub || typeof sub !== "object") return sub
   const {
     payloadHash: _payloadHash,
     draftRevision: _draftRevision,
+    contentLocale,
     ...rest
   } = sub as Record<string, unknown>
 
-  return rest as T
+  return (
+    contentLocale === undefined ? rest : { ...rest, locale: contentLocale }
+  ) as T
+}
+
+/**
+ * The locale a new or finalized submission is stored with: `locale` from
+ * the request when given, else (articles) the draft's `locale`, else what
+ * the row already holds; always a configured locale, the default otherwise.
+ */
+export async function resolveSubmissionLocale(
+  strapi: any,
+  requested: unknown,
+  row: {
+    submissionType?: unknown
+    draftData?: unknown
+    contentLocale?: unknown
+  } = {}
+): Promise<string> {
+  const isArticle =
+    row.submissionType === "wiki_edit" ||
+    row.submissionType === "blog_submission"
+  const draftLocale =
+    isArticle && row.draftData && typeof row.draftData === "object"
+      ? (row.draftData as { locale?: unknown }).locale
+      : undefined
+
+  return normaliseLocale(
+    strapi,
+    typeof requested === "string" && requested
+      ? requested
+      : (draftLocale ?? submissionLocale(row))
+  )
 }
 
 // NOTE: `status` on a submission is the moderation status (draft/pending/
@@ -311,9 +351,15 @@ export default ({ strapi }: { strapi: any }) => ({
     submittedByEmail: string
     submittedByName?: string
     asDraft?: boolean
+    /** Stored as `contentLocale`; normalised to a configured locale. */
+    locale?: unknown
   }) {
-    const { asDraft, ...rest } = data
+    const { asDraft, locale, ...fields } = data
     const status = asDraft ? "draft" : "pending"
+    const rest = {
+      ...fields,
+      contentLocale: await resolveSubmissionLocale(strapi, locale, fields),
+    }
 
     const created = await strapi
       .documents("plugin::content-moderation.submission")
@@ -555,6 +601,9 @@ export default ({ strapi }: { strapi: any }) => ({
             const newLibrary = await strapi
               .documents("api::library.library")
               .create({
+                // A new library starts in the default locale; translations
+                // are corrections to it.
+                locale: await defaultLocale(strapi),
                 data: {
                   name: String(f.name ?? "Unnamed Library"),
                   libraryType: (f.libraryType as string) ?? "Other",
@@ -1013,7 +1062,15 @@ export default ({ strapi }: { strapi: any }) => ({
       ) {
         try {
           const isNew = isNewArticleDraft(submission.draftData)
-          const isTranslation = articleTranslation
+          // Knowledge: the target's locales decide. Journal: the editor
+          // marks a translation (`draftData.isTranslation`), and the
+          // target's locales must agree, so a flag alone earns nothing.
+          const isTranslation =
+            submission.submissionType === "wiki_edit"
+              ? articleTranslation
+              : articleTranslation &&
+                (submission.draftData as Record<string, unknown> | null)
+                  ?.isTranslation === true
           const [action, pts] =
             submission.submissionType === "wiki_edit"
               ? isNew
@@ -1023,7 +1080,9 @@ export default ({ strapi }: { strapi: any }) => ({
                   : (["knowledge_edit_accepted", 8] as const)
               : isNew
                 ? (["journal_accepted", 30] as const)
-                : (["journal_edit_accepted", 8] as const)
+                : isTranslation
+                  ? (["journal_translated", 15] as const)
+                  : (["journal_edit_accepted", 8] as const)
           await strapi
             .plugin("rewards")
             .service("points")
@@ -1120,8 +1179,10 @@ export default ({ strapi }: { strapi: any }) => ({
     // after the ownership/status checks below and before the CAS write —
     // so a policy check here can't be tricked by racing the check against a
     // stale or someone-else's row (C-1c / C-5).
+    // `locale` is the one this finalize stores, so the check uses it too.
     beforeTransition?: (
-      existing: any
+      existing: any,
+      next: { locale: string }
     ) => Promise<{ ok: true } | { ok: false; status: number; message: string }>
   ): Promise<
     | null
@@ -1150,11 +1211,16 @@ export default ({ strapi }: { strapi: any }) => ({
     // with no library fields keeps the saved draft's, so a bare finalize
     // can't blank a submission; the controller's content check uses the
     // same rule (see `splitSubmissionBody`).
+    // `locale` picks the version the change is written to; it is not a
+    // field of the change itself.
+    const { locale: requestedLocale, ...form } = (
+      formData && typeof formData === "object" ? formData : {}
+    ) as Record<string, unknown>
     const {
       fields: libraryFields,
       extras,
       hasFields,
-    } = splitSubmissionBody(formData)
+    } = splitSubmissionBody(form)
     const checked = validateSubmissionExtras(strapi, extras)
     if (!checked.ok)
       return {
@@ -1162,14 +1228,23 @@ export default ({ strapi }: { strapi: any }) => ({
         verdict: { ok: false, status: 400, message: checked.message },
       }
 
+    const contentLocale = await resolveSubmissionLocale(
+      strapi,
+      requestedLocale,
+      existing
+    )
+
     if (beforeTransition) {
-      const verdict = await beforeTransition(existing)
+      const verdict = await beforeTransition(existing, {
+        locale: contentLocale,
+      })
       if (!verdict.ok) return { error: "policy", verdict }
     }
 
     const updateData: Record<string, unknown> = {
       status: "pending",
       fields: hasFields ? libraryFields : (existing.fields ?? {}),
+      contentLocale,
     }
     for (const [key, value] of Object.entries(checked.extras))
       if (value) updateData[key] = value
@@ -1457,11 +1532,32 @@ export default ({ strapi }: { strapi: any }) => ({
     return ownedUploadIds(strapi, baUserId, ids)
   },
 
-  async findDraft(userId: string, submissionType: string, targetSlug?: string) {
+  /**
+   * The user's latest draft of this type (and target), in `locale`: an
+   * English and a Czech draft of the same article are separate drafts.
+   * Drafts written before submissions carried a locale count as the
+   * default locale's.
+   */
+  async findDraft(
+    userId: string,
+    submissionType: string,
+    targetSlug?: string,
+    locale?: unknown
+  ) {
+    const wanted = await normaliseLocale(strapi, locale)
+    const base = await defaultLocale(strapi)
     const filters: Record<string, unknown> = {
       submittedByUserId: userId,
       submissionType,
       status: "draft",
+      ...(wanted === base
+        ? {
+            $or: [
+              { contentLocale: { $eq: wanted } },
+              { contentLocale: { $null: true } },
+            ],
+          }
+        : { contentLocale: { $eq: wanted } }),
     }
     if (targetSlug) filters.targetSlug = targetSlug
     const results = await strapi

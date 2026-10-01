@@ -151,6 +151,11 @@ export default ({ strapi }: { strapi: any }) => ({
     directWikiEdit?: boolean
     directJournalEdit?: boolean
     verificationMethod?: unknown
+    /**
+     * The submission's normalised locale. Direct edits are checked against
+     * the editor's locales in it; without one, any direct-edit right counts.
+     */
+    locale?: string
     // Finalize re-checks the quota against the same row that's about to be
     // promoted out of `draft`; excluding it here avoids counting it against
     // itself (it isn't `pending`/`needs_info` yet, but the hourly count
@@ -180,6 +185,7 @@ export default ({ strapi }: { strapi: any }) => ({
             : undefined,
         directWikiEdit: !!input.directWikiEdit,
         directJournalEdit: !!input.directJournalEdit,
+        ...(typeof input.locale === "string" ? { locale: input.locale } : {}),
       })
     )
       return {

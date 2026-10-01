@@ -63,6 +63,7 @@ const ACTION_META: Record<string, { label: string; color: string }> = {
   knowledge_article_published: { label: "Knowledge article", color: "#075985" },
   journal_accepted: { label: "Journal article", color: "#b45309" },
   journal_edit_accepted: { label: "Journal edit", color: "#d4884a" },
+  journal_translated: { label: "Journal translation", color: "#c2410c" },
   source_added: { label: "Source added", color: "#6d5bd0" },
   correction_approved: { label: "Correction", color: "#8e8ea9" },
   claim_approved: { label: "Library claim", color: "#32324d" },

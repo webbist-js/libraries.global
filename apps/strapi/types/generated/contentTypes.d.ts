@@ -734,6 +734,61 @@ export interface ApiAreaArea extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface ApiArticleChangeArticleChange
+  extends Struct.CollectionTypeSchema {
+  collectionName: "article_changes"
+  info: {
+    description: "Article Changes: one append-only row per Knowledge or Journal article write. Written only by the change-records document middleware."
+    displayName: "Article Change"
+    pluralName: "article-changes"
+    singularName: "article-change"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: true
+    }
+    "content-type-builder": {
+      visible: true
+    }
+  }
+  attributes: {
+    actorId: Schema.Attribute.String
+    actorKind: Schema.Attribute.Enumeration<
+      ["contributor", "admin", "token", "system"]
+    >
+    actorName: Schema.Attribute.String
+    articleDocumentId: Schema.Attribute.String
+    articleKind: Schema.Attribute.Enumeration<["wiki", "blog"]>
+    bodyHash: Schema.Attribute.String
+    changedAt: Schema.Attribute.DateTime
+    contentLocale: Schema.Attribute.String
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    editSummary: Schema.Attribute.Text
+    kind: Schema.Attribute.Enumeration<
+      ["created", "edited", "translated", "published", "unpublished", "deleted"]
+    >
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::article-change.article-change"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    reviewerId: Schema.Attribute.String
+    slug: Schema.Attribute.String
+    submissionDocumentId: Schema.Attribute.String
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    versionStatus: Schema.Attribute.Enumeration<["draft", "published"]>
+  }
+}
+
 export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
   collectionName: "blog_articles"
   info: {
@@ -1922,6 +1977,65 @@ export interface ApiLibraryAffiliationLibraryAffiliation
       ["email_domain", "vouching", "contact_us"]
     > &
       Schema.Attribute.DefaultTo<"contact_us">
+  }
+}
+
+export interface ApiLibraryChangeLibraryChange
+  extends Struct.CollectionTypeSchema {
+  collectionName: "library_changes"
+  info: {
+    description: "Change Records: an append-only, field-level audit trail of every library write. Written only by the change-records document middleware."
+    displayName: "Library Change"
+    pluralName: "library-changes"
+    singularName: "library-change"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: true
+    }
+    "content-type-builder": {
+      visible: true
+    }
+  }
+  attributes: {
+    action: Schema.Attribute.Enumeration<
+      ["create", "update", "publish", "unpublish", "delete"]
+    >
+    actorId: Schema.Attribute.String
+    actorKind: Schema.Attribute.Enumeration<
+      ["contributor", "admin", "token", "system"]
+    >
+    actorName: Schema.Attribute.String
+    batchId: Schema.Attribute.String & Schema.Attribute.Required
+    changedAt: Schema.Attribute.DateTime & Schema.Attribute.Required
+    contentLocale: Schema.Attribute.String
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    entityRef: Schema.Attribute.String
+    field: Schema.Attribute.String & Schema.Attribute.Required
+    libraryDocumentId: Schema.Attribute.String & Schema.Attribute.Required
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::library-change.library-change"
+    > &
+      Schema.Attribute.Private
+    next: Schema.Attribute.JSON
+    previous: Schema.Attribute.JSON
+    publishedAt: Schema.Attribute.DateTime
+    reviewerId: Schema.Attribute.String
+    source: Schema.Attribute.Enumeration<
+      ["submission", "admin", "api_token", "import", "system"]
+    >
+    submissionDocumentId: Schema.Attribute.String
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    versionStatus: Schema.Attribute.Enumeration<["draft", "published"]>
   }
 }
 
@@ -4442,6 +4556,7 @@ declare module "@strapi/strapi" {
       "api::accessibility.accessibility": ApiAccessibilityAccessibility
       "api::amenity.amenity": ApiAmenityAmenity
       "api::area.area": ApiAreaArea
+      "api::article-change.article-change": ApiArticleChangeArticleChange
       "api::blog-article.blog-article": ApiBlogArticleBlogArticle
       "api::blog-landing.blog-landing": ApiBlogLandingBlogLanding
       "api::blog-section.blog-section": ApiBlogSectionBlogSection
@@ -4454,6 +4569,7 @@ declare module "@strapi/strapi" {
       "api::homepage.homepage": ApiHomepageHomepage
       "api::legal-document.legal-document": ApiLegalDocumentLegalDocument
       "api::library-affiliation.library-affiliation": ApiLibraryAffiliationLibraryAffiliation
+      "api::library-change.library-change": ApiLibraryChangeLibraryChange
       "api::library.library": ApiLibraryLibrary
       "api::page.page": ApiPagePage
       "api::pro-verification.pro-verification": ApiProVerificationProVerification

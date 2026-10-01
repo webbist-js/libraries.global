@@ -340,7 +340,7 @@ describe("article points come from draftData and the target, never from fields",
     ])
   })
 
-  it("a locale Strapi doesn't know is not a translation, applies nothing and earns nothing", async () => {
+  it("a locale Strapi doesn't know is not a translation: it is a default-locale edit", async () => {
     const sub = {
       documentId: "s0000000000000000000052",
       submissionType: "wiki_edit",
@@ -365,8 +365,12 @@ describe("article points come from draftData and the target, never from fields",
     const result = await svc.updateStatus(sub.documentId, "approved", "admin1")
     expect("data" in result).toBe(true)
     expect(store[WIKI]).toHaveLength(1)
-    expect(store[WIKI]![0]!.title).toBe("Old")
-    expect(award).not.toHaveBeenCalled()
+    // Written to the default (en) draft, never to an unknown locale.
+    const update = strapi.documents(WIKI).update.mock.calls[0]![0]
+    expect(update).toMatchObject({ locale: "en", status: "draft" })
+    expect(award.mock.calls.map((c: unknown[]) => c[1])).toEqual([
+      "knowledge_edit_accepted",
+    ])
   })
 
   it("no points for a direct edit that is only a suggestion (skipped_suggestion)", async () => {
@@ -458,7 +462,7 @@ describe("applyArticleSubmission: existing articles", () => {
     expect(call?.data.contributors).toEqual({ connect: [{ documentId: "p1" }] })
   })
 
-  it("is a noop for an unknown slug or locale", async () => {
+  it("is a noop for an unknown slug; an unknown locale means the default", async () => {
     const { strapi } = harness({ [WIKI]: [article] }, "editorial_board")
     expect(
       await applyArticleSubmission(
@@ -483,6 +487,9 @@ describe("applyArticleSubmission: existing articles", () => {
         },
         "wiki"
       )
-    ).toBe("noop")
+    ).toBe("published")
+    expect(strapi.documents(WIKI).update.mock.calls[0]![0]).toMatchObject({
+      locale: "en",
+    })
   })
 })

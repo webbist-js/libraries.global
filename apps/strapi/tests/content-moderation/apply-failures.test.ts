@@ -68,7 +68,11 @@ function setup(seed: Record<string, any[]>) {
   f.services["i18n.locales"] = { find: async () => [{ code: "en" }] }
   f.services["content-moderation.submission-policy"] = {
     loadCapabilities: async () => ({
-      caps: { set: new Set(["docs.directEdit"]), claimedLibraryIds: new Set() },
+      caps: {
+        set: new Set(["docs.directEdit"]),
+        claimedLibraryIds: new Set(),
+        editorLocales: { docs: "all", journal: new Set() },
+      },
       tier: null,
     }),
   }

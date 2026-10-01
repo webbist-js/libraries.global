@@ -1,5 +1,14 @@
+import { canDirectEdit } from "@repo/access"
+
+import {
+  configuredLocales,
+  defaultLocale,
+  knownLocale,
+  normaliseLocale,
+  submissionLocale,
+} from "./locales"
 import { isDocumentId, isNewArticleDraft } from "./params"
-import { applyToPublished } from "./publish-guard"
+import { applyToLocale } from "./publish-guard"
 import { ownedUploadIds } from "./uploads"
 import { sanitizeWikiBody } from "./wiki-body"
 
@@ -38,7 +47,8 @@ const TARGETS: Record<
   ArticleKind,
   {
     uid: string
-    capability: "docs.directEdit" | "journal.directEdit"
+    /** The `@repo/access` editor kind whose locales may direct-edit. */
+    editor: "docs" | "journal"
     /** Knowledge articles carry the docs taxonomy; Journal ones a section relation. */
     docsSections: boolean
     sectionUid: string | null
@@ -46,13 +56,13 @@ const TARGETS: Record<
 > = {
   wiki: {
     uid: "api::wiki-article.wiki-article",
-    capability: "docs.directEdit",
+    editor: "docs",
     docsSections: true,
     sectionUid: null,
   },
   journal: {
     uid: "api::blog-article.blog-article",
-    capability: "journal.directEdit",
+    editor: "journal",
     docsSections: false,
     sectionUid: "api::blog-section.blog-section",
   },
@@ -134,16 +144,19 @@ export function slugify(title: string): string {
   return s || "article"
 }
 
+/** A slug no version of any article holds, in any locale. */
 async function uniqueSlug(strapi: any, uid: string, base: string) {
-  const taken = new Set(
-    (
-      (await strapi.documents(uid).findMany({
-        filters: { slug: { $startsWith: base } },
-        fields: ["slug"],
-        limit: 200,
-      })) as { slug?: string }[]
-    ).map((r) => r.slug)
-  )
+  const taken = new Set<string | undefined>()
+  for (const locale of await configuredLocales(strapi)) {
+    const rows = (await strapi.documents(uid).findMany({
+      filters: { slug: { $startsWith: base } },
+      locale,
+      fields: ["slug"],
+      sort: "id:asc",
+      limit: 200,
+    })) as { slug?: string }[]
+    for (const r of rows) taken.add(r.slug)
+  }
   if (!taken.has(base)) return base
   for (let n = 2; n < 1000; n++) {
     const candidate = `${base}-${n}`
@@ -209,23 +222,49 @@ async function journalSectionTarget(strapi: any, keys: string[]) {
   return section ? { documentId: section.documentId } : null
 }
 
-/** `locale` when it is one of Strapi's configured i18n locales, else null. */
-async function knownLocale(
+/**
+ * The locale an article submission is written to: the submission's own
+ * (stored as `contentLocale`), else the one its draft names, as a
+ * configured locale; anything unknown falls back to the default locale.
+ */
+export async function articleLocale(
   strapi: any,
-  locale: unknown
-): Promise<string | null> {
-  if (typeof locale !== "string" || !locale) return null
-  const locales: { code: string }[] = await strapi
-    .plugin("i18n")
-    .service("locales")
-    .find()
+  submission: any
+): Promise<string> {
+  const draftData = (submission?.draftData ?? {}) as Record<string, unknown>
 
-  return locales.some((l) => l.code === locale) ? locale : null
+  return normaliseLocale(
+    strapi,
+    submissionLocale(submission) ?? draftData.locale
+  )
 }
 
-/** The locale a draft names, defaulting to `en` when it names none. */
-const draftLocale = (draftData: Record<string, unknown>) =>
-  typeof draftData.locale === "string" ? draftData.locale : "en"
+/**
+ * The article a submission targets, by its slug (shared by every locale):
+ * the default-locale version when there is one, else the version in the
+ * submission's locale.
+ */
+async function findArticle(
+  strapi: any,
+  uid: string,
+  slug: string,
+  locale: string
+): Promise<{ documentId: string; locale?: string } | null> {
+  const [article] = (await strapi.documents(uid).findMany({
+    filters: { slug: { $eq: slug } },
+    fields: ["documentId", "locale"],
+    limit: 1,
+  })) as { documentId: string; locale?: string }[]
+  if (article) return article
+  const [inLocale] = (await strapi.documents(uid).findMany({
+    filters: { slug: { $eq: slug } },
+    locale,
+    fields: ["documentId", "locale"],
+    limit: 1,
+  })) as { documentId: string; locale?: string }[]
+
+  return inLocale ?? null
+}
 
 /** Relation data shared by creates and edits: taxonomy, tags, credit. */
 async function relationData(
@@ -288,7 +327,7 @@ function claimedImageIds(body: unknown): number[] {
  * existing article, names one of Strapi's configured locales other than the
  * article's own, and that locale has no version yet. Decided from the target
  * and the i18n config, never from `fields.isTranslation` or an unchecked
- * `draftData.locale`. Call it before applying: the apply creates the locale
+ * locale (the submission's `locale`, else `draftData.locale`). Call it before applying: the apply creates the locale
  * version, after which the answer would be "no". The caller must still gate
  * points on the apply's outcome (a `noop` earns nothing).
  */
@@ -299,8 +338,10 @@ export async function isTranslationSubmission(
 ): Promise<boolean> {
   const draftData = (submission?.draftData ?? {}) as Record<string, unknown>
   if (isNewArticleDraft(draftData)) return false
-  if (typeof draftData.locale !== "string") return false
-  const locale = await knownLocale(strapi, draftData.locale)
+  const locale = await knownLocale(
+    strapi,
+    submissionLocale(submission) ?? draftData.locale
+  )
   const slug: string | undefined = submission?.targetSlug ?? undefined
   if (!locale || !slug) return false
   const uid = TARGETS[kind].uid
@@ -341,16 +382,9 @@ export async function applyArticleSubmission(
     .plugin("content-moderation")
     .service("submission-policy")
     .loadCapabilities(submission.submittedByUserId)
-  const canPublish = caps.set.has(target.capability)
-
-  const locale = await knownLocale(strapi, draftLocale(draftData))
-  if (!locale) {
-    strapi.log.warn(
-      `[content-moderation] ${kind} ${submission.documentId}: unknown locale; nothing applied`
-    )
-
-    return "noop"
-  }
+  const locale = await articleLocale(strapi, submission)
+  // Editors may be scoped to locales: the right is to publish in this one.
+  const canPublish = canDirectEdit(caps, target.editor, locale)
 
   // ── New article ──────────────────────────────────────────────────────
   // `draftData.kind` alone decides (never `fields.kind`, which the
@@ -404,10 +438,7 @@ export async function applyArticleSubmission(
   // A2: the target is whatever the moderator saw, never draftData.
   const slug: string | undefined = submission.targetSlug ?? undefined
   if (!slug) return "noop"
-  const [article] = (await strapi.documents(target.uid).findMany({
-    filters: { slug: { $eq: slug } },
-    limit: 1,
-  })) as { documentId: string }[]
+  const article = await findArticle(strapi, target.uid, slug, locale)
   if (!article) return "noop"
 
   const direct =
@@ -439,12 +470,14 @@ export async function applyArticleSubmission(
       await relationData(strapi, kind, draftData, submission.submittedByUserId)
     )
     if (Object.keys(data).length === 0) return "noop"
-    const { mode } = await applyToPublished(
+    // A locale the article has no version in yet is created (published)
+    // from this edit: a translation.
+    const { mode } = await applyToLocale(
       strapi,
       target.uid,
       article.documentId,
       data,
-      { locale }
+      { locale, defaultLocale: await defaultLocale(strapi) }
     )
 
     return mode === "draft_only" ? "drafted_divergent" : "published"

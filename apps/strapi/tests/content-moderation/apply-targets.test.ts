@@ -88,6 +88,7 @@ describe("applyWikiEdit", () => {
                 caps: {
                   set: new Set(["docs.directEdit"]),
                   claimedLibraryIds: new Set(),
+                  editorLocales: { docs: "all", journal: new Set() },
                 },
                 tier: null,
               }),
@@ -104,7 +105,7 @@ describe("applyWikiEdit", () => {
     expect(store[WIKI][1].title).toBe("B")
   })
 
-  it("refuses unknown locales", async () => {
+  it("writes an unknown locale to the default locale", async () => {
     const { strapi, store } = makeFakeStrapi({
       [WIKI]: [
         {
@@ -124,6 +125,7 @@ describe("applyWikiEdit", () => {
                 caps: {
                   set: new Set(["docs.directEdit"]),
                   claimedLibraryIds: new Set(),
+                  editorLocales: { docs: "all", journal: new Set() },
                 },
                 tier: null,
               }),
@@ -135,8 +137,8 @@ describe("applyWikiEdit", () => {
       draftData: { title: "T", locale: "xx" },
       submittedByUserId: "u1",
     })
-    expect(outcome).toBe("noop")
-    expect(store[WIKI][0].title).toBe("A")
+    expect(outcome).toBe("published")
+    expect(store[WIKI][0].title).toBe("T")
   })
 })
 

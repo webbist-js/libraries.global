@@ -2,6 +2,7 @@ import contentTypes from "./server/content-types"
 import controllers from "./server/controllers"
 import routes from "./server/routes"
 import services from "./server/services"
+import { backfillSubmissionLocales } from "./server/utils/locales"
 
 export default {
   register({ strapi }: { strapi: any }) {},
@@ -20,6 +21,15 @@ export default {
         pluginName: "content-moderation",
       },
     ])
+    // One-off, flag-guarded: Submissions from before they carried a locale.
+    try {
+      await backfillSubmissionLocales(strapi)
+    } catch (err) {
+      strapi.log.error(
+        "[content-moderation] submission locale backfill failed",
+        err
+      )
+    }
   },
   config: { default: {}, validator() {} },
   contentTypes,
