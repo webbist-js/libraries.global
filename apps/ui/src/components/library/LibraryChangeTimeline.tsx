@@ -24,10 +24,13 @@ import {
   fieldNames,
   formatValue,
   hasValues,
+  isUnrecorded,
+  isWithheld,
+  UNRECORDED_NOTE,
 } from "./change-history.helpers"
 
 const SECONDARY_PILL =
-  "inline-flex items-center gap-1.5 rounded-full border bg-white px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:opacity-60"
+  "inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:opacity-60"
 
 const historyUrl = (documentId: string, page: number) =>
   `/api/libraries/${documentId}/history?page=${page}`
@@ -47,14 +50,20 @@ async function loadPage(
   }
 }
 
-const withFields = (b: LibraryHistoryBatch) => b.fields.length > 0
-const valued = (b: LibraryHistoryBatch) => b.fields.some(hasValues)
+/** Some field's values exist but weren't sent to this viewer. */
+const withheld = (b: LibraryHistoryBatch) => b.fields.some(isWithheld)
 
 function BatchRow({ batch }: { readonly batch: LibraryHistoryBatch }) {
   const { verb, icon } = batchVerb(batch)
   const actor = actorLabel(batch)
   const n = batch.fields.length
   const shown = batch.fields.filter(hasValues)
+  const unrecorded = batch.fields.some(isUnrecorded)
+  const note = (
+    <p className="m-0 mt-2 text-[13px]" style={{ color: T.ink.dim }}>
+      {UNRECORDED_NOTE}
+    </p>
+  )
 
   return (
     <li
@@ -125,7 +134,10 @@ function BatchRow({ batch }: { readonly batch: LibraryHistoryBatch }) {
                 </div>
               ))}
             </dl>
+            {unrecorded ? note : null}
           </details>
+        ) : unrecorded ? (
+          note
         ) : null}
       </div>
     </li>
@@ -152,14 +164,20 @@ export function LibraryChangeTimeline({
   // A Pro viewer of the static page: fetch page 1 again, with values.
   useEffect(() => {
     if (!pro || upgraded.current) return
-    if (!initial.data.some(withFields) || initial.data.some(valued)) return
+    if (!initial.data.some(withheld)) return
     upgraded.current = true
     let live = true
     loadPage(documentId, 1).then((res) => {
       if (!live || !res) return
-      setBatches(res.data)
+      // Swap in the valued page-1 batches; older pages already loaded stay.
+      const byId = new Map(res.data.map((b) => [b.batchId, b]))
+      setBatches((prev) => {
+        const kept = prev.map((b) => byId.get(b.batchId) ?? b)
+        const seen = new Set(kept.map((b) => b.batchId))
+
+        return [...kept, ...res.data.filter((b) => !seen.has(b.batchId))]
+      })
       setTotal(res.meta.total)
-      setPage(1)
     })
 
     return () => {
@@ -177,10 +195,13 @@ export function LibraryChangeTimeline({
 
         return
       }
-      const seen = new Set(batches.map((b) => b.batchId))
-      setBatches([...batches, ...res.data.filter((b) => !seen.has(b.batchId))])
+      setBatches((prev) => {
+        const seen = new Set(prev.map((b) => b.batchId))
+
+        return [...prev, ...res.data.filter((b) => !seen.has(b.batchId))]
+      })
       setTotal(res.meta.total)
-      setPage(page + 1)
+      setPage((p) => p + 1)
     })
   }
 
@@ -191,8 +212,7 @@ export function LibraryChangeTimeline({
       </p>
     )
 
-  const hidden =
-    ready && !pro && batches.some((b) => withFields(b) && !valued(b))
+  const hidden = ready && !pro && batches.some(withheld)
   const more = batches.length < total && page < 100
 
   return (
@@ -229,7 +249,11 @@ export function LibraryChangeTimeline({
           <button
             type="button"
             className={SECONDARY_PILL}
-            style={{ borderColor: T.border.hi, color: T.ink.base }}
+            style={{
+              background: T.bg.deep,
+              borderColor: T.border.hi,
+              color: T.ink.base,
+            }}
             disabled={loading}
             onClick={loadMore}
           >

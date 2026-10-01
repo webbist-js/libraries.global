@@ -5,6 +5,7 @@
 import type {
   HistoryActor,
   LibraryHistoryBatch,
+  LibraryHistoryField,
   LibraryHistoryStats,
 } from "@/lib/strapi-api/content/server"
 
@@ -148,8 +149,33 @@ export function actorLabel(b: { source?: string; actor: HistoryActor }): {
   }
 }
 
+/**
+ * What a field can show:
+ * - "recorded": a previous → next pair to show;
+ * - "unrecorded": both values null, as on backfilled Change Records,
+ *   whose values were never recorded;
+ * - "withheld": no values sent, because the viewer lacks `library.history`.
+ */
+export function valueState(
+  f: LibraryHistoryField
+): "recorded" | "unrecorded" | "withheld" {
+  if (!("previous" in f) && !("next" in f)) return "withheld"
+
+  return f.previous == null && f.next == null ? "unrecorded" : "recorded"
+}
+
+type ValuePair = LibraryHistoryField
+
 /** True when the field carries a value pair to show. */
-export const hasValues = (f: object): boolean => "previous" in f || "next" in f
+export const hasValues = (f: ValuePair) => valueState(f) === "recorded"
+
+/** True when a value pair exists but the viewer wasn't sent it. */
+export const isWithheld = (f: ValuePair) => valueState(f) === "withheld"
+
+/** True when the field's values were never recorded. */
+export const isUnrecorded = (f: ValuePair) => valueState(f) === "unrecorded"
+
+export const UNRECORDED_NOTE = "Earlier change: values weren't recorded."
 
 /** A value as one short line: "Empty" for nothing, JSON for objects. */
 export function formatValue(v: unknown, max = 160): string {

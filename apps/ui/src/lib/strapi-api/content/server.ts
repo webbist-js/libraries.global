@@ -1677,7 +1677,7 @@ export async function fetchArticleHistory(
         {
           changedAt,
           kind: str(r.kind) ?? "edited",
-          locale: str(r.locale) ?? routing.defaultLocale,
+          locale: str(r.locale) || routing.defaultLocale,
           actor: toActor(r.actor),
           editSummary: str(r.editSummary),
         },

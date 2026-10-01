@@ -33,7 +33,8 @@ vi.mock("@/lib/navigation", async () => {
 })
 
 const { LibraryChangeTimeline } = await import("../LibraryChangeTimeline")
-const { actorLabel, batchVerb } = await import("../change-history.helpers")
+const { actorLabel, batchVerb, hasValues, valueState } =
+  await import("../change-history.helpers")
 
 const DOC = "abcdefghijklmnopqrstuvwx"
 
@@ -224,5 +225,125 @@ describe("batchVerb", () => {
     ["create", "import", "Imported"],
   ])("%s from %s reads %s", (action, source, verb) => {
     expect(batchVerb(batch({ action, source })).verb).toBe(verb)
+  })
+})
+
+describe("values that were never recorded (backfilled batches)", () => {
+  const unrecorded = () =>
+    batch({
+      fields: [
+        { field: "website", previous: null, next: null },
+        { field: "phone", previous: null, next: null },
+      ],
+    })
+
+  it("shows a Pro viewer a note instead of Empty → Empty, and no upgrade line", () => {
+    features.list = ["library.history"]
+    const { container, queryByText } = render(
+      createElement(LibraryChangeTimeline, {
+        documentId: DOC,
+        initial: page([unrecorded()]),
+      })
+    )
+    expect(container.querySelector("[data-previous]")).toBe(null)
+    expect(container.textContent).not.toContain("Empty")
+    expect(container.textContent).toContain(
+      "Earlier change: values weren't recorded."
+    )
+    expect(queryByText("See what changed, field by field, with Pro.")).toBe(
+      null
+    )
+    // Unrecorded is not "missing": no reload for values that don't exist.
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("doesn't offer Pro to a free viewer for values that were never recorded", () => {
+    const { queryByText, container } = render(
+      createElement(LibraryChangeTimeline, {
+        documentId: DOC,
+        initial: page([unrecorded()]),
+      })
+    )
+    expect(queryByText("See what changed, field by field, with Pro.")).toBe(
+      null
+    )
+    expect(container.textContent).not.toContain("Empty")
+  })
+
+  it("shows recorded fields and notes the unrecorded ones in a mixed batch", () => {
+    features.list = ["library.history"]
+    const { container } = render(
+      createElement(LibraryChangeTimeline, {
+        documentId: DOC,
+        initial: page([
+          batch({
+            fields: [
+              { field: "website", previous: "a", next: "b" },
+              { field: "phone", previous: null, next: null },
+            ],
+          }),
+        ]),
+      })
+    )
+    expect(container.querySelectorAll("[data-previous]")).toHaveLength(1)
+    expect(container.textContent).toContain(
+      "Earlier change: values weren't recorded."
+    )
+  })
+})
+
+describe("valueState", () => {
+  it("tells recorded, unrecorded and withheld values apart", () => {
+    expect(valueState({ field: "a", previous: "x", next: null })).toBe(
+      "recorded"
+    )
+    expect(valueState({ field: "a", previous: null, next: null })).toBe(
+      "unrecorded"
+    )
+    expect(valueState({ field: "a" })).toBe("withheld")
+    expect(hasValues({ field: "a", previous: null, next: null })).toBe(false)
+  })
+})
+
+describe("the Pro reload", () => {
+  it("keeps older pages loaded before the session arrived", async () => {
+    features.ready = false
+    features.list = ["library.history"]
+    const older = batch({ batchId: "b2", fields: [{ field: "email" }] })
+    fetchMock.mockResolvedValueOnce(
+      Response.json({
+        data: [older],
+        meta: { page: 2, pageSize: 20, total: 21 },
+      })
+    )
+    const { getByRole, container, rerender } = render(
+      createElement(LibraryChangeTimeline, {
+        documentId: DOC,
+        initial: page([batch({ fields: [{ field: "website" }] })], 21),
+      })
+    )
+    fireEvent.click(getByRole("button", { name: /older changes/i }))
+    await waitFor(() => expect(container.textContent).toContain("Email"))
+
+    features.ready = true
+    fetchMock.mockResolvedValueOnce(
+      Response.json(
+        page(
+          [batch({ fields: [{ field: "website", previous: "a", next: "b" }] })],
+          21
+        )
+      )
+    )
+    rerender(
+      createElement(LibraryChangeTimeline, {
+        documentId: DOC,
+        initial: page([batch({ fields: [{ field: "website" }] })], 21),
+      })
+    )
+    await waitFor(() =>
+      expect(container.querySelector("[data-next]")?.textContent).toBe("b")
+    )
+    expect(container.textContent).toContain("Email")
+    expect(container.querySelectorAll("li")).toHaveLength(2)
   })
 })

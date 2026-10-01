@@ -131,3 +131,26 @@ describe("GET /api/libraries/[documentId]/history", () => {
     expect((await call()).status).toBe(502)
   })
 })
+
+describe("fetchArticleHistory", () => {
+  it("reads an empty locale as the default locale", async () => {
+    const { fetchArticleHistory } =
+      await import("@/lib/strapi-api/content/server")
+    fetchMock.mockImplementation(async () =>
+      Response.json({
+        data: [
+          {
+            changedAt: "2026-09-20T10:00:00.000Z",
+            kind: "edited",
+            locale: "",
+            actor: { kind: "admin", username: null },
+            editSummary: null,
+          },
+        ],
+        meta: { page: 1, pageSize: 20, total: 1 },
+      })
+    )
+    const res = await fetchArticleHistory("wiki", DOC)
+    expect(res!.data[0]!.locale).toBe("en")
+  })
+})

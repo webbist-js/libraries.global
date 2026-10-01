@@ -63,14 +63,14 @@ export function ArticleEditHistory({
         </span>
       </summary>
       <ul className="m-0 mt-3 list-none p-0">
-        {items.map((item, i) => {
+        {items.map((item) => {
           const actor = actorLabel(item)
           const icon = KIND[item.kind]?.icon ?? KIND.edited!.icon
           const otherLocale = item.locale !== locale
 
           return (
             <li
-              key={`${item.changedAt}-${i}`}
+              key={`${item.changedAt}-${item.kind}-${item.locale}`}
               className="flex gap-3 py-3 text-[15px]"
               style={{ borderTop: `1px solid ${T.border.divider}` }}
             >
