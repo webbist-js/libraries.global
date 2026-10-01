@@ -19,7 +19,8 @@ import {
   fetchFeaturedLibraryPaths,
   fetchLibrary,
   fetchLibraryFollowerCount,
-  fetchLibraryRevisions,
+  fetchLibraryHistory,
+  fetchLibraryHistoryStats,
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
@@ -156,13 +157,19 @@ export default function LibraryRoutePage(props: {
     openingTimes: library.openingTimes as OpeningTimesValue | null,
     locale,
   })
-  const revisionsPromise = fetchLibraryRevisions(library.documentId)
+  // The page is static and shared, so history is fetched without values;
+  // a viewer with `library.history` gets them from the history route.
+  const historyPromise = fetchLibraryHistory(library.documentId, {
+    values: false,
+  })
+  const historyStatsPromise = fetchLibraryHistoryStats(library.documentId)
   const datasetPromise = fetchDataset(library.source)
   const followersPromise = fetchLibraryFollowerCount(library.documentId)
   const localesPromise = fetchArticleLocales()
 
   const area = use(areaPromise)
-  const revisions = use(revisionsPromise)
+  const history = use(historyPromise)
+  const historyStats = use(historyStatsPromise)
   const dataset = use(datasetPromise)
   const followers = use(followersPromise)
   const locales = use(localesPromise)
@@ -224,7 +231,8 @@ export default function LibraryRoutePage(props: {
         library={library}
         locale={locale}
         area={area}
-        revisions={revisions}
+        history={history}
+        historyStats={historyStats}
         dataset={dataset}
         canonicalUrl={url}
         followers={followers}

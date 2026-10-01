@@ -3,6 +3,8 @@
 import { Icon } from "@iconify/react"
 
 import GlobalLink from "@/components/global/GlobalLink"
+import { topFields } from "@/components/library/change-history.helpers"
+import { ChangeHistogram } from "@/components/library/ChangeHistogram"
 import { facilityRows } from "@/components/library/facility-rows"
 import {
   buildCitation,
@@ -10,6 +12,7 @@ import {
   hasStaffingDetail,
   type OpeningTimesValue,
 } from "@/components/library/library-page.helpers"
+import { LibraryChangeTimeline } from "@/components/library/LibraryChangeTimeline"
 import { LibraryCopyButton } from "@/components/library/LibraryCopyButton"
 import { OpenCorrectionLink } from "@/components/library/LibraryCorrection"
 import { LibraryFacilityAnswers } from "@/components/library/LibraryFacilityAnswers"
@@ -22,7 +25,11 @@ import {
 import StrapiBlocksContent from "@/components/library/StrapiBlocksContent"
 import { T } from "@/lib/design-tokens"
 import type { DatasetRecord } from "@/lib/strapi-api/content/datasets"
-import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
+import type {
+  LibraryHistoryPage,
+  LibraryHistoryStats,
+  PopulatedLibraryData,
+} from "@/lib/strapi-api/content/server"
 
 type Lib = PopulatedLibraryData
 const asRecord = (l: Lib) => l as unknown as Record<string, unknown>
@@ -524,28 +531,12 @@ export function LibraryEventsEmpty() {
   )
 }
 
-// ── Sources & changes ────────────────────────────────────────────────────────
+// ── Changes (history, histogram, sources) ───────────────────────────────────
 
 const SOURCE_LABELS: Record<string, string> = {
   libraryon: "libraryOn, published by the British Library",
   wikidata: "Wikidata",
   manual: "a contributor",
-}
-
-const REVISION_KIND_META: Record<string, { verb: string; icon: string }> = {
-  edit: { verb: "Changed", icon: LIB_ICONS.pencil },
-  addition: { verb: "Added", icon: LIB_ICONS.plus },
-  import: { verb: "Imported", icon: LIB_ICONS.download },
-  steward: { verb: "Updated by staff", icon: LIB_ICONS.shield },
-}
-
-export interface LibraryRevisionItem {
-  kind: string
-  summary: string
-  submittedByUsername: string | null
-  decidedAt: string | null
-  /** A public source the contributor supplied, when there was one. */
-  sourceUrl?: string | null
 }
 
 function SourceRow({
@@ -593,13 +584,17 @@ function SourceRow({
   )
 }
 
-export function LibrarySourcesSection({
+export function LibraryChangesSection({
   library,
-  revisions = [],
+  history = null,
+  stats = null,
   dataset = null,
 }: {
   readonly library: Lib
-  readonly revisions?: readonly LibraryRevisionItem[]
+  /** Page 1 of the Change Batches; null when Strapi couldn't answer. */
+  readonly history?: LibraryHistoryPage | null
+  /** Change counts for the last 24 months; null when unavailable. */
+  readonly stats?: LibraryHistoryStats | null
   /** The dataset the record was imported from, from the dataset registry. */
   readonly dataset?: DatasetRecord | null
 }) {
@@ -609,6 +604,8 @@ export function LibrarySourcesSection({
   const lastVerifiedAt = rec.lastVerifiedAt as string | null
   const createdAt = rec.createdAt as string | null
   const website = rec.website as string | null
+  const busy = stats?.months.some((m) => m.batches > 0) ?? false
+  const most = stats ? topFields(stats.byField) : []
 
   const datasetLink = sourceUrl || dataset?.sourceUrl || null
   const licence = dataset?.licence ? (
@@ -628,50 +625,63 @@ export function LibrarySourcesSection({
 
   return (
     <LibrarySectionCard
-      id="sources"
-      title="Sources and changes"
+      id="changes"
+      title="Changes"
       iconPath={LIB_ICONS.list}
       tone="neutral"
-      intro="Where each detail comes from, and every change to this record."
+      intro="Every change to this record, and where its details come from."
     >
+      {stats && busy ? (
+        <div className="mb-5 grid gap-5 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] md:items-start">
+          <ChangeHistogram
+            months={stats.months}
+            verificationEvents={stats.verificationEvents}
+          />
+          {most.length > 0 ? (
+            <div>
+              <h3
+                className="m-0 text-[15px] font-semibold"
+                style={{ color: T.ink.base }}
+              >
+                Most changed
+              </h3>
+              <ol className="m-0 mt-2 list-none p-0 text-[14px]">
+                {most.map((f) => (
+                  <li
+                    key={f.field}
+                    className="flex items-baseline justify-between gap-3 py-1.5"
+                    style={{ borderTop: `1px solid ${T.border.divider}` }}
+                  >
+                    <span style={{ color: T.ink.base }}>{f.label}</span>
+                    <span style={{ color: T.ink.dim }}>
+                      {f.count} {f.count === 1 ? "change" : "changes"}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {history ? (
+        <LibraryChangeTimeline
+          documentId={library.documentId}
+          initial={history}
+        />
+      ) : (
+        <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+          Change history is unavailable right now. Try again later.
+        </p>
+      )}
+
+      <h3
+        className="mt-6 mb-0 text-[15px] font-semibold"
+        style={{ color: T.ink.base }}
+      >
+        Sources
+      </h3>
       <ul className="m-0 list-none p-0">
-        {revisions.map((r, i) => {
-          const meta = REVISION_KIND_META[r.kind] ?? REVISION_KIND_META.edit!
-
-          return (
-            <SourceRow
-              key={`${r.decidedAt ?? i}-${r.summary}`}
-              icon={meta.icon}
-              meta={[
-                r.submittedByUsername ? (
-                  <GlobalLink
-                    href={`/profile/${r.submittedByUsername}`}
-                    className="underline underline-offset-2"
-                  >
-                    {r.submittedByUsername}
-                  </GlobalLink>
-                ) : (
-                  "A contributor"
-                ),
-                fmtDate(r.decidedAt),
-                r.sourceUrl ? (
-                  <a
-                    href={r.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline underline-offset-2"
-                  >
-                    Source ↗
-                  </a>
-                ) : null,
-              ]}
-              title={<strong>{meta.verb}</strong>}
-            >
-              {r.summary}
-            </SourceRow>
-          )
-        })}
-
         {website ? (
           <SourceRow
             icon={LIB_ICONS.globe}

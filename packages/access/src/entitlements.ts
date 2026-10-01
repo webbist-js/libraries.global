@@ -12,6 +12,7 @@ export type Feature =
   | "index.compare"
   | "library.watch"
   | "library.notes"
+  | "library.history"
   | "data.benchmark"
   | "data.explorerExport"
   | "events.personalFeed"
@@ -57,6 +58,7 @@ const PRO_FEATURES: readonly Feature[] = [
   "index.compare",
   "library.watch",
   "library.notes",
+  "library.history",
   "data.benchmark",
   "data.explorerExport",
   "events.personalFeed",

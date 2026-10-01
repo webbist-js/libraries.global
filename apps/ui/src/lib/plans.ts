@@ -75,6 +75,10 @@ export const PRO_FEATURE_COPY: Record<
     status: "soon",
   },
   "library.notes": { label: "Private notes on any library", status: "soon" },
+  "library.history": {
+    label: "See every change to a library, field by field",
+    status: "live",
+  },
   "data.benchmark": {
     label: "Benchmark a service against similar ones",
     status: "soon",
@@ -92,6 +96,15 @@ export const PRO_FEATURE_COPY: Record<
   "team.embed": { label: "An embeddable library finder", status: "soon" },
   "api.key": { label: "Higher API quotas", status: "soon" },
 }
+
+/**
+ * The line under a library's Changes list when values are hidden: the
+ * field names are public, previous → next is Pro (`library.history`).
+ */
+export const LIBRARY_HISTORY_UPGRADE = {
+  text: "See what changed, field by field, with Pro.",
+  href: "/contribute/membership",
+} as const
 
 /** A plan's features, read from the resolver so the copy can't drift from it. */
 export function featuresOf(plan: "pro" | "team"): Feature[] {

@@ -180,3 +180,16 @@ describe("features", () => {
     expect(can(pro, "team.workspace")).toBe(false)
   })
 })
+
+describe("library.history", () => {
+  it("pro and team see field-by-field history; free and public don't", () => {
+    const of = (plan: "pro" | "team") =>
+      resolveEntitlements(base({ grants: [{ plan, expiresAt: null }] }))
+    expect(can(of("pro"), "library.history")).toBe(true)
+    expect(can(of("team"), "library.history")).toBe(true)
+    expect(can(resolveEntitlements(base()), "library.history")).toBe(false)
+    expect(
+      can(resolveEntitlements(base({ signedIn: false })), "library.history")
+    ).toBe(false)
+  })
+})

@@ -22,6 +22,6 @@ export const LIBRARY_ANCHORS = {
   },
   events: { href: "#events", label: "Events", icon: LIB_ICONS.calendar },
   area: { href: "#area", label: "In the area", icon: LIB_ICONS.map, pro: true },
-  sources: { href: "#sources", label: "Sources", icon: LIB_ICONS.list },
+  changes: { href: "#changes", label: "Changes", icon: LIB_ICONS.list },
   reuse: { href: "#reuse", label: "Reuse", icon: LIB_ICONS.download },
 } as const satisfies Record<string, AnchorItem>

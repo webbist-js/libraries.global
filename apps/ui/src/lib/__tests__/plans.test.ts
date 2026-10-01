@@ -139,11 +139,11 @@ describe("PRO_FEATURE_COPY", () => {
     expect(Object.keys(PRO_FEATURE_COPY).sort()).toEqual([...FEATURES].sort())
   })
 
-  it("marks only the Atlas export as live", () => {
+  it("marks only the Atlas export and library history as live", () => {
     const live = Object.entries(PRO_FEATURE_COPY)
       .filter(([, c]) => c.status === "live")
       .map(([f]) => f)
-    expect(live).toEqual(["atlas.export"])
+    expect(live.sort()).toEqual(["atlas.export", "library.history"])
   })
 })
 

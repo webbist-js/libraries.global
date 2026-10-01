@@ -54,6 +54,7 @@ const FEATURE_GROUPS: Record<string, readonly Feature[]> = {
     "data.explorerExport",
   ],
   watching: [
+    "library.history",
     "library.watch",
     "index.alerts",
     "index.compare",

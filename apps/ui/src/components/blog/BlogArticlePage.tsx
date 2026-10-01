@@ -4,6 +4,7 @@ import type { Locale } from "next-intl"
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
 import { ArticleShareButtons } from "@/components/blog/ArticleShareButtons"
 import { BlogArticleCard } from "@/components/blog/BlogArticleCard"
+import { ArticleEditHistorySection } from "@/components/docs/ArticleEditHistory"
 import { Badge } from "@/components/ds/Badge"
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import GlobalHeader from "@/components/global/GlobalHeader"
@@ -16,6 +17,7 @@ import {
   formatDate,
 } from "@/lib/article-helpers"
 import { T } from "@/lib/design-tokens"
+import { routing } from "@/lib/navigation"
 import type {
   BlogArticleDetail,
   BlogArticleSummary,
@@ -221,6 +223,12 @@ export function BlogArticlePage({
                 <ArticleBodyBlocks blocks={article.body} />
               </div>
             </article>
+
+            <ArticleEditHistorySection
+              kind="blog"
+              documentId={article.documentId}
+              locale={untranslatedLocale ? routing.defaultLocale : locale}
+            />
 
             {/* Author bio */}
             {article.author ? (

@@ -9,6 +9,7 @@ import {
   computeCompleteness,
   type OpeningTimesValue,
 } from "@/components/library/library-page.helpers"
+import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
 import { logNonBlockingError } from "@/lib/logging"
 import { routing } from "@/lib/navigation"
 import { PublicStrapiClient } from "@/lib/strapi-api"
@@ -1389,43 +1390,305 @@ export async function fetchFooter(locale: Locale) {
   }
 }
 
-// ------ Library revision history (content-moderation plugin)
+// ------ Change history (content-moderation plugin)
 
-export interface LibraryRevision {
-  kind: "edit" | "addition" | "import"
-  summary: string
-  fieldsChanged: string[]
-  submittedByUsername: string | null
-  decidedAt: string | null
+export type HistorySource =
+  | "submission"
+  | "admin"
+  | "api_token"
+  | "import"
+  | "system"
+export type HistoryActorKind = "contributor" | "admin" | "token" | "system"
+export type HistoryAction =
+  | "create"
+  | "update"
+  | "publish"
+  | "unpublish"
+  | "delete"
+
+/** Who made a change. `username` only when their activity is public. */
+export interface HistoryActor {
+  kind: HistoryActorKind | (string & {})
+  username: string | null
+}
+
+/** One field of a Change Batch. Values only for `library.history`. */
+export interface LibraryHistoryField {
+  field: string
+  previous?: unknown
+  next?: unknown
+}
+
+/** One Change Batch: every field one write changed. */
+export interface LibraryHistoryBatch {
+  batchId: string
+  changedAt: string
+  action: HistoryAction | (string & {})
+  source: HistorySource | (string & {})
+  actor: HistoryActor
+  fields: LibraryHistoryField[]
+  submissionDocumentId: string | null
+}
+
+export interface HistoryMeta {
+  page: number
+  pageSize: number
+  total: number
+}
+
+export interface LibraryHistoryPage {
+  data: LibraryHistoryBatch[]
+  meta: HistoryMeta
+}
+
+export interface LibraryHistoryStats {
+  /** Oldest first, one entry per month of the window. */
+  months: {
+    month: string
+    batches: number
+    fields: number
+    contributors: number
+  }[]
+  byField: { field: string; count: number }[]
+  byAction: { action: string; count: number }[]
+  /** `YYYY-MM` months in which `lastVerifiedAt` changed. */
+  verificationEvents: string[]
+}
+
+export type ArticleHistoryKind =
+  | "created"
+  | "edited"
+  | "translated"
+  | "published"
+  | "unpublished"
+  | "deleted"
+
+/** One Article Change. No values, ever. */
+export interface ArticleHistoryItem {
+  changedAt: string
+  kind: ArticleHistoryKind | (string & {})
+  locale: string
+  actor: HistoryActor
+  editSummary: string | null
+}
+
+export interface ArticleHistoryPage {
+  data: ArticleHistoryItem[]
+  meta: HistoryMeta
+}
+
+export const HISTORY_PAGE_SIZE = 20
+
+const historyBase = () =>
+  `${process.env.STRAPI_URL ?? "http://127.0.0.1:1337"}/api/content-moderation`
+
+const isObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v)
+
+const str = (v: unknown): string | null => (typeof v === "string" ? v : null)
+const num = (v: unknown, fallback = 0): number =>
+  typeof v === "number" && Number.isFinite(v) ? v : fallback
+
+function toActor(v: unknown): HistoryActor {
+  const a = isObject(v) ? v : {}
+
+  return { kind: str(a.kind) ?? "system", username: str(a.username) }
+}
+
+function toMeta(v: unknown, fallbackPage: number, count: number): HistoryMeta {
+  const m = isObject(v) ? v : {}
+
+  return {
+    page: num(m.page, fallbackPage),
+    pageSize: num(m.pageSize, HISTORY_PAGE_SIZE),
+    total: num(m.total, count),
+  }
 }
 
 /**
- * Public, sanitized revision history for a library — the most recent
- * approved submissions from the content-moderation plugin.
+ * A batch as the UI may show it. Values are kept only when they were asked
+ * for: a public read never carries them, even if Strapi sent some.
  */
-export async function fetchLibraryRevisions(
-  documentId: string
-): Promise<LibraryRevision[]> {
-  const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
+function toBatch(v: unknown, values: boolean): LibraryHistoryBatch | null {
+  if (!isObject(v)) return null
+  const batchId = str(v.batchId)
+  const changedAt = str(v.changedAt)
+  if (!batchId || !changedAt) return null
+  const fields = (Array.isArray(v.fields) ? v.fields : []).flatMap((f) => {
+    if (!isObject(f) || typeof f.field !== "string") return []
+    const out: LibraryHistoryField = { field: f.field }
+    if (values && "previous" in f) out.previous = f.previous
+    if (values && "next" in f) out.next = f.next
+
+    return [out]
+  })
+
+  return {
+    batchId,
+    changedAt,
+    action: str(v.action) ?? "update",
+    source: str(v.source) ?? "system",
+    actor: toActor(v.actor),
+    fields,
+    submissionDocumentId: str(v.submissionDocumentId),
+  }
+}
+
+function logHistoryError(message: string, e: unknown) {
+  logNonBlockingError({
+    message,
+    error: {
+      error: e instanceof Error ? e.message : String(e),
+      stack: e instanceof Error ? e.stack : undefined,
+    },
+  })
+}
+
+/**
+ * One page of a library's Change Batches, newest first, or null when
+ * Strapi can't answer. `values` asks for previous → next and is honoured
+ * only with a `user`, whose bridge headers carry the service secret; the
+ * caller decides it from the session's `library.history` entitlement.
+ * Without values no secret is sent and the read is cached.
+ */
+export async function fetchLibraryHistory(
+  documentId: string,
+  {
+    page = 1,
+    values,
+    user,
+  }: {
+    page?: number
+    values: boolean
+    user?: { id: string; email: string; name?: string | null } | null
+  }
+): Promise<LibraryHistoryPage | null> {
+  const withValues = values && !!user
+  const qs = new URLSearchParams({
+    page: String(page),
+    pageSize: String(HISTORY_PAGE_SIZE),
+  })
+  if (withValues) qs.set("values", "1")
   try {
     const res = await fetch(
-      `${strapiUrl}/api/content-moderation/libraries/${documentId}/revisions`,
-      { next: { revalidate: 300 } }
+      `${historyBase()}/libraries/${encodeURIComponent(documentId)}/history?${qs}`,
+      withValues
+        ? { headers: bridgeUserHeaders(user), cache: "no-store" }
+        : { next: { revalidate: 300 } }
     )
-    if (!res.ok) return []
-    const json = (await res.json()) as { data?: LibraryRevision[] }
+    if (!res.ok) return null
+    const json = (await res.json()) as { data?: unknown; meta?: unknown }
+    const data = (Array.isArray(json.data) ? json.data : []).flatMap((b) => {
+      const batch = toBatch(b, withValues)
 
-    return Array.isArray(json.data) ? json.data : []
-  } catch (e: unknown) {
-    logNonBlockingError({
-      message: `Error fetching revisions for library '${documentId}'`,
-      error: {
-        error: e instanceof Error ? e.message : String(e),
-        stack: e instanceof Error ? e.stack : undefined,
-      },
+      return batch ? [batch] : []
     })
 
-    return []
+    return { data, meta: toMeta(json.meta, page, data.length) }
+  } catch (e: unknown) {
+    logHistoryError(`Error fetching history for library '${documentId}'`, e)
+
+    return null
+  }
+}
+
+/**
+ * A library's change counts for the last 24 months, or null when Strapi
+ * can't answer. Accepts the stats bare or wrapped in `{ data }`.
+ */
+export async function fetchLibraryHistoryStats(
+  documentId: string
+): Promise<LibraryHistoryStats | null> {
+  try {
+    const res = await fetch(
+      `${historyBase()}/libraries/${encodeURIComponent(documentId)}/history/stats?months=24`,
+      { next: { revalidate: 300 } }
+    )
+    if (!res.ok) return null
+    const json = (await res.json()) as unknown
+    const raw =
+      isObject(json) && isObject(json.data)
+        ? json.data
+        : isObject(json)
+          ? json
+          : {}
+    if (!Array.isArray(raw.months)) return null
+
+    return {
+      months: raw.months.flatMap((m) =>
+        isObject(m) && typeof m.month === "string"
+          ? [
+              {
+                month: m.month,
+                batches: num(m.batches),
+                fields: num(m.fields),
+                contributors: num(m.contributors),
+              },
+            ]
+          : []
+      ),
+      byField: (Array.isArray(raw.byField) ? raw.byField : []).flatMap((f) =>
+        isObject(f) && typeof f.field === "string"
+          ? [{ field: f.field, count: num(f.count) }]
+          : []
+      ),
+      byAction: (Array.isArray(raw.byAction) ? raw.byAction : []).flatMap(
+        (a) =>
+          isObject(a) && typeof a.action === "string"
+            ? [{ action: a.action, count: num(a.count) }]
+            : []
+      ),
+      verificationEvents: (Array.isArray(raw.verificationEvents)
+        ? raw.verificationEvents
+        : []
+      ).filter((m): m is string => typeof m === "string"),
+    }
+  } catch (e: unknown) {
+    logHistoryError(
+      `Error fetching history stats for library '${documentId}'`,
+      e
+    )
+
+    return null
+  }
+}
+
+/**
+ * The latest Article Changes of a Knowledge (`wiki`) or Journal (`blog`)
+ * article, or null when Strapi can't answer.
+ */
+export async function fetchArticleHistory(
+  kind: "wiki" | "blog",
+  documentId: string
+): Promise<ArticleHistoryPage | null> {
+  try {
+    const res = await fetch(
+      `${historyBase()}/articles/${kind}/${encodeURIComponent(documentId)}/history?page=1&pageSize=${HISTORY_PAGE_SIZE}`,
+      { next: { revalidate: 300 } }
+    )
+    if (!res.ok) return null
+    const json = (await res.json()) as { data?: unknown; meta?: unknown }
+    const data = (Array.isArray(json.data) ? json.data : []).flatMap((r) => {
+      if (!isObject(r)) return []
+      const changedAt = str(r.changedAt)
+      if (!changedAt) return []
+
+      return [
+        {
+          changedAt,
+          kind: str(r.kind) ?? "edited",
+          locale: str(r.locale) ?? routing.defaultLocale,
+          actor: toActor(r.actor),
+          editSummary: str(r.editSummary),
+        },
+      ]
+    })
+
+    return { data, meta: toMeta(json.meta, 1, data.length) }
+  } catch (e: unknown) {
+    logHistoryError(`Error fetching history for ${kind} '${documentId}'`, e)
+
+    return null
   }
 }
 

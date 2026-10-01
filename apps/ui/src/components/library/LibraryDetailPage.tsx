@@ -19,12 +19,12 @@ import {
 } from "@/components/library/LibrarySectionCard"
 import {
   hasCollections,
+  LibraryChangesSection,
   LibraryCollectionsSection,
   LibraryEventsEmpty,
   LibraryFacilitiesSection,
   LibraryHistorySection,
   LibraryReuseSection,
-  LibrarySourcesSection,
   LibraryVisitSection,
 } from "@/components/library/LibrarySections"
 import {
@@ -37,7 +37,8 @@ import { T } from "@/lib/design-tokens"
 import type { DatasetRecord } from "@/lib/strapi-api/content/datasets"
 import type { LibraryAreaData } from "@/lib/strapi-api/content/library-area"
 import type {
-  LibraryRevision,
+  LibraryHistoryPage,
+  LibraryHistoryStats,
   PopulatedLibraryData,
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
@@ -54,7 +55,10 @@ interface LibraryDetailPageProps {
   readonly locale: Locale
   /** Nearby libraries and area figures, from the index. */
   readonly area?: LibraryAreaData
-  readonly revisions?: LibraryRevision[]
+  /** Page 1 of the record's Change Batches; null when unavailable. */
+  readonly history?: LibraryHistoryPage | null
+  /** The record's change counts for the last 24 months. */
+  readonly historyStats?: LibraryHistoryStats | null
   /** The dataset this record was imported from, if any. */
   readonly dataset?: DatasetRecord | null
   /** The record's canonical, absolute URL (for the citation). */
@@ -71,7 +75,8 @@ export function LibraryDetailPage({
   library,
   locale,
   area = NO_AREA,
-  revisions = [],
+  history = null,
+  historyStats = null,
   dataset = null,
   canonicalUrl,
   followers = null,
@@ -164,7 +169,7 @@ export function LibraryDetailPage({
     LIBRARY_ANCHORS.collections,
     LIBRARY_ANCHORS.events,
     LIBRARY_ANCHORS.area,
-    LIBRARY_ANCHORS.sources,
+    LIBRARY_ANCHORS.changes,
     LIBRARY_ANCHORS.reuse,
   ]
 
@@ -247,9 +252,10 @@ export function LibraryDetailPage({
                   libraryName={library.name ?? "This library"}
                   regionName={library.region?.name}
                 />
-                <LibrarySourcesSection
+                <LibraryChangesSection
                   library={library}
-                  revisions={revisions}
+                  history={history}
+                  stats={historyStats}
                   dataset={dataset}
                 />
                 <LibraryReuseSection

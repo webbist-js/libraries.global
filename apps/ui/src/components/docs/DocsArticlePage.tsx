@@ -2,12 +2,14 @@ import { Icon } from "@iconify/react"
 import type { Locale } from "next-intl"
 
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
+import { ArticleEditHistorySection } from "@/components/docs/ArticleEditHistory"
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
 import { countWords, extractHeadings, formatDate } from "@/lib/article-helpers"
 import { T } from "@/lib/design-tokens"
+import { routing } from "@/lib/navigation"
 import type {
   ArticleBodyBlock,
   DocsWikiArticle,
@@ -271,6 +273,13 @@ export function DocsArticlePage({
                 This page has no content yet.
               </p>
             )}
+
+            <ArticleEditHistorySection
+              className="mt-6"
+              kind="wiki"
+              documentId={article.documentId}
+              locale={untranslatedLocale ? routing.defaultLocale : locale}
+            />
 
             {/* Previous / next */}
             {(previous ?? next) ? (
