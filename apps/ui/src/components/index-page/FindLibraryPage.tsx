@@ -2,6 +2,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
+import { useLocale } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import {
@@ -60,6 +61,7 @@ export function FindLibraryPage({
   initialFacetDistribution: Record<string, Record<string, number>> | null
   statsTotal: number
 }) {
+  const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -108,45 +110,49 @@ export function FindLibraryPage({
     return JSON.stringify(rest)
   }, [state])
 
-  const runFetch = useCallback(async (s: FindState) => {
-    const seq = ++fetchSeq.current
-    setLoading(true)
-    setError(false)
-    try {
-      const res = await searchLibrariesV2({
-        query: s.q,
-        place: s.place ?? undefined,
-        libraryTypes: s.groups.flatMap(
-          (key) => TYPE_GROUPS.find((g) => g.key === key)?.types ?? []
-        ),
-        accessibilityNames: s.access,
-        serviceNames: s.services,
-        nearLat: s.nearLat,
-        nearLng: s.nearLng,
-        nearRadius:
-          s.nearLat != null && s.radiusKm > 0 ? s.radiusKm * 1000 : undefined,
-        sortByDistance: s.sort === "near" && s.nearLat != null,
-        bulkLimit: BULK_LIMIT,
-        withFacets: true,
-      })
-      if (seq !== fetchSeq.current) return
-      setResult({
-        all: res.hits,
-        facets: facetsFrom(
-          (res.facetDistribution ?? null) as Record<
-            string,
-            Record<string, number>
-          > | null,
-          res.hits
-        ),
-      })
-    } catch {
-      if (seq !== fetchSeq.current) return
-      setError(true)
-    } finally {
-      if (seq === fetchSeq.current) setLoading(false)
-    }
-  }, [])
+  const runFetch = useCallback(
+    async (s: FindState) => {
+      const seq = ++fetchSeq.current
+      setLoading(true)
+      setError(false)
+      try {
+        const res = await searchLibrariesV2({
+          query: s.q,
+          place: s.place ?? undefined,
+          libraryTypes: s.groups.flatMap(
+            (key) => TYPE_GROUPS.find((g) => g.key === key)?.types ?? []
+          ),
+          accessibilityNames: s.access,
+          serviceNames: s.services,
+          nearLat: s.nearLat,
+          nearLng: s.nearLng,
+          nearRadius:
+            s.nearLat != null && s.radiusKm > 0 ? s.radiusKm * 1000 : undefined,
+          sortByDistance: s.sort === "near" && s.nearLat != null,
+          bulkLimit: BULK_LIMIT,
+          withFacets: true,
+          locale,
+        })
+        if (seq !== fetchSeq.current) return
+        setResult({
+          all: res.hits,
+          facets: facetsFrom(
+            (res.facetDistribution ?? null) as Record<
+              string,
+              Record<string, number>
+            > | null,
+            res.hits
+          ),
+        })
+      } catch {
+        if (seq !== fetchSeq.current) return
+        setError(true)
+      } finally {
+        if (seq === fetchSeq.current) setLoading(false)
+      }
+    },
+    [locale]
+  )
 
   useEffect(() => {
     if (!didMount.current) {

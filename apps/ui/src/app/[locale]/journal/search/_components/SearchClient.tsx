@@ -1,6 +1,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
+import { useLocale } from "next-intl"
 import { Suspense, useEffect, useRef, useState } from "react"
 
 import { PageHero, SearchField } from "@/components/ds"
@@ -57,6 +58,7 @@ function SearchResult({ hit }: { hit: BlogArticleSearchHit }) {
 }
 
 function BlogSearchResults({ query }: { query: string }) {
+  const locale = useLocale()
   const [results, setResults] = useState<BlogArticleSearchHit[]>([])
   // Track the last resolved query to derive loading/searched state without synchronous setState in effects
   const [resolvedQuery, setResolvedQuery] = useState("")
@@ -67,7 +69,7 @@ function BlogSearchResults({ query }: { query: string }) {
 
     const id = ++pendingRef.current
 
-    searchBlogArticles(query, 40)
+    searchBlogArticles(query, 40, locale)
       .then((res) => {
         if (id === pendingRef.current) {
           setResults(res.hits)
@@ -80,7 +82,7 @@ function BlogSearchResults({ query }: { query: string }) {
           setResolvedQuery(query)
         }
       })
-  }, [query])
+  }, [query, locale])
 
   if (!query.trim()) return null
 

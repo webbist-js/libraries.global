@@ -6,6 +6,7 @@ import {
   LOCALIZED_LIBRARY_FIELDS,
   resolveEditLocale,
   restrictToEditable,
+  translateTargets,
   translationMode,
   withSubmissionLocale,
 } from "./translation-mode"
@@ -147,9 +148,35 @@ describe("draftMatchesLocale", () => {
 describe("TranslationBanner copy", async () => {
   const { translationBannerText } = await import("./TranslationBanner")
 
+  it("says when there's no version in that language yet", () => {
+    expect(translationBannerText("Czech", true)).toBe(
+      "Translating into Czech. Only text that differs by language can be changed here. No Czech version yet; the original is shown."
+    )
+  })
+
   it("names the language and what can change", () => {
     expect(translationBannerText("Czech")).toBe(
       "Translating into Czech. Only text that differs by language can be changed here."
     )
+  })
+})
+
+describe("translateTargets", () => {
+  const all = [
+    { code: "en", name: "English", isDefault: true },
+    { code: "cs", name: "Czech" },
+    { code: "fr", name: "French" },
+  ]
+
+  it("offers no target with a single locale", () => {
+    expect(translateTargets([all[0]!], "en")).toEqual([])
+  })
+
+  it("lists the non-default locales in Strapi's order", () => {
+    expect(translateTargets(all, "en").map((l) => l.code)).toEqual(["cs", "fr"])
+  })
+
+  it("puts a non-default route locale first", () => {
+    expect(translateTargets(all, "fr").map((l) => l.code)).toEqual(["fr", "cs"])
   })
 })

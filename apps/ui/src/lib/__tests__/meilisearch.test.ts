@@ -23,7 +23,8 @@ vi.mock("meilisearch", () => ({
 vi.mock("@/lib/navigation", () => ({
   routing: { defaultLocale: "en", locales: ["cs", "en"] },
 }))
-vi.mock("@/lib/seo/metadata", () => ({ LIVE_LOCALES: ["en"] }))
+// `fr` stands in for a second live locale; `cs` is routed but not live.
+vi.mock("@/lib/live-locales", () => ({ LIVE_LOCALES: ["en", "fr"] }))
 
 vi.mock("@/lib/strapi-helpers", () => ({
   formatStrapiMediaUrl: (url: string) => url,
@@ -33,6 +34,7 @@ vi.mock("@/lib/strapi-helpers", () => ({
 const {
   searchBlogArticles,
   searchLibraries,
+  searchLibrariesByParams,
   searchLibrariesV2,
   searchLibraryNames,
   searchLocale,
@@ -180,5 +182,16 @@ describe("shared locale clause", () => {
       hitsPerPage: 8,
       attributesToRetrieve: ["documentId", "name"],
     })
+  })
+})
+
+describe("route locale", () => {
+  it("uses a live non-default route locale", async () => {
+    expect(searchLocaleFilter("fr")).toBe('locale = "fr"')
+    await searchLibrariesByParams({ query: "x", locale: "fr" })
+    expect(mockSearch).toHaveBeenLastCalledWith(
+      "x",
+      expect.objectContaining({ filter: 'locale = "fr"' })
+    )
   })
 })

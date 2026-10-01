@@ -1,6 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import { useLocale } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import { SearchField } from "@/components/ds"
@@ -12,6 +13,7 @@ import {
 } from "@/lib/meilisearch"
 
 export function BlogSearchBar({ inputId }: { readonly inputId?: string }) {
+  const locale = useLocale()
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<BlogArticleSearchHit[]>([])
   const [open, setOpen] = useState(false)
@@ -31,7 +33,7 @@ export function BlogSearchBar({ inputId }: { readonly inputId?: string }) {
     setLoading(true)
     const t = setTimeout(async () => {
       try {
-        const res = await searchBlogArticles(query, 8)
+        const res = await searchBlogArticles(query, 8, locale)
         setResults(res.hits)
         setOpen(res.hits.length > 0)
       } catch {
@@ -42,7 +44,7 @@ export function BlogSearchBar({ inputId }: { readonly inputId?: string }) {
     }, 250)
 
     return () => clearTimeout(t)
-  }, [query])
+  }, [query, locale])
 
   // Close on outside click
   useEffect(() => {

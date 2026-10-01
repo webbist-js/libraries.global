@@ -28,10 +28,11 @@ export async function generateMetadata({
   })
 }
 
-async function fetchInitial() {
+async function fetchInitial(locale: string) {
   const search = await searchLibrariesV2({
     bulkLimit: 1000,
     withFacets: true,
+    locale,
   }).catch(() => null)
 
   let total = search?.hits.length ?? 0
@@ -64,7 +65,7 @@ export default function FindLibraryRoute(props: {
   params: Promise<{ locale: string }>
 }) {
   const { locale } = use(props.params)
-  const { hits, facets, total } = use(fetchInitial())
+  const { hits, facets, total } = use(fetchInitial(locale))
 
   return (
     <div

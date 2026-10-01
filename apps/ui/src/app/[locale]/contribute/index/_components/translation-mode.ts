@@ -88,3 +88,18 @@ export function draftMatchesLocale(
 ): boolean {
   return (draft.locale || defaultLocale) === editLocale
 }
+
+/**
+ * The locales "Translate this record" offers: the non-default ones, none
+ * when only one locale is configured, with a non-default route locale first
+ * (a reader on /cs/... most likely wants to translate into Czech).
+ */
+export function translateTargets<
+  L extends { code: string; isDefault?: boolean },
+>(locales: readonly L[], routeLocale?: string | null): L[] {
+  if (locales.length < 2) return []
+  const targets = locales.filter((l) => !l.isDefault)
+  const route = targets.find((l) => l.code === routeLocale)
+
+  return route ? [route, ...targets.filter((l) => l !== route)] : targets
+}

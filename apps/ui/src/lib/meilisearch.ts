@@ -4,8 +4,8 @@ import {
   type LibraryIndexFilterState,
   DEFAULT_FILTERS,
 } from "@/components/library-index/types"
+import { LIVE_LOCALES } from "@/lib/live-locales"
 import { routing } from "@/lib/navigation"
-import { LIVE_LOCALES } from "@/lib/seo/metadata"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 const host = process.env.NEXT_PUBLIC_MEILISEARCH_HOST ?? "http://localhost:7700"
@@ -94,6 +94,8 @@ export interface LibrarySearchParams {
   nearLat?: number
   nearLng?: number
   nearRadius?: number
+  /** Route locale; see `searchLocale`. */
+  locale?: string
 }
 
 // ── Search ────────────────────────────────────────────────────────────────────
@@ -270,7 +272,11 @@ export async function searchLibrariesByParams(params: LibrarySearchParams) {
       nearLng: params.nearLng,
       nearRadius: params.nearRadius ?? DEFAULT_FILTERS.nearRadius,
     },
-    { hitsPerPage: params.hitsPerPage, withFacets: params.withFacets }
+    {
+      hitsPerPage: params.hitsPerPage,
+      withFacets: params.withFacets,
+      locale: params.locale,
+    }
   )
 }
 

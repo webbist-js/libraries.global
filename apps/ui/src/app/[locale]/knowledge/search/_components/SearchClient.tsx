@@ -1,6 +1,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
+import { useLocale } from "next-intl"
 import { Suspense, useEffect, useRef, useState } from "react"
 
 import {
@@ -100,6 +101,7 @@ function SearchResult({ hit }: { hit: WikiArticleSearchHit }) {
 }
 
 function DocsSearchResults({ query }: { query: string }) {
+  const locale = useLocale()
   const [results, setResults] = useState<WikiArticleSearchHit[]>([])
   const [resolvedQuery, setResolvedQuery] = useState("")
   const pendingRef = useRef(0)
@@ -109,7 +111,7 @@ function DocsSearchResults({ query }: { query: string }) {
 
     const id = ++pendingRef.current
 
-    searchWikiArticles(query, null, 40)
+    searchWikiArticles(query, null, 40, locale)
       .then((res) => {
         if (id === pendingRef.current) {
           setResults(res.hits)
@@ -122,7 +124,7 @@ function DocsSearchResults({ query }: { query: string }) {
           setResolvedQuery(query)
         }
       })
-  }, [query])
+  }, [query, locale])
 
   if (!query.trim()) return null
 

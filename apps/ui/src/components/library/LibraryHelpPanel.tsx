@@ -1,7 +1,9 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useLocale } from "next-intl"
 
+import { translateTargets } from "@/app/[locale]/contribute/index/_components/translation-mode"
 import { hubHref } from "@/components/contribute/wizard.logic"
 import type { ChecklistKey } from "@/components/library/library-page.helpers"
 import { useCorrectionDrawer } from "@/components/library/LibraryCorrection"
@@ -232,6 +234,7 @@ export function LibraryHelpPanel({
    */
   readonly translateLocales?: readonly TranslateLocale[]
 }) {
+  const routeLocale = useLocale()
   const { open } = useCorrectionDrawer()
   const { has, claimedLibraryIds, ready } = useCapabilities()
   const steward =
@@ -244,10 +247,7 @@ export function LibraryHelpPanel({
     facilityQuestions
   )
 
-  const targets =
-    translateLocales.length > 1
-      ? translateLocales.filter((l) => !l.isDefault)
-      : []
+  const targets = translateTargets(translateLocales, routeLocale)
 
   if (!steward && tasks.length === 0 && targets.length === 0) return null
 

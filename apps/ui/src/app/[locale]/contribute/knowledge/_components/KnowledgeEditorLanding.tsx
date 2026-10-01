@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useLocale } from "next-intl"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
@@ -141,6 +142,7 @@ export function KnowledgeEditorLanding({
   /** Journal editors see Journal first; everyone can pitch a story. */
   readonly canWriteJournal: boolean
 }) {
+  const locale = useLocale()
   const [kind, setKind] = useState<ArticleKind>(initialKind)
   const [query, setQuery] = useState("")
   const [hits, setHits] = useState<
@@ -168,7 +170,10 @@ export function KnowledgeEditorLanding({
         return
       }
       setLoading(true)
-      Promise.all([searchWikiArticles(q, null, 8), searchBlogArticles(q, 8)])
+      Promise.all([
+        searchWikiArticles(q, null, 8, locale),
+        searchBlogArticles(q, 8, locale),
+      ])
         .then(([wiki, blog]) =>
           setHits([
             ...wiki.hits.map((h) => ({
@@ -192,7 +197,7 @@ export function KnowledgeEditorLanding({
     return () => {
       if (debounce.current) clearTimeout(debounce.current)
     }
-  }, [query])
+  }, [query, locale])
 
   const bySlug = useMemo(
     () => new Map(articles.map((a) => [`${a.kind}:${a.slug}`, a])),

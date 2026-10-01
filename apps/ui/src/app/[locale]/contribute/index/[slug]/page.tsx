@@ -157,6 +157,7 @@ export default async function ImproveLibraryPage({
           code: editLocale,
           defaultCode: defaultLocale,
           languageName: languageName(editLocale, locales),
+          missing: translating && !!libraryRes?.localeFallback,
         }}
         initialData={prefill(library)}
         target={{

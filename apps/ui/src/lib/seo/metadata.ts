@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 
 import { SITE_NAME } from "@/lib/constants"
 import { getEnvVar } from "@/lib/env-vars"
+import { LIVE_LOCALES } from "@/lib/live-locales"
 import { routing } from "@/lib/navigation"
 
 /** Brand name used in <title> template, og:site_name and JSON-LD publisher. */
@@ -15,13 +16,7 @@ export const DEFAULT_DESCRIPTION =
 /** X/Twitter handle — unverified; remove if the account does not exist. */
 export const TWITTER_SITE = "@LibrariesGlobal"
 
-/**
- * Locales whose content is actually published. `routing.locales` also lists
- * `cs` (starter-template scaffolding), but only English content exists, so we
- * don't emit hreflang alternates or sitemap entries for other locales.
- * Add a locale here once its content is live.
- */
-export const LIVE_LOCALES: readonly string[] = [routing.defaultLocale]
+export { LIVE_LOCALES }
 
 const FALLBACK_SITE_URL = "https://libraries.global"
 

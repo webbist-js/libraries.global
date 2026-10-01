@@ -1,6 +1,7 @@
 "use client"
 
 import { Navigation, Search } from "lucide-react"
+import { useLocale } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { DEFAULT_FILTERS } from "@/components/library-index/types"
@@ -21,6 +22,7 @@ const TRY_SEARCHES = [
 ]
 
 export default function HomeSearch() {
+  const locale = useLocale()
   const router = useRouter()
   const listboxId = useId()
   const [query, setQuery] = useState("")
@@ -41,7 +43,7 @@ export default function HomeSearch() {
       return
     }
     debounceRef.current = setTimeout(() => {
-      searchLibraries({ ...DEFAULT_FILTERS, query }, { hitsPerPage: 6 })
+      searchLibraries({ ...DEFAULT_FILTERS, query }, { hitsPerPage: 6, locale })
         .then((res) => {
           setHits(res.hits)
           setActive(0)
@@ -53,7 +55,7 @@ export default function HomeSearch() {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [query])
+  }, [query, locale])
 
   useEffect(() => {
     function handlePointerDown(e: PointerEvent) {

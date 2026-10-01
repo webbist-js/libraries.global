@@ -175,6 +175,8 @@ export interface WizardLocale {
   defaultCode: string
   /** `code`'s language name, e.g. "Czech". */
   languageName: string
+  /** No version in `code` exists yet: the form is prefilled from the default. */
+  missing?: boolean
 }
 
 export interface IndexRecordWizardProps {

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 vi.mock("@/lib/navigation", () => ({
   routing: { defaultLocale: "en", locales: ["cs", "en"] },
 }))
-vi.mock("@/lib/seo/metadata", () => ({ LIVE_LOCALES: ["en"] }))
+vi.mock("@/lib/live-locales", () => ({ LIVE_LOCALES: ["en"] }))
 vi.mock("@/lib/strapi-helpers", () => ({
   formatStrapiMediaUrl: (url: string) => url,
 }))

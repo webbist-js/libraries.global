@@ -3,8 +3,15 @@ import { Icon } from "@iconify/react"
 import { T } from "@/lib/design-tokens"
 
 /** The Index editor's translation-mode notice. */
-export function translationBannerText(languageName: string): string {
-  return `Translating into ${languageName}. Only text that differs by language can be changed here.`
+export function translationBannerText(
+  languageName: string,
+  missing = false
+): string {
+  const text = `Translating into ${languageName}. Only text that differs by language can be changed here.`
+
+  return missing
+    ? `${text} No ${languageName} version yet; the original is shown.`
+    : text
 }
 
 /**
@@ -13,8 +20,11 @@ export function translationBannerText(languageName: string): string {
  */
 export function TranslationBanner({
   languageName,
+  missing = false,
 }: {
   readonly languageName: string
+  /** No version in this language yet: the form shows the original. */
+  readonly missing?: boolean
 }) {
   return (
     <div
@@ -32,7 +42,7 @@ export function TranslationBanner({
         aria-hidden="true"
         style={{ color: T.accent.primary, flexShrink: 0, marginTop: 2 }}
       />
-      <p className="m-0">{translationBannerText(languageName)}</p>
+      <p className="m-0">{translationBannerText(languageName, missing)}</p>
     </div>
   )
 }

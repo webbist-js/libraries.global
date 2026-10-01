@@ -481,7 +481,10 @@ export function IndexRecordWizard({
             )}
 
             {translating && (
-              <TranslationBanner languageName={locale.languageName} />
+              <TranslationBanner
+                languageName={locale.languageName}
+                missing={locale.missing}
+              />
             )}
 
             {showDraftBanner && existingDraft && (

@@ -244,7 +244,7 @@ export function WizardSelect({
         {label}
         {required && !shared && <RequiredTag />}
         {changed && <ChangedTag />}
-        {shared && <SharedTag />}
+        {shared && <SharedTag id={`${id}-shared`} />}
       </span>
       <RadixSelect
         value={value}
@@ -255,6 +255,7 @@ export function WizardSelect({
       >
         <SelectTrigger
           aria-labelledby={`${id}-label`}
+          aria-describedby={shared ? `${id}-shared` : undefined}
           aria-required={required && !shared}
           style={{
             ...fieldInputStyle,
@@ -446,6 +447,9 @@ export function TagSelector({
           opacity: shared ? 0.75 : 1,
         }}
       >
+        <legend className="sr-only">
+          {shared ? `${label}: shared across languages` : label}
+        </legend>
         {selected.map((o) => (
           <button
             key={o.documentId}

@@ -17,7 +17,7 @@ vi.mock("@/lib/strapi-helpers", () => ({
 vi.mock("@/lib/navigation", () => ({
   routing: { defaultLocale: "en", locales: ["cs", "en"] },
 }))
-vi.mock("@/lib/seo/metadata", () => ({ LIVE_LOCALES: ["en"] }))
+vi.mock("@/lib/live-locales", () => ({ LIVE_LOCALES: ["en"] }))
 vi.mock("@/lib/logging", () => ({ logNonBlockingError: vi.fn() }))
 
 const { fetchLibraryArea } = await import("../library-area")

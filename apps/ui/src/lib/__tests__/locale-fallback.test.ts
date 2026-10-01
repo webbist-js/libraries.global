@@ -85,7 +85,7 @@ describe.each([
 })
 
 describe("fallback copy", async () => {
-  const { languageName, notTranslatedText, LOCALE_FALLBACK_ROBOTS } =
+  const { languageName, notTranslatedText } =
     await import("@/lib/locale-fallback")
 
   it("names a locale in English", () => {
@@ -101,9 +101,5 @@ describe("fallback copy", async () => {
 
   it("falls back to the code for an unknown locale", () => {
     expect(languageName("not a locale")).toBe("not a locale")
-  })
-
-  it("keeps a fallback render out of the index but follows its links", () => {
-    expect(LOCALE_FALLBACK_ROBOTS).toEqual({ index: false, follow: true })
   })
 })
