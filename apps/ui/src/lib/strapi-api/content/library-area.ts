@@ -8,7 +8,7 @@ import {
 } from "@/components/library/library-page.helpers"
 import { buildLibraryPath } from "@/lib/library-helpers"
 import { logNonBlockingError } from "@/lib/logging"
-import { meiliClient } from "@/lib/meilisearch"
+import { meiliClient, withSearchLocale } from "@/lib/meilisearch"
 
 /** A neighbouring library, numbered on the hero map and in the list. */
 export interface AreaNeighbour {
@@ -116,12 +116,15 @@ export async function fetchLibraryArea({
   location,
   openingTimes,
   neighbours = 3,
+  locale,
 }: {
   slug: string
   regionSlug?: string | null
   location: LatLng | null
   openingTimes: OpeningTimesValue | null
   neighbours?: number
+  /** Route locale: every count and neighbour comes from one locale's documents. */
+  locale?: string | null
 }): Promise<LibraryAreaData> {
   const index = meiliClient.index("library")
   // `slug` isn't filterable in the index, so this library is dropped from
@@ -136,14 +139,19 @@ export async function fetchLibraryArea({
     settle(
       location
         ? index.search<Hit>("", {
-            filter: `_geoRadius(${location.lat}, ${location.lng}, ${NEIGHBOUR_RADIUS_M})`,
+            filter: withSearchLocale(
+              [
+                `_geoRadius(${location.lat}, ${location.lng}, ${NEIGHBOUR_RADIUS_M})`,
+              ],
+              locale
+            ),
             sort: [`_geoPoint(${location.lat}, ${location.lng}):asc`],
             limit: neighbours + 1,
             attributesToRetrieve: NEIGHBOUR_FIELDS,
           })
         : inRegion
           ? index.search<Hit>("", {
-              filter: inRegion,
+              filter: withSearchLocale([inRegion], locale),
               sort: ["name:asc"],
               limit: neighbours + 1,
               attributesToRetrieve: NEIGHBOUR_FIELDS,
@@ -153,7 +161,12 @@ export async function fetchLibraryArea({
     settle(
       location
         ? index.search<{ slug: string }>("", {
-            filter: `_geoRadius(${location.lat}, ${location.lng}, ${WITHIN_KM * 1000})`,
+            filter: withSearchLocale(
+              [
+                `_geoRadius(${location.lat}, ${location.lng}, ${WITHIN_KM * 1000})`,
+              ],
+              locale
+            ),
             limit: REGION_SCAN_LIMIT,
             attributesToRetrieve: ["slug"],
           })
@@ -162,7 +175,7 @@ export async function fetchLibraryArea({
     settle(
       inRegion
         ? index.search<Hit>("", {
-            filter: inRegion,
+            filter: withSearchLocale([inRegion], locale),
             limit: REGION_SCAN_LIMIT,
             attributesToRetrieve: ["slug", "openingTimes"],
           })

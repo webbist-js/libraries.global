@@ -4,12 +4,44 @@ import {
   type LibraryIndexFilterState,
   DEFAULT_FILTERS,
 } from "@/components/library-index/types"
+import { routing } from "@/lib/navigation"
+import { LIVE_LOCALES } from "@/lib/seo/metadata"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 const host = process.env.NEXT_PUBLIC_MEILISEARCH_HOST ?? "http://localhost:7700"
 const searchKey = process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY ?? ""
 
 export const meiliClient = new Meilisearch({ host, apiKey: searchKey })
+
+// ── Locale ─────────────────────────────────────────────────────────────────────
+// The library, Knowledge and Journal indexes hold every locale's version of a
+// document, so every search on them names one locale.
+
+/** The route locale when its content is live, else the default locale. */
+export function searchLocale(routeLocale?: string | null): string {
+  return routeLocale && LIVE_LOCALES.includes(routeLocale)
+    ? routeLocale
+    : routing.defaultLocale
+}
+
+/**
+ * The `locale = "<x>"` clause every search of the library, Knowledge and
+ * Journal indexes must carry, so a published translation never shows twice.
+ * No route locale means the default locale.
+ */
+export function searchLocaleFilter(routeLocale?: string | null): string {
+  return `locale = ${JSON.stringify(searchLocale(routeLocale))}`
+}
+
+/** A caller's own filter clauses joined with the locale clause. */
+export function withSearchLocale(
+  clauses: readonly (string | null | undefined | false)[],
+  routeLocale?: string | null
+): string {
+  return [...clauses.filter(Boolean), searchLocaleFilter(routeLocale)].join(
+    " AND "
+  )
+}
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -68,7 +100,7 @@ export interface LibrarySearchParams {
 
 export async function searchLibraries(
   filters: LibraryIndexFilterState,
-  options: { hitsPerPage?: number; withFacets?: boolean } = {}
+  options: { hitsPerPage?: number; withFacets?: boolean; locale?: string } = {}
 ) {
   const {
     query,
@@ -151,6 +183,7 @@ export async function searchLibraries(
   if (nearLat != null && nearLng != null) {
     filterParts.push(`_geoRadius(${nearLat}, ${nearLng}, ${nearRadius})`)
   }
+  filterParts.push(searchLocaleFilter(options.locale))
 
   const sortArr: string[] = []
   // Near-me overrides user sort — distance is always the primary sort
@@ -241,6 +274,26 @@ export async function searchLibrariesByParams(params: LibrarySearchParams) {
   )
 }
 
+/**
+ * A small library lookup for pickers (find a library, tag an article, link
+ * an event feed): one locale's documents, the caller's fields.
+ */
+export async function searchLibraryNames(
+  query: string,
+  opts: {
+    hitsPerPage: number
+    attributesToRetrieve: string[]
+    filters?: string[]
+    locale?: string | null
+  }
+) {
+  return meiliClient.index("library").search<LibrarySearchHit>(query, {
+    filter: withSearchLocale(opts.filters ?? [], opts.locale),
+    hitsPerPage: opts.hitsPerPage,
+    attributesToRetrieve: opts.attributesToRetrieve,
+  })
+}
+
 // ── Blog search ───────────────────────────────────────────────────────────────
 
 export interface BlogArticleSearchHit {
@@ -251,8 +304,13 @@ export interface BlogArticleSearchHit {
   section_slug?: string | null
 }
 
-export async function searchBlogArticles(query: string, limit = 30) {
+export async function searchBlogArticles(
+  query: string,
+  limit = 30,
+  locale?: string
+) {
   return meiliClient.index("blog-article").search<BlogArticleSearchHit>(query, {
+    filter: searchLocaleFilter(locale),
     limit,
     attributesToRetrieve: ["id", "documentId", "slug", "title", "section_slug"],
   })
@@ -274,10 +332,14 @@ export interface WikiArticleSearchHit {
 export async function searchWikiArticles(
   query: string,
   sectionSlug?: string | null,
-  limit = 30
+  limit = 30,
+  locale?: string
 ) {
   return meiliClient.index("wiki-article").search<WikiArticleSearchHit>(query, {
-    filter: sectionSlug ? `section_slug = "${sectionSlug}"` : undefined,
+    filter: [
+      ...(sectionSlug ? [`section_slug = ${JSON.stringify(sectionSlug)}`] : []),
+      searchLocaleFilter(locale),
+    ].join(" AND "),
     limit,
     attributesToRetrieve: [
       "id",
@@ -357,6 +419,8 @@ export interface SearchLibrariesV2Options {
   /** fetch up to `limit` hits in one page for client-side filtering/sorting */
   bulkLimit?: number
   withFacets?: boolean
+  /** Route locale; see `searchLocale`. */
+  locale?: string
 }
 
 export async function searchLibrariesV2(opts: SearchLibrariesV2Options) {
@@ -386,6 +450,7 @@ export async function searchLibrariesV2(opts: SearchLibrariesV2Options) {
       `_geoRadius(${opts.nearLat}, ${opts.nearLng}, ${opts.nearRadius})`
     )
   }
+  filterParts.push(searchLocaleFilter(opts.locale))
 
   const sortArr: string[] = []
   if (opts.sortByDistance && opts.nearLat != null && opts.nearLng != null) {

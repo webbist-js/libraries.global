@@ -33,6 +33,7 @@ type IndexConfig = {
   entriesQuery?: {
     fields?: unknown
     populate?: Record<string, PopulateNode>
+    locale?: string
   }
   transformEntry?: (args: {
     entry: Record<string, unknown>
@@ -414,6 +415,24 @@ describe.each(INDEXES)("Meilisearch index %s", (name) => {
   })
 })
 
+describe("Meilisearch indexes every locale", () => {
+  // strapi-plugin-meilisearch passes `entriesQuery.locale` straight to the
+  // Strapi 5 Document Service, which only understands "*" as "every locale"
+  // ("all" is the Strapi 4 i18n spelling and matches no rows in v5).
+  it.each([...LOCALIZED])("%s fetches every locale", (name) => {
+    expect(meili[name].entriesQuery?.locale).toBe("*")
+  })
+
+  it.each([...LOCALIZED])("%s can filter and display by locale", (name) => {
+    expect(meili[name].settings.filterableAttributes).toContain("locale")
+    expect(meili[name].settings.displayedAttributes).toContain("locale")
+  })
+
+  it("leaves the non-localized event index alone", () => {
+    expect(meili.event.entriesQuery?.locale).toBeUndefined()
+  })
+})
+
 describe("Meilisearch transforms keep their derived fields", () => {
   it("library: flattened location, facet arrays and _geo", () => {
     const doc = meili.library.transformEntry!({
@@ -520,14 +539,22 @@ describe("scripts/seed-meilisearch.mjs mirrors the plugin config", () => {
       {
         apiPath: string
         settings: Record<string, unknown>
-        entriesQuery: { fields: string[]; populate: Record<string, unknown> }
+        entriesQuery: {
+          fields: string[]
+          populate: Record<string, unknown>
+          locale?: string
+        }
         transformEntry: (
           entry: Record<string, unknown>
         ) => Record<string, unknown>
       }
     >
     entriesQueryParams: (
-      entriesQuery: { fields: string[]; populate: Record<string, unknown> },
+      entriesQuery: {
+        fields: string[]
+        populate: Record<string, unknown>
+        locale?: string
+      },
       page: number
     ) => URLSearchParams
     meilisearchId: (collection: string, doc: Record<string, unknown>) => string
@@ -569,6 +596,7 @@ describe("scripts/seed-meilisearch.mjs mirrors the plugin config", () => {
   it("asks REST for exactly the configured fields and populate", () => {
     const params = seed.entriesQueryParams(seed.INDEXES.library.entriesQuery, 2)
     expect(params.get("status")).toBe("published")
+    expect(params.get("locale")).toBe("*")
     expect(params.get("pagination[page]")).toBe("2")
     expect(params.getAll("fields[0]")).toEqual(["documentId"])
     expect(params.get("populate[country][fields][0]")).toBe("iso2")

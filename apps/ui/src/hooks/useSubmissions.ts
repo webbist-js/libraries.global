@@ -125,16 +125,34 @@ export function useFinalizeDraft() {
   })
 }
 
-export function useResumeDraft(type: string, targetSlug?: string) {
+/**
+ * The draft lookup URL. `locale` (translation mode only) asks for that
+ * locale's draft; without it Strapi returns the default locale's.
+ */
+export function resumeDraftUrl(
+  type: string,
+  targetSlug: string | undefined,
+  locale: string | undefined,
+  origin: string
+): string {
+  const url = new URL(`/api/submissions/draft/${type}`, origin)
+  if (targetSlug) url.searchParams.set("targetSlug", targetSlug)
+  if (locale) url.searchParams.set("locale", locale)
+
+  return url.toString()
+}
+
+export function useResumeDraft(
+  type: string,
+  targetSlug?: string,
+  locale?: string
+) {
   return useQuery({
-    queryKey: ["draft", type, targetSlug],
+    queryKey: ["draft", type, targetSlug, locale ?? null],
     queryFn: async () => {
-      const url = new URL(
-        `/api/submissions/draft/${type}`,
-        window.location.origin
+      const res = await fetch(
+        resumeDraftUrl(type, targetSlug, locale, window.location.origin)
       )
-      if (targetSlug) url.searchParams.set("targetSlug", targetSlug)
-      const res = await fetch(url.toString())
       if (!res.ok) return null
       const json = await res.json()
 

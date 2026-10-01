@@ -1,11 +1,12 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useLocale } from "next-intl"
 import type React from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { T, tintForLibraryType } from "@/lib/design-tokens"
-import { meiliClient, type LibrarySearchHit } from "@/lib/meilisearch"
+import { type LibrarySearchHit, searchLibraryNames } from "@/lib/meilisearch"
 import { Link } from "@/lib/navigation"
 
 import { StepHeading } from "./WizardFields"
@@ -158,24 +159,25 @@ export function FindLibraryFirst({
 }: {
   readonly needsHelp: readonly RecordNeedingHelp[]
 }) {
+  const locale = useLocale()
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<LibrarySearchHit[]>([])
   const [loading, setLoading] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const search = useCallback(async (q: string) => {
-    if (q.trim().length < 2) {
-      setResults([])
-      setHasSearched(false)
+  const search = useCallback(
+    async (q: string) => {
+      if (q.trim().length < 2) {
+        setResults([])
+        setHasSearched(false)
 
-      return
-    }
-    setLoading(true)
-    try {
-      const res = await meiliClient
-        .index("library")
-        .search<LibrarySearchHit>(q, {
+        return
+      }
+      setLoading(true)
+      try {
+        const res = await searchLibraryNames(q, {
+          locale,
           hitsPerPage: 8,
           attributesToRetrieve: [
             "id",
@@ -189,15 +191,17 @@ export function FindLibraryFirst({
             "region_name",
           ],
         })
-      setResults(res.hits)
-      setHasSearched(true)
-    } catch {
-      setResults([])
-      setHasSearched(true)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+        setResults(res.hits)
+        setHasSearched(true)
+      } catch {
+        setResults([])
+        setHasSearched(true)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [locale]
+  )
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)

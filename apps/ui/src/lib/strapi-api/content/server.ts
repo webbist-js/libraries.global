@@ -10,6 +10,7 @@ import {
   type OpeningTimesValue,
 } from "@/components/library/library-page.helpers"
 import { logNonBlockingError } from "@/lib/logging"
+import { routing } from "@/lib/navigation"
 import { PublicStrapiClient } from "@/lib/strapi-api"
 import type {
   APIResponse,
@@ -43,6 +44,30 @@ type PopulatedFooterData = Data.ContentType<"api::footer.footer"> & {
   links?: Data.Component<"utilities.link">[]
   socialLinks?: Data.Component<"shared.social">[]
   sections?: Data.Component<"elements.footer-item">[]
+}
+
+// ------ Locale fallback
+
+/** A fetch result, flagged when it's the default-locale stand-in. */
+export type WithLocaleFallback<R> = R & { localeFallback: boolean }
+
+/**
+ * Fetch `locale`'s version; when it's missing and `locale` isn't the
+ * default, fetch the default locale instead and set `localeFallback`, so a
+ * page renders the original with a "Not yet translated" line instead of 404.
+ */
+async function withLocaleFallback<R extends { data?: unknown }>(
+  locale: string,
+  fetchIn: (locale: Locale) => Promise<R | undefined>,
+  defaultLocale: string = routing.defaultLocale
+): Promise<WithLocaleFallback<R> | undefined> {
+  const res = await fetchIn(locale as Locale)
+  if (res?.data || locale === defaultLocale)
+    return res ? { ...res, localeFallback: false } : undefined
+  const fallback = await fetchIn(defaultLocale as Locale)
+  if (fallback?.data) return { ...fallback, localeFallback: true }
+
+  return res ? { ...res, localeFallback: false } : undefined
 }
 
 // ------ Page fetching functions
@@ -251,7 +276,12 @@ export type PopulatedLibraryData = Data.ContentType<"api::library.library"> & {
   seo?: LibrarySeoData | null
 }
 
+/** A library in `locale`, or the default-locale version flagged `localeFallback`. */
 export async function fetchLibrary(slug: string, locale: Locale) {
+  return withLocaleFallback(locale, (l) => fetchLibraryIn(slug, l))
+}
+
+async function fetchLibraryIn(slug: string, locale: Locale) {
   const dm = await draftMode()
 
   try {
@@ -944,7 +974,12 @@ export async function fetchBlogLanding(locale: Locale) {
   }
 }
 
+/** A Journal article in `locale`, or the default-locale version flagged `localeFallback`. */
 export async function fetchBlogArticle(slug: string, locale: Locale) {
+  return withLocaleFallback(locale, (l) => fetchBlogArticleIn(slug, l))
+}
+
+async function fetchBlogArticleIn(slug: string, locale: Locale) {
   const dm = await draftMode()
   try {
     return (await PublicStrapiClient.fetchAPI(
@@ -1163,7 +1198,12 @@ export type WikiArticleDetail = WikiArticleSummary & {
   seo?: LibrarySeoData | null
 }
 
+/** A Knowledge article in `locale`, or the default-locale version flagged `localeFallback`. */
 export async function fetchWikiArticle(slug: string, locale: Locale) {
+  return withLocaleFallback(locale, (l) => fetchWikiArticleIn(slug, l))
+}
+
+async function fetchWikiArticleIn(slug: string, locale: Locale) {
   const dm = await draftMode()
   try {
     return (await PublicStrapiClient.fetchAPI(
@@ -1578,8 +1618,13 @@ export type LibraryForEditing = Record<string, unknown> & {
 /**
  * A published library with everything the Index editor prefills: the atlas
  * hierarchy, facility relations, social links, hours and the hero image.
+ * A missing translation falls back to the default locale (`localeFallback`).
  */
 export async function fetchLibraryForEditing(slug: string, locale: Locale) {
+  return withLocaleFallback(locale, (l) => fetchLibraryForEditingIn(slug, l))
+}
+
+async function fetchLibraryForEditingIn(slug: string, locale: Locale) {
   try {
     return (await PublicStrapiClient.fetchOneBySlug(
       "api::library.library",

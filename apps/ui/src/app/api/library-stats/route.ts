@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { meiliClient } from "@/lib/meilisearch"
+import { meiliClient, searchLocaleFilter } from "@/lib/meilisearch"
 
 export const revalidate = 1800 // 30 minutes
 
@@ -14,24 +14,26 @@ export async function GET() {
   }
 
   try {
-    const [indexStats, operationalFacets, countriesRes, regionsRes] =
-      await Promise.all([
-        meiliClient.index("library").getStats(),
-        meiliClient.index("library").search("", {
-          facets: ["operationalStatus"],
-          hitsPerPage: 0,
-        }),
-        fetch(
-          `${STRAPI}/api/countries?pagination[pageSize]=1&pagination[page]=1`,
-          { headers: strapiHeaders, next: { revalidate: 1800 } }
-        ).then((r) => (r.ok ? r.json() : null)),
-        fetch(
-          `${STRAPI}/api/regions?pagination[pageSize]=1&pagination[page]=1`,
-          { headers: strapiHeaders, next: { revalidate: 1800 } }
-        ).then((r) => (r.ok ? r.json() : null)),
-      ])
+    // The index holds every locale's version of a library: count one
+    // locale's documents, not the index's.
+    const [operationalFacets, countriesRes, regionsRes] = await Promise.all([
+      meiliClient.index("library").search("", {
+        filter: searchLocaleFilter(),
+        facets: ["operationalStatus"],
+        hitsPerPage: 0,
+      }),
+      fetch(
+        `${STRAPI}/api/countries?pagination[pageSize]=1&pagination[page]=1`,
+        { headers: strapiHeaders, next: { revalidate: 1800 } }
+      ).then((r) => (r.ok ? r.json() : null)),
+      fetch(`${STRAPI}/api/regions?pagination[pageSize]=1&pagination[page]=1`, {
+        headers: strapiHeaders,
+        next: { revalidate: 1800 },
+      }).then((r) => (r.ok ? r.json() : null)),
+    ])
 
-    const totalLibraries = indexStats.numberOfDocuments
+    // `hitsPerPage` pagination always reports an exact `totalHits`.
+    const totalLibraries = operationalFacets.totalHits
 
     const facetDist =
       (

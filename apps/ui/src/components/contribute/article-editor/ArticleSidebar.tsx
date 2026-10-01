@@ -1,11 +1,12 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useLocale } from "next-intl"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { DOCS_SECTIONS } from "@/components/docs/docs.config"
 import { T } from "@/lib/design-tokens"
-import { meiliClient, type LibrarySearchHit } from "@/lib/meilisearch"
+import { searchLibraryNames } from "@/lib/meilisearch"
 import { Link } from "@/lib/navigation"
 
 import type { ArticleKind, ArticleLocale, ArticleTag } from "./article.types"
@@ -333,6 +334,7 @@ export function TagsCard({
   onChange: (next: ArticleTag[]) => void
   disabled?: boolean
 }) {
+  const locale = useLocale()
   const [query, setQuery] = useState("")
   const [topics, setTopics] = useState<ArticleTag[]>([])
   const [libraryHits, setLibraryHits] = useState<ArticleTag[]>([])
@@ -372,12 +374,11 @@ export function TagsCard({
 
         return
       }
-      meiliClient
-        .index("library")
-        .search<LibrarySearchHit>(q, {
-          hitsPerPage: 4,
-          attributesToRetrieve: ["documentId", "name", "slug", "city"],
-        })
+      searchLibraryNames(q, {
+        locale,
+        hitsPerPage: 4,
+        attributesToRetrieve: ["documentId", "name", "slug", "city"],
+      })
         .then((res) =>
           setLibraryHits(
             res.hits.flatMap((h) =>
@@ -400,7 +401,7 @@ export function TagsCard({
     return () => {
       if (debounce.current) clearTimeout(debounce.current)
     }
-  }, [query])
+  }, [query, locale])
 
   const chosen = useMemo(() => new Set(tags.map(tagKey)), [tags])
   const q = query.trim().toLowerCase()

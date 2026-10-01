@@ -8,6 +8,7 @@ import { Badge } from "@/components/ds/Badge"
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
+import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
 import {
   countWords,
   estimateReadingTime,
@@ -27,10 +28,13 @@ export function BlogArticlePage({
   article,
   related,
   locale,
+  untranslatedLocale = null,
 }: {
   readonly article: BlogArticleDetail | null
   readonly related?: BlogArticleSummary[]
   readonly locale: Locale
+  /** Set when this is the default-locale stand-in for a missing translation. */
+  readonly untranslatedLocale?: string | null
 }) {
   if (!article) {
     return (
@@ -136,6 +140,9 @@ export function BlogArticlePage({
               >
                 {article.title}
               </h1>
+              {untranslatedLocale ? (
+                <NotTranslatedNote locale={untranslatedLocale} />
+              ) : null}
 
               {article.summary ? (
                 <p

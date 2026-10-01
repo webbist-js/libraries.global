@@ -48,7 +48,8 @@ export async function generateMetadata({
   params: Promise<{ locale: string; section: string; slug: string }>
 }): Promise<Metadata> {
   const { locale, section, slug } = await params
-  const data = (await fetchBlogArticle(slug, locale as Locale))?.data
+  const res = await fetchBlogArticle(slug, locale as Locale)
+  const data = res?.data
   if (!data) return { title: "Article not found", robots: { index: false } }
 
   const title = data.seo?.metaTitle ?? data.title ?? "Article"
@@ -71,9 +72,12 @@ export async function generateMetadata({
     publishedTime: data.publishedAt,
     modifiedTime: data.updatedAt,
     authors: data.author ? [data.author] : undefined,
+    // A default-locale stand-in for a missing translation isn't indexed.
     robots: data.seo?.metaRobots?.replaceAll(" ", "").startsWith("noindex")
       ? "noindex"
-      : "index",
+      : res?.localeFallback
+        ? "noindex-follow"
+        : "index",
   })
 }
 
@@ -83,7 +87,8 @@ export default function BlogArticleRoute(props: {
   const { locale: localeStr, section, slug } = use(props.params)
   const locale = localeStr as Locale
 
-  const article = use(fetchBlogArticle(slug, locale))?.data ?? null
+  const articleRes = use(fetchBlogArticle(slug, locale))
+  const article = articleRes?.data ?? null
   if (!article) notFound()
   const related = use(fetchRecentBlogArticles(locale))?.data ?? []
   const path = `blog/${articleSection(article, section)}/${slug}`
@@ -115,6 +120,7 @@ export default function BlogArticleRoute(props: {
         article={article}
         related={related.filter((a) => a.slug !== slug)}
         locale={locale}
+        untranslatedLocale={articleRes?.localeFallback ? locale : null}
       />
     </>
   )

@@ -11,6 +11,7 @@ import { LibraryAnchorNav } from "@/components/library/LibraryAnchorNav"
 import { LibraryAreaSection } from "@/components/library/LibraryArea"
 import { LibraryCorrectionProvider } from "@/components/library/LibraryCorrection"
 import { LibraryEvents } from "@/components/library/LibraryEvents"
+import type { TranslateLocale } from "@/components/library/LibraryHelpPanel"
 import { LibraryHero } from "@/components/library/LibraryHero"
 import {
   LIB_ICONS,
@@ -60,6 +61,10 @@ interface LibraryDetailPageProps {
   readonly canonicalUrl?: string
   /** People following the library; null leaves the count out. */
   readonly followers?: number | null
+  /** Set when this is the default-locale stand-in for a missing translation. */
+  readonly untranslatedLocale?: string | null
+  /** Strapi's configured locales, for the "Translate this record" link. */
+  readonly translateLocales?: readonly TranslateLocale[]
 }
 
 export function LibraryDetailPage({
@@ -70,6 +75,8 @@ export function LibraryDetailPage({
   dataset = null,
   canonicalUrl,
   followers = null,
+  untranslatedLocale = null,
+  translateLocales = [],
 }: LibraryDetailPageProps) {
   if (!library) {
     return (
@@ -177,6 +184,7 @@ export function LibraryDetailPage({
             library={library}
             neighbours={mapNeighbours}
             stepFree={stepFree}
+            untranslatedLocale={untranslatedLocale}
             wizardLibrary={wizardLibrary}
           />
 
@@ -258,6 +266,7 @@ export function LibraryDetailPage({
                 <LibraryTasksPanel
                   facilityQuestions={unanswered.length}
                   library={library}
+                  translateLocales={translateLocales}
                 />
                 <LibraryLinksPanel library={library} />
                 <LibraryClaimNote library={library} />

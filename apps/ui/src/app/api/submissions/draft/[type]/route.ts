@@ -9,7 +9,7 @@ import { userHeaders } from "../../route"
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
 
-// GET /api/submissions/draft/[type]?targetSlug=... — retrieve an in-progress draft
+// GET /api/submissions/draft/[type]?targetSlug=...&locale=... — retrieve an in-progress draft
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ type: string }> }
@@ -37,6 +37,11 @@ export async function GET(
     `${STRAPI}/api/content-moderation/submissions/draft/${encodeURIComponent(type)}`
   )
   if (targetSlug) strapiUrl.searchParams.set("targetSlug", targetSlug)
+  // Translation drafts are looked up per locale; Strapi maps an unknown one
+  // to the default. Only a locale-shaped code is forwarded.
+  const locale = searchParams.get("locale")
+  if (locale && /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$/.test(locale))
+    strapiUrl.searchParams.set("locale", locale)
 
   const res = await fetch(strapiUrl.toString(), {
     headers: userHeaders(session.user),

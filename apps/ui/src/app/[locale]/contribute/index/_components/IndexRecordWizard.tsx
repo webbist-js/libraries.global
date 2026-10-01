@@ -17,6 +17,14 @@ import { primaryCtaSm } from "@/lib/styles"
 import { ChangedFieldsContext } from "./ChangedFieldsContext"
 import { DraftResumeBanner } from "./DraftResumeBanner"
 import {
+  draftMatchesLocale,
+  editableFields,
+  restrictToEditable,
+  translationMode,
+  withSubmissionLocale,
+} from "./translation-mode"
+import { TranslationBanner } from "./TranslationBanner"
+import {
   changedFieldKeys,
   changedSteps,
   recordChangesPayload,
@@ -31,6 +39,7 @@ import {
   SECTION_CHECKS,
   WizardCompletionSidebar,
 } from "./WizardCompletionSidebar"
+import { EditableFieldsContext } from "./WizardFields"
 import { WizardStepNav } from "./WizardStepNav"
 import { STEP_COMPONENTS } from "./WizardSteps"
 
@@ -119,8 +128,20 @@ export function IndexRecordWizard({
   mode,
   initialData,
   target,
+  locale,
 }: IndexRecordWizardProps) {
   const improve = mode === "improve" && !!target
+  // Translation mode: a non-default locale, improve mode only.
+  const translating =
+    improve && !!locale && translationMode(locale.code, locale.defaultCode)
+  const translationLocale = translating ? locale.code : null
+  const editable = useMemo<ReadonlySet<string> | null>(
+    () =>
+      translating
+        ? new Set(editableFields(true, Object.keys(EMPTY_FORM)))
+        : null,
+    [translating]
+  )
   const router = useRouter()
   const initial = useMemo<FormData>(
     () => (initialData ? { ...EMPTY_FORM, ...initialData } : EMPTY_FORM),
@@ -128,7 +149,14 @@ export function IndexRecordWizard({
   )
   const [step, setStep] = useState(1)
   const [visited, setVisited] = useState<number[]>([])
-  const [formData, setFormData] = useState<FormData>(initial)
+  // eslint-disable-next-line react/hook-use-state -- `formData` is the view below
+  const [rawFormData, setFormData] = useState<FormData>(initial)
+  // Shared fields stay at the record's value in translation mode, whatever
+  // a resumed draft holds.
+  const formData = useMemo(
+    () => restrictToEditable(initial, rawFormData, editable),
+    [initial, rawFormData, editable]
+  )
   const [draftId, setDraftId] = useState<string | null>(null)
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
   const [draftBannerDismissed, setDraftBannerDismissed] = useState(false)
@@ -145,7 +173,8 @@ export function IndexRecordWizard({
   const { mutate: finalizeDraft, isPending: isFinalizing } = useFinalizeDraft()
   const { data: existingDraft } = useResumeDraft(
     submissionType,
-    improve ? target.slug : undefined
+    improve ? target.slug : undefined,
+    translationLocale ?? undefined
   )
   const isPending = isCreating || isFinalizing
 
@@ -159,7 +188,17 @@ export function IndexRecordWizard({
   const completedSteps = improve ? filledSteps(formData) : visited
 
   const showDraftBanner =
-    !draftBannerDismissed && !draftId && !!existingDraft?.draftData
+    !draftBannerDismissed &&
+    !draftId &&
+    !!existingDraft?.draftData &&
+    // A draft of another language's version isn't this edit's to resume.
+    (!improve ||
+      !locale ||
+      draftMatchesLocale(
+        existingDraft as { locale?: string | null },
+        locale.code,
+        locale.defaultCode
+      ))
 
   const resumeDraft = useCallback(() => {
     if (!existingDraft?.draftData) return
@@ -208,15 +247,18 @@ export function IndexRecordWizard({
     (currentFormData: FormData) => {
       const { libraryFields, ...meta } = splitForm(currentFormData)
       createSubmission(
-        {
-          submissionType,
-          ...targetParams,
-          ...meta,
-          fields: improve
-            ? recordChangesPayload(initial, currentFormData)
-            : libraryFields,
-          asDraft: true,
-        },
+        withSubmissionLocale(
+          {
+            submissionType,
+            ...targetParams,
+            ...meta,
+            fields: improve
+              ? recordChangesPayload(initial, currentFormData)
+              : libraryFields,
+            asDraft: true,
+          },
+          translationLocale
+        ),
         {
           onSuccess: (submission) => {
             setDraftId(submission.documentId)
@@ -227,7 +269,14 @@ export function IndexRecordWizard({
       )
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [createSubmission, submissionType, improve, initial, target?.documentId]
+    [
+      createSubmission,
+      submissionType,
+      improve,
+      initial,
+      target?.documentId,
+      translationLocale,
+    ]
   )
 
   const goNext = () => {
@@ -305,7 +354,10 @@ export function IndexRecordWizard({
       )
     } else {
       createSubmission(
-        { submissionType, ...targetParams, ...meta, fields },
+        withSubmissionLocale(
+          { submissionType, ...targetParams, ...meta, fields },
+          translationLocale
+        ),
         { onSuccess: onSent, onError: onFailed }
       )
     }
@@ -428,6 +480,10 @@ export function IndexRecordWizard({
               </div>
             )}
 
+            {translating && (
+              <TranslationBanner languageName={locale.languageName} />
+            )}
+
             {showDraftBanner && existingDraft && (
               <DraftResumeBanner
                 savedStep={existingDraft.stepCompleted ?? 1}
@@ -437,7 +493,9 @@ export function IndexRecordWizard({
               />
             )}
 
-            <StepComponent f={formData} set={set} setFormData={setFormData} />
+            <EditableFieldsContext.Provider value={editable}>
+              <StepComponent f={formData} set={set} setFormData={setFormData} />
+            </EditableFieldsContext.Provider>
 
             <div
               role="group"

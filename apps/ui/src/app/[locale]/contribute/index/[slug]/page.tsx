@@ -3,8 +3,11 @@ import { notFound, redirect } from "next/navigation"
 import type { Locale } from "next-intl"
 
 import { computeCompleteness } from "@/components/library/library-page.helpers"
+import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
+import { languageName } from "@/lib/locale-fallback"
+import { routing } from "@/lib/navigation"
 import { privateMetadata } from "@/lib/seo/metadata"
 import {
   fetchLibraryForEditing,
@@ -13,6 +16,10 @@ import {
 
 import { ContributeSectionHeader } from "../../_components/ContributeSectionHeader"
 import { IndexRecordWizard } from "../_components/IndexRecordWizard"
+import {
+  resolveEditLocale,
+  translationMode,
+} from "../_components/translation-mode"
 import { blocksToPlainText } from "../_components/wizard.changes"
 import type { FormData } from "../_components/wizard.types"
 
@@ -90,18 +97,33 @@ function prefill(lib: LibraryForEditing): Partial<FormData> {
 
 export default async function ImproveLibraryPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>
+  searchParams: Promise<{ locale?: string | string[] }>
 }) {
-  const { locale, slug } = await params
+  const [{ slug }, query, locales] = await Promise.all([
+    params,
+    searchParams,
+    fetchArticleLocales(),
+  ])
+  // The edit's locale comes from `?locale=` only, never the route locale:
+  // without it the editor loads and submits the default locale. A missing
+  // translation prefills from the default locale (fetch fallback).
+  const defaultLocale =
+    locales.find((l) => l.isDefault)?.code ?? routing.defaultLocale
+  const editLocale = resolveEditLocale(query.locale, locales, defaultLocale)
+  const translating = translationMode(editLocale, defaultLocale)
   const [session, libraryRes] = await Promise.all([
     getSessionSSR(await headers()),
-    fetchLibraryForEditing(slug, locale as Locale),
+    fetchLibraryForEditing(slug, editLocale as Locale),
   ])
-  if (!session?.user)
-    redirect(
-      `/auth/signin?callbackUrl=${encodeURIComponent(`/contribute/index/${slug}`)}`
-    )
+  if (!session?.user) {
+    const back = translating
+      ? `/contribute/index/${slug}?locale=${encodeURIComponent(editLocale)}`
+      : `/contribute/index/${slug}`
+    redirect(`/auth/signin?callbackUrl=${encodeURIComponent(back)}`)
+  }
 
   const library = libraryRes?.data
   if (!library?.documentId) notFound()
@@ -122,7 +144,7 @@ export default async function ImproveLibraryPage({
       <ContributeSectionHeader
         compact
         section="Index editor"
-        title={`Improve *${name}.*`}
+        title={translating ? `Translate *${name}.*` : `Improve *${name}.*`}
         lead={
           isClaimed
             ? "You look after this library. Changes go to editorial review before they appear on the public record."
@@ -131,6 +153,11 @@ export default async function ImproveLibraryPage({
       />
       <IndexRecordWizard
         mode="improve"
+        locale={{
+          code: editLocale,
+          defaultCode: defaultLocale,
+          languageName: languageName(editLocale, locales),
+        }}
         initialData={prefill(library)}
         target={{
           documentId: library.documentId,

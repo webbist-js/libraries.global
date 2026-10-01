@@ -47,7 +47,8 @@ export async function generateMetadata({
   params: Promise<{ locale: string; section: string; slug: string }>
 }): Promise<Metadata> {
   const { slug, locale } = await params
-  const article = (await fetchWikiArticle(slug, locale as Locale))?.data
+  const res = await fetchWikiArticle(slug, locale as Locale)
+  const article = res?.data
   if (!article) return { title: "Page not found", robots: { index: false } }
 
   const title = article.seo?.metaTitle ?? article.title ?? "Knowledge"
@@ -67,6 +68,8 @@ export async function generateMetadata({
     ),
     publishedTime: article.publishedAt,
     modifiedTime: article.updatedAt,
+    // A default-locale stand-in for a missing translation isn't indexed.
+    robots: res?.localeFallback ? "noindex-follow" : "index",
   })
 }
 
@@ -122,6 +125,7 @@ export default async function DocsArticleRoute({
         articles={allRes?.data ?? []}
         locale={locale}
         sectionKey={mappedSection}
+        untranslatedLocale={articleRes?.localeFallback ? locale : null}
       />
     </>
   )

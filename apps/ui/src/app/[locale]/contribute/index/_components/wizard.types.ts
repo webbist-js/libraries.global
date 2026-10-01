@@ -167,12 +167,28 @@ export interface WizardTarget {
   completeSections: string[]
 }
 
+/** The locale an improve-mode edit loads from and is applied to. */
+export interface WizardLocale {
+  /** The locale being edited (`?locale=`, else the default). */
+  code: string
+  /** Strapi's default locale. */
+  defaultCode: string
+  /** `code`'s language name, e.g. "Czech". */
+  languageName: string
+}
+
 export interface IndexRecordWizardProps {
   /** `new` adds a library; `improve` edits the given target. */
   mode: "new" | "improve"
   /** Improve mode: the record's current values. New mode: optional prefill. */
   initialData?: Partial<FormData>
   target?: WizardTarget
+  /**
+   * Improve mode: the locale being edited. A non-default locale is
+   * translation mode: only localized fields change and the submission
+   * carries `locale`. Omitted means the default locale.
+   */
+  locale?: WizardLocale
 }
 
 /** Form keys that aren't library fields: they describe the submission itself. */

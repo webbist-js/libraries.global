@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 
+import { withSearchLocale } from "@/lib/meilisearch"
+
 const MEILI_HOST =
   process.env.NEXT_PUBLIC_MEILISEARCH_HOST ?? "http://localhost:7700"
 
@@ -15,14 +17,20 @@ export async function GET(req: Request) {
   const country_slug = searchParams.get("country_slug") ?? ""
   const continent_slug = searchParams.get("continent_slug") ?? ""
 
-  const filterParts: string[] = []
-  if (continent_slug)
-    filterParts.push(`continent_slug = ${JSON.stringify(continent_slug)}`)
-  if (country_slug)
-    filterParts.push(`country_slug = ${JSON.stringify(country_slug)}`)
+  // `locale` only selects among live locales; anything else is the default.
+  const locale = searchParams.get("locale")
 
-  const body: Record<string, unknown> = { q, limit: 20 }
-  if (filterParts.length > 0) body.filter = filterParts.join(" AND ")
+  const body: Record<string, unknown> = {
+    q,
+    limit: 20,
+    filter: withSearchLocale(
+      [
+        continent_slug && `continent_slug = ${JSON.stringify(continent_slug)}`,
+        country_slug && `country_slug = ${JSON.stringify(country_slug)}`,
+      ],
+      locale
+    ),
+  }
 
   try {
     const res = await fetch(`${MEILI_HOST}/indexes/library/search`, {

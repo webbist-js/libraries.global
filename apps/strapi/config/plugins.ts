@@ -51,12 +51,13 @@ export default ({ env }) => {
               "author",
               "section_name",
             ],
-            filterableAttributes: ["section_slug"],
+            filterableAttributes: ["section_slug", "locale"],
             displayedAttributes: ARTICLE_DISPLAYED,
           },
           entriesQuery: {
             fields: ARTICLE_FIELDS,
             populate: ARTICLE_POPULATE,
+            locale: ALL_LOCALES,
           },
           transformEntry({ entry }: { entry: Record<string, unknown> }) {
             return articleDocument(entry)
@@ -71,12 +72,13 @@ export default ({ env }) => {
               "section_name",
               "category_name",
             ],
-            filterableAttributes: ["section_slug", "category_slug"],
+            filterableAttributes: ["section_slug", "category_slug", "locale"],
             displayedAttributes: ARTICLE_DISPLAYED,
           },
           entriesQuery: {
             fields: ARTICLE_FIELDS,
             populate: ARTICLE_POPULATE,
+            locale: ALL_LOCALES,
           },
           transformEntry({ entry }: { entry: Record<string, unknown> }) {
             return articleDocument(entry)
@@ -170,12 +172,14 @@ export default ({ env }) => {
               "service_names",
               "operatorType",
               "_geo",
+              "locale",
             ],
             sortableAttributes: ["name", "featured", "_geo"],
             displayedAttributes: LIBRARY_DISPLAYED,
           },
           entriesQuery: {
             fields: LIBRARY_FIELDS,
+            locale: ALL_LOCALES,
             populate: {
               continent: { fields: ["slug", "name"] },
               country: { fields: ["iso2", "slug", "name"] },
@@ -279,6 +283,13 @@ export default ({ env }) => {
 // by the plugin before the transform). Strapi always returns `id`.
 
 type Rec = Record<string, unknown>
+
+/**
+ * Index every locale's version (the UI filters by `locale`). Strapi 5's
+ * Document Service spells "every locale" `"*"`; the plugin passes this
+ * straight through, and its Strapi 4 spelling `"all"` matches no rows.
+ */
+const ALL_LOCALES = "*"
 
 const MEDIA_FIELDS = ["url", "alternativeText", "formats"]
 

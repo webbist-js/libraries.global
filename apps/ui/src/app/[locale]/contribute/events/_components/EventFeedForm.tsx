@@ -1,10 +1,11 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useLocale } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
-import { meiliClient, type LibrarySearchHit } from "@/lib/meilisearch"
+import { type LibrarySearchHit, searchLibraryNames } from "@/lib/meilisearch"
 
 import {
   fieldHintStyle,
@@ -266,6 +267,7 @@ export function EventFeedForm({
 }: {
   sessionUser: { id: string; name: string | null; email: string }
 }) {
+  const locale = useLocale()
   const [countrySlug, setCountrySlug] = useState("")
   const [libraryQuery, setLibraryQuery] = useState("")
   const [libraryResults, setLibraryResults] = useState<LibrarySearchHit[]>([])
@@ -298,21 +300,19 @@ export function EventFeedForm({
         const filterParts: string[] = []
         if (countrySlug)
           filterParts.push(`country_slug = ${JSON.stringify(countrySlug)}`)
-        const res = await meiliClient
-          .index("library")
-          .search<LibrarySearchHit>(libraryQuery, {
-            filter:
-              filterParts.length > 0 ? filterParts.join(" AND ") : undefined,
-            hitsPerPage: 8,
-            attributesToRetrieve: [
-              "documentId",
-              "name",
-              "entityRef",
-              "city",
-              "country_name",
-              "country_slug",
-            ],
-          })
+        const res = await searchLibraryNames(libraryQuery, {
+          locale,
+          filters: filterParts,
+          hitsPerPage: 8,
+          attributesToRetrieve: [
+            "documentId",
+            "name",
+            "entityRef",
+            "city",
+            "country_name",
+            "country_slug",
+          ],
+        })
         setLibraryResults(res.hits)
         setDropdownOpen(res.hits.length > 0)
       } catch {
@@ -322,7 +322,7 @@ export function EventFeedForm({
         setLibrarySearching(false)
       }
     }, 250)
-  }, [libraryQuery, countrySlug, selectedLibrary])
+  }, [libraryQuery, countrySlug, selectedLibrary, locale])
 
   // Close dropdown on outside click
   useEffect(() => {

@@ -21,6 +21,10 @@ import { fileURLToPath, pathToFileURL } from "node:url"
 // Index shapes — mirror config/plugins.ts (parity-tested)
 // ---------------------------------------------------------------------------
 
+// Every locale's version is indexed; the UI filters by `locale`. Strapi 5
+// spells "every locale" `*` (REST `?locale=*` and the Document Service).
+const ALL_LOCALES = "*"
+
 const MEDIA_FIELDS = ["url", "alternativeText", "formats"]
 
 const ARTICLE_FIELDS = [
@@ -193,12 +197,14 @@ export const INDEXES = {
         "service_names",
         "operatorType",
         "_geo",
+        "locale",
       ],
       sortableAttributes: ["name", "featured", "_geo"],
       displayedAttributes: LIBRARY_DISPLAYED,
     },
     entriesQuery: {
       fields: LIBRARY_FIELDS,
+      locale: ALL_LOCALES,
       populate: {
         continent: { fields: ["slug", "name"] },
         country: { fields: ["iso2", "slug", "name"] },
@@ -216,10 +222,14 @@ export const INDEXES = {
     apiPath: "blog-articles",
     settings: {
       searchableAttributes: ["title", "summary", "author", "section_name"],
-      filterableAttributes: ["section_slug"],
+      filterableAttributes: ["section_slug", "locale"],
       displayedAttributes: ARTICLE_DISPLAYED,
     },
-    entriesQuery: { fields: ARTICLE_FIELDS, populate: ARTICLE_POPULATE },
+    entriesQuery: {
+      fields: ARTICLE_FIELDS,
+      populate: ARTICLE_POPULATE,
+      locale: ALL_LOCALES,
+    },
     transformEntry: articleDocument,
   },
   "wiki-article": {
@@ -231,10 +241,14 @@ export const INDEXES = {
         "section_name",
         "category_name",
       ],
-      filterableAttributes: ["section_slug", "category_slug"],
+      filterableAttributes: ["section_slug", "category_slug", "locale"],
       displayedAttributes: ARTICLE_DISPLAYED,
     },
-    entriesQuery: { fields: ARTICLE_FIELDS, populate: ARTICLE_POPULATE },
+    entriesQuery: {
+      fields: ARTICLE_FIELDS,
+      populate: ARTICLE_POPULATE,
+      locale: ALL_LOCALES,
+    },
     transformEntry: articleDocument,
   },
 }
@@ -259,6 +273,7 @@ export function entriesQueryParams(entriesQuery, page, pageSize = 100) {
     "pagination[pageSize]": String(pageSize),
     status: "published",
   })
+  if (entriesQuery.locale) params.set("locale", entriesQuery.locale)
   entriesQuery.fields.forEach((field, i) => params.set(`fields[${i}]`, field))
   for (const [relation, { fields }] of Object.entries(entriesQuery.populate)) {
     fields.forEach((field, i) =>
@@ -362,7 +377,9 @@ async function main() {
 
   for (const [indexName, index] of Object.entries(INDEXES)) {
     const entries = await fetchAll(index.apiPath, index.entriesQuery)
-    console.log(`Fetched ${entries.length} published ${index.apiPath}`)
+    console.log(
+      `Fetched ${entries.length} published ${index.apiPath} (all locales)`
+    )
     await seedIndex(
       indexName,
       index.settings,

@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import type React from "react"
-import { useEffect, useState } from "react"
+import { createContext, useContext, useEffect, useState } from "react"
 
 import {
   Select as RadixSelect,
@@ -63,6 +63,80 @@ function FieldFrame({
   )
 }
 
+// ── Shared fields — translation mode locks what every language shares ──────
+
+/**
+ * The form keys that may change, or `null` when all may. Translation mode
+ * sets it to the localized fields; the rest render read-only.
+ */
+export const EditableFieldsContext = createContext<ReadonlySet<string> | null>(
+  null
+)
+
+/** True when `key` is shared across languages and can't change here. */
+export function useIsShared(key?: keyof FormData): boolean {
+  const editable = useContext(EditableFieldsContext)
+
+  return !!editable && !!key && !editable.has(key)
+}
+
+export function SharedTag({ id }: { id?: string }) {
+  return (
+    <span
+      id={id}
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12.5px] font-semibold"
+      style={{ background: T.bg.muted, color: T.ink.dim }}
+    >
+      <Icon icon="mdi:earth" width={12} aria-hidden="true" />
+      Shared across languages
+    </span>
+  )
+}
+
+const sharedInputStyle: React.CSSProperties = {
+  background: T.bg.muted,
+  color: T.ink.dim,
+  cursor: "not-allowed",
+}
+
+/**
+ * Wraps an editor with its own controls (hours, relations, photos): in
+ * translation mode a disabled fieldset renders it read-only with the tag.
+ */
+export function SharedBlock({
+  fields,
+  children,
+}: {
+  fields: readonly (keyof FormData)[]
+  children: React.ReactNode
+}) {
+  const editable = useContext(EditableFieldsContext)
+  const shared = !!editable && fields.every((f) => !editable.has(f))
+  if (!shared) return <>{children}</>
+
+  return (
+    <fieldset
+      disabled
+      style={{
+        border: "none",
+        padding: 0,
+        margin: 0,
+        minWidth: 0,
+        display: "flex",
+        flexDirection: "column",
+        gap: "10px",
+        opacity: 0.75,
+      }}
+    >
+      <legend className="sr-only">Shared across languages</legend>
+      <div>
+        <SharedTag />
+      </div>
+      {children}
+    </fieldset>
+  )
+}
+
 // ── RequiredTag — subtle rust "required" marker next to a label ──────────────
 
 export function RequiredTag() {
@@ -105,13 +179,18 @@ export function Field({
 }) {
   const hintId = hint ? `${id}-hint` : undefined
   const changed = useIsChanged(id)
+  const shared = useIsShared(id)
+  const describedBy =
+    [shared ? `${id}-shared` : null, hintId].filter(Boolean).join(" ") ||
+    undefined
 
   return (
     <FieldFrame changed={changed}>
       <label htmlFor={id} style={fieldLabelStyle}>
         {label}
-        {required && <RequiredTag />}
+        {required && !shared && <RequiredTag />}
         {changed && <ChangedTag />}
+        {shared && <SharedTag id={`${id}-shared`} />}
       </label>
       <input
         id={id}
@@ -119,12 +198,15 @@ export function Field({
         type={type}
         value={value}
         onChange={(e) => onChange(id, e.target.value)}
-        placeholder={placeholder}
-        required={required}
-        aria-required={required}
-        aria-describedby={hintId}
+        placeholder={shared ? undefined : placeholder}
+        required={required && !shared}
+        aria-required={required && !shared}
+        readOnly={shared}
+        aria-describedby={describedBy}
         autoComplete={autoComplete}
-        style={fieldInputStyle}
+        style={
+          shared ? { ...fieldInputStyle, ...sharedInputStyle } : fieldInputStyle
+        }
       />
       {hint && (
         <p id={hintId} style={fieldHintStyle}>
@@ -153,29 +235,33 @@ export function WizardSelect({
   required?: boolean
 }) {
   const changed = useIsChanged(id)
+  const shared = useIsShared(id)
 
   return (
     <FieldFrame changed={changed}>
       {/* Radix Select doesn't support htmlFor; aria-labelledby used instead */}
       <span id={`${id}-label`} style={fieldLabelStyle}>
         {label}
-        {required && <RequiredTag />}
+        {required && !shared && <RequiredTag />}
         {changed && <ChangedTag />}
+        {shared && <SharedTag />}
       </span>
       <RadixSelect
         value={value}
         onValueChange={(v) => onChange(id, v)}
-        required={required}
+        required={required && !shared}
+        disabled={shared}
         name={id}
       >
         <SelectTrigger
           aria-labelledby={`${id}-label`}
-          aria-required={required}
+          aria-required={required && !shared}
           style={{
             ...fieldInputStyle,
             color: value ? T.ink.base : T.ink.dim,
             height: "auto",
             justifyContent: "space-between",
+            ...(shared ? sharedInputStyle : {}),
           }}
         >
           <SelectValue placeholder="Select…" />
@@ -231,23 +317,34 @@ export function TextareaField({
 }) {
   const hintId = hint ? `${id}-hint` : undefined
   const changed = useIsChanged(id)
+  const shared = useIsShared(id)
+  const describedBy =
+    [shared ? `${id}-shared` : null, hintId].filter(Boolean).join(" ") ||
+    undefined
 
   return (
     <FieldFrame changed={changed}>
       <label htmlFor={id} style={fieldLabelStyle}>
         {label}
-        {required && <RequiredTag />}
+        {required && !shared && <RequiredTag />}
         {changed && <ChangedTag />}
+        {shared && <SharedTag id={`${id}-shared`} />}
       </label>
       <textarea
         id={id}
         name={id}
         value={value}
         onChange={(e) => onChange(id, e.target.value)}
-        placeholder={placeholder}
+        placeholder={shared ? undefined : placeholder}
         rows={rows}
-        aria-describedby={hintId}
-        style={{ ...fieldInputStyle, resize: "vertical", lineHeight: 1.6 }}
+        readOnly={shared}
+        aria-describedby={describedBy}
+        style={{
+          ...fieldInputStyle,
+          resize: "vertical",
+          lineHeight: 1.6,
+          ...(shared ? sharedInputStyle : {}),
+        }}
       />
       {hint && (
         <p id={hintId} style={fieldHintStyle}>
@@ -277,6 +374,7 @@ export function TagSelector({
   fieldKey?: keyof FormData
 }) {
   const changed = useIsChanged(fieldKey ?? "services") && !!fieldKey
+  const shared = useIsShared(fieldKey)
   const [options, setOptions] = useState<
     { documentId: string; name: string }[]
   >([])
@@ -333,8 +431,21 @@ export function TagSelector({
       <span style={fieldLabelStyle}>
         {label}
         {changed && <ChangedTag />}
+        {shared && <SharedTag />}
       </span>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+      <fieldset
+        disabled={shared}
+        style={{
+          border: "none",
+          padding: 0,
+          margin: 0,
+          minWidth: 0,
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "8px",
+          opacity: shared ? 0.75 : 1,
+        }}
+      >
         {selected.map((o) => (
           <button
             key={o.documentId}
@@ -384,7 +495,7 @@ export function TagSelector({
             Show {overflow} more
           </button>
         )}
-      </div>
+      </fieldset>
       {hint && <p style={fieldHintStyle}>{hint}</p>}
     </div>
   )

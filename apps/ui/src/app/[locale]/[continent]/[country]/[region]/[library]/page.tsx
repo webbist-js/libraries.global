@@ -9,6 +9,7 @@ import {
 } from "@/components/library/library-page.helpers"
 import LibraryDetailPage from "@/components/library/LibraryDetailPage"
 import { JsonLd } from "@/components/seo/JsonLd"
+import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { isDevelopment } from "@/lib/general-helpers"
 import { buildBreadcrumbSchema, buildLibrarySchema } from "@/lib/seo/json-ld"
 import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
@@ -117,9 +118,12 @@ export async function generateMetadata({
     locale,
     image,
     imageAlt: library.heroImage?.alternativeText ?? name,
+    // A default-locale stand-in for a missing translation isn't indexed.
     robots: seo?.metaRobots?.replaceAll(" ", "").startsWith("noindex")
       ? "noindex"
-      : "index",
+      : res?.localeFallback
+        ? "noindex-follow"
+        : "index",
   })
 }
 
@@ -150,15 +154,18 @@ export default function LibraryRoutePage(props: {
     regionSlug: library.region?.slug,
     location: toLatLng(library.location),
     openingTimes: library.openingTimes as OpeningTimesValue | null,
+    locale,
   })
   const revisionsPromise = fetchLibraryRevisions(library.documentId)
   const datasetPromise = fetchDataset(library.source)
   const followersPromise = fetchLibraryFollowerCount(library.documentId)
+  const localesPromise = fetchArticleLocales()
 
   const area = use(areaPromise)
   const revisions = use(revisionsPromise)
   const dataset = use(datasetPromise)
   const followers = use(followersPromise)
+  const locales = use(localesPromise)
 
   const crumbs = libraryPath(library, {
     continent: params.continent,
@@ -221,6 +228,8 @@ export default function LibraryRoutePage(props: {
         dataset={dataset}
         canonicalUrl={url}
         followers={followers}
+        untranslatedLocale={libraryRes?.localeFallback ? locale : null}
+        translateLocales={locales}
       />
     </>
   )

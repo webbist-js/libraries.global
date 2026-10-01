@@ -9,6 +9,13 @@ import { useCapabilities } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 
+/** One of Strapi's configured locales. */
+export type TranslateLocale = {
+  code: string
+  name: string
+  isDefault?: boolean
+}
+
 type Task = {
   key: ChecklistKey
   title: string
@@ -96,7 +103,11 @@ function tasksFor(
 const ROW =
   "group flex w-full items-center gap-3 rounded-2xl border bg-white px-3 py-2.5 text-left no-underline transition-colors hover:bg-(--t-bg-surface)"
 
-function TaskBody({ task }: { readonly task: Task }) {
+function TaskBody({
+  task,
+}: {
+  readonly task: Pick<Task, "title" | "meta" | "icon" | "tint">
+}) {
   return (
     <>
       <span
@@ -129,6 +140,72 @@ function TaskBody({ task }: { readonly task: Task }) {
   )
 }
 
+/** The Index editor in translation mode for `code`. */
+export function translateHref(slug: string, code: string): string {
+  return `/contribute/index/${slug}?locale=${encodeURIComponent(code)}`
+}
+
+/**
+ * "Translate this record": a link into the Index editor's translation mode,
+ * with a choice of language when more than one can be translated into.
+ */
+function TranslateRecord({
+  librarySlug,
+  locales,
+  divided,
+}: {
+  readonly librarySlug: string
+  readonly locales: readonly TranslateLocale[]
+  /** Rule it off from tasks above it. */
+  readonly divided: boolean
+}) {
+  const [first, ...rest] = locales
+  if (!first) return null
+
+  return (
+    <div
+      className={
+        divided
+          ? "mt-3 flex flex-col gap-2 border-t pt-3"
+          : "flex flex-col gap-2"
+      }
+      style={{ borderColor: T.border.divider }}
+    >
+      <Link
+        href={translateHref(librarySlug, first.code)}
+        className={ROW}
+        style={{ borderColor: T.border.line }}
+      >
+        <TaskBody
+          task={{
+            title: "Translate this record",
+            meta: rest.length > 0 ? `Into ${first.name}` : first.name,
+            icon: "mdi:translate",
+            tint: INDIGO,
+          }}
+        />
+      </Link>
+      {rest.length > 0 ? (
+        <nav aria-label="Translate into another language">
+          <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
+            {rest.map((l) => (
+              <li key={l.code}>
+                <Link
+                  href={translateHref(librarySlug, l.code)}
+                  className="inline-flex items-center rounded-full border bg-white px-3 py-1 text-[13px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+                  style={{ borderColor: T.border.hi, color: T.ink.base }}
+                >
+                  {l.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ) : null}
+    </div>
+  )
+}
+
 /**
  * "Help finish this record": up to three quick tasks for the record's gaps.
  * The library's own stewards get an edit link first. UI only: every route
@@ -141,6 +218,7 @@ export function LibraryHelpPanel({
   libraryName,
   libraryDocumentId,
   facilityQuestions,
+  translateLocales = [],
 }: {
   readonly gaps: readonly ChecklistKey[]
   readonly librarySlug: string
@@ -148,6 +226,11 @@ export function LibraryHelpPanel({
   readonly libraryDocumentId: string
   /** Unanswered accessibility questions on the page. */
   readonly facilityQuestions: number
+  /**
+   * Strapi's configured locales. With more than one, the panel offers
+   * "Translate this record" into each non-default locale.
+   */
+  readonly translateLocales?: readonly TranslateLocale[]
 }) {
   const { open } = useCorrectionDrawer()
   const { has, claimedLibraryIds, ready } = useCapabilities()
@@ -161,7 +244,12 @@ export function LibraryHelpPanel({
     facilityQuestions
   )
 
-  if (!steward && tasks.length === 0) return null
+  const targets =
+    translateLocales.length > 1
+      ? translateLocales.filter((l) => !l.isDefault)
+      : []
+
+  if (!steward && tasks.length === 0 && targets.length === 0) return null
 
   return (
     <section
@@ -204,40 +292,47 @@ export function LibraryHelpPanel({
           </p>
         </div>
       ) : null}
-      <ul className="m-0 flex list-none flex-col gap-2 p-0">
-        {tasks.map((task) => (
-          <li key={task.key}>
-            {"href" in task ? (
-              task.href.startsWith("#") ? (
-                <a
-                  href={task.href}
-                  className={ROW}
-                  style={{ borderColor: T.border.line }}
-                >
-                  <TaskBody task={task} />
-                </a>
+      {tasks.length > 0 ? (
+        <ul className="m-0 flex list-none flex-col gap-2 p-0">
+          {tasks.map((task) => (
+            <li key={task.key}>
+              {"href" in task ? (
+                task.href.startsWith("#") ? (
+                  <a
+                    href={task.href}
+                    className={ROW}
+                    style={{ borderColor: T.border.line }}
+                  >
+                    <TaskBody task={task} />
+                  </a>
+                ) : (
+                  <Link
+                    href={task.href}
+                    className={ROW}
+                    style={{ borderColor: T.border.line }}
+                  >
+                    <TaskBody task={task} />
+                  </Link>
+                )
               ) : (
-                <Link
-                  href={task.href}
+                <button
+                  type="button"
+                  onClick={() => open(task.category)}
                   className={ROW}
                   style={{ borderColor: T.border.line }}
                 >
                   <TaskBody task={task} />
-                </Link>
-              )
-            ) : (
-              <button
-                type="button"
-                onClick={() => open(task.category)}
-                className={ROW}
-                style={{ borderColor: T.border.line }}
-              >
-                <TaskBody task={task} />
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <TranslateRecord
+        divided={tasks.length > 0}
+        librarySlug={librarySlug}
+        locales={targets}
+      />
     </section>
   )
 }

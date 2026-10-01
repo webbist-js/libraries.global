@@ -9,7 +9,10 @@ import {
 import { LibraryClaimButton } from "@/components/library/LibraryClaimButton"
 import { OpenCorrectionLink } from "@/components/library/LibraryCorrection"
 import { LibraryFollowerCount } from "@/components/library/LibraryFollowerCount"
-import { LibraryHelpPanel } from "@/components/library/LibraryHelpPanel"
+import {
+  LibraryHelpPanel,
+  type TranslateLocale,
+} from "@/components/library/LibraryHelpPanel"
 import { LIB_ICONS, LibIcon } from "@/components/library/LibrarySectionCard"
 import { T } from "@/lib/design-tokens"
 import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
@@ -157,9 +160,12 @@ export function LibraryRecordPanel({
 export function LibraryTasksPanel({
   library,
   facilityQuestions,
+  translateLocales = [],
 }: {
   readonly library: Lib
   readonly facilityQuestions: number
+  /** Strapi's configured locales, for the "Translate this record" link. */
+  readonly translateLocales?: readonly TranslateLocale[]
 }) {
   const { items } = libraryChecklist(library)
   const gaps = items.filter((i) => !i.done).map((i) => i.key)
@@ -171,6 +177,7 @@ export function LibraryTasksPanel({
       libraryDocumentId={library.documentId ?? ""}
       libraryName={library.name ?? ""}
       librarySlug={library.slug ?? ""}
+      translateLocales={translateLocales}
     />
   )
 }

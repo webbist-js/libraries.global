@@ -5,6 +5,7 @@ import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
+import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
 import { countWords, extractHeadings, formatDate } from "@/lib/article-helpers"
 import { T } from "@/lib/design-tokens"
 import type {
@@ -62,11 +63,14 @@ export function DocsArticlePage({
   articles,
   locale,
   sectionKey,
+  untranslatedLocale = null,
 }: {
   readonly article: WikiArticleDetail
   readonly articles: DocsWikiArticle[]
   readonly locale: Locale
   readonly sectionKey: DocsSectionKey
+  /** Set when this is the default-locale stand-in for a missing translation. */
+  readonly untranslatedLocale?: string | null
 }) {
   const section = DOCS_SECTIONS.find((s) => s.key === sectionKey)
   const title = article.title ?? article.slug ?? "Untitled"
@@ -173,6 +177,9 @@ export function DocsArticlePage({
             >
               {title}
             </h1>
+            {untranslatedLocale ? (
+              <NotTranslatedNote locale={untranslatedLocale} />
+            ) : null}
 
             {article.summary ? (
               <p

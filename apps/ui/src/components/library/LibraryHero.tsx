@@ -8,6 +8,7 @@ import {
 import { Breadcrumb, type BreadcrumbItem } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
+import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
 import type { FacilityState } from "@/components/library/facility-rows"
 import {
   type LatLng,
@@ -42,6 +43,7 @@ export function LibraryHero({
   neighbours,
   stepFree,
   hasPhoto,
+  untranslatedLocale = null,
 }: {
   readonly library: PopulatedLibraryData
   readonly crumbs: BreadcrumbItem[]
@@ -51,6 +53,8 @@ export function LibraryHero({
   /** yes: documented; no: confirmed absent; unknown: not documented. */
   readonly stepFree: FacilityState
   readonly hasPhoto: boolean
+  /** Set when this is the default-locale stand-in for a missing translation. */
+  readonly untranslatedLocale?: string | null
 }) {
   const rec = library as unknown as Record<string, unknown>
   const tint = tintForLibraryType(library.libraryType)
@@ -129,6 +133,9 @@ export function LibraryHero({
             >
               {library.name}
             </h1>
+            {untranslatedLocale ? (
+              <NotTranslatedNote locale={untranslatedLocale} />
+            ) : null}
 
             {locationLine || shortName ? (
               <p

@@ -15,6 +15,7 @@ import {
 import type { StepProps } from "./wizard.types"
 import {
   Field,
+  SharedBlock,
   SubSection,
   StepHeader,
   TagSelector,
@@ -199,7 +200,16 @@ function StepLocation({ f, set, setFormData }: StepProps) {
         label="Content hierarchy"
         sub="Link this library to its place in the atlas — used for breadcrumbs and location browsing."
       />
-      <LocationHierarchySelector f={f} setFormData={setFormData} />
+      <SharedBlock
+        fields={[
+          "continentDocumentId",
+          "countryDocumentId",
+          "regionDocumentId",
+          "areaDocumentId",
+        ]}
+      >
+        <LocationHierarchySelector f={f} setFormData={setFormData} />
+      </SharedBlock>
     </fieldset>
   )
 }
@@ -355,12 +365,14 @@ function StepVisit({ f, set, setFormData }: StepProps) {
               label="Opening hours"
               sub="Weekly schedule shown on the library detail page. Leave slots empty for days you don't have data for."
             />
-            <OpeningTimesEditor
-              value={f.openingTimes}
-              onChange={(updated) =>
-                setFormData((prev) => ({ ...prev, openingTimes: updated }))
-              }
-            />
+            <SharedBlock fields={["openingTimes"]}>
+              <OpeningTimesEditor
+                value={f.openingTimes}
+                onChange={(updated) =>
+                  setFormData((prev) => ({ ...prev, openingTimes: updated }))
+                }
+              />
+            </SharedBlock>
           </>
         )}
 
@@ -405,12 +417,14 @@ function StepVisit({ f, set, setFormData }: StepProps) {
         label="Social media"
         sub="Official social media accounts for this library."
       />
-      <SocialLinksEditor
-        value={f.socialLinks}
-        onChange={(links) =>
-          setFormData((prev) => ({ ...prev, socialLinks: links }))
-        }
-      />
+      <SharedBlock fields={["socialLinks"]}>
+        <SocialLinksEditor
+          value={f.socialLinks}
+          onChange={(links) =>
+            setFormData((prev) => ({ ...prev, socialLinks: links }))
+          }
+        />
+      </SharedBlock>
     </fieldset>
   )
 }
@@ -569,12 +583,14 @@ function StepImagery({ f, set, setFormData }: StepProps) {
           sub="Upload images of the library and mark one as the hero. It appears at the top of the library page."
         />
       </legend>
-      <ImageUploadEditor
-        images={f.uploadedImages}
-        onChange={(imgs) =>
-          setFormData((prev) => ({ ...prev, uploadedImages: imgs }))
-        }
-      />
+      <SharedBlock fields={["uploadedImages"]}>
+        <ImageUploadEditor
+          images={f.uploadedImages}
+          onChange={(imgs) =>
+            setFormData((prev) => ({ ...prev, uploadedImages: imgs }))
+          }
+        />
+      </SharedBlock>
       <Field
         label="Image credit / attribution"
         id="imageCredit"
