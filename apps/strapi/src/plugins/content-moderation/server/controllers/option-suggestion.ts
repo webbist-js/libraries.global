@@ -7,6 +7,50 @@ import {
 import { isDocumentId } from "../utils/params"
 
 /**
+ * Validates a decision body and applies it: shared by the admin route and
+ * the editorial board's content-api route, which differ only in who
+ * `decidedBy` names.
+ */
+export async function decideFromRequest(
+  strapi: any,
+  id: unknown,
+  body: unknown,
+  decidedBy: string
+): Promise<
+  | { ok: true; data: unknown }
+  | { ok: false; status: 400 | 404; message: string }
+> {
+  const { decision, name, note } = (body ?? {}) as {
+    decision?: unknown
+    name?: unknown
+    note?: unknown
+  }
+  if (!isDocumentId(id))
+    return { ok: false, status: 400, message: "Invalid id" }
+  if (decision !== "accept" && decision !== "decline")
+    return {
+      ok: false,
+      status: 400,
+      message: "decision must be accept or decline",
+    }
+  const updated = await decideSuggestion(strapi, {
+    documentId: id,
+    decision,
+    decidedBy,
+    name: typeof name === "string" ? name : undefined,
+    note: typeof note === "string" ? note : undefined,
+  })
+  if (!updated)
+    return {
+      ok: false,
+      status: 404,
+      message: "This suggestion was already decided.",
+    }
+
+  return { ok: true, data: updated }
+}
+
+/**
  * Suggested options: the public list and votes (content API), and the
  * editorial board's tally and decisions (admin).
  */
@@ -56,28 +100,21 @@ export default ({ strapi }: { strapi: any }) => ({
 
   // PUT /content-moderation/option-suggestions/:id  (admin)
   async decide(ctx: any) {
-    const { id } = ctx.params
-    const { decision, name, note } = (ctx.request.body ?? {}) as {
-      decision?: unknown
-      name?: unknown
-      note?: unknown
-    }
-    if (!isDocumentId(id)) return ctx.badRequest("Invalid id")
-    if (decision !== "accept" && decision !== "decline")
-      return ctx.badRequest("decision must be accept or decline")
     const admin = ctx.state?.user
     const decidedBy =
       [admin?.firstname, admin?.lastname].filter(Boolean).join(" ") ||
       admin?.email ||
       "Editorial board"
-    const updated = await decideSuggestion(strapi, {
-      documentId: id,
-      decision,
-      decidedBy,
-      name: typeof name === "string" ? name : undefined,
-      note: typeof note === "string" ? note : undefined,
-    })
-    if (!updated) return ctx.notFound("This suggestion was already decided.")
-    ctx.body = { data: updated }
+    const result = await decideFromRequest(
+      strapi,
+      ctx.params?.id,
+      ctx.request.body,
+      decidedBy
+    )
+    if (!result.ok)
+      return result.status === 404
+        ? ctx.notFound(result.message)
+        : ctx.badRequest(result.message)
+    ctx.body = { data: result.data }
   },
 })

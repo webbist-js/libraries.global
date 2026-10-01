@@ -95,4 +95,60 @@ export default [
     handler: "option-suggestion.vote",
     config: { auth: false, policies: [] },
   },
+  // Community moderation: bridge secret + X-Ba-User-Id, scopes re-checked
+  // per request (controllers/moderation).
+  {
+    method: "GET",
+    path: "/moderation/submissions",
+    handler: "moderation.list",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
+    path: "/moderation/submissions/:documentId",
+    handler: "moderation.findOne",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "PUT",
+    path: "/moderation/submissions/:documentId/status",
+    handler: "moderation.updateStatus",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "PUT",
+    path: "/moderation/submissions/:documentId/target",
+    handler: "moderation.setTarget",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
+    path: "/moderation/submissions/:documentId/events",
+    handler: "moderation.events",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
+    path: "/moderation/stats",
+    handler: "moderation.stats",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
+    path: "/moderation/relation-labels",
+    handler: "moderation.relationLabels",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
+    path: "/moderation/option-suggestions",
+    handler: "moderation.optionSuggestions",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "PUT",
+    path: "/moderation/option-suggestions/:id",
+    handler: "moderation.decideOptionSuggestion",
+    config: { auth: false, policies: [] },
+  },
 ]

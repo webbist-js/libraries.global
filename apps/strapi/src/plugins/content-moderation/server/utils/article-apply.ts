@@ -369,7 +369,12 @@ export type ApplyArticleResult = {
 }
 
 export type ApplyArticleOptions = {
-  /** Reserved for the publish choice (Task 11); not read yet. */
+  /**
+   * A Moderator chose "Approve and publish": a suggestion or a non-editor's
+   * new article is published (through the publish guard) instead of being
+   * written as a draft. It changes the write mode only: a reader's direct
+   * edit is still skipped, and points don't depend on it.
+   */
   publish?: boolean
   /** Called with the new article's documentId when one is created. */
   onCreated?: (documentId: string) => void
@@ -418,6 +423,7 @@ export async function applyArticleSubmission(
   const locale = await articleLocale(strapi, submission)
   // Editors may be scoped to locales: the right is to publish in this one.
   const canPublish = canDirectEdit(caps, target.editor, locale)
+  const publish = canPublish || opts.publish === true
 
   // ── New article ──────────────────────────────────────────────────────
   // `draftData.kind` alone decides (never `fields.kind`, which the
@@ -445,7 +451,7 @@ export async function applyArticleSubmission(
 
     const created = await strapi.documents(target.uid).create({
       locale,
-      status: canPublish ? "published" : "draft",
+      status: publish ? "published" : "draft",
       data: {
         title,
         slug,
@@ -461,12 +467,12 @@ export async function applyArticleSubmission(
       },
     })
     strapi.log.info(
-      `[content-moderation] ${kind} ${submission.documentId}: created ${canPublish ? "published" : "draft"} article ${created?.documentId ?? slug}`
+      `[content-moderation] ${kind} ${submission.documentId}: created ${publish ? "published" : "draft"} article ${created?.documentId ?? slug}`
     )
     if (typeof created?.documentId === "string")
       opts.onCreated?.(created.documentId)
 
-    return canPublish ? "created_published" : "created_draft"
+    return publish ? "created_published" : "created_draft"
   }
 
   // ── Existing article ─────────────────────────────────────────────────
@@ -527,6 +533,24 @@ export async function applyArticleSubmission(
     const body = cleanBody(draftData.proposedBody)
     if (body) data.body = body
     if (Object.keys(data).length === 0) return "noop"
+    const profileId = await submitterProfileId(
+      strapi,
+      submission.submittedByUserId
+    )
+    if (opts.publish === true) {
+      // "Approve and publish": through the publish guard, like a direct edit.
+      if (profileId)
+        data.contributors = { connect: [{ documentId: profileId }] }
+      const { mode } = await applyToLocale(
+        strapi,
+        target.uid,
+        article.documentId,
+        data,
+        { locale, defaultLocale: await defaultLocale(strapi) }
+      )
+
+      return mode === "draft_only" ? "drafted_divergent" : "published"
+    }
     // Draft version only: an admin publishes from the Content Manager.
     await strapi.documents(target.uid).update({
       documentId: article.documentId,
@@ -534,10 +558,6 @@ export async function applyArticleSubmission(
       status: "draft",
       data,
     })
-    const profileId = await submitterProfileId(
-      strapi,
-      submission.submittedByUserId
-    )
     if (profileId)
       await strapi.documents(target.uid).update({
         documentId: article.documentId,

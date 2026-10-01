@@ -14,7 +14,12 @@
  * 3. is published otherwise.
  */
 
-export type ApplyRefusedReason = "not_published"
+/**
+ * `not_published`: the record has no published version. `no_hierarchy`: a
+ * `new_library` approved with `publish` lacks its continent, country or
+ * region, so it can't get a real entityRef (see services/submission).
+ */
+export type ApplyRefusedReason = "not_published" | "no_hierarchy"
 
 export class ApplyRefusedError extends Error {
   readonly reason: ApplyRefusedReason

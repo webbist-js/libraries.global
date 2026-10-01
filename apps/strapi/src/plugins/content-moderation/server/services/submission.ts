@@ -33,7 +33,10 @@ import {
 } from "../utils/locales"
 import { isDocumentId, isNewArticleDraft } from "../utils/params"
 import { payloadHash } from "../utils/payload-hash"
-import { ApplyRefusedError } from "../utils/publish-guard"
+import {
+  ApplyRefusedError,
+  type ApplyRefusedReason,
+} from "../utils/publish-guard"
 import {
   preloadRecordReviews,
   preloadTopicReviews,
@@ -67,6 +70,103 @@ export const DRAFT_ONLY_MARKER =
 // approval was returned to review. Publish the record, then approve again.
 export const NOT_PUBLISHED_MARKER =
   " [Not applied: the record is not published. Publish it in the Content Manager, then approve again]"
+// A `new_library` approved with `publish` had no continent, country or region
+// (or they didn't give it a real entityRef): set the target, then approve again.
+export const NO_HIERARCHY_MARKER =
+  " [Not published: the library needs a continent, country and region. Set its location, then approve again]"
+
+const REFUSED_MARKERS: Record<ApplyRefusedReason, string> = {
+  not_published: NOT_PUBLISHED_MARKER,
+  no_hierarchy: NO_HIERARCHY_MARKER,
+}
+
+/** The places a `new_library` (or `location_request`) is filed under. */
+export const HIERARCHY_KEYS = [
+  "continent",
+  "country",
+  "region",
+  "area",
+] as const
+export type HierarchyKey = (typeof HIERARCHY_KEYS)[number]
+export type ModeratorTarget = Partial<Record<HierarchyKey, string>>
+
+export const HIERARCHY_UIDS: Record<HierarchyKey, string> = {
+  continent: "api::continent.continent",
+  country: "api::country.country",
+  region: "api::region.region",
+  area: "api::area.area",
+}
+
+/** Submission types a Moderator may set the hierarchy of before approval. */
+export const TARGETABLE_TYPES: ReadonlySet<string> = new Set([
+  "new_library",
+  "location_request",
+])
+
+/**
+ * Where a new library is filed: the Moderator's `draftData.moderatorTarget`
+ * when it names any place (it replaces the submitter's choice as a whole, so
+ * a region and an area from two different picks never mix), else the
+ * submitter's `fields.*DocumentId`. Unknown values are dropped.
+ */
+export function libraryHierarchy(submission: {
+  fields?: unknown
+  draftData?: unknown
+}): ModeratorTarget {
+  const pick = (src: Record<string, unknown>, suffix: string) => {
+    const out: ModeratorTarget = {}
+    for (const k of HIERARCHY_KEYS) {
+      const v = src[`${k}${suffix}`]
+      if (isDocumentId(v)) out[k] = v
+    }
+
+    return out
+  }
+  const draft =
+    submission.draftData && typeof submission.draftData === "object"
+      ? (submission.draftData as Record<string, unknown>)
+      : {}
+  const target =
+    draft.moderatorTarget && typeof draft.moderatorTarget === "object"
+      ? pick(draft.moderatorTarget as Record<string, unknown>, "")
+      : {}
+  if (Object.keys(target).length > 0) return target
+  const fields =
+    submission.fields && typeof submission.fields === "object"
+      ? (submission.fields as Record<string, unknown>)
+      : {}
+
+  return pick(fields, "DocumentId")
+}
+
+/** A URL slug for a library name; falls back to "library". */
+function librarySlug(name: string): string {
+  const s = name
+    .normalize("NFKD")
+    .replaceAll(/[\u0300-\u036F]/g, "")
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/^-+|-+$/g, "")
+    .slice(0, 80)
+
+  return s || "library"
+}
+
+/** A library slug no other library holds. */
+async function uniqueLibrarySlug(strapi: any, base: string): Promise<string> {
+  const rows = (await strapi.documents("api::library.library").findMany({
+    filters: { slug: { $startsWith: base } },
+    fields: ["slug"],
+    sort: "id:asc",
+    limit: 500,
+  })) as { slug?: string }[]
+  const taken = new Set(rows.map((r) => r.slug))
+  if (!taken.has(base)) return base
+  for (let n = 2; n < 1000; n++)
+    if (!taken.has(`${base}-${n}`)) return `${base}-${n}`
+
+  return `${base}-${Date.now()}`
+}
 
 const ARTICLE_MARKERS: Partial<Record<ApplyArticleOutcome, string>> = {
   skipped_suggestion: SUGGESTION_MARKER,
@@ -462,7 +562,9 @@ export default ({ strapi }: { strapi: any }) => ({
     status: "approved" | "rejected" | "needs_info" | "pending",
     reviewer: Reviewer,
     reviewNote?: string,
-    // `publish` is threaded to the applies for Task 11; not read yet.
+    // "Approve and publish" (Moderators, Task 11): an article suggestion or
+    // new article is published, and a new library is published with its
+    // hierarchy. The caller checks the reviewer may publish it.
     opts: { publish?: boolean } = {}
   ): Promise<
     | {
@@ -644,6 +746,21 @@ export default ({ strapi }: { strapi: any }) => ({
             }
             const connectOne = (v: unknown) =>
               isDocumentId(v) ? { connect: [{ documentId: v }] } : undefined
+            const place = libraryHierarchy(submission)
+            const publishLibrary = opts.publish === true
+            // A published library needs a real entityRef, which needs the
+            // continent, country and region. Refused before anything is
+            // written; the transaction rolls the approval back.
+            if (
+              publishLibrary &&
+              (!place.continent || !place.country || !place.region)
+            )
+              throw new ApplyRefusedError(
+                "no_hierarchy",
+                "api::library.library",
+                documentId
+              )
+            const name = String(f.name ?? "Unnamed Library")
 
             // Tracks the draft library once it's created, so the catch below
             // can clean it up if a later step in this block (e.g. the proposer
@@ -658,7 +775,17 @@ export default ({ strapi }: { strapi: any }) => ({
                   // are corrections to it.
                   locale: await defaultLocale(strapi),
                   data: {
-                    name: String(f.name ?? "Unnamed Library"),
+                    name,
+                    // Publishing validates the required slug; a draft gets
+                    // one from the Content Manager.
+                    ...(publishLibrary
+                      ? {
+                          slug: await uniqueLibrarySlug(
+                            strapi,
+                            librarySlug(name)
+                          ),
+                        }
+                      : {}),
                     libraryType: (f.libraryType as string) ?? "Other",
                     operationalStatus:
                       (f.operationalStatus as string) ?? "unknown",
@@ -707,10 +834,10 @@ export default ({ strapi }: { strapi: any }) => ({
                             lng: Number.parseFloat(String(f.lng)),
                           }
                         : undefined,
-                    continent: connectOne(f.continentDocumentId),
-                    country: connectOne(f.countryDocumentId),
-                    region: connectOne(f.regionDocumentId),
-                    area: connectOne(f.areaDocumentId),
+                    continent: connectOne(place.continent),
+                    country: connectOne(place.country),
+                    region: connectOne(place.region),
+                    area: connectOne(place.area),
                     heroImage: heroImage
                       ? { connect: [{ id: heroImage.strapiId }] }
                       : undefined,
@@ -734,6 +861,34 @@ export default ({ strapi }: { strapi: any }) => ({
               strapi.log.info(
                 `[content-moderation] Auto-created draft library "${f.name}" from approved submission ${documentId}`
               )
+
+              if (publishLibrary) {
+                // The entityRef lifecycle replaces the PENDING- reference
+                // once the hierarchy resolves; if it didn't, the ids named
+                // no real places and the library must not go live.
+                const created = await strapi
+                  .documents("api::library.library")
+                  .findOne({
+                    documentId: newLibrary.documentId,
+                    fields: ["documentId", "entityRef"] as any,
+                  })
+                const ref = String(created?.entityRef ?? tempRef)
+                if (ref.startsWith("PENDING-"))
+                  throw new ApplyRefusedError(
+                    "no_hierarchy",
+                    "api::library.library",
+                    newLibrary.documentId
+                  )
+                await strapi.documents("api::library.library").update({
+                  documentId: newLibrary.documentId,
+                  locale: await defaultLocale(strapi),
+                  status: "published",
+                  data: {},
+                })
+                strapi.log.info(
+                  `[content-moderation] Published library ${newLibrary.documentId} from approved submission ${documentId}`
+                )
+              }
 
               // Record the proposer's affiliation with the new library. D-C5:
               // proposing a library does not make you verified staff — a role
@@ -996,7 +1151,10 @@ export default ({ strapi }: { strapi: any }) => ({
             .update({
               documentId,
               data: {
-                reviewNote: withMarker(priorReviewNote, NOT_PUBLISHED_MARKER),
+                reviewNote: withMarker(
+                  priorReviewNote,
+                  REFUSED_MARKERS[err.reason]
+                ),
               },
             })
         } catch (noteErr) {
@@ -1611,6 +1769,66 @@ export default ({ strapi }: { strapi: any }) => ({
       })
 
     return toClient(results[0] ?? null)
+  },
+
+  /**
+   * Sets (or, with no places, clears) the hierarchy a `new_library` or
+   * `location_request` is filed under on approval, as
+   * `draftData.moderatorTarget`. Only while the submission is in review. The
+   * stored payloadHash is re-pinned in the same compare-and-set: the
+   * Moderator's change is part of what is reviewed, never tampering. The
+   * caller checks the Moderator's scope and that each id names a record.
+   */
+  async setModeratorTarget(
+    documentId: string,
+    target: ModeratorTarget
+  ): Promise<
+    | { error: "not_found" | "wrong_type" | "not_open" | "conflict" }
+    | { data: { documentId: string; moderatorTarget: ModeratorTarget | null } }
+  > {
+    const submission = await strapi
+      .documents("plugin::content-moderation.submission")
+      .findOne({ documentId })
+    if (!submission || submission.status === "draft")
+      return { error: "not_found" }
+    if (!TARGETABLE_TYPES.has(submission.submissionType))
+      return { error: "wrong_type" }
+    if (submission.status !== "pending" && submission.status !== "needs_info")
+      return { error: "not_open" }
+
+    const clean: ModeratorTarget = {}
+    for (const k of HIERARCHY_KEYS)
+      if (isDocumentId(target[k])) clean[k] = target[k]
+    const { moderatorTarget: _previous, ...rest } =
+      submission.draftData && typeof submission.draftData === "object"
+        ? (submission.draftData as Record<string, unknown>)
+        : {}
+    const hasTarget = Object.keys(clean).length > 0
+    const draftData = hasTarget ? { ...rest, moderatorTarget: clean } : rest
+    const next = { ...submission, draftData }
+
+    const { count } = await strapi.db
+      .query("plugin::content-moderation.submission")
+      .updateMany({
+        where: {
+          documentId,
+          status: submission.status,
+          ...(submission.payloadHash
+            ? { payloadHash: submission.payloadHash }
+            : {}),
+        },
+        data: {
+          draftData,
+          // Re-pinned: draftData is hashed, and the Moderator's own change
+          // must not make the approval read as `tampered`.
+          ...(submission.payloadHash ? { payloadHash: payloadHash(next) } : {}),
+        },
+      })
+    if (count !== 1) return { error: "conflict" }
+
+    return {
+      data: { documentId, moderatorTarget: hasTarget ? clean : null },
+    }
   },
 
   /** Applies an approved facilities correction (see utils/facility-answers). */
