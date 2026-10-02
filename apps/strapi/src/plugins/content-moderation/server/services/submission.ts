@@ -1783,7 +1783,9 @@ export default ({ strapi }: { strapi: any }) => ({
     documentId: string,
     target: ModeratorTarget
   ): Promise<
-    | { error: "not_found" | "wrong_type" | "not_open" | "conflict" }
+    | {
+        error: "not_found" | "wrong_type" | "not_open" | "conflict" | "tampered"
+      }
     | { data: { documentId: string; moderatorTarget: ModeratorTarget | null } }
   > {
     const submission = await strapi
@@ -1795,6 +1797,13 @@ export default ({ strapi }: { strapi: any }) => ({
       return { error: "wrong_type" }
     if (submission.status !== "pending" && submission.status !== "needs_info")
       return { error: "not_open" }
+    // Never re-pin a hash the stored content no longer matches: that would
+    // launder a tampered payload into a reviewable one.
+    if (
+      submission.payloadHash &&
+      submission.payloadHash !== payloadHash(submission)
+    )
+      return { error: "tampered" }
 
     const clean: ModeratorTarget = {}
     for (const k of HIERARCHY_KEYS)

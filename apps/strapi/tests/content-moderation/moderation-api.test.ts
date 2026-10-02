@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { summaryOf as adminSummaryOf } from "../../src/plugins/content-moderation/admin/src/components/submissionMeta"
 import createModerationController from "../../src/plugins/content-moderation/server/controllers/moderation"
+import createSubmissionController from "../../src/plugins/content-moderation/server/controllers/submission"
 import contentApiRoutes from "../../src/plugins/content-moderation/server/routes/content-api"
 import createModerationService from "../../src/plugins/content-moderation/server/services/moderation"
 import createService from "../../src/plugins/content-moderation/server/services/submission"
@@ -29,6 +30,7 @@ const INDEX_MOD = "modindex"
 const GLOBAL_MOD = "modall"
 const BOARD = "board"
 const READER = "reader"
+const EN_KNOWLEDGE = "moden"
 
 const grant = (
   baUserId: string,
@@ -45,6 +47,7 @@ const grant = (
 
 const GRANTS = [
   grant(FR_KNOWLEDGE, "moderator", "knowledge", "fr"),
+  grant(EN_KNOWLEDGE, "moderator", "knowledge", "en"),
   grant(INDEX_MOD, "moderator", "index", null),
   grant(GLOBAL_MOD, "moderator", "all", null),
   grant(BOARD, "editorial_board", "all", null),
@@ -102,7 +105,11 @@ function expandContainsi(filters: any, rows: any[]): any {
   return out
 }
 
-function setup(rows: any[], extra: Record<string, any[]> = {}) {
+function setup(
+  rows: any[],
+  extra: Record<string, any[]> = {},
+  { lifecycle = true }: { lifecycle?: boolean } = {}
+) {
   const f = makeFakeStrapi(
     { [SUB]: rows, [ROLE_GRANT]: GRANTS, ...extra },
     { tables: { cm_option_votes: VOTE } }
@@ -130,7 +137,7 @@ function setup(rows: any[], extra: Record<string, any[]> = {}) {
       const { create } = api
       api.create = vi.fn(async (q: any) => {
         const doc = await create(q)
-        if (q.data?.continent && q.data?.country && q.data?.region)
+        if (lifecycle && q.data?.continent && q.data?.country && q.data?.region)
           doc.entityRef = `europe:gb:eng:${q.data.slug ?? "x"}`
 
         return doc
@@ -155,9 +162,18 @@ function setup(rows: any[], extra: Record<string, any[]> = {}) {
   f.services["content-moderation.moderation"] = createModerationService({
     strapi: f.strapi,
   })
+  // `plugin().controller()` as Strapi exposes it.
+  const controllers: Record<string, any> = {
+    submission: createSubmissionController({ strapi: f.strapi }),
+  }
+  const plugin = f.strapi.plugin
+  f.strapi.plugin = vi.fn((name: string) => ({
+    ...plugin(name),
+    controller: (c: string) => controllers[c],
+  }))
   const controller: any = createModerationController({ strapi: f.strapi })
 
-  return { ...f, svc, controller }
+  return { ...f, svc, controller, controllers }
 }
 
 type CtxInit = {
@@ -714,6 +730,34 @@ describe("PUT /moderation/submissions/:documentId/status", () => {
       expect(store[EVENT] ?? []).toHaveLength(0)
     })
 
+    it("new_library whose ids don't give a real entityRef: no_hierarchy, no library", async () => {
+      const { controller, store } = setup(
+        [
+          newLibrary({
+            continentDocumentId: C,
+            countryDocumentId: K,
+            regionDocumentId: R,
+          }),
+        ],
+        places,
+        { lifecycle: false }
+      )
+      const ctx = ctxFor({
+        viewer: INDEX_MOD,
+        params: { documentId: id(1) },
+        body: { status: "approved", publish: true },
+      })
+      await controller.updateStatus(ctx)
+      expect(ctx.status).toBe(409)
+      expect(ctx.body.error).toMatchObject({
+        name: "apply_refused",
+        reason: "no_hierarchy",
+      })
+      expect(store[LIBRARY] ?? []).toHaveLength(0)
+      expect(store[SUB]![0].status).toBe("pending")
+      expect(store[EVENT] ?? []).toHaveLength(0)
+    })
+
     it("new_library publishes with the moderator's target over the submitter's", async () => {
       const { controller, store } = setup(
         [newLibrary({ continentDocumentId: C, countryDocumentId: K })],
@@ -789,6 +833,36 @@ describe("PUT /moderation/submissions/:documentId/target", () => {
     await controller.setTarget(own)
     expect(own.status).toBe(403)
     expect(store[SUB]!.map((s: any) => s.draftData)).toEqual([null, null])
+  })
+
+  it("422 when the content no longer matches its hash; approval still 422", async () => {
+    const s = sub({
+      submissionType: "new_library",
+      contentLocale: "en",
+      fields: { name: "x" },
+      draftData: null,
+    })
+    s.fields = { name: "tampered" }
+    const { controller, store } = setup([s], {
+      [REGION]: [{ documentId: "r00000000000000000000001", slug: "eng" }],
+    })
+    const pinned = store[SUB]![0].payloadHash
+    const target = ctxFor({
+      viewer: INDEX_MOD,
+      params: { documentId: id(1) },
+      body: { region: "r00000000000000000000001" },
+    })
+    await controller.setTarget(target)
+    expect(target.status).toBe(422)
+    expect(store[SUB]![0].payloadHash).toBe(pinned)
+    expect(store[SUB]![0].draftData).toBeNull()
+    const approve = ctxFor({
+      viewer: INDEX_MOD,
+      params: { documentId: id(1) },
+      body: { status: "approved" },
+    })
+    await controller.updateStatus(approve)
+    expect(approve.status).toBe(422)
   })
 
   it("is rejected for other types", async () => {
@@ -915,5 +989,91 @@ describe("summaryOf port", () => {
       { submissionType: "topic_suggestion", fields: {} },
     ]
     for (const r of rows) expect(summaryOf(r)).toBe(adminSummaryOf(r))
+  })
+})
+
+describe("review round 2", () => {
+  it("canPublish is false once the submission is decided", async () => {
+    const { controller } = setup([
+      sub({ status: "approved", draftData: { proposedTitle: "x" } }),
+      sub({ status: "needs_info", draftData: { proposedTitle: "x" } }),
+    ])
+    const decided = ctxFor({ params: { documentId: id(1) } })
+    await controller.findOne(decided)
+    expect(decided.body.data.canPublish).toBe(false)
+    const open = ctxFor({ params: { documentId: id(2) } })
+    await controller.findOne(open)
+    expect(open.body.data.canPublish).toBe(true)
+  })
+
+  it("a row with no stored locale counts as the default locale in lists", async () => {
+    const { controller } = setup([sub({ contentLocale: null }), sub()])
+    const en = ctxFor({ viewer: EN_KNOWLEDGE })
+    await controller.list(en)
+    expect(en.body.data.map((r: any) => r.documentId)).toEqual([id(1)])
+    expect(en.body.data[0].locale).toBe("en")
+    const fr = ctxFor({ viewer: FR_KNOWLEDGE })
+    await controller.list(fr)
+    expect(fr.body.data.map((r: any) => r.documentId)).toEqual([id(2)])
+    const filtered = ctxFor({ query: { locale: "en" } })
+    await controller.list(filtered)
+    expect(filtered.body.data.map((r: any) => r.documentId)).toEqual([id(1)])
+    const stats = ctxFor({ viewer: EN_KNOWLEDGE })
+    await controller.stats(stats)
+    expect(stats.body.data[0]).toEqual({
+      queue: "knowledge",
+      status: "pending",
+      count: 1,
+    })
+  })
+
+  it("relation-labels runs the plugin's submission handler after authorising", async () => {
+    const { controller, controllers } = setup([], {
+      "api::service.service": [
+        { documentId: "svc00000000000000000001", name: "Wi-Fi" },
+      ],
+    })
+    const spy = vi.spyOn(controllers.submission, "relationLabels")
+    const denied = ctxFor({ viewer: READER, query: { type: "services" } })
+    await controller.relationLabels(denied)
+    expect(denied.status).toBe(403)
+    expect(spy).not.toHaveBeenCalled()
+    const ctx = ctxFor({ query: { type: "services" } })
+    await controller.relationLabels(ctx)
+    expect(spy).toHaveBeenCalledTimes(1)
+    expect(ctx.body).toEqual({ data: { svc00000000000000000001: "Wi-Fi" } })
+  })
+
+  it("a library claim's detail keeps the review fields and drops contact details", async () => {
+    const { controller } = setup([
+      sub({
+        submissionType: "library_claim",
+        contentLocale: "en",
+        draftData: null,
+        fields: {
+          name: "Nailsea Library",
+          entityRef: "GB-NL-001",
+          role: "librarian",
+          department: "Lending",
+          verificationMethod: "contact_us",
+          userEmailDomain: "nailsea.gov.uk",
+          claimedWebsiteDomain: "nailsea.gov.uk",
+          phone: "01234 567890",
+          email: "una@nailsea.gov.uk",
+          contactEmail: "una@example.org",
+        },
+      }),
+    ])
+    const ctx = ctxFor({ viewer: INDEX_MOD, params: { documentId: id(1) } })
+    await controller.findOne(ctx)
+    expect(ctx.body.data.fields).toEqual({
+      name: "Nailsea Library",
+      entityRef: "GB-NL-001",
+      role: "librarian",
+      department: "Lending",
+      verificationMethod: "contact_us",
+      userEmailDomain: "nailsea.gov.uk",
+      claimedWebsiteDomain: "nailsea.gov.uk",
+    })
   })
 })

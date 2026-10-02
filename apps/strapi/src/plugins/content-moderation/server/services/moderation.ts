@@ -114,18 +114,39 @@ export type ListQuery = {
 }
 
 /**
+ * Rows in `locale`. A row with no stored locale (written before the
+ * backfill) counts as the default locale's, as `loadInScope` and `toRow`
+ * read it.
+ */
+export function localeFilter(
+  locale: string,
+  defaultCode: string
+): Record<string, unknown> {
+  return locale === defaultCode
+    ? {
+        $or: [
+          { contentLocale: { $eq: locale } },
+          { contentLocale: { $null: true } },
+        ],
+      }
+    : { contentLocale: { $eq: locale } }
+}
+
+/**
  * The `$or` of the caller's scopes, or null when one of them covers every
  * queue in every locale (then there is nothing to filter by).
  */
 export function scopeFilter(
-  scopes: readonly ModerationScope[]
+  scopes: readonly ModerationScope[],
+  defaultCode: string
 ): Record<string, unknown> | null {
   const clauses: Record<string, unknown>[] = []
   for (const s of scopes) {
     const clause: Record<string, unknown> = {}
     if (s.queue !== "all")
       clause.submissionType = { $in: submissionTypesOfQueue(s.queue) }
-    if (s.locale !== null) clause.contentLocale = { $eq: s.locale }
+    if (s.locale !== null)
+      Object.assign(clause, localeFilter(s.locale, defaultCode))
     if (Object.keys(clause).length === 0) return null
     clauses.push(clause)
   }
@@ -143,8 +164,8 @@ export function queuesInScope(
 }
 
 /** Filters shared by every read: in scope, not the viewer's, never a draft. */
-function baseFilters(caps: Capabilities, viewer: string) {
-  const scope = scopeFilter(caps.moderation)
+function baseFilters(caps: Capabilities, viewer: string, defaultCode: string) {
+  const scope = scopeFilter(caps.moderation, defaultCode)
 
   return [
     ...(scope ? [scope] : []),
@@ -164,6 +185,37 @@ function isArticleSuggestion(draftData: unknown): boolean {
     Array.isArray(d.proposedBody) ||
     typeof d.proposedTitle === "string" ||
     typeof d.proposedSummary === "string"
+  )
+}
+
+/**
+ * What a library claim's review needs from `fields` (see ClaimLibraryForm
+ * and /api/profile/me/claim-library): the library, the claimant's role and
+ * department, the method and the domain check. Anything else, such as a
+ * phone number or an email address, is personal and stays out.
+ */
+const CLAIM_REVIEW_FIELDS = new Set([
+  "name",
+  "libraryName",
+  "entityRef",
+  "libraryDocumentId",
+  "role",
+  "department",
+  "verificationMethod",
+  "userEmailDomain",
+  "claimedWebsiteDomain",
+])
+
+/** `fields` as the moderator sees them. */
+function reviewFields(s: { submissionType?: string; fields?: unknown }) {
+  const f = s.fields
+  if (s.submissionType !== "library_claim" || !f || typeof f !== "object")
+    return f ?? null
+
+  return Object.fromEntries(
+    Object.entries(f as Record<string, unknown>).filter(([k]) =>
+      CLAIM_REVIEW_FIELDS.has(k)
+    )
   )
 }
 
@@ -226,13 +278,14 @@ export default ({ strapi }: { strapi: any }) => ({
     meta: { page: number; pageSize: number; total: number }
   }> {
     const and: Record<string, unknown>[] = [
-      ...baseFilters(caps, viewer),
+      ...baseFilters(caps, viewer, await defaultLocale(strapi)),
       { status: STATUS_FILTER[query.status] },
     ]
     if (query.queue)
       and.push({ submissionType: { $in: submissionTypesOfQueue(query.queue) } })
     if (query.type) and.push({ submissionType: { $eq: query.type } })
-    if (query.locale) and.push({ contentLocale: { $eq: query.locale } })
+    if (query.locale)
+      and.push(localeFilter(query.locale, await defaultLocale(strapi)))
     if (query.q)
       // Never the email: personal data the queue doesn't need to search.
       and.push({
@@ -347,6 +400,8 @@ export default ({ strapi }: { strapi: any }) => ({
    * viewer's scope covers the submission's queue and locale.
    */
   async canPublish(s: any, locale: string): Promise<boolean> {
+    // A decided submission has nothing left to publish.
+    if (!OPEN.has(s.status)) return false
     if (s.submissionType === "new_library") return true
     if (
       s.submissionType !== "wiki_edit" &&
@@ -377,7 +432,7 @@ export default ({ strapi }: { strapi: any }) => ({
       targetDocumentId: s.targetDocumentId ?? null,
       targetEntityType: s.targetEntityType ?? null,
       resultDocumentId: s.resultDocumentId ?? null,
-      fields: s.fields ?? null,
+      fields: reviewFields(s),
       draftData: s.draftData ?? null,
       note: str(s.note),
       editSummary: str(s.editSummary),
@@ -411,7 +466,7 @@ export default ({ strapi }: { strapi: any }) => ({
 
   /** Counts per queue and list status, within the viewer's scope. */
   async stats(caps: Capabilities, viewer: string) {
-    const base = baseFilters(caps, viewer)
+    const base = baseFilters(caps, viewer, await defaultLocale(strapi))
     const cells = queuesInScope(caps.moderation).flatMap((queue) =>
       LIST_STATUSES.map((status) => ({ queue, status }))
     )

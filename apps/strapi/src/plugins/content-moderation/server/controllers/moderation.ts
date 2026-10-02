@@ -6,7 +6,6 @@ import {
 } from "@repo/access"
 
 import { decideFromRequest } from "./option-suggestion"
-import createSubmissionController from "./submission"
 import { LIST_STATUSES, type ListStatus } from "../services/moderation"
 import {
   HIERARCHY_KEYS,
@@ -383,8 +382,14 @@ export default ({ strapi }: { strapi: any }) => {
             400,
             "Only new libraries and location requests take a location."
           )
-        if (result.error === "not_found")
-          return fail(ctx, 404, "Submission not found.")
+        if (result.error === "not_found") return fail(ctx, 404, NOT_FOUND)
+        if (result.error === "tampered")
+          return fail(
+            ctx,
+            422,
+            "This submission changed after it was submitted for review.",
+            { name: "tampered" }
+          )
 
         return fail(
           ctx,
@@ -407,7 +412,12 @@ export default ({ strapi }: { strapi: any }) => {
     async relationLabels(ctx: any) {
       const auth = await authorise(ctx)
       if (!auth) return
-      await createSubmissionController({ strapi }).relationLabels(ctx)
+      // The admin route's handler: it reads only `ctx.query.type` and
+      // published option names, nothing admin-only.
+      await strapi
+        .plugin("content-moderation")
+        .controller("submission")
+        .relationLabels(ctx)
     },
 
     // GET /moderation/option-suggestions  (editorial board)
