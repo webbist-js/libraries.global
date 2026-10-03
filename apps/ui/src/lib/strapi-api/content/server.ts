@@ -10,6 +10,7 @@ import {
   type OpeningTimesValue,
 } from "@/components/library/library-page.helpers"
 import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
+import { buildLibraryPath } from "@/lib/library-helpers"
 import { logNonBlockingError } from "@/lib/logging"
 import { routing } from "@/lib/navigation"
 import { PublicStrapiClient } from "@/lib/strapi-api"
@@ -828,6 +829,134 @@ export async function fetchArea(slug: string, locale: Locale) {
         stack: e instanceof Error ? e.stack : undefined,
       },
     })
+  }
+}
+
+// ------ Places by documentId (moderation review links)
+
+export type PlaceKind = "library" | "country" | "region" | "area"
+
+/** A place's name and where to open it; `href` null when it has no page. */
+export type PlaceLink = { name: string | null; href: string | null }
+
+const PLACE_UID = {
+  library: "api::library.library",
+  country: "api::country.country",
+  region: "api::region.region",
+  area: "api::area.area",
+} as const
+
+const SLUG_ONLY = { fields: ["slug"] }
+const COUNTRY_WITH_CONTINENT = {
+  fields: ["slug", "name"],
+  populate: { continent: SLUG_ONLY },
+}
+const REGION_WITH_PARENTS = {
+  fields: ["slug", "name"],
+  populate: { continent: SLUG_ONLY, country: COUNTRY_WITH_CONTINENT },
+}
+const PLACE_POPULATE: Record<PlaceKind, Record<string, unknown>> = {
+  library: { continent: SLUG_ONLY, country: SLUG_ONLY, region: SLUG_ONLY },
+  country: { continent: SLUG_ONLY },
+  region: { continent: SLUG_ONLY, country: COUNTRY_WITH_CONTINENT },
+  area: { region: REGION_WITH_PARENTS },
+}
+
+type SlugRef = { slug?: string | null; name?: string | null } | null
+type PlaceRow = {
+  name?: string | null
+  slug?: string | null
+  continent?: SlugRef
+  country?: (SlugRef & { continent?: SlugRef }) | null
+  region?:
+    | (SlugRef & {
+        continent?: SlugRef
+        country?: (SlugRef & { continent?: SlugRef }) | null
+      })
+    | null
+}
+
+async function readPlace(
+  kind: PlaceKind,
+  documentId: string,
+  status: "published" | "draft"
+): Promise<PlaceRow | null> {
+  const res = (await PublicStrapiClient.fetchMany(
+    PLACE_UID[kind],
+    {
+      filters: { documentId: { $eq: documentId } },
+      fields: ["name", "slug"],
+      populate: PLACE_POPULATE[kind],
+      status,
+      pagination: { pageSize: 1 },
+    } as never,
+    // A record just created by an approval: never a cached miss.
+    { next: { revalidate: 0 } }
+  )) as { data?: PlaceRow[] }
+
+  return res.data?.[0] ?? null
+}
+
+/** `/{continent}/{country}/{region}` for a region row, when every slug is known. */
+function regionPath(region: NonNullable<PlaceRow["region"]>): string | null {
+  const continent = region.continent?.slug ?? region.country?.continent?.slug
+  const country = region.country?.slug
+  if (!continent || !country || !region.slug) return null
+
+  return `/${continent}/${country}/${region.slug}`
+}
+
+/**
+ * A library, country, region or area by documentId: its name and public
+ * page. An area has no page of its own, so it links to its region's. An
+ * unpublished library links to the Index editor when it has a slug.
+ */
+export async function fetchPlaceLink(
+  kind: PlaceKind,
+  documentId: string
+): Promise<PlaceLink | null> {
+  try {
+    const row = await readPlace(kind, documentId, "published")
+    if (!row) {
+      if (kind !== "library") return null
+      const draft = await readPlace(kind, documentId, "draft")
+      if (!draft) return null
+
+      return {
+        name: draft.name ?? null,
+        href: draft.slug
+          ? `/contribute/index/${encodeURIComponent(draft.slug)}`
+          : null,
+      }
+    }
+    const name = row.name ?? null
+    switch (kind) {
+      case "library":
+        return { name, href: buildLibraryPath(row) }
+      case "country":
+        return {
+          name,
+          href:
+            row.continent?.slug && row.slug
+              ? `/${row.continent.slug}/${row.slug}`
+              : null,
+        }
+      case "region":
+        return { name, href: regionPath(row) }
+
+      default:
+        return { name, href: row.region ? regionPath(row.region) : null }
+    }
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching ${kind} '${documentId}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return null
   }
 }
 

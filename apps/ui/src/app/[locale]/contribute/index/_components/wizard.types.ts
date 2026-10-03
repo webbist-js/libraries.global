@@ -37,6 +37,11 @@ export interface FormData {
   countryDocumentId: string
   regionDocumentId: string
   areaDocumentId: string
+  // Step 2 – A missing region or area the contributor asked for (a
+  // `location_request`); approval files the library under it.
+  proposedRegionName: string
+  proposedAreaName: string
+  locationRequestDocumentId: string
   // Step 3 – Visit
   website: string
   planVisitUrl: string
@@ -107,6 +112,9 @@ export const EMPTY_FORM: FormData = {
   countryDocumentId: "",
   regionDocumentId: "",
   areaDocumentId: "",
+  proposedRegionName: "",
+  proposedAreaName: "",
+  locationRequestDocumentId: "",
   website: "",
   planVisitUrl: "",
   catalogueUrl: "",

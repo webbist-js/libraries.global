@@ -16,6 +16,7 @@ import { primaryCtaSm } from "@/lib/styles"
 
 import { ChangedFieldsContext } from "./ChangedFieldsContext"
 import { DraftResumeBanner } from "./DraftResumeBanner"
+import { LocationRequestsContext } from "./LocationHierarchySelector"
 import {
   draftMatchesLocale,
   editableFields,
@@ -367,6 +368,10 @@ export function IndexRecordWizard({
 
   return (
     <ChangedFieldsContext.Provider value={changedSet}>
+      {/* "Not listed?" asks for a missing region or area; the proposal
+          (proposedRegionName / proposedAreaName, locationRequestDocumentId)
+          rides on the form, so the new_library's fields carry it. */}
+      <LocationRequestsContext.Provider value={!improve}>
       <main
         id="wizard-main"
         className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8 lg:py-12"
@@ -624,6 +629,7 @@ export function IndexRecordWizard({
           </aside>
         </div>
       </main>
+      </LocationRequestsContext.Provider>
     </ChangedFieldsContext.Provider>
   )
 }

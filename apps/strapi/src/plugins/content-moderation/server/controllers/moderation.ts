@@ -14,7 +14,12 @@ import {
 } from "../services/submission"
 import { knownLocale } from "../utils/locales"
 import { listSuggestions } from "../utils/option-suggestions"
-import { isDocumentId } from "../utils/params"
+import {
+  isDocumentId,
+  type LocationEdit,
+  locationNameProblem,
+  locationTypeLabelProblem,
+} from "../utils/params"
 import { contributorReviewer } from "../utils/reviewer"
 import { isValidServiceSecret } from "../utils/service-secret"
 
@@ -348,7 +353,10 @@ export default ({ strapi }: { strapi: any }) => {
       ctx.body = { data: await moderation().detail(fresh ?? s) }
     },
 
-    // PUT /moderation/submissions/:documentId/target  { continent?, country?, region?, area? }
+    // PUT /moderation/submissions/:documentId/target
+    //   { continent?, country?, region?, area?, name?, typeLabel? }
+    // Places set (or, all empty, clear) the hierarchy; `name` and
+    // `typeLabel` are a Location Request's Moderator edit (null clears one).
     async setTarget(ctx: any) {
       const auth = await authorise(ctx)
       if (!auth) return
@@ -358,9 +366,27 @@ export default ({ strapi }: { strapi: any }) => {
       if (!body || typeof body !== "object" || Array.isArray(body))
         return fail(ctx, 400, "Expected an object of place ids")
       const target: ModeratorTarget = {}
+      const edit: Partial<Record<keyof LocationEdit, string | null>> = {}
+      let hasPlaces = false
       for (const [k, v] of Object.entries(body as Record<string, unknown>)) {
+        if (k === "name" || k === "typeLabel") {
+          if (v === null || v === undefined) {
+            edit[k] = null
+            continue
+          }
+          if (typeof v !== "string") return fail(ctx, 400, `${k} must be text`)
+          const text = v.trim()
+          const problem =
+            k === "name"
+              ? locationNameProblem(text)
+              : locationTypeLabelProblem(text)
+          if (problem) return fail(ctx, 400, problem)
+          edit[k] = text
+          continue
+        }
         if (!(HIERARCHY_KEYS as readonly string[]).includes(k))
           return fail(ctx, 400, `Unknown place: ${k}`)
+        hasPlaces = true
         if (v === null || v === undefined || v === "") continue
         if (!isDocumentId(v)) return fail(ctx, 400, `Invalid ${k} id`)
         const key = k as keyof ModeratorTarget
@@ -370,10 +396,32 @@ export default ({ strapi }: { strapi: any }) => {
         if (!found) return fail(ctx, 400, `No ${k} with that id`)
         target[key] = v
       }
+      const hasEdit = Object.keys(edit).length > 0
+      if (hasEdit && s.submissionType !== "location_request")
+        return fail(
+          ctx,
+          400,
+          "Only location requests take a name and a type."
+        )
+      if (hasEdit) {
+        // The Moderator's words go live on approval: same check as a
+        // contributor's.
+        const safe = await strapi
+          .plugin("content-moderation")
+          .service("submission-policy")
+          .checkContent({
+            fields: Object.fromEntries(
+              Object.entries(edit).filter(([, v]) => typeof v === "string")
+            ),
+          })
+        if (!safe.ok) return fail(ctx, safe.status, safe.message)
+      }
 
+      // A bare edit leaves the place alone; `{}` still clears it.
       const result = await submissions().setModeratorTarget(
         s.documentId,
-        target
+        hasPlaces || !hasEdit ? target : undefined,
+        hasEdit ? edit : undefined
       )
       if ("error" in result) {
         if (result.error === "wrong_type")
