@@ -1,6 +1,7 @@
 import { headers } from "next/headers"
 
 import { getSessionSSR } from "@/lib/auth-server"
+import { readOwnProfile } from "@/lib/own-profile-server"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const BRIDGE_SECRET = process.env.STRAPI_BRIDGE_SECRET
@@ -65,20 +66,13 @@ export async function POST(req: Request) {
   }
 
   // 3. Verify verified librarian role (server-side re-check)
-  const profileRes = await fetch(
-    `${STRAPI}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(session.user.id)}&fields[0]=isVerifiedLibrarian`,
-    {
-      cache: "no-store",
-      headers: API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {},
-    }
-  )
-  if (!profileRes.ok) {
+  // Own profile through the bridge, keyed on the session's Better Auth id
+  // (`baUserId` is private, so the public REST filter can't find it).
+  const lookup = await readOwnProfile(session.user)
+  if (!lookup.ok && lookup.reason === "unavailable") {
     return new Response("Profile lookup failed", { status: 500 })
   }
-  const profileData = (await profileRes.json()) as {
-    data?: { isVerifiedLibrarian?: boolean }[]
-  }
-  if (!profileData.data?.[0]?.isVerifiedLibrarian) {
+  if (!lookup.ok || !lookup.profile.isVerifiedLibrarian) {
     return new Response("Forbidden: verified librarian role required", {
       status: 403,
     })

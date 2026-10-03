@@ -132,6 +132,7 @@ function publicProfile<T extends Record<string, any>>(
 }
 
 const AFFILIATION = "api::library-affiliation.library-affiliation"
+const PROFILE = "api::user-profile.user-profile"
 
 /**
  * Who is asking, as far as the bridge secret vouches for it. The owner and
@@ -227,6 +228,98 @@ async function loadEarnedBadges(
   }))
 }
 
+/** A profile holder's library affiliations, with each library's Atlas hierarchy. */
+async function loadAffiliations(
+  baUserId: string | null | undefined
+): Promise<any[]> {
+  if (!baUserId) return []
+
+  return (await strapi.db.query(AFFILIATION).findMany({
+    where: { baUserId },
+    populate: {
+      library: { populate: { continent: true, country: true, region: true } },
+    },
+  })) as any[]
+}
+
+/** Affiliations as the `claimedLibraries` every profile endpoint returns. */
+function toClaimedLibraries(affiliations: any[]): Record<string, unknown>[] {
+  return affiliations
+    .filter((a: any) => a.library)
+    .map((a: any) => ({
+      entityRef: a.library.entityRef ?? null,
+      documentId: a.library.documentId ?? null,
+      name: a.library.name ?? null,
+      slug: a.library.slug ?? null,
+      libraryType: a.library.libraryType ?? null,
+      path: buildLibraryPath(a.library),
+    }))
+}
+
+/**
+ * Followed libraries (published only) and followed profiles (public only).
+ * Follows are written via db.query connect/disconnect, so they are read back
+ * the same way: Document Service populate does not reliably reflect those
+ * writes. A library unpublished since it was followed must not surface, and
+ * private or limited profiles are never listed.
+ */
+async function loadFollows(baUserId: string | null | undefined): Promise<{
+  followedLibraries: Record<string, unknown>[]
+  followedProfiles: Record<string, unknown>[]
+}> {
+  if (!baUserId) return { followedLibraries: [], followedProfiles: [] }
+  const row = await strapi.db.query(PROFILE).findOne({
+    where: { baUserId },
+    populate: {
+      followedLibraries: {
+        where: { publishedAt: { $notNull: true } },
+        populate: {
+          heroImage: true,
+          continent: true,
+          country: true,
+          region: true,
+        },
+      },
+      followedProfiles: { populate: { avatar: true } },
+    },
+  })
+
+  return {
+    followedLibraries: publishedFollowedLibraries(row?.followedLibraries),
+    followedProfiles: ((row?.followedProfiles ?? []) as any[])
+      .filter((p: any) => p.profileVisibility === "public")
+      .map((p: any) => ({
+        username: p.username ?? null,
+        displayName:
+          [p.firstName, p.lastName].filter(Boolean).join(" ") ||
+          p.username ||
+          null,
+        avatarUrl: p.avatar?.url ?? null,
+        bio: p.bio ?? null,
+      })),
+  }
+}
+
+/**
+ * Fields kept out of the owner's own view (`findMe`). The owner sees their
+ * notification settings and contributor number; the Better Auth id is the
+ * key the caller already holds, and earnedProUntil is plan bookkeeping that
+ * only the session-profile bridge reads.
+ */
+const OWNER_HIDDEN_FIELDS = ["baUserId", "earnedProUntil"] as const
+
+/**
+ * The Better Auth id the bridge vouches for: `X-Ba-User-Id`, trusted only
+ * alongside a valid `X-Service-Secret`. Null when either is missing or bad.
+ */
+function bridgeBaUserId(ctx: any): string | null {
+  if (!isValidServiceSecret(ctx.request.headers["x-service-secret"]))
+    return null
+  const id = ctx.request.headers["x-ba-user-id"]
+
+  return typeof id === "string" && id.length > 0 && id.length <= 200 ? id : null
+}
+
 /**
  * The badge endpoints' gate. Badges follow the activity rule: a private
  * profile's are for its owner (where the endpoint allows an owner bypass at
@@ -291,29 +384,8 @@ export default factories.createCoreController(
       }
 
       // Fetch claimed library affiliations for this profile
-      const affiliations = profile.baUserId
-        ? await strapi.db
-            .query("api::library-affiliation.library-affiliation")
-            .findMany({
-              where: { baUserId: profile.baUserId },
-              populate: {
-                library: {
-                  populate: { continent: true, country: true, region: true },
-                },
-              },
-            })
-        : []
-
-      const claimedLibraries = (affiliations as any[])
-        .filter((a: any) => a.library)
-        .map((a: any) => ({
-          entityRef: a.library.entityRef ?? null,
-          documentId: a.library.documentId ?? null,
-          name: a.library.name ?? null,
-          slug: a.library.slug ?? null,
-          libraryType: a.library.libraryType ?? null,
-          path: buildLibraryPath(a.library),
-        }))
+      const affiliations = await loadAffiliations(profile.baUserId)
+      const claimedLibraries = toClaimedLibraries(affiliations)
 
       // For limited profiles, check whether the viewer is affiliated with any of
       // the same libraries as the profile owner — if so, they see the full profile
@@ -321,7 +393,7 @@ export default factories.createCoreController(
       // check directly rather than canSeeLimitedProfile, which would re-read them.)
       const viewerIsLibraryMember =
         profile.profileVisibility === "limited" && !isOwnerRequest
-          ? await viewerSharesLibrary(affiliations as any[], viewerBaUserId)
+          ? await viewerSharesLibrary(affiliations, viewerBaUserId)
           : false
       const limitedForViewer =
         profile.profileVisibility === "limited" &&
@@ -334,45 +406,10 @@ export default factories.createCoreController(
         ? []
         : await loadEarnedBadges(profile.baUserId)
 
-      // followedLibraries + followedProfiles are written via db.query
-      // connect/disconnect; re-fetch via db.query so we see the same data.
-      // Document Service populate does not reliably reflect db.query relation writes.
-      // Published libraries only: a row that was unpublished since it was
-      // followed must not surface on a public page.
-      const profileWithFollows = profile.baUserId
-        ? await strapi.db.query("api::user-profile.user-profile").findOne({
-            where: { baUserId: profile.baUserId },
-            populate: {
-              followedLibraries: {
-                where: { publishedAt: { $notNull: true } },
-                populate: {
-                  heroImage: true,
-                  continent: true,
-                  country: true,
-                  region: true,
-                },
-              },
-              followedProfiles: { populate: { avatar: true } },
-            },
-          })
-        : null
-      const followedLibraries = publishedFollowedLibraries(
-        profileWithFollows?.followedLibraries
+      // Published libraries and public profiles only (see loadFollows).
+      const { followedLibraries, followedProfiles } = await loadFollows(
+        profile.baUserId
       )
-      // Only surface public followed profiles — never expose private/limited ones
-      const followedProfiles = (
-        (profileWithFollows?.followedProfiles ?? []) as any[]
-      )
-        .filter((p: any) => p.profileVisibility === "public")
-        .map((p: any) => ({
-          username: p.username ?? null,
-          displayName:
-            [p.firstName, p.lastName].filter(Boolean).join(" ") ||
-            p.username ||
-            null,
-          avatarUrl: p.avatar?.url ?? null,
-          bio: p.bio ?? null,
-        }))
 
       // Fields always stripped from public responses
       const safe = publicProfile({
@@ -409,6 +446,42 @@ export default factories.createCoreController(
           isOwnerRequest
         ),
       })
+    },
+
+    /**
+     * GET /api/user-profiles/me — the signed-in user's own profile, keyed on
+     * the Better Auth id. Bridge only: the UI server sends X-Service-Secret
+     * and X-Ba-User-Id from the session. Returns the owner view (no
+     * visibility rules apply) with the shapes the profile, settings,
+     * onboarding, notification, export and quick-wins pages need.
+     */
+    async findMe(ctx: any) {
+      if (!isValidServiceSecret(ctx.request.headers["x-service-secret"]))
+        return ctx.unauthorized("Invalid or missing service secret")
+      const baUserId = bridgeBaUserId(ctx)
+      if (!baUserId) return ctx.badRequest("Missing X-Ba-User-Id")
+
+      const profile = await strapi.documents(PROFILE).findFirst({
+        filters: { baUserId: { $eq: baUserId } },
+        populate: { avatar: true, languages: true, quickWins: true },
+      })
+      if (!profile) return ctx.notFound("Profile not found")
+
+      const [affiliations, follows, earnedBadges] = await Promise.all([
+        loadAffiliations(baUserId),
+        loadFollows(baUserId),
+        loadEarnedBadges(baUserId),
+      ])
+
+      const owner: Record<string, unknown> = {
+        ...profile,
+        ...follows,
+        claimedLibraries: toClaimedLibraries(affiliations),
+        earnedBadges,
+      }
+      for (const field of OWNER_HIDDEN_FIELDS) delete owner[field]
+
+      return ctx.send({ data: owner })
     },
 
     async findByDocumentId(ctx: any) {

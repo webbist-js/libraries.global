@@ -6,6 +6,7 @@ import type { Locale } from "next-intl"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
+import { fetchOwnProfile } from "@/lib/own-profile-server"
 import { buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 import type { UserProfile } from "@/lib/types/profile"
@@ -38,25 +39,6 @@ async function fetchProfile(
     const json = (await res.json()) as { data: UserProfile }
 
     return json.data
-  } catch {
-    return null
-  }
-}
-
-async function fetchOwnProfile(baUserId: string): Promise<UserProfile | null> {
-  const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
-  try {
-    const res = await fetch(
-      `${STRAPI}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(baUserId)}`,
-      {
-        cache: "no-store",
-        headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
-      }
-    )
-    if (!res.ok) return null
-    const json = (await res.json()) as { data?: UserProfile[] }
-
-    return json.data?.[0] ?? null
   } catch {
     return null
   }
@@ -137,7 +119,7 @@ export default async function ProfileLayout({
 
   if (session?.user?.id) {
     // Always determine ownership first — used for both private bypass and limited check
-    const ownProfile = await fetchOwnProfile(session.user.id)
+    const ownProfile = await fetchOwnProfile(session.user)
     isOwnProfile = ownProfile?.username === username
 
     if (profile === null || profile === "private") {

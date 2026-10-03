@@ -4,27 +4,21 @@ import { z } from "zod"
 
 import { auth } from "@/lib/auth"
 import { readJsonCapped } from "@/lib/bridge-params"
+import { readOwnProfile } from "@/lib/own-profile-server"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
-const API_TOKEN = process.env.STRAPI_REST_READONLY_API_KEY
 
 export async function GET() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const res = await fetch(
-    `${STRAPI}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(session.user.id)}`,
-    {
-      cache: "no-store",
-      headers: API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {},
-    }
-  )
-  if (!res.ok) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  // Strapi v5: fields are flat on the object, no `attributes` wrapper
-  const json = (await res.json()) as { data?: { notifPrefs?: unknown }[] }
-  const prefs = json.data?.[0]?.notifPrefs ?? {}
+  // notifPrefs is private: only the owner view through the bridge has it.
+  const lookup = await readOwnProfile(session.user)
+  if (!lookup.ok)
+    return NextResponse.json({ error: "Not found" }, { status: 404 })
+  const prefs = lookup.profile.notifPrefs ?? {}
 
   return NextResponse.json({ data: prefs })
 }

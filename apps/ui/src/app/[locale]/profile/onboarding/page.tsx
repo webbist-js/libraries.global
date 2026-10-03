@@ -5,7 +5,7 @@ import type { Locale } from "next-intl"
 
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { getSessionSSR } from "@/lib/auth-server"
-import type { UserProfile } from "@/lib/types/profile"
+import { fetchOwnProfile } from "@/lib/own-profile-server"
 
 export const metadata: Metadata = {
   title: "Set up your profile",
@@ -21,25 +21,9 @@ export default async function OnboardingPage({
   const session = await getSessionSSR(await headers())
   if (!session?.user) redirect("/auth/signin?callbackUrl=/profile/onboarding")
 
-  const profile = await (async (): Promise<UserProfile | null> => {
-    try {
-      const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
-      const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
-      const res = await fetch(
-        `${STRAPI}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(session.user.id)}`,
-        {
-          cache: "no-store",
-          headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
-        }
-      )
-      if (!res.ok) return null
-      const json = (await res.json()) as { data?: UserProfile[] }
-
-      return json.data?.[0] ?? null
-    } catch {
-      return null
-    }
-  })()
+  // No username yet, so the profile is read by the session's Better Auth id
+  // through the bridge (`baUserId` is private).
+  const profile = await fetchOwnProfile(session.user)
 
   const { OnboardingShell } = await import("./_components/OnboardingShell")
 

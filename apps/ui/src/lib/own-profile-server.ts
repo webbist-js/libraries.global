@@ -1,8 +1,77 @@
 import "server-only"
 
+import { cache } from "react"
+
+import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
 import { formatStrapiMediaUrlForClient } from "@/lib/strapi-helpers"
+import type { QuickWin, UserProfile } from "@/lib/types/profile"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
+
+/** The signed-in user, as the session gives it. */
+type SessionUser = { id: string; email: string; name?: string | null }
+
+/**
+ * The owner view of the signed-in user's profile, as Strapi's
+ * `GET /api/user-profiles/me` returns it: every field the owner may see
+ * (notification settings included), avatar, languages, quick wins, follows,
+ * claimed libraries and badges. Never carries `baUserId`. `username` is null
+ * until onboarding sets it.
+ */
+export type OwnProfile = UserProfile & {
+  quickWins?: QuickWin[] | null
+  quickWinsComputedAt?: string | null
+}
+
+export type OwnProfileLookup =
+  | { ok: true; profile: OwnProfile }
+  | { ok: false; reason: "not_found" | "unavailable" }
+
+/**
+ * One bridge read per request: the header, layout and page of a render share
+ * it through React `cache`. Route handlers call straight through.
+ */
+const lookupOwnProfile = cache(
+  async (id: string, email: string, name: string): Promise<OwnProfileLookup> => {
+    if (!process.env.STRAPI_BRIDGE_SECRET)
+      return { ok: false, reason: "unavailable" }
+    try {
+      const res = await fetch(`${STRAPI}/api/user-profiles/me`, {
+        cache: "no-store",
+        headers: bridgeUserHeaders({ id, email, name }),
+        signal: AbortSignal.timeout(5000),
+      })
+      if (res.status === 404) return { ok: false, reason: "not_found" }
+      if (!res.ok) return { ok: false, reason: "unavailable" }
+      const json = (await res.json()) as { data?: OwnProfile | null }
+
+      return json.data
+        ? { ok: true, profile: json.data }
+        : { ok: false, reason: "not_found" }
+    } catch {
+      return { ok: false, reason: "unavailable" }
+    }
+  }
+)
+
+/**
+ * The signed-in user's own profile, read through the bridge-secret
+ * `/api/user-profiles/me` route keyed on the Better Auth id from the session.
+ * `baUserId` is private, so the public REST filter on it can't be used.
+ * Use this when the caller must tell "no profile" from "Strapi is down".
+ */
+export function readOwnProfile(user: SessionUser): Promise<OwnProfileLookup> {
+  return lookupOwnProfile(user.id, user.email, user.name ?? "")
+}
+
+/** The signed-in user's own profile, or null when missing or unreachable. */
+export async function fetchOwnProfile(
+  user: SessionUser
+): Promise<OwnProfile | null> {
+  const lookup = await readOwnProfile(user)
+
+  return lookup.ok ? lookup.profile : null
+}
 
 /** The signed-in user's own profile, as far as the header and forms need it. */
 export type OwnProfileSnippet = {
@@ -14,50 +83,22 @@ export type OwnProfileSnippet = {
 }
 
 /**
- * The signed-in user's profile, read through the owner-scoped by-username
- * route with the bridge secret (the settings page uses the same route).
- * `baUserId` is private, so the public REST filter on it can't be used;
- * the username comes from the session instead. Null when there's no
- * username yet or the bridge is down.
+ * The header's slice of the signed-in user's profile (same bridge read as
+ * `fetchOwnProfile`). Null when there's no username yet or the bridge is down.
  */
-export async function fetchOwnProfileSnippet(user: {
-  id: string
-  username?: string | null
-}): Promise<OwnProfileSnippet | null> {
-  const secret = process.env.STRAPI_BRIDGE_SECRET
-  const username = user.username
-  if (!secret || !username) return null
-  try {
-    const res = await fetch(
-      `${STRAPI}/api/user-profiles/by-username/${encodeURIComponent(username)}?ownerBaUserId=${encodeURIComponent(user.id)}`,
-      {
-        cache: "no-store",
-        headers: { "X-Service-Secret": secret },
-        signal: AbortSignal.timeout(3000),
-      }
-    )
-    if (!res.ok) return null
-    const json = (await res.json()) as {
-      data?: {
-        username?: string | null
-        isVerifiedLibrarian?: boolean | null
-        avatar?: { url?: string | null } | null
-        languages?: { code?: unknown }[] | null
-      }
-    }
-    const p = json.data
-    if (!p) return null
+export async function fetchOwnProfileSnippet(
+  user: SessionUser
+): Promise<OwnProfileSnippet | null> {
+  const p = await fetchOwnProfile(user)
+  if (!p?.username) return null
 
-    return {
-      username: p.username ?? username,
-      // Passed to the browser: the asset proxy form, never the Strapi origin.
-      avatarUrl: formatStrapiMediaUrlForClient(p.avatar?.url) ?? null,
-      isVerifiedLibrarian: p.isVerifiedLibrarian === true,
-      languages: (p.languages ?? [])
-        .map((l) => l?.code)
-        .filter((c): c is string => typeof c === "string" && c.length > 0),
-    }
-  } catch {
-    return null
+  return {
+    username: p.username,
+    // Passed to the browser: the asset proxy form, never the Strapi origin.
+    avatarUrl: formatStrapiMediaUrlForClient(p.avatar?.url) ?? null,
+    isVerifiedLibrarian: p.isVerifiedLibrarian === true,
+    languages: (p.languages ?? [])
+      .map((l) => l?.code as unknown)
+      .filter((c): c is string => typeof c === "string" && c.length > 0),
   }
 }

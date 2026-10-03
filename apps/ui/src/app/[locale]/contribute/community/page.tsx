@@ -2,6 +2,7 @@ import { headers } from "next/headers"
 
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
+import { fetchOwnProfile } from "@/lib/own-profile-server"
 import { privateMetadata } from "@/lib/seo/metadata"
 import type { LeaderboardEntry } from "@/lib/types/leaderboard"
 
@@ -15,24 +16,6 @@ export const metadata = privateMetadata("Community leaderboard")
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const API_TOKEN = process.env.STRAPI_REST_READONLY_API_KEY
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
-
-async function fetchProfileUsername(baUserId: string): Promise<string | null> {
-  try {
-    const res = await fetch(
-      `${STRAPI}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(baUserId)}&fields[0]=username`,
-      {
-        cache: "no-store",
-        headers: API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {},
-      }
-    )
-    if (!res.ok) return null
-    const json = (await res.json()) as { data?: { username?: string }[] }
-
-    return json.data?.[0]?.username ?? null
-  } catch {
-    return null
-  }
-}
 
 type Period = "today" | "week" | "month" | "all"
 
@@ -114,7 +97,7 @@ export default async function CommunityPage({
     fetchLeaderboard(period),
     session?.user ? fetchStanding(session.user.id) : Promise.resolve(null),
     session?.user
-      ? fetchProfileUsername(session.user.id)
+      ? fetchOwnProfile(session.user).then((p) => p?.username ?? null)
       : Promise.resolve(null),
   ])
 

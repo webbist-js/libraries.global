@@ -3,49 +3,26 @@ import { NextResponse } from "next/server"
 
 import { auth } from "@/lib/auth"
 import { deleteStrapiProfile } from "@/lib/delete-profile"
+import { readOwnProfile } from "@/lib/own-profile-server"
 import { isSameOrigin, sameOriginResponse } from "@/lib/same-origin"
 import { invalidateSessionProfile } from "@/lib/session-profile"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
-const API_TOKEN = process.env.STRAPI_REST_READONLY_API_KEY
-
-async function getStrapiProfile(baUserId: string) {
-  try {
-    const params = new URLSearchParams({
-      "filters[baUserId][$eq]": baUserId,
-      "populate[avatar]": "*",
-      "populate[languages]": "*",
-      "populate[followedLibraries][fields][0]": "name",
-      "populate[followedLibraries][fields][1]": "slug",
-      "populate[followedLibraries][fields][2]": "libraryType",
-      "populate[followedLibraries][populate][heroImage][fields][0]": "url",
-    })
-    const res = await fetch(
-      `${STRAPI}/api/user-profiles?${params.toString()}`,
-      {
-        cache: "no-store",
-        headers: API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {},
-      }
-    )
-    if (!res.ok) return null
-    const json = (await res.json()) as { data?: Record<string, unknown>[] }
-
-    return json.data?.[0] ?? null
-  } catch {
-    return null
-  }
-}
 
 export async function GET() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const profile = await getStrapiProfile(session.user.id)
-  if (!profile)
-    return NextResponse.json({ error: "Profile not found" }, { status: 404 })
+  // Owner view through the bridge, keyed on the session's Better Auth id
+  // (`baUserId` is private, so the public REST filter can't find it).
+  const lookup = await readOwnProfile(session.user)
+  if (!lookup.ok)
+    return lookup.reason === "not_found"
+      ? NextResponse.json({ error: "Profile not found" }, { status: 404 })
+      : NextResponse.json({ error: "CMS unavailable" }, { status: 503 })
 
-  return NextResponse.json({ data: profile })
+  return NextResponse.json({ data: lookup.profile })
 }
 
 export async function PUT(req: Request) {

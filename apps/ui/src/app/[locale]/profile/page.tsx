@@ -7,30 +7,16 @@ export const metadata: Metadata = {
 }
 
 import { getSessionSSR } from "@/lib/auth-server"
+import { fetchOwnProfile } from "@/lib/own-profile-server"
 
 export default async function OwnProfilePage() {
   const session = await getSessionSSR(await headers())
   if (!session?.user) redirect("/auth/signin")
 
-  // Fetch own profile to get username
-  const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
-  const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
-  try {
-    const res = await fetch(
-      `${strapiUrl}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(session.user.id)}`,
-      {
-        cache: "no-store",
-        headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
-      }
-    )
-    if (res.ok) {
-      const json = (await res.json()) as { data?: { username?: string }[] }
-      const username = json.data?.[0]?.username
-      if (username) redirect(`/profile/${username}`)
-    }
-  } catch {
-    // swallow — fallback redirect below
-  }
+  // Own profile through the bridge (`baUserId` is private). redirect()
+  // throws, so it stays outside any try/catch.
+  const profile = await fetchOwnProfile(session.user)
+  if (profile?.username) redirect(`/profile/${profile.username}`)
 
   // Fallback: redirect to settings to complete profile
   redirect("/profile/settings")

@@ -2,13 +2,13 @@ import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 
 import { getSessionSSR } from "@/lib/auth-server"
+import { fetchOwnProfile } from "@/lib/own-profile-server"
 import type { UserProfile } from "@/lib/types/profile"
 
 import { FollowingSection } from "../_components/sections/FollowingSection"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const BRIDGE_SECRET = process.env.STRAPI_BRIDGE_SECRET
-const API_TOKEN = process.env.STRAPI_REST_READONLY_API_KEY
 
 async function fetchProfile(
   username: string,
@@ -35,24 +35,6 @@ async function fetchProfile(
   }
 }
 
-async function fetchOwnProfile(baUserId: string): Promise<UserProfile | null> {
-  try {
-    const res = await fetch(
-      `${STRAPI}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(baUserId)}`,
-      {
-        cache: "no-store",
-        headers: API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {},
-      }
-    )
-    if (!res.ok) return null
-    const json = (await res.json()) as { data?: UserProfile[] }
-
-    return json.data?.[0] ?? null
-  } catch {
-    return null
-  }
-}
-
 export default async function FollowingPage({
   params,
 }: {
@@ -67,7 +49,7 @@ export default async function FollowingPage({
   let profile: UserProfile | null = publicProfile
 
   if (session?.user?.id) {
-    const ownProfile = await fetchOwnProfile(session.user.id)
+    const ownProfile = await fetchOwnProfile(session.user)
     const isOwnProfile = ownProfile?.username === username
 
     if (!profile) {

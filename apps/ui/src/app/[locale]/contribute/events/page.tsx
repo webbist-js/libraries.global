@@ -5,12 +5,11 @@ import { redirect } from "next/navigation"
 import GlobalLink from "@/components/global/GlobalLink"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
+import { fetchOwnProfile } from "@/lib/own-profile-server"
 import { privateMetadata } from "@/lib/seo/metadata"
 
 import { ContributeSectionHeader } from "../_components/ContributeSectionHeader"
 import { EventFeedForm } from "./_components/EventFeedForm"
-
-const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 
 export const metadata = privateMetadata("Connect an event feed")
 
@@ -37,27 +36,6 @@ const ASIDE_STEPS = [
   },
 ]
 
-async function fetchIsVerifiedLibrarian(baUserId: string): Promise<boolean> {
-  const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
-  try {
-    const res = await fetch(
-      `${STRAPI}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(baUserId)}&fields[0]=isVerifiedLibrarian`,
-      {
-        cache: "no-store",
-        headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
-      }
-    )
-    if (!res.ok) return false
-    const json = (await res.json()) as {
-      data?: { isVerifiedLibrarian?: boolean }[]
-    }
-
-    return json.data?.[0]?.isVerifiedLibrarian ?? false
-  } catch {
-    return false
-  }
-}
-
 export default async function ContributeEventsPage({
   params,
 }: {
@@ -71,7 +49,9 @@ export default async function ContributeEventsPage({
     redirect("/auth/signin?callbackUrl=/contribute/events")
   }
 
-  const isVerifiedLibrarian = await fetchIsVerifiedLibrarian(session.user.id)
+  // Own profile through the bridge: `baUserId` is private.
+  const isVerifiedLibrarian =
+    (await fetchOwnProfile(session.user))?.isVerifiedLibrarian === true
 
   return (
     <div

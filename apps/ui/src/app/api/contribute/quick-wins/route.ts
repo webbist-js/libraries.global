@@ -2,10 +2,10 @@ import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
 import { getSessionSSR } from "@/lib/auth-server"
+import { readOwnProfile } from "@/lib/own-profile-server"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET ?? ""
-const READONLY_TOKEN = process.env.STRAPI_REST_READONLY_API_KEY ?? ""
 const FOUR_HOURS_MS = 4 * 60 * 60 * 1000
 
 export async function GET() {
@@ -16,22 +16,12 @@ export async function GET() {
 
   const baUserId = session.user.id
   try {
-    const res = await fetch(
-      `${STRAPI}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(baUserId)}&populate[quickWins]=true&fields[0]=quickWinsComputedAt`,
-      {
-        cache: "no-store",
-        headers: READONLY_TOKEN
-          ? { Authorization: `Bearer ${READONLY_TOKEN}` }
-          : {},
-      }
-    )
-    if (!res.ok) return NextResponse.json({ data: [], total: 0 })
-    const json = (await res.json()) as {
-      data?: { quickWins?: unknown[]; quickWinsComputedAt?: string }[]
-    }
-    const profile = json.data?.[0]
-    const wins = profile?.quickWins ?? []
-    const computedAt = profile?.quickWinsComputedAt ?? null
+    // Own profile through the bridge, keyed on the session's Better Auth id
+    // (`baUserId` is private, so the public REST filter can't find it).
+    const lookup = await readOwnProfile(session.user)
+    if (!lookup.ok) return NextResponse.json({ data: [], total: 0 })
+    const wins = lookup.profile.quickWins ?? []
+    const computedAt = lookup.profile.quickWinsComputedAt ?? null
 
     // Fire-and-forget recompute if stale
     if (
