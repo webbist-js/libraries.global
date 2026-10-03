@@ -2,6 +2,7 @@ import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import type { Locale } from "next-intl"
 
+import { editingLocaleFrom } from "@/components/contribute/article-editor/article.types"
 import { ArticleEditorShell } from "@/components/contribute/article-editor/ArticleEditorShell"
 import {
   fetchArticleLocales,
@@ -27,11 +28,14 @@ export async function generateMetadata({
 
 export default async function EditJournalArticlePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>
+  searchParams: Promise<{ locale?: string | string[] }>
 }) {
-  const [{ locale, slug }, session] = await Promise.all([
+  const [{ locale, slug }, { locale: requested }, session] = await Promise.all([
     params,
+    searchParams,
     getSessionSSR(await headers()),
   ])
   if (!session?.user)
@@ -61,6 +65,7 @@ export default async function EditJournalArticlePage({
         article={article}
         locales={locales}
         uiLocale={locale}
+        initialLocale={editingLocaleFrom(requested, locales)}
       />
     </div>
   )

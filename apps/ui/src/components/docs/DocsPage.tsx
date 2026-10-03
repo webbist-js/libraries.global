@@ -21,12 +21,11 @@ import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
-import { CONTACT_EMAIL } from "@/lib/constants"
 import { T } from "@/lib/design-tokens"
 import type { DocsWikiArticle } from "@/lib/strapi-api/content/server"
 
-// Wiki editor is given by hand for now (see "Roles and permissions").
-const WIKI_EDITOR_APPLY_HREF = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Wiki editor application")}`
+// Contributors with enough accepted changes apply in the app; a moderator decides.
+const WIKI_EDITOR_APPLY_HREF = "/contribute/knowledge/apply?role=wiki_editor"
 
 const ENTRY_CARDS = [
   {
@@ -281,7 +280,7 @@ export function DocsPage({
                 >
                   Spot a mistake? Anyone with an account can suggest a change to
                   a page. To write, edit and translate articles yourself, apply
-                  to become a wiki editor.
+                  to become a Knowledge editor.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <GlobalLink
@@ -291,7 +290,7 @@ export function DocsPage({
                   >
                     Suggest a change
                   </GlobalLink>
-                  <a
+                  <GlobalLink
                     className="inline-flex items-center gap-1 rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-white/10"
                     href={WIKI_EDITOR_APPLY_HREF}
                     style={{
@@ -300,13 +299,7 @@ export function DocsPage({
                     }}
                   >
                     Apply to edit
-                    <Icon
-                      aria-hidden="true"
-                      height={13}
-                      icon="mdi:email-outline"
-                      width={13}
-                    />
-                  </a>
+                  </GlobalLink>
                 </div>
               </section>
             </aside>

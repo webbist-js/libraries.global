@@ -113,6 +113,7 @@ export function ArticleEditorShell({
   resumeDraftId,
   locales,
   uiLocale,
+  initialLocale,
 }: {
   readonly kind: ArticleKind
   readonly mode: "new" | "edit"
@@ -121,6 +122,8 @@ export function ArticleEditorShell({
   readonly resumeDraftId?: string
   readonly locales: ArticleLocale[]
   readonly uiLocale: string
+  /** Language to open on load (from `?locale=`), a configured locale. */
+  readonly initialLocale?: string
 }) {
   const meta = ARTICLE_KIND_META[kind]
   const { has, ready } = useCapabilities()
@@ -386,6 +389,15 @@ export function ArticleEditorShell({
       setLoadingLocale(false)
     }
   }
+
+  // A link such as "Translate into French" opens that language once, on load.
+  const openedInitialLocale = useRef(false)
+  useEffect(() => {
+    if (openedInitialLocale.current) return
+    openedInitialLocale.current = true
+    if (initialLocale && initialLocale !== sourceLocale)
+      void changeLocale(initialLocale)
+  })
 
   const uploadImage = useCallback(
     async (file: File): Promise<UploadedImage | null> => {

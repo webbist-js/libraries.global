@@ -58,11 +58,19 @@ const ROWS: Row[] = [
   },
 ]
 
-const COLUMNS = [
+const COLUMNS: { title: string; sub: string; apply?: string }[] = [
   { title: "Contributor", sub: "Anyone with an account" },
   { title: "Verified library staff", sub: "Confirmed through a library claim" },
-  { title: "Knowledge editor", sub: "Invited by the editorial board" },
-  { title: "Journal editor", sub: "Invited by the editorial board" },
+  {
+    title: "Knowledge editor",
+    sub: "After five accepted changes",
+    apply: "/contribute/knowledge/apply?role=wiki_editor",
+  },
+  {
+    title: "Journal editor",
+    sub: "After five accepted changes",
+    apply: "/contribute/knowledge/apply?role=journal_editor",
+  },
   { title: "Moderator", sub: "Invited by the editorial board" },
   { title: "Editorial board", sub: "Reviews every queue and language" },
 ]
@@ -144,6 +152,16 @@ export function RolesTable() {
                   >
                     {column.sub}
                   </span>
+                  {column.apply ? (
+                    <GlobalLink
+                      href={column.apply}
+                      aria-label={`Apply to be a ${column.title}`}
+                      className="mt-1 inline-block text-[13px] font-semibold underline underline-offset-[3px]"
+                      style={{ color: T.accent.primary }}
+                    >
+                      Apply
+                    </GlobalLink>
+                  ) : null}
                 </th>
               ))}
             </tr>

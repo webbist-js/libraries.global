@@ -2,7 +2,10 @@ import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import type { Locale } from "next-intl"
 
-import { ARTICLE_KIND_META } from "@/components/contribute/article-editor/article.types"
+import {
+  ARTICLE_KIND_META,
+  editingLocaleFrom,
+} from "@/components/contribute/article-editor/article.types"
 import { ArticleEditorShell } from "@/components/contribute/article-editor/ArticleEditorShell"
 import {
   fetchArticleLocales,
@@ -32,13 +35,10 @@ export default async function EditKnowledgeArticlePage({
   searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>
-  searchParams: Promise<{ mode?: string }>
+  searchParams: Promise<{ mode?: string; locale?: string | string[] }>
 }) {
-  const [{ locale, slug }, { mode }, session] = await Promise.all([
-    params,
-    searchParams,
-    getSessionSSR(await headers()),
-  ])
+  const [{ locale, slug }, { mode, locale: requested }, session] =
+    await Promise.all([params, searchParams, getSessionSSR(await headers())])
   if (!session?.user)
     redirect(
       `/auth/signin?callbackUrl=${encodeURIComponent(`/contribute/knowledge/${slug}`)}`
@@ -84,6 +84,7 @@ export default async function EditKnowledgeArticlePage({
           article={article}
           locales={locales}
           uiLocale={locale}
+          initialLocale={editingLocaleFrom(requested, locales)}
         />
       )}
     </div>

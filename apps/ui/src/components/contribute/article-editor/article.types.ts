@@ -85,6 +85,17 @@ export function isArticleKind(v: unknown): v is ArticleKind {
   return v === "knowledge" || v === "journal"
 }
 
+/** A `?locale=` value when it names a configured locale; otherwise undefined. */
+export function editingLocaleFrom(
+  requested: unknown,
+  locales: readonly ArticleLocale[]
+): string | undefined {
+  return typeof requested === "string" &&
+    locales.some((l) => l.code === requested)
+    ? requested
+    : undefined
+}
+
 export const EMPTY_DOC: TiptapDoc = {
   type: "doc",
   content: [{ type: "paragraph" }],

@@ -2,6 +2,7 @@ import type { Locale } from "next-intl"
 
 import { PageHero } from "@/components/ds/PageHero"
 import GlobalHeader from "@/components/global/GlobalHeader"
+import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 import type {
   BlogArticleSummary,
@@ -59,6 +60,16 @@ export function BlogLandingPage({
           title={heroTitle}
         >
           <BlogSearchBar inputId="journal-search" />
+          <p className="mt-3 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
+            Write for the Journal?{" "}
+            <GlobalLink
+              href="/contribute/knowledge/apply?role=journal_editor"
+              className="font-semibold underline underline-offset-[3px]"
+              style={{ color: T.accent.primary }}
+            >
+              Apply to be a Journal editor
+            </GlobalLink>
+          </p>
         </PageHero>
 
         {/* ── Feed (filters + featured + list) ─────────────────────────── */}
