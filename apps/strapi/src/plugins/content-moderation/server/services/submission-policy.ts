@@ -5,12 +5,20 @@ import {
   highestRole,
   isSubmissionType,
   resolveCapabilities,
+  ROLE_APPLICATION_MIN_ACCEPTED,
+  type RoleGrant,
   SESSION_PROFILE_MAX_CLAIMS,
 } from "@repo/access"
 import { findUnsafeContent } from "@repo/shared-data"
 
 import { activeGrants } from "../../../../utils/role-grants"
-import { isDocumentId, VERIFICATION_METHODS } from "../utils/params"
+import { configuredLocales } from "../utils/locales"
+import {
+  isDocumentId,
+  type RoleApplicationFields,
+  validateRoleApplicationFields,
+  VERIFICATION_METHODS,
+} from "../utils/params"
 
 type Result =
   | { ok: true }
@@ -26,6 +34,27 @@ export type SubmissionContent = {
 }
 
 const LIBRARY = "api::library.library"
+const SUBMISSION = "plugin::content-moderation.submission"
+/** Most open applications read when looking for one for the same role. */
+const OPEN_APPLICATIONS_MAX = 50
+
+/**
+ * Whether the user's grants already cover the application: a grant for the
+ * role with no locale covers every locale; otherwise every requested locale
+ * must be granted, and an application for all locales is covered only by an
+ * all-locale grant.
+ */
+function grantsCover(
+  grants: RoleGrant[],
+  application: RoleApplicationFields
+): boolean {
+  const held = grants.filter((g) => g.role === application.role)
+  if (held.some((g) => g.locale === null)) return true
+  if (application.locales.length === 0) return false
+  const locales = new Set(held.map((g) => g.locale))
+
+  return application.locales.every((l) => locales.has(l))
+}
 
 /**
  * Affiliation roles that are not Library Claims. A `new_library` approval
@@ -144,9 +173,81 @@ export default ({ strapi }: { strapi: any }) => ({
       : []
   },
 
+  /**
+   * Role Application eligibility (spec §6.1): valid fields, at least
+   * `ROLE_APPLICATION_MIN_ACCEPTED` approved submissions that aren't
+   * applications, no open application for the same role, and no grant that
+   * already covers it. Never reads Plan, Tier or Points.
+   */
+  async checkRoleApplication(input: {
+    baUserId: string
+    fields: unknown
+    targetEntityType?: unknown
+    excludeDocumentId?: string
+  }): Promise<Result> {
+    if (
+      input.targetEntityType !== undefined &&
+      input.targetEntityType !== "user_profile"
+    )
+      return { ok: false, status: 400, message: "Invalid target" }
+    const parsed = validateRoleApplicationFields(
+      input.fields,
+      await configuredLocales(strapi)
+    )
+    if (!parsed.ok) return { ok: false, status: 400, message: parsed.message }
+    const application = parsed.value
+
+    const accepted = await strapi.documents(SUBMISSION).count({
+      filters: {
+        submittedByUserId: { $eq: input.baUserId },
+        status: { $eq: "approved" },
+        submissionType: { $ne: "role_application" },
+      },
+    })
+    if (accepted < ROLE_APPLICATION_MIN_ACCEPTED)
+      return {
+        ok: false,
+        status: 403,
+        message: `You can apply once ${ROLE_APPLICATION_MIN_ACCEPTED} of your changes have been accepted. So far ${accepted} ${accepted === 1 ? "has" : "have"}.`,
+      }
+
+    const open = (await strapi.documents(SUBMISSION).findMany({
+      filters: {
+        submittedByUserId: { $eq: input.baUserId },
+        submissionType: { $eq: "role_application" },
+        status: { $in: ["draft", "pending", "needs_info"] },
+        ...(input.excludeDocumentId
+          ? { documentId: { $ne: input.excludeDocumentId } }
+          : {}),
+      },
+      fields: ["documentId", "fields"],
+      sort: "createdAt:desc",
+      limit: OPEN_APPLICATIONS_MAX,
+    })) as { fields?: { role?: unknown } | null }[]
+    if (open.some((row) => row.fields?.role === application.role))
+      return {
+        ok: false,
+        status: 403,
+        message:
+          "You already have an application for this role. Wait for a moderator to decide on it.",
+      }
+
+    if (grantsCover(await activeGrants(strapi, input.baUserId), application))
+      return {
+        ok: false,
+        status: 403,
+        message: "You already hold this role for the languages you chose.",
+      }
+
+    return { ok: true }
+  },
+
   async check(input: {
     baUserId: string
     submissionType: unknown
+    /** The submission's `fields`; required for a `role_application`. */
+    fields?: unknown
+    targetEntityType?: unknown
     targetDocumentId?: unknown
     directWikiEdit?: boolean
     directJournalEdit?: boolean
@@ -193,6 +294,16 @@ export default ({ strapi }: { strapi: any }) => ({
         status: 403,
         message: "You can't submit this type of change.",
       }
+
+    if (submissionType === "role_application") {
+      const eligible = await (this as any).checkRoleApplication({
+        baUserId,
+        fields: input.fields,
+        targetEntityType: input.targetEntityType,
+        excludeDocumentId: input.excludeDocumentId,
+      })
+      if (!eligible.ok) return eligible
+    }
 
     const limits = contributionLimits(tier, role)
     const excludeFilter = input.excludeDocumentId

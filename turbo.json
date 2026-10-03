@@ -35,7 +35,8 @@
     "BASIC_AUTH_ENABLED",
     "BASIC_AUTH_USERNAME",
     "BASIC_AUTH_PASSWORD",
-    "CHANGE_RECORDS_ENABLED"
+    "CHANGE_RECORDS_ENABLED",
+    "MODERATORS_EMAIL"
   ],
   "tasks": {
     "build": {

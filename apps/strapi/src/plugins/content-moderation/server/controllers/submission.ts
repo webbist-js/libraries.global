@@ -184,6 +184,9 @@ export default ({ strapi }: { strapi: any }) => ({
       .check({
         baUserId: user.id,
         submissionType,
+        // Types with their own field rules (role_application) check these.
+        fields,
+        targetEntityType,
         targetDocumentId,
         directWikiEdit,
         directJournalEdit,
@@ -497,9 +500,20 @@ export default ({ strapi }: { strapi: any }) => ({
           const policy = strapi
             .plugin("content-moderation")
             .service("submission-policy")
+          // What goes to review: the fields `finalizeDraft` is about to write
+          // (this body's, or the saved draft's when the body carries none)
+          // plus this request's extras.
+          const { locale: _locale, ...form } = (body ?? {}) as Record<
+            string,
+            unknown
+          >
+          const { fields, extras, hasFields } = splitSubmissionBody(form)
+          const reviewedFields = hasFields ? fields : existing.fields
           const verdict = await policy.check({
             baUserId: user.id,
             submissionType: existing.submissionType,
+            fields: reviewedFields,
+            targetEntityType: existing.targetEntityType ?? undefined,
             targetDocumentId: existing.targetDocumentId ?? undefined,
             directWikiEdit:
               existing.submissionType === "wiki_edit" &&
@@ -514,18 +528,9 @@ export default ({ strapi }: { strapi: any }) => ({
           })
           if (!verdict.ok) return verdict
 
-          // What goes to review: the fields `finalizeDraft` is about to write
-          // (this body's, or the saved draft's when the body carries none)
-          // plus this request's extras.
-          const { locale: _locale, ...form } = (body ?? {}) as Record<
-            string,
-            unknown
-          >
-          const { fields, extras, hasFields } = splitSubmissionBody(form)
-
           return policy.checkContent(
             {
-              fields: hasFields ? fields : existing.fields,
+              fields: reviewedFields,
               draftData: existing.draftData,
               note: extras.note ?? existing.note,
               editSummary: extras.editSummary ?? existing.editSummary,

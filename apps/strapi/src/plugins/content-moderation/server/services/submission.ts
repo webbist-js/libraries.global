@@ -1,3 +1,4 @@
+import createNotifications, { scheduleNotification } from "./notifications"
 import { isActivityPublic } from "../../../../utils/activity-visibility"
 import {
   grantVerifiedLibrarian,
@@ -7,6 +8,7 @@ import {
   type ChangeContext,
   runWithChangeContext,
 } from "../../../../utils/change-context"
+import { createGrant } from "../../../../utils/role-grants"
 import {
   type ApplyArticleOutcome,
   type ApplyArticleResult,
@@ -31,7 +33,11 @@ import {
   normaliseLocale,
   submissionLocale,
 } from "../utils/locales"
-import { isDocumentId, isNewArticleDraft } from "../utils/params"
+import {
+  isApplicationRole,
+  isDocumentId,
+  isNewArticleDraft,
+} from "../utils/params"
 import { payloadHash } from "../utils/payload-hash"
 import {
   ApplyRefusedError,
@@ -274,7 +280,81 @@ export type SubmissionExtras = Partial<
 >
 
 const SUBMISSION_UID = "plugin::content-moderation.submission"
+const PROFILE_UID = "api::user-profile.user-profile"
 const REVIEW_EVENT_UID = "plugin::content-moderation.review-event"
+
+/**
+ * The plugin's notifications service, built directly when it isn't
+ * registered (or a stub stands in for it), so a transition always reaches
+ * the never-throwing implementation.
+ */
+function notifications(strapi: any): ReturnType<typeof createNotifications> {
+  let registered: any = null
+  try {
+    registered = strapi
+      .plugin?.("content-moderation")
+      ?.service?.("notifications")
+  } catch {
+    registered = null
+  }
+
+  return typeof registered?.submissionDecided === "function" &&
+    typeof registered?.submissionPending === "function"
+    ? registered
+    : createNotifications({ strapi })
+}
+
+/**
+ * Applies an approved Role Application: one Role Grant per requested
+ * locale, or one for every locale when it named none. Returns the
+ * applicant's profile documentId. Throws (rolling the approval back) when
+ * the role isn't one an application may grant or the applicant has no
+ * profile.
+ */
+async function applyRoleApplication(
+  strapi: any,
+  submission: any,
+  reviewer: Reviewer
+): Promise<string> {
+  const f =
+    submission.fields && typeof submission.fields === "object"
+      ? (submission.fields as Record<string, unknown>)
+      : {}
+  if (!isApplicationRole(f.role))
+    throw new Error(
+      `role_application ${submission.documentId} names no role an application can grant`
+    )
+  const baUserId = String(submission.submittedByUserId ?? "")
+  const [profile] = baUserId
+    ? ((await strapi.documents(PROFILE_UID).findMany({
+        filters: { baUserId: { $eq: baUserId } },
+        fields: ["documentId"],
+        limit: 1,
+      })) as { documentId: string }[])
+    : []
+  if (!profile)
+    throw new Error(
+      `role_application ${submission.documentId}: the applicant has no profile`
+    )
+
+  const locales = Array.isArray(f.locales)
+    ? [...new Set(f.locales.filter((l): l is string => typeof l === "string"))]
+    : []
+  for (const locale of locales.length > 0 ? locales : [null])
+    await createGrant(strapi, {
+      baUserId,
+      role: f.role,
+      locale,
+      source: "application",
+      grantedBy: reviewer.id,
+      reason: `Approved application ${submission.documentId}`,
+    })
+  strapi.log.info(
+    `[content-moderation] Granted ${f.role} (${locales.length > 0 ? locales.join(", ") : "all locales"}) from approved application ${submission.documentId}`
+  )
+
+  return profile.documentId
+}
 
 /** Records one Submission State change (see the review-event schema). */
 async function writeReviewEvent(
@@ -495,6 +575,10 @@ export default ({ strapi }: { strapi: any }) => ({
           ...(status === "pending" ? { payloadHash: payloadHash(rest) } : {}),
         },
       })
+    if (status === "pending")
+      scheduleNotification(strapi, `alert for ${created.documentId}`, () =>
+        notifications(strapi).submissionPending(created)
+      )
 
     return toClient(created)
   },
@@ -1104,6 +1188,27 @@ export default ({ strapi }: { strapi: any }) => ({
             }
           }
 
+          // ── role_application approval ─────────────────────────────────────
+          // Grants the role (the role-grant lifecycle re-derives the profile's
+          // role and drops the cached session). No points.
+          if (
+            status === "approved" &&
+            submission?.submissionType === "role_application"
+          ) {
+            const profileDocumentId = await applyRoleApplication(
+              strapi,
+              submission,
+              reviewer
+            )
+            await strapi
+              .documents("plugin::content-moderation.submission")
+              .update({
+                documentId,
+                data: { resultDocumentId: profileDocumentId },
+              })
+            updated.resultDocumentId = profileDocumentId
+          }
+
           return "ok" as const
         })
       })
@@ -1352,6 +1457,21 @@ export default ({ strapi }: { strapi: any }) => ({
           strapi.log.warn("[quick-wins] Post-approval recompute failed:", err)
         }
       }
+
+      // After the commit and off the request path; never fails the
+      // transition. A decision tells the submitter (with the moderator's own
+      // note, not the markers appended for moderators); a resubmission from
+      // needs_info alerts the moderators like a first submission does.
+      if (status === "pending") {
+        scheduleNotification(strapi, `alert for ${documentId}`, () =>
+          notifications(strapi).submissionPending(submission)
+        )
+      } else {
+        const decided = { ...submission, reviewNote: reviewNote ?? null }
+        scheduleNotification(strapi, `${status} email for ${documentId}`, () =>
+          notifications(strapi).submissionDecided(decided, status)
+        )
+      }
     }
 
     return { data: updated }
@@ -1537,11 +1657,15 @@ export default ({ strapi }: { strapi: any }) => ({
     })
     if (!moved) return null
 
-    return toClient(
-      await strapi
-        .documents("plugin::content-moderation.submission")
-        .findOne({ documentId })
-    )
+    const finalized = await strapi
+      .documents("plugin::content-moderation.submission")
+      .findOne({ documentId })
+    if (finalized)
+      scheduleNotification(strapi, `alert for ${documentId}`, () =>
+        notifications(strapi).submissionPending(finalized)
+      )
+
+    return toClient(finalized)
   },
 
   async findPublicByDocumentId(documentId: string) {
