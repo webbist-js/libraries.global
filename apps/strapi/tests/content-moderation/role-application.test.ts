@@ -1,9 +1,12 @@
-import { describe, expect, it, vi } from "vitest"
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 
 import submissionControllerFactory from "../../src/plugins/content-moderation/server/controllers/submission"
 import createService from "../../src/plugins/content-moderation/server/services/submission"
 import createPolicy from "../../src/plugins/content-moderation/server/services/submission-policy"
-import { validateRoleApplicationFields } from "../../src/plugins/content-moderation/server/utils/params"
+import {
+  roleApplicationFields,
+  validateRoleApplicationFields,
+} from "../../src/plugins/content-moderation/server/utils/params"
 import { payloadHash } from "../../src/plugins/content-moderation/server/utils/payload-hash"
 import { adminReviewer } from "../../src/plugins/content-moderation/server/utils/reviewer"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
@@ -78,6 +81,22 @@ describe("role application fields", () => {
   })
 })
 
+describe("roleApplicationFields", () => {
+  it("reads the role and unique string locales of a stored application", () => {
+    expect(
+      roleApplicationFields({
+        role: "journal_editor",
+        locales: ["fr", "fr", 3],
+      })
+    ).toEqual({ role: "journal_editor", locales: ["fr"] })
+    expect(roleApplicationFields({ role: "moderator" })).toEqual({
+      role: null,
+      locales: [],
+    })
+    expect(roleApplicationFields(null)).toEqual({ role: null, locales: [] })
+  })
+})
+
 describe("role application eligibility", () => {
   it("refuses with four accepted changes and allows five", async () => {
     const four = setup({ [SUB]: accepted(4) })
@@ -103,9 +122,6 @@ describe("role application eligibility", () => {
       ok: false,
       status: 400,
     })
-    expect(
-      await apply(policy, fieldsFor(), { targetEntityType: "library" })
-    ).toMatchObject({ ok: false, status: 400 })
   })
 
   it("refuses while an application for the same role is open", async () => {
@@ -224,7 +240,15 @@ describe("role application approval", () => {
 })
 
 describe("role application through the controller", () => {
-  process.env.STRAPI_BRIDGE_SECRET = "test-secret"
+  let savedSecret: string | undefined
+  beforeAll(() => {
+    savedSecret = process.env.STRAPI_BRIDGE_SECRET
+    process.env.STRAPI_BRIDGE_SECRET = "test-secret"
+  })
+  afterAll(() => {
+    if (savedSecret === undefined) delete process.env.STRAPI_BRIDGE_SECRET
+    else process.env.STRAPI_BRIDGE_SECRET = savedSecret
+  })
   const headers = {
     "x-service-secret": "test-secret",
     "x-ba-user-id": "u1",
@@ -287,6 +311,21 @@ describe("role application through the controller", () => {
     const ctx = ctxFor({ body: body(false) })
     await controller.create(ctx)
     expect(ctx.body.data).toMatchObject({ status: "pending" })
+  })
+
+  it("files every application against the user's profile, whatever the client sends", async () => {
+    const { controller, store } = harness(5)
+    for (const targetEntityType of ["library", undefined]) {
+      store[SUB] = store[SUB]!.filter(
+        (s) => s.submissionType !== "role_application"
+      )
+      const ctx = ctxFor({ body: { ...body(false), targetEntityType } })
+      await controller.create(ctx)
+      expect(ctx.status).toBeUndefined()
+      expect(
+        store[SUB]!.find((s) => s.submissionType === "role_application")
+      ).toMatchObject({ targetEntityType: "user_profile" })
+    }
   })
 
   it("refuses an ineligible user with a 403", async () => {

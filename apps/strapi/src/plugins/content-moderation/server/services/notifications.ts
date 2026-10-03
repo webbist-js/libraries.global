@@ -6,6 +6,7 @@ import {
   moderatorAlertEmail,
   roleLabel,
 } from "../utils/email-templates"
+import { roleApplicationFields } from "../utils/params"
 
 /** What the notifications read from a submission row. */
 export type SubmissionRow = {
@@ -67,23 +68,11 @@ export function scheduleNotification(
 
 /** `${APP_PUBLIC_URL}${path}`, without a doubled slash. */
 function appUrl(path: string): string {
-  const base = (process.env.APP_PUBLIC_URL || DEFAULT_APP_URL).replace(
-    /\/+$/,
-    ""
-  )
+  let base = process.env.APP_PUBLIC_URL || DEFAULT_APP_URL
+  while (base.endsWith("/")) base = base.slice(0, -1)
 
   return `${base}${path}`
 }
-
-const fieldsOf = (s: SubmissionRow): Record<string, unknown> =>
-  s.fields && typeof s.fields === "object" && !Array.isArray(s.fields)
-    ? (s.fields as Record<string, unknown>)
-    : {}
-
-const localesOf = (f: Record<string, unknown>): string[] =>
-  Array.isArray(f.locales)
-    ? f.locales.filter((l): l is string => typeof l === "string")
-    : []
 
 const text = (v: unknown, max = 120): string | null =>
   typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null
@@ -91,9 +80,14 @@ const text = (v: unknown, max = 120): string | null =>
 /** One line saying what a moderator is being asked to review. */
 function alertSummary(s: SubmissionRow): string {
   const who = text(s.submittedByName) ?? "A contributor"
-  const f = fieldsOf(s)
-  if (s.submissionType === "role_application")
-    return `${who} applied to be a ${roleLabel(String(f.role ?? "editor"))} for ${languagesLabel(localesOf(f))}.`
+  if (s.submissionType === "role_application") {
+    const { role, locales } = roleApplicationFields(s.fields)
+
+    return `${who} applied to be a ${roleLabel(role ?? "editor")} for ${languagesLabel(locales)}.`
+  }
+  const f = (
+    s.fields && typeof s.fields === "object" ? s.fields : {}
+  ) as Record<string, unknown>
   const kind = f.kind === "area" ? "area" : "region"
   const name = text(f.name)
 
@@ -158,13 +152,13 @@ export default ({ strapi }: { strapi: any }) => {
         const note = s.reviewNote?.trim() || null
 
         if (s.submissionType === "role_application") {
-          const f = fieldsOf(s)
+          const { role, locales } = roleApplicationFields(s.fields)
           await send(what, {
             to,
             ...applicationDecidedEmail({
               name,
-              role: String(f.role ?? ""),
-              locales: localesOf(f),
+              role: role ?? "",
+              locales,
               status,
               note,
               url,

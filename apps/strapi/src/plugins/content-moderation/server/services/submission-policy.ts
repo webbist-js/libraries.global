@@ -76,6 +76,69 @@ export const CLAIM_AFFILIATION_FILTER = {
   ],
 }
 
+/**
+ * Role Application eligibility (spec §6.1): valid fields, at least
+ * `ROLE_APPLICATION_MIN_ACCEPTED` approved submissions that aren't
+ * applications, no open application for the same role, and no grant that
+ * already covers it. Never reads Plan, Tier or Points. `targetEntityType` is
+ * not checked: `create` files every application against the user's profile.
+ */
+async function checkRoleApplication(
+  strapi: any,
+  input: { baUserId: string; fields: unknown; excludeDocumentId?: string }
+): Promise<Result> {
+  const parsed = validateRoleApplicationFields(
+    input.fields,
+    await configuredLocales(strapi)
+  )
+  if (!parsed.ok) return { ok: false, status: 400, message: parsed.message }
+  const application = parsed.value
+
+  const accepted = await strapi.documents(SUBMISSION).count({
+    filters: {
+      submittedByUserId: { $eq: input.baUserId },
+      status: { $eq: "approved" },
+      submissionType: { $ne: "role_application" },
+    },
+  })
+  if (accepted < ROLE_APPLICATION_MIN_ACCEPTED)
+    return {
+      ok: false,
+      status: 403,
+      message: `You can apply once ${ROLE_APPLICATION_MIN_ACCEPTED} of your changes have been accepted. So far ${accepted} ${accepted === 1 ? "has" : "have"}.`,
+    }
+
+  const open = (await strapi.documents(SUBMISSION).findMany({
+    filters: {
+      submittedByUserId: { $eq: input.baUserId },
+      submissionType: { $eq: "role_application" },
+      status: { $in: ["draft", "pending", "needs_info"] },
+      ...(input.excludeDocumentId
+        ? { documentId: { $ne: input.excludeDocumentId } }
+        : {}),
+    },
+    fields: ["documentId", "fields"],
+    sort: "createdAt:desc",
+    limit: OPEN_APPLICATIONS_MAX,
+  })) as { fields?: { role?: unknown } | null }[]
+  if (open.some((row) => row.fields?.role === application.role))
+    return {
+      ok: false,
+      status: 403,
+      message:
+        "You already have an application for this role. Wait for a moderator to decide on it.",
+    }
+
+  if (grantsCover(await activeGrants(strapi, input.baUserId), application))
+    return {
+      ok: false,
+      status: 403,
+      message: "You already hold this role for the languages you chose.",
+    }
+
+  return { ok: true }
+}
+
 export default ({ strapi }: { strapi: any }) => ({
   /**
    * Loads the submitter's Role Grants, tier and library claims, and
@@ -173,75 +236,6 @@ export default ({ strapi }: { strapi: any }) => ({
       : []
   },
 
-  /**
-   * Role Application eligibility (spec §6.1): valid fields, at least
-   * `ROLE_APPLICATION_MIN_ACCEPTED` approved submissions that aren't
-   * applications, no open application for the same role, and no grant that
-   * already covers it. Never reads Plan, Tier or Points.
-   */
-  async checkRoleApplication(input: {
-    baUserId: string
-    fields: unknown
-    targetEntityType?: unknown
-    excludeDocumentId?: string
-  }): Promise<Result> {
-    if (
-      input.targetEntityType !== undefined &&
-      input.targetEntityType !== "user_profile"
-    )
-      return { ok: false, status: 400, message: "Invalid target" }
-    const parsed = validateRoleApplicationFields(
-      input.fields,
-      await configuredLocales(strapi)
-    )
-    if (!parsed.ok) return { ok: false, status: 400, message: parsed.message }
-    const application = parsed.value
-
-    const accepted = await strapi.documents(SUBMISSION).count({
-      filters: {
-        submittedByUserId: { $eq: input.baUserId },
-        status: { $eq: "approved" },
-        submissionType: { $ne: "role_application" },
-      },
-    })
-    if (accepted < ROLE_APPLICATION_MIN_ACCEPTED)
-      return {
-        ok: false,
-        status: 403,
-        message: `You can apply once ${ROLE_APPLICATION_MIN_ACCEPTED} of your changes have been accepted. So far ${accepted} ${accepted === 1 ? "has" : "have"}.`,
-      }
-
-    const open = (await strapi.documents(SUBMISSION).findMany({
-      filters: {
-        submittedByUserId: { $eq: input.baUserId },
-        submissionType: { $eq: "role_application" },
-        status: { $in: ["draft", "pending", "needs_info"] },
-        ...(input.excludeDocumentId
-          ? { documentId: { $ne: input.excludeDocumentId } }
-          : {}),
-      },
-      fields: ["documentId", "fields"],
-      sort: "createdAt:desc",
-      limit: OPEN_APPLICATIONS_MAX,
-    })) as { fields?: { role?: unknown } | null }[]
-    if (open.some((row) => row.fields?.role === application.role))
-      return {
-        ok: false,
-        status: 403,
-        message:
-          "You already have an application for this role. Wait for a moderator to decide on it.",
-      }
-
-    if (grantsCover(await activeGrants(strapi, input.baUserId), application))
-      return {
-        ok: false,
-        status: 403,
-        message: "You already hold this role for the languages you chose.",
-      }
-
-    return { ok: true }
-  },
-
   async check(input: {
     baUserId: string
     submissionType: unknown
@@ -296,10 +290,9 @@ export default ({ strapi }: { strapi: any }) => ({
       }
 
     if (submissionType === "role_application") {
-      const eligible = await (this as any).checkRoleApplication({
+      const eligible = await checkRoleApplication(strapi, {
         baUserId,
         fields: input.fields,
-        targetEntityType: input.targetEntityType,
         excludeDocumentId: input.excludeDocumentId,
       })
       if (!eligible.ok) return eligible

@@ -81,6 +81,27 @@ export type RoleApplicationFields = {
   samples: string[]
 }
 
+/**
+ * The role and locales of a stored application, read leniently: `role` is
+ * null unless it is one an application may ask for, and `locales` keeps the
+ * unique strings (empty means every locale). Shared by the approval and the
+ * notification emails, which read rows already validated at submit time.
+ */
+export function roleApplicationFields(fields: unknown): {
+  role: ApplicationRole | null
+  locales: string[]
+} {
+  const f =
+    fields && typeof fields === "object" && !Array.isArray(fields)
+      ? (fields as Record<string, unknown>)
+      : {}
+  const locales = Array.isArray(f.locales)
+    ? [...new Set(f.locales.filter((l): l is string => typeof l === "string"))]
+    : []
+
+  return { role: isApplicationRole(f.role) ? f.role : null, locales }
+}
+
 export function isApplicationRole(v: unknown): v is ApplicationRole {
   return (
     typeof v === "string" &&

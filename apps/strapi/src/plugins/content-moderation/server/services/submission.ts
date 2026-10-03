@@ -34,9 +34,9 @@ import {
   submissionLocale,
 } from "../utils/locales"
 import {
-  isApplicationRole,
   isDocumentId,
   isNewArticleDraft,
+  roleApplicationFields,
 } from "../utils/params"
 import { payloadHash } from "../utils/payload-hash"
 import {
@@ -316,11 +316,8 @@ async function applyRoleApplication(
   submission: any,
   reviewer: Reviewer
 ): Promise<string> {
-  const f =
-    submission.fields && typeof submission.fields === "object"
-      ? (submission.fields as Record<string, unknown>)
-      : {}
-  if (!isApplicationRole(f.role))
+  const { role, locales } = roleApplicationFields(submission.fields)
+  if (!role)
     throw new Error(
       `role_application ${submission.documentId} names no role an application can grant`
     )
@@ -337,20 +334,17 @@ async function applyRoleApplication(
       `role_application ${submission.documentId}: the applicant has no profile`
     )
 
-  const locales = Array.isArray(f.locales)
-    ? [...new Set(f.locales.filter((l): l is string => typeof l === "string"))]
-    : []
   for (const locale of locales.length > 0 ? locales : [null])
     await createGrant(strapi, {
       baUserId,
-      role: f.role,
+      role,
       locale,
       source: "application",
       grantedBy: reviewer.id,
       reason: `Approved application ${submission.documentId}`,
     })
   strapi.log.info(
-    `[content-moderation] Granted ${f.role} (${locales.length > 0 ? locales.join(", ") : "all locales"}) from approved application ${submission.documentId}`
+    `[content-moderation] Granted ${role} (${locales.length > 0 ? locales.join(", ") : "all locales"}) from approved application ${submission.documentId}`
   )
 
   return profile.documentId
@@ -563,6 +557,11 @@ export default ({ strapi }: { strapi: any }) => ({
     const status = asDraft ? "draft" : "pending"
     const rest = {
       ...fields,
+      // An application is always about the applicant's own profile; the
+      // client's value is ignored.
+      ...(fields.submissionType === "role_application"
+        ? { targetEntityType: "user_profile" }
+        : {}),
       contentLocale: await resolveSubmissionLocale(strapi, locale, fields),
     }
 
