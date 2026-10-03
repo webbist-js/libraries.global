@@ -48,13 +48,24 @@ export function ReviewDecisionForm({
   if (!OPEN.has(status)) {
     const meta = statusMeta(status)
 
+    // The live region stays mounted across router.refresh(), so the
+    // decision just made ("Approved.") is still announced here.
     return (
-      <p
-        className="m-0 text-[15px] leading-[1.55]"
-        style={{ color: T.ink.dim }}
-      >
-        {`This submission is ${meta.label.toLowerCase()}${reviewedAt ? ` (${new Date(reviewedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })})` : ""}; decisions are final.`}
-      </p>
+      <div className="flex flex-col gap-2">
+        <p
+          aria-live="polite"
+          className="m-0 text-[14px]"
+          style={{ color: T.accent.ok }}
+        >
+          {done}
+        </p>
+        <p
+          className="m-0 text-[15px] leading-[1.55]"
+          style={{ color: T.ink.dim }}
+        >
+          {`This submission is ${meta.label.toLowerCase()}${reviewedAt ? ` (${new Date(reviewedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })})` : ""}; decisions are final.`}
+        </p>
+      </div>
     )
   }
 

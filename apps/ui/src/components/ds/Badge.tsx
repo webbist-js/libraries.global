@@ -1,3 +1,5 @@
+import { Icon } from "@iconify/react"
+
 import { T } from "@/lib/design-tokens"
 
 export type BadgeColor =
@@ -61,11 +63,14 @@ export function Badge({
   label,
   color,
   dot,
+  icon,
   size = "sm",
 }: {
   readonly label: string
   readonly color: BadgeColor
   readonly dot?: boolean
+  /** Iconify id shown before the label, in the badge's text colour. */
+  readonly icon?: string
   readonly size?: "sm" | "md"
 }) {
   const { text, border, bg } = COLOR_MAP[color]
@@ -100,6 +105,15 @@ export function Badge({
           }}
         />
       )}
+      {icon ? (
+        <Icon
+          aria-hidden="true"
+          icon={icon}
+          width={size === "md" ? 16 : 14}
+          height={size === "md" ? 16 : 14}
+          style={{ color: text, flexShrink: 0 }}
+        />
+      ) : null}
       {label}
     </span>
   )

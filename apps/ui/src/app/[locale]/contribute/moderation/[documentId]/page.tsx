@@ -198,7 +198,7 @@ export default async function ReviewSubmissionPage({
 
   return (
     <>
-      <ModerationHero title={d.summary} leaf={moderationRowLabel(d)}>
+      <ModerationHero title={d.summary} plainTitle leaf={moderationRowLabel(d)}>
         <div className="flex flex-wrap items-center gap-3">
           <StatusBadge status={d.status} />
           <span className="text-[15px]" style={{ color: T.ink.dim }}>
@@ -277,6 +277,16 @@ export default async function ReviewSubmissionPage({
             aria-label="Related pages"
             className="flex flex-col gap-2 text-[15px]"
           >
+            {d.resultDocumentId ? (
+              // TODO(Task 16): link to the created record once a server
+              // helper resolves a library (or region/area) by documentId to
+              // its public path; none exists today.
+              <p className="m-0" style={{ color: T.ink.dim }}>
+                {d.submissionType === "location_request"
+                  ? "Approval created this place in the atlas."
+                  : "Approval created a new library record."}
+              </p>
+            ) : null}
             {links.map((l) => (
               <Link
                 key={l.href}

@@ -9,9 +9,12 @@ export function ModerationHero({
   title,
   lead,
   leaf,
+  plainTitle,
   children,
 }: {
   readonly title: string
+  /** A contributor's text as the title: never parsed as `*italic*`. */
+  readonly plainTitle?: boolean
   readonly lead?: ReactNode
   /** Breadcrumb leaf after "Moderation", on sub-pages. */
   readonly leaf?: string
@@ -32,6 +35,7 @@ export function ModerationHero({
       eyebrow="Moderation"
       eyebrowIcon="mdi:shield-check-outline"
       title={title}
+      plainTitle={plainTitle}
       lead={lead}
       compact
       tabs={<ContributeNavBar />}

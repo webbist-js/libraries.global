@@ -124,6 +124,21 @@ describe("ReviewDecisionForm", () => {
     expect(refresh).not.toHaveBeenCalled()
   })
 
+  it("announces the outcome after the page refreshes to the decided state", async () => {
+    const { rerender } = renderForm()
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }))
+    await waitFor(() => expect(refresh).toHaveBeenCalled())
+    rerender(
+      createElement(ReviewDecisionForm, {
+        documentId: DOC,
+        status: "approved",
+        canPublish: false,
+      })
+    )
+    const live = document.querySelector("[aria-live]")
+    expect(live?.textContent).toBe("Approved.")
+  })
+
   it("is read-only once decided", () => {
     renderForm({ status: "approved" })
     expect(screen.queryByRole("button", { name: "Approve" })).toBeNull()

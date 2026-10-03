@@ -24,6 +24,7 @@ export function PageHero({
   title,
   lead,
   compact = false,
+  plainTitle = false,
   tabs,
   children,
 }: {
@@ -35,6 +36,11 @@ export function PageHero({
   /** Trailing indigo text inside the pill, e.g. a version number. */
   readonly eyebrowAccent?: ReactNode
   readonly title: string
+  /**
+   * Render `title` as plain text, asterisks included: for user-supplied
+   * titles that mustn't be read as `*italic*` markup.
+   */
+  readonly plainTitle?: boolean
   readonly lead?: ReactNode
   /** Tighter band + smaller title for task pages (forms, wizards). */
   readonly compact?: boolean
@@ -105,7 +111,7 @@ export function PageHero({
               color: T.ink.base,
             }}
           >
-            {parseHeroText(title)}
+            {plainTitle ? title : parseHeroText(title)}
           </h1>
         </div>
 

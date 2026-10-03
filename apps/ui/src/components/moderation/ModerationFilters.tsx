@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useId, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 
 import { SearchField } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
@@ -48,9 +48,17 @@ export function ModerationFilters({
 }) {
   const ids = { queue: useId(), locale: useId(), search: useId() }
   const [q, setQ] = useState(value.q)
+  const searchRef = useRef<HTMLInputElement>(null)
 
-  // Keep the box in step when the URL changes (back/forward).
+  // Keep the box in step when the URL changes (back/forward), but never
+  // while the user is typing in it: a debounced search landing in the URL
+  // would otherwise overwrite the characters typed since.
   useEffect(() => {
+    if (
+      typeof document !== "undefined" &&
+      document.activeElement === searchRef.current
+    )
+      return
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setQ(value.q)
   }, [value.q])
@@ -170,6 +178,7 @@ export function ModerationFilters({
           size="sm"
           placeholder="Search contributor, record or note"
           label="Search submissions"
+          inputRef={searchRef}
           onClear={() => {
             setQ("")
             onChange({ q: "" })

@@ -9,7 +9,6 @@ import { Link, useRouter } from "@/lib/navigation"
 import { ModerationFilters, type QueueFilters } from "./ModerationFilters"
 import { StatusBadge } from "./StatusBadge"
 import {
-  decisionErrorMessage,
   formatDate,
   type ModerationListResponse,
   type ModerationQueueName,
@@ -50,6 +49,14 @@ function apiQuery(s: QueueState): string {
   return p.toString()
 }
 
+/** Why the list didn't load (not the decision copy: nothing was decided). */
+export function listErrorMessage(status: number): string {
+  if (status === 403) return "You don't have access to this queue."
+  if (status === 429) return "Too many requests. Wait a minute, then try again."
+
+  return "The queue couldn't be loaded. Try again."
+}
+
 const cell = "px-4 py-3 text-left align-top text-[14px]"
 
 /**
@@ -84,16 +91,14 @@ export function ModerationQueue({
     fetch(`/api/moderation/submissions?${query}`, { signal: ctrl.signal })
       .then(async (res) => {
         const body: unknown = await res.json().catch(() => null)
-        if (!res.ok) throw new Error(decisionErrorMessage(res.status, body))
+        if (!res.ok) throw new Error(listErrorMessage(res.status))
         setResult(body as ModerationListResponse)
       })
       .catch((e: unknown) => {
         if (ctrl.signal.aborted) return
         setResult(null)
         setError(
-          e instanceof Error && e.message
-            ? e.message
-            : "The queue could not be loaded."
+          e instanceof Error && e.message ? e.message : listErrorMessage(0)
         )
       })
       .finally(() => {

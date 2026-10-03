@@ -74,6 +74,7 @@ export function ArticleReviewPanel({
 }: {
   readonly detail: Pick<
     ModerationDetail,
+    | "status"
     | "submissionType"
     | "draftData"
     | "fields"
@@ -161,17 +162,19 @@ export function ArticleReviewPanel({
           </span>
         ) : null}
       </div>
-      <p
-        className="m-0 rounded-[14px] px-4 py-3 text-[14px] leading-[1.55]"
-        style={{
-          background: T.bg.surface,
-          border: `1px solid ${T.border.line}`,
-          color: T.ink.dim,
-        }}
-      >
-        <strong style={{ color: T.ink.base }}>On approval: </strong>
-        {outcome}
-      </p>
+      {detail.status === "pending" || detail.status === "needs_info" ? (
+        <p
+          className="m-0 rounded-[14px] px-4 py-3 text-[14px] leading-[1.55]"
+          style={{
+            background: T.bg.surface,
+            border: `1px solid ${T.border.line}`,
+            color: T.ink.dim,
+          }}
+        >
+          <strong style={{ color: T.ink.base }}>On approval: </strong>
+          {outcome}
+        </p>
+      ) : null}
       {editSummary ? (
         <p className="m-0 text-[15px]" style={{ color: T.ink.base }}>
           <strong>Edit summary: </strong>

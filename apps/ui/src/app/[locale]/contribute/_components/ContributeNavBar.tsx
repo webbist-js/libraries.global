@@ -81,9 +81,11 @@ export function ContributeNavBar() {
   const pathname = usePathname()
   const { has } = useCapabilities()
   // Moderation sits before Membership, after the contributor's own tabs.
-  const tabs: readonly SectionTab[] = has("moderate.queue")
-    ? [...NAV_ITEMS.slice(0, -1), MODERATION_TAB, ...NAV_ITEMS.slice(-1)]
-    : NAV_ITEMS
+  const tabs: SectionTab[] = [...NAV_ITEMS]
+  if (has("moderate.queue")) {
+    const at = tabs.findIndex((t) => t.id === "membership")
+    tabs.splice(at === -1 ? tabs.length : at, 0, MODERATION_TAB)
+  }
 
   return (
     <SectionTabs
