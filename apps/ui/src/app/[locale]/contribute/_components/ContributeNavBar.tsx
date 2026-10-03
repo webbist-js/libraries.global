@@ -2,7 +2,8 @@
 
 import { usePathname } from "next/navigation"
 
-import { SectionTabs } from "@/components/ds"
+import { type SectionTab, SectionTabs } from "@/components/ds"
+import { useCapabilities } from "@/lib/access-client"
 
 const NAV_ITEMS = [
   {
@@ -43,8 +44,18 @@ const NAV_ITEMS = [
   },
 ] as const
 
+/** Shown only to Moderators (`moderate.queue`); Strapi re-checks every call. */
+const MODERATION_TAB = {
+  id: "moderation",
+  href: "/contribute/moderation",
+  label: "Moderation",
+  icon: "mdi:shield-check-outline",
+} as const
+
+type TabId = (typeof NAV_ITEMS)[number]["id"] | typeof MODERATION_TAB.id
+
 /** Sub-routes that belong under a tab without being the tab's own page. */
-const SEGMENT_TO_TAB: Record<string, (typeof NAV_ITEMS)[number]["id"]> = {
+const SEGMENT_TO_TAB: Record<string, TabId> = {
   community: "community",
   index: "index",
   claim: "index",
@@ -52,6 +63,7 @@ const SEGMENT_TO_TAB: Record<string, (typeof NAV_ITEMS)[number]["id"]> = {
   knowledge: "knowledge",
   submissions: "submissions",
   membership: "membership",
+  moderation: "moderation",
 }
 
 export function activeContributeTab(pathname: string): string | null {
@@ -67,12 +79,17 @@ export function activeContributeTab(pathname: string): string | null {
 /** The Contribute section's tabs, on the bottom edge of its hero band. */
 export function ContributeNavBar() {
   const pathname = usePathname()
+  const { has } = useCapabilities()
+  // Moderation sits before Membership, after the contributor's own tabs.
+  const tabs: readonly SectionTab[] = has("moderate.queue")
+    ? [...NAV_ITEMS.slice(0, -1), MODERATION_TAB, ...NAV_ITEMS.slice(-1)]
+    : NAV_ITEMS
 
   return (
     <SectionTabs
       activeId={activeContributeTab(pathname)}
       label="Contribute"
-      tabs={NAV_ITEMS}
+      tabs={tabs}
     />
   )
 }

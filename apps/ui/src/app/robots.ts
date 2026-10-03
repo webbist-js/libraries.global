@@ -19,6 +19,7 @@ const PRIVATE_PATHS = [
   "/contribute/correct",
   "/contribute/claim",
   "/contribute/submissions",
+  "/contribute/moderation",
   "/contribute/knowledge/",
   "/contribute/events",
   "/dev/",
