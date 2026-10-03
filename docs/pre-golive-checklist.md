@@ -66,13 +66,13 @@ node apps/ui/scripts/download-london-boroughs.mjs
 - [ ] Run `populate-world-countries.ts` with an `ingest-*` token, then reindex Meilisearch.
 
 ```bash
-STRAPI_API_TOKEN=<ingest-* token> \
+STRAPI_URL=<strapi url> STRAPI_API_TOKEN=<ingest-* token> \
   apps/strapi/node_modules/.bin/tsx apps/strapi/scripts/populate-world-countries.ts --dry-run
 # review the plan, then run again without --dry-run
 node apps/strapi/scripts/seed-meilisearch.mjs
 ```
 
-Publishes every country in `apps/ui/public/boundaries/seed-data.json` (229 of its 247 Natural Earth features; the 18 with no ISO 3166-1 alpha-2 code, such as Bir Tawil, are skipped and listed) so the country picker is never empty. Existing countries are matched by `iso2`, then `slug`, and only their empty `iso2`, `mapConfig`, `boundaryUrl`, `sourceAttribution` and `continent` are filled. The seed's Americas list is split into `north-america` and `south-america` (created if missing; there is no `americas` continent). Draft-only countries and regions are published too.
+`STRAPI_URL` defaults to `http://127.0.0.1:1337`; set it to the target Strapi or the script writes to local dev. Publishes every country in `apps/ui/public/boundaries/seed-data.json` (229 of its 247 Natural Earth features; the 18 with no ISO 3166-1 alpha-2 code, such as Bir Tawil, are skipped and listed) so the country picker is never empty. Existing countries are matched by `iso2`, then `slug`, and only their empty `iso2`, `mapConfig`, `boundaryUrl`, `sourceAttribution` and `continent` are filled. The seed's Americas list is split into `north-america` and `south-america` (created if missing; there is no `americas` continent). Draft-only countries and regions are published too.
 
 ### Expansion to other continents
 

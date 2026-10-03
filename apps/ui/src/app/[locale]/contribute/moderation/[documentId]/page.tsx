@@ -143,6 +143,7 @@ const PANELS: Record<
       status={d.status}
       fields={d.fields}
       draftData={d.draftData}
+      pendingLocationRequest={d.pendingLocationRequest === true}
     />
   ),
   location_request: (d, ctx) => (

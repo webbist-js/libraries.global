@@ -408,11 +408,11 @@ export function PublicProfileSection({
                     No library linked yet
                   </span>
                   <Link
-                    href="/contribute/claim"
+                    href="/contribute/index"
                     className="shrink-0 text-[14px] font-semibold underline underline-offset-[3px]"
                     style={{ color: T.accent.primary }}
                   >
-                    Claim your library
+                    Find your library, then choose Claim
                   </Link>
                 </div>
               )}
@@ -456,11 +456,11 @@ export function PublicProfileSection({
                 </span>
               )}
               <Link
-                href="/contribute/claim"
+                href="/contribute/index"
                 className="underline underline-offset-[3px]"
                 style={{ color: T.accent.primary }}
               >
-                Change library
+                Change library: find it, then choose Claim
               </Link>
             </p>
           ) : null}

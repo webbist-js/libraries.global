@@ -1,5 +1,6 @@
 "use client"
 
+import { Icon } from "@iconify/react"
 import { useEffect, useState } from "react"
 
 import { LocationHierarchySelector } from "@/app/[locale]/contribute/index/_components/LocationHierarchySelector"
@@ -48,7 +49,11 @@ const PROPOSAL_KEYS = new Set([
  * request's own review. Approving that request first files the library
  * under the new place (unless a location is saved here).
  */
-function RequestedPlace({ fields }: { readonly fields: Record<string, unknown> }) {
+function RequestedPlace({
+  fields,
+}: {
+  readonly fields: Record<string, unknown>
+}) {
   const region = textOf(fields.proposedRegionName)
   const area = textOf(fields.proposedAreaName)
   const requestId = idOf(fields.locationRequestDocumentId)
@@ -247,18 +252,21 @@ function initialPlace(
  * A proposed new library: its fields, and where in the atlas it will be
  * filed. While the submission is open the Moderator can change that place
  * (Strapi's `target` route); publishing on approval needs a continent,
- * country and region.
+ * country and region. `pendingLocationRequest` (from Strapi's detail) says
+ * the contributor's Location Request still awaits a decision.
  */
 export function NewLibraryPanel({
   documentId,
   status,
   fields,
   draftData,
+  pendingLocationRequest = false,
 }: {
   readonly documentId: string
   readonly status: string
   readonly fields: Record<string, unknown> | null
   readonly draftData: Record<string, unknown> | null
+  readonly pendingLocationRequest?: boolean
 }) {
   const router = useRouter()
   const editable = status === "pending" || status === "needs_info"
@@ -336,6 +344,22 @@ export function NewLibraryPanel({
           Where it goes in the atlas
         </legend>
         <RequestedPlace fields={fields ?? {}} />
+        {pendingLocationRequest === true ? (
+          <p
+            className="m-0 flex items-start gap-1.5 text-[14px] font-semibold"
+            style={{ color: T.accent.warn }}
+          >
+            <Icon
+              aria-hidden="true"
+              icon="mdi:alert-outline"
+              width={16}
+              height={16}
+              className="mt-0.5 shrink-0"
+            />
+            Its location request is still open; approve that first so the
+            library is linked.
+          </p>
+        ) : null}
         <LocationHierarchySelector f={place} setFormData={setPlace} />
         {editable ? (
           <div className="flex flex-wrap items-center gap-3">

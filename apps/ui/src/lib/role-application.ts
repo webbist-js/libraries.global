@@ -68,13 +68,6 @@ export function applicationRoleFrom(v: unknown): ApplicationRole | null {
     : null
 }
 
-/** Approved submissions that count towards applying (not applications). */
-export function countAccepted(rows: readonly MySubmissionRow[]): number {
-  return rows.filter(
-    (r) => r.status === "approved" && r.submissionType !== "role_application"
-  ).length
-}
-
 /** The newest application for each role, newest first. */
 export function latestApplications(
   rows: readonly MySubmissionRow[]

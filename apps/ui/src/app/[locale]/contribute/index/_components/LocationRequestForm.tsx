@@ -49,7 +49,9 @@ export type LocationRequestInput = {
  */
 export function locationRequestFields(
   input: LocationRequestInput
-): { ok: true; fields: Record<string, string> } | { ok: false; message: string } {
+):
+  | { ok: true; fields: Record<string, string> }
+  | { ok: false; message: string } {
   const name = input.name.trim()
   const typeLabel = input.typeLabel.trim()
   const evidenceUrl = input.evidenceUrl.trim()

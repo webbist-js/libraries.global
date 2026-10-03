@@ -13,7 +13,9 @@ export function bridgeUserHeaders(user: {
     "X-Service-Secret": process.env.STRAPI_BRIDGE_SECRET ?? "",
     "X-Ba-User-Id": user.id,
     "X-Ba-User-Email": user.email,
-    "X-Ba-User-Name": user.name ?? "",
+    // Header values must be ByteStrings; names with accents, CJK or emoji
+    // would make fetch throw. Strapi decodes this with decodeURIComponent.
+    "X-Ba-User-Name": encodeURIComponent(user.name ?? ""),
   }
 }
 

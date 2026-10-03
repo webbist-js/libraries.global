@@ -154,11 +154,11 @@ export default async function ContributeEventsPage({
                   verified.
                 </p>
                 <GlobalLink
-                  href="/contribute/claim"
+                  href="/contribute/index"
                   className="inline-flex items-center gap-2 rounded-full bg-(--t-accent-primary) px-6 py-3 font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
                   style={{ fontFamily: T.font.sans, fontSize: "15px" }}
                 >
-                  Claim your library
+                  Find your library, then choose Claim
                   <Icon
                     icon="mdi:arrow-right"
                     className="size-4"

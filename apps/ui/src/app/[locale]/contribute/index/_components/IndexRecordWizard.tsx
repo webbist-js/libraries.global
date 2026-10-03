@@ -372,263 +372,272 @@ export function IndexRecordWizard({
           (proposedRegionName / proposedAreaName, locationRequestDocumentId)
           rides on the form, so the new_library's fields carry it. */}
       <LocationRequestsContext.Provider value={!improve}>
-      <main
-        id="wizard-main"
-        className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8 lg:py-12"
-      >
-        <div
-          ref={topRef}
-          className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-12 xl:grid-cols-[280px_minmax(0,1fr)_340px] 2xl:grid-cols-[300px_minmax(0,1fr)_380px]"
-          style={{ scrollMarginTop: "128px" }}
+        <main
+          id="wizard-main"
+          className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8 lg:py-12"
         >
-          {/* Left — rail: title, status, stepper */}
-          <div className="min-w-0 self-start lg:sticky lg:top-[128px] lg:row-span-2 xl:row-span-1">
-            <h2
-              className="truncate"
-              style={{
-                fontFamily: T.font.serif,
-                fontSize: "24px",
-                fontWeight: 500,
-                letterSpacing: "-0.01em",
-                lineHeight: 1.2,
-                color: T.ink.base,
-                margin: "0 0 6px",
-              }}
-              title={improve ? target.name : undefined}
-            >
-              {improve ? target.name : "Your record"}
-            </h2>
-            {improve ? (
-              changed.length === 0 ? (
-                <RailStatus icon="mdi:pencil-outline" color={T.ink.dim}>
-                  No changes yet
-                </RailStatus>
-              ) : (
-                <RailStatus icon="mdi:pencil" color={T.accent.primary}>
-                  {changed.length} field{changed.length === 1 ? "" : "s"}{" "}
-                  changed
-                  {lastSavedAt
-                    ? ` · saved ${formatSavedTime(lastSavedAt)}`
-                    : ""}
-                </RailStatus>
-              )
-            ) : (
-              <RailStatus
-                icon={
-                  lastSavedAt
-                    ? "mdi:check-circle-outline"
-                    : "mdi:circle-outline"
-                }
-                color={lastSavedAt ? T.accent.ok : T.ink.dim}
-              >
-                {lastSavedAt
-                  ? `Draft saved · ${formatSavedTime(lastSavedAt)}`
-                  : "Draft not yet saved"}
-              </RailStatus>
-            )}
-            <div className="mt-6">
-              <WizardStepNav
-                currentStep={step}
-                completedSteps={completedSteps}
-                changedSteps={stepsWithChanges}
-                onStepClick={handleStepClick}
-                findHref={findHref}
-              />
-            </div>
-          </div>
-
-          {/* Centre — step form */}
-          <div className="min-w-0">
-            {improve && (
-              <div
-                className="mb-8 flex flex-col gap-3 rounded-[20px] p-5"
+          <div
+            ref={topRef}
+            className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-12 xl:grid-cols-[280px_minmax(0,1fr)_340px] 2xl:grid-cols-[300px_minmax(0,1fr)_380px]"
+            style={{ scrollMarginTop: "128px" }}
+          >
+            {/* Left — rail: title, status, stepper */}
+            <div className="min-w-0 self-start lg:sticky lg:top-[128px] lg:row-span-2 xl:row-span-1">
+              <h2
+                className="truncate"
                 style={{
-                  background: T.bg.deep,
-                  border: `1px solid ${T.border.line}`,
+                  fontFamily: T.font.serif,
+                  fontSize: "24px",
+                  fontWeight: 500,
+                  letterSpacing: "-0.01em",
+                  lineHeight: 1.2,
+                  color: T.ink.base,
+                  margin: "0 0 6px",
+                }}
+                title={improve ? target.name : undefined}
+              >
+                {improve ? target.name : "Your record"}
+              </h2>
+              {improve ? (
+                changed.length === 0 ? (
+                  <RailStatus icon="mdi:pencil-outline" color={T.ink.dim}>
+                    No changes yet
+                  </RailStatus>
+                ) : (
+                  <RailStatus icon="mdi:pencil" color={T.accent.primary}>
+                    {changed.length} field{changed.length === 1 ? "" : "s"}{" "}
+                    changed
+                    {lastSavedAt
+                      ? ` · saved ${formatSavedTime(lastSavedAt)}`
+                      : ""}
+                  </RailStatus>
+                )
+              ) : (
+                <RailStatus
+                  icon={
+                    lastSavedAt
+                      ? "mdi:check-circle-outline"
+                      : "mdi:circle-outline"
+                  }
+                  color={lastSavedAt ? T.accent.ok : T.ink.dim}
+                >
+                  {lastSavedAt
+                    ? `Draft saved · ${formatSavedTime(lastSavedAt)}`
+                    : "Draft not yet saved"}
+                </RailStatus>
+              )}
+              <div className="mt-6">
+                <WizardStepNav
+                  currentStep={step}
+                  completedSteps={completedSteps}
+                  changedSteps={stepsWithChanges}
+                  onStepClick={handleStepClick}
+                  findHref={findHref}
+                />
+              </div>
+            </div>
+
+            {/* Centre — step form */}
+            <div className="min-w-0">
+              {improve && (
+                <div
+                  className="mb-8 flex flex-col gap-3 rounded-[20px] p-5"
+                  style={{
+                    background: T.bg.deep,
+                    border: `1px solid ${T.border.line}`,
+                  }}
+                >
+                  <p
+                    className="m-0 flex items-start gap-3 text-[15px] leading-[1.5]"
+                    style={{ color: T.ink.dim }}
+                  >
+                    <Icon
+                      icon="mdi:pencil-outline"
+                      width={18}
+                      aria-hidden="true"
+                      style={{
+                        color: T.accent.primary,
+                        flexShrink: 0,
+                        marginTop: 2,
+                      }}
+                    />
+                    <span>
+                      <strong style={{ color: T.ink.base }}>
+                        Improving an existing record.
+                      </strong>{" "}
+                      Change only what you can source. Changed fields are
+                      marked.
+                      {target.isClaimed
+                        ? " You look after this library, so your edit goes straight to review as a stewarded change."
+                        : ""}
+                    </span>
+                  </p>
+                  <Link
+                    href={findHref}
+                    className="inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-muted-2)"
+                    style={{
+                      border: `1px solid ${T.border.hi}`,
+                      background: T.bg.deep,
+                      color: T.ink.base,
+                    }}
+                  >
+                    Choose a different library
+                  </Link>
+                </div>
+              )}
+
+              {translating && (
+                <TranslationBanner
+                  languageName={locale.languageName}
+                  missing={locale.missing}
+                />
+              )}
+
+              {showDraftBanner && existingDraft && (
+                <DraftResumeBanner
+                  savedStep={existingDraft.stepCompleted ?? 1}
+                  savedAt={existingDraft.updatedAt}
+                  onResume={resumeDraft}
+                  onDiscard={discardDraft}
+                />
+              )}
+
+              <EditableFieldsContext.Provider value={editable}>
+                <StepComponent
+                  f={formData}
+                  set={set}
+                  setFormData={setFormData}
+                />
+              </EditableFieldsContext.Provider>
+
+              <div
+                role="group"
+                aria-label="Step navigation"
+                className="flex flex-wrap items-center gap-3"
+                style={{
+                  marginTop: "40px",
+                  paddingTop: "28px",
+                  borderTop: `1px solid ${T.border.line}`,
                 }}
               >
-                <p
-                  className="m-0 flex items-start gap-3 text-[15px] leading-[1.5]"
-                  style={{ color: T.ink.dim }}
-                >
-                  <Icon
-                    icon="mdi:pencil-outline"
-                    width={18}
-                    aria-hidden="true"
+                {step > 1 ? (
+                  <button
+                    type="button"
+                    onClick={goPrev}
+                    className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted-2)"
                     style={{
-                      color: T.accent.primary,
-                      flexShrink: 0,
-                      marginTop: 2,
+                      border: `1px solid ${T.border.hi}`,
+                      background: T.bg.deep,
+                      color: T.ink.base,
+                      cursor: "pointer",
+                      fontFamily: T.font.sans,
                     }}
-                  />
-                  <span>
-                    <strong style={{ color: T.ink.base }}>
-                      Improving an existing record.
-                    </strong>{" "}
-                    Change only what you can source. Changed fields are marked.
-                    {target.isClaimed
-                      ? " You look after this library, so your edit goes straight to review as a stewarded change."
-                      : ""}
-                  </span>
-                </p>
-                <Link
-                  href={findHref}
-                  className="inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-muted-2)"
-                  style={{
-                    border: `1px solid ${T.border.hi}`,
-                    background: T.bg.deep,
-                    color: T.ink.base,
-                  }}
-                >
-                  Choose a different library
-                </Link>
-              </div>
-            )}
+                  >
+                    <Icon icon="mdi:arrow-left" width={18} aria-hidden="true" />
+                    Back
+                  </button>
+                ) : (
+                  <Link
+                    href={findHref}
+                    className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-muted-2)"
+                    style={{
+                      border: `1px solid ${T.border.hi}`,
+                      background: T.bg.deep,
+                      color: T.ink.base,
+                      fontFamily: T.font.sans,
+                    }}
+                  >
+                    <Icon icon="mdi:arrow-left" width={18} aria-hidden="true" />
+                    Back
+                  </Link>
+                )}
 
-            {translating && (
-              <TranslationBanner
-                languageName={locale.languageName}
-                missing={locale.missing}
-              />
-            )}
+                <span className="flex-1" />
 
-            {showDraftBanner && existingDraft && (
-              <DraftResumeBanner
-                savedStep={existingDraft.stepCompleted ?? 1}
-                savedAt={existingDraft.updatedAt}
-                onResume={resumeDraft}
-                onDiscard={discardDraft}
-              />
-            )}
+                {improve && step < LAST_STEP && (
+                  <button
+                    type="button"
+                    onClick={() => setStep(LAST_STEP)}
+                    disabled={changed.length === 0}
+                    className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted-2) disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{
+                      border: `1px solid ${T.border.hi}`,
+                      background: T.bg.deep,
+                      color: T.ink.base,
+                      cursor: "pointer",
+                      fontFamily: T.font.sans,
+                    }}
+                  >
+                    Skip to sources
+                  </button>
+                )}
 
-            <EditableFieldsContext.Provider value={editable}>
-              <StepComponent f={formData} set={set} setFormData={setFormData} />
-            </EditableFieldsContext.Provider>
-
-            <div
-              role="group"
-              aria-label="Step navigation"
-              className="flex flex-wrap items-center gap-3"
-              style={{
-                marginTop: "40px",
-                paddingTop: "28px",
-                borderTop: `1px solid ${T.border.line}`,
-              }}
-            >
-              {step > 1 ? (
-                <button
-                  type="button"
-                  onClick={goPrev}
-                  className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted-2)"
-                  style={{
-                    border: `1px solid ${T.border.hi}`,
-                    background: T.bg.deep,
-                    color: T.ink.base,
-                    cursor: "pointer",
-                    fontFamily: T.font.sans,
-                  }}
-                >
-                  <Icon icon="mdi:arrow-left" width={18} aria-hidden="true" />
-                  Back
-                </button>
-              ) : (
-                <Link
-                  href={findHref}
-                  className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-muted-2)"
-                  style={{
-                    border: `1px solid ${T.border.hi}`,
-                    background: T.bg.deep,
-                    color: T.ink.base,
-                    fontFamily: T.font.sans,
-                  }}
-                >
-                  <Icon icon="mdi:arrow-left" width={18} aria-hidden="true" />
-                  Back
-                </Link>
-              )}
-
-              <span className="flex-1" />
-
-              {improve && step < LAST_STEP && (
-                <button
-                  type="button"
-                  onClick={() => setStep(LAST_STEP)}
-                  disabled={changed.length === 0}
-                  className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted-2) disabled:cursor-not-allowed disabled:opacity-50"
-                  style={{
-                    border: `1px solid ${T.border.hi}`,
-                    background: T.bg.deep,
-                    color: T.ink.base,
-                    cursor: "pointer",
-                    fontFamily: T.font.sans,
-                  }}
-                >
-                  Skip to sources
-                </button>
-              )}
-
-              {step < LAST_STEP ? (
-                <button
-                  type="button"
-                  onClick={goNext}
-                  className={primaryCtaSm}
-                  style={{ border: "none", cursor: "pointer" }}
-                >
-                  Next:{" "}
-                  {
-                    [
-                      "",
-                      "Identity",
-                      "Location",
-                      "Visit",
-                      "Collections",
-                      "History",
-                      "Photo",
-                      "Sources & send",
-                    ][step + 1]
-                  }
-                  <Icon icon="mdi:arrow-right" width={18} aria-hidden="true" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={submit}
-                  disabled={isPending}
-                  aria-busy={isPending}
-                  className={primaryCtaSm}
-                  style={{
-                    border: "none",
-                    cursor: isPending ? "not-allowed" : "pointer",
-                    opacity: isPending ? 0.6 : 1,
-                  }}
-                >
-                  {isPending ? "Submitting…" : "Submit for review"}
-                  {!isPending && (
+                {step < LAST_STEP ? (
+                  <button
+                    type="button"
+                    onClick={goNext}
+                    className={primaryCtaSm}
+                    style={{ border: "none", cursor: "pointer" }}
+                  >
+                    Next:{" "}
+                    {
+                      [
+                        "",
+                        "Identity",
+                        "Location",
+                        "Visit",
+                        "Collections",
+                        "History",
+                        "Photo",
+                        "Sources & send",
+                      ][step + 1]
+                    }
                     <Icon
                       icon="mdi:arrow-right"
                       width={18}
                       aria-hidden="true"
                     />
-                  )}
-                </button>
-              )}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={submit}
+                    disabled={isPending}
+                    aria-busy={isPending}
+                    className={primaryCtaSm}
+                    style={{
+                      border: "none",
+                      cursor: isPending ? "not-allowed" : "pointer",
+                      opacity: isPending ? 0.6 : 1,
+                    }}
+                  >
+                    {isPending ? "Submitting…" : "Submit for review"}
+                    {!isPending && (
+                      <Icon
+                        icon="mdi:arrow-right"
+                        width={18}
+                        aria-hidden="true"
+                      />
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Right — changes / completeness + tip */}
-          <aside
-            aria-label={improve ? "Your changes" : "Submission completeness"}
-            className="self-start lg:col-start-2 xl:sticky xl:top-[128px] xl:col-start-auto"
-          >
-            <WizardCompletionSidebar
-              formData={formData}
-              step={step}
-              mode={improve ? "improve" : "new"}
-              changedCount={changed.length}
-            />
-          </aside>
-        </div>
-      </main>
+            {/* Right — changes / completeness + tip */}
+            <aside
+              aria-label={improve ? "Your changes" : "Submission completeness"}
+              className="self-start lg:col-start-2 xl:sticky xl:top-[128px] xl:col-start-auto"
+            >
+              <WizardCompletionSidebar
+                formData={formData}
+                step={step}
+                mode={improve ? "improve" : "new"}
+                changedCount={changed.length}
+              />
+            </aside>
+          </div>
+        </main>
       </LocationRequestsContext.Provider>
     </ChangedFieldsContext.Provider>
   )

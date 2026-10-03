@@ -58,6 +58,8 @@ export type ModerationDetail = ModerationRow & {
     source: (ArticleVersion & { locale: string }) | null
   } | null
   canPublish: boolean
+  /** new_library only: its Location Request still awaits a decision. */
+  pendingLocationRequest?: boolean
 }
 
 export type ReviewEvent = {

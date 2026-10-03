@@ -152,6 +152,7 @@ const ROLE_ORDER = [
   "moderator",
   "editorial_board",
 ] as const
+
 export type ContributorRole = (typeof ROLE_ORDER)[number]
 
 /**
@@ -176,13 +177,13 @@ export const fixtureByKey = (key: string): Fixture => {
  * Locales the fixtures' grants name. The seed adds any that Strapi's i18n
  * plugin lacks, so a French Moderator has French submissions to review.
  */
-export const FIXTURE_LOCALES: readonly string[] = [
-  ...new Set(
+export const FIXTURE_LOCALES: readonly string[] = Array.from(
+  new Set(
     FIXTURES.flatMap((f) =>
       f.grants.flatMap((g) => (g.locale ? [g.locale] : []))
     )
-  ),
-]
+  )
+)
 
 /**
  * Areas created by location-request.spec.ts are named with this prefix,

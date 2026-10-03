@@ -75,11 +75,14 @@ export async function GET(
   const extraFields = type === "blog-sections" ? "&fields[2]=slug" : ""
   const url = `${STRAPI}/api/${strapiPlural}?sort=name:asc&pagination[limit]=${limit}${status}&fields[0]=name&fields[1]=documentId${extraFields}${filterParam}`
 
+  // Regions and areas gain entries when a Location Request is approved, so
+  // they refresh within a minute; the other lists change rarely.
+  const revalidate = type === "regions" || type === "areas" ? 60 : 3600
   const res = await fetch(url, {
     headers: {
       ...(SECRET ? { "X-Service-Secret": SECRET } : {}),
     },
-    next: { revalidate: 3600 },
+    next: { revalidate },
   })
 
   if (!res.ok) return NextResponse.json({ data: [] }, { status: 200 })

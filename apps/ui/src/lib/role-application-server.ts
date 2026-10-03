@@ -29,3 +29,32 @@ export async function fetchMySubmissions(user: {
     return []
   }
 }
+
+/**
+ * How many of the signed-in user's submissions were approved, not counting
+ * Role Applications: what applying for an editor role needs. Strapi counts
+ * them all (`/submissions/my` only returns the newest 100). 0 when the bridge
+ * is down; Strapi still decides on submit.
+ */
+export async function fetchAcceptedCount(user: {
+  id: string
+  email: string
+  name?: string | null
+}): Promise<number> {
+  if (!process.env.STRAPI_BRIDGE_SECRET) return 0
+  try {
+    const res = await fetch(
+      `${STRAPI}/api/content-moderation/submissions/my/accepted-count`,
+      { cache: "no-store", headers: bridgeUserHeaders(user) }
+    )
+    if (!res.ok) return 0
+    const json = (await res.json()) as { data?: { accepted?: unknown } }
+    const accepted = json.data?.accepted
+
+    return typeof accepted === "number" && Number.isFinite(accepted)
+      ? Math.max(0, Math.floor(accepted))
+      : 0
+  } catch {
+    return 0
+  }
+}

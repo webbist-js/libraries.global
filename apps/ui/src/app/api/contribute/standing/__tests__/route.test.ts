@@ -11,14 +11,7 @@ vi.mock("@/lib/auth-server", () => ({
 const fetchMock = vi.fn(async (url: string) =>
   url.includes("/api/rewards/my-standing")
     ? Response.json({ data: { points: 120, tier: "Reader" } })
-    : Response.json({
-        data: [
-          { status: "approved", submissionType: "correction" },
-          { status: "approved", submissionType: "new_library" },
-          { status: "approved", submissionType: "role_application" },
-          { status: "pending", submissionType: "correction" },
-        ],
-      })
+    : Response.json({ data: { accepted: 2 } })
 )
 
 const { GET } = await import("../route")
@@ -39,7 +32,7 @@ describe("GET /api/contribute/standing", () => {
     expect(res.status).toBe(401)
   })
 
-  it("adds acceptedCount, excluding role applications", async () => {
+  it("adds acceptedCount from Strapi's accepted-count route", async () => {
     const res = await GET()
     expect(res.status).toBe(200)
     const json = await res.json()
@@ -47,7 +40,9 @@ describe("GET /api/contribute/standing", () => {
     expect(json.acceptedCount).toBe(2)
     const urls = fetchMock.mock.calls.map((c) => String(c[0]))
     expect(
-      urls.some((u) => u.endsWith("/api/content-moderation/submissions/my"))
+      urls.some((u) =>
+        u.endsWith("/api/content-moderation/submissions/my/accepted-count")
+      )
     ).toBe(true)
   })
 

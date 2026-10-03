@@ -7,8 +7,10 @@ import {
   waitFor,
 } from "@testing-library/react"
 import * as React from "react"
-import { createElement, useState } from "react"
+import { createElement, useEffect, useState } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+import type { FormData } from "../wizard.types"
 
 // vitest.config has no JSX runtime, so .tsx compiles to React.createElement.
 Object.assign(globalThis, { React })
@@ -26,11 +28,9 @@ const fetchMock = vi.fn(async (url: string, _init?: RequestInit) =>
 
 const { LocationRequestForm, LOCATION_REQUEST_SENT, locationRequestFields } =
   await import("../LocationRequestForm")
-const { LocationHierarchySelector, LocationRequestsContext } = await import(
-  "../LocationHierarchySelector"
-)
+const { LocationHierarchySelector, LocationRequestsContext } =
+  await import("../LocationHierarchySelector")
 const { EMPTY_FORM } = await import("../wizard.types")
-type FormData = import("../wizard.types").FormData
 
 const posted = () => {
   const call = fetchMock.mock.calls.find(([u]) => u === "/api/submissions")
@@ -138,13 +138,13 @@ describe("LocationRequestForm", () => {
 describe("Not listed? in the hierarchy selector", () => {
   it("stores the proposal on the wizard form", async () => {
     let latest: FormData | null = null
-    function Harness() {
+    function Harness({ onForm }: { onForm: (f: FormData) => void }) {
       const [f, setFormData] = useState<FormData>({
         ...EMPTY_FORM,
         continentDocumentId: "c00000000000000000000001",
         countryDocumentId: COUNTRY,
       })
-      latest = f
+      useEffect(() => onForm(f), [f, onForm])
 
       return createElement(
         LocationRequestsContext.Provider,
@@ -152,7 +152,13 @@ describe("Not listed? in the hierarchy selector", () => {
         createElement(LocationHierarchySelector, { f, setFormData })
       )
     }
-    render(createElement(Harness))
+    render(
+      createElement(Harness, {
+        onForm: (f) => {
+          latest = f
+        },
+      })
+    )
     fireEvent.click(screen.getByRole("button", { name: "Not listed?" }))
     fill(/^Name/, "Somerset")
     fill(/^Evidence link/, "https://example.org/somerset")

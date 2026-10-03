@@ -2,8 +2,7 @@ import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
 import { getSessionSSR } from "@/lib/auth-server"
-import { countAccepted } from "@/lib/role-application"
-import { fetchMySubmissions } from "@/lib/role-application-server"
+import { fetchAcceptedCount } from "@/lib/role-application-server"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET ?? ""
@@ -20,7 +19,7 @@ export async function GET() {
 
   const baUserId = session.user.id
   try {
-    const [res, submissions] = await Promise.all([
+    const [res, acceptedCount] = await Promise.all([
       fetch(`${STRAPI}/api/rewards/my-standing`, {
         cache: "no-store",
         headers: {
@@ -28,7 +27,7 @@ export async function GET() {
           "X-Service-Secret": SECRET,
         },
       }),
-      fetchMySubmissions(session.user),
+      fetchAcceptedCount(session.user),
     ])
     if (!res.ok)
       return NextResponse.json({ error: "Upstream error" }, { status: 502 })
@@ -36,7 +35,7 @@ export async function GET() {
 
     return NextResponse.json({
       ...json,
-      acceptedCount: countAccepted(submissions),
+      acceptedCount,
     })
   } catch {
     return NextResponse.json({ error: "Failed" }, { status: 500 })

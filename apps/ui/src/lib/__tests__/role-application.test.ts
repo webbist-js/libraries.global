@@ -4,7 +4,6 @@ import {
   applicationFields,
   applicationProblem,
   applicationRoleFrom,
-  countAccepted,
   latestApplications,
 } from "@/lib/role-application"
 
@@ -15,20 +14,6 @@ const valid = {
   statement: "I have fixed many library records.",
   samples: [""],
 }
-
-describe("countAccepted", () => {
-  it("counts approved submissions that aren't role applications", () => {
-    expect(
-      countAccepted([
-        { status: "approved", submissionType: "correction" },
-        { status: "approved", submissionType: "new_library" },
-        { status: "approved", submissionType: "role_application" },
-        { status: "pending", submissionType: "correction" },
-        { status: "rejected", submissionType: "wiki_edit" },
-      ])
-    ).toBe(2)
-  })
-})
 
 describe("latestApplications", () => {
   it("keeps the newest application per role, with its note", () => {

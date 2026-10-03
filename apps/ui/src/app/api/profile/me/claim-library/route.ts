@@ -176,10 +176,7 @@ export async function POST(req: Request) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Service-Secret": SECRET,
-        "X-Ba-User-Id": session.user.id,
-        "X-Ba-User-Email": session.user.email,
-        "X-Ba-User-Name": session.user.name ?? "",
+        ...userHeaders(session.user),
       },
       body: JSON.stringify({
         submissionType: "library_claim",

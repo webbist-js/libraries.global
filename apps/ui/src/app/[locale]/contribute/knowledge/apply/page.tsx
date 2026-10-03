@@ -5,12 +5,11 @@ import { RoleApplicationForm } from "@/components/contribute/RoleApplicationForm
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
+import { applicationRoleFrom, latestApplications } from "@/lib/role-application"
 import {
-  applicationRoleFrom,
-  countAccepted,
-  latestApplications,
-} from "@/lib/role-application"
-import { fetchMySubmissions } from "@/lib/role-application-server"
+  fetchAcceptedCount,
+  fetchMySubmissions,
+} from "@/lib/role-application-server"
 import { privateMetadata } from "@/lib/seo/metadata"
 
 import { ContributeSectionHeader } from "../../_components/ContributeSectionHeader"
@@ -33,8 +32,9 @@ export default async function ApplyForEditorRolePage({
     redirect(`/auth/signin?callbackUrl=${encodeURIComponent(back)}`)
   }
 
-  const [rows, locales] = await Promise.all([
+  const [rows, acceptedCount, locales] = await Promise.all([
     fetchMySubmissions(session.user),
+    fetchAcceptedCount(session.user),
     fetchArticleLocales(),
   ])
 
@@ -50,7 +50,7 @@ export default async function ApplyForEditorRolePage({
       />
       <main className="mx-auto w-full max-w-[760px] px-4 pt-8 pb-20 sm:px-8">
         <RoleApplicationForm
-          acceptedCount={countAccepted(rows)}
+          acceptedCount={acceptedCount}
           locales={locales}
           initialRole={initialRole}
           applications={latestApplications(rows)}
