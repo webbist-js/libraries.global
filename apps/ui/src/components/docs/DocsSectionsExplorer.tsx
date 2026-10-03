@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react"
 import { useSearchParams } from "next/navigation"
 import { Suspense } from "react"
 
+import { EditorOnly } from "@/components/contribute/EditorOnly"
 import {
   DOCS_SECTIONS,
   type DocsSectionKey,
@@ -145,19 +146,21 @@ function SectionsBody({
                   <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
                     No pages written yet.
                   </p>
-                  <GlobalLink
-                    className="inline-flex items-center gap-1 text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
-                    href={`/contribute/knowledge/new?section=${section.key}`}
-                    style={{ color: T.accent.primary }}
-                  >
-                    Write the first page
-                    <Icon
-                      aria-hidden="true"
-                      height={14}
-                      icon="mdi:arrow-right"
-                      width={14}
-                    />
-                  </GlobalLink>
+                  <EditorOnly kind="knowledge">
+                    <GlobalLink
+                      className="inline-flex items-center gap-1 text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+                      href={`/contribute/knowledge/new?type=knowledge&section=${section.key}`}
+                      style={{ color: T.accent.primary }}
+                    >
+                      Write the first page
+                      <Icon
+                        aria-hidden="true"
+                        height={14}
+                        icon="mdi:arrow-right"
+                        width={14}
+                      />
+                    </GlobalLink>
+                  </EditorOnly>
                 </div>
               ) : (
                 <ul className="m-0 mt-5 list-none p-0">

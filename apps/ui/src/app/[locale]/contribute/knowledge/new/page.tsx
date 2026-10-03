@@ -7,6 +7,7 @@ import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { isDocumentIdParam } from "@/lib/bridge-params"
 import { T } from "@/lib/design-tokens"
+import { requireEditorOrApply } from "@/lib/editor-gate"
 import { privateMetadata } from "@/lib/seo/metadata"
 
 import { ContributeSectionHeader } from "../../_components/ContributeSectionHeader"
@@ -31,6 +32,7 @@ export default async function NewArticlePage({
     redirect(
       `/auth/signin?callbackUrl=${encodeURIComponent(`/contribute/knowledge/new?type=${kind}`)}`
     )
+  requireEditorOrApply(session.user, kind)
   const locales = await fetchArticleLocales()
   const resumeDraftId =
     query.draft && isDocumentIdParam(query.draft) ? query.draft : undefined

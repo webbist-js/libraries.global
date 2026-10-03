@@ -15,7 +15,13 @@ vi.mock("next/navigation", () => ({
   },
 }))
 vi.mock("@/lib/auth-server", () => ({
-  getSessionSSR: async () => ({ user: { id: "u1", email: "u@example.org" } }),
+  getSessionSSR: async () => ({
+    user: {
+      id: "u1",
+      email: "u@example.org",
+      capabilities: ["docs.directEdit", "journal.directEdit"],
+    },
+  }),
 }))
 vi.mock("@/lib/seo/metadata", () => ({ privateMetadata: () => ({}) }))
 vi.mock("@/lib/article-editor-server", () => ({

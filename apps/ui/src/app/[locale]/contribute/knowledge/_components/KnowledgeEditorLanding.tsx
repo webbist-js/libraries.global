@@ -134,13 +134,13 @@ export function KnowledgeEditorLanding({
   articles,
   drafts,
   initialKind,
-  canWriteJournal,
+  kinds,
 }: {
   readonly articles: EditableArticle[]
   readonly drafts: ArticleDraftSummary[]
   readonly initialKind: ArticleKind
-  /** Journal editors see Journal first; everyone can pitch a story. */
-  readonly canWriteJournal: boolean
+  /** The kinds this editor may write and edit (their editor roles). */
+  readonly kinds: readonly ArticleKind[]
 }) {
   const locale = useLocale()
   const [kind, setKind] = useState<ArticleKind>(initialKind)
@@ -204,19 +204,21 @@ export function KnowledgeEditorLanding({
     [articles]
   )
   const results: EditableArticle[] | null = hits
-    ? hits.map(
-        (h) =>
-          bySlug.get(`${h.kind}:${h.slug}`) ?? {
-            kind: h.kind,
-            documentId: h.slug,
-            slug: h.slug,
-            title: h.title,
-            sections: h.section ? [h.section] : [],
-            publishedAt: null,
-            updatedAt: null,
-            contributorCount: 0,
-          }
-      )
+    ? hits
+        .filter((h) => kinds.includes(h.kind))
+        .map(
+          (h) =>
+            bySlug.get(`${h.kind}:${h.slug}`) ?? {
+              kind: h.kind,
+              documentId: h.slug,
+              slug: h.slug,
+              title: h.title,
+              sections: h.section ? [h.section] : [],
+              publishedAt: null,
+              updatedAt: null,
+              contributorCount: 0,
+            }
+        )
     : null
   const PAGE = 5
   const all = results ?? articles
@@ -262,66 +264,65 @@ export function KnowledgeEditorLanding({
             aria-label="Article type"
             className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2"
           >
-            {KINDS.map((option) => {
-              const on = kind === option.id
-              const meta = ARTICLE_KIND_META[option.id]
+            {KINDS.filter((option) => kinds.includes(option.id)).map(
+              (option) => {
+                const on = kind === option.id
+                const meta = ARTICLE_KIND_META[option.id]
 
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={on}
-                  onClick={() => setKind(option.id)}
-                  className="flex flex-col items-start gap-3 rounded-[20px] text-left transition-colors hover:border-(--t-accent-primary)"
-                  style={{
-                    border: on
-                      ? `2px solid ${T.accent.primary}`
-                      : `1px solid ${T.border.line}`,
-                    padding: on ? 19 : 20,
-                    background: on ? "#F7F6FE" : T.bg.deep,
-                    cursor: "pointer",
-                    fontFamily: T.font.sans,
-                  }}
-                >
-                  <span className="flex w-full items-start justify-between">
-                    <span
-                      aria-hidden="true"
-                      className="flex size-11 items-center justify-center rounded-full"
-                      style={{ background: meta.tintBg, color: meta.tintFg }}
-                    >
-                      <Icon icon={meta.icon} width={20} />
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    onClick={() => setKind(option.id)}
+                    className="flex flex-col items-start gap-3 rounded-[20px] text-left transition-colors hover:border-(--t-accent-primary)"
+                    style={{
+                      border: on
+                        ? `2px solid ${T.accent.primary}`
+                        : `1px solid ${T.border.line}`,
+                      padding: on ? 19 : 20,
+                      background: on ? "#F7F6FE" : T.bg.deep,
+                      cursor: "pointer",
+                      fontFamily: T.font.sans,
+                    }}
+                  >
+                    <span className="flex w-full items-start justify-between">
+                      <span
+                        aria-hidden="true"
+                        className="flex size-11 items-center justify-center rounded-full"
+                        style={{ background: meta.tintBg, color: meta.tintFg }}
+                      >
+                        <Icon icon={meta.icon} width={20} />
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="flex size-6 items-center justify-center rounded-full"
+                        style={
+                          on
+                            ? { background: T.accent.primary, color: "#fff" }
+                            : { border: `2px solid ${T.border.hi}` }
+                        }
+                      >
+                        {on && <Icon icon="mdi:check-bold" width={14} />}
+                      </span>
                     </span>
                     <span
-                      aria-hidden="true"
-                      className="flex size-6 items-center justify-center rounded-full"
-                      style={
-                        on
-                          ? { background: T.accent.primary, color: "#fff" }
-                          : { border: `2px solid ${T.border.hi}` }
-                      }
+                      className="text-[18px] font-semibold"
+                      style={{ color: T.ink.base }}
                     >
-                      {on && <Icon icon="mdi:check-bold" width={14} />}
+                      {option.title}
                     </span>
-                  </span>
-                  <span
-                    className="text-[18px] font-semibold"
-                    style={{ color: T.ink.base }}
-                  >
-                    {option.title}
-                  </span>
-                  <span
-                    className="text-[15px] leading-[1.5]"
-                    style={{ color: T.ink.dim }}
-                  >
-                    {option.blurb}
-                    {option.id === "journal" && !canWriteJournal
-                      ? " Editors review pitches before they’re published."
-                      : ""}
-                  </span>
-                </button>
-              )
-            })}
+                    <span
+                      className="text-[15px] leading-[1.5]"
+                      style={{ color: T.ink.dim }}
+                    >
+                      {option.blurb}
+                    </span>
+                  </button>
+                )
+              }
+            )}
           </div>
 
           <Link

@@ -13,6 +13,7 @@ import {
 } from "@/lib/article-editor-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
+import { requireEditorOrApply, userIsArticleEditor } from "@/lib/editor-gate"
 import { privateMetadata } from "@/lib/seo/metadata"
 
 import { ReportProblemForm } from "./_components/ReportProblemForm"
@@ -39,17 +40,20 @@ export default async function EditKnowledgeArticlePage({
 }) {
   const [{ locale, slug }, { mode, locale: requested }, session] =
     await Promise.all([params, searchParams, getSessionSSR(await headers())])
+  const report = mode === "report"
   if (!session?.user)
     redirect(
-      `/auth/signin?callbackUrl=${encodeURIComponent(`/contribute/knowledge/${slug}`)}`
+      `/auth/signin?callbackUrl=${encodeURIComponent(`/contribute/knowledge/${slug}${report ? "?mode=report" : ""}`)}`
     )
+  // Reporting a problem stays open to every signed-in user; the editor
+  // itself needs the Knowledge editor role.
+  if (!report) requireEditorOrApply(session.user, "knowledge")
 
   const [article, locales] = await Promise.all([
     loadArticleForEditor("knowledge", slug, locale as Locale),
     fetchArticleLocales(),
   ])
   if (!article) notFound()
-  const report = mode === "report"
 
   return (
     <div
@@ -75,6 +79,7 @@ export default async function EditKnowledgeArticlePage({
             slug={slug}
             title={article.title}
             editHref={ARTICLE_KIND_META.knowledge.editPath(slug)}
+            canEdit={userIsArticleEditor(session.user, "knowledge")}
           />
         </main>
       ) : (

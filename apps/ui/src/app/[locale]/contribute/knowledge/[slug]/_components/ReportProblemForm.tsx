@@ -3,6 +3,7 @@
 import { useState } from "react"
 
 import { T } from "@/lib/design-tokens"
+import { editorApplyHref } from "@/lib/editor-gate"
 import { Link } from "@/lib/navigation"
 
 const CATEGORIES = [
@@ -28,17 +29,21 @@ const input: React.CSSProperties = {
 
 /**
  * "Report a problem" on a Knowledge article: a short suggestion a reviewer
- * applies by hand. Anyone who wants to make the change themselves uses the
- * article editor instead.
+ * applies by hand. Open to every signed-in user. Knowledge editors can make
+ * the change themselves in the article editor; everyone else is pointed to
+ * the editor role application.
  */
 export function ReportProblemForm({
   slug,
   title,
   editHref,
+  canEdit,
 }: {
   readonly slug: string
   readonly title: string
   readonly editHref: string
+  /** The viewer holds the Knowledge editor role (`docs.directEdit`). */
+  readonly canEdit: boolean
 }) {
   const [category, setCategory] = useState<string>(CATEGORIES[0])
   const [proposal, setProposal] = useState("")
@@ -108,16 +113,32 @@ export function ReportProblemForm({
     >
       <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
         Reporting a problem in{" "}
-        <strong style={{ color: T.ink.base }}>{title}</strong>. Prefer to fix it
-        yourself?{" "}
-        <Link
-          href={editHref}
-          className="font-semibold underline underline-offset-[3px]"
-          style={{ color: T.accent.primary }}
-        >
-          Open it in the editor
-        </Link>
-        .
+        <strong style={{ color: T.ink.base }}>{title}</strong>.{" "}
+        {canEdit ? (
+          <>
+            Prefer to fix it yourself?{" "}
+            <Link
+              href={editHref}
+              className="font-semibold underline underline-offset-[3px]"
+              style={{ color: T.accent.primary }}
+            >
+              Open it in the editor
+            </Link>
+            .
+          </>
+        ) : (
+          <>
+            Want to edit pages yourself?{" "}
+            <Link
+              href={editorApplyHref("knowledge")}
+              className="font-semibold underline underline-offset-[3px]"
+              style={{ color: T.accent.primary }}
+            >
+              Apply to be a Knowledge editor
+            </Link>
+            .
+          </>
+        )}
       </p>
       <label className="flex flex-col gap-2 text-[15px] font-semibold">
         What needs changing?

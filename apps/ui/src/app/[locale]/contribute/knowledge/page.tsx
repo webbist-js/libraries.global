@@ -11,9 +11,11 @@ import {
   docsSectionForArticle,
   docsSectionsOf,
 } from "@/components/docs/docs.config"
+import { sessionCapabilities } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
 import { T } from "@/lib/design-tokens"
+import { editableKinds, requireEditorOrApply } from "@/lib/editor-gate"
 import { privateMetadata } from "@/lib/seo/metadata"
 import {
   fetchDocsWikiArticles,
@@ -96,20 +98,24 @@ export default async function KnowledgeEditorPage({
     getSessionSSR(await headers()),
   ])
   if (!session?.user) redirect("/auth/signin?callbackUrl=/contribute/knowledge")
+  // Editors only; `?type=` asks for that kind's editor role.
+  requireEditorOrApply(session.user, isArticleKind(type) ? type : undefined)
 
-  const capabilities = ((session.user as { capabilities?: unknown })
-    .capabilities ?? []) as string[]
-  const canWriteJournal = capabilities.includes("journal.directEdit")
-  const initialKind: ArticleKind = isArticleKind(type)
-    ? type
-    : canWriteJournal && !capabilities.includes("docs.directEdit")
-      ? "journal"
-      : "knowledge"
+  const caps = sessionCapabilities(session.user)
+  const kinds = editableKinds((cap) => caps.set.has(cap))
+  const initialKind: ArticleKind =
+    isArticleKind(type) && kinds.includes(type) ? type : kinds[0]!
 
   const [wiki, blog, drafts] = await Promise.all([
-    fetchDocsWikiArticles(locale as Locale),
-    fetchRecentBlogArticles(locale as Locale),
-    fetchArticleDrafts(session.user),
+    kinds.includes("knowledge")
+      ? fetchDocsWikiArticles(locale as Locale)
+      : Promise.resolve(null),
+    kinds.includes("journal")
+      ? fetchRecentBlogArticles(locale as Locale)
+      : Promise.resolve(null),
+    fetchArticleDrafts(session.user).then((list) =>
+      list.filter((d) => kinds.includes(d.kind))
+    ),
   ])
 
   const sectionTitle = (key: string) =>
@@ -157,7 +163,7 @@ export default async function KnowledgeEditorPage({
         articles={articles}
         drafts={drafts}
         initialKind={initialKind}
-        canWriteJournal={canWriteJournal}
+        kinds={kinds}
       />
     </div>
   )

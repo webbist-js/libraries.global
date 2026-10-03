@@ -1,6 +1,7 @@
 import { Icon } from "@iconify/react"
 import type { Locale } from "next-intl"
 
+import { EditorOnly } from "@/components/contribute/EditorOnly"
 import {
   DOCS_REPO_URL,
   DOCS_SECTIONS,
@@ -22,10 +23,11 @@ import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
+import { editorApplyHref } from "@/lib/editor-gate"
 import type { DocsWikiArticle } from "@/lib/strapi-api/content/server"
 
 // Contributors with enough accepted changes apply in the app; a moderator decides.
-const WIKI_EDITOR_APPLY_HREF = "/contribute/knowledge/apply?role=wiki_editor"
+const WIKI_EDITOR_APPLY_HREF = editorApplyHref("knowledge")
 
 const ENTRY_CARDS = [
   {
@@ -278,28 +280,31 @@ export function DocsPage({
                   className="mt-2 mb-0 text-[14px] leading-[1.55]"
                   style={{ color: "rgba(255,255,255,.75)" }}
                 >
-                  Spot a mistake? Anyone with an account can suggest a change to
-                  a page. To write, edit and translate articles yourself, apply
-                  to become a Knowledge editor.
+                  Spot a mistake? Anyone with an account can report an issue on
+                  any page. To write, edit and translate articles yourself,
+                  apply to become a Knowledge editor.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <GlobalLink
-                    className="inline-flex items-center gap-1 rounded-full px-4 py-2 text-[14px] font-semibold transition-opacity hover:opacity-90"
-                    href="/contribute/knowledge"
-                    style={{ background: "#fff", color: T.ink.base }}
+                  <EditorOnly
+                    kind="knowledge"
+                    fallback={
+                      <GlobalLink
+                        className="inline-flex items-center gap-1 rounded-full px-4 py-2 text-[14px] font-semibold transition-opacity hover:opacity-90"
+                        href={WIKI_EDITOR_APPLY_HREF}
+                        style={{ background: "#fff", color: T.ink.base }}
+                      >
+                        Apply to edit
+                      </GlobalLink>
+                    }
                   >
-                    Suggest a change
-                  </GlobalLink>
-                  <GlobalLink
-                    className="inline-flex items-center gap-1 rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-white/10"
-                    href={WIKI_EDITOR_APPLY_HREF}
-                    style={{
-                      borderColor: "rgba(255,255,255,.35)",
-                      color: "#fff",
-                    }}
-                  >
-                    Apply to edit
-                  </GlobalLink>
+                    <GlobalLink
+                      className="inline-flex items-center gap-1 rounded-full px-4 py-2 text-[14px] font-semibold transition-opacity hover:opacity-90"
+                      href="/contribute/knowledge"
+                      style={{ background: "#fff", color: T.ink.base }}
+                    >
+                      Open the Knowledge editor
+                    </GlobalLink>
+                  </EditorOnly>
                 </div>
               </section>
             </aside>

@@ -5,11 +5,12 @@ import { findUnsafeContent } from "@repo/shared-data"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 
+import { useCapabilities } from "@/lib/access-client"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 
-import { actionMeta } from "./actions"
+import { actionFor } from "./actions"
 import {
   type CorrectionRecord,
   describeChanges,
@@ -142,7 +143,8 @@ function StepRail({
   readonly hints: readonly string[]
   readonly drawer?: boolean
 }) {
-  const meta = actionMeta(action)
+  const { has } = useCapabilities()
+  const meta = actionFor(action, has)
   // The panel collapses below lg, so it shows hints and lines only there;
   // the drawer's rail is hidden on phones and always shows them.
   const wide = drawer ? "block" : "hidden lg:block"
@@ -556,7 +558,8 @@ export function ContributionWizard({
   const router = useRouter()
   const { data: session, isPending } = authClient.useSession()
   const signedIn = Boolean(session?.user)
-  const meta = actionMeta(action)
+  const { has } = useCapabilities()
+  const meta = actionFor(action, has)
   const fallbackId = useId()
   const titleId = headingId ?? `${fallbackId}-title`
   const stepHeading = useRef<HTMLHeadingElement>(null)
@@ -946,7 +949,7 @@ export function ContributionWizard({
             }}
           >
             <span className="sr-only">Step {step}: </span>
-            {STEP_TITLES[action][step - 1]}
+            {meta.handoff?.heading ?? STEP_TITLES[action][step - 1]}
           </h3>
         ) : (
           <h3 ref={stepHeading} className="sr-only" tabIndex={-1}>

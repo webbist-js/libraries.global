@@ -10,6 +10,7 @@ import {
 } from "@/lib/article-editor-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
+import { requireEditorOrApply } from "@/lib/editor-gate"
 import { privateMetadata } from "@/lib/seo/metadata"
 
 import { ContributeSectionHeader } from "../../../_components/ContributeSectionHeader"
@@ -42,6 +43,7 @@ export default async function EditJournalArticlePage({
     redirect(
       `/auth/signin?callbackUrl=${encodeURIComponent(`/contribute/knowledge/journal/${slug}`)}`
     )
+  requireEditorOrApply(session.user, "journal")
 
   const [article, locales] = await Promise.all([
     loadArticleForEditor("journal", slug, locale as Locale),

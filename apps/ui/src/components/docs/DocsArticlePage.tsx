@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react"
 import type { Locale } from "next-intl"
 
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
+import { EditorOnly } from "@/components/contribute/EditorOnly"
 import { ArticleEditHistorySection } from "@/components/docs/ArticleEditHistory"
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import GlobalHeader from "@/components/global/GlobalHeader"
@@ -221,23 +222,26 @@ export function DocsArticlePage({
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <GlobalLink
-                  className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-muted)"
-                  href={`/contribute/knowledge/${article.slug}`}
-                  style={{
-                    background: T.bg.deep,
-                    borderColor: T.border.hi,
-                    color: T.ink.base,
-                  }}
-                >
-                  <Icon
-                    aria-hidden="true"
-                    height={14}
-                    icon="mdi:pencil-outline"
-                    width={14}
-                  />
-                  Edit this page
-                </GlobalLink>
+                {/* The editor is for Knowledge editors; reporting is for all. */}
+                <EditorOnly kind="knowledge">
+                  <GlobalLink
+                    className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-muted)"
+                    href={`/contribute/knowledge/${article.slug}`}
+                    style={{
+                      background: T.bg.deep,
+                      borderColor: T.border.hi,
+                      color: T.ink.base,
+                    }}
+                  >
+                    <Icon
+                      aria-hidden="true"
+                      height={14}
+                      icon="mdi:pencil-outline"
+                      width={14}
+                    />
+                    Edit this page
+                  </GlobalLink>
+                </EditorOnly>
                 <GlobalLink
                   className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-muted)"
                   href={`/contribute/knowledge/${article.slug}?mode=report`}

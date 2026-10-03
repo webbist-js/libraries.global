@@ -1,3 +1,8 @@
+import type { Capability } from "@repo/access"
+
+import { editorApplyHref, isArticleEditor } from "@/lib/editor-gate"
+
+import type { ArticleKind } from "./article-editor/article.types"
 import type { ActionId } from "./wizard.logic"
 
 /** The chooser's two groups: quick record edits, and longer written pieces. */
@@ -37,7 +42,18 @@ export type ActionMeta = {
   /** One line of advice under the wizard's step rail. */
   tip: string
   /** Set for actions that open a full editor instead of the wizard. */
-  handoff?: { href: string; blurb: string; cta: string }
+  handoff?: { href: string; blurb: string; cta: string; heading?: string }
+  /**
+   * The handoff opens the Knowledge editor, which needs this kind's editor
+   * role. Everyone else is sent to the role application with this copy.
+   */
+  editorsOnly?: {
+    kind: ArticleKind
+    note: string
+    heading: string
+    blurb: string
+    cta: string
+  }
 }
 
 export const ACTIONS: readonly ActionMeta[] = [
@@ -113,6 +129,14 @@ export const ACTIONS: readonly ActionMeta[] = [
         "Journal pieces are written in the article editor: a title, a short summary, then the body. Drafts save to your account, and an editor reviews it before it’s published.",
       cta: "Start a journal article",
     },
+    editorsOnly: {
+      kind: "journal",
+      note: "Opens the editor application",
+      heading: "Apply to write for the journal",
+      blurb:
+        "Journal pieces are written by Journal editors. Apply to become one: say what you’d like to write about, and a moderator reads every application.",
+      cta: "Apply to be a Journal editor",
+    },
   },
   {
     id: "knowledge",
@@ -131,9 +155,42 @@ export const ACTIONS: readonly ActionMeta[] = [
         "Pick a Knowledge page to improve or translate, or start a new guide. Changes go to review before they appear on the site.",
       cta: "Open the Knowledge editor",
     },
+    editorsOnly: {
+      kind: "knowledge",
+      note: "Opens the editor application",
+      heading: "Apply to edit the knowledge base",
+      blurb:
+        "Knowledge pages are written and translated by Knowledge editors. Spotted a mistake? Use “Report an issue” on the page itself. To write and edit pages yourself, apply to become an editor.",
+      cta: "Apply to be a Knowledge editor",
+    },
   },
 ]
 
 export function actionMeta(id: ActionId): ActionMeta {
   return ACTIONS.find((a) => a.id === id)!
+}
+
+/**
+ * `actionMeta` for this viewer: an editors-only handoff sends anyone
+ * without that editor role to the role application instead. UI only; the
+ * editor pages redirect too.
+ */
+export function actionFor(
+  id: ActionId,
+  has: (cap: Capability) => boolean
+): ActionMeta {
+  const meta = actionMeta(id)
+  const gate = meta.editorsOnly
+  if (!gate || !meta.handoff || isArticleEditor(has, gate.kind)) return meta
+
+  return {
+    ...meta,
+    note: gate.note,
+    handoff: {
+      href: editorApplyHref(gate.kind),
+      heading: gate.heading,
+      blurb: gate.blurb,
+      cta: gate.cta,
+    },
+  }
 }

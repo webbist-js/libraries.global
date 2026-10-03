@@ -25,6 +25,7 @@ import {
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { isDocumentIdParam } from "@/lib/bridge-params"
 import { T } from "@/lib/design-tokens"
+import { userIsArticleEditor } from "@/lib/editor-gate"
 import { fetchModeration } from "@/lib/moderation-proxy"
 import { Link } from "@/lib/navigation"
 import { privateMetadata } from "@/lib/seo/metadata"
@@ -203,26 +204,36 @@ const PANEL_TITLES: Record<string, string> = {
   role_application: "The application",
 }
 
-/** Where the Moderator can open what the submission changes. */
-function targetLinks(d: ModerationDetail): { href: string; label: string }[] {
+/**
+ * Where the Moderator can open what the submission changes. The article
+ * editors only open for Moderators who also hold that editor role.
+ */
+function targetLinks(
+  d: ModerationDetail,
+  user: { capabilities?: unknown }
+): { href: string; label: string }[] {
   const slug = d.targetSlug
   if (!slug) return []
   const isNewArticle =
     d.draftData?.kind === "new_article" || d.fields?.kind === "new_article"
-  if (d.submissionType === "wiki_edit" && !isNewArticle)
-    return [
-      {
-        href: `/contribute/knowledge/${encodeURIComponent(slug)}`,
-        label: "Open the article in the Knowledge editor",
-      },
-    ]
-  if (d.submissionType === "blog_submission" && !isNewArticle)
-    return [
-      {
-        href: `/contribute/knowledge/journal/${encodeURIComponent(slug)}`,
-        label: "Open the article in the Journal editor",
-      },
-    ]
+  if (d.submissionType === "wiki_edit")
+    return isNewArticle || !userIsArticleEditor(user, "knowledge")
+      ? []
+      : [
+          {
+            href: `/contribute/knowledge/${encodeURIComponent(slug)}`,
+            label: "Open the article in the Knowledge editor",
+          },
+        ]
+  if (d.submissionType === "blog_submission")
+    return isNewArticle || !userIsArticleEditor(user, "journal")
+      ? []
+      : [
+          {
+            href: `/contribute/knowledge/journal/${encodeURIComponent(slug)}`,
+            label: "Open the article in the Journal editor",
+          },
+        ]
   if (
     ["correction", "library_edit", "library_claim"].includes(d.submissionType)
   )
@@ -299,7 +310,7 @@ export default async function ReviewSubmissionPage({
   const contributorNote = !isArticle(d.submissionType)
     ? [d.editSummary, d.note].filter(Boolean).join(" — ")
     : (d.note ?? "")
-  const links = targetLinks(d)
+  const links = targetLinks(d, user)
 
   return (
     <>

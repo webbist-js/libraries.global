@@ -4,7 +4,9 @@ import { Icon } from "@iconify/react"
 import React from "react"
 
 import type { Submission } from "@/hooks/useSubmissions"
+import { useCapabilities } from "@/lib/access-client"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
+import { editorApplyHref, isArticleEditor } from "@/lib/editor-gate"
 import { Link } from "@/lib/navigation"
 
 // ---------------------------------------------------------------------------
@@ -387,7 +389,26 @@ function StatusPanelRow({
 const PANEL_CLASS =
   "m-0 flex shrink-0 flex-col gap-3 border-t pt-4 sm:w-[200px] sm:border-t-0 sm:border-l sm:pt-0 sm:pl-6"
 
-/** Where an unsent draft continues: the record wizard or the article editor. */
+/**
+ * Where an unsent draft continues: the record wizard or the article editor.
+ * The article editor is for editors, so anyone else is sent to the editor
+ * role application.
+ */
+function continueLink(
+  submission: Submission,
+  isEditor: (kind: "knowledge" | "journal") => boolean
+): { href: string; label: string } {
+  const href = continueHref(submission)
+  const { submissionType } = submission
+  if (submissionType !== "wiki_edit" && submissionType !== "blog_submission")
+    return { href, label: "Continue" }
+  const kind = submissionType === "wiki_edit" ? "knowledge" : "journal"
+
+  return isEditor(kind)
+    ? { href, label: "Continue" }
+    : { href: editorApplyHref(kind), label: "Apply to edit" }
+}
+
 function continueHref(submission: Submission): string {
   const { submissionType, targetSlug, documentId, draftData } = submission
   if (submissionType === "wiki_edit" || submissionType === "blog_submission") {
@@ -413,10 +434,16 @@ function continueHref(submission: Submission): string {
 
 function StatusPanel({ submission }: { submission: Submission }) {
   const { status, updatedAt, createdAt, reviewedAt } = submission
+  const { has, ready } = useCapabilities()
 
   const panelStyle: React.CSSProperties = { borderColor: T.border.divider }
 
   if (status === "draft") {
+    const next = continueLink(
+      submission,
+      (kind) => !ready || isArticleEditor(has, kind)
+    )
+
     return (
       <dl className={PANEL_CLASS} style={panelStyle}>
         <StatusPanelRow
@@ -427,11 +454,11 @@ function StatusPanel({ submission }: { submission: Submission }) {
 
         <div className="mt-1">
           <Link
-            href={continueHref(submission)}
+            href={next.href}
             className="inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-[15px] font-semibold whitespace-nowrap text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
             style={{ background: T.accent.primary }}
           >
-            Continue
+            {next.label}
             <span aria-hidden="true">→</span>
           </Link>
         </div>

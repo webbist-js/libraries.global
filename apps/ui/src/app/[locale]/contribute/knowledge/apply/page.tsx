@@ -180,7 +180,7 @@ export default async function ApplyForRolePage({
         lead={
           initialRole === "moderator"
             ? "Moderators review other people’s changes in a queue and language they choose. The editorial board reads every moderator application."
-            : "Anyone can suggest changes. Editors can also publish their own changes straight away. A moderator reads every application."
+            : "Editors write, edit and translate Knowledge and Journal articles, and their changes publish straight away. Anyone can still report an issue on a Knowledge page. A moderator reads every application."
         }
       />
       <main className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">

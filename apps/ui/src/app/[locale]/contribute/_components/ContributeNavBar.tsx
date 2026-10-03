@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation"
 
 import { type SectionTab, SectionTabs } from "@/components/ds"
 import { useCapabilities } from "@/lib/access-client"
+import { EDITOR_APPLY_HREF, isArticleEditor } from "@/lib/editor-gate"
 
 const NAV_ITEMS = [
   {
@@ -79,9 +80,16 @@ export function activeContributeTab(pathname: string): string | null {
 /** The Contribute section's tabs, on the bottom edge of its hero band. */
 export function ContributeNavBar() {
   const pathname = usePathname()
-  const { has } = useCapabilities()
+  const { has, ready } = useCapabilities()
+  // The Knowledge editor is for editors; everyone else gets the role
+  // application under the same tab (the editor pages redirect there too).
+  const applyForEditor = ready && !isArticleEditor(has)
+  const tabs: SectionTab[] = NAV_ITEMS.map((t) =>
+    t.id === "knowledge" && applyForEditor
+      ? { ...t, href: EDITOR_APPLY_HREF }
+      : t
+  )
   // Moderation sits before Membership, after the contributor's own tabs.
-  const tabs: SectionTab[] = [...NAV_ITEMS]
   if (has("moderate.queue")) {
     const at = tabs.findIndex((t) => t.id === "membership")
     tabs.splice(at === -1 ? tabs.length : at, 0, MODERATION_TAB)
