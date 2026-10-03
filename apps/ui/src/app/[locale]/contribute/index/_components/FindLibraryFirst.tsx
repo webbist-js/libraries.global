@@ -6,7 +6,11 @@ import type React from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { T, tintForLibraryType } from "@/lib/design-tokens"
-import { type LibrarySearchHit, searchLibraryNames } from "@/lib/meilisearch"
+import {
+  buildLibraryPath,
+  type LibrarySearchHit,
+  searchLibraryNames,
+} from "@/lib/meilisearch"
 import { Link } from "@/lib/navigation"
 
 import { StepHeading } from "./WizardFields"
@@ -70,12 +74,15 @@ function RecordRow({
   libraryType,
   gaps,
   slug,
+  pageHref,
 }: {
   name: string
   meta: string
   libraryType?: string | null
   gaps: string[]
   slug: string
+  /** Claim intent: link to the library's own page (where Claim lives). */
+  pageHref?: string | null
 }) {
   return (
     <li
@@ -125,7 +132,7 @@ function RecordRow({
         )}
       </div>
       <Link
-        href={improveHref(slug)}
+        href={pageHref ?? improveHref(slug)}
         className={improvePill}
         style={{
           border: `1px solid ${T.border.hi}`,
@@ -133,8 +140,12 @@ function RecordRow({
           color: T.ink.base,
         }}
       >
-        <Icon icon="mdi:pencil-outline" width={16} aria-hidden="true" />
-        Improve this record
+        <Icon
+          icon={pageHref ? "mdi:bank-outline" : "mdi:pencil-outline"}
+          width={16}
+          aria-hidden="true"
+        />
+        {pageHref ? "Open its page to claim" : "Improve this record"}
         <span className="sr-only">: {name}</span>
       </Link>
     </li>
@@ -156,9 +167,13 @@ const groupLabelStyle: React.CSSProperties = {
  */
 export function FindLibraryFirst({
   needsHelp,
+  intent = "edit",
 }: {
   readonly needsHelp: readonly RecordNeedingHelp[]
+  /** "claim": results open the library's page, where Claim lives. */
+  readonly intent?: "edit" | "claim"
 }) {
+  const claiming = intent === "claim"
   const locale = useLocale()
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<LibrarySearchHit[]>([])
@@ -189,6 +204,9 @@ export function FindLibraryFirst({
             "city",
             "country_name",
             "region_name",
+            "continent_slug",
+            "country_slug",
+            "region_slug",
           ],
         })
         setResults(res.hits)
@@ -292,7 +310,11 @@ export function FindLibraryFirst({
 
       <div className="mt-5 mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <p style={groupLabelStyle}>
-          {hasSearched ? "Results" : "Records that need help"}
+          {hasSearched
+            ? "Results"
+            : claiming
+              ? "Your library"
+              : "Records that need help"}
         </p>
         <p
           id="index-status"
@@ -320,6 +342,12 @@ export function FindLibraryFirst({
                 libraryType={hit.libraryType}
                 gaps={[]}
                 slug={hit.slug}
+                pageHref={
+                  claiming
+                    ? (buildLibraryPath(hit) ??
+                      `/contribute/claim?librarySlug=${encodeURIComponent(hit.slug)}&libraryName=${encodeURIComponent(hit.name)}&libraryDocumentId=${encodeURIComponent(hit.documentId)}`)
+                    : undefined
+                }
               />
             ))}
           </ul>
@@ -345,6 +373,10 @@ export function FindLibraryFirst({
             </p>
           </div>
         )
+      ) : claiming ? (
+        <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+          Search for your library by name, town or city.
+        </p>
       ) : needsHelp.length > 0 ? (
         <ul className="m-0 flex list-none flex-col gap-3 p-0">
           {needsHelp.map((record) => (

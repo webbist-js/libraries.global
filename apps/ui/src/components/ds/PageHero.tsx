@@ -3,6 +3,7 @@ import type { ReactNode } from "react"
 
 import { Container } from "@/components/elementary/Container"
 import { T } from "@/lib/design-tokens"
+import { Link } from "@/lib/navigation"
 
 import { Breadcrumb, type BreadcrumbItem } from "./Breadcrumb"
 
@@ -26,6 +27,7 @@ export function PageHero({
   compact = false,
   plainTitle = false,
   tabs,
+  back,
   children,
 }: {
   /** Optional breadcrumb trail rendered above the eyebrow pill. */
@@ -51,6 +53,11 @@ export function PageHero({
    * with sub-pages (Contribute, Knowledge).
    */
   readonly tabs?: ReactNode
+  /**
+   * A back link ("‹ Contribute") in place of the eyebrow pill, for task
+   * pages reached from a section's landing page.
+   */
+  readonly back?: { href: string; label: string }
 }) {
   return (
     <section
@@ -75,28 +82,51 @@ export function PageHero({
       >
         <div>
           <p className={compact ? "m-0 mb-4" : "m-0 mb-5"}>
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[14px] font-semibold"
-              style={{
-                background: T.bg.deep,
-                borderColor: T.border.line,
-                color: T.ink.base,
-              }}
-            >
-              {eyebrowIcon ? (
+            {back ? (
+              <Link
+                href={back.href}
+                className="inline-flex items-center gap-1 rounded-full border py-1 pr-3 pl-2 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+                style={{
+                  background: T.bg.deep,
+                  borderColor: T.border.line,
+                  color: T.ink.base,
+                }}
+              >
                 <Icon
                   aria-hidden="true"
-                  height={15}
-                  icon={eyebrowIcon}
-                  style={{ color: T.accent.primary }}
-                  width={15}
+                  height={16}
+                  icon="mdi:chevron-left"
+                  width={16}
+                  style={{ color: T.ink.dim }}
                 />
-              ) : null}
-              {eyebrow}
-              {eyebrowAccent ? (
-                <span style={{ color: T.accent.primary }}>{eyebrowAccent}</span>
-              ) : null}
-            </span>
+                {back.label}
+              </Link>
+            ) : (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[14px] font-semibold"
+                style={{
+                  background: T.bg.deep,
+                  borderColor: T.border.line,
+                  color: T.ink.base,
+                }}
+              >
+                {eyebrowIcon ? (
+                  <Icon
+                    aria-hidden="true"
+                    height={15}
+                    icon={eyebrowIcon}
+                    style={{ color: T.accent.primary }}
+                    width={15}
+                  />
+                ) : null}
+                {eyebrow}
+                {eyebrowAccent ? (
+                  <span style={{ color: T.accent.primary }}>
+                    {eyebrowAccent}
+                  </span>
+                ) : null}
+              </span>
+            )}
           </p>
           <h1
             className="m-0 text-balance"

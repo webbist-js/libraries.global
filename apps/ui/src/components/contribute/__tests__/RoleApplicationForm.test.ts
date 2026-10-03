@@ -36,19 +36,36 @@ const fetchMock = vi.fn(async () =>
 const { RoleApplicationForm } = await import("../RoleApplicationForm")
 
 const LOCALES = [
-  { code: "en", name: "English", isDefault: true },
-  { code: "fr", name: "French" },
+  { code: "en", label: "English" },
+  { code: "fr", label: "French · Français" },
 ]
+
+const NONE = {
+  wiki_editor: [],
+  journal_editor: [],
+  moderator: { index: [], knowledge: [], journal: [] },
+}
 
 const renderForm = (over: Record<string, unknown> = {}) =>
   render(
     createElement(RoleApplicationForm, {
       acceptedCount: 5,
       locales: LOCALES,
-      initialRole: null,
+      initialLocales: [],
+      initialRole: "wiki_editor",
       applications: [],
+      accepted: [],
+      acceptedTotal: 5,
+      username: "ada",
+      wikiSections: [{ slug: "contributing", name: "Contributing" }],
+      blogSections: [{ slug: "field-notes", name: "Field notes" }],
+      held: NONE,
+      guidelines: {
+        editor: "/knowledge/contributing/how-to-contribute",
+        moderator: "/knowledge/governance/how-review-works",
+      },
       ...over,
-    })
+    } as Parameters<typeof RoleApplicationForm>[0])
   )
 
 const STATEMENT = "I have corrected dozens of library records."
@@ -62,6 +79,14 @@ const sent = () => {
   return { url, method: init.method, body: JSON.parse(String(init.body)) }
 }
 
+const fillAndSend = () => {
+  fireEvent.change(screen.getByLabelText(/Why you’re applying/), {
+    target: { value: `  ${STATEMENT}  ` },
+  })
+  fireEvent.click(screen.getByLabelText(/I’ve read the/))
+  fireEvent.click(screen.getByRole("button", { name: /Send application/ }))
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   vi.stubGlobal("fetch", fetchMock)
@@ -71,24 +96,18 @@ afterEach(cleanup)
 describe("RoleApplicationForm", () => {
   it("shows progress and disables the form below five accepted changes", () => {
     renderForm({ acceptedCount: 3 })
-    expect(screen.getByText("3 of 5 accepted changes")).toBeTruthy()
+    expect(screen.getByText("3 accepted changes")).toBeTruthy()
+    expect(screen.getByText("Not yet")).toBeTruthy()
     const bar = screen.getByRole("progressbar")
     expect(bar.getAttribute("aria-valuenow")).toBe("3")
     expect(bar.getAttribute("aria-valuemax")).toBe("5")
     expect(
       screen.getByText(
-        "Keep contributing: corrections and new libraries all count."
+        /Keep contributing: corrections, new libraries and photos all count\./
       )
     ).toBeTruthy()
-    expect(
-      screen.getByRole("link", { name: /contribute/i }).getAttribute("href")
-    ).toBe("/contribute")
-    const submit = screen.getByRole("button", { name: "Send application" })
-    expect((submit as HTMLButtonElement).disabled).toBe(true)
-    expect(
-      (screen.getByLabelText(/Why you’re applying/) as HTMLTextAreaElement)
-        .disabled
-    ).toBe(true)
+    const submit = screen.getByRole("button", { name: /Send application/ })
+    expect(submit.closest("fieldset[disabled]")).toBeTruthy()
   })
 
   it("preselects the role from the query", () => {
@@ -96,18 +115,17 @@ describe("RoleApplicationForm", () => {
     expect(
       (screen.getByLabelText(/Journal editor/) as HTMLInputElement).checked
     ).toBe(true)
+    expect(screen.getByText("What a journal editor can do")).toBeTruthy()
   })
 
-  it("sends a role application with the documented payload", async () => {
-    renderForm({ initialRole: "wiki_editor" })
-    fireEvent.click(screen.getByLabelText("French"))
-    fireEvent.change(screen.getByLabelText(/Why you’re applying/), {
-      target: { value: `  ${STATEMENT}  ` },
-    })
+  it("sends an editor application with the shared field contract", async () => {
+    renderForm()
+    fireEvent.click(screen.getByLabelText("French · Français"))
+    fireEvent.click(screen.getByLabelText("Contributing"))
     fireEvent.change(screen.getByLabelText("Sample link 1"), {
       target: { value: "https://example.org/my-edit" },
     })
-    fireEvent.click(screen.getByRole("button", { name: "Send application" }))
+    fillAndSend()
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
     expect(sent()).toEqual({
@@ -119,8 +137,10 @@ describe("RoleApplicationForm", () => {
         fields: {
           role: "wiki_editor",
           locales: ["fr"],
+          sections: ["contributing"],
           statement: STATEMENT,
           samples: ["https://example.org/my-edit"],
+          acceptedGuidelines: true,
         },
       },
     })
@@ -129,119 +149,114 @@ describe("RoleApplicationForm", () => {
     )
   })
 
-  it("defaults to all languages", async () => {
-    renderForm({ initialRole: "journal_editor" })
-    expect(
-      (screen.getByLabelText("All languages") as HTMLInputElement).checked
-    ).toBe(true)
-    fireEvent.change(screen.getByLabelText(/Why you’re applying/), {
-      target: { value: STATEMENT },
-    })
-    fireEvent.click(screen.getByRole("button", { name: "Send application" }))
+  it("asks a moderator applicant for a queue and sends it", async () => {
+    renderForm({ initialRole: "moderator" })
+    fillAndSend()
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(screen.getByRole("alert").textContent).toMatch(/queue/)
+
+    fireEvent.click(screen.getByLabelText("Index (library records)"))
+    // No section list for the Index queue.
+    expect(screen.queryByText(/sections you’d work on/)).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: /Send application/ }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
     expect(sent().body.fields).toEqual({
-      role: "journal_editor",
+      role: "moderator",
+      queue: "index",
       locales: [],
       statement: STATEMENT,
       samples: [],
+      acceptedGuidelines: true,
     })
   })
 
-  it("refuses a statement outside 20 to 2000 characters", () => {
-    renderForm({ initialRole: "wiki_editor" })
-    const statement = screen.getByLabelText(/Why you’re applying/)
-    fireEvent.change(statement, { target: { value: "Too short." } })
-    expect(screen.getByText("10 / 2000")).toBeTruthy()
-    fireEvent.click(screen.getByRole("button", { name: "Send application" }))
+  it("needs the guidelines confirmed", () => {
+    renderForm()
+    fireEvent.change(screen.getByLabelText(/Why you’re applying/), {
+      target: { value: STATEMENT },
+    })
+    fireEvent.click(screen.getByRole("button", { name: /Send application/ }))
     expect(fetchMock).not.toHaveBeenCalled()
-    expect(screen.getByRole("alert").textContent).toMatch(
-      /between 20 and 2000 characters/
-    )
+    expect(screen.getByRole("alert").textContent).toMatch(/guidelines/)
+  })
 
-    fireEvent.change(statement, { target: { value: "x".repeat(2001) } })
-    fireEvent.click(screen.getByRole("button", { name: "Send application" }))
-    expect(fetchMock).not.toHaveBeenCalled()
+  it("preselects profile languages", () => {
+    renderForm({ initialLocales: ["fr"] })
+    expect(
+      (screen.getByLabelText("French · Français") as HTMLInputElement).checked
+    ).toBe(true)
+    expect(
+      (screen.getByLabelText("Any language") as HTMLInputElement).checked
+    ).toBe(false)
   })
 
   it("shows the server's reason when it refuses", async () => {
     fetchMock.mockResolvedValueOnce(
       Response.json(
-        {
-          error: {
-            message: "You already hold this role for the languages you chose.",
-          },
-        },
+        { error: { message: "You already have this role." } },
         { status: 403 }
       )
     )
-    renderForm({ initialRole: "wiki_editor" })
-    fireEvent.change(screen.getByLabelText(/Why you’re applying/), {
-      target: { value: STATEMENT },
-    })
-    fireEvent.click(screen.getByRole("button", { name: "Send application" }))
+    renderForm()
+    fillAndSend()
     await waitFor(() =>
       expect(screen.getByRole("alert").textContent).toMatch(
-        /already hold this role/
+        /already have this role/
       )
     )
   })
 
-  it("shows an existing application with the moderator's note", () => {
+  it("shows an open application instead of the form", () => {
     renderForm({
-      initialRole: "wiki_editor",
       applications: [
         {
           documentId: "a1",
           role: "wiki_editor",
+          queue: null,
           status: "needs_info",
           locales: [],
           reviewNote: "Please add a sample of your work.",
           createdAt: "2026-10-01T00:00:00Z",
-        },
-        {
-          documentId: "a2",
-          role: "journal_editor",
-          status: "rejected",
-          locales: ["fr"],
-          reviewNote: "Not this time.",
-          createdAt: "2026-09-01T00:00:00Z",
+          decidedAt: null,
         },
       ],
     })
-    const list = screen.getByRole("list", { name: "Your applications" })
-    expect(list.textContent).toMatch(/Knowledge editor/)
-    expect(list.textContent).toMatch(/Needs more information/)
-    expect(list.textContent).toMatch(/Please add a sample of your work\./)
-    expect(list.textContent).toMatch(/Journal editor/)
-    expect(list.textContent).toMatch(/Not accepted/)
-    expect(list.textContent).toMatch(/Not this time\./)
+    expect(screen.getByText(/already have an application/)).toBeTruthy()
+    expect(screen.getByText(/Please add a sample of your work\./)).toBeTruthy()
+    expect(
+      screen.queryByRole("button", { name: /Send application/ })
+    ).toBeNull()
   })
 
-  it("won't send a second application while one is open for the role", () => {
+  it("shows when a rejected applicant may apply again", () => {
     renderForm({
-      initialRole: "wiki_editor",
       applications: [
         {
-          documentId: "a1",
+          documentId: "a2",
           role: "wiki_editor",
-          status: "pending",
+          queue: null,
+          status: "rejected",
           locales: [],
-          reviewNote: null,
-          createdAt: "2026-10-01T00:00:00Z",
+          reviewNote: "Not this time.",
+          createdAt: new Date().toISOString(),
+          decidedAt: new Date().toISOString(),
         },
       ],
     })
-    fireEvent.change(screen.getByLabelText(/Why you’re applying/), {
-      target: { value: STATEMENT },
-    })
     expect(
-      (
-        screen.getByRole("button", {
-          name: "Send application",
-        }) as HTMLButtonElement
-      ).disabled
-    ).toBe(true)
-    expect(screen.getByText(/already have an application/)).toBeTruthy()
+      screen.getByText(/You can apply for this role again on/)
+    ).toBeTruthy()
+    expect(screen.getByText(/Not this time\./)).toBeTruthy()
+  })
+
+  it("says so when the role is already held", () => {
+    renderForm({ held: { ...NONE, wiki_editor: "all" } })
+    expect(screen.getByText("You’re already a Knowledge editor.")).toBeTruthy()
+    expect(
+      screen
+        .getByRole("link", { name: "Open the Knowledge editor" })
+        .getAttribute("href")
+    ).toBe("/contribute/knowledge")
   })
 
   it("never mentions Pro or paying", () => {

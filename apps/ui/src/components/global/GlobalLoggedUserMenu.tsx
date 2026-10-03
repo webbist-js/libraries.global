@@ -122,8 +122,17 @@ export function GlobalLoggedUserMenu({
     ? getFirstName(user.name)
     : user.email.split("@")[0]
   const avatarSrc = profileSnippet?.avatarUrl ?? user.image ?? null
-  const username = profileSnippet?.username ?? null
+  // The session carries the username (buildSessionAccess); the snippet is a
+  // fallback. "Complete your profile" only when the bridge answered and
+  // there is no username: a failed bridge says nothing about the profile.
+  const username = user.username ?? profileSnippet?.username ?? null
+  const needsProfile = user.profileLoaded === true && !username
   const isVerifiedLibrarian = profileSnippet?.isVerifiedLibrarian ?? false
+  // UI only: the routes behind these links re-check every capability.
+  const caps = new Set<string>(user.capabilities ?? [])
+  const canModerate = caps.has("moderate.queue")
+  const holdsEditorOrModerator =
+    canModerate || caps.has("docs.directEdit") || caps.has("journal.directEdit")
   // Missing plan means free (missing session fields deny).
   const hasPro = user.plan === "pro" || user.plan === "team"
   const planName =
@@ -230,12 +239,29 @@ export function GlobalLoggedUserMenu({
               </MenuLink>
             )}
           </>
-        ) : (
+        ) : needsProfile ? (
           /* No profile yet — prompt to complete setup */
           <MenuLink href="/profile/settings" icon="mdi:account-plus-outline">
             Complete your profile
           </MenuLink>
-        )}
+        ) : null}
+
+        {canModerate ? (
+          <MenuLink
+            href="/contribute/moderation"
+            icon="mdi:shield-check-outline"
+          >
+            Moderation
+          </MenuLink>
+        ) : null}
+        {!holdsEditorOrModerator && user.profileLoaded === true ? (
+          <MenuLink
+            href="/contribute/knowledge/apply"
+            icon="mdi:account-star-outline"
+          >
+            Apply for a role
+          </MenuLink>
+        ) : null}
 
         <DropdownMenuSeparator
           className="mx-1 my-1.5"

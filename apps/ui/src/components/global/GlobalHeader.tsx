@@ -13,6 +13,7 @@ import GlobalNavLinks, {
 } from "@/components/global/GlobalNavLinks"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
+import { fetchOwnProfileSnippet } from "@/lib/own-profile-server"
 
 const NAV_LINKS: NavLink[] = [
   { label: "Atlas", href: "/map" },
@@ -21,52 +22,6 @@ const NAV_LINKS: NavLink[] = [
   { label: "Events", href: "/events" },
   { label: "Knowledge", href: "/knowledge" },
 ]
-
-type ProfileSnippet = {
-  avatarUrl?: string | null
-  username?: string | null
-  isVerifiedLibrarian?: boolean | null
-}
-
-async function fetchProfileSnippet(
-  baUserId: string
-): Promise<ProfileSnippet | null> {
-  const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
-  const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
-  try {
-    const params = new URLSearchParams({
-      "filters[baUserId][$eq]": baUserId,
-      "fields[0]": "username",
-      "fields[1]": "isVerifiedLibrarian",
-      "populate[avatar][fields][0]": "url",
-    })
-    const res = await fetch(
-      `${strapiUrl}/api/user-profiles?${params.toString()}`,
-      {
-        cache: "no-store",
-        headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
-      }
-    )
-    if (!res.ok) return null
-    const json = (await res.json()) as {
-      data?: {
-        username?: string | null
-        isVerifiedLibrarian?: boolean | null
-        avatar?: { url?: string | null } | null
-      }[]
-    }
-    const item = json.data?.[0]
-    if (!item) return null
-
-    return {
-      username: item.username ?? null,
-      isVerifiedLibrarian: item.isVerifiedLibrarian ?? null,
-      avatarUrl: item.avatar?.url ?? null,
-    }
-  } catch {
-    return null
-  }
-}
 
 export async function GlobalHeader({
   locale,
@@ -80,8 +35,11 @@ export async function GlobalHeader({
   readonly variant?: "site" | "app"
 }) {
   const sessionSSR = await getSessionSSR(await headers())
+  // The username comes from the session (buildSessionAccess); avatar and
+  // librarian flag from the owner-scoped bridge read. `baUserId` is private,
+  // so the public REST filter on it no longer works.
   const profileSnippet = sessionSSR?.user
-    ? await fetchProfileSnippet(sessionSSR.user.id)
+    ? await fetchOwnProfileSnippet(sessionSSR.user)
     : null
   const app = variant === "app"
 

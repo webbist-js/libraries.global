@@ -3,6 +3,7 @@ import { headers } from "next/headers"
 import type { Locale } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
+import { sessionCapabilities } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
 import { KOFI_URL } from "@/lib/constants"
@@ -23,6 +24,7 @@ import {
 } from "./_components/hub/RecordsThatNeedYou"
 import { RolesTable } from "./_components/hub/RolesTable"
 import { SuggestedAdditions } from "./_components/hub/SuggestedAdditions"
+import { TakeOnARole } from "./_components/hub/TakeOnARole"
 import {
   SignInPromptCard,
   YourSubmissionsList,
@@ -148,25 +150,6 @@ async function fetchMySubmissions(user: {
   }
 }
 
-async function fetchUsername(baUserId: string): Promise<string | null> {
-  const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
-  try {
-    const res = await fetch(
-      `${STRAPI}/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(baUserId)}&fields[0]=username`,
-      {
-        cache: "no-store",
-        headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
-      }
-    )
-    if (!res.ok) return null
-    const json = (await res.json()) as { data?: { username?: string }[] }
-
-    return json.data?.[0]?.username ?? null
-  } catch {
-    return null
-  }
-}
-
 function BottomLinkCard({
   title,
   copy,
@@ -210,21 +193,20 @@ export default async function ContributePage({
   const { locale } = await params
   const session = await getSessionSSR(await headers())
 
-  const [
-    libraryCount,
-    incompleteRecords,
-    continentsResponse,
-    submissions,
-    username,
-  ] = await Promise.all([
-    fetchLibraryCount(),
-    fetchIncompleteRecords(),
-    fetchHomepageContinents(locale as Locale),
-    session?.user
-      ? fetchMySubmissions(session.user)
-      : Promise.resolve([] as HubSubmission[]),
-    session?.user ? fetchUsername(session.user.id) : Promise.resolve(null),
-  ])
+  const [libraryCount, incompleteRecords, continentsResponse, submissions] =
+    await Promise.all([
+      fetchLibraryCount(),
+      fetchIncompleteRecords(),
+      fetchHomepageContinents(locale as Locale),
+      session?.user
+        ? fetchMySubmissions(session.user)
+        : Promise.resolve([] as HubSubmission[]),
+    ])
+  // From the session (buildSessionAccess): `baUserId` is private, so the
+  // public REST filter on it can't find the profile.
+  const username = session?.user?.username ?? null
+  // UI only: which "Take on a role" cards to hide. Strapi decides.
+  const caps = sessionCapabilities(session?.user)
 
   const continents: ContinentCount[] = (continentsResponse?.data ?? [])
     .map((continent) => ({
@@ -289,6 +271,14 @@ export default async function ContributePage({
       ) : null}
 
       <HowReviewWorks />
+      <TakeOnARole
+        signedIn={!!session?.user}
+        hasClaim={caps.claimedLibraryIds.size > 0}
+        isEditor={
+          caps.set.has("docs.directEdit") || caps.set.has("journal.directEdit")
+        }
+        isModerator={caps.set.has("moderate.queue")}
+      />
       <RolesTable />
 
       {/* You: your submissions (3/4) beside voting on new additions (1/4). */}

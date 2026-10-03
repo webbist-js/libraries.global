@@ -1328,6 +1328,27 @@ export type WikiArticleDetail = WikiArticleSummary & {
   seo?: LibrarySeoData | null
 }
 
+/** Knowledge (wiki) sections in their display order, for pickers. */
+export async function fetchWikiSections() {
+  try {
+    return (await PublicStrapiClient.fetchAPI("/wiki-sections", {
+      fields: ["name", "label", "slug", "order"] as any,
+      sort: ["order:asc", "name:asc"] as any,
+      pagination: { pageSize: 50 } as any,
+    })) as APIResponseCollection<WikiSection>
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: "Error fetching wiki sections",
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return { data: [] }
+  }
+}
+
 /** A Knowledge article in `locale`, or the default-locale version flagged `localeFallback`. */
 export async function fetchWikiArticle(slug: string, locale: Locale) {
   return withLocaleFallback(locale, (l) => fetchWikiArticleIn(slug, l))

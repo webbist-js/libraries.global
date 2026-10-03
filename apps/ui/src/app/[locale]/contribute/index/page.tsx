@@ -77,9 +77,23 @@ const STEPS = [
   { n: 7, label: "Sources & send", sub: "Evidence · Review" },
 ]
 
-export default async function IndexEditorPage() {
-  const session = await getSessionSSR(await headers())
-  if (!session?.user) redirect("/auth/signin?callbackUrl=/contribute/index")
+export default async function IndexEditorPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ intent?: string | string[] }>
+}) {
+  const [{ intent }, session] = await Promise.all([
+    searchParams,
+    getSessionSSR(await headers()),
+  ])
+  // ?intent=claim: the reader came to claim their library, not to edit.
+  const claiming = intent === "claim"
+  if (!session?.user) {
+    const back = claiming
+      ? "/contribute/index?intent=claim"
+      : "/contribute/index"
+    redirect(`/auth/signin?callbackUrl=${encodeURIComponent(back)}`)
+  }
 
   const needsHelp: RecordNeedingHelp[] = (await fetchIncompleteLibraries())
     .slice(0, 3)
@@ -185,7 +199,33 @@ export default async function IndexEditorPage() {
 
           {/* Centre — search */}
           <div className="min-w-0">
-            <FindLibraryFirst needsHelp={needsHelp} />
+            {claiming ? (
+              <div
+                role="status"
+                className="mb-6 flex items-start gap-3 rounded-[20px] px-5 py-4"
+                style={{ background: "var(--tint-public-bg)" }}
+              >
+                <Icon
+                  icon="mdi:bank-outline"
+                  width={22}
+                  aria-hidden="true"
+                  style={{ color: "var(--tint-public-fg)", flexShrink: 0 }}
+                />
+                <p
+                  className="m-0 text-[15px] leading-[1.55]"
+                  style={{ color: T.ink.base }}
+                >
+                  <strong style={{ color: "var(--tint-public-fg)" }}>
+                    Claiming your library?
+                  </strong>{" "}
+                  Find your library, then choose Claim on its page.
+                </p>
+              </div>
+            ) : null}
+            <FindLibraryFirst
+              needsHelp={needsHelp}
+              intent={claiming ? "claim" : "edit"}
+            />
           </div>
 
           {/* Right — what happens next */}

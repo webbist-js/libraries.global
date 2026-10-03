@@ -44,10 +44,12 @@ describe("latestApplications", () => {
       {
         documentId: "b",
         role: "wiki_editor",
+        queue: null,
         status: "needs_info",
         locales: ["fr"],
         reviewNote: "Add a sample.",
         createdAt: "2026-10-02T00:00:00Z",
+        decidedAt: null,
       },
     ])
   })
@@ -59,7 +61,7 @@ describe("latestApplications", () => {
           documentId: "x",
           submissionType: "role_application",
           status: "pending",
-          fields: { role: "moderator" },
+          fields: { role: "librarian" },
         },
       ])
     ).toEqual([])
@@ -67,10 +69,11 @@ describe("latestApplications", () => {
 })
 
 describe("applicationRoleFrom", () => {
-  it("accepts the two editor roles only", () => {
+  it("accepts the two editor roles and moderator only", () => {
     expect(applicationRoleFrom("journal_editor")).toBe("journal_editor")
     expect(applicationRoleFrom("wiki_editor")).toBe("wiki_editor")
-    expect(applicationRoleFrom("moderator")).toBeNull()
+    expect(applicationRoleFrom("moderator")).toBe("moderator")
+    expect(applicationRoleFrom("editorial_board")).toBeNull()
     expect(applicationRoleFrom(undefined)).toBeNull()
   })
 })
@@ -82,7 +85,7 @@ describe("applicationProblem", () => {
 
   it("requires a role", () => {
     expect(applicationProblem({ ...valid, role: null }, LOCALES)).toMatch(
-      /Knowledge editor or Journal editor/
+      /Knowledge editor, Journal editor or Moderator/
     )
   })
 
@@ -141,6 +144,7 @@ describe("applicationFields", () => {
       locales: ["fr"],
       statement: "I write about libraries.",
       samples: ["https://example.org/a"],
+      acceptedGuidelines: true,
     })
   })
 })

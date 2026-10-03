@@ -19,6 +19,7 @@ import {
   ReviewDecisionForm,
   type ReviewEvent,
   ReviewThread,
+  RoleApplicationPanel,
   StatusBadge,
 } from "@/components/moderation"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
@@ -73,13 +74,20 @@ const asRecord = (v: unknown) =>
 const idOf = (v: unknown) => (typeof v === "string" && v ? v : null)
 
 /** What a panel needs beyond the detail, read on the server. */
-type PanelContext = { country: PlaceLink | null; region: PlaceLink | null }
+type PanelContext = {
+  country: PlaceLink | null
+  region: PlaceLink | null
+  /** Locale code → name. */
+  localeNames: Record<string, string>
+}
 
 /**
  * A Location Request's parents as approval will use them: the Moderator's
  * target when it names any place, else the request's own ids.
  */
-async function locationParents(d: ModerationDetail): Promise<PanelContext> {
+async function locationParents(
+  d: ModerationDetail
+): Promise<Pick<PanelContext, "country" | "region">> {
   const target = asRecord(d.draftData?.moderatorTarget)
   const useTarget = ["continent", "country", "region", "area"].some((k) =>
     idOf(target[k])
@@ -156,6 +164,13 @@ const PANELS: Record<
       region={ctx.region}
     />
   ),
+  role_application: (d, ctx) => (
+    <RoleApplicationPanel
+      fields={d.fields}
+      applicant={d.applicant}
+      localeNames={ctx.localeNames}
+    />
+  ),
   library_edit: (d) => (
     <RecordChangesTable
       submissionType={d.submissionType}
@@ -185,6 +200,7 @@ const PANEL_TITLES: Record<string, string> = {
   blog_submission: "The article",
   new_library: "The new library",
   location_request: "The requested place",
+  role_application: "The application",
 }
 
 /** Where the Moderator can open what the submission changes. */
@@ -264,12 +280,16 @@ export default async function ReviewSubmissionPage({
   const d = detailRes.body?.data
   if (detailRes.status !== 200 || !d) return <LoadFailed />
   const events = eventsRes.body?.data ?? []
-  const [panelContext, created] = await Promise.all([
+  const [parents, created] = await Promise.all([
     d.submissionType === "location_request"
       ? locationParents(d)
       : Promise.resolve({ country: null, region: null }),
     createdRecord(d),
   ])
+  const panelContext: PanelContext = {
+    ...parents,
+    localeNames: Object.fromEntries(locales.map((l) => [l.code, l.name])),
+  }
   const language =
     locales.find((l) => l.code === d.locale)?.name ?? d.locale.toUpperCase()
   const panel = (

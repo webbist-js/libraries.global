@@ -17,6 +17,7 @@ export function ContributeSectionHeader({
   title,
   lead,
   compact = false,
+  back = false,
   children,
 }: {
   /** Breadcrumb leaf after "Contribute". Omit on the hub itself. */
@@ -24,25 +25,33 @@ export function ContributeSectionHeader({
   readonly title: string
   readonly lead?: ReactNode
   readonly compact?: boolean
+  /**
+   * A "‹ Contribute" back pill instead of the breadcrumb and eyebrow, for
+   * task pages such as the role application.
+   */
+  readonly back?: boolean
   /** Rendered under the lead in the right column. */
   readonly children?: ReactNode
 }) {
   return (
     <PageHero
       breadcrumb={
-        section
-          ? [
-              { label: "Home", href: "/" },
-              { label: "Contribute", href: "/contribute" },
-              { label: section },
-            ]
-          : [{ label: "Home", href: "/" }, { label: "Contribute" }]
+        back
+          ? undefined
+          : section
+            ? [
+                { label: "Home", href: "/" },
+                { label: "Contribute", href: "/contribute" },
+                { label: section },
+              ]
+            : [{ label: "Home", href: "/" }, { label: "Contribute" }]
       }
       eyebrow="Contribute"
       eyebrowIcon="mdi:account-group-outline"
       title={title}
       lead={lead}
       compact={compact}
+      back={back ? { href: "/contribute", label: "Contribute" } : undefined}
       tabs={<ContributeNavBar />}
     >
       {children}

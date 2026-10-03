@@ -60,6 +60,15 @@ export type ModerationDetail = ModerationRow & {
   canPublish: boolean
   /** new_library only: its Location Request still awaits a decision. */
   pendingLocationRequest?: boolean
+  /** role_application only: who applied and what they've had accepted. */
+  applicant?: RoleApplicant | null
+}
+
+/** The applicant block on a Role Application's detail (newest first, ≤ 10). */
+export type RoleApplicant = {
+  username: string | null
+  acceptedCount: number
+  recentAccepted: { summary: string; type: string; decidedAt: string }[]
 }
 
 export type ReviewEvent = {
@@ -384,10 +393,52 @@ export function summaryOf(sub: SubmissionLike): string {
       )
     case "topic_suggestion":
       return str(f.name) ?? "Topic"
+    case "role_application":
+      return roleApplicationSummary(f)
 
     default:
       return sub.targetSlug ?? "Library"
   }
+}
+
+const APPLICATION_ROLE_NAMES: Record<string, string> = {
+  wiki_editor: "Knowledge editor",
+  journal_editor: "Journal editor",
+  moderator: "Moderator",
+}
+
+const APPLICATION_QUEUE_NAMES: Record<string, string> = {
+  index: "Index",
+  knowledge: "Knowledge",
+  journal: "Journal",
+}
+
+/**
+ * A Role Application in a line, as Strapi's submission summary writes it:
+ * "Moderator application: Index (fr)", "Knowledge editor application (all
+ * languages)".
+ */
+export function roleApplicationSummary(f: Record<string, unknown>): string {
+  const role =
+    typeof f.role === "string" ? APPLICATION_ROLE_NAMES[f.role] : undefined
+  const locales = Array.isArray(f.locales)
+    ? [
+        ...new Set(
+          f.locales.filter(
+            (l): l is string => typeof l === "string" && l.trim() !== ""
+          )
+        ),
+      ]
+    : []
+  const langs = locales.length > 0 ? locales.join(", ") : "all languages"
+  if (f.role === "moderator") {
+    const queue =
+      typeof f.queue === "string" ? APPLICATION_QUEUE_NAMES[f.queue] : undefined
+
+    return `Moderator application: ${queue ?? "Queue"} (${langs})`
+  }
+
+  return `${role ?? "Editor"} application (${langs})`
 }
 
 const fieldCount = (f: Record<string, unknown>) => {

@@ -71,7 +71,11 @@ const COLUMNS: { title: string; sub: string; apply?: string }[] = [
     sub: "After five accepted changes",
     apply: "/contribute/knowledge/apply?role=journal_editor",
   },
-  { title: "Moderator", sub: "Invited by the editorial board" },
+  {
+    title: "Moderator",
+    sub: "After five accepted changes",
+    apply: "/contribute/knowledge/apply?role=moderator",
+  },
   { title: "Editorial board", sub: "Reviews every queue and language" },
 ]
 
