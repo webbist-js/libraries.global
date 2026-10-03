@@ -137,6 +137,20 @@ export async function backfillSubmissionLocales(
 
     for (const row of rows) {
       const current: unknown = row.contentLocale
+      // A Role Application is always filed in the default locale (its
+      // languages are `fields.locales`; see resolveSubmissionLocale). A
+      // hash that matched is re-pinned with it: the content is unchanged.
+      if (row.submissionType === "role_application") {
+        if (current === base) continue
+        const data: Record<string, unknown> = { contentLocale: base }
+        if (row.payloadHash && row.payloadHash === payloadHash(row))
+          data.payloadHash = payloadHash({ ...row, contentLocale: base })
+        await strapi
+          .documents(SUBMISSION)
+          .update({ documentId: row.documentId, data })
+        updated += 1
+        continue
+      }
       if (row.payloadHash && row.payloadHash === payloadHash(row)) continue
       if (typeof current === "string" && current && current !== base) continue
 

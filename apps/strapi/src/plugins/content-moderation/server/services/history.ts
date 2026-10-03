@@ -1,8 +1,7 @@
 import { randomUUID } from "node:crypto"
 
 import { isActivityPublic } from "../../../../utils/activity-visibility"
-import { isRecordCorrection } from "../utils/library-record"
-import { RECORD_META_KEYS } from "../utils/record-review"
+import { isRecordCorrection, recordFieldNames } from "../utils/library-record"
 
 /**
  * Public history read from Change Records (`library-change`) and Article
@@ -393,10 +392,9 @@ export async function backfillLibraryHistory(
       // Only submissions that edited the record itself: claims, facility
       // answers, photos and free-text corrections changed no record field.
       if (!isRecordEdit(s)) continue
-      const fields =
-        s.fields && typeof s.fields === "object" && !Array.isArray(s.fields)
-          ? Object.keys(s.fields).filter((k) => !RECORD_META_KEYS.has(k))
-          : []
+      // Only the library fields the record allowlist accepts: anything else
+      // a contributor sent was never written, and the history is public.
+      const fields = recordFieldNames(s.fields)
       if (fields.length === 0) continue
       const recorded = await strapi.documents(LIBRARY_CHANGE).count({
         filters: { submissionDocumentId: { $eq: s.documentId } },

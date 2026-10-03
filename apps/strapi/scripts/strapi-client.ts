@@ -260,6 +260,9 @@ export class StrapiClient {
       const params: Record<string, string> = {
         "pagination[page]": String(page),
         "pagination[pageSize]": String(pageSize),
+        // A stable order, so rows written while paging can't shift a row
+        // across a page boundary and be read twice or skipped.
+        "sort[0]": "id:asc",
         status: options.status ?? "published",
       }
       if (options.fields)

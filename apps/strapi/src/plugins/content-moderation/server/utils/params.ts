@@ -243,15 +243,16 @@ export function locationTypeLabelProblem(typeLabel: string): string | null {
  */
 export function validateLocationRequestFields(
   fields: unknown
-):
-  | { ok: true; value: LocationRequestFields }
-  | { ok: false; message: string } {
+): { ok: true; value: LocationRequestFields } | { ok: false; message: string } {
   if (!fields || typeof fields !== "object" || Array.isArray(fields))
     return { ok: false, message: "Tell us which place is missing." }
   const f = fields as Record<string, unknown>
   const unknown = Object.keys(f).find((k) => !LOCATION_REQUEST_KEYS.has(k))
   if (unknown)
-    return { ok: false, message: `Unexpected field in the request: ${unknown}.` }
+    return {
+      ok: false,
+      message: `Unexpected field in the request: ${unknown}.`,
+    }
 
   if (!isLocationRequestKind(f.kind))
     return { ok: false, message: "Ask for a region or an area." }

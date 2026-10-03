@@ -45,6 +45,8 @@ import { payloadHash } from "../utils/payload-hash"
 import {
   ApplyRefusedError,
   type ApplyRefusedReason,
+  applyToPublished,
+  loadPublishedTarget,
 } from "../utils/publish-guard"
 import {
   preloadRecordReviews,
@@ -128,6 +130,26 @@ const asObject = (v: unknown): Record<string, unknown> =>
     ? (v as Record<string, unknown>)
     : {}
 
+/**
+ * `draftData` keys only a Moderator writes, through `setModeratorTarget`.
+ * A contributor's draftData never carries them: `create`, `saveDraft` and
+ * `finalizeDraft` drop them, so a submitter can't file their own library or
+ * rename their own Location Request on approval.
+ */
+const MODERATOR_KEYS: readonly string[] = ["moderatorTarget", "moderatorEdit"]
+
+export function withoutModeratorKeys<T>(draftData: T): T {
+  if (!draftData || typeof draftData !== "object" || Array.isArray(draftData))
+    return draftData
+  if (!MODERATOR_KEYS.some((k) => k in (draftData as object))) return draftData
+
+  return Object.fromEntries(
+    Object.entries(draftData as Record<string, unknown>).filter(
+      ([k]) => !MODERATOR_KEYS.includes(k)
+    )
+  ) as T
+}
+
 /** The Moderator's `draftData.moderatorTarget`, valid ids only. */
 export function moderatorTargetOf(draftData: unknown): ModeratorTarget {
   return pickPlaces(asObject(asObject(draftData).moderatorTarget), "")
@@ -158,7 +180,11 @@ export function libraryHierarchy(submission: {
  */
 export async function newLibraryHierarchy(
   strapi: any,
-  submission: { fields?: unknown; draftData?: unknown; submittedByUserId?: unknown }
+  submission: {
+    fields?: unknown
+    draftData?: unknown
+    submittedByUserId?: unknown
+  }
 ): Promise<ModeratorTarget> {
   const place = libraryHierarchy(submission)
   if (Object.keys(moderatorTargetOf(submission.draftData)).length > 0)
@@ -249,9 +275,7 @@ async function applyLocationRequest(
       `location_request ${submission.documentId} asks for no region or area`
     )
   const edit = locationEditOf(submission.draftData)
-  const name = (
-    edit.name ?? (typeof f.name === "string" ? f.name : "")
-  ).trim()
+  const name = (edit.name ?? (typeof f.name === "string" ? f.name : "")).trim()
   if (!name)
     throw new Error(`location_request ${submission.documentId} has no name`)
   const typeLabel =
@@ -274,7 +298,9 @@ async function applyLocationRequest(
     const continent = country.continent?.documentId
     parents = {
       country: { connect: [{ documentId: place.country }] },
-      ...(continent ? { continent: { connect: [{ documentId: continent }] } } : {}),
+      ...(continent
+        ? { continent: { connect: [{ documentId: continent }] } }
+        : {}),
     }
   } else {
     const region = place.region
@@ -312,6 +338,101 @@ async function applyLocationRequest(
   )
 
   return created.documentId
+}
+
+/** Approved new libraries one Location Request approval links, at most. */
+const WAITING_LIBRARIES_MAX = 50
+
+/**
+ * After a Location Request is approved: the submitter's approved
+ * `new_library` submissions that named it (`fields.locationRequestDocumentId`)
+ * and were approved first get the new place on their library, when the
+ * library has none yet. A pending one needs nothing: its approval reads
+ * the request then (`newLibraryHierarchy`). A library a Moderator filed
+ * under a place of their own (`moderatorTarget`) is left alone, as there.
+ * Runs inside the approval's transaction and change context; a published
+ * library goes through the publish guard. Returns the libraries linked.
+ */
+async function linkWaitingLibraries(
+  strapi: any,
+  request: any,
+  placeDocumentId: string
+): Promise<string[]> {
+  const kind = asObject(request.fields).kind
+  if (!isLocationRequestKind(kind) || !request.submittedByUserId) return []
+  const rows = (await strapi.documents(SUBMISSION_UID).findMany({
+    filters: {
+      submissionType: { $eq: "new_library" },
+      status: { $eq: "approved" },
+      submittedByUserId: { $eq: request.submittedByUserId },
+      resultDocumentId: { $notNull: true },
+    },
+    fields: ["documentId", "fields", "draftData", "resultDocumentId"],
+    sort: "id:asc",
+    limit: WAITING_LIBRARIES_MAX,
+  })) as {
+    documentId: string
+    fields?: unknown
+    draftData?: unknown
+    resultDocumentId?: string | null
+  }[]
+  const waiting = (rows ?? []).filter(
+    (r) =>
+      asObject(r.fields).locationRequestDocumentId === request.documentId &&
+      Object.keys(moderatorTargetOf(r.draftData)).length === 0 &&
+      isDocumentId(r.resultDocumentId)
+  )
+  if (waiting.length === 0) return []
+
+  const base = await defaultLocale(strapi)
+  // The parent the request was filed under (an area's region).
+  const requestedRegion = libraryHierarchy(request).region
+  const linked: string[] = []
+  for (const sub of waiting) {
+    const libraryId = sub.resultDocumentId as string
+    const library = (await strapi.documents(LIBRARY_UID).findOne({
+      documentId: libraryId,
+      locale: base,
+      status: "draft",
+      fields: ["documentId"],
+      populate: {
+        region: { fields: ["documentId"] },
+        area: { fields: ["documentId"] },
+      },
+    })) as {
+      region?: { documentId?: string } | null
+      area?: { documentId?: string } | null
+    } | null
+    if (!library) continue
+    const data: Record<string, unknown> = {}
+    if (kind === "region" && !library.region?.documentId)
+      data.region = { set: [{ documentId: placeDocumentId }] }
+    if (kind === "area" && !library.area?.documentId) {
+      data.area = { set: [{ documentId: placeDocumentId }] }
+      if (!library.region?.documentId && requestedRegion)
+        data.region = { set: [{ documentId: requestedRegion }] }
+    }
+    if (Object.keys(data).length === 0) continue
+
+    await ((await loadPublishedTarget(strapi, LIBRARY_UID, libraryId, {
+      locale: base,
+    }))
+      ? applyToPublished(strapi, LIBRARY_UID, libraryId, data, {
+          locale: base,
+        })
+      : strapi.documents(LIBRARY_UID).update({
+          documentId: libraryId,
+          locale: base,
+          status: "draft",
+          data,
+        }))
+    linked.push(libraryId)
+    strapi.log.info(
+      `[content-moderation] Filed library ${libraryId} (submission ${sub.documentId}) under the ${kind} ${placeDocumentId} from location request ${request.documentId}`
+    )
+  }
+
+  return linked
 }
 
 /** A URL slug for a name; falls back to `fallback` ("library"). */
@@ -449,6 +570,7 @@ export type SubmissionExtras = Partial<
 >
 
 const SUBMISSION_UID = "plugin::content-moderation.submission"
+const LIBRARY_UID = "api::library.library"
 const PROFILE_UID = "api::user-profile.user-profile"
 const REVIEW_EVENT_UID = "plugin::content-moderation.review-event"
 
@@ -668,9 +790,28 @@ export function toClient<T>(sub: T): T {
 }
 
 /**
+ * `toClient` for the submitter's own views (create, drafts, finalize,
+ * `/submissions/my`): also drops `reviewedByUserId`, which names the
+ * Moderator who decided it. Admin and moderation responses keep it.
+ */
+export function toContributor<T>(sub: T): T {
+  const client = toClient(sub)
+  if (!client || typeof client !== "object") return client
+  const { reviewedByUserId: _reviewer, ...rest } = client as Record<
+    string,
+    unknown
+  >
+
+  return rest as T
+}
+
+/**
  * The locale a new or finalized submission is stored with: `locale` from
  * the request when given, else (articles) the draft's `locale`, else what
  * the row already holds; always a configured locale, the default otherwise.
+ * A Role Application is always filed in the default locale: the languages
+ * it asks for are `fields.locales`, and moderation scope reads those
+ * (`canModerateApplication`), never a locale the client picked.
  */
 export async function resolveSubmissionLocale(
   strapi: any,
@@ -681,6 +822,7 @@ export async function resolveSubmissionLocale(
     contentLocale?: unknown
   } = {}
 ): Promise<string> {
+  if (row.submissionType === "role_application") return defaultLocale(strapi)
   const isArticle =
     row.submissionType === "wiki_edit" ||
     row.submissionType === "blog_submission"
@@ -727,6 +869,9 @@ export default ({ strapi }: { strapi: any }) => ({
     const requestedKind = fields.fields?.kind
     const rest = {
       ...fields,
+      ...(fields.draftData === undefined
+        ? {}
+        : { draftData: withoutModeratorKeys(fields.draftData) }),
       // An application is always about the applicant's own profile; the
       // client's value is ignored.
       ...(fields.submissionType === "role_application"
@@ -754,7 +899,7 @@ export default ({ strapi }: { strapi: any }) => ({
         notifications(strapi).submissionPending(created)
       )
 
-    return toClient(created)
+    return toContributor(created)
   },
 
   async findAll(status?: unknown) {
@@ -812,7 +957,7 @@ export default ({ strapi }: { strapi: any }) => ({
         limit: 100,
       })
 
-    return (rows ?? []).map(toClient)
+    return (rows ?? []).map(toContributor)
   },
 
   async updateStatus(
@@ -1395,6 +1540,8 @@ export default ({ strapi }: { strapi: any }) => ({
               strapi,
               submission
             )
+            // Libraries approved before the place existed get it now.
+            await linkWaitingLibraries(strapi, submission, placeDocumentId)
             await strapi
               .documents("plugin::content-moderation.submission")
               .update({
@@ -1690,8 +1837,9 @@ export default ({ strapi }: { strapi: any }) => ({
     // A1: once a submission is in review (or decided) its content is frozen.
     if (existing.status !== "draft") return { error: "not_draft" }
 
-    const safeDraft =
+    const safeDraft = withoutModeratorKeys(
       draftData && typeof draftData === "object" ? draftData : {}
+    )
     // Also sync the top-level submission fields from draftData so the
     // moderation queue always reflects the latest wizard state.
     const { fields: libraryFields, extras } = splitSubmissionBody(safeDraft)
@@ -1739,7 +1887,7 @@ export default ({ strapi }: { strapi: any }) => ({
       .documents("plugin::content-moderation.submission")
       .findOne({ documentId })
 
-    return { data: toClient(data) }
+    return { data: toContributor(data) }
   },
 
   async finalizeDraft(
@@ -1817,6 +1965,10 @@ export default ({ strapi }: { strapi: any }) => ({
       fields: hasFields ? libraryFields : (existing.fields ?? {}),
       contentLocale,
     }
+    // A draft is never moderated, so any Moderator key in it is the
+    // contributor's own (a row saved before saveDraft dropped them).
+    const draftData = withoutModeratorKeys(existing.draftData)
+    if (draftData !== existing.draftData) updateData.draftData = draftData
     for (const [key, value] of Object.entries(checked.extras))
       if (value) updateData[key] = value
 
@@ -1860,7 +2012,7 @@ export default ({ strapi }: { strapi: any }) => ({
         notifications(strapi).submissionPending(finalized)
       )
 
-    return toClient(finalized)
+    return toContributor(finalized)
   },
 
   async findPublicByDocumentId(documentId: string) {
@@ -2087,7 +2239,7 @@ export default ({ strapi }: { strapi: any }) => ({
         limit: 1,
       })
 
-    return toClient(results[0] ?? null)
+    return toContributor(results[0] ?? null)
   },
 
   /**

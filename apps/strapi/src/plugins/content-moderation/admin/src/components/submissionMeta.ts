@@ -270,6 +270,36 @@ export function summaryOf(sub: Submission): string {
       )
     case "topic_suggestion":
       return str(f.name) ?? "Topic"
+    case "role_application": {
+      const role =
+        f.role === "journal_editor"
+          ? "Journal editor"
+          : f.role === "wiki_editor"
+            ? "Knowledge editor"
+            : "Editor"
+      const locales = Array.isArray(f.locales)
+        ? [
+            ...new Set(
+              f.locales.flatMap((l: unknown) => {
+                const code = str(l)
+
+                return code ? [code] : []
+              })
+            ),
+          ]
+        : []
+
+      return `${role} application (${locales.length > 0 ? locales.join(", ") : "all languages"})`
+    }
+    case "location_request": {
+      const edit =
+        d.moderatorEdit && typeof d.moderatorEdit === "object"
+          ? (d.moderatorEdit as Record<string, unknown>)
+          : {}
+      const name = str(edit.name) ?? str(f.name) ?? "unnamed"
+
+      return `New ${f.kind === "area" ? "area" : "region"}: ${name}`
+    }
 
     default:
       return sub.targetSlug ?? "Library"

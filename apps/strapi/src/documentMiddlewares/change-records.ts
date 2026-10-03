@@ -23,6 +23,12 @@ import {
  *
  * The inserts are awaited and never caught. Inside `strapi.db.transaction`
  * a failed insert therefore fails, and rolls back, the write it describes.
+ *
+ * Cost per write: a library update reads the version before and after, and
+ * inserts one batch of rows. Ingest and import scripts must batch their
+ * writes (CLAUDE.md "Scale target": bulk imports bypass per-row paths);
+ * an import token's `create` (source `import`) skips the read after the
+ * write and records one `*` row from what the create returned.
  */
 
 const LIBRARY = "api::library.library"
@@ -255,7 +261,22 @@ function versionStatusFor(
   return writeStatus
 }
 
-async function recordLibrary(args: RecordArgs & { batchId: string }) {
+/**
+ * `normaliseForDiff` for a document read without `populate` (what a
+ * `create` returns): relations and media it doesn't carry are left out
+ * rather than recorded as empty.
+ */
+function normaliseLoaded(doc: Doc, attrs: TrackedAttributes): Doc {
+  const out = normaliseForDiff(doc, attrs)
+  for (const f of [...attrs.relations, ...attrs.media])
+    if (!(f in doc)) delete out[f]
+
+  return out
+}
+
+async function recordLibrary(
+  args: RecordArgs & { batchId: string; unpopulated?: boolean }
+) {
   const { strapi, action, attrs, documentId, after, snap, actor } = args
   // A delete that removes a published version is public: describe what the
   // public saw, never unpublished draft edits.
@@ -264,35 +285,47 @@ async function recordLibrary(args: RecordArgs & { batchId: string }) {
       ? snap.publishedBefore
       : snap.before
   const prev = removed ? normaliseForDiff(removed, attrs) : null
-  const nextDoc = after ? normaliseForDiff(after, attrs) : null
+  let nextDoc: Doc | null = null
+  if (after)
+    nextDoc = args.unpopulated
+      ? normaliseLoaded(after, attrs)
+      : normaliseForDiff(after, attrs)
   const changes = libraryChanges(action, prev, nextDoc, FIELD_GROUPS(attrs))
+  if (changes.length === 0) return
 
   const entityRef =
     str(after?.entityRef) ??
     str(snap.before?.entityRef) ??
     str(snap.draftBefore?.entityRef)
-  for (const change of changes) {
-    await strapi.documents(LIBRARY_CHANGE).create({
-      data: {
-        batchId: args.batchId,
-        libraryDocumentId: documentId,
-        entityRef,
-        contentLocale: snap.locale ?? null,
-        versionStatus: args.versionStatus,
-        action,
-        field: change.field,
-        previous: change.previous,
-        next: change.next,
-        source: actor.source,
-        actorKind: actor.actorKind,
-        actorId: actor.actorId,
-        actorName: actor.actorName ?? null,
-        reviewerId: actor.reviewerId ?? null,
-        submissionDocumentId: actor.submissionDocumentId ?? null,
-        changedAt: args.changedAt,
-      },
-    })
-  }
+  const rows = changes.map((change) => ({
+    batchId: args.batchId,
+    libraryDocumentId: documentId,
+    entityRef,
+    contentLocale: snap.locale ?? null,
+    versionStatus: args.versionStatus,
+    action,
+    field: change.field,
+    previous: change.previous,
+    next: change.next,
+    source: actor.source,
+    actorKind: actor.actorKind,
+    actorId: actor.actorId,
+    actorName: actor.actorName ?? null,
+    reviewerId: actor.reviewerId ?? null,
+    submissionDocumentId: actor.submissionDocumentId ?? null,
+    changedAt: args.changedAt,
+    // What the Document Service sets on a type without draft & publish.
+    publishedAt: new Date(args.changedAt),
+  }))
+
+  // One INSERT per batch, not one Document Service create per field (CLAUDE.md
+  // "Scale target": bulk writes bypass per-row paths). `library-change` is
+  // an append-only log with no draft & publish, no relations and no
+  // lifecycles, so the query engine writes the same row the Document Service
+  // would (documentId and timestamps come from the model defaults). It joins
+  // the surrounding `strapi.db.transaction`, so a failed insert still rolls
+  // back the write it describes.
+  await strapi.db.query(LIBRARY_CHANGE).createMany({ data: rows })
 }
 
 async function recordArticle(args: RecordArgs & { uid: string }) {
@@ -378,6 +411,12 @@ export function registerChangeRecordsMiddleware({
         return doc ? (structuredClone(doc) as Doc) : null
       }
 
+      // Who is writing; read before the write so an import's create can
+      // skip the reads it doesn't need.
+      const actor = resolveChangeContext(strapi)
+      const importCreate =
+        uid === LIBRARY && action === "create" && actor.source === "import"
+
       const locales = await localesFor(
         strapi,
         uid,
@@ -405,15 +444,14 @@ export function registerChangeRecordsMiddleware({
         (typeof result?.documentId === "string" ? result.documentId : null)
       if (!documentId) return result
 
-      const actor = resolveChangeContext(strapi)
       const changedAt = new Date().toISOString()
       const batchId = randomUUID()
 
       for (const snap of snapshots) {
-        const after =
-          action === "delete" || action === "unpublish"
-            ? null
-            : await load(documentId, snap.locale, readStatus)
+        let after: Doc | null = null
+        if (importCreate) after = result ?? null
+        else if (action !== "delete" && action !== "unpublish")
+          after = await load(documentId, snap.locale, readStatus)
         const versionStatus = versionStatusFor(action, writeStatus, snap)
         const common = {
           strapi,
@@ -427,7 +465,7 @@ export function registerChangeRecordsMiddleware({
           changedAt,
         }
         await (uid === LIBRARY
-          ? recordLibrary({ ...common, batchId })
+          ? recordLibrary({ ...common, batchId, unpopulated: importCreate })
           : recordArticle({ ...common, uid }))
       }
 

@@ -2,6 +2,7 @@ import {
   type Capabilities,
   canDirectEdit,
   canModerate,
+  canModerateApplication,
   isSubmissionType,
   MODERATION_QUEUES,
   type ModerationQueue,
@@ -12,7 +13,7 @@ import {
 } from "@repo/access"
 
 import { defaultLocale, knownLocale, submissionLocale } from "../utils/locales"
-import { isNewArticleDraft } from "../utils/params"
+import { isNewArticleDraft, roleApplicationFields } from "../utils/params"
 import { preloadTopicReviews, recordReview } from "../utils/record-review"
 import { summaryOf } from "../utils/submission-summary"
 
@@ -132,27 +133,71 @@ export function localeFilter(
     : { contentLocale: { $eq: locale } }
 }
 
+const APPLICATION = "role_application"
+
+/** Matches no row: every document has a documentId. */
+const NOTHING = { documentId: { $null: true } }
+
 /**
  * The `$or` of the caller's scopes, or null when one of them covers every
  * queue in every locale (then there is nothing to filter by).
+ *
+ * A Role Application is filed in the default locale whatever languages it
+ * asks for, so a locale-scoped scope can't select applications by locale.
+ * `applicationIds` are the applications such a scope covers
+ * (`canModerateApplication`, see `applicationIdsInScope`); without them a
+ * locale-scoped scope covers no application.
  */
 export function scopeFilter(
   scopes: readonly ModerationScope[],
-  defaultCode: string
+  defaultCode: string,
+  applicationIds: readonly string[] = []
 ): Record<string, unknown> | null {
   const clauses: Record<string, unknown>[] = []
+  let applicationsByLocale = false
   for (const s of scopes) {
-    const clause: Record<string, unknown> = {}
-    if (s.queue !== "all")
-      clause.submissionType = { $in: submissionTypesOfQueue(s.queue) }
-    if (s.locale !== null)
-      Object.assign(clause, localeFilter(s.locale, defaultCode))
-    if (Object.keys(clause).length === 0) return null
-    clauses.push(clause)
+    const types = s.queue === "all" ? null : submissionTypesOfQueue(s.queue)
+    if (s.locale === null) {
+      if (!types) return null
+      clauses.push({ submissionType: { $in: types } })
+      continue
+    }
+    if (!types || types.includes(APPLICATION)) applicationsByLocale = true
+    const others = types?.filter((t) => t !== APPLICATION)
+    if (!others || others.length > 0)
+      clauses.push({
+        $and: [
+          {
+            submissionType: others ? { $in: others } : { $ne: APPLICATION },
+          },
+          localeFilter(s.locale, defaultCode),
+        ],
+      })
   }
+  if (applicationsByLocale && applicationIds.length > 0)
+    clauses.push({
+      submissionType: { $eq: APPLICATION },
+      documentId: { $in: [...applicationIds] },
+    })
 
-  return { $or: clauses }
+  return { $or: clauses.length > 0 ? clauses : [NOTHING] }
 }
+
+/**
+ * Whether reading the applications queue needs `applicationIdsInScope`:
+ * some scope covers applications only in one locale, and none covers them
+ * in every locale.
+ */
+function needsApplicationIds(scopes: readonly ModerationScope[]): boolean {
+  const covers = (s: ModerationScope) =>
+    s.queue === "all" || s.queue === "applications"
+  if (scopes.some((s) => covers(s) && s.locale === null)) return false
+
+  return scopes.some((s) => covers(s) && s.locale !== null)
+}
+
+/** Open and decided applications read to resolve a locale-scoped queue. */
+const APPLICATIONS_SCANNED = 1000
 
 /** The queues any of the scopes covers, in the canonical order. */
 export function queuesInScope(
@@ -164,8 +209,13 @@ export function queuesInScope(
 }
 
 /** Filters shared by every read: in scope, not the viewer's, never a draft. */
-function baseFilters(caps: Capabilities, viewer: string, defaultCode: string) {
-  const scope = scopeFilter(caps.moderation, defaultCode)
+function baseFilters(
+  caps: Capabilities,
+  viewer: string,
+  defaultCode: string,
+  applicationIds: readonly string[] = []
+) {
+  const scope = scopeFilter(caps.moderation, defaultCode, applicationIds)
 
   return [
     ...(scope ? [scope] : []),
@@ -241,6 +291,19 @@ export default ({ strapi }: { strapi: any }) => ({
     const s = await strapi.documents(SUBMISSION).findOne({ documentId })
     if (!s || s.status === "draft" || !isSubmissionType(s.submissionType))
       return null
+    // An application's scope is the languages it asks for, not its stored
+    // locale (always the default).
+    if (s.submissionType === APPLICATION)
+      return canModerateApplication(
+        caps,
+        {
+          locales: roleApplicationFields(s.fields).locales,
+          submittedByUserId: s.submittedByUserId,
+        },
+        viewer
+      )
+        ? s
+        : null
     const allowed = canModerate(
       caps,
       {
@@ -252,6 +315,48 @@ export default ({ strapi }: { strapi: any }) => ({
     )
 
     return allowed ? s : null
+  },
+
+  /**
+   * The Role Applications a locale-scoped Moderator may review, by
+   * documentId: the languages an application asks for live in its JSON
+   * `fields`, so they are checked here (`canModerateApplication`) rather
+   * than in the query. Empty when no scope needs it (see
+   * `needsApplicationIds`). Applications are few; the newest
+   * `APPLICATIONS_SCANNED` are read.
+   */
+  async applicationIdsInScope(
+    caps: Capabilities,
+    viewer: string
+  ): Promise<string[]> {
+    if (!needsApplicationIds(caps.moderation)) return []
+    const rows = (await strapi.documents(SUBMISSION).findMany({
+      filters: {
+        submissionType: { $eq: APPLICATION },
+        status: { $ne: "draft" },
+        submittedByUserId: { $ne: viewer },
+      },
+      fields: ["documentId", "fields", "submittedByUserId"],
+      sort: [{ createdAt: "desc" }, { id: "desc" }],
+      limit: APPLICATIONS_SCANNED,
+    })) as {
+      documentId: string
+      fields?: unknown
+      submittedByUserId: string
+    }[]
+
+    return (rows ?? [])
+      .filter((r) =>
+        canModerateApplication(
+          caps,
+          {
+            locales: roleApplicationFields(r.fields).locales,
+            submittedByUserId: r.submittedByUserId,
+          },
+          viewer
+        )
+      )
+      .map((r) => r.documentId)
   },
 
   async toRow(s: any): Promise<ModerationRow> {
@@ -278,7 +383,12 @@ export default ({ strapi }: { strapi: any }) => ({
     meta: { page: number; pageSize: number; total: number }
   }> {
     const and: Record<string, unknown>[] = [
-      ...baseFilters(caps, viewer, await defaultLocale(strapi)),
+      ...baseFilters(
+        caps,
+        viewer,
+        await defaultLocale(strapi),
+        await (this as any).applicationIdsInScope(caps, viewer)
+      ),
       { status: STATUS_FILTER[query.status] },
     ]
     if (query.queue)
@@ -466,7 +576,12 @@ export default ({ strapi }: { strapi: any }) => ({
 
   /** Counts per queue and list status, within the viewer's scope. */
   async stats(caps: Capabilities, viewer: string) {
-    const base = baseFilters(caps, viewer, await defaultLocale(strapi))
+    const base = baseFilters(
+      caps,
+      viewer,
+      await defaultLocale(strapi),
+      await (this as any).applicationIdsInScope(caps, viewer)
+    )
     const cells = queuesInScope(caps.moderation).flatMap((queue) =>
       LIST_STATUSES.map((status) => ({ queue, status }))
     )

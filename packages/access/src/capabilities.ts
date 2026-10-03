@@ -197,6 +197,31 @@ export function canModerate(
   )
 }
 
+/**
+ * Whether the viewer may review this Role Application. Applications are
+ * stored in the default locale, so the stored locale says nothing: what
+ * counts is the languages applied for (`fields.locales`, empty meaning every
+ * language). A scope covering the applications queue with no locale covers
+ * every application; a scope with a locale covers one only when it names at
+ * least one language and every one is that locale. Nobody reviews their
+ * own application.
+ */
+export function canModerateApplication(
+  c: Capabilities,
+  application: { locales: readonly string[]; submittedByUserId: string },
+  viewerBaUserId: string
+): boolean {
+  if (application.submittedByUserId === viewerBaUserId) return false
+  const { locales } = application
+
+  return c.moderation.some(
+    (m) =>
+      (m.queue === "all" || m.queue === "applications") &&
+      (m.locale === null ||
+        (locales.length > 0 && locales.every((l) => l === m.locale)))
+  )
+}
+
 export function isSubmissionType(v: unknown): v is SubmissionType {
   return (
     typeof v === "string" && (SUBMISSION_TYPES as readonly string[]).includes(v)

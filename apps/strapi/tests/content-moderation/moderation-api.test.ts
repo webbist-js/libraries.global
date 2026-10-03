@@ -31,6 +31,8 @@ const GLOBAL_MOD = "modall"
 const BOARD = "board"
 const READER = "reader"
 const EN_KNOWLEDGE = "moden"
+const FR_APPLICATIONS = "modfrapps"
+const EN_ALL = "modenall"
 
 const grant = (
   baUserId: string,
@@ -51,6 +53,8 @@ const GRANTS = [
   grant(INDEX_MOD, "moderator", "index", null),
   grant(GLOBAL_MOD, "moderator", "all", null),
   grant(BOARD, "editorial_board", "all", null),
+  grant(FR_APPLICATIONS, "moderator", "applications", "fr"),
+  grant(EN_ALL, "moderator", "all", "en"),
 ]
 
 let seq = 0
@@ -987,8 +991,31 @@ describe("summaryOf port", () => {
       { submissionType: "wiki_edit", fields: {}, targetSlug: "how-to" },
       { submissionType: "correction", fields: {}, targetSlug: "bristol" },
       { submissionType: "topic_suggestion", fields: {} },
+      {
+        submissionType: "role_application",
+        fields: { role: "wiki_editor", locales: ["fr", "de"] },
+      },
+      {
+        submissionType: "role_application",
+        fields: { role: "journal_editor", locales: [] },
+      },
+      {
+        submissionType: "location_request",
+        fields: { kind: "area", name: "Clifton" },
+      },
+      {
+        submissionType: "location_request",
+        fields: { kind: "region", name: "Wessex" },
+        draftData: { moderatorEdit: { name: "Wessex Region" } },
+      },
     ]
     for (const r of rows) expect(summaryOf(r)).toBe(adminSummaryOf(r))
+    expect(rows.slice(-4).map(summaryOf)).toEqual([
+      "Knowledge editor application (fr, de)",
+      "Journal editor application (all languages)",
+      "New area: Clifton",
+      "New region: Wessex Region",
+    ])
   })
 })
 
@@ -1074,6 +1101,114 @@ describe("review round 2", () => {
       verificationMethod: "contact_us",
       userEmailDomain: "nailsea.gov.uk",
       claimedWebsiteDomain: "nailsea.gov.uk",
+    })
+  })
+})
+
+describe("Role Application scope", () => {
+  // Stored in the default locale; the scope is the languages asked for.
+  const application = (locales: string[]) =>
+    sub({
+      submissionType: "role_application",
+      contentLocale: "en",
+      targetSlug: null,
+      draftData: null,
+      fields: {
+        role: "wiki_editor",
+        locales,
+        statement: "I have edited Knowledge articles for a year.",
+        samples: [],
+      },
+    })
+  const seed = () => [
+    application(["fr"]), // 1
+    application(["fr", "en"]), // 2
+    application([]), // 3: every language
+    application(["en"]), // 4
+  ]
+  const listed = async (controller: any, viewer: string) => {
+    const ctx = ctxFor({ viewer, query: { queue: "applications" } })
+    await controller.list(ctx)
+
+    return {
+      ids: ctx.body.data.map((r: any) => r.documentId),
+      total: ctx.body.meta.total,
+    }
+  }
+
+  it("lists for a locale-scoped moderator only applications for exactly that locale", async () => {
+    const { controller } = setup(seed())
+    expect(await listed(controller, FR_APPLICATIONS)).toEqual({
+      ids: [id(1)],
+      total: 1,
+    })
+    // `all` in English: the English-only application, never one that also
+    // asks for French or for every language.
+    expect(await listed(controller, EN_ALL)).toEqual({
+      ids: [id(4)],
+      total: 1,
+    })
+    expect(await listed(controller, GLOBAL_MOD)).toEqual({
+      ids: [id(4), id(3), id(2), id(1)],
+      total: 4,
+    })
+  })
+
+  it("keeps a locale-scoped all-queue moderator's other queues filtered by locale", async () => {
+    const { controller } = setup([
+      sub({
+        submissionType: "correction",
+        contentLocale: "en",
+        draftData: null,
+      }),
+      sub({
+        submissionType: "correction",
+        contentLocale: "fr",
+        draftData: null,
+      }),
+    ])
+    const ctx = ctxFor({ viewer: EN_ALL })
+    await controller.list(ctx)
+    expect(ctx.body.data.map((r: any) => r.documentId)).toEqual([id(1)])
+  })
+
+  it("404s an out-of-scope application on read and on decision", async () => {
+    const { controller, store } = setup(seed())
+    for (const n of [2, 3, 4]) {
+      const read = ctxFor({
+        viewer: FR_APPLICATIONS,
+        params: { documentId: id(n) },
+      })
+      await controller.findOne(read)
+      expect(read.status).toBe(404)
+    }
+    const decide = ctxFor({
+      viewer: FR_APPLICATIONS,
+      params: { documentId: id(3) },
+      body: { status: "rejected", note: "No." },
+    })
+    await controller.updateStatus(decide)
+    expect(decide.status).toBe(404)
+    expect(store[SUB]!.find((r: any) => r.documentId === id(3))!.status).toBe(
+      "pending"
+    )
+
+    const ok = ctxFor({
+      viewer: FR_APPLICATIONS,
+      params: { documentId: id(1) },
+    })
+    await controller.findOne(ok)
+    expect(ok.status).toBe(200)
+  })
+
+  it("counts only in-scope applications in stats", async () => {
+    const { controller } = setup(seed())
+    const ctx = ctxFor({ viewer: FR_APPLICATIONS })
+    await controller.stats(ctx)
+    expect(ctx.body.data).toContainEqual({
+      queue: "applications",
+      status: "pending",
+      count: 1,
     })
   })
 })

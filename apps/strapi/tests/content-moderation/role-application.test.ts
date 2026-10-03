@@ -313,6 +313,22 @@ describe("role application through the controller", () => {
     expect(ctx.body.data).toMatchObject({ status: "pending" })
   })
 
+  it("files every application in the default locale, whatever locale the client sends", async () => {
+    const { controller, store } = harness(5)
+    const create = ctxFor({ body: { ...body(true), locale: "fr" } })
+    await controller.create(create)
+    const draftId = create.body.data.documentId
+    expect(
+      store[SUB]!.find((s) => s.documentId === draftId)!.contentLocale
+    ).toBe("en")
+
+    const finalize = ctxFor({ body: { locale: "fr" } }, { id: draftId })
+    await controller.finalize(finalize)
+    const row = store[SUB]!.find((s) => s.documentId === draftId)!
+    expect(row).toMatchObject({ status: "pending", contentLocale: "en" })
+    expect(row.payloadHash).toBe(payloadHash(row))
+  })
+
   it("files every application against the user's profile, whatever the client sends", async () => {
     const { controller, store } = harness(5)
     for (const targetEntityType of ["library", undefined]) {

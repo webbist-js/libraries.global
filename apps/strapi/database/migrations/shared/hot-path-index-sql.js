@@ -112,6 +112,26 @@ const HOT_PATH_INDEXES = [
   // Added after the E1 migration ran, so it has its own migration
   // (2026.09.30T00.00.03.role-grants-index.js); bootstrap covers fresh DBs.
   index("role_grants", ["ba_user_id"]),
+
+  // Audit trail (community moderation): a library's public history (its
+  // published Change Batches, newest first), one batch's rows, a
+  // submission's Change Records and Review Events, an article's history,
+  // and the moderation queue's per-locale filter. Bootstrap only: the site
+  // isn't live, so no migration backfills them.
+  index(
+    "library_changes",
+    ["library_document_id", "version_status", "changed_at"],
+    { name: "library_changes_doc_status_changed_idx" }
+  ),
+  index("library_changes", ["batch_id"]),
+  index("library_changes", ["submission_document_id"]),
+  index(
+    "article_changes",
+    ["article_kind", "article_document_id", "version_status", "changed_at"],
+    { name: "article_changes_kind_doc_status_changed_idx" }
+  ),
+  index("cm_review_events", ["submission_document_id", "created_at"]),
+  index("cm_submissions", ["content_locale", "status"]),
 ]
 
 /**

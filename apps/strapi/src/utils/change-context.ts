@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 
+import { decodeHeaderName } from "./header-name"
 import { isValidServiceSecret } from "./service-secret"
 
 /**
@@ -28,7 +29,18 @@ export interface ChangeContext {
   editSummary?: string | null
 }
 
-const storage = new AsyncLocalStorage<ChangeContext>()
+/**
+ * One store per process, not per module copy. The content-moderation plugin
+ * is bundled separately (`strapi-plugin build`), so it carries its own copy
+ * of this module: a module-scope `new AsyncLocalStorage()` would give the
+ * plugin's `runWithChangeContext` and the app's change-records middleware
+ * two different stores, and every approval would be recorded as `system`.
+ * `Symbol.for` keys the store on `globalThis`, which both copies share.
+ */
+const STORAGE_KEY = Symbol.for("libraries-global.changeContext")
+const storage: AsyncLocalStorage<ChangeContext> = ((globalThis as any)[
+  STORAGE_KEY
+] ??= new AsyncLocalStorage<ChangeContext>())
 
 export function runWithChangeContext<T>(
   ctx: ChangeContext,
@@ -71,7 +83,7 @@ function fromRequest(req: any): ChangeContext | null {
   if (
     user &&
     user.id !== undefined &&
-    strategy !== "api-token" &&
+    !TOKEN_STRATEGIES.has(strategy) &&
     strategy !== "users-permissions"
   ) {
     const name = [user.firstname, user.lastname]
@@ -104,7 +116,7 @@ function fromRequest(req: any): ChangeContext | null {
       source: "submission",
       actorKind: "contributor",
       actorId: `ba:${baUserId}`,
-      actorName: header(req, "x-ba-user-name") ?? null,
+      actorName: decodeHeaderName(header(req, "x-ba-user-name")),
     }
   }
 

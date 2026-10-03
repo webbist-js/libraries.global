@@ -6,6 +6,7 @@ import {
 } from "@repo/access"
 
 import { decideFromRequest } from "./option-suggestion"
+import { decodeHeaderName } from "../../../../utils/header-name"
 import { LIST_STATUSES, type ListStatus } from "../services/moderation"
 import {
   HIERARCHY_KEYS,
@@ -78,7 +79,8 @@ function viewerOf(ctx: any): Viewer | null {
   return {
     id,
     email: header(ctx, "x-ba-user-email"),
-    name: header(ctx, "x-ba-user-name"),
+    // Percent-encoded by the bridge (headers are Latin-1 only).
+    name: decodeHeaderName(header(ctx, "x-ba-user-name")),
   }
 }
 
@@ -398,11 +400,7 @@ export default ({ strapi }: { strapi: any }) => {
       }
       const hasEdit = Object.keys(edit).length > 0
       if (hasEdit && s.submissionType !== "location_request")
-        return fail(
-          ctx,
-          400,
-          "Only location requests take a name and a type."
-        )
+        return fail(ctx, 400, "Only location requests take a name and a type.")
       if (hasEdit) {
         // The Moderator's words go live on approval: same check as a
         // contributor's.

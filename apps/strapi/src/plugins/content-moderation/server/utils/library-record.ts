@@ -240,6 +240,43 @@ function num(v: unknown): number | null {
   return Number.isFinite(n) ? n : null
 }
 
+/**
+ * The submitted keys `buildLibraryRecordData` accepts: its allowlist. Any
+ * other key in a record edit's `fields` is never written.
+ */
+export const RECORD_FIELD_KEYS: ReadonlySet<string> = new Set([
+  ...STRING_FIELDS,
+  ...Object.keys(ENUM_FIELDS),
+  ...BLOCKS_FIELDS,
+  ...RELATION_SETS,
+  ...Object.keys(HIERARCHY),
+  "openingTimes",
+  "socialLinks",
+  "uploadedImages",
+  "lat",
+  "lng",
+])
+
+/**
+ * The library attributes a record edit's submitted `fields` name, through
+ * `RECORD_FIELD_KEYS`: hierarchy ids become their relation, `lat`/`lng`
+ * become `location`, uploads `heroImage`. Unknown keys are dropped, so junk
+ * a contributor sent never reaches a public surface.
+ */
+export function recordFieldNames(fields: unknown): string[] {
+  if (!fields || typeof fields !== "object" || Array.isArray(fields)) return []
+  const names = new Set<string>()
+  for (const key of Object.keys(fields as Record<string, unknown>)) {
+    if (!RECORD_FIELD_KEYS.has(key)) continue
+    if (key in HIERARCHY) names.add(HIERARCHY[key]!)
+    else if (key === "lat" || key === "lng") names.add("location")
+    else if (key === "uploadedImages") names.add("heroImage")
+    else names.add(key)
+  }
+
+  return [...names]
+}
+
 /** True for a `correction` that carries record fields (vs. facilities or free text). */
 export function isRecordCorrection(fields: unknown): boolean {
   return (

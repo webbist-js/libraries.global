@@ -489,6 +489,21 @@ export function makeFakeStrapi(
 
         return doc
       }),
+      createMany: vi.fn(async ({ data }: { data: Record<string, any>[] }) => {
+        const ids: number[] = []
+        for (const row of data) {
+          const doc = {
+            id: ++n,
+            documentId: `doc${String(n).padStart(21, "0")}`,
+            createdAt: new Date().toISOString(),
+            ...row,
+          }
+          table(uid).push(doc)
+          ids.push(doc.id)
+        }
+
+        return { count: data.length, ids }
+      }),
       // `populate` is ignored: seed relations as nested objects instead.
       findMany: vi.fn(async ({ where }: { where?: Record<string, any> } = {}) =>
         table(uid).filter((d) => match(d, where))

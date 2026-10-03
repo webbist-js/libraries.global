@@ -53,6 +53,13 @@ export default [
     handler: "submission.findMine",
     config: { auth: false, policies: [] },
   },
+  // Bridge secret + X-Ba-User-Id (401 otherwise).
+  {
+    method: "GET",
+    path: "/submissions/my/accepted-count",
+    handler: "submission.acceptedCount",
+    config: { auth: false, policies: [] },
+  },
   {
     method: "PATCH",
     path: "/submissions/:id/draft",

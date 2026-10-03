@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   canModerate,
+  canModerateApplication,
   fromSessionCapabilities,
   highestRole,
   QUEUE_OF_SUBMISSION_TYPE,
@@ -54,6 +55,48 @@ describe("canModerate", () => {
     const c = caps([{ role: "wiki_editor", queue: "all", locale: null }])
     expect(c.set.has("moderate.queue")).toBe(false)
     expect(canModerate(c, sub("wiki_edit"), "viewer")).toBe(false)
+  })
+})
+
+describe("canModerateApplication", () => {
+  const app = (locales: string[], submittedByUserId = "author") => ({
+    locales,
+    submittedByUserId,
+  })
+
+  it("lets a moderator with no locale review every application", () => {
+    for (const queue of ["all", "applications"] as const) {
+      const c = caps([{ role: "moderator", queue, locale: null }])
+      expect(canModerateApplication(c, app([]), "viewer")).toBe(true)
+      expect(canModerateApplication(c, app(["fr", "de"]), "viewer")).toBe(true)
+    }
+    const board = caps([
+      { role: "editorial_board", queue: "all", locale: null },
+    ])
+    expect(canModerateApplication(board, app([]), "viewer")).toBe(true)
+  })
+
+  it("limits a locale-scoped moderator to applications for that locale only", () => {
+    for (const queue of ["all", "applications"] as const) {
+      const c = caps([{ role: "moderator", queue, locale: "fr" }])
+      expect(canModerateApplication(c, app(["fr"]), "viewer")).toBe(true)
+      expect(canModerateApplication(c, app(["fr", "de"]), "viewer")).toBe(false)
+      expect(canModerateApplication(c, app(["de"]), "viewer")).toBe(false)
+      // Every language: only a moderator with no locale may decide it.
+      expect(canModerateApplication(c, app([]), "viewer")).toBe(false)
+    }
+  })
+
+  it("needs a scope that covers the applications queue", () => {
+    const c = caps([{ role: "moderator", queue: "knowledge", locale: null }])
+    expect(canModerateApplication(c, app(["fr"]), "viewer")).toBe(false)
+  })
+
+  it("never lets anyone review their own application", () => {
+    const c = caps([{ role: "moderator", queue: "all", locale: null }])
+    expect(canModerateApplication(c, app(["fr"], "viewer"), "viewer")).toBe(
+      false
+    )
   })
 })
 

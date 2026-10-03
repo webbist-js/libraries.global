@@ -385,14 +385,61 @@ describe("change-records middleware", () => {
     expect(written[0].previous.name).toBe("Old Library")
   })
 
+  it("inserts a library write's rows with one createMany", async () => {
+    const { strapi, run, rows } = setup({ [LIBRARY]: [lib()] })
+    const params = {
+      documentId: "lib1",
+      data: { name: "New Library", services: ["s2"] },
+    }
+    await run(LIBRARY, "update", params, () =>
+      strapi.documents(LIBRARY).update(params)
+    )
+    const calls = strapi.db.query.mock.results.flatMap(
+      (r: any) => r.value.createMany.mock.calls
+    )
+    expect(calls).toHaveLength(1)
+    expect(calls[0][0].data).toHaveLength(2)
+    expect(rows(LIBRARY_CHANGE)).toHaveLength(2)
+    expect(rows(LIBRARY_CHANGE)[0].publishedAt).toBeInstanceOf(Date)
+  })
+
+  it("records an import's create as one * row without reading the library back", async () => {
+    const { strapi, run, rows } = setup()
+    const actor = {
+      source: "import" as const,
+      actorKind: "token" as const,
+      actorId: "ingest-uk",
+    }
+    await runWithChangeContext(actor, async () =>
+      run(LIBRARY, "create", { data: { name: "Imported" } }, () =>
+        strapi.documents(LIBRARY).create({ data: { name: "Imported" } })
+      )
+    )
+    const written = rows(LIBRARY_CHANGE)
+    expect(written).toHaveLength(1)
+    expect(written[0]).toMatchObject({
+      action: "create",
+      field: "*",
+      source: "import",
+      actorId: "ingest-uk",
+    })
+    expect(written[0].next.name).toBe("Imported")
+    // Relations the create didn't return aren't recorded as empty.
+    expect(written[0].next).not.toHaveProperty("services")
+    const reads = strapi.documents.mock.results
+      .map((r: any) => r.value.findOne.mock.calls.length)
+      .reduce((a: number, b: number) => a + b, 0)
+    expect(reads).toBe(0)
+  })
+
   it("rejects the outer write when the change-record insert fails", async () => {
     const { strapi, run } = setup({ [LIBRARY]: [lib()] })
-    const base = strapi.documents.getMockImplementation()!
-    strapi.documents.mockImplementation((uid: string) =>
+    const base = strapi.db.query.getMockImplementation()!
+    strapi.db.query.mockImplementation((uid: string) =>
       uid === LIBRARY_CHANGE
         ? {
             ...base(uid),
-            create: vi.fn(async () => {
+            createMany: vi.fn(async () => {
               throw new Error("insert failed")
             }),
           }

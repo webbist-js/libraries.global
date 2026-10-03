@@ -171,3 +171,61 @@ describe("payloadHash on entering review", () => {
     expect(store[UID][0].payloadHash).toBe(payloadHash(store[UID][0]))
   })
 })
+
+describe("moderator-only draftData keys", () => {
+  const target = { region: "r0000000000000000000001" }
+  const edit = { name: "Renamed" }
+
+  it("create drops moderatorTarget and moderatorEdit from the contributor's draftData", async () => {
+    const { strapi, store } = makeFakeStrapi({ [UID]: [] })
+    await createService({ strapi }).create({
+      submissionType: "new_library",
+      fields: { name: "A library" },
+      draftData: {
+        name: "A library",
+        moderatorTarget: target,
+        moderatorEdit: edit,
+      },
+      submittedByUserId: "u1",
+      submittedByEmail: "u1@example.org",
+      asDraft: true,
+    })
+    expect(store[UID][0].draftData).toEqual({ name: "A library" })
+  })
+
+  it("saveDraft drops them", async () => {
+    const { strapi, store } = makeFakeStrapi({
+      [UID]: [sub({ status: "draft", submissionType: "new_library" })],
+    })
+    const res = await createService({ strapi }).saveDraft(
+      "s0000000000000000000001",
+      "u1",
+      { name: "A library", moderatorTarget: target, moderatorEdit: edit },
+      1
+    )
+    expect("data" in res).toBe(true)
+    expect(store[UID][0].draftData).toEqual({ name: "A library" })
+  })
+
+  it("finalizeDraft drops them from a draft saved before the rule, and hashes what it stores", async () => {
+    const { strapi, store } = makeFakeStrapi({
+      [UID]: [
+        sub({
+          status: "draft",
+          submissionType: "location_request",
+          draftData: { moderatorTarget: target, moderatorEdit: edit, step: 2 },
+        }),
+      ],
+    })
+    const result = await createService({ strapi }).finalizeDraft(
+      "s0000000000000000000001",
+      "u1",
+      {}
+    )
+    expect(result).not.toBeNull()
+    const row = store[UID][0]
+    expect(row.status).toBe("pending")
+    expect(row.draftData).toEqual({ step: 2 })
+    expect(row.payloadHash).toBe(payloadHash(row))
+  })
+})

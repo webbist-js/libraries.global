@@ -271,6 +271,12 @@ describe("hot-path index list", () => {
       "ON rw_badge_awards (ba_user_id, badge_id)",
       "ON rw_leaderboard_snapshots (period, period_type)",
       "ON role_grants (ba_user_id)",
+      "ON library_changes (library_document_id, version_status, changed_at)",
+      "ON library_changes (batch_id)",
+      "ON library_changes (submission_document_id)",
+      "ON article_changes (article_kind, article_document_id, version_status, changed_at)",
+      "ON cm_review_events (submission_document_id, created_at)",
+      "ON cm_submissions (content_locale, status)",
     ]) {
       expect(bySql.some((s) => s.includes(expected))).toBe(true)
     }

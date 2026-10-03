@@ -485,9 +485,31 @@ describe("history routes and controller", () => {
     ...over,
   })
 
-  it("clamps page size and only honours values with the service secret", async () => {
+  it("clamps page size and only honours values for a bridged user entitled to library.history", async () => {
     process.env.STRAPI_BRIDGE_SECRET = "sekrit"
-    const { strapi, history } = setup([])
+    const { strapi, history } = setup([], {
+      [PROFILE]: [
+        { documentId: "pp", baUserId: "pro", tier: "Reader" },
+        { documentId: "pa", baUserId: "archivist", tier: "Archivist" },
+        { documentId: "pf", baUserId: "free", tier: "Reader" },
+        {
+          documentId: "pe",
+          baUserId: "expired",
+          tier: "Reader",
+          earnedProUntil: "2020-01-01T00:00:00.000Z",
+        },
+      ],
+      "api::entitlement-grant.entitlement-grant": [
+        { documentId: "g1", baUserId: "pro", plan: "pro", expiresAt: null },
+        {
+          documentId: "g2",
+          baUserId: "free",
+          plan: "pro",
+          expiresAt: "2020-01-01T00:00:00.000Z",
+        },
+      ],
+      "api::pro-verification.pro-verification": [],
+    })
     const spy = vi.spyOn(history, "libraryHistory")
     const c = createController({ strapi })
     await c.libraryHistory(ctxFor({ query: { pageSize: "500", values: "1" } }))
@@ -496,16 +518,35 @@ describe("history routes and controller", () => {
       pageSize: 50,
       values: false,
     })
-    await c.libraryHistory(
-      ctxFor({
-        query: { page: "2", values: "1" },
-        request: { headers: { "x-service-secret": "sekrit" } },
-      })
-    )
+    const asUser = (headers: Record<string, string>) =>
+      c.libraryHistory(
+        ctxFor({
+          query: { page: "2", values: "1" },
+          request: { headers },
+        })
+      )
+    const lastValues = () => (spy.mock.lastCall![1] as any).values
+
+    // The secret alone is not enough: values are a Pro feature.
+    await asUser({ "x-service-secret": "sekrit" })
+    expect(lastValues()).toBe(false)
+    // A user id without the secret is not trusted.
+    await asUser({ "x-ba-user-id": "pro" })
+    expect(lastValues()).toBe(false)
+    for (const [user, allowed] of [
+      ["pro", true], // a plan grant
+      ["archivist", true], // earned Pro
+      ["free", false], // an expired grant
+      ["expired", false], // an earned-Pro hold that ended
+      ["nobody", false], // no profile at all
+    ] as const) {
+      await asUser({ "x-service-secret": "sekrit", "x-ba-user-id": user })
+      expect(lastValues()).toBe(allowed)
+    }
     expect(spy).toHaveBeenLastCalledWith(LIB, {
       page: 2,
       pageSize: 20,
-      values: true,
+      values: false,
     })
     await c.libraryHistory(ctxFor({ query: { pageSize: "0" } }))
     expect(spy).toHaveBeenLastCalledWith(LIB, {
@@ -677,6 +718,34 @@ describe("library-history-backfill-v1: what counts as a record edit", () => {
       (r: any) => `${r.submissionDocumentId}:${r.field}`
     )
     expect(bySub.sort()).toEqual(["s4:name", "s5:phone"])
+  })
+
+  it("records only allowlisted library fields, under their library names", async () => {
+    const f = makeFakeStrapi({
+      [SUB]: [
+        approved(1, {
+          submissionType: "library_edit",
+          fields: {
+            phone: "1",
+            lat: "51.5",
+            lng: "-0.1",
+            regionDocumentId: "r0000000000000000000001",
+            isAdmin: true,
+            "<script>": "x",
+          },
+        }),
+        approved(2, {
+          submissionType: "correction",
+          fields: { kind: "record", previous: {}, notAField: "x" },
+        }),
+      ],
+    })
+    withStore(f.strapi)
+    await backfillLibraryHistory(f.strapi)
+    const bySub = (f.store[CHANGE] ?? []).map(
+      (r: any) => `${r.submissionDocumentId}:${r.field}`
+    )
+    expect(bySub.sort()).toEqual(["s1:location", "s1:phone", "s1:region"])
   })
 
   it("writes a batch atomically: a failed row leaves none of it", async () => {

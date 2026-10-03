@@ -1,7 +1,12 @@
+import { can } from "@repo/access"
+
+import { resolveUserEntitlements } from "../../../../utils/entitlement-inputs"
+import { decodeHeaderName } from "../../../../utils/header-name"
 import {
   resolveSubmissionLocale,
   splitSubmissionBody,
 } from "../services/submission"
+import { acceptedCount as countAccepted } from "../services/submission-policy"
 import {
   isDirectJournalEdit,
   isDirectWikiEdit,
@@ -253,16 +258,16 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   // GET /api/content-moderation/libraries/:documentId/history  (content-api route, public)
-  // A library's published Change Batches, newest first. Field values only
-  // with `values=1` *and* the bridge secret; everyone else gets field names.
+  // A library's published Change Batches, newest first. Field values (a Pro
+  // feature, spec §9.1) only with `values=1`, the bridge secret and an
+  // `X-Ba-User-Id` whose Entitlements, resolved here, include
+  // `library.history`; everyone else gets field names.
   async libraryHistory(ctx: any) {
     const { documentId } = ctx.params as { documentId?: unknown }
     if (!isDocumentId(documentId)) return ctx.badRequest("Invalid documentId")
     const q = (ctx.query ?? {}) as Record<string, unknown>
     const wantsValues = q.values === "1" || q.values === "true"
-    const values =
-      wantsValues &&
-      isValidServiceSecret(ctx.request?.headers?.["x-service-secret"])
+    const values = wantsValues && (await mayReadHistoryValues(strapi, ctx))
 
     const result = await strapi
       .plugin("content-moderation")
@@ -338,6 +343,24 @@ export default ({ strapi }: { strapi: any }) => ({
       .service("submission")
       .findByUser(user.id)
     ctx.body = { data: submissions }
+  },
+
+  // GET /api/content-moderation/submissions/my/accepted-count  (content-api route)
+  // How many of the caller's changes were accepted, Role Applications aside:
+  // the Role Application eligibility count. Bridge secret and X-Ba-User-Id
+  // only; the id is trusted after the secret, never on its own.
+  async acceptedCount(ctx: any) {
+    const headers = ctx.request?.headers ?? {}
+    const baUserId = headers["x-ba-user-id"]
+    if (
+      !isValidServiceSecret(headers["x-service-secret"]) ||
+      typeof baUserId !== "string" ||
+      !baUserId.trim()
+    )
+      return ctx.unauthorized("Service secret and user required.")
+    const accepted = await countAccepted(strapi, baUserId.trim())
+    ctx.set?.("Cache-Control", "no-store")
+    ctx.body = { data: { accepted } }
   },
 
   // GET /content-moderation/relation-labels?type=services  (admin route only)
@@ -677,6 +700,31 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 })
 
+/**
+ * Whether this request may read Change Record values: the bridge secret, a
+ * Better Auth user id, and that user's Entitlements (resolved in Strapi from
+ * the same rows as the session) include `library.history`. Never the
+ * session's word alone.
+ */
+async function mayReadHistoryValues(strapi: any, ctx: any): Promise<boolean> {
+  const headers = ctx.request?.headers ?? {}
+  if (!isValidServiceSecret(headers["x-service-secret"])) return false
+  const baUserId = headers["x-ba-user-id"]
+  if (typeof baUserId !== "string" || !baUserId.trim()) return false
+  try {
+    const entitlements = await resolveUserEntitlements(strapi, baUserId.trim())
+
+    return can(entitlements, "library.history")
+  } catch (err) {
+    strapi.log.warn(
+      "[content-moderation] could not resolve entitlements for history values",
+      err
+    )
+
+    return false
+  }
+}
+
 // Resolves the calling user from the request.
 // Accepts two auth patterns:
 //   1. Service-to-service: X-Service-Secret header (from Next.js API routes) +
@@ -694,7 +742,9 @@ export async function resolveUser(
       const userEmail = ctx.request.headers["x-ba-user-email"] as
         | string
         | undefined
-      const userName = (ctx.request.headers["x-ba-user-name"] as string) ?? ""
+      // Percent-encoded by the bridge (headers are Latin-1 only).
+      const userName =
+        decodeHeaderName(ctx.request.headers["x-ba-user-name"]) ?? ""
       if (userId && userEmail) {
         return { id: userId, email: userEmail, name: userName }
       }

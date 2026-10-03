@@ -80,6 +80,26 @@ export const CLAIM_AFFILIATION_FILTER = {
 }
 
 /**
+ * How many of the user's submissions were accepted (`approved`), not
+ * counting Role Applications: the number the Role Application eligibility
+ * rule reads. Counted in the database.
+ */
+export async function acceptedCount(
+  strapi: any,
+  baUserId: string
+): Promise<number> {
+  const n = await strapi.documents(SUBMISSION).count({
+    filters: {
+      submittedByUserId: { $eq: baUserId },
+      status: { $eq: "approved" },
+      submissionType: { $ne: "role_application" },
+    },
+  })
+
+  return Number(n ?? 0)
+}
+
+/**
  * Role Application eligibility (spec §6.1): valid fields, at least
  * `ROLE_APPLICATION_MIN_ACCEPTED` approved submissions that aren't
  * applications, no open application for the same role, and no grant that
@@ -97,13 +117,7 @@ async function checkRoleApplication(
   if (!parsed.ok) return { ok: false, status: 400, message: parsed.message }
   const application = parsed.value
 
-  const accepted = await strapi.documents(SUBMISSION).count({
-    filters: {
-      submittedByUserId: { $eq: input.baUserId },
-      status: { $eq: "approved" },
-      submissionType: { $ne: "role_application" },
-    },
-  })
+  const accepted = await acceptedCount(strapi, input.baUserId)
   if (accepted < ROLE_APPLICATION_MIN_ACCEPTED)
     return {
       ok: false,
@@ -154,10 +168,7 @@ async function checkLocationRequest(
   const parsed = validateLocationRequestFields(input.fields)
   if (!parsed.ok) return { ok: false, status: 400, message: parsed.message }
   const request = parsed.value
-  if (
-    input.targetEntityType != null &&
-    input.targetEntityType !== request.kind
-  )
+  if (input.targetEntityType != null && input.targetEntityType !== request.kind)
     return {
       ok: false,
       status: 400,

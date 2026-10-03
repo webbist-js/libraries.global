@@ -285,7 +285,10 @@ describe("location request approval", () => {
       const { controller, svc, store } = setup({
         [SUB]: [request(regionFields({ name: "Somersett" }))],
       })
-      const target = ctxFor({ name: " Somerset ", typeLabel: "Ceremonial county" })
+      const target = ctxFor({
+        name: " Somerset ",
+        typeLabel: "Ceremonial county",
+      })
       await controller.setTarget(target)
       expect(target.status).toBe(200)
       expect(store[SUB]![0].draftData.moderatorEdit).toEqual({
@@ -297,8 +300,9 @@ describe("location request approval", () => {
 
       const res: any = await svc.updateStatus(REQ, "approved", REVIEWER)
       expect(res.error).toBeUndefined()
-      expect(store[REGION]!.find((r) => r.documentId === res.data.resultDocumentId))
-        .toMatchObject({ name: "Somerset", typeLabel: "Ceremonial county" })
+      expect(
+        store[REGION]!.find((r) => r.documentId === res.data.resultDocumentId)
+      ).toMatchObject({ name: "Somerset", typeLabel: "Ceremonial county" })
     })
 
     it("refuses a short name, and a name for another type", async () => {
@@ -353,6 +357,27 @@ describe("new_library with a location request", () => {
       region: { connect: [{ documentId: R }] },
       area: { connect: [{ documentId: AREA_ID }] },
     })
+  })
+
+  it("files a library approved before its request once the request is approved", async () => {
+    const { svc, store } = setup({
+      [SUB]: [
+        request(
+          regionFields({ kind: "area", name: "Dover", regionDocumentId: R })
+        ),
+        newLibrary(),
+      ],
+    })
+    await svc.updateStatus(LIB_SUB, "approved", REVIEWER)
+    expect(store[LIBRARY]![0].area).toBeUndefined()
+
+    const res = await svc.updateStatus(REQ, "approved", REVIEWER)
+    expect(res).toHaveProperty("data")
+    const areaId = store[SUB]!.find(
+      (s) => s.documentId === REQ
+    )!.resultDocumentId
+    expect(areaId).toEqual(expect.any(String))
+    expect(store[LIBRARY]![0].area).toEqual({ set: [{ documentId: areaId }] })
   })
 
   it("ignores a request still in review, or someone else's", async () => {

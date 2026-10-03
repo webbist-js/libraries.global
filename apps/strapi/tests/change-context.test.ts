@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
   resolveChangeContext,
@@ -101,6 +101,66 @@ describe("resolveChangeContext", () => {
       actorKind: "system",
     })
     expect(withStrategy(undefined)).toMatchObject({ source: "system" })
+  })
+
+  it("shares one store across module copies (the plugin bundle and the app)", async () => {
+    vi.resetModules()
+    const pluginCopy = await import("../src/utils/change-context")
+    vi.resetModules()
+    const appCopy = await import("../src/utils/change-context")
+    // Two evaluations of the module, as the separately built plugin and the
+    // app each load their own.
+    expect(pluginCopy).not.toBe(appCopy)
+
+    const ctx: ChangeContext = {
+      source: "submission",
+      actorKind: "contributor",
+      actorId: "ba:u7",
+      submissionDocumentId: "sub7",
+    }
+    const seen = await pluginCopy.runWithChangeContext(ctx, async () =>
+      appCopy.resolveChangeContext({})
+    )
+    expect(seen).toEqual(ctx)
+    // And the other way round.
+    const back = await appCopy.runWithChangeContext(ctx, async () =>
+      pluginCopy.resolveChangeContext({})
+    )
+    expect(back).toEqual(ctx)
+  })
+
+  it("treats a content API token with a user on state as a token, not an admin", () => {
+    expect(
+      resolveChangeContext(
+        withRequest({
+          state: {
+            user: { id: 9 },
+            auth: {
+              strategy: { name: "content-api-token" },
+              credentials: { name: "ingest-uk" },
+            },
+          },
+        })
+      )
+    ).toMatchObject({ source: "import", actorKind: "token" })
+  })
+
+  it("decodes a percent-encoded bridge name and keeps a raw one", () => {
+    const named = (name: string) =>
+      resolveChangeContext(
+        withRequest({
+          state: {},
+          request: {
+            headers: {
+              "x-service-secret": "s3cret",
+              "x-ba-user-id": "u42",
+              "x-ba-user-name": name,
+            },
+          },
+        })
+      ).actorName
+    expect(named(encodeURIComponent("Zoë Ångström"))).toBe("Zoë Ångström")
+    expect(named("100% Grace")).toBe("100% Grace")
   })
 
   it("resolves a bridge call with a valid secret", () => {
