@@ -129,10 +129,15 @@ async function strapiGet(pathAndQuery: string) {
 
 /** The sign-up hook creates the profile via the auth-bridge; allow it a moment. */
 async function waitForProfile(baUserId: string, email: string): Promise<void> {
-  const q = `/api/user-profiles?filters[baUserId][$eq]=${encodeURIComponent(baUserId)}&fields[0]=documentId`
+  // baUserId is private, so the profile is read through the bridge-only
+  // own-profile route rather than a public filter.
+  const secret = process.env.STRAPI_BRIDGE_SECRET
+  if (!secret) throw new Error("STRAPI_BRIDGE_SECRET is required to seed")
   for (let i = 0; i < 20; i++) {
-    const { data } = await strapiGet(q)
-    if (data[0]) return
+    const res = await fetch(`${process.env.STRAPI_URL}/api/user-profiles/me`, {
+      headers: { "X-Service-Secret": secret, "X-Ba-User-Id": baUserId },
+    })
+    if (res.ok) return
     await sleep(500)
   }
   throw new Error(`No user-profile for ${email}; sign-up sync failed`)
