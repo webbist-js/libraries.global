@@ -344,6 +344,22 @@ describe("email templates", () => {
     expect(all.text).not.toContain("Their note")
   })
 
+  it("names a Moderator application's queue and the editorial board", () => {
+    const e = applicationDecidedEmail({
+      name: "Ada",
+      role: "moderator",
+      queue: "index",
+      locales: ["fr"],
+      status: "approved",
+      note: null,
+      url: "https://x",
+    })
+    expect(e.subject).toBe("You are now a Moderator of the Index queue")
+    expect(e.text).toContain(
+      "The editorial board approved your application. You are now a Moderator of the Index queue for fr."
+    )
+  })
+
   it("links the moderator alert", () => {
     const e = moderatorAlertEmail({
       type: "role_application",

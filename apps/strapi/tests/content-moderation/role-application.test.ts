@@ -25,6 +25,7 @@ const fieldsFor = (over: Record<string, unknown> = {}) => ({
   locales: [],
   statement: STATEMENT,
   samples: ["https://example.org/a"],
+  acceptedGuidelines: true,
   ...over,
 })
 
@@ -63,9 +64,35 @@ describe("role application fields", () => {
 
   it("accepts a well-formed application", () => {
     expect(ok(fieldsFor({ locales: ["fr"] }))).toBe(true)
+    expect(ok(fieldsFor({ role: "moderator", queue: "index" }))).toBe(true)
+  })
+  it("requires a queue for a moderator and drops it for an editor", () => {
+    expect(ok(fieldsFor({ role: "moderator" }))).toBe(false)
+    expect(ok(fieldsFor({ role: "moderator", queue: "applications" }))).toBe(
+      false
+    )
+    const editor = validateRoleApplicationFields(
+      fieldsFor({ queue: "index", sections: ["getting-started"] }),
+      ["en"]
+    )
+    expect(editor).toMatchObject({
+      ok: true,
+      value: { role: "wiki_editor", sections: ["getting-started"] },
+    })
+    expect((editor as any).value.queue).toBeUndefined()
+    // The Index queue has no sections.
+    const index = validateRoleApplicationFields(
+      fieldsFor({ role: "moderator", queue: "index", sections: ["x"] }),
+      ["en"]
+    )
+    expect(index).toMatchObject({ ok: true, value: { sections: [] } })
+  })
+  it("requires the guidelines to be accepted, literally true", () => {
+    expect(ok(fieldsFor({ acceptedGuidelines: false }))).toBe(false)
+    expect(ok(fieldsFor({ acceptedGuidelines: "true" }))).toBe(false)
+    expect(ok(fieldsFor({ acceptedGuidelines: undefined }))).toBe(false)
   })
   it("refuses other roles, unknown locales, short statements and bad samples", () => {
-    expect(ok(fieldsFor({ role: "moderator" }))).toBe(false)
     expect(ok(fieldsFor({ role: "editorial_board" }))).toBe(false)
     expect(ok(fieldsFor({ locales: ["de"] }))).toBe(false)
     expect(ok(fieldsFor({ statement: "too short" }))).toBe(false)
@@ -88,19 +115,39 @@ describe("roleApplicationFields", () => {
         role: "journal_editor",
         locales: ["fr", "fr", 3],
       })
-    ).toEqual({ role: "journal_editor", locales: ["fr"] })
-    expect(roleApplicationFields({ role: "moderator" })).toEqual({
-      role: null,
-      locales: [],
+    ).toEqual({
+      role: "journal_editor",
+      queue: null,
+      locales: ["fr"],
+      sections: [],
     })
-    expect(roleApplicationFields(null)).toEqual({ role: null, locales: [] })
+    expect(
+      roleApplicationFields({ role: "moderator", queue: "journal" })
+    ).toEqual({ role: "moderator", queue: "journal", locales: [], sections: [] })
+    expect(roleApplicationFields({ role: "editorial_board" })).toEqual({
+      role: null,
+      queue: null,
+      locales: [],
+      sections: [],
+    })
+    expect(roleApplicationFields(null)).toEqual({
+      role: null,
+      queue: null,
+      locales: [],
+      sections: [],
+    })
   })
 })
 
 describe("role application eligibility", () => {
   it("refuses with four accepted changes and allows five", async () => {
     const four = setup({ [SUB]: accepted(4) })
-    expect(await apply(four.policy)).toMatchObject({ ok: false, status: 403 })
+    expect(await apply(four.policy)).toEqual({
+      ok: false,
+      status: 403,
+      message:
+        "Editor and moderator roles go to people with at least 5 accepted changes.",
+    })
 
     const five = setup({ [SUB]: accepted(5) })
     expect(await apply(five.policy)).toEqual({ ok: true })
@@ -137,7 +184,11 @@ describe("role application eligibility", () => {
         },
       ],
     })
-    expect(await apply(policy)).toMatchObject({ ok: false, status: 403 })
+    expect(await apply(policy)).toEqual({
+      ok: false,
+      status: 403,
+      message: "You already have an application for this role.",
+    })
     // A different role is a different application.
     expect(await apply(policy, fieldsFor({ role: "journal_editor" }))).toEqual({
       ok: true,
@@ -159,7 +210,7 @@ describe("role application eligibility", () => {
     const global = setup({ [SUB]: accepted(5), [ROLE_GRANT]: [grant(null)] })
     expect(
       await apply(global.policy, fieldsFor({ locales: ["fr"] }))
-    ).toMatchObject({ ok: false, status: 403 })
+    ).toEqual({ ok: false, status: 403, message: "You already have this role." })
 
     const fr = setup({ [SUB]: accepted(5), [ROLE_GRANT]: [grant("fr")] })
     expect(
@@ -173,6 +224,61 @@ describe("role application eligibility", () => {
     expect(await apply(fr.policy, fieldsFor({ locales: [] }))).toEqual({
       ok: true,
     })
+  })
+
+  it("counts a moderator grant only for its queue, and the board for every role", async () => {
+    const mod = (queue: string) => ({
+      documentId: `rg-mod-${queue}`,
+      baUserId: "u1",
+      role: "moderator",
+      queue,
+      scopeLocale: null,
+    })
+    const index = setup({ [SUB]: accepted(5), [ROLE_GRANT]: [mod("index")] })
+    const asMod = (queue: string) =>
+      apply(index.policy, fieldsFor({ role: "moderator", queue }))
+    expect(await asMod("index")).toMatchObject({ ok: false, status: 403 })
+    expect(await asMod("journal")).toEqual({ ok: true })
+
+    const board = setup({
+      [SUB]: accepted(5),
+      [ROLE_GRANT]: [{ ...mod("all"), role: "editorial_board" }],
+    })
+    expect(await apply(board.policy)).toMatchObject({ ok: false, status: 403 })
+  })
+
+  it("refuses a reapplication within 30 days of a rejection, with the date", async () => {
+    const DAY = 24 * 60 * 60 * 1000
+    const rejected = (daysAgo: number) => ({
+      documentId: APP_ID,
+      submittedByUserId: "u1",
+      submissionType: "role_application",
+      status: "rejected",
+      fields: fieldsFor(),
+      reviewedAt: new Date(Date.now() - daysAgo * DAY).toISOString(),
+    })
+
+    const row = rejected(10)
+    const recent = setup({ [SUB]: [...accepted(5), row] })
+    const again = new Date(new Date(row.reviewedAt).getTime() + 30 * DAY)
+    const expected = new Intl.DateTimeFormat("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    }).format(again)
+    expect(await apply(recent.policy)).toEqual({
+      ok: false,
+      status: 403,
+      message: `You can apply for this role again on ${expected}.`,
+    })
+    // Another role isn't held back.
+    expect(
+      await apply(recent.policy, fieldsFor({ role: "journal_editor" }))
+    ).toEqual({ ok: true })
+
+    const old = setup({ [SUB]: [...accepted(5), rejected(31)] })
+    expect(await apply(old.policy)).toEqual({ ok: true })
   })
 })
 
@@ -299,7 +405,7 @@ describe("role application through the controller", () => {
     expect(finalize.body.data).toMatchObject({
       status: "pending",
       submissionType: "role_application",
-      fields: { role: "wiki_editor", locales: ["fr"] },
+      fields: { role: "wiki_editor", locales: ["fr"], acceptedGuidelines: true },
     })
     expect(
       store[SUB]!.find((s) => s.documentId === draft.documentId)!.status

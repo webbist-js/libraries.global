@@ -1000,6 +1000,10 @@ describe("summaryOf port", () => {
         fields: { role: "journal_editor", locales: [] },
       },
       {
+        submissionType: "role_application",
+        fields: { role: "moderator", queue: "index", locales: ["fr"] },
+      },
+      {
         submissionType: "location_request",
         fields: { kind: "area", name: "Clifton" },
       },
@@ -1010,9 +1014,10 @@ describe("summaryOf port", () => {
       },
     ]
     for (const r of rows) expect(summaryOf(r)).toBe(adminSummaryOf(r))
-    expect(rows.slice(-4).map(summaryOf)).toEqual([
+    expect(rows.slice(-5).map(summaryOf)).toEqual([
       "Knowledge editor application (fr, de)",
       "Journal editor application (all languages)",
+      "Moderator application: Index (fr)",
       "New area: Clifton",
       "New region: Wessex Region",
     ])
@@ -1199,6 +1204,52 @@ describe("Role Application scope", () => {
     })
     await controller.findOne(ok)
     expect(ok.status).toBe(200)
+  })
+
+  it("shows Moderator applications to the editorial board only", async () => {
+    const moderatorApplication = sub({
+      submissionType: "role_application",
+      contentLocale: "en",
+      targetSlug: null,
+      draftData: null,
+      fields: {
+        role: "moderator",
+        queue: "index",
+        locales: [],
+        statement: "I have reviewed library corrections for a year.",
+        samples: [],
+        acceptedGuidelines: true,
+      },
+    })
+    const { controller, store } = setup([moderatorApplication])
+    const appId = moderatorApplication.documentId
+
+    // A global Moderator: not listed, 404 on read and on decision.
+    expect(await listed(controller, GLOBAL_MOD)).toEqual({ ids: [], total: 0 })
+    const read = ctxFor({ viewer: GLOBAL_MOD, params: { documentId: appId } })
+    await controller.findOne(read)
+    expect(read.status).toBe(404)
+    const decide = ctxFor({
+      viewer: GLOBAL_MOD,
+      params: { documentId: appId },
+      body: { status: "approved" },
+    })
+    await controller.updateStatus(decide)
+    expect(decide.status).toBe(404)
+    expect(store[SUB]!.find((r: any) => r.documentId === appId)!.status).toBe(
+      "pending"
+    )
+
+    // The editorial board sees it, with the applicant block.
+    expect(await listed(controller, BOARD)).toEqual({ ids: [appId], total: 1 })
+    const board = ctxFor({ viewer: BOARD, params: { documentId: appId } })
+    await controller.findOne(board)
+    expect(board.status).toBe(200)
+    expect(board.body.data.applicant).toEqual({
+      username: null,
+      acceptedCount: 0,
+      recentAccepted: [],
+    })
   })
 
   it("counts only in-scope applications in stats", async () => {
