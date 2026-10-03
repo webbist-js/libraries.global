@@ -1,1 +1,1 @@
-export { ModerationDashboard as App } from "./pages/ModerationDashboard"
+export { App } from "./pages/App"

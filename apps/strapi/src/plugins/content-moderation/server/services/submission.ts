@@ -29,6 +29,7 @@ import {
   isRecordCorrection,
 } from "../utils/library-record"
 import {
+  configuredLocales,
   defaultLocale,
   normaliseLocale,
   submissionLocale,
@@ -40,6 +41,7 @@ import {
   type LocationEdit,
   locationEditOf,
   roleApplicationFields,
+  validateRoleApplicationFields,
 } from "../utils/params"
 import { payloadHash } from "../utils/payload-hash"
 import {
@@ -597,7 +599,8 @@ function notifications(strapi: any): ReturnType<typeof createNotifications> {
 
 /**
  * Applies an approved Role Application: one Role Grant per requested
- * locale, or one for every locale when it named none. Returns the
+ * locale, or one for every locale when it named none; a Moderator's grants
+ * carry the queue applied for. Returns the
  * applicant's profile documentId. Throws (rolling the approval back) when
  * the role isn't one an application may grant or the applicant has no
  * profile.
@@ -607,10 +610,14 @@ async function applyRoleApplication(
   submission: any,
   reviewer: Reviewer
 ): Promise<string> {
-  const { role, locales } = roleApplicationFields(submission.fields)
+  const { role, queue, locales } = roleApplicationFields(submission.fields)
   if (!role)
     throw new Error(
       `role_application ${submission.documentId} names no role an application can grant`
+    )
+  if (role === "moderator" && !queue)
+    throw new Error(
+      `role_application ${submission.documentId} asks to moderate no queue`
     )
   const baUserId = String(submission.submittedByUserId ?? "")
   const [profile] = baUserId
@@ -629,13 +636,14 @@ async function applyRoleApplication(
     await createGrant(strapi, {
       baUserId,
       role,
+      ...(role === "moderator" && queue ? { queue } : {}),
       locale,
       source: "application",
       grantedBy: reviewer.id,
       reason: `Approved application ${submission.documentId}`,
     })
   strapi.log.info(
-    `[content-moderation] Granted ${role} (${locales.length > 0 ? locales.join(", ") : "all locales"}) from approved application ${submission.documentId}`
+    `[content-moderation] Granted ${role}${queue ? ` of the ${queue} queue` : ""} (${locales.length > 0 ? locales.join(", ") : "all locales"}) from approved application ${submission.documentId}`
   )
 
   return profile.documentId
@@ -865,6 +873,15 @@ export default ({ strapi }: { strapi: any }) => ({
     locale?: unknown
   }) {
     const { asDraft, locale, ...fields } = data
+    // An application is stored as validated: trimmed, de-duplicated, and
+    // without the keys its role ignores (the policy already checked it).
+    if (fields.submissionType === "role_application") {
+      const parsed = validateRoleApplicationFields(
+        fields.fields,
+        await configuredLocales(strapi)
+      )
+      if (parsed.ok) fields.fields = parsed.value
+    }
     const status = asDraft ? "draft" : "pending"
     const requestedKind = fields.fields?.kind
     const rest = {

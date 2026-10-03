@@ -81,9 +81,9 @@ const text = (v: unknown, max = 120): string | null =>
 function alertSummary(s: SubmissionRow): string {
   const who = text(s.submittedByName) ?? "A contributor"
   if (s.submissionType === "role_application") {
-    const { role, locales } = roleApplicationFields(s.fields)
+    const { role, queue, locales } = roleApplicationFields(s.fields)
 
-    return `${who} applied to be a ${roleLabel(role ?? "editor")} for ${languagesLabel(locales)}.`
+    return `${who} applied to be a ${roleLabel(role ?? "editor", queue)} for ${languagesLabel(locales)}.`
   }
   const f = (
     s.fields && typeof s.fields === "object" ? s.fields : {}
@@ -152,12 +152,13 @@ export default ({ strapi }: { strapi: any }) => {
         const note = s.reviewNote?.trim() || null
 
         if (s.submissionType === "role_application") {
-          const { role, locales } = roleApplicationFields(s.fields)
+          const { role, queue, locales } = roleApplicationFields(s.fields)
           await send(what, {
             to,
             ...applicationDecidedEmail({
               name,
               role: role ?? "",
+              queue,
               locales,
               status,
               note,

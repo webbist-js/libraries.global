@@ -54,6 +54,12 @@ const STAFF_ROLES: ReadonlySet<string> = new Set([
 export const ROLE_APPLICATION_MIN_ACCEPTED = 5
 
 /**
+ * Days after a rejected Role Application is decided before the same user
+ * may apply for that role again.
+ */
+export const ROLE_APPLICATION_COOLDOWN_DAYS = 30
+
+/**
  * Tier-scaled contribution quotas. Tiers raise limits; they never skip review.
  * Editorial staff get Curator quotas whatever their points: bounded rather
  * than unlimited, so a compromised staff account still can't flood the queue.

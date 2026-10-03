@@ -49,7 +49,21 @@ export function summaryOf(sub: SummarySource): string {
           ]
         : []
 
-      return `${role} application (${locales.length > 0 ? locales.join(", ") : "all languages"})`
+      const languages = locales.length > 0 ? locales.join(", ") : "all languages"
+      if (f.role === "moderator") {
+        const queue =
+          f.queue === "index"
+            ? "Index"
+            : f.queue === "knowledge"
+              ? "Knowledge"
+              : f.queue === "journal"
+                ? "Journal"
+                : "Queue"
+
+        return `Moderator application: ${queue} (${languages})`
+      }
+
+      return `${role} application (${languages})`
     }
     case "location_request": {
       const edit =

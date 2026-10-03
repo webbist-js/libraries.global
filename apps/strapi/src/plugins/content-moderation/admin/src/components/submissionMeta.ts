@@ -73,6 +73,8 @@ export const TYPE_LABELS: Record<string, string> = {
   wiki_edit: "Knowledge",
   blog_submission: "Journal",
   topic_suggestion: "Topic",
+  role_application: "Role application",
+  location_request: "Location request",
 }
 
 /** Design System colour tokens per type: badge background and text. */
@@ -84,6 +86,8 @@ export const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   wiki_edit: { bg: "secondary100", text: "secondary600" },
   blog_submission: { bg: "alternative100", text: "alternative600" },
   topic_suggestion: { bg: "neutral150", text: "neutral600" },
+  role_application: { bg: "danger100", text: "danger600" },
+  location_request: { bg: "success100", text: "success600" },
 }
 
 export const EVIDENCE_TYPE_LABELS: Record<string, string> = {
@@ -289,7 +293,21 @@ export function summaryOf(sub: Submission): string {
           ]
         : []
 
-      return `${role} application (${locales.length > 0 ? locales.join(", ") : "all languages"})`
+      const languages = locales.length > 0 ? locales.join(", ") : "all languages"
+      if (f.role === "moderator") {
+        const queue =
+          f.queue === "index"
+            ? "Index"
+            : f.queue === "knowledge"
+              ? "Knowledge"
+              : f.queue === "journal"
+                ? "Journal"
+                : "Queue"
+
+        return `Moderator application: ${queue} (${languages})`
+      }
+
+      return `${role} application (${languages})`
     }
     case "location_request": {
       const edit =

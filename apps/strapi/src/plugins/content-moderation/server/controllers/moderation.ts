@@ -134,8 +134,9 @@ export default ({ strapi }: { strapi: any }) => {
   }
 
   /**
-   * Option suggestions are the editorial board's alone: an active
-   * `editorial_board` Role Grant (the highest role), not merely a global
+   * Option suggestions and Moderator applications are the editorial board's
+   * alone: an active `editorial_board` Role Grant (the highest role,
+   * `highestRole` of the grants `authorise` loaded), not merely a global
    * Moderator's `{ all, any locale }` scope.
    */
   const isBoard = (auth: { role: string | null }) =>
@@ -148,7 +149,7 @@ export default ({ strapi }: { strapi: any }) => {
    */
   async function decidable(
     ctx: any,
-    auth: { viewer: Viewer; caps: Capabilities }
+    auth: { viewer: Viewer; caps: Capabilities; role: string | null }
   ): Promise<any | null> {
     const { documentId } = (ctx.params ?? {}) as { documentId?: unknown }
     if (!isDocumentId(documentId)) {
@@ -174,7 +175,9 @@ export default ({ strapi }: { strapi: any }) => {
       return null
     }
     const s = row
-      ? await moderation().loadInScope(auth.caps, auth.viewer.id, documentId)
+      ? await moderation().loadInScope(auth.caps, auth.viewer.id, documentId, {
+          board: isBoard(auth),
+        })
       : null
     if (!s) fail(ctx, 404, NOT_FOUND)
 
@@ -184,7 +187,7 @@ export default ({ strapi }: { strapi: any }) => {
   /** The in-scope submission named by the route, or null after a 400/404. */
   async function inScope(
     ctx: any,
-    auth: { viewer: Viewer; caps: Capabilities }
+    auth: { viewer: Viewer; caps: Capabilities; role: string | null }
   ): Promise<any | null> {
     const { documentId } = (ctx.params ?? {}) as { documentId?: unknown }
     if (!isDocumentId(documentId)) {
@@ -195,7 +198,8 @@ export default ({ strapi }: { strapi: any }) => {
     const s = await moderation().loadInScope(
       auth.caps,
       auth.viewer.id,
-      documentId
+      documentId,
+      { board: isBoard(auth) }
     )
     if (!s) fail(ctx, 404, NOT_FOUND)
 
@@ -230,15 +234,20 @@ export default ({ strapi }: { strapi: any }) => {
         search = q.q.trim() || undefined
       }
 
-      ctx.body = await moderation().list(auth.caps, auth.viewer.id, {
-        status: status ?? "pending",
-        queue,
-        type: isSubmissionType(q.type) ? q.type : undefined,
-        locale,
-        q: search,
-        page: clampInt(q.page, PAGE),
-        pageSize: clampInt(q.pageSize, PAGE_SIZE),
-      })
+      ctx.body = await moderation().list(
+        auth.caps,
+        auth.viewer.id,
+        {
+          status: status ?? "pending",
+          queue,
+          type: isSubmissionType(q.type) ? q.type : undefined,
+          locale,
+          q: search,
+          page: clampInt(q.page, PAGE),
+          pageSize: clampInt(q.pageSize, PAGE_SIZE),
+        },
+        { board: isBoard(auth) }
+      )
     },
 
     // GET /moderation/submissions/:documentId
@@ -451,7 +460,11 @@ export default ({ strapi }: { strapi: any }) => {
     async stats(ctx: any) {
       const auth = await authorise(ctx)
       if (!auth) return
-      ctx.body = { data: await moderation().stats(auth.caps, auth.viewer.id) }
+      ctx.body = {
+        data: await moderation().stats(auth.caps, auth.viewer.id, {
+          board: isBoard(auth),
+        }),
+      }
     },
 
     // GET /moderation/relation-labels?type=  (the admin route, for Moderators)

@@ -5,6 +5,7 @@ import {
   highestRole,
   isSubmissionType,
   resolveCapabilities,
+  ROLE_APPLICATION_COOLDOWN_DAYS,
   ROLE_APPLICATION_MIN_ACCEPTED,
   type RoleGrant,
   SESSION_PROFILE_MAX_CLAIMS,
@@ -14,6 +15,7 @@ import { findUnsafeContent } from "@repo/shared-data"
 import { activeGrants } from "../../../../utils/role-grants"
 import { configuredLocales } from "../utils/locales"
 import {
+  applicationSectionKind,
   isDocumentId,
   type RoleApplicationFields,
   validateLocationRequestFields,
@@ -38,20 +40,42 @@ const LIBRARY = "api::library.library"
 const COUNTRY = "api::country.country"
 const REGION = "api::region.region"
 const SUBMISSION = "plugin::content-moderation.submission"
+const SECTION_UID = {
+  wiki: "api::wiki-section.wiki-section",
+  blog: "api::blog-section.blog-section",
+} as const
 /** Most open applications read when looking for one for the same role. */
 const OPEN_APPLICATIONS_MAX = 50
+const DAY_MS = 24 * 60 * 60 * 1000
+
+/** "3 November 2026": the date format the application messages use. */
+const longDate = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+})
 
 /**
- * Whether the user's grants already cover the application: a grant for the
- * role with no locale covers every locale; otherwise every requested locale
- * must be granted, and an application for all locales is covered only by an
- * all-locale grant.
+ * Whether the user's grants already cover the application. An
+ * `editorial_board` grant covers every application. Otherwise only grants
+ * for the role count (for a Moderator, in the queue applied for or in every
+ * queue): one with no locale covers every locale; else every requested
+ * locale must be granted, and an application for all locales is covered
+ * only by an all-locale grant.
  */
-function grantsCover(
-  grants: RoleGrant[],
-  application: RoleApplicationFields
+export function grantsCover(
+  grants: readonly RoleGrant[],
+  application: Pick<RoleApplicationFields, "role" | "queue" | "locales">
 ): boolean {
-  const held = grants.filter((g) => g.role === application.role)
+  if (grants.some((g) => g.role === "editorial_board")) return true
+  const held = grants.filter(
+    (g) =>
+      g.role === application.role &&
+      (application.role !== "moderator" ||
+        g.queue === "all" ||
+        g.queue === application.queue)
+  )
   if (held.some((g) => g.locale === null)) return true
   if (application.locales.length === 0) return false
   const locales = new Set(held.map((g) => g.locale))
@@ -100,11 +124,63 @@ export async function acceptedCount(
 }
 
 /**
+ * The date the user may apply for `role` again, when an application of
+ * theirs for it was rejected less than `ROLE_APPLICATION_COOLDOWN_DAYS`
+ * ago; otherwise null.
+ */
+export async function reapplyDate(
+  strapi: any,
+  baUserId: string,
+  role: string,
+  now: Date = new Date()
+): Promise<Date | null> {
+  const cutoff = new Date(now.getTime() - ROLE_APPLICATION_COOLDOWN_DAYS * DAY_MS)
+  const rejected = (await strapi.documents(SUBMISSION).findMany({
+    filters: {
+      submittedByUserId: { $eq: baUserId },
+      submissionType: { $eq: "role_application" },
+      status: { $eq: "rejected" },
+      reviewedAt: { $gte: cutoff.toISOString() },
+    },
+    fields: ["documentId", "fields", "reviewedAt"],
+    sort: [{ reviewedAt: "desc" }, { id: "desc" }],
+    limit: OPEN_APPLICATIONS_MAX,
+  })) as { fields?: { role?: unknown } | null; reviewedAt?: string | null }[]
+  const last = rejected.find(
+    (row) => row.fields?.role === role && !!row.reviewedAt
+  )
+  if (!last?.reviewedAt) return null
+  const decided = new Date(last.reviewedAt)
+  if (Number.isNaN(decided.getTime())) return null
+
+  return new Date(decided.getTime() + ROLE_APPLICATION_COOLDOWN_DAYS * DAY_MS)
+}
+
+/** Whether every section slug exists in the list the application names. */
+async function sectionsExist(
+  strapi: any,
+  application: RoleApplicationFields
+): Promise<boolean> {
+  const kind = applicationSectionKind(application)
+  if (!kind || application.sections.length === 0) return true
+  const found = (await strapi.documents(SECTION_UID[kind] as any).findMany({
+    filters: { slug: { $in: application.sections } },
+    fields: ["slug"],
+    limit: application.sections.length,
+  })) as { slug?: string }[]
+  const slugs = new Set(found.map((r) => r.slug))
+
+  return application.sections.every((slug) => slugs.has(slug))
+}
+
+/**
  * Role Application eligibility (spec §6.1): valid fields, at least
  * `ROLE_APPLICATION_MIN_ACCEPTED` approved submissions that aren't
- * applications, no open application for the same role, and no grant that
- * already covers it. Never reads Plan, Tier or Points. `targetEntityType` is
- * not checked: `create` files every application against the user's profile.
+ * applications, no open application for the same role, no grant that
+ * already covers it, and no rejection for the same role in the last
+ * `ROLE_APPLICATION_COOLDOWN_DAYS`. Never reads Plan, Tier or Points.
+ * `targetEntityType` is not checked: `create` files every application
+ * against the user's profile.
  */
 async function checkRoleApplication(
   strapi: any,
@@ -116,13 +192,15 @@ async function checkRoleApplication(
   )
   if (!parsed.ok) return { ok: false, status: 400, message: parsed.message }
   const application = parsed.value
+  if (!(await sectionsExist(strapi, application)))
+    return { ok: false, status: 400, message: "Choose sections from the list." }
 
   const accepted = await acceptedCount(strapi, input.baUserId)
   if (accepted < ROLE_APPLICATION_MIN_ACCEPTED)
     return {
       ok: false,
       status: 403,
-      message: `You can apply once ${ROLE_APPLICATION_MIN_ACCEPTED} of your changes have been accepted. So far ${accepted} ${accepted === 1 ? "has" : "have"}.`,
+      message: `Editor and moderator roles go to people with at least ${ROLE_APPLICATION_MIN_ACCEPTED} accepted changes.`,
     }
 
   const open = (await strapi.documents(SUBMISSION).findMany({
@@ -142,15 +220,18 @@ async function checkRoleApplication(
     return {
       ok: false,
       status: 403,
-      message:
-        "You already have an application for this role. Wait for a moderator to decide on it.",
+      message: "You already have an application for this role.",
     }
 
   if (grantsCover(await activeGrants(strapi, input.baUserId), application))
+    return { ok: false, status: 403, message: "You already have this role." }
+
+  const again = await reapplyDate(strapi, input.baUserId, application.role)
+  if (again)
     return {
       ok: false,
       status: 403,
-      message: "You already hold this role for the languages you chose.",
+      message: `You can apply for this role again on ${longDate.format(again)}.`,
     }
 
   return { ok: true }

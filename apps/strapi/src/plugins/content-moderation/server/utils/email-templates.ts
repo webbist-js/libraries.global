@@ -24,14 +24,27 @@ const TYPE_LABELS: Record<string, string> = {
 const ROLE_LABELS: Record<string, string> = {
   wiki_editor: "Knowledge editor",
   journal_editor: "Journal editor",
+  moderator: "Moderator",
+}
+
+const QUEUE_LABELS: Record<string, string> = {
+  index: "Index",
+  knowledge: "Knowledge",
+  journal: "Journal",
 }
 
 export function typeLabel(type: string): string {
   return TYPE_LABELS[type] ?? "submission"
 }
 
-export function roleLabel(role: string): string {
-  return ROLE_LABELS[role] ?? role
+/** "Knowledge editor", or "Moderator of the Index queue" with a queue. */
+export function roleLabel(role: string, queue?: string | null): string {
+  const label = ROLE_LABELS[role] ?? role
+  const queueLabel = queue ? QUEUE_LABELS[queue] : undefined
+
+  return role === "moderator" && queueLabel
+    ? `${label} of the ${queueLabel} queue`
+    : label
 }
 
 export function languagesLabel(locales: string[]): string {
@@ -151,27 +164,31 @@ export function moderatorAlertEmail(i: {
 export function applicationDecidedEmail(i: {
   name: string | null
   role: string
+  /** Moderator applications: the queue applied for. */
+  queue?: string | null
   locales: string[]
   status: string
   note: string | null
   url: string
 }): Email {
-  const role = roleLabel(i.role)
+  const role = roleLabel(i.role, i.queue)
   const languages = languagesLabel(i.locales)
+  // Moderator applications are decided by the editorial board.
+  const who = i.role === "moderator" ? "The editorial board" : "A moderator"
   const [subject, line] =
     i.status === "approved"
       ? [
           `You are now a ${role}`,
-          `A moderator approved your application. You are now a ${role} for ${languages}.`,
+          `${who} approved your application. You are now a ${role} for ${languages}.`,
         ]
       : i.status === "rejected"
         ? [
             `Your application to be a ${role} was not accepted`,
-            `A moderator reviewed your application to be a ${role} for ${languages} and did not accept it.`,
+            `${who} reviewed your application to be a ${role} for ${languages} and did not accept it.`,
           ]
         : [
-            `A moderator has a question about your application`,
-            `A moderator needs more information before deciding on your application to be a ${role} for ${languages}.`,
+            `${who} has a question about your application`,
+            `${who} needs more information before deciding on your application to be a ${role} for ${languages}.`,
           ]
 
   return compose(subject, {
