@@ -2,11 +2,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 const fetchMock = vi.fn()
 
-const { fetchAllLibrarySlugs, LIBRARY_SLUGS_PAGE_SIZE } =
-  await import("../library-slugs")
+const {
+  fetchLibraryLocationCounts,
+  fetchLibrarySlugCount,
+  fetchLibrarySlugRange,
+  LIBRARY_SLUGS_PAGE_SIZE,
+} = await import("../library-slugs")
 
-const row = (n: number) => ({
-  slug: `lib-${n}`,
+const row = (id: number) => ({
+  id,
+  slug: `lib-${id}`,
   locale: "en",
   updatedAt: "2026-09-29T00:00:00.000Z",
   continent: { slug: "europe" },
@@ -14,28 +19,30 @@ const row = (n: number) => ({
   region: { slug: "west-yorkshire" },
 })
 
-/** Strapi's capped slugs route: `total` rows, `pageSize` per page. */
+/**
+ * Strapi's `/libraries/slugs` as the controller implements it: rows in id
+ * order, `id > after`, then `start` skipped, `limit` capped at 1000, and
+ * `meta.next` set only on a full page. Ids have gaps, as real ones do.
+ */
 function strapi(total: number) {
+  const ids = Array.from({ length: total }, (_, i) => (i + 1) * 3)
+
   return async (url: string) => {
     const u = new URL(url)
-    const page = Number(u.searchParams.get("page") ?? 1)
-    const pageSize = Number(u.searchParams.get("pageSize"))
-    const start = (page - 1) * pageSize
-    const data = Array.from(
-      { length: Math.max(0, Math.min(pageSize, total - start)) },
-      (_, i) => row(start + i)
-    )
+    if (u.pathname === "/api/libraries/slugs/count")
+      return Response.json({ count: total })
+    const after = Number(u.searchParams.get("after") ?? 0)
+    const start = Number(u.searchParams.get("start") ?? 0)
+    const limit = Math.min(Number(u.searchParams.get("limit") ?? 1000), 1000)
+    const data = ids
+      .filter((id) => id > after)
+      .slice(start, start + limit)
+      .map(row)
+    const next = data.length === limit ? data.at(-1)!.id : null
 
     return Response.json({
       data,
-      meta: {
-        pagination: {
-          page,
-          pageSize,
-          pageCount: Math.ceil(total / pageSize),
-          total,
-        },
-      },
+      meta: { after, start, limit, count: data.length, next },
     })
   }
 }
@@ -52,50 +59,94 @@ afterEach(() => {
   vi.unstubAllEnvs()
 })
 
-describe("fetchAllLibrarySlugs", () => {
-  it("reads GET /libraries/slugs page by page until the last page", async () => {
-    fetchMock.mockImplementation(strapi(LIBRARY_SLUGS_PAGE_SIZE * 2 + 5))
+describe("fetchLibrarySlugRange", () => {
+  it("jumps to the offset once, then walks by keyset", async () => {
+    fetchMock.mockImplementation(strapi(12_500))
 
-    const { data } = await fetchAllLibrarySlugs("en")
+    const rows = await fetchLibrarySlugRange("en", 10_000, 10_000)
 
-    expect(data).toHaveLength(LIBRARY_SLUGS_PAGE_SIZE * 2 + 5)
-    expect(data[0]).toEqual(row(0))
-    expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(rows).toHaveLength(2500)
+    expect(rows[0]!.slug).toBe(`lib-${10_001 * 3}`)
+    expect(rows.at(-1)!.slug).toBe(`lib-${12_500 * 3}`)
+    expect(new Set(rows.map((r) => r.slug)).size).toBe(2500)
+    const urls = fetchMock.mock.calls.map(([url]) => new URL(url))
+    expect(urls).toHaveLength(3)
+    expect(urls[0]!.searchParams.get("start")).toBe("10000")
+    expect(urls[0]!.searchParams.get("after")).toBe("0")
+    expect(urls[1]!.searchParams.get("start")).toBe("0")
+    expect(urls[1]!.searchParams.get("after")).toBe(String(11_000 * 3))
+  })
+
+  it("reads exactly the file's size and never more", async () => {
+    fetchMock.mockImplementation(strapi(30_000))
+
+    const rows = await fetchLibrarySlugRange("en", 0, 2500)
+
+    expect(rows).toHaveLength(2500)
+    const limits = fetchMock.mock.calls.map(([url]) =>
+      new URL(url).searchParams.get("limit")
+    )
+    expect(limits).toEqual([
+      String(LIBRARY_SLUGS_PAGE_SIZE),
+      String(LIBRARY_SLUGS_PAGE_SIZE),
+      "500",
+    ])
+  })
+
+  it("sends the locale, published status, token and cache tags", async () => {
+    fetchMock.mockImplementation(strapi(3))
+
+    expect(await fetchLibrarySlugRange("en", 0, 10_000)).toHaveLength(3)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
     const [url, init] = fetchMock.mock.calls[0]!
     const u = new URL(url)
     expect(u.pathname).toBe("/api/libraries/slugs")
     expect(u.searchParams.get("locale")).toBe("en")
     expect(u.searchParams.get("status")).toBe("published")
-    expect(u.searchParams.get("pageSize")).toBe(String(LIBRARY_SLUGS_PAGE_SIZE))
     expect(init.headers).toMatchObject({ Authorization: "Bearer ro-token" })
     expect(init.next).toEqual({ revalidate: 3600, tags: ["strapi", "library"] })
   })
 
-  it("stops after one page when there is only one", async () => {
-    fetchMock.mockImplementation(strapi(3))
+  it("is empty past the last row", async () => {
+    fetchMock.mockImplementation(strapi(5))
 
-    const { data } = await fetchAllLibrarySlugs("en")
-
-    expect(data).toHaveLength(3)
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(await fetchLibrarySlugRange("en", 10_000, 10_000)).toEqual([])
   })
 
-  it("returns an empty list when Strapi fails", async () => {
-    fetchMock.mockResolvedValue(new Response("boom", { status: 500 }))
-
-    expect(await fetchAllLibrarySlugs("en")).toEqual({ data: [] })
-  })
-
-  it("keeps what it has if a later page fails", async () => {
-    const answer = strapi(LIBRARY_SLUGS_PAGE_SIZE * 3)
+  it("throws when Strapi fails, rather than returning a partial file", async () => {
+    const answer = strapi(5000)
     fetchMock.mockImplementation(async (url: string) =>
-      new URL(url).searchParams.get("page") === "3"
-        ? new Response("boom", { status: 500 })
-        : answer(url)
+      new URL(url).searchParams.get("after") === "0"
+        ? answer(url)
+        : new Response("boom", { status: 500 })
     )
 
-    const { data } = await fetchAllLibrarySlugs("en")
+    await expect(fetchLibrarySlugRange("en", 0, 5000)).rejects.toThrow("500")
+  })
+})
 
-    expect(data).toHaveLength(LIBRARY_SLUGS_PAGE_SIZE * 2)
+describe("fetchLibrarySlugCount", () => {
+  it("reads the count route", async () => {
+    fetchMock.mockImplementation(strapi(2_900_000))
+
+    expect(await fetchLibrarySlugCount("en")).toBe(2_900_000)
+    expect(new URL(fetchMock.mock.calls[0]![0]).pathname).toBe(
+      "/api/libraries/slugs/count"
+    )
+  })
+})
+
+describe("fetchLibraryLocationCounts", () => {
+  it("returns the counts as a map keyed by slug path", async () => {
+    fetchMock.mockResolvedValue(
+      Response.json({ data: { europe: 3, "europe/france": 3 } })
+    )
+
+    const counts = await fetchLibraryLocationCounts("en")
+
+    expect(counts.get("europe/france")).toBe(3)
+    expect(new URL(fetchMock.mock.calls[0]![0]).pathname).toBe(
+      "/api/libraries/location-counts"
+    )
   })
 })
