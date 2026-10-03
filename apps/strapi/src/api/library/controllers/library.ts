@@ -9,6 +9,7 @@ import {
   compactHours,
   type OpeningTimes,
 } from "../../../utils/library-completeness"
+import { countLibrariesByLocationPath } from "../../../utils/library-location-counts"
 import { readStatus } from "../../../utils/read-status"
 
 // ── Atlas helpers ──────────────────────────────────────────────────────────
@@ -289,41 +290,88 @@ export default factories.createCoreController(
     },
 
     /**
-     * GET /libraries/slugs?start=0&limit=1000
+     * GET /libraries/slugs?after=0&start=0&limit=1000
      * Slug, locale and location slugs for every library, in id order, for
-     * sitemaps and static params. `limit` is capped at SLUGS_MAX_LIMIT; the
-     * caller pages with `start`.
+     * sitemaps and static params. `limit` is capped at SLUGS_MAX_LIMIT.
+     * Callers page by keyset: pass `meta.next` back as `after` (null on the
+     * last page). `start` skips rows after that, so a sitemap file can jump
+     * to its first row once and walk by keyset from there.
      */
     async slugs(ctx) {
       const q = stringQuery(ctx.query as Record<string, unknown>, [
         "locale",
+        "after",
         "start",
         "limit",
       ])
       if (!q) return ctx.badRequest("Query parameters must be single strings")
+      const after = pageInt(q.after, 0, 0)
       const start = pageInt(q.start, 0, 0)
       const limit = pageInt(q.limit, SLUGS_MAX_LIMIT, 1, SLUGS_MAX_LIMIT)
-      if (start === null || limit === null)
-        return ctx.badRequest("start must be >= 0 and limit between 1 and 1000")
+      if (after === null || start === null || limit === null)
+        return ctx.badRequest(
+          "after and start must be >= 0 and limit between 1 and 1000"
+        )
       const status = readStatus(ctx)
 
-      const results = await strapi.documents("api::library.library").findMany({
-        fields: ["slug", "locale", "updatedAt"],
-        populate: {
-          continent: { fields: ["slug"] },
-          country: { fields: ["slug"] },
-          region: { fields: ["slug"] },
-        } as never,
-        locale: q.locale,
-        status,
-        sort: "id:asc" as never,
-        start,
-        limit,
-      })
+      const results = (await strapi
+        .documents("api::library.library")
+        .findMany({
+          ...(after > 0 ? { filters: { id: { $gt: after } } as never } : {}),
+          fields: ["slug", "locale", "updatedAt"],
+          populate: {
+            continent: { fields: ["slug"] },
+            country: { fields: ["slug"] },
+            region: { fields: ["slug"] },
+          } as never,
+          locale: q.locale,
+          status,
+          sort: "id:asc" as never,
+          start,
+          limit,
+        })) as unknown as { id?: number }[]
+      const last = results.at(-1)?.id
+      const next =
+        results.length === limit && typeof last === "number" ? last : null
 
       ctx.body = {
         data: results,
-        meta: { start, limit, count: results.length },
+        meta: { after, start, limit, count: results.length, next },
+      }
+    },
+
+    /**
+     * GET /libraries/slugs/count
+     * How many libraries `/libraries/slugs` would walk, so the sitemap index
+     * can size its files without reading every row.
+     */
+    async slugsCount(ctx) {
+      const q = stringQuery(ctx.query as Record<string, unknown>, ["locale"])
+      if (!q) return ctx.badRequest("Query parameters must be single strings")
+
+      const count = await strapi.documents("api::library.library").count({
+        locale: q.locale,
+        status: readStatus(ctx),
+      } as never)
+
+      ctx.body = { count }
+    },
+
+    /**
+     * GET /libraries/location-counts
+     * Published libraries per continent, continent/country and
+     * continent/country/region slug path, from one grouped query. The
+     * sitemap lists a location page only once it has records.
+     */
+    async locationCounts(ctx) {
+      const q = stringQuery(ctx.query as Record<string, unknown>, ["locale"])
+      if (!q) return ctx.badRequest("Query parameters must be single strings")
+
+      ctx.body = {
+        data: await countLibrariesByLocationPath(strapi, {
+          locale: q.locale,
+          status: readStatus(ctx),
+        }),
       }
     },
   })

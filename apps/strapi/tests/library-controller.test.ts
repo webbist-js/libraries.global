@@ -201,9 +201,40 @@ describe("library.slugs (E5)", () => {
     expect(p1.fields).toEqual(["slug", "locale", "updatedAt"])
     expect(p2).toMatchObject({ start: 1000, limit: 1000 })
     expect(first.body.data).toHaveLength(1000)
-    expect(first.body.meta).toEqual({ start: 0, limit: 1000, count: 1000 })
+    expect(first.body.meta).toEqual({
+      after: 0,
+      start: 0,
+      limit: 1000,
+      count: 1000,
+      next: 1000,
+    })
     expect(second.body.data).toHaveLength(201)
     expect(second.body.data[0].slug).toBe("library-1001")
+    expect(second.body.meta.next).toBeNull()
+  })
+
+  it("walks by keyset: `after` filters on id and `meta.next` is the last id", async () => {
+    const rows = Array.from({ length: 25 }, (_, i) => library(i + 1))
+    const { controller, findManyParams } = build(rows)
+    const first = ctx({ start: "5", limit: "10" })
+    await controller.slugs(first)
+    const second = ctx({ after: String(first.body.meta.next), limit: "10" })
+    await controller.slugs(second)
+
+    const [p1, p2] = findManyParams()
+    expect(p1.filters).toBeUndefined()
+    expect(p2.filters).toEqual({ id: { $gt: 15 } })
+    expect(first.body.data[0].slug).toBe("library-6")
+    expect(first.body.meta.next).toBe(15)
+    expect(second.body.data.map((r: any) => r.slug)).toEqual(
+      Array.from({ length: 10 }, (_, i) => `library-${i + 16}`)
+    )
+    // A full page always hands back a cursor; the next page is then empty.
+    expect(second.body.meta.next).toBe(25)
+    const third = ctx({ after: "25", limit: "10" })
+    await controller.slugs(third)
+    expect(third.body.data).toEqual([])
+    expect(third.body.meta.next).toBeNull()
   })
 
   it.each([
@@ -211,6 +242,7 @@ describe("library.slugs (E5)", () => {
     ["start", "x"],
     ["limit", "0"],
     ["limit", ["10", "20"]],
+    ["after", "-5"],
   ])("returns 400 for an invalid %s", async (key, value) => {
     const { controller, strapi } = build([library(1)])
     const c = ctx({ [key]: value })
@@ -218,5 +250,28 @@ describe("library.slugs (E5)", () => {
 
     expect(c.status).toBe(400)
     expect(strapi.documents).not.toHaveBeenCalled()
+  })
+})
+
+describe("library.slugsCount", () => {
+  it("counts published libraries in the locale", async () => {
+    const { controller, strapi } = build([library(1), library(2)])
+    const c = ctx({ locale: "en" })
+    await controller.slugsCount(c)
+
+    expect(c.body).toEqual({ count: 2 })
+    const handle = strapi.documents.mock.results[0].value
+    expect(handle.count).toHaveBeenCalledWith({
+      locale: "en",
+      status: "published",
+    })
+  })
+
+  it("refuses a repeated locale", async () => {
+    const { controller } = build([])
+    const c = ctx({ locale: ["en", "cs"] })
+    await controller.slugsCount(c)
+
+    expect(c.status).toBe(400)
   })
 })
