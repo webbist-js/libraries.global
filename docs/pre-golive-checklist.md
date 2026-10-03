@@ -109,10 +109,13 @@ After ingest, bulk-review drafts in the Strapi admin and publish approved record
 
 ### 3a. Meilisearch — populate index
 
-Ensure the Meilisearch `library` index is populated. Libraries are indexed via the Strapi `afterCreate` / `afterUpdate` lifecycle hooks, but a full re-index may be needed after a bulk ingest:
+- [ ] Reindex after the countries import (1e), the library ingest (2a) and the first deploy of the community moderation work, which made the indexes hold every locale.
 
-- Trigger via Strapi admin → Content Manager → bulk publish (hooks fire on publish)
-- Or run a manual re-index script if one exists
+```bash
+node apps/strapi/scripts/seed-meilisearch.mjs
+```
+
+The script fills the `library`, `wiki-article` and `blog-article` indexes with every locale's version (`locale: "*"`, with `locale` filterable) and applies the same settings as `apps/strapi/config/plugins.ts`. Publishing in Strapi keeps them current from then on. Search filters by the route locale when it is in `LIVE_LOCALES` (`apps/ui/src/lib/live-locales.ts`), else English, so an index without a `locale` on every document returns nothing.
 
 ### 3b. Verify search settings
 
@@ -125,13 +128,33 @@ Confirm searchable attributes, filters, and sortable fields match `apps/ui/src/l
 - Confirm Better Auth is configured for production domain (callback URLs, OAuth app credentials)
 - Verify Strapi Roles & Permissions for the `Public` role match `docs/strapi-role-permissions.md`
 - Test OAuth flows (GitHub, Google) end-to-end in staging
+- [ ] Add the Role Grants production needs in the Content Manager (Role Grant): the editorial board and any Moderators, with `grantedBy` and `reason`. Moderators work at `/contribute/moderation` and need no Strapi admin account.
+- [ ] If any admin role besides Super Admin exists, make Library Change and Article Change read only for it, and keep Role Grant, Entitlement Grant and Pro Verification Super Admin only (`docs/strapi-role-permissions.md`, "Admin panel RBAC").
+
+### 4a. Boot backfills (automatic)
+
+The first Strapi boot of the community moderation release runs these one-offs. Each is guarded by a core-store flag, so it runs once, and a failure is logged without blocking boot. Nothing to run by hand; check the boot log.
+
+- `migrateContributorRolesToGrants` (`src/utils/role-grants.ts`): a global Role Grant for every profile whose `contributorRole` is above `reader`. Logs `[role-grants] Backfilled grants for N profiles`.
+- `backfillSubmissionLocales` (`content-moderation/server/utils/locales.ts`): a `contentLocale` on Submissions from before they carried one.
+- `migrateReviewerPrefix` (`content-moderation/server/utils/reviewer.ts`): prefixes bare reviewer ids with `admin:`.
+- `backfillLibraryHistory` (`content-moderation/server/services/history.ts`): one Change Batch (field names only) for every approved `library_edit` and record `correction` from before Change Records. Claims, facility answers, photos and free-text corrections aren't backfilled.
+
+A failure appears as `[role-grants] Contributor role migration failed` or `[content-moderation] … failed`. Fix the cause and restart: a backfill whose flag wasn't set runs again.
+
+### 4b. Build the Strapi plugins before deploying
+
+- [ ] The `content-moderation`, `rewards` and `events` plugins ship built bundles. `pnpm --filter @repo/strapi build` runs `build:plugins` first, and so does `postinstall`; if the deploy skips both, run `pnpm --filter @repo/strapi build:plugins` before `strapi build`, or the admin queue and the server's routes won't match the source.
 
 ---
 
 ## 5. Environment
 
 - `NEXT_PUBLIC_APP_URL` set to production domain (used in `metadataBase` and sitemap)
-- `STRAPI_BRIDGE_SECRET` rotated for production
+- `STRAPI_BRIDGE_SECRET` rotated for production, and the same value in both apps (Strapi checks it on every bridge call and uses it to clear the site's session cache after a Role Grant changes)
+- Strapi `APP_PUBLIC_URL` set to the production site: moderation email links and the session cache call (`/api/internal/session/invalidate`) use it
+- Strapi `MAILGUN_API_KEY` and `MAILGUN_DOMAIN` set, or moderation emails (decisions, new Role Applications and Location Requests) are logged and skipped. `MODERATORS_EMAIL` (default `moderators@libraries.global`) is a monitored mailbox.
+- `CHANGE_RECORDS_ENABLED` unset or `true`: `false` stops the audit trail and is for emergencies only
 - `NEXT_PUBLIC_MEILISEARCH_*` pointing to production Meilisearch instance
 - Strapi `APP_KEYS`, `JWT_SECRET`, `ADMIN_JWT_SECRET`, `API_TOKEN_SALT` all rotated
 - `MAILGUN_SMTP_USER` / `MAILGUN_SMTP_PASS` set (and `MAILGUN_SMTP_HOST=smtp.eu.mailgun.org` for an EU-region domain). Production refuses to send sign-in links without them.

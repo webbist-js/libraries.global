@@ -49,15 +49,15 @@ Editorial and narrative content — stories, features, guest pieces — managed 
 _Avoid_: posts, news
 
 **Submission**:
-A user-initiated change request that enters a moderation queue before any data is altered. Covers corrections to existing entries, new Library proposals, Library Claims, wiki and blog contributions, and topic suggestions. All submissions go through review regardless of the submitter's trust level.
+A user-initiated change request that enters a Moderation Queue before any data is altered. Covers corrections to existing entries, new Library proposals, Library Claims, wiki and blog contributions, topic suggestions, Role Applications and Location Requests. Each carries the locale it was written in (stored as `contentLocale`), which decides which Moderators may review it and which language version an approval changes. All submissions go through review regardless of the submitter's trust level.
 _Avoid_: edit, change request, contribution (alone — too generic; use the specific type)
 
 **Submission State**:
-Where a Submission is in moderation: `draft` (saved, not sent) → `pending` (waiting for review) → `approved`, `rejected` or `needs_info` (the reviewer asked for more). `needs_info` returns to `pending` when the submitter resubmits (their edit-and-resubmit flow is still to come, C-M1); a moderator can also approve or reject it directly. `approved` and `rejected` are final. Only these transitions are allowed (content-moderation `utils/transitions.ts`), and approval side effects (applying the change, awarding Points) run once. Users see Draft, Submitted, Needs changes, Accepted and Not accepted.
+Where a Submission is in moderation: `draft` (saved, not sent) → `pending` (waiting for review) → `approved`, `rejected` or `needs_info` (the reviewer asked for more). `needs_info` returns to `pending` when the submitter resubmits (their edit-and-resubmit flow is still to come, C-M1); a moderator can also approve or reject it directly. `approved` and `rejected` are final. Only these transitions are allowed (content-moderation `utils/transitions.ts`), each is logged as a Review Event, and approval side effects (applying the change, awarding Points) run once. Users see Draft, Submitted, Needs changes, Accepted and Not accepted.
 _Avoid_: status (alone — clashes with Strapi's document `status`, which the content-manager shows as `published` for every Submission)
 
 **Library Claim**:
-A Submission in which a user asserts a trusted relationship to a specific Library — either as an employee or institutional affiliate, or as a verified community member who wants to steward that Library's data. Approval grants the claimant a trusted-contributor signal on future Submissions, not a bypass of moderation.
+A Submission in which a user asserts a trusted relationship to a specific Library — either as an employee or institutional affiliate, or as a verified community member who wants to steward that Library's data. Approval gives the claimant a `verified_librarian` Role Grant and a trusted-contributor signal on future Submissions, not a bypass of moderation.
 _Avoid_: ownership claim, takeover
 
 **Saved Library**:
@@ -69,7 +69,7 @@ The unit of contribution credit awarded when a Submission is approved. Drive Tie
 _Avoid_: credits, score, karma
 
 **Tier**:
-A prestige level computed from a user's all-time Points — Reader (0), Indexer (100), Cartographer (500), Archivist (1 500), Scholar (4 000), Curator (9 000). Scales contribution limits only (pending submissions, submissions per hour, uploads per day: `contributionLimits` in `@repo/access`; `wiki_editor` and `editorial_board` get Curator limits) and, from Archivist up, earns Pro (see Plan Source). Never confers trust: no Tier skips review or grants a Capability.
+A prestige level computed from a user's all-time Points — Reader (0), Indexer (100), Cartographer (500), Archivist (1 500), Scholar (4 000), Curator (9 000). Scales contribution limits only (pending submissions, submissions per hour, uploads per day: `contributionLimits` in `@repo/access`; `wiki_editor`, `journal_editor`, `moderator` and `editorial_board` get Curator limits) and, from Archivist up, earns Pro (see Plan Source). Never confers trust: no Tier skips review or grants a Capability.
 _Avoid_: level, rank, grade
 
 **Badge**:
@@ -81,15 +81,47 @@ The number of consecutive calendar days on which a user had an approved contribu
 _Avoid_: combo, run, activity count
 
 **Moderator**:
-A community member or staff editor with authority to approve, reject, or request more information on Submissions. A future role — not yet fully built — intended to distribute moderation workload beyond the core team.
+A community member with authority to approve, reject, or request more information on Submissions within their Moderation Scope: anyone holding a `moderator` Role Grant, and the editorial board for every queue and locale. Moderators review on the site at `/contribute/moderation`, where Strapi re-checks their scope on every request; the owner can also review from the Strapi admin queue. Nobody reviews their own Submission, and no Moderator lets one skip review.
 _Avoid_: admin, reviewer (alone — too generic)
 
 **Contributor Role**:
-A permission level stored on a user's profile that gates access to privileged platform features. Distinct from Tier (earned with Points; changes limits only) and Plan (changes Entitlements only). Values in ascending privilege order: `reader` (default), `contributor`, `verified_librarian`, `wiki_editor`, `editorial_board`. `wiki_editor` and `editorial_board` can edit Wiki articles. Roles are assigned by staff in Strapi admin, except `verified_librarian`, which an approved Library Claim (or an email-domain auto-verification) sets; that never lowers a higher role. They are never earned with Points or bought. Stored in the user-profile record and read into the Better Auth session through the `session-profile` bridge, which is cached for 60 seconds per user (spec §3.2), so a role change takes effect within a minute.
+A level of trust that gates privileged platform features, held through Role Grants. Distinct from Tier (earned with Points; changes limits only) and Plan (changes Entitlements only). Values in ascending privilege order: `reader` (no grants), `contributor`, `verified_librarian`, `wiki_editor`, `journal_editor`, `moderator`, `editorial_board`. A person can hold several at once, each with its own scope: `wiki_editor` and `journal_editor` edit Knowledge or Journal articles directly in the locales of their grants, `moderator` reviews Submissions in its Moderation Scope, and `editorial_board` does all of that in every queue and locale. Staff grant roles in Strapi admin; an approved Library Claim (or an email-domain auto-verification) grants `verified_librarian`, and an approved Role Application grants an editor role. They are never earned with Points or bought. The profile's `contributorRole` shows the highest role for display and is derived from the grants, never written directly. Grants reach the Better Auth session through the `session-profile` bridge, cached for 60 seconds per user; a grant change also asks the site to drop that cache, so it usually shows at once and always within a minute.
 _Avoid_: permission, access level, tier (Tier is the Points-based system)
 
+**Role Grant**:
+A row that gives one person one Contributor Role, optionally scoped to a Moderation Queue and a locale, with who granted it, why, and an optional expiry. A person's Contributor Roles are the union of their unexpired grants; someone with none is a `reader`. Stored in the admin-only `role-grant` collection (the locale as `scopeLocale`).
+_Avoid_: permission, U&P role
+
+**Moderation Queue**:
+Where a Submission waits for review: `index` (library submissions and Location Requests), `knowledge` (Knowledge contributions), `journal` (Journal contributions) or `applications` (Role Applications). Every Submission type maps to exactly one queue.
+_Avoid_: inbox, backlog
+
+**Moderation Scope**:
+The (queue, locale) pairs a Moderator may review, one per `moderator` Role Grant. The `all` queue and no locale mean unrestricted.
+_Avoid_: permission, remit
+
+**Role Application**:
+A Submission asking for a Knowledge or Journal editor role, for every language or only some, reviewed in the `applications` queue. Open to anyone with five accepted Submissions, no open application for that role and no grant that already covers it; never related to Plan, Tier or Points. Approval creates the Role Grants and awards no Points.
+_Avoid_: promotion, role request
+
+**Location Request**:
+A Submission asking for a missing Region or Area, made from the new-Library flow and reviewed in the `index` queue. Approval creates the Region or Area, published, and awards no Points. Countries are never requested: every country is imported.
+_Avoid_: new region, location suggestion
+
+**Review Event**:
+One Submission State transition: from, to, reviewer, note and when. Append-only; together they are the review thread on a Submission.
+_Avoid_: comment, history (alone — too generic)
+
+**Change Record**:
+One field of one Library changing once: previous value, next value, who, when, why (which Submission, if any) and from which source (a Submission, an admin, an API token, an import or the system). Recorded for every write, including admin edits and imports, and never edited or deleted. The Change Records from one write form a **Change Batch**. A Library's public Changes section names the fields; their values are a Pro Entitlement (`library.history`).
+_Avoid_: revision, audit log entry
+
+**Article Change**:
+One edit event on a Knowledge or Journal article: who, when, locale and kind (created, edited, translated, published, unpublished or deleted). No body diff.
+_Avoid_: revision, version
+
 **Capability**:
-Something a signed-in user may do in the contribution system: submit a correction, a new Library, a Library Claim, a doc suggestion, a journal pitch or a topic suggestion; submit a `library_edit` or connect an event feed for a Library they have claimed; or edit Wiki articles directly (`docs.directEdit`, for `wiki_editor` and `editorial_board`). Resolved only from the Contributor Role and Library Claims (`resolveCapabilities` in `@repo/access`); Tier and Plan never feed it. Strapi's `submission-policy` is the real gate; the session's copy drives the UI and route pre-checks only.
+Something a signed-in user may do in the contribution system: submit a correction, a new Library, a Library Claim, a doc suggestion, a journal pitch, a topic suggestion, a Role Application or a Location Request; submit a `library_edit` or connect an event feed for a Library they have claimed; edit Wiki or Blog articles directly (`docs.directEdit`, `journal.directEdit`, in the locales of the editor's grants); or review Submissions (`moderate.queue`, within a Moderation Scope). Resolved only from Role Grants and Library Claims (`resolveCapabilities` in `@repo/access`); Tier and Plan never feed it. Strapi's `submission-policy` is the real gate; the session's copy drives the UI and route pre-checks only.
 _Avoid_: permission (Strapi admin's word for its own roles), entitlement (that is what a Plan gives)
 
 **Entitlement**:
@@ -139,8 +171,10 @@ _Avoid_: province, state, county (those are display names; the concept is Region
 - An **Area** belongs to exactly one **Region**; not every **Region** has **Areas**
 - A **Library Claim** links a user to a specific **Library** and, when approved, elevates their trust signal on future **Submissions** against that Library
 - **Points** accumulate per approved **Submission** and determine a user's **Tier** and **Badge** eligibility
-- A user's **Capabilities** come only from their **Contributor Role** and **Library Claims**, and their **Entitlements** only from their **Plan**. The two never feed each other; **Tier** feeds only contribution limits and earned Pro
+- A user's **Capabilities** come only from their **Role Grants** (their **Contributor Roles**) and **Library Claims**, and their **Entitlements** only from their **Plan**. The two never feed each other; **Tier** feeds only contribution limits and earned Pro
 - Every **Submission** moves through the **Submission States**; no **Plan**, **Tier** or **Contributor Role** lets it skip review
+- Every **Submission** belongs to one **Moderation Queue**; a **Moderator** reviews it only when the queue and its locale are in their **Moderation Scope**, and never their own
+- Every change to a **Library**'s content leaves **Change Records**, whoever made it; every write to a Wiki or Blog article leaves an **Article Change**
 - A **Pillar Institution** is a **Library** flagged `featured: true` by editorial choice; there is no maximum per Region or Country
 
 ## Example dialogue
