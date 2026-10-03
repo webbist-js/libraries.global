@@ -10,11 +10,12 @@
  *     must never run while a content-type schema is mid-edit.
  *
  * Why it exists: Strapi REST cannot make these writes, by design.
- * user-profile exposes only find/findOne, and library-affiliation,
- * entitlement-grant and pro-verification have no routes at all (P-A
- * hardening; the last two are admin-only). So this calls load() and writes
- * through the Document Service, the same way the moderation service does on
- * claim approval. It never calls listen(), so no HTTP server starts. load()
+ * user-profile exposes only find/findOne, and role-grant,
+ * library-affiliation, entitlement-grant and pro-verification have no
+ * routes at all (P-A hardening; all four are admin-only), nor does a
+ * submission's status. So this calls load() and writes through the Document
+ * Service, the same way the moderation service does on claim approval. It
+ * never calls listen(), so no HTTP server starts. load()
  * runs bootstrap, which starts the cron service. So the writer:
  *   - sets server.cron.enabled = false before load(), so config/cron-tasks
  *     are never scheduled even if CRON_ENABLED=true in apps/strapi/.env;
@@ -24,14 +25,24 @@
  *     and destroy() stops those. A job due in that instant could still run.
  *
  * Run by the seed with cwd = apps/strapi, so Strapi loads its own .env.
- * Input: ACCESS_SEED_PLAN, a JSON array of { baUserId, role, username,
- * plan, claimLibrary } (see FIXTURES in access-fixtures.ts; a null username
- * marks the onboarding fixture). Output: one line prefixed
- * ACCESS_SEED_RESULT with a JSON summary of what changed.
+ * Input: ACCESS_SEED_PLAN, a JSON array of { baUserId, email, name,
+ * roleGrants: [{ role, queue, locale }], username, plan, claimLibrary,
+ * trackRecord } (see FIXTURES in access-fixtures.ts; a null username marks
+ * the onboarding fixture), and ACCESS_SEED_OPTIONS, { locales,
+ * areaNamePrefix }. Output: one line prefixed ACCESS_SEED_RESULT with a
+ * JSON summary of what changed.
+ *
+ * Contributor Roles are Role Grants. The writer never sets
+ * `user-profile.contributorRole` or `isVerifiedLibrarian`: the role-grant
+ * lifecycle (loaded with the app) derives them on every grant write, and
+ * the writer runs the same `syncDerivedRole` (from dist) once per fixture,
+ * so a profile left stale by hand is corrected even when no grant changed.
  *
  * Every fixture converges in both directions: rows it should have are
  * created, rows it shouldn't are deleted, and nothing that already matches
- * is written, so a re-run is a no-op.
+ * is written, so a re-run is a no-op. Submissions converge too: a fixture
+ * keeps only its `trackRecord` accepted ones, so whatever the specs
+ * submitted is deleted.
  */
 const { createRequire } = require("node:module")
 const path = require("node:path")
@@ -41,6 +52,9 @@ const requireFromStrapi = createRequire(path.join(appDir, "package.json"))
 const { createStrapi } = requireFromStrapi("@strapi/strapi")
 
 const PROFILE = "api::user-profile.user-profile"
+const ROLE_GRANT = "api::role-grant.role-grant"
+const SUBMISSION = "plugin::content-moderation.submission"
+const AREA = "api::area.area"
 const AFFILIATION = "api::library-affiliation.library-affiliation"
 const GRANT = "api::entitlement-grant.entitlement-grant"
 const VERIFICATION = "api::pro-verification.pro-verification"
@@ -50,6 +64,26 @@ const DAY_MS = 86_400_000
 // replaced, so it never lapses between seeds and a re-run stays a no-op.
 const VERIFICATION_DAYS = 365
 const VERIFICATION_RENEW_DAYS = 30
+
+const GRANTABLE_ROLES = new Set([
+  "contributor",
+  "verified_librarian",
+  "wiki_editor",
+  "journal_editor",
+  "moderator",
+  "editorial_board",
+])
+const QUEUES = new Set(["all", "index", "knowledge", "journal", "applications"])
+const LOCALE_CODE = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$/
+const LOCALE_NAMES = {
+  fr: "French (fr)",
+  de: "German (de)",
+  es: "Spanish (es)",
+}
+
+/** Marks the accepted submissions a fixture keeps as its track record. */
+const TRACK_RECORD_NOTE = "Access fixture: an accepted change (track record)"
+const PAGE = 200
 
 /**
  * What onboarding writes: OnboardingShell's handleSave body, less avatarUrl,
@@ -159,13 +193,11 @@ async function applyProfile(strapi, item) {
   })
   if (!profile) throw new Error(`No user-profile for ${item.baUserId}`)
 
+  // contributorRole and isVerifiedLibrarian are derived from Role Grants
+  // (applyRoleGrants), never written here.
   const data = {
-    contributorRole: item.role,
     username: item.username,
     profileVisibility: "private",
-    // Mirror a real claim approval (grantVerifiedLibrarian): only the
-    // claiming fixture is a verified librarian.
-    isVerifiedLibrarian: !!item.claimLibrary,
     ...standing(item.plan),
     ...(item.username === null ? ONBOARDING_CLEARED : {}),
   }
@@ -176,6 +208,182 @@ async function applyProfile(strapi, item) {
       .update({ documentId: profile.documentId, data })
 
   return changed
+}
+
+/** The profile's derived role fields, to tell whether they changed. */
+async function derivedFields(strapi, baUserId) {
+  const [profile] = await strapi.documents(PROFILE).findMany({
+    filters: { baUserId: { $eq: baUserId } },
+    fields: ["contributorRole", "isVerifiedLibrarian"],
+    limit: 1,
+  })
+
+  return `${profile?.contributorRole ?? "reader"}|${!!profile?.isVerifiedLibrarian}`
+}
+
+const sameLocale = (a, b) => (a || null) === (b || null)
+
+/**
+ * Converges Role Grants: the fixture ends with exactly its grants, each
+ * unexpired; every other row (an expired one, a migration duplicate, the
+ * grant an approved Role Application gave) is deleted. A row matches on
+ * role, queue and locale, whatever its source. Each create and delete runs
+ * the role-grant lifecycle, which re-derives `contributorRole` and asks the
+ * UI to drop its cached session.
+ */
+async function applyRoleGrants(strapi, item, syncDerivedRole) {
+  const before = await derivedFields(strapi, item.baUserId)
+  const existing = await strapi.documents(ROLE_GRANT).findMany({
+    filters: { baUserId: { $eq: item.baUserId } },
+    sort: "id:asc",
+    limit: 100,
+  })
+  const wanted = item.roleGrants.map((g) => ({ ...g, kept: false }))
+  let removed = 0
+  for (const row of existing) {
+    const match = wanted.find(
+      (w) =>
+        !w.kept &&
+        row.role === w.role &&
+        (row.queue ?? "all") === w.queue &&
+        sameLocale(row.scopeLocale, w.locale) &&
+        row.expiresAt == null
+    )
+    if (match) {
+      match.kept = true
+      continue
+    }
+    await strapi.documents(ROLE_GRANT).delete({ documentId: row.documentId })
+    removed++
+  }
+  let created = 0
+  for (const w of wanted) {
+    if (w.kept) continue
+    await strapi.documents(ROLE_GRANT).create({
+      data: {
+        baUserId: item.baUserId,
+        role: w.role,
+        queue: w.queue,
+        scopeLocale: w.locale,
+        source: "admin",
+        grantedBy: "seed:access",
+        reason: "access fixture",
+        expiresAt: null,
+      },
+    })
+    created++
+  }
+  // The lifecycle has already re-derived after any write; this also fixes
+  // a profile whose derived fields were edited by hand. A no-op otherwise.
+  await syncDerivedRole(strapi, item.baUserId)
+
+  return {
+    roleChanged: (await derivedFields(strapi, item.baUserId)) !== before,
+    roleGrantsCreated: created,
+    roleGrantsRemoved: removed,
+  }
+}
+
+/**
+ * Converges submissions: the fixture keeps `trackRecord` accepted
+ * corrections (marked with TRACK_RECORD_NOTE, never applied to anything)
+ * and nothing else, so what the specs submitted never counts against the
+ * pending or hourly quota of the next run.
+ */
+async function applySubmissions(strapi, item, now) {
+  const want = Number(item.trackRecord) || 0
+  // Read every page first, so deleting doesn't shift the pages.
+  const rows = []
+  for (let start = 0; ; start += PAGE) {
+    const page = await strapi.documents(SUBMISSION).findMany({
+      filters: { submittedByUserId: { $eq: item.baUserId } },
+      fields: ["documentId", "status", "note", "submissionType"],
+      sort: "id:asc",
+      start,
+      limit: PAGE,
+    })
+    rows.push(...page)
+    if (page.length < PAGE) break
+  }
+  let kept = 0
+  let removed = 0
+  for (const s of rows) {
+    if (
+      kept < want &&
+      s.submissionType === "correction" &&
+      s.status === "approved" &&
+      s.note === TRACK_RECORD_NOTE
+    ) {
+      kept++
+      continue
+    }
+    await strapi.documents(SUBMISSION).delete({ documentId: s.documentId })
+    removed++
+  }
+  let created = 0
+  for (; kept + created < want; created++)
+    await strapi.documents(SUBMISSION).create({
+      data: {
+        submissionType: "correction",
+        status: "approved",
+        targetEntityType: "library",
+        fields: { proposal: "Access fixture track record" },
+        note: TRACK_RECORD_NOTE,
+        submittedByUserId: item.baUserId,
+        submittedByEmail: item.email,
+        submittedByName: item.name,
+        reviewedByUserId: "admin:seed-access",
+        reviewedAt: new Date(now).toISOString(),
+        contentLocale: "en",
+      },
+    })
+
+  return { submissionsCreated: created, submissionsRemoved: removed }
+}
+
+/**
+ * Adds each locale the fixture grants name to Strapi's i18n plugin when it
+ * is missing: a French Moderator needs French submissions, and Strapi
+ * stores a submission in an unknown locale as the default one.
+ */
+async function ensureLocales(strapi, codes) {
+  const created = []
+  if (codes.length === 0) return created
+  const locales = strapi.plugin("i18n")?.service("locales")
+  if (!locales) throw new Error("Strapi's i18n plugin isn't loaded")
+  for (const code of codes) {
+    if (await locales.findByCode(code)) continue
+    await locales.create({ code, name: LOCALE_NAMES[code] ?? code })
+    created.push(code)
+  }
+
+  return created
+}
+
+/**
+ * Deletes the Areas location-request.spec.ts created (every locale), named
+ * with the E2E prefix. A short prefix could match real places, so one
+ * under 8 characters is refused.
+ */
+async function removeE2eAreas(strapi, prefix) {
+  if (typeof prefix !== "string" || prefix.trim().length < 8)
+    throw new Error("Refusing: the E2E area prefix is too short")
+  let removed = 0
+  for (let round = 0; round < 20; round++) {
+    const rows = await strapi.documents(AREA).findMany({
+      filters: { name: { $startsWith: prefix } },
+      fields: ["documentId"],
+      sort: "id:asc",
+      limit: PAGE,
+    })
+    if (rows.length === 0) break
+    for (const documentId of new Set(rows.map((r) => r.documentId))) {
+      await strapi.documents(AREA).delete({ documentId, locale: "*" })
+      removed++
+    }
+  }
+
+  return removed
 }
 
 /**
@@ -322,12 +530,34 @@ function assertPlan(plan) {
       throw new Error(
         `Refusing: plan item ${i} has no baUserId (a non-empty string)`
       )
+    if (typeof item.email !== "string" || !item.email.includes("@"))
+      throw new Error(`Refusing: plan item ${i} has no email`)
+    if (!Array.isArray(item.roleGrants))
+      throw new Error(`Refusing: plan item ${i} has no roleGrants array`)
+    for (const g of item.roleGrants)
+      if (
+        !GRANTABLE_ROLES.has(g?.role) ||
+        !QUEUES.has(g?.queue) ||
+        !(g?.locale === null || LOCALE_CODE.test(String(g?.locale)))
+      )
+        throw new Error(`Refusing: plan item ${i} has an invalid role grant`)
   }
+}
+
+/** ACCESS_SEED_OPTIONS, checked. */
+function readOptions() {
+  const options = JSON.parse(process.env.ACCESS_SEED_OPTIONS ?? "{}")
+  const locales = Array.isArray(options.locales) ? options.locales : []
+  if (!locales.every((c) => typeof c === "string" && LOCALE_CODE.test(c)))
+    throw new Error("Refusing: ACCESS_SEED_OPTIONS has an invalid locale")
+
+  return { locales, areaNamePrefix: options.areaNamePrefix }
 }
 
 async function main() {
   const plan = JSON.parse(process.env.ACCESS_SEED_PLAN ?? "[]")
   assertPlan(plan)
+  const options = readOptions()
   const instance = createStrapi({ appDir, distDir: path.join(appDir, "dist") })
   assertLocalDatabase(instance)
   // A second instance must not run scheduled tasks alongside `strapi
@@ -339,26 +569,40 @@ async function main() {
   // added themselves; stop them all.
   strapi.cron?.destroy?.()
   strapi.log.level = "error"
-  const result = []
+  // The app's own derivation, as the role-grant lifecycle runs it.
+  const { syncDerivedRole } = require(
+    path.join(appDir, "dist/src/utils/role-grants.js")
+  )
+  const fixtures = []
   const now = Date.now()
+  let localesCreated = []
+  let areasRemoved = 0
   try {
+    localesCreated = await ensureLocales(strapi, options.locales)
+    areasRemoved = await removeE2eAreas(strapi, options.areaNamePrefix)
     for (const item of plan) {
       const profileChanged = await applyProfile(strapi, item)
+      const roles = await applyRoleGrants(strapi, item, syncDerivedRole)
       const claim = await applyClaim(strapi, item)
       const grant = await applyGrants(strapi, item)
       const verification = await applyVerifications(strapi, item, now)
-      result.push({
+      const submissions = await applySubmissions(strapi, item, now)
+      fixtures.push({
         baUserId: item.baUserId,
         profileChanged,
+        ...roles,
         ...claim,
         ...grant,
         ...verification,
+        ...submissions,
       })
     }
   } finally {
     await strapi.destroy()
   }
-  process.stdout.write(`ACCESS_SEED_RESULT ${JSON.stringify(result)}\n`)
+  process.stdout.write(
+    `ACCESS_SEED_RESULT ${JSON.stringify({ fixtures, localesCreated, areasRemoved })}\n`
+  )
 }
 
 // Exit explicitly: a Strapi instance that failed mid-load can leave open

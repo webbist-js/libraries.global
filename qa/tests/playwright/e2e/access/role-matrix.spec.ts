@@ -1,6 +1,10 @@
 import { type APIRequestContext, expect, request, test } from "@playwright/test"
 
-import { signIn } from "../../helpers/access-fixtures"
+import {
+  derivedRole,
+  fixtureByKey,
+  signIn,
+} from "../../helpers/access-fixtures"
 
 // Local only, opt-in: run with `pnpm playwright-access-tests` after
 // `pnpm seed:access`. The seed waits out the UI's 60 s session cache
@@ -13,39 +17,102 @@ const ALL_SIGNED_IN = [
   "submit.docSuggestion",
   "submit.journalPitch",
   "submit.topicSuggestion",
+  "submit.roleApplication",
+  "submit.locationRequest",
 ]
 
-// `directEdit`: Knowledge editing (docs.directEdit); `journalEdit`: Journal
-// editing (journal.directEdit). The editorial board holds both; wiki and
-// journal editors one each.
-const MATRIX = [
-  { key: "reader", extra: [], directEdit: false, journalEdit: false },
-  { key: "contributor", extra: [], directEdit: false, journalEdit: false },
+type Scope = { queue: string; locale: string | null }
+type Locales = "all" | string[]
+
+// One row per Role Grant shape (see FIXTURES; the seed writes the grants
+// and Strapi derives `contributorRole` from them). `directEdit`: Knowledge
+// editing (docs.directEdit); `journalEdit`: Journal editing
+// (journal.directEdit), in at least one locale. The editorial board holds
+// both and moderates everything; a Moderator only moderates, within its
+// scope; a French Journal editor edits the Journal in French only.
+const MATRIX: readonly {
+  key: string
+  extra: readonly string[]
+  directEdit: boolean
+  journalEdit: boolean
+  scopes: readonly Scope[]
+  editorLocales: { docs: Locales; journal: Locales }
+}[] = [
+  {
+    key: "reader",
+    extra: [],
+    directEdit: false,
+    journalEdit: false,
+    scopes: [],
+    editorLocales: { docs: [], journal: [] },
+  },
+  {
+    key: "contributor",
+    extra: [],
+    directEdit: false,
+    journalEdit: false,
+    scopes: [],
+    editorLocales: { docs: [], journal: [] },
+  },
   {
     key: "librarian",
     extra: ["submit.libraryEdit", "events.feed"],
     directEdit: false,
     journalEdit: false,
+    scopes: [],
+    editorLocales: { docs: [], journal: [] },
   },
   {
     key: "wiki-editor",
     extra: ["docs.directEdit"],
     directEdit: true,
     journalEdit: false,
+    scopes: [],
+    editorLocales: { docs: "all", journal: [] },
   },
   {
     key: "journal-editor",
     extra: ["journal.directEdit"],
     directEdit: false,
     journalEdit: true,
+    scopes: [],
+    editorLocales: { docs: [], journal: "all" },
   },
   {
     key: "editorial",
-    extra: ["docs.directEdit", "journal.directEdit"],
+    extra: ["docs.directEdit", "journal.directEdit", "moderate.queue"],
     directEdit: true,
     journalEdit: true,
+    scopes: [{ queue: "all", locale: null }],
+    editorLocales: { docs: "all", journal: "all" },
   },
-] as const
+  {
+    key: "moderator-global",
+    extra: ["moderate.queue"],
+    directEdit: false,
+    journalEdit: false,
+    scopes: [{ queue: "all", locale: null }],
+    editorLocales: { docs: [], journal: [] },
+  },
+  {
+    key: "moderator-knowledge-fr",
+    extra: ["moderate.queue"],
+    directEdit: false,
+    journalEdit: false,
+    scopes: [{ queue: "knowledge", locale: "fr" }],
+    editorLocales: { docs: [], journal: [] },
+  },
+  {
+    // The draft routes check journal.directEdit, which an editor in any
+    // locale holds; the locale is enforced by Strapi at submit and apply.
+    key: "journal-editor-fr",
+    extra: ["journal.directEdit"],
+    directEdit: false,
+    journalEdit: true,
+    scopes: [],
+    editorLocales: { docs: [], journal: ["fr"] },
+  },
+]
 
 // One row per way of holding a plan (see FIXTURES). Every plan fixture is a
 // reader with no claims, so apart from its plan it must look like the reader.
@@ -106,7 +173,7 @@ const wikiEdit = (extra: Record<string, unknown>) => ({
 })
 
 // Better Auth allows 5 sign-ins per minute per IP. This file signs in once
-// per fixture (10 times), and onboarding.spec.ts 3 more. The access project
+// per fixture (13 times), and the other access specs about 10 more. The access project
 // runs one worker, so the files take turns, and signIn waits out each 429:
 // a cold run of the whole project waits out the limit about twice, so it
 // takes roughly 2 to 3 minutes. Back-to-back runs share the window, so a
@@ -214,6 +281,15 @@ test.describe("access role matrix (API)", () => {
       expect([...user.capabilities].sort()).toEqual(
         [...ALL_SIGNED_IN, ...row.extra].sort()
       )
+      // The display role Strapi derives from the grants: the highest one.
+      expect(user.contributorRole).toBe(
+        derivedRole(fixtureByKey(row.key).grants)
+      )
+      expect(user.moderationScopes).toEqual(row.scopes)
+      expect(user.editorLocales).toEqual(row.editorLocales)
+      // Moderation API: a 403 from the Next pre-check without a scope.
+      const queue = await api.get("/api/moderation/stats")
+      expect(queue.status()).toBe(row.scopes.length > 0 ? 200 : 403)
       expect(user.plan).toBe("free")
       expect(user.features).toEqual([])
       // Money never buys trust, and trust never shows up as a plan.

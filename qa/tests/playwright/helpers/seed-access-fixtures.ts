@@ -1,22 +1,28 @@
 /**
  * Seeds the Better Auth users for the access E2E (FIXTURES): one per
- * Contributor Role, one per way of holding a paid plan, and two that haven't
- * onboarded yet. Local only: refuses to run in production or against a
- * non-local host.
+ * Contributor Role, scoped Moderators and editors, an applicant with a track
+ * record, one per way of holding a paid plan, and two that haven't onboarded
+ * yet. Local only: refuses to run in production or against a non-local host.
  *
  * Strapi REST is used for reads only (STRAPI_SEED_TOKEN can be read-only).
  * Writes can't use REST: it exposes no update for user-profile and no routes
- * for library-affiliation, entitlement-grant or pro-verification (P-A
- * hardening), so they go through the Document Service in a headless Strapi
- * process (strapi-access-writer.cjs).
+ * for role-grant, library-affiliation, entitlement-grant or
+ * pro-verification (P-A hardening), so they go through the Document Service
+ * in a headless Strapi process (strapi-access-writer.cjs). Contributor Roles
+ * are Role Grants; Strapi derives `contributorRole` from them, and the seed
+ * never writes it.
  *
  * The password comes from ACCESS_FIXTURE_PASSWORD. An existing fixture whose
  * stored credential doesn't match it is reset to it (hashed with the UI's
  * own Better Auth), so changing the value and re-running the seed is enough.
  *
- * A re-run changes nothing that already matches. The one exception is the
- * onboarding fixture: once the onboarding spec has given it a username, the
- * next seed clears it again.
+ * A re-run changes nothing that already matches. What the specs change, the
+ * next seed undoes: the onboarding fixture's username is cleared again, the
+ * wiki_editor grant an approved Role Application gave the applicant is
+ * removed, every submission the specs created is deleted (the applicant's
+ * five accepted ones stay), and so are the Areas a location request added
+ * (named with E2E_AREA_PREFIX). It also adds any locale the fixture grants
+ * name (fr) to Strapi's i18n plugin if it's missing.
  */
 import { execFile } from "node:child_process"
 import { createRequire } from "node:module"
@@ -28,7 +34,11 @@ import dotenv from "dotenv"
 import { Client } from "pg"
 
 import {
+  derivedRole,
+  E2E_AREA_PREFIX,
   emailFor,
+  type FixtureGrant,
+  FIXTURE_LOCALES,
   type FixturePlan,
   fixturePassword,
   FIXTURES,
@@ -47,25 +57,40 @@ const WRITER = path.resolve(__dirname, "strapi-access-writer.cjs")
 const LOCAL = /^(localhost|127\.0\.0\.1)$/
 
 type PlanItem = {
+  key: string
   email: string
   baUserId: string
+  /** The derived Contributor Role the grants give, for the log line. */
   role: string
+  roleGrants: readonly FixtureGrant[]
   /** null for the onboarding fixture, which the writer resets. */
   username: string | null
   plan: FixturePlan | null
   claimLibrary: string | null
+  trackRecord: number
   signedUpNow: boolean
   passwordReset: boolean
 }
 type WriteResult = {
   baUserId: string
   profileChanged: boolean
+  /** The derived contributorRole changed (a grant write or a resync). */
+  roleChanged: boolean
+  roleGrantsCreated: number
+  roleGrantsRemoved: number
   claimCreated: boolean
   claimsRemoved: number
   grantCreated: boolean
   grantsRemoved: number
   verificationCreated: boolean
   verificationsRemoved: number
+  submissionsCreated: number
+  submissionsRemoved: number
+}
+type WriterOutput = {
+  fixtures: WriteResult[]
+  localesCreated: string[]
+  areasRemoved: number
 }
 
 function assertLocal(): void {
@@ -191,7 +216,7 @@ async function convergePassword(
   return true
 }
 
-async function runWriter(plan: PlanItem[]): Promise<WriteResult[]> {
+async function runWriter(plan: PlanItem[]): Promise<WriterOutput> {
   const { stdout } = await promisify(execFile)(process.execPath, [WRITER], {
     cwd: STRAPI_APP_DIR,
     // Minimal env: Strapi must read its own apps/strapi/.env, not ours.
@@ -201,12 +226,23 @@ async function runWriter(plan: PlanItem[]): Promise<WriteResult[]> {
       ACCESS_SEED_PLAN: JSON.stringify(
         plan.map((item) => ({
           baUserId: item.baUserId,
-          role: item.role,
+          email: item.email,
+          name: `Access ${item.key}`,
+          roleGrants: item.roleGrants.map((g) => ({
+            role: g.role,
+            queue: g.queue ?? "all",
+            locale: g.locale ?? null,
+          })),
           username: item.username,
           plan: item.plan,
           claimLibrary: item.claimLibrary,
+          trackRecord: item.trackRecord,
         }))
       ),
+      ACCESS_SEED_OPTIONS: JSON.stringify({
+        locales: FIXTURE_LOCALES,
+        areaNamePrefix: E2E_AREA_PREFIX,
+      }),
     },
     maxBuffer: 16 * 1024 * 1024,
   })
@@ -224,6 +260,7 @@ const createdOrPresent = (created: boolean) => (created ? "created" : "present")
 function describeResult(item: PlanItem, r: WriteResult): string {
   const head =
     `${item.signedUpNow ? "created" : "existing"}, role ${item.role}` +
+    `${r.roleChanged ? " (re-derived)" : ""}` +
     `${item.passwordReset ? " (password reset)" : ""}` +
     `${r.profileChanged ? " (updated)" : ""}`
   const granted = item.plan === "pro-grant" || item.plan === "team-grant"
@@ -237,6 +274,22 @@ function describeResult(item: PlanItem, r: WriteResult): string {
     [
       item.plan === "pro-verified",
       `verification ${createdOrPresent(r.verificationCreated)}`,
+    ],
+    [
+      item.roleGrants.length > 0,
+      `${item.roleGrants.length} role grant(s)${r.roleGrantsCreated > 0 ? `, ${r.roleGrantsCreated} created` : ""}`,
+    ],
+    [
+      r.roleGrantsRemoved > 0,
+      `${r.roleGrantsRemoved} stray role grant(s) removed`,
+    ],
+    [
+      item.trackRecord > 0,
+      `${item.trackRecord} accepted submission(s)${r.submissionsCreated > 0 ? `, ${r.submissionsCreated} created` : ""}`,
+    ],
+    [
+      r.submissionsRemoved > 0,
+      `${r.submissionsRemoved} earlier submission(s) removed`,
     ],
     [r.claimsRemoved > 0, `${r.claimsRemoved} stray claim(s) removed`],
     [r.grantsRemoved > 0, `${r.grantsRemoved} stray grant(s) removed`],
@@ -287,13 +340,16 @@ export async function seedAccessFixtures(): Promise<void> {
         : await convergePassword(db, hasher, baUserId, email, password)
       await waitForProfile(baUserId, email)
       plan.push({
+        key: f.key,
         email,
         baUserId,
-        role: f.role,
+        role: derivedRole(f.grants),
+        roleGrants: f.grants,
         username:
           f.username === null ? null : `access_${f.key.replaceAll("-", "_")}`,
         plan: f.plan ?? null,
         claimLibrary: f.claim ? claimLibrary : null,
+        trackRecord: f.trackRecord ?? 0,
         signedUpNow,
         passwordReset,
       })
@@ -302,13 +358,21 @@ export async function seedAccessFixtures(): Promise<void> {
     await db.end()
   }
 
-  const results = await runWriter(plan)
+  const output = await runWriter(plan)
+  for (const code of output.localesCreated)
+    console.log(`Strapi locale ${code} added (fixture grants name it)`)
+  if (output.areasRemoved > 0)
+    console.log(`${output.areasRemoved} E2E area(s) from earlier runs removed`)
   let mayBeStale = false
   for (const item of plan) {
-    const r = results.find((x) => x.baUserId === item.baUserId)
+    const r = output.fixtures.find((x) => x.baUserId === item.baUserId)
     if (!r) throw new Error(`Strapi writer skipped ${item.email}`)
+    // Only what the session profile reads counts; submissions don't.
     const changed =
       r.profileChanged ||
+      r.roleChanged ||
+      r.roleGrantsCreated > 0 ||
+      r.roleGrantsRemoved > 0 ||
       r.claimCreated ||
       r.claimsRemoved > 0 ||
       r.grantCreated ||
