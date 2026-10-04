@@ -9,7 +9,6 @@ export const SUBMISSION_TYPES = [
   "blog_submission",
   "topic_suggestion",
   "role_application",
-  "location_request",
 ] as const
 export type SubmissionType = (typeof SUBMISSION_TYPES)[number]
 
@@ -29,7 +28,6 @@ export const QUEUE_OF_SUBMISSION_TYPE: Record<SubmissionType, ModerationQueue> =
     library_claim: "index",
     library_edit: "index",
     topic_suggestion: "index",
-    location_request: "index",
     wiki_edit: "knowledge",
     blog_submission: "journal",
     role_application: "applications",
@@ -52,7 +50,6 @@ export type Capability =
   | "events.feed"
   | "moderate.queue"
   | "submit.roleApplication"
-  | "submit.locationRequest"
 
 /**
  * Most library claims one session carries. The bridge and the submission
@@ -124,7 +121,6 @@ export function resolveCapabilities(input: CapabilityInput): Capabilities {
   set.add("submit.journalPitch")
   set.add("submit.topicSuggestion")
   set.add("submit.roleApplication")
-  set.add("submit.locationRequest")
   if (claimedLibraryIds.size > 0) {
     set.add("submit.libraryEdit")
     set.add("events.feed")
@@ -276,8 +272,6 @@ export function canSubmit(
       return c.set.has("submit.topicSuggestion")
     case "role_application":
       return c.set.has("submit.roleApplication")
-    case "location_request":
-      return c.set.has("submit.locationRequest")
 
     default:
       return false

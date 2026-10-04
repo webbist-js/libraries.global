@@ -6,6 +6,7 @@ import {
   grantsFromLegacyRole,
   promoteRole,
   resolveCapabilities,
+  SUBMISSION_TYPES,
   type CapabilityInput,
   type ContributorRole,
   type RoleGrant,
@@ -139,14 +140,18 @@ describe("resolveCapabilities", () => {
     expect(canSubmit(c, "pro_upgrade" as never)).toBe(false)
   })
 
-  it("gives every signed-in user role applications and location requests", () => {
+  it("gives every signed-in user role applications", () => {
     const c = resolveCapabilities(input({ grants: [] }))
     expect(c.set.has("submit.roleApplication")).toBe(true)
-    expect(c.set.has("submit.locationRequest")).toBe(true)
     expect(canSubmit(c, "role_application")).toBe(true)
-    expect(canSubmit(c, "location_request")).toBe(true)
     expect(c.moderation).toEqual([])
     expect(c.set.has("moderate.queue")).toBe(false)
+  })
+
+  it("has no Location Request submission type", () => {
+    const c = resolveCapabilities(input({ contributorRole: "editorial_board" }))
+    expect(SUBMISSION_TYPES).not.toContain("location_request")
+    expect(canSubmit(c, "location_request" as never)).toBe(false)
   })
 
   it("gives signed-out users empty editor locales and no moderation", () => {
@@ -157,7 +162,6 @@ describe("resolveCapabilities", () => {
     expect([...(c.editorLocales.docs as ReadonlySet<string>)]).toEqual([])
     expect([...(c.editorLocales.journal as ReadonlySet<string>)]).toEqual([])
     expect(canSubmit(c, "role_application")).toBe(false)
-    expect(canSubmit(c, "location_request")).toBe(false)
   })
 
   it("scopes a wiki_editor grant to its locale", () => {
