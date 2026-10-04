@@ -3,15 +3,11 @@
 import { useEffect, useMemo, useState } from "react"
 
 import type { PublicSubmission } from "@/app/api/profile/[username]/contributions/route"
+import { ContributionList } from "@/components/contributions/ContributionList"
+import { StatCard } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
 
-import {
-  CARD,
-  ContributionRow,
-  SectionTitle,
-  StatCard,
-  TextLink,
-} from "../ProfileSectionUI"
+import { CARD, SectionTitle, TextLink } from "../ProfileSectionUI"
 
 // Estimated points per type/status (mirrors rewards plugin)
 function estimatePoints(s: PublicSubmission): number | null {
@@ -31,54 +27,50 @@ function estimatePoints(s: PublicSubmission): number | null {
   }
 }
 
-function groupByDay(
-  subs: PublicSubmission[]
-): { label: string; items: PublicSubmission[] }[] {
-  const groups: Map<string, PublicSubmission[]> = new Map()
-  for (const s of subs) {
-    const d = new Date(s.createdAt)
-    const key = d.toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    })
-    if (!groups.has(key)) groups.set(key, [])
-    groups.get(key)!.push(s)
-  }
-
-  return [...groups.entries()].map(([label, items]) => ({ label, items }))
-}
-
 // ── Filters ───────────────────────────────────────────────────────────────
 
-const FILTER_TABS = [
-  { id: "all", label: "All" },
-  { id: "new_library", label: "Added" },
-  { id: "library_edit", label: "Edited" },
-  { id: "wiki_edit", label: "Knowledge" },
-  { id: "library_claim", label: "Claimed" },
-  { id: "other", label: "Other" },
+const FILTERS = [
+  { id: "all", label: "All", types: null },
+  { id: "added", label: "Added", types: ["new_library"] },
+  { id: "edited", label: "Edited", types: ["library_edit", "correction"] },
+  {
+    id: "articles",
+    label: "Articles",
+    types: ["wiki_edit", "blog_submission"],
+  },
+  { id: "claimed", label: "Claimed", types: ["library_claim"] },
+  { id: "other", label: "Other", types: null },
 ] as const
 
-type FilterId = (typeof FILTER_TABS)[number]["id"]
+type FilterId = (typeof FILTERS)[number]["id"]
+
+const NAMED_TYPES: ReadonlySet<string> = new Set(
+  FILTERS.flatMap((f) => f.types ?? [])
+)
 
 function matchesFilter(s: PublicSubmission, filter: FilterId): boolean {
   if (filter === "all") return true
-  if (filter === "other")
-    return ![
-      "new_library",
-      "library_edit",
-      "wiki_edit",
-      "library_claim",
-    ].includes(s.submissionType)
+  if (filter === "other") return !NAMED_TYPES.has(s.submissionType)
+  const types: readonly string[] =
+    FILTERS.find((f) => f.id === filter)?.types ?? []
 
-  return s.submissionType === filter
+  return types.includes(s.submissionType)
 }
 
-export function ContributionsSection({ username }: { username: string }) {
+/**
+ * A profile's public record: accepted contributions only, so a change in
+ * review or not accepted never shows here. Its owner is pointed to My
+ * submissions for those.
+ */
+export function ContributionsSection({
+  username,
+  isOwner = false,
+}: {
+  username: string
+  isOwner?: boolean
+}) {
   const [submissions, setSubmissions] = useState<PublicSubmission[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeFilter, setActiveFilter] = useState<FilterId>("all")
 
   useEffect(() => {
     fetch(`/api/profile/${encodeURIComponent(username)}/contributions`)
@@ -90,39 +82,27 @@ export function ContributionsSection({ username }: { username: string }) {
       .finally(() => setLoading(false))
   }, [username])
 
-  const filtered = useMemo(
-    () => submissions.filter((s) => matchesFilter(s, activeFilter)),
-    [submissions, activeFilter]
+  const counts = useMemo(
+    () =>
+      Object.fromEntries(
+        FILTERS.map((f) => [
+          f.id,
+          submissions.filter((s) => matchesFilter(s, f.id)).length,
+        ])
+      ) as Record<FilterId, number>,
+    [submissions]
   )
-
-  const grouped = useMemo(() => groupByDay(filtered), [filtered])
-
-  const total = submissions.length
-  const approved = submissions.filter((s) => s.status === "approved").length
-  const pending = submissions.filter(
-    (s) => s.status === "pending" || s.status === "needs_info"
-  ).length
-  const counts = useMemo(() => {
-    const c: Record<FilterId, number> = {
-      all: 0,
-      new_library: 0,
-      library_edit: 0,
-      wiki_edit: 0,
-      library_claim: 0,
-      other: 0,
-    }
-    for (const tab of FILTER_TABS) {
-      c[tab.id] = submissions.filter((s) => matchesFilter(s, tab.id)).length
-    }
-
-    return c
-  }, [submissions])
-  const activeLabel =
-    FILTER_TABS.find((t) => t.id === activeFilter)?.label ?? "All"
   const totalPts = submissions
     .map(estimatePoints)
     .filter((p): p is number => p !== null)
     .reduce((a, b) => a + b, 0)
+
+  const ownerNote = isOwner ? (
+    <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+      Only accepted changes appear here. Drafts and changes in review are in{" "}
+      <TextLink href="/contribute/submissions">My submissions</TextLink>.
+    </p>
+  ) : null
 
   if (loading) {
     return (
@@ -166,12 +146,15 @@ export function ContributionsSection({ username }: { username: string }) {
           Contributions
         </SectionTitle>
         <p className="m-0 mt-2 text-[15px]" style={{ color: T.ink.dim }}>
-          No contributions yet. Added libraries, edits and wiki changes will
-          appear here once submitted.
+          No accepted contributions yet. Added libraries, edits and articles
+          appear here once a moderator accepts them.
         </p>
-        <p className="m-0 mt-3">
-          <TextLink href="/contribute">Start contributing</TextLink>
-        </p>
+        <div className="mt-3 flex flex-col gap-2">
+          {ownerNote}
+          <p className="m-0">
+            <TextLink href="/contribute">Start contributing</TextLink>
+          </p>
+        </div>
       </section>
     )
   }
@@ -182,25 +165,25 @@ export function ContributionsSection({ username }: { username: string }) {
       <h2 className="sr-only">Contribution summary</h2>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
-          label="Total"
-          value={String(total)}
-          bg="var(--tint-neutral-bg)"
-          fg="var(--tint-neutral-fg)"
-          icon="mdi:format-list-bulleted"
-        />
-        <StatCard
           label="Accepted"
-          value={String(approved)}
+          value={String(submissions.length)}
           bg="var(--tint-public-bg)"
           fg="var(--tint-public-fg)"
           icon="mdi:check-circle-outline"
         />
         <StatCard
-          label="In review"
-          value={String(pending)}
+          label="Libraries added"
+          value={String(counts.added)}
+          bg="var(--tint-neutral-bg)"
+          fg="var(--tint-neutral-fg)"
+          icon="mdi:book-plus-outline"
+        />
+        <StatCard
+          label="Records improved"
+          value={String(counts.edited)}
           bg="var(--tint-academic-bg)"
           fg="var(--tint-academic-fg)"
-          icon="mdi:clock-outline"
+          icon="mdi:pencil-outline"
         />
         <StatCard
           label="Points earned"
@@ -211,98 +194,15 @@ export function ContributionsSection({ username }: { username: string }) {
         />
       </div>
 
-      {/* List */}
-      <section aria-labelledby="ct-list" style={CARD}>
-        <div className="flex flex-col gap-4 px-6 pt-5 pb-4">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <SectionTitle as="h2" id="ct-list">
-              All contributions
-            </SectionTitle>
-            <span
-              className="text-[15px]"
-              style={{ color: T.ink.dim }}
-              aria-live="polite"
-            >
-              {filtered.length}{" "}
-              {filtered.length === 1 ? "contribution" : "contributions"}
-              {activeFilter === "all" ? "" : ` · ${activeLabel}`}
-            </span>
-          </div>
-
-          <fieldset className="m-0 border-0 p-0">
-            <legend className="sr-only">Filter by type</legend>
-            <div className="flex flex-wrap gap-2">
-              {FILTER_TABS.map((tab) => {
-                const active = activeFilter === tab.id
-                const count = counts[tab.id]
-
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => setActiveFilter(tab.id)}
-                    className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[14px] font-semibold transition-colors"
-                    style={
-                      active
-                        ? {
-                            background: T.accent.chip,
-                            borderColor: T.accent.primary,
-                            color: T.accent.primaryHover,
-                          }
-                        : {
-                            background: T.bg.deep,
-                            borderColor: T.border.hi,
-                            color: T.ink.base,
-                          }
-                    }
-                  >
-                    {tab.label}
-                    <span
-                      className="text-[13px] font-medium"
-                      style={{
-                        color: active ? T.accent.primaryHover : T.ink.low,
-                      }}
-                    >
-                      {count}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          </fieldset>
-        </div>
-
-        {grouped.length === 0 ? (
-          <p
-            className="m-0 border-t px-6 py-6 text-[15px]"
-            style={{ borderTopColor: T.border.divider, color: T.ink.dim }}
-          >
-            No contributions of this type yet.
-          </p>
-        ) : (
-          grouped.map((group) => (
-            <div key={group.label}>
-              <h3
-                className="m-0 border-t px-6 pt-4 pb-1 text-[14px] font-semibold"
-                style={{ borderTopColor: T.border.line, color: T.ink.low }}
-              >
-                {group.label}
-              </h3>
-              <ul className="m-0 list-none p-0">
-                {group.items.map((sub) => (
-                  <ContributionRow
-                    key={sub.documentId}
-                    item={sub}
-                    points={estimatePoints(sub)}
-                    showStatusIcon
-                  />
-                ))}
-              </ul>
-            </div>
-          ))
-        )}
-      </section>
+      <ContributionList
+        title="Accepted contributions"
+        items={submissions}
+        filters={FILTERS}
+        matches={matchesFilter}
+        legend="Filter by type"
+        rowExtras={(sub) => ({ points: estimatePoints(sub) })}
+        intro={ownerNote}
+      />
     </div>
   )
 }

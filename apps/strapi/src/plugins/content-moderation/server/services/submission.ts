@@ -51,6 +51,7 @@ import {
   recordReview,
 } from "../utils/record-review"
 import { isSelfReview, type Reviewer } from "../utils/reviewer"
+import { withTargetLabels } from "../utils/target-labels"
 import { canTransition } from "../utils/transitions"
 import { ownedUploadIds } from "../utils/uploads"
 
@@ -695,7 +696,9 @@ export default ({ strapi }: { strapi: any }) => ({
         limit: 100,
       })
 
-    return (rows ?? []).map(toContributor)
+    // Named like the public list on the profile: library names and article
+    // titles, not slugs.
+    return (await withTargetLabels(strapi, rows ?? [])).map(toContributor)
   },
 
   async updateStatus(
@@ -1758,86 +1761,20 @@ export default ({ strapi }: { strapi: any }) => ({
         limit: 200,
       })
 
-    const libSlugs = new Set<string>()
-    for (const s of submissions) {
-      if (
-        (s.submissionType === "library_edit" ||
-          s.submissionType === "correction") &&
-        s.targetSlug
-      ) {
-        libSlugs.add(s.targetSlug)
-      }
-    }
-    const libNameMap: Record<string, string> = {}
-    if (libSlugs.size > 0) {
-      try {
-        const libs = await strapi.db.query("api::library.library").findMany({
-          where: { slug: { $in: [...libSlugs] } },
-          select: ["slug", "name"],
-        })
-        for (const lib of libs as { slug: string; name: string }[]) {
-          libNameMap[lib.slug] = lib.name
-        }
-      } catch {
-        // non-fatal
-      }
-    }
+    const labelled = await withTargetLabels(strapi, submissions)
 
-    return submissions.map((s: any) => {
-      let targetLabel: string | null = null
-      const f = (s.fields ?? {}) as Record<string, unknown>
-      switch (s.submissionType) {
-        case "new_library":
-          targetLabel = (f.name as string) ?? s.targetSlug ?? null
-          break
-        case "library_edit":
-        case "correction":
-          targetLabel =
-            (s.targetSlug ? libNameMap[s.targetSlug] : null) ??
-            s.targetSlug ??
-            null
-          break
-        case "library_claim":
-          targetLabel =
-            (f.libraryName as string) ??
-            (f.entityRef as string) ??
-            s.targetSlug ??
-            null
-          break
-        case "wiki_edit":
-          targetLabel =
-            (f.title as string) ??
-            (s.targetSlug
-              ? s.targetSlug
-                  .split("-")
-                  .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
-                  .join(" ")
-              : null)
-          break
-        case "topic_suggestion":
-          targetLabel = (f.name as string) ?? s.targetSlug ?? null
-          break
-        case "blog_submission":
-          targetLabel = (f.title as string) ?? s.targetSlug ?? null
-          break
-
-        default:
-          targetLabel = s.targetSlug ?? null
-      }
-
-      return {
-        documentId: s.documentId,
-        submissionType: s.submissionType,
-        status: s.status,
-        targetEntityType: s.targetEntityType ?? null,
-        targetSlug: s.targetSlug ?? null,
-        targetLabel,
-        editSummary: s.editSummary ?? null,
-        createdAt: s.createdAt,
-        updatedAt: s.updatedAt,
-        reviewedAt: s.reviewedAt ?? null,
-      }
-    })
+    return labelled.map((s: any) => ({
+      documentId: s.documentId,
+      submissionType: s.submissionType,
+      status: s.status,
+      targetEntityType: s.targetEntityType ?? null,
+      targetSlug: s.targetSlug ?? null,
+      targetLabel: s.targetLabel,
+      editSummary: s.editSummary ?? null,
+      createdAt: s.createdAt,
+      updatedAt: s.updatedAt,
+      reviewedAt: s.reviewedAt ?? null,
+    }))
   },
 
   async findPublicByUsername(username: string) {

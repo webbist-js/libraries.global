@@ -4,19 +4,15 @@ import { Icon } from "@iconify/react"
 import { useEffect, useMemo, useState } from "react"
 
 import type { PublicSubmission } from "@/app/api/profile/[username]/contributions/route"
+import { ContributionRow } from "@/components/contributions/ContributionRow"
+import { StatCard } from "@/components/ds"
 import { BADGE_CATALOG } from "@/lib/badges"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 import { resolvePublicPrefs, type UserProfile } from "@/lib/types/profile"
 
 import { ContributionHeatmap } from "../ContributionHeatmap"
-import {
-  BadgeTile,
-  CARD,
-  ContributionRow,
-  SectionTitle,
-  StatCard,
-} from "../ProfileSectionUI"
+import { BadgeTile, CARD, SectionTitle } from "../ProfileSectionUI"
 
 // ── Main component ────────────────────────────────────────────────────────────
 

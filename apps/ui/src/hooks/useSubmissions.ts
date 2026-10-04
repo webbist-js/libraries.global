@@ -16,6 +16,8 @@ export interface Submission {
   targetEntityType?: string | null
   targetDocumentId?: string | null
   targetSlug?: string | null
+  /** The library's name or article's title, resolved by Strapi. */
+  targetLabel?: string | null
   fields?: Record<string, unknown> | null
   note?: string | null
   reviewNote?: string | null

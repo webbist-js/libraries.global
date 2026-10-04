@@ -3,16 +3,11 @@
 import { useEffect, useMemo, useState } from "react"
 
 import type { EarnedBadge } from "@/app/api/profile/[username]/badges/route"
+import { StatCard } from "@/components/ds"
 import { BADGE_CATALOG } from "@/lib/badges"
 import { T } from "@/lib/design-tokens"
 
-import {
-  BadgeTile,
-  CARD,
-  SectionTitle,
-  StatCard,
-  TextLink,
-} from "../ProfileSectionUI"
+import { BadgeTile, CARD, SectionTitle, TextLink } from "../ProfileSectionUI"
 
 const TIERS = [
   { name: "Reader", min: 0, next: 100 },

@@ -1,44 +1,82 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Icon } from "@iconify/react"
+import { useEffect } from "react"
 
+import { ContributionList } from "@/components/contributions/ContributionList"
+import { StatCard } from "@/components/ds"
 import { useMySubmissions, type Submission } from "@/hooks/useSubmissions"
+import { useCapabilities } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
+import { editorApplyHref, isArticleEditor } from "@/lib/editor-gate"
+import { Link } from "@/lib/navigation"
 
-import { SubmissionCard } from "./SubmissionCard"
 import { ContributeSectionHeader } from "../../_components/ContributeSectionHeader"
 
-const TABS = [
+const STATUS_FILTERS = [
   { id: "all", label: "All" },
   { id: "draft", label: "Drafts" },
-  { id: "pending", label: "Under review" },
+  { id: "pending", label: "In review" },
   { id: "needs_info", label: "Changes requested" },
-  { id: "approved", label: "Approved" },
-  { id: "rejected", label: "Rejected" },
-]
+  { id: "approved", label: "Accepted" },
+  { id: "rejected", label: "Not accepted" },
+] as const
 
-function filterSubmissions(
-  submissions: Submission[],
-  filter: string
-): Submission[] {
-  if (filter === "all") return submissions
+type StatusFilter = (typeof STATUS_FILTERS)[number]["id"]
 
-  return submissions.filter((s) => s.status === filter)
+const matchesStatus = (s: Submission, filter: StatusFilter) =>
+  filter === "all" || s.status === filter
+
+/** Where an unsent draft continues: the record wizard or the article editor. */
+function continueHref(submission: Submission): string {
+  const { submissionType, targetSlug, documentId, draftData } = submission
+  if (submissionType === "wiki_edit" || submissionType === "blog_submission") {
+    const kind = submissionType === "wiki_edit" ? "knowledge" : "journal"
+    if (
+      (draftData as { kind?: unknown } | null)?.kind === "new_article" ||
+      !targetSlug
+    )
+      return `/contribute/knowledge/new?type=${kind}&draft=${encodeURIComponent(documentId)}`
+
+    return kind === "knowledge"
+      ? `/contribute/knowledge/${encodeURIComponent(targetSlug)}`
+      : `/contribute/knowledge/journal/${encodeURIComponent(targetSlug)}`
+  }
+  if (
+    (submissionType === "library_edit" || submissionType === "correction") &&
+    targetSlug
+  )
+    return `/contribute/index/${encodeURIComponent(targetSlug)}`
+
+  return "/contribute/index/new"
 }
 
-function countForTab(submissions: Submission[], tabId: string): number {
-  if (tabId === "all") return submissions.length
+/**
+ * A draft's next step. The article editor is for editors, so anyone else
+ * is sent to the editor role application.
+ */
+function continueLink(
+  submission: Submission,
+  isEditor: (kind: "knowledge" | "journal") => boolean
+): { href: string; label: string } {
+  const href = continueHref(submission)
+  const { submissionType } = submission
+  if (submissionType !== "wiki_edit" && submissionType !== "blog_submission")
+    return { href, label: "Continue" }
+  const kind = submissionType === "wiki_edit" ? "knowledge" : "journal"
 
-  return submissions.filter((s) => s.status === tabId).length
+  return isEditor(kind)
+    ? { href, label: "Continue" }
+    : { href: editorApplyHref(kind), label: "Apply to edit" }
 }
 
-function SkeletonCards() {
+function SkeletonList() {
   return (
     <div className="flex flex-col gap-4" aria-hidden="true">
       {[0, 1, 2].map((i) => (
         <div
           key={i}
-          className="h-[148px] animate-pulse rounded-[20px]"
+          className="h-[92px] animate-pulse rounded-[20px]"
           style={{
             background: T.bg.deep,
             border: `1px solid ${T.border.line}`,
@@ -49,46 +87,14 @@ function SkeletonCards() {
   )
 }
 
-function EmptyState({ filter }: { filter: string }) {
-  const label =
-    filter === "all"
-      ? "No submissions yet"
-      : `No ${(TABS.find((tab) => tab.id === filter)?.label ?? filter.replace("_", " ")).toLowerCase()} submissions`
-  const description =
-    filter === "all"
-      ? "Your library additions, edits, and corrections will appear here once submitted."
-      : "No submissions matching this filter at the moment."
-
-  return (
-    <div
-      className="flex flex-col items-center rounded-[20px] px-6 py-12 text-center"
-      style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
-    >
-      <h2
-        className="m-0"
-        style={{
-          fontFamily: T.font.serif,
-          fontSize: "24px",
-          fontWeight: 500,
-          letterSpacing: "-0.01em",
-          color: T.ink.base,
-        }}
-      >
-        {label}
-      </h2>
-      <p
-        className="mt-2 mb-0 max-w-[44ch] text-[15px] leading-[1.6]"
-        style={{ color: T.ink.dim }}
-      >
-        {description}
-      </p>
-    </div>
-  )
-}
-
-export function SubmissionsShell() {
-  const [activeFilter, setActiveFilter] = useState<string>("all")
+/**
+ * My submissions: everything the user has sent or started, in the same
+ * rows as the Contributions tab on their profile, with a Continue link on
+ * drafts and the moderator's note on a decision.
+ */
+export function SubmissionsShell({ username }: { username: string | null }) {
   const { data: submissions = [], isLoading, refetch } = useMySubmissions()
+  const { has, ready } = useCapabilities()
 
   useEffect(() => {
     refetch()
@@ -97,7 +103,40 @@ export function SubmissionsShell() {
     return () => clearInterval(id)
   }, [refetch])
 
-  const filtered = filterSubmissions(submissions, activeFilter)
+  const count = (status: Submission["status"]) =>
+    submissions.filter((s) => s.status === status).length
+
+  const rowExtras = (s: Submission) => {
+    if (s.status === "draft") {
+      const next = continueLink(
+        s,
+        (kind) => !ready || isArticleEditor(has, kind)
+      )
+
+      return {
+        action: (
+          <Link
+            href={next.href}
+            className="inline-flex items-center gap-1 rounded-full px-4 py-1.5 text-[14px] font-semibold whitespace-nowrap text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+            style={{ background: T.accent.primary }}
+          >
+            {next.label}
+            <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
+          </Link>
+        ),
+      }
+    }
+    if ((s.status === "needs_info" || s.status === "rejected") && s.reviewNote)
+      return {
+        note: {
+          text: s.reviewNote,
+          tone:
+            s.status === "needs_info" ? ("warn" as const) : ("danger" as const),
+        },
+      }
+
+    return {}
+  }
 
   return (
     <>
@@ -105,7 +144,7 @@ export function SubmissionsShell() {
       <ContributeSectionHeader
         section="My submissions"
         title="Your contributions, *in flight.*"
-        lead="Drafts, things under review, requests for changes, and recently published. Editorial board comments live alongside each one."
+        lead="Drafts, changes in review and decisions, with the moderator’s note where there is one."
       >
         <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
           This list refreshes every minute.
@@ -113,93 +152,105 @@ export function SubmissionsShell() {
       </ContributeSectionHeader>
 
       <div className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-16 sm:px-8">
-        <div
-          role="group"
-          aria-label="Filter submissions by status"
-          className="mb-7 flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          style={{ borderBottom: `1px solid ${T.border.line}` }}
-        >
-          {TABS.map((tab) => {
-            const isActive = activeFilter === tab.id
-            const count = countForTab(submissions, tab.id)
+        {isLoading ? (
+          <SkeletonList />
+        ) : submissions.length === 0 ? (
+          <section
+            aria-labelledby="subs-empty"
+            className="rounded-[20px] p-6"
+            style={{
+              background: T.bg.deep,
+              border: `1px solid ${T.border.line}`,
+            }}
+          >
+            <h2
+              id="subs-empty"
+              className="m-0"
+              style={{
+                fontFamily: T.font.serif,
+                fontSize: "24px",
+                fontWeight: 500,
+                letterSpacing: "-0.01em",
+                color: T.ink.base,
+              }}
+            >
+              No submissions yet
+            </h2>
+            <p
+              className="mt-2 mb-3 text-[15px] leading-[1.6]"
+              style={{ color: T.ink.dim }}
+            >
+              Libraries you add, corrections and articles appear here as soon as
+              you start them.
+            </p>
+            <Link
+              href="/contribute"
+              className="text-[15px] font-semibold underline underline-offset-[3px]"
+              style={{ color: T.accent.primary }}
+            >
+              Start contributing
+            </Link>
+          </section>
+        ) : (
+          <div className="flex flex-col gap-6">
+            <h2 className="sr-only">Submission summary</h2>
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <StatCard
+                label="Drafts"
+                value={String(count("draft"))}
+                bg="var(--tint-neutral-bg)"
+                fg="var(--tint-neutral-fg)"
+                icon="mdi:file-document-edit-outline"
+              />
+              <StatCard
+                label="In review"
+                value={String(count("pending"))}
+                bg="var(--tint-academic-bg)"
+                fg="var(--tint-academic-fg)"
+                icon="mdi:clock-outline"
+              />
+              <StatCard
+                label="Changes requested"
+                value={String(count("needs_info"))}
+                bg="#F5EEDC"
+                fg="#6B5420"
+                icon="mdi:alert-circle-outline"
+              />
+              <StatCard
+                label="Accepted"
+                value={String(count("approved"))}
+                bg="var(--tint-public-bg)"
+                fg="var(--tint-public-fg)"
+                icon="mdi:check-circle-outline"
+              />
+            </div>
 
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                aria-pressed={isActive}
-                onClick={() => setActiveFilter(tab.id)}
-                className="-mb-px flex items-center gap-2 whitespace-nowrap"
-                style={{
-                  background: "none",
-                  border: "none",
-                  borderBottom: isActive
-                    ? `3px solid ${T.accent.primary}`
-                    : "3px solid transparent",
-                  padding: "12px 14px 10px",
-                  cursor: "pointer",
-                  fontFamily: T.font.sans,
-                  fontSize: "15px",
-                  fontWeight: isActive ? 600 : 500,
-                  color: isActive ? T.ink.base : T.ink.dim,
-                  transition: "color 150ms",
-                }}
-              >
-                {tab.label}
-                <span
-                  className="rounded-full px-2 text-[13px] font-semibold"
-                  style={{
-                    background: isActive ? T.accent.chip : T.bg.muted,
-                    color: isActive ? T.accent.primary : T.ink.dim,
-                    lineHeight: "20px",
-                  }}
-                >
-                  {count}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-
-        <div aria-live="polite">
-          {isLoading ? (
-            <SkeletonCards />
-          ) : filtered.length === 0 ? (
-            <EmptyState filter={activeFilter} />
-          ) : (
-            <SubmissionList submissions={filtered} />
-          )}
-        </div>
+            <ContributionList
+              title="Your submissions"
+              items={submissions}
+              filters={STATUS_FILTERS}
+              matches={matchesStatus}
+              legend="Filter by status"
+              rowExtras={rowExtras}
+              intro={
+                username ? (
+                  <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+                    Accepted ones also make up the public record on{" "}
+                    <Link
+                      href={`/profile/${encodeURIComponent(username)}/contributions`}
+                      className="font-semibold underline underline-offset-[3px]"
+                      style={{ color: T.accent.primary }}
+                    >
+                      your profile
+                    </Link>
+                    .
+                  </p>
+                ) : null
+              }
+            />
+          </div>
+        )}
       </div>
     </>
-  )
-}
-
-function SubmissionList({ submissions }: { submissions: Submission[] }) {
-  const [visibleCount, setVisibleCount] = useState(5)
-  const visible = submissions.slice(0, visibleCount)
-  const remaining = submissions.length - visibleCount
-
-  return (
-    <div className="flex flex-col gap-4">
-      {visible.map((sub, i) => (
-        <SubmissionCard key={sub.documentId} submission={sub} index={i} />
-      ))}
-      {remaining > 0 && (
-        <button
-          type="button"
-          onClick={() => setVisibleCount((c) => c + 9)}
-          className="self-center rounded-full border px-6 py-2.5 text-[15px] font-semibold transition-colors hover:bg-(--t-bg-surface)"
-          style={{
-            borderColor: T.border.hi,
-            background: T.bg.deep,
-            color: T.ink.base,
-            cursor: "pointer",
-          }}
-        >
-          {`Load ${remaining} earlier submission${remaining === 1 ? "" : "s"}`}
-        </button>
-      )}
-    </div>
   )
 }

@@ -127,9 +127,8 @@ export function GlobalLoggedUserMenu({
   // there is no username: a failed bridge says nothing about the profile.
   const username = user.username ?? profileSnippet?.username ?? null
   const needsProfile = user.profileLoaded === true && !username
-  const isVerifiedLibrarian = profileSnippet?.isVerifiedLibrarian ?? false
   // UI only: the routes behind these links re-check every capability.
-  const caps = new Set<string>(user.capabilities ?? [])
+  const caps = new Set<string>(user.capabilities)
   const canModerate = caps.has("moderate.queue")
   const holdsEditorOrModerator =
     canModerate || caps.has("docs.directEdit") || caps.has("journal.directEdit")
@@ -206,11 +205,13 @@ export function GlobalLoggedUserMenu({
             >
               My profile
             </MenuLink>
+            {/* Everything sent or started, drafts included. The accepted
+                ones, the public record, are a tab on My profile. */}
             <MenuLink
-              href={`/profile/${username}/contributions`}
-              icon="mdi:pencil-outline"
+              href="/contribute/submissions"
+              icon="mdi:inbox-multiple-outline"
             >
-              My contributions
+              My submissions
             </MenuLink>
             <MenuLink
               href={`/profile/${username}/badges`}
@@ -218,26 +219,6 @@ export function GlobalLoggedUserMenu({
             >
               Badges & points
             </MenuLink>
-            {/* Submissions — verified librarians only */}
-            {isVerifiedLibrarian && (
-              <MenuLink
-                href="/contribute/submissions"
-                icon="mdi:inbox-multiple-outline"
-                trailing={
-                  <span
-                    className="ml-auto rounded-full px-2 py-0.5 text-[12px] font-semibold"
-                    style={{
-                      background: "var(--tint-national-bg)",
-                      color: "var(--tint-national-fg)",
-                    }}
-                  >
-                    Librarian
-                  </span>
-                }
-              >
-                My submissions
-              </MenuLink>
-            )}
           </>
         ) : needsProfile ? (
           /* No profile yet — prompt to complete setup */
