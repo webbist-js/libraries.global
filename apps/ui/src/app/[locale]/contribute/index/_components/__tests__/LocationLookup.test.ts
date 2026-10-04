@@ -16,20 +16,6 @@ import type { Place } from "@/lib/geocode/place"
 Object.assign(globalThis, { React })
 
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
-// @/components/ds is a barrel: importing Notice from it also evaluates
-// sibling exports (PageHero, Breadcrumb, …) that pull in next-intl's
-// navigation, which happy-dom can't resolve. Same mock as PageHero.test.ts.
-vi.mock("@/lib/env-vars", () => ({ getEnvVar: () => {} }))
-vi.mock("@/lib/navigation", async () => {
-  const { createElement: h } = await import("react")
-
-  return {
-    Link: ({ href, children }: { href: string; children?: React.ReactNode }) =>
-      h("a", { href }, children),
-    formatHref: (href?: string | null) => href || "#",
-    isAppLink: () => true,
-  }
-})
 
 const place = (id: string, label: string, kind: string): Place => ({
   id,

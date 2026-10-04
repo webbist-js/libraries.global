@@ -4,7 +4,6 @@ import { Icon } from "@iconify/react"
 import type React from "react"
 import { useEffect, useId, useState, useSyncExternalStore } from "react"
 
-import { Notice } from "@/components/ds"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import { findPlaces } from "@/lib/geocode/client"
 import type { Place } from "@/lib/geocode/place"
@@ -72,12 +71,27 @@ function Alert({
   readonly children: string
 }) {
   return (
-    <div role="status">
-      <Notice icon="mdi:alert-circle-outline" tone="warn" title={title}>
-        <p className="m-0" style={{ color: T.ink.base }}>
+    <div
+      role="status"
+      className="flex items-start gap-3 rounded-[14px] px-4 py-3"
+      style={{ background: T.bg.muted }}
+    >
+      <Icon
+        aria-hidden="true"
+        icon="mdi:alert-circle-outline"
+        width={20}
+        height={20}
+        className="mt-0.5 shrink-0"
+        style={{ color: T.accent.warn }}
+      />
+      <div className="flex min-w-0 flex-col gap-0.5 text-[15px] leading-normal">
+        <p className="m-0 font-semibold" style={{ color: T.ink.base }}>
+          {title}
+        </p>
+        <p className="m-0" style={{ color: T.ink.dim }}>
           {children}
         </p>
-      </Notice>
+      </div>
     </div>
   )
 }

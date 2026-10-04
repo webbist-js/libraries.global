@@ -18,20 +18,6 @@ import type { FormData } from "../wizard.types"
 Object.assign(globalThis, { React })
 
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
-// @/components/ds is a barrel: importing Notice from it (via LocationLookup)
-// also evaluates sibling exports that pull in next-intl's navigation, which
-// happy-dom can't resolve. Same mocks as LocationLookup.test.ts.
-vi.mock("@/lib/env-vars", () => ({ getEnvVar: () => {} }))
-vi.mock("@/lib/navigation", async () => {
-  const { createElement: h } = await import("react")
-
-  return {
-    Link: ({ href, children }: { href: string; children?: React.ReactNode }) =>
-      h("a", { href }, children),
-    formatHref: (href?: string | null) => href || "#",
-    isAppLink: () => true,
-  }
-})
 // The map has its own tests; here a button stands in for a dropped pin.
 vi.mock("../LocationPinMap", async () => {
   const { createElement: h } = await import("react")
@@ -214,7 +200,7 @@ describe("StepLocation", () => {
     expect(screen.queryByText(/Nearest address to the pin/)).toBeNull()
   })
 
-  it("starts a new library's search from its name", () => {
+  it("starts a new library's search from its name", async () => {
     show({ ...EMPTY_FORM, name: "Radlett Library" })
     expect(
       (
@@ -223,9 +209,12 @@ describe("StepLocation", () => {
         }) as HTMLInputElement
       ).value
     ).toBe("Radlett Library")
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith("/api/relations/continents")
+    )
   })
 
-  it("starts empty when improving a record", () => {
+  it("starts empty when improving a record", async () => {
     show({ ...EMPTY_FORM, name: "Radlett Library" }, true)
     expect(
       (
@@ -234,9 +223,12 @@ describe("StepLocation", () => {
         }) as HTMLInputElement
       ).value
     ).toBe("")
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith("/api/relations/continents")
+    )
   })
 
-  it("leaves out the search and the map while translating", () => {
+  it("leaves out the search and the map while translating", async () => {
     const editable = new Set(editableFields(true, Object.keys(EMPTY_FORM)))
     render(
       createElement(
@@ -251,5 +243,8 @@ describe("StepLocation", () => {
       })
     ).toBeNull()
     expect(screen.queryByRole("button", { name: "Drop pin" })).toBeNull()
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith("/api/relations/continents")
+    )
   })
 })
