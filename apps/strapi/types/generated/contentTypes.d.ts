@@ -3508,6 +3508,53 @@ export interface PluginContentModerationOptionVote
   }
 }
 
+export interface PluginContentModerationReviewEvent
+  extends Struct.CollectionTypeSchema {
+  collectionName: "cm_review_events"
+  info: {
+    description: "One row per Submission State change: who moved it, from what, to what, with what note. Append-only."
+    displayName: "Review Event"
+    pluralName: "review-events"
+    singularName: "review-event"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    fromStatus: Schema.Attribute.Enumeration<
+      ["draft", "pending", "approved", "rejected", "needs_info"]
+    >
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::content-moderation.review-event"
+    > &
+      Schema.Attribute.Private
+    note: Schema.Attribute.Text
+    publishedAt: Schema.Attribute.DateTime
+    reviewerId: Schema.Attribute.String
+    reviewerKind: Schema.Attribute.Enumeration<["admin", "contributor"]>
+    submissionDocumentId: Schema.Attribute.String & Schema.Attribute.Required
+    toStatus: Schema.Attribute.Enumeration<
+      ["draft", "pending", "approved", "rejected", "needs_info"]
+    >
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface PluginContentModerationSubmission
   extends Struct.CollectionTypeSchema {
   collectionName: "cm_submissions"
@@ -3528,6 +3575,7 @@ export interface PluginContentModerationSubmission
     }
   }
   attributes: {
+    contentLocale: Schema.Attribute.String & Schema.Attribute.DefaultTo<"en">
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -3557,6 +3605,7 @@ export interface PluginContentModerationSubmission
     note: Schema.Attribute.Text
     payloadHash: Schema.Attribute.String & Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
+    resultDocumentId: Schema.Attribute.String
     reviewedAt: Schema.Attribute.DateTime
     reviewedByUserId: Schema.Attribute.String
     reviewerAssignedTo: Schema.Attribute.String
@@ -3576,6 +3625,7 @@ export interface PluginContentModerationSubmission
         "wiki_edit",
         "blog_submission",
         "topic_suggestion",
+        "role_application",
       ]
     > &
       Schema.Attribute.Required
@@ -4247,6 +4297,7 @@ export interface PluginRewardsPointEvent extends Struct.CollectionTypeSchema {
         "wiki_translated",
         "journal_accepted",
         "journal_edit_accepted",
+        "journal_translated",
         "knowledge_article_published",
         "knowledge_edit_accepted",
         "source_added",
@@ -4586,6 +4637,7 @@ declare module "@strapi/strapi" {
       "api::wiki-section.wiki-section": ApiWikiSectionWikiSection
       "plugin::content-moderation.option-suggestion": PluginContentModerationOptionSuggestion
       "plugin::content-moderation.option-vote": PluginContentModerationOptionVote
+      "plugin::content-moderation.review-event": PluginContentModerationReviewEvent
       "plugin::content-moderation.submission": PluginContentModerationSubmission
       "plugin::content-moderation.submission-upload": PluginContentModerationSubmissionUpload
       "plugin::content-releases.release": PluginContentReleasesRelease
