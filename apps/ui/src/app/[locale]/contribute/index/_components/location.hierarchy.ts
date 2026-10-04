@@ -14,13 +14,7 @@ export type HierarchyFill = Pick<
   | "regionDocumentId"
   | "areaDocumentId"
   | "country"
-> &
-  Partial<
-    Pick<
-      FormData,
-      "proposedRegionName" | "proposedAreaName" | "locationRequestDocumentId"
-    >
-  >
+>
 
 async function list<T>(url: string): Promise<T[]> {
   const res = await fetch(url)
@@ -33,9 +27,9 @@ async function list<T>(url: string): Promise<T[]> {
 /**
  * Where an address sits in the atlas, starting from what the form has.
  * Continent and country come from the ISO code; a different country
- * replaces the selection and any Location Request, as choosing it in the
- * selects would. Region and area are matched by name, only while empty and
- * not requested. Null when the country isn't in the atlas or a lookup failed.
+ * replaces the selection, as choosing it in the selects would. Region and
+ * area are matched by name, only while empty. Null when the country isn't
+ * in the atlas or a lookup failed.
  */
 export async function resolveHierarchy(
   form: FormData,
@@ -58,9 +52,6 @@ export async function resolveHierarchy(
           regionDocumentId: "",
           areaDocumentId: "",
           country: country.name,
-          proposedRegionName: "",
-          proposedAreaName: "",
-          locationRequestDocumentId: "",
         }
       : {
           continentDocumentId: form.continentDocumentId,
@@ -69,11 +60,8 @@ export async function resolveHierarchy(
           areaDocumentId: form.areaDocumentId,
           country: country.name,
         }
-    const requested = moved
-      ? { region: "", area: "" }
-      : { region: form.proposedRegionName, area: form.proposedAreaName }
 
-    if (!fill.regionDocumentId && !requested.region) {
+    if (!fill.regionDocumentId) {
       const regions = await list<Option>(
         `/api/relations/regions?countryDocumentId=${encodeURIComponent(fill.countryDocumentId)}`
       )
@@ -85,7 +73,7 @@ export async function resolveHierarchy(
           address.district,
         ]) ?? ""
     }
-    if (fill.regionDocumentId && !fill.areaDocumentId && !requested.area) {
+    if (fill.regionDocumentId && !fill.areaDocumentId) {
       const areas = await list<Option>(
         `/api/relations/areas?regionDocumentId=${encodeURIComponent(fill.regionDocumentId)}`
       )

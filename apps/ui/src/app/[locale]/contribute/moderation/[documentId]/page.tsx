@@ -11,7 +11,6 @@ import {
   FieldsList,
   formatDateTime,
   KeyValueList,
-  LocationRequestPanel,
   type ModerationDetail,
   moderationRowLabel,
   NewLibraryPanel,
@@ -29,11 +28,7 @@ import { userIsArticleEditor } from "@/lib/editor-gate"
 import { fetchModeration } from "@/lib/moderation-proxy"
 import { Link } from "@/lib/navigation"
 import { privateMetadata } from "@/lib/seo/metadata"
-import {
-  fetchPlaceLink,
-  type PlaceKind,
-  type PlaceLink,
-} from "@/lib/strapi-api/content/server"
+import { fetchPlaceLink, type PlaceLink } from "@/lib/strapi-api/content/server"
 
 import { ModerationHero } from "../_components/ModerationHero"
 import { requireModerator } from "../_components/moderator"
@@ -67,68 +62,21 @@ function Section({
 
 const isArticle = (t: string) => t === "wiki_edit" || t === "blog_submission"
 
-const asRecord = (v: unknown) =>
-  (v && typeof v === "object" && !Array.isArray(v) ? v : {}) as Record<
-    string,
-    unknown
-  >
-const idOf = (v: unknown) => (typeof v === "string" && v ? v : null)
-
 /** What a panel needs beyond the detail, read on the server. */
 type PanelContext = {
-  country: PlaceLink | null
-  region: PlaceLink | null
   /** Locale code → name. */
   localeNames: Record<string, string>
-}
-
-/**
- * A Location Request's parents as approval will use them: the Moderator's
- * target when it names any place, else the request's own ids.
- */
-async function locationParents(
-  d: ModerationDetail
-): Promise<Pick<PanelContext, "country" | "region">> {
-  const target = asRecord(d.draftData?.moderatorTarget)
-  const useTarget = ["continent", "country", "region", "area"].some((k) =>
-    idOf(target[k])
-  )
-  const fields = d.fields ?? {}
-  const countryId = useTarget
-    ? idOf(target.country)
-    : idOf(fields.countryDocumentId)
-  const regionId = useTarget
-    ? idOf(target.region)
-    : idOf(fields.regionDocumentId)
-  const [country, region] = await Promise.all([
-    countryId ? fetchPlaceLink("country", countryId) : null,
-    regionId && fields.kind === "area"
-      ? fetchPlaceLink("region", regionId)
-      : null,
-  ])
-
-  return { country, region }
 }
 
 /** The record an approval created: what it is and where to open it. */
 async function createdRecord(
   d: ModerationDetail
 ): Promise<{ label: string; link: PlaceLink | null } | null> {
-  if (!d.resultDocumentId) return null
-  let kind: PlaceKind | null = null
-  if (d.submissionType === "new_library") kind = "library"
-  else if (d.submissionType === "location_request")
-    kind = d.fields?.kind === "area" ? "area" : "region"
-  if (!kind) return null
-  const link = await fetchPlaceLink(kind, d.resultDocumentId)
-  const label =
-    kind === "library"
-      ? link?.href?.startsWith("/contribute/")
-        ? "Open the new library in the Index editor"
-        : "Open the new library"
-      : kind === "area"
-        ? "Open the region of the new area"
-        : "Open the new region"
+  if (!d.resultDocumentId || d.submissionType !== "new_library") return null
+  const link = await fetchPlaceLink(d.resultDocumentId)
+  const label = link?.href?.startsWith("/contribute/")
+    ? "Open the new library in the Index editor"
+    : "Open the new library"
 
   return { label, link }
 }
@@ -152,17 +100,6 @@ const PANELS: Record<
       status={d.status}
       fields={d.fields}
       draftData={d.draftData}
-      pendingLocationRequest={d.pendingLocationRequest === true}
-    />
-  ),
-  location_request: (d, ctx) => (
-    <LocationRequestPanel
-      documentId={d.documentId}
-      status={d.status}
-      fields={d.fields}
-      draftData={d.draftData}
-      country={ctx.country}
-      region={ctx.region}
     />
   ),
   role_application: (d, ctx) => (
@@ -200,7 +137,6 @@ const PANEL_TITLES: Record<string, string> = {
   wiki_edit: "The article",
   blog_submission: "The article",
   new_library: "The new library",
-  location_request: "The requested place",
   role_application: "The application",
 }
 
@@ -291,14 +227,8 @@ export default async function ReviewSubmissionPage({
   const d = detailRes.body?.data
   if (detailRes.status !== 200 || !d) return <LoadFailed />
   const events = eventsRes.body?.data ?? []
-  const [parents, created] = await Promise.all([
-    d.submissionType === "location_request"
-      ? locationParents(d)
-      : Promise.resolve({ country: null, region: null }),
-    createdRecord(d),
-  ])
+  const created = await createdRecord(d)
   const panelContext: PanelContext = {
-    ...parents,
     localeNames: Object.fromEntries(locales.map((l) => [l.code, l.name])),
   }
   const language =
@@ -409,9 +339,7 @@ export default async function ReviewSubmissionPage({
               </Link>
             ) : created ? (
               <p className="m-0" style={{ color: T.ink.dim }}>
-                {d.submissionType === "location_request"
-                  ? "Approval created this place in the atlas."
-                  : "Approval created a new library record."}
+                Approval created a new library record.
               </p>
             ) : null}
             {links.map((l) => (

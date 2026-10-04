@@ -102,7 +102,7 @@ const holds = (role: GrantableRole): readonly FixtureGrant[] => [{ role }]
 
 export const FIXTURES: readonly Fixture[] = [
   { key: "reader", grants: [], claim: false },
-  // Also the specs' submitter (moderation, location requests).
+  // Also the specs' submitter (moderation).
   { key: "contributor", grants: holds("contributor"), claim: false },
   { key: "librarian", grants: holds("verified_librarian"), claim: true },
   { key: "wiki-editor", grants: holds("wiki_editor"), claim: false },
@@ -184,12 +184,6 @@ export const FIXTURE_LOCALES: readonly string[] = Array.from(
     )
   )
 )
-
-/**
- * Areas created by location-request.spec.ts are named with this prefix,
- * and every seed deletes them again.
- */
-export const E2E_AREA_PREFIX = "Access E2E area "
 
 export const emailFor = (key: string) => `access-${key}@example.test`
 

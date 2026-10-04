@@ -18,7 +18,6 @@ const ALL_SIGNED_IN = [
   "submit.journalPitch",
   "submit.topicSuggestion",
   "submit.roleApplication",
-  "submit.locationRequest",
 ]
 
 type Scope = { queue: string; locale: string | null }

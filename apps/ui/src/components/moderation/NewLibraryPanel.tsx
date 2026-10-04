@@ -1,6 +1,5 @@
 "use client"
 
-import { Icon } from "@iconify/react"
 import { useEffect, useState } from "react"
 
 import { LocationHierarchySelector } from "@/app/[locale]/contribute/index/_components/LocationHierarchySelector"
@@ -10,7 +9,7 @@ import {
 } from "@/app/[locale]/contribute/index/_components/wizard.types"
 import { Badge } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
-import { Link, useRouter } from "@/lib/navigation"
+import { useRouter } from "@/lib/navigation"
 import { formatStrapiMediaUrlForClient } from "@/lib/strapi-helpers"
 
 import { KeyValueList } from "./KeyValueList"
@@ -35,58 +34,6 @@ const asRecord = (v: unknown) =>
     unknown
   >
 const idOf = (v: unknown) => (typeof v === "string" ? v : "")
-const textOf = (v: unknown) => (typeof v === "string" ? v.trim() : "")
-
-/** The contributor's Location Request keys: shown as their own line. */
-const PROPOSAL_KEYS = new Set([
-  "proposedRegionName",
-  "proposedAreaName",
-  "locationRequestDocumentId",
-])
-
-/**
- * The missing region or area the contributor asked for, with a link to the
- * request's own review. Approving that request first files the library
- * under the new place (unless a location is saved here).
- */
-function RequestedPlace({
-  fields,
-}: {
-  readonly fields: Record<string, unknown>
-}) {
-  const region = textOf(fields.proposedRegionName)
-  const area = textOf(fields.proposedAreaName)
-  const requestId = idOf(fields.locationRequestDocumentId)
-  if (!region && !area) return null
-
-  return (
-    <div
-      className="flex flex-col gap-1 rounded-[14px] px-3 py-2 text-[14px]"
-      style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
-    >
-      <p className="m-0" style={{ color: T.ink.base }}>
-        <strong>
-          {region
-            ? `Requested a new region: ${region}`
-            : `Requested a new area: ${area}`}
-        </strong>
-      </p>
-      <p className="m-0" style={{ color: T.ink.dim }}>
-        Approve the location request first and the library is filed under the
-        new place, unless you save a location here.
-      </p>
-      {requestId ? (
-        <Link
-          href={`/contribute/moderation/${encodeURIComponent(requestId)}`}
-          className="font-semibold underline-offset-2 hover:underline"
-          style={{ color: T.accent.primary }}
-        >
-          Review the location request
-        </Link>
-      ) : null}
-    </div>
-  )
-}
 
 function GroupHeading({ children }: { children: string }) {
   return (
@@ -252,21 +199,18 @@ function initialPlace(
  * A proposed new library: its fields, and where in the atlas it will be
  * filed. While the submission is open the Moderator can change that place
  * (Strapi's `target` route); publishing on approval needs a continent,
- * country and region. `pendingLocationRequest` (from Strapi's detail) says
- * the contributor's Location Request still awaits a decision.
+ * country and region.
  */
 export function NewLibraryPanel({
   documentId,
   status,
   fields,
   draftData,
-  pendingLocationRequest = false,
 }: {
   readonly documentId: string
   readonly status: string
   readonly fields: Record<string, unknown> | null
   readonly draftData: Record<string, unknown> | null
-  readonly pendingLocationRequest?: boolean
 }) {
   const router = useRouter()
   const editable = status === "pending" || status === "needs_info"
@@ -322,13 +266,9 @@ export function NewLibraryPanel({
     !!place.countryDocumentId &&
     !!place.regionDocumentId
 
-  const listed = Object.fromEntries(
-    Object.entries(fields ?? {}).filter(([k]) => !PROPOSAL_KEYS.has(k))
-  )
-
   return (
     <div className="flex flex-col gap-6">
-      <FieldsList fields={listed} />
+      <FieldsList fields={fields ?? {}} />
       <fieldset
         className="m-0 flex flex-col gap-3 rounded-[14px] p-4"
         style={{
@@ -343,23 +283,6 @@ export function NewLibraryPanel({
         >
           Where it goes in the atlas
         </legend>
-        <RequestedPlace fields={fields ?? {}} />
-        {pendingLocationRequest === true ? (
-          <p
-            className="m-0 flex items-start gap-1.5 text-[14px] font-semibold"
-            style={{ color: T.accent.warn }}
-          >
-            <Icon
-              aria-hidden="true"
-              icon="mdi:alert-outline"
-              width={16}
-              height={16}
-              className="mt-0.5 shrink-0"
-            />
-            Its location request is still open; approve that first so the
-            library is linked.
-          </p>
-        ) : null}
         <LocationHierarchySelector f={place} setFormData={setPlace} />
         {editable ? (
           <div className="flex flex-wrap items-center gap-3">

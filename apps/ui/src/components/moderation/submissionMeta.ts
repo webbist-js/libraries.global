@@ -58,8 +58,6 @@ export type ModerationDetail = ModerationRow & {
     source: (ArticleVersion & { locale: string }) | null
   } | null
   canPublish: boolean
-  /** new_library only: its Location Request still awaits a decision. */
-  pendingLocationRequest?: boolean
   /** role_application only: who applied and what they've had accepted. */
   applicant?: RoleApplicant | null
 }
@@ -119,7 +117,6 @@ export const TYPE_LABELS: Record<string, string> = {
   blog_submission: "Journal",
   topic_suggestion: "Topic",
   role_application: "Role application",
-  location_request: "Location request",
 }
 
 export const TYPE_COLORS: Record<string, BadgeColor> = {
@@ -131,7 +128,6 @@ export const TYPE_COLORS: Record<string, BadgeColor> = {
   blog_submission: "ember",
   topic_suggestion: "dim",
   role_application: "violet",
-  location_request: "ok",
 }
 
 /** The Type column's label for a queue row (or any submission). */

@@ -221,8 +221,6 @@ function actionOf(
       return "Wrote for the Journal"
     case "topic_suggestion":
       return "Suggested a topic"
-    case "location_request":
-      return "Added a place"
 
     default:
       return "Accepted change"

@@ -53,10 +53,19 @@ describe("resolveHierarchy", () => {
       regionDocumentId: "wy",
       areaDocumentId: "brad",
       country: "England",
-      proposedRegionName: "",
-      proposedAreaName: "",
-      locationRequestDocumentId: "",
     })
+  })
+
+  it("returns only the hierarchy and the country name", async () => {
+    expect(
+      Object.keys((await resolveHierarchy(EMPTY_FORM, HAWORTH)) ?? {}).sort()
+    ).toEqual([
+      "areaDocumentId",
+      "continentDocumentId",
+      "country",
+      "countryDocumentId",
+      "regionDocumentId",
+    ])
   })
 
   it("keeps a region already chosen in the same country", async () => {
@@ -78,40 +87,19 @@ describe("resolveHierarchy", () => {
     )
   })
 
-  it("replaces another country, with its requested region or area", async () => {
+  it("replaces another country's selection", async () => {
     const form = {
       ...EMPTY_FORM,
       continentDocumentId: "na",
       countryDocumentId: "us",
       regionDocumentId: "ca",
-      proposedAreaName: "Sunnyvale",
     }
     expect(await resolveHierarchy(form, HAWORTH)).toMatchObject({
       continentDocumentId: "eu",
       countryDocumentId: "eng",
       regionDocumentId: "wy",
       areaDocumentId: "brad",
-      proposedAreaName: "",
     })
-  })
-
-  it("leaves a requested region alone", async () => {
-    const form = {
-      ...EMPTY_FORM,
-      continentDocumentId: "eu",
-      countryDocumentId: "eng",
-      proposedRegionName: "Calderdale",
-    }
-    expect(await resolveHierarchy(form, HAWORTH)).toEqual({
-      continentDocumentId: "eu",
-      countryDocumentId: "eng",
-      regionDocumentId: "",
-      areaDocumentId: "",
-      country: "England",
-    })
-    expect(asked()).not.toContain(
-      "/api/relations/regions?countryDocumentId=eng"
-    )
   })
 
   it("is null outside the atlas or without a country code", async () => {

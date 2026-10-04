@@ -28,9 +28,8 @@
  * Input: ACCESS_SEED_PLAN, a JSON array of { baUserId, email, name,
  * roleGrants: [{ role, queue, locale }], username, plan, claimLibrary,
  * trackRecord } (see FIXTURES in access-fixtures.ts; a null username marks
- * the onboarding fixture), and ACCESS_SEED_OPTIONS, { locales,
- * areaNamePrefix }. Output: one line prefixed ACCESS_SEED_RESULT with a
- * JSON summary of what changed.
+ * the onboarding fixture), and ACCESS_SEED_OPTIONS, { locales }. Output:
+ * one line prefixed ACCESS_SEED_RESULT with a JSON summary of what changed.
  *
  * Contributor Roles are Role Grants. The writer never sets
  * `user-profile.contributorRole` or `isVerifiedLibrarian`: the role-grant
@@ -54,7 +53,6 @@ const { createStrapi } = requireFromStrapi("@strapi/strapi")
 const PROFILE = "api::user-profile.user-profile"
 const ROLE_GRANT = "api::role-grant.role-grant"
 const SUBMISSION = "plugin::content-moderation.submission"
-const AREA = "api::area.area"
 const AFFILIATION = "api::library-affiliation.library-affiliation"
 const GRANT = "api::entitlement-grant.entitlement-grant"
 const VERIFICATION = "api::pro-verification.pro-verification"
@@ -361,32 +359,6 @@ async function ensureLocales(strapi, codes) {
 }
 
 /**
- * Deletes the Areas location-request.spec.ts created (every locale), named
- * with the E2E prefix. A short prefix could match real places, so one
- * under 8 characters is refused.
- */
-async function removeE2eAreas(strapi, prefix) {
-  if (typeof prefix !== "string" || prefix.trim().length < 8)
-    throw new Error("Refusing: the E2E area prefix is too short")
-  let removed = 0
-  for (let round = 0; round < 20; round++) {
-    const rows = await strapi.documents(AREA).findMany({
-      filters: { name: { $startsWith: prefix } },
-      fields: ["documentId"],
-      sort: "id:asc",
-      limit: PAGE,
-    })
-    if (rows.length === 0) break
-    for (const documentId of new Set(rows.map((r) => r.documentId))) {
-      await strapi.documents(AREA).delete({ documentId, locale: "*" })
-      removed++
-    }
-  }
-
-  return removed
-}
-
-/**
  * Converges affiliations: the claiming fixture ends with exactly one, on
  * claimLibrary; every other fixture ends with none.
  */
@@ -551,7 +523,7 @@ function readOptions() {
   if (!locales.every((c) => typeof c === "string" && LOCALE_CODE.test(c)))
     throw new Error("Refusing: ACCESS_SEED_OPTIONS has an invalid locale")
 
-  return { locales, areaNamePrefix: options.areaNamePrefix }
+  return { locales }
 }
 
 async function main() {
@@ -576,10 +548,8 @@ async function main() {
   const fixtures = []
   const now = Date.now()
   let localesCreated = []
-  let areasRemoved = 0
   try {
     localesCreated = await ensureLocales(strapi, options.locales)
-    areasRemoved = await removeE2eAreas(strapi, options.areaNamePrefix)
     for (const item of plan) {
       const profileChanged = await applyProfile(strapi, item)
       const roles = await applyRoleGrants(strapi, item, syncDerivedRole)
@@ -601,7 +571,7 @@ async function main() {
     await strapi.destroy()
   }
   process.stdout.write(
-    `ACCESS_SEED_RESULT ${JSON.stringify({ fixtures, localesCreated, areasRemoved })}\n`
+    `ACCESS_SEED_RESULT ${JSON.stringify({ fixtures, localesCreated })}\n`
   )
 }
 

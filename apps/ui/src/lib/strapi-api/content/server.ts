@@ -839,54 +839,32 @@ export type PlaceKind = "library" | "country" | "region" | "area"
 /** A place's name and where to open it; `href` null when it has no page. */
 export type PlaceLink = { name: string | null; href: string | null }
 
-const PLACE_UID = {
-  library: "api::library.library",
-  country: "api::country.country",
-  region: "api::region.region",
-  area: "api::area.area",
-} as const
-
+const LIBRARY_UID = "api::library.library"
 const SLUG_ONLY = { fields: ["slug"] }
-const COUNTRY_WITH_CONTINENT = {
-  fields: ["slug", "name"],
-  populate: { continent: SLUG_ONLY },
-}
-const REGION_WITH_PARENTS = {
-  fields: ["slug", "name"],
-  populate: { continent: SLUG_ONLY, country: COUNTRY_WITH_CONTINENT },
-}
-const PLACE_POPULATE: Record<PlaceKind, Record<string, unknown>> = {
-  library: { continent: SLUG_ONLY, country: SLUG_ONLY, region: SLUG_ONLY },
-  country: { continent: SLUG_ONLY },
-  region: { continent: SLUG_ONLY, country: COUNTRY_WITH_CONTINENT },
-  area: { region: REGION_WITH_PARENTS },
+const LIBRARY_POPULATE = {
+  continent: SLUG_ONLY,
+  country: SLUG_ONLY,
+  region: SLUG_ONLY,
 }
 
-type SlugRef = { slug?: string | null; name?: string | null } | null
 type PlaceRow = {
   name?: string | null
   slug?: string | null
-  continent?: SlugRef
-  country?: (SlugRef & { continent?: SlugRef }) | null
-  region?:
-    | (SlugRef & {
-        continent?: SlugRef
-        country?: (SlugRef & { continent?: SlugRef }) | null
-      })
-    | null
+  continent?: { slug?: string | null } | null
+  country?: { slug?: string | null } | null
+  region?: { slug?: string | null } | null
 }
 
 async function readPlace(
-  kind: PlaceKind,
   documentId: string,
   status: "published" | "draft"
 ): Promise<PlaceRow | null> {
   const res = (await PublicStrapiClient.fetchMany(
-    PLACE_UID[kind],
+    LIBRARY_UID,
     {
       filters: { documentId: { $eq: documentId } },
       fields: ["name", "slug"],
-      populate: PLACE_POPULATE[kind],
+      populate: LIBRARY_POPULATE,
       status,
       pagination: { pageSize: 1 },
     } as never,
@@ -897,29 +875,17 @@ async function readPlace(
   return res.data?.[0] ?? null
 }
 
-/** `/{continent}/{country}/{region}` for a region row, when every slug is known. */
-function regionPath(region: NonNullable<PlaceRow["region"]>): string | null {
-  const continent = region.continent?.slug ?? region.country?.continent?.slug
-  const country = region.country?.slug
-  if (!continent || !country || !region.slug) return null
-
-  return `/${continent}/${country}/${region.slug}`
-}
-
 /**
- * A library, country, region or area by documentId: its name and public
- * page. An area has no page of its own, so it links to its region's. An
- * unpublished library links to the Index editor when it has a slug.
+ * A library by documentId: its name and public page. An unpublished
+ * library links to the Index editor when it has a slug.
  */
 export async function fetchPlaceLink(
-  kind: PlaceKind,
   documentId: string
 ): Promise<PlaceLink | null> {
   try {
-    const row = await readPlace(kind, documentId, "published")
+    const row = await readPlace(documentId, "published")
     if (!row) {
-      if (kind !== "library") return null
-      const draft = await readPlace(kind, documentId, "draft")
+      const draft = await readPlace(documentId, "draft")
       if (!draft) return null
 
       return {
@@ -929,27 +895,11 @@ export async function fetchPlaceLink(
           : null,
       }
     }
-    const name = row.name ?? null
-    switch (kind) {
-      case "library":
-        return { name, href: buildLibraryPath(row) }
-      case "country":
-        return {
-          name,
-          href:
-            row.continent?.slug && row.slug
-              ? `/${row.continent.slug}/${row.slug}`
-              : null,
-        }
-      case "region":
-        return { name, href: regionPath(row) }
 
-      default:
-        return { name, href: row.region ? regionPath(row.region) : null }
-    }
+    return { name: row.name ?? null, href: buildLibraryPath(row) }
   } catch (e: unknown) {
     logNonBlockingError({
-      message: `Error fetching ${kind} '${documentId}'`,
+      message: `Error fetching library '${documentId}'`,
       error: {
         error: e instanceof Error ? e.message : String(e),
         stack: e instanceof Error ? e.stack : undefined,

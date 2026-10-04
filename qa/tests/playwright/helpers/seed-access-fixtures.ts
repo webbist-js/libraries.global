@@ -19,10 +19,9 @@
  * A re-run changes nothing that already matches. What the specs change, the
  * next seed undoes: the onboarding fixture's username is cleared again, the
  * wiki_editor grant an approved Role Application gave the applicant is
- * removed, every submission the specs created is deleted (the applicant's
- * five accepted ones stay), and so are the Areas a location request added
- * (named with E2E_AREA_PREFIX). It also adds any locale the fixture grants
- * name (fr) to Strapi's i18n plugin if it's missing.
+ * removed, and every submission the specs created is deleted (the
+ * applicant's five accepted ones stay). It also adds any locale the fixture
+ * grants name (fr) to Strapi's i18n plugin if it's missing.
  */
 import { execFile } from "node:child_process"
 import { createRequire } from "node:module"
@@ -35,7 +34,6 @@ import { Client } from "pg"
 
 import {
   derivedRole,
-  E2E_AREA_PREFIX,
   emailFor,
   type FixtureGrant,
   FIXTURE_LOCALES,
@@ -90,7 +88,6 @@ type WriteResult = {
 type WriterOutput = {
   fixtures: WriteResult[]
   localesCreated: string[]
-  areasRemoved: number
 }
 
 function assertLocal(): void {
@@ -246,7 +243,6 @@ async function runWriter(plan: PlanItem[]): Promise<WriterOutput> {
       ),
       ACCESS_SEED_OPTIONS: JSON.stringify({
         locales: FIXTURE_LOCALES,
-        areaNamePrefix: E2E_AREA_PREFIX,
       }),
     },
     maxBuffer: 16 * 1024 * 1024,
@@ -366,8 +362,6 @@ export async function seedAccessFixtures(): Promise<void> {
   const output = await runWriter(plan)
   for (const code of output.localesCreated)
     console.log(`Strapi locale ${code} added (fixture grants name it)`)
-  if (output.areasRemoved > 0)
-    console.log(`${output.areasRemoved} E2E area(s) from earlier runs removed`)
   let mayBeStale = false
   for (const item of plan) {
     const r = output.fixtures.find((x) => x.baUserId === item.baUserId)
