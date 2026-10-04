@@ -3,23 +3,33 @@
 
 import {
   FilterGroup,
+  FilterHelper,
   FilterOption,
   FilterPanelHeader,
   type FilterSidebarState,
 } from "@/components/ds"
+import { T } from "@/lib/design-tokens"
+import type { FindLocation } from "@/lib/find-search"
 
 import {
+  type FindPlace,
   type FindState,
   type TypeGroupKey,
   NEED_KEYS,
+  pickPlace,
+  placeChoices,
+  placePath,
   TYPE_GROUPS,
 } from "./find-helpers"
+import { placeSelectLabels } from "./place-select-labels"
 
 export interface FindFacets {
   /** raw libraryType enum value → count */
   libraryType: Record<string, number>
   accessibility: Record<string, number>
   services: Record<string, number>
+  /** places to choose from, with counts under the other filters */
+  location?: FindLocation
   /** computed client-side when bulk data is available */
   openNowCount?: number
   hoursKnownCount?: number
@@ -234,38 +244,117 @@ export function FindFilterSidebar({
       </FilterGroup>
 
       <FilterGroup
-        title="Distance"
+        title="Location"
         defaultOpen={false}
-        dimmed={state.nearLat == null}
+        activeCount={
+          (state.place ? 1 : 0) +
+          (state.nearLat != null && state.radiusKm > 0 ? 1 : 0)
+        }
         icon={
           <>
             <path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z" />
             <circle cx="12" cy="10" r="2.5" />
           </>
         }
-        helper={
-          state.nearLat == null
-            ? "Turn on “Use my location” to enable"
-            : undefined
-        }
       >
-        {[
-          { km: 0, label: "Any distance" },
-          { km: 10, label: "Within 10 km" },
-          { km: 50, label: "Within 50 km" },
-          { km: 200, label: "Within 200 km" },
-        ].map((o) => (
-          <FilterOption
-            key={o.km}
-            type="radio"
-            name="distance"
-            label={o.label}
-            disabled={state.nearLat == null}
-            checked={state.radiusKm === o.km}
-            onChange={() => onChange({ radiusKm: o.km, page: 0 })}
-          />
-        ))}
+        <PlaceSelects
+          place={state.place}
+          location={facets.location}
+          onChange={(place) => onChange({ place, page: 0 })}
+        />
+        <fieldset
+          disabled={state.nearLat == null}
+          className="m-0 mt-3 min-w-0 border-0 p-0"
+        >
+          <legend
+            className="p-0 text-[14px] font-semibold"
+            style={{ color: T.ink.dim }}
+          >
+            Distance
+          </legend>
+          <div
+            className="mt-1 flex flex-col"
+            style={{ opacity: state.nearLat == null ? 0.55 : 1 }}
+          >
+            {DISTANCES.map((o) => (
+              <FilterOption
+                key={o.km}
+                type="radio"
+                name="distance"
+                label={o.label}
+                disabled={state.nearLat == null}
+                checked={state.radiusKm === o.km}
+                onChange={() => onChange({ radiusKm: o.km, page: 0 })}
+              />
+            ))}
+          </div>
+          {state.nearLat == null ? (
+            <FilterHelper>Turn on “Use my location” to enable</FilterHelper>
+          ) : null}
+        </fieldset>
       </FilterGroup>
+    </div>
+  )
+}
+
+const DISTANCES = [
+  { km: 0, label: "Any distance" },
+  { km: 10, label: "Within 10 km" },
+  { km: 50, label: "Within 50 km" },
+  { km: 200, label: "Within 200 km" },
+]
+
+/**
+ * Continent, then country, then region: each select appears once the one
+ * above it has a value, and lists the places there with matching libraries.
+ */
+function PlaceSelects({
+  place,
+  location,
+  onChange,
+}: {
+  place: FindPlace | null
+  location?: FindLocation
+  onChange: (place: FindPlace | null) => void
+}) {
+  const path = placePath(place, location)
+  const selects = placeSelectLabels(location)
+
+  return (
+    <div className="flex flex-col gap-3">
+      {selects.map(({ level, label, all }, i) => {
+        const parent = selects[i - 1]?.level
+        if (parent && path[parent] === "") return null
+
+        return (
+          <label
+            key={level}
+            className="flex flex-col gap-1.5 text-[14px] font-semibold"
+            style={{ color: T.ink.dim }}
+          >
+            {label}
+            <select
+              value={path[level]}
+              onChange={(e) => onChange(pickPlace(path, level, e.target.value))}
+              className="min-h-11 w-full cursor-pointer rounded-[14px] px-3 text-[15px] font-normal"
+              style={{
+                background: T.bg.deep,
+                border: `1px solid ${T.border.hi}`,
+                color: T.ink.base,
+              }}
+            >
+              <option value="">{all}</option>
+              {placeChoices(level, path, location).map((c) => (
+                <option key={c.slug} value={c.slug}>
+                  {c.count == null
+                    ? c.name
+                    : `${c.name} (${c.count.toLocaleString("en-GB")})`}
+                </option>
+              ))}
+            </select>
+          </label>
+        )
+      })}
     </div>
   )
 }

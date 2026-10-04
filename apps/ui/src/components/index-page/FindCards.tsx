@@ -2,9 +2,10 @@
 "use client"
 
 import { T, TYPE_TINT } from "@/lib/design-tokens"
-import { type LibrarySearchHitV2, buildLibraryPath } from "@/lib/meilisearch"
+import type { LibrarySearchHitV2 } from "@/lib/find-search"
+import { buildLibraryPath } from "@/lib/meilisearch"
 import { Link } from "@/lib/navigation"
-import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
+import { formatStrapiMediaUrlForClient } from "@/lib/strapi-helpers"
 
 import {
   type OpenStatus,
@@ -53,7 +54,7 @@ function Monogram({
   radius: number
 }) {
   const tint = TYPE_TINT[groupForLibraryType(hit.libraryType)]
-  const photo = formatStrapiMediaUrl(
+  const photo = formatStrapiMediaUrlForClient(
     hit.heroImage?.formats?.small?.url ?? hit.heroImage?.url ?? null
   )
 

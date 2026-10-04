@@ -3,7 +3,14 @@
 
 import { useSearchParams } from "next/navigation"
 import { useLocale } from "next-intl"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
 import {
   FilterDrawer,
@@ -13,53 +20,40 @@ import {
 } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import { T } from "@/lib/design-tokens"
-import { type LibrarySearchHitV2, searchLibrariesV2 } from "@/lib/meilisearch"
+import {
+  type FindResult,
+  type LibrarySearchHitV2,
+  FIND_MAX_REACHABLE,
+  searchFind,
+} from "@/lib/find-search"
 import { usePathname, useRouter } from "@/lib/navigation"
 
 import {
   type FindState,
   DEFAULT_FIND_STATE,
-  TYPE_GROUPS,
-  completenessScore,
   distanceKm,
+  findQueryOf,
   findStateFromParams,
   findStateToParams,
-  hasActiveFindFilters,
-  hitNeeds,
-  openStatus,
+  placeName,
 } from "./find-helpers"
 import { LibraryResultCard, LibraryResultRow } from "./FindCards"
-import {
-  FindFilterChips,
-  FindResultsControls,
-  FindSearchBar,
-} from "./FindControls"
+import { FindFilterChips, FindResultsControls } from "./FindControls"
 import { type FindFacets, FindFilterSidebar } from "./FindFilterSidebar"
 import { FindMapPanel } from "./FindMapPanel"
 import { FindEmptyState, FindErrorState, FindSkeletonGrid } from "./FindStates"
-
-const PAGE_SIZE = 24
-/**
- * All fetches use one bulk request (MeiliSearch's 1000-hit ceiling) so that
- * "open now", "digital collections" and the completeness sort can be computed
- * client-side — none of them are indexed yet. Revisit once the index carries
- * a completeness score and an open-now-friendly schedule encoding.
- */
-const BULK_LIMIT = 1000
-
-interface FetchResult {
-  all: LibrarySearchHitV2[]
-  facets: FindFacets
-}
+import { LibrarySearchBox } from "./LibrarySearchBox"
 
 export function FindLibraryPage({
-  initialHits,
-  initialFacetDistribution,
+  initial,
   statsTotal,
+  contributeBand,
 }: {
-  initialHits: LibrarySearchHitV2[] | null
-  initialFacetDistribution: Record<string, Record<string, number>> | null
+  /** The server's search for this URL's own state; null when it failed. */
+  initial: FindResult | null
   statsTotal: number
+  /** Rendered between the hero and the results. */
+  contributeBand?: ReactNode
 }) {
   const locale = useLocale()
   const router = useRouter()
@@ -69,19 +63,8 @@ export function FindLibraryPage({
   const [state, setState] = useState<FindState>(() =>
     findStateFromParams(new URLSearchParams(searchParams.toString()))
   )
-  // The server's hits are unfiltered: only show them for the default state.
-  const [initialMatches] = useState(
-    () => initialHits !== null && !hasActiveFindFilters(state)
-  )
-  const [result, setResult] = useState<FetchResult | null>(() =>
-    initialHits && initialMatches
-      ? {
-          all: initialHits,
-          facets: facetsFrom(initialFacetDistribution, initialHits),
-        }
-      : null
-  )
-  const [loading, setLoading] = useState(!initialMatches)
+  const [result, setResult] = useState<FindResult | null>(initial)
+  const [loading, setLoading] = useState(initial === null)
   const [error, setError] = useState(false)
   const [locating, setLocating] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -104,8 +87,10 @@ export function FindLibraryPage({
   }, [state])
 
   // ── Data fetching (debounced) ─────────────────────────────────────────────
+  // Every filter, sort and page is answered by Meilisearch; only the view
+  // (grid, list, map) stays in the browser.
   const searchKey = useMemo(() => {
-    const { view: _view, page: _page, sort: _sort, ...rest } = state
+    const { view: _view, ...rest } = state
 
     return JSON.stringify(rest)
   }, [state])
@@ -116,34 +101,12 @@ export function FindLibraryPage({
       setLoading(true)
       setError(false)
       try {
-        const res = await searchLibrariesV2({
-          query: s.q,
-          place: s.place ?? undefined,
-          libraryTypes: s.groups.flatMap(
-            (key) => TYPE_GROUPS.find((g) => g.key === key)?.types ?? []
-          ),
-          accessibilityNames: s.access,
-          serviceNames: s.services,
-          nearLat: s.nearLat,
-          nearLng: s.nearLng,
-          nearRadius:
-            s.nearLat != null && s.radiusKm > 0 ? s.radiusKm * 1000 : undefined,
-          sortByDistance: s.sort === "near" && s.nearLat != null,
-          bulkLimit: BULK_LIMIT,
-          withFacets: true,
-          locale,
+        const res = await searchFind({
+          ...findQueryOf(s, locale),
+          now: new Date(),
         })
         if (seq !== fetchSeq.current) return
-        setResult({
-          all: res.hits,
-          facets: facetsFrom(
-            (res.facetDistribution ?? null) as Record<
-              string,
-              Record<string, number>
-            > | null,
-            res.hits
-          ),
-        })
+        setResult(res)
       } catch {
         if (seq !== fetchSeq.current) return
         setError(true)
@@ -157,8 +120,8 @@ export function FindLibraryPage({
   useEffect(() => {
     if (!didMount.current) {
       didMount.current = true
-      // Server provided matching initial data only for the default state
-      if (result && !hasActiveFindFilters(state)) return
+      // The server already searched this URL's state.
+      if (result) return
     }
     const t = setTimeout(() => runFetch(state), 250)
 
@@ -166,62 +129,18 @@ export function FindLibraryPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchKey])
 
-  // ── Client-side refinement (open now / digital / sort / pagination) ──────
+  // The open badges' clock, fixed per search so cards don't flicker.
   const now = useMemo(() => new Date(), [searchKey])
 
-  const refined = useMemo(() => {
-    if (!result) return []
-    let hits = result.all
-    if (state.openNow) {
-      hits = hits.filter((h) => {
-        const st = openStatus(h.openingTimes, h.timezone, now)
-
-        return st.known && st.open
-      })
-    }
-    if (state.digital) {
-      hits = hits.filter((h) => Boolean(h.iiifEndpoint))
-    }
-    if (state.needs.length > 0) {
-      hits = hits.filter((h) =>
-        hitNeeds(h).some((need) => state.needs.includes(need))
-      )
-    }
-    if (state.sort === "complete" || state.sort === "gaps") {
-      const dir = state.sort === "gaps" ? -1 : 1
-      hits = [...hits].sort(
-        (a, b) =>
-          dir * (completenessScore(b) - completenessScore(a)) ||
-          (a.name ?? "").localeCompare(b.name ?? "")
-      )
-    } else if (state.sort === "name") {
-      hits = [...hits].sort((a, b) =>
-        (a.name ?? "").localeCompare(b.name ?? "")
-      )
-    }
-    // sort === "near": server already ordered by distance
-
-    return hits
-  }, [result, state.openNow, state.digital, state.needs, state.sort, now])
-
-  // "In England": the place's name from any hit, else its slug.
-  const placeName = useMemo(() => {
-    const place = state.place
-    if (!place) return null
-    const hit = result?.all.find((h) => h[`${place.level}_slug`] === place.slug)
-
-    return (
-      hit?.[`${place.level}_name`] ??
-      place.slug
-        .split("-")
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" ")
-    )
-  }, [result, state.place])
-
-  const pageCount = Math.max(1, Math.ceil(refined.length / PAGE_SIZE))
+  const pageHits = result?.hits ?? []
+  const total = result?.total ?? 0
+  const pageCount = result?.pageCount ?? 1
   const page = Math.min(state.page, pageCount - 1)
-  const pageHits = refined.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+
+  // "In England"
+  const chosenPlaceName = state.place
+    ? placeName(state.place, result?.location)
+    : null
 
   const activeFilterCount =
     state.groups.length +
@@ -273,11 +192,18 @@ export function FindLibraryPage({
     )
   }, [state.nearLat, state.sort, patch])
 
-  const facets = result?.facets ?? {
-    libraryType: {},
-    accessibility: {},
-    services: {},
-  }
+  const facets: FindFacets = result
+    ? {
+        libraryType: result.facets.libraryType,
+        accessibility: result.facets.accessibility,
+        services: result.facets.services,
+        openNowCount: result.facets.openNow,
+        hoursKnownCount: result.facets.hoursKnown,
+        digitalCount: result.facets.digital,
+        needs: result.facets.needs,
+        location: result.location,
+      }
+    : { libraryType: {}, accessibility: {}, services: {} }
 
   return (
     <>
@@ -288,13 +214,19 @@ export function FindLibraryPage({
         lead={`Search ${statsTotal.toLocaleString("en-GB")} published records by name, place, type and facilities. The index grows as contributors document more libraries.`}
         title="Find a library, *anywhere.*"
       >
-        <FindSearchBar
-          state={state}
-          onQuery={(q) => patch({ q, page: 0 })}
+        <LibrarySearchBox
+          id="find-q"
+          placeholder="Library, town or country"
+          defaultQuery={state.q}
+          onSubmit={(q) => patch({ q, page: 0 })}
+          onClear={() => patch({ q: "", page: 0 })}
           onNearMe={handleNearMe}
+          nearActive={state.nearLat != null}
           locating={locating}
         />
       </PageHero>
+
+      {contributeBand}
 
       {/* Main two-column area */}
       <Container className="flex flex-1 items-start gap-8 pt-8 pb-[88px]">
@@ -313,7 +245,7 @@ export function FindLibraryPage({
         <FilterDrawer
           open={filtersOpen}
           onClose={() => setFiltersOpen(false)}
-          showLabel={`Show ${refined.length.toLocaleString("en-GB")} results`}
+          showLabel={`Show ${total.toLocaleString("en-GB")} results`}
         >
           <FindFilterSidebar
             state={state}
@@ -327,7 +259,7 @@ export function FindLibraryPage({
         <section aria-label="Results" className="min-w-0 flex-1">
           <FindResultsControls
             state={state}
-            total={refined.length}
+            total={total}
             loading={loading}
             onChange={patch}
             onOpenFilters={() => setFiltersOpen(true)}
@@ -338,7 +270,7 @@ export function FindLibraryPage({
           <div className="mt-4">
             <FindFilterChips
               state={state}
-              placeName={placeName}
+              placeName={chosenPlaceName}
               onChange={patch}
               onClearAll={clearAll}
             />
@@ -349,7 +281,7 @@ export function FindLibraryPage({
               <FindErrorState onRetry={() => runFetch(state)} />
             ) : loading && !result ? (
               <FindSkeletonGrid />
-            ) : refined.length === 0 ? (
+            ) : total === 0 ? (
               <FindEmptyState onClear={clearAll} />
             ) : state.view === "list" ? (
               <ul
@@ -389,7 +321,7 @@ export function FindLibraryPage({
                   ))}
                 </ul>
                 <div className="xl:w-[420px] xl:shrink-0">
-                  <FindMapPanel hits={refined} />
+                  <FindMapPanel hits={pageHits} />
                 </div>
               </div>
             ) : (
@@ -413,7 +345,7 @@ export function FindLibraryPage({
           </div>
 
           {/* Pager */}
-          {refined.length > PAGE_SIZE ? (
+          {pageCount > 1 ? (
             <nav
               aria-label="Results pages"
               className="mt-7 flex items-center justify-center gap-4"
@@ -449,6 +381,17 @@ export function FindLibraryPage({
               </button>
             </nav>
           ) : null}
+          {total > FIND_MAX_REACHABLE ? (
+            <p
+              role="status"
+              className="mt-3 text-center text-[14.5px]"
+              style={{ color: T.ink.dim }}
+            >
+              Showing the first {FIND_MAX_REACHABLE.toLocaleString("en-GB")} of{" "}
+              {total.toLocaleString("en-GB")}. Add a search term or a filter to
+              reach the rest.
+            </p>
+          ) : null}
         </section>
       </Container>
     </>
@@ -456,35 +399,6 @@ export function FindLibraryPage({
 }
 
 // ── helpers ─────────────────────────────────────────────────────────────────
-
-function facetsFrom(
-  dist: Record<string, Record<string, number>> | null,
-  hits: LibrarySearchHitV2[]
-): FindFacets {
-  const nowDate = new Date()
-  let openNowCount = 0
-  let hoursKnownCount = 0
-  let digitalCount = 0
-  const needCounts: Record<string, number> = {}
-  for (const h of hits) {
-    for (const need of hitNeeds(h))
-      needCounts[need] = (needCounts[need] ?? 0) + 1
-    const st = openStatus(h.openingTimes, h.timezone, nowDate)
-    if (st.known) hoursKnownCount += 1
-    if (st.known && st.open) openNowCount += 1
-    if (h.iiifEndpoint) digitalCount += 1
-  }
-
-  return {
-    libraryType: dist?.libraryType ?? {},
-    accessibility: dist?.accessibility_names ?? {},
-    services: dist?.service_names ?? {},
-    openNowCount,
-    hoursKnownCount,
-    digitalCount,
-    needs: needCounts,
-  }
-}
 
 function hitDistance(
   hit: LibrarySearchHitV2,

@@ -1,9 +1,15 @@
 // apps/ui/src/components/index-page/find-helpers.ts
 //
-// Pure helpers for the Find-a-library page: URL state, open-now computation,
-// completeness scoring and the POC's broad library-type groups.
+// Pure helpers for the Find-a-library page: URL state and its search query,
+// the open-now badge and the POC's broad library-type groups.
 
-import type { LibrarySearchHitV2 } from "@/lib/meilisearch"
+import {
+  type FindPlaceLevel,
+  FIND_PLACE_LEVELS,
+  nameFromSlug,
+} from "@/lib/find-places"
+import type { FindLocation, FindQuery } from "@/lib/find-search"
+import { localDayMinute } from "@/lib/local-time"
 
 // ── Broad type groups (POC sidebar) ─────────────────────────────────────────
 
@@ -66,7 +72,17 @@ export interface OpenStatus {
   until?: string
 }
 
-/** Compute whether a library is open right now in its own timezone. */
+const minutesOf = (hm: string) => {
+  const [h, m] = hm.split(":").map(Number)
+
+  return (h ?? 0) * 60 + (m ?? 0)
+}
+
+/**
+ * Whether a library is open right now in its own timezone. Reads the clock
+ * the way the "Open now" filter does (`localDayMinute`), so a card's badge
+ * agrees with the filter that found it.
+ */
 export function openStatus(
   openingTimes?: unknown,
   timezone?: string | null,
@@ -77,34 +93,23 @@ export function openStatus(
     return { known: false, open: false }
   }
 
-  let weekday = ""
-  let hm = ""
-  try {
-    const parts = new Intl.DateTimeFormat("en-GB", {
-      timeZone: timezone || "UTC",
-      weekday: "long",
-      hour: "2-digit",
-      minute: "2-digit",
-      hourCycle: "h23",
-    }).formatToParts(now)
-    weekday = (
-      parts.find((p) => p.type === "weekday")?.value ?? ""
-    ).toLowerCase()
-    const hour = parts.find((p) => p.type === "hour")?.value ?? "00"
-    const minute = parts.find((p) => p.type === "minute")?.value ?? "00"
-    hm = `${hour}:${minute}`
-  } catch {
-    return { known: false, open: false }
-  }
+  const local = localDayMinute(timezone || "UTC", now)
+  if (!local) return { known: false, open: false }
 
-  const today = days.find((d) => (d.day ?? "").toLowerCase() === weekday)
+  const today = days.find(
+    (d) => (d.day ?? "").toLowerCase().slice(0, 3) === local.day
+  )
   if (!today?.enabled || !Array.isArray(today.timeframes)) {
     return { known: true, open: false }
   }
 
   for (const tf of today.timeframes) {
-    // "HH:mm" strings compare correctly lexicographically
-    if (tf.startTime && tf.endTime && tf.startTime <= hm && hm < tf.endTime) {
+    if (
+      tf.startTime &&
+      tf.endTime &&
+      minutesOf(tf.startTime) <= local.minute &&
+      local.minute < minutesOf(tf.endTime)
+    ) {
       return { known: true, open: true, until: tf.endTime }
     }
   }
@@ -112,23 +117,7 @@ export function openStatus(
   return { known: true, open: false }
 }
 
-// ── Completeness ────────────────────────────────────────────────────────────
-
-/** Rough record-completeness score used by the "Most complete first" sort. */
-export function completenessScore(hit: LibrarySearchHitV2): number {
-  let score = 0
-  const days = (hit.openingTimes as OpeningTimes | null | undefined)?.days
-  if (Array.isArray(days) && days.length > 0) score += 2
-  if (hit.summary) score += 1
-  if (hit.heroImage?.url) score += 1
-  if (hit.accessibility_names?.length) score += 1
-  if (hit.service_names?.length) score += 1
-  if (hit.iiifEndpoint) score += 1
-  if (hit._geo) score += 1
-  if (hit.city) score += 1
-
-  return score
-}
+// ── Record gaps ─────────────────────────────────────────────────────────────
 
 /** Gaps a contributor can fill, as surfaced on the Contribute hub. */
 export const NEED_KEYS = [
@@ -141,31 +130,25 @@ export type NeedKey = (typeof NEED_KEYS)[number]["key"]
 
 export const ALL_NEED_KEYS: NeedKey[] = NEED_KEYS.map((n) => n.key)
 
-export function hitNeeds(hit: LibrarySearchHitV2): NeedKey[] {
-  const needs: NeedKey[] = []
-  const days = (hit.openingTimes as OpeningTimes | null | undefined)?.days
-  if (!days?.some((d) => d.enabled && d.timeframes?.length)) {
-    needs.push("hours")
-  }
-  if (!hit.heroImage?.url) needs.push("photo")
-  if (!hit.accessibility_names?.length && !hit.service_names?.length) {
-    needs.push("facilities")
-  }
-
-  return needs
-}
-
 // ── URL state ───────────────────────────────────────────────────────────────
 
 export type ViewMode = "grid" | "list" | "map"
 export type SortKey = "complete" | "gaps" | "name" | "near"
 
 /** Location scope, set by `?continent=` / `?country=` / `?region=` (slugs). */
-export type PlaceLevel = "continent" | "country" | "region"
-export type FindPlace = { level: PlaceLevel; slug: string }
+export type PlaceLevel = FindPlaceLevel
+export type FindPlace = {
+  level: PlaceLevel
+  slug: string
+  /**
+   * The parents' slugs when the place was picked in the Location filter,
+   * so its selects hold still until the search names them. Never in the URL.
+   */
+  parents?: Partial<Record<PlaceLevel, string>>
+}
 
 // Narrowest first: a region link wins over its country.
-const PLACE_LEVELS: readonly PlaceLevel[] = ["region", "country", "continent"]
+const PLACE_LEVELS = [...FIND_PLACE_LEVELS].reverse()
 
 export interface FindState {
   q: string
@@ -274,6 +257,126 @@ export function hasActiveFindFilters(s: FindState): boolean {
     s.needs.length > 0 ||
     s.nearLat != null
   )
+}
+
+// ── Location filter ─────────────────────────────────────────────────────────
+
+const PLACE_LISTS = {
+  continent: "continents",
+  country: "countries",
+  region: "regions",
+} as const
+
+export type PlaceChoice = { slug: string; name: string; count?: number }
+export type PlacePath = Record<PlaceLevel, string>
+
+/**
+ * The slug each Location select shows: the chosen place, its parents (as the
+ * search named them, else as they were picked) and nothing below it.
+ */
+export function placePath(
+  place: FindPlace | null,
+  location?: FindLocation
+): PlacePath {
+  const path: PlacePath = { continent: "", country: "", region: "" }
+  if (!place) return path
+  const named = location?.[place.level]?.slug === place.slug ? location : null
+  for (const level of FIND_PLACE_LEVELS) {
+    if (level === place.level) {
+      path[level] = place.slug
+      break
+    }
+    path[level] = named?.[level]?.slug ?? place.parents?.[level] ?? ""
+  }
+
+  return path
+}
+
+/** The place once a Location select changes; "" steps back up a level. */
+export function pickPlace(
+  path: PlacePath,
+  level: PlaceLevel,
+  slug: string
+): FindPlace | null {
+  const above = FIND_PLACE_LEVELS.slice(
+    0,
+    FIND_PLACE_LEVELS.indexOf(level)
+  ).filter((l) => path[l] !== "")
+  const parentsOf = (levels: PlaceLevel[]) =>
+    Object.fromEntries(levels.map((l) => [l, path[l]]))
+  if (slug) return { level, slug, parents: parentsOf(above) }
+  const up = above.at(-1)
+
+  return up
+    ? { level: up, slug: path[up], parents: parentsOf(above.slice(0, -1)) }
+    : null
+}
+
+/** The chosen place's name, as the search knows it, else from its slug. */
+export function placeName(
+  place: Pick<FindPlace, "level" | "slug">,
+  location?: FindLocation
+): string {
+  const named = location?.[place.level]
+  if (named?.slug === place.slug) return named.name
+
+  return (
+    location?.[PLACE_LISTS[place.level]].find((o) => o.slug === place.slug)
+      ?.name ?? nameFromSlug(place.slug)
+  )
+}
+
+/**
+ * A Location select's options: the search's list when it was made for the
+ * parent now chosen, and always the chosen place.
+ */
+export function placeChoices(
+  level: PlaceLevel,
+  path: PlacePath,
+  location?: FindLocation
+): PlaceChoice[] {
+  const parent = FIND_PLACE_LEVELS[FIND_PLACE_LEVELS.indexOf(level) - 1]
+  const current = !parent || location?.[parent]?.slug === path[parent]
+  const choices: PlaceChoice[] = current
+    ? [...(location?.[PLACE_LISTS[level]] ?? [])]
+    : []
+  const chosen = path[level]
+  if (chosen && !choices.some((c) => c.slug === chosen)) {
+    choices.unshift({
+      slug: chosen,
+      name: placeName({ level, slug: chosen }, location),
+    })
+  }
+
+  return choices
+}
+
+/** The page state as a search: the one mapping the server and browser share. */
+export function findQueryOf(state: FindState, locale: string): FindQuery {
+  return {
+    query: state.q,
+    place: state.place
+      ? { level: state.place.level, slug: state.place.slug }
+      : undefined,
+    libraryTypes: state.groups.flatMap(
+      (key) => TYPE_GROUPS.find((g) => g.key === key)?.types ?? []
+    ),
+    accessibilityNames: state.access,
+    serviceNames: state.services,
+    digital: state.digital,
+    openNow: state.openNow,
+    needs: state.needs,
+    nearLat: state.nearLat,
+    nearLng: state.nearLng,
+    nearRadius:
+      state.nearLat != null && state.radiusKm > 0
+        ? state.radiusKm * 1000
+        : undefined,
+    sort: state.sort,
+    page: state.page,
+    hitsPerPage: 24,
+    locale,
+  }
 }
 
 /** Haversine distance in km. */

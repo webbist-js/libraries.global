@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest"
  */
 const SRC = path.resolve(__dirname, "../..")
 const CALL =
-  /\b(searchLibraries|searchLibrariesV2|searchWikiArticles|searchBlogArticles|searchLibrariesByParams|searchLibraryNames)\(/g
+  /\b(searchLibraries|searchFind|libraryTotal|findQueryOf|searchWikiArticles|searchBlogArticles|searchLibrariesByParams|searchLibraryNames)\(/g
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {

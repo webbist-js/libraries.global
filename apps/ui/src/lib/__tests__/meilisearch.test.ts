@@ -36,7 +36,6 @@ const {
   searchBlogArticles,
   searchLibraries,
   searchLibrariesByParams,
-  searchLibrariesV2,
   searchLibraryNames,
   searchLocale,
   searchLocaleFilter,
@@ -144,13 +143,11 @@ describe("locale filter", () => {
     )
   })
 
-  it("adds the locale to the v2, Knowledge and Journal searches", async () => {
-    await searchLibrariesV2({ query: "x" })
+  it("adds the locale to the Knowledge and Journal searches", async () => {
     await searchWikiArticles("x", "guides")
     await searchBlogArticles("x")
     const filters = mockSearch.mock.calls.map((c) => c[1]?.filter)
     expect(filters).toEqual([
-      'locale = "en"',
       'section_slug = "guides" AND locale = "en"',
       'locale = "en"',
     ])

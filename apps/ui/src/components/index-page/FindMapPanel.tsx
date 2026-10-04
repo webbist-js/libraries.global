@@ -2,7 +2,7 @@
 "use client"
 
 import { T } from "@/lib/design-tokens"
-import type { LibrarySearchHitV2 } from "@/lib/meilisearch"
+import type { LibrarySearchHitV2 } from "@/lib/find-search"
 import { Link } from "@/lib/navigation"
 
 /**

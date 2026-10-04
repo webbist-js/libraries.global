@@ -5,7 +5,6 @@ import {
   FilterShowButton,
   type FilterSidebarState,
   FilterToggleButton,
-  SearchField,
 } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
 
@@ -16,70 +15,6 @@ import {
   NEED_KEYS,
   TYPE_GROUPS,
 } from "./find-helpers"
-
-// ── Search bar + near-me ────────────────────────────────────────────────────
-
-export function FindSearchBar({
-  state,
-  onQuery,
-  onNearMe,
-  locating,
-}: {
-  state: FindState
-  onQuery: (q: string) => void
-  onNearMe: () => void
-  locating: boolean
-}) {
-  const nearActive = state.nearLat != null
-
-  return (
-    <div className="flex flex-wrap gap-3">
-      <SearchField
-        id="find-q"
-        className="min-w-[280px] flex-3"
-        label="Search by library name, city, region or country"
-        placeholder="Library name, city, region or country"
-        onClear={() => onQuery("")}
-        inputProps={{
-          value: state.q,
-          onChange: (e) => onQuery(e.target.value),
-          autoComplete: "off",
-        }}
-      />
-
-      <button
-        type="button"
-        onClick={onNearMe}
-        aria-pressed={nearActive}
-        className="flex min-w-[190px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-3 text-[16px] font-semibold transition-colors"
-        style={{
-          background: nearActive ? T.ink.base : T.bg.deep,
-          color: nearActive ? "#fff" : T.ink.base,
-          border: `1px solid ${nearActive ? T.ink.base : T.border.hi}`,
-        }}
-      >
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="12" r="8" />
-          <circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none" />
-          <path d="M12 2v3M12 19v3M2 12h3M19 12h3" strokeLinecap="round" />
-        </svg>
-        {locating
-          ? "Locating…"
-          : nearActive
-            ? "Near you · turn off"
-            : "Use my location"}
-      </button>
-    </div>
-  )
-}
 
 // ── Active filter chips ─────────────────────────────────────────────────────
 

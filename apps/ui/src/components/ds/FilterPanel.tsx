@@ -129,6 +129,8 @@ function isActiveOption(child: ReactNode, index: number): boolean {
  * Long lists show the first few with a "Show all" toggle, and stay expanded
  * while a ticked option sits past the cut. `icon` is the inner SVG markup
  * (paths etc.) of a 24×24 stroke icon, rendered inside an indigo stroke <svg>.
+ * A group of other controls (selects, nested fieldsets) passes its own
+ * `activeCount`.
  */
 export function FilterGroup({
   title,
@@ -137,6 +139,7 @@ export function FilterGroup({
   helper,
   dimmed = false,
   defaultOpen = true,
+  activeCount,
 }: {
   readonly title: string
   readonly icon: React.ReactNode
@@ -144,10 +147,11 @@ export function FilterGroup({
   readonly helper?: React.ReactNode
   readonly dimmed?: boolean
   readonly defaultOpen?: boolean
+  readonly activeCount?: number
 }) {
   const options = Children.toArray(children)
   const activeFlags = options.map(isActiveOption)
-  const active = activeFlags.filter(Boolean).length
+  const active = activeCount ?? activeFlags.filter(Boolean).length
   const long = options.length > MAX_VISIBLE_OPTIONS
   const hiddenChecked = long && activeFlags.slice(PREVIEW_OPTIONS).some(Boolean)
 
