@@ -23,7 +23,6 @@
       "imageUrl": "SEO-TWITTER-IMAGE-URL"
     }
   },
-
   "general": {
     "noOptionsAvailable": "Žádné možnosti k dispozici",
     "search": "Vyhledat",
@@ -33,7 +32,6 @@
     "submitForm": "Odeslat",
     "saveChanges": "Uložit změny"
   },
-
   "tables": {
     "previousPage": "Předchozí stránka",
     "nextPage": "Další stránka",
@@ -45,7 +43,6 @@
     "descending": "Sestupně",
     "noData": "Žádná data"
   },
-
   "navbar": {
     "account": "Účet",
     "actions": {
@@ -55,7 +52,6 @@
       "signIn": "Přihlásit se"
     }
   },
-
   "comps": {
     "fileInput": {
       "label": "Vybrat soubor",
@@ -78,7 +74,6 @@
       "confirmClose": "Chcete zavřít dialog? Ztratíte tím všechny rozpracované změny."
     }
   },
-
   "errors": {
     "global": {
       "title": "Nastala neznámá chyba",
@@ -86,25 +81,21 @@
       "invalidContent": "Tenhle obsah se nepodařilo načíst",
       "somethingWentWrong": "Něco se pokazilo 🥺"
     },
-
     "notFound": {
       "title": "Stránka nenalezena",
       "description": "Stránka, kterou hledáte, nebyla nalezena.",
       "solution": "Zkontrolujte prosím, zda jste zadali správnou adresu anebo se vraťte na úvodní stránku.",
       "redirect": "Přejít na úvodní stránku"
     },
-
     "forms": {
       "errorsInForm": "Formulář obsahuje chyby",
       "checkFormForErrors": "Zkontrolujte prosím, zda nechybí žádné hodnoty"
     },
-
     "zodValidation": {
       "invalid_type": "Požadovaný typ je {expected}, zadán byl {received}",
       "invalid_type_received_undefined": "Pole je požadované",
       "invalid_literal": "Nesprávná hodnota, očekává sa {expected}",
       "invalid_union": "Nesprávná hodnota",
-
       "invalid_string": {
         "regex": "Nesprávný formát"
       },
@@ -139,7 +130,6 @@
       }
     }
   },
-
   "contactForm": {
     "name": "Jméno a Přijmení",
     "namePlaceholder": "Jan Novák",
@@ -152,7 +142,6 @@
     "error": "Při odesílání formuláře došlo k chybě, zkuste to prosím znovu",
     "gdprLink": "Informace o zpracování osobních údajů"
   },
-
   "auth": {
     "signIn": {
       "status": {
@@ -173,7 +162,6 @@
       "forgotPassword": "Zapomenuté heslo",
       "createAccount": "Vytvořit účet"
     },
-
     "register": {
       "status": {
         "fail": "Registrace selhala",
@@ -196,51 +184,7 @@
       "signInLinkLinkDescription": "Již máte účet?",
       "signInLink": "Přihlásit se"
     },
-
-    "changePassword": {
-      "errors": {
-        "invalidCurrentPassword": "Současné heslo se neshoduje",
-        "unexpectedError": "An unexpected error occurred. Please try again later.",
-        "newPasswordSameAsCurrent": "Nové heslo se shoduje s aktuálním heslem"
-      },
-      "successfullyChanged": "Heslo bylo úspěšně změněno",
-      "header": "Změna hesla",
-      "description": "Vyberte si nové heslo, které budete nově používat pro přístup do systému.",
-      "currentPassword": "Aktuální heslo",
-      "password": "Nové heslo",
-      "confirmPassword": "Potvrdit nové heslo",
-      "submit": "Změnit heslo"
-    },
-
-    "accountActivation": {
-      "successfullySet": "Účet byl úspěšně aktivován. Můžete se přihlásit.",
-      "errors": {
-        "incorrectCodeProvided": "Byl vám vygenerován nesprávný odkaz. Kontaktujte podporu."
-      },
-      "welcome": "Vítej",
-      "activateAccount": "Byl Vám založen nový účet s emailem {email}.",
-      "invalidLink": "Tento odkaz nie je platný.",
-      "activate": "Aktivovat účet",
-      "header": "Zvolení hesla",
-      "description": "Zvolte si heslo, které budete používat k přihlašování.",
-      "submit": "Aktivovat účet",
-      "password": "Nové heslo",
-      "confirmPassword": "Potvrdit heslo"
-    },
-
-    "resetPassword": {
-      "header": "Resetování hesla",
-      "description": "Zvolte si nové heslo, které budete používat k přihlašování.",
-      "submit": "Nastavit heslo",
-      "password": "Nové heslo",
-      "confirmPassword": "Potvrdit heslo",
-      "errors": {
-        "incorrectCodeProvided": "Neplatný nebo expirovaný kód. Požádejte prosím o obnovení hesla znovu."
-      }
-    },
-
     "forgotPassword": {
-      "passwordChangeEmailSent": "Byl vám zaslán e-mail s instrukcemi pro obnovení hesla.",
       "header": "Zapomenuté heslo",
       "description": "Zadejte email se kterým se zvyknete přihlašovat. Na tento email odešleme instrukce k obnově hesla.",
       "email": "E-mail",
@@ -249,7 +193,6 @@
         "failedToSendPasswordResetEmail": "Nepodařilo se odeslat email s instrukcemi pro obnovení hesla."
       }
     },
-
     "oauth": {
       "orContinueWith": "Nebo pokračujte s",
       "signingIn": "Přihlašuji vás...",

@@ -2,10 +2,23 @@ import "server-only"
 
 import nodemailer, { type Transporter } from "nodemailer"
 
+import {
+  linkLifetime,
+  MAGIC_LINK_EMAIL_SUBJECT,
+  MAGIC_LINK_TTL_SECONDS,
+  RESET_EMAIL_SUBJECT,
+  RESET_LINK_TTL_SECONDS,
+  VERIFICATION_EMAIL_SUBJECT,
+  VERIFICATION_LINK_TTL_SECONDS,
+} from "@/lib/auth-links"
 import { SITE_NAME } from "@/lib/constants"
 
 /** Automated sender for transactional mail — not a contact address. */
 const DEFAULT_FROM = `"${SITE_NAME}" <noreply@libraries.global>`
+
+const MAGIC_LINK_LIFETIME = linkLifetime(MAGIC_LINK_TTL_SECONDS)
+const VERIFICATION_LINK_LIFETIME = linkLifetime(VERIFICATION_LINK_TTL_SECONDS)
+const RESET_LINK_LIFETIME = linkLifetime(RESET_LINK_TTL_SECONDS)
 
 function createTransporter(): Transporter | null {
   if (process.env.MAILTRAP_USER && process.env.MAILTRAP_PASS) {
@@ -64,9 +77,9 @@ export async function sendMagicLinkEmail(
   await transporter.sendMail({
     from,
     to,
-    subject: `Your ${SITE_NAME} sign-in link`,
-    html: `<p>Click the link below to sign in to ${SITE_NAME}. This link expires in 5 minutes.</p><p><a href="${magicUrl}">${magicUrl}</a></p>`,
-    text: `Sign in to ${SITE_NAME}: ${magicUrl}\n\nThis link expires in 5 minutes.`,
+    subject: MAGIC_LINK_EMAIL_SUBJECT,
+    html: `<p>Click the link below to sign in to ${SITE_NAME}. It works once, within ${MAGIC_LINK_LIFETIME}.</p><p><a href="${magicUrl}">${magicUrl}</a></p>`,
+    text: `Sign in to ${SITE_NAME}: ${magicUrl}\n\nIt works once, within ${MAGIC_LINK_LIFETIME}.`,
   })
 }
 
@@ -86,9 +99,9 @@ export async function sendResetPasswordEmail(
   await transporter.sendMail({
     from,
     to,
-    subject: `Reset your ${SITE_NAME} password`,
-    html: `<p>Reset your ${SITE_NAME} password: <a href="${resetUrl}">${resetUrl}</a></p>`,
-    text: `Reset your ${SITE_NAME} password: ${resetUrl}`,
+    subject: RESET_EMAIL_SUBJECT,
+    html: `<p>Choose a new ${SITE_NAME} password: <a href="${resetUrl}">${resetUrl}</a></p><p>The link works once, for ${RESET_LINK_LIFETIME}. If you didn't ask for it, you can ignore this email: your password stays the same.</p>`,
+    text: `Choose a new ${SITE_NAME} password: ${resetUrl}\n\nThe link works once, for ${RESET_LINK_LIFETIME}. If you didn't ask for it, you can ignore this email: your password stays the same.`,
   })
 }
 
@@ -108,8 +121,8 @@ export async function sendVerificationEmail(
   await transporter.sendMail({
     from,
     to,
-    subject: `Confirm your ${SITE_NAME} email address`,
-    html: `<p>Confirm your email address to finish creating your ${SITE_NAME} account:</p><p><a href="${verifyUrl}">${verifyUrl}</a></p><p>If you didn't sign up, you can ignore this email.</p>`,
-    text: `Confirm your email address to finish creating your ${SITE_NAME} account: ${verifyUrl}\n\nIf you didn't sign up, you can ignore this email.`,
+    subject: VERIFICATION_EMAIL_SUBJECT,
+    html: `<p>Confirm your email address to finish creating your ${SITE_NAME} account:</p><p><a href="${verifyUrl}">${verifyUrl}</a></p><p>The link works for ${VERIFICATION_LINK_LIFETIME}. If you didn't sign up, you can ignore this email.</p>`,
+    text: `Confirm your email address to finish creating your ${SITE_NAME} account: ${verifyUrl}\n\nThe link works for ${VERIFICATION_LINK_LIFETIME}. If you didn't sign up, you can ignore this email.`,
   })
 }

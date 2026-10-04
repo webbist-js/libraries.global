@@ -5,7 +5,12 @@ import { APIError, createAuthMiddleware, getOAuthState } from "better-auth/api"
 import { customSession, magicLink } from "better-auth/plugins"
 import { Pool } from "pg"
 
-import { PASSWORD_MIN_LENGTH } from "./constants"
+import {
+  MAGIC_LINK_TTL_SECONDS,
+  RESET_LINK_TTL_SECONDS,
+  VERIFICATION_LINK_TTL_SECONDS,
+} from "./auth-links"
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "./constants"
 import { deleteStrapiProfile } from "./delete-profile"
 import {
   sendMagicLinkEmail,
@@ -136,6 +141,10 @@ export const auth = betterAuth({
     // register someone else's address and pre-claim the account.
     requireEmailVerification: true,
     minPasswordLength: PASSWORD_MIN_LENGTH,
+    maxPasswordLength: PASSWORD_MAX_LENGTH,
+    resetPasswordTokenExpiresIn: RESET_LINK_TTL_SECONDS,
+    // A reset may follow a stolen password, so it ends every session.
+    revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, token }) => {
       const base = process.env.APP_PUBLIC_URL ?? "http://localhost:3000"
       const url = `${base}/auth/reset-password?token=${encodeURIComponent(token)}`
@@ -146,6 +155,7 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     sendOnSignIn: true,
     autoSignInAfterVerification: true,
+    expiresIn: VERIFICATION_LINK_TTL_SECONDS,
     sendVerificationEmail: async ({ user, url }) => {
       await sendVerificationEmail(user.email, url)
     },
@@ -163,6 +173,8 @@ export const auth = betterAuth({
       "/forget-password": { window: 60, max: 3 },
       "/request-password-reset": { window: 60, max: 3 },
       "/send-verification-email": { window: 60, max: 3 },
+      // Guesses at the current password from a signed-in session.
+      "/change-password": { window: 60, max: 5 },
     },
   },
   socialProviders: {
@@ -176,6 +188,7 @@ export const auth = betterAuth({
       // Sign-in only: new accounts must come through a flow that shows the
       // terms and the 18+ confirmation.
       disableSignUp: true,
+      expiresIn: MAGIC_LINK_TTL_SECONDS,
       sendMagicLink: async ({ email, url }) => {
         await sendMagicLinkEmail(email, url)
       },

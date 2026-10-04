@@ -73,12 +73,19 @@ test("a bad token shows the magic-link error page, signed out", async ({
     NAVIGATION
   )
   await expect(
-    page.getByRole("heading", { name: "Link verification failed" })
+    page.getByRole("heading", { name: /That link didn.t work/ })
   ).toBeVisible()
   await expect(
     page.getByText(
-      "This sign-in link isn't valid. It may have been used already."
+      "It may have been used already: each sign-in link works once.",
+      {
+        exact: false,
+      }
     )
+  ).toBeVisible()
+  // The page offers a new link rather than leaving the reader stuck.
+  await expect(
+    page.getByRole("button", { name: "Email me a new link" })
   ).toBeVisible()
   expect(await sessionUser(page)).toBeNull()
 })

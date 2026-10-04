@@ -22,7 +22,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }))
-vi.mock("@iconify/react", () => ({ Icon: () => null }))
+vi.mock("@iconify/react", () => ({ Icon: () => null, loadIcons: () => {} }))
 vi.mock("@/lib/navigation", async () => {
   const { createElement: h } = await import("react")
 
@@ -38,6 +38,7 @@ vi.mock("@/lib/auth-client", () => ({
   authClient: {
     getSession: vi.fn(),
     signIn: { magicLink: vi.fn(), social: vi.fn() },
+    sendVerificationEmail: vi.fn(),
   },
 }))
 vi.mock("@/hooks/useUserMutations", () => {
@@ -60,8 +61,12 @@ const { ForgotPasswordForm } =
   await import("../../forgot-password/_components/ForgotPasswordForm")
 const { ChangePasswordForm } =
   await import("../../change-password/_components/ChangePasswordForm")
-const { SetPasswordForm } =
-  await import("../../activate/_components/SetPasswordForm")
+const { ResetPasswordForm } =
+  await import("../../reset-password/_components/ResetPasswordForm")
+const { MagicLinkErrorContent } =
+  await import("../../magic-link/_components/MagicLinkErrorContent")
+const { VerifyEmailContent } =
+  await import("../../verify-email-sent/_components/VerifyEmailContent")
 
 afterEach(() => {
   cleanup()
@@ -78,22 +83,27 @@ const FORMS: [name: string, element: () => ReactElement, action: string][] = [
   ],
   [
     "change-password",
-    () => createElement(ChangePasswordForm),
+    () =>
+      createElement(ChangePasswordForm, {
+        hasPassword: true,
+        email: "reader@example.test",
+      }),
     "/auth/change-password",
   ],
   [
     "reset-password",
-    () => createElement(SetPasswordForm, { token: "token" }),
+    () => createElement(ResetPasswordForm, { token: "token" }),
     "/auth/reset-password",
   ],
   [
-    "activate",
-    () =>
-      createElement(SetPasswordForm, {
-        token: "token",
-        accountActivation: true,
-      }),
-    "/auth/activate",
+    "magic-link (send a new link)",
+    () => createElement(MagicLinkErrorContent, { error: "EXPIRED_TOKEN" }),
+    "/auth/magic-link",
+  ],
+  [
+    "verify-email (send a new link)",
+    () => createElement(VerifyEmailContent, { state: "expired" }),
+    "/auth/verify-email-sent",
   ],
 ]
 

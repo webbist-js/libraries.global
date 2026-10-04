@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import * as z from "zod"
 
 import {
+  AuthCheckbox,
   AuthDivider,
   AuthField,
   AuthHeading,
@@ -16,14 +17,16 @@ import {
   FieldError,
   fieldA11y,
   PasswordInput,
+  PasswordStrengthMeter,
 } from "@/app/[locale]/auth/_components/AuthFormParts"
 import { AuthOAuthButtons } from "@/app/[locale]/auth/_components/AuthOAuthButtons"
+import { newPasswordSchema } from "@/app/[locale]/auth/_components/password-rules"
+import { rememberPendingEmail } from "@/app/[locale]/auth/_components/pending-email"
 import GlobalLink from "@/components/global/GlobalLink"
 import { useUserMutations } from "@/hooks/useUserMutations"
-import { PASSWORD_MIN_LENGTH } from "@/lib/constants"
+import { VERIFY_EMAIL_PATH } from "@/lib/auth-redirects"
 import { T } from "@/lib/design-tokens"
 import { MINIMUM_ACCOUNT_AGE } from "@/lib/legal-consent"
-import { passwordStrength } from "@/lib/password-strength"
 
 const RegisterFormSchema = z.object({
   displayName: z
@@ -35,9 +38,7 @@ const RegisterFormSchema = z.object({
     .string()
     .min(1, "Enter your email address")
     .email("Enter a valid email address"),
-  password: z
-    .string()
-    .min(PASSWORD_MIN_LENGTH, `Use at least ${PASSWORD_MIN_LENGTH} characters`),
+  password: newPasswordSchema,
   terms: z
     .boolean()
     .refine(
@@ -76,13 +77,15 @@ export function RegisterForm() {
       },
       {
         onSuccess: () => {
-          // Email verification is required before the first sign-in.
-          globalThis.location.href = "/auth/verify-email-sent"
+          // Email verification is required before the first sign-in. The
+          // next page names the address without it going in the URL.
+          rememberPendingEmail(values.email)
+          globalThis.location.href = VERIFY_EMAIL_PATH
         },
         onError: (error) => {
           const msg = error?.message ?? "Registration failed"
-          const display = msg.includes("already taken")
-            ? "An account with this email already exists."
+          const display = /already exists/i.test(msg)
+            ? "An account with this email already exists. Sign in instead, or reset your password."
             : msg
           toast.error(display)
         },
@@ -161,53 +164,35 @@ export function RegisterForm() {
             aria-describedby={passwordDescribedBy}
             {...register("password")}
           />
-          <PasswordStrengthMeter password={password} />
+          <PasswordStrengthMeter id="password-strength" password={password} />
         </AuthField>
 
         <div>
-          <label
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "12px",
-              cursor: "pointer",
-              fontSize: "15px",
-              lineHeight: 1.5,
-              color: T.ink.base,
-            }}
-          >
-            <input
-              type="checkbox"
-              style={{
-                width: "20px",
-                height: "20px",
-                marginTop: "1px",
-                accentColor: T.accent.primary,
-                flexShrink: 0,
-              }}
-              {...fieldA11y("terms", errors.terms?.message)}
-              {...register("terms")}
-            />
-            <span>
-              I&rsquo;m {MINIMUM_ACCOUNT_AGE} or over, and I agree to the{" "}
-              <GlobalLink
-                href="/legal/terms"
-                style={{ color: T.accent.primary }}
-                className="underline underline-offset-[3px]"
-              >
-                terms of use
-              </GlobalLink>{" "}
-              and{" "}
-              <GlobalLink
-                href="/legal/privacy"
-                style={{ color: T.accent.primary }}
-                className="underline underline-offset-[3px]"
-              >
-                privacy notice
-              </GlobalLink>
-              .
-            </span>
-          </label>
+          <AuthCheckbox
+            label={
+              <>
+                I&rsquo;m {MINIMUM_ACCOUNT_AGE} or over, and I agree to the{" "}
+                <GlobalLink
+                  href="/legal/terms"
+                  style={{ color: T.accent.primary }}
+                  className="underline underline-offset-[3px]"
+                >
+                  terms of use
+                </GlobalLink>{" "}
+                and{" "}
+                <GlobalLink
+                  href="/legal/privacy"
+                  style={{ color: T.accent.primary }}
+                  className="underline underline-offset-[3px]"
+                >
+                  privacy notice
+                </GlobalLink>
+                .
+              </>
+            }
+            {...fieldA11y("terms", errors.terms?.message)}
+            {...register("terms")}
+          />
           <FieldError id="terms" message={errors.terms?.message} />
         </div>
 
@@ -228,51 +213,5 @@ export function RegisterForm() {
 
       <AuthOAuthButtons mode="register" />
     </>
-  )
-}
-
-// Filled-segment colour per score; the label text carries the same meaning.
-const STRENGTH_COLOR = [
-  T.bg.muted2,
-  T.accent.danger,
-  T.accent.warn,
-  T.accent.ok,
-  T.accent.ok,
-]
-
-function PasswordStrengthMeter({ password }: { password: string }) {
-  const { score, label } = passwordStrength(password, PASSWORD_MIN_LENGTH)
-
-  return (
-    <div style={{ marginTop: "10px" }}>
-      <div aria-hidden="true" className="grid grid-cols-4 gap-1.5">
-        {[1, 2, 3, 4].map((segment) => (
-          <span
-            key={segment}
-            style={{
-              height: "6px",
-              borderRadius: "999px",
-              background:
-                segment <= score ? STRENGTH_COLOR[score] : T.bg.muted2,
-              transition: "background 150ms",
-            }}
-          />
-        ))}
-      </div>
-      <p
-        id="password-strength"
-        aria-live="polite"
-        style={{
-          marginTop: "8px",
-          fontSize: "14px",
-          lineHeight: 1.5,
-          color: T.ink.dim,
-        }}
-      >
-        <strong style={{ fontWeight: 600, color: T.ink.base }}>{label}.</strong>{" "}
-        At least {PASSWORD_MIN_LENGTH} characters. A few unrelated words works
-        well.
-      </p>
-    </div>
   )
 }

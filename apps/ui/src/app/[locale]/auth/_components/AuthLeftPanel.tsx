@@ -14,7 +14,11 @@ export interface JournalTeaser {
 }
 
 interface AuthLeftPanelProps {
-  mode: "signin" | "register"
+  /**
+   * `verify` is sign-up's second step: the confirmation email has gone out.
+   * `account` is for signed-in pages such as changing a password.
+   */
+  mode: "signin" | "register" | "verify" | "account"
   /** Latest journal article; the card is left out when there is none. */
   journal?: JournalTeaser | null
 }
@@ -38,6 +42,29 @@ const TIPS: readonly AuthTip[] = [
     body: "The events calendar gathers exhibitions, talks and reading groups from the libraries that publish them.",
   },
 ]
+
+// Each tip matches how sign-in and Settings work today.
+const ACCOUNT_TIPS: readonly AuthTip[] = [
+  {
+    title: "See where you're signed in",
+    body: "Settings lists every device signed in to your account. Sign out any you don't recognise.",
+  },
+  {
+    title: "Sign in without a password",
+    body: "On the sign-in page, choose “Email me a sign-in link” for a link that signs you in once.",
+  },
+  {
+    title: "Use a few unrelated words",
+    body: "A long passphrase is easier to remember than a short password full of symbols, and harder to guess.",
+  },
+]
+
+const TIPS_FOR: Partial<
+  Record<AuthLeftPanelProps["mode"], readonly AuthTip[]>
+> = {
+  signin: TIPS,
+  account: ACCOUNT_TIPS,
+}
 
 const STEPS = [
   { title: "Create your account", body: "Email and password, or Google." },
@@ -76,10 +103,38 @@ const COPY: Record<
     subtext:
       "Three short steps, then you can start improving records. Every change is reviewed and credited to you.",
   },
+  verify: {
+    chipIcon: "mdi:email-check-outline",
+    chip: "Almost there",
+    heading: (
+      <>
+        Help map <span style={italic}>the world&rsquo;s libraries.</span>
+      </>
+    ),
+    subtext:
+      "Your account is created. Confirm your email, choose a username, and you can start improving records.",
+  },
+  account: {
+    chipIcon: "mdi:shield-lock-outline",
+    chip: "Your account",
+    heading: (
+      <>
+        Keep your account <span style={italic}>yours.</span>
+      </>
+    ),
+    subtext:
+      "Change your password, or add one if you sign in with Google. Library records stay free either way.",
+  },
+}
+
+const ACTIVE_STEP: Partial<Record<AuthLeftPanelProps["mode"], 1 | 2>> = {
+  register: 1,
+  verify: 2,
 }
 
 export function AuthLeftPanel({ mode, journal }: AuthLeftPanelProps) {
   const copy = COPY[mode]
+  const activeStep = ACTIVE_STEP[mode]
 
   return (
     <aside
@@ -153,15 +208,15 @@ export function AuthLeftPanel({ mode, journal }: AuthLeftPanelProps) {
         </p>
 
         <div className="mt-10">
-          {mode === "register" ? (
-            <StepCards activeStep={1} />
+          {activeStep ? (
+            <StepCards activeStep={activeStep} />
           ) : (
             <div
               className={
                 journal ? "grid grid-cols-2 gap-4" : "grid max-w-sm gap-4"
               }
             >
-              <AuthTipCarousel tips={TIPS} />
+              <AuthTipCarousel tips={TIPS_FOR[mode] ?? TIPS} />
               {journal && <JournalCard journal={journal} />}
             </div>
           )}
@@ -229,6 +284,7 @@ function StepCards({ activeStep }: { activeStep: 1 | 2 | 3 }) {
       {STEPS.map((step, i) => {
         const number = i + 1
         const active = number === activeStep
+        const done = number < activeStep
 
         return (
           <li
@@ -247,15 +303,23 @@ function StepCards({ activeStep }: { activeStep: 1 | 2 | 3 }) {
                 borderRadius: "999px",
                 fontSize: "15px",
                 fontWeight: 600,
-                ...(active
-                  ? { background: T.accent.primary, color: "#fff" }
-                  : {
-                      border: `1px solid ${T.border.hi}`,
-                      color: T.ink.dim,
-                    }),
+                ...(active && { background: T.accent.primary, color: "#fff" }),
+                ...(done && {
+                  background: "var(--tint-public-bg)",
+                  color: T.accent.ok,
+                }),
+                ...(!active &&
+                  !done && {
+                    border: `1px solid ${T.border.hi}`,
+                    color: T.ink.dim,
+                  }),
               }}
             >
-              {number}
+              {done ? (
+                <Icon icon="mdi:check" width={18} aria-hidden="true" />
+              ) : (
+                number
+              )}
             </span>
             <div>
               <p
@@ -266,6 +330,7 @@ function StepCards({ activeStep }: { activeStep: 1 | 2 | 3 }) {
                 }}
               >
                 {step.title}
+                {done && <span className="sr-only"> (done)</span>}
               </p>
               <p
                 style={{

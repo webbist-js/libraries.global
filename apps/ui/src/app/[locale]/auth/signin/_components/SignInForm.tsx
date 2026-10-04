@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import * as z from "zod"
 
+import { authErrorParts } from "@/app/[locale]/auth/_components/auth-error"
 import {
   AuthDivider,
   AuthField,
@@ -22,10 +23,15 @@ import {
   PasswordInput,
 } from "@/app/[locale]/auth/_components/AuthFormParts"
 import { AuthOAuthButtons } from "@/app/[locale]/auth/_components/AuthOAuthButtons"
+import { rememberPendingEmail } from "@/app/[locale]/auth/_components/pending-email"
 import { UseSearchParamsWrapper } from "@/components/helpers/UseSearchParamsWrapper"
 import { useUserMutations } from "@/hooks/useUserMutations"
 import { authClient } from "@/lib/auth-client"
-import { magicLinkCallbacks } from "@/lib/auth-redirects"
+import {
+  magicLinkCallbacks,
+  signInCallbackURL,
+  VERIFY_EMAIL_PATH,
+} from "@/lib/auth-redirects"
 import { T } from "@/lib/design-tokens"
 import { safeRedirectPath } from "@/lib/safe-redirect"
 
@@ -57,32 +63,29 @@ function SuspensedSignInForm() {
   })
   const { errors, isSubmitting } = form.formState
 
+  // On success Better Auth's client follows callbackURL to post-signin, which
+  // sends a user who hasn't onboarded to onboarding, else to the destination.
   const onSubmit = form.handleSubmit(async (values) => {
-    signInMutation.mutate(values, {
-      onSuccess: async () => {
-        const { data } = await authClient.getSession()
-        const user = data?.user
-        // Only a loaded profile with no username means "not onboarded"; a
-        // Strapi outage (profileLoaded false) must not force onboarding.
-        if (user?.profileLoaded === true && !user.username) {
-          const next = encodeURIComponent(callbackUrl)
-          globalThis.location.href = `/profile/onboarding?next=${next}`
-        } else {
-          globalThis.location.href = callbackUrl
-        }
-      },
-      onError: (error) => {
-        const msg = error instanceof Error ? error.message : "Sign in failed"
-        let display = msg
-        if (msg.includes("identifier or password")) {
-          display = "Incorrect email or password."
-        } else if (/email not verified/i.test(msg)) {
-          display =
-            "Please confirm your email address first. We've sent you a new link."
-        }
-        toast.error(display)
-      },
-    })
+    signInMutation.mutate(
+      { ...values, callbackURL: signInCallbackURL(callbackUrl) },
+      {
+        onError: (error) => {
+          const { code, message } = authErrorParts(error)
+          // Better Auth has just emailed this unconfirmed account a new link.
+          if (code === "EMAIL_NOT_VERIFIED") {
+            rememberPendingEmail(values.email)
+            globalThis.location.href = `${VERIFY_EMAIL_PATH}?state=unverified`
+
+            return
+          }
+          toast.error(
+            code === "INVALID_EMAIL_OR_PASSWORD"
+              ? "Incorrect email or password."
+              : (message ?? "Sign in failed")
+          )
+        },
+      }
+    )
   })
 
   // The sign-in link reuses the email field above instead of a second input.
@@ -100,6 +103,7 @@ function SuspensedSignInForm() {
       if (result?.error) {
         toast.error(result.error.message ?? "Failed to send magic link")
       } else {
+        rememberPendingEmail(form.getValues("email"))
         globalThis.location.href = "/auth/magic-link-sent"
       }
     } catch {

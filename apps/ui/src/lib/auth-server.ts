@@ -49,3 +49,22 @@ export async function getSessionSSR(
     return null
   }
 }
+
+/**
+ * Whether the signed-in user can sign in with a password (a `credential`
+ * account), as opposed to Google only. Unknown counts as yes: the change
+ * password form then finds out from Better Auth's reply.
+ */
+export async function hasPasswordSignIn(
+  headers: ReadonlyHeaders
+): Promise<boolean> {
+  try {
+    const accounts = await auth.api.listUserAccounts({
+      headers: headers as unknown as Headers,
+    })
+
+    return accounts.some((account) => account.providerId === "credential")
+  } catch {
+    return true
+  }
+}

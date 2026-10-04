@@ -17,16 +17,21 @@ const LEGAL_LINKS = [
   { label: "Help", href: "/knowledge" },
 ]
 
+const BACK_TO_ATLAS = { href: "/", label: "Back to the atlas" }
+
 export function AuthShell({
   locale,
   aside,
   footnote,
+  back = BACK_TO_ATLAS,
   children,
 }: {
   locale: Locale
   aside: ReactNode
   /** Reassurance line in the footer strip, e.g. "We never share your email." */
   footnote: string
+  /** The top-left link; signed-in pages go back to where they came from. */
+  back?: { href: string; label: string }
   children: ReactNode
 }) {
   return (
@@ -48,7 +53,7 @@ export function AuthShell({
       >
         <div className="flex items-center justify-between gap-4">
           <GlobalLink
-            href="/"
+            href={back.href}
             className="-ml-2 flex items-center gap-1.5 rounded-full py-1.5 pr-3 pl-1.5 transition-colors hover:bg-(--t-bg-muted-2)"
             style={{
               fontFamily: T.font.sans,
@@ -59,7 +64,7 @@ export function AuthShell({
             }}
           >
             <Icon icon="mdi:chevron-left" width={20} aria-hidden="true" />
-            Back to the atlas
+            {back.label}
           </GlobalLink>
           <LocaleSwitcher
             locale={locale}

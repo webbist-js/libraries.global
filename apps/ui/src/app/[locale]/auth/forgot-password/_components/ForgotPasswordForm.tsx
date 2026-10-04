@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useTranslations } from "next-intl"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import * as z from "zod"
@@ -9,14 +10,23 @@ import * as z from "zod"
 import {
   AuthField,
   AuthHeading,
+  AuthInboxHint,
   authInputClassName,
   authInputStyle,
+  AuthNote,
   AuthPrimaryButton,
+  AuthSecondaryButton,
   AuthSwitchPrompt,
   fieldA11y,
+  usePreloadedIcons,
 } from "@/app/[locale]/auth/_components/AuthFormParts"
 import { useUserMutations } from "@/hooks/useUserMutations"
-import { useRouter } from "@/lib/navigation"
+import {
+  linkLifetime,
+  RESET_EMAIL_SUBJECT,
+  RESET_LINK_TTL_SECONDS,
+} from "@/lib/auth-links"
+import { T } from "@/lib/design-tokens"
 
 const ForgotPasswordFormSchema = z.object({
   email: z
@@ -25,10 +35,14 @@ const ForgotPasswordFormSchema = z.object({
     .email("Enter a valid email address"),
 })
 
+const SENT_ICONS = ["mdi:email-fast-outline", "mdi:email-outline"] as const
+
 export function ForgotPasswordForm() {
+  usePreloadedIcons(SENT_ICONS)
   const t = useTranslations("auth.forgotPassword")
-  const router = useRouter()
   const { forgotPasswordMutation } = useUserMutations()
+  // The address the link went to, once sent.
+  const [sentTo, setSentTo] = useState<string | null>(null)
 
   const form = useForm<z.infer<typeof ForgotPasswordFormSchema>>({
     resolver: zodResolver(ForgotPasswordFormSchema),
@@ -38,12 +52,9 @@ export function ForgotPasswordForm() {
 
   const onSubmit = form.handleSubmit(async (data) => {
     forgotPasswordMutation.mutate(data, {
-      onSuccess: () => {
-        // This flow happens even if the email does not exist in the system
-        toast.success(t("passwordChangeEmailSent"))
-        form.reset()
-        router.push("/auth/signin")
-      },
+      // Better Auth answers the same whether or not the address has an
+      // account, so the next screen doesn't claim one does.
+      onSuccess: () => setSentTo(data.email),
       onError: (error) => {
         // This happens only on unexpected errors (e.g. network issues)
         toast.error(
@@ -52,6 +63,42 @@ export function ForgotPasswordForm() {
       },
     })
   })
+
+  if (sentTo) {
+    return (
+      <>
+        <AuthHeading
+          icon="mdi:email-fast-outline"
+          title="Check your"
+          italic="inbox."
+          subtitle={
+            <>
+              If <strong style={{ color: T.ink.base }}>{sentTo}</strong> has an
+              account, we&rsquo;ve sent it a link to choose a new password.
+            </>
+          }
+        />
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          <AuthInboxHint
+            subject={RESET_EMAIL_SUBJECT}
+            detail={`The link works once, for ${linkLifetime(RESET_LINK_TTL_SECONDS)}.`}
+          />
+          <AuthSecondaryButton onClick={() => setSentTo(null)}>
+            Try a different address
+          </AuthSecondaryButton>
+          <AuthNote>
+            Nothing yet? Check your spam or promotions folder. Emails can take a
+            few minutes to arrive.
+          </AuthNote>
+        </div>
+        <AuthSwitchPrompt
+          prompt="Remembered it?"
+          linkLabel="Back to sign in"
+          href="/auth/signin"
+        />
+      </>
+    )
+  }
 
   return (
     <>

@@ -8,11 +8,16 @@ import { TERMS_VERSION } from "@/lib/legal-consent"
 
 export function useUserMutations() {
   const signInMutation = useMutation({
-    mutationFn: async (values: { email: string; password: string }) => {
+    mutationFn: async (values: {
+      email: string
+      password: string
+      /** From `signInCallbackURL`: the client follows it on success. */
+      callbackURL: string
+    }) => {
       const result = await authClient.signIn.email({
         email: values.email,
         password: values.password,
-        callbackURL: "/",
+        callbackURL: values.callbackURL,
       })
 
       return unwrapBetterAuth(result)
@@ -45,11 +50,13 @@ export function useUserMutations() {
     mutationFn: async (values: {
       currentPassword: string
       password: string
+      /** Ends every other session; this one gets a fresh token. */
+      revokeOtherSessions: boolean
     }) => {
       const result = await authClient.changePassword({
         currentPassword: values.currentPassword,
         newPassword: values.password,
-        revokeOtherSessions: false,
+        revokeOtherSessions: values.revokeOtherSessions,
       })
 
       return unwrapBetterAuth(result)
