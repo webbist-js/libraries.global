@@ -161,6 +161,8 @@ export type StepProps = {
   f: FormData
   set: (k: keyof FormData, v: string) => void
   setFormData: React.Dispatch<React.SetStateAction<FormData>>
+  /** Improve mode: the form edits an existing record. */
+  improving?: boolean
 }
 
 /** The record the Index editor is improving. */

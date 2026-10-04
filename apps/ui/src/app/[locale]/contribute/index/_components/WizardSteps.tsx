@@ -612,7 +612,7 @@ function StepImagery({ f, set, setFormData }: StepProps) {
 
 // ── Step 7 — Sources ──────────────────────────────────────────────────────────
 
-function StepSources({ f, set }: StepProps) {
+function StepSources({ f, set, improving }: StepProps) {
   return (
     <fieldset
       style={{
@@ -672,6 +672,7 @@ function StepSources({ f, set }: StepProps) {
         onChange={set}
         placeholder="Briefly describe what you're adding and how you verified it."
         rows={2}
+        required={improving}
       />
       <TextareaField
         label="Note to reviewer (optional)"

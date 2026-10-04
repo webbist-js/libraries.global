@@ -154,6 +154,45 @@ export function RequiredTag() {
   )
 }
 
+// ── Field errors — the wizard reveals them when a step can't be left ──────────
+
+/** The form keys showing a "required" error. Empty outside the wizard. */
+export const FieldErrorsContext = createContext<ReadonlySet<string>>(new Set())
+
+function useFieldError(key: keyof FormData): { invalid: boolean; id: string } {
+  return {
+    invalid: useContext(FieldErrorsContext).has(key),
+    id: `${key}-error`,
+  }
+}
+
+// `border`, not `borderColor`: fieldInputStyle sets the shorthand.
+const invalidInputStyle: React.CSSProperties = {
+  border: `1px solid ${T.accent.danger}`,
+}
+
+function FieldError({ id, children }: { id: string; children: string }) {
+  return (
+    <p
+      id={id}
+      style={{
+        ...fieldHintStyle,
+        color: T.accent.danger,
+        fontWeight: 500,
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+      }}
+    >
+      <Icon icon="mdi:alert-circle-outline" width={16} aria-hidden="true" />
+      {children}
+    </p>
+  )
+}
+
+const joinIds = (...ids: (string | false | null | undefined)[]) =>
+  ids.filter(Boolean).join(" ") || undefined
+
 // ── Field primitive ───────────────────────────────────────────────────────────
 
 export function Field({
@@ -180,9 +219,7 @@ export function Field({
   const hintId = hint ? `${id}-hint` : undefined
   const changed = useIsChanged(id)
   const shared = useIsShared(id)
-  const describedBy =
-    [shared ? `${id}-shared` : null, hintId].filter(Boolean).join(" ") ||
-    undefined
+  const error = useFieldError(id)
 
   return (
     <FieldFrame changed={changed}>
@@ -201,13 +238,23 @@ export function Field({
         placeholder={shared ? undefined : placeholder}
         required={required && !shared}
         aria-required={required && !shared}
+        aria-invalid={error.invalid || undefined}
         readOnly={shared}
-        aria-describedby={describedBy}
+        aria-describedby={joinIds(
+          error.invalid && error.id,
+          shared && `${id}-shared`,
+          hintId
+        )}
         autoComplete={autoComplete}
-        style={
-          shared ? { ...fieldInputStyle, ...sharedInputStyle } : fieldInputStyle
-        }
+        style={{
+          ...fieldInputStyle,
+          ...(shared ? sharedInputStyle : {}),
+          ...(error.invalid ? invalidInputStyle : {}),
+        }}
       />
+      {error.invalid && (
+        <FieldError id={error.id}>Fill this in to continue.</FieldError>
+      )}
       {hint && (
         <p id={hintId} style={fieldHintStyle}>
           {hint}
@@ -236,6 +283,7 @@ export function WizardSelect({
 }) {
   const changed = useIsChanged(id)
   const shared = useIsShared(id)
+  const error = useFieldError(id)
 
   return (
     <FieldFrame changed={changed}>
@@ -254,15 +302,21 @@ export function WizardSelect({
         name={id}
       >
         <SelectTrigger
+          id={id}
           aria-labelledby={`${id}-label`}
-          aria-describedby={shared ? `${id}-shared` : undefined}
+          aria-describedby={joinIds(
+            error.invalid && error.id,
+            shared && `${id}-shared`
+          )}
           aria-required={required && !shared}
+          aria-invalid={error.invalid || undefined}
           style={{
             ...fieldInputStyle,
             color: value ? T.ink.base : T.ink.dim,
             height: "auto",
             justifyContent: "space-between",
             ...(shared ? sharedInputStyle : {}),
+            ...(error.invalid ? invalidInputStyle : {}),
           }}
         >
           <SelectValue placeholder="Select…" />
@@ -291,6 +345,9 @@ export function WizardSelect({
           ))}
         </SelectContent>
       </RadixSelect>
+      {error.invalid && (
+        <FieldError id={error.id}>Choose one to continue.</FieldError>
+      )}
     </FieldFrame>
   )
 }
@@ -319,9 +376,7 @@ export function TextareaField({
   const hintId = hint ? `${id}-hint` : undefined
   const changed = useIsChanged(id)
   const shared = useIsShared(id)
-  const describedBy =
-    [shared ? `${id}-shared` : null, hintId].filter(Boolean).join(" ") ||
-    undefined
+  const error = useFieldError(id)
 
   return (
     <FieldFrame changed={changed}>
@@ -339,14 +394,25 @@ export function TextareaField({
         placeholder={shared ? undefined : placeholder}
         rows={rows}
         readOnly={shared}
-        aria-describedby={describedBy}
+        required={required && !shared}
+        aria-required={required && !shared}
+        aria-invalid={error.invalid || undefined}
+        aria-describedby={joinIds(
+          error.invalid && error.id,
+          shared && `${id}-shared`,
+          hintId
+        )}
         style={{
           ...fieldInputStyle,
           resize: "vertical",
           lineHeight: 1.6,
           ...(shared ? sharedInputStyle : {}),
+          ...(error.invalid ? invalidInputStyle : {}),
         }}
       />
+      {error.invalid && (
+        <FieldError id={error.id}>Fill this in to continue.</FieldError>
+      )}
       {hint && (
         <p id={hintId} style={fieldHintStyle}>
           {hint}

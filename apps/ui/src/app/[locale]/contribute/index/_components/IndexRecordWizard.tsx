@@ -37,10 +37,15 @@ import {
   SUBMISSION_META_KEYS,
 } from "./wizard.types"
 import {
+  firstIncompleteStep,
+  missingFields,
+  type ValidationScope,
+} from "./wizard.validation"
+import {
   SECTION_CHECKS,
   WizardCompletionSidebar,
 } from "./WizardCompletionSidebar"
-import { EditableFieldsContext } from "./WizardFields"
+import { EditableFieldsContext, FieldErrorsContext } from "./WizardFields"
 import { WizardStepNav } from "./WizardStepNav"
 import { STEP_COMPONENTS } from "./WizardSteps"
 
@@ -222,6 +227,28 @@ export function IndexRecordWizard({
 
   const StepComponent = STEP_COMPONENTS[step - 1]!
 
+  const scope = useMemo<ValidationScope>(
+    () => ({ record: improve ? initial : null, editable }),
+    [improve, initial, editable]
+  )
+  const missing = useMemo(
+    () => missingFields(step, formData, scope),
+    [step, formData, scope]
+  )
+  // Errors stay hidden until leaving a step is refused, then track the input.
+  const [revealed, setRevealed] = useState<{
+    step: number
+    focus?: keyof FormData
+  } | null>(null)
+  const fieldErrors = useMemo(
+    () => new Set<string>(revealed?.step === step ? missing : []),
+    [revealed, step, missing]
+  )
+  const reveal = (at: number, keys: (keyof FormData)[]) => {
+    setStep(at)
+    setRevealed({ step: at, focus: keys[0] })
+  }
+
   const saveDraft = useCallback(
     (currentFormData: FormData, currentStep: number, id: string) => {
       saveDraftMutation(
@@ -281,6 +308,11 @@ export function IndexRecordWizard({
   )
 
   const goNext = () => {
+    if (missing.length > 0) {
+      reveal(step, missing)
+
+      return
+    }
     setVisited((v) => (v.includes(step) ? v : [...v, step]))
     const nextStep = Math.min(step + 1, LAST_STEP)
     setStep(nextStep)
@@ -291,7 +323,13 @@ export function IndexRecordWizard({
   const goPrev = () => setStep((s) => Math.max(s - 1, 1))
 
   const handleStepClick = (n: number) => {
-    if (improve || visited.includes(step) || n <= step) setStep(n)
+    if (!improve && !visited.includes(step) && n > step) return
+    if (n > step && missing.length > 0) {
+      reveal(step, missing)
+
+      return
+    }
+    setStep(n)
   }
 
   const topRef = useRef<HTMLDivElement>(null)
@@ -307,6 +345,14 @@ export function IndexRecordWizard({
       el.scrollIntoView({ block: "start" })
     }
   }, [step])
+
+  // After the step scroll above, so the first missing field ends in view.
+  useEffect(() => {
+    if (!revealed?.focus) return
+    const el = document.getElementById(revealed.focus)
+    el?.scrollIntoView({ block: "center" })
+    el?.focus({ preventScroll: true })
+  }, [revealed])
 
   useEffect(() => {
     if (!draftId) return
@@ -329,15 +375,9 @@ export function IndexRecordWizard({
 
       return
     }
-    if (!formData.name || !formData.libraryType || !formData.evidenceUrl) {
-      toast.error(
-        "Please fill in the required fields: name, library type, and evidence URL."
-      )
-
-      return
-    }
-    if (improve && !formData.editSummary.trim()) {
-      toast.error("Add a one-line summary of what you changed.")
+    const incomplete = firstIncompleteStep(formData, scope)
+    if (incomplete !== null) {
+      reveal(incomplete, missingFields(incomplete, formData, scope))
 
       return
     }
@@ -503,11 +543,14 @@ export function IndexRecordWizard({
               )}
 
               <EditableFieldsContext.Provider value={editable}>
-                <StepComponent
-                  f={formData}
-                  set={set}
-                  setFormData={setFormData}
-                />
+                <FieldErrorsContext.Provider value={fieldErrors}>
+                  <StepComponent
+                    f={formData}
+                    set={set}
+                    setFormData={setFormData}
+                    improving={improve}
+                  />
+                </FieldErrorsContext.Provider>
               </EditableFieldsContext.Provider>
 
               <div
@@ -557,7 +600,7 @@ export function IndexRecordWizard({
                 {improve && step < LAST_STEP && (
                   <button
                     type="button"
-                    onClick={() => setStep(LAST_STEP)}
+                    onClick={() => handleStepClick(LAST_STEP)}
                     disabled={changed.length === 0}
                     className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted-2) disabled:cursor-not-allowed disabled:opacity-50"
                     style={{

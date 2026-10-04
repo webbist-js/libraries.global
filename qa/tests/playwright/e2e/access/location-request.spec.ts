@@ -93,8 +93,18 @@ async function openPicker(browser: Browser, baseURL: string, place: Place) {
   )
   const continent = page.locator("#hier-continent")
   // A click before hydration does nothing, so retry until the step shows.
+  // Identity's required type and status come first: Next holds the step.
   await expect(async () => {
     if (await continent.isVisible()) return
+    for (const [trigger, option] of [
+      ["#libraryType", "Public"],
+      ["#operationalStatus", "Open"],
+    ] as const) {
+      await page.locator(trigger).click({ timeout: 5000 })
+      await page
+        .getByRole("option", { name: option, exact: true })
+        .click({ timeout: 5000 })
+    }
     await page
       .getByRole("button", { name: /^Next: Location/ })
       .click({ timeout: 5000 })
