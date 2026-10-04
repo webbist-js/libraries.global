@@ -33,7 +33,8 @@ Two route handlers under `apps/ui/src/app/api/geocode/`:
 
 - **Auth:** a signed-in session (the wizard already requires one). 401 without.
 - **Rate limit:** per user via `lib/rate-limit.ts`: search 60 a minute, reverse 20 a minute. 429 with `Retry-After`.
-- **Upstream:** `User-Agent: libraries.global (https://libraries.global; info@libraries.global)`, 5 s timeout, `next: { revalidate: 86400 }` so repeat queries come from the data cache. Reverse coordinates are rounded to 5 decimal places (about 1 m) before the call so nearby pins share cache entries.
+- **Upstream:** `User-Agent: libraries.global (https://libraries.global; info@libraries.global)`, 5 s timeout, `next: { revalidate: 86400 }` so repeat queries come from the data cache.
+- **Postcodes:** only an address or a street result fills Postal code. Photon gives a village one postcode out of many ("Haworth" comes back with BD22 8NJ), which would be wrong for most buildings in it. Reverse coordinates are rounded to 5 decimal places (about 1 m) before the call so nearby pins share cache entries.
 - **Failure:** a Photon error or timeout returns 502 `{ error: "unavailable" }`. The client shows the "isn't available" state and the fields still work.
 - **Output:** `{ data: Place[] }`, normalised server-side (§4.2). Photon's raw GeoJSON never reaches the client.
 
@@ -80,7 +81,7 @@ Mapping from Photon `properties`:
 - **Requests:** 300 ms debounce, 3-character minimum, an `AbortController` cancels the previous request.
 - **Prefill:** in new mode, when every location field is empty, the input starts with the library name from step 1. Results load on focus.
 - **Rows:** the label in semibold `T.ink.base`, the detail line in `T.ink.dim`, the kind as a neutral badge.
-- **Pick:** `applyPlace` (§4.6) writes the fields and coordinates, the map flies to the result, the list closes, and a status line reads "Filled from OpenStreetMap — check the details below."
+- **Pick:** `applyPlace` (§4.6) writes the fields and coordinates, the map flies to the result, the list closes, and a status line reads "Filled in from OpenStreetMap. Check the details below."
 - **Empty:** "No matches. Try the street and town, or enter the address below."
 - **Error or 429:** "Search isn't available right now. Enter the address below."
 - **Attribution** under the list: "Search by Photon · © OpenStreetMap contributors", both linked.
@@ -117,7 +118,7 @@ Pure functions in `location.apply.ts`, tested without React:
 
 - `applyPlace(form, place)`: sets each of `streetAddress`, `district`, `city`, `postalCode`, `country` that the place has a non-empty value for, and always sets `lat`/`lng`. Fields the place lacks keep their current value.
 - `addressIsEmpty(form)`: true when street, district, city, postcode and country are all blank.
-- **Fill rule for reverse lookups:** when `addressIsEmpty`, apply the place's address (not its coordinates: the pin is where the contributor put it). Otherwise show "Nearest address: {label}, {city}" with a "Use this address" button that does the same. The offer disappears when the coordinates change again or a field is edited.
+- **Fill rule for reverse lookups:** when `addressIsEmpty`, apply the place's address (not its coordinates: the pin is where the contributor put it). Otherwise show "Nearest address to the pin: {street}, {city}" with a "Use this address" button that does the same. The offer disappears when the coordinates change again or a field is edited.
 - `parseCoordinatePair(text)`: returns `{ lat, lng }` for the formats in §4.5 when both are in range, else null.
 - `formatCoord(n)`: 6 decimal places, trailing zeros trimmed.
 
@@ -125,9 +126,9 @@ Pure functions in `location.apply.ts`, tested without React:
 
 After a search pick or an applied reverse lookup:
 
-1. **Country.** `GET /api/relations/countries?iso2=GB` (new filter on the existing route: `filters[iso2][$eqi]`, `populate[continent][fields][0]=documentId`) returns `{ documentId, name, continentDocumentId }`. If continent is empty, or the result is in a different country from the one selected, set continent and country and clear region and area (as the selects' own handlers do, including any Location Request proposal). If the same country is already selected, keep it.
-2. **Region**, only while empty: fetch the country's regions (the existing list endpoint) and pick one whose name, normalised (case, accents, a leading "The", "County of"/"City of"), equals the place's `state`, `county`, `city` or `district`. Exactly one match is set; zero or several leave it empty.
-3. **Area**, only while empty and a region is set: the same against the region's areas with `county`, `city`, `district`.
+1. **Country.** The atlas files the UK as four countries with ISO 3166-2 codes (`GB-ENG`, `GB-SCT`, `GB-WLS`, `GB-NIR`), so a `GB` place tries its `state`'s code first: `GET /api/relations/countries?iso2=GB-ENG,GB` (new filter on the existing route: `filters[iso2][$in]`, continent populated) returns `[{ documentId, name, iso2, continentDocumentId }]` in the order asked, and the first row wins. If the result is a different country from the one selected (or none is), set continent and country and clear region, area and any Location Request proposal, as the selects' own handlers do. If the same country is already selected, keep it. Either way the free-text Country field takes the atlas country's name ("England"), so the two agree.
+2. **Region**, only while empty and no region was requested: fetch the country's regions (the existing list endpoint) and pick one whose name, normalised (case, accents, spacing, a leading "The", "Greater", "County of" or "City of"), equals the place's `state`, `county`, `city` or `district`. Exactly one match is set; zero or several leave it empty. ("London" matches "Greater London"; "West Yorkshire" matches itself.)
+3. **Area**, only while empty, no area was requested and a region is set: the same against the region's areas with `county`, `city`, `district`.
 4. A status line under the hierarchy reads "Set from the address. Check these." until the contributor changes any of the four selects.
 
 A failed lookup at any step leaves the hierarchy as it was.
@@ -135,26 +136,31 @@ A failed lookup at any step leaves the hierarchy as it was.
 ### 4.8 Modes
 
 - **New and improve:** identical behaviour. In improve mode the changed-field markers show what the lookup touched, and the summary lists it like any other edit.
-- **Translation mode:** location fields are shared across languages, so the search, location button and map are not rendered. The read-only fields stay as they are.
+- **Translation mode:** country, postcode and coordinates are shared across languages, and Photon names places in English, so the search, location button and map are not rendered. Street, district and city stay editable by hand, as now.
 - **Moderator panel:** reuses the hierarchy selector only, so it is unaffected.
 
 ## 5. Files
 
 | File                                                               | Change                                                             |
 | ------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| `apps/ui/src/lib/geocode/coordinates.ts`                           | new: read, format, validate and paste-split coordinates            |
 | `apps/ui/src/lib/geocode/place.ts`                                 | new: `Place` type, Photon normaliser, street ordering, kind labels |
 | `apps/ui/src/lib/geocode/photon.ts`                                | new, `server-only`: Photon URL building and fetch                  |
+| `apps/ui/src/lib/geocode/client.ts`                                | new: the browser's fetchers for `/api/geocode/*`                   |
 | `apps/ui/src/app/api/geocode/search/route.ts`, `reverse/route.ts`  | new route handlers                                                 |
 | `apps/ui/src/app/api/relations/[type]/route.ts`                    | `countries?iso2=` lookup                                           |
 | `.../contribute/index/_components/location.apply.ts`               | new pure helpers (§4.6) and the region/area name matcher (§4.7)    |
+| `.../contribute/index/_components/location.hierarchy.ts`           | new: `resolveHierarchy`, the atlas lookups of §4.7                 |
+| `.../contribute/index/_components/useLocationFill.ts`              | new: pick, pin and device lookups, the offer and the note          |
 | `.../contribute/index/_components/LocationLookup.tsx`              | new: combobox and "Use my location"                                |
 | `.../contribute/index/_components/LocationPinMap.tsx`              | new: MapLibre pin map                                              |
-| `.../contribute/index/_components/WizardSteps.tsx`                 | step 2 composes the above; coordinate paste and hint               |
-| `.../contribute/index/_components/WizardFields.tsx`                | `Field` gains `onPaste`                                            |
+| `.../contribute/index/_components/StepLocation.tsx`                | step 2, moved out of `WizardSteps.tsx` and composing the above     |
+| `.../contribute/index/_components/WizardFields.tsx`                | `Field` gains `onPaste` and `errorText`                            |
 | `.../contribute/index/_components/wizard.validation.ts`            | coordinate range errors on step 2                                  |
 | `apps/ui/src/lib/geo-lookup.ts`, `hooks/useGeoLookup.ts`, its test | deleted                                                            |
-| `apps/ui/.env.local.example`                                       | `PHOTON_URL` documented                                            |
 | `qa/tests/playwright/e2e/access/location-lookup.spec.ts`           | new E2E (§6)                                                       |
+
+`PHOTON_URL` is optional (it defaults to the public instance) and is documented where it is read, in `photon.ts`. `.env.local.example` isn't touched: another session has uncommitted edits in it.
 
 ## 6. Testing
 
