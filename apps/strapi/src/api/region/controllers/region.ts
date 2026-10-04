@@ -9,7 +9,45 @@ import {
   SEO_POPULATE,
 } from "../../../utils/populate-shapes"
 import { readStatus } from "../../../utils/read-status"
+import { regionIdsWithLibraries } from "../../../utils/region-library-ids"
 import { scopedWhere } from "../../../utils/scoped-where"
+
+/** The most slugs one `withLibraries=1` page returns. */
+const REGION_SLUGS_MAX_LIMIT = 1000
+
+/**
+ * The query parameters `/regions/slugs` reads. Each must be absent or a
+ * single string: a repeated key or a bracketed object is refused rather than
+ * silently ignored (mirrors `/libraries/slugs`'s `stringQuery`).
+ */
+function stringQuery(
+  q: Record<string, unknown>,
+  keys: readonly string[]
+): Record<string, string | undefined> | null {
+  const out: Record<string, string | undefined> = {}
+  for (const key of keys) {
+    const value = q[key]
+    if (value === undefined) continue
+    if (typeof value !== "string") return null
+    out[key] = value
+  }
+
+  return out
+}
+
+/** A non-negative integer query value: `fallback` when absent, null below `min` or malformed, clamped to `max`. */
+function pageInt(
+  raw: string | undefined,
+  fallback: number,
+  min: number,
+  max = Number.MAX_SAFE_INTEGER
+): number | null {
+  if (raw === undefined || raw === "") return fallback
+  if (!/^\d+$/.test(raw)) return null
+  const n = Number(raw)
+
+  return n >= min ? Math.min(n, max) : null
+}
 
 /** Library rows returned with a region — enough for its list and gap chips. */
 const REGION_LIBRARY_LIMIT = 100
@@ -224,76 +262,79 @@ export default factories.createCoreController(
       }
     },
 
-    // ── /regions/map-pins ─────────────────────────────────────────────────────
-    // Returns region centroids (from mapConfig) for interactive map rendering.
-    // Accepts one of: countrySlug, continentSlug
-    async mapPins(ctx) {
-      const q = ctx.query as Record<string, string | undefined>
-      const locale = typeof q.locale === "string" ? q.locale : undefined
+    // ── /regions/slugs ────────────────────────────────────────────────────────
+    // Returns slug + locale pairs for regions — used by generateStaticParams
+    // on the region page. Always pages by id keyset like `/libraries/slugs`
+    // (`after`, `limit` capped at REGION_SLUGS_MAX_LIMIT, `meta.next`): no
+    // caller may load every Region in one unbounded read.
+    //
+    // `withLibraries=1` prerenders only Regions with at least one published
+    // library: the rest render on demand (`dynamicParams`). It filters to the
+    // documentIds one grouped query (`regionIdsWithLibraries`) says have a
+    // library — never a per-region count. Without it, every Region is paged
+    // the same way, just unfiltered (no caller still needs an unpaged read).
+    async slugs(ctx) {
+      const q = stringQuery(ctx.query as Record<string, unknown>, [
+        "locale",
+        "after",
+        "limit",
+        "withLibraries",
+      ])
+      if (!q) return ctx.badRequest("Query parameters must be single strings")
+      const locale = q.locale
       const status = readStatus(ctx)
+      const after = pageInt(q.after, 0, 0)
+      const limit = pageInt(
+        q.limit,
+        REGION_SLUGS_MAX_LIMIT,
+        1,
+        REGION_SLUGS_MAX_LIMIT
+      )
+      if (after === null || limit === null)
+        return ctx.badRequest("after must be >= 0 and limit between 1 and 1000")
 
-      const filters: Record<string, unknown> = {}
-      if (q.countrySlug) filters.country = { slug: { $eq: q.countrySlug } }
-      else if (q.continentSlug)
-        filters.continent = { slug: { $eq: q.continentSlug } }
+      if (q.withLibraries !== "1") {
+        const results = (await strapi.documents("api::region.region").findMany({
+          ...(after > 0 ? { filters: { id: { $gt: after } } as never } : {}),
+          fields: ["slug", "locale"],
+          populate: {
+            country: { fields: ["slug"] },
+            continent: { fields: ["slug"] },
+          },
+          locale,
+          status,
+          sort: "id:asc" as never,
+          limit,
+        })) as unknown as { id?: number }[]
 
-      const results = await strapi.documents("api::region.region").findMany({
-        filters: filters as never,
-        fields: ["name", "slug", "boundaryUrl"],
-        populate: {
-          mapConfig: MAP_CONFIG_POPULATE,
-          continent: { fields: ["slug"] },
-          country: { fields: ["slug"] },
-        } as never,
-        locale,
-        status,
-      })
+        const last = results.at(-1)?.id
+        const next =
+          results.length === limit && typeof last === "number" ? last : null
 
-      type RegionWithMap = {
-        documentId: string
-        name?: string
-        slug?: string
-        boundaryUrl?: string | null
-        mapConfig?: {
-          centerLat?: number | null
-          centerLng?: number | null
-          boundingBoxNE?: string | null
-          boundingBoxSW?: string | null
-        } | null
-        continent?: { slug?: string } | null
-        country?: { slug?: string } | null
+        ctx.body = {
+          data: results,
+          meta: { after, limit, count: results.length, next },
+        }
+
+        return
       }
 
-      const pins = (results as unknown as RegionWithMap[])
-        .filter(
-          (r) =>
-            r.boundaryUrl || (r.mapConfig?.centerLat && r.mapConfig?.centerLng)
-        )
-        .map((r) => ({
-          documentId: r.documentId,
-          name: r.name,
-          slug: r.slug,
-          lat: r.mapConfig?.centerLat ?? null,
-          lng: r.mapConfig?.centerLng ?? null,
-          boundingBoxNE: r.mapConfig?.boundingBoxNE ?? null,
-          boundingBoxSW: r.mapConfig?.boundingBoxSW ?? null,
-          boundaryUrl: r.boundaryUrl ?? null,
-          continent: r.continent ?? null,
-          country: r.country ?? null,
-        }))
+      const documentIds = [
+        ...(await regionIdsWithLibraries(strapi, { locale, status })),
+      ]
+      if (documentIds.length === 0) {
+        ctx.body = { data: [], meta: { after, limit, count: 0, next: null } }
 
-      ctx.body = { data: pins, meta: { total: pins.length } }
-    },
+        return
+      }
 
-    // ── /regions/slugs ────────────────────────────────────────────────────────
-    // Returns slug + locale pairs for all published regions — used by
-    // generateStaticParams on the region page.
-    async slugs(ctx) {
-      const locale =
-        typeof ctx.query.locale === "string" ? ctx.query.locale : undefined
-      const status = readStatus(ctx)
-
-      const results = await strapi.documents("api::region.region").findMany({
+      const results = (await strapi.documents("api::region.region").findMany({
+        filters: {
+          $and: [
+            { documentId: { $in: documentIds } },
+            ...(after > 0 ? [{ id: { $gt: after } }] : []),
+          ],
+        } as never,
         fields: ["slug", "locale"],
         populate: {
           country: { fields: ["slug"] },
@@ -301,11 +342,17 @@ export default factories.createCoreController(
         },
         locale,
         status,
-      })
+        sort: "id:asc" as never,
+        limit,
+      })) as unknown as { id?: number }[]
+
+      const last = results.at(-1)?.id
+      const next =
+        results.length === limit && typeof last === "number" ? last : null
 
       ctx.body = {
         data: results,
-        meta: {},
+        meta: { after, limit, count: results.length, next },
       }
     },
   })

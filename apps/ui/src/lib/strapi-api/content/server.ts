@@ -697,21 +697,50 @@ export async function fetchAllCountries(locale: Locale) {
   }
 }
 
+export type RegionSlugRow = {
+  slug: string
+  locale?: string | null
+  country?: { slug: string } | null
+  continent?: { slug: string } | null
+}
+
+/** The most rows one `/regions/slugs?withLibraries=1` request returns. */
+const REGION_SLUGS_PAGE_SIZE = 1000
+
+/** A hard stop on pages walked, so a misbehaving cursor can never loop forever. */
+const REGION_SLUGS_MAX_PAGES = 1000
+
+/**
+ * Every Region with at least one published library, in this locale: used by
+ * the Region page's `generateStaticParams` (so only non-empty Regions are
+ * prerendered — the rest render on demand) and by the sitemap, which already
+ * filters to indexable locations on top of this. Pages through
+ * `/regions/slugs?withLibraries=1` by id keyset (`meta.next`), capped per
+ * request, so no single read loads every Region.
+ */
 export async function fetchAllRegions(locale: Locale) {
   try {
-    const result = await PublicStrapiClient.fetchAPI("/regions/slugs", {
-      locale,
-      status: "published",
-    })
+    const rows: RegionSlugRow[] = []
+    let after: number | null = 0
 
-    return result as {
-      data: {
-        slug: string
-        locale?: string | null
-        country?: { slug: string } | null
-        continent?: { slug: string } | null
-      }[]
+    for (
+      let page = 0;
+      after !== null && page < REGION_SLUGS_MAX_PAGES;
+      page++
+    ) {
+      const result = (await PublicStrapiClient.fetchAPI("/regions/slugs", {
+        locale,
+        status: "published",
+        withLibraries: "1",
+        after: String(after),
+        limit: String(REGION_SLUGS_PAGE_SIZE),
+      })) as { data?: RegionSlugRow[]; meta?: { next?: number | null } }
+
+      rows.push(...(result.data ?? []))
+      after = typeof result.meta?.next === "number" ? result.meta.next : null
     }
+
+    return { data: rows }
   } catch (e: unknown) {
     logNonBlockingError({
       message: `Error fetching all regions for locale '${locale}'`,
