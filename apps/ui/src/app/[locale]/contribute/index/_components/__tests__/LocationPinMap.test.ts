@@ -30,6 +30,7 @@ const fake = vi.hoisted(() => {
     resize = vi.fn()
     remove = vi.fn()
     touchZoomRotate = { disableRotation: vi.fn() }
+    keyboard = { disableRotation: vi.fn() }
     constructor() {
       if (!state.webgl) throw new Error("WebGL unavailable")
       state.maps.push(this)
@@ -191,5 +192,12 @@ describe("LocationPinMap", () => {
     fake.state.webgl = false
     render(createElement(LocationPinMap, props()))
     expect(await screen.findByText(/can’t load in this browser/)).toBeTruthy()
+  })
+
+  it("turns rotation and pitch off for touch and keyboard", async () => {
+    render(createElement(LocationPinMap, props()))
+    const { map } = await loaded()
+    expect(map.touchZoomRotate.disableRotation).toHaveBeenCalled()
+    expect(map.keyboard.disableRotation).toHaveBeenCalled()
   })
 })

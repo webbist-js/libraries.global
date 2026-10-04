@@ -108,6 +108,7 @@ export function LocationPinMap({
           return
         }
         map.touchZoomRotate.disableRotation()
+        map.keyboard.disableRotation()
         map.addControl(
           new maplibregl.NavigationControl({ showCompass: false }),
           "top-left"
@@ -174,7 +175,7 @@ export function LocationPinMap({
       <div
         className="relative h-[220px] overflow-hidden rounded-[20px] sm:h-[280px]"
         style={{
-          background: T.bg.surface,
+          background: T.bg.deep,
           border: `1px solid ${T.border.line}`,
         }}
       >
