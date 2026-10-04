@@ -49,7 +49,7 @@ Editorial and narrative content — stories, features, guest pieces — managed 
 _Avoid_: posts, news
 
 **Submission**:
-A user-initiated change request that enters a Moderation Queue before any data is altered. Covers corrections to existing entries, new Library proposals, Library Claims, wiki and blog contributions, topic suggestions, Role Applications and Location Requests. Each carries the locale it was written in (stored as `contentLocale`), which decides which Moderators may review it and which language version an approval changes. All submissions go through review regardless of the submitter's trust level.
+A user-initiated change request that enters a Moderation Queue before any data is altered. Covers corrections to existing entries, new Library proposals, Library Claims, wiki and blog contributions, topic suggestions and Role Applications. Each carries the locale it was written in (stored as `contentLocale`), which decides which Moderators may review it and which language version an approval changes. All submissions go through review regardless of the submitter's trust level.
 _Avoid_: edit, change request, contribution (alone — too generic; use the specific type)
 
 **Submission State**:
@@ -93,7 +93,7 @@ A row that gives one person one Contributor Role, optionally scoped to a Moderat
 _Avoid_: permission, U&P role
 
 **Moderation Queue**:
-Where a Submission waits for review: `index` (library submissions and Location Requests), `knowledge` (Knowledge contributions), `journal` (Journal contributions) or `applications` (Role Applications). Every Submission type maps to exactly one queue.
+Where a Submission waits for review: `index` (library submissions), `knowledge` (Knowledge contributions), `journal` (Journal contributions) or `applications` (Role Applications). Every Submission type maps to exactly one queue.
 _Avoid_: inbox, backlog
 
 **Moderation Scope**:
@@ -103,10 +103,6 @@ _Avoid_: permission, remit
 **Role Application**:
 A Submission asking for a Knowledge or Journal editor role, for every language or only some, reviewed in the `applications` queue. Open to anyone with five accepted Submissions, no open application for that role and no grant that already covers it; never related to Plan, Tier or Points. Approval creates the Role Grants and awards no Points.
 _Avoid_: promotion, role request
-
-**Location Request**:
-A Submission asking for a missing Region or Area, made from the new-Library flow and reviewed in the `index` queue. Approval creates the Region or Area, published, and awards no Points. Countries are never requested: every country is imported.
-_Avoid_: new region, location suggestion
 
 **Review Event**:
 One Submission State transition: from, to, reviewer, note and when. Append-only; together they are the review thread on a Submission.
@@ -121,7 +117,7 @@ One edit event on a Knowledge or Journal article: who, when, locale and kind (cr
 _Avoid_: revision, version
 
 **Capability**:
-Something a signed-in user may do in the contribution system: submit a correction, a new Library, a Library Claim, a doc suggestion, a journal pitch, a topic suggestion, a Role Application or a Location Request; submit a `library_edit` or connect an event feed for a Library they have claimed; edit Wiki or Blog articles directly (`docs.directEdit`, `journal.directEdit`, in the locales of the editor's grants); or review Submissions (`moderate.queue`, within a Moderation Scope). Resolved only from Role Grants and Library Claims (`resolveCapabilities` in `@repo/access`); Tier and Plan never feed it. Strapi's `submission-policy` is the real gate; the session's copy drives the UI and route pre-checks only.
+Something a signed-in user may do in the contribution system: submit a correction, a new Library, a Library Claim, a doc suggestion, a journal pitch, a topic suggestion or a Role Application; submit a `library_edit` or connect an event feed for a Library they have claimed; edit Wiki or Blog articles directly (`docs.directEdit`, `journal.directEdit`, in the locales of the editor's grants); or review Submissions (`moderate.queue`, within a Moderation Scope). Resolved only from Role Grants and Library Claims (`resolveCapabilities` in `@repo/access`); Tier and Plan never feed it. Strapi's `submission-policy` is the real gate; the session's copy drives the UI and route pre-checks only.
 _Avoid_: permission (Strapi admin's word for its own roles), entitlement (that is what a Plan gives)
 
 **Entitlement**:
@@ -163,6 +159,14 @@ _Avoid_: university library (when the institution is not a university), research
 **Region**:
 A first-level administrative subdivision of a Country (state, province, county, département, etc.). Every Library belongs to a Region, either directly or through an Area.
 _Avoid_: province, state, county (those are display names; the concept is Region)
+
+**Place Labels**:
+The four localised strings on a Country that name its Regions and Areas in the UI: `regionTypeLabel` and `regionsSectionLabel` (singular, plural), `areaTypeLabel` and `areasSectionLabel`. Display only; they never change routing, hierarchy or data.
+_Avoid_: region type, area type (those are the per-place `typeLabel`)
+
+**Country Profile**:
+One entry per country in the world place import's profile file: its Place Labels, which source level is its Region and which its Area, whether it opts in to filling gaps, and an optional curated source.
+_Avoid_: country config, country settings
 
 ## Relationships
 

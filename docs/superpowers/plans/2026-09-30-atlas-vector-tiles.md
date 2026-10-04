@@ -1,6 +1,7 @@
 # Atlas at 3 million libraries: vector tiles plan
 
 **Status:** proposed, 2026-09-30. Nothing built yet.
+**Note (2026-10-04):** `InteractiveMap` and the `/map-pins` routes were removed (place labels and world places spec); location pages use `LocationHeroMap`.
 **Why now:** there are about 2.9 million libraries in the world. The Atlas can't carry that many today, and it is the only part of the platform that can't.
 
 ## The problem
@@ -11,11 +12,11 @@ Strapi builds that response by walking the whole library table with three many-t
 
 The measured payload is 625 bytes per library (107 libraries, 67 KB). At 2.9 million libraries:
 
-| | Today (107) | At 2.9M |
-| --- | --- | --- |
-| Atlas JSON | 67 KB | ~1.8 GB (~300 MB gzipped) |
-| Strapi build | instant | ~2,900 batched queries, minutes, GBs of heap |
-| Browser | fine | can't parse it; the tab crashes |
+|              | Today (107) | At 2.9M                                      |
+| ------------ | ----------- | -------------------------------------------- |
+| Atlas JSON   | 67 KB       | ~1.8 GB (~300 MB gzipped)                    |
+| Strapi build | instant     | ~2,900 batched queries, minutes, GBs of heap |
+| Browser      | fine        | can't parse it; the tab crashes              |
 
 Location pages have the same problem at a smaller scale. `InteractiveMap` reads `/libraries/map-pins`, which stops at 500 pins and sets `truncated`. At 2.9M, most large regions will have more than 500 libraries.
 
@@ -45,18 +46,18 @@ Strapi ──(keyset export, nightly + on change)──▶ tile build (tippecano
 - **tippecanoe settings:** zoom 0–14. `--cluster-distance` and `--accumulate-attribute` produce pre-built clusters with a `point_count` at low zoom. `-r1 --drop-densest-as-needed` is off from z10 up, so every library is in the tiles at street level. Keep tiles under about 500 KB.
 - **Feature properties** (short keys, so tiles stay small):
 
-| Key | Meaning | Used by |
-| --- | --- | --- |
-| `i` | documentId | pin click, "recent changes" masking |
-| `s` | slug | deep links |
-| `t` | type group (`TYPE_GROUPS`) | type filter, pin style |
-| `o` | operator group | operator filter |
-| `st` | operational status | closures layer, `isListed` |
-| `f` | facility codes, comma-wrapped (`,wc,lp,`) | facilities filter via `["in", ",wc,", ["get","f"]]` |
-| `e` / `c` | has events / catalogue | filters, events layer |
-| `y` | founded year | founded filter, Pro founded layer |
-| `p` | completeness | completeness layer |
-| `h` | open week-slots string (see below) | open now / open at, open-late layer |
+| Key       | Meaning                                   | Used by                                             |
+| --------- | ----------------------------------------- | --------------------------------------------------- |
+| `i`       | documentId                                | pin click, "recent changes" masking                 |
+| `s`       | slug                                      | deep links                                          |
+| `t`       | type group (`TYPE_GROUPS`)                | type filter, pin style                              |
+| `o`       | operator group                            | operator filter                                     |
+| `st`      | operational status                        | closures layer, `isListed`                          |
+| `f`       | facility codes, comma-wrapped (`,wc,lp,`) | facilities filter via `["in", ",wc,", ["get","f"]]` |
+| `e` / `c` | has events / catalogue                    | filters, events layer                               |
+| `y`       | founded year                              | founded filter, Pro founded layer                   |
+| `p`       | completeness                              | completeness layer                                  |
+| `h`       | open week-slots string (see below)        | open now / open at, open-late layer                 |
 
 - **Opening hours:** MapLibre expressions can't evaluate hours in each library's timezone. The build therefore precomputes a 336-character `0`/`1` string for each library: the 30-minute slots of the week in UTC, using this week's UTC offsets. The browser works out the current UTC slot `n` and filters with `["==", ["slice", ["get","h"], n, n + 1], "1"]`. The nightly rebuild keeps DST changes correct. It's about 336 bytes per feature before compression and compresses very well. If tiles run too large, drop it below z10 and send low-zoom "open now" to Meilisearch (§2).
 
@@ -64,14 +65,14 @@ Strapi ──(keyset export, nightly + on change)──▶ tile build (tippecano
 
 Add these fields to the `library` index's `transformEntry` and make them filterable: `type_group`, `operator_group`, `has_events`, `has_catalogue`, `founded`, `completeness`, `open_slots` (an array of UTC slot numbers), and three grid cells `cell_3`, `cell_4`, `cell_5` (geohash prefixes).
 
-| Atlas feature | Today | After |
-| --- | --- | --- |
-| Filter counts, `countWith`, `loosenSuggestions` | loops over all libraries | one Meili `multiSearch`: the base query plus one query per suggestion, `limit: 0`, with `_geoBoundingBox` |
-| "N libraries in view", `groupsInView`, `places` | filter over all | Meili with `_geoBoundingBox` and `facets` |
-| List view | sorts the in-view set | paged Meili query, `sort: ["_geoPoint(lat,lng):asc"]` |
-| Search tab | client-side fuzzy match | the existing `/api/search/libraries` |
-| Filtered clusters at low zoom | Supercluster over filtered GeoJSON | Meili facet distribution over `cell_<z>` for the viewport; draw one circle per cell at its centre |
-| Open now / open at | `isOpenAt` in the browser | `open_slots = n` |
+| Atlas feature                                   | Today                              | After                                                                                                     |
+| ----------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Filter counts, `countWith`, `loosenSuggestions` | loops over all libraries           | one Meili `multiSearch`: the base query plus one query per suggestion, `limit: 0`, with `_geoBoundingBox` |
+| "N libraries in view", `groupsInView`, `places` | filter over all                    | Meili with `_geoBoundingBox` and `facets`                                                                 |
+| List view                                       | sorts the in-view set              | paged Meili query, `sort: ["_geoPoint(lat,lng):asc"]`                                                     |
+| Search tab                                      | client-side fuzzy match            | the existing `/api/search/libraries`                                                                      |
+| Filtered clusters at low zoom                   | Supercluster over filtered GeoJSON | Meili facet distribution over `cell_<z>` for the viewport; draw one circle per cell at its centre         |
+| Open now / open at                              | `isOpenAt` in the browser          | `open_slots = n`                                                                                          |
 
 Low-zoom pre-built clusters can't reflect filters. So with **no filters**, clusters come from the tiles. With **filters on, below z10**, the tile cluster layer is hidden and the Meili cell layer is shown instead. From z10 up, every point is in the tiles, and MapLibre filter expressions handle it.
 
@@ -96,36 +97,36 @@ Pro data layers backed by outside datasets (per-capita, deprivation, transit, sc
 Each phase ships behind the `atlas.tiles` flag until phase 6.
 
 **Phase 0: benchmark rig (do first).** Write a generator for 3M synthetic libraries: jitter real places from GeoNames, weighted by population, with realistic type, hours and facility mixes. Load them into a throwaway local Postgres and Meili. Record tile archive size, the largest tile, build time, Meili p95 for viewport + facets + multiSearch, and Meili RAM and disk.
-*Exit:* numbers written into this doc, and the budgets below confirmed or revised.
+_Exit:_ numbers written into this doc, and the budgets below confirmed or revised.
 
 **Phase 1: Meili fields.** Add the new fields and settings, backfill with batched `updateDocuments`, and add tests in `meilisearch-config.test.ts`.
-*Exit:* every Atlas question in §2 answered by Meili within budget against the phase-0 data.
+_Exit:_ every Atlas question in §2 answered by Meili within budget against the phase-0 data.
 
 **Phase 2: tile build.** Add the `tile-source` endpoint, the build script, the GitHub Action, the upload and the manifest.
-*Exit:* nightly archive published; a z14 city tile under 500 KB; a 3M build under 30 minutes.
+_Exit:_ nightly archive published; a z14 city tile under 500 KB; a 3M build under 30 minutes.
 
 **Phase 3: draw from tiles.** Add the `pmtiles` protocol to `AtlasMap`, rebuild the pin, cluster, heat, closures and open-late layers on the vector source, add static filters as expressions and the open-now slot expression, and add the recent-changes overlay (§3).
-*Exit:* the Atlas renders 3M libraries with no call to `/libraries/atlas`.
+_Exit:_ the Atlas renders 3M libraries with no call to `/libraries/atlas`.
 
 **Phase 4: questions to Meili.** Move counts, suggestions, in view, list view, search tab and filtered low-zoom cells, with a debounce on `moveend`. Keep `atlas.logic.ts`'s filter shapes, and map `AtlasFilters` to a Meili filter string in one tested function.
-*Exit:* the existing Atlas tests pass against the new data source; the list view pages through a 3M index.
+_Exit:_ the existing Atlas tests pass against the new data source; the list view pages through a 3M index.
 
 **Phase 5: pins, deep links, export, location maps.** Everything in §4.
-*Exit:* nothing in the UI reads `/libraries/atlas` or `/libraries/map-pins`.
+_Exit:_ nothing in the UI reads `/libraries/atlas` or `/libraries/map-pins`.
 
 **Phase 6: cut-over.** Remove the flag, delete `GET /libraries/atlas`, `utils/atlas-cache.ts`, `fromFeatureCollection` and `map-pins`, and update CLAUDE.md's Map section.
 
 ## Budgets
 
-| Measure | Target |
-| --- | --- |
-| First pins visible (4G, cold) | < 1.5 s |
-| Largest single request to draw the map | < 500 KB |
-| Browser memory, Atlas open | < 150 MB |
-| Meili viewport count / list query, p95 | < 150 ms |
-| Meili multiSearch (base + 6 suggestions), p95 | < 300 ms |
-| Tile build, 3M libraries | < 30 min |
-| Map staleness without the overlay | ≤ 24 h (≤ 30 min with dispatch) |
+| Measure                                       | Target                          |
+| --------------------------------------------- | ------------------------------- |
+| First pins visible (4G, cold)                 | < 1.5 s                         |
+| Largest single request to draw the map        | < 500 KB                        |
+| Browser memory, Atlas open                    | < 150 MB                        |
+| Meili viewport count / list query, p95        | < 150 ms                        |
+| Meili multiSearch (base + 6 suggestions), p95 | < 300 ms                        |
+| Tile build, 3M libraries                      | < 30 min                        |
+| Map staleness without the overlay             | ≤ 24 h (≤ 30 min with dispatch) |
 
 ## Open questions
 

@@ -42,15 +42,15 @@ One row gives one person one Contributor Role. A person's roles are the union of
 
 ### What each role gives
 
-| Role                 | Capabilities                                                                                                                                                                                                                                 |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `reader` (no grants) | Every signed-in user can submit corrections, new libraries, claims, Knowledge suggestions, Journal pitches, topic suggestions, Role Applications and Location Requests. A Library Claim adds `library_edit` and event feeds for that library |
-| `contributor`        | A displayed trust label; no extra capabilities                                                                                                                                                                                               |
-| `verified_librarian` | A displayed trust label (`isVerifiedLibrarian`); library edits come from the Library Claim itself                                                                                                                                            |
-| `wiki_editor`        | `docs.directEdit`: Knowledge edits publish on approval, in the grant's locale (or every locale)                                                                                                                                              |
-| `journal_editor`     | `journal.directEdit`: Journal edits publish on approval, in the grant's locale (or every locale)                                                                                                                                             |
-| `moderator`          | `moderate.queue`: reviews Submissions in the grant's queue and locale at `/contribute/moderation`. Nothing else                                                                                                                              |
-| `editorial_board`    | Both editor roles in every locale, moderates every queue and locale, and alone decides option suggestions                                                                                                                                    |
+| Role                 | Capabilities                                                                                                                                                                                                              |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `reader` (no grants) | Every signed-in user can submit corrections, new libraries, claims, Knowledge suggestions, Journal pitches, topic suggestions and Role Applications. A Library Claim adds `library_edit` and event feeds for that library |
+| `contributor`        | A displayed trust label; no extra capabilities                                                                                                                                                                            |
+| `verified_librarian` | A displayed trust label (`isVerifiedLibrarian`); library edits come from the Library Claim itself                                                                                                                         |
+| `wiki_editor`        | `docs.directEdit`: Knowledge edits publish on approval, in the grant's locale (or every locale)                                                                                                                           |
+| `journal_editor`     | `journal.directEdit`: Journal edits publish on approval, in the grant's locale (or every locale)                                                                                                                          |
+| `moderator`          | `moderate.queue`: reviews Submissions in the grant's queue and locale at `/contribute/moderation`. Nothing else                                                                                                           |
+| `editorial_board`    | Both editor roles in every locale, moderates every queue and locale, and alone decides option suggestions                                                                                                                 |
 
 `wiki_editor`, `journal_editor`, `moderator` and `editorial_board` also get Curator contribution quotas (`contributionLimits`).
 

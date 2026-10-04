@@ -1,91 +1,97 @@
-# libraries.global — Open TODOs & Unfinished Work
+# libraries.global — Open TODOs
 
-_Last audited: 2026-09-28_
+_Last audited: 2026-10-03_
 
-The v2 light/accessible UI rework is **done** across all routes (homepage, find-a-library `/libraries`, library detail, atlas pages, profile, journal, knowledge, events, auth, contribute, settings, map). Strapi is on 5.55.1. The monorepo typechecks with zero errors.
+Built and on `dev`: the v2 light UI on every route; the access model (Role Grants, capabilities, entitlements, Pro from grants, verification and earned Archivist); the Index and Knowledge editors; structured corrections; community moderation on the site with Role Applications and Location Requests; Change Records and the library Changes section; locale-aware submissions and record translations; the Strapi security review fixes; and the first scale work (keyset slug paging, SQL location counts, a split sitemap). CLAUDE.md describes how it all works.
 
-**Phases done:** P-A security hardening (A1–A13), P-B access model and session (`@repo/access`, session capabilities and entitlements, the Strapi `submission-policy`, the 60 s bridge cache, the role-matrix E2E) and P-D0 Pro without payments (admin grants, verifications and earned Pro; `/pro`; Atlas export). What remains:
-
----
-
-## HIGH — Blocks or degrades launch (target: 15 Oct 2026)
-
-### 1. LibraryOn full ingest (~3,800 UK records)
-
-The source dies when the British Library shuts libraryOn down on 15 Oct. Dry run done (`ingest-dry-log.json`); the full resumable run has not completed. See `docs/pre-golive-checklist.md` §2a. **Run this before anything else.**
-
-### 2. MeiliSearch — secondary indexes + post-ingest scaling
-
-- Local instance is `librariesglobal-meilisearch` on **:7701** (the :7700 container belongs to a different project). `library` index seeded via `apps/strapi/scripts/seed-meilisearch.mjs`.
-- `blog-article` and `wiki-article` indexes not yet seeded on the new instance (blog/wiki search returns errors until then).
-- After the UK ingest (>1,000 records), `/libraries`' client-side "Open now" / "Has digital collections" / "Most complete first" computations hit MeiliSearch's fetch ceiling — index a completeness score and a filterable open-now-friendly schedule encoding, then move those to real facets.
-
-### 3. CMS content tasks (Strapi admin)
-
-- ~~Populate homepage `featuredLibraries`~~ — done (populated in the local CMS)
-- ~~Add Wiki/knowledge-base link to a footer section~~ — done ("Knowledge" under Contribute; "Plans & Pro" added under Explore on 2026-09-28)
-- ~~Optionally set homepage heroTitle to the POC copy~~ — resolved: heroTitle is set to its own copy; code still falls back to the POC line if emptied
-
-### 4. Production deploy
-
-Vercel (UI) + Strapi Cloud (backend) + production MeiliSearch. Full list: `docs/pre-golive-checklist.md` §4–6 (env rotation, OAuth callbacks, sitemap/robots checks).
+This file lists what's left. Deploy, environment, legal and licensing steps live in `docs/pre-golive-checklist.md`, which isn't repeated here.
 
 ---
 
-## MEDIUM — Post-POC functional gaps
+## Launch blockers (go-live 15 Oct 2026)
 
-### 5. ~~Revision history on library pages~~ — done
-
-The content-moderation plugin serves `GET /libraries/:documentId/revisions`, and the library page's Sources section lists "Recent changes". P-A (A10) keeps rejected submissions and private or limited profiles out of public history.
-
-### 6. ~~Profile privacy toggles~~ — done
-
-`user-profile.publicPrefs` (location, verified affiliation, activity graph, libraries followed) is live, with the owner-only "Manage what's public" fieldset on the profile. Strapi enforces it (`applyPublicPrefs`, `isActivityPublic`). On top of `profileVisibility`, a `limited` profile hides activity and badges from anyone who doesn't share a library with the owner (P-A A10 and P-B, decision I8).
-
-### 7. Schema nice-to-haves from the POC
-
-Done: `nearestStation` and `wikidataId` (schema and library page). Still open: a steward-user relation on Library (record status is hardcoded "Community maintained"), and a "contributed to" relation for the profile Libraries tab.
-
-### 8. Real-browser WebGL check
-
-Headless screenshots can't verify: map Voyager tiles + indigo pins, drill-down shelf, homepage/atlas globe canvases (dark-disc treatment on light bg — consider a lighter globe variant).
+1. **LibraryOn full ingest (~3,800 UK records).** Not run yet. Local Strapi has 107 published libraries. The last attempt (26 Sept) stopped after about 100 records, with 19 `fetch failed`/`terminated` errors (`.scratch/libraryon-import/log.json`). The source goes away when the British Library shuts LibraryOn down on 15 Oct, so **run this first**: `libraryon-ingest.ts --resume`, then publish the drafts (checklist §2a–2b). Use a token whose name starts with `ingest` or `import`, so Change Records log the writes as `source: import`.
+2. **World countries import.** Do a dry run, then the real run of `populate-world-countries.ts` (checklist §1e). In the dry run, check that France's `mapConfig` doesn't span its overseas territories. On the real run, check that `PUT ?status=published` actually publishes.
+3. **Reindex Meilisearch** after 1 and 2 (checklist §3a).
+4. **Production deploy:** Vercel, Strapi Cloud and production Meilisearch (checklist §4–6). The Strapi review's operator steps aren't in the checklist yet:
+   - grant the events admin permissions (`manage-credentials`, `review`) to moderator admin roles
+   - re-save each provider credential once, because the blobs are now bound to the credential id
+   - set `REVALIDATE_SECRET`, `IMAGE_REMOTE_HOSTS` and `TRUST_PROXY`, and add the Strapi → `/api/revalidate` webhook
+   - scope the public Meilisearch key to `search` on `library`, `blog-article`, `wiki-article` and `event`
+5. **Legal and licensing before publication** (checklist §7): get LibraryOn's licence in writing, replace the GADM boundaries, pay the ICO fee, and publish the legal documents as v1.0.
 
 ---
 
-## Deferred to P-C (from the P-B review)
+## Verification owed on the moderation and audit work
 
-- `topContributors` slices before it filters out hidden profiles; also the owner's own history path (M7)
-- `/api/upload`: a Strapi-side gate and the `uploadsPerDay` quota (M11)
-- A library-scoped `hasCapability`, and a `{ user } | { response }` route helper (M12)
-- I6: the wiki editor still sends a numeric `submissionId`
-- The event-feed page checks `isVerifiedLibrarian` instead of the `events.feed` capability
-- The access E2E leaves one reader draft per run
-- The fixture writer should fall back to `PGHOST` before `localhost` when the host is empty
-- `--project=access` detection is case-sensitive
+Tasks 13–17 of `docs/superpowers/plans/2026-09-30-community-moderation-and-audit.md` and the final-review fixes (`41b5883`, `5c8758b`) were committed on 3 Oct without running tests, and the fixes weren't re-reviewed.
 
----
+- [ ] `pnpm --filter @repo/strapi build:plugins && pnpm --filter @repo/strapi build`, then the Strapi and UI unit tests, typecheck, lint and `next build`
+- [ ] The Playwright access project (`cd qa/tests/playwright && pnpm seed:access && npx playwright test --project=access`). The moderation, Role Application and Location Request specs have never run, and their selectors were guessed.
+- [ ] Live: a `new_library` approved with **Approve and publish**; `/history` and `/history/stats` on Postgres; a Pro fixture getting previous → next values from `/api/libraries/<id>/history`
+- [ ] Browser: the `LocationHierarchySelector` preset ids and its `router.replace` refresh after a Location Request
+- [ ] Add the new fixtures (`moderator-global`, `moderator-knowledge-fr`, `journal-editor-fr`, `applicant`) to `TEST-USERS.local.md`
 
-## LOW — Polish / cleanup
+## Manual checks owed from earlier phases
 
-- Blog card components still use the `--font-fraunces` alias (maps to Newsreader) — remove alias with their next restyle
-- Wiki + contribute retain dense mono-uppercase micro-labels — optional typography polish toward POC restraint
-- `/profile/[username]/contributions` sub-page micro-labels — same
-- Old Collections stub route reachable by URL only (`/profile/[username]/collections`)
-- Deprecated `auroraCta*` constants in `lib/styles.ts` still used by 3 contribute wizard components — replace with indigo pills, then delete constants
-- `strapi-plugin-meilisearch` lifecycle hooks vs seed script: confirm hooks index on publish against :7701 (plugin store may need re-enabling in admin)
+- [ ] P-A: Super Admin has the content-moderation "Update submission status" and rewards award permissions, and an Author gets 403
+- [ ] P-A: two-browser session revoke; Next preview-mode draft render; create an upload-only Strapi token and untick upload on the read-only token
+- [ ] P-D0: the whole-branch review (stopped on 28 Sept and never re-run)
+- [ ] P-D0: one large Atlas export on a Vercel preview (4.5 MB response limit)
+- [ ] Real-browser WebGL: map tiles and pins, the drill-down shelf, the globe canvases (consider a lighter globe on the paper background)
 
 ---
 
-## Feature backlog (unchanged priorities)
+## Decisions waiting on the owner
 
-| Feature                          | Status                                                                     |
-| -------------------------------- | -------------------------------------------------------------------------- |
-| Events (sync-worker + UI)        | Sync-worker phase 1 done, typechecks; not launched                         |
-| Collections content type         | Not started                                                                |
-| IIIF viewer on library detail    | Not started (external links shipped)                                       |
-| 2FA (Better Auth twoFactor)      | Not started                                                                |
-| i18n expansion (FR, ES, AR, JA)  | Not started                                                                |
-| Notification email delivery      | Prefs saved, no delivery mechanism                                         |
-| Visit log / annotations          | Not started                                                                |
-| Pro checkout (Stripe, P-D1)      | Not started; Pro comes only from grants, verification and earned Archivist |
-| Self-serve Pro verification (C5) | Not started; staff create `pro-verification` rows by hand                  |
+- Submission, point-event and badge-award are hidden from the Content Manager, which blocks the local MCP tools for those types. Keep them hidden?
+- `daily_streak` awards +1 a day; the leaderboard's `rankChange` is weekly only; `/api/health` is exempt from staging Basic Auth. Keep all three?
+- Auth plan (`docs/superpowers/plans/2026-09-28-wp1-auth-login.md`): only Tasks 1–2 are committed. It needs a yes or no on GitHub OAuth (Task 6) before the rest can run.
+- Prices in `lib/plans.ts` are placeholders until confirmed.
+- Code licence (MIT or AGPL, D-O1) and data licence (D-P6): checklist §7.
+
+---
+
+## Product gaps
+
+- **Needs-changes thread (P-C, C-M1/C-M2):** contributors see the moderator's note but can't reply or edit and resubmit.
+- **Free-text corrections** still only award points. Nothing applies them.
+- **Atlas at scale:** `GET /libraries/atlas` downloads every library, and location maps stop at 500 pins. Both are replaced by `docs/superpowers/plans/2026-09-30-atlas-vector-tiles.md` (not started).
+- **Search facets:** `/libraries` works out "Open now", "Has digital collections" and "Most complete first" in the browser, which hits Meilisearch's fetch ceiling after the ingest. Index a completeness score and an open-now encoding, and make them real facets.
+- **History for free viewers:** backfilled batches have no values, but free viewers still see the Pro upgrade line on them. Strapi needs to send a `valuesRecorded` flag.
+- **Index editor fields with nowhere to go:** `officialName`, `collectionSize`, `collectionTypes`, `specialCollections`, `architecturalStyle`, `imageCredit` and `imageNote` reach the reviewer but aren't applied, because the library schema has no field for them.
+- **Schema:** add a steward relation on Library (record status is hard-coded "Community maintained") and a "contributed to" relation for the profile Libraries tab.
+- **Notification emails:** only the moderation emails are sent (decisions, new Role Applications and Location Requests). Weekly digest, new followers and editorial messages are saved preferences with nothing to deliver them.
+- Free-text article tags don't create topic suggestions.
+
+## Smaller follow-ups
+
+- `wiki-article` `topContributors` fetches every approved `wiki_edit` for the month, counts them in JS (against the Scale target) and cuts to 10 before it drops hidden profiles (M7).
+- `contribute/events/page.tsx` checks `isVerifiedLibrarian` when it should check the `events.feed` capability.
+- `fromSessionCapabilities` and `useCapabilities` don't validate scope entries. Harden them before anything relies on the cookie.
+- The moderation review page loads external photo hosts in the moderator's browser, and `ClaimPanel` uses raw colours with no warn token.
+- `MAILGUN_*` and `MAILTRAP_*` aren't declared in `turbo.json`.
+- Playwright: the fixture writer should fall back to `PGHOST` before `localhost`, and the `--project=access` check is case-sensitive.
+- CLAUDE.md is stale in two places: the Auth section's `strapiJWT` text, and Events listed as "not yet built".
+- Local dev clean-up: remove the `claude-review@example.test` super admin, and give the read-only API token `find` on Topic if article topics should appear.
+
+## Polish
+
+- Delete the unused `--font-fraunces` alias in `styles/globals.css`.
+- Retire the old Collections stub route (`/profile/[username]/collections`).
+- Dense mono-uppercase micro-labels remain in the Knowledge, Contribute and profile contributions pages.
+
+---
+
+## Feature backlog
+
+| Feature                          | Status                                                                             |
+| -------------------------------- | ---------------------------------------------------------------------------------- |
+| Events (plugin + sync-worker)    | Built, not launched                                                                |
+| Collections content type         | Not started                                                                        |
+| IIIF viewer on library detail    | Not started (external links shipped)                                               |
+| 2FA (Better Auth twoFactor)      | Not started                                                                        |
+| More locales (FR, ES, AR, JA)    | Plumbing built (§6 in CLAUDE.md); `LIVE_LOCALES` stays `[en]` until content exists |
+| Visit log / annotations          | Not started                                                                        |
+| Pro checkout (Stripe, P-D1)      | Not started; Pro comes only from grants, verification and earned Archivist         |
+| Self-serve Pro verification (C5) | Not started; staff create `pro-verification` rows by hand                          |

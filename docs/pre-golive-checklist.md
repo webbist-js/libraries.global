@@ -157,7 +157,7 @@ A failure appears as `[role-grants] Contributor role migration failed` or `[cont
 - `CHANGE_RECORDS_ENABLED` unset or `true`: `false` stops the audit trail and is for emergencies only
 - `NEXT_PUBLIC_MEILISEARCH_*` pointing to production Meilisearch instance
 - Strapi `APP_KEYS`, `JWT_SECRET`, `ADMIN_JWT_SECRET`, `API_TOKEN_SALT` all rotated
-- `MAILGUN_SMTP_USER` / `MAILGUN_SMTP_PASS` set (and `MAILGUN_SMTP_HOST=smtp.eu.mailgun.org` for an EU-region domain). Production refuses to send sign-in links without them.
+- `MAILGUN_SMTP_USER` / `MAILGUN_SMTP_PASS` set (and `MAILGUN_SMTP_HOST=smtp.eu.mailgun.org` for an EU-region domain). Production refuses to send sign-in links without them. Domain, DNS and the sign-up email test run: `docs/email-setup.md`.
 - `CRON_SECRET` set in Vercel so the daily `/api/cron/retention` job (see `apps/ui/vercel.json`) can run. The privacy notice promises expired sessions and 30-day-old rate-limit rows are deleted.
 - The `legal@libraries.global` mailbox exists and is monitored (the legal pages, complaints and data-protection requests all point to it).
 
