@@ -108,14 +108,6 @@
         }
       }
     },
-    "boundaryUrl": {
-      "type": "string",
-      "pluginOptions": {
-        "i18n": {
-          "localized": false
-        }
-      }
-    },
     "mapConfig": {
       "type": "component",
       "component": "shared.map-config",

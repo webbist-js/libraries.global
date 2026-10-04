@@ -60,7 +60,6 @@ export interface RegionCreateData {
   name: string
   slug?: string
   typeLabel?: string
-  boundaryUrl?: string
   continent?: { connect: { documentId: string }[] }
   country?: { connect: { documentId: string }[] }
 }
@@ -663,7 +662,7 @@ export class StrapiClient {
 
   async updateCountry(
     documentId: string,
-    data: Partial<CountryCreateData> & { boundaryUrl?: string }
+    data: Partial<CountryCreateData>
   ): Promise<void> {
     await this.put(`/countries/${documentId}`, { data })
   }

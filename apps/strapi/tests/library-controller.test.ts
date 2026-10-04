@@ -54,47 +54,6 @@ function build(rows: Record<string, unknown>[]) {
   return { ...faked, controller, findManyParams }
 }
 
-describe("library.mapPins (E2)", () => {
-  it("reads with a flat limit and a stable sort, never `pagination`", async () => {
-    const { controller, findManyParams } = build([library(1), library(2)])
-    const c = ctx({ regionSlug: "england" })
-    await controller.mapPins(c)
-
-    const [params] = findManyParams()
-    expect(params.pagination).toBeUndefined()
-    expect(params.limit).toBe(500)
-    expect(params.sort).toEqual(["id:asc"])
-    expect(c.body.meta).toEqual({ total: 2, truncated: false })
-  })
-
-  it("flags the payload as truncated when the cap is hit", async () => {
-    const rows = Array.from({ length: 500 }, (_, i) => library(i + 1))
-    const { controller } = build(rows)
-    const c = ctx({})
-    await controller.mapPins(c)
-
-    expect(c.body.data).toHaveLength(500)
-    expect(c.body.meta.truncated).toBe(true)
-  })
-
-  it.each([
-    ["libraryTypes", ["Public", "National"]],
-    ["operationalStatuses", ["open", "closed"]],
-    ["areaSlug", ["a", "b"]],
-    ["regionSlug", { $ne: "x" }],
-    ["countrySlug", ["a"]],
-    ["continentSlug", ["a"]],
-    ["locale", ["en", "fr"]],
-  ])("returns 400 when %s is not a string", async (key, value) => {
-    const { controller, strapi } = build([library(1)])
-    const c = ctx({ [key]: value })
-    await controller.mapPins(c)
-
-    expect(c.status).toBe(400)
-    expect(strapi.documents).not.toHaveBeenCalled()
-  })
-})
-
 describe("library.atlas (E2, E3)", () => {
   beforeEach(() => invalidateAtlasCache())
   afterEach(() => invalidateAtlasCache())

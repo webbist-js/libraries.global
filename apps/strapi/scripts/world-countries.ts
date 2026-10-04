@@ -1,5 +1,5 @@
 /**
- * Pure mapping from the boundary seed (apps/ui/public/boundaries/seed-data.json)
+ * Pure mapping from the boundary seed (scripts/ingests/gazetteer/data/seed-data.json)
  * to Strapi Country rows. No I/O: populate-world-countries.ts does the writes.
  *
  * The seed's `continents/<name>` keys hold one array of countries per
@@ -27,7 +27,6 @@ export type SeedCountry = {
   bboxSouth: number
   bboxEast: number
   bboxWest: number
-  boundaryUrl: string
   sourceAttribution: string
 }
 

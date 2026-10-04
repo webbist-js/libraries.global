@@ -84,8 +84,6 @@ type AtlasFeature = {
   properties: ReturnType<typeof toAtlasProperties>
 }
 
-/** Map-pin payload cap; the response says when it was hit. */
-const MAP_PINS_LIMIT = 500
 /** Atlas keyset page. */
 const ATLAS_PAGE = 1000
 
@@ -109,100 +107,9 @@ function stringQuery(
   return out
 }
 
-const MAP_PIN_PARAMS = [
-  "locale",
-  "areaSlug",
-  "regionSlug",
-  "countrySlug",
-  "continentSlug",
-  "libraryTypes",
-  "operationalStatuses",
-] as const
-
 export default factories.createCoreController(
   "api::library.library",
   ({ strapi }) => ({
-    /**
-     * GET /libraries/map-pins
-     * Returns libraries with location data for map rendering.
-     * Accepts one of: areaSlug, regionSlug, countrySlug, continentSlug
-     */
-    async mapPins(ctx) {
-      const q = stringQuery(
-        ctx.query as Record<string, unknown>,
-        MAP_PIN_PARAMS
-      )
-      if (!q) return ctx.badRequest("Query parameters must be single strings")
-      const locale = q.locale
-      const status = readStatus(ctx)
-
-      const filters: Record<string, unknown> = {}
-      if (q.areaSlug) {
-        filters.area = { slug: { $eq: q.areaSlug } }
-      } else if (q.regionSlug) {
-        filters.region = { slug: { $eq: q.regionSlug } }
-      } else if (q.countrySlug) {
-        filters.country = { slug: { $eq: q.countrySlug } }
-      } else if (q.continentSlug) {
-        filters.continent = { slug: { $eq: q.continentSlug } }
-      }
-
-      // Optional type / status filters (comma-separated values)
-      if (q.libraryTypes) {
-        const types = q.libraryTypes.split(",").filter(Boolean)
-        if (types.length > 0) filters.libraryType = { $in: types }
-      }
-      if (q.operationalStatuses) {
-        const statuses = q.operationalStatuses.split(",").filter(Boolean)
-        if (statuses.length > 0) filters.operationalStatus = { $in: statuses }
-      }
-
-      const results = await strapi.documents("api::library.library").findMany({
-        filters: filters as never,
-        fields: [
-          "name",
-          "slug",
-          "libraryType",
-          "operationalStatus",
-          "city",
-          "location",
-          "summary",
-        ],
-        populate: {
-          continent: { fields: ["slug"] },
-          country: { fields: ["slug"] },
-          region: { fields: ["slug"] },
-          heroImage: { fields: ["url"] },
-        } as never,
-        locale,
-        status,
-        sort: ["id:asc"] as never,
-        limit: MAP_PINS_LIMIT,
-      })
-
-      // Only return entries that have valid { lat, lng } location data
-      const pins = results.filter((lib: unknown) => {
-        const l = lib as { location?: unknown }
-        if (
-          !l.location ||
-          typeof l.location !== "object" ||
-          Array.isArray(l.location)
-        )
-          return false
-        const { lat, lng } = l.location as { lat?: unknown; lng?: unknown }
-
-        return typeof lat === "number" && typeof lng === "number"
-      })
-
-      ctx.body = {
-        data: pins,
-        meta: {
-          total: pins.length,
-          truncated: results.length >= MAP_PINS_LIMIT,
-        },
-      }
-    },
-
     /**
      * GET /libraries/atlas
      * Every published library as a compact GeoJSON FeatureCollection for the
@@ -314,22 +221,20 @@ export default factories.createCoreController(
         )
       const status = readStatus(ctx)
 
-      const results = (await strapi
-        .documents("api::library.library")
-        .findMany({
-          ...(after > 0 ? { filters: { id: { $gt: after } } as never } : {}),
-          fields: ["slug", "locale", "updatedAt"],
-          populate: {
-            continent: { fields: ["slug"] },
-            country: { fields: ["slug"] },
-            region: { fields: ["slug"] },
-          } as never,
-          locale: q.locale,
-          status,
-          sort: "id:asc" as never,
-          start,
-          limit,
-        })) as unknown as { id?: number }[]
+      const results = (await strapi.documents("api::library.library").findMany({
+        ...(after > 0 ? { filters: { id: { $gt: after } } as never } : {}),
+        fields: ["slug", "locale", "updatedAt"],
+        populate: {
+          continent: { fields: ["slug"] },
+          country: { fields: ["slug"] },
+          region: { fields: ["slug"] },
+        } as never,
+        locale: q.locale,
+        status,
+        sort: "id:asc" as never,
+        start,
+        limit,
+      })) as unknown as { id?: number }[]
       const last = results.at(-1)?.id
       const next =
         results.length === limit && typeof last === "number" ? last : null

@@ -16,13 +16,5 @@ export default {
         auth: false,
       },
     },
-    {
-      method: "GET",
-      path: "/countries/map-pins",
-      handler: "country.mapPins",
-      config: {
-        auth: false,
-      },
-    },
   ],
 }

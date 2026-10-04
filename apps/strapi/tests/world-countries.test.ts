@@ -15,7 +15,7 @@ import {
 
 const SEED_PATH = path.resolve(
   __dirname,
-  "../../ui/public/boundaries/seed-data.json"
+  "../scripts/ingests/gazetteer/data/seed-data.json"
 )
 const seed = JSON.parse(fs.readFileSync(SEED_PATH, "utf8")) as Record<
   string,
@@ -32,7 +32,6 @@ const sample: SeedCountry = {
   bboxSouth: 51.445705,
   bboxEast: -5.99352,
   bboxWest: -10.478179,
-  boundaryUrl: "/boundaries/continents/europe.geojson",
   sourceAttribution:
     "Natural Earth public domain map data. https://www.naturalearthdata.com/",
 }
@@ -253,5 +252,18 @@ describe("mapConfigFor", () => {
     expect(small).toBeGreaterThan(large)
     expect(large).toBeGreaterThanOrEqual(2)
     expect(small).toBeLessThanOrEqual(10)
+  })
+})
+
+describe("the seed file on disk", () => {
+  it("reads the seed from the gazetteer data folder, with no boundary URLs", () => {
+    const file = path.resolve(
+      __dirname,
+      "../scripts/ingests/gazetteer/data/seed-data.json"
+    )
+    const raw = fs.readFileSync(file, "utf8")
+    expect(raw).not.toContain("boundaryUrl")
+    const rows = countriesFromSeed(JSON.parse(raw) as Record<string, unknown>)
+    expect(rows.length).toBeGreaterThan(200)
   })
 })

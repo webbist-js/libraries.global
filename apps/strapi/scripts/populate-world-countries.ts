@@ -2,11 +2,11 @@
  * Publish every country in the world before go-live, so contributors never
  * meet an empty country picker.
  *
- * Reads apps/ui/public/boundaries/seed-data.json (the `continents/*` lists,
+ * Reads scripts/ingests/gazetteer/data/seed-data.json (the `continents/*` lists,
  * 247 features; mapping in ./world-countries.ts). Features with no valid
  * ISO 3166-1 alpha-2 code are skipped and listed. For each other country:
  *   - matches an existing Country by iso2, then by slug;
- *   - existing: fills only empty `iso2`, `mapConfig`, `boundaryUrl`,
+ *   - existing: fills only empty `iso2`, `mapConfig`,
  *     `sourceAttribution` and `continent`, never overwriting a value;
  *   - missing: creates it published with `name`, `slug` and those fields.
  * It also makes sure the `north-america` and `south-america` continents exist
@@ -24,7 +24,7 @@
  *     apps/strapi/node_modules/.bin/tsx apps/strapi/scripts/populate-world-countries.ts --dry-run
  *
  * --dry-run reads Strapi and prints the plan without writing anything.
- * Afterwards, reindex Meilisearch (node apps/strapi/scripts/seed-meilisearch.mjs).
+ * Afterwards, reindex Meilisearch (pnpm --filter @repo/strapi seed:meilisearch).
  */
 
 import * as fs from "node:fs"
@@ -45,7 +45,7 @@ import {
 
 const SEED_PATH = path.resolve(
   __dirname,
-  "../../ui/public/boundaries/seed-data.json"
+  "ingests/gazetteer/data/seed-data.json"
 )
 const DRY_RUN = process.argv.includes("--dry-run")
 
@@ -64,7 +64,6 @@ interface StrapiCountry extends StrapiEntity {
   name: string
   slug: string
   iso2?: string | null
-  boundaryUrl?: string | null
   sourceAttribution?: string | null
   mapConfig?: Record<string, unknown> | null
   continent?: { documentId: string } | null
@@ -171,7 +170,6 @@ function fillFor(
   const iso2 = iso2For(seed)
   if (isEmpty(row.iso2) && iso2 && !iso2Taken.has(iso2)) data.iso2 = iso2
   if (!row.mapConfig) data.mapConfig = mapConfigFor(seed)
-  if (isEmpty(row.boundaryUrl)) data.boundaryUrl = seed.boundaryUrl
   if (isEmpty(row.sourceAttribution))
     data.sourceAttribution = seed.sourceAttribution
   if (!row.continent?.documentId && continentId)
@@ -192,7 +190,6 @@ function createFor(
     slug: seed.slug,
     ...(iso2 && !iso2Taken.has(iso2) ? { iso2 } : {}),
     mapConfig: mapConfigFor(seed),
-    boundaryUrl: seed.boundaryUrl,
     sourceAttribution: seed.sourceAttribution,
     ...(continentId
       ? { continent: { connect: [{ documentId: continentId }] } }

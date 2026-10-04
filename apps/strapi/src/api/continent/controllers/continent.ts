@@ -152,51 +152,6 @@ export default factories.createCoreController(
       }
     },
 
-    // ── /continents/map-pins ─────────────────────────────────────────────────
-    // Returns all continents with boundary URL + bounding box for the world map
-    async mapPins(ctx) {
-      const locale =
-        typeof ctx.query.locale === "string" ? ctx.query.locale : undefined
-      const status = readStatus(ctx)
-
-      const results = await strapi
-        .documents("api::continent.continent")
-        .findMany({
-          fields: ["name", "slug", "boundaryUrl"],
-          populate: { mapConfig: MAP_CONFIG_POPULATE } as never,
-          locale,
-          status,
-        })
-
-      const pins = results.map((c: unknown) => {
-        const cont = c as {
-          documentId: string
-          name: string
-          slug: string
-          boundaryUrl?: string | null
-          mapConfig?: {
-            centerLat?: number | null
-            centerLng?: number | null
-            boundingBoxNE?: string | null
-            boundingBoxSW?: string | null
-          } | null
-        }
-
-        return {
-          documentId: cont.documentId,
-          name: cont.name,
-          slug: cont.slug,
-          lat: cont.mapConfig?.centerLat ?? null,
-          lng: cont.mapConfig?.centerLng ?? null,
-          boundingBoxNE: cont.mapConfig?.boundingBoxNE ?? null,
-          boundingBoxSW: cont.mapConfig?.boundingBoxSW ?? null,
-          boundaryUrl: cont.boundaryUrl ?? null,
-        }
-      })
-
-      ctx.body = { data: pins, meta: { total: pins.length } }
-    },
-
     // ── /continents/slugs ────────────────────────────────────────────────────
     // Returns slug + locale pairs for all published continents — used by
     // generateStaticParams on the continent page.

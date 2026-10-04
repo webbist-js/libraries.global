@@ -647,12 +647,6 @@ export interface ApiAreaArea extends Struct.CollectionTypeSchema {
     }
   }
   attributes: {
-    boundaryUrl: Schema.Attribute.String &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: false
-        }
-      }>
     country: Schema.Attribute.Relation<"manyToOne", "api::country.country"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1171,12 +1165,6 @@ export interface ApiContinentContinent extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true
-        }
-      }>
-    boundaryUrl: Schema.Attribute.String &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: false
         }
       }>
     code: Schema.Attribute.String &
@@ -2638,12 +2626,6 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
   }
   attributes: {
     areas: Schema.Attribute.Relation<"oneToMany", "api::area.area"> &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: false
-        }
-      }>
-    boundaryUrl: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
