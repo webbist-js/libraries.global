@@ -49,7 +49,8 @@ export function summaryOf(sub: SummarySource): string {
           ]
         : []
 
-      const languages = locales.length > 0 ? locales.join(", ") : "all languages"
+      const languages =
+        locales.length > 0 ? locales.join(", ") : "all languages"
       if (f.role === "moderator") {
         const queue =
           f.queue === "index"
@@ -64,15 +65,6 @@ export function summaryOf(sub: SummarySource): string {
       }
 
       return `${role} application (${languages})`
-    }
-    case "location_request": {
-      const edit =
-        d.moderatorEdit && typeof d.moderatorEdit === "object"
-          ? (d.moderatorEdit as Record<string, unknown>)
-          : {}
-      const name = str(edit.name) ?? str(f.name) ?? "unnamed"
-
-      return `New ${f.kind === "area" ? "area" : "region"}: ${name}`
     }
 
     default:

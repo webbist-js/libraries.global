@@ -18,7 +18,6 @@ const TYPE_LABELS: Record<string, string> = {
   blog_submission: "Journal submission",
   topic_suggestion: "topic suggestion",
   role_application: "role application",
-  location_request: "location request",
 }
 
 const ROLE_LABELS: Record<string, string> = {

@@ -36,10 +36,7 @@ import {
 } from "../utils/locales"
 import {
   isDocumentId,
-  isLocationRequestKind,
   isNewArticleDraft,
-  type LocationEdit,
-  locationEditOf,
   roleApplicationFields,
   validateRoleApplicationFields,
 } from "../utils/params"
@@ -47,8 +44,6 @@ import { payloadHash } from "../utils/payload-hash"
 import {
   ApplyRefusedError,
   type ApplyRefusedReason,
-  applyToPublished,
-  loadPublishedTarget,
 } from "../utils/publish-guard"
 import {
   preloadRecordReviews,
@@ -93,7 +88,7 @@ const REFUSED_MARKERS: Record<ApplyRefusedReason, string> = {
   no_hierarchy: NO_HIERARCHY_MARKER,
 }
 
-/** The places a `new_library` (or `location_request`) is filed under. */
+/** The places a `new_library` is filed under. */
 export const HIERARCHY_KEYS = [
   "continent",
   "country",
@@ -111,10 +106,7 @@ export const HIERARCHY_UIDS: Record<HierarchyKey, string> = {
 }
 
 /** Submission types a Moderator may set the hierarchy of before approval. */
-export const TARGETABLE_TYPES: ReadonlySet<string> = new Set([
-  "new_library",
-  "location_request",
-])
+export const TARGETABLE_TYPES: ReadonlySet<string> = new Set(["new_library"])
 
 /** The documentIds `src` holds under `${place}${suffix}`; anything else dropped. */
 function pickPlaces(src: Record<string, unknown>, suffix: string) {
@@ -135,8 +127,8 @@ const asObject = (v: unknown): Record<string, unknown> =>
 /**
  * `draftData` keys only a Moderator writes, through `setModeratorTarget`.
  * A contributor's draftData never carries them: `create`, `saveDraft` and
- * `finalizeDraft` drop them, so a submitter can't file their own library or
- * rename their own Location Request on approval.
+ * `finalizeDraft` drop them, so a submitter can't file their own library on
+ * approval.
  */
 const MODERATOR_KEYS: readonly string[] = ["moderatorTarget", "moderatorEdit"]
 
@@ -171,270 +163,6 @@ export function libraryHierarchy(submission: {
   if (Object.keys(target).length > 0) return target
 
   return pickPlaces(asObject(submission.fields), "DocumentId")
-}
-
-/**
- * `libraryHierarchy`, plus the submitter's own Location Request: when no
- * Moderator target is set and `fields.locationRequestDocumentId` names an
- * approved `location_request` by the same submitter, the region (or area)
- * it created is used. A new region replaces the area too: an area picked
- * before the region existed can't belong to it.
- */
-export async function newLibraryHierarchy(
-  strapi: any,
-  submission: {
-    fields?: unknown
-    draftData?: unknown
-    submittedByUserId?: unknown
-  }
-): Promise<ModeratorTarget> {
-  const place = libraryHierarchy(submission)
-  if (Object.keys(moderatorTargetOf(submission.draftData)).length > 0)
-    return place
-  const requestId = asObject(submission.fields).locationRequestDocumentId
-  if (!isDocumentId(requestId)) return place
-  const request = await strapi.documents(SUBMISSION_UID).findOne({
-    documentId: requestId,
-    fields: [
-      "documentId",
-      "submissionType",
-      "status",
-      "submittedByUserId",
-      "resultDocumentId",
-      "fields",
-    ],
-  })
-  if (
-    !request ||
-    request.submissionType !== "location_request" ||
-    request.status !== "approved" ||
-    request.submittedByUserId !== submission.submittedByUserId ||
-    !isDocumentId(request.resultDocumentId)
-  )
-    return place
-  const kind = asObject(request.fields).kind
-  if (kind === "region") {
-    const { area: _area, ...rest } = place
-
-    return { ...rest, region: request.resultDocumentId }
-  }
-  if (kind === "area") return { ...place, area: request.resultDocumentId }
-
-  return place
-}
-
-/** The content types a Location Request creates. */
-const LOCATION_UIDS = {
-  region: "api::region.region",
-  area: "api::area.area",
-} as const
-
-/**
- * A slug for the new place: the slugified name, then `-2`, `-3`… until no
- * other record of the type holds it. Strapi validates a published `uid` as
- * unique across the whole type (and region pages resolve by slug alone), so
- * this is wider than "unique within the parent", which it implies.
- */
-async function uniquePlaceSlug(
-  strapi: any,
-  uid: string,
-  base: string
-): Promise<string> {
-  for (let from = 1; from < 1000; from += 50) {
-    const candidates = Array.from({ length: 50 }, (_, i) =>
-      from + i === 1 ? base : `${base}-${from + i}`
-    )
-    const rows = (await strapi.documents(uid).findMany({
-      filters: { slug: { $in: candidates } },
-      fields: ["slug"],
-      sort: "id:asc",
-      limit: candidates.length,
-    })) as { slug?: string }[]
-    const taken = new Set(rows.map((r) => r.slug))
-    const free = candidates.find((c) => !taken.has(c))
-    if (free) return free
-  }
-
-  return `${base}-${Date.now()}`
-}
-
-/**
- * Applies an approved Location Request: creates the Region (under the
- * country, with the country's continent) or the Area (under the region and
- * its country), published, named as the Moderator edited it
- * (`draftData.moderatorEdit`) or as requested. The parents are the
- * Moderator's `moderatorTarget` when set, else the request's. Returns the
- * new documentId; throws (rolling the approval back) when a parent is gone.
- */
-async function applyLocationRequest(
-  strapi: any,
-  submission: any
-): Promise<string> {
-  const f = asObject(submission.fields)
-  const kind = f.kind
-  if (!isLocationRequestKind(kind))
-    throw new Error(
-      `location_request ${submission.documentId} asks for no region or area`
-    )
-  const edit = locationEditOf(submission.draftData)
-  const name = (edit.name ?? (typeof f.name === "string" ? f.name : "")).trim()
-  if (!name)
-    throw new Error(`location_request ${submission.documentId} has no name`)
-  const typeLabel =
-    edit.typeLabel ?? (typeof f.typeLabel === "string" ? f.typeLabel : "")
-  const place = libraryHierarchy(submission)
-
-  let parents: Record<string, unknown>
-  if (kind === "region") {
-    const country = place.country
-      ? ((await strapi.documents("api::country.country").findOne({
-          documentId: place.country,
-          fields: ["documentId"],
-          populate: { continent: { fields: ["documentId"] } },
-        })) as { continent?: { documentId?: string } | null } | null)
-      : null
-    if (!country)
-      throw new Error(
-        `location_request ${submission.documentId}: the country is gone`
-      )
-    const continent = country.continent?.documentId
-    parents = {
-      country: { connect: [{ documentId: place.country }] },
-      ...(continent
-        ? { continent: { connect: [{ documentId: continent }] } }
-        : {}),
-    }
-  } else {
-    const region = place.region
-      ? ((await strapi.documents("api::region.region").findOne({
-          documentId: place.region,
-          fields: ["documentId"],
-          populate: { country: { fields: ["documentId"] } },
-        })) as { country?: { documentId?: string } | null } | null)
-      : null
-    if (!region)
-      throw new Error(
-        `location_request ${submission.documentId}: the region is gone`
-      )
-    // The region's own country wins over a mismatched pick.
-    const country = region.country?.documentId ?? place.country
-    parents = {
-      region: { connect: [{ documentId: place.region }] },
-      ...(country ? { country: { connect: [{ documentId: country }] } } : {}),
-    }
-  }
-
-  const uid = LOCATION_UIDS[kind]
-  const created = await strapi.documents(uid).create({
-    locale: await defaultLocale(strapi),
-    status: "published",
-    data: {
-      name,
-      slug: await uniquePlaceSlug(strapi, uid, librarySlug(name, kind)),
-      ...(typeLabel ? { typeLabel } : {}),
-      ...parents,
-    },
-  })
-  strapi.log.info(
-    `[content-moderation] Created ${kind} "${name}" (${created.documentId}) from approved location request ${submission.documentId}`
-  )
-
-  return created.documentId
-}
-
-/** Approved new libraries one Location Request approval links, at most. */
-const WAITING_LIBRARIES_MAX = 50
-
-/**
- * After a Location Request is approved: the submitter's approved
- * `new_library` submissions that named it (`fields.locationRequestDocumentId`)
- * and were approved first get the new place on their library, when the
- * library has none yet. A pending one needs nothing: its approval reads
- * the request then (`newLibraryHierarchy`). A library a Moderator filed
- * under a place of their own (`moderatorTarget`) is left alone, as there.
- * Runs inside the approval's transaction and change context; a published
- * library goes through the publish guard. Returns the libraries linked.
- */
-async function linkWaitingLibraries(
-  strapi: any,
-  request: any,
-  placeDocumentId: string
-): Promise<string[]> {
-  const kind = asObject(request.fields).kind
-  if (!isLocationRequestKind(kind) || !request.submittedByUserId) return []
-  const rows = (await strapi.documents(SUBMISSION_UID).findMany({
-    filters: {
-      submissionType: { $eq: "new_library" },
-      status: { $eq: "approved" },
-      submittedByUserId: { $eq: request.submittedByUserId },
-      resultDocumentId: { $notNull: true },
-    },
-    fields: ["documentId", "fields", "draftData", "resultDocumentId"],
-    sort: "id:asc",
-    limit: WAITING_LIBRARIES_MAX,
-  })) as {
-    documentId: string
-    fields?: unknown
-    draftData?: unknown
-    resultDocumentId?: string | null
-  }[]
-  const waiting = (rows ?? []).filter(
-    (r) =>
-      asObject(r.fields).locationRequestDocumentId === request.documentId &&
-      Object.keys(moderatorTargetOf(r.draftData)).length === 0 &&
-      isDocumentId(r.resultDocumentId)
-  )
-  if (waiting.length === 0) return []
-
-  const base = await defaultLocale(strapi)
-  // The parent the request was filed under (an area's region).
-  const requestedRegion = libraryHierarchy(request).region
-  const linked: string[] = []
-  for (const sub of waiting) {
-    const libraryId = sub.resultDocumentId as string
-    const library = (await strapi.documents(LIBRARY_UID).findOne({
-      documentId: libraryId,
-      locale: base,
-      status: "draft",
-      fields: ["documentId"],
-      populate: {
-        region: { fields: ["documentId"] },
-        area: { fields: ["documentId"] },
-      },
-    })) as {
-      region?: { documentId?: string } | null
-      area?: { documentId?: string } | null
-    } | null
-    if (!library) continue
-    const data: Record<string, unknown> = {}
-    if (kind === "region" && !library.region?.documentId)
-      data.region = { set: [{ documentId: placeDocumentId }] }
-    if (kind === "area" && !library.area?.documentId) {
-      data.area = { set: [{ documentId: placeDocumentId }] }
-      if (!library.region?.documentId && requestedRegion)
-        data.region = { set: [{ documentId: requestedRegion }] }
-    }
-    if (Object.keys(data).length === 0) continue
-
-    await ((await loadPublishedTarget(strapi, LIBRARY_UID, libraryId, {
-      locale: base,
-    }))
-      ? applyToPublished(strapi, LIBRARY_UID, libraryId, data, {
-          locale: base,
-        })
-      : strapi.documents(LIBRARY_UID).update({
-          documentId: libraryId,
-          locale: base,
-          status: "draft",
-          data,
-        }))
-    linked.push(libraryId)
-    strapi.log.info(
-      `[content-moderation] Filed library ${libraryId} (submission ${sub.documentId}) under the ${kind} ${placeDocumentId} from location request ${request.documentId}`
-    )
-  }
-
-  return linked
 }
 
 /** A URL slug for a name; falls back to `fallback` ("library"). */
@@ -572,7 +300,6 @@ export type SubmissionExtras = Partial<
 >
 
 const SUBMISSION_UID = "plugin::content-moderation.submission"
-const LIBRARY_UID = "api::library.library"
 const PROFILE_UID = "api::user-profile.user-profile"
 const REVIEW_EVENT_UID = "plugin::content-moderation.review-event"
 
@@ -883,7 +610,6 @@ export default ({ strapi }: { strapi: any }) => ({
       if (parsed.ok) fields.fields = parsed.value
     }
     const status = asDraft ? "draft" : "pending"
-    const requestedKind = fields.fields?.kind
     const rest = {
       ...fields,
       ...(fields.draftData === undefined
@@ -893,11 +619,6 @@ export default ({ strapi }: { strapi: any }) => ({
       // client's value is ignored.
       ...(fields.submissionType === "role_application"
         ? { targetEntityType: "user_profile" }
-        : {}),
-      // A location request targets the kind of place it asks for.
-      ...(fields.submissionType === "location_request" &&
-      isLocationRequestKind(requestedKind)
-        ? { targetEntityType: requestedKind }
         : {}),
       contentLocale: await resolveSubmissionLocale(strapi, locale, fields),
     }
@@ -1166,9 +887,8 @@ export default ({ strapi }: { strapi: any }) => ({
             }
             const connectOne = (v: unknown) =>
               isDocumentId(v) ? { connect: [{ documentId: v }] } : undefined
-            // The Moderator's target, else the submitter's ids (with the
-            // place their approved Location Request created).
-            const place = await newLibraryHierarchy(strapi, submission)
+            // The Moderator's target, else the submitter's ids.
+            const place = libraryHierarchy(submission)
             const publishLibrary = opts.publish === true
             // A published library needs a real entityRef, which needs the
             // continent, country and region. Refused before anything is
@@ -1545,27 +1265,6 @@ export default ({ strapi }: { strapi: any }) => ({
                 data: { resultDocumentId: profileDocumentId },
               })
             updated.resultDocumentId = profileDocumentId
-          }
-
-          // ── location_request approval ─────────────────────────────────────
-          // Creates the region or area, published. No points.
-          if (
-            status === "approved" &&
-            submission?.submissionType === "location_request"
-          ) {
-            const placeDocumentId = await applyLocationRequest(
-              strapi,
-              submission
-            )
-            // Libraries approved before the place existed get it now.
-            await linkWaitingLibraries(strapi, submission, placeDocumentId)
-            await strapi
-              .documents("plugin::content-moderation.submission")
-              .update({
-                documentId,
-                data: { resultDocumentId: placeDocumentId },
-              })
-            updated.resultDocumentId = placeDocumentId
           }
 
           return "ok" as const
@@ -2260,21 +1959,16 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   /**
-   * Sets (or, with no places, clears) the hierarchy a `new_library` or
-   * `location_request` is filed under on approval, as
-   * `draftData.moderatorTarget`; `target` undefined leaves it as it is. For
-   * a `location_request`, `edit` sets (a string) or clears (null) the
-   * Moderator's `name` and `typeLabel` in `draftData.moderatorEdit`; keys
-   * it doesn't name are kept. Only while the submission is in review. The
-   * stored payloadHash is re-pinned in the same compare-and-set: the
-   * Moderator's change is part of what is reviewed, never tampering. The
-   * caller checks the Moderator's scope, that each id names a record and
-   * that the edit is valid and safe.
+   * Sets (or, with no places, clears) the hierarchy a `new_library` is filed
+   * under on approval, as `draftData.moderatorTarget`. Only while the
+   * submission is in review. The stored payloadHash is re-pinned in the same
+   * compare-and-set: the Moderator's change is part of what is reviewed,
+   * never tampering. The caller checks the Moderator's scope and that each
+   * id names a record.
    */
   async setModeratorTarget(
     documentId: string,
-    target: ModeratorTarget | undefined,
-    edit?: Partial<Record<keyof LocationEdit, string | null>>
+    target: ModeratorTarget
   ): Promise<
     | {
         error: "not_found" | "wrong_type" | "not_open" | "conflict" | "tampered"
@@ -2283,7 +1977,6 @@ export default ({ strapi }: { strapi: any }) => ({
         data: {
           documentId: string
           moderatorTarget: ModeratorTarget | null
-          moderatorEdit: LocationEdit | null
         }
       }
   > {
@@ -2293,8 +1986,6 @@ export default ({ strapi }: { strapi: any }) => ({
     if (!submission || submission.status === "draft")
       return { error: "not_found" }
     if (!TARGETABLE_TYPES.has(submission.submissionType))
-      return { error: "wrong_type" }
-    if (edit && submission.submissionType !== "location_request")
       return { error: "wrong_type" }
     if (submission.status !== "pending" && submission.status !== "needs_info")
       return { error: "not_open" }
@@ -2306,35 +1997,15 @@ export default ({ strapi }: { strapi: any }) => ({
     )
       return { error: "tampered" }
 
-    const {
-      moderatorTarget: previousTarget,
-      moderatorEdit: previousEdit,
-      ...rest
-    } = asObject(submission.draftData)
+    const { moderatorTarget: _previous, ...rest } = asObject(
+      submission.draftData
+    )
     const draftData: Record<string, unknown> = { ...rest }
-
-    const clean: ModeratorTarget =
-      target === undefined ? moderatorTargetOf(submission.draftData) : {}
-    if (target !== undefined)
-      for (const k of HIERARCHY_KEYS)
-        if (isDocumentId(target[k])) clean[k] = target[k]
+    const clean: ModeratorTarget = {}
+    for (const k of HIERARCHY_KEYS)
+      if (isDocumentId(target[k])) clean[k] = target[k]
     const hasTarget = Object.keys(clean).length > 0
     if (hasTarget) draftData.moderatorTarget = clean
-    else if (target === undefined && previousTarget !== undefined)
-      draftData.moderatorTarget = previousTarget
-
-    const nextEdit: LocationEdit = locationEditOf(submission.draftData)
-    if (edit)
-      for (const k of ["name", "typeLabel"] as const) {
-        if (!(k in edit)) continue
-        const v = edit[k]
-        if (typeof v === "string") nextEdit[k] = v.trim()
-        else delete nextEdit[k]
-      }
-    const hasEdit = Object.keys(nextEdit).length > 0
-    if (hasEdit) draftData.moderatorEdit = nextEdit
-    else if (!edit && previousEdit !== undefined)
-      draftData.moderatorEdit = previousEdit
     const next = { ...submission, draftData }
 
     const { count } = await strapi.db
@@ -2357,11 +2028,7 @@ export default ({ strapi }: { strapi: any }) => ({
     if (count !== 1) return { error: "conflict" }
 
     return {
-      data: {
-        documentId,
-        moderatorTarget: hasTarget ? clean : null,
-        moderatorEdit: hasEdit ? nextEdit : null,
-      },
+      data: { documentId, moderatorTarget: hasTarget ? clean : null },
     }
   },
 

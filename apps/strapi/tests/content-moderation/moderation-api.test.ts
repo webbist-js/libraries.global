@@ -905,6 +905,24 @@ describe("PUT /moderation/submissions/:documentId/target", () => {
       expect(ctx.status).toBe(400)
     }
   })
+
+  it("refuses a name or type on the target route", async () => {
+    const { controller } = setup([
+      sub({
+        submissionType: "new_library",
+        fields: { name: "x" },
+        draftData: null,
+      }),
+    ])
+    const ctx = ctxFor({
+      viewer: INDEX_MOD,
+      params: { documentId: id(1) },
+      body: { name: "Wessex", typeLabel: "Region" },
+    })
+    await controller.setTarget(ctx)
+    expect(ctx.status).toBe(400)
+    expect(JSON.stringify(ctx.body)).toContain("Unknown place: name")
+  })
 })
 
 describe("GET /moderation/stats", () => {
@@ -1003,23 +1021,12 @@ describe("summaryOf port", () => {
         submissionType: "role_application",
         fields: { role: "moderator", queue: "index", locales: ["fr"] },
       },
-      {
-        submissionType: "location_request",
-        fields: { kind: "area", name: "Clifton" },
-      },
-      {
-        submissionType: "location_request",
-        fields: { kind: "region", name: "Wessex" },
-        draftData: { moderatorEdit: { name: "Wessex Region" } },
-      },
     ]
     for (const r of rows) expect(summaryOf(r)).toBe(adminSummaryOf(r))
-    expect(rows.slice(-5).map(summaryOf)).toEqual([
+    expect(rows.slice(-3).map(summaryOf)).toEqual([
       "Knowledge editor application (fr, de)",
       "Journal editor application (all languages)",
       "Moderator application: Index (fr)",
-      "New area: Clifton",
-      "New region: Wessex Region",
     ])
   })
 })

@@ -212,7 +212,7 @@ describe("moderator-only draftData keys", () => {
       [UID]: [
         sub({
           status: "draft",
-          submissionType: "location_request",
+          submissionType: "new_library",
           draftData: { moderatorTarget: target, moderatorEdit: edit, step: 2 },
         }),
       ],

@@ -74,7 +74,6 @@ export const TYPE_LABELS: Record<string, string> = {
   blog_submission: "Journal",
   topic_suggestion: "Topic",
   role_application: "Role application",
-  location_request: "Location request",
 }
 
 /** Design System colour tokens per type: badge background and text. */
@@ -87,7 +86,6 @@ export const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   blog_submission: { bg: "alternative100", text: "alternative600" },
   topic_suggestion: { bg: "neutral150", text: "neutral600" },
   role_application: { bg: "danger100", text: "danger600" },
-  location_request: { bg: "success100", text: "success600" },
 }
 
 export const EVIDENCE_TYPE_LABELS: Record<string, string> = {
@@ -293,7 +291,8 @@ export function summaryOf(sub: Submission): string {
           ]
         : []
 
-      const languages = locales.length > 0 ? locales.join(", ") : "all languages"
+      const languages =
+        locales.length > 0 ? locales.join(", ") : "all languages"
       if (f.role === "moderator") {
         const queue =
           f.queue === "index"
@@ -308,15 +307,6 @@ export function summaryOf(sub: Submission): string {
       }
 
       return `${role} application (${languages})`
-    }
-    case "location_request": {
-      const edit =
-        d.moderatorEdit && typeof d.moderatorEdit === "object"
-          ? (d.moderatorEdit as Record<string, unknown>)
-          : {}
-      const name = str(edit.name) ?? str(f.name) ?? "unnamed"
-
-      return `New ${f.kind === "area" ? "area" : "region"}: ${name}`
     }
 
     default:

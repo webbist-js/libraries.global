@@ -25,7 +25,7 @@ const PROFILE = "api::user-profile.user-profile"
 const DEFAULT_MODERATORS_EMAIL = "moderators@libraries.global"
 const DEFAULT_APP_URL = "https://libraries.global"
 /** Only these reaching `pending` alert the moderators (spec §6.3). */
-const ALERT_TYPES = new Set(["role_application", "location_request"])
+const ALERT_TYPES = new Set(["role_application"])
 
 export type NotificationTask = () => Promise<void>
 type Scheduler = (task: NotificationTask) => void
@@ -195,8 +195,8 @@ export default ({ strapi }: { strapi: any }) => {
     },
 
     /**
-     * Alerts `MODERATORS_EMAIL` that a Role Application or Location Request
-     * reached `pending`. Every other type is silent.
+     * Alerts `MODERATORS_EMAIL` that a Role Application reached `pending`.
+     * Every other type is silent.
      */
     async submissionPending(s: SubmissionRow): Promise<void> {
       if (!ALERT_TYPES.has(s.submissionType)) return

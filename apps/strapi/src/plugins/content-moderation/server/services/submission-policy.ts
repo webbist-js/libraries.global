@@ -18,7 +18,6 @@ import {
   applicationSectionKind,
   isDocumentId,
   type RoleApplicationFields,
-  validateLocationRequestFields,
   validateRoleApplicationFields,
   VERIFICATION_METHODS,
 } from "../utils/params"
@@ -37,8 +36,6 @@ export type SubmissionContent = {
 }
 
 const LIBRARY = "api::library.library"
-const COUNTRY = "api::country.country"
-const REGION = "api::region.region"
 const SUBMISSION = "plugin::content-moderation.submission"
 const SECTION_UID = {
   wiki: "api::wiki-section.wiki-section",
@@ -134,7 +131,9 @@ export async function reapplyDate(
   role: string,
   now: Date = new Date()
 ): Promise<Date | null> {
-  const cutoff = new Date(now.getTime() - ROLE_APPLICATION_COOLDOWN_DAYS * DAY_MS)
+  const cutoff = new Date(
+    now.getTime() - ROLE_APPLICATION_COOLDOWN_DAYS * DAY_MS
+  )
   const rejected = (await strapi.documents(SUBMISSION).findMany({
     filters: {
       submittedByUserId: { $eq: baUserId },
@@ -233,54 +232,6 @@ async function checkRoleApplication(
       status: 403,
       message: `You can apply for this role again on ${longDate.format(again)}.`,
     }
-
-  return { ok: true }
-}
-
-/**
- * Location Request rules (spec §8.2): valid fields, `targetEntityType` equal
- * to `kind`, a country that exists and, for an area, a region of that
- * country. The text itself goes through `checkContent` like any other.
- */
-async function checkLocationRequest(
-  strapi: any,
-  input: { fields: unknown; targetEntityType?: unknown }
-): Promise<Result> {
-  const parsed = validateLocationRequestFields(input.fields)
-  if (!parsed.ok) return { ok: false, status: 400, message: parsed.message }
-  const request = parsed.value
-  if (input.targetEntityType != null && input.targetEntityType !== request.kind)
-    return {
-      ok: false,
-      status: 400,
-      message: "The request's target must match the kind of place.",
-    }
-
-  const country = await strapi.documents(COUNTRY).findOne({
-    documentId: request.countryDocumentId,
-    fields: ["documentId"],
-  })
-  if (!country)
-    return { ok: false, status: 400, message: "That country isn't listed." }
-
-  if (request.kind === "area") {
-    const region = (await strapi.documents(REGION).findOne({
-      documentId: request.regionDocumentId,
-      fields: ["documentId"],
-      populate: { country: { fields: ["documentId"] } },
-    })) as { country?: { documentId?: string } | null } | null
-    if (!region)
-      return { ok: false, status: 400, message: "That region isn't listed." }
-    if (
-      region.country?.documentId &&
-      region.country.documentId !== request.countryDocumentId
-    )
-      return {
-        ok: false,
-        status: 400,
-        message: "That region isn't in the country you chose.",
-      }
-  }
 
   return { ok: true }
 }
@@ -385,10 +336,7 @@ export default ({ strapi }: { strapi: any }) => ({
   async check(input: {
     baUserId: string
     submissionType: unknown
-    /**
-     * The submission's `fields`; required for a `role_application` and a
-     * `location_request`.
-     */
+    /** The submission's `fields`; required for a `role_application`. */
     fields?: unknown
     targetEntityType?: unknown
     targetDocumentId?: unknown
@@ -445,14 +393,6 @@ export default ({ strapi }: { strapi: any }) => ({
         excludeDocumentId: input.excludeDocumentId,
       })
       if (!eligible.ok) return eligible
-    }
-
-    if (submissionType === "location_request") {
-      const valid = await checkLocationRequest(strapi, {
-        fields: input.fields,
-        targetEntityType: input.targetEntityType,
-      })
-      if (!valid.ok) return valid
     }
 
     const limits = contributionLimits(tier, role)
