@@ -8,7 +8,7 @@ import { useCapabilities } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 import type { ArticleBodyBlock } from "@/lib/strapi-api/content/server"
-import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
+import { formatStrapiMediaUrlForClient } from "@/lib/strapi-helpers"
 
 import {
   ARTICLE_KIND_META,
@@ -75,7 +75,7 @@ function draftFromServer(d: Record<string, unknown>): Partial<ArticleDraft> & {
 }
 
 function mediaUrl(url: string) {
-  return formatStrapiMediaUrl(url) ?? url
+  return formatStrapiMediaUrlForClient(url) ?? url
 }
 
 function relativeTime(iso: string | undefined): string {

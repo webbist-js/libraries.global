@@ -9,7 +9,7 @@ import {
   type OpeningTimesValue,
 } from "@/components/library/library-page.helpers"
 import { T } from "@/lib/design-tokens"
-import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
+import { formatStrapiMediaUrlForClient } from "@/lib/strapi-helpers"
 
 import { Icon, tintOfGroup, TypeBadge } from "./atlas-ui"
 import {
@@ -99,7 +99,7 @@ export function AtlasLibraryPanel({
   const operator = OPERATOR_GROUPS.find(
     (g) => library.operator && g.values.includes(library.operator)
   )
-  const img = formatStrapiMediaUrl(detail?.heroImage?.url ?? undefined)
+  const img = formatStrapiMediaUrlForClient(detail?.heroImage?.url ?? undefined)
   // Some records keep the whole address in streetAddress; don't repeat parts.
   const street = detail?.streetAddress ?? ""
   const address = [
