@@ -125,13 +125,14 @@ export async function GET(
     filterParam = `&filters[region][documentId][$eq]=${encodeURIComponent(regionFilter)}`
   }
 
-  const limit = type === "countries" ? 300 : 500
+  // The largest real parents hold about 850 places (Minas Gerais, Brazil).
+  const limit = type === "countries" ? 300 : 1000
   const status = type === "blog-sections" ? "" : "&status=published"
   const extraFields = type === "blog-sections" ? "&fields[2]=slug" : ""
   const url = `${STRAPI}/api/${strapiPlural}?sort=name:asc&pagination[limit]=${limit}${status}&fields[0]=name&fields[1]=documentId${extraFields}${filterParam}`
 
-  // Regions and areas gain entries when a Location Request is approved, so
-  // they refresh within a minute; the other lists change rarely.
+  // Regions and areas change when the world place import runs, so they
+  // refresh within a minute; the other lists change rarely.
   const revalidate = type === "regions" || type === "areas" ? 60 : 3600
   const res = await fetch(url, {
     headers: {

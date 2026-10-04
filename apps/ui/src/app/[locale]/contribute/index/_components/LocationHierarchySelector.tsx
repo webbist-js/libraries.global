@@ -3,12 +3,19 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 
+import { placeLabels } from "@/components/location/location-page.helpers"
 import { T } from "@/lib/design-tokens"
 
 import { fieldInputStyle, fieldLabelStyle } from "./wizard.constants"
 import type { FormData } from "./wizard.types"
 
 type RelationOption = { documentId: string; name: string }
+type CountryOption = RelationOption & {
+  regionTypeLabel?: string | null
+  regionsSectionLabel?: string | null
+  areaTypeLabel?: string | null
+  areasSectionLabel?: string | null
+}
 
 export function LocationHierarchySelector({
   f,
@@ -18,7 +25,7 @@ export function LocationHierarchySelector({
   setFormData: React.Dispatch<React.SetStateAction<FormData>>
 }) {
   const [continents, setContinents] = useState<RelationOption[]>([])
-  const [countries, setCountries] = useState<RelationOption[]>([])
+  const [countries, setCountries] = useState<CountryOption[]>([])
   const [regions, setRegions] = useState<RelationOption[]>([])
   const [areas, setAreas] = useState<RelationOption[]>([])
 
@@ -78,6 +85,11 @@ export function LocationHierarchySelector({
     ...fieldInputStyle,
     cursor: "pointer",
   }
+
+  // What the chosen country calls its Regions and Areas (UI only).
+  const labels = placeLabels(
+    countries.find((c) => c.documentId === f.countryDocumentId)
+  )
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -155,7 +167,7 @@ export function LocationHierarchySelector({
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           <label style={fieldLabelStyle} htmlFor="hier-region">
-            Region
+            {labels.region.name}
           </label>
           <select
             id="hier-region"
@@ -184,7 +196,7 @@ export function LocationHierarchySelector({
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           <label style={fieldLabelStyle} htmlFor="hier-area">
-            Area{" "}
+            {labels.area.name}{" "}
             <span style={{ color: T.ink.faint, fontWeight: 400 }}>
               (optional)
             </span>

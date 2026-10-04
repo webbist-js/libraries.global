@@ -9,6 +9,11 @@ const countries = (qs: string) =>
     params: Promise.resolve({ type: "countries" }),
   })
 
+const areas = (qs: string) =>
+  GET(new Request(`http://localhost/api/relations/areas?${qs}`), {
+    params: Promise.resolve({ type: "areas" }),
+  })
+
 const strapiUrl = () => decodeURIComponent(String(fetchMock.mock.calls[0]?.[0]))
 
 const ENGLAND = {
@@ -69,5 +74,18 @@ describe("GET /api/relations/countries?iso2=", () => {
     )
     await countries("continentDocumentId=eu")
     expect(strapiUrl()).toContain("filters[continent][documentId][$eq]=eu")
+  })
+
+  it("caps countries at 300", async () => {
+    await countries("continentDocumentId=eu")
+    expect(strapiUrl()).toContain("pagination[limit]=300")
+  })
+})
+
+describe("GET /api/relations/areas", () => {
+  it("caps areas at 1000", async () => {
+    fetchMock.mockResolvedValue(Response.json({ data: [] }))
+    await areas("regionDocumentId=r1")
+    expect(strapiUrl()).toContain("pagination[limit]=1000")
   })
 })

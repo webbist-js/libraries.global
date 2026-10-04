@@ -8,7 +8,7 @@ import {
   countNoun,
   formatCount,
   lowerFirst,
-  regionLabels,
+  placeLabels,
 } from "@/components/location/location-page.helpers"
 import { LocationAbout } from "@/components/location/LocationAbout"
 import { LocationChildBrowser } from "@/components/location/LocationChildBrowser"
@@ -49,7 +49,7 @@ export function CountryDetailPage({
 }) {
   const name = country.name ?? ""
   const regions = country.regions ?? []
-  const labels = regionLabels(country)
+  const labels = placeLabels(country).region
   const pluralLower = lowerFirst(labels.plural)
   const libraryCount = country.libraryCount ?? 0
   const withLibraries = regions.filter((r) => (r.libraryCount ?? 0) > 0)

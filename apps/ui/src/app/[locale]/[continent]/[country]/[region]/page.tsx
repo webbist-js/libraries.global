@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
 import { use } from "react"
 
+import { placeLabels } from "@/components/location/location-page.helpers"
 import { RegionDetailPage } from "@/components/region/RegionDetailPage"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { isDevelopment } from "@/lib/general-helpers"
@@ -60,8 +61,8 @@ export async function generateMetadata({
         name: countryName ? `${name}, ${countryName}` : name,
         libraryCount: data.libraryCount,
         typeCounts: data.libraryTypeCounts,
-        childLabel: data.areas?.length
-          ? (data.areas[0]?.typeLabel ?? "area")
+        childLabel: data.areaCount
+          ? placeLabels(data.country).area.singular
           : null,
       }),
     // Canonicalise to the entity's real parents, not whatever the URL said.

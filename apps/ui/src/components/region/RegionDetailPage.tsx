@@ -13,8 +13,9 @@ import {
   type GapKey,
   lowerFirst,
   pickNearby,
+  placeLabels,
   recordGaps,
-  regionLabels,
+  toCoord,
 } from "@/components/location/location-page.helpers"
 import {
   locationHelpActions,
@@ -72,12 +73,6 @@ function QuickLinkCard({ link }: { link: QuickLink }) {
       </div>
     </GlobalLink>
   )
-}
-
-const toCoord = (value: unknown): number | null => {
-  const n = typeof value === "string" ? Number.parseFloat(value) : value
-
-  return typeof n === "number" && Number.isFinite(n) ? n : null
 }
 
 // ── Page ─────────────────────────────────────────────────────────────────────
@@ -188,9 +183,7 @@ export function RegionDetailPage({
   const hasMap = pins.length > 0 || Boolean(bounds.ne && bounds.sw)
 
   // ── Nearby ──────────────────────────────────────────────────────────────────
-  const labels = regionLabels({
-    regionTypeLabel: region.country?.regionTypeLabel,
-  })
+  const labels = placeLabels(region.country).region
   const nearby = pickNearby(region.center, region.siblings ?? [])
   const nearbyTitle =
     nearby.mode === "nearby"
@@ -215,7 +208,7 @@ export function RegionDetailPage({
               : {}),
             [slug]: name,
           }}
-          typeLabel={region.typeLabel ?? "Region"}
+          typeLabel={region.typeLabel?.trim() || labels.name}
           typeIcon="mdi:map-outline"
           title={name}
           intro={intro}

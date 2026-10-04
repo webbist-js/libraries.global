@@ -7,9 +7,9 @@ import {
   groupScreenPoints,
   lowerFirst,
   pickNearby,
+  placeLabels,
   pluralizeLabel,
   recordGaps,
-  regionLabels,
   singularizeLabel,
   summariseWeek,
 } from "../location-page.helpers"
@@ -54,23 +54,44 @@ describe("labels", () => {
     expect(lowerFirst("London Borough")).toBe("London Borough")
   })
 
-  it("derives what a country calls its regions", () => {
-    expect(regionLabels({ regionTypeLabel: "Authority" })).toEqual({
-      plural: "Authorities",
-      singular: "authority",
+  it("derives what a country calls its Regions and Areas", () => {
+    expect(
+      placeLabels({ regionTypeLabel: "Canton", areaTypeLabel: "District" })
+    ).toEqual({
+      region: { name: "Canton", plural: "Cantons", singular: "canton" },
+      area: { name: "District", plural: "Districts", singular: "district" },
     })
     expect(
-      regionLabels({
-        regionTypeLabel: "County / Unitary Authority / London Borough",
-      })
-    ).toEqual({ plural: "Areas", singular: "area" })
-    expect(
-      regionLabels({
+      placeLabels({
         regionsSectionLabel: "Council areas",
         regionTypeLabel: "Authority",
-      })
-    ).toEqual({ plural: "Council areas", singular: "council area" })
-    expect(regionLabels({})).toEqual({ plural: "Areas", singular: "area" })
+      }).region
+    ).toEqual({
+      name: "Council area",
+      plural: "Council areas",
+      singular: "council area",
+    })
+    expect(
+      placeLabels({ areasSectionLabel: "Local government areas" }).area
+    ).toEqual({
+      name: "Local government area",
+      plural: "Local government areas",
+      singular: "local government area",
+    })
+  })
+
+  it("falls back to Region and Area", () => {
+    const fallback = {
+      region: { name: "Region", plural: "Regions", singular: "region" },
+      area: { name: "Area", plural: "Areas", singular: "area" },
+    }
+    expect(placeLabels({})).toEqual(fallback)
+    expect(placeLabels(null)).toEqual(fallback)
+    expect(
+      placeLabels({
+        regionTypeLabel: "County / Unitary Authority / London Borough",
+      }).region
+    ).toEqual(fallback.region)
   })
 })
 

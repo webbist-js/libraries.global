@@ -20,6 +20,12 @@ export function countNoun(n: number, singular: string, plural: string) {
   return n === 1 ? singular : plural
 }
 
+export const toCoord = (value: unknown): number | null => {
+  const n = typeof value === "string" ? Number.parseFloat(value) : value
+
+  return typeof n === "number" && Number.isFinite(n) ? n : null
+}
+
 /** "a, b and c". */
 export function joinList(items: readonly string[]): string {
   if (items.length <= 1) return items[0] ?? ""
@@ -52,31 +58,66 @@ export function lowerFirst(label: string): string {
 }
 
 export type ChildLabels = {
-  /** Section title, e.g. "Counties" or "Areas". */
+  /** Title-case singular, e.g. "County": select labels and hero badges. */
+  name: string
+  /** Section title, e.g. "Counties". */
   plural: string
-  /** Mid-sentence singular, e.g. "county" or "area". */
+  /** Mid-sentence singular, e.g. "county". */
   singular: string
 }
 
-/**
- * What a country calls its regions. An explicit section label wins; a single
- * `regionTypeLabel` ("County") is pluralised; a mixed one
- * ("County / Unitary Authority / London Borough") falls back to "Areas".
- */
-export function regionLabels(country: {
-  regionsSectionLabel?: string | null
+/** The Place Labels on a Country (UI only; they never change the hierarchy). */
+export type PlaceLabelFields = {
   regionTypeLabel?: string | null
-}): ChildLabels {
-  const section = country.regionsSectionLabel?.trim()
-  if (section) {
-    return { plural: section, singular: lowerFirst(singularizeLabel(section)) }
+  regionsSectionLabel?: string | null
+  areaTypeLabel?: string | null
+  areasSectionLabel?: string | null
+}
+
+/**
+ * One level's words: the plural label wins, then the singular (pluralised);
+ * a mixed singular ("County / Unitary Authority") or nothing falls back.
+ */
+function levelLabels(
+  type: string | null | undefined,
+  section: string | null | undefined,
+  fallback: "Region" | "Area"
+): ChildLabels {
+  const plural = section?.trim()
+  if (plural) {
+    const name = singularizeLabel(plural)
+
+    return { name, plural, singular: lowerFirst(name) }
   }
-  const type = country.regionTypeLabel?.trim()
-  if (type && !type.includes("/")) {
-    return { plural: pluralizeLabel(type), singular: lowerFirst(type) }
+  const name = type?.trim()
+  if (name && !name.includes("/")) {
+    return { name, plural: pluralizeLabel(name), singular: lowerFirst(name) }
   }
 
-  return { plural: "Areas", singular: "area" }
+  return {
+    name: fallback,
+    plural: `${fallback}s`,
+    singular: fallback.toLowerCase(),
+  }
+}
+
+/** What a country calls its Regions and its Areas. */
+export function placeLabels(country: PlaceLabelFields | null | undefined): {
+  region: ChildLabels
+  area: ChildLabels
+} {
+  return {
+    region: levelLabels(
+      country?.regionTypeLabel,
+      country?.regionsSectionLabel,
+      "Region"
+    ),
+    area: levelLabels(
+      country?.areaTypeLabel,
+      country?.areasSectionLabel,
+      "Area"
+    ),
+  }
 }
 
 // ── Opening hours ─────────────────────────────────────────────────────────────
