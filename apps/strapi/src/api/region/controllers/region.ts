@@ -46,9 +46,6 @@ export default factories.createCoreController(
         heroImage: mediaPopulate,
         mapConfig: MAP_CONFIG_POPULATE,
         featuredLibraries: FEATURED_LIBRARY_POPULATE,
-        areas: {
-          fields: ["name", "slug", "summary", "typeLabel"],
-        },
         seo: SEO_POPULATE,
       }
 

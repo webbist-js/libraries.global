@@ -555,13 +555,6 @@ export type PopulatedCountryData = Omit<
 
 // ── Region ────────────────────────────────────────────────────────────────────
 
-export type AreaSummary = {
-  name: string
-  slug: string
-  summary?: string | null
-  typeLabel?: string | null
-}
-
 export type PopulatedRegionData = Omit<
   Data.ContentType<"api::region.region">,
   "libraries"
@@ -575,9 +568,11 @@ export type PopulatedRegionData = Omit<
     slug: string
     capitalCity?: string | null
     regionTypeLabel?: string | null
+    regionsSectionLabel?: string | null
+    areaTypeLabel?: string | null
+    areasSectionLabel?: string | null
     continent?: { name: string; slug: string; code?: string | null } | null
   } | null
-  areas?: AreaSummary[]
   featuredLibraries?: PopulatedFeaturedLibraryData[]
   quickLinks?: QuickLink[]
   mapConfig?: MapConfig | null
@@ -628,45 +623,6 @@ export type RegionSibling = {
   typeLabel?: string | null
   libraryCount: number
   center?: LatLng | null
-}
-
-// ── Area ──────────────────────────────────────────────────────────────────────
-
-export type PopulatedAreaData = {
-  id: number
-  documentId: string
-  name: string
-  slug: string
-  shortName?: string | null
-  typeLabel?: string | null
-  summary?: string | null
-  mapConfig?: MapConfig | null
-  region?: {
-    name: string
-    slug: string
-    typeLabel?: string | null
-    country?: {
-      name: string
-      slug: string
-      regionTypeLabel?: string | null
-      continent?: { name: string; slug: string; code?: string | null } | null
-    } | null
-  } | null
-  country?: { name: string; slug: string } | null
-  libraries?: {
-    name: string
-    slug: string
-    summary?: string | null
-    libraryType?: string | null
-    operationalStatus?: string | null
-    heroImage?: { url?: string | null; alternativeText?: string | null } | null
-  }[]
-  libraryCount?: number
-  seo?: {
-    metaTitle?: string | null
-    metaDescription?: string | null
-    metaImage?: { url?: string | null } | null
-  } | null
 }
 
 export async function fetchContinent(slug: string, locale: Locale) {
@@ -811,30 +767,7 @@ export async function fetchRegion(slug: string, locale: Locale) {
   }
 }
 
-export async function fetchArea(slug: string, locale: Locale) {
-  const dm = await draftMode()
-  try {
-    return (await PublicStrapiClient.fetchAPI(
-      `/areas/detail/${encodeURIComponent(slug)}`,
-      {
-        locale,
-        status: dm.isEnabled ? "draft" : "published",
-      }
-    )) as APIResponse<PopulatedAreaData>
-  } catch (e: unknown) {
-    logNonBlockingError({
-      message: `Error fetching area '${slug}' for locale '${locale}'`,
-      error: {
-        error: e instanceof Error ? e.message : String(e),
-        stack: e instanceof Error ? e.stack : undefined,
-      },
-    })
-  }
-}
-
 // ------ Places by documentId (moderation review links)
-
-export type PlaceKind = "library" | "country" | "region" | "area"
 
 /** A place's name and where to open it; `href` null when it has no page. */
 export type PlaceLink = { name: string | null; href: string | null }
@@ -907,34 +840,6 @@ export async function fetchPlaceLink(
     })
 
     return null
-  }
-}
-
-export async function fetchAllAreaSlugs(locale: Locale) {
-  try {
-    const result = await PublicStrapiClient.fetchAPI("/areas/slugs", {
-      locale,
-      status: "published",
-    })
-
-    return result as {
-      data: {
-        slug: string
-        locale?: string | null
-        region?: { slug: string } | null
-        country?: { slug: string } | null
-      }[]
-    }
-  } catch (e: unknown) {
-    logNonBlockingError({
-      message: `Error fetching all area slugs for locale '${locale}'`,
-      error: {
-        error: e instanceof Error ? e.message : String(e),
-        stack: e instanceof Error ? e.stack : undefined,
-      },
-    })
-
-    return { data: [] }
   }
 }
 

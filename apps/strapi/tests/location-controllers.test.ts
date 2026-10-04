@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
 
 import { makeFakeStrapi } from "./helpers/fake-strapi"
-import areaFactory from "../src/api/area/controllers/area"
 import categoryFactory from "../src/api/category/controllers/category"
 import continentFactory from "../src/api/continent/controllers/continent"
 import countryFactory from "../src/api/country/controllers/country"
@@ -158,59 +157,16 @@ describe("region.detail (E5)", () => {
 
     const [params] = paramsOf(REGION)
     expectFieldLimitedMedia(params.populate)
+    // Every Area of the region used to be populated here just so the UI
+    // could read `.length`; it now reads the counted `areaCount` instead.
+    expect(params.populate.areas).toBeUndefined()
     expect(countWheres(LIBRARY)[0].locale).toBe("en")
+    expect(countWheres(AREA)[0].locale).toBe("en")
     const list = paramsOf(LIBRARY).find((p) => p.filters?.region)
     expect(list.limit).toBe(100)
     expect(list.populate.heroImage.fields).toEqual(MEDIA_FIELDS)
     expect(c.body.data.libraries).toHaveLength(1)
-  })
-})
-
-describe("area.detail (E5)", () => {
-  it("reads libraries in a separate capped query instead of populating them all", async () => {
-    const { controller, paramsOf, countWheres } = build(AREA, areaFactory, {
-      [AREA]: [{ id: 1, documentId: "ar", slug: "camden" }],
-      [LIBRARY]: [
-        {
-          ...published,
-          id: 1,
-          documentId: "l1",
-          name: "A",
-          area: { id: 1, documentId: "ar" },
-        },
-        {
-          ...published,
-          id: 2,
-          documentId: "l2",
-          name: "B",
-          area: { id: 1, documentId: "ar" },
-        },
-        {
-          ...published,
-          id: 3,
-          documentId: "l3",
-          name: "C",
-          area: { id: 9, documentId: "other" },
-        },
-      ],
-    })
-    const c: any = ctx("camden")
-    await controller.detail(c)
-
-    const [areaParams] = paramsOf(AREA)
-    expect(areaParams.populate.libraries).toBeUndefined()
-    const [libraryParams] = paramsOf(LIBRARY)
-    expect(libraryParams.filters).toEqual({
-      area: { documentId: { $eq: "ar" } },
-    })
-    expect(libraryParams.limit).toBe(100)
-    expect(libraryParams.populate.heroImage).toEqual({ fields: MEDIA_FIELDS })
-    expect(countWheres(LIBRARY)[0].locale).toBe("en")
-    expect(c.body.data.libraries.map((l: any) => l.documentId)).toEqual([
-      "l1",
-      "l2",
-    ])
-    expect(c.body.data.libraryCount).toBe(2)
+    expect(c.body.data.areaCount).toBe(0)
   })
 })
 
