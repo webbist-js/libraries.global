@@ -663,6 +663,13 @@ export interface ApiAreaArea extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    geonamesId: Schema.Attribute.String &
+      Schema.Attribute.Unique &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     gssCode: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -705,6 +712,12 @@ export interface ApiAreaArea extends Struct.CollectionTypeSchema {
       }>
     slug: Schema.Attribute.UID<"name"> &
       Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    sourceAttribution: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
@@ -2673,6 +2686,13 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
       "manyToMany",
       "api::library.library"
     > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    geonamesId: Schema.Attribute.String &
+      Schema.Attribute.Unique &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false

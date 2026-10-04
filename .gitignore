@@ -55,3 +55,4 @@ ingest-dry-log.json
 *.ingest-log.json
 # Downloaded dataset files (ingests fetch them on demand)
 apps/strapi/scripts/ingests/**/.cache/
+apps/strapi/scripts/ingests/**/.runs/

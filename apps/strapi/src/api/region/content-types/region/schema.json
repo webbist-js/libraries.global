@@ -44,6 +44,15 @@
         }
       }
     },
+    "geonamesId": {
+      "type": "string",
+      "unique": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
     "shortName": {
       "type": "string",
       "pluginOptions": {

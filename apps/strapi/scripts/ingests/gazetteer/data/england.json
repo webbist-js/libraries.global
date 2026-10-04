@@ -1,0 +1,1774 @@
+{
+  "source": "ons-lad",
+  "attribution": "Contains public sector information licensed under the Open Government Licence v3.0 (Office for National Statistics).",
+  "regions": [
+    {
+      "key": "bedfordshire",
+      "name": "Bedfordshire",
+      "areas": [
+        {
+          "gssCode": "E06000055",
+          "name": "Bedford",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000056",
+          "name": "Central Bedfordshire",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000032",
+          "name": "Luton",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "berkshire",
+      "name": "Berkshire",
+      "areas": [
+        {
+          "gssCode": "E06000036",
+          "name": "Bracknell Forest",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000038",
+          "name": "Reading",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000039",
+          "name": "Slough",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000037",
+          "name": "West Berkshire",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000040",
+          "name": "Windsor and Maidenhead",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000041",
+          "name": "Wokingham",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "bristol",
+      "name": "Bristol",
+      "areas": [
+        {
+          "gssCode": "E06000023",
+          "name": "Bristol",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "buckinghamshire",
+      "name": "Buckinghamshire",
+      "areas": [
+        {
+          "gssCode": "E06000060",
+          "name": "Buckinghamshire",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000042",
+          "name": "Milton Keynes",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "cambridgeshire",
+      "name": "Cambridgeshire",
+      "areas": [
+        {
+          "gssCode": "E07000008",
+          "name": "Cambridge",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000009",
+          "name": "East Cambridgeshire",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000010",
+          "name": "Fenland",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000011",
+          "name": "Huntingdonshire",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E06000031",
+          "name": "Peterborough",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E07000012",
+          "name": "South Cambridgeshire",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "cheshire",
+      "name": "Cheshire",
+      "areas": [
+        {
+          "gssCode": "E06000049",
+          "name": "Cheshire East",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000050",
+          "name": "Cheshire West and Chester",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000006",
+          "name": "Halton",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000007",
+          "name": "Warrington",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "city-of-london",
+      "name": "City of London",
+      "areas": [
+        {
+          "gssCode": "E09000001",
+          "name": "City of London",
+          "typeLabel": "City corporation"
+        }
+      ]
+    },
+    {
+      "key": "cornwall",
+      "name": "Cornwall",
+      "areas": [
+        {
+          "gssCode": "E06000052",
+          "name": "Cornwall",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000053",
+          "name": "Isles of Scilly",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "cumbria",
+      "name": "Cumbria",
+      "areas": [
+        {
+          "gssCode": "E06000063",
+          "name": "Cumberland",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000064",
+          "name": "Westmorland and Furness",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "derbyshire",
+      "name": "Derbyshire",
+      "areas": [
+        {
+          "gssCode": "E07000032",
+          "name": "Amber Valley",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000033",
+          "name": "Bolsover",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000034",
+          "name": "Chesterfield",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E06000015",
+          "name": "Derby",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E07000035",
+          "name": "Derbyshire Dales",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000036",
+          "name": "Erewash",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000037",
+          "name": "High Peak",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000038",
+          "name": "North East Derbyshire",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000039",
+          "name": "South Derbyshire",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "devon",
+      "name": "Devon",
+      "areas": [
+        {
+          "gssCode": "E07000040",
+          "name": "East Devon",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000041",
+          "name": "Exeter",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000042",
+          "name": "Mid Devon",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000043",
+          "name": "North Devon",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E06000026",
+          "name": "Plymouth",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E07000044",
+          "name": "South Hams",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000045",
+          "name": "Teignbridge",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E06000027",
+          "name": "Torbay",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E07000046",
+          "name": "Torridge",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000047",
+          "name": "West Devon",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "dorset",
+      "name": "Dorset",
+      "areas": [
+        {
+          "gssCode": "E06000058",
+          "name": "Bournemouth, Christchurch and Poole",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000059",
+          "name": "Dorset",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "durham",
+      "name": "Durham",
+      "areas": [
+        {
+          "gssCode": "E06000047",
+          "name": "County Durham",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000005",
+          "name": "Darlington",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000001",
+          "name": "Hartlepool",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000004",
+          "name": "Stockton-on-Tees",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "east-riding-of-yorkshire",
+      "name": "East Riding of Yorkshire",
+      "areas": [
+        {
+          "gssCode": "E06000011",
+          "name": "East Riding of Yorkshire",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000010",
+          "name": "Kingston upon Hull",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "east-sussex",
+      "name": "East Sussex",
+      "areas": [
+        {
+          "gssCode": "E06000043",
+          "name": "Brighton and Hove",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E07000061",
+          "name": "Eastbourne",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000062",
+          "name": "Hastings",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000063",
+          "name": "Lewes",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000064",
+          "name": "Rother",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000065",
+          "name": "Wealden",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "essex",
+      "name": "Essex",
+      "areas": [
+        {
+          "gssCode": "E07000066",
+          "name": "Basildon",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000067",
+          "name": "Braintree",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000068",
+          "name": "Brentwood",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000069",
+          "name": "Castle Point",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000070",
+          "name": "Chelmsford",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000071",
+          "name": "Colchester",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000072",
+          "name": "Epping Forest",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000073",
+          "name": "Harlow",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000074",
+          "name": "Maldon",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000075",
+          "name": "Rochford",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E06000033",
+          "name": "Southend-on-Sea",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E07000076",
+          "name": "Tendring",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E06000034",
+          "name": "Thurrock",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E07000077",
+          "name": "Uttlesford",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "gloucestershire",
+      "name": "Gloucestershire",
+      "areas": [
+        {
+          "gssCode": "E07000078",
+          "name": "Cheltenham",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000079",
+          "name": "Cotswold",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000080",
+          "name": "Forest of Dean",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000081",
+          "name": "Gloucester",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E06000025",
+          "name": "South Gloucestershire",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E07000082",
+          "name": "Stroud",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000083",
+          "name": "Tewkesbury",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "greater-london",
+      "name": "Greater London",
+      "areas": [
+        {
+          "gssCode": "E09000002",
+          "name": "Barking and Dagenham",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000003",
+          "name": "Barnet",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000004",
+          "name": "Bexley",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000005",
+          "name": "Brent",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000006",
+          "name": "Bromley",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000007",
+          "name": "Camden",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000008",
+          "name": "Croydon",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000009",
+          "name": "Ealing",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000010",
+          "name": "Enfield",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000011",
+          "name": "Greenwich",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000012",
+          "name": "Hackney",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000013",
+          "name": "Hammersmith and Fulham",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000014",
+          "name": "Haringey",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000015",
+          "name": "Harrow",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000016",
+          "name": "Havering",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000017",
+          "name": "Hillingdon",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000018",
+          "name": "Hounslow",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000019",
+          "name": "Islington",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000020",
+          "name": "Kensington and Chelsea",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000021",
+          "name": "Kingston upon Thames",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000022",
+          "name": "Lambeth",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000023",
+          "name": "Lewisham",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000024",
+          "name": "Merton",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000025",
+          "name": "Newham",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000026",
+          "name": "Redbridge",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000027",
+          "name": "Richmond upon Thames",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000028",
+          "name": "Southwark",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000029",
+          "name": "Sutton",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000030",
+          "name": "Tower Hamlets",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000031",
+          "name": "Waltham Forest",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000032",
+          "name": "Wandsworth",
+          "typeLabel": "London borough"
+        },
+        {
+          "gssCode": "E09000033",
+          "name": "Westminster",
+          "typeLabel": "London borough"
+        }
+      ]
+    },
+    {
+      "key": "greater-manchester",
+      "name": "Greater Manchester",
+      "areas": [
+        {
+          "gssCode": "E08000001",
+          "name": "Bolton",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000002",
+          "name": "Bury",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000003",
+          "name": "Manchester",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000004",
+          "name": "Oldham",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000005",
+          "name": "Rochdale",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000006",
+          "name": "Salford",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000007",
+          "name": "Stockport",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000008",
+          "name": "Tameside",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000009",
+          "name": "Trafford",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000010",
+          "name": "Wigan",
+          "typeLabel": "Metropolitan borough"
+        }
+      ]
+    },
+    {
+      "key": "hampshire",
+      "name": "Hampshire",
+      "areas": [
+        {
+          "gssCode": "E07000084",
+          "name": "Basingstoke and Deane",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000085",
+          "name": "East Hampshire",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000086",
+          "name": "Eastleigh",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000087",
+          "name": "Fareham",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000088",
+          "name": "Gosport",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000089",
+          "name": "Hart",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000090",
+          "name": "Havant",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000091",
+          "name": "New Forest",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E06000044",
+          "name": "Portsmouth",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E07000092",
+          "name": "Rushmoor",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E06000045",
+          "name": "Southampton",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E07000093",
+          "name": "Test Valley",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000094",
+          "name": "Winchester",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "herefordshire",
+      "name": "Herefordshire",
+      "areas": [
+        {
+          "gssCode": "E06000019",
+          "name": "Herefordshire",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "hertfordshire",
+      "name": "Hertfordshire",
+      "areas": [
+        {
+          "gssCode": "E07000095",
+          "name": "Broxbourne",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000096",
+          "name": "Dacorum",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000242",
+          "name": "East Hertfordshire",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000098",
+          "name": "Hertsmere",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000099",
+          "name": "North Hertfordshire",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000240",
+          "name": "St Albans",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000243",
+          "name": "Stevenage",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000102",
+          "name": "Three Rivers",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000103",
+          "name": "Watford",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000241",
+          "name": "Welwyn Hatfield",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "isle-of-wight",
+      "name": "Isle of Wight",
+      "areas": [
+        {
+          "gssCode": "E06000046",
+          "name": "Isle of Wight",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "kent",
+      "name": "Kent",
+      "areas": [
+        {
+          "gssCode": "E07000105",
+          "name": "Ashford",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000106",
+          "name": "Canterbury",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000107",
+          "name": "Dartford",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000108",
+          "name": "Dover",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000112",
+          "name": "Folkestone and Hythe",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000109",
+          "name": "Gravesham",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000110",
+          "name": "Maidstone",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E06000035",
+          "name": "Medway",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E07000111",
+          "name": "Sevenoaks",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000113",
+          "name": "Swale",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000114",
+          "name": "Thanet",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000115",
+          "name": "Tonbridge and Malling",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000116",
+          "name": "Tunbridge Wells",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "lancashire",
+      "name": "Lancashire",
+      "areas": [
+        {
+          "gssCode": "E06000008",
+          "name": "Blackburn with Darwen",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000009",
+          "name": "Blackpool",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E07000117",
+          "name": "Burnley",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000118",
+          "name": "Chorley",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000119",
+          "name": "Fylde",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000120",
+          "name": "Hyndburn",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000121",
+          "name": "Lancaster",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000122",
+          "name": "Pendle",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000123",
+          "name": "Preston",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000124",
+          "name": "Ribble Valley",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000125",
+          "name": "Rossendale",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000126",
+          "name": "South Ribble",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000127",
+          "name": "West Lancashire",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000128",
+          "name": "Wyre",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "leicestershire",
+      "name": "Leicestershire",
+      "areas": [
+        {
+          "gssCode": "E07000129",
+          "name": "Blaby",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000130",
+          "name": "Charnwood",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000131",
+          "name": "Harborough",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000132",
+          "name": "Hinckley and Bosworth",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E06000016",
+          "name": "Leicester",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E07000133",
+          "name": "Melton",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000134",
+          "name": "North West Leicestershire",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000135",
+          "name": "Oadby and Wigston",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "lincolnshire",
+      "name": "Lincolnshire",
+      "areas": [
+        {
+          "gssCode": "E07000136",
+          "name": "Boston",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000137",
+          "name": "East Lindsey",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000138",
+          "name": "Lincoln",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E06000012",
+          "name": "North East Lincolnshire",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E07000139",
+          "name": "North Kesteven",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E06000013",
+          "name": "North Lincolnshire",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E07000140",
+          "name": "South Holland",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000141",
+          "name": "South Kesteven",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000142",
+          "name": "West Lindsey",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "merseyside",
+      "name": "Merseyside",
+      "areas": [
+        {
+          "gssCode": "E08000011",
+          "name": "Knowsley",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000012",
+          "name": "Liverpool",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000014",
+          "name": "Sefton",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000013",
+          "name": "St. Helens",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000015",
+          "name": "Wirral",
+          "typeLabel": "Metropolitan borough"
+        }
+      ]
+    },
+    {
+      "key": "norfolk",
+      "name": "Norfolk",
+      "areas": [
+        {
+          "gssCode": "E07000143",
+          "name": "Breckland",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000144",
+          "name": "Broadland",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000145",
+          "name": "Great Yarmouth",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000146",
+          "name": "King's Lynn and West Norfolk",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000147",
+          "name": "North Norfolk",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000148",
+          "name": "Norwich",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000149",
+          "name": "South Norfolk",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "north-yorkshire",
+      "name": "North Yorkshire",
+      "areas": [
+        {
+          "gssCode": "E06000002",
+          "name": "Middlesbrough",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000065",
+          "name": "North Yorkshire",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000003",
+          "name": "Redcar and Cleveland",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000014",
+          "name": "York",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "northamptonshire",
+      "name": "Northamptonshire",
+      "areas": [
+        {
+          "gssCode": "E06000061",
+          "name": "North Northamptonshire",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000062",
+          "name": "West Northamptonshire",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "northumberland",
+      "name": "Northumberland",
+      "areas": [
+        {
+          "gssCode": "E06000057",
+          "name": "Northumberland",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "nottinghamshire",
+      "name": "Nottinghamshire",
+      "areas": [
+        {
+          "gssCode": "E07000170",
+          "name": "Ashfield",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000171",
+          "name": "Bassetlaw",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000172",
+          "name": "Broxtowe",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000173",
+          "name": "Gedling",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000174",
+          "name": "Mansfield",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000175",
+          "name": "Newark and Sherwood",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E06000018",
+          "name": "Nottingham",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E07000176",
+          "name": "Rushcliffe",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "oxfordshire",
+      "name": "Oxfordshire",
+      "areas": [
+        {
+          "gssCode": "E07000177",
+          "name": "Cherwell",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000178",
+          "name": "Oxford",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000179",
+          "name": "South Oxfordshire",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000180",
+          "name": "Vale of White Horse",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000181",
+          "name": "West Oxfordshire",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "rutland",
+      "name": "Rutland",
+      "areas": [
+        {
+          "gssCode": "E06000017",
+          "name": "Rutland",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "shropshire",
+      "name": "Shropshire",
+      "areas": [
+        {
+          "gssCode": "E06000051",
+          "name": "Shropshire",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000020",
+          "name": "Telford and Wrekin",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "somerset",
+      "name": "Somerset",
+      "areas": [
+        {
+          "gssCode": "E06000022",
+          "name": "Bath and North East Somerset",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000024",
+          "name": "North Somerset",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000066",
+          "name": "Somerset",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "south-yorkshire",
+      "name": "South Yorkshire",
+      "areas": [
+        {
+          "gssCode": "E08000038",
+          "name": "Barnsley",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000017",
+          "name": "Doncaster",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000018",
+          "name": "Rotherham",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000039",
+          "name": "Sheffield",
+          "typeLabel": "Metropolitan borough"
+        }
+      ]
+    },
+    {
+      "key": "staffordshire",
+      "name": "Staffordshire",
+      "areas": [
+        {
+          "gssCode": "E07000192",
+          "name": "Cannock Chase",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000193",
+          "name": "East Staffordshire",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000194",
+          "name": "Lichfield",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000195",
+          "name": "Newcastle-under-Lyme",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000196",
+          "name": "South Staffordshire",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000197",
+          "name": "Stafford",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000198",
+          "name": "Staffordshire Moorlands",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E06000021",
+          "name": "Stoke-on-Trent",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E07000199",
+          "name": "Tamworth",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "suffolk",
+      "name": "Suffolk",
+      "areas": [
+        {
+          "gssCode": "E07000200",
+          "name": "Babergh",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000244",
+          "name": "East Suffolk",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000202",
+          "name": "Ipswich",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000203",
+          "name": "Mid Suffolk",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000245",
+          "name": "West Suffolk",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "surrey",
+      "name": "Surrey",
+      "areas": [
+        {
+          "gssCode": "E07000207",
+          "name": "Elmbridge",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000208",
+          "name": "Epsom and Ewell",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000209",
+          "name": "Guildford",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000210",
+          "name": "Mole Valley",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000211",
+          "name": "Reigate and Banstead",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000212",
+          "name": "Runnymede",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000213",
+          "name": "Spelthorne",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000214",
+          "name": "Surrey Heath",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000215",
+          "name": "Tandridge",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000216",
+          "name": "Waverley",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000217",
+          "name": "Woking",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "tyne-and-wear",
+      "name": "Tyne and Wear",
+      "areas": [
+        {
+          "gssCode": "E08000037",
+          "name": "Gateshead",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000021",
+          "name": "Newcastle upon Tyne",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000022",
+          "name": "North Tyneside",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000023",
+          "name": "South Tyneside",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000024",
+          "name": "Sunderland",
+          "typeLabel": "Metropolitan borough"
+        }
+      ]
+    },
+    {
+      "key": "warwickshire",
+      "name": "Warwickshire",
+      "areas": [
+        {
+          "gssCode": "E07000218",
+          "name": "North Warwickshire",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000219",
+          "name": "Nuneaton and Bedworth",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000220",
+          "name": "Rugby",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000221",
+          "name": "Stratford-on-Avon",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000222",
+          "name": "Warwick",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "west-midlands",
+      "name": "West Midlands",
+      "areas": [
+        {
+          "gssCode": "E08000025",
+          "name": "Birmingham",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000026",
+          "name": "Coventry",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000027",
+          "name": "Dudley",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000028",
+          "name": "Sandwell",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000029",
+          "name": "Solihull",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000030",
+          "name": "Walsall",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000031",
+          "name": "Wolverhampton",
+          "typeLabel": "Metropolitan borough"
+        }
+      ]
+    },
+    {
+      "key": "west-sussex",
+      "name": "West Sussex",
+      "areas": [
+        {
+          "gssCode": "E07000223",
+          "name": "Adur",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000224",
+          "name": "Arun",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000225",
+          "name": "Chichester",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000226",
+          "name": "Crawley",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000227",
+          "name": "Horsham",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000228",
+          "name": "Mid Sussex",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000229",
+          "name": "Worthing",
+          "typeLabel": "District"
+        }
+      ]
+    },
+    {
+      "key": "west-yorkshire",
+      "name": "West Yorkshire",
+      "areas": [
+        {
+          "gssCode": "E08000032",
+          "name": "Bradford",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000033",
+          "name": "Calderdale",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000034",
+          "name": "Kirklees",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000035",
+          "name": "Leeds",
+          "typeLabel": "Metropolitan borough"
+        },
+        {
+          "gssCode": "E08000036",
+          "name": "Wakefield",
+          "typeLabel": "Metropolitan borough"
+        }
+      ]
+    },
+    {
+      "key": "wiltshire",
+      "name": "Wiltshire",
+      "areas": [
+        {
+          "gssCode": "E06000030",
+          "name": "Swindon",
+          "typeLabel": "Unitary authority"
+        },
+        {
+          "gssCode": "E06000054",
+          "name": "Wiltshire",
+          "typeLabel": "Unitary authority"
+        }
+      ]
+    },
+    {
+      "key": "worcestershire",
+      "name": "Worcestershire",
+      "areas": [
+        {
+          "gssCode": "E07000234",
+          "name": "Bromsgrove",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000235",
+          "name": "Malvern Hills",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000236",
+          "name": "Redditch",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000237",
+          "name": "Worcester",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000238",
+          "name": "Wychavon",
+          "typeLabel": "District"
+        },
+        {
+          "gssCode": "E07000239",
+          "name": "Wyre Forest",
+          "typeLabel": "District"
+        }
+      ]
+    }
+  ]
+}

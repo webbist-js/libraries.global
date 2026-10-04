@@ -66,6 +66,9 @@ const SLUG_TABLES = [
 const HOT_PATH_INDEXES = [
   // Slug lookups (detail pages, `slugs` endpoints, entityRef recompute).
   ...SLUG_TABLES.map((t) => index(t, ["slug", "locale", "published_at"])),
+  // World place import: matches Regions and Areas by GeoNames id.
+  index("regions", ["geonames_id"]),
+  index("areas", ["geonames_id"]),
   index("libraries", ["entity_ref"]),
   index("libraries", ["library_type"]),
 

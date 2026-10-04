@@ -67,6 +67,43 @@ export const DATASET_SEED: DatasetSeed[] = [
     notes:
       'Works of the US federal government have no copyright (17 U.S.C. § 105), and the FY 2023 data file documentation says "all information contained herein is in the public domain and may be used and reprinted without special permission". The FY 2023 file covers the year to mid-2023, so opening status reflects that year. Only values IMLS marks as reported are used; imputed values are dropped. Outlying areas and books-by-mail services are not imported. Records carry source "imls-pls" and a source record whose ID is FSCSKEY-FSCS_SEQ.',
   },
+  {
+    key: "geonames",
+    name: "GeoNames administrative divisions",
+    publisher: "GeoNames",
+    sourceUrl: "https://www.geonames.org",
+    licence: "CC BY 4.0",
+    licenceUrl: "https://creativecommons.org/licenses/by/4.0/",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted_with_attribution",
+    attribution:
+      "Contains place names from GeoNames (geonames.org), licensed under CC BY 4.0.",
+    coverage:
+      "First- and second-level administrative divisions of every country (third level for Germany)",
+    importMechanism:
+      "apps/strapi/scripts/ingests/gazetteer/import.ts, reading admin1CodesASCII.txt, admin2Codes.txt and, where a country's Areas are level 3, its country dump",
+    notes:
+      'Creates Regions and Areas only; libraries are not imported from GeoNames. Imported places carry a geonamesId and sourceAttribution "GeoNames (geonames.org), CC BY 4.0".',
+  },
+  {
+    key: "ons-lad",
+    name: "Local Authority Districts",
+    publisher: "Office for National Statistics",
+    sourceUrl: "https://geoportal.statistics.gov.uk",
+    licence: "Open Government Licence v3.0",
+    licenceUrl:
+      "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted_with_attribution",
+    attribution:
+      "Contains public sector information licensed under the Open Government Licence v3.0 (Office for National Statistics).",
+    coverage:
+      "England's local authority districts, filed under the 48 ceremonial counties",
+    importMechanism:
+      "apps/strapi/scripts/ingests/gazetteer/import.ts, reading the curated data/england.json",
+    notes:
+      "District names and GSS codes come from ONS; the district-to-county assignment follows the Lieutenancies Act 1997 as amended.",
+  },
 ]
 
 const UID = "api::dataset.dataset"

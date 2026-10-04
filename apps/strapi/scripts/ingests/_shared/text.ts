@@ -87,9 +87,48 @@ export function properCase(input: string): string {
     .join(" ")
 }
 
+/**
+ * Letters Unicode's NFKD normalisation can't decompose into a base letter
+ * plus a combining accent, mapped to their nearest ASCII spelling. Every
+ * world place must be importable, so these can't just fall out as "".
+ */
+const TRANSLITERATIONS: Record<string, string> = {
+  "\u0142": "l", // Polish \u0142
+  "\u0141": "L", // Polish \u0141
+  "\u00F8": "o", // Scandinavian \u00F8
+  "\u00D8": "O", // Scandinavian \u00D8
+  "\u00E6": "ae", // Scandinavian \u00E6
+  "\u00C6": "Ae", // Scandinavian \u00C6
+  "\u00DF": "ss", // German \u00DF
+  "\u1E9E": "SS", // German capital \u1E9E
+  "\u0111": "d", // Vietnamese/Croatian \u0111
+  "\u0110": "D", // Vietnamese/Croatian \u0110
+  "\u00F0": "d", // Icelandic \u00F0
+  "\u00D0": "D", // Icelandic \u00D0
+  "\u0131": "i", // Turkish dotless \u0131
+  "\u00FE": "th", // Icelandic \u00FE
+  "\u00DE": "Th", // Icelandic \u00DE
+  "\u0153": "oe", // French \u0153
+  "\u0152": "Oe", // French \u0152
+  "\u0127": "h", // Maltese \u0127
+  "\u0126": "H", // Maltese \u0126
+  "\u0140": "l", // Catalan \u0140
+  "\u013F": "L", // Catalan \u013F
+}
+
+const TRANSLITERATE_RE = new RegExp(
+  `[${Object.keys(TRANSLITERATIONS).join("")}]`,
+  "g"
+)
+
+/** Replace letters NFKD can't split into a base letter and an accent. */
+export function transliterate(input: string): string {
+  return input.replaceAll(TRANSLITERATE_RE, (ch) => TRANSLITERATIONS[ch]!)
+}
+
 /** URL slug: ASCII, lowercase, hyphen-separated. */
 export function slugify(input: string): string {
-  return input
+  return transliterate(input)
     .normalize("NFKD")
     .replaceAll(/[\u0300-\u036F]/g, "")
     .toLowerCase()
