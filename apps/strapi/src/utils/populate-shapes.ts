@@ -205,6 +205,9 @@ const COUNTRY_FIELDS = [
   "iso3",
   "capitalCity",
   "regionTypeLabel",
+  "regionsSectionLabel",
+  "areaTypeLabel",
+  "areasSectionLabel",
   "summary",
   "heroTagline",
   "featured",
@@ -233,7 +236,6 @@ export const COUNTRY_SHAPES: ShapeSet = {
       "employees",
       "volunteers",
       "visitsPerYear",
-      "regionsSectionLabel",
     ],
     populate: {
       continent: continentRef,
@@ -287,7 +289,15 @@ export const REGION_SHAPES: ShapeSet = {
     populate: {
       continent: continentRef,
       country: {
-        fields: ["name", "slug", "capitalCity", "regionTypeLabel"],
+        fields: [
+          "name",
+          "slug",
+          "capitalCity",
+          "regionTypeLabel",
+          "regionsSectionLabel",
+          "areaTypeLabel",
+          "areasSectionLabel",
+        ],
         populate: { continent: continentRef },
       },
       heroImage: mediaPopulate,
@@ -329,7 +339,14 @@ export const AREA_SHAPES: ShapeSet = {
         fields: ["name", "slug", "typeLabel"],
         populate: {
           country: {
-            fields: ["name", "slug", "regionTypeLabel"],
+            fields: [
+              "name",
+              "slug",
+              "regionTypeLabel",
+              "regionsSectionLabel",
+              "areaTypeLabel",
+              "areasSectionLabel",
+            ],
             populate: { continent: continentRef },
           },
         },

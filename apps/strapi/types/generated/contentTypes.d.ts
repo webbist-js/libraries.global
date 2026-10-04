@@ -1245,7 +1245,7 @@ export interface ApiContinentContinent extends Struct.CollectionTypeSchema {
 export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
   collectionName: "countries"
   info: {
-    description: ""
+    description: "Place labels (regionTypeLabel, regionsSectionLabel, areaTypeLabel, areasSectionLabel) are UI labels only and never change the hierarchy."
     displayName: "Country"
     pluralName: "countries"
     singularName: "country"
@@ -1265,10 +1265,16 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
-    boundaryUrl: Schema.Attribute.String &
+    areasSectionLabel: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
-          localized: false
+          localized: true
+        }
+      }>
+    areaTypeLabel: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
         }
       }>
     budget: Schema.Attribute.String &

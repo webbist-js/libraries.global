@@ -34,7 +34,15 @@ export default factories.createCoreController(
 
       const basePopulate: Record<string, unknown> = {
         country: {
-          fields: ["name", "slug", "capitalCity", "regionTypeLabel"],
+          fields: [
+            "name",
+            "slug",
+            "capitalCity",
+            "regionTypeLabel",
+            "regionsSectionLabel",
+            "areaTypeLabel",
+            "areasSectionLabel",
+          ],
           populate: {
             continent: { fields: ["name", "slug", "code"] },
           },

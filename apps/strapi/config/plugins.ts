@@ -182,7 +182,15 @@ export default ({ env }) => {
             locale: ALL_LOCALES,
             populate: {
               continent: { fields: ["slug", "name"] },
-              country: { fields: ["iso2", "slug", "name"] },
+              country: {
+                fields: [
+                  "iso2",
+                  "slug",
+                  "name",
+                  "regionTypeLabel",
+                  "regionsSectionLabel",
+                ],
+              },
               region: { fields: ["slug", "name"] },
               area: { fields: ["slug", "name"] },
               accessibility: { fields: ["name"] },
@@ -210,6 +218,9 @@ export default ({ env }) => {
               country_slug: country?.slug ?? null,
               country_name: country?.name ?? null,
               country_code: countryCode(country?.iso2),
+              // What the country calls its Regions, for Find libraries' filter.
+              country_region_label: str(country?.regionTypeLabel),
+              country_regions_label: str(country?.regionsSectionLabel),
               region_slug: region?.slug ?? null,
               region_name: region?.name ?? null,
               area_slug: area?.slug ?? null,
@@ -386,6 +397,8 @@ const LIBRARY_DISPLAYED = [
   "country_slug",
   "country_name",
   "country_code",
+  "country_region_label",
+  "country_regions_label",
   "region_slug",
   "region_name",
   "area_slug",
@@ -424,6 +437,10 @@ const optionNames = (value: unknown): string[] =>
 
 const countryCode = (iso2: unknown): string | null =>
   typeof iso2 === "string" && iso2 !== "" ? iso2.toUpperCase() : null
+
+/** A trimmed string, or `null` for anything blank or not a string. */
+const str = (v: unknown): string | null =>
+  typeof v === "string" && v.trim() ? v.trim() : null
 
 const coordinate = (value: unknown): number | null => {
   if (value == null || value === "") return null

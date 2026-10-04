@@ -455,6 +455,32 @@ describe("Meilisearch transforms keep their derived fields", () => {
     })
   })
 
+  it("carries the country's Region labels into library documents", () => {
+    const libraryTransform = meili.library.transformEntry!
+    const doc = libraryTransform({
+      entry: {
+        name: "Bern Public Library",
+        country: {
+          iso2: "CH",
+          slug: "switzerland",
+          name: "Switzerland",
+          regionTypeLabel: "Canton",
+          regionsSectionLabel: "Cantons",
+        },
+      },
+    })
+    expect(doc.country_region_label).toBe("Canton")
+    expect(doc.country_regions_label).toBe("Cantons")
+
+    const countryPopulate = meili.library.entriesQuery?.populate?.country
+    expect(countryPopulate?.fields).toContain("regionTypeLabel")
+    expect(countryPopulate?.fields).toContain("regionsSectionLabel")
+
+    const displayed = meili.library.settings.displayedAttributes ?? []
+    expect(displayed).toContain("country_region_label")
+    expect(displayed).toContain("country_regions_label")
+  })
+
   it("library: omits _geo without a usable location", () => {
     const entry = structuredClone(FIXTURES.library)
     entry.location = { lat: "n/a", lng: null }

@@ -5,7 +5,7 @@
     "singularName": "country",
     "pluralName": "countries",
     "displayName": "Country",
-    "description": ""
+    "description": "Place labels (regionTypeLabel, regionsSectionLabel, areaTypeLabel, areasSectionLabel) are UI labels only and never change the hierarchy."
   },
   "options": {
     "draftAndPublish": true
@@ -271,6 +271,22 @@
       }
     },
     "regionsSectionLabel": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "areaTypeLabel": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "areasSectionLabel": {
       "type": "string",
       "pluginOptions": {
         "i18n": {
