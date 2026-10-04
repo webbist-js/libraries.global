@@ -13,6 +13,9 @@ import type {
   RegionSibling,
 } from "@/lib/strapi-api/content/server"
 
+/** Cards rendered on a region page; "See all" opens the rest in Find libraries. */
+export const REGION_LIST_LIMIT = 24
+
 /** "Libraries in {region}": a grid of record cards, then an add prompt. */
 export function RegionLibraryList({
   regionName,
@@ -31,10 +34,14 @@ export function RegionLibraryList({
   readonly total: number
   readonly findHref: string
 }) {
+  // The region's full first page still feeds the map and the gap counts;
+  // the grid shows a page's worth so a big region stays light.
+  const shown = libraries.slice(0, REGION_LIST_LIMIT)
+
   return (
     <div className="flex flex-col gap-3">
       <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2">
-        {libraries.map((library) => (
+        {shown.map((library) => (
           <li key={library.documentId}>
             <LocationLibraryCard
               library={library}
@@ -46,7 +53,7 @@ export function RegionLibraryList({
         ))}
       </ul>
 
-      {total > libraries.length ? (
+      {total > shown.length ? (
         <GlobalLink
           href={findHref}
           className="self-start text-[14.5px] font-semibold underline underline-offset-[3px]"
