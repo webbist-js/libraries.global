@@ -1,57 +1,66 @@
-import GlobalLink from "@/components/global/GlobalLink"
 import Emphasis from "@/components/home/Emphasis"
+import { displayStyle } from "@/components/home/homepage.constants"
 import HomeSearch from "@/components/home/HomeSearch"
 import type { LibraryMarker } from "@/components/home/knowledge-globe-data"
-import KnowledgeGlobeCanvas from "@/components/home/KnowledgeGlobeCanvas"
+import KnowledgeGlobeCanvas, {
+  type GlobeView,
+} from "@/components/home/KnowledgeGlobeCanvas"
 import { T } from "@/lib/design-tokens"
 
+/** Where the globe opens, one picked at random on each page load so the
+ * hero isn't always Europe. Each is the point turned to face the camera,
+ * which sits below the crop: chosen so the named region lands in the
+ * visible upper-left of the globe. */
+const START_VIEWS: readonly GlobeView[] = [
+  { lat: 12, lng: 23 }, // Europe
+  { lat: 3, lng: -82 }, // North America
+  { lat: -5, lng: 132 }, // East Asia
+  { lat: -19, lng: 96 }, // South Asia
+  { lat: -39, lng: 43 }, // Africa
+  { lat: -63, lng: -26 }, // South America
+  { lat: -60, lng: 160 }, // South-East Asia and Australia
+]
+
+/** The homepage hero: a display title, one line on what the index is, and
+ * the library search, beside the globe of every published record. */
 export function HomepageHero({
   eyebrow,
   title,
   text,
   markers,
-  signedIn,
 }: {
   readonly eyebrow: string
   readonly title: string
   readonly text: string
   readonly markers?: LibraryMarker[]
-  readonly signedIn: boolean
 }) {
   return (
-    <section
-      className="relative w-full overflow-hidden border-b"
-      style={{ borderColor: T.border.line }}
-    >
-      {/* Soft lavender wash fading into the paper page */}
+    <section className="relative w-full overflow-hidden">
+      {/* Globe — every published record, plotted: the hero's feature
+          visual, pinned into the bottom-right corner and cropped by both
+          edges. From xl it fills the space right of the text column (its
+          left edge sits 24px inside the column, and the 64px feather plus
+          `clearLeft` keep the globe 40px clear of it); below xl it sits in a
+          band under the search. The feathers fade orbital dust out instead
+          of ending it in a seam. */}
       <div
         aria-hidden
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(720px 360px at 78% 30%, rgba(255,255,255,.85) 0%, transparent 70%), linear-gradient(180deg, #EEEBFA 0%, #F3F1F6 55%, var(--t-bg-void) 100%)",
-        }}
-      />
-
-      {/* Globe — every published record, plotted. Oversized and pinned to
-          the bottom-right corner so the section edges crop it. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-y-0 right-0 w-full md:w-[64%]"
-        style={{
-          // Feather the canvas's left edge so orbital dust never ends in a seam
-          maskImage: "linear-gradient(to right, transparent, #000 14%)",
-          WebkitMaskImage: "linear-gradient(to right, transparent, #000 14%)",
-        }}
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[320px] [mask-image:linear-gradient(to_bottom,transparent,#000_48px)] xl:top-0 xl:left-[calc(max(0px,(100%_-_1360px)/2)_+_2rem_+_760px_-_24px)] xl:h-auto xl:[mask-image:linear-gradient(to_right,transparent,#000_64px)]"
       >
         <KnowledgeGlobeCanvas
           markers={markers}
           overrides={{
-            anchor: { x: 0.8, y: 1.02, radius: 0.84, maxRadiusW: 0.62 },
+            pin: {
+              radius: 1.06,
+              below: 0.15,
+              inset: 0.4,
+              minInset: -0.05,
+              clearLeft: 64,
+            },
+            startViews: START_VIEWS,
             autoRotateSpeed: 0.018,
             cameraY: 0,
             dprMax: 1.25,
-            globePitch: 10,
             globeTilt: 22,
             interactive: false,
             showSatellites: false,
@@ -60,10 +69,10 @@ export function HomepageHero({
         />
       </div>
 
-      <div className="relative z-10 mx-auto w-full max-w-[1360px] px-4 pt-[clamp(48px,8vh,104px)] pb-72 sm:px-8 md:pb-[clamp(48px,8vh,104px)]">
-        <div className="max-w-[660px]">
+      <div className="relative z-10 mx-auto w-full max-w-[1360px] px-4 pt-[clamp(48px,8vw,112px)] pb-[360px] sm:px-8 xl:pb-[clamp(56px,7vw,96px)]">
+        <div className="max-w-[760px]">
           <p
-            className="mb-5 inline-flex items-center gap-2 rounded-full border bg-white px-3.5 py-1.5 text-[14px] font-semibold"
+            className="mb-4 inline-flex items-center gap-2 rounded-full border bg-white px-3.5 py-1.5 text-[14px] font-semibold"
             style={{ borderColor: T.border.line, color: T.ink.base }}
           >
             <span
@@ -75,40 +84,18 @@ export function HomepageHero({
           </p>
           <h1
             className="m-0 text-balance"
-            style={{
-              fontFamily: T.font.serif,
-              fontWeight: 500,
-              fontSize: "clamp(46px,6vw,86px)",
-              lineHeight: 1,
-              letterSpacing: "-0.02em",
-              color: T.ink.base,
-            }}
+            style={{ ...displayStyle("hero"), color: T.ink.base }}
           >
             <Emphasis text={title} emStyle={{ color: T.accent.primary }} />
           </h1>
           <p
-            className="mt-5 max-w-[560px] text-[19px] leading-[1.6] text-pretty"
+            className="mt-8 max-w-[600px] text-[clamp(18px,1.6vw,21px)] leading-[1.6] text-pretty"
             style={{ color: T.ink.dim }}
           >
             {text}
           </p>
 
           <HomeSearch />
-
-          <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2">
-            <GlobalLink
-              href={signedIn ? "/map" : "/auth/register"}
-              className="rounded-full px-5 py-3 text-[15px] font-semibold text-white no-underline transition-colors hover:bg-[#2C2A48]"
-              style={{ background: T.ink.base }}
-            >
-              {signedIn ? "Open the atlas" : "Create a free account"}
-            </GlobalLink>
-            <span className="text-[15px]" style={{ color: T.ink.dim }}>
-              {signedIn
-                ? "Every published library on one map."
-                : "Follow libraries, suggest edits, get credit."}
-            </span>
-          </div>
         </div>
       </div>
     </section>

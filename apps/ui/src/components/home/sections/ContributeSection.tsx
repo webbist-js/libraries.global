@@ -8,11 +8,12 @@ import {
   History,
   MapPin,
   Plus,
-  Sparkles,
+  Star,
 } from "lucide-react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import Emphasis from "@/components/home/Emphasis"
+import { displayStyle } from "@/components/home/homepage.constants"
 import type {
   ContributionTask,
   CtaBand,
@@ -118,8 +119,7 @@ function taskHref(task: ContributionTask): string {
   return `/contribute/correct/${task.slug}?libraryName=${encodeURIComponent(task.name)}`
 }
 
-const ROW =
-  "group flex items-center gap-4 rounded-[16px] border bg-white px-4 py-3.5 no-underline transition-colors hover:border-(--t-accent-primary)"
+const ROW = "group flex items-center gap-4 py-4 no-underline"
 
 /** How contributing works, beside a few real gaps anyone could fill now. */
 export function ContributeSection({
@@ -137,232 +137,210 @@ export function ContributeSection({
     <section
       id="contribute"
       aria-labelledby="contribute-title"
-      className="mx-auto w-full max-w-[1360px] px-4 pt-[clamp(64px,8vw,104px)] sm:px-8"
+      className="mx-auto grid w-full max-w-[1360px] grid-cols-1 items-start gap-[clamp(40px,7vw,120px)] px-4 pt-[clamp(80px,10vw,140px)] sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
     >
+      <div>
+        <h2
+          id="contribute-title"
+          className="m-0 text-balance"
+          style={{ ...displayStyle("band"), color: T.ink.base }}
+        >
+          <Emphasis
+            text={band.title ?? ""}
+            emStyle={{ color: T.accent.primary }}
+          />
+        </h2>
+        {band.text ? (
+          <p
+            className="mt-8 max-w-[540px] text-[18px] leading-[1.65] text-pretty"
+            style={{ color: T.ink.dim }}
+          >
+            {band.text}
+          </p>
+        ) : null}
+
+        {steps.length > 0 ? (
+          <ol className="m-0 mt-6 flex list-none flex-wrap gap-2 p-0">
+            {steps.map((step, i) => (
+              <li
+                key={step.title}
+                className="flex items-center gap-2.5 rounded-full border bg-white py-1.5 pr-4 pl-1.5 text-[16px] font-medium"
+                style={{ borderColor: T.border.line, color: T.ink.base }}
+                title={step.text ?? undefined}
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex size-[30px] shrink-0 items-center justify-center rounded-full text-[14px] font-semibold text-white"
+                  style={{ background: T.ink.base }}
+                >
+                  {i + 1}
+                </span>
+                {step.title}
+              </li>
+            ))}
+          </ol>
+        ) : null}
+
+        <div className="mt-7 flex flex-wrap gap-2.5">
+          {band.primaryLabel && band.primaryHref ? (
+            <GlobalLink
+              href={band.primaryHref}
+              className="rounded-full px-6 py-3.5 font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+              style={{ background: T.accent.primary }}
+            >
+              {band.primaryLabel}
+            </GlobalLink>
+          ) : null}
+          {band.secondaryLabel && band.secondaryHref ? (
+            <GlobalLink
+              href={band.secondaryHref}
+              className="rounded-full border bg-white px-6 py-3.5 font-semibold no-underline transition-colors hover:border-(--t-accent-primary)"
+              style={{ borderColor: T.border.hi, color: T.ink.base }}
+            >
+              {band.secondaryLabel}
+            </GlobalLink>
+          ) : null}
+        </div>
+      </div>
+
       <div
-        className="grid gap-[clamp(28px,4vw,56px)] rounded-[28px] border bg-white p-[clamp(24px,4vw,48px)] lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]"
+        className="rounded-[28px] border bg-white px-[clamp(20px,2.4vw,32px)] pt-6 pb-5"
         style={{ borderColor: T.border.line }}
       >
-        <div>
-          <p
-            className="m-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[14px] font-semibold"
-            style={{ background: "#E6EFE6", color: "#2F5D3A" }}
+        <div
+          className="flex flex-wrap items-baseline justify-between gap-3 border-b pb-3"
+          style={{ borderColor: T.border.line }}
+        >
+          <h3
+            className="m-0 text-[17px] font-bold"
+            style={{ color: T.ink.base }}
           >
-            <Plus aria-hidden="true" className="size-3.5" strokeWidth={2} />
-            Contribute
-          </p>
-          <h2
-            id="contribute-title"
-            className="m-0 mt-4 text-balance"
-            style={{
-              fontFamily: T.font.serif,
-              fontWeight: 500,
-              fontSize: "clamp(32px,3.6vw,46px)",
-              lineHeight: 1.08,
-              letterSpacing: "-0.015em",
-              color: T.ink.base,
-            }}
-          >
-            <Emphasis
-              text={band.title ?? ""}
-              emStyle={{ color: T.accent.primary }}
-            />
-          </h2>
-          {band.text ? (
-            <p
-              className="mt-3 max-w-[480px] text-[17px] leading-[1.6] text-pretty"
-              style={{ color: T.ink.dim }}
+            {tasksIntro.title}
+          </h3>
+          {tasks.length > 0 ? (
+            <GlobalLink
+              href="/contribute"
+              className="text-[15px] font-semibold underline underline-offset-[3px]"
+              style={{ color: T.accent.primary }}
             >
-              {band.text}
-            </p>
+              See all open tasks
+            </GlobalLink>
           ) : null}
-
-          {steps.length > 0 ? (
-            <ol className="m-0 mt-5 flex list-none flex-col gap-3 p-0">
-              {steps.map((step, i) => (
-                <li
-                  key={step.title}
-                  className="flex items-center gap-3 text-[16px]"
-                  style={{ color: T.ink.dim }}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="flex size-7 shrink-0 items-center justify-center rounded-full border text-[14px] font-semibold"
-                    style={{
-                      borderColor: T.accent.primary,
-                      color: T.accent.primary,
-                    }}
-                  >
-                    {i + 1}
-                  </span>
-                  <span>
-                    <strong style={{ color: T.ink.base }}>{step.title}</strong>
-                    {step.text ? ` ${step.text}` : null}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          ) : null}
-
-          <div className="mt-7 flex flex-wrap gap-2.5">
-            {band.primaryLabel && band.primaryHref ? (
-              <GlobalLink
-                href={band.primaryHref}
-                className="rounded-full px-5 py-3 font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
-                style={{ background: T.accent.primary }}
-              >
-                {band.primaryLabel}
-              </GlobalLink>
-            ) : null}
-            {band.secondaryLabel && band.secondaryHref ? (
-              <GlobalLink
-                href={band.secondaryHref}
-                className="rounded-full border bg-white px-5 py-3 font-semibold no-underline transition-colors hover:border-(--t-accent-primary)"
-                style={{ borderColor: T.border.hi, color: T.ink.base }}
-              >
-                {band.secondaryLabel}
-              </GlobalLink>
-            ) : null}
-          </div>
         </div>
 
-        <div>
-          <div className="mb-3 flex flex-wrap items-baseline justify-between gap-3">
-            <h3
-              className="m-0 text-[16px] font-bold"
-              style={{ color: T.ink.base }}
-            >
-              {tasksIntro.title}
-            </h3>
-            {tasks.length > 0 ? (
-              <GlobalLink
-                href="/contribute"
-                className="text-[15px] font-semibold underline underline-offset-[3px]"
-                style={{ color: T.accent.primary }}
+        <ul className="m-0 list-none p-0">
+          {tasks.map((task) => {
+            const { label, action, Icon, tint } = TASK_COPY[task.missingKey]!
+
+            return (
+              <li
+                key={task.documentId}
+                className="border-b"
+                style={{ borderColor: T.border.line }}
               >
-                See all open tasks
-              </GlobalLink>
-            ) : null}
-          </div>
-
-          <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
-            {tasks.map((task) => {
-              const { label, action, Icon, tint } = TASK_COPY[task.missingKey]!
-
-              return (
-                <li key={task.documentId}>
-                  <GlobalLink
-                    href={taskHref(task)}
-                    className={ROW}
-                    style={{ borderColor: T.border.line }}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="flex size-9 shrink-0 items-center justify-center rounded-full"
-                      style={{ background: tint.bg, color: tint.fg }}
-                    >
-                      <Icon className="size-4" strokeWidth={1.9} />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span
-                        className="block text-[13.5px] font-semibold"
-                        style={{ color: tint.fg }}
-                      >
-                        {label}
-                      </span>
-                      <span
-                        className="block truncate text-[20px] leading-[1.25]"
-                        style={{
-                          fontFamily: T.font.serif,
-                          fontWeight: 500,
-                          color: T.ink.base,
-                        }}
-                      >
-                        {task.name}
-                      </span>
-                      {task.place ? (
-                        <span
-                          className="block truncate text-[14px]"
-                          style={{ color: T.ink.dim }}
-                        >
-                          {task.place}
-                        </span>
-                      ) : null}
-                    </span>
-                    <span
-                      className="hidden shrink-0 text-[15px] font-semibold sm:inline"
-                      style={{ color: T.accent.primary }}
-                    >
-                      {action} <span aria-hidden="true">→</span>
-                    </span>
-                  </GlobalLink>
-                </li>
-              )
-            })}
-
-            {tasks.length === 0 ? (
-              <li>
-                <GlobalLink
-                  href="/contribute/index/new"
-                  className={ROW}
-                  style={{ borderColor: T.border.hi, background: T.bg.surface }}
-                >
+                <GlobalLink href={taskHref(task)} className={ROW}>
                   <span
                     aria-hidden="true"
-                    className="flex size-9 shrink-0 items-center justify-center rounded-full"
-                    style={{
-                      background: T.accent.chip,
-                      color: T.accent.primary,
-                    }}
+                    className="flex size-12 shrink-0 items-center justify-center rounded-[12px]"
+                    style={{ background: tint.bg, color: tint.fg }}
                   >
-                    <Plus className="size-4" strokeWidth={2} />
+                    <Icon className="size-5" strokeWidth={1.8} />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span
-                      className="block text-[20px] leading-[1.25]"
+                      className="block text-[14px] font-semibold"
+                      style={{ color: tint.fg }}
+                    >
+                      {label}
+                    </span>
+                    <span
+                      className="block truncate text-[22px] leading-tight transition-colors group-hover:text-(--t-accent-primary)"
                       style={{
                         fontFamily: T.font.serif,
                         fontWeight: 500,
                         color: T.ink.base,
                       }}
                     >
-                      Your local library missing?
+                      {task.name}
                     </span>
-                    <span
-                      className="block text-[14px]"
-                      style={{ color: T.ink.dim }}
-                    >
-                      Only a name, library type and one source are required.
-                    </span>
+                    {task.place ? (
+                      <span
+                        className="block truncate text-[14px]"
+                        style={{ color: T.ink.dim }}
+                      >
+                        {task.place}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span
+                    className="hidden shrink-0 text-[15px] font-semibold sm:inline"
+                    style={{ color: T.accent.primary }}
+                  >
+                    {action} <span aria-hidden="true">→</span>
                   </span>
                 </GlobalLink>
               </li>
-            ) : null}
-          </ul>
+            )
+          })}
 
-          <p
-            className="m-0 mt-4 flex items-center gap-1.5 text-[15px]"
-            style={{ color: T.ink.dim }}
-          >
-            <Sparkles
-              aria-hidden="true"
-              className="size-4 shrink-0"
-              strokeWidth={1.8}
-              style={{ color: T.accent.primary }}
-            />
-            <span>
-              Regular contributors get{" "}
-              <GlobalLink
-                href="/contribute/membership"
-                className="font-semibold underline underline-offset-[3px]"
-                style={{ color: T.accent.primary }}
-              >
-                Pro free
+          {tasks.length === 0 ? (
+            <li className="border-b" style={{ borderColor: T.border.line }}>
+              <GlobalLink href="/contribute/index/new" className={ROW}>
+                <span
+                  aria-hidden="true"
+                  className="flex size-12 shrink-0 items-center justify-center rounded-[12px]"
+                  style={{
+                    background: T.accent.chip,
+                    color: T.accent.primary,
+                  }}
+                >
+                  <Plus className="size-5" strokeWidth={2} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span
+                    className="block text-[22px] leading-tight"
+                    style={{
+                      fontFamily: T.font.serif,
+                      fontWeight: 500,
+                      color: T.ink.base,
+                    }}
+                  >
+                    Your local library missing?
+                  </span>
+                  <span
+                    className="block text-[14px]"
+                    style={{ color: T.ink.dim }}
+                  >
+                    Only a name, library type and one source are required.
+                  </span>
+                </span>
               </GlobalLink>
-              .
-            </span>
-          </p>
-        </div>
+            </li>
+          ) : null}
+        </ul>
+
+        <p
+          className="m-0 mt-4 flex items-center gap-2 text-[15px]"
+          style={{ color: T.ink.dim }}
+        >
+          <Star
+            aria-hidden="true"
+            className="size-4 shrink-0"
+            strokeWidth={1.8}
+            style={{ color: T.accent.primary }}
+          />
+          <span>
+            Regular contributors get{" "}
+            <GlobalLink
+              href="/contribute/membership"
+              className="font-semibold underline underline-offset-[3px]"
+              style={{ color: T.accent.primary }}
+            >
+              Pro free
+            </GlobalLink>
+            .
+          </span>
+        </p>
       </div>
     </section>
   )

@@ -40,25 +40,22 @@ export function PlansSection({
   return (
     <section
       aria-labelledby="plans-title"
-      className="mx-auto w-full max-w-[1360px] px-4 pt-[clamp(64px,8vw,104px)] sm:px-8"
+      className="mx-auto w-full max-w-[1360px] px-4 pt-[clamp(80px,10vw,140px)] sm:px-8"
     >
       <div
-        className="rounded-[28px] border p-[clamp(24px,4vw,48px)]"
+        className="rounded-[32px] border px-[clamp(20px,5vw,72px)] py-[clamp(32px,5vw,72px)]"
         style={{ background: T.bg.space, borderColor: T.border.line }}
       >
-        <SectionHeader
-          id="plans-title"
-          intro={intro}
-          action={
-            <GlobalLink
-              href="/contribute/membership"
-              className="font-semibold underline underline-offset-[3px]"
-              style={{ color: T.accent.primary }}
-            >
-              Compare all plans
-            </GlobalLink>
-          }
-        />
+        <div className="mb-10 max-w-[760px]">
+          <SectionHeader id="plans-title" intro={intro} size="band" />
+          <GlobalLink
+            href="/contribute/membership"
+            className="-mt-4 inline-block font-semibold underline underline-offset-[3px]"
+            style={{ color: T.accent.primary }}
+          >
+            Compare all plans
+          </GlobalLink>
+        </div>
 
         <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-4">
           {PLAN_TEASERS.map((teaser) => {

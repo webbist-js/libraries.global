@@ -1,26 +1,36 @@
 import GlobalLink from "@/components/global/GlobalLink"
-import Emphasis from "@/components/home/Emphasis"
+import { SECTION_RULE } from "@/components/home/homepage.constants"
 import type {
   HomepageContinentSummary,
   SectionIntro,
 } from "@/components/home/homepage.types"
-import { T } from "@/lib/design-tokens"
+import SectionHeader from "@/components/home/sections/SectionHeader"
+import { T, TYPE_TINT } from "@/lib/design-tokens"
 
 /** Segment shades for the per-country share bar (dark → light green). */
-const BAR_SHADES = ["#2F5D3A", "#4C7A56", "#7FA886", "#A9C7AD", "#CBDCCB"]
+const BAR_SHADES = ["#2F5D3A", "#6D9A76", "#A9C8AE", "#CBDCCB"]
 
 export type CountryBreakdown = Record<string, { name: string; count: number }[]>
 
+const NAME_STYLE = {
+  fontFamily: T.font.serif,
+  fontWeight: 500,
+  fontSize: "clamp(32px,3.4vw,48px)",
+  lineHeight: 1,
+  letterSpacing: "-0.015em",
+} as const
+
+/** How far the index has got: a row per continent with published records
+ * (its countries' shares and the count), then the continents still waiting
+ * for a first record. Counts are published records only. */
 export function CoverageSection({
   intro,
   continents,
   countryBreakdown = {},
-  totalCountriesByContinent = {},
 }: {
   readonly intro: SectionIntro
   readonly continents: HomepageContinentSummary[]
   readonly countryBreakdown?: CountryBreakdown
-  readonly totalCountriesByContinent?: Record<string, number>
 }) {
   if (continents.length === 0) return null
 
@@ -28,155 +38,122 @@ export function CoverageSection({
     .filter((c) => c.libraryCount > 0)
     .sort((a, b) => b.libraryCount - a.libraryCount)
   const empty = continents.filter((c) => c.libraryCount === 0)
+  const row =
+    "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-4 border-b py-7 md:grid-cols-[minmax(0,280px)_minmax(0,1fr)_auto] md:gap-x-10"
 
   return (
     <section
       aria-labelledby="coverage-title"
-      className="mx-auto grid w-full max-w-[1360px] grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] items-center gap-[clamp(24px,4vw,56px)] px-4 pt-[clamp(64px,8vw,104px)] sm:px-8"
+      className="mx-auto w-full max-w-[1360px] px-4 pt-[clamp(80px,10vw,140px)] sm:px-8"
     >
-      <div>
-        <h2
-          id="coverage-title"
-          className="m-0 text-balance"
-          style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
-            fontSize: "clamp(34px,4vw,50px)",
-            lineHeight: 1.08,
-            letterSpacing: "-0.015em",
-            color: T.ink.base,
-          }}
-        >
-          <Emphasis
-            text={intro.title ?? ""}
-            emStyle={{ color: T.accent.primary }}
-          />
-        </h2>
-        {intro.text ? (
-          <p
-            className="mt-3 max-w-[460px] text-[18px] leading-[1.6]"
-            style={{ color: T.ink.dim }}
-          >
-            {intro.text}
-          </p>
-        ) : null}
-        <GlobalLink
-          href="/contribute/index/new"
-          className="mt-6 inline-block rounded-full border bg-white px-5 py-3 font-semibold no-underline transition-colors hover:border-(--t-accent-primary)"
-          style={{ borderColor: T.border.hi, color: T.ink.base }}
-        >
-          Add the first library in your country
-        </GlobalLink>
-      </div>
+      <SectionHeader id="coverage-title" intro={intro} textBeside />
 
-      <div className="flex flex-col gap-4">
+      <div className="border-t-2" style={{ borderColor: SECTION_RULE }}>
         {withRecords.map((continent) => {
           const countries = countryBreakdown[continent.slug ?? ""] ?? []
           const total = continent.libraryCount
-          const totalCountries =
-            totalCountriesByContinent[continent.slug ?? ""] ?? null
-          const moreCountries =
-            totalCountries != null
-              ? Math.max(totalCountries - countries.length, 0)
-              : null
 
           return (
             <div
               key={continent.documentId}
-              className="rounded-[20px] border bg-white p-5"
+              className={row}
               style={{ borderColor: T.border.line }}
             >
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <GlobalLink
-                  href={`/${continent.slug}`}
-                  className="text-[24px] no-underline hover:underline"
-                  style={{
-                    fontFamily: T.font.serif,
-                    fontWeight: 500,
-                    color: T.ink.base,
-                  }}
-                >
-                  {continent.name} <span aria-hidden="true">→</span>
-                </GlobalLink>
-                <span
-                  className="text-[15px] font-semibold"
-                  style={{ color: T.ink.base }}
-                >
-                  {total.toLocaleString("en-US")} published record
-                  {total === 1 ? "" : "s"}
-                </span>
-              </div>
-
-              {/* Country-share bar */}
-              <div
-                aria-hidden="true"
-                className="mt-3 flex h-2.5 gap-px overflow-hidden rounded-full"
-                style={{ background: "#E6EFE6" }}
+              <GlobalLink
+                href={`/${continent.slug}`}
+                className="no-underline hover:underline"
+                style={{ ...NAME_STYLE, color: T.ink.base }}
               >
-                {countries.map((country, i) => (
-                  <span
-                    key={country.name}
-                    className="block h-full"
-                    style={{
-                      width: `${(country.count / total) * 100}%`,
-                      background:
-                        BAR_SHADES[Math.min(i, BAR_SHADES.length - 1)],
-                    }}
-                  />
-                ))}
+                {continent.name}
+              </GlobalLink>
+
+              <div className="col-span-2 row-start-2 md:col-span-1 md:col-start-2 md:row-start-1">
+                <div
+                  aria-hidden="true"
+                  className="flex h-3.5 gap-px overflow-hidden rounded-full"
+                  style={{ background: T.border.divider }}
+                >
+                  {countries.map((country, i) => (
+                    <span
+                      key={country.name}
+                      className="block h-full"
+                      style={{
+                        width: `${(country.count / total) * 100}%`,
+                        background:
+                          BAR_SHADES[Math.min(i, BAR_SHADES.length - 1)],
+                      }}
+                    />
+                  ))}
+                </div>
+                {countries.length > 0 ? (
+                  <ul className="m-0 mt-2.5 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-[14px]">
+                    {countries.map((country) => (
+                      <li key={country.name} style={{ color: T.ink.dim }}>
+                        <span
+                          className="font-semibold"
+                          style={{ color: T.ink.base }}
+                        >
+                          {country.name}
+                        </span>{" "}
+                        {country.count.toLocaleString("en-US")}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </div>
 
               <p
-                className="m-0 mt-2.5 text-[14px]"
-                style={{ color: T.ink.dim }}
+                className="m-0 text-right"
+                style={{
+                  fontFamily: T.font.serif,
+                  fontWeight: 500,
+                  fontSize: "clamp(44px,4.6vw,66px)",
+                  lineHeight: 1,
+                  letterSpacing: "-0.02em",
+                  color: TYPE_TINT.public.fg,
+                }}
               >
-                {countries.map((country, i) => (
-                  <span key={country.name}>
-                    {i > 0 ? " · " : ""}
-                    <span style={{ color: T.ink.base, fontWeight: 600 }}>
-                      {country.name}
-                    </span>{" "}
-                    {country.count}
-                  </span>
-                ))}
-                {moreCountries != null && moreCountries > 0 ? (
-                  <span>
-                    {countries.length > 0 ? " · " : ""}
-                    {moreCountries.toLocaleString("en-US")} more{" "}
-                    {moreCountries === 1 ? "country" : "countries"}: none yet
-                  </span>
-                ) : null}
+                {total.toLocaleString("en-US")}
+                <span className="sr-only">
+                  {" "}
+                  published {total === 1 ? "record" : "records"}
+                </span>
               </p>
             </div>
           )
         })}
 
         {empty.length > 0 ? (
-          <div
-            className="rounded-[20px] border bg-white p-5"
-            style={{ borderColor: T.border.line }}
-          >
-            <p
-              className="m-0 mb-3 text-[15px] font-semibold"
-              style={{ color: T.ink.base }}
-            >
-              Waiting for a first record
+          <div className={row} style={{ borderColor: T.border.line }}>
+            <p className="m-0" style={{ ...NAME_STYLE, color: T.ink.dim }}>
+              Waiting
             </p>
-            <div className="flex flex-wrap gap-2">
+            <ul className="col-span-2 row-start-2 m-0 flex list-none flex-wrap gap-2 p-0 md:col-span-1 md:col-start-2 md:row-start-1">
               {empty.map((continent) => (
-                <GlobalLink
-                  key={continent.documentId}
-                  href={`/${continent.slug}`}
-                  className="rounded-full border px-3.5 py-1.5 text-[14px] font-medium no-underline transition-colors hover:border-(--t-accent-primary)"
-                  style={{ borderColor: T.border.hi, color: T.ink.base }}
-                >
-                  {continent.name}{" "}
-                  <span aria-hidden="true" style={{ color: T.ink.low }}>
-                    +
-                  </span>
-                </GlobalLink>
+                <li key={continent.documentId}>
+                  <GlobalLink
+                    href={`/${continent.slug}`}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-dashed px-4 py-2 text-[15px] font-semibold no-underline transition-colors hover:border-(--t-accent-primary)"
+                    style={{ borderColor: T.border.hi, color: T.ink.base }}
+                  >
+                    {continent.name}
+                    <span
+                      aria-hidden="true"
+                      style={{ color: T.accent.primary }}
+                    >
+                      +
+                    </span>
+                  </GlobalLink>
+                </li>
               ))}
-            </div>
+            </ul>
+            <GlobalLink
+              href="/contribute/index/new"
+              className="text-right text-[15px] font-semibold underline underline-offset-[3px]"
+              style={{ color: T.accent.primary }}
+            >
+              Add the first library in your country
+            </GlobalLink>
           </div>
         ) : null}
       </div>

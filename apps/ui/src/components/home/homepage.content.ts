@@ -24,8 +24,10 @@ type HomepageDefaults = {
   atlasBand: CtaBand
   plansIntro: SectionIntro
   coverageIntro: SectionIntro
-  stewardBand: CtaBand
+  eventsIntro: SectionIntro
   journalIntro: SectionIntro
+  knowledgeBand: CtaBand
+  knowledgeLinks: LinkCard[]
   finalCta: CtaBand
   finalBenefits: Step[]
   openIntro: SectionIntro
@@ -34,9 +36,9 @@ type HomepageDefaults = {
 
 export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
   heroEyebrow: "Open data · Open source · Free to use",
-  heroTitle: "The world’s libraries, *documented together.*",
+  heroTitle: "Every library, *on one map.*",
   heroText:
-    "Find a library, explore the atlas, and help build an open record anyone can use.",
+    "An open record of the world’s libraries: find one near you, see how places are served, and help document the rest.",
 
   journeysIntro: {
     title: "Find them. Learn about them. *Help document them.*",
@@ -54,7 +56,7 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
     },
     {
       tone: "contribute",
-      eyebrow: "For everyone who knows a library",
+      eyebrow: "For anyone who knows a library",
       title: "Help build the index",
       text: "Add missing libraries, fix details and share photos. Reviewers check every change.",
       ctaLabel: "Start contributing",
@@ -64,19 +66,23 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
       tone: "analyse",
       eyebrow: "For researchers and planners",
       title: "Analyse access",
-      text: "Map where libraries are, when they open and how step-free they are. Deeper analysis is coming with Pro.",
+      text: "Map where libraries are, when they open and how step-free they are. Deeper analysis with Pro.",
       ctaLabel: "Open the atlas",
       ctaHref: "/map",
     },
   ],
 
-  featuredIntro: {
-    title: "Libraries worth knowing",
-    text: "Buildings, collections and histories from the growing index.",
+  atlasBand: {
+    title: "See how places *are served.*",
+    text: "Every library on one map. Filter by type, opening hours or services, then switch on layers for step-free access, events and record completeness.",
+    primaryLabel: "Open the atlas",
+    primaryHref: "/map",
+    secondaryLabel: "What Pro adds",
+    secondaryHref: "/contribute/membership",
   },
 
   communityBand: {
-    title: "Two minutes can finish a record.",
+    title: "Two minutes can *finish a record.*",
     text: "You don’t need to be a librarian. Pick a gap, add what you know with a source, and a reviewer checks it. Every accepted change is credited to you.",
     primaryLabel: "Start contributing",
     primaryHref: "/contribute",
@@ -85,55 +91,78 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
   },
 
   communitySteps: [
-    { title: "Pick a gap.", text: "Hours, photos, access." },
-    { title: "Add it with a source.", text: "A website or your own visit." },
-    {
-      title: "A reviewer checks it.",
-      text: "Then it’s published, with credit.",
-    },
+    { title: "Pick a gap", text: null },
+    { title: "Add it with a source", text: null },
+    { title: "A reviewer checks it", text: null },
   ],
 
   tasksIntro: {
-    title: "Open tasks",
+    title: "Open tasks right now",
     text: null,
   },
 
-  atlasBand: {
-    title: "See how places are served.",
-    text: "The atlas puts every library on one map. Filter by type, opening hours or services, then switch on layers for step-free access, events and record completeness.",
-    primaryLabel: "Open the atlas",
-    primaryHref: "/map",
-    secondaryLabel: "What Pro adds",
-    secondaryHref: "/contribute/membership",
-  },
-
-  plansIntro: {
-    title: "Library facts are always free.",
-    text: "Plans pay for analysis and extra data, and keep the index independent. No ads, and money never buys a place in the index.",
+  featuredIntro: {
+    title: "Libraries *worth knowing*",
+    text: null,
   },
 
   coverageIntro: {
-    title: "Where we are so far",
+    title: "Where we are *so far.*",
     text: "There’s no complete open record of the world’s libraries. We’re building one, country by country. Counts are published records only.",
   },
 
-  stewardBand: {
-    title: "Is this your library?",
-    text: "Staff can become verified stewards of their library’s record: add collections and photos and keep information accurate. The community can still suggest edits.",
-    primaryLabel: "Find your library",
-    primaryHref: "/libraries",
-    secondaryLabel: "Team plans for library services",
-    secondaryHref: "/contribute/membership",
+  plansIntro: {
+    title: "Library facts are *always free.*",
+    text: "Plans pay for analysis and extra data and keep the index independent. No ads, and money never buys a place in the index.",
+  },
+
+  eventsIntro: {
+    title: "What’s on at libraries",
+    text: "Talks, exhibitions, storytimes and workshops, collected from library calendars and booking sites.",
   },
 
   journalIntro: {
-    title: "From the journal",
+    title: "From the *journal*",
     text: null,
   },
 
+  knowledgeBand: {
+    title: "How it all works, *in plain words.*",
+    text: null,
+    primaryLabel: "Knowledge hub",
+    primaryHref: "/knowledge",
+    secondaryLabel: null,
+    secondaryHref: null,
+  },
+
+  knowledgeLinks: [
+    {
+      title: "Finding a library",
+      text: "Browse by place, search and filter the index, or explore the map.",
+      href: "/knowledge/getting-started/finding-a-library",
+    },
+    {
+      title: "How review works",
+      text: "Who checks contributions, and what happens to yours.",
+      href: "/knowledge/governance/how-review-works",
+    },
+    {
+      title: "Claiming a library you work for",
+      text: "How staff and volunteers become verified stewards of a record.",
+      href: "/knowledge/contributing/claiming-your-library",
+    },
+    {
+      title: "Reusing the data",
+      text: "The licence on records and photos, and what it asks of you.",
+      href: "/knowledge/data-api/reusing-the-data",
+    },
+  ],
+
+  // The closing band shows the title and one step per column, the primary
+  // call to action under the first and the secondary under the second.
   finalCta: {
     title: "Know a library? *Put it on the map.*",
-    text: "A free account takes a minute. You get credit for every accepted change, and regular contributors get Pro free.",
+    text: null,
     primaryLabel: "Create a free account",
     primaryHref: "/auth/register",
     secondaryLabel: "Make your first contribution",
@@ -142,20 +171,12 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
 
   finalBenefits: [
     {
-      title: "Suggest and publish improvements",
-      text: "Reviewed, sourced, credited to you.",
+      title: "Join the index",
+      text: "A free account takes a minute. Follow the libraries you care about and get credit for every accepted change.",
     },
     {
-      title: "Follow the libraries you care about",
-      text: "Hear about changes and events.",
-    },
-    {
-      title: "Earn trust over time",
-      text: "From contributor to reviewer or steward.",
-    },
-    {
-      title: "Pro free for regular contributors",
-      text: "Unlock atlas analysis by helping out.",
+      title: "Add what you know",
+      text: "Fill a gap in a record or add a missing library. A reviewer checks it first, and regular contributors get Pro free.",
     },
   ],
 
@@ -171,29 +192,59 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
       href: "https://github.com/webbist-js/libraries.global",
     },
     {
-      title: "Contribution guide",
-      text: "How to add and edit records, and what counts as a good source.",
-      href: "/knowledge/contributing/how-to-contribute",
-    },
-    {
-      title: "Governance",
-      text: "Who reviews changes and how decisions are made.",
-      href: "/knowledge",
+      title: "Methodology",
+      text: "What we include, how we count, and known gaps.",
+      href: "/knowledge/data-api/how-we-count",
     },
     {
       title: "Data licence",
-      text: "Download the index under an open licence, with provenance.",
+      text: "Reuse the index under an open licence, with provenance.",
       href: "/legal/data-licence",
     },
+  ],
+}
+
+/**
+ * The homepage closing band's first step for a signed-in member, in place of
+ * the join step and its sign-up button.
+ */
+export const CLOSING_MEMBER_STEP: Step & { ctaLabel: string; ctaHref: string } =
+  {
+    title: "You’ve joined the index",
+    text: "Follow the libraries you care about, and get credit for every change of yours that’s accepted.",
+    ctaLabel: "Find libraries to follow",
+    ctaHref: "/libraries",
+  }
+
+/**
+ * The contribute prompt above the Find libraries list: the homepage's
+ * closing ask, with what an account gets you in place of its two steps.
+ */
+export const FIND_CONTRIBUTE_PROMPT: { band: CtaBand; benefits: Step[] } = {
+  band: {
+    title: "Know a library? *Put it on the map.*",
+    text: "A free account takes a minute. You get credit for every accepted change, and regular contributors get Pro free.",
+    primaryLabel: "Create a free account",
+    primaryHref: "/auth/register",
+    secondaryLabel: "Make your first contribution",
+    secondaryHref: "/contribute",
+  },
+  benefits: [
     {
-      title: "API",
-      text: "Query libraries by place, type and services.",
-      href: "/knowledge",
+      title: "Suggest and publish improvements",
+      text: "Reviewed, sourced, credited to you.",
     },
     {
-      title: "Methodology",
-      text: "What we include, how we verify, and known gaps.",
-      href: "/knowledge",
+      title: "Follow the libraries you care about",
+      text: "Hear about changes and events.",
+    },
+    {
+      title: "Earn trust over time",
+      text: "From contributor to reviewer or steward.",
+    },
+    {
+      title: "Pro free for regular contributors",
+      text: "Unlock atlas analysis by helping out.",
     },
   ],
 }
@@ -234,8 +285,10 @@ type HomepageCms = {
   atlasBand?: CtaBand | null
   plansIntro?: SectionIntro | null
   coverageIntro?: SectionIntro | null
-  stewardBand?: CtaBand | null
+  eventsIntro?: SectionIntro | null
   journalIntro?: SectionIntro | null
+  knowledgeBand?: CtaBand | null
+  knowledgeLinks?: LinkCard[] | null
   finalCta?: CtaBand | null
   finalBenefits?: Step[] | null
   openIntro?: SectionIntro | null
@@ -267,8 +320,10 @@ export function resolveHomepageContent(
     atlasBand: withFallback(cms?.atlasBand, d.atlasBand),
     plansIntro: withFallback(cms?.plansIntro, d.plansIntro),
     coverageIntro: withFallback(cms?.coverageIntro, d.coverageIntro),
-    stewardBand: withFallback(cms?.stewardBand, d.stewardBand),
+    eventsIntro: withFallback(cms?.eventsIntro, d.eventsIntro),
     journalIntro: withFallback(cms?.journalIntro, d.journalIntro),
+    knowledgeBand: withFallback(cms?.knowledgeBand, d.knowledgeBand),
+    knowledgeLinks: listOrFallback(cms?.knowledgeLinks, d.knowledgeLinks),
     finalCta: withFallback(cms?.finalCta, d.finalCta),
     finalBenefits: listOrFallback(cms?.finalBenefits, d.finalBenefits),
     openIntro: withFallback(cms?.openIntro, d.openIntro),

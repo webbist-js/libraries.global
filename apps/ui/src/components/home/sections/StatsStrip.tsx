@@ -41,15 +41,15 @@ export function StatsStrip({
   return (
     <section
       aria-label="The index so far"
-      className="border-b bg-white"
+      className="border-y"
       style={{ borderColor: T.border.line }}
     >
-      <div className="mx-auto flex w-full max-w-[1360px] flex-wrap items-center justify-between gap-x-8 gap-y-3 px-4 py-4 sm:px-8">
-        <dl className="m-0 flex flex-wrap items-baseline gap-x-8 gap-y-2">
+      <div className="mx-auto flex w-full max-w-[1360px] flex-wrap items-baseline justify-between gap-x-10 gap-y-3 px-4 py-6 sm:px-8">
+        <dl className="m-0 flex flex-wrap items-baseline gap-x-[clamp(32px,5vw,72px)] gap-y-3">
           {cells.map((cell) => (
             <div
               key={cell.label}
-              className="flex flex-row-reverse items-baseline gap-2"
+              className="flex flex-row-reverse items-baseline gap-2.5"
             >
               <dt className="text-[15px]" style={{ color: T.ink.dim }}>
                 {cell.label}
@@ -59,8 +59,9 @@ export function StatsStrip({
                 style={{
                   fontFamily: T.font.serif,
                   fontWeight: 500,
-                  fontSize: "28px",
+                  fontSize: "clamp(40px,4.2vw,58px)",
                   lineHeight: 1,
+                  letterSpacing: "-0.02em",
                   color: T.ink.base,
                 }}
               >

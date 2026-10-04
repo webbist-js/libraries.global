@@ -10,6 +10,10 @@ export type HomepageContinentSummary = Pick<
   "code" | "documentId" | "id" | "name" | "slug"
 > & {
   libraryCount: number
+  /** Countries in the continent, with or without libraries. */
+  countryTotal?: number
+  /** Countries that have libraries, most first. */
+  countries?: { name: string; slug: string; libraryCount: number }[]
 }
 
 // ── Editable section copy (homepage.* components) ────────────────────────────

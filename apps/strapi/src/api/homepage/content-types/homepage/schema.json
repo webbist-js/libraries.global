@@ -151,19 +151,21 @@
         }
       }
     },
-    "plansIntro": {
-      "type": "component",
-      "component": "homepage.section-intro",
-      "repeatable": false,
+    "atlasImage": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ],
       "pluginOptions": {
         "i18n": {
-          "localized": true
+          "localized": false
         }
       }
     },
-    "stewardBand": {
+    "plansIntro": {
       "type": "component",
-      "component": "homepage.cta-band",
+      "component": "homepage.section-intro",
       "repeatable": false,
       "pluginOptions": {
         "i18n": {
@@ -181,10 +183,40 @@
         }
       }
     },
+    "eventsIntro": {
+      "type": "component",
+      "component": "homepage.section-intro",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
     "journalIntro": {
       "type": "component",
       "component": "homepage.section-intro",
       "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "knowledgeBand": {
+      "type": "component",
+      "component": "homepage.cta-band",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "knowledgeLinks": {
+      "type": "component",
+      "component": "homepage.link-card",
+      "repeatable": true,
       "pluginOptions": {
         "i18n": {
           "localized": true

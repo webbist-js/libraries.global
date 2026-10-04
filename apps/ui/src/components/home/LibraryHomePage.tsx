@@ -9,6 +9,8 @@ import HomepageSections from "@/components/home/HomepageSections"
 import { pickTasks } from "@/components/home/sections/ContributeSection"
 import StrapiStructuredData from "@/components/page-builder/components/seo-utilities/StrapiStructuredData"
 import { T } from "@/lib/design-tokens"
+import { loadJournalTopStories } from "@/lib/journal-landing"
+import { fetchGlobeMarkers, fetchUpcomingEvents } from "@/lib/meilisearch"
 import {
   fetchFooter,
   fetchHomepage,
@@ -16,7 +18,6 @@ import {
   fetchHomepageStats,
   fetchIncompleteLibraries,
   fetchLegalDocuments,
-  fetchRecentBlogArticles,
 } from "@/lib/strapi-api/content/server"
 
 export function LibraryHomePage({
@@ -31,83 +32,45 @@ export function LibraryHomePage({
   const continentSummariesPromise = fetchHomepageContinents(locale)
   const footerPromise = fetchFooter(locale)
   const legalDocumentsPromise = fetchLegalDocuments(locale, "published")
-  const blogArticlesPromise = fetchRecentBlogArticles(locale)
-  const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
+  const journalPromise = loadJournalTopStories(locale)
+  // The next four events in the coming month; none means no events section.
+  const eventsPromise = fetchUpcomingEvents({ days: 30, limit: 4 })
 
   const statsPromise = fetchHomepageStats()
   const incompletePromise = fetchIncompleteLibraries()
 
-  // Every published record with coordinates — plotted on the hero globe and
-  // aggregated for the coverage breakdown.
-  const markersPromise = fetch(
-    `${STRAPI}/api/libraries?pagination[pageSize]=500&fields[0]=location&fields[1]=featured&populate[country][fields][0]=name&populate[continent][fields][0]=slug&status=published`,
-    { next: { revalidate: 300 } }
-  )
-    .then((r) => r.json())
-    .catch(() => null)
+  // One marker per 1° cell with libraries, plus each featured library.
+  const globeMarkersPromise = fetchGlobeMarkers(locale).catch(() => [])
 
   const homepage = use(homepagePromise)?.data
   const continentSummaries = use(continentSummariesPromise)?.data ?? []
   const footer = use(footerPromise)?.data
   const legalDocuments = use(legalDocumentsPromise).data
-  const blogArticles = use(blogArticlesPromise)?.data ?? []
+  const journal = use(journalPromise)
+  const events = use(eventsPromise)
   const stats = use(statsPromise)
   const tasks = pickTasks(use(incompletePromise), 3)
   const content = resolveHomepageContent(homepage)
-  const markersJson = use(markersPromise) as {
-    data?: {
-      location?: { lat?: number | string; lng?: number | string } | null
-      featured?: boolean | null
-      country?: { name?: string | null } | null
-      continent?: { slug?: string | null } | null
-    }[]
-  } | null
+  const globeMarkers = use(globeMarkersPromise)
 
-  const records = markersJson?.data ?? []
-  const globeMarkers = records
-    .map((entry) => ({
-      lat: Number(entry.location?.lat),
-      lng: Number(entry.location?.lng),
-      featured: entry.featured === true,
-    }))
-    .filter((m) => Number.isFinite(m.lat) && Number.isFinite(m.lng))
-
-  // Per-continent country breakdown for the coverage section.
-  const countryBreakdown: Record<string, { name: string; count: number }[]> = {}
-  for (const entry of records) {
-    const cSlug = entry.continent?.slug
-    const countryName = entry.country?.name
-    if (!cSlug || !countryName) continue
-    countryBreakdown[cSlug] ??= []
-    const bucket = countryBreakdown[cSlug]
-    const existing = bucket.find((c) => c.name === countryName)
-    if (existing) existing.count += 1
-    else bucket.push({ name: countryName, count: 1 })
-  }
-  for (const bucket of Object.values(countryBreakdown)) {
-    bucket.sort((a, b) => b.count - a.count)
-  }
-
-  // Total country count per continent-with-records ("39 more countries: none yet")
-  const totalCountriesByContinent: Record<string, number> = {}
-  const continentSlugs = Object.keys(countryBreakdown)
-  const countryTotals = use(
-    Promise.all(
-      continentSlugs.map((slug) =>
-        fetch(
-          `${STRAPI}/api/countries?filters[continent][slug][$eq]=${encodeURIComponent(slug)}&pagination[pageSize]=1&fields[0]=id`,
-          { next: { revalidate: 3600 } }
-        )
-          .then((r) => r.json())
-          .then((j) => j?.meta?.pagination?.total ?? null)
-          .catch(() => null)
+  // Per-continent country breakdown for the coverage section, counted in
+  // Strapi over every published library.
+  const countryBreakdown: Record<string, { name: string; count: number }[]> =
+    Object.fromEntries(
+      continentSummaries.flatMap((c) =>
+        c.slug && c.countries?.length
+          ? [
+              [
+                c.slug,
+                c.countries.map(({ name, libraryCount }) => ({
+                  name,
+                  count: libraryCount,
+                })),
+              ],
+            ]
+          : []
       )
     )
-  )
-  continentSlugs.forEach((slug, i) => {
-    const total = countryTotals[i]
-    if (typeof total === "number") totalCountriesByContinent[slug] = total
-  })
 
   return (
     <div
@@ -125,18 +88,19 @@ export function LibraryHomePage({
             title={content.heroTitle}
             text={content.heroText}
             markers={globeMarkers}
-            signedIn={viewerPlan !== undefined}
           />
 
           <HomepageSections
             content={content}
             stats={stats}
             tasks={tasks}
+            atlasImage={homepage?.atlasImage}
             featuredLibraries={homepage?.featuredLibraries}
             continents={continentSummaries}
             countryBreakdown={countryBreakdown}
-            totalCountriesByContinent={totalCountriesByContinent}
-            blogArticles={blogArticles}
+            events={events}
+            journal={journal}
+            locale={locale}
             viewerPlan={viewerPlan}
           />
         </main>

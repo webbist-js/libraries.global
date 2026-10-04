@@ -5,7 +5,14 @@
 import { OrbitControls, Stars, useTexture } from "@react-three/drei"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Bloom, EffectComposer } from "@react-three/postprocessing"
-import { Suspense, useEffect, useMemo, useRef } from "react"
+import {
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import * as THREE from "three"
 
 import {
@@ -1063,20 +1070,31 @@ function StarfieldLayer({
 }
 
 /**
- * Pins the globe to a point on the canvas instead of centring it. `x`/`y` are
- * fractions of the canvas (0 = left/top, values past 1 sit off-canvas),
- * `radius` is a fraction of canvas height, capped by `maxRadiusW` (fraction
- * of width) so narrow viewports don't swallow the page content.
+ * Pins the globe into the canvas's bottom-right corner, cropped by both
+ * edges, instead of centring it. Offsets are in globe radii, so the crop
+ * keeps its shape at any size: the centre sits `below` radii under the
+ * bottom edge and, given the room, `inset` radii in from the right edge.
+ * `radius` is a fraction of canvas height. On a canvas too narrow for it,
+ * the globe slides right (to `minInset`, negative past the edge) and then
+ * shrinks, so its left limb never comes within `clearLeft` px of the left
+ * edge.
  */
-export type GlobeScreenAnchor = {
-  x: number
-  y: number
+export type GlobeCornerPin = {
   radius: number
-  maxRadiusW?: number
+  below: number
+  inset: number
+  minInset: number
+  clearLeft?: number
 }
 
+/** A point on the globe, in degrees, turned to face the camera. */
+export type GlobeView = { lat: number; lng: number }
+
 export type GlobeOverrides = {
-  anchor?: GlobeScreenAnchor
+  pin?: GlobeCornerPin
+  /** Opening views; one is picked at random each time the globe mounts.
+   * Takes precedence over `globePitch` and `globeYaw`. */
+  startViews?: readonly GlobeView[]
   autoRotate?: boolean
   autoRotateSpeed?: number
   cameraFov?: number
@@ -1105,38 +1123,85 @@ export type GlobeOverrides = {
   showStars?: boolean
 }
 
-/** World-space position + scale that places the globe at a screen anchor.
- * Assumes the camera looks down -z at the origin, so the globe plane (z=0)
- * sits `camera.position.z` away. */
-function useAnchorFrame(anchor: GlobeScreenAnchor | undefined) {
+/** Puts the globe at its corner pin with a lens shift: the camera stays
+ * aimed at the globe, so it draws as a true circle, and its frame slides
+ * until the globe sits in the corner. (Moving the globe off-axis instead
+ * would stretch it in perspective.) Returns the globe's scale, or null when
+ * it isn't pinned. */
+function useCornerPin(pin: GlobeCornerPin | undefined) {
   const size = useThree((state) => state.size)
   const camera = useThree((state) => state.camera)
 
-  return useMemo(() => {
-    if (!anchor || !(camera instanceof THREE.PerspectiveCamera)) return null
-    const worldH =
-      2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)
-    const aspect = size.width / Math.max(size.height, 1)
-    const worldW = worldH * aspect
-    const radiusH = Math.min(
-      anchor.radius,
-      (anchor.maxRadiusW ?? Infinity) * aspect
+  const frame = useMemo(() => {
+    const { width, height } = size
+    if (!pin || !(camera instanceof THREE.PerspectiveCamera)) return null
+    if (width <= 0 || height <= 0) return null
+    const clearLeft = pin.clearLeft ?? 0
+    // Half-width of the cap where the bottom edge cuts it, in radii: the
+    // furthest left the globe reaches.
+    const reach = pin.below > 0 ? Math.sqrt(1 - Math.min(pin.below, 1) ** 2) : 1
+    const radius = Math.max(
+      Math.min(
+        pin.radius * height,
+        (width - clearLeft) / (reach + pin.minInset)
+      ),
+      0
     )
+    const x = Math.max(width - pin.inset * radius, clearLeft + reach * radius)
+    const y = height + pin.below * radius
+
+    // A frame centred on the globe, at the canvas's aspect (so R3F's own
+    // resize handling agrees with it), big enough to contain the canvas.
+    const zoom = Math.max(
+      (2 * x) / width,
+      (2 * (width - x)) / width,
+      (2 * y) / height,
+      (2 * (height - y)) / height
+    )
+    const fullWidth = width * zoom
+    const fullHeight = height * zoom
+    const focalPx =
+      fullHeight / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2))
+    // The sphere whose outline is `radius` px across from the camera
+    const sphereRadius =
+      camera.position.length() * Math.sin(Math.atan(radius / focalPx))
 
     return {
-      position: [(anchor.x - 0.5) * worldW, (0.5 - anchor.y) * worldH, 0] as [
-        number,
-        number,
-        number,
-      ],
-      scale: (radiusH * worldH) / EARTH_RADIUS,
+      fullHeight,
+      fullWidth,
+      offsetX: fullWidth / 2 - x,
+      offsetY: fullHeight / 2 - y,
+      scale: sphereRadius / EARTH_RADIUS,
     }
-  }, [anchor, camera, size.width, size.height])
+  }, [pin, camera, size])
+
+  useLayoutEffect(() => {
+    if (!frame || !(camera instanceof THREE.PerspectiveCamera)) return
+    camera.setViewOffset(
+      frame.fullWidth,
+      frame.fullHeight,
+      frame.offsetX,
+      frame.offsetY,
+      size.width,
+      size.height
+    )
+    camera.updateProjectionMatrix()
+
+    return () => camera.clearViewOffset()
+  }, [camera, frame, size])
+
+  return frame?.scale ?? null
 }
 
-/** Spins its children about the globe's own polar axis — used in anchored
- * mode, where OrbitControls' auto-rotate would swing the camera around the
- * origin rather than the off-centre globe. */
+function pickStartView(views: readonly GlobeView[] | undefined) {
+  if (!views?.length) return null
+
+  return views[Math.floor(Math.random() * views.length)] ?? null
+}
+
+/** Spins its children about the globe's own (tilted) polar axis — used when
+ * pinned, in place of OrbitControls' auto-rotate, which orbits the camera
+ * about the world's vertical and would make a tilted globe wobble. */
 function PolarSpin({
   children,
   speed,
@@ -1158,6 +1223,27 @@ function PolarSpin({
   return <group ref={ref}>{children}</group>
 }
 
+/** Pitch and yaw, in degrees, that turn the opening view toward the camera;
+ * failing that the explicit overrides, and by default the plotted data. */
+function facingAngles(
+  startView: GlobeView | null,
+  overrides: GlobeOverrides | undefined,
+  centroid: GlobeView | null
+) {
+  if (startView) return { pitch: startView.lat, yaw: -startView.lng }
+
+  return {
+    pitch:
+      overrides?.globePitch ??
+      (centroid
+        ? THREE.MathUtils.clamp(centroid.lat * 0.55, -32, 32)
+        : GLOBE_SETTINGS.globePitch),
+    yaw:
+      overrides?.globeYaw ??
+      (centroid ? -centroid.lng : GLOBE_SETTINGS.globeYaw),
+  }
+}
+
 function GlobeScene({
   markers,
   overrides,
@@ -1165,7 +1251,10 @@ function GlobeScene({
   readonly markers?: LibraryMarker[]
   readonly overrides?: GlobeOverrides
 }) {
-  const anchorFrame = useAnchorFrame(overrides?.anchor)
+  const pinned = overrides?.pin !== undefined
+  const pinScale = useCornerPin(overrides?.pin)
+  // Picked once per mount, so a fresh visit opens on a different region.
+  const [startView] = useState(() => pickStartView(overrides?.startViews))
   // Real records replace the illustrative dataset when available.
   const dataLayers = useMemo(() => {
     if (!markers || markers.length === 0) return null
@@ -1195,14 +1284,11 @@ function GlobeScene({
 
   const globeY = overrides?.globeY ?? GLOBE_SETTINGS.globeY
   const globeScale = overrides?.globeScale ?? GLOBE_SETTINGS.globeScale
-  // Face the plotted data toward the camera by default.
-  const globePitch =
-    overrides?.globePitch ??
-    (centroid
-      ? THREE.MathUtils.clamp(centroid.lat * 0.55, -32, 32)
-      : GLOBE_SETTINGS.globePitch)
-  const globeYaw =
-    overrides?.globeYaw ?? (centroid ? -centroid.lng : GLOBE_SETTINGS.globeYaw)
+  const { pitch: globePitch, yaw: globeYaw } = facingAngles(
+    startView,
+    overrides,
+    centroid
+  )
   // Axial tilt is decorative on the illustrative globe; with real data it
   // rolls the centred cluster off-axis, so it's dropped when markers drive
   // the framing.
@@ -1277,8 +1363,8 @@ function GlobeScene({
       ) : null}
 
       <group
-        position={anchorFrame?.position ?? [-0.02, globeY, 0]}
-        scale={anchorFrame?.scale ?? globeScale}
+        position={pinned ? [0, 0, 0] : [-0.02, globeY, 0]}
+        scale={pinScale ?? globeScale}
       >
         {showSatellites ? <Satellites /> : null}
         {showDust ? <OrbitalDust /> : null}
@@ -1286,7 +1372,7 @@ function GlobeScene({
         {/* Pitch/tilt applied outside, yaw inside — so yaw spins the sphere
             about its own poles and lng→front math stays exact. */}
         <group rotation={[THREE.MathUtils.degToRad(globePitch), 0, globeTilt]}>
-          <PolarSpin speed={anchorFrame && autoRotate ? autoRotateSpeed : 0}>
+          <PolarSpin speed={pinned && autoRotate ? autoRotateSpeed : 0}>
             <group rotation={[0, THREE.MathUtils.degToRad(globeYaw), 0]}>
               <GlobeShell />
               {showGraticule ? <Graticule /> : null}
@@ -1337,7 +1423,7 @@ function GlobeScene({
         </group>
       </group>
 
-      {anchorFrame ? null : (
+      {pinned ? null : (
         <OrbitControls
           autoRotate={autoRotate}
           autoRotateSpeed={autoRotateSpeed}
@@ -1377,13 +1463,13 @@ export function KnowledgeGlobeCanvas({
   const fov = overrides?.cameraFov ?? GLOBE_SETTINGS.cameraFov
   const cameraZ = overrides?.cameraZ ?? GLOBE_SETTINGS.cameraZ
   const cameraY = overrides?.cameraY ?? 0.06
-  const anchor = overrides?.anchor
+  const pinned = overrides?.pin !== undefined
   const interactive = overrides?.interactive ?? true
 
   return (
     <div className={cn("relative h-full w-full", className)}>
       {/* Ambient canvas glow — a soft warm indigo wash behind the globe */}
-      {anchor ? null : (
+      {pinned ? null : (
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"

@@ -300,6 +300,45 @@ export async function searchLibraryNames(
   })
 }
 
+// ── Homepage globe ───────────────────────────────────────────────────────────
+
+/**
+ * Hero-globe markers: one per 1° grid cell that has a library (a facet
+ * count, so its size follows the map, not the index), plus every featured
+ * library at its own position.
+ */
+export async function fetchGlobeMarkers(
+  locale?: string
+): Promise<{ lat: number; lng: number; featured: boolean }[]> {
+  const index = meiliClient.index("library")
+  const [cells, featured] = await Promise.all([
+    index.search("", {
+      filter: searchLocaleFilter(locale),
+      limit: 0,
+      facets: ["geo_cell"],
+    }),
+    index.search<LibrarySearchHit>("", {
+      filter: withSearchLocale(["featured = true"], locale),
+      limit: 200,
+      attributesToRetrieve: ["_geo"],
+    }),
+  ])
+  const cellMarkers = Object.keys(
+    cells.facetDistribution?.geo_cell ?? {}
+  ).flatMap((cell) => {
+    const [lat, lng] = cell.split(",").map(Number)
+
+    return Number.isFinite(lat) && Number.isFinite(lng)
+      ? [{ lat: lat!, lng: lng!, featured: false }]
+      : []
+  })
+  const featuredMarkers = featured.hits.flatMap((hit) =>
+    hit._geo ? [{ lat: hit._geo.lat, lng: hit._geo.lng, featured: true }] : []
+  )
+
+  return [...cellMarkers, ...featuredMarkers]
+}
+
 // ── Blog search ───────────────────────────────────────────────────────────────
 
 export interface BlogArticleSearchHit {
@@ -554,6 +593,8 @@ export interface EventSearchParams {
   countryCode?: string
   continentSlug?: string
   regionSlug?: string
+  /** Only these statuses, e.g. upcoming and ongoing; every status when empty. */
+  statuses?: string[]
   page?: number
   hitsPerPage?: number
 }
@@ -568,6 +609,7 @@ export async function searchEvents(params: EventSearchParams = {}) {
     countryCode,
     continentSlug,
     regionSlug,
+    statuses = [],
     page = 0,
     hitsPerPage = 20,
   } = params
@@ -594,6 +636,11 @@ export async function searchEvents(params: EventSearchParams = {}) {
     )
   if (regionSlug)
     filterParts.push(`library_region_slug = ${JSON.stringify(regionSlug)}`)
+  if (statuses.length > 0) {
+    filterParts.push(
+      `status IN [${statuses.map((s) => JSON.stringify(s)).join(", ")}]`
+    )
+  }
 
   const index = meiliClient.index("event")
 
@@ -629,6 +676,33 @@ export async function searchEvents(params: EventSearchParams = {}) {
       "library_region_slug",
     ],
   })
+}
+
+/**
+ * The next public (upcoming or ongoing) events anywhere, soonest first,
+ * starting within `days`. No index yet (nothing synced) or Meilisearch being
+ * down reads as no events, so a page can simply leave its events out.
+ */
+export async function fetchUpcomingEvents({
+  days,
+  limit,
+}: {
+  days: number
+  limit: number
+}): Promise<EventSearchHit[]> {
+  const now = Math.floor(Date.now() / 1000)
+  try {
+    const result = await searchEvents({
+      fromTimestamp: now,
+      toTimestamp: now + days * 24 * 60 * 60,
+      statuses: ["upcoming", "ongoing"],
+      hitsPerPage: limit,
+    })
+
+    return result.hits
+  } catch {
+    return []
+  }
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────

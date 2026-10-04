@@ -1683,6 +1683,12 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
           localized: true
         }
       }>
+    atlasImage: Schema.Attribute.Media<"images"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     communityBand: Schema.Attribute.Component<"homepage.cta-band", false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1734,6 +1740,12 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+    eventsIntro: Schema.Attribute.Component<"homepage.section-intro", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     featuredIntro: Schema.Attribute.Component<"homepage.section-intro", false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1807,6 +1819,18 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
           localized: true
         }
       }>
+    knowledgeBand: Schema.Attribute.Component<"homepage.cta-band", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    knowledgeLinks: Schema.Attribute.Component<"homepage.link-card", true> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     locale: Schema.Attribute.String
     localizations: Schema.Attribute.Relation<
       "oneToMany",
@@ -1832,12 +1856,6 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
       }>
     publishedAt: Schema.Attribute.DateTime
     seo: Schema.Attribute.Component<"shared.seo", false> &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true
-        }
-      }>
-    stewardBand: Schema.Attribute.Component<"homepage.cta-band", false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true

@@ -32,6 +32,7 @@ vi.mock("@/lib/strapi-helpers", () => ({
 
 // Must import AFTER mock is declared so the singleton picks up the mock
 const {
+  fetchGlobeMarkers,
   searchBlogArticles,
   searchLibraries,
   searchLibrariesByParams,
@@ -193,5 +194,31 @@ describe("route locale", () => {
       "x",
       expect.objectContaining({ filter: 'locale = "fr"' })
     )
+  })
+})
+
+describe("fetchGlobeMarkers", () => {
+  it("plots one marker per grid cell plus each featured library", async () => {
+    mockSearch
+      .mockResolvedValueOnce({
+        hits: [],
+        facetDistribution: { geo_cell: { "41,-74": 400, "56,-4": 81 } },
+      })
+      .mockResolvedValueOnce({ hits: [{ _geo: { lat: 51.53, lng: -0.127 } }] })
+
+    expect(await fetchGlobeMarkers("en")).toEqual([
+      { lat: 41, lng: -74, featured: false },
+      { lat: 56, lng: -4, featured: false },
+      { lat: 51.53, lng: -0.127, featured: true },
+    ])
+    const [cells, featured] = mockSearch.mock.calls.slice(-2)
+    expect(cells?.[1]).toMatchObject({
+      limit: 0,
+      facets: ["geo_cell"],
+      filter: 'locale = "en"',
+    })
+    expect(featured?.[1]).toMatchObject({
+      filter: 'featured = true AND locale = "en"',
+    })
   })
 })
