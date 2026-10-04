@@ -4,7 +4,7 @@ import { Icon } from "@iconify/react"
 import { findUnsafeContent } from "@repo/shared-data"
 import { useEffect, useId, useRef, useState } from "react"
 
-import { Badge } from "@/components/ds"
+import { Badge, ChoiceCard, Notice } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 import {
@@ -284,48 +284,6 @@ function EligibilityCard({
         </p>
       )}
     </section>
-  )
-}
-
-/** A tinted notice with an icon: status is never colour alone. */
-function Notice({
-  icon,
-  tone,
-  title,
-  children,
-}: {
-  readonly icon: string
-  readonly tone: "ok" | "info" | "warn"
-  readonly title: string
-  readonly children?: React.ReactNode
-}) {
-  const tones = {
-    ok: { bg: "var(--tint-public-bg)", fg: T.accent.ok },
-    info: { bg: T.accent.chip, fg: T.accent.primaryHover },
-    warn: { bg: "#F5EEDC", fg: "#6B5420" },
-  } as const
-  const { bg, fg } = tones[tone]
-
-  return (
-    <div
-      className="flex items-start gap-3 rounded-[16px] px-4 py-3.5"
-      style={{ background: bg }}
-    >
-      <Icon
-        aria-hidden="true"
-        icon={icon}
-        width={20}
-        height={20}
-        className="mt-0.5 shrink-0"
-        style={{ color: fg }}
-      />
-      <div className="flex min-w-0 flex-col gap-1 text-[15px] leading-[1.55]">
-        <p className="m-0 font-semibold" style={{ color: fg }}>
-          {title}
-        </p>
-        {children}
-      </div>
-    </div>
   )
 }
 
@@ -733,60 +691,19 @@ export function RoleApplicationForm({
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   {APPLICATION_ROLES.map((r) => {
                     const meta = ROLE_CARD[r]
-                    const on = role === r
 
                     return (
-                      <label
+                      <ChoiceCard
                         key={r}
-                        className="relative flex cursor-pointer flex-col gap-2 rounded-[16px] p-4 transition-colors has-[:disabled]:cursor-not-allowed has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-(--t-accent-primary) has-[:focus-visible]:outline-solid"
-                        style={{
-                          border: `1.5px solid ${on ? T.accent.primary : T.border.line}`,
-                          background: on
-                            ? "color-mix(in srgb, var(--t-accent-chip) 45%, var(--t-bg-deep))"
-                            : T.bg.deep,
-                        }}
-                      >
-                        <input
-                          type="radio"
-                          name={`${ids}-role`}
-                          value={r}
-                          checked={on}
-                          onChange={() => chooseRole(r)}
-                          className="sr-only"
-                        />
-                        <span className="flex items-start justify-between gap-2">
-                          <span
-                            aria-hidden="true"
-                            className="flex size-9 items-center justify-center rounded-full"
-                            style={{ background: meta.bg, color: meta.fg }}
-                          >
-                            <Icon icon={meta.icon} width={18} height={18} />
-                          </span>
-                          <Icon
-                            aria-hidden="true"
-                            icon={
-                              on ? "mdi:check-circle" : "mdi:circle-outline"
-                            }
-                            width={22}
-                            height={22}
-                            style={{
-                              color: on ? T.accent.primary : T.border.hi,
-                            }}
-                          />
-                        </span>
-                        <span
-                          className="text-[15.5px] font-semibold"
-                          style={{ color: T.ink.base }}
-                        >
-                          {APPLICATION_ROLE_LABEL[r]}
-                        </span>
-                        <span
-                          className="text-[14px] leading-[1.45]"
-                          style={{ color: T.ink.dim }}
-                        >
-                          {meta.hint}
-                        </span>
-                      </label>
+                        name={`${ids}-role`}
+                        value={r}
+                        checked={role === r}
+                        onChange={() => chooseRole(r)}
+                        icon={meta.icon}
+                        tint={{ bg: meta.bg, fg: meta.fg }}
+                        title={APPLICATION_ROLE_LABEL[r]}
+                        hint={meta.hint}
+                      />
                     )
                   })}
                 </div>
