@@ -71,8 +71,12 @@ export function AvatarUpload({
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+      {/* A second way in for pointer users; the labelled button beside it is
+          the one keyboard and screen-reader users reach. */}
       <button
         type="button"
+        tabIndex={-1}
+        aria-hidden="true"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
         style={{
@@ -100,7 +104,7 @@ export function AvatarUpload({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={preview}
-            alt="avatar"
+            alt=""
             style={{
               width: "100%",
               height: "100%",
@@ -135,13 +139,13 @@ export function AvatarUpload({
         </button>
         <p
           style={{
-            margin: "4px 0 0",
-            fontSize: "11px",
-            color: T.ink.faint,
-            fontFamily: T.font.mono,
+            margin: "6px 0 0",
+            fontSize: "13px",
+            color: T.ink.dim,
+            fontFamily: T.font.sans,
           }}
         >
-          JPG · PNG · WebP · max 5 MB
+          JPG, PNG, WebP or GIF, up to 5 MB
         </p>
       </div>
 

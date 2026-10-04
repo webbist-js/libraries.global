@@ -3,6 +3,7 @@ import type { ReactNode } from "react"
 
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import GlobalLink from "@/components/global/GlobalLink"
+import { avatarSrc } from "@/lib/avatar"
 import { T } from "@/lib/design-tokens"
 import { resolvePublicPrefs, type UserProfile } from "@/lib/types/profile"
 
@@ -98,6 +99,7 @@ export function ProfileHero({
   tabs?: ReactNode
 }) {
   const initials = getInitials(profile)
+  const avatar = avatarSrc(profile.avatar, "lg")
   const prefs = resolvePublicPrefs(profile.publicPrefs)
   const showAffiliation = isOwnProfile || prefs.showAffiliation
   const showLocation = isOwnProfile || prefs.showLocation
@@ -183,13 +185,9 @@ export function ProfileHero({
               fontWeight: 500,
             }}
           >
-            {profile.avatar?.url ? (
+            {avatar ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={profile.avatar.url}
-                alt=""
-                className="size-full object-cover"
-              />
+              <img src={avatar} alt="" className="size-full object-cover" />
             ) : (
               <span aria-hidden="true">{initials}</span>
             )}

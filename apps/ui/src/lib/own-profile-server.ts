@@ -2,8 +2,8 @@ import "server-only"
 
 import { cache } from "react"
 
+import { avatarSrc } from "@/lib/avatar"
 import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
-import { formatStrapiMediaUrlForClient } from "@/lib/strapi-helpers"
 import type { QuickWin, UserProfile } from "@/lib/types/profile"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
@@ -32,7 +32,11 @@ export type OwnProfileLookup =
  * it through React `cache`. Route handlers call straight through.
  */
 const lookupOwnProfile = cache(
-  async (id: string, email: string, name: string): Promise<OwnProfileLookup> => {
+  async (
+    id: string,
+    email: string,
+    name: string
+  ): Promise<OwnProfileLookup> => {
     if (!process.env.STRAPI_BRIDGE_SECRET)
       return { ok: false, reason: "unavailable" }
     try {
@@ -95,7 +99,7 @@ export async function fetchOwnProfileSnippet(
   return {
     username: p.username,
     // Passed to the browser: the asset proxy form, never the Strapi origin.
-    avatarUrl: formatStrapiMediaUrlForClient(p.avatar?.url) ?? null,
+    avatarUrl: avatarSrc(p.avatar),
     isVerifiedLibrarian: p.isVerifiedLibrarian === true,
     languages: (p.languages ?? [])
       .map((l) => l?.code as unknown)

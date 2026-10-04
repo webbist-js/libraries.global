@@ -1,5 +1,6 @@
 "use client"
 
+import { Icon } from "@iconify/react"
 import { useState, useRef, useEffect, useId, useMemo } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -21,22 +22,24 @@ function getTimezones(): string[] {
   }
 }
 
-const triggerStyle = {
+// Matches the text inputs beside it; a page with taller fields passes
+// `triggerStyle` to line up with them.
+const triggerStyle: React.CSSProperties = {
   width: "100%",
   padding: "10px 14px",
-  borderRadius: "10px",
-  border: `1px solid ${T.border.hi}`,
-  background: T.bg.surface,
+  borderRadius: "12px",
+  border: `1px solid ${T.border.line}`,
+  background: T.bg.deep,
   color: T.ink.base,
-  fontSize: "13px",
+  fontSize: "15px",
   fontFamily: T.font.sans,
-  outline: "none",
-  boxSizing: "border-box" as const,
+  boxSizing: "border-box",
   cursor: "pointer",
-  textAlign: "left" as const,
+  textAlign: "left",
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
+  gap: "8px",
 }
 
 export function TimezoneCombobox({
@@ -44,6 +47,7 @@ export function TimezoneCombobox({
   onChange,
   id,
   labelledBy,
+  triggerStyle: triggerOverrides,
 }: {
   value: string
   onChange: (tz: string) => void
@@ -54,6 +58,8 @@ export function TimezoneCombobox({
    * current value; a `<label htmlFor>` alone would drop the value.
    */
   labelledBy?: string
+  /** Overrides for the trigger button, e.g. a page's own field style. */
+  triggerStyle?: React.CSSProperties
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
@@ -100,18 +106,19 @@ export function TimezoneCombobox({
         id={id}
         type="button"
         aria-labelledby={labelledBy ? `${labelledBy} ${valueId}` : undefined}
-        style={triggerStyle}
+        style={{ ...triggerStyle, ...triggerOverrides }}
         onClick={() => setOpen((o) => !o)}
       >
-        <span id={valueId} style={{ color: value ? T.ink.base : T.ink.faint }}>
+        <span id={valueId} style={{ color: value ? T.ink.base : T.ink.dim }}>
           {displayValue || "Select timezone…"}
         </span>
-        <span
+        <Icon
           aria-hidden="true"
-          style={{ color: T.ink.faint, fontSize: "10px" }}
-        >
-          ▾
-        </span>
+          icon="mdi:chevron-down"
+          width={18}
+          height={18}
+          style={{ color: T.ink.dim, flexShrink: 0 }}
+        />
       </button>
 
       {open && (
@@ -124,7 +131,7 @@ export function TimezoneCombobox({
             zIndex: 50,
             background: T.bg.deep,
             border: `1px solid ${T.border.hi}`,
-            borderRadius: "10px",
+            borderRadius: "14px",
             overflow: "hidden",
             boxShadow: "0 12px 28px rgba(23,22,43,.12)",
           }}
@@ -143,7 +150,7 @@ export function TimezoneCombobox({
               borderBottom: `1px solid ${T.border.line}`,
               background: "transparent",
               color: T.ink.base,
-              fontSize: "13px",
+              fontSize: "15px",
               fontFamily: T.font.sans,
               outline: "none",
               boxSizing: "border-box",

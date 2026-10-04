@@ -1,10 +1,14 @@
 "use client"
 
+import { type DismissiblePrompt, DISMISSIBLE_PROMPTS } from "@repo/shared-data"
 import { useState } from "react"
+import { toast } from "sonner"
 
+import { SectionCard } from "@/components/profile-form/FormParts"
 import { ToggleSwitch } from "@/components/settings/ToggleSwitch"
 import { useProfile } from "@/hooks/useProfile"
 import { T } from "@/lib/design-tokens"
+import { clearPromptCookie, savePromptSetting } from "@/lib/dismissed-prompts"
 import type { UserProfile } from "@/lib/types/profile"
 
 type NotifKey =
@@ -15,11 +19,13 @@ type NotifKey =
   | "soundOn"
   | "marketing"
 
-type NotificationItem = {
-  key: NotifKey
+type ToggleItem<K extends string> = {
+  key: K
   label: string
   desc: string
 }
+
+type NotificationItem = ToggleItem<NotifKey>
 
 const EMAIL_NOTIFS: NotificationItem[] = [
   {
@@ -57,18 +63,27 @@ const SITE_NOTIFS: NotificationItem[] = [
   },
 ]
 
+/** Every prompt a reader can hide (`DismissiblePrompt`); on means shown. */
+const PROMPTS: Record<DismissiblePrompt, ToggleItem<DismissiblePrompt>> = {
+  "find-contribute": {
+    key: "find-contribute",
+    label: "Invitation to contribute",
+    desc: "The banner above the results on Find libraries.",
+  },
+}
+
 type NotificationPrefs = Record<NotifKey, boolean>
 
-function NotifGroup({
+function NotifGroup<K extends string>({
   title,
   items,
   prefs,
   onToggle,
 }: {
   title: string
-  items: NotificationItem[]
-  prefs: NotificationPrefs
-  onToggle: (key: NotifKey) => void
+  items: ToggleItem<K>[]
+  prefs: Record<K, boolean>
+  onToggle: (key: K) => void
 }) {
   return (
     <div>
@@ -128,6 +143,15 @@ export function NotificationsSection({
   }
 
   const [prefs, setPrefs] = useState<NotificationPrefs>(defaults)
+  const [shownPrompts, setShownPrompts] = useState(
+    () =>
+      Object.fromEntries(
+        DISMISSIBLE_PROMPTS.map((p) => [
+          p,
+          !profile?.dismissedPrompts?.includes(p),
+        ])
+      ) as Record<DismissiblePrompt, boolean>
+  )
 
   const toggle = (key: NotifKey) => {
     const next = { ...prefs, [key]: !prefs[key] }
@@ -136,24 +160,27 @@ export function NotificationsSection({
     void updateNotifications(next)
   }
 
-  return (
-    <div>
-      <h2
-        className="m-0"
-        style={{
-          fontFamily: T.font.serif,
-          fontSize: "24px",
-          fontWeight: 500,
-          color: T.ink.base,
-        }}
-      >
-        Notifications
-      </h2>
-      <p className="mt-1 mb-6 text-[15px]" style={{ color: T.ink.dim }}>
-        Choose what you hear about libraries, your contributions and the people
-        you follow.
-      </p>
+  const savePrompt = async (key: DismissiblePrompt, show: boolean) => {
+    if (await savePromptSetting(key, !show)) return
+    setShownPrompts((s) => ({ ...s, [key]: !show }))
+    toast.error("Couldn't save that setting")
+  }
 
+  const togglePrompt = (key: DismissiblePrompt) => {
+    const show = !shownPrompts[key]
+
+    setShownPrompts((s) => ({ ...s, [key]: show }))
+    // A cookie from hiding it this session would otherwise outlast "on".
+    if (show) clearPromptCookie(key)
+    void savePrompt(key, show)
+  }
+
+  return (
+    <SectionCard
+      id="notifications"
+      title="Notifications"
+      lead="Choose what you hear about libraries, your contributions and the people you follow."
+    >
       <NotifGroup
         title="By email"
         items={EMAIL_NOTIFS}
@@ -161,14 +188,19 @@ export function NotificationsSection({
         onToggle={toggle}
       />
 
-      <div className="mt-7">
-        <NotifGroup
-          title="On the site"
-          items={SITE_NOTIFS}
-          prefs={prefs}
-          onToggle={toggle}
-        />
-      </div>
-    </div>
+      <NotifGroup
+        title="On the site"
+        items={SITE_NOTIFS}
+        prefs={prefs}
+        onToggle={toggle}
+      />
+
+      <NotifGroup
+        title="Prompts"
+        items={Object.values(PROMPTS)}
+        prefs={shownPrompts}
+        onToggle={togglePrompt}
+      />
+    </SectionCard>
   )
 }

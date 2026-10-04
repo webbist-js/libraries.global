@@ -1,209 +1,124 @@
 "use client"
 
-import { Icon } from "@iconify/react"
-import { useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
 
-import { Breadcrumb } from "@/components/ds/Breadcrumb"
+import { ProfileProgress } from "@/components/profile-form/ProfileProgress"
+import {
+  AffiliationSection,
+  IdentitySection,
+  InterestsSection,
+  LinksSection,
+} from "@/components/profile-form/ProfileSections"
+import { useProfileForm } from "@/components/profile-form/useProfileForm"
+import { useMounted } from "@/hooks/useMounted"
+import { useProfile } from "@/hooks/useProfile"
 import type { BetterAuthUser } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
-import { Link } from "@/lib/navigation"
+import { useRouter } from "@/lib/navigation"
 import type { UserProfile } from "@/lib/types/profile"
 
 import { DataAccountSection } from "./DataAccountSection"
 import { NotificationsSection } from "./NotificationsSection"
 import { PrivacySection } from "./PrivacySection"
-import { PublicProfileSection } from "./PublicProfileSection"
 import { SignInSecuritySection } from "./SignInSecuritySection"
 
-const SIDEBAR_ITEMS = [
-  { id: "profile", label: "Profile", icon: "mdi:account-outline" },
-  { id: "privacy", label: "Privacy", icon: "mdi:eye-outline" },
+/** The account cards under the profile ones, listed in the side card. */
+const ACCOUNT_LINKS = [
   { id: "notifications", label: "Notifications", icon: "mdi:bell-outline" },
-  {
-    id: "security",
-    label: "Sign-in & security",
-    icon: "mdi:lock-outline",
-  },
-  {
-    id: "data",
-    label: "Your data & account",
-    icon: "mdi:tray-arrow-down",
-  },
-] as const
+  { id: "security", label: "Sign-in & security", icon: "mdi:lock-outline" },
+  { id: "data", label: "Your data & account", icon: "mdi:tray-arrow-down" },
+]
 
-type SectionId = (typeof SIDEBAR_ITEMS)[number]["id"]
-
+/**
+ * Settings, laid out like onboarding: the same profile cards in the main
+ * column, then Privacy, Notifications, Sign-in & security and Your data.
+ * The profile cards save together from the side card; the account cards
+ * save each change as it's made.
+ */
 export function SettingsShell({
   profile,
   sessionUser,
+  avatarUrl,
 }: {
   profile: UserProfile | null
   sessionUser: BetterAuthUser
+  /** The browser-safe avatar URL (`avatarSrc`), or null. */
+  avatarUrl: string | null
 }) {
-  const [activeSection, setActiveSection] = useState<SectionId>("profile")
-  const observerRef = useRef<IntersectionObserver | null>(null)
+  const router = useRouter()
+  const mounted = useMounted()
+  const { saving, updateProfile } = useProfile()
+  const form = useProfileForm({
+    profile,
+    sessionName: sessionUser.name ?? "",
+    avatarUrl,
+  })
 
-  useEffect(() => {
-    const sections = SIDEBAR_ITEMS.map((item) =>
-      document.getElementById(item.id)
-    ).filter(Boolean) as HTMLElement[]
+  const handleSave = async () => {
+    if (form.usernameStatus === "taken") {
+      toast.error("That username is taken")
 
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
-        if (visible[0]) {
-          setActiveSection(visible[0].target.id as SectionId)
-        }
-      },
-      { rootMargin: "-15% 0px -65% 0px", threshold: 0 }
-    )
-
-    sections.forEach((el) => observerRef.current!.observe(el))
-
-    return () => observerRef.current?.disconnect()
-  }, [])
-
-  const displayName = profile?.firstName
-    ? `${profile.firstName}${profile.lastName ? ` ${profile.lastName}` : ""}`
-    : (sessionUser.name ?? sessionUser.email)
+      return
+    }
+    // Visibility saves from the Privacy card as soon as it changes.
+    const body: Record<string, unknown> = form.payload({ visibility: false })
+    const ok = await updateProfile(body)
+    if (!ok) return
+    if (body.username && body.username !== profile?.username)
+      router.push(`/profile/${body.username as string}`)
+    else router.refresh()
+  }
 
   return (
-    <div
-      className="relative isolate flex min-h-screen w-full flex-col"
-      style={{ background: T.bg.void }}
-    >
-      {/* ── Header ────────────────────────────────────────────────────── */}
-      <section className="mx-auto w-full max-w-[1360px] px-4 pt-6 pb-2 sm:px-8 sm:pt-10">
-        <Breadcrumb
-          className="mb-5"
-          items={[
-            { label: "Home", href: "/" },
-            ...(profile?.username
-              ? [
-                  {
-                    label: `@${profile.username}`,
-                    href: `/profile/${profile.username}`,
-                  },
-                ]
-              : []),
-            { label: "Settings" },
-          ]}
-        />
-        <p
-          className="m-0 mb-2 text-[15px] font-medium"
-          style={{ color: T.ink.dim }}
-        >
-          Account settings
-        </p>
-        <h1
-          className="m-0"
-          style={{
-            fontFamily: T.font.serif,
-            fontSize: "clamp(2.1rem, 3.8vw, 3rem)",
-            fontWeight: 500,
-            letterSpacing: "-0.02em",
-            lineHeight: 1.05,
-            color: T.ink.base,
-          }}
-        >
-          Welcome back,{" "}
-          <em
-            style={{
-              fontStyle: "italic",
-              fontWeight: 400,
-              color: T.accent.primary,
-            }}
-          >
-            {displayName}.
-          </em>
-        </h1>
-        <p
-          className="mt-3 mb-0 text-[16px]"
-          style={{ color: T.ink.dim, maxWidth: "60ch" }}
-        >
-          Manage your profile, privacy, notifications and account.{" "}
-          {profile?.username ? (
-            <Link
-              href={`/profile/${profile.username}`}
-              className="underline underline-offset-[3px]"
-              style={{ color: T.accent.primary, fontWeight: 600 }}
-            >
-              View your public profile
-            </Link>
-          ) : null}
-        </p>
-      </section>
-
-      {/* ── Body: sidebar + stacked cards ─────────────────────────────── */}
-      <div className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8">
-        <div className="flex gap-8">
-          <nav
-            aria-label="Settings sections"
-            className="sticky hidden w-[210px] shrink-0 flex-col gap-1 self-start md:flex"
-            style={{ top: "80px" }}
-          >
-            {SIDEBAR_ITEMS.map((item) => {
-              const active = activeSection === item.id
-
-              return (
-                <a
-                  key={item.id}
-                  href={`#${item.id}`}
-                  aria-current={active ? "true" : undefined}
-                  className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2 text-[14px] no-underline transition-colors"
-                  style={{
-                    background: active ? T.accent.chip : "transparent",
-                    color: active ? T.accent.primaryHover : T.ink.dim,
-                    fontWeight: active ? 600 : 500,
-                    fontFamily: T.font.sans,
-                  }}
-                >
-                  <Icon
-                    icon={item.icon}
-                    width={17}
-                    height={17}
-                    aria-hidden="true"
-                    style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }}
-                  />
-                  {item.label}
-                </a>
-              )
-            })}
-          </nav>
-
-          <div className="flex min-w-0 flex-1 flex-col gap-6">
-            <section id="profile" className="scroll-mt-20">
-              <div className="settings-card">
-                <PublicProfileSection
-                  profile={profile}
-                  sessionUser={sessionUser}
-                />
-              </div>
-            </section>
-            <section id="privacy" className="scroll-mt-20">
-              <div className="settings-card">
-                <PrivacySection profile={profile} />
-              </div>
-            </section>
-            <section id="notifications" className="scroll-mt-20">
-              <div className="settings-card">
-                <NotificationsSection profile={profile} />
-              </div>
-            </section>
-            <section id="security" className="scroll-mt-20">
-              <div className="settings-card">
-                <SignInSecuritySection />
-              </div>
-            </section>
-            <section id="data" className="scroll-mt-20">
-              <div className="settings-card">
-                <DataAccountSection sessionUser={sessionUser} />
-              </div>
-            </section>
-          </div>
+    <div className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
+        <div className="flex min-w-0 flex-col gap-5">
+          <IdentitySection form={form} />
+          <AffiliationSection
+            form={form}
+            claimedLibraries={profile?.claimedLibraries ?? []}
+            isVerifiedLibrarian={profile?.isVerifiedLibrarian === true}
+          />
+          <InterestsSection form={form} />
+          <LinksSection form={form} />
+          <PrivacySection
+            profile={profile}
+            visibility={form.visibility}
+            onVisibilityChange={form.setVisibility}
+          />
+          <NotificationsSection profile={profile} />
+          <SignInSecuritySection />
+          <DataAccountSection sessionUser={sessionUser} />
         </div>
+
+        {/* ── Aside: progress, save, other sections (sticky) ── */}
+        <aside
+          aria-label="Your profile"
+          className="flex flex-col gap-4 self-start lg:sticky lg:top-24"
+        >
+          <ProfileProgress
+            title="Your profile"
+            steps={form.steps("privacy")}
+            links={ACCOUNT_LINKS}
+          >
+            <button
+              type="button"
+              disabled={!mounted || saving || form.usernameStatus === "taken"}
+              onClick={() => void handleSave()}
+              className="inline-flex w-full items-center justify-center rounded-full bg-(--t-accent-primary) px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
+              style={{ border: "none", fontFamily: T.font.sans }}
+            >
+              {saving ? "Saving…" : "Save profile"}
+            </button>
+            <p
+              className="m-0 text-[13.5px] leading-[1.55]"
+              style={{ color: T.ink.dim }}
+            >
+              Saves the profile cards. Privacy and notification changes save as
+              you make them.
+            </p>
+          </ProfileProgress>
+        </aside>
       </div>
     </div>
   )

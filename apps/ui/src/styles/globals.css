@@ -300,11 +300,3 @@ body:has([data-homepage="true"]) .strapi-layout-footer {
 body:has([data-hide-footer="true"]) .strapi-layout-footer {
   display: none;
 }
-
-/* ── Settings section cards ──────────────────────────────────────────────── */
-.settings-card {
-  background: var(--t-bg-deep);
-  border: 1px solid var(--t-border-line);
-  border-radius: 18px;
-  padding: 28px 30px;
-}

@@ -1,8 +1,8 @@
 "use client"
 
-import { Icon } from "@iconify/react"
+import { useId } from "react"
 
-import { T } from "@/lib/design-tokens"
+import { ChoiceCard } from "@/components/ds"
 
 type Visibility = "public" | "limited" | "private"
 
@@ -11,104 +11,56 @@ const OPTIONS: {
   label: string
   desc: string
   icon: string
+  tint: { bg: string; fg: string }
 }[] = [
   {
     value: "public",
     label: "Public",
     desc: "Indexed and findable. Recommended for librarians and contributors.",
     icon: "mdi:earth",
+    tint: { bg: "var(--tint-public-bg)", fg: "var(--tint-public-fg)" },
   },
   {
     value: "limited",
     label: "Limited",
     desc: "Contact details and location visible only to members of libraries you're affiliated with.",
-    icon: "mdi:help-circle-outline",
+    icon: "mdi:account-group-outline",
+    tint: { bg: "var(--tint-academic-bg)", fg: "var(--tint-academic-fg)" },
   },
   {
     value: "private",
     label: "Private",
     desc: "Anonymous on contributions; profile page is hidden.",
     icon: "mdi:lock-outline",
+    tint: { bg: "var(--tint-neutral-bg)", fg: "var(--tint-neutral-fg)" },
   },
 ]
 
+/** Profile visibility as radio cards. The caller names the group. */
 export function VisibilityCards({
   value,
   onChange,
-  layout = "vertical",
 }: {
   value: Visibility
   onChange: (v: Visibility) => void
-  layout?: "vertical" | "horizontal"
 }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: layout === "horizontal" ? "row" : "column",
-        gap: "10px",
-      }}
-    >
-      {OPTIONS.map((opt) => {
-        const selected = opt.value === value
+  const name = useId()
 
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            aria-pressed={selected}
-            onClick={() => onChange(opt.value)}
-            style={{
-              flex: layout === "horizontal" ? "1 1 0" : undefined,
-              padding: "16px 18px",
-              borderRadius: "14px",
-              border: `1px solid ${selected ? T.accent.primary : T.border.line}`,
-              background: selected ? T.accent.chip : T.bg.deep,
-              cursor: "pointer",
-              textAlign: "left",
-              transition: "border-color 150ms, background 150ms",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              gap: "10px",
-            }}
-          >
-            <Icon
-              icon={opt.icon}
-              width={20}
-              height={20}
-              style={{
-                color: selected ? T.accent.primaryHover : T.ink.dim,
-                flexShrink: 0,
-                transition: "color 150ms",
-              }}
-            />
-            <div>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: "15px",
-                  fontWeight: 600,
-                  color: T.ink.base,
-                  lineHeight: 1.3,
-                }}
-              >
-                {opt.label}
-              </p>
-              <p
-                style={{
-                  margin: "4px 0 0",
-                  fontSize: "14px",
-                  color: T.ink.dim,
-                  lineHeight: 1.5,
-                }}
-              >
-                {opt.desc}
-              </p>
-            </div>
-          </button>
-        )
-      })}
+  return (
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      {OPTIONS.map((opt) => (
+        <ChoiceCard
+          key={opt.value}
+          name={name}
+          value={opt.value}
+          checked={opt.value === value}
+          onChange={() => onChange(opt.value)}
+          icon={opt.icon}
+          tint={opt.tint}
+          title={opt.label}
+          hint={opt.desc}
+        />
+      ))}
     </div>
   )
 }

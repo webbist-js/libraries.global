@@ -12,7 +12,7 @@ import {
 export const NAVIGATION = { timeout: 60_000 }
 
 /** The username field's visible label, the whole of its accessible name. */
-export const USERNAME_LABEL = "Username * → libraries.global/@handle"
+export const USERNAME_LABEL = "Username Required"
 
 /**
  * Sets a secret through the input's native value setter, not fill():
@@ -151,20 +151,23 @@ export async function completeOnboarding(page: Page, username: string) {
   await expect(enterProfile).toBeEnabled(NAVIGATION)
 
   await expect(
-    page.getByLabel("Display name *", { exact: true })
+    page.getByLabel("Display name Required", { exact: true })
   ).not.toHaveValue("")
   const usernameInput = page.getByLabel(USERNAME_LABEL, { exact: true })
   await usernameInput.fill(username)
-  await expect(page.getByText("Available ✓")).toBeVisible(NAVIGATION)
-  await expect(usernameInput).toHaveAccessibleDescription("Available ✓")
+  await expect(page.getByText("Available", { exact: true })).toBeVisible(
+    NAVIGATION
+  )
+  await expect(usernameInput).toHaveAccessibleDescription(/^Available /)
   await page
-    .getByLabel("Pronouns *", { exact: true })
+    .getByLabel("Pronouns Required", { exact: true })
     .selectOption({ label: "Prefer not to say" })
-  const reader = page
-    .getByRole("group", { name: "Affiliation" })
-    .getByRole("button", { name: "Reader / enthusiast" })
-  await reader.click()
-  await expect(reader).toHaveAttribute("aria-pressed", "true")
+  // The radio is visually hidden inside its card, so the card is clicked.
+  const affiliation = page.getByRole("radiogroup", { name: "Affiliation" })
+  await affiliation.getByText("Reader / enthusiast", { exact: true }).click()
+  await expect(
+    affiliation.getByRole("radio", { name: /^Reader \/ enthusiast/ })
+  ).toBeChecked()
   await enterProfile.click()
 
   await expect(page).toHaveURL(new RegExp(`/profile/${username}$`), NAVIGATION)

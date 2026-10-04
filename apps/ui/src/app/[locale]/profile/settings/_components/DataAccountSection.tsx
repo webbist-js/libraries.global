@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { toast } from "sonner"
 
+import { SectionCard } from "@/components/profile-form/FormParts"
 import { authClient } from "@/lib/auth-client"
 import type { BetterAuthUser } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
@@ -81,205 +82,199 @@ export function DataAccountSection({
     deleteInput.trim().toLowerCase() === sessionUser.email.toLowerCase()
 
   return (
-    <div>
-      <h2
-        className="m-0"
-        style={{
-          fontFamily: T.font.serif,
-          fontSize: "24px",
-          fontWeight: 500,
-          color: T.ink.base,
-        }}
-      >
-        Your data &amp; account
-      </h2>
-
-      {/* Download */}
-      <div className="flex items-center justify-between gap-4 py-4">
-        <div>
-          <p
-            className="m-0 text-[15px] font-medium"
-            style={{ color: T.ink.base }}
+    <SectionCard
+      id="data"
+      title="Your data & account"
+      lead="Download everything we hold about you, or delete your account."
+    >
+      <div>
+        {/* Download */}
+        <div className="flex items-center justify-between gap-4 py-4">
+          <div>
+            <p
+              className="m-0 text-[15px] font-medium"
+              style={{ color: T.ink.base }}
+            >
+              Download your data
+            </p>
+            <p className="m-0 mt-0.5 text-[14px]" style={{ color: T.ink.dim }}>
+              A JSON file of your profile, preferences and account details.
+            </p>
+          </div>
+          <a
+            href="/api/profile/me/export"
+            download
+            style={{ ...pillButton, textDecoration: "none" }}
           >
-            Download your data
-          </p>
-          <p className="m-0 mt-0.5 text-[14px]" style={{ color: T.ink.dim }}>
-            A JSON file of your profile, preferences and account details.
-          </p>
+            Request download
+          </a>
         </div>
-        <a
-          href="/api/profile/me/export"
-          download
-          style={{ ...pillButton, textDecoration: "none" }}
-        >
-          Request download
-        </a>
-      </div>
 
-      {/* Danger zone */}
-      <div
-        className="rounded-[16px] border"
-        style={{
-          borderColor: "var(--t-danger-edge)",
-          background: "var(--t-danger-soft)",
-        }}
-      >
-        {/* Deactivate */}
+        {/* Danger zone */}
         <div
-          className="px-5"
-          style={{ borderBottom: "1px solid var(--t-danger-edge)" }}
+          className="rounded-[16px] border"
+          style={{
+            borderColor: "var(--t-danger-edge)",
+            background: "var(--t-danger-soft)",
+          }}
         >
-          <div className="flex items-center justify-between gap-4 py-4">
-            <div>
-              <p
-                className="m-0 text-[15px] font-semibold"
-                style={{ color: T.accent.danger }}
-              >
-                Deactivate account
-              </p>
-              <p
-                className="m-0 mt-0.5 text-[14px]"
-                style={{ color: T.ink.dim }}
-              >
-                Hides your profile and pauses notifications. Sign in again to
-                come back.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setDeactivateConfirm((v) => !v)
-                setDeleteConfirm(false)
-              }}
-              style={pillButton}
-            >
-              Deactivate
-            </button>
-          </div>
-          {deactivateConfirm ? (
-            <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
-              <p
-                className="m-0 max-w-[52ch] text-[14px] leading-[1.5]"
-                style={{ color: T.ink.dim }}
-              >
-                Your profile will be set to private and you&rsquo;ll be signed
-                out. Reactivate any time by signing back in and updating your
-                visibility.
-              </p>
-              <div className="flex shrink-0 gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setDeactivateConfirm(false)}
-                  style={pillButton}
+          {/* Deactivate */}
+          <div
+            className="px-5"
+            style={{ borderBottom: "1px solid var(--t-danger-edge)" }}
+          >
+            <div className="flex items-center justify-between gap-4 py-4">
+              <div>
+                <p
+                  className="m-0 text-[15px] font-semibold"
+                  style={{ color: T.accent.danger }}
                 >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={deactivating}
-                  onClick={() => void handleDeactivate()}
-                  style={{
-                    ...pillButton,
-                    border: "none",
-                    background: T.accent.danger,
-                    color: "#fff",
-                    opacity: deactivating ? 0.6 : 1,
-                  }}
+                  Deactivate account
+                </p>
+                <p
+                  className="m-0 mt-0.5 text-[14px]"
+                  style={{ color: T.ink.dim }}
                 >
-                  {deactivating ? "Deactivating…" : "Confirm deactivation"}
-                </button>
+                  Hides your profile and pauses notifications. Sign in again to
+                  come back.
+                </p>
               </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setDeactivateConfirm((v) => !v)
+                  setDeleteConfirm(false)
+                }}
+                style={pillButton}
+              >
+                Deactivate
+              </button>
             </div>
-          ) : null}
-        </div>
+            {deactivateConfirm ? (
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
+                <p
+                  className="m-0 max-w-[52ch] text-[14px] leading-[1.5]"
+                  style={{ color: T.ink.dim }}
+                >
+                  Your profile will be set to private and you&rsquo;ll be signed
+                  out. Reactivate any time by signing back in and updating your
+                  visibility.
+                </p>
+                <div className="flex shrink-0 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setDeactivateConfirm(false)}
+                    style={pillButton}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={deactivating}
+                    onClick={() => void handleDeactivate()}
+                    style={{
+                      ...pillButton,
+                      border: "none",
+                      background: T.accent.danger,
+                      color: "#fff",
+                      opacity: deactivating ? 0.6 : 1,
+                    }}
+                  >
+                    {deactivating ? "Deactivating…" : "Confirm deactivation"}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
 
-        {/* Delete */}
-        <div className="px-5">
-          <div className="flex items-center justify-between gap-4 py-4">
-            <div>
-              <p
-                className="m-0 text-[15px] font-semibold"
-                style={{ color: T.accent.danger }}
-              >
-                Delete account
-              </p>
-              <p
-                className="m-0 mt-0.5 text-[14px]"
-                style={{ color: T.ink.dim }}
-              >
-                Permanently removes your account. Accepted contributions stay in
-                the index, credited to &ldquo;a former contributor&rdquo;. This
-                can&rsquo;t be undone.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setDeleteConfirm((v) => !v)
-                setDeactivateConfirm(false)
-                setDeleteInput("")
-              }}
-              style={{
-                ...pillButton,
-                border: "none",
-                background: T.accent.danger,
-                color: "#fff",
-              }}
-            >
-              Delete account…
-            </button>
-          </div>
-          {deleteConfirm ? (
-            <div className="flex flex-col gap-3 pb-4">
-              <p
-                className="m-0 text-[14px] leading-[1.5]"
-                style={{ color: T.ink.dim }}
-              >
-                All personal data will be permanently removed. Type your email
-                address to confirm:
-              </p>
-              <div className="flex flex-wrap items-center gap-2.5">
-                <input
-                  type="email"
-                  placeholder={sessionUser.email}
-                  value={deleteInput}
-                  onChange={(e) => setDeleteInput(e.target.value)}
-                  className="min-w-0 flex-1 rounded-[12px] border px-3.5 py-2 text-[14px]"
-                  style={{
-                    borderColor: "var(--t-danger-edge)",
-                    background: T.bg.deep,
-                    color: T.ink.base,
-                    fontFamily: T.font.sans,
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setDeleteConfirm(false)}
-                  style={pillButton}
+          {/* Delete */}
+          <div className="px-5">
+            <div className="flex items-center justify-between gap-4 py-4">
+              <div>
+                <p
+                  className="m-0 text-[15px] font-semibold"
+                  style={{ color: T.accent.danger }}
                 >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={deleting || !emailMatches}
-                  onClick={() => void handleDelete()}
-                  style={{
-                    ...pillButton,
-                    border: "none",
-                    background: T.accent.danger,
-                    color: "#fff",
-                    opacity: deleting || !emailMatches ? 0.45 : 1,
-                    cursor:
-                      deleting || !emailMatches ? "not-allowed" : "pointer",
-                  }}
+                  Delete account
+                </p>
+                <p
+                  className="m-0 mt-0.5 text-[14px]"
+                  style={{ color: T.ink.dim }}
                 >
-                  {deleting ? "Deleting…" : "Delete my account"}
-                </button>
+                  Permanently removes your account. Accepted contributions stay
+                  in the index, credited to &ldquo;a former contributor&rdquo;.
+                  This can&rsquo;t be undone.
+                </p>
               </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setDeleteConfirm((v) => !v)
+                  setDeactivateConfirm(false)
+                  setDeleteInput("")
+                }}
+                style={{
+                  ...pillButton,
+                  border: "none",
+                  background: T.accent.danger,
+                  color: "#fff",
+                }}
+              >
+                Delete account…
+              </button>
             </div>
-          ) : null}
+            {deleteConfirm ? (
+              <div className="flex flex-col gap-3 pb-4">
+                <p
+                  className="m-0 text-[14px] leading-[1.5]"
+                  style={{ color: T.ink.dim }}
+                >
+                  All personal data will be permanently removed. Type your email
+                  address to confirm:
+                </p>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <input
+                    type="email"
+                    placeholder={sessionUser.email}
+                    value={deleteInput}
+                    onChange={(e) => setDeleteInput(e.target.value)}
+                    className="min-w-0 flex-1 rounded-[12px] border px-3.5 py-2 text-[14px]"
+                    style={{
+                      borderColor: "var(--t-danger-edge)",
+                      background: T.bg.deep,
+                      color: T.ink.base,
+                      fontFamily: T.font.sans,
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setDeleteConfirm(false)}
+                    style={pillButton}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={deleting || !emailMatches}
+                    onClick={() => void handleDelete()}
+                    style={{
+                      ...pillButton,
+                      border: "none",
+                      background: T.accent.danger,
+                      color: "#fff",
+                      opacity: deleting || !emailMatches ? 0.45 : 1,
+                      cursor:
+                        deleting || !emailMatches ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {deleting ? "Deleting…" : "Delete my account"}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
-    </div>
+    </SectionCard>
   )
 }

@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { toast } from "sonner"
 
+import { SectionCard } from "@/components/profile-form/FormParts"
+import { VisibilityChoice } from "@/components/profile-form/ProfileSections"
 import { ToggleSwitch } from "@/components/settings/ToggleSwitch"
 import { T } from "@/lib/design-tokens"
 import {
@@ -12,25 +14,6 @@ import {
 } from "@/lib/types/profile"
 
 type Visibility = "public" | "limited" | "private"
-
-const VISIBILITY_OPTIONS: { value: Visibility; label: string; desc: string }[] =
-  [
-    {
-      value: "public",
-      label: "Public",
-      desc: "Anyone can find and view your profile. Recommended for library staff.",
-    },
-    {
-      value: "limited",
-      label: "Limited",
-      desc: "Only signed-in contributors can see your location and affiliation.",
-    },
-    {
-      value: "private",
-      label: "Private",
-      desc: "Your profile page is hidden. Contributions show your username only.",
-    },
-  ]
 
 async function patchProfile(body: Record<string, unknown>): Promise<boolean> {
   try {
@@ -46,20 +29,29 @@ async function patchProfile(body: Record<string, unknown>): Promise<boolean> {
   }
 }
 
-export function PrivacySection({ profile }: { profile: UserProfile | null }) {
-  const [visibility, setVisibility] = useState<Visibility>(
-    profile?.profileVisibility ?? "public"
-  )
+/**
+ * Who can see the profile and what shows on it. Each change saves at once;
+ * the visibility value is the settings form's, so its side card stays in step.
+ */
+export function PrivacySection({
+  profile,
+  visibility,
+  onVisibilityChange,
+}: {
+  profile: UserProfile | null
+  visibility: Visibility
+  onVisibilityChange: (v: Visibility) => void
+}) {
   const [prefs, setPrefs] = useState<PublicPrefs>(() =>
     resolvePublicPrefs(profile?.publicPrefs)
   )
 
   const changeVisibility = async (v: Visibility) => {
     const prev = visibility
-    setVisibility(v)
+    onVisibilityChange(v)
     const ok = await patchProfile({ profileVisibility: v })
     if (!ok) {
-      setVisibility(prev)
+      onVisibilityChange(prev)
       toast.error("Couldn't save — please try again")
     }
   }
@@ -108,91 +100,33 @@ export function PrivacySection({ profile }: { profile: UserProfile | null }) {
   ]
 
   return (
-    <div>
-      <h2
-        className="m-0"
-        style={{
-          fontFamily: T.font.serif,
-          fontSize: "24px",
-          fontWeight: 500,
-          color: T.ink.base,
-        }}
-      >
-        Privacy
-      </h2>
-      <p className="mt-1 mb-6 text-[15px]" style={{ color: T.ink.dim }}>
-        Your contributions stay attributed to your username either way.
-      </p>
-
-      {/* Who can see your profile */}
-      <p
-        className="m-0 mb-3 text-[15px] font-semibold"
-        style={{ color: T.ink.base }}
-      >
-        Who can see your profile
-      </p>
-      <div
-        role="radiogroup"
-        aria-label="Who can see your profile"
-        className="grid grid-cols-1 gap-3 sm:grid-cols-3"
-      >
-        {VISIBILITY_OPTIONS.map((opt) => {
-          const selected = visibility === opt.value
-
-          return (
-            <button
-              key={opt.value}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              onClick={() => void changeVisibility(opt.value)}
-              className="cursor-pointer rounded-[14px] border p-4 text-left transition-colors"
-              style={{
-                borderColor: selected ? T.accent.primary : T.border.line,
-                background: selected ? T.accent.chip : T.bg.deep,
-              }}
-            >
-              <span className="flex items-center gap-2.5">
-                <span
-                  aria-hidden="true"
-                  className="flex size-[18px] shrink-0 items-center justify-center rounded-full border-2"
-                  style={{
-                    borderColor: selected ? T.accent.primary : T.border.hi,
-                  }}
-                >
-                  {selected ? (
-                    <span
-                      className="size-2 rounded-full"
-                      style={{ background: T.accent.primary }}
-                    />
-                  ) : null}
-                </span>
-                <span
-                  className="text-[15px] font-semibold"
-                  style={{ color: T.ink.base }}
-                >
-                  {opt.label}
-                </span>
-              </span>
-              <span
-                className="mt-2 block text-[14px] leading-[1.45]"
-                style={{ color: T.ink.dim }}
-              >
-                {opt.desc}
-              </span>
-            </button>
-          )
-        })}
+    <SectionCard
+      id="privacy"
+      title="Privacy"
+      lead="Your contributions stay attributed to your username either way. Changes here save straight away."
+    >
+      <div>
+        <p
+          id="privacy-visibility"
+          className="m-0 mb-3 text-[15px] font-semibold"
+          style={{ color: T.ink.base }}
+        >
+          Who can see your profile
+        </p>
+        <VisibilityChoice
+          value={visibility}
+          onChange={(v) => void changeVisibility(v)}
+          labelledBy="privacy-visibility"
+        />
       </div>
 
-      {/* Per-section toggles */}
-      <p
-        className="m-0 mt-7 mb-1 text-[15px] font-semibold"
-        style={{ color: T.ink.base }}
-      >
-        Show on your public profile
-      </p>
       <div>
+        <p
+          className="m-0 mb-1 text-[15px] font-semibold"
+          style={{ color: T.ink.base }}
+        >
+          Show on your public profile
+        </p>
         {prefRows.map((row, index) => (
           <div
             key={row.key}
@@ -226,6 +160,6 @@ export function PrivacySection({ profile }: { profile: UserProfile | null }) {
           </div>
         ))}
       </div>
-    </div>
+    </SectionCard>
   )
 }

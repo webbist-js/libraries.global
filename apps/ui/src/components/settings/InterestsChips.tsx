@@ -9,9 +9,12 @@ import type { Topic } from "@/lib/types/profile"
 export function InterestsChips({
   selected,
   onChange,
+  inputStyle,
 }: {
   selected: string[]
   onChange: (ids: string[]) => void
+  /** Overrides for the "Suggest a topic" input, e.g. a page's field style. */
+  inputStyle?: React.CSSProperties
 }) {
   const [topics, setTopics] = useState<Topic[]>([])
   const [suggestInput, setSuggestInput] = useState("")
@@ -120,6 +123,7 @@ export function InterestsChips({
             color: T.ink.base,
             fontSize: "15px",
             fontFamily: T.font.sans,
+            ...inputStyle,
           }}
         />
         <button

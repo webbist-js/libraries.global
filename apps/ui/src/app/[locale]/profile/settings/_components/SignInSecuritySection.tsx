@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import GlobalLink from "@/components/global/GlobalLink"
+import { SectionCard } from "@/components/profile-form/FormParts"
 import { T } from "@/lib/design-tokens"
 
 type SessionEntry = {
@@ -150,206 +151,208 @@ export function SignInSecuritySection() {
   }
 
   return (
-    <div>
-      <h2
-        className="m-0"
-        style={{
-          fontFamily: T.font.serif,
-          fontSize: "24px",
-          fontWeight: 500,
-          color: T.ink.base,
-        }}
-      >
-        Sign-in &amp; security
-      </h2>
-      <p className="mt-1 mb-5 text-[15px]" style={{ color: T.ink.dim }}>
-        How you sign in, and where you&rsquo;re signed in right now.
-      </p>
-
-      {/* Two-step verification */}
-      <div
-        className="flex items-center justify-between gap-4 py-3.5"
-        style={rowStyle}
-      >
-        <div>
-          <p
-            className="m-0 text-[15px] font-medium"
-            style={{ color: T.ink.base }}
-          >
-            Two-step verification
-          </p>
-          <p className="m-0 mt-0.5 text-[14px]" style={{ color: T.ink.dim }}>
-            Ask for a code from an authenticator app when you sign in.
-          </p>
-        </div>
-        <span
-          className="shrink-0 rounded-full px-3 py-1 text-[13px] font-semibold"
-          style={{
-            background: "var(--tint-special-bg)",
-            color: "var(--tint-special-fg)",
-          }}
+    <SectionCard
+      id="security"
+      title="Sign-in & security"
+      lead="How you sign in, and where you’re signed in right now."
+    >
+      <div>
+        {/* Two-step verification */}
+        <div
+          className="flex items-center justify-between gap-4 py-3.5"
+          style={rowStyle}
         >
-          Coming soon
-        </span>
-      </div>
+          <div>
+            <p
+              className="m-0 text-[15px] font-medium"
+              style={{ color: T.ink.base }}
+            >
+              Two-step verification
+            </p>
+            <p className="m-0 mt-0.5 text-[14px]" style={{ color: T.ink.dim }}>
+              Ask for a code from an authenticator app when you sign in.
+            </p>
+          </div>
+          <span
+            className="shrink-0 rounded-full px-3 py-1 text-[13px] font-semibold"
+            style={{
+              background: "var(--tint-special-bg)",
+              color: "var(--tint-special-fg)",
+            }}
+          >
+            Coming soon
+          </span>
+        </div>
 
-      {/* Connected sign-in methods */}
-      {loading ? (
-        <p className="py-3.5 text-[14px]" style={{ color: T.ink.low }}>
-          Loading sign-in methods…
+        {/* Connected sign-in methods */}
+        {loading ? (
+          <p className="py-3.5 text-[14px]" style={{ color: T.ink.low }}>
+            Loading sign-in methods…
+          </p>
+        ) : (
+          accounts.map((acct) => {
+            const meta = providerMeta(acct.providerId)
+            const others = accounts.filter(
+              (a) => a.providerId !== acct.providerId
+            )
+            const isOnly = others.length === 0
+            const isPassword = acct.providerId === "credential"
+
+            return (
+              <div
+                key={acct.id}
+                className="flex items-center justify-between gap-4 py-3.5"
+                style={rowStyle}
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <Icon
+                    icon={meta.icon}
+                    width={20}
+                    height={20}
+                    aria-hidden="true"
+                    style={{ color: T.ink.dim, flexShrink: 0 }}
+                  />
+                  <div className="min-w-0">
+                    <p
+                      className="m-0 text-[15px] font-medium"
+                      style={{ color: T.ink.base }}
+                    >
+                      {meta.label}
+                    </p>
+                    <p
+                      className="m-0 mt-0.5 truncate text-[14px]"
+                      style={{ color: T.ink.dim }}
+                    >
+                      {isOnly
+                        ? isPassword
+                          ? "Your only sign-in method."
+                          : "Your only sign-in method. Add a password before you can disconnect it."
+                        : acct.accountId.includes("@")
+                          ? acct.accountId
+                          : "Connected"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  {/* A Google-only account adds a password on the same page. */}
+                  {(isPassword || isOnly) && (
+                    <GlobalLink
+                      href="/auth/change-password"
+                      style={{ ...pillButton, textDecoration: "none" }}
+                    >
+                      {isPassword ? "Change password" : "Add a password"}
+                    </GlobalLink>
+                  )}
+                  {!isOnly && (
+                    <button
+                      type="button"
+                      onClick={() => void disconnect(acct.providerId)}
+                      style={pillButton}
+                    >
+                      Disconnect
+                    </button>
+                  )}
+                </div>
+              </div>
+            )
+          })
+        )}
+
+        {/* Sessions */}
+        <p
+          className="m-0 mt-6 mb-1 text-[15px] font-semibold"
+          style={{ color: T.ink.base }}
+        >
+          Where you&rsquo;re signed in
         </p>
-      ) : (
-        accounts.map((acct) => {
-          const meta = providerMeta(acct.providerId)
-          const others = accounts.filter(
-            (a) => a.providerId !== acct.providerId
-          )
-          const isOnly = others.length === 0
-
-          return (
+        {loading ? (
+          <p className="py-3 text-[14px]" style={{ color: T.ink.low }}>
+            Loading sessions…
+          </p>
+        ) : sessions.length === 0 ? (
+          <p className="py-3 text-[14px]" style={{ color: T.ink.dim }}>
+            No active sessions found.
+          </p>
+        ) : (
+          sessions.map((s) => (
             <div
-              key={acct.id}
+              key={s.id}
               className="flex items-center justify-between gap-4 py-3.5"
               style={rowStyle}
             >
               <div className="flex min-w-0 items-center gap-3">
-                <Icon
-                  icon={meta.icon}
-                  width={20}
-                  height={20}
+                <span
                   aria-hidden="true"
-                  style={{ color: T.ink.dim, flexShrink: 0 }}
-                />
+                  className="flex size-9 shrink-0 items-center justify-center rounded-[10px] border"
+                  style={{
+                    borderColor: T.border.line,
+                    background: T.bg.surface,
+                  }}
+                >
+                  <Icon
+                    icon={
+                      s.userAgent?.includes("Mobile")
+                        ? "mdi:cellphone"
+                        : "mdi:monitor"
+                    }
+                    width={18}
+                    height={18}
+                    style={{ color: T.ink.dim }}
+                  />
+                </span>
                 <div className="min-w-0">
                   <p
                     className="m-0 text-[15px] font-medium"
                     style={{ color: T.ink.base }}
                   >
-                    {meta.label}
+                    {describeDevice(s.userAgent)}
                   </p>
                   <p
                     className="m-0 mt-0.5 truncate text-[14px]"
                     style={{ color: T.ink.dim }}
                   >
-                    {isOnly
-                      ? "Your only sign-in method. Add another before you can disconnect it."
-                      : acct.accountId.includes("@")
-                        ? acct.accountId
-                        : "Connected"}
+                    Signed in{" "}
+                    {new Date(s.createdAt).toLocaleDateString("en-GB")}
+                    {s.ipAddress ? ` · ${s.ipAddress}` : ""}
                   </p>
                 </div>
               </div>
-              {isOnly ? (
-                <GlobalLink
-                  href="/auth/change-password"
-                  style={{ ...pillButton, textDecoration: "none" }}
+              {s.current ? (
+                <span
+                  className="shrink-0 rounded-full px-3 py-1 text-[13px] font-semibold text-white"
+                  style={{ background: T.ink.base }}
                 >
-                  Add a sign-in method
-                </GlobalLink>
+                  This device
+                </span>
               ) : (
                 <button
                   type="button"
-                  onClick={() => void disconnect(acct.providerId)}
-                  style={pillButton}
+                  disabled={revoking === s.id}
+                  onClick={() => void revokeSession(s.id)}
+                  style={{
+                    ...pillButton,
+                    opacity: revoking === s.id ? 0.5 : 1,
+                  }}
                 >
-                  Disconnect
+                  Sign out
                 </button>
               )}
             </div>
-          )
-        })
-      )}
+          ))
+        )}
 
-      {/* Sessions */}
-      <p
-        className="m-0 mt-6 mb-1 text-[15px] font-semibold"
-        style={{ color: T.ink.base }}
-      >
-        Where you&rsquo;re signed in
-      </p>
-      {loading ? (
-        <p className="py-3 text-[14px]" style={{ color: T.ink.low }}>
-          Loading sessions…
-        </p>
-      ) : sessions.length === 0 ? (
-        <p className="py-3 text-[14px]" style={{ color: T.ink.dim }}>
-          No active sessions found.
-        </p>
-      ) : (
-        sessions.map((s) => (
-          <div
-            key={s.id}
-            className="flex items-center justify-between gap-4 py-3.5"
-            style={rowStyle}
-          >
-            <div className="flex min-w-0 items-center gap-3">
-              <span
-                aria-hidden="true"
-                className="flex size-9 shrink-0 items-center justify-center rounded-[10px] border"
-                style={{ borderColor: T.border.line, background: T.bg.surface }}
-              >
-                <Icon
-                  icon={
-                    s.userAgent?.includes("Mobile")
-                      ? "mdi:cellphone"
-                      : "mdi:monitor"
-                  }
-                  width={18}
-                  height={18}
-                  style={{ color: T.ink.dim }}
-                />
-              </span>
-              <div className="min-w-0">
-                <p
-                  className="m-0 text-[15px] font-medium"
-                  style={{ color: T.ink.base }}
-                >
-                  {describeDevice(s.userAgent)}
-                </p>
-                <p
-                  className="m-0 mt-0.5 truncate text-[14px]"
-                  style={{ color: T.ink.dim }}
-                >
-                  Signed in {new Date(s.createdAt).toLocaleDateString("en-GB")}
-                  {s.ipAddress ? ` · ${s.ipAddress}` : ""}
-                </p>
-              </div>
-            </div>
-            {s.current ? (
-              <span
-                className="shrink-0 rounded-full px-3 py-1 text-[13px] font-semibold text-white"
-                style={{ background: T.ink.base }}
-              >
-                This device
-              </span>
-            ) : (
-              <button
-                type="button"
-                disabled={revoking === s.id}
-                onClick={() => void revokeSession(s.id)}
-                style={{
-                  ...pillButton,
-                  opacity: revoking === s.id ? 0.5 : 1,
-                }}
-              >
-                Sign out
-              </button>
-            )}
+        {sessions.some((s) => !s.current) ? (
+          <div className="pt-4">
+            <button
+              type="button"
+              onClick={() => void revokeAll()}
+              style={pillButton}
+            >
+              Sign out everywhere else
+            </button>
           </div>
-        ))
-      )}
-
-      {sessions.some((s) => !s.current) ? (
-        <div className="pt-4">
-          <button
-            type="button"
-            onClick={() => void revokeAll()}
-            style={pillButton}
-          >
-            Sign out everywhere else
-          </button>
-        </div>
-      ) : null}
-    </div>
+        ) : null}
+      </div>
+    </SectionCard>
   )
 }

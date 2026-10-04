@@ -2,23 +2,23 @@
 
 import { Icon } from "@iconify/react"
 import { useRouter } from "next/navigation"
-import { useEffect, useId, useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
 
 import { CODE_OF_CONDUCT_URL } from "@/components/legal/legal.helpers"
-import { AvatarUpload } from "@/components/settings/AvatarUpload"
-import { CountryCombobox } from "@/components/settings/CountryCombobox"
-import { InterestsChips } from "@/components/settings/InterestsChips"
-import { TimezoneCombobox } from "@/components/settings/TimezoneCombobox"
-import { VisibilityCards } from "@/components/settings/VisibilityCards"
+import { ProfileProgress } from "@/components/profile-form/ProfileProgress"
+import {
+  AffiliationSection,
+  IdentitySection,
+  InterestsSection,
+  LinksSection,
+  VisibilitySection,
+} from "@/components/profile-form/ProfileSections"
+import { useProfileForm } from "@/components/profile-form/useProfileForm"
 import { useMounted } from "@/hooks/useMounted"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 import type { UserProfile } from "@/lib/types/profile"
-
-import { LibraryClaimSearch } from "./LibraryClaimSearch"
-
-// ── Types ─────────────────────────────────────────────────────────────────────
 
 type SessionUser = {
   id: string
@@ -27,377 +27,43 @@ type SessionUser = {
   image: string | null
 }
 
-type LanguageEntry = {
-  code: string
-  proficiency: "native" | "fluent" | "conversational"
-}
-
-// ── Style helpers ─────────────────────────────────────────────────────────────
-
-const input: React.CSSProperties = {
-  width: "100%",
-  padding: "10px 14px",
-  borderRadius: "12px",
-  border: `1px solid ${T.border.line}`,
-  background: T.bg.deep,
-  color: T.ink.base,
-  fontSize: "15px",
-  fontFamily: T.font.sans,
-  boxSizing: "border-box",
-}
-
-const label: React.CSSProperties = {
-  fontFamily: T.font.sans,
-  fontSize: "14px",
-  fontWeight: 500,
-  color: T.ink.dim,
-  display: "block",
-  marginBottom: "6px",
-}
-
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-const PRONOUNS = [
-  { value: "", label: "Not specified" },
-  { value: "he_him", label: "He / Him" },
-  { value: "she_her", label: "She / Her" },
-  { value: "they_them", label: "They / Them" },
-  { value: "other", label: "Other" },
-  { value: "prefer_not_to_say", label: "Prefer not to say" },
-]
-
-const AFFILIATION_TYPES = [
-  {
-    value: "reader",
-    label: "Reader / enthusiast",
-    desc: "I use libraries for personal learning.",
-    icon: "mdi:book-open-page-variant-outline",
-    showClaim: false,
-  },
-  {
-    value: "researcher",
-    label: "Researcher / academic",
-    desc: "I use libraries as a primary research tool.",
-    icon: "mdi:magnify",
-    showClaim: true,
-  },
-  {
-    value: "librarian",
-    label: "Librarian / archivist",
-    desc: "I work in a library, archive, or special collection.",
-    icon: "mdi:bookshelf",
-    showClaim: true,
-  },
-  {
-    value: "other",
-    label: "Something else",
-    desc: "Author, publisher, journalist, student.",
-    icon: "mdi:dots-horizontal",
-    showClaim: false,
-  },
-]
-
-const LANGUAGE_OPTIONS = [
-  { code: "en", name: "English" },
-  { code: "fr", name: "French" },
-  { code: "de", name: "German" },
-  { code: "es", name: "Spanish" },
-  { code: "it", name: "Italian" },
-  { code: "pt", name: "Portuguese" },
-  { code: "ar", name: "Arabic" },
-  { code: "zh", name: "Chinese" },
-  { code: "ja", name: "Japanese" },
-  { code: "ko", name: "Korean" },
-  { code: "ru", name: "Russian" },
-  { code: "nl", name: "Dutch" },
-  { code: "pl", name: "Polish" },
-  { code: "sv", name: "Swedish" },
-  { code: "la", name: "Latin" },
-  { code: "el", name: "Greek" },
-]
-
-const PROFICIENCY = ["native", "fluent", "conversational"] as const
-
-// ── Section header component ──────────────────────────────────────────────────
-
-function SectionHeading({
-  id,
-  icon,
-  title,
-  subtitle,
-  required,
-  optional,
-  requiredId,
-}: {
-  /** The heading's id, so a group of options can be labelled by it. */
-  id?: string
-  icon: string
-  title: string
-  subtitle?: string
-  required?: boolean
-  optional?: boolean
-  /** id for the "Required" pill, so a group can point to it via aria-describedby. */
-  requiredId?: string
-}) {
-  return (
-    <div style={{ marginBottom: "20px" }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "4px",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span
-            aria-hidden="true"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "32px",
-              height: "32px",
-              borderRadius: "50%",
-              background: T.accent.chip,
-              color: T.accent.primary,
-              flexShrink: 0,
-            }}
-          >
-            <Icon icon={icon} width={16} height={16} />
-          </span>
-          <h2
-            id={id}
-            style={{
-              fontFamily: T.font.serif,
-              fontSize: "22px",
-              fontWeight: 500,
-              color: T.ink.base,
-              margin: 0,
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {title}
-          </h2>
-        </div>
-        {required && (
-          <span
-            id={requiredId}
-            style={{
-              fontSize: "13px",
-              fontWeight: 600,
-              padding: "3px 10px",
-              borderRadius: "999px",
-              background: T.accent.chip,
-              color: T.accent.primaryHover,
-            }}
-          >
-            Required
-          </span>
-        )}
-        {optional && (
-          <span
-            style={{
-              fontSize: "13px",
-              fontWeight: 600,
-              padding: "3px 10px",
-              borderRadius: "999px",
-              background: T.bg.muted,
-              color: T.ink.dim,
-            }}
-          >
-            Optional · Public
-          </span>
-        )}
-      </div>
-      {subtitle && (
-        <p
-          style={{
-            margin: "8px 0 0 42px",
-            fontSize: "15px",
-            color: T.ink.dim,
-            lineHeight: 1.55,
-          }}
-        >
-          {subtitle}
-        </p>
-      )}
-    </div>
-  )
-}
-
-// ── Main shell ────────────────────────────────────────────────────────────────
+const linkClass = "underline underline-offset-[3px]"
+const linkStyle: React.CSSProperties = { color: T.accent.primary }
 
 export function OnboardingShell({
   sessionUser,
   initialProfile,
+  avatarUrl,
 }: {
   sessionUser: SessionUser
   initialProfile: UserProfile | null
+  /** The browser-safe avatar URL (`avatarSrc`), or null. */
+  avatarUrl: string | null
 }) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   // The primary and "finish later" buttons stay disabled until mounted: see
   // useMounted. Typed any sooner, the values wouldn't reach React either.
   const mounted = useMounted()
-
-  // Stable ids that tie each visible label to its control.
-  const uid = useId()
-  const ids = {
-    firstName: `${uid}-first-name`,
-    lastName: `${uid}-last-name`,
-    username: `${uid}-username`,
-    usernameStatus: `${uid}-username-status`,
-    pronouns: `${uid}-pronouns`,
-    city: `${uid}-city`,
-    country: `${uid}-country`,
-    countryLabel: `${uid}-country-label`,
-    timezone: `${uid}-timezone`,
-    timezoneLabel: `${uid}-timezone-label`,
-    bio: `${uid}-bio`,
-    bioCount: `${uid}-bio-count`,
-    bioHelp: `${uid}-bio-help`,
-    affiliation: `${uid}-affiliation`,
-    affiliationRequired: `${uid}-affiliation-required`,
-    interests: `${uid}-interests`,
-    language: `${uid}-language`,
-    website: `${uid}-website`,
-    orcid: `${uid}-orcid`,
-    mastodon: `${uid}-mastodon`,
-    linkedin: `${uid}-linkedin`,
-    visibility: `${uid}-visibility`,
-  }
-
-  // ── Identity state ───────────────────────────────────────────────
-  const [firstName, setFirstName] = useState(
-    initialProfile?.firstName ?? sessionUser.name?.split(" ")[0] ?? ""
-  )
-  const [lastName, setLastName] = useState(
-    initialProfile?.lastName ??
-      sessionUser.name?.split(" ").slice(1).join(" ") ??
-      ""
-  )
-  const [username, setUsername] = useState(initialProfile?.username ?? "")
-  const [pronouns, setPronouns] = useState(initialProfile?.pronouns ?? "")
-  const [bio, setBio] = useState(initialProfile?.bio ?? "")
-  const [city, setCity] = useState(initialProfile?.city ?? "")
-  const [country, setCountry] = useState(initialProfile?.country ?? "")
-  const [timezone, setTimezone] = useState(initialProfile?.timezone ?? "")
-  const [avatarUrl, setAvatarUrl] = useState(initialProfile?.avatar?.url ?? "")
-
-  const [usernameStatus, setUsernameStatus] = useState<
-    "idle" | "checking" | "available" | "taken"
-  >("idle")
-
-  useEffect(() => {
-    const u = username.trim()
-    const t = setTimeout(async () => {
-      if (!u || u === initialProfile?.username) {
-        setUsernameStatus("idle")
-
-        return
-      }
-      setUsernameStatus("checking")
-      try {
-        const res = await fetch(
-          `/api/profile/check-username?username=${encodeURIComponent(u)}`
-        )
-        const json = (await res.json()) as { available: boolean | null }
-        setUsernameStatus(
-          json.available === true
-            ? "available"
-            : json.available === false
-              ? "taken"
-              : "idle"
-        )
-      } catch {
-        setUsernameStatus("idle")
-      }
-    }, 400)
-
-    return () => clearTimeout(t)
-  }, [username, initialProfile?.username])
-
-  // ── Affiliation state ────────────────────────────────────────────
-  const [affiliationType, setAffiliationType] = useState<string>(
-    initialProfile?.affiliationType ?? ""
-  )
-  const [claimResult, setClaimResult] = useState<{
-    libraryName: string
-    entityRef: string
-    status: string
-  } | null>(null)
-
-  const selectedAff = AFFILIATION_TYPES.find((a) => a.value === affiliationType)
-
-  // ── Interests & languages state ──────────────────────────────────
-  const [interests, setInterests] = useState<string[]>(
-    initialProfile?.interests?.map((i) => i.documentId) ?? []
-  )
-  const [languages, setLanguages] = useState<LanguageEntry[]>(
-    (initialProfile?.languages as LanguageEntry[] | undefined) ?? []
-  )
-  const [addingLang, setAddingLang] = useState("")
-  const [addingProf, setAddingProf] = useState<
-    "native" | "fluent" | "conversational"
-  >("fluent")
-
-  const addLanguage = () => {
-    if (!addingLang || languages.some((l) => l.code === addingLang)) return
-    setLanguages((prev) => [
-      ...prev,
-      { code: addingLang, proficiency: addingProf },
-    ])
-    setAddingLang("")
-  }
-
-  // ── External links state ─────────────────────────────────────────
-  const [website, setWebsite] = useState(initialProfile?.website ?? "")
-  const [orcid, setOrcid] = useState(initialProfile?.orcid ?? "")
-  const [mastodon, setMastodon] = useState(initialProfile?.mastodon ?? "")
-  const [linkedin, setLinkedin] = useState(initialProfile?.linkedin ?? "")
-
-  // ── Visibility state ─────────────────────────────────────────────
-  const [visibility, setVisibility] = useState<
-    "public" | "limited" | "private"
-  >(initialProfile?.profileVisibility ?? "public")
-
-  // ── Save logic ───────────────────────────────────────────────────
-
-  const initials =
-    ((firstName[0] ?? "") + (lastName[0] ?? "")).toUpperCase() || "?"
+  const form = useProfileForm({
+    profile: initialProfile,
+    sessionName: sessionUser.name ?? "",
+    avatarUrl,
+  })
 
   const handleSave = async (then: "profile" | "home") => {
-    if (usernameStatus === "taken") {
+    if (form.usernameStatus === "taken") {
       toast.error("Username is taken")
 
       return
     }
     setSaving(true)
     try {
+      const body = form.payload()
       const res = await fetch("/api/profile/me", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          username,
-          pronouns: pronouns || null,
-          bio,
-          city,
-          country,
-          timezone,
-          avatarUrl,
-          affiliationType:
-            (affiliationType as UserProfile["affiliationType"]) || null,
-          interests,
-          languages,
-          website,
-          orcid,
-          mastodon,
-          linkedin,
-          profileVisibility: visibility,
-        }),
+        body: JSON.stringify(body),
       })
       if (!res.ok) {
         toast.error("Failed to save — please try again")
@@ -406,8 +72,8 @@ export function OnboardingShell({
       }
       router.push(
         then === "profile"
-          ? username
-            ? `/profile/${username}`
+          ? body.username
+            ? `/profile/${body.username}`
             : "/profile"
           : "/"
       )
@@ -418,1127 +84,92 @@ export function OnboardingShell({
     }
   }
 
-  // ── Render ───────────────────────────────────────────────────────
+  const primaryDisabled = !mounted || saving || form.usernameStatus === "taken"
 
   return (
-    <>
-      {/* Body: two-column layout */}
-      <div style={{ flex: 1, display: "flex" }}>
-        {/* ── Left sidebar (sticky) ── */}
-        <div
-          className="hidden lg:flex"
-          style={{
-            width: "340px",
-            flexShrink: 0,
-            position: "sticky",
-            top: "56px",
-            height: "calc(100vh - 56px)",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            padding: "48px 40px",
-            borderRight: `1px solid ${T.border.line}`,
-            background: T.bg.void,
-            overflow: "hidden",
-          }}
-        >
-          {/* Glow decoration */}
-          <div
-            aria-hidden
-            style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "radial-gradient(ellipse 70% 55% at 60% 35%, rgba(67,56,202,0.05), transparent 60%), radial-gradient(ellipse 50% 70% at 50% 50%, rgba(242,200,121,0.06), transparent 55%)",
-              pointerEvents: "none",
-            }}
-          />
-          {/* Globe ring hints */}
-          <div
-            aria-hidden
-            style={{
-              position: "absolute",
-              right: "-140px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              width: "480px",
-              height: "480px",
-              borderRadius: "50%",
-              border: "1px solid rgba(67,56,202,0.10)",
-              pointerEvents: "none",
-            }}
-          />
-          <div
-            aria-hidden
-            style={{
-              position: "absolute",
-              right: "-80px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              width: "340px",
-              height: "340px",
-              borderRadius: "50%",
-              border: "1px solid rgba(67,56,202,0.06)",
-              pointerEvents: "none",
-            }}
-          />
-
-          {/* Top eyebrow */}
-          <div
-            style={{
-              position: "relative",
-              zIndex: 1,
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              fontFamily: T.font.sans,
-              fontSize: "14px",
-              fontWeight: 600,
-              color: T.ink.dim,
-            }}
-          >
-            <span
-              style={{
-                width: "22px",
-                height: "2px",
-                borderRadius: "2px",
-                background: T.accent.primary,
-                display: "inline-block",
-                flexShrink: 0,
-              }}
-            />
-            Before you continue
-          </div>
-
-          {/* Main content */}
-          <div
-            style={{
-              position: "relative",
-              zIndex: 1,
-              display: "flex",
-              flexDirection: "column",
-              gap: "24px",
-            }}
-          >
-            <div>
-              <h1
-                style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "clamp(2rem, 3.5vw, 3rem)",
-                  fontWeight: 500,
-                  lineHeight: 1.05,
-                  letterSpacing: "-0.02em",
-                  color: T.ink.base,
-                  margin: "0 0 18px",
-                }}
-              >
-                One last thing —{" "}
-                <em
-                  style={{
-                    fontStyle: "italic",
-                    fontWeight: 400,
-                    color: T.accent.primary,
-                  }}
-                >
-                  introduce yourself.
-                </em>
-              </h1>
-              <p
-                style={{
-                  fontSize: "15px",
-                  lineHeight: "1.65",
-                  color: T.ink.dim,
-                  maxWidth: "38ch",
-                }}
-              >
-                We hold a public profile for every contributor on the atlas.
-                It&apos;s how readers, editors, and reviewers know who&apos;s
-                behind a record.
-              </p>
-              <p
-                style={{
-                  marginTop: "12px",
-                  fontSize: "15px",
-                  lineHeight: "1.65",
-                  color: T.ink.dim,
-                  maxWidth: "38ch",
-                }}
-              >
-                You can keep it spare or fill it out fully — but a name and
-                pronouns are the floor. Take a minute; you only do this once.
-              </p>
-            </div>
-
-            {/* Pull-quote */}
-            <div
-              style={{
-                borderLeft: `2px solid ${T.accent.primary}`,
-                paddingLeft: "16px",
-                maxWidth: "34ch",
-              }}
-            >
-              <p
-                style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "15px",
-                  fontStyle: "italic",
-                  color: T.ink.dim,
-                  lineHeight: "1.6",
-                  margin: "0 0 8px",
-                }}
-              >
-                &ldquo;A name on an entry is a small act of trust between a
-                librarian and a reader.&rdquo;
-              </p>
-              <p
-                style={{
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: T.ink.low,
-                  margin: 0,
-                }}
-              >
-                Editorial covenant
-              </p>
-            </div>
-          </div>
-
-          {/* Progress segments */}
-          <div
-            style={{
-              position: "relative",
-              zIndex: 1,
-              display: "flex",
-              flexDirection: "column",
-              gap: "14px",
-            }}
-          >
-            <span
-              style={{
-                fontFamily: T.font.sans,
-                fontSize: "13px",
-                fontWeight: 600,
-                color: T.ink.dim,
-              }}
-            >
-              Profile setup
-            </span>
-            <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
-              {[
-                "Identity",
-                "Affiliation",
-                "Interests",
-                "Links",
-                "Visibility",
-              ].map((s, i) => (
-                <div
-                  key={s}
-                  title={s}
-                  style={{
-                    flex: 1,
-                    height: "3px",
-                    borderRadius: "2px",
-                    background:
-                      i === 0
-                        ? T.accent.primary
-                        : i < 4
-                          ? "var(--t-aurora-edge)"
-                          : T.border.line,
-                  }}
-                />
-              ))}
-            </div>
-          </div>
+    <div className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
+        <div className="flex min-w-0 flex-col gap-5">
+          <IdentitySection form={form} />
+          <AffiliationSection form={form} />
+          <InterestsSection form={form} />
+          <LinksSection form={form} />
+          <VisibilitySection form={form} />
         </div>
 
-        {/* ── Right: scrollable form ── */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-          <div
-            style={{
-              flex: 1,
-              maxWidth: "1080px",
-              margin: "0 auto",
-              width: "100%",
-              padding: "48px 56px 48px",
-            }}
-          >
-            {/* Page heading */}
-            <div style={{ marginBottom: "40px" }}>
-              <h2
-                style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "clamp(1.8rem, 3vw, 2.4rem)",
-                  fontWeight: 500,
-                  letterSpacing: "-0.02em",
-                  color: T.ink.base,
-                  margin: "0 0 6px",
-                }}
-              >
-                Your{" "}
-                <em
-                  style={{
-                    fontStyle: "italic",
-                    fontWeight: 400,
-                    color: T.accent.primary,
-                  }}
-                >
-                  public
-                </em>{" "}
-                profile.
-              </h2>
-              <p
-                style={{
-                  fontSize: "15px",
-                  color: T.ink.dim,
-                  margin: 0,
-                  lineHeight: 1.6,
-                }}
-              >
-                Visible on every record you contribute to and on your profile
-                page. Required fields marked with *; everything else is yours to
-                shape.
-              </p>
-            </div>
-
-            {/* ───────────── § Identity ───────────── */}
-            <section
-              id="section-identity"
-              style={{
-                marginBottom: "40px",
-                padding: "28px",
-                borderRadius: "20px",
-                border: `1px solid ${T.border.line}`,
-                background: T.bg.deep,
-              }}
-            >
-              <SectionHeading
-                icon="mdi:account-circle-outline"
-                title="Identity"
-                required
-              />
-
-              <AvatarUpload
-                currentUrl={avatarUrl}
-                initials={initials}
-                onUpload={setAvatarUrl}
-              />
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "12px",
-                  marginTop: "20px",
-                }}
-              >
-                <div>
-                  <label htmlFor={ids.firstName} style={label}>
-                    Display name *
-                  </label>
-                  <input
-                    id={ids.firstName}
-                    style={input}
-                    type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="Amélie"
-                  />
-                </div>
-                <div>
-                  <label htmlFor={ids.lastName} style={label}>
-                    Last name
-                  </label>
-                  <input
-                    id={ids.lastName}
-                    style={input}
-                    type="text"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    placeholder="Rault"
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginTop: "12px" }}>
-                {/* The status sits beside the label, not in it: it's the
-                    field's live description, not part of its name. */}
-                <div
-                  style={{
-                    ...label,
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <label htmlFor={ids.username}>
-                    Username *{" "}
-                    <span style={{ color: T.ink.faint }}>
-                      → libraries.global/@handle
-                    </span>
-                  </label>
-                  <span id={ids.usernameStatus} aria-live="polite">
-                    {usernameStatus === "checking" && (
-                      <span style={{ color: T.ink.faint }}>Checking…</span>
-                    )}
-                    {usernameStatus === "available" && (
-                      <span style={{ color: T.accent.ok }}>Available ✓</span>
-                    )}
-                    {usernameStatus === "taken" && (
-                      <span style={{ color: T.accent.danger }}>Taken</span>
-                    )}
-                  </span>
-                </div>
-                <input
-                  id={ids.username}
-                  aria-describedby={ids.usernameStatus}
-                  aria-invalid={usernameStatus === "taken" || undefined}
-                  style={{
-                    ...input,
-                    borderColor:
-                      usernameStatus === "taken"
-                        ? "var(--t-danger-edge)"
-                        : undefined,
-                  }}
-                  type="text"
-                  value={username}
-                  onChange={(e) =>
-                    setUsername(
-                      e.target.value.toLowerCase().replaceAll(/[^a-z0-9_]/g, "")
-                    )
-                  }
-                  placeholder="amelie.rault"
-                />
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "12px",
-                  marginTop: "12px",
-                }}
-              >
-                <div>
-                  <label htmlFor={ids.pronouns} style={label}>
-                    Pronouns *
-                  </label>
-                  <select
-                    id={ids.pronouns}
-                    style={{ ...input, cursor: "pointer" }}
-                    value={pronouns ?? ""}
-                    onChange={(e) => setPronouns(e.target.value)}
-                  >
-                    {PRONOUNS.map((p) => (
-                      <option
-                        key={p.value}
-                        value={p.value}
-                        style={{ background: T.bg.deep }}
-                      >
-                        {p.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor={ids.city} style={label}>
-                    City · optional
-                  </label>
-                  <input
-                    id={ids.city}
-                    style={input}
-                    type="text"
-                    value={city ?? ""}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="Paris"
-                  />
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "12px",
-                  marginTop: "12px",
-                }}
-              >
-                <div>
-                  <label
-                    id={ids.countryLabel}
-                    htmlFor={ids.country}
-                    style={label}
-                  >
-                    Country · optional
-                  </label>
-                  <CountryCombobox
-                    id={ids.country}
-                    labelledBy={ids.countryLabel}
-                    value={country}
-                    onChange={setCountry}
-                  />
-                </div>
-                <div>
-                  <label
-                    id={ids.timezoneLabel}
-                    htmlFor={ids.timezone}
-                    style={label}
-                  >
-                    Timezone · optional
-                  </label>
-                  <TimezoneCombobox
-                    id={ids.timezone}
-                    labelledBy={ids.timezoneLabel}
-                    value={timezone}
-                    onChange={setTimezone}
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginTop: "12px" }}>
-                <div
-                  style={{
-                    ...label,
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <label htmlFor={ids.bio}>Short bio · optional</label>
-                  <span id={ids.bioCount} style={{ color: T.ink.faint }}>
-                    {bio.length} / 320
-                  </span>
-                </div>
-                <textarea
-                  id={ids.bio}
-                  aria-describedby={`${ids.bioHelp} ${ids.bioCount}`}
-                  style={{
-                    ...input,
-                    resize: "vertical",
-                    minHeight: "80px",
-                    fontFamily: T.font.sans,
-                    lineHeight: "1.5",
-                  }}
-                  value={bio}
-                  maxLength={320}
-                  onChange={(e) => setBio(e.target.value)}
-                  placeholder="Shown at the top of your profile. Plain text, no markdown."
-                />
-                <p
-                  id={ids.bioHelp}
-                  style={{
-                    margin: "4px 0 0",
-                    fontSize: "13px",
-                    color: T.ink.low,
-                  }}
-                >
-                  Shown at the top of your profile. Plain text; no markdown.
-                </p>
-              </div>
-            </section>
-
-            {/* ───────────── § Affiliation ───────────── */}
-            <section
-              id="section-affiliation"
-              style={{
-                marginBottom: "40px",
-                padding: "28px",
-                borderRadius: "20px",
-                border: `1px solid ${T.border.line}`,
-                background: T.bg.deep,
-              }}
-            >
-              <SectionHeading
-                id={ids.affiliation}
-                requiredId={ids.affiliationRequired}
-                icon="mdi:domain"
-                title="Affiliation"
-                required
-                subtitle="How are you connected to libraries? This shapes which review queues you fast-track and what badges you can earn."
-              />
-
-              <div
-                role="group"
-                aria-labelledby={ids.affiliation}
-                aria-describedby={ids.affiliationRequired}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "10px",
-                }}
-              >
-                {AFFILIATION_TYPES.map((type) => {
-                  const active = affiliationType === type.value
-
-                  return (
-                    <button
-                      key={type.value}
-                      type="button"
-                      aria-pressed={active}
-                      onClick={() => setAffiliationType(type.value)}
-                      style={{
-                        padding: "14px 16px",
-                        borderRadius: "10px",
-                        border: `1px solid ${active ? "var(--t-aurora-edge)" : T.border.line}`,
-                        background: active ? T.accent.chip : T.bg.surface,
-                        cursor: "pointer",
-                        textAlign: "left",
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: "10px",
-                        transition: "border-color 150ms, background 150ms",
-                      }}
-                    >
-                      <Icon
-                        icon={type.icon}
-                        width={16}
-                        height={16}
-                        style={{
-                          color: active ? T.accent.primary : T.ink.low,
-                          marginTop: "2px",
-                          flexShrink: 0,
-                        }}
-                      />
-                      <div>
-                        <p
-                          style={{
-                            margin: 0,
-                            fontSize: "15px",
-                            fontWeight: 600,
-                            color: T.ink.base,
-                          }}
-                        >
-                          {type.label}
-                        </p>
-                        <p
-                          style={{
-                            margin: "2px 0 0",
-                            fontSize: "13px",
-                            color: T.ink.dim,
-                          }}
-                        >
-                          {type.desc}
-                        </p>
-                      </div>
-                      <div style={{ marginLeft: "auto", flexShrink: 0 }}>
-                        <div
-                          style={{
-                            width: "14px",
-                            height: "14px",
-                            borderRadius: "50%",
-                            border: `1px solid ${active ? T.accent.primary : T.border.hi}`,
-                            background: active
-                              ? T.accent.primary
-                              : "transparent",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          {active && (
-                            <Icon
-                              icon="mdi:check"
-                              width={9}
-                              height={9}
-                              style={{ color: "#fff" }}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-
-              {/* Library claim */}
-              {selectedAff?.showClaim && !claimResult && (
-                <div
-                  style={{
-                    marginTop: "20px",
-                    padding: "20px",
-                    borderRadius: "10px",
-                    border: `1px solid ${T.border.line}`,
-                    background: T.bg.surface,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      marginBottom: "6px",
-                    }}
-                  >
-                    <Icon
-                      icon="mdi:check-decagram-outline"
-                      width={15}
-                      height={15}
-                      style={{ color: T.accent.primary }}
-                    />
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: "15px",
-                        fontWeight: 600,
-                        color: T.ink.base,
-                      }}
-                    >
-                      Are you affiliated with a library on the atlas?
-                    </p>
-                  </div>
-                  <p
-                    style={{
-                      margin: "0 0 16px 25px",
-                      fontSize: "14px",
-                      color: T.ink.dim,
-                      lineHeight: 1.55,
-                    }}
-                  >
-                    Search libraries by name, city, or entity ref. Verified
-                    affiliations get a green tick on every contribution record
-                    and unlock the Verified Librarian badge.
-                  </p>
-                  <LibraryClaimSearch
-                    onClaimed={(result) => setClaimResult(result)}
-                  />
-                </div>
-              )}
-
-              {claimResult && (
-                <div
-                  style={{
-                    marginTop: "16px",
-                    padding: "14px 18px",
-                    borderRadius: "10px",
-                    border: `1px solid ${claimResult.status === "verified" ? "var(--tint-public-bg)" : "#EADFC4"}`,
-                    background:
-                      claimResult.status === "verified"
-                        ? "var(--tint-public-bg)"
-                        : "#F5EEDC",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                  }}
-                >
-                  <Icon
-                    icon={
-                      claimResult.status === "verified"
-                        ? "mdi:check-circle-outline"
-                        : "mdi:clock-outline"
-                    }
-                    width={16}
-                    height={16}
-                    style={{
-                      color:
-                        claimResult.status === "verified"
-                          ? T.accent.ok
-                          : T.accent.warn,
-                      flexShrink: 0,
-                    }}
-                  />
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "14px",
-                      fontWeight: 600,
-                      color:
-                        claimResult.status === "verified"
-                          ? "var(--tint-public-fg)"
-                          : T.accent.warn,
-                    }}
-                  >
-                    {claimResult.status === "verified"
-                      ? `Verified at ${claimResult.libraryName}`
-                      : `Claim pending for ${claimResult.libraryName}`}
-                  </p>
-                </div>
-              )}
-            </section>
-
-            {/* ───────────── § Interests & languages ───────────── */}
-            <section
-              id="section-interests"
-              style={{
-                marginBottom: "40px",
-                padding: "28px",
-                borderRadius: "20px",
-                border: `1px solid ${T.border.line}`,
-                background: T.bg.deep,
-              }}
-            >
-              <SectionHeading
-                icon="mdi:tag-heart-outline"
-                title="Interests & languages"
-                subtitle="We use these to suggest contribution paths and route translation requests in your direction."
-              />
-
-              <p
-                id={ids.interests}
-                style={{
-                  margin: "0 0 10px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  color: T.ink.dim,
-                }}
-              >
-                Topics you care about
-              </p>
-              <div role="group" aria-labelledby={ids.interests}>
-                <InterestsChips selected={interests} onChange={setInterests} />
-              </div>
-
-              <label
-                htmlFor={ids.language}
-                style={{
-                  display: "block",
-                  margin: "20px 0 10px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  color: T.ink.dim,
-                }}
-              >
-                Languages you can review in
-              </label>
-
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "10px",
-                  marginBottom: "12px",
-                }}
-              >
-                {languages.map((lang) => {
-                  const name =
-                    LANGUAGE_OPTIONS.find((l) => l.code === lang.code)?.name ??
-                    lang.code
-
-                  return (
-                    <span
-                      key={lang.code}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        padding: "4px 10px",
-                        borderRadius: "999px",
-                        border: "1px solid transparent",
-                        background: T.accent.chip,
-                        color: T.accent.primaryHover,
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        fontFamily: T.font.sans,
-                      }}
-                    >
-                      {name} · {lang.proficiency}
-                      <button
-                        type="button"
-                        aria-label={`Remove ${name}`}
-                        onClick={() =>
-                          setLanguages((prev) =>
-                            prev.filter((l) => l.code !== lang.code)
-                          )
-                        }
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: T.ink.faint,
-                          cursor: "pointer",
-                          padding: 0,
-                          fontSize: "14px",
-                          lineHeight: 1,
-                        }}
-                      >
-                        ×
-                      </button>
-                    </span>
-                  )
-                })}
-              </div>
-
-              <div
-                style={{ display: "flex", gap: "10px", alignItems: "center" }}
-              >
-                <select
-                  id={ids.language}
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    border: `1px solid ${T.border.hi}`,
-                    background: T.bg.surface,
-                    color: T.ink.base,
-                    fontSize: "13px",
-                    fontFamily: T.font.sans,
-                    outline: "none",
-                  }}
-                  value={addingLang}
-                  onChange={(e) => setAddingLang(e.target.value)}
-                >
-                  <option value="" style={{ background: T.bg.deep }}>
-                    + Add a language
-                  </option>
-                  {LANGUAGE_OPTIONS.filter(
-                    (l) => !languages.some((ll) => ll.code === l.code)
-                  ).map((l) => (
-                    <option
-                      key={l.code}
-                      value={l.code}
-                      style={{ background: T.bg.deep }}
-                    >
-                      {l.name}
-                    </option>
-                  ))}
-                </select>
-                {/* No visible label to point at, so it's named here. */}
-                <select
-                  aria-label="Proficiency"
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    border: `1px solid ${T.border.hi}`,
-                    background: T.bg.surface,
-                    color: T.ink.base,
-                    fontSize: "13px",
-                    fontFamily: T.font.sans,
-                    outline: "none",
-                  }}
-                  value={addingProf}
-                  onChange={(e) =>
-                    setAddingProf(e.target.value as typeof addingProf)
-                  }
-                >
-                  {PROFICIENCY.map((p) => (
-                    <option key={p} value={p} style={{ background: T.bg.deep }}>
-                      {p}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={addLanguage}
-                  disabled={!addingLang}
-                  style={{
-                    padding: "8px 14px",
-                    borderRadius: "6px",
-                    border: `1px solid ${T.border.hi}`,
-                    background: T.bg.deep,
-                    color: T.ink.dim,
-                    fontSize: "14px",
-                    cursor: addingLang ? "pointer" : "not-allowed",
-                    opacity: addingLang ? 1 : 0.5,
-                  }}
-                >
-                  Add
-                </button>
-              </div>
-            </section>
-
-            {/* ───────────── § External links ───────────── */}
-            <section
-              id="section-links"
-              style={{
-                marginBottom: "40px",
-                padding: "28px",
-                borderRadius: "20px",
-                border: `1px solid ${T.border.line}`,
-                background: T.bg.deep,
-              }}
-            >
-              <SectionHeading
-                icon="mdi:link-variant"
-                title="External links"
-                optional
-              />
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "12px",
-                }}
-              >
-                <div>
-                  <label htmlFor={ids.website} style={label}>
-                    Website
-                  </label>
-                  <input
-                    id={ids.website}
-                    style={input}
-                    type="url"
-                    value={website}
-                    onChange={(e) => setWebsite(e.target.value)}
-                    placeholder="https://"
-                  />
-                </div>
-                <div>
-                  <label htmlFor={ids.orcid} style={label}>
-                    ORCID
-                  </label>
-                  <input
-                    id={ids.orcid}
-                    style={input}
-                    type="text"
-                    value={orcid}
-                    onChange={(e) => setOrcid(e.target.value)}
-                    placeholder="0000-0000-0000-0000"
-                  />
-                </div>
-                <div>
-                  <label htmlFor={ids.mastodon} style={label}>
-                    Mastodon / Bluesky
-                  </label>
-                  <input
-                    id={ids.mastodon}
-                    style={input}
-                    type="text"
-                    value={mastodon}
-                    onChange={(e) => setMastodon(e.target.value)}
-                    placeholder="@you@mastodon.social"
-                  />
-                </div>
-                <div>
-                  <label htmlFor={ids.linkedin} style={label}>
-                    LinkedIn
-                  </label>
-                  <input
-                    id={ids.linkedin}
-                    style={input}
-                    type="url"
-                    value={linkedin}
-                    onChange={(e) => setLinkedin(e.target.value)}
-                    placeholder="linkedin.com/in/"
-                  />
-                </div>
-              </div>
-            </section>
-
-            {/* ───────────── § Profile visibility ───────────── */}
-            <section
-              id="section-visibility"
-              style={{
-                marginBottom: "40px",
-                padding: "28px",
-                borderRadius: "20px",
-                border: `1px solid ${T.border.line}`,
-                background: T.bg.deep,
-              }}
-            >
-              <SectionHeading
-                id={ids.visibility}
-                icon="mdi:eye-outline"
-                title="Profile visibility"
-                subtitle="You can change this any time from settings. Affiliation badge shows up regardless once verified."
-              />
-
-              <div role="group" aria-labelledby={ids.visibility}>
-                <VisibilityCards value={visibility} onChange={setVisibility} />
-              </div>
-            </section>
-
-            {/* Fine print */}
-            <p
-              style={{
-                fontSize: "13px",
-                color: T.ink.low,
-                lineHeight: 1.6,
-                marginBottom: "10px",
-              }}
-            >
-              By continuing, you agree to the{" "}
-              <a
-                href={CODE_OF_CONDUCT_URL}
-                rel="noopener noreferrer"
-                style={{ color: T.ink.faint, textDecoration: "underline" }}
-                target="_blank"
-              >
-                Contributor Covenant
-                <span className="sr-only"> (opens in a new tab)</span>
-              </a>{" "}
-              and acknowledge that your profile data will be processed as
-              described in the{" "}
-              <Link
-                href="/legal/privacy"
-                style={{ color: T.ink.faint, textDecoration: "underline" }}
-              >
-                Privacy Policy
-              </Link>
-              . You can edit or delete your profile at any time from{" "}
-              <Link
-                href="/profile/settings"
-                style={{ color: T.ink.faint, textDecoration: "underline" }}
-              >
-                Settings
-              </Link>
-              .
-            </p>
-          </div>
-
-          {/* ── Sticky footer bar ── */}
-          <div
-            style={{
-              position: "sticky",
-              bottom: 0,
-              zIndex: 40,
-              background: "var(--t-header-bg)",
-              backdropFilter: "blur(16px)",
-              borderTop: "1px solid var(--t-border-line)",
-              padding: "14px 56px",
-              display: "flex",
-              justifyContent: "flex-end",
-              alignItems: "center",
-              gap: "12px",
-            }}
-          >
+        {/* ── Aside: progress + actions (sticky) ── */}
+        <aside
+          aria-label="Profile setup"
+          className="flex flex-col gap-4 self-start lg:sticky lg:top-24"
+        >
+          <ProfileProgress title="Profile setup" steps={form.steps()}>
             <button
               type="button"
-              disabled={!mounted}
-              onClick={() => void handleSave("home")}
-              style={{
-                padding: "9px 20px",
-                borderRadius: "999px",
-                border: `1px solid ${T.border.hi}`,
-                background: T.bg.deep,
-                color: T.ink.base,
-                fontSize: "14px",
-                fontFamily: T.font.sans,
-                cursor: mounted ? "pointer" : "not-allowed",
-                opacity: mounted ? 1 : 0.6,
-              }}
-            >
-              Save &amp; finish later
-            </button>
-            <button
-              type="button"
-              disabled={!mounted || saving || usernameStatus === "taken"}
+              disabled={primaryDisabled}
               onClick={() => void handleSave("profile")}
-              style={{
-                padding: "10px 24px",
-                borderRadius: "999px",
-                border: "none",
-                background: T.accent.primary,
-                color: "#fff",
-                fontSize: "14px",
-                fontFamily: T.font.sans,
-                fontWeight: 600,
-                cursor:
-                  !mounted || saving || usernameStatus === "taken"
-                    ? "not-allowed"
-                    : "pointer",
-                opacity:
-                  !mounted || saving || usernameStatus === "taken" ? 0.6 : 1,
-                display: "flex",
-                alignItems: "center",
-                gap: "7px",
-              }}
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-(--t-accent-primary) px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
+              style={{ border: "none", fontFamily: T.font.sans }}
             >
               {saving ? (
                 "Saving…"
               ) : (
                 <>
                   Enter your profile
-                  <Icon icon="mdi:arrow-right" width={14} height={14} />
+                  <Icon aria-hidden="true" icon="mdi:arrow-right" width={18} />
                 </>
               )}
             </button>
-          </div>
-        </div>
+            <button
+              type="button"
+              disabled={!mounted || saving}
+              onClick={() => void handleSave("home")}
+              className="inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-[15px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
+              style={{
+                background: T.bg.deep,
+                border: `1px solid ${T.border.hi}`,
+                color: T.ink.base,
+                fontFamily: T.font.sans,
+              }}
+            >
+              Save &amp; finish later
+            </button>
+            <p
+              className="m-0 mt-1 text-[13.5px] leading-[1.55]"
+              style={{ color: T.ink.dim }}
+            >
+              By continuing, you agree to the{" "}
+              <a
+                href={CODE_OF_CONDUCT_URL}
+                rel="noopener noreferrer"
+                target="_blank"
+                className={linkClass}
+                style={linkStyle}
+              >
+                Contributor Covenant
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>{" "}
+              and acknowledge that your profile data is processed as described
+              in the{" "}
+              <Link
+                href="/legal/privacy"
+                className={linkClass}
+                style={linkStyle}
+              >
+                Privacy Policy
+              </Link>
+              . You can edit or delete your profile any time from{" "}
+              <Link
+                href="/profile/settings"
+                className={linkClass}
+                style={linkStyle}
+              >
+                Settings
+              </Link>
+              .
+            </p>
+          </ProfileProgress>
+        </aside>
       </div>
-    </>
+    </div>
   )
 }
