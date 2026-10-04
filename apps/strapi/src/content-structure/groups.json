@@ -5,46 +5,56 @@
       "groups": [
         {
           "parent": null,
-          "name": "Libraries",
-          "id": "grp_87eb9095704c41fd96f557c0",
+          "name": "Auditing",
+          "id": "grp_k6l7m8n9o0p1q2r3s4t5u6v7",
           "children": [
             {
-              "uid": "api::service.service",
+              "uid": "api::library-change.library-change",
               "type": "contentType"
             },
             {
-              "uid": "api::country.country",
-              "type": "contentType"
-            },
-            {
-              "uid": "api::continent.continent",
-              "type": "contentType"
-            },
-            {
-              "uid": "api::accessibility.accessibility",
-              "type": "contentType"
-            },
-            {
-              "uid": "api::amenity.amenity",
-              "type": "contentType"
-            },
-            {
-              "uid": "api::area.area",
-              "type": "contentType"
-            },
-            {
-              "uid": "api::library.library",
-              "type": "contentType"
-            },
-            {
-              "uid": "api::region.region",
+              "uid": "api::article-change.article-change",
               "type": "contentType"
             }
           ]
         },
         {
           "parent": null,
-          "name": "Wiki",
+          "name": "Events",
+          "id": "grp_m2n3o4p5q6r7s8t9u0v1w2x3",
+          "children": [
+            {
+              "uid": "plugin::events.event",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::saved-event.saved-event",
+              "type": "contentType"
+            }
+          ]
+        },
+        {
+          "parent": null,
+          "name": "Journal",
+          "id": "grp_b60124713c5d4e7ebd248c7c",
+          "children": [
+            {
+              "uid": "api::blog-article.blog-article",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::blog-section.blog-section",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::category.category",
+              "type": "contentType"
+            }
+          ]
+        },
+        {
+          "parent": null,
+          "name": "Knowledge",
           "id": "grp_1772a908ee7748dcac964ff4",
           "children": [
             {
@@ -59,15 +69,104 @@
         },
         {
           "parent": null,
-          "name": "Blog",
-          "id": "grp_b60124713c5d4e7ebd248c7c",
+          "name": "Libraries",
+          "id": "grp_87eb9095704c41fd96f557c0",
           "children": [
             {
-              "uid": "api::blog-section.blog-section",
+              "uid": "api::continent.continent",
               "type": "contentType"
             },
             {
-              "uid": "api::blog-article.blog-article",
+              "uid": "api::country.country",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::region.region",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::area.area",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::library.library",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::service.service",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::accessibility.accessibility",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::amenity.amenity",
+              "type": "contentType"
+            }
+          ]
+        },
+        {
+          "parent": null,
+          "name": "Pages & Content",
+          "id": "grp_y4z5a6b7c8d9e0f1g2h3i4j5",
+          "children": [
+            {
+              "uid": "api::page.page",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::legal-document.legal-document",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::redirect.redirect",
+              "type": "contentType"
+            }
+          ]
+        },
+        {
+          "parent": null,
+          "name": "Utilities",
+          "id": "grp_w8x9y0z1a2b3c4d5e6f7g8h9",
+          "children": [
+            {
+              "uid": "api::dataset.dataset",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::topic.topic",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::subscriber.subscriber",
+              "type": "contentType"
+            }
+          ]
+        },
+        {
+          "parent": null,
+          "name": "Users & Access",
+          "id": "grp_a1b2c3d4e5f6g7h8i9j0k1l2",
+          "children": [
+            {
+              "uid": "api::user-profile.user-profile",
+              "type": "contentType"
+            },
+            {
+              "uid": "plugin::users-permissions.user",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::role-grant.role-grant",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::entitlement-grant.entitlement-grant",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::pro-verification.pro-verification",
               "type": "contentType"
             }
           ]
