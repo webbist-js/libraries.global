@@ -147,3 +147,18 @@ describe.each(SHAPES)("populate shape for %s", (uid, shapes) => {
     }
   )
 })
+
+describe("library list shape serves the ingest scripts", () => {
+  // StrapiClient.librariesBySourceRecord() reads `/api/libraries` with
+  // `populate=sourceRecords` to skip outlets an ingest already created. The
+  // route swaps that populate for LIBRARY_SHAPES.list, so without the source
+  // records there every re-run would create the whole dataset again.
+  it("populates each library's source records", () => {
+    const sourceRecords = LIBRARY_SHAPES.list.populate.sourceRecords as
+      | { fields?: string[] }
+      | undefined
+    expect(sourceRecords?.fields).toEqual(
+      expect.arrayContaining(["dataset", "recordId"])
+    )
+  })
+})

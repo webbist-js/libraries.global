@@ -78,6 +78,9 @@
           "zod": "*"
         }
       }
+    },
+    "patchedDependencies": {
+      "strapi-plugin-meilisearch@0.16.5": "patches/strapi-plugin-meilisearch@0.16.5.patch"
     }
   }
 }

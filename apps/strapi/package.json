@@ -26,6 +26,7 @@
     "test": "vitest run",
     "test:unit": "vitest run --exclude tests/app.test.ts",
     "test:watch": "vitest",
+    "seed:meilisearch": "tsx scripts/seed-meilisearch.ts",
     "transfer": "strapi transfer",
     "typecheck": "tsc --noEmit"
   },
@@ -60,7 +61,7 @@
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.0.0",
     "strapi-plugin-config-sync": "2.1.0",
-    "strapi-plugin-meilisearch": "^0.16.0",
+    "strapi-plugin-meilisearch": "^0.16.5",
     "strapi-plugin-timezone-select": "2.0.0",
     "styled-components": "^6.0.0",
     "vitest": "^4.0.18"
@@ -70,6 +71,7 @@
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   },
   "strapi": {

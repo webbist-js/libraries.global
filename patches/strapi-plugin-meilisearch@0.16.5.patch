@@ -1,0 +1,86 @@
+diff --git a/dist/server/index.js b/dist/server/index.js
+index 3f6890d72bfa5d6cf00cc43e53ed6f617e5ede74..61cf738078599d9b25e47a1d250510a7ef3c5528 100644
+--- a/dist/server/index.js
++++ b/dist/server/index.js
+@@ -637,6 +637,10 @@ async function registerDocumentMiddleware({ strapi: strapi2 }) {
+   }
+   strapi2.documents.use(async (ctx, next) => {
+     let result;
++    // Patched: errors from next() are the write's own and must reach the
++    // caller; only the plugin's indexing work is best-effort.
++    let nextCalled = false;
++    let nextFailed = false;
+     try {
+       const plugin = strapi2.plugin("meilisearch");
+       const store2 = plugin.service("store");
+@@ -682,7 +686,13 @@ async function registerDocumentMiddleware({ strapi: strapi2 }) {
+       const preActionSnapshotsByDocumentId = new Map(
+         preActionSnapshots.map((snapshot) => [snapshot.documentId, snapshot])
+       );
+-      result = await next();
++      nextCalled = true;
++      try {
++        result = await next();
++      } catch (nextError) {
++        nextFailed = true;
++        throw nextError;
++      }
+       const documentIds = resolveDocumentIds({
+         actionParams: ctx?.params,
+         result,
+@@ -823,10 +833,11 @@ async function registerDocumentMiddleware({ strapi: strapi2 }) {
+       }
+       return result;
+     } catch (error2) {
++      if (nextFailed) throw error2;
+       strapi2.log.error(
+         `Meilisearch document middleware error: ${error2.message}`
+       );
+-      return result;
++      return nextCalled ? result : next();
+     }
+   });
+ }
+diff --git a/dist/server/index.mjs b/dist/server/index.mjs
+index b908479a1a1c06547abb8acf4762ff75e410abc4..88f845f6aaf2584f9af1ee203b7699a345b0ff1b 100644
+--- a/dist/server/index.mjs
++++ b/dist/server/index.mjs
+@@ -636,6 +636,10 @@ async function registerDocumentMiddleware({ strapi: strapi2 }) {
+   }
+   strapi2.documents.use(async (ctx, next) => {
+     let result;
++    // Patched: errors from next() are the write's own and must reach the
++    // caller; only the plugin's indexing work is best-effort.
++    let nextCalled = false;
++    let nextFailed = false;
+     try {
+       const plugin = strapi2.plugin("meilisearch");
+       const store2 = plugin.service("store");
+@@ -681,7 +685,13 @@ async function registerDocumentMiddleware({ strapi: strapi2 }) {
+       const preActionSnapshotsByDocumentId = new Map(
+         preActionSnapshots.map((snapshot) => [snapshot.documentId, snapshot])
+       );
+-      result = await next();
++      nextCalled = true;
++      try {
++        result = await next();
++      } catch (nextError) {
++        nextFailed = true;
++        throw nextError;
++      }
+       const documentIds = resolveDocumentIds({
+         actionParams: ctx?.params,
+         result,
+@@ -822,10 +832,11 @@ async function registerDocumentMiddleware({ strapi: strapi2 }) {
+       }
+       return result;
+     } catch (error2) {
++      if (nextFailed) throw error2;
+       strapi2.log.error(
+         `Meilisearch document middleware error: ${error2.message}`
+       );
+-      return result;
++      return nextCalled ? result : next();
+     }
+   });
+ }

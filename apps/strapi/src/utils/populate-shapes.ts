@@ -79,7 +79,12 @@ export type ShapeSet = { list: Shape; detail: Shape }
 
 // ── Library ─────────────────────────────────────────────────────────────────
 
+// `locale`, `iiifEndpoint` and the country's `iso2` are here for
+// scripts/seed-meilisearch.mjs, which reads this route to build the search
+// index (parity-tested in tests/meilisearch-config.test.ts); `sourceRecords`
+// is for the ingests, which skip outlets they already created.
 const LIBRARY_LIST_FIELDS = [
+  "locale",
   "name",
   "slug",
   "entityRef",
@@ -106,6 +111,7 @@ const LIBRARY_LIST_FIELDS = [
   "completeness",
   "lastVerifiedAt",
   "contentUpdatedAt",
+  "iiifEndpoint",
   "updatedAt",
   "publishedAt",
 ]
@@ -113,13 +119,16 @@ const LIBRARY_LIST_FIELDS = [
 const LIBRARY_LIST_POPULATE = {
   heroImage: mediaPopulate,
   continent: continentRef,
-  country: locationRef,
+  country: {
+    fields: ["name", "slug", "iso2", "regionTypeLabel", "regionsSectionLabel"],
+  },
   region: locationRef,
   area: locationRef,
   accessibility: optionRef,
   services: optionRef,
   amenities: optionRef,
   collectionStats: { fields: ["value", "category", "description"] },
+  sourceRecords: { fields: ["dataset", "recordId", "retrievedAt", "url"] },
 }
 
 export const LIBRARY_SHAPES: ShapeSet = {
@@ -145,7 +154,6 @@ export const LIBRARY_SHAPES: ShapeSet = {
       "buildingInfo",
       "languagesServed",
       "classificationSystem",
-      "iiifEndpoint",
       "transitInfo",
       "nearestStation",
       "wikidataId",
@@ -157,7 +165,6 @@ export const LIBRARY_SHAPES: ShapeSet = {
       gallery: mediaPopulate,
       socialLinks: { fields: ["platform", "label", "url"] },
       libraryStats: { fields: ["value", "label", "note"] },
-      sourceRecords: { fields: ["dataset", "recordId", "retrievedAt", "url"] },
       seo: SEO_POPULATE,
     },
   },

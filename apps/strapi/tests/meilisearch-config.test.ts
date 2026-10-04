@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs"
 import { beforeAll, describe, expect, it, vi } from "vitest"
 
 import pluginsConfig from "../config/plugins"
+import type * as SeedModule from "../scripts/seed-meilisearch"
+import { LIBRARY_SHAPES } from "../src/utils/populate-shapes"
 
 /**
  * Guards the Meilisearch index configuration against leaking private data.
@@ -241,7 +243,16 @@ const FIXTURES: Record<IndexName, Record<string, unknown>> = {
     website: "https://bl.uk",
     featured: true,
     timezone: "Europe/London",
-    openingTimes: { mon: [["09:30", "20:00"]] },
+    openingTimes: {
+      days: [
+        {
+          day: "monday",
+          enabled: true,
+          timeframes: [{ startTime: "09:30", endTime: "20:00" }],
+        },
+      ],
+    },
+    completeness: 63,
     iiifEndpoint: "https://iiif.bl.uk",
     location: { lat: "51.53", lng: "-0.127" },
     heroImage: MEDIA,
@@ -398,8 +409,16 @@ describe.each(INDEXES)("Meilisearch index %s", (name) => {
     const doc = transform!({ entry: structuredClone(FIXTURES[name]) })
     const displayed = meili[name].settings.displayedAttributes ?? []
 
-    // Exactly the displayed keys: nothing extra, nothing missing.
-    expect(Object.keys(doc).sort()).toEqual([...displayed].sort())
+    // Exactly the displayed keys: nothing extra, nothing missing. The
+    // opening-hours fields are sparse (only real timeframes are stored).
+    const isOpen = (key: string) => /^open_[a-z]{3}_\d_(from|to)$/.test(key)
+    expect(
+      Object.keys(doc)
+        .filter((k) => !isOpen(k))
+        .sort()
+    ).toEqual(displayed.filter((k) => !isOpen(k)).sort())
+    for (const key of Object.keys(doc).filter(isOpen))
+      expect(displayed).toContain(key)
 
     // Nothing private survives anywhere in the document, nested included.
     const serialised = JSON.stringify(doc)
@@ -430,6 +449,24 @@ describe("Meilisearch indexes every locale", () => {
 
   it("leaves the non-localized event index alone", () => {
     expect(meili.event.entriesQuery?.locale).toBeUndefined()
+  })
+
+  it("runs a plugin whose live sync understands the * locale", () => {
+    // 0.16.0's document middleware re-read every created, updated or
+    // published entry with findOne({ locale: "*" }), which Strapi 5 answers
+    // with null, and then deleted the entry from the index. 0.16.5 resolves
+    // the wildcard to the edited locale.
+    const { version } = JSON.parse(
+      readFileSync(
+        new URL(
+          "../node_modules/strapi-plugin-meilisearch/package.json",
+          import.meta.url
+        ),
+        "utf8"
+      )
+    ) as { version: string }
+    const [major, minor, patch] = version.split(".").map(Number)
+    expect(major * 1e6 + minor * 1e3 + patch).toBeGreaterThanOrEqual(16_005)
   })
 })
 
@@ -553,55 +590,27 @@ describe("Meilisearch config keys", () => {
   })
 })
 
-describe("scripts/seed-meilisearch.mjs mirrors the plugin config", () => {
-  // The seed script can't import the TypeScript config, so it repeats the
-  // index shapes. This keeps the two from drifting: same fetch, same
-  // settings, same document for the same entry.
-  const SEEDED = ["library", "blog-article", "wiki-article"] as const
-
-  type SeedModule = {
-    INDEXES: Record<
-      (typeof SEEDED)[number],
-      {
-        apiPath: string
-        settings: Record<string, unknown>
-        entriesQuery: {
-          fields: string[]
-          populate: Record<string, unknown>
-          locale?: string
-        }
-        transformEntry: (
-          entry: Record<string, unknown>
-        ) => Record<string, unknown>
-      }
-    >
-    entriesQueryParams: (
-      entriesQuery: {
-        fields: string[]
-        populate: Record<string, unknown>
-        locale?: string
-      },
-      page: number
-    ) => URLSearchParams
-    meilisearchId: (collection: string, doc: Record<string, unknown>) => string
-  }
-
-  let seed: SeedModule
+describe("scripts/seed-meilisearch.ts", () => {
+  // The seed imports config/plugins.ts, so the index shapes have one source.
+  let seed: typeof SeedModule
+  const libraryQuery = () =>
+    seed.seededIndexes().find((i) => i.name === "library")!.entriesQuery
 
   beforeAll(async () => {
-    seed = (await import("../scripts/seed-meilisearch.mjs")) as SeedModule
+    seed = await import("../scripts/seed-meilisearch")
   })
 
-  it.each(SEEDED)("%s: same settings and entriesQuery", (name) => {
-    expect(seed.INDEXES[name].settings).toEqual(meili[name].settings)
-    expect(seed.INDEXES[name].entriesQuery).toEqual(meili[name].entriesQuery)
-  })
-
-  it.each(SEEDED)("%s: same document for the same entry", (name) => {
-    const entry = structuredClone(FIXTURES[name])
-    expect(seed.INDEXES[name].transformEntry(structuredClone(entry))).toEqual(
-      meili[name].transformEntry!({ entry })
-    )
+  it("seeds the library and article indexes from the plugin config", () => {
+    const indexes = seed.seededIndexes()
+    expect(indexes.map((i) => i.name)).toEqual([
+      "library",
+      "blog-article",
+      "wiki-article",
+    ])
+    for (const index of indexes) {
+      expect(index.settings).toEqual(meili[index.name].settings)
+      expect(index.entriesQuery).toEqual(meili[index.name].entriesQuery)
+    }
   })
 
   it("builds the plugin's document id, with the locale only when present", () => {
@@ -619,8 +628,31 @@ describe("scripts/seed-meilisearch.mjs mirrors the plugin config", () => {
     ).toBe("event-ev-1")
   })
 
+  it("library: the core list route returns every field the seed reads", () => {
+    // The seed reads `/api/libraries`, whose `library-populate` middleware
+    // swaps the query's fields and populate for LIBRARY_SHAPES.list. Whatever
+    // the seed asks for that the shape leaves out comes back missing, and a
+    // missing `locale` hides every library from the locale-filtered search.
+    const { fields, populate } = libraryQuery()
+    const shape = LIBRARY_SHAPES.list
+    expect(
+      fields.filter((f) => f !== "documentId" && !shape.fields.includes(f))
+    ).toEqual([])
+    const missing = Object.entries(populate).flatMap(([relation, node]) => {
+      const shaped = shape.populate[relation] as
+        | { fields?: string[] }
+        | undefined
+      if (!shaped) return [relation]
+
+      return node.fields
+        .filter((f) => !shaped.fields?.includes(f))
+        .map((f) => `${relation}.${f}`)
+    })
+    expect(missing).toEqual([])
+  })
+
   it("asks REST for exactly the configured fields and populate", () => {
-    const params = seed.entriesQueryParams(seed.INDEXES.library.entriesQuery, 2)
+    const params = seed.entriesQueryParams(libraryQuery(), 2)
     expect(params.get("status")).toBe("published")
     expect(params.get("locale")).toBe("*")
     expect(params.get("pagination[page]")).toBe("2")

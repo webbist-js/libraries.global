@@ -1,3 +1,7 @@
+import {
+  OPEN_FIELD_NAMES,
+  librarySearchFields,
+} from "../src/utils/library-search-fields"
 import { scrubSentryEvent } from "../src/utils/sentry-scrub"
 
 export default ({ env }) => {
@@ -173,9 +177,16 @@ export default ({ env }) => {
               "operatorType",
               "_geo",
               "locale",
+              ...LIBRARY_SEARCH_FIELDS,
             ],
-            sortableAttributes: ["name", "featured", "_geo"],
+            sortableAttributes: ["name", "featured", "completeness", "_geo"],
             displayedAttributes: LIBRARY_DISPLAYED,
+            // geo_cell counts libraries per 1° cell for the homepage globe:
+            // densest cells first, and room for every inhabited cell.
+            faceting: {
+              maxValuesPerFacet: 5000,
+              sortFacetValuesBy: { "*": "alpha", geo_cell: "count" },
+            },
           },
           entriesQuery: {
             fields: LIBRARY_FIELDS,
@@ -229,6 +240,8 @@ export default ({ env }) => {
               accessibility_names: optionNames(entry.accessibility),
               service_names: optionNames(entry.services),
               amenity_names: optionNames(entry.amenities),
+              // Find libraries' filters, counts and sorts; see the module.
+              ...librarySearchFields(entry, lat, lng),
               // _geo enables MeiliSearch geo radius filtering and distance sorting
               ...(lat != null && lng != null ? { _geo: { lat, lng } } : {}),
             }
@@ -380,6 +393,7 @@ const LIBRARY_FIELDS = [
   "timezone",
   "openingTimes",
   "iiifEndpoint",
+  "completeness",
   "location",
   "publishedAt",
   "updatedAt",
@@ -388,6 +402,15 @@ const LIBRARY_FIELDS = [
 const LIBRARY_DOC_KEYS = [
   "id",
   ...LIBRARY_FIELDS.filter((f) => f !== "location"),
+]
+/** Derived by librarySearchFields; completeness is already a document key. */
+const LIBRARY_SEARCH_FIELDS = [
+  "has_hours",
+  "has_iiif",
+  "needs",
+  "open_tz",
+  "geo_cell",
+  ...OPEN_FIELD_NAMES,
 ]
 const LIBRARY_DISPLAYED = [
   ...LIBRARY_DOC_KEYS,
@@ -407,6 +430,7 @@ const LIBRARY_DISPLAYED = [
   "service_names",
   "amenity_names",
   "_geo",
+  ...LIBRARY_SEARCH_FIELDS,
 ]
 
 const asRecord = (value: unknown): Rec | null =>
