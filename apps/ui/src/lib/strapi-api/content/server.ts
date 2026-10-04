@@ -936,6 +936,11 @@ export type BlogSection = {
   documentId: string
   name: string
   slug: string
+  description?: string | null
+  /** Iconify id chosen by editors, e.g. "mdi:bank-outline". */
+  icon?: string | null
+  /** purple | green | blue | rust | neutral */
+  tint?: string | null
 }
 
 export type BlogArticleSummary = {
@@ -1054,22 +1059,73 @@ export async function fetchRecentBlogArticles(locale: Locale) {
   }
 }
 
-export async function fetchBlogArticlesBySection(
-  sectionSlug: string,
-  locale: Locale,
-  page = 1,
-  pageSize = 24
-) {
+type NamedPlace = { name?: string | null } | null
+
+/** A Journal list entry: the summary plus what its card derives from. */
+export type JournalArticleItem = BlogArticleSummary & {
+  /** Body blocks, fetched only to estimate the reading time. */
+  body?: { __component: string }[] | null
+  /** Linked libraries, for the "Radlett, England" place label. */
+  libraries?:
+    | {
+        name?: string | null
+        area?: NamedPlace
+        region?: NamedPlace
+        country?: NamedPlace
+      }[]
+    | null
+}
+
+type JournalPagination = {
+  page: number
+  pageSize: number
+  pageCount: number
+  total: number
+}
+
+/**
+ * One page of Journal articles in `locale`, optionally in one section or
+ * limited to given documents. `sort` is a Strapi sort list.
+ */
+export async function fetchJournalArticles({
+  locale,
+  section,
+  documentIds,
+  sort,
+  page,
+  pageSize,
+}: {
+  locale: Locale
+  section?: string | null
+  documentIds?: string[]
+  sort: string[]
+  page: number
+  pageSize: number
+}): Promise<{
+  data: JournalArticleItem[]
+  meta: { pagination: JournalPagination }
+}> {
   const dm = await draftMode()
+  const filters: Record<string, unknown> = {}
+  if (section) filters.section = { slug: { $eq: section } }
+  if (documentIds) filters.documentId = { $in: documentIds }
   try {
     return (await PublicStrapiClient.fetchAPI("/blog-articles", {
       locale,
       status: dm.isEnabled ? "draft" : "published",
-      filters: { section: { slug: { $eq: sectionSlug } } } as any,
+      filters: filters as any,
       populate: {
         heroImage: true,
-        section: { fields: ["name", "slug"] },
-        category: { fields: ["name", "slug"] },
+        section: { fields: ["name", "slug", "icon", "tint"] },
+        body: true,
+        libraries: {
+          fields: ["name"],
+          populate: {
+            area: { fields: ["name"] },
+            region: { fields: ["name"] },
+            country: { fields: ["name"] },
+          },
+        },
       } as any,
       fields: [
         "title",
@@ -1080,21 +1136,15 @@ export async function fetchBlogArticlesBySection(
         "publishedAt",
         "updatedAt",
       ] as any,
-      sort: ["publishedAt:desc"] as any,
+      sort: sort as any,
       pagination: { page, pageSize } as any,
-    })) as APIResponseCollection<BlogArticleSummary> & {
-      meta: {
-        pagination: {
-          page: number
-          pageSize: number
-          pageCount: number
-          total: number
-        }
-      }
+    })) as {
+      data: JournalArticleItem[]
+      meta: { pagination: JournalPagination }
     }
   } catch (e: unknown) {
     logNonBlockingError({
-      message: `Error fetching blog articles for section '${sectionSlug}'`,
+      message: `Error fetching Journal articles (section '${section ?? "all"}', locale '${locale}')`,
       error: {
         error: e instanceof Error ? e.message : String(e),
         stack: e instanceof Error ? e.stack : undefined,
@@ -1103,15 +1153,49 @@ export async function fetchBlogArticlesBySection(
 
     return {
       data: [],
-      meta: { pagination: { page: 1, pageSize, pageCount: 1, total: 0 } },
+      meta: { pagination: { page, pageSize, pageCount: 0, total: 0 } },
     }
+  }
+}
+
+/**
+ * How many Journal articles `locale` has, in one section or overall. Any
+ * Strapi locale, not only the ones the site routes.
+ */
+export async function countJournalArticles(
+  locale: string,
+  section?: string | null
+): Promise<number> {
+  const dm = await draftMode()
+  try {
+    const res = (await PublicStrapiClient.fetchAPI("/blog-articles", {
+      locale: locale as Locale,
+      status: dm.isEnabled ? "draft" : "published",
+      ...(section
+        ? { filters: { section: { slug: { $eq: section } } } as any }
+        : {}),
+      fields: ["slug"] as any,
+      pagination: { page: 1, pageSize: 1 } as any,
+    })) as { meta?: { pagination?: { total?: number } } }
+
+    return res.meta?.pagination?.total ?? 0
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error counting Journal articles (section '${section ?? "all"}', locale '${locale}')`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+
+    return 0
   }
 }
 
 export async function fetchBlogSections() {
   try {
     return (await PublicStrapiClient.fetchAPI("/blog-sections", {
-      fields: ["name", "slug", "description"] as any,
+      fields: ["name", "slug", "description", "icon", "tint"] as any,
       sort: ["name:asc"] as any,
       pagination: { pageSize: 50 } as any,
     })) as APIResponseCollection<BlogSection>

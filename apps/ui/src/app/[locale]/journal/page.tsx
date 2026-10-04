@@ -1,17 +1,15 @@
 import type { Metadata } from "next"
 import type { Locale } from "next-intl"
-import { use } from "react"
 
 import BlogLandingPage from "@/components/blog/BlogLandingPage"
+import { parseJournalQuery } from "@/components/blog/journalLanding.helpers"
+import { loadJournalLanding } from "@/lib/journal-landing"
 import { buildMetadata } from "@/lib/seo/metadata"
-import {
-  fetchBlogLanding,
-  fetchBlogSections,
-  fetchRecentBlogArticles,
-} from "@/lib/strapi-api/content/server"
+import { fetchBlogLanding } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
-export const dynamic = "force-static"
+// Section, sort, page, view and language live in the URL, so the page renders
+// per request; the Strapi fetches underneath stay cached.
 export const revalidate = 300
 
 export async function generateMetadata({
@@ -33,22 +31,18 @@ export async function generateMetadata({
   })
 }
 
-export default function BlogPage(props: {
+export default async function BlogPage(props: {
   params: Promise<{ locale: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const params = use(props.params)
-  const locale = params.locale as Locale
-
-  const landing = use(fetchBlogLanding(locale))?.data ?? null
-  const articles = use(fetchRecentBlogArticles(locale))?.data ?? []
-  const sections = use(fetchBlogSections())?.data ?? []
-
-  return (
-    <BlogLandingPage
-      landing={landing}
-      articles={articles}
-      sections={sections}
-      locale={locale}
-    />
+  const [{ locale }, searchParams] = await Promise.all([
+    props.params,
+    props.searchParams,
+  ])
+  const data = await loadJournalLanding(
+    locale as Locale,
+    parseJournalQuery(searchParams)
   )
+
+  return <BlogLandingPage data={data} locale={locale as Locale} />
 }

@@ -1053,6 +1053,10 @@ export interface ApiBlogSectionBlogSection extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
     description: Schema.Attribute.Text
+    icon: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 80
+      }>
     locale: Schema.Attribute.String & Schema.Attribute.Private
     localizations: Schema.Attribute.Relation<
       "oneToMany",
@@ -1062,6 +1066,10 @@ export interface ApiBlogSectionBlogSection extends Struct.CollectionTypeSchema {
     name: Schema.Attribute.String & Schema.Attribute.Required
     publishedAt: Schema.Attribute.DateTime
     slug: Schema.Attribute.UID<"name"> & Schema.Attribute.Required
+    tint: Schema.Attribute.Enumeration<
+      ["purple", "green", "blue", "rust", "neutral"]
+    > &
+      Schema.Attribute.DefaultTo<"neutral">
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private

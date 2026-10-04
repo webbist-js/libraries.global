@@ -1,45 +1,37 @@
 import type { Locale } from "next-intl"
 
 import { PageHero } from "@/components/ds/PageHero"
+import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
-import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
-import type {
-  BlogArticleSummary,
-  BlogLandingData,
-  BlogSection,
-} from "@/lib/strapi-api/content/server"
+import type { JournalLandingData } from "@/lib/journal-landing"
 
-import BlogFeed from "./BlogFeed"
 import { BlogSearchBar } from "./BlogSearchBar"
+import { JournalAllArticles } from "./JournalAllArticles"
+import { JournalFeatureCard, JournalSideCard } from "./JournalCards"
+import { JournalSectionBrowser } from "./JournalSectionBrowser"
+import { JournalWriteCta } from "./JournalWriteCta"
+import { MonthlyDispatchCard } from "./MonthlyDispatchCard"
+import { MostReadCard } from "./MostReadCard"
 
 export function BlogLandingPage({
-  landing,
-  articles,
-  sections,
+  data,
   locale,
 }: {
-  readonly landing: BlogLandingData | null
-  readonly articles: BlogArticleSummary[]
-  readonly sections: BlogSection[]
+  readonly data: JournalLandingData
   readonly locale: Locale
 }) {
-  // The landing single-type and the articles list populate different fields
-  // (landing has author/authorTitle, the list has section) — merge them.
-  const featuredRef = landing?.featuredArticle ?? articles[0] ?? null
-  const listCopy = featuredRef
-    ? articles.find((a) => a.documentId === featuredRef.documentId)
-    : null
-  const featuredArticle = featuredRef
-    ? {
-        ...listCopy,
-        ...featuredRef,
-        section: featuredRef.section ?? listCopy?.section ?? null,
-        heroImage: featuredRef.heroImage ?? listCopy?.heroImage ?? null,
-      }
-    : null
-
-  const heroTitle = landing?.heroTitle ?? "Field notes *from the stacks.*"
+  const {
+    landing,
+    query,
+    sections,
+    total,
+    linkLocale,
+    featured,
+    editorsPick,
+    sideStories,
+    mostRead,
+  } = data
 
   return (
     <div
@@ -55,31 +47,56 @@ export function BlogLandingPage({
           eyebrowIcon="mdi:notebook-outline"
           lead={
             landing?.heroText ??
-            "Histories, collection notes and dispatches, written by the librarians, archivists and researchers who document the index."
+            "Stories, histories and notes from librarians, archivists and researchers about the world’s libraries and the people in them."
           }
-          title={heroTitle}
+          title={landing?.heroTitle ?? "Field notes *from the stacks.*"}
         >
           <BlogSearchBar inputId="journal-search" />
-          <p className="mt-3 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
-            Write for the Journal?{" "}
-            <GlobalLink
-              href="/contribute/knowledge/apply?role=journal_editor"
-              className="font-semibold underline underline-offset-[3px]"
-              style={{ color: T.accent.primary }}
-            >
-              Apply to be a Journal editor
-            </GlobalLink>
-          </p>
         </PageHero>
 
-        {/* ── Feed (filters + featured + list) ─────────────────────────── */}
-        {articles.length > 0 && (
-          <BlogFeed
-            articles={articles}
-            featuredArticle={featuredArticle}
+        <Container className="pt-10 pb-20">
+          {featured ? (
+            <section aria-label="Top stories">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+                <JournalFeatureCard
+                  article={featured}
+                  editorsPick={editorsPick}
+                  locale={linkLocale}
+                />
+                {sideStories.length > 0 ? (
+                  <div className="flex flex-col gap-4">
+                    {sideStories.map((article) => (
+                      <JournalSideCard
+                        article={article}
+                        key={article.documentId}
+                        locale={linkLocale}
+                      />
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </section>
+          ) : null}
+
+          <JournalSectionBrowser
+            query={query}
             sections={sections}
+            total={total}
           />
-        )}
+
+          <div className="mt-14 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <JournalAllArticles {...data} />
+
+            <aside
+              aria-label="More from the Journal"
+              className="flex flex-col gap-5"
+            >
+              <MostReadCard articles={mostRead} locale={linkLocale} />
+              <MonthlyDispatchCard />
+              <JournalWriteCta />
+            </aside>
+          </div>
+        </Container>
       </main>
     </div>
   )

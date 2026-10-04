@@ -28,6 +28,15 @@
     "description": {
       "type": "text"
     },
+    "icon": {
+      "type": "string",
+      "maxLength": 80
+    },
+    "tint": {
+      "type": "enumeration",
+      "enum": ["purple", "green", "blue", "rust", "neutral"],
+      "default": "neutral"
+    },
     "articles": {
       "type": "relation",
       "relation": "oneToMany",
