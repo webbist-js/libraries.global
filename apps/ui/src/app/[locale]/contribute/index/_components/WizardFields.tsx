@@ -200,20 +200,25 @@ export function Field({
   id,
   value,
   onChange,
+  onPaste,
   placeholder,
   type = "text",
   required,
   hint,
+  errorText = "Fill this in to continue.",
   autoComplete,
 }: {
   label: string
   id: keyof FormData
   value: string
   onChange: (name: keyof FormData, val: string) => void
+  onPaste?: React.ClipboardEventHandler<HTMLInputElement>
   placeholder?: string
   type?: string
   required?: boolean
   hint?: string
+  /** What the field's error says, when the step flags it. */
+  errorText?: string
   autoComplete?: string
 }) {
   const hintId = hint ? `${id}-hint` : undefined
@@ -235,6 +240,7 @@ export function Field({
         type={type}
         value={value}
         onChange={(e) => onChange(id, e.target.value)}
+        onPaste={onPaste}
         placeholder={shared ? undefined : placeholder}
         required={required && !shared}
         aria-required={required && !shared}
@@ -252,9 +258,7 @@ export function Field({
           ...(error.invalid ? invalidInputStyle : {}),
         }}
       />
-      {error.invalid && (
-        <FieldError id={error.id}>Fill this in to continue.</FieldError>
-      )}
+      {error.invalid && <FieldError id={error.id}>{errorText}</FieldError>}
       {hint && (
         <p id={hintId} style={fieldHintStyle}>
           {hint}

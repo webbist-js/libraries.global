@@ -92,4 +92,44 @@ describe("IndexRecordWizard", () => {
     expect(screen.getByRole("heading", { name: "Where is it?" })).toBeTruthy()
     expect(errorIds()).toEqual([])
   })
+
+  it("holds the Location step on a coordinate out of range, and splits a pasted pair", () => {
+    render(
+      createElement(IndexRecordWizard, {
+        mode: "new",
+        initialData: {
+          name: "Radlett Library",
+          libraryType: "Public",
+          operationalStatus: "open",
+          city: "Radlett",
+          country: "England",
+        },
+      })
+    )
+    fireEvent.click(nextButton())
+    expect(screen.getByRole("heading", { name: "Where is it?" })).toBeTruthy()
+
+    const latitude = () =>
+      screen.getByLabelText(/^Latitude/) as HTMLInputElement
+    fireEvent.change(latitude(), { target: { value: "200" } })
+    fireEvent.click(nextButton())
+    expect(errorIds()).toEqual(["lat"])
+    expect(
+      screen.getByText("Latitude is a number between -90 and 90.")
+    ).toBeTruthy()
+
+    fireEvent.paste(latitude(), {
+      clipboardData: { getData: () => "51.7031, -0.3255" },
+    })
+    expect(latitude().value).toBe("51.7031")
+    expect(
+      (screen.getByLabelText(/^Longitude/) as HTMLInputElement).value
+    ).toBe("-0.3255")
+    expect(errorIds()).toEqual([])
+
+    fireEvent.click(nextButton())
+    expect(
+      screen.getByRole("heading", { name: "How do people visit?" })
+    ).toBeTruthy()
+  })
 })

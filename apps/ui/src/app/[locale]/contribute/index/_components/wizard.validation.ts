@@ -1,3 +1,5 @@
+import { coordIsValid } from "@/lib/geocode/coordinates"
+
 import { type FormData, SUBMISSION_META_KEYS } from "./wizard.types"
 
 /** The fields each step marks "required". A test holds WizardSteps to it. */
@@ -8,9 +10,19 @@ const REQUIRED_BY_STEP: Readonly<Record<number, readonly (keyof FormData)[]>> =
     7: ["evidenceType", "evidenceUrl"],
   }
 
-const STEPS_WITH_REQUIRED = Object.keys(REQUIRED_BY_STEP)
-  .map(Number)
-  .sort((a, b) => a - b)
+/** Fields a step checks the format of once they're filled in. */
+const FORMATTED_BY_STEP: Readonly<Record<number, readonly ("lat" | "lng")[]>> =
+  {
+    2: ["lat", "lng"],
+  }
+
+const STEPS_CHECKED = [
+  ...new Set(
+    [...Object.keys(REQUIRED_BY_STEP), ...Object.keys(FORMATTED_BY_STEP)].map(
+      Number
+    )
+  ),
+].sort((a, b) => a - b)
 
 const META = new Set<string>(SUBMISSION_META_KEYS)
 
@@ -35,10 +47,11 @@ export function requiredFields(
 }
 
 /**
- * The required fields on `step` that are still empty. Fields the
- * contributor can't fill here don't count: one shared across languages
- * while translating, or one the record already lacks, so fixing the hours
- * never waits on a city nobody has sourced.
+ * The fields that stop `step` being left: required ones still empty, then
+ * coordinates that aren't a number in range. Fields the contributor can't
+ * fill here don't count: one shared across languages while translating, or
+ * one the record already lacks, so fixing the hours never waits on a city
+ * nobody has sourced.
  */
 export function missingFields(
   step: number,
@@ -46,13 +59,17 @@ export function missingFields(
   scope: ValidationScope
 ): (keyof FormData)[] {
   const { record, editable } = scope
-
-  return requiredFields(step, !!record).filter((key) => {
+  const empty = requiredFields(step, !!record).filter((key) => {
     if (editable && !editable.has(key)) return false
     if (record && !META.has(key) && blank(record[key])) return false
 
     return blank(form[key])
   })
+  const malformed = (FORMATTED_BY_STEP[step] ?? []).filter(
+    (key) => (!editable || editable.has(key)) && !coordIsValid(key, form[key])
+  )
+
+  return [...empty, ...malformed]
 }
 
 /** The first step with a missing field, or null when the form can be sent. */
@@ -61,8 +78,7 @@ export function firstIncompleteStep(
   scope: ValidationScope
 ): number | null {
   return (
-    STEPS_WITH_REQUIRED.find(
-      (step) => missingFields(step, form, scope).length > 0
-    ) ?? null
+    STEPS_CHECKED.find((step) => missingFields(step, form, scope).length > 0) ??
+    null
   )
 }

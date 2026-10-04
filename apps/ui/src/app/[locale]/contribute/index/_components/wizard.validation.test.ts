@@ -69,6 +69,28 @@ describe("missingFields", () => {
 
     expect(missingFields(1, form, scope)).toEqual(["name"])
   })
+
+  it("flags a coordinate that isn't a number in range", () => {
+    expect(missingFields(2, { ...complete, lat: "91" }, adding)).toEqual([
+      "lat",
+    ])
+    expect(missingFields(2, { ...complete, lng: "west" }, adding)).toEqual([
+      "lng",
+    ])
+    expect(
+      missingFields(2, { ...complete, lat: "53.83", lng: "-1.957" }, adding)
+    ).toEqual([])
+    expect(
+      missingFields(2, { ...complete, city: "", lat: "x" }, adding)
+    ).toEqual(["city", "lat"])
+  })
+
+  it("leaves the coordinates alone while translating", () => {
+    const editable = new Set(editableFields(true, Object.keys(EMPTY_FORM)))
+    const scope = { record: complete, editable }
+
+    expect(missingFields(2, { ...complete, lat: "x" }, scope)).toEqual([])
+  })
 })
 
 describe("firstIncompleteStep", () => {
@@ -79,5 +101,9 @@ describe("firstIncompleteStep", () => {
       7
     )
     expect(firstIncompleteStep(complete, adding)).toBeNull()
+  })
+
+  it("stops at a malformed coordinate", () => {
+    expect(firstIncompleteStep({ ...complete, lng: "200" }, adding)).toBe(2)
   })
 })

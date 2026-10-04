@@ -3,9 +3,9 @@
 import type React from "react"
 
 import { ImageUploadEditor } from "./ImageUploadEditor"
-import { LocationHierarchySelector } from "./LocationHierarchySelector"
 import { OpeningTimesEditor } from "./OpeningTimesEditor"
 import { SocialLinksEditor } from "./SocialLinksEditor"
+import { StepLocation } from "./StepLocation"
 import {
   EVIDENCE_TYPES,
   LIBRARY_TYPES,
@@ -112,104 +112,6 @@ function StepBasics({ f, set }: StepProps) {
           hint="Briefly explain why or when the library closed."
         />
       )}
-    </fieldset>
-  )
-}
-
-// ── Step 2 — Location ─────────────────────────────────────────────────────────
-
-function StepLocation({ f, set, setFormData }: StepProps) {
-  return (
-    <fieldset
-      style={{
-        border: "none",
-        padding: 0,
-        margin: 0,
-        display: "flex",
-        flexDirection: "column",
-        gap: "22px",
-      }}
-    >
-      <legend style={{ display: "contents" }}>
-        <StepHeader
-          n={2}
-          label="Location"
-          title="Where is it?"
-          sub="An address and coordinates put the library on the map and in the right place in the atlas."
-        />
-      </legend>
-      <Field
-        label="Street address"
-        id="streetAddress"
-        value={f.streetAddress}
-        onChange={set}
-        autoComplete="street-address"
-      />
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field
-          label="City / Town"
-          id="city"
-          value={f.city}
-          onChange={set}
-          required
-          autoComplete="address-level2"
-        />
-        <Field
-          label="District / Borough"
-          id="district"
-          value={f.district}
-          onChange={set}
-        />
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field
-          label="Country"
-          id="country"
-          value={f.country}
-          onChange={set}
-          required
-          autoComplete="country-name"
-        />
-        <Field
-          label="Postal code"
-          id="postalCode"
-          value={f.postalCode}
-          onChange={set}
-          autoComplete="postal-code"
-        />
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field
-          label="Latitude"
-          id="lat"
-          value={f.lat}
-          onChange={set}
-          placeholder="51.5297"
-          hint="Right-click in Google Maps → copy coordinates"
-        />
-        <Field
-          label="Longitude"
-          id="lng"
-          value={f.lng}
-          onChange={set}
-          placeholder="-0.1271"
-        />
-      </div>
-
-      <SubSection
-        label="Content hierarchy"
-        sub="Link this library to its place in the atlas — used for breadcrumbs and location browsing."
-      />
-      <SharedBlock
-        fields={[
-          "continentDocumentId",
-          "countryDocumentId",
-          "regionDocumentId",
-          "areaDocumentId",
-        ]}
-      >
-        <LocationHierarchySelector f={f} setFormData={setFormData} />
-      </SharedBlock>
     </fieldset>
   )
 }
