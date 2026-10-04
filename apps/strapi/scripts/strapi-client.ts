@@ -7,7 +7,7 @@
  *   const englandId = await strapi.findOrCreateCountry("England", "england", europeId)
  *   const lib = await strapi.createLibrary({ name: "...", ... })
  *
- * Env: STRAPI_URL, STRAPI_API_TOKEN
+ * Env: STRAPI_URL, STRAPI_API_TOKEN, STRAPI_BRIDGE_SECRET
  */
 
 const STRAPI_URL = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
@@ -16,6 +16,18 @@ const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN ?? ""
 if (!STRAPI_API_TOKEN) {
   console.error(
     "STRAPI_API_TOKEN is not set. Export it before running scripts."
+  )
+  process.exit(1)
+}
+
+// C1 (src/middlewares/strip-draft-status.ts) drops `?status` from every
+// /api request without the bridge secret, so without it a "draft" write
+// publishes straight away.
+const STRAPI_BRIDGE_SECRET = process.env.STRAPI_BRIDGE_SECRET ?? ""
+
+if (!STRAPI_BRIDGE_SECRET) {
+  console.error(
+    "STRAPI_BRIDGE_SECRET is not set. Without it Strapi ignores ?status=draft and every write publishes. Export it from apps/strapi/.env before running scripts."
   )
   process.exit(1)
 }
@@ -198,6 +210,7 @@ export class StrapiClient {
     this.headers = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${STRAPI_API_TOKEN}`,
+      "X-Service-Secret": STRAPI_BRIDGE_SECRET,
     }
   }
 

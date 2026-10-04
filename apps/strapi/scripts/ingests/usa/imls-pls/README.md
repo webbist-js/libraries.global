@@ -19,8 +19,10 @@ From `apps/strapi`:
 npx tsx scripts/ingests/usa/imls-pls/ingest.ts --dry-run --state=NY
 
 # Create drafts: New York, 25 at a time
-STRAPI_API_TOKEN=… npx tsx scripts/ingests/usa/imls-pls/ingest.ts --state=NY --limit=25
+STRAPI_API_TOKEN=… STRAPI_BRIDGE_SECRET=… npx tsx scripts/ingests/usa/imls-pls/ingest.ts --state=NY --limit=25
 ```
+
+Both values are in `apps/strapi/.env`. Without the bridge secret Strapi ignores `?status=draft` and every write publishes, so the client refuses to start.
 
 Records go in as drafts. Every library gets `source: "imls-pls"` and a source record `{ dataset: "imls-pls", recordId: "<FSCSKEY>-<FSCS_SEQ>" }`. An outlet that already has a source record is reported as `exists` and left alone, so re-running is safe. The first live run creates North America → United States (a Country with region label "State"), then each state as a Region and each county as an Area.
 

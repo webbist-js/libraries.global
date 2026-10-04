@@ -20,4 +20,4 @@ The LibraryOn ingest is still at `scripts/libraryon-ingest.ts` and has yet to mo
    - `README.md`: the licence, the file and its URL, and a column → field table with the reason for every rule.
 3. Give every library `source: "<dataset-key>"` and a `sourceRecords` entry holding the source's own ID. `StrapiClient.librariesBySourceRecord()` loads the existing matches, so a re-run skips what's already there.
 4. Put tests for `map.ts` in `tests/ingests/`.
-5. Dry-run first and read the run log (`*.ingest-log.json`, git-ignored). Then do a small live run with `--limit` and check the drafts in the admin.
+5. Dry-run first and read the run log (`*.ingest-log.json`, git-ignored). Then do a small live run with `--limit` and check the drafts in the admin. Live runs need `STRAPI_API_TOKEN` and `STRAPI_BRIDGE_SECRET` from `apps/strapi/.env`: without the secret Strapi ignores `?status=draft` and publishes.
