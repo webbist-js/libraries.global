@@ -9,6 +9,7 @@ import {
   type RoleGrant,
   SESSION_PROFILE_MAX_CLAIMS,
 } from "@repo/access"
+import { type DismissiblePrompt, isDismissiblePrompt } from "@repo/shared-data"
 import { z } from "zod"
 
 export const SESSION_PROFILE_TTL_MS = 60_000
@@ -28,6 +29,8 @@ export type SessionProfile = {
   roleGrants: RoleGrant[]
   verifications: SessionVerification[]
   earnedProUntil: string | null
+  /** Prompts the user has hidden in their settings. */
+  dismissedPrompts: DismissiblePrompt[]
 }
 
 const Body = z.object({
@@ -44,6 +47,7 @@ const Body = z.object({
     .max(20)
     .optional(),
   earnedProUntil: z.string().nullable().optional(),
+  dismissedPrompts: z.array(z.unknown()).max(20).optional(),
   // Elements stay loose so one unknown role or queue is dropped, not fatal.
   roleGrants: z
     .array(z.unknown())
@@ -186,6 +190,7 @@ async function loadSessionProfile(
       roleGrants: parseRoleGrants(d.roleGrants, contributorRole),
       verifications: d.verifications ?? [],
       earnedProUntil: d.earnedProUntil ?? null,
+      dismissedPrompts: (d.dismissedPrompts ?? []).filter(isDismissiblePrompt),
     }
     if (generations.get(baUserId) === gen) {
       setBounded(cache, baUserId, { at: startedAt, value })

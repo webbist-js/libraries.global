@@ -117,6 +117,7 @@ function publishedFollowedLibraries(rows: unknown): Record<string, unknown>[] {
 const PRIVATE_PROFILE_FIELDS = [
   "baUserId",
   "notifPrefs",
+  "dismissedPrompts",
   "contributorNumber",
   "earnedProUntil",
 ] as const

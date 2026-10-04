@@ -11,6 +11,7 @@ import {
   resolveEntitlements,
   toSessionCapabilities,
 } from "@repo/access"
+import type { DismissiblePrompt } from "@repo/shared-data"
 
 import type { SessionProfile } from "./session-profile"
 
@@ -27,6 +28,8 @@ export type SessionAccess = {
   planSource: PlanSource
   features: Feature[]
   limits: Record<Limit, number>
+  /** Prompts hidden in the user's settings (`lib/dismissed-prompts.ts`). */
+  dismissedPrompts: DismissiblePrompt[]
 }
 
 /**
@@ -78,5 +81,6 @@ export function buildSessionAccess(
     planSource: ent.source,
     features: [...ent.features],
     limits: { ...ent.limits },
+    dismissedPrompts: profile?.dismissedPrompts ?? [],
   }
 }

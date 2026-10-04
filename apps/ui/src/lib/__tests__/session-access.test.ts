@@ -18,6 +18,7 @@ const baseProfile: SessionProfile = {
   roleGrants: [],
   verifications: [],
   earnedProUntil: null,
+  dismissedPrompts: [],
 }
 
 describe("buildSessionAccess", () => {
@@ -34,7 +35,16 @@ describe("buildSessionAccess", () => {
       planSource: "none",
       features: [],
       limits: FREE_LIMITS,
+      dismissedPrompts: [],
     })
+  })
+
+  it("carries the prompts the user has hidden", () => {
+    const a = buildSessionAccess({
+      ...baseProfile,
+      dismissedPrompts: ["find-contribute"],
+    })
+    expect(a.dismissedPrompts).toEqual(["find-contribute"])
   })
 
   it("resolves a wiki editor's capabilities", () => {

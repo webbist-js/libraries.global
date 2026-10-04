@@ -77,6 +77,8 @@ export type UserProfile = {
   interests?: InterestTopic[]
   notifPrefs: NotifPrefs
   publicPrefs?: PublicPrefs | null
+  /** Owner view only: prompts hidden in Settings (`lib/dismissed-prompts.ts`). */
+  dismissedPrompts?: string[] | null
   followedLibraries?: FollowedLibrary[]
   followedProfiles?: FollowedUser[]
   claimedLibraries?: ClaimedLibrary[]
@@ -125,7 +127,7 @@ export function resolvePublicPrefs(
   return { ...DEFAULT_PUBLIC_PREFS, ...prefs }
 }
 
-export type PublicProfile = Omit<UserProfile, "notifPrefs">
+export type PublicProfile = Omit<UserProfile, "notifPrefs" | "dismissedPrompts">
 
 export type Topic = {
   documentId: string

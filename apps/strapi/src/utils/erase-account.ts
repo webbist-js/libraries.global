@@ -113,6 +113,7 @@ export async function eraseAccount(
           quickWinsComputedAt: null,
           interests: [],
           notifPrefs: null,
+          dismissedPrompts: null,
           publicPrefs: null,
           followedLibraries: { set: [] },
           followedProfiles: { set: [] },

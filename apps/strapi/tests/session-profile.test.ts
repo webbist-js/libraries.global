@@ -38,6 +38,7 @@ describe("auth-bridge sessionProfile", () => {
           username: "ada",
           tier: "Indexer",
           earnedProUntil: FUTURE_ISO,
+          dismissedPrompts: ["find-contribute", "not-a-prompt"],
         },
       ],
       [AFF]: [
@@ -124,7 +125,7 @@ describe("auth-bridge sessionProfile", () => {
     expect(c.status).toBe(401)
   })
 
-  it("returns role, username, tier and only this user's claims", async () => {
+  it("returns role, username, tier, known dismissed prompts and only this user's claims", async () => {
     const c = ctx({ baUserId: "u1" })
     await controller.sessionProfile(c)
     expect(c.body).toEqual({
@@ -139,6 +140,7 @@ describe("auth-bridge sessionProfile", () => {
       ],
       verifications: [{ expiresAt: FUTURE_ISO }],
       earnedProUntil: FUTURE_ISO,
+      dismissedPrompts: ["find-contribute"],
     })
   })
 
@@ -154,6 +156,7 @@ describe("auth-bridge sessionProfile", () => {
       roleGrants: [],
       verifications: [],
       earnedProUntil: null,
+      dismissedPrompts: [],
     })
   })
 

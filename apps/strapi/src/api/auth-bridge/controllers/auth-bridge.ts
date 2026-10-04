@@ -1,4 +1,5 @@
 import { SESSION_PROFILE_MAX_CLAIMS } from "@repo/access"
+import { isDismissiblePrompt } from "@repo/shared-data"
 import freeEmailDomains from "free-email-domains"
 
 import {
@@ -162,6 +163,13 @@ export default {
     const data: Record<string, unknown> = {}
     for (const key of scalarFields) {
       if (key in fields) data[key] = fields[key] === "" ? null : fields[key]
+    }
+
+    // dismissedPrompts: the prompts the user has hidden, known keys only.
+    if ("dismissedPrompts" in fields) {
+      data.dismissedPrompts = Array.isArray(fields.dismissedPrompts)
+        ? [...new Set(fields.dismissedPrompts.filter(isDismissiblePrompt))]
+        : []
     }
 
     // languages: passed as [{ code, proficiency }] — Document Service writes
@@ -555,7 +563,13 @@ export default {
     const [[profile], affiliations, planRows, roleGrants] = await Promise.all([
       strapi.documents("api::user-profile.user-profile").findMany({
         filters: { baUserId: { $eq: baUserId } },
-        fields: ["contributorRole", "username", "tier", "earnedProUntil"],
+        fields: [
+          "contributorRole",
+          "username",
+          "tier",
+          "earnedProUntil",
+          "dismissedPrompts",
+        ],
         limit: 1,
       }) as Promise<
         {
@@ -563,6 +577,7 @@ export default {
           username?: string
           tier?: string
           earnedProUntil?: string | null
+          dismissedPrompts?: unknown
         }[]
       >,
       strapi
@@ -591,6 +606,9 @@ export default {
       roleGrants,
       verifications: planRows.verifications,
       earnedProUntil: profile?.earnedProUntil ?? null,
+      dismissedPrompts: Array.isArray(profile?.dismissedPrompts)
+        ? profile.dismissedPrompts.filter(isDismissiblePrompt)
+        : [],
     })
   },
 

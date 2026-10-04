@@ -126,6 +126,10 @@
     "publicPrefs": {
       "type": "json"
     },
+    "dismissedPrompts": {
+      "type": "json",
+      "private": true
+    },
     "contributorRole": {
       "type": "enumeration",
       "enum": [

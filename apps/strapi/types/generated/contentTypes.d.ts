@@ -3089,6 +3089,7 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+    dismissedPrompts: Schema.Attribute.JSON & Schema.Attribute.Private
     earnedProUntil: Schema.Attribute.DateTime & Schema.Attribute.Private
     firstName: Schema.Attribute.String
     followedLibraries: Schema.Attribute.Relation<

@@ -46,6 +46,7 @@ describe("fetchSessionProfile", () => {
       roleGrants: [{ role: "contributor", queue: "all", locale: null }],
       verifications: [],
       earnedProUntil: null,
+      dismissedPrompts: [],
     }
     expect(await fetchSessionProfile("u1")).toEqual(expected)
     expect(await fetchSessionProfile("u1")).toEqual(expected)
@@ -196,6 +197,20 @@ describe("fetchSessionProfile", () => {
     expect(profile?.grants).toEqual([])
     expect(profile?.verifications).toEqual([])
     expect(profile?.earnedProUntil).toBeNull()
+  })
+
+  it("keeps only known dismissed prompts", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          ...body,
+          dismissedPrompts: ["find-contribute", "not-a-prompt", 7],
+        })
+      )
+    )
+    const profile = await fetchSessionProfile("u1")
+    expect(profile?.dismissedPrompts).toEqual(["find-contribute"])
   })
 
   it("drops a grant with an unknown plan at parse time", async () => {
