@@ -45,6 +45,59 @@ async function locales() {
   return NextResponse.json({ data: json.data ?? [] })
 }
 
+const ISO_CODE = /^[A-Z]{2}(?:-[A-Z0-9]{1,3})?$/
+
+type CountryRow = {
+  documentId: string
+  name: string
+  iso2?: string | null
+  continent?: { documentId?: string } | null
+}
+
+/**
+ * Atlas countries by ISO code (`?iso2=GB-ENG,GB`), in the order asked, for
+ * the location lookup. The UK's countries are filed by ISO 3166-2 code.
+ */
+async function countriesByCode(raw: string) {
+  const codes = raw
+    .split(",")
+    .map((code) => code.trim().toUpperCase())
+    .filter((code) => ISO_CODE.test(code))
+    .slice(0, 3)
+  if (codes.length === 0) return NextResponse.json({ data: [] })
+
+  const filters = codes
+    .map((code, i) => `filters[iso2][$in][${i}]=${encodeURIComponent(code)}`)
+    .join("&")
+  const res = await fetch(
+    `${STRAPI}/api/countries?${filters}&status=published&pagination[limit]=${codes.length}&fields[0]=name&fields[1]=iso2&populate[continent][fields][0]=name`,
+    {
+      headers: { ...(SECRET ? { "X-Service-Secret": SECRET } : {}) },
+      next: { revalidate: 3600 },
+    }
+  )
+  if (!res.ok) return NextResponse.json({ data: [] })
+  const rows = ((await res.json()) as { data?: CountryRow[] }).data ?? []
+
+  return NextResponse.json({
+    data: codes.flatMap((code) => {
+      const row = rows.find((r) => r.iso2?.toUpperCase() === code)
+      const continentDocumentId = row?.continent?.documentId
+
+      return row && continentDocumentId
+        ? [
+            {
+              documentId: row.documentId,
+              name: row.name,
+              iso2: code,
+              continentDocumentId,
+            },
+          ]
+        : []
+    }),
+  })
+}
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ type: string }> }
@@ -52,11 +105,13 @@ export async function GET(
   const { type } = await params
   if (type === "topics") return approvedTopics()
   if (type === "locales") return locales()
+  const searchParams = new URL(req.url).searchParams
+  const iso2 = searchParams.get("iso2")
+  if (type === "countries" && iso2) return countriesByCode(iso2)
   const strapiPlural = TYPE_MAP[type]
   if (!strapiPlural)
     return NextResponse.json({ error: "Not found" }, { status: 404 })
 
-  const searchParams = new URL(req.url).searchParams
   const continentFilter = searchParams.get("continentDocumentId")
   const countryFilter = searchParams.get("countryDocumentId")
   const regionFilter = searchParams.get("regionDocumentId")
