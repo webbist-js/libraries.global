@@ -86,27 +86,34 @@ test("a picked result fills the address, the coordinates and the atlas", async (
   baseURL,
 }) => {
   const page = await locationStep(browser, baseURL!)
-  const lookup = page.getByRole("combobox", {
-    name: "Find the library or its address",
-  })
-  await expect(lookup).toHaveValue("British Library")
-  await lookup.focus()
-  await page.getByRole("option", { name: /^British Library/ }).click()
+  try {
+    const lookup = page.getByRole("combobox", {
+      name: "Find the library or its address",
+    })
+    await expect(lookup).toHaveValue("British Library")
+    await lookup.focus()
+    await page.getByRole("option", { name: /^British Library/ }).click()
 
-  await expect(page.locator("#streetAddress")).toHaveValue("96 Euston Road")
-  await expect(page.locator("#city")).toHaveValue("London")
-  await expect(page.locator("#postalCode")).toHaveValue("NW1 2DB")
-  await expect(page.locator("#lat")).toHaveValue("51.529912")
-  await expect(page.locator("#lng")).toHaveValue("-0.127692")
-  await expect(page.locator("#hier-country option:checked")).toHaveText(
-    "England",
-    NAVIGATION
-  )
-  await expect(page.locator("#country")).toHaveValue("England")
-  await expect(
-    page.getByText("Set from the address. Check these.")
-  ).toBeVisible()
-  await page.context().close()
+    await expect(page.locator("#streetAddress")).toHaveValue("96 Euston Road")
+    await expect(page.locator("#city")).toHaveValue("London")
+    await expect(page.locator("#postalCode")).toHaveValue("NW1 2DB")
+    await expect(page.locator("#lat")).toHaveValue("51.529912")
+    await expect(page.locator("#lng")).toHaveValue("-0.127692")
+    await expect(page.locator("#hier-continent option:checked")).toHaveText(
+      "Europe",
+      NAVIGATION
+    )
+    await expect(page.locator("#hier-country option:checked")).toHaveText(
+      "England",
+      NAVIGATION
+    )
+    await expect(page.locator("#country")).toHaveValue("England")
+    await expect(
+      page.getByText("Set from the address. Check these.")
+    ).toBeVisible()
+  } finally {
+    await page.context().close()
+  }
 })
 
 test("pasting a coordinate pair fills both boxes; a bad latitude holds the step", async ({
@@ -114,29 +121,32 @@ test("pasting a coordinate pair fills both boxes; a bad latitude holds the step"
   baseURL,
 }) => {
   const page = await locationStep(browser, baseURL!)
-  await page.locator("#lat").evaluate((el, text) => {
-    const data = new DataTransfer()
-    data.setData("text/plain", text)
-    el.dispatchEvent(
-      new ClipboardEvent("paste", {
-        clipboardData: data,
-        bubbles: true,
-        cancelable: true,
-      })
-    )
-  }, "51.7031, -0.3255")
-  await expect(page.locator("#lat")).toHaveValue("51.7031")
-  await expect(page.locator("#lng")).toHaveValue("-0.3255")
+  try {
+    await page.locator("#lat").evaluate((el, text) => {
+      const data = new DataTransfer()
+      data.setData("text/plain", text)
+      el.dispatchEvent(
+        new ClipboardEvent("paste", {
+          clipboardData: data,
+          bubbles: true,
+          cancelable: true,
+        })
+      )
+    }, "51.7031, -0.3255")
+    await expect(page.locator("#lat")).toHaveValue("51.7031")
+    await expect(page.locator("#lng")).toHaveValue("-0.3255")
 
-  await page.locator("#lat").fill("200")
-  await page.locator("#city").fill("Radlett")
-  await page.locator("#country").fill("England")
-  await page.getByRole("button", { name: /^Next:/ }).click()
-  await expect(
-    page.getByText("Latitude is a number between -90 and 90.")
-  ).toBeVisible()
-  await expect(
-    page.getByRole("heading", { name: "Where is it?" })
-  ).toBeVisible()
-  await page.context().close()
+    await page.locator("#lat").fill("200")
+    await page.locator("#city").fill("Radlett")
+    await page.locator("#country").fill("England")
+    await page.getByRole("button", { name: /^Next:/ }).click()
+    await expect(
+      page.getByText("Latitude is a number between -90 and 90.")
+    ).toBeVisible()
+    await expect(
+      page.getByRole("heading", { name: "Where is it?" })
+    ).toBeVisible()
+  } finally {
+    await page.context().close()
+  }
 })
