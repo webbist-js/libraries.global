@@ -8,10 +8,27 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 Object.assign(globalThis, { React })
 
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
+// @/components/ds is a barrel: importing Notice from it (via LocationLookup,
+// rendered on step 2) also evaluates sibling exports that pull in
+// next-intl's navigation, which happy-dom can't resolve. Same mocks as
+// LocationLookup.test.ts.
+vi.mock("@/lib/env-vars", () => ({ getEnvVar: () => {} }))
 vi.mock("@/lib/navigation", () => ({
   Link: ({ href, children }: { href: string; children: React.ReactNode }) =>
     createElement("a", { href }, children),
   useRouter: () => ({ push: vi.fn() }),
+  formatHref: (href?: string | null) => href || "#",
+  isAppLink: () => true,
+}))
+// No WebGL here: the Location step's map shows its fallback note.
+vi.mock("maplibre-gl", () => ({
+  default: {
+    Map: class {
+      constructor() {
+        throw new Error("WebGL unavailable")
+      }
+    },
+  },
 }))
 const mutation = () => ({ mutate: vi.fn(), isPending: false })
 vi.mock("@/hooks/useSubmissions", () => ({
