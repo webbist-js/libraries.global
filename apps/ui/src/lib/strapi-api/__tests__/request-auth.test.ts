@@ -8,7 +8,7 @@ import { isStrapiEndpointAllowed } from "../request-auth"
 describe("isStrapiEndpointAllowed", () => {
   it.each([
     "api/libraries",
-    "api/libraries/map-pins",
+    "api/libraries/atlas",
     "api/events/ics/library/GB-BL-001.ics",
     "api/countries",
   ])("allows %s", (path) => {

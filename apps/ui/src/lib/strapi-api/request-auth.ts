@@ -13,12 +13,6 @@ const ALLOWED_STRAPI_ENDPOINTS: Record<string, string[]> = {
     "api/regions",
     "api/libraries",
     "api/areas",
-    // Custom map-pins endpoints (centroid / boundary URL only)
-    "api/continents/map-pins",
-    "api/libraries/map-pins",
-    "api/regions/map-pins",
-    "api/countries/map-pins",
-    "api/areas/map-pins",
     // Events plugin — public feeds (ICS calendar + browsing)
     "api/events",
   ],
@@ -57,7 +51,7 @@ export const normaliseProxyPath = (path: string): string | null => {
 /**
  * Check if the given Strapi Admin/API path is allowed to be accessed
  * with the provided HTTP method. Matches whole path segments only, so
- * `api/libraries` allows `api/libraries/map-pins` but not `api/libraries-x`
+ * `api/libraries` allows `api/libraries/atlas` but not `api/libraries-x`
  * or `api/libraries/../user-profiles`.
  */
 export const isStrapiEndpointAllowed = (

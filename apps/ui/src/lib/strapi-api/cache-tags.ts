@@ -20,7 +20,6 @@ const MODELS = new Set(MODEL_BY_PATH.values())
 /** Sub-paths that are actions on a collection, not entries in it. */
 const ACTION_SEGMENTS = new Set([
   "slugs",
-  "map-pins",
   "continents",
   "export",
   "atlas",
