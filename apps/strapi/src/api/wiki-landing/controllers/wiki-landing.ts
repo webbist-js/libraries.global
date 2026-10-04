@@ -1,14 +1,13 @@
 import { factories } from "@strapi/strapi"
 
-import { readStatus } from "../../../utils/read-status"
+import { readLocale, readStatus } from "../../../utils/read-status"
 
 export default factories.createCoreController(
   "api::wiki-landing.wiki-landing",
   ({ strapi }) => ({
     // ── /wiki-landing ─────────────────────────────────────────────────────────
     async find(ctx) {
-      const locale =
-        typeof ctx.query.locale === "string" ? ctx.query.locale : undefined
+      const locale = readLocale(ctx)
       const status = readStatus(ctx)
 
       const data = await strapi

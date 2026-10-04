@@ -1,13 +1,9 @@
 import { factories } from "@strapi/strapi"
 
-import { readStatus } from "../../../utils/read-status"
+import { readLocale, readStatus } from "../../../utils/read-status"
 
 const UID = "api::legal-document.legal-document"
 const NAV_FIELDS = ["title", "navLabel", "slug", "order"] as const
-
-function readLocale(ctx: { query: Record<string, unknown> }) {
-  return typeof ctx.query.locale === "string" ? ctx.query.locale : undefined
-}
 
 export default factories.createCoreController(UID, ({ strapi }) => ({
   // ── /legal-documents/nav ──────────────────────────────────────────────────

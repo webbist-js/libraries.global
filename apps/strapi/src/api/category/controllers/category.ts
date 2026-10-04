@@ -1,13 +1,14 @@
 import { factories } from "@strapi/strapi"
 
+import { readLocale } from "../../../utils/read-status"
+
 export default factories.createCoreController(
   "api::category.category",
   ({ strapi }) => ({
     // ── /categories/nav ────────────────────────────────────────────────────────
     // Returns all categories with their wiki articles — used to build the sidebar
     async nav(ctx) {
-      const locale =
-        typeof ctx.query.locale === "string" ? ctx.query.locale : undefined
+      const locale = readLocale(ctx)
 
       const categories = await strapi
         .documents("api::category.category")

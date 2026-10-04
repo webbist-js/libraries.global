@@ -1,6 +1,6 @@
 import { factories } from "@strapi/strapi"
 
-import { readStatus } from "../../../utils/read-status"
+import { readLocale, readStatus } from "../../../utils/read-status"
 
 const BODY_POPULATE = {
   on: {
@@ -18,8 +18,7 @@ export default factories.createCoreController(
     // ── /blog-articles/detail/:slug ───────────────────────────────────────────
     async detail(ctx) {
       const { slug } = ctx.params as { slug: string }
-      const locale =
-        typeof ctx.query.locale === "string" ? ctx.query.locale : undefined
+      const locale = readLocale(ctx)
       const status = readStatus(ctx)
 
       const results = await strapi
@@ -98,8 +97,7 @@ export default factories.createCoreController(
 
     // ── /blog-articles/slugs ──────────────────────────────────────────────────
     async slugs(ctx) {
-      const locale =
-        typeof ctx.query.locale === "string" ? ctx.query.locale : undefined
+      const locale = readLocale(ctx)
       const status = readStatus(ctx)
 
       const results = await strapi

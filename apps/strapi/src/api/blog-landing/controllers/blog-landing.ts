@@ -1,6 +1,6 @@
 import { factories } from "@strapi/strapi"
 
-import { readStatus } from "../../../utils/read-status"
+import { readLocale, readStatus } from "../../../utils/read-status"
 
 export default factories.createCoreController(
   "api::blog-landing.blog-landing",
@@ -8,8 +8,7 @@ export default factories.createCoreController(
     // ── /blog-landing ─────────────────────────────────────────────────────────
     // Override find to always return a fully populated landing page
     async find(ctx) {
-      const locale =
-        typeof ctx.query.locale === "string" ? ctx.query.locale : undefined
+      const locale = readLocale(ctx)
       const status = readStatus(ctx)
 
       const data = await strapi

@@ -10,3 +10,12 @@ export function readStatus(ctx: {
     ? "draft"
     : "published"
 }
+
+/** Read locale from query, returning undefined if not a non-empty string. */
+export function readLocale(ctx: {
+  query?: Record<string, unknown>
+}): string | undefined {
+  const locale = ctx.query?.locale
+
+  return typeof locale === "string" && locale.length > 0 ? locale : undefined
+}

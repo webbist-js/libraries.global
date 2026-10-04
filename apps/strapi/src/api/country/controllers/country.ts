@@ -8,7 +8,7 @@ import {
   mediaPopulate,
   SEO_POPULATE,
 } from "../../../utils/populate-shapes"
-import { readStatus } from "../../../utils/read-status"
+import { readLocale, readStatus } from "../../../utils/read-status"
 import { scopedWhere } from "../../../utils/scoped-where"
 
 export default factories.createCoreController(
@@ -17,8 +17,7 @@ export default factories.createCoreController(
     // ── /countries/detail/:slug ───────────────────────────────────────────────
     async detail(ctx) {
       const { slug } = ctx.params as { slug: string }
-      const locale =
-        typeof ctx.query.locale === "string" ? ctx.query.locale : undefined
+      const locale = readLocale(ctx)
       const status = readStatus(ctx)
 
       const basePopulate: Record<string, unknown> = {
@@ -205,8 +204,7 @@ export default factories.createCoreController(
     // Returns slug + locale pairs for all published countries — used by
     // generateStaticParams on the country page.
     async slugs(ctx) {
-      const locale =
-        typeof ctx.query.locale === "string" ? ctx.query.locale : undefined
+      const locale = readLocale(ctx)
       const status = readStatus(ctx)
 
       const results = await strapi.documents("api::country.country").findMany({
