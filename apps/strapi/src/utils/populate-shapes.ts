@@ -109,6 +109,7 @@ const LIBRARY_LIST_FIELDS = [
   "featured",
   "hasActiveFeed",
   "completeness",
+  "gaps",
   "lastVerifiedAt",
   "contentUpdatedAt",
   "iiifEndpoint",

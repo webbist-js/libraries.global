@@ -2269,6 +2269,7 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    gaps: Schema.Attribute.JSON
     hasActiveFeed: Schema.Attribute.Boolean &
       Schema.Attribute.SetPluginOptions<{
         i18n: {

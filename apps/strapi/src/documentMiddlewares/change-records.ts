@@ -64,6 +64,7 @@ export const LIBRARY_IGNORED: ReadonlySet<string> = new Set([
   "updatedBy",
   "localizations",
   "completeness",
+  "gaps", // derived, like completeness
   // Derived from the location slugs by the entityRef lifecycle, which
   // rewrites it with a nested document update; every row still carries it
   // in the `entityRef` column.

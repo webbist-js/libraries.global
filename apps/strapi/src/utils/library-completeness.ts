@@ -1,3 +1,4 @@
+import { completenessOf, gapsOf, type GapKey } from "@repo/shared-data"
 import type { Core } from "@strapi/strapi"
 
 const LIBRARY = "api::library.library"
@@ -27,6 +28,7 @@ export type CompletenessSource = {
   website?: string | null
   phone?: string | null
   email?: string | null
+  absentFacilities?: unknown
 }
 
 /** Scalar attributes completeness reads. */
@@ -41,6 +43,7 @@ export const COMPLETENESS_FIELDS = [
   "website",
   "phone",
   "email",
+  "absentFacilities",
 ] as const
 
 /** Relations and components completeness reads, populated as ids only. */
@@ -90,26 +93,20 @@ export function compactHours(o: OpeningTimes | undefined): number[][][] | null {
   return out.some((d) => d.length > 0) ? out : null
 }
 
-/** 0–100: the share of the eight record sections that have content. */
+/**
+ * 0–100: the share of the eight record sections that have content. The
+ * eight sections come from `@repo/shared-data`'s `GAPS` registry (the ones
+ * flagged `completeness`). Note: blank strings no longer count as content —
+ * the registry treats a blank or whitespace-only string as empty, where this
+ * used to count any truthy string.
+ */
 export function computeCompleteness(l: CompletenessSource): number {
-  const sections = [
-    Boolean(l.heroImage),
-    compactHours(l.openingTimes) !== null,
-    Boolean(l.streetAddress),
-    Boolean(l.location),
-    Boolean(
-      l.accessibility?.length || l.services?.length || l.amenities?.length
-    ),
-    Boolean(
-      l.summary ||
-      (Array.isArray(l.description) && l.description.length) ||
-      l.collectionStats?.length
-    ),
-    Boolean(l.foundedYear || l.openedYear),
-    Boolean(l.website || l.phone || l.email),
-  ]
+  return completenessOf(l).percent
+}
 
-  return Math.round((sections.filter(Boolean).length / sections.length) * 100)
+/** The record's gaps (registry order), stored beside completeness. */
+export function computeGaps(l: CompletenessSource): GapKey[] {
+  return gapsOf(l)
 }
 
 type LibraryRow = {
@@ -118,13 +115,15 @@ type LibraryRow = {
   locale?: string | null
   publishedAt?: string | null
   completeness?: number | null
+  gaps?: unknown
 }
 
 /**
- * Recompute one row's `completeness` and store it when it changed. Writes go
- * through `db.query` by row id so the draft and the published version each
- * get their own value (a Document Service update would only touch the
- * draft); the lifecycle ignores that write (see `lifeCycles/entityRef.ts`).
+ * Recompute one row's `completeness` and `gaps` and store them when either
+ * changed. Writes go through `db.query` by row id so the draft and the
+ * published version each get their own values (a Document Service update
+ * would only touch the draft); the lifecycle ignores that write (see
+ * `lifeCycles/entityRef.ts`).
  */
 export async function refreshLibraryCompleteness(
   strapi: Core.Strapi,
@@ -140,10 +139,14 @@ export async function refreshLibraryCompleteness(
     })) as CompletenessSource | null
     if (!source) return null
     const completeness = computeCompleteness(source)
-    if (completeness !== row.completeness) {
+    const gaps = computeGaps(source)
+    if (
+      completeness !== row.completeness ||
+      JSON.stringify(gaps) !== JSON.stringify(row.gaps ?? null)
+    ) {
       await strapi.db
         .query(LIBRARY)
-        .update({ where: { id: row.id }, data: { completeness } })
+        .update({ where: { id: row.id }, data: { completeness, gaps } })
     }
 
     return completeness
@@ -159,7 +162,8 @@ const BACKFILL_MAX_PASSES = 1000
 
 /**
  * One-off bootstrap pass: every row (draft and published, all locales) whose
- * `completeness` is still NULL gets one. A no-op once everything is filled.
+ * `completeness` or `gaps` is still NULL gets both. A no-op once everything
+ * is filled.
  */
 export async function backfillLibraryCompleteness(
   strapi: Core.Strapi
@@ -169,12 +173,15 @@ export async function backfillLibraryCompleteness(
     for (const status of ["draft", "published"] as const) {
       for (let pass = 0; pass < BACKFILL_MAX_PASSES; pass++) {
         const rows = (await strapi.documents(LIBRARY).findMany({
-          filters: { completeness: { $null: true } } as never,
+          filters: {
+            $or: [{ completeness: { $null: true } }, { gaps: { $null: true } }],
+          } as never,
           fields: [
             "documentId",
             "locale",
             "publishedAt",
             "completeness",
+            "gaps",
             ...COMPLETENESS_FIELDS,
           ] as never,
           populate: COMPLETENESS_POPULATE as never,
@@ -187,7 +194,10 @@ export async function backfillLibraryCompleteness(
         for (const row of rows) {
           await strapi.db.query(LIBRARY).update({
             where: { id: row.id },
-            data: { completeness: computeCompleteness(row) },
+            data: {
+              completeness: computeCompleteness(row),
+              gaps: computeGaps(row),
+            },
           })
           written++
         }

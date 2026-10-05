@@ -589,6 +589,9 @@
       "min": 0,
       "max": 100
     },
+    "gaps": {
+      "type": "json"
+    },
     "seo": {
       "type": "component",
       "component": "shared.seo",

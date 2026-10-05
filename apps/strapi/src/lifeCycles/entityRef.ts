@@ -33,6 +33,7 @@ const REF_TRIGGER_KEYS = ["slug", "continent", "country", "region", "area"]
 const SELF_WRITE_KEYS = new Set([
   "entityRef",
   "completeness",
+  "gaps",
   "id",
   "documentId",
   "locale",
@@ -56,6 +57,7 @@ type Row = {
   locale?: string | null
   publishedAt?: string | null
   completeness?: number | null
+  gaps?: unknown
 }
 
 async function computeEntityRef(
@@ -214,6 +216,7 @@ async function maybeUpdateCompleteness(strapi: Core.Strapi, result: Row) {
     locale: result.locale,
     publishedAt: result.publishedAt,
     completeness: result.completeness,
+    gaps: result.gaps,
   })
 }
 

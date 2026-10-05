@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import { makeFakeStrapi } from "./helpers/fake-strapi"
 import { registerEntityRefSubscriber } from "../src/lifeCycles/entityRef"
+import { computeGaps } from "../src/utils/library-completeness"
 
 const LIBRARY = "api::library.library"
 const REGION = "api::region.region"
@@ -31,7 +32,7 @@ function build(seed: Record<string, any[]>) {
   return { ...faked, hooks: () => hooks, documentCalls, rowUpdates }
 }
 
-const library = {
+const libraryFields = {
   id: 1,
   documentId: "l1",
   slug: "old",
@@ -43,6 +44,9 @@ const library = {
   region: { slug: "eng" },
   publishedAt: null,
 }
+// Gaps already match the fields above, so a write that doesn't change them
+// doesn't trigger a store (mirrors the real row once backfilled).
+const library = { ...libraryFields, gaps: computeGaps(libraryFields) }
 
 describe("entityRef lifecycle guards (E5)", () => {
   it("ignores its own entityRef and completeness writes", async () => {
@@ -89,9 +93,10 @@ describe("entityRef lifecycle guards (E5)", () => {
       params: { data: { website: "https://a.example" } },
     })
 
-    // One of eight sections (contact) is filled: 13 → no write. Now fill
-    // another and the value changes.
+    // One of eight sections (contact) is filled: 13 → no write, and gaps
+    // already match the row's fields. Now fill another and both change.
     expect(rowUpdates(LIBRARY)).toEqual([])
+    const addressedFields = { ...libraryFields, streetAddress: "1 High St" }
     const { hooks: hooks2, rowUpdates: rowUpdates2 } = build({
       [LIBRARY]: [{ ...library, streetAddress: "1 High St" }],
     })
@@ -101,7 +106,10 @@ describe("entityRef lifecycle guards (E5)", () => {
       params: { data: { streetAddress: "1 High St" } },
     })
     expect(rowUpdates2(LIBRARY)).toEqual([
-      { where: { id: 1 }, data: { completeness: 25 } },
+      {
+        where: { id: 1 },
+        data: { completeness: 25, gaps: computeGaps(addressedFields) },
+      },
     ])
   })
 
