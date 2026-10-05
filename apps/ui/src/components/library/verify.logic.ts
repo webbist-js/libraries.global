@@ -169,6 +169,18 @@ export function verifyProblem({
   return null
 }
 
+/** The field `verifyProblem`'s message is about, for linking it to that field. */
+export function verifyProblemField({
+  sections,
+  source,
+  inPerson,
+}: VerifyInput): "sections" | "source" | null {
+  if (sections.length === 0) return "sections"
+  const s = source.trim()
+
+  return (!s && !inPerson) || (s && !isWebAddress(s)) ? "source" : null
+}
+
 export type VerifyBody = {
   submissionType: "correction"
   targetEntityType: "library"

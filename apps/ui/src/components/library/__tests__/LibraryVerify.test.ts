@@ -111,6 +111,42 @@ describe("LibraryVerify", () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
+  it("ties a source problem to the source field", () => {
+    show()
+    fireEvent.click(screen.getByRole("button", { name: "Send" }))
+    const alert = screen.getByRole("alert")
+    const input = screen.getByLabelText(/Where did you check/)
+    expect(input.getAttribute("aria-invalid")).toBe("true")
+    expect(alert.id).toBeTruthy()
+    expect(input.getAttribute("aria-describedby")).toBe(alert.id)
+
+    fireEvent.change(input, { target: { value: "not a url" } })
+    fireEvent.click(screen.getByRole("button", { name: "Send" }))
+    expect(screen.getByRole("alert").textContent).toBe(
+      "The source must be a web address."
+    )
+    expect(input.getAttribute("aria-invalid")).toBe("true")
+  })
+
+  it("ties a sections problem to the sections, not the source", () => {
+    render(
+      createElement(LibraryVerify, {
+        library,
+        initial: [],
+        onDone: vi.fn(),
+        returnTo: "/lib",
+      })
+    )
+    fireEvent.click(box("I checked in person"))
+    fireEvent.click(screen.getByRole("button", { name: "Send" }))
+    const alert = screen.getByRole("alert")
+    expect(alert.textContent).toBe("Choose at least one section to confirm.")
+    const group = screen.getByRole("group", { name: "What did you check?" })
+    expect(group.getAttribute("aria-describedby")).toBe(alert.id)
+    const input = screen.getByLabelText(/Where did you check/)
+    expect(input.getAttribute("aria-invalid")).toBeNull()
+  })
+
   it("sends a verify correction and thanks the reader", async () => {
     fetchMock.mockResolvedValue(Response.json({ data: {} }, { status: 201 }))
     const onDone = show()
@@ -161,6 +197,10 @@ describe("LibraryVerify", () => {
         "Choose at least one section to confirm."
       )
     )
+    // Strapi's message isn't about the source field.
+    expect(
+      screen.getByLabelText(/Where did you check/).getAttribute("aria-invalid")
+    ).toBeNull()
     const body = JSON.parse(
       String((fetchMock.mock.calls[0] as [string, RequestInit])[1].body)
     )

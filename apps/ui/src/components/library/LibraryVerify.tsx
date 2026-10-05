@@ -12,6 +12,7 @@ import {
   type VerifySection,
   verifyPayload,
   verifyProblem,
+  verifyProblemField,
 } from "@/components/library/verify.logic"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
@@ -109,10 +110,13 @@ export function LibraryVerify({
   const [source, setSource] = useState("")
   const [inPerson, setInPerson] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
+  // The field the problem is about, so it's announced with that field.
+  const [problemOn, setProblemOn] = useState<"sections" | "source" | null>(null)
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
   const [expired, setExpired] = useState(false)
   const thanks = useRef<HTMLHeadingElement>(null)
+  const problemId = `${id}-problem`
 
   // The Send button goes once it's sent, so focus moves to the thanks.
   useEffect(() => {
@@ -138,6 +142,7 @@ export function LibraryVerify({
     const input = { sections, source, inPerson }
     const why = verifyProblem(input)
     setProblem(why)
+    setProblemOn(why ? verifyProblemField(input) : null)
     if (why) return
     setSending(true)
     try {
@@ -244,7 +249,10 @@ export function LibraryVerify({
             </p>
           </div>
 
-          <fieldset className="m-0 flex min-w-0 flex-col gap-2.5 border-0 p-0">
+          <fieldset
+            aria-describedby={problemOn === "sections" ? problemId : undefined}
+            className="m-0 flex min-w-0 flex-col gap-2.5 border-0 p-0"
+          >
             <legend
               className="mb-2.5 p-0 text-[15px] font-semibold"
               style={{ color: T.ink.base }}
@@ -280,6 +288,8 @@ export function LibraryVerify({
               </span>
             </label>
             <input
+              aria-describedby={problemOn === "source" ? problemId : undefined}
+              aria-invalid={problemOn === "source" ? true : undefined}
               autoComplete="url"
               className={FIELD}
               id={`${id}-source`}
@@ -309,6 +319,7 @@ export function LibraryVerify({
           {problem ? (
             <p
               className="m-0 text-[15px] font-semibold"
+              id={problemId}
               role="alert"
               style={{ color: T.accent.danger }}
             >

@@ -6,6 +6,7 @@ import {
   sectionSummary,
   verifyPayload,
   verifyProblem,
+  verifyProblemField,
 } from "../verify.logic"
 
 const hours = {
@@ -54,6 +55,33 @@ describe("verify logic", () => {
       verifyProblem({
         sections: ["hours"],
         source: " https://lib.example ",
+        inPerson: false,
+      })
+    ).toBeNull()
+  })
+
+  it("says which field a problem is about", () => {
+    const hoursOnly = ["hours"] as const
+    expect(
+      verifyProblemField({ sections: [], source: "", inPerson: false })
+    ).toBe("sections")
+    expect(
+      verifyProblemField({ sections: hoursOnly, source: "", inPerson: false })
+    ).toBe("source")
+    expect(
+      verifyProblemField({
+        sections: hoursOnly,
+        source: "not a url",
+        inPerson: true,
+      })
+    ).toBe("source")
+    expect(
+      verifyProblemField({ sections: hoursOnly, source: "", inPerson: true })
+    ).toBeNull()
+    expect(
+      verifyProblemField({
+        sections: hoursOnly,
+        source: "https://lib.example",
         inPerson: false,
       })
     ).toBeNull()
