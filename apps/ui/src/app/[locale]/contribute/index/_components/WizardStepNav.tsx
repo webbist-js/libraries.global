@@ -6,6 +6,9 @@ import type React from "react"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 
+import type { StepProgress } from "./wizard.progress"
+import { RequiredTag } from "./WizardFields"
+
 export const WIZARD_STEPS = [
   { n: 0, label: "Find existing", sub: "Add or improve" },
   { n: 1, label: "Identity", sub: "Name · Type · Status" },
@@ -19,8 +22,8 @@ export const WIZARD_STEPS = [
 
 interface WizardStepNavProps {
   currentStep: number
-  /** Steps shown with a tick: visited in new mode, filled in on the record in improve mode. */
-  completedSteps: number[]
+  /** Each step's completeness: a tick once done, "required" until then. */
+  progress: StepProgress[]
   /** Improve mode: steps holding a changed field get a pencil marker. */
   changedSteps?: number[]
   onStepClick: (n: number) => void
@@ -31,11 +34,11 @@ interface WizardStepNavProps {
 function StepCircle({
   n,
   isActive,
-  isCompleted,
+  isDone,
 }: {
   n: number
   isActive: boolean
-  isCompleted: boolean
+  isDone: boolean
 }) {
   let bg: string = T.bg.deep
   let fg: string = T.ink.dim
@@ -44,18 +47,17 @@ function StepCircle({
     bg = T.accent.primary
     fg = "#fff"
     border = `1.5px solid ${T.accent.primary}`
-  } else if (isCompleted) {
+  } else if (isDone) {
     bg = "var(--tint-public-bg)"
     fg = "var(--tint-public-fg)"
     border = "1.5px solid var(--tint-public-bg)"
   }
 
-  let glyph: React.ReactNode = n
-  if (isCompleted && !isActive) {
-    glyph = <Icon icon="mdi:check" aria-hidden="true" width={18} />
-  } else if (n === 0) {
-    glyph = <Icon icon="mdi:magnify" aria-hidden="true" width={18} />
-  }
+  const glyph: React.ReactNode = isDone ? (
+    <Icon icon="mdi:check" aria-hidden="true" width={18} />
+  ) : (
+    n
+  )
 
   return (
     <span
@@ -86,15 +88,18 @@ function StepLabel({
   label,
   sub,
   changed,
+  required,
 }: {
   label: string
   sub: string
   changed: boolean
+  /** A required step not yet done. */
+  required: boolean
 }) {
   return (
     <span className="flex min-w-0 flex-col">
       <span
-        className="flex items-center gap-2 whitespace-nowrap"
+        className="flex items-baseline gap-2 whitespace-nowrap"
         style={{
           fontFamily: T.font.sans,
           fontSize: "17px",
@@ -104,12 +109,17 @@ function StepLabel({
         }}
       >
         {label}
+        {required && (
+          <span className="hidden lg:inline">
+            <RequiredTag />
+          </span>
+        )}
         {changed && (
           <Icon
             icon="mdi:pencil"
             width={14}
             aria-hidden="true"
-            style={{ color: T.accent.primary }}
+            style={{ color: T.accent.primary, alignSelf: "center" }}
           />
         )}
       </span>
@@ -134,7 +144,7 @@ const itemClass =
 
 function itemStyle(isActive: boolean): React.CSSProperties {
   return {
-    padding: "12px 16px",
+    padding: "10px 16px",
     borderRadius: "16px",
     cursor: "pointer",
     background: isActive ? T.bg.deep : "transparent",
@@ -142,9 +152,18 @@ function itemStyle(isActive: boolean): React.CSSProperties {
   }
 }
 
+const requiredSteps = (n: number) => `${n} required step${n === 1 ? "" : "s"}`
+
+function stepStatusText(step: StepProgress | undefined): string {
+  if (step?.done) return ", done"
+  if (step?.required) return ", required"
+
+  return ""
+}
+
 export function WizardStepNav({
   currentStep,
-  completedSteps,
+  progress,
   changedSteps = [],
   onStepClick,
   findHref,
@@ -153,53 +172,172 @@ export function WizardStepNav({
     <nav aria-label="Wizard steps">
       <ol className="-mx-4 my-0 flex list-none gap-1 overflow-x-auto px-4 pb-2 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
         {WIZARD_STEPS.map((step) => {
-          const isActive = step.n === currentStep
-          const isCompleted = step.n === 0 || completedSteps.includes(step.n)
-          const changed = changedSteps.includes(step.n)
-          const status = isCompleted ? ", completed" : ""
-          const changedText = changed ? ", has changes" : ""
-
-          return (
-            <li key={step.n} className="shrink-0 lg:shrink">
-              {step.n === 0 ? (
+          if (step.n === 0) {
+            return (
+              <li key={step.n} className="shrink-0 lg:shrink">
                 <Link
                   href={findHref}
-                  aria-label={`${step.label}${status}. Choose a different library`}
+                  aria-label={`${step.label}, done. Choose a different library`}
                   className={itemClass}
                   style={itemStyle(false)}
                 >
-                  <StepCircle n={0} isActive={false} isCompleted />
+                  <StepCircle n={0} isActive={false} isDone />
                   <StepLabel
                     label={step.label}
                     sub={step.sub}
                     changed={false}
+                    required={false}
                   />
                 </Link>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => onStepClick(step.n)}
-                  aria-current={isActive ? "step" : undefined}
-                  aria-label={`Step ${step.n}: ${step.label}${status}${changedText}`}
-                  className={itemClass}
-                  style={itemStyle(isActive)}
-                >
-                  <StepCircle
-                    n={step.n}
-                    isActive={isActive}
-                    isCompleted={isCompleted}
-                  />
-                  <StepLabel
-                    label={step.label}
-                    sub={step.sub}
-                    changed={changed}
-                  />
-                </button>
-              )}
+              </li>
+            )
+          }
+
+          const state = progress.find((p) => p.n === step.n)
+          const isActive = step.n === currentStep
+          const isDone = !!state?.done
+          const changed = changedSteps.includes(step.n)
+          const changedText = changed ? ", has changes" : ""
+
+          return (
+            <li key={step.n} className="shrink-0 lg:shrink">
+              <button
+                type="button"
+                onClick={() => onStepClick(step.n)}
+                aria-current={isActive ? "step" : undefined}
+                aria-label={`Step ${step.n}: ${step.label}${stepStatusText(state)}${changedText}`}
+                className={itemClass}
+                style={itemStyle(isActive)}
+              >
+                <StepCircle n={step.n} isActive={isActive} isDone={isDone} />
+                <StepLabel
+                  label={step.label}
+                  sub={step.sub}
+                  changed={changed}
+                  required={!!state?.required && !isDone}
+                />
+              </button>
             </li>
           )
         })}
       </ol>
     </nav>
+  )
+}
+
+/**
+ * The rail's completeness summary above the steps: how many are done and,
+ * when adding a library, how many required ones are left before sending.
+ */
+export function RecordProgress({
+  progress,
+  improving,
+  changedCount,
+}: {
+  progress: StepProgress[]
+  improving: boolean
+  changedCount: number
+}) {
+  const total = progress.length
+  const doneCount = progress.filter((s) => s.done).length
+  const requiredLeft = progress.filter((s) => s.required && !s.done).length
+  const pct = Math.round((doneCount / total) * 100)
+
+  let helper: React.ReactNode = null
+  if (requiredLeft > 0 && (!improving || changedCount > 0)) {
+    helper = improving
+      ? `${requiredSteps(requiredLeft)} still empty.`
+      : `${requiredSteps(requiredLeft)} left before you send.`
+  } else if (!improving) {
+    helper = (
+      <span
+        className="inline-flex items-center gap-1.5"
+        style={{ color: T.accent.ok, fontWeight: 600 }}
+      >
+        <Icon icon="mdi:check-circle-outline" width={16} aria-hidden="true" />
+        Ready to send.
+      </span>
+    )
+  }
+
+  return (
+    <section aria-labelledby="record-progress-heading">
+      <div className="flex items-baseline justify-between gap-3">
+        <h3
+          id="record-progress-heading"
+          style={{
+            fontFamily: T.font.sans,
+            fontSize: "15px",
+            fontWeight: 600,
+            color: T.ink.base,
+            margin: 0,
+          }}
+        >
+          Record completeness
+        </h3>
+        <p
+          aria-live="polite"
+          aria-atomic="true"
+          style={{
+            margin: 0,
+            whiteSpace: "nowrap",
+            fontFamily: T.font.sans,
+            fontSize: "14px",
+            color: T.ink.dim,
+          }}
+        >
+          <span
+            style={{
+              fontFamily: T.font.serif,
+              fontSize: "22px",
+              fontWeight: 500,
+              color: T.ink.base,
+              lineHeight: 1,
+            }}
+          >
+            {doneCount}
+          </span>{" "}
+          of {total}
+        </p>
+      </div>
+      <div
+        role="progressbar"
+        aria-valuenow={doneCount}
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-valuetext={`${doneCount} of ${total} steps complete`}
+        aria-label="Record completeness"
+        style={{
+          height: "6px",
+          marginTop: "8px",
+          borderRadius: "999px",
+          background: T.bg.muted,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            height: "100%",
+            width: `${pct}%`,
+            background: doneCount === total ? T.accent.ok : T.accent.primary,
+            borderRadius: "999px",
+            transition: "width 0.3s ease",
+          }}
+        />
+      </div>
+      {helper && (
+        <p
+          style={{
+            fontFamily: T.font.sans,
+            fontSize: "14px",
+            color: T.ink.dim,
+            margin: "8px 0 0",
+            lineHeight: 1.5,
+          }}
+        >
+          {helper}
+        </p>
+      )}
+    </section>
   )
 }

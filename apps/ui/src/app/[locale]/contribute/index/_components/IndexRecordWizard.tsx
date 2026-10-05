@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 
+import { Notice } from "@/components/ds/Notice"
 import {
   useCreateSubmission,
   useFinalizeDraft,
@@ -29,6 +30,8 @@ import {
   changedSteps,
   recordChangesPayload,
 } from "./wizard.changes"
+import { stepProgress } from "./wizard.progress"
+import { tipFor } from "./wizard.tips"
 import {
   EMPTY_FORM,
   type FormData,
@@ -40,12 +43,8 @@ import {
   missingFields,
   type ValidationScope,
 } from "./wizard.validation"
-import {
-  SECTION_CHECKS,
-  WizardCompletionSidebar,
-} from "./WizardCompletionSidebar"
 import { EditableFieldsContext, FieldErrorsContext } from "./WizardFields"
-import { WizardStepNav } from "./WizardStepNav"
+import { RecordProgress, WizardStepNav } from "./WizardStepNav"
 import { STEP_COMPONENTS } from "./WizardSteps"
 
 export type { FormData, SocialLink, UploadedImage } from "./wizard.types"
@@ -89,21 +88,6 @@ function RailStatus({
       {children}
     </p>
   )
-}
-
-/** Which of the wizard's steps a record already has something in. */
-function filledSteps(f: FormData): number[] {
-  const checks = SECTION_CHECKS(f)
-  const done = new Set(checks.filter((c) => c.done).map((c) => c.key))
-  const steps: number[] = []
-  if (done.has("identity")) steps.push(1)
-  if (done.has("location")) steps.push(2)
-  if (done.has("contact") || done.has("visiting")) steps.push(3)
-  if (done.has("collections")) steps.push(4)
-  if (done.has("history")) steps.push(5)
-  if (done.has("photo")) steps.push(6)
-
-  return steps
 }
 
 function splitForm(formData: FormData) {
@@ -190,7 +174,10 @@ export function IndexRecordWizard({
   )
   const changedSet = useMemo(() => new Set(changed), [changed])
   const stepsWithChanges = useMemo(() => changedSteps(changed), [changed])
-  const completedSteps = improve ? filledSteps(formData) : visited
+  const progress = useMemo(
+    () => stepProgress(formData, improve),
+    [formData, improve]
+  )
 
   const showDraftBanner =
     !draftBannerDismissed &&
@@ -225,6 +212,7 @@ export function IndexRecordWizard({
   }, [])
 
   const StepComponent = STEP_COMPONENTS[step - 1]!
+  const tip = tipFor(step, improve)
 
   const scope = useMemo<ValidationScope>(
     () => ({ record: improve ? initial : null, editable }),
@@ -413,11 +401,11 @@ export function IndexRecordWizard({
       >
         <div
           ref={topRef}
-          className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-12 xl:grid-cols-[280px_minmax(0,1fr)_340px] 2xl:grid-cols-[300px_minmax(0,1fr)_380px]"
+          className="grid grid-cols-1 gap-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-12 2xl:grid-cols-[300px_minmax(0,1fr)] 2xl:gap-16"
           style={{ scrollMarginTop: "128px" }}
         >
-          {/* Left — rail: title, status, stepper */}
-          <div className="min-w-0 self-start lg:sticky lg:top-[128px] lg:row-span-2 xl:row-span-1">
+          {/* Left — rail: title, status, completeness, stepper */}
+          <div className="min-w-0 self-start lg:sticky lg:top-[128px]">
             <h2
               className="truncate"
               style={{
@@ -461,10 +449,17 @@ export function IndexRecordWizard({
                   : "Draft not yet saved"}
               </RailStatus>
             )}
-            <div className="mt-6">
+            <div className="mt-5">
+              <RecordProgress
+                progress={progress}
+                improving={improve}
+                changedCount={changed.length}
+              />
+            </div>
+            <div className="mt-5">
               <WizardStepNav
                 currentStep={step}
-                completedSteps={completedSteps}
+                progress={progress}
                 changedSteps={stepsWithChanges}
                 onStepClick={handleStepClick}
                 findHref={findHref}
@@ -472,8 +467,8 @@ export function IndexRecordWizard({
             </div>
           </div>
 
-          {/* Centre — step form */}
-          <div className="min-w-0">
+          {/* Right — step form */}
+          <div className="max-w-[880px] min-w-0">
             {improve && (
               <div
                 className="mb-8 flex flex-col gap-3 rounded-[20px] p-5"
@@ -546,6 +541,18 @@ export function IndexRecordWizard({
                 />
               </FieldErrorsContext.Provider>
             </EditableFieldsContext.Provider>
+
+            <div className="mt-10">
+              <Notice
+                icon="mdi:lightbulb-on-outline"
+                tone="info"
+                title={tip.title}
+              >
+                <p className="m-0" style={{ color: T.ink.base }}>
+                  {tip.body}
+                </p>
+              </Notice>
+            </div>
 
             <div
               role="group"
@@ -656,19 +663,6 @@ export function IndexRecordWizard({
               )}
             </div>
           </div>
-
-          {/* Right — changes / completeness + tip */}
-          <aside
-            aria-label={improve ? "Your changes" : "Submission completeness"}
-            className="self-start lg:col-start-2 xl:sticky xl:top-[128px] xl:col-start-auto"
-          >
-            <WizardCompletionSidebar
-              formData={formData}
-              step={step}
-              mode={improve ? "improve" : "new"}
-              changedCount={changed.length}
-            />
-          </aside>
         </div>
       </main>
     </ChangedFieldsContext.Provider>
