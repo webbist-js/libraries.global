@@ -3,6 +3,8 @@
 // Pure helpers for the Find-a-library page: URL state and its search query,
 // the open-now badge and the POC's broad library-type groups.
 
+import type { GapKey } from "@repo/shared-data"
+
 import {
   type FindPlaceLevel,
   FIND_PLACE_LEVELS,
@@ -127,7 +129,7 @@ export const NEED_KEYS = [
   { key: "services", label: "Missing services and amenities" },
   { key: "contact", label: "Missing contact details" },
   { key: "address", label: "Missing address" },
-] as const
+] as const satisfies readonly { key: GapKey; label: string }[]
 
 export type NeedKey = (typeof NEED_KEYS)[number]["key"]
 

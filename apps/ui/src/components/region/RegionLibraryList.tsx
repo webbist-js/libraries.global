@@ -4,7 +4,7 @@ import GlobalLink from "@/components/global/GlobalLink"
 import {
   countNoun,
   formatCount,
-  type GapKey,
+  type LocationGapKey,
 } from "@/components/location/location-page.helpers"
 import { LocationLibraryCard } from "@/components/location/LocationLibraryCard"
 import { T } from "@/lib/design-tokens"
@@ -29,7 +29,7 @@ export function RegionLibraryList({
   /** "/europe/england/hertfordshire" — library slugs are appended. */
   readonly basePath: string
   readonly libraries: RegionLibrary[]
-  readonly gapsBySlug: Record<string, GapKey[]>
+  readonly gapsBySlug: Record<string, LocationGapKey[]>
   /** Published libraries in the region (the list may be capped). */
   readonly total: number
   readonly findHref: string

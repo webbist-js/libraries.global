@@ -3,8 +3,8 @@ import { Icon } from "@iconify/react"
 import GlobalLink from "@/components/global/GlobalLink"
 import type { OpeningTimesValue } from "@/components/library/library-page.helpers"
 import {
-  type GapKey,
   gapLabel,
+  type LocationGapKey,
   summariseWeek,
 } from "@/components/location/location-page.helpers"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
@@ -47,7 +47,7 @@ export function LocationLibraryCard({
   readonly href?: string | null
   /** Town or district shown as a neutral chip. */
   readonly place?: string | null
-  readonly gaps?: GapKey[]
+  readonly gaps?: LocationGapKey[]
 }) {
   const name = library.name ?? ""
   const tint = tintForLibraryType(library.libraryType)

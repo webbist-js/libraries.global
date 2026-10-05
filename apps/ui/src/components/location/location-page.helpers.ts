@@ -222,19 +222,20 @@ export const GAP_DEFS = LOCATION_GAPS.map((key) => {
   return { key, label: g.label, phrase: g.phrase }
 })
 
-export type GapKey = (typeof LOCATION_GAPS)[number]
+/** The gaps location pages show (a subset of the registry's `GapKey`). */
+export type LocationGapKey = (typeof LOCATION_GAPS)[number]
 
-export function recordGaps(library: GapRecord): GapKey[] {
+export function recordGaps(library: GapRecord): LocationGapKey[] {
   const gaps = new Set(gapsOf(library))
 
   return LOCATION_GAPS.filter((k) => gaps.has(k))
 }
 
-export const gapLabel = (key: GapKey) =>
+export const gapLabel = (key: LocationGapKey) =>
   GAP_DEFS.find((g) => g.key === key)!.label
 
 /** "opening hours, a photo and accessibility details". */
-export function describeGaps(keys: readonly GapKey[]): string {
+export function describeGaps(keys: readonly LocationGapKey[]): string {
   return joinList(keys.map((k) => GAP_DEFS.find((g) => g.key === k)!.phrase))
 }
 

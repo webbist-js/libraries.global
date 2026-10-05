@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react"
-import type { GapKey as GapCountKey } from "@repo/shared-data"
+import type { GapKey } from "@repo/shared-data"
 import type { Locale } from "next-intl"
 
 import { Container } from "@/components/elementary/Container"
@@ -11,7 +11,7 @@ import {
   describeGaps,
   formatCount,
   GAP_DEFS,
-  type GapKey,
+  type LocationGapKey,
   lowerFirst,
   pickNearby,
   placeLabels,
@@ -93,7 +93,7 @@ export function RegionDetailPage({
   continentSlug: string
   gapCounts: {
     total: number
-    gaps: Partial<Record<GapCountKey, number>>
+    gaps: Partial<Record<GapKey, number>>
   } | null
 }) {
   const name = region.name ?? ""
@@ -106,7 +106,7 @@ export function RegionDetailPage({
   const hasQuickLinks = Boolean(region.quickLinks?.length)
 
   // ── Record gaps ─────────────────────────────────────────────────────────────
-  const gapsBySlug: Record<string, GapKey[]> = Object.fromEntries(
+  const gapsBySlug: Record<string, LocationGapKey[]> = Object.fromEntries(
     libraries.map((library) => [library.slug, recordGaps(library)])
   )
   const withGaps = libraries.filter((l) => gapsBySlug[l.slug]!.length > 0)
@@ -114,7 +114,7 @@ export function RegionDetailPage({
     (sum, l) => sum + gapsBySlug[l.slug]!.length,
     0
   )
-  const firstWith = (gap: GapKey) =>
+  const firstWith = (gap: LocationGapKey) =>
     libraries.find((l) => gapsBySlug[l.slug]!.includes(gap))
   const asWizardLibrary = (l: (typeof libraries)[number] | undefined) =>
     l ? { slug: l.slug, name: l.name, place: l.city ?? undefined } : null
@@ -122,7 +122,7 @@ export function RegionDetailPage({
   /** The two most common gaps, from the exact search counts when we have
    * them (the facet counts gaps, not libraries with gaps), else from the
    * first-100 local computation. */
-  const commonGaps = (): GapKey[] =>
+  const commonGaps = (): LocationGapKey[] =>
     (gapCounts
       ? GAP_DEFS.map((g) => ({ key: g.key, n: gapCounts.gaps[g.key] ?? 0 }))
       : GAP_DEFS.map((g) => ({
