@@ -17,7 +17,7 @@ test.describe("Community section", () => {
       "noticeboard"
     )
     await expect(
-      page.getByRole("heading", { name: "How a drive works" })
+      page.getByRole("list", { name: "How a drive works" })
     ).toBeVisible()
 
     const tabs = page.getByRole("navigation", { name: "Community" })
