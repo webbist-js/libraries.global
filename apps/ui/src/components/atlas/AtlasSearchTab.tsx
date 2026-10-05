@@ -1,6 +1,6 @@
 "use client"
 
-import { useId, useMemo } from "react"
+import { type ReactNode, useId, useMemo } from "react"
 
 import { T } from "@/lib/design-tokens"
 
@@ -89,6 +89,7 @@ export function AtlasSearchTab({
   onPickPlace,
   onPreset,
   onGoLayers,
+  contributePrompt,
 }: {
   readonly query: string
   readonly onQuery: (q: string) => void
@@ -101,6 +102,8 @@ export function AtlasSearchTab({
   readonly onPickPlace: (place: Place) => void
   readonly onPreset: (patch: Partial<AtlasFilters>) => void
   readonly onGoLayers: () => void
+  /** The invitation to contribute, under the Layers hint. */
+  readonly contributePrompt?: ReactNode
 }) {
   const inputId = useId()
   const q = norm(query.trim())
@@ -170,7 +173,7 @@ export function AtlasSearchTab({
   )
 
   return (
-    <div className="flex min-h-full flex-col gap-[18px]">
+    <div className="flex min-h-full shrink-0 flex-col gap-[18px]">
       <label
         htmlFor={inputId}
         className="flex h-12 items-center gap-2.5 rounded-[14px] border px-3.5 focus-within:border-(--t-accent-primary) focus-within:shadow-[0_0_0_3px_var(--t-accent-chip)]"
@@ -283,20 +286,25 @@ export function AtlasSearchTab({
         </>
       )}
 
-      <button
-        type="button"
-        onClick={onGoLayers}
-        className="mt-auto flex items-start gap-3 rounded-[18px] border px-4 py-3.5 text-left"
-        style={{ background: T.bg.surface, borderColor: T.border.divider }}
-      >
-        <span className="mt-0.5" style={{ color: T.accent.primary }}>
-          <Icon name="layers" size={20} />
-        </span>
-        <span className="text-[14px] leading-normal">
-          <strong className="block text-[15px]">Add context to the map</strong>
-          Density, opening hours and more live in the Layers tab.
-        </span>
-      </button>
+      <div className="mt-auto flex flex-col gap-3">
+        <button
+          type="button"
+          onClick={onGoLayers}
+          className="flex items-start gap-3 rounded-[18px] border px-4 py-3.5 text-left"
+          style={{ background: T.bg.surface, borderColor: T.border.divider }}
+        >
+          <span className="mt-0.5" style={{ color: T.accent.primary }}>
+            <Icon name="layers" size={20} />
+          </span>
+          <span className="text-[14px] leading-normal">
+            <strong className="block text-[15px]">
+              Add context to the map
+            </strong>
+            Density, opening hours and more live in the Layers tab.
+          </span>
+        </button>
+        {contributePrompt}
+      </div>
     </div>
   )
 }

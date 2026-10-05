@@ -67,8 +67,13 @@ const SITE_NOTIFS: NotificationItem[] = [
 const PROMPTS: Record<DismissiblePrompt, ToggleItem<DismissiblePrompt>> = {
   "find-contribute": {
     key: "find-contribute",
-    label: "Invitation to contribute",
-    desc: "The banner above the results on Find libraries.",
+    label: "Invitation to contribute on Find libraries",
+    desc: "The banner above the results.",
+  },
+  "atlas-contribute": {
+    key: "atlas-contribute",
+    label: "Invitation to contribute on the Atlas",
+    desc: "The card under the Atlas search.",
   },
 }
 

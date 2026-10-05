@@ -4,7 +4,10 @@
  * keeps it hidden until they turn it back on in Settings. Strapi and the UI
  * both accept only these keys.
  */
-export const DISMISSIBLE_PROMPTS = ["find-contribute"] as const
+export const DISMISSIBLE_PROMPTS = [
+  "find-contribute",
+  "atlas-contribute",
+] as const
 
 export type DismissiblePrompt = (typeof DISMISSIBLE_PROMPTS)[number]
 

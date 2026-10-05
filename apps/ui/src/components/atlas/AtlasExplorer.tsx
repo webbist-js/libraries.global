@@ -1,6 +1,13 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
 import { useEntitlements } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
@@ -91,7 +98,13 @@ function useTier(): Tier {
   return tierForPlan(useEntitlements().plan)
 }
 
-export function AtlasExplorer() {
+export function AtlasExplorer({
+  contributePrompt,
+}: {
+  /** Server-rendered invitation to contribute, at the foot of the Search
+   * tab; null when the reader has hidden it. */
+  readonly contributePrompt?: ReactNode
+}) {
   const mapRef = useRef<AtlasMapHandle>(null)
   const isMobile = useIsMobile()
   const tier = useTier()
@@ -356,6 +369,7 @@ export function AtlasExplorer() {
             setTab("filter")
           }}
           onGoLayers={() => setTab("layers")}
+          contributePrompt={contributePrompt}
         />
       ) : null}
       {tab === "filter" ? (
