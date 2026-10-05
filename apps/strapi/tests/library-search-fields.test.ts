@@ -87,3 +87,43 @@ describe("librarySearchFields", () => {
     expect(geoCell(null, 1)).toBeNull()
   })
 })
+
+describe("drive fields", () => {
+  it("uses the stored gaps as needs", () => {
+    expect(
+      librarySearchFields(
+        { gaps: ["hours", "contact", "bogus"], openingTimes: null },
+        null,
+        null
+      ).needs
+    ).toEqual(["hours", "contact"])
+  })
+
+  it("falls back to the three legacy needs before gaps are stored", () => {
+    expect(librarySearchFields({}, null, null).needs).toEqual([
+      "hours",
+      "photo",
+      "facilities",
+    ])
+  })
+
+  it("adds created and verified timestamps in seconds", () => {
+    const f = librarySearchFields(
+      {
+        createdAt: "2026-10-01T00:00:00.000Z",
+        lastVerifiedAt: "2026-10-03T00:00:00.000Z",
+        verifiedSections: { hours: "2026-10-02T00:00:00.000Z", nope: "x" },
+      },
+      null,
+      null
+    )
+    expect(f.created_ts).toBe(Date.parse("2026-10-01T00:00:00.000Z") / 1000)
+    expect(f.last_verified_ts).toBe(
+      Date.parse("2026-10-03T00:00:00.000Z") / 1000
+    )
+    expect(f.verified_hours_ts).toBe(
+      Date.parse("2026-10-02T00:00:00.000Z") / 1000
+    )
+    expect(f).not.toHaveProperty("verified_status_ts")
+  })
+})

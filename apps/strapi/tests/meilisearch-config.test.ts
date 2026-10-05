@@ -114,6 +114,7 @@ const UI_READS: Record<IndexName, string[]> = {
     "accessibility_names",
     "service_names",
     "_geo",
+    "source",
   ],
   event: [
     "id",
@@ -253,6 +254,16 @@ const FIXTURES: Record<IndexName, Record<string, unknown>> = {
       ],
     },
     completeness: 63,
+    gaps: ["accessibility"],
+    source: "wikidata",
+    createdAt: "2026-08-01T00:00:00.000Z",
+    lastVerifiedAt: "2026-10-03T00:00:00.000Z",
+    verifiedSections: {
+      hours: "2026-10-02T00:00:00.000Z",
+      status: "2026-10-02T00:00:00.000Z",
+      address: "2026-10-02T00:00:00.000Z",
+      contact: "2026-10-02T00:00:00.000Z",
+    },
     iiifEndpoint: "https://iiif.bl.uk",
     location: { lat: "51.53", lng: "-0.127" },
     heroImage: MEDIA,
@@ -587,6 +598,32 @@ describe("Meilisearch config keys", () => {
       readFileSync(new URL(`../${schemas[key]}`, import.meta.url), "utf8")
     ) as { info: { singularName: string } }
     expect(schema.info.singularName).toBe(key)
+  })
+})
+
+describe("library index serves drives", () => {
+  it("filters on what drive scopes and gaps need", () => {
+    const {
+      filterableAttributes = [],
+      sortableAttributes = [],
+      searchableAttributes = [],
+    } = meili.library.settings
+    for (const key of [
+      "completeness",
+      "id",
+      "source",
+      "created_ts",
+      "last_verified_ts",
+      "verified_hours_ts",
+      "verified_status_ts",
+      "verified_address_ts",
+      "verified_contact_ts",
+      "needs",
+      "area_slug",
+    ])
+      expect(filterableAttributes).toContain(key)
+    expect(sortableAttributes).toContain("id")
+    expect(searchableAttributes).toContain("area_name")
   })
 })
 

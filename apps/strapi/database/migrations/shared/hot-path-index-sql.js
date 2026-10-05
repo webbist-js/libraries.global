@@ -71,6 +71,10 @@ const HOT_PATH_INDEXES = [
   index("areas", ["geonames_id"]),
   index("libraries", ["entity_ref"]),
   index("libraries", ["library_type"]),
+  // Drives and Find libraries filter or sort on these (also in Meilisearch).
+  index("libraries", ["completeness"]),
+  index("libraries", ["last_verified_at"]),
+  index("libraries", ["source"]),
 
   // Profiles: bridge reads by ba_user_id; leaderboard and country boards.
   index("user_profiles", ["ba_user_id"]),

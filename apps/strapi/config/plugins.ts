@@ -1,5 +1,6 @@
 import {
   OPEN_FIELD_NAMES,
+  TIMESTAMP_FIELD_NAMES,
   librarySearchFields,
 } from "../src/utils/library-search-fields"
 import { scrubSentryEvent } from "../src/utils/sentry-scrub"
@@ -163,6 +164,7 @@ export default ({ env }) => {
               "district",
               "country_name",
               "region_name",
+              "area_name",
             ],
             filterableAttributes: [
               "libraryType",
@@ -177,9 +179,18 @@ export default ({ env }) => {
               "operatorType",
               "_geo",
               "locale",
+              "completeness",
+              "id",
+              "source",
               ...LIBRARY_SEARCH_FIELDS,
             ],
-            sortableAttributes: ["name", "featured", "completeness", "_geo"],
+            sortableAttributes: [
+              "name",
+              "featured",
+              "completeness",
+              "_geo",
+              "id",
+            ],
             displayedAttributes: LIBRARY_DISPLAYED,
             // geo_cell counts libraries per 1° cell for the homepage globe:
             // densest cells first, and room for every inhabited cell.
@@ -395,15 +406,27 @@ const LIBRARY_FIELDS = [
   "iiifEndpoint",
   "completeness",
   "location",
+  "gaps",
+  "source",
+  "createdAt",
+  "lastVerifiedAt",
+  "verifiedSections",
   "publishedAt",
   "updatedAt",
 ]
-// `location` is only fetched to derive `_geo`; it never reaches the index.
+// Fetched only to derive other fields; never stored as is.
+const DERIVE_ONLY = new Set([
+  "location",
+  "gaps",
+  "verifiedSections",
+  "lastVerifiedAt",
+  "createdAt",
+])
 const LIBRARY_DOC_KEYS = [
   "id",
-  ...LIBRARY_FIELDS.filter((f) => f !== "location"),
+  ...LIBRARY_FIELDS.filter((f) => !DERIVE_ONLY.has(f)),
 ]
-/** Derived by librarySearchFields; completeness is already a document key. */
+/** Derived by librarySearchFields; completeness is a document key and is filterable too. */
 const LIBRARY_SEARCH_FIELDS = [
   "has_hours",
   "has_iiif",
@@ -411,6 +434,7 @@ const LIBRARY_SEARCH_FIELDS = [
   "open_tz",
   "geo_cell",
   ...OPEN_FIELD_NAMES,
+  ...TIMESTAMP_FIELD_NAMES,
 ]
 const LIBRARY_DISPLAYED = [
   ...LIBRARY_DOC_KEYS,

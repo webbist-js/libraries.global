@@ -114,7 +114,9 @@ const LIBRARY_LIST_FIELDS = [
   "verifiedSections",
   "contentUpdatedAt",
   "iiifEndpoint",
+  "source",
   "updatedAt",
+  "createdAt",
   "publishedAt",
 ]
 
@@ -159,7 +161,6 @@ export const LIBRARY_SHAPES: ShapeSet = {
       "transitInfo",
       "nearestStation",
       "wikidataId",
-      "source",
       "sourceUrl",
     ],
     populate: {

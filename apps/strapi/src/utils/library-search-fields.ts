@@ -5,6 +5,8 @@
  * stored completeness, and a 1° grid cell for the homepage globe.
  */
 
+import { isGapKey } from "@repo/shared-data"
+
 export const OPEN_DAYS = [
   "monday",
   "tuesday",
@@ -80,7 +82,10 @@ export function openFields(openingTimes: unknown): Record<string, number> {
   return out
 }
 
-/** The gaps a contributor can fill, as the Find page's "Needs" filter names them. */
+/**
+ * Legacy fallback for a row not yet backfilled with stored `gaps` (Task 2):
+ * the three gaps the Find page's "Needs" filter used to derive inline.
+ */
 export function libraryNeeds(entry: Record<string, unknown>): string[] {
   const needs: string[] = []
   const hasHours = days(entry.openingTimes).some(
@@ -103,6 +108,47 @@ export function geoCell(lat: number | null, lng: number | null): string | null {
     : `${Math.round(lat) + 0},${Math.round(lng) + 0}`
 }
 
+const seconds = (v: unknown): number | null => {
+  if (typeof v !== "string" && !(v instanceof Date)) return null
+  const t = new Date(v).getTime()
+
+  return Number.isFinite(t) ? Math.floor(t / 1000) : null
+}
+
+const VERIFIED_SECTIONS = ["hours", "status", "address", "contact"] as const
+
+/** The stored gaps, or the legacy derivation for a row not yet backfilled. */
+function needsOf(entry: Record<string, unknown>): string[] {
+  return Array.isArray(entry.gaps)
+    ? entry.gaps.filter(isGapKey)
+    : libraryNeeds(entry)
+}
+
+/** Unix seconds for when the library was created and when each section was last checked. */
+export function timestampFields(
+  entry: Record<string, unknown>
+): Record<string, number> {
+  const out: Record<string, number> = {}
+  const created = seconds(entry.createdAt)
+  if (created != null) out.created_ts = created
+  const last = seconds(entry.lastVerifiedAt)
+  if (last != null) out.last_verified_ts = last
+  const map = entry.verifiedSections
+  if (map && typeof map === "object" && !Array.isArray(map))
+    for (const s of VERIFIED_SECTIONS) {
+      const t = seconds((map as Record<string, unknown>)[s])
+      if (t != null) out[`verified_${s}_ts`] = t
+    }
+
+  return out
+}
+
+export const TIMESTAMP_FIELD_NAMES = [
+  "created_ts",
+  "last_verified_ts",
+  ...VERIFIED_SECTIONS.map((s) => `verified_${s}_ts`),
+]
+
 export function librarySearchFields(
   entry: Record<string, unknown>,
   lat: number | null,
@@ -117,12 +163,13 @@ export function librarySearchFields(
     has_iiif:
       typeof entry.iiifEndpoint === "string" &&
       entry.iiifEndpoint.trim() !== "",
-    needs: libraryNeeds(entry),
+    needs: needsOf(entry),
     open_tz:
       typeof entry.timezone === "string" && entry.timezone !== ""
         ? entry.timezone
         : "UTC",
     ...openFields(entry.openingTimes),
     ...(cell ? { geo_cell: cell } : {}),
+    ...timestampFields(entry),
   }
 }
