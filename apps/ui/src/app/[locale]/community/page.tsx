@@ -87,13 +87,9 @@ export default async function CommunityPage() {
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <section
             aria-labelledby="top-contributors"
-            className={`${CARD} flex flex-col`}
-            style={{ borderColor: T.border.line }}
+            className="flex flex-col gap-4"
           >
-            <div
-              className="flex items-baseline justify-between gap-4 border-b px-5 py-5"
-              style={{ borderColor: T.border.divider }}
-            >
+            <div className="flex items-baseline justify-between gap-4">
               <h2
                 id="top-contributors"
                 className="m-0"
@@ -116,15 +112,13 @@ export default async function CommunityPage() {
             </div>
             {top.length === 0 ? (
               <p
-                className="m-0 px-5 py-6 text-[15px]"
-                style={{ color: T.ink.dim }}
+                className={`${CARD} m-0 px-5 py-6 text-[15px]`}
+                style={{ borderColor: T.border.line, color: T.ink.dim }}
               >
                 No contributions recorded this month yet.
               </p>
             ) : (
-              <div className="px-2 py-2">
-                <LeaderboardRows entries={top} />
-              </div>
+              <LeaderboardRows entries={top} />
             )}
           </section>
 
