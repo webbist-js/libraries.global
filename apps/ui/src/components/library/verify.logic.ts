@@ -68,20 +68,34 @@ export function toSections(raw: unknown): VerifySection[] {
   return VERIFY_SECTIONS.filter((s) => asked.has(s))
 }
 
+const isValidStamp = (v: unknown): v is string =>
+  typeof v === "string" && !Number.isNaN(Date.parse(v))
+
 /**
- * When a section was last confirmed: its own stamp, else `lastVerifiedAt`
- * (records checked before sections were stamped one by one have only that).
+ * When a section was last confirmed: its own stamp when `verifiedSections`
+ * holds any valid stamp at all (even for a different section — in which case
+ * this section just hasn't been checked, so the answer is null, never another
+ * section's date); otherwise `lastVerifiedAt` (the legacy case: records
+ * checked before sections were stamped one by one — old rows, new_library
+ * approvals, imports — have only that).
  */
 export function sectionCheckedAt(
   library: object,
   section: VerifySection
 ): string | null {
   const r = library as Record<string, unknown>
-  const stamp = (r.verifiedSections as Record<string, unknown> | null)?.[
-    section
-  ]
+  const sections = r.verifiedSections
 
-  return typeof stamp === "string" ? stamp : str(r.lastVerifiedAt)
+  const hasAnyValidStamp =
+    sections !== null &&
+    typeof sections === "object" &&
+    Object.values(sections as Record<string, unknown>).some(isValidStamp)
+
+  if (!hasAnyValidStamp) return str(r.lastVerifiedAt)
+
+  const stamp = (sections as Record<string, unknown>)[section]
+
+  return isValidStamp(stamp) ? stamp : null
 }
 
 /** Only the sections the library has a value for. */

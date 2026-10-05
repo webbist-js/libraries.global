@@ -70,6 +70,12 @@ const SAMPLES = [
     fields: { website: "x" },
   },
   { ...base, submissionType: "topic_suggestion", fields: { name: "Maps" } },
+  {
+    ...base,
+    submissionType: "correction",
+    targetSlug: "british-library",
+    fields: { kind: "verify", sections: ["hours"], libraryName: "BL" },
+  },
 ]
 
 // Expected values are the Strapi admin helpers' own outputs for these rows
@@ -86,6 +92,7 @@ const EXPECTED: [summary: string, detail: string | null][] = [
   ["british-library", "Facility answers"],
   ["british-library", "1 field changed"],
   ["Maps", null],
+  ["british-library", "Still right?"],
 ]
 
 describe("submissionMeta port", () => {

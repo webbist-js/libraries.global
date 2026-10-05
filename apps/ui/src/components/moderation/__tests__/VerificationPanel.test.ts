@@ -44,7 +44,7 @@ describe("VerificationPanel", () => {
 
     const opening = within(sectionOf("Opening hours"))
     expect(opening.getByText("Mon 09:00–17:00")).toBeTruthy()
-    expect(opening.getByText("Previously checked 1 Jan 2025")).toBeTruthy()
+    expect(opening.getByText("Last checked 1 Jan 2025")).toBeTruthy()
 
     const contact = within(sectionOf("Contact details"))
     const link = contact.getByText("https://x").closest("a")

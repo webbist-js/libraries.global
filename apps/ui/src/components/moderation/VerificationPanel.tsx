@@ -232,7 +232,7 @@ export function VerificationPanel({
                   }
                   width={15}
                 />
-                {last ? `Previously checked ${last}` : "Not checked before"}
+                {last ? `Last checked ${last}` : "Not checked before"}
               </p>
             </li>
           )

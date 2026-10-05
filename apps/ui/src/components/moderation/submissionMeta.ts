@@ -462,6 +462,7 @@ const CORRECTION_KINDS: Record<string, string> = {
   facilities: "Facility answers",
   photo: "Photo",
   source: "Source",
+  verify: "Still right?",
 }
 
 /** A second line: what kind of change, in a few words. */

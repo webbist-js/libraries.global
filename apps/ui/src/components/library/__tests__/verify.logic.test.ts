@@ -138,7 +138,38 @@ describe("verify logic", () => {
         "hours"
       )
     ).toBe("2026-01-01T00:00:00.000Z")
-    expect(sectionCheckedAt(record, "hours")).toBe("2026-03-01T00:00:00.000Z")
+    // A valid stamp exists (contact), but not for hours: no borrowing another
+    // section's date, and no legacy fallback either.
+    expect(sectionCheckedAt(record, "hours")).toBeNull()
     expect(sectionCheckedAt({}, "hours")).toBeNull()
+    // verifiedSections missing entirely (null, not an object): legacy
+    // fallback to lastVerifiedAt.
+    expect(
+      sectionCheckedAt(
+        {
+          lastVerifiedAt: "2026-03-01T00:00:00.000Z",
+          verifiedSections: null,
+        },
+        "hours"
+      )
+    ).toBe("2026-03-01T00:00:00.000Z")
+    // hours has its own valid stamp: use it.
+    expect(
+      sectionCheckedAt(
+        { verifiedSections: { hours: "2026-01-01T00:00:00.000Z" } },
+        "hours"
+      )
+    ).toBe("2026-01-01T00:00:00.000Z")
+    // verifiedSections.hours isn't a valid date and nothing else is valid
+    // either: that's the legacy case, so fall back to lastVerifiedAt.
+    expect(
+      sectionCheckedAt(
+        {
+          lastVerifiedAt: "2026-03-01T00:00:00.000Z",
+          verifiedSections: { hours: "junk" },
+        },
+        "hours"
+      )
+    ).toBe("2026-03-01T00:00:00.000Z")
   })
 })

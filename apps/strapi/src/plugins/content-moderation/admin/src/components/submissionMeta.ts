@@ -342,6 +342,7 @@ export function detailOf(sub: Submission): string | null {
     if (f.kind === "facilities") return "Facility answers"
     if (f.kind === "photo") return "Photo"
     if (f.kind === "source") return "Source"
+    if (f.kind === "verify") return "Still right?"
 
     return typeof f.category === "string" ? f.category : null
   }
