@@ -123,7 +123,10 @@ export function openStatus(
 export const NEED_KEYS = [
   { key: "hours", label: "Missing opening hours" },
   { key: "photo", label: "Missing photo" },
-  { key: "facilities", label: "Missing accessibility & facilities" },
+  { key: "accessibility", label: "Missing accessibility details" },
+  { key: "services", label: "Missing services and amenities" },
+  { key: "contact", label: "Missing contact details" },
+  { key: "address", label: "Missing address" },
 ] as const
 
 export type NeedKey = (typeof NEED_KEYS)[number]["key"]

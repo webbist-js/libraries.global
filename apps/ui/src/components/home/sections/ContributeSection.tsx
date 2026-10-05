@@ -61,7 +61,7 @@ const TASK_COPY: Record<string, TaskCopy> = {
     Icon: Globe,
     tint: PURPLE,
   },
-  collections: {
+  about: {
     label: "Collections not described",
     action: "Describe them",
     Icon: BookOpen,

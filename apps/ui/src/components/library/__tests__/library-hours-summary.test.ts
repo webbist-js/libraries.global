@@ -184,7 +184,6 @@ describe("distances", () => {
 describe("recordChecklist", () => {
   it("counts the eight parts", () => {
     const { done, total, items } = recordChecklist({
-      name: "Nailsea Library",
       streetAddress: "6–8 Colliers Walk",
       openingTimes: NAILSEA,
       openedYear: "1972",
@@ -193,11 +192,12 @@ describe("recordChecklist", () => {
     })
 
     expect(total).toBe(8)
-    expect(done).toBe(5)
+    expect(done).toBe(4)
     expect(items.filter((i) => !i.done).map((i) => i.key)).toEqual([
-      "accessibility",
-      "collections",
-      "photos",
+      "photo",
+      "location",
+      "facilities",
+      "about",
     ])
   })
 })

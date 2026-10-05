@@ -31,18 +31,22 @@ export function libraryChecklist(library: Lib) {
   const rec = asRecord(library)
 
   return recordChecklist({
-    name: library.name,
-    streetAddress: library.streetAddress,
+    heroImage: library.heroImage,
     openingTimes: library.openingTimes as OpeningTimesValue | null,
-    foundedYear: rec.foundedYear as string | null,
-    openedYear: rec.openedYear as string | null,
-    website: rec.website as string | null,
-    catalogueUrl: rec.catalogueUrl as string | null,
+    streetAddress: library.streetAddress,
+    location: library.location,
     accessibility: library.accessibility as unknown[] | null,
+    services: library.services as unknown[] | null,
+    amenities: library.amenities as unknown[] | null,
+    absentFacilities: rec.absentFacilities,
     summary: library.summary,
     description: library.description,
     collectionStats: rec.collectionStats as unknown[] | null,
-    heroImage: library.heroImage,
+    foundedYear: rec.foundedYear as string | null,
+    openedYear: rec.openedYear as string | null,
+    website: rec.website as string | null,
+    phone: rec.phone as string | null,
+    email: rec.email as string | null,
   })
 }
 

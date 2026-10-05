@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import type { FindLocation } from "@/lib/find-search"
 
 import {
+  ALL_NEED_KEYS,
   DEFAULT_FIND_STATE,
   findQueryOf,
   findStateFromParams,
@@ -14,6 +15,25 @@ import {
   placeName,
   placePath,
 } from "../find-helpers"
+
+describe("NEED_KEYS", () => {
+  it("covers every gap a contributor can fill, in order", () => {
+    expect(ALL_NEED_KEYS).toEqual([
+      "hours",
+      "photo",
+      "accessibility",
+      "services",
+      "contact",
+      "address",
+    ])
+  })
+
+  it("keeps only the recognised keys from ?needs=", () => {
+    expect(
+      findStateFromParams(new URLSearchParams("needs=hours,facilities")).needs
+    ).toEqual(["hours"])
+  })
+})
 
 describe("place scope", () => {
   it("reads a continent, country or region slug from the URL", () => {

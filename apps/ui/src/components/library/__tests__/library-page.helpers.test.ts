@@ -6,6 +6,7 @@ import {
   formatDayTimes,
   getOpenStatus,
   type OpeningTimesValue,
+  recordChecklist,
 } from "../library-page.helpers"
 
 const HOURS: OpeningTimesValue = {
@@ -112,5 +113,30 @@ describe("computeCompleteness", () => {
     })
     expect(total).toBe(8)
     expect(filled).toBe(4) // hours, address, location, contact
+  })
+})
+
+describe("recordChecklist", () => {
+  it("lists the eight completeness sections in registry order", () => {
+    const { items, total, done } = recordChecklist({})
+    expect(items.map((i) => i.key)).toEqual([
+      "photo",
+      "hours",
+      "address",
+      "location",
+      "facilities",
+      "about",
+      "history",
+      "contact",
+    ])
+    expect(total).toBe(8)
+    expect(done).toBe(0)
+  })
+
+  it("matches the stored completeness score's sections", () => {
+    const lib = { streetAddress: "1 High St", phone: "0123" }
+    const { done } = recordChecklist(lib)
+    expect(done).toBe(computeCompleteness(lib).filled)
+    expect(done).toBe(2)
   })
 })

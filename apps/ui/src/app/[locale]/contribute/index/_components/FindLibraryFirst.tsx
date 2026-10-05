@@ -34,7 +34,7 @@ const GAP_LABELS: Record<string, string> = {
   address: "No address",
   location: "Not on the map",
   facilities: "No facilities listed",
-  collections: "No collections info",
+  about: "No collections info",
   history: "No history",
   contact: "No contact details",
 }

@@ -4,6 +4,7 @@ import type { OpeningTimesValue } from "@/components/library/library-page.helper
 
 import {
   describeGaps,
+  GAP_DEFS,
   groupScreenPoints,
   lowerFirst,
   pickNearby,
@@ -161,7 +162,7 @@ describe("recordGaps", () => {
       accessibility: [],
       website: null,
     })
-    expect(gaps).toEqual(["photo", "facilities", "contact"])
+    expect(gaps).toEqual(["photo", "accessibility", "contact"])
     expect(describeGaps(gaps)).toBe(
       "a photo, accessibility details and contact details"
     )
@@ -176,6 +177,18 @@ describe("recordGaps", () => {
         website: "https://example.org",
       })
     ).toEqual([])
+  })
+
+  it("shows location pages the four gaps visitors need first", () => {
+    expect(GAP_DEFS.map((g) => g.key)).toEqual([
+      "hours",
+      "photo",
+      "accessibility",
+      "contact",
+    ])
+    expect(recordGaps({ absentFacilities: ["Hearing loop"] })).not.toContain(
+      "accessibility"
+    )
   })
 })
 

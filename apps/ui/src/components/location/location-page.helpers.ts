@@ -1,9 +1,10 @@
 // Pure helpers for the continent / country / region pages (v2).
 // No React imports — unit-testable.
 
+import { gapDefinition, gapsOf, type GapRecord } from "@repo/shared-data"
+
 import { distanceKm } from "@/components/index-page/find-helpers"
 import {
-  computeCompleteness,
   DAY_ORDER,
   type OpeningTimesDay,
   type OpeningTimesValue,
@@ -212,30 +213,21 @@ export function summariseWeek(
 
 // ── Record gaps ───────────────────────────────────────────────────────────────
 
+const LOCATION_GAPS = ["hours", "photo", "accessibility", "contact"] as const
+
 /** The gaps shown on location pages: the details visitors need first. */
-export const GAP_DEFS = [
-  { key: "hours", label: "Opening hours", phrase: "opening hours" },
-  { key: "photo", label: "Photo", phrase: "a photo" },
-  {
-    key: "facilities",
-    label: "Accessibility",
-    phrase: "accessibility details",
-  },
-  { key: "contact", label: "Contact details", phrase: "contact details" },
-] as const
+export const GAP_DEFS = LOCATION_GAPS.map((key) => {
+  const g = gapDefinition(key)
 
-export type GapKey = (typeof GAP_DEFS)[number]["key"]
+  return { key, label: g.label, phrase: g.phrase }
+})
 
-export function recordGaps(
-  library: Parameters<typeof computeCompleteness>[0]
-): GapKey[] {
-  const missing = new Set(
-    computeCompleteness(library)
-      .sections.filter((s) => !s.filled)
-      .map((s) => s.key)
-  )
+export type GapKey = (typeof LOCATION_GAPS)[number]
 
-  return GAP_DEFS.filter((g) => missing.has(g.key)).map((g) => g.key)
+export function recordGaps(library: GapRecord): GapKey[] {
+  const gaps = new Set(gapsOf(library))
+
+  return LOCATION_GAPS.filter((k) => gaps.has(k))
 }
 
 export const gapLabel = (key: GapKey) =>

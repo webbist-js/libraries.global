@@ -54,7 +54,7 @@ const GITHUB_REPO = "https://github.com/webbist-js/libraries.global"
 
 const MISSING_LABELS: Record<string, string> = {
   hours: "Opening hours",
-  collections: "Collections",
+  about: "Collections",
   facilities: "Accessibility",
   photo: "Photo",
 }

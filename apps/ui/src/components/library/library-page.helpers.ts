@@ -1,6 +1,13 @@
 // Pure helpers for the library detail page (v2).
 // No React imports — unit-testable.
 
+import {
+  completenessOf,
+  type CompletenessSection as RegistrySection,
+  type GapKey,
+  type GapRecord,
+} from "@repo/shared-data"
+
 export const DAY_ORDER = [
   "monday",
   "tuesday",
@@ -165,81 +172,23 @@ export function formatCoordinates(
   return `${latLabel}, ${lngLabel}`
 }
 
-export interface CompletenessSection {
-  key: string
-  label: string
-  filled: boolean
-}
+/** The eight completeness sections, from the shared gap registry. */
+export type CompletenessSection = RegistrySection
 
 /**
  * Record completeness — how many of the core sections have data.
- * Mirrors the POC's "N of M sections documented".
+ * Mirrors the POC's "N of M sections documented". Reads the shared gap
+ * registry (`@repo/shared-data`), so it agrees with the stored
+ * `completeness` score and the search index's `needs`.
  */
-export function computeCompleteness(library: {
-  heroImage?: unknown
-  openingTimes?: OpeningTimesValue | null
-  streetAddress?: string | null
-  location?: unknown
-  accessibility?: unknown[] | null
-  services?: unknown[] | null
-  amenities?: unknown[] | null
-  description?: unknown
-  summary?: string | null
-  collectionStats?: unknown[] | null
-  foundedYear?: string | null
-  openedYear?: string | null
-  website?: string | null
-  phone?: string | null
-  email?: string | null
-}): { filled: number; total: number; sections: CompletenessSection[] } {
-  const hasHours = Boolean(
-    library.openingTimes?.days?.some((d) => d.enabled && d.timeframes?.length)
-  )
-  const sections: CompletenessSection[] = [
-    { key: "photo", label: "Photo", filled: Boolean(library.heroImage) },
-    { key: "hours", label: "Opening hours", filled: hasHours },
-    {
-      key: "address",
-      label: "Address",
-      filled: Boolean(library.streetAddress),
-    },
-    {
-      key: "location",
-      label: "Map location",
-      filled: Boolean(library.location),
-    },
-    {
-      key: "facilities",
-      label: "Accessibility & facilities",
-      filled: Boolean(
-        library.accessibility?.length ||
-        library.services?.length ||
-        library.amenities?.length
-      ),
-    },
-    {
-      key: "collections",
-      label: "Collections",
-      filled: Boolean(
-        library.summary ||
-        (Array.isArray(library.description) && library.description.length) ||
-        library.collectionStats?.length
-      ),
-    },
-    {
-      key: "history",
-      label: "History",
-      filled: Boolean(library.foundedYear || library.openedYear),
-    },
-    {
-      key: "contact",
-      label: "Contact",
-      filled: Boolean(library.website || library.phone || library.email),
-    },
-  ]
-  const filled = sections.filter((s) => s.filled).length
+export function computeCompleteness(library: GapRecord): {
+  filled: number
+  total: number
+  sections: CompletenessSection[]
+} {
+  const { filled, total, sections } = completenessOf(library)
 
-  return { filled, total: sections.length, sections }
+  return { filled, total, sections }
 }
 
 // ── Hours summaries (hero fact cards, timeline) ──────────────────────────────
@@ -421,15 +370,18 @@ export function formatDistance(km: number): string {
 
 // ── Record checklist (sidebar) ───────────────────────────────────────────────
 
-export type ChecklistKey =
-  | "name"
-  | "address"
+/** The eight completeness sections, for the sidebar's checklist and tasks. */
+export type ChecklistKey = Extract<
+  GapKey,
+  | "photo"
   | "hours"
+  | "address"
+  | "location"
+  | "facilities"
+  | "about"
   | "history"
-  | "links"
-  | "accessibility"
-  | "collections"
-  | "photos"
+  | "contact"
+>
 
 export interface ChecklistItem {
   key: ChecklistKey
@@ -439,66 +391,22 @@ export interface ChecklistItem {
 
 /**
  * The sidebar's "Completeness" checklist: the eight parts a reader looks
- * for, in the order they're shown (two columns, read across).
+ * for, in the order they're shown (two columns, read across). Reads the
+ * shared gap registry, so it matches the stored completeness score.
  */
-export function recordChecklist(library: {
-  name?: string | null
-  streetAddress?: string | null
-  openingTimes?: OpeningTimesValue | null
-  foundedYear?: string | null
-  openedYear?: string | null
-  website?: string | null
-  catalogueUrl?: string | null
-  accessibility?: unknown[] | null
-  summary?: string | null
-  description?: unknown
-  collectionStats?: unknown[] | null
-  heroImage?: unknown
-}): { done: number; total: number; items: ChecklistItem[] } {
-  const items: ChecklistItem[] = [
-    { key: "name", label: "Name", done: Boolean(library.name) },
-    { key: "address", label: "Address", done: Boolean(library.streetAddress) },
-    {
-      key: "hours",
-      label: "Hours",
-      done: Boolean(
-        library.openingTimes?.days?.some(
-          (d) => d.enabled && d.timeframes?.length
-        )
-      ),
-    },
-    {
-      key: "history",
-      label: "History",
-      done: Boolean(library.foundedYear || library.openedYear),
-    },
-    {
-      key: "links",
-      label: "Links",
-      done: Boolean(library.website || library.catalogueUrl),
-    },
-    {
-      key: "accessibility",
-      label: "Accessibility",
-      done: Boolean(library.accessibility?.length),
-    },
-    {
-      key: "collections",
-      label: "Collections",
-      done: Boolean(
-        library.summary ||
-        (Array.isArray(library.description) && library.description.length) ||
-        library.collectionStats?.length
-      ),
-    },
-    { key: "photos", label: "Photos", done: Boolean(library.heroImage) },
-  ]
+export function recordChecklist(library: GapRecord): {
+  done: number
+  total: number
+  items: ChecklistItem[]
+} {
+  const { filled, total, sections } = completenessOf(library)
+  const items: ChecklistItem[] = sections.map((s) => ({
+    key: s.key as ChecklistKey,
+    label: s.label,
+    done: s.filled,
+  }))
 
-  return {
-    done: items.filter((i) => i.done).length,
-    total: items.length,
-    items,
-  }
+  return { done: filled, total, items }
 }
 
 // ── Citation ─────────────────────────────────────────────────────────────────

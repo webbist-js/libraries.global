@@ -42,7 +42,7 @@ function tasksFor(
 ): Task[] {
   const all: Task[] = [
     {
-      key: "accessibility",
+      key: "facilities",
       title: "Add accessibility details",
       meta: `About 2 minutes · ${questions} ${questions === 1 ? "question" : "questions"}`,
       icon: "mdi:human",
@@ -50,7 +50,7 @@ function tasksFor(
       href: "#access",
     },
     {
-      key: "collections",
+      key: "about",
       title: "Describe the collections",
       meta: "About 5 minutes",
       icon: "mdi:bookshelf",
@@ -58,7 +58,7 @@ function tasksFor(
       category: "Collections",
     },
     {
-      key: "photos",
+      key: "photo",
       title: "Share a photo",
       meta: "Your own, or one you may share",
       icon: "mdi:camera-outline",
@@ -82,6 +82,14 @@ function tasksFor(
       category: "Address or location",
     },
     {
+      key: "location",
+      title: "Put it on the map",
+      meta: "About 1 minute",
+      icon: "mdi:map-marker-radius-outline",
+      tint: INDIGO,
+      category: "Address or location",
+    },
+    {
       key: "history",
       title: "Add a date from its history",
       meta: "About 2 minutes",
@@ -90,7 +98,7 @@ function tasksFor(
       category: "Something else",
     },
     {
-      key: "links",
+      key: "contact",
       title: "Add the official website",
       meta: "About 1 minute",
       icon: "mdi:web",
