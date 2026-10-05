@@ -133,12 +133,12 @@ export default ({ strapi }: { strapi: any }) => ({
           },
           {
             action: "hours_verified",
-            label: "Opening hours verified on-site",
+            label: "Opening hours checked and accepted",
             points: 5,
           },
           {
             action: "status_verified",
-            label: "Operational status verified",
+            label: "Open status checked and accepted",
             points: 5,
           },
           {

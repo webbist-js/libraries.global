@@ -286,6 +286,28 @@ export function isRecordCorrection(fields: unknown): boolean {
   )
 }
 
+export type VerifiedAction = "hours_verified" | "status_verified"
+
+/**
+ * The verification points an approved record edit earns: whoever set a
+ * library's hours or its open status checked them. Clearing the hours or
+ * setting the status to "unknown" checks nothing, and a translation can't
+ * change either (both are shared by every locale version).
+ */
+export function verifiedActions(
+  fields: unknown,
+  localized: boolean
+): VerifiedAction[] {
+  if (localized) return []
+  const data = buildLibraryRecordData(fields)
+  const actions: VerifiedAction[] = []
+  if (data.openingTimes) actions.push("hours_verified")
+  if (data.operationalStatus && data.operationalStatus !== "unknown")
+    actions.push("status_verified")
+
+  return actions
+}
+
 export type LibraryRecordData = Record<string, unknown>
 
 /**

@@ -165,18 +165,18 @@ Library stewards (users with a claim on this library) see the full edit diff flo
 
 Points are awarded on submission approval by the rewards plugin:
 
-| Action                            | Points | Status                    |
-| --------------------------------- | ------ | ------------------------- |
-| `correction` approved             | 2      | **Not yet wired**         |
-| `library_edit` minor (1–3 fields) | 5      | Wired                     |
-| `library_edit` major (4+ fields)  | 15     | Wired                     |
-| `library_claim` approved          | 10     | **Not yet wired**         |
-| `wiki_edit` approved              | 5      | Wired                     |
-| `wiki_edit` translation           | 15     | Wired                     |
-| `new_library` approved            | 50     | Wired                     |
-| `photo_licensed_cc`               | TBD    | Defined, no triggering UI |
-| `hours_verified`                  | TBD    | Defined, no triggering UI |
-| `status_verified`                 | TBD    | Defined, no triggering UI |
+| Action                            | Points | Status                   |
+| --------------------------------- | ------ | ------------------------ |
+| `correction` approved             | 2      | Wired                    |
+| `library_edit` minor (1–3 fields) | 5      | Wired                    |
+| `library_edit` major (4+ fields)  | 15     | Wired                    |
+| `library_claim` approved          | 10     | Wired                    |
+| `wiki_edit` approved              | 5      | Wired                    |
+| `wiki_edit` translation           | 15     | Wired                    |
+| `new_library` approved            | 50     | Wired                    |
+| `photo_licensed_cc`               | 8      | Wired (shared photo)     |
+| `hours_verified`                  | 5      | Wired (edit sets hours)  |
+| `status_verified`                 | 5      | Wired (edit sets status) |
 
 ### Tiers (wired)
 

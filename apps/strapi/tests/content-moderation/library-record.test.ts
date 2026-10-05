@@ -6,6 +6,7 @@ import {
   isRecordCorrection,
   parseSuggestedOptions,
   sanitizeOpeningTimes,
+  verifiedActions,
 } from "../../src/plugins/content-moderation/server/utils/library-record"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
 
@@ -346,5 +347,57 @@ describe("applyLibraryRecord", () => {
     expect(isRecordCorrection({ kind: "record", city: "x" })).toBe(true)
     expect(isRecordCorrection({ kind: "facilities" })).toBe(false)
     expect(isRecordCorrection(null)).toBe(false)
+  })
+})
+
+describe("verifiedActions", () => {
+  const hours = sanitizeOpeningTimes({
+    version: 1,
+    days: [
+      {
+        day: "monday",
+        enabled: true,
+        timeframes: [{ startTime: "09:00", endTime: "17:00" }],
+      },
+    ],
+  })
+
+  it("counts setting the hours as checking them", () => {
+    expect(
+      verifiedActions({ kind: "record", openingTimes: hours }, false)
+    ).toEqual(["hours_verified"])
+  })
+
+  it("counts setting the open status as checking it", () => {
+    expect(
+      verifiedActions({ kind: "record", operationalStatus: "open" }, false)
+    ).toEqual(["status_verified"])
+  })
+
+  it("earns both when both are set", () => {
+    expect(
+      verifiedActions(
+        { openingTimes: hours, operationalStatus: "temporarily_closed" },
+        false
+      )
+    ).toEqual(["hours_verified", "status_verified"])
+  })
+
+  it("earns nothing for clearing the hours or an unknown status", () => {
+    expect(verifiedActions({ openingTimes: "" }, false)).toEqual([])
+    expect(verifiedActions({ openingTimes: null }, false)).toEqual([])
+    expect(verifiedActions({ operationalStatus: "unknown" }, false)).toEqual([])
+    expect(verifiedActions({ operationalStatus: "haunted" }, false)).toEqual([])
+  })
+
+  it("earns nothing for other fields", () => {
+    expect(verifiedActions({ kind: "record", city: "York" }, false)).toEqual([])
+    expect(verifiedActions(null, false)).toEqual([])
+  })
+
+  it("earns nothing in a translation, which can't change shared fields", () => {
+    expect(
+      verifiedActions({ openingTimes: hours, operationalStatus: "open" }, true)
+    ).toEqual([])
   })
 })

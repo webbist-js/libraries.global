@@ -27,6 +27,7 @@ import {
   type ApplyRecordOutcome,
   isHttpUrl,
   isRecordCorrection,
+  verifiedActions,
 } from "../utils/library-record"
 import {
   configuredLocales,
@@ -302,6 +303,8 @@ export type SubmissionExtras = Partial<
 >
 
 const SUBMISSION_UID = "plugin::content-moderation.submission"
+/** hours_verified and status_verified, each (rewards "How it works"). */
+const VERIFIED_POINTS = 5
 const PROFILE_UID = "api::user-profile.user-profile"
 const REVIEW_EVENT_UID = "plugin::content-moderation.review-event"
 
@@ -1425,6 +1428,44 @@ export default ({ strapi }: { strapi: any }) => ({
         } catch (err) {
           strapi.log.warn(
             "[content-moderation] rewards.award (correction) failed:",
+            err
+          )
+        }
+      }
+
+      // Setting a library's hours or open status checks them: each earns
+      // its verification points on top of the edit's own, which the Shelf
+      // Check, Verifier and Lending Library badges count.
+      if (
+        status === "approved" &&
+        (submission?.submissionType === "library_edit" ||
+          (submission?.submissionType === "correction" &&
+            isRecordCorrection(submission.fields)))
+      ) {
+        try {
+          const base = await defaultLocale(strapi)
+          const locale = await normaliseLocale(
+            strapi,
+            submissionLocale(submission)
+          )
+          for (const action of verifiedActions(
+            submission.fields,
+            locale !== base
+          )) {
+            await strapi
+              .plugin("rewards")
+              .service("points")
+              .award(
+                submission.submittedByUserId,
+                action,
+                VERIFIED_POINTS,
+                { submissionId: documentId },
+                `${documentId}:${action}`
+              )
+          }
+        } catch (err) {
+          strapi.log.warn(
+            "[content-moderation] rewards.award (verified) failed:",
             err
           )
         }

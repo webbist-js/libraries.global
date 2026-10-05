@@ -13,8 +13,8 @@ The libraries.global rewards system recognises contributor effort through points
 | `wiki_translated`      | Wiki page translation approved                          | +15               |
 | `photo_licensed_cc`    | CC-licensed photo accepted                              | +8                |
 | `edit_accepted_minor`  | Edit approved with 1–3 fields changed                   | +5                |
-| `hours_verified`       | Opening hours verified on-site                          | +5                |
-| `status_verified`      | Operational status verified                             | +5                |
+| `hours_verified`       | Accepted edit that sets a library's opening hours       | +5                |
+| `status_verified`      | Accepted edit that sets a library's open status         | +5                |
 | `daily_streak`         | Any approved contribution on a consecutive calendar day | +1                |
 | `manual_award`         | Admin manual award (reason required in metadata)        | Custom            |
 | `manual_deduct`        | Admin manual deduction (reason required in metadata)    | Custom (negative) |

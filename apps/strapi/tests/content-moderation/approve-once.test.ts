@@ -38,8 +38,47 @@ const pendingClaim = () => {
   return s
 }
 
+/** A claimant's edit that sets a library's hours and open status. */
+const pendingHoursEdit = () => {
+  const s: any = {
+    documentId: "s0000000000000000000003",
+    submissionType: "library_edit",
+    status: "pending",
+    submittedByUserId: "u3",
+    targetDocumentId: "lib00000000000000000001",
+    fields: {
+      openingTimes: {
+        version: 1,
+        days: [
+          {
+            day: "monday",
+            enabled: true,
+            timeframes: [{ startTime: "09:00", endTime: "17:00" }],
+          },
+        ],
+      },
+      operationalStatus: "open",
+    },
+    draftData: null,
+  }
+  s.payloadHash = payloadHash(s)
+
+  return s
+}
+
+const LIBRARY_SEED = {
+  "api::library.library": [
+    {
+      documentId: "lib00000000000000000001",
+      slug: "lib",
+      name: "Library",
+      locale: "en",
+    },
+  ],
+}
+
 function setup(seed = pending()) {
-  const f = makeFakeStrapi({ [UID]: [seed] })
+  const f = makeFakeStrapi({ [UID]: [seed], ...LIBRARY_SEED })
   const award = vi.fn(async () => {})
   f.services["rewards.points"] = { award }
   f.services["api::user-profile.quick-wins"] = {
@@ -95,6 +134,34 @@ describe("updateStatus", () => {
       expect.anything(),
       "s0000000000000000000001:correction_approved"
     )
+  })
+
+  it("awards verification points for setting a library's hours and status", async () => {
+    const edit = pendingHoursEdit()
+    const { svc, award } = setup(edit)
+    await svc.updateStatus(edit.documentId, "approved", REVIEWER)
+    expect(award).toHaveBeenCalledWith(
+      "u3",
+      "hours_verified",
+      5,
+      expect.anything(),
+      `${edit.documentId}:hours_verified`
+    )
+    expect(award).toHaveBeenCalledWith(
+      "u3",
+      "status_verified",
+      5,
+      expect.anything(),
+      `${edit.documentId}:status_verified`
+    )
+  })
+
+  it("awards no verification points for a free-text correction", async () => {
+    const { svc, award } = setup()
+    await svc.updateStatus("s0000000000000000000001", "approved", REVIEWER)
+    const actions = award.mock.calls.map((c: unknown[]) => c[1])
+    expect(actions).not.toContain("hours_verified")
+    expect(actions).not.toContain("status_verified")
   })
 
   it("returns conflict when the compare-and-set loses the race", async () => {
