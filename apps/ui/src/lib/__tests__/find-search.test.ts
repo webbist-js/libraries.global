@@ -18,6 +18,7 @@ const {
   findSort,
   localDayMinute,
   openNowFilter,
+  placeGapCounts,
   searchFind,
 } = await import("../find-search")
 
@@ -126,6 +127,37 @@ describe("findSort", () => {
     expect(findSort({ sort: "near", nearLat: 1, nearLng: 2 })).toEqual([
       "_geoPoint(1, 2):asc",
     ])
+  })
+})
+
+describe("placeGapCounts", () => {
+  it("filters the needs facet to gap keys and totals from locale", async () => {
+    search.mockResolvedValue({
+      facetDistribution: {
+        locale: { en: 1083 },
+        needs: { hours: 1083, photo: 1002, bogus: 5 },
+      },
+    })
+
+    const result = await placeGapCounts("region", "new-york", "en")
+
+    expect(result).toEqual({ total: 1083, gaps: { hours: 1083, photo: 1002 } })
+    const [, params] = search.mock.calls[0] as [
+      string,
+      { filter: string; limit?: number; facets?: string[] },
+    ]
+    expect(params.filter).toContain('region_slug = "new-york"')
+    expect(params.filter).toContain('locale = "en"')
+    expect(params.limit).toBe(0)
+    expect(params.facets).toEqual(["needs", "locale"])
+  })
+
+  it("returns null when the search fails", async () => {
+    search.mockRejectedValue(new Error("meilisearch down"))
+
+    const result = await placeGapCounts("region", "new-york", "en")
+
+    expect(result).toBeNull()
   })
 })
 

@@ -9,6 +9,8 @@
  * Location filter's place names come from `distinct` searches on the
  * `<level>_slug` fields, one library per place.
  */
+import { isGapKey, type GapKey } from "@repo/shared-data"
+
 import {
   type FindPlaceLevel,
   FIND_PLACE_LEVELS,
@@ -562,4 +564,33 @@ export async function libraryTotal(locale?: string): Promise<number> {
   })
 
   return countOf(res.facetDistribution as Distribution, "locale")
+}
+
+/**
+ * A place's exact record count and gap counts, from one `limit: 0` search
+ * faceted on `needs` and `locale`. `total` is every library there (the
+ * `locale` facet); `gaps` is the `needs` distribution narrowed to gap keys
+ * (the facet also carries non-gap `needs` values). Null when the search
+ * fails, so callers fall back to their own computation.
+ */
+export async function placeGapCounts(
+  level: FindPlaceLevel,
+  slug: string,
+  locale?: string
+): Promise<{ total: number; gaps: Partial<Record<GapKey, number>> } | null> {
+  try {
+    const res = await meiliClient.index("library").search("", {
+      filter: `${placeClause({ level, slug })} AND ${searchLocaleFilter(locale)}`,
+      limit: 0,
+      facets: ["needs", "locale"],
+    })
+    const dist = res.facetDistribution as Distribution
+    const gaps = Object.fromEntries(
+      Object.entries(dist?.needs ?? {}).filter(([key]) => isGapKey(key))
+    ) as Partial<Record<GapKey, number>>
+
+    return { total: countOf(dist, "locale"), gaps }
+  } catch {
+    return null
+  }
 }
