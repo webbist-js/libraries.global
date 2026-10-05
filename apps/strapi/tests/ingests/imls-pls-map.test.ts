@@ -56,6 +56,15 @@ describe("properCase", () => {
       "The Wilkes-Barre Library"
     )
   })
+
+  it("capitalises a word after an opening bracket or quote", () => {
+    expect(properCase("SAN GERMAN PUBLIC LIBRARY (RAQUEL QUINONES)")).toBe(
+      "San German Public Library (Raquel Quinones)"
+    )
+    expect(properCase('THE "OLD" LIBRARY (THE ANNEX)')).toBe(
+      'The "Old" Library (The Annex)'
+    )
+  })
 })
 
 describe("slugs", () => {
@@ -98,6 +107,7 @@ describe("mapOutlet", () => {
     expect(o.geo).toEqual({
       regionName: "New York",
       regionSlug: "new-york",
+      county: "SCHUYLER",
       areaName: "Schuyler County",
       areaSlug: "schuyler-county-ny",
       areaTypeLabel: "County",
@@ -161,8 +171,40 @@ describe("mapOutlet", () => {
     expect(o.geo.areaTypeLabel).toBe("City")
   })
 
-  it("skips outlying areas and books-by-mail services", () => {
-    expect(mapOutlet(outlet({ STABR: "PR" }), admin()).ok).toBe(false)
+  it("keeps the survey's county as written, for matching to the atlas", () => {
+    expect(mapped(outlet({ CNTY: "ST LAWRENCE" })).geo.county).toBe(
+      "ST LAWRENCE"
+    )
+  })
+
+  it("uses a state's own Region slug, and no Area where it has no counties", () => {
+    expect(mapped(outlet({ STABR: "MT" })).geo.regionSlug).toBe("montana-us")
+
+    const dc = mapped(outlet({ STABR: "DC", CNTY: "DIST OF COLUMBIA" }))
+    expect(dc.geo.regionSlug).toBe("district-of-columbia")
+    expect(dc.geo.areaSlug).toBeUndefined()
+  })
+
+  it("files a territory as its own Country, with its Region from the survey", () => {
+    const pr = mapped(outlet({ STABR: "PR", CNTY: "BAYAMÓN", CITY: "BAYAMON" }))
+    expect(pr.geo).toEqual({
+      countrySlug: "puerto-rico",
+      regionName: "Bayamón",
+      regionSlug: "bayamon",
+    })
+    expect(pr.data.timezone).toBe("America/Puerto_Rico")
+
+    const gu = mapped(outlet({ STABR: "GU", CNTY: "GUAM", CITY: "AGAT" }))
+    expect(gu.geo.countrySlug).toBe("guam")
+    expect(gu.geo.regionName).toBe("Agat")
+    expect(
+      mapped(outlet({ STABR: "GU", CNTY: "GUAM", CITY: "AGANA" })).geo
+        .regionName
+    ).toBe("Hagatna")
+  })
+
+  it("skips unknown state codes and books-by-mail services", () => {
+    expect(mapOutlet(outlet({ STABR: "ZZ" }), admin()).ok).toBe(false)
     expect(mapOutlet(outlet({ C_OUT_TY: "BM" }), admin()).ok).toBe(false)
   })
 })

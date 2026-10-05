@@ -5,8 +5,8 @@
  * `timezone` is null where a state spans more than one IANA zone: an ingest
  * must then leave the library's timezone empty rather than guess.
  *
- * Territories (AS, GU, MP, PR, VI) are not listed. Whether they sit under
- * the United States or as their own countries is still to be decided.
+ * The inhabited territories are in `US_TERRITORIES` below: the atlas files
+ * each as a Country of its own.
  */
 
 export interface UsState {
@@ -14,6 +14,10 @@ export interface UsState {
   timezone: string | null
   /** What the state calls its county-level areas. */
   countyLabel: string
+  /** The Region's slug, where it isn't the name's ("montana" is Bulgaria's). */
+  regionSlug?: string
+  /** No county-level Areas: libraries sit straight under the Region. */
+  noAreas?: boolean
 }
 
 const COUNTY = "County"
@@ -43,6 +47,7 @@ export const US_STATES: Record<string, UsState> = {
     name: "District of Columbia",
     timezone: EASTERN,
     countyLabel: COUNTY,
+    noAreas: true,
   },
   FL: { name: "Florida", timezone: null, countyLabel: COUNTY },
   GA: { name: "Georgia", timezone: EASTERN, countyLabel: COUNTY },
@@ -65,7 +70,12 @@ export const US_STATES: Record<string, UsState> = {
   MN: { name: "Minnesota", timezone: CENTRAL, countyLabel: COUNTY },
   MS: { name: "Mississippi", timezone: CENTRAL, countyLabel: COUNTY },
   MO: { name: "Missouri", timezone: CENTRAL, countyLabel: COUNTY },
-  MT: { name: "Montana", timezone: MOUNTAIN, countyLabel: COUNTY },
+  MT: {
+    name: "Montana",
+    timezone: MOUNTAIN,
+    countyLabel: COUNTY,
+    regionSlug: "montana-us",
+  },
   NE: { name: "Nebraska", timezone: null, countyLabel: COUNTY },
   NV: { name: "Nevada", timezone: null, countyLabel: COUNTY },
   NH: {
@@ -122,4 +132,55 @@ export const US_STATES: Record<string, UsState> = {
   },
   WI: { name: "Wisconsin", timezone: CENTRAL, countyLabel: COUNTY },
   WY: { name: "Wyoming", timezone: MOUNTAIN, countyLabel: COUNTY },
+}
+
+/**
+ * The inhabited territories, keyed by USPS code. As in ISO 3166 and GeoNames,
+ * each is a Country of its own, whose Regions are its municipios (PR), islands
+ * (VI), villages (GU), municipalities (MP) or districts (AS). There is no Area
+ * level below them.
+ */
+export interface UsTerritory {
+  name: string
+  countrySlug: string
+  timezone: string
+  /** The column that names the Region. Guam's county column says only "GUAM". */
+  regionFrom: "county" | "city"
+  /** Survey names for a Region the atlas calls something else. */
+  regionAliases?: Record<string, string>
+}
+
+export const US_TERRITORIES: Record<string, UsTerritory> = {
+  AS: {
+    name: "American Samoa",
+    countrySlug: "american-samoa",
+    timezone: "Pacific/Pago_Pago",
+    regionFrom: "county",
+  },
+  GU: {
+    name: "Guam",
+    countrySlug: "guam",
+    timezone: "Pacific/Guam",
+    regionFrom: "city",
+    // The capital's older name; the atlas uses Hagåtña's, unaccented.
+    regionAliases: { AGANA: "Hagatna" },
+  },
+  MP: {
+    name: "Northern Mariana Islands",
+    countrySlug: "northern-mariana-islands",
+    timezone: "Pacific/Saipan",
+    regionFrom: "county",
+  },
+  PR: {
+    name: "Puerto Rico",
+    countrySlug: "puerto-rico",
+    timezone: "America/Puerto_Rico",
+    regionFrom: "county",
+  },
+  VI: {
+    name: "United States Virgin Islands",
+    countrySlug: "united-states-virgin-islands",
+    timezone: "America/St_Thomas",
+    regionFrom: "county",
+  },
 }

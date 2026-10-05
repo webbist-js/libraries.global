@@ -6,7 +6,8 @@
  *   npx tsx scripts/ingests/usa/imls-pls/ingest.ts --state=NY --limit=25
  *
  * Options:
- *   --dry-run        Map and report without calling Strapi (no token needed)
+ *   --dry-run        Map and report without writing. With STRAPI_API_TOKEN set
+ *                    it also finds every outlet's Region and Area, read only
  *   --state=NY,NJ    Only these states (USPS codes)
  *   --limit=N        Stop after N outlets
  *   --file=path.zip  Use a local copy of pls_fy2023_csv.zip
@@ -16,7 +17,10 @@
  * record FSCSKEY-FSCS_SEQ. Outlets already matched to a source record are
  * left alone, so a re-run only adds what's missing.
  *
- * Env (live runs): STRAPI_URL, STRAPI_API_TOKEN
+ * Regions and Areas are matched to the atlas by slug, then by name, then by
+ * the county the Census geocoder gives for the outlet's point (places.ts).
+ *
+ * Env (live runs): STRAPI_URL, STRAPI_API_TOKEN, STRAPI_BRIDGE_SECRET
  */
 
 import { readFileSync, readdirSync } from "node:fs"
@@ -29,10 +33,12 @@ import {
   type MappedOutlet,
   type OutletRow,
 } from "./map"
+import { PlaceResolver } from "./places"
 import { flag, limitOf, listOf, parseArgs } from "../../_shared/cli"
 import { parseCsv } from "../../_shared/csv"
 import { RunLog } from "../../_shared/run-log"
 import { fetchSourceFile, unzip } from "../../_shared/source-file"
+import { CensusCounties } from "../census-county"
 
 const ZIP_URL =
   "https://www.imls.gov/sites/default/files/2025-08/pls_fy2023_csv.zip"
@@ -110,7 +116,7 @@ async function run() {
     mapped.push(outlet)
   }
 
-  if (DRY_RUN) {
+  if (DRY_RUN && !process.env.STRAPI_API_TOKEN) {
     for (const o of mapped) {
       log.add({
         recordId: o.recordId,
@@ -120,23 +126,60 @@ async function run() {
         ...(o.warnings.length > 0 ? { warnings: o.warnings } : {}),
       })
     }
-    report(log, mapped)
+    report(log, mapped, [])
 
     return
   }
 
-  // Loaded only for live runs: the client exits without a token.
+  // Loaded only when Strapi is used: the client exits without a token.
   const { StrapiClient } = await import("../../../strapi-client")
   const strapi = new StrapiClient()
+  const places = new PlaceResolver(
+    strapi,
+    new CensusCounties(path.join(__dirname, ".cache", "census-counties.json")),
+    !DRY_RUN
+  )
+  const placeNotes: string[] = []
+
+  if (DRY_RUN) {
+    for (const o of mapped) {
+      try {
+        const place = await places.resolve(o)
+        placeNotes.push(...place.notes)
+        log.add({
+          recordId: o.recordId,
+          name: o.data.name,
+          status: "dry-run",
+          slug: o.data.slug,
+          ...(o.warnings.length + place.notes.length > 0
+            ? { warnings: [...o.warnings, ...place.notes] }
+            : {}),
+        })
+      } catch (err) {
+        const reason = err instanceof Error ? err.message : String(err)
+        log.add({
+          recordId: o.recordId,
+          name: o.data.name,
+          status: "error",
+          reason,
+        })
+      }
+    }
+    report(log, mapped, placeNotes)
+
+    return
+  }
+
   const existing = await strapi.librariesBySourceRecord(DATASET_KEY)
   const retrievedAt = new Date().toISOString().slice(0, 10)
 
+  // The first run against an empty atlas creates the United States.
   const continentId = await strapi.findOrCreateContinent(
     "North America",
     "north-america",
     "NA"
   )
-  const countryId = await strapi.findOrCreateCountry(
+  await strapi.findOrCreateCountry(
     "United States",
     "united-states",
     continentId,
@@ -156,23 +199,8 @@ async function run() {
     }
 
     try {
-      const regionId = await strapi.findOrCreateRegion(
-        o.geo.regionName,
-        o.geo.regionSlug,
-        countryId,
-        continentId,
-        { typeLabel: o.state === "DC" ? "Federal District" : "State" }
-      )
-      const areaId =
-        o.geo.areaName && o.geo.areaSlug
-          ? await strapi.findOrCreateArea(
-              o.geo.areaName,
-              o.geo.areaSlug,
-              regionId,
-              countryId,
-              { typeLabel: o.geo.areaTypeLabel }
-            )
-          : null
+      const place = await places.resolve(o)
+      placeNotes.push(...place.notes)
 
       // A slug taken by a record from elsewhere gets the outlet sequence.
       if (await strapi.libraryExistsBySlug(o.data.slug)) {
@@ -184,10 +212,12 @@ async function run() {
         sourceRecords: [
           { dataset: DATASET_KEY, recordId: o.recordId, retrievedAt },
         ],
-        continent: { connect: [{ documentId: continentId }] },
-        country: { connect: [{ documentId: countryId }] },
-        region: { connect: [{ documentId: regionId }] },
-        ...(areaId ? { area: { connect: [{ documentId: areaId }] } } : {}),
+        continent: { connect: [{ documentId: place.continentId }] },
+        country: { connect: [{ documentId: place.countryId }] },
+        region: { connect: [{ documentId: place.regionId! }] },
+        ...(place.areaId
+          ? { area: { connect: [{ documentId: place.areaId }] } }
+          : {}),
       })
       console.log(`[OK]   ${o.data.name} → ${created.documentId}`)
       log.add({
@@ -196,7 +226,9 @@ async function run() {
         status: "created",
         documentId: created.documentId,
         slug: o.data.slug,
-        ...(o.warnings.length > 0 ? { warnings: o.warnings } : {}),
+        ...(o.warnings.length + place.notes.length > 0
+          ? { warnings: [...o.warnings, ...place.notes] }
+          : {}),
       })
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err)
@@ -213,20 +245,23 @@ async function run() {
     await new Promise((resolve) => setTimeout(resolve, 80))
   }
 
-  report(log, mapped)
+  report(log, mapped, placeNotes)
 }
 
-function tally(values: string[]): string {
+function counted(values: string[]): [string, number][] {
   const counts: Record<string, number> = {}
   for (const v of values) counts[v] = (counts[v] ?? 0) + 1
 
-  return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])
+}
+
+function tally(values: string[]): string {
+  return counted(values)
     .map(([k, n]) => `${k} ${n}`)
     .join(", ")
 }
 
-function report(log: RunLog, mapped: MappedOutlet[]) {
+function report(log: RunLog, mapped: MappedOutlet[], placeNotes: string[]) {
   log.save()
 
   const skipped = log.entries.filter((e) => e.status === "skipped")
@@ -246,6 +281,9 @@ function report(log: RunLog, mapped: MappedOutlet[]) {
   if (skipped.length > 0)
     console.log(`Skipped:    ${tally(skipped.map((e) => e.reason ?? ""))}`)
   if (warnings.length > 0) console.log(`Warnings:   ${tally(warnings)}`)
+  // Each place found by name or geocoder, or created, once with its count.
+  if (placeNotes.length > 0) console.log("Places:")
+  for (const [note, n] of counted(placeNotes)) console.log(`  ${note} ×${n}`)
   console.log(`\nLog saved to ${LOG_PATH}`)
 }
 

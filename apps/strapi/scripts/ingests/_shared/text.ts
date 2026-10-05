@@ -77,10 +77,13 @@ export function properCase(input: string): string {
       word
         .split("-")
         .map((part, j) => {
-          const small = part.toLowerCase()
-          if (i > 0 && j === 0 && SMALL_WORDS.has(small)) return small
+          // "(RAQUEL" and "\"OLD\"": the word inside starts a phrase.
+          const open = /^[("“]+/.exec(part)?.[0] ?? ""
+          const word = part.slice(open.length)
+          const small = word.toLowerCase()
+          if (i > 0 && j === 0 && !open && SMALL_WORDS.has(small)) return small
 
-          return capitalise(part)
+          return `${open}${capitalise(word)}`
         })
         .join("-")
     )

@@ -5,7 +5,7 @@
  */
 
 import { properCase, slugify } from "../../_shared/text"
-import { US_STATES } from "../states"
+import { US_STATES, US_TERRITORIES } from "../states"
 
 export const DATASET_KEY = "imls-pls"
 export const SURVEY_YEAR = "FY 2023"
@@ -37,8 +37,12 @@ export interface MappedOutlet {
     sourceUrl: string
   }
   geo: {
+    /** A territory's own Country. Unset: the United States. */
+    countrySlug?: string
     regionName: string
     regionSlug: string
+    /** The survey's county, as written, for matching to the atlas's Areas. */
+    county?: string
     areaName?: string
     areaSlug?: string
     areaTypeLabel?: string
@@ -132,10 +136,28 @@ function areaOf(row: OutletRow, countyLabel: string, state: string) {
     : `${properCase(county)} ${countyLabel}`
 
   return {
+    county,
     areaName,
     // County names repeat across states (30 have a Washington County).
     areaSlug: `${slugify(areaName)}-${state.toLowerCase()}`,
     areaTypeLabel: isCity ? "City" : countyLabel,
+  }
+}
+
+// A territory's Region is named by the county column (Guam's: the city one).
+// The resolver in ingest.ts matches it to the atlas; the slug is a first guess.
+function territoryGeo(
+  row: OutletRow,
+  territory: (typeof US_TERRITORIES)[string]
+): MappedOutlet["geo"] {
+  const raw = (territory.regionFrom === "city" ? row.CITY : row.CNTY)?.trim()
+  const regionName =
+    territory.regionAliases?.[raw?.toUpperCase() ?? ""] ?? properCase(raw ?? "")
+
+  return {
+    countrySlug: territory.countrySlug,
+    regionName,
+    regionSlug: slugify(regionName),
   }
 }
 
@@ -146,14 +168,15 @@ export function mapOutlet(
   const recordId = recordIdOf(row)
   const state = row.STABR
   const stateInfo = US_STATES[state]
+  const territory = US_TERRITORIES[state]
   const rawName = properCase(row.LIBNAME)
 
-  if (!stateInfo) {
+  if (!stateInfo && !territory) {
     return {
       ok: false,
       recordId,
       name: rawName,
-      reason: `Outlying area ${state}: its country placement is not decided yet`,
+      reason: `Unknown state code ${state}`,
     }
   }
   if (row.C_OUT_TY === "BM") {
@@ -187,8 +210,9 @@ export function mapOutlet(
     : undefined
   if (!admin) warnings.push(`No administrative entity row for ${row.FSCSKEY}`)
 
-  if (!stateInfo.timezone) {
-    warnings.push(`${stateInfo.name} spans time zones: timezone left empty`)
+  const timezone = territory?.timezone ?? stateInfo?.timezone
+  if (!timezone) {
+    warnings.push(`${stateInfo!.name} spans time zones: timezone left empty`)
   }
   if (Number(row.GEOSCORE) < 90) {
     warnings.push(`Low geocode score ${row.GEOSCORE} (${row.GEOMTYPE})`)
@@ -232,16 +256,20 @@ export function mapOutlet(
         ...(/^\d{5}$/.test(row.ZIP) ? { postalCode: row.ZIP } : {}),
         ...(phone ? { phone } : {}),
         location: { lat, lng },
-        ...(stateInfo.timezone ? { timezone: stateInfo.timezone } : {}),
+        ...(timezone ? { timezone } : {}),
         ...(libraryStats.length > 0 ? { libraryStats } : {}),
         source: DATASET_KEY,
         sourceUrl: SURVEY_URL,
       },
-      geo: {
-        regionName: stateInfo.name,
-        regionSlug: slugify(stateInfo.name),
-        ...areaOf(row, stateInfo.countyLabel, state),
-      },
+      geo: territory
+        ? territoryGeo(row, territory)
+        : {
+            regionName: stateInfo!.name,
+            regionSlug: stateInfo!.regionSlug ?? slugify(stateInfo!.name),
+            ...(stateInfo!.noAreas
+              ? {}
+              : areaOf(row, stateInfo!.countyLabel, state)),
+          },
       warnings,
     },
   }
