@@ -1,14 +1,25 @@
-import { Icon } from "@iconify/react"
 import type { Metadata } from "next"
+import { headers } from "next/headers"
 
-import { SuggestedAdditions } from "@/components/community/SuggestedAdditions"
-import GlobalLink from "@/components/global/GlobalLink"
-import { fetchLeaderboard } from "@/lib/community/leaderboard-server"
+import { StandingCard } from "@/components/community/StandingCard"
+import { TopThisMonthCard } from "@/components/community/TopThisMonthCard"
+import { VoteOnAdditionsCard } from "@/components/community/VoteOnAdditionsCard"
+import { getSessionSSR } from "@/lib/auth-server"
+import { fetchDriveGaps } from "@/lib/community/drive-gaps-server"
+import {
+  fetchLeaderboard,
+  fetchStanding,
+} from "@/lib/community/leaderboard-server"
+import { isVotable } from "@/lib/community/suggestions"
+import { fetchPublicSuggestions } from "@/lib/community/suggestions-server"
 import { T } from "@/lib/design-tokens"
+import { fetchOwnProfile, type OwnProfile } from "@/lib/own-profile-server"
 import { buildMetadata } from "@/lib/seo/metadata"
+import { getInitials } from "@/lib/types/leaderboard"
 
 import { CommunitySectionHeader } from "./_components/CommunitySectionHeader"
-import { LeaderboardRows } from "./leaderboard/_components/LeaderboardRows"
+import { GapsWorthADrive } from "./_components/GapsWorthADrive"
+import { NoDrivesCard } from "./_components/NoDrivesCard"
 
 export async function generateMetadata({
   params,
@@ -26,104 +37,84 @@ export async function generateMetadata({
   })
 }
 
-const CARD = "rounded-[20px] border bg-white"
+/** The viewer's initials: from their profile, else their account name. */
+function viewerInitials(
+  profile: OwnProfile | null,
+  user: { name?: string | null; email: string }
+): string {
+  if (profile) return getInitials(profile)
+  const words = (user.name || user.email).trim().split(/\s+/)
 
-export default async function CommunityPage() {
-  const top = await fetchLeaderboard("month", 5)
+  return getInitials({
+    firstName: words[0] ?? null,
+    lastName: words.length > 1 ? (words.at(-1) ?? null) : null,
+    username: null,
+  })
+}
+
+export default async function CommunityPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  const session = await getSessionSSR(await headers())
+  const user = session?.user ?? null
+
+  const [standing, profile, top, suggestions, gaps] = await Promise.all([
+    user ? fetchStanding(user.id, "month") : Promise.resolve(null),
+    user ? fetchOwnProfile(user) : Promise.resolve(null),
+    fetchLeaderboard("month", 3),
+    fetchPublicSuggestions(),
+    fetchDriveGaps(locale),
+  ])
+  const votableCount = suggestions.filter(isVotable).length
 
   return (
     <div
-      style={{ minHeight: "100vh", background: T.bg.void, color: T.ink.base }}
+      className="relative isolate flex min-h-screen w-full flex-col"
+      style={{ background: T.bg.void, color: T.ink.base }}
     >
       <CommunitySectionHeader
         title="The *noticeboard.*"
         lead="Community drives to fill gaps in the index. Pick one, work through small tasks, and see the whole effort move forward."
+        counts={{ suggestions: votableCount }}
       />
 
-      <div className="mx-auto flex w-full max-w-[1360px] flex-col gap-8 px-4 pt-8 pb-16 sm:px-8">
-        {/* Replaced by the drive lists when drives ship (D1). */}
-        <section
-          id="drives"
-          aria-labelledby="drives-heading"
-          className={`${CARD} flex flex-col gap-3 px-6 py-8 sm:px-8`}
-          style={{ borderColor: T.border.line }}
+      <div
+        className="mx-auto flex w-full max-w-[1360px] flex-wrap items-start"
+        style={{
+          padding:
+            "clamp(28px,3.4vw,44px) clamp(16px,3vw,32px) clamp(56px,7vw,88px)",
+          gap: "clamp(16px,2.4vw,28px)",
+        }}
+      >
+        <div
+          className="flex min-w-0 flex-col"
+          style={{ flex: "2 1 440px", gap: "clamp(24px,3vw,36px)" }}
         >
-          <span
-            aria-hidden="true"
-            className="flex size-10 items-center justify-center rounded-full"
-            style={{ background: T.accent.chip, color: T.accent.primary }}
-          >
-            <Icon icon="mdi:pin-outline" width={20} height={20} />
-          </span>
-          <h2
-            id="drives-heading"
-            className="m-0"
-            style={{
-              fontFamily: T.font.serif,
-              fontSize: "clamp(24px,2.6vw,30px)",
-              fontWeight: 500,
-              letterSpacing: "-0.01em",
-            }}
-          >
-            No drives are open yet
-          </h2>
-          <p
-            className="m-0 max-w-[640px] text-[16px] leading-[1.6]"
-            style={{ color: T.ink.dim }}
-          >
-            A drive is a short, shared effort to fill one kind of gap, such as
-            opening hours for a county’s libraries or photos of a city’s
-            branches. Until the first one opens, you can improve any record from
-            the Index editor.
-          </p>
-          <GlobalLink
-            href="/contribute/index"
-            className="mt-1 inline-flex h-10 items-center self-start rounded-full bg-(--t-accent-primary) px-4 text-[15px] font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
-          >
-            Improve a record
-          </GlobalLink>
-        </section>
-
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-          <section
-            aria-labelledby="top-contributors"
-            className="flex flex-col gap-4"
-          >
-            <div className="flex items-baseline justify-between gap-4">
-              <h2
-                id="top-contributors"
-                className="m-0"
-                style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "24px",
-                  fontWeight: 500,
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                Top contributors this month
-              </h2>
-              <GlobalLink
-                href="/community/leaderboard"
-                className="shrink-0 text-[14px] font-semibold whitespace-nowrap underline underline-offset-[3px]"
-                style={{ color: T.accent.primary }}
-              >
-                Full leaderboard
-              </GlobalLink>
-            </div>
-            {top.length === 0 ? (
-              <p
-                className={`${CARD} m-0 px-5 py-6 text-[15px]`}
-                style={{ borderColor: T.border.line, color: T.ink.dim }}
-              >
-                No contributions recorded this month yet.
-              </p>
-            ) : (
-              <LeaderboardRows entries={top} />
-            )}
-          </section>
-
-          <SuggestedAdditions signInReturnTo="/community#suggested-additions" />
+          {/* D1 replaces this card with the pinned drive and open drives. */}
+          <NoDrivesCard hasGaps={gaps.length > 0} />
+          <GapsWorthADrive gaps={gaps} />
         </div>
+
+        <aside
+          aria-label="Sidebar"
+          className="flex min-w-0 flex-col gap-3.5 min-[760px]:sticky min-[760px]:top-24 min-[760px]:max-w-[440px]"
+          style={{ flex: "1 1 290px" }}
+        >
+          <StandingCard
+            standing={standing}
+            signedIn={Boolean(user)}
+            initials={user ? viewerInitials(profile, user) : ""}
+            signInReturnTo="/community"
+          />
+          <TopThisMonthCard entries={top} />
+          <VoteOnAdditionsCard
+            initial={suggestions}
+            signInReturnTo="/community#vote-on-additions"
+          />
+        </aside>
       </div>
     </div>
   )

@@ -4,6 +4,10 @@ import { usePathname } from "next/navigation"
 
 import { type SectionTab, SectionTabs } from "@/components/ds"
 
+export type CommunityTabCounts = Partial<
+  Record<"noticeboard" | "suggestions", number>
+>
+
 const COMMUNITY_TABS: readonly SectionTab[] = [
   {
     id: "noticeboard",
@@ -42,15 +46,28 @@ export function activeCommunityTab(pathname: string): string | null {
   return SEGMENT_TO_TAB[segment] ?? null
 }
 
+/** The tabs with their counts: open drives, open suggestions. Zero shows none. */
+export function communityTabs(counts?: CommunityTabCounts): SectionTab[] {
+  return COMMUNITY_TABS.map((tab) => {
+    const count = counts?.[tab.id as keyof CommunityTabCounts]
+
+    return count && count > 0 ? { ...tab, count } : tab
+  })
+}
+
 /** The Community section's tabs, on the bottom edge of its hero band. */
-export function CommunityNavBar() {
+export function CommunityNavBar({
+  counts,
+}: {
+  readonly counts?: CommunityTabCounts
+}) {
   const pathname = usePathname() ?? ""
 
   return (
     <SectionTabs
       activeId={activeCommunityTab(pathname)}
       label="Community"
-      tabs={COMMUNITY_TABS}
+      tabs={communityTabs(counts)}
     />
   )
 }

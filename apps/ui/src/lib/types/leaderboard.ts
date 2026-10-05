@@ -27,7 +27,10 @@ export function getDisplayName(entry: LeaderboardEntry): string {
   return full || entry.username || `Contributor #${entry.rank}`
 }
 
-export function getInitials(entry: LeaderboardEntry): string {
+/** Two initials from the name, else the username's first two letters. */
+export function getInitials(
+  entry: Pick<LeaderboardEntry, "firstName" | "lastName" | "username">
+): string {
   const first = entry.firstName?.[0] ?? ""
   const last = entry.lastName?.[0] ?? ""
 

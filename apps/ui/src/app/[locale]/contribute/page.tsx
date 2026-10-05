@@ -2,11 +2,12 @@ import type { Metadata } from "next"
 import { headers } from "next/headers"
 import type { Locale } from "next-intl"
 
-import { SuggestedAdditions } from "@/components/community/SuggestedAdditions"
+import { VoteOnAdditionsCard } from "@/components/community/VoteOnAdditionsCard"
 import GlobalLink from "@/components/global/GlobalLink"
 import { sessionCapabilities } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
+import { fetchPublicSuggestions } from "@/lib/community/suggestions-server"
 import { KOFI_URL } from "@/lib/constants"
 import { T } from "@/lib/design-tokens"
 import { buildMetadata } from "@/lib/seo/metadata"
@@ -193,15 +194,21 @@ export default async function ContributePage({
   const { locale } = await params
   const session = await getSessionSSR(await headers())
 
-  const [libraryCount, incompleteRecords, continentsResponse, submissions] =
-    await Promise.all([
-      fetchLibraryCount(),
-      fetchIncompleteRecords(),
-      fetchHomepageContinents(locale as Locale),
-      session?.user
-        ? fetchMySubmissions(session.user)
-        : Promise.resolve([] as HubSubmission[]),
-    ])
+  const [
+    libraryCount,
+    incompleteRecords,
+    continentsResponse,
+    submissions,
+    suggestions,
+  ] = await Promise.all([
+    fetchLibraryCount(),
+    fetchIncompleteRecords(),
+    fetchHomepageContinents(locale as Locale),
+    session?.user
+      ? fetchMySubmissions(session.user)
+      : Promise.resolve([] as HubSubmission[]),
+    fetchPublicSuggestions(),
+  ])
   // From the session (buildSessionAccess): `baUserId` is private, so the
   // public REST filter on it can't find the profile.
   const username = session?.user?.username ?? null
@@ -288,7 +295,12 @@ export default async function ContributePage({
         ) : (
           <SignInPromptCard />
         )}
-        <SuggestedAdditions signInReturnTo="/contribute#suggested-additions" />
+        <div className="self-start">
+          <VoteOnAdditionsCard
+            initial={suggestions}
+            signInReturnTo="/contribute#vote-on-additions"
+          />
+        </div>
       </div>
 
       {/* Bottom links */}

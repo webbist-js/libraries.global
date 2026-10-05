@@ -49,6 +49,20 @@ describe("CommunityNavBar", () => {
       screen.getByRole("link", { name: /Suggestions/ }).getAttribute("href")
     ).toBe("/community/suggestions")
   })
+
+  it("shows a count only when it is above zero", () => {
+    render(
+      createElement(CommunityNavBar, {
+        counts: { noticeboard: 0, suggestions: 5 },
+      })
+    )
+    expect(screen.getByRole("link", { name: /Suggestions/ }).textContent).toBe(
+      "Suggestions5"
+    )
+    expect(screen.getByRole("link", { name: /Noticeboard/ }).textContent).toBe(
+      "Noticeboard"
+    )
+  })
 })
 
 describe("activeCommunityTab", () => {

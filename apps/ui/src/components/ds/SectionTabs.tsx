@@ -75,8 +75,8 @@ export function SectionTabs({
             {tab.label}
             {tab.count != null ? (
               <span
-                className="font-medium tabular-nums"
-                style={{ color: active ? T.ink.dim : T.ink.low }}
+                className="rounded-full px-2 text-[13px] font-bold tabular-nums"
+                style={{ background: T.bg.muted, color: T.ink.dim }}
               >
                 {tab.count}
               </span>

@@ -252,7 +252,7 @@ const cache = new Map<string, { at: number; value: Promise<unknown> }>()
  * One shared answer per key for ten minutes, for lookups that don't depend
  * on the filters. A failed lookup is forgotten; the oldest key goes first.
  */
-function cached<V>(key: string, load: () => Promise<V>): Promise<V> {
+export function cached<V>(key: string, load: () => Promise<V>): Promise<V> {
   const hit = cache.get(key)
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.value as Promise<V>
   const value = load()

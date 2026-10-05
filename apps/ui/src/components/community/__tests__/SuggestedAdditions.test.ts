@@ -38,6 +38,7 @@ const suggestion = (n: number) => ({
   documentId: `s${n}`,
   name: `Option ${n}`,
   optionKey: "services",
+  status: "open",
   requests: 1,
   votes: n,
   voted: false,
