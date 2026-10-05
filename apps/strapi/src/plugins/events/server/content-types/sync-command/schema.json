@@ -14,6 +14,7 @@
   "attributes": {
     "requestedAt": { "type": "datetime", "required": true },
     "requestedByUserId": { "type": "string" },
-    "consumedAt": { "type": "datetime" }
+    "consumedAt": { "type": "datetime" },
+    "credentialDocumentId": { "type": "string" }
   }
 }

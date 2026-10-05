@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest"
 
 import {
+  EV_CREDENTIAL_EVENTS_INDEX_NAME,
+  EV_CREDENTIALS_STATUS_INDEX_NAME,
   EV_EVENTS_LIBRARY_ENTITY_REF_INDEX_NAME,
   EV_EVENTS_PROVIDER_EXTERNAL_INDEX_NAME,
   ensureEventIndexes,
@@ -85,6 +87,20 @@ describe("ensureEventIndexes", () => {
           s.includes("ev_events_library_lnk")
       )
     ).toBe(true)
+    expect(
+      sql.some((s) =>
+        s.includes(
+          `CREATE INDEX IF NOT EXISTS ${EV_CREDENTIALS_STATUS_INDEX_NAME} ON ev_event_credentials (status)`
+        )
+      )
+    ).toBe(true)
+    expect(
+      sql.some((s) =>
+        s.includes(
+          `CREATE INDEX IF NOT EXISTS ${EV_CREDENTIAL_EVENTS_INDEX_NAME} ON ev_credential_events (credential_document_id, created_at)`
+        )
+      )
+    ).toBe(true)
   })
 
   it("skips an index that already exists and never re-runs the dedupe", async () => {
@@ -93,6 +109,8 @@ describe("ensureEventIndexes", () => {
       existingIndexes: new Set([
         EV_EVENTS_PROVIDER_EXTERNAL_INDEX_NAME,
         EV_EVENTS_LIBRARY_ENTITY_REF_INDEX_NAME,
+        EV_CREDENTIALS_STATUS_INDEX_NAME,
+        EV_CREDENTIAL_EVENTS_INDEX_NAME,
       ]),
     })
 

@@ -17,12 +17,12 @@
       "required": true,
       "enum": [
         "eventbrite",
-        "ticketsource",
-        "meetup",
         "ical",
+        "ticketsource",
         "wegottickets",
         "spydus",
-        "bibliocommons"
+        "solus",
+        "aspen"
       ]
     },
     "label": { "type": "string", "required": true },
@@ -36,14 +36,82 @@
       "relation": "manyToMany",
       "target": "api::library.library"
     },
-    "isActive": { "type": "boolean", "required": true, "default": true },
+    "status": {
+      "type": "enumeration",
+      "required": true,
+      "enum": ["draft", "pending", "active", "paused"],
+      "default": "pending"
+    },
+    "pausedReason": {
+      "type": "enumeration",
+      "enum": ["library", "admin", "sync_failures"]
+    },
+    "source": {
+      "type": "enumeration",
+      "required": true,
+      "enum": ["admin", "library"],
+      "default": "admin"
+    },
+    "connectedBy": { "type": "string", "private": true },
+    "credentialsEncrypted": {
+      "type": "text",
+      "required": true,
+      "private": true
+    },
+    "hints": { "type": "json" },
+    "pendingCredentialsEncrypted": { "type": "text", "private": true },
+    "pendingHints": { "type": "json" },
+    "pendingSubmissionDocumentId": { "type": "string" },
+    "submissionDocumentId": { "type": "string" },
+    "lastTestedAt": { "type": "datetime" },
+    "lastTestResult": {
+      "type": "enumeration",
+      "enum": [
+        "ok",
+        "auth_failed",
+        "not_found",
+        "unreachable",
+        "rate_limited",
+        "unrecognised_format",
+        "provider_error",
+        "decrypt_failed"
+      ]
+    },
+    "pendingTestedAt": { "type": "datetime" },
+    "pendingTestResult": {
+      "type": "enumeration",
+      "enum": [
+        "ok",
+        "auth_failed",
+        "not_found",
+        "unreachable",
+        "rate_limited",
+        "unrecognised_format",
+        "provider_error",
+        "decrypt_failed"
+      ]
+    },
     "lastVerifiedAt": { "type": "datetime" },
     "lastSyncAt": { "type": "datetime" },
     "lastSyncStatus": {
       "type": "enumeration",
       "enum": ["ok", "partial", "error"]
     },
+    "lastErrorCode": {
+      "type": "enumeration",
+      "enum": [
+        "ok",
+        "auth_failed",
+        "not_found",
+        "unreachable",
+        "rate_limited",
+        "unrecognised_format",
+        "provider_error",
+        "decrypt_failed"
+      ]
+    },
     "lastErrorMessage": { "type": "text" },
-    "credentialsEncrypted": { "type": "text", "required": true }
+    "consecutiveFailures": { "type": "integer", "default": 0 },
+    "autoPauseNotifiedAt": { "type": "datetime" }
   }
 }

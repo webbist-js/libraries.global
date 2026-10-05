@@ -7,6 +7,10 @@
  *   every sync fails with "no unique or exclusion constraint matching".
  * - `ev_events (library_entity_ref)` — the public library and ICS handlers
  *   filter on the denormalised entity ref.
+ * - `ev_event_credentials (status)` — the worker's `loadCredentials` and the
+ *   cron's auto-pause scan filter by status.
+ * - `ev_credential_events (credential_document_id, created_at)` — the
+ *   reveal and review-history reads page one feed's audit log in order.
  *
  * The same statements live in the migration
  * `database/migrations/2026.09.30T00.00.02.events-unique-external-id.js`.
@@ -54,6 +58,18 @@ export const EV_EVENTS_BACKFILL_ENTITY_REF_SQL =
   "UPDATE ev_events e SET library_entity_ref = l.entity_ref " +
   "FROM ev_events_library_lnk lnk JOIN libraries l ON l.id = lnk.library_id " +
   "WHERE lnk.event_id = e.id AND e.library_entity_ref IS NULL"
+
+export const EV_CREDENTIALS_STATUS_INDEX_NAME =
+  "ev_event_credentials_status_idx"
+export const EV_CREDENTIAL_EVENTS_INDEX_NAME =
+  "ev_credential_events_credential_idx"
+
+export const EV_CREDENTIALS_STATUS_INDEX_SQL =
+  `CREATE INDEX IF NOT EXISTS ${EV_CREDENTIALS_STATUS_INDEX_NAME} ` +
+  "ON ev_event_credentials (status)"
+export const EV_CREDENTIAL_EVENTS_INDEX_SQL =
+  `CREATE INDEX IF NOT EXISTS ${EV_CREDENTIAL_EVENTS_INDEX_NAME} ` +
+  "ON ev_credential_events (credential_document_id, created_at)"
 
 type Txn = { raw: (sql: string, bindings?: unknown[]) => Promise<unknown> }
 
@@ -106,6 +122,14 @@ export async function ensureEventIndexes(strapi: any): Promise<void> {
       if (!(await indexExists(trx, EV_EVENTS_LIBRARY_ENTITY_REF_INDEX_NAME))) {
         await trx.raw(EV_EVENTS_BACKFILL_ENTITY_REF_SQL)
         await trx.raw(EV_EVENTS_LIBRARY_ENTITY_REF_INDEX_SQL)
+      }
+
+      if (!(await indexExists(trx, EV_CREDENTIALS_STATUS_INDEX_NAME))) {
+        await trx.raw(EV_CREDENTIALS_STATUS_INDEX_SQL)
+      }
+
+      if (!(await indexExists(trx, EV_CREDENTIAL_EVENTS_INDEX_NAME))) {
+        await trx.raw(EV_CREDENTIAL_EVENTS_INDEX_SQL)
       }
     })
   } catch (err) {

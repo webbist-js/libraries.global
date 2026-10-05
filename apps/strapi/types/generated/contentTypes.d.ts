@@ -3848,6 +3848,69 @@ export interface PluginContentReleasesReleaseAction
   }
 }
 
+export interface PluginEventsCredentialEvent
+  extends Struct.CollectionTypeSchema {
+  collectionName: "ev_credential_events"
+  info: {
+    description: "Append-only log of Event Feed actions. Never holds a value."
+    displayName: "Credential Event"
+    pluralName: "credential-events"
+    singularName: "credential-event"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    action: Schema.Attribute.Enumeration<
+      [
+        "connect_submitted",
+        "replace_submitted",
+        "approved",
+        "rejected",
+        "withdrawn",
+        "tested",
+        "paused",
+        "resumed",
+        "auto_paused",
+        "disconnected",
+        "revealed",
+        "admin_created",
+        "admin_updated",
+        "admin_deleted",
+      ]
+    > &
+      Schema.Attribute.Required
+    actor: Schema.Attribute.String & Schema.Attribute.Required
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    credentialDocumentId: Schema.Attribute.String & Schema.Attribute.Required
+    libraryDocumentIds: Schema.Attribute.JSON
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::events.credential-event"
+    > &
+      Schema.Attribute.Private
+    note: Schema.Attribute.String
+    provider: Schema.Attribute.String
+    publishedAt: Schema.Attribute.DateTime
+    resultCode: Schema.Attribute.String
+    submissionDocumentId: Schema.Attribute.String
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface PluginEventsEvent extends Struct.CollectionTypeSchema {
   collectionName: "ev_events"
   info: {
@@ -3961,17 +4024,46 @@ export interface PluginEventsEventCredential
     }
   }
   attributes: {
+    autoPauseNotifiedAt: Schema.Attribute.DateTime
+    connectedBy: Schema.Attribute.String & Schema.Attribute.Private
+    consecutiveFailures: Schema.Attribute.Integer &
+      Schema.Attribute.DefaultTo<0>
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
-    credentialsEncrypted: Schema.Attribute.Text & Schema.Attribute.Required
-    isActive: Schema.Attribute.Boolean &
+    credentialsEncrypted: Schema.Attribute.Text &
       Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<true>
+      Schema.Attribute.Private
+    hints: Schema.Attribute.JSON
     label: Schema.Attribute.String & Schema.Attribute.Required
+    lastErrorCode: Schema.Attribute.Enumeration<
+      [
+        "ok",
+        "auth_failed",
+        "not_found",
+        "unreachable",
+        "rate_limited",
+        "unrecognised_format",
+        "provider_error",
+        "decrypt_failed",
+      ]
+    >
     lastErrorMessage: Schema.Attribute.Text
     lastSyncAt: Schema.Attribute.DateTime
     lastSyncStatus: Schema.Attribute.Enumeration<["ok", "partial", "error"]>
+    lastTestedAt: Schema.Attribute.DateTime
+    lastTestResult: Schema.Attribute.Enumeration<
+      [
+        "ok",
+        "auth_failed",
+        "not_found",
+        "unreachable",
+        "rate_limited",
+        "unrecognised_format",
+        "provider_error",
+        "decrypt_failed",
+      ]
+    >
     lastVerifiedAt: Schema.Attribute.DateTime
     libraries: Schema.Attribute.Relation<"manyToMany", "api::library.library">
     locale: Schema.Attribute.String & Schema.Attribute.Private
@@ -3980,21 +4072,50 @@ export interface PluginEventsEventCredential
       "plugin::events.event-credential"
     > &
       Schema.Attribute.Private
+    pausedReason: Schema.Attribute.Enumeration<
+      ["library", "admin", "sync_failures"]
+    >
+    pendingCredentialsEncrypted: Schema.Attribute.Text &
+      Schema.Attribute.Private
+    pendingHints: Schema.Attribute.JSON
+    pendingSubmissionDocumentId: Schema.Attribute.String
+    pendingTestedAt: Schema.Attribute.DateTime
+    pendingTestResult: Schema.Attribute.Enumeration<
+      [
+        "ok",
+        "auth_failed",
+        "not_found",
+        "unreachable",
+        "rate_limited",
+        "unrecognised_format",
+        "provider_error",
+        "decrypt_failed",
+      ]
+    >
     provider: Schema.Attribute.Enumeration<
       [
         "eventbrite",
-        "ticketsource",
-        "meetup",
         "ical",
+        "ticketsource",
         "wegottickets",
         "spydus",
-        "bibliocommons",
+        "solus",
+        "aspen",
       ]
     > &
       Schema.Attribute.Required
     publishedAt: Schema.Attribute.DateTime
     scope: Schema.Attribute.Enumeration<["library", "group"]> &
       Schema.Attribute.Required
+    source: Schema.Attribute.Enumeration<["admin", "library"]> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"admin">
+    status: Schema.Attribute.Enumeration<
+      ["draft", "pending", "active", "paused"]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"pending">
+    submissionDocumentId: Schema.Attribute.String
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -4087,6 +4208,7 @@ export interface PluginEventsSyncCommand extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+    credentialDocumentId: Schema.Attribute.String
     locale: Schema.Attribute.String & Schema.Attribute.Private
     localizations: Schema.Attribute.Relation<
       "oneToMany",
@@ -4702,6 +4824,7 @@ declare module "@strapi/strapi" {
       "plugin::content-moderation.submission-upload": PluginContentModerationSubmissionUpload
       "plugin::content-releases.release": PluginContentReleasesRelease
       "plugin::content-releases.release-action": PluginContentReleasesReleaseAction
+      "plugin::events.credential-event": PluginEventsCredentialEvent
       "plugin::events.event": PluginEventsEvent
       "plugin::events.event-credential": PluginEventsEventCredential
       "plugin::events.import-run": PluginEventsImportRun

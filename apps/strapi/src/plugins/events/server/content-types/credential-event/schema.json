@@ -1,0 +1,44 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ev_credential_events",
+  "info": {
+    "singularName": "credential-event",
+    "pluralName": "credential-events",
+    "displayName": "Credential Event",
+    "description": "Append-only log of Event Feed actions. Never holds a value."
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": false },
+    "content-type-builder": { "visible": false }
+  },
+  "attributes": {
+    "credentialDocumentId": { "type": "string", "required": true },
+    "provider": { "type": "string" },
+    "libraryDocumentIds": { "type": "json" },
+    "action": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "connect_submitted",
+        "replace_submitted",
+        "approved",
+        "rejected",
+        "withdrawn",
+        "tested",
+        "paused",
+        "resumed",
+        "auto_paused",
+        "disconnected",
+        "revealed",
+        "admin_created",
+        "admin_updated",
+        "admin_deleted"
+      ]
+    },
+    "actor": { "type": "string", "required": true },
+    "submissionDocumentId": { "type": "string" },
+    "resultCode": { "type": "string" },
+    "note": { "type": "string" }
+  }
+}

@@ -26,6 +26,12 @@ export default {
         uid: "review",
         pluginName: "events",
       },
+      {
+        section: "plugins",
+        displayName: "Reveal event credentials (logged)",
+        uid: "reveal-credentials",
+        pluginName: "events",
+      },
     ])
 
     // Fresh-DB fallback for the events migration (runs after schema sync).

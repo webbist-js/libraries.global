@@ -61,7 +61,7 @@ describe("loadCredentials", () => {
         provider: "ical",
         label: "A",
         scope: "library",
-        isActive: true,
+        status: "active",
         credentialsEncrypted: "{a}",
       },
       {
@@ -70,7 +70,7 @@ describe("loadCredentials", () => {
         provider: "ical",
         label: "B",
         scope: "group",
-        isActive: true,
+        status: "active",
         credentialsEncrypted: "{b}",
       },
       {
@@ -79,7 +79,7 @@ describe("loadCredentials", () => {
         provider: "ical",
         label: "C",
         scope: "library",
-        isActive: true,
+        status: "active",
         credentialsEncrypted: "{c}",
       },
     ]
@@ -145,7 +145,7 @@ describe("loadCredentials", () => {
         provider: "ical",
         label: "A",
         scope: "library",
-        isActive: true,
+        status: "active",
         credentialsEncrypted: "{a}",
       },
     ]
@@ -163,7 +163,7 @@ describe("loadCredentials", () => {
         provider: "ical",
         label: "A",
         scope: "library",
-        isActive: true,
+        status: "active",
         credentialsEncrypted: "bad",
       },
     ]

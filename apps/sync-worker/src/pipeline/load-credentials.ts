@@ -26,7 +26,6 @@ interface CredentialRow {
   provider: string
   label: string
   scope: string
-  isActive: boolean
   credentialsEncrypted: string
 }
 
@@ -68,10 +67,9 @@ export async function loadCredentials(): Promise<LoadedCredential[]> {
       "ec.provider",
       "ec.label",
       "ec.scope",
-      "ec.is_active as isActive",
       "ec.credentials_encrypted as credentialsEncrypted"
     )
-    .where("ec.is_active", true)) as CredentialRow[]
+    .where("ec.status", "active")) as CredentialRow[]
 
   const key = getKey()
   const prevKey = getPrevKey()
