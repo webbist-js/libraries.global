@@ -16,4 +16,7 @@ export const API_ENDPOINTS: Partial<Record<UID.ContentType, string>> = {
   "api::blog-landing.blog-landing": "/blog-landing",
   "api::wiki-article.wiki-article": "/wiki-articles",
   "api::wiki-landing.wiki-landing": "/wiki-landing",
+  "api::accessibility.accessibility": "/accessibility-features",
+  "api::amenity.amenity": "/amenities",
+  "api::service.service": "/services",
 } as const

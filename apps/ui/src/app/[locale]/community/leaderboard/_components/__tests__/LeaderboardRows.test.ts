@@ -35,11 +35,14 @@ const entry = (overrides: Partial<LeaderboardEntry>): LeaderboardEntry => ({
   firstName: "Jane",
   lastName: "Doe",
   country: null,
+  city: null,
   avatarUrl: null,
   contributorRole: null,
   periodPoints: 120,
   totalPoints: 500,
   tier: "Cartographer",
+  approvedCount: 0,
+  acceptanceRate: null,
   ...overrides,
 })
 

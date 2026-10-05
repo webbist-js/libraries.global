@@ -4,11 +4,21 @@ export type LeaderboardEntry = {
   firstName: string | null
   lastName: string | null
   country: string | null
+  city: string | null
   avatarUrl: string | null
   contributorRole: string | null
   periodPoints: number
   totalPoints: number
   tier: string
+  approvedCount: number
+  acceptanceRate: number | null
+}
+
+/** "City, Country", "Country", or null when there's no country to show. */
+export function entryPlace(entry: LeaderboardEntry): string | null {
+  if (!entry.country) return null
+
+  return entry.city ? `${entry.city}, ${entry.country}` : entry.country
 }
 
 export function getDisplayName(entry: LeaderboardEntry): string {

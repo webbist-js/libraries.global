@@ -89,7 +89,11 @@ export function SuggestedAdditions({
       )
       .then((json: { data?: Suggestion[] }) => {
         if (live && cast === votesCast.current)
-          setItems((json.data ?? []).filter((s) => VOTABLE.has(s.status)))
+          setItems(
+            (json.data ?? []).filter(
+              (s) => VOTABLE.has(s.status) && s.optionKey in LIST
+            )
+          )
       })
       .catch(() => live && setFailed(true))
 
