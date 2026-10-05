@@ -65,7 +65,8 @@ export function stampSections(
   if (current && typeof current === "object" && !Array.isArray(current))
     for (const s of VERIFY_SECTIONS) {
       const v = (current as Record<string, unknown>)[s]
-      if (isValidStamp(v)) map[s] = v
+      // ISO, so `latestStamp`'s string sort orders them by time.
+      if (isValidStamp(v)) map[s] = new Date(v).toISOString()
     }
   for (const s of sections) map[s] = at.toISOString()
 

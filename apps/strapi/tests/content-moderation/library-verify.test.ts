@@ -61,6 +61,19 @@ describe("verify helpers", () => {
       )
     ).toEqual({ status: "2025-01-01T00:00:00.000Z" })
   })
+
+  it("keeps parseable stamps as ISO, so the latest sorts last", () => {
+    const map = stampSections(
+      {
+        hours: "Mon, 05 Oct 2026 13:00:00 GMT",
+        status: "2026-10-05T14:00:00.000Z",
+      },
+      [],
+      AT
+    )
+    expect(map.hours).toBe("2026-10-05T13:00:00.000Z")
+    expect(latestStamp(map)).toBe("2026-10-05T14:00:00.000Z")
+  })
 })
 
 describe("verifyReview", () => {
