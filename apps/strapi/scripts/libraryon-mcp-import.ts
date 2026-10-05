@@ -4,15 +4,21 @@
  * Every write goes through the content-manager MCP tools (create_library,
  * publish_library, ...), so records get admin validation and RBAC.
  *
+ * Each library is filed under the Region (and, in England, the Area) its
+ * coordinates fall in, looked up through postcodes.io (libraryon-placement.ts).
+ * It never creates a Region or Area: a library it can't place is logged as an
+ * error and skipped. Run the world place import first.
+ *
  * Usage:
  *   tsx scripts/libraryon-mcp-import.ts [options]
  *
  * Options:
  *   --limit=N        Process at most N libraries not already in the log (default 100)
  *   --start-page=N   First libraryOn page to read, 100 per page, sorted by id (default 1)
- *   --dry-run        Map and resolve, but write nothing
- *   --no-publish     Leave libraries (and new regions/taxonomy) as drafts
- *   --log=path       Import log (default ../../.scratch/libraryon-import/log.json)
+ *   --dry-run        Map and place, but write nothing
+ *   --no-publish     Leave libraries (and new taxonomy) as drafts
+ *   --log=path       Import log (default ../../.scratch/libraryon-import/log.json);
+ *                    postcodes.io answers are cached beside it in districts.json
  *
  * Env: STRAPI_URL, STRAPI_MCP_TOKEN, LIBRARYON_API
  */
@@ -29,6 +35,13 @@ import {
   type MappedLibrary,
   type TaxonomyEntry,
 } from "./field-mapper"
+import {
+  districtsFor,
+  placeLibrary,
+  regionKey,
+  type PlaceIndex,
+  type Placement,
+} from "./libraryon-placement"
 import { StrapiMcpClient } from "./mcp-client"
 
 const LIBRARYON_API =
@@ -49,6 +62,8 @@ const PUBLISH = args["no-publish"] !== "true"
 const LOG_PATH = path.resolve(
   args.log ?? `${__dirname}/../../../.scratch/libraryon-import/log.json`
 )
+const DISTRICTS_PATH = path.join(path.dirname(LOG_PATH), "districts.json")
+const MAX_FAILED_IN_A_ROW = 25
 
 // ── Log ───────────────────────────────────────────────────────────────────────
 
@@ -108,13 +123,7 @@ interface Doc {
   entityRef?: string
   source?: string
   summary?: string | null
-}
-
-const REGION_TYPE_LABEL: Record<string, string> = {
-  england: "County",
-  scotland: "Council area",
-  wales: "Principal area",
-  "northern-ireland": "District",
+  gssCode?: string | null
 }
 
 const UK = ["england", "scotland", "wales", "northern-ireland"]
@@ -122,8 +131,8 @@ const UK = ["england", "scotland", "wales", "northern-ireland"]
 class Refs {
   continentId = ""
   countries = new Map<string, string>() // slug → documentId
-  regions = new Map<string, string>() // `${country}:${slug}` → documentId
-  areas = new Map<string, string>() // `${regionSlug}:${slug}` → documentId
+  places: PlaceIndex = { areasByGss: new Map(), regionsByName: new Map() }
+  slugs = new Map<string, string>() // Region or Area documentId → slug
   libraries = new Map<string, Doc>() // slug → doc
   taxonomy = {
     accessibility: new Map<string, string>(), // lower(name) → documentId
@@ -131,8 +140,6 @@ class Refs {
     service: new Map<string, string>(),
   }
 
-  createdRegions: string[] = []
-  createdAreas: string[] = []
   createdTaxonomy: string[] = []
 
   constructor(private mcp: StrapiMcpClient) {}
@@ -154,14 +161,31 @@ class Refs {
         $or: UK.map((c) => ({ entityRef: { $startsWith: `europe:${c}:` } })),
       },
     })
+    const englishRegions = new Map<string, string>() // slug → documentId
     for (const r of regions) {
       const country = r.entityRef?.split(":")[1]
-      if (country) this.regions.set(`${country}:${r.slug}`, r.documentId)
+      if (!country) continue
+      const key = regionKey(country, r.name)
+      this.places.regionsByName.set(key, [
+        ...(this.places.regionsByName.get(key) ?? []),
+        r.documentId,
+      ])
+      this.slugs.set(r.documentId, r.slug!)
+      if (country === "england") englishRegions.set(r.slug!, r.documentId)
     }
 
-    for (const a of await this.mcp.listAll<Doc>("area")) {
-      const regionSlug = a.entityRef?.split(":")[2]
-      if (regionSlug) this.areas.set(`${regionSlug}:${a.slug}`, a.documentId)
+    // Only England's districts: an English library's Area is found by GSS code.
+    const areas = await this.mcp.listAll<Doc>("area", {
+      filters: { entityRef: { $startsWith: "europe:england:" } },
+    })
+    for (const a of areas) {
+      const regionId = englishRegions.get(a.entityRef!.split(":")[2]!)
+      if (!regionId || !a.gssCode) continue
+      this.places.areasByGss.set(a.gssCode, {
+        regionId,
+        areaId: a.documentId,
+      })
+      this.slugs.set(a.documentId, a.slug!)
     }
 
     for (const l of await this.mcp.listAll<Doc>("library"))
@@ -233,72 +257,6 @@ class Refs {
     this.createdTaxonomy.push(`${kind}: ${e.name} placeholder copy replaced`)
   }
 
-  async region(country: string, slug: string, name: string) {
-    const key = `${country}:${slug}`
-    const hit = this.regions.get(key)
-    if (hit) return hit
-    if (DRY_RUN) {
-      this.createdRegions.push(`${key} (dry-run)`)
-      this.regions.set(key, `dry-run:${key}`)
-
-      return this.regions.get(key)!
-    }
-    const created = await this.mcp.call<{ data: Doc }>("create_region", {
-      data: {
-        name,
-        slug,
-        entityRef: `europe:${country}:${slug}`,
-        typeLabel: REGION_TYPE_LABEL[country],
-        continent: this.continentId,
-        country: this.countries.get(country),
-      },
-    })
-    if (PUBLISH)
-      await this.mcp.call("publish_region", {
-        documentId: created.data.documentId,
-      })
-    this.regions.set(key, created.data.documentId)
-    this.createdRegions.push(key)
-
-    return created.data.documentId
-  }
-
-  async area(
-    country: string,
-    regionSlug: string,
-    regionId: string,
-    slug: string,
-    name: string
-  ) {
-    const key = `${regionSlug}:${slug}`
-    const hit = this.areas.get(key)
-    if (hit) return hit
-    if (DRY_RUN) {
-      this.createdAreas.push(`${key} (dry-run)`)
-      this.areas.set(key, `dry-run:${key}`)
-
-      return this.areas.get(key)!
-    }
-    const created = await this.mcp.call<{ data: Doc }>("create_area", {
-      data: {
-        name,
-        slug,
-        entityRef: `europe:${country}:${regionSlug}:${slug}`,
-        typeLabel: "Borough",
-        region: regionId,
-        country: this.countries.get(country),
-      },
-    })
-    if (PUBLISH)
-      await this.mcp.call("publish_area", {
-        documentId: created.data.documentId,
-      })
-    this.areas.set(key, created.data.documentId)
-    this.createdAreas.push(key)
-
-    return created.data.documentId
-  }
-
   taxonomyIds(kind: keyof Refs["taxonomy"], names: string[]): string[] {
     return names.flatMap((n) => this.taxonomy[kind].get(n.toLowerCase()) ?? [])
   }
@@ -309,7 +267,8 @@ class Refs {
 async function importLibrary(
   mcp: StrapiMcpClient,
   refs: Refs,
-  mapped: MappedLibrary
+  mapped: MappedLibrary,
+  placement: Placement
 ): Promise<LogEntry> {
   const { data, meta } = mapped
   const base = {
@@ -319,21 +278,11 @@ async function importLibrary(
     at: new Date().toISOString(),
   }
 
-  const country = meta.countrySlug
-  if (!country || !refs.countries.has(country) || !meta.regionSlug)
-    throw new Error(`cannot place ${meta.libraryOnRef} geographically`)
-
-  const regionId = await refs.region(country, meta.regionSlug, meta.regionName!)
-  const areaId =
-    meta.areaSlug && meta.areaName
-      ? await refs.area(
-          country,
-          meta.regionSlug,
-          regionId,
-          meta.areaSlug,
-          meta.areaName
-        )
-      : null
+  if ("error" in placement)
+    throw new Error(`cannot place ${meta.libraryOnRef}: ${placement.error}`)
+  const { countrySlug: country, regionId, areaId } = placement
+  if (!refs.countries.has(country))
+    throw new Error(`cannot place ${meta.libraryOnRef}: no Country ${country}`)
 
   // Slug: reuse a previous libraryOn import, otherwise avoid colliding with
   // a library from another source by suffixing the authority.
@@ -344,7 +293,12 @@ async function importLibrary(
     existing = refs.libraries.get(slug)
   }
 
-  const geoPath = [country, meta.regionSlug, meta.areaSlug, slug]
+  const geoPath = [
+    country,
+    refs.slugs.get(regionId),
+    areaId ? refs.slugs.get(areaId) : null,
+    slug,
+  ]
     .filter(Boolean)
     .join(":")
   const accessibility = refs.taxonomyIds(
@@ -416,7 +370,7 @@ async function run() {
   const refs = new Refs(mcp)
   await refs.load()
   console.log(
-    `Loaded ${refs.regions.size} UK regions, ${refs.areas.size} areas, ${refs.libraries.size} libraries`
+    `Loaded ${refs.places.regionsByName.size} UK region names, ${refs.places.areasByGss.size} English districts, ${refs.libraries.size} libraries`
   )
   await refs.ensureTaxonomy()
   if (refs.createdTaxonomy.length)
@@ -433,21 +387,54 @@ async function run() {
     unmappedServices: {} as Record<string, number>,
     unmappedAccessibility: {} as Record<string, number>,
     noLocation: [] as string[],
+    noRef: [] as string[],
+    unplaced: {} as Record<string, string[]>,
     noHours: 0,
   }
   const bump = (m: Record<string, number>, k: string) =>
     (m[k] = (m[k] ?? 0) + 1)
 
   let processed = 0
+  // Strapi down or the token revoked: stop rather than fail every record.
+  let failedInARow = 0
+  let aborted = false
   let page = START_PAGE
-  while (processed < LIMIT) {
-    const { data: records, pageCount } = await fetchPage(page)
-    for (const record of records) {
+  while (processed < LIMIT && !aborted) {
+    const { data: pageRecords, pageCount } = await fetchPage(page)
+    const records = pageRecords.filter((r) => {
+      if (!r.attributes.ref) report.noRef.push(`${r.id} ${r.attributes.name}`)
+
+      return r.attributes.ref && !done.has(r.attributes.ref)
+    })
+    const mappedPage = records.map(mapLibraryOnRecord)
+    const located = mappedPage.filter((m) => m.data.location)
+    const districts = await districtsFor(
+      located.map((m) => ({
+        ...m.data.location!,
+        postcode: m.data.postalCode,
+      })),
+      DISTRICTS_PATH
+    )
+    const districtOf = new Map(
+      located.map((m, i) => [m.meta.libraryOnRef, districts[i] ?? null])
+    )
+
+    for (const [i, record] of records.entries()) {
       if (processed >= LIMIT) break
-      if (done.has(record.attributes.ref)) continue
       processed++
 
-      const mapped = mapLibraryOnRecord(record)
+      const mapped = mappedPage[i]!
+      const placement = placeLibrary(
+        districtOf.get(mapped.meta.libraryOnRef) ?? null,
+        refs.places
+      )
+      if ("error" in placement) {
+        const reason = mapped.data.location ? placement.error : "no coordinates"
+        report.unplaced[reason] = [
+          ...(report.unplaced[reason] ?? []),
+          mapped.meta.libraryOnRef,
+        ]
+      }
       bump(report.status, mapped.data.operationalStatus!)
       bump(report.operator, mapped.data.operatorType!)
       for (const s of mapped.meta.unmappedServices)
@@ -460,7 +447,7 @@ async function run() {
 
       let entry: LogEntry
       try {
-        entry = await importLibrary(mcp, refs, mapped)
+        entry = await importLibrary(mcp, refs, mapped, placement)
       } catch (err) {
         entry = {
           libraryOnId: record.id,
@@ -473,6 +460,15 @@ async function run() {
         console.error(`[ERR] ${entry.name}: ${entry.error}`)
       }
       stats[entry.status]++
+      failedInARow =
+        entry.status === "error" && !("error" in placement)
+          ? failedInARow + 1
+          : 0
+      if (failedInARow >= MAX_FAILED_IN_A_ROW) {
+        console.error(`Aborting: ${failedInARow} writes failed in a row`)
+        aborted = true
+        break
+      }
       if (!DRY_RUN) {
         log.push(entry)
         if (entry.status !== "error") done.add(entry.ref)
@@ -488,17 +484,8 @@ async function run() {
   if (!DRY_RUN) saveLog()
 
   console.log(`\nDone: ${processed} processed`, JSON.stringify(stats))
-  console.log(
-    JSON.stringify(
-      {
-        ...report,
-        createdRegions: refs.createdRegions,
-        createdAreas: refs.createdAreas,
-      },
-      null,
-      2
-    )
-  )
+  console.log(JSON.stringify(report, null, 2))
+  if (aborted) process.exitCode = 1
 }
 
 run().catch((err) => {

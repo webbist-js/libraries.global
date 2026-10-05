@@ -174,6 +174,22 @@ describe("libraryOn mapper: taxonomy and contact data", () => {
     expect(data.name).toBe("Fettercairn Library")
   })
 
+  it("cleans emails held as links or sentences, and drops broken ones", () => {
+    const withEmail = (email: string) =>
+      mapLibraryOnRecord({
+        ...records.badEmail,
+        attributes: { ...records.badEmail.attributes, email },
+      }).data.email
+
+    expect(withEmail("mailto:westcalder.lib@westlothian.gov.uk")).toBe(
+      "westcalder.lib@westlothian.gov.uk"
+    )
+    expect(withEmail("mail@mywoodhouse.co.uk.")).toBe("mail@mywoodhouse.co.uk")
+    expect(
+      withEmail("oldtownlibrary@southswindon-pc.gov.uk/old-town-library")
+    ).toBeUndefined()
+  })
+
   it("records provenance", () => {
     const { data } = mapLibraryOnRecord(records.laRun)
 

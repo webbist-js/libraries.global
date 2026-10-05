@@ -590,7 +590,9 @@ function mapSocial(
   })
 }
 
-const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
+// Strict enough for Strapi's email validation: one that fails is dropped,
+// not sent, so the library still imports.
+const EMAIL_RE = /^[^@\s/]+@(?:[a-z0-9-]+\.)+[a-z]{2,}$/i
 
 // ── Main mapper ───────────────────────────────────────────────────────────────
 
@@ -697,7 +699,9 @@ export function mapLibraryOnRecord(record: LibraryOnRecord): MappedLibrary {
   if (librarySlug) data.slug = librarySlug
   if (openingTimes) data.openingTimes = openingTimes
 
-  const email = a.email?.trim()
+  // Some records hold a link ("mailto:x@y.org") or end a sentence ("x@y.org.").
+  let email = a.email?.trim().replace(/^mailto:/i, "")
+  while (email?.endsWith(".")) email = email.slice(0, -1)
   if (email && EMAIL_RE.test(email)) data.email = email
   if (a.phone?.trim()) data.phone = a.phone.trim()
   if (a.website?.trim()) data.website = a.website.trim()
