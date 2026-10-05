@@ -61,6 +61,6 @@ export default ({ env }) => {
     // `scripts/` is never loaded by the server, and the ingests write their
     // run logs and source caches there mid-run: watching it restarted
     // `strapi develop` under a live import and dropped every request after.
-    watchIgnoreFiles: ["**/config/sync/**", "**/scripts/**"],
+    watchIgnoreFiles: ["**/config/sync/**", "**/scripts/**", "**/tests/**"],
   }
 }
