@@ -11,6 +11,7 @@ import {
   placeLabels,
   pluralizeLabel,
   recordGaps,
+  regionHelpBody,
   singularizeLabel,
   summariseWeek,
 } from "../location-page.helpers"
@@ -189,6 +190,111 @@ describe("recordGaps", () => {
     expect(recordGaps({ absentFacilities: ["Hearing loop"] })).not.toContain(
       "accessibility"
     )
+  })
+})
+
+/** A loaded record for the help text: its name and location gaps. */
+const loadedLib = (name: string, gaps: ("hours" | "photo" | "contact")[]) => ({
+  name,
+  gaps,
+})
+
+describe("regionHelpBody", () => {
+  const add = "Start there, or add another library."
+
+  describe("with search counts", () => {
+    it("reads the counts even when the loaded records have no gaps", () => {
+      expect(
+        regionHelpBody({
+          placeName: "York",
+          loaded: [loadedLib("A", []), loadedLib("B", [])],
+          gapCounts: { total: 300, gaps: { hours: 40, photo: 90, contact: 5 } },
+        })
+      ).toBe(
+        `Libraries here are most often missing a photo and opening hours. ${add}`
+      )
+    })
+
+    it("never names one loaded record while the counts cover many", () => {
+      const body = regionHelpBody({
+        placeName: "York",
+        loaded: [loadedLib("A", ["hours"]), loadedLib("B", [])],
+        gapCounts: { total: 300, gaps: { hours: 120 } },
+      })
+      expect(body).toBe(
+        `Libraries here are most often missing opening hours. ${add}`
+      )
+      expect(body).not.toContain("A’s record")
+    })
+
+    it("says every record has its core details only when the counts do", () => {
+      expect(
+        regionHelpBody({
+          placeName: "York",
+          loaded: [loadedLib("A", ["hours"])],
+          gapCounts: { total: 300, gaps: { location: 4 } },
+        })
+      ).toBe(
+        "Every record here has its core details. Know a library that’s missing? Add it and we’ll review it."
+      )
+    })
+
+    it("names the only library from its counted gaps", () => {
+      expect(
+        regionHelpBody({
+          placeName: "York",
+          loaded: [loadedLib("A", [])],
+          gapCounts: { total: 1, gaps: { photo: 1, hours: 1 } },
+        })
+      ).toBe(`A’s record is missing opening hours and a photo. ${add}`)
+    })
+
+    it("asks for a library when the counts find none", () => {
+      expect(
+        regionHelpBody({
+          placeName: "York",
+          loaded: [],
+          gapCounts: { total: 0, gaps: {} },
+        })
+      ).toBe(
+        "Know a library in York? Add it with a source and a reviewer will check it before it’s published."
+      )
+    })
+  })
+
+  describe("without search counts", () => {
+    it("reads the loaded records", () => {
+      expect(
+        regionHelpBody({ placeName: "York", loaded: [], gapCounts: null })
+      ).toContain("Know a library in York?")
+      expect(
+        regionHelpBody({
+          placeName: "York",
+          loaded: [loadedLib("A", [])],
+          gapCounts: null,
+        })
+      ).toContain("Every record here has its core details.")
+      expect(
+        regionHelpBody({
+          placeName: "York",
+          loaded: [loadedLib("A", ["photo", "contact"]), loadedLib("B", [])],
+          gapCounts: null,
+        })
+      ).toBe(`A’s record is missing a photo and contact details. ${add}`)
+      expect(
+        regionHelpBody({
+          placeName: "York",
+          loaded: [
+            loadedLib("A", ["photo"]),
+            loadedLib("B", ["photo", "hours"]),
+            loadedLib("C", []),
+          ],
+          gapCounts: null,
+        })
+      ).toBe(
+        `2 of 3 records here are missing details, most often a photo and opening hours. ${add}`
+      )
+    })
   })
 })
 

@@ -8,7 +8,6 @@ import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import {
   countNoun,
-  describeGaps,
   formatCount,
   GAP_DEFS,
   type LocationGapKey,
@@ -16,6 +15,7 @@ import {
   pickNearby,
   placeLabels,
   recordGaps,
+  regionHelpBody,
   toCoord,
 } from "@/components/location/location-page.helpers"
 import {
@@ -119,36 +119,11 @@ export function RegionDetailPage({
   const asWizardLibrary = (l: (typeof libraries)[number] | undefined) =>
     l ? { slug: l.slug, name: l.name, place: l.city ?? undefined } : null
 
-  /** The two most common gaps, from the exact search counts when we have
-   * them (the facet counts gaps, not libraries with gaps), else from the
-   * first-100 local computation. */
-  const commonGaps = (): LocationGapKey[] =>
-    (gapCounts
-      ? GAP_DEFS.map((g) => ({ key: g.key, n: gapCounts.gaps[g.key] ?? 0 }))
-      : GAP_DEFS.map((g) => ({
-          key: g.key,
-          n: withGaps.filter((l) => gapsBySlug[l.slug]!.includes(g.key)).length,
-        }))
-    )
-      .filter((g) => g.n > 0)
-      .sort((a, b) => b.n - a.n)
-      .slice(0, 2)
-      .map((g) => g.key)
-
-  let helpBody: string
-  if (libraries.length === 0) {
-    helpBody = `Know a library in ${name}? Add it with a source and a reviewer will check it before it’s published.`
-  } else if (withGaps.length === 0) {
-    helpBody =
-      "Every record here has its core details. Know a library that’s missing? Add it and we’ll review it."
-  } else if (withGaps.length === 1) {
-    const only = withGaps[0]!
-    helpBody = `${only.name}’s record is missing ${describeGaps(gapsBySlug[only.slug]!)}. Start there, or add another library.`
-  } else if (gapCounts) {
-    helpBody = `Libraries here are most often missing ${describeGaps(commonGaps())}. Start there, or add another library.`
-  } else {
-    helpBody = `${formatCount(withGaps.length)} of ${formatCount(libraries.length)} records here are missing details, most often ${describeGaps(commonGaps())}. Start there, or add another library.`
-  }
+  const helpBody = regionHelpBody({
+    placeName: name,
+    loaded: libraries.map((l) => ({ name: l.name, gaps: gapsBySlug[l.slug]! })),
+    gapCounts,
+  })
 
   // ── Hero ────────────────────────────────────────────────────────────────────
   const intro =

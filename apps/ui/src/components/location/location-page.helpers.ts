@@ -1,7 +1,12 @@
 // Pure helpers for the continent / country / region pages (v2).
 // No React imports — unit-testable.
 
-import { gapDefinition, gapsOf, type GapRecord } from "@repo/shared-data"
+import {
+  gapDefinition,
+  type GapKey,
+  gapsOf,
+  type GapRecord,
+} from "@repo/shared-data"
 
 import { distanceKm } from "@/components/index-page/find-helpers"
 import {
@@ -237,6 +242,83 @@ export const gapLabel = (key: LocationGapKey) =>
 /** "opening hours, a photo and accessibility details". */
 export function describeGaps(keys: readonly LocationGapKey[]): string {
   return joinList(keys.map((k) => GAP_DEFS.find((g) => g.key === k)!.phrase))
+}
+
+/** A place's exact search counts: its libraries, and how many lack each gap. */
+export type PlaceGapCounts = {
+  total: number
+  gaps: Partial<Record<GapKey, number>>
+}
+
+/** A loaded record's name and its location gaps. */
+export type LoadedGaps = {
+  name: string
+  gaps: readonly LocationGapKey[]
+}
+
+/**
+ * The location gaps the most libraries lack, most first (at most `limit`):
+ * from the search counts when there are some, else from the loaded records.
+ */
+export function commonGaps(
+  loaded: readonly LoadedGaps[],
+  gapCounts: PlaceGapCounts | null,
+  limit = 2
+): LocationGapKey[] {
+  return GAP_DEFS.map((g) => ({
+    key: g.key,
+    n: gapCounts
+      ? (gapCounts.gaps[g.key] ?? 0)
+      : loaded.filter((l) => l.gaps.includes(g.key)).length,
+  }))
+    .filter((g) => g.n > 0)
+    .sort((a, b) => b.n - a.n)
+    .slice(0, limit)
+    .map((g) => g.key)
+}
+
+const START_THERE = "Start there, or add another library."
+const ALL_FILLED =
+  "Every record here has its core details. Know a library that’s missing? Add it and we’ll review it."
+const addOne = (placeName: string) =>
+  `Know a library in ${placeName}? Add it with a source and a reviewer will check it before it’s published.`
+
+/**
+ * The location help panel's text. With the search counts, every branch reads
+ * them, so it never contradicts the "still missing" figure beside it; the
+ * loaded records (the first page only) speak only when there are no counts.
+ */
+export function regionHelpBody({
+  placeName,
+  loaded,
+  gapCounts,
+}: {
+  placeName: string
+  loaded: readonly LoadedGaps[]
+  gapCounts: PlaceGapCounts | null
+}): string {
+  if (gapCounts) {
+    if (gapCounts.total === 0) return addOne(placeName)
+    const counted = commonGaps(loaded, gapCounts, GAP_DEFS.length)
+    if (counted.length === 0) return ALL_FILLED
+    if (gapCounts.total === 1 && loaded.length === 1) {
+      const only = GAP_DEFS.filter((g) => counted.includes(g.key)).map(
+        (g) => g.key
+      )
+
+      return `${loaded[0]!.name}’s record is missing ${describeGaps(only)}. ${START_THERE}`
+    }
+
+    return `Libraries here are most often missing ${describeGaps(counted.slice(0, 2))}. ${START_THERE}`
+  }
+
+  if (loaded.length === 0) return addOne(placeName)
+  const withGaps = loaded.filter((l) => l.gaps.length > 0)
+  if (withGaps.length === 0) return ALL_FILLED
+  if (withGaps.length === 1)
+    return `${withGaps[0]!.name}’s record is missing ${describeGaps(withGaps[0]!.gaps)}. ${START_THERE}`
+
+  return `${formatCount(withGaps.length)} of ${formatCount(loaded.length)} records here are missing details, most often ${describeGaps(commonGaps(loaded, null))}. ${START_THERE}`
 }
 
 // ── Nearby regions ────────────────────────────────────────────────────────────
