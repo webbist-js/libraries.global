@@ -14,7 +14,10 @@ import {
 } from "@/components/library/library-page.helpers"
 import { LibraryChangeTimeline } from "@/components/library/LibraryChangeTimeline"
 import { LibraryCopyButton } from "@/components/library/LibraryCopyButton"
-import { OpenCorrectionLink } from "@/components/library/LibraryCorrection"
+import {
+  OpenCorrectionLink,
+  OpenVerifyLink,
+} from "@/components/library/LibraryCorrection"
 import { LibraryFacilityAnswers } from "@/components/library/LibraryFacilityAnswers"
 import { LibraryHoursTable } from "@/components/library/LibraryHoursTable"
 import {
@@ -23,6 +26,11 @@ import {
   LibrarySectionCard,
 } from "@/components/library/LibrarySectionCard"
 import StrapiBlocksContent from "@/components/library/StrapiBlocksContent"
+import {
+  availableSections,
+  sectionCheckedAt,
+  verifyRecordOf,
+} from "@/components/library/verify.logic"
 import { T } from "@/lib/design-tokens"
 import type { DatasetRecord } from "@/lib/strapi-api/content/datasets"
 import type {
@@ -90,6 +98,62 @@ function Note({ children }: { readonly children: React.ReactNode }) {
 
 // ── Visit ────────────────────────────────────────────────────────────────────
 
+/** The note under the hours: staffing, gaps, when they were last checked. */
+function HoursNote({
+  staffing,
+  manyRanges,
+  hasHours,
+  checkedAt,
+  canVerify,
+}: {
+  readonly staffing: boolean
+  readonly manyRanges: boolean
+  readonly hasHours: boolean
+  /** When the hours were last confirmed. */
+  readonly checkedAt: string | null
+  /** Whether "Still right?" can confirm them. */
+  readonly canVerify: boolean
+}) {
+  return (
+    <Note>
+      {staffing
+        ? "Self-service hours: the building is open but no staff are on hand, and you may need a registered library card to get in. "
+        : null}
+      {manyRanges ? (
+        <>
+          Some days list three time ranges, possibly staffed and self-service
+          hours.{" "}
+          <OpenCorrectionLink category="Opening hours" className={LINK}>
+            Help clarify
+          </OpenCorrectionLink>
+          .{" "}
+        </>
+      ) : null}
+      {!hasHours ? (
+        <>
+          <OpenCorrectionLink category="Opening hours" className={LINK}>
+            Add the opening hours
+          </OpenCorrectionLink>
+          .{" "}
+        </>
+      ) : checkedAt ? (
+        `Checked ${fmtDate(checkedAt)} by a contributor; no temporary closures reported. `
+      ) : (
+        "Not yet checked by a contributor; no temporary closures reported. "
+      )}
+      {hasHours && canVerify ? (
+        <OpenVerifyLink className={LINK} sections={["hours", "status"]}>
+          Still right?
+          <span className="sr-only">
+            {" "}
+            Confirm the opening hours and open status
+          </span>
+        </OpenVerifyLink>
+      ) : null}
+    </Note>
+  )
+}
+
 export function LibraryVisitSection({ library }: { readonly library: Lib }) {
   const rec = asRecord(library)
   const coords = formatCoordinates(
@@ -105,7 +169,7 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
   const timezone = (rec.timezone as string | null) ?? null
   const openingTimes =
     (library.openingTimes as OpeningTimesValue | null) ?? null
-  const lastVerifiedAt = rec.lastVerifiedAt as string | null
+  const confirmable = availableSections(verifyRecordOf(library))
   const staffing = hasStaffingDetail(openingTimes)
   const manyRanges =
     !staffing &&
@@ -157,8 +221,17 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
             </p>
           ) : null}
           {addressLines.length > 0 ? (
-            <div className="mt-3">
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
               <LibraryCopyButton text={addressLines.join(", ")} />
+              {confirmable.includes("address") ? (
+                <OpenVerifyLink
+                  className={`${LINK} text-[14px]`}
+                  sections={["address"]}
+                >
+                  Still right?
+                  <span className="sr-only"> Confirm the address</span>
+                </OpenVerifyLink>
+              ) : null}
             </div>
           ) : null}
           {nearestStation ? (
@@ -192,33 +265,13 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
             ) : null}
           </h3>
           <LibraryHoursTable openingTimes={openingTimes} timezone={timezone} />
-          <Note>
-            {staffing
-              ? "Self-service hours: the building is open but no staff are on hand, and you may need a registered library card to get in. "
-              : null}
-            {manyRanges ? (
-              <>
-                Some days list three time ranges, possibly staffed and
-                self-service hours.{" "}
-                <OpenCorrectionLink category="Opening hours" className={LINK}>
-                  Help clarify
-                </OpenCorrectionLink>
-                .{" "}
-              </>
-            ) : null}
-            {!hasHours ? (
-              <>
-                <OpenCorrectionLink category="Opening hours" className={LINK}>
-                  Add the opening hours
-                </OpenCorrectionLink>
-                .{" "}
-              </>
-            ) : lastVerifiedAt ? (
-              `Checked ${fmtDate(lastVerifiedAt)} by a contributor; no temporary closures reported.`
-            ) : (
-              "Not yet checked by a contributor; no temporary closures reported."
-            )}
-          </Note>
+          <HoursNote
+            canVerify={confirmable.includes("hours")}
+            checkedAt={sectionCheckedAt(library, "hours")}
+            hasHours={hasHours}
+            manyRanges={manyRanges}
+            staffing={staffing}
+          />
         </div>
       </div>
     </LibrarySectionCard>

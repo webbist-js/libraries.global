@@ -7,13 +7,20 @@ import {
   recordChecklist,
 } from "@/components/library/library-page.helpers"
 import { LibraryClaimButton } from "@/components/library/LibraryClaimButton"
-import { OpenCorrectionLink } from "@/components/library/LibraryCorrection"
+import {
+  OpenCorrectionLink,
+  OpenVerifyLink,
+} from "@/components/library/LibraryCorrection"
 import { LibraryFollowerCount } from "@/components/library/LibraryFollowerCount"
 import {
   LibraryHelpPanel,
   type TranslateLocale,
 } from "@/components/library/LibraryHelpPanel"
 import { LIB_ICONS, LibIcon } from "@/components/library/LibrarySectionCard"
+import {
+  availableSections,
+  verifyRecordOf,
+} from "@/components/library/verify.logic"
 import { T } from "@/lib/design-tokens"
 import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
 
@@ -198,6 +205,9 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
   const rec = asRecord(library)
   const website = (rec.website as string | null) ?? null
   const catalogueUrl = (rec.catalogueUrl as string | null) ?? null
+  const hasContact = availableSections(verifyRecordOf(library)).includes(
+    "contact"
+  )
   const others: { href: string | null; label: string; icon: string }[] = [
     {
       href: (rec.membershipUrl as string | null) ?? null,
@@ -273,6 +283,20 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
           : missing("Catalogue link", LIB_ICONS.book)}
         {others.flatMap((l) => (l.href ? [link(l.href, l.label, l.icon)] : []))}
       </ul>
+      {hasContact ? (
+        <p
+          className="m-0 mt-3 border-t pt-3 text-[13.5px]"
+          style={{ borderColor: T.border.divider, color: T.ink.dim }}
+        >
+          <OpenVerifyLink
+            className="font-semibold underline underline-offset-2"
+            sections={["contact"]}
+          >
+            Still right?
+            <span className="sr-only"> Confirm the contact details</span>
+          </OpenVerifyLink>
+        </p>
+      ) : null}
     </section>
   )
 }

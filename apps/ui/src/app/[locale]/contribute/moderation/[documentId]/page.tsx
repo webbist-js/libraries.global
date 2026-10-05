@@ -20,6 +20,7 @@ import {
   ReviewThread,
   RoleApplicationPanel,
   StatusBadge,
+  VerificationPanel,
 } from "@/components/moderation"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { isDocumentIdParam } from "@/lib/bridge-params"
@@ -117,6 +118,15 @@ const PANELS: Record<
     />
   ),
   correction: (d) => {
+    if (d.fields?.kind === "verify")
+      return (
+        <VerificationPanel
+          fields={d.fields}
+          review={d.review}
+          evidenceType={d.evidenceType}
+          evidenceUrl={d.evidenceUrl}
+        />
+      )
     if (d.fields?.kind === "record")
       return (
         <RecordChangesTable
@@ -293,7 +303,13 @@ export default async function ReviewSubmissionPage({
             </Section>
           ) : null}
 
-          <Section title={PANEL_TITLES[d.submissionType] ?? "Proposed changes"}>
+          <Section
+            title={
+              d.fields?.kind === "verify"
+                ? "Still right?"
+                : (PANEL_TITLES[d.submissionType] ?? "Proposed changes")
+            }
+          >
             {panel}
           </Section>
         </div>

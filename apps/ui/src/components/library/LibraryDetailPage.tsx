@@ -33,6 +33,7 @@ import {
   LibraryRecordPanel,
   LibraryTasksPanel,
 } from "@/components/library/LibrarySidebar"
+import { verifyRecordOf } from "@/components/library/verify.logic"
 import { T } from "@/lib/design-tokens"
 import type { DatasetRecord } from "@/lib/strapi-api/content/datasets"
 import type { LibraryAreaData } from "@/lib/strapi-api/content/library-area"
@@ -180,7 +181,11 @@ export function LibraryDetailPage({
     >
       <GlobalHeader locale={locale} />
 
-      <LibraryCorrectionProvider library={wizardLibrary} path={path}>
+      <LibraryCorrectionProvider
+        library={wizardLibrary}
+        path={path}
+        record={verifyRecordOf(library)}
+      >
         <main className="flex-1">
           <LibraryHero
             coords={coords}

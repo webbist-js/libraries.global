@@ -30,7 +30,7 @@ type Day = {
 }
 
 /** One line per day, e.g. "Mon 09:00–13:00, 14:00–17:00 (volunteer)". */
-function hoursLines(v: unknown): string[] | null {
+export function hoursLines(v: unknown): string[] | null {
   const days = (v as { days?: Day[] } | null)?.days
   if (!Array.isArray(days)) return null
 
