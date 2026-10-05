@@ -1,7 +1,7 @@
+import type { LibraryHint } from "@repo/event-providers"
 import { describe, it, expect } from "vitest"
 
 import { matchVenueToLibrary } from "../../src/pipeline/match-libraries"
-import type { LibraryHint } from "../../src/providers/types"
 
 const HINTS: LibraryHint[] = [
   {

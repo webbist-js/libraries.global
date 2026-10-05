@@ -1,5 +1,12 @@
-import { toUtcIso, truncateSummary, computeSyncHash } from "../lib/date"
-import type { RawEvent, NormalizedEvent, EventType } from "../providers/types"
+import {
+  toUtcIso,
+  truncateSummary,
+  computeSyncHash,
+  type RawEvent,
+  type EventType,
+} from "@repo/event-providers"
+
+import type { NormalizedEvent } from "../types"
 
 export function normalizeEvent(
   raw: RawEvent,

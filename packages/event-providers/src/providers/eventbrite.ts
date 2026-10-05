@@ -1,11 +1,12 @@
+import { ProviderStatusError } from "../errors"
+import { parseJsonBody, safeFetchText } from "../lib/safe-fetch"
 import type {
   EventProvider,
   EventType,
   LibraryHint,
   ProviderCredentials,
   RawEvent,
-} from "./types"
-import { parseJsonBody, safeFetchText } from "../lib/safe-fetch"
+} from "../types"
 
 const BASE = "https://www.eventbriteapi.com/v3"
 
@@ -56,7 +57,7 @@ async function fetchPage(
   const res = await safeFetchText(url, {
     headers: { Authorization: `Bearer ${token}` },
   })
-  if (!res.ok) throw new Error(`Eventbrite feed returned ${res.status}`)
+  if (!res.ok) throw new ProviderStatusError("eventbrite", res.status)
 
   return parseJsonBody(res, "Eventbrite")
 }
@@ -67,17 +68,11 @@ export const eventbriteProvider: EventProvider = {
 
   async test(credentials: ProviderCredentials) {
     const { organizationId, accessToken } = credentials
-    try {
-      const res = await safeFetchText(
-        `${BASE}/organizations/${organizationId}/`,
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      )
-      if (res.ok) return { ok: true }
-
-      return { ok: false, error: `Eventbrite feed returned ${res.status}` }
-    } catch (err: unknown) {
-      return { ok: false, error: (err as Error).message }
-    }
+    const res = await safeFetchText(
+      `${BASE}/organizations/${organizationId}/`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    )
+    if (!res.ok) throw new ProviderStatusError("eventbrite", res.status)
   },
 
   async fetch(

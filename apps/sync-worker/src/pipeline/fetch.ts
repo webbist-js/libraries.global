@@ -1,8 +1,8 @@
 // apps/sync-worker/src/pipeline/fetch.ts
+import { getProvider, type RawEvent } from "@repo/event-providers"
 import pLimit from "p-limit"
 
-import { getProvider } from "../providers"
-import type { LoadedCredential, RawEvent } from "../providers/types"
+import type { LoadedCredential } from "../types"
 
 export interface FetchResult {
   credentialId: number

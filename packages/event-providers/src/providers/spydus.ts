@@ -1,11 +1,12 @@
+import { FeedFormatError, ProviderStatusError } from "../errors"
+import { parseJsonBody, safeFetchText } from "../lib/safe-fetch"
 import type {
   EventProvider,
   EventType,
   LibraryHint,
   ProviderCredentials,
   RawEvent,
-} from "./types"
-import { parseJsonBody, safeFetchText } from "../lib/safe-fetch"
+} from "../types"
 
 const MAX_EVENTS = 5000
 const MAX_PAGES = 50
@@ -68,11 +69,12 @@ async function getAuthToken(
     body: JSON.stringify({}),
   })
 
-  if (!res.ok) throw new Error(`Spydus feed returned ${res.status}`)
+  if (!res.ok) throw new ProviderStatusError("spydus", res.status)
 
   const data = parseJsonBody(res, "Spydus")
   const token = data?.Access_Token as string | undefined
-  if (!token) throw new Error("Spydus auth: missing Access_Token in response")
+  if (!token)
+    throw new FeedFormatError("Spydus auth: missing Access_Token in response")
 
   tokenCache.set(cacheKey, { token, expires: Date.now() + 2 * 60 * 60 * 1000 })
 
@@ -113,7 +115,7 @@ async function fetchSessions(
     }
 
     const res = await safeFetchText(url.toString(), { headers })
-    if (!res.ok) throw new Error(`Spydus feed returned ${res.status}`)
+    if (!res.ok) throw new ProviderStatusError("spydus", res.status)
 
     const data = parseJsonBody(res, "Spydus")
     const records: any[] = data?.records ?? []
@@ -206,24 +208,18 @@ export const spydusProvider: EventProvider = {
       !institutionID ||
       !locationCode
     ) {
-      return { ok: false, error: "Missing one or more Spydus credentials" }
+      throw new FeedFormatError("Missing one or more Spydus credentials")
     }
 
-    try {
-      const baseUrl = buildBaseUrl(endpoint)
-      const authString = makeAuthString(
-        customerKey,
-        username,
-        password,
-        institutionID,
-        locationCode
-      )
-      await getAuthToken(baseUrl, authString)
-
-      return { ok: true }
-    } catch (err: unknown) {
-      return { ok: false, error: (err as Error).message }
-    }
+    const baseUrl = buildBaseUrl(endpoint)
+    const authString = makeAuthString(
+      customerKey,
+      username,
+      password,
+      institutionID,
+      locationCode
+    )
+    await getAuthToken(baseUrl, authString)
   },
 
   async fetch(

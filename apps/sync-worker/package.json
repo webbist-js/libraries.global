@@ -12,16 +12,14 @@
   },
   "dependencies": {
     "@paralleldrive/cuid2": "^3.3.0",
+    "@repo/event-providers": "workspace:*",
     "@repo/events-crypto": "workspace:*",
+    "@repo/shared-data": "workspace:*",
     "dotenv": "17.2.3",
-    "fast-xml-parser": "^5.11.1",
-    "ical.js": "^2.0.1",
-    "ipaddr.js": "^2.5.0",
     "knex": "^3.1.0",
     "node-cron": "^3.0.3",
     "p-limit": "^6.1.0",
-    "pg": "^8.11.0",
-    "undici": "^8.11.2"
+    "pg": "^8.11.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

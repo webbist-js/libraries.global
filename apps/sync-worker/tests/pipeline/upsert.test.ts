@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { upsertEvents } from "../../src/pipeline/upsert"
-import type { NormalizedEvent } from "../../src/providers/types"
+import type { NormalizedEvent } from "../../src/types"
 
 /**
  * A tiny in-memory stand-in for the knex connection: it understands exactly

@@ -1,17 +1,27 @@
 // apps/sync-worker/src/pipeline/validate.ts
-import { getProvider } from "../providers"
-import type { LoadedCredential } from "../providers/types"
+import {
+  classifyFailure,
+  getProvider,
+  redactUrlsInText,
+} from "@repo/event-providers"
+import type { FeedTestCode } from "@repo/shared-data"
+
+import type { LoadedCredential } from "../types"
 
 export interface ValidationResult {
   valid: LoadedCredential[]
-  failed: { credential: LoadedCredential; error: string }[]
+  failed: {
+    credential: LoadedCredential
+    code: FeedTestCode
+    error: string
+  }[]
 }
 
 export async function validateCredentials(
   credentials: LoadedCredential[]
 ): Promise<ValidationResult> {
   const valid: LoadedCredential[] = []
-  const failed: { credential: LoadedCredential; error: string }[] = []
+  const failed: ValidationResult["failed"] = []
 
   await Promise.all(
     credentials.map(async (cred) => {
@@ -19,25 +29,22 @@ export async function validateCredentials(
       if (!provider) {
         failed.push({
           credential: cred,
+          code: "provider_error",
           error: `No provider registered for "${cred.provider}"`,
         })
 
         return
       }
       try {
-        const result = await provider.test(cred.credentials)
-        if (result.ok) {
-          valid.push(cred)
-        } else {
-          failed.push({
-            credential: cred,
-            error: result.error ?? "test() returned ok=false",
-          })
-        }
-      } catch (err: any) {
+        await provider.test(cred.credentials)
+        valid.push(cred)
+      } catch (err) {
         failed.push({
           credential: cred,
-          error: (err.message as string) ?? "Unknown error",
+          code: classifyFailure(err),
+          error: redactUrlsInText(
+            err instanceof Error ? err.message : String(err)
+          ),
         })
       }
     })

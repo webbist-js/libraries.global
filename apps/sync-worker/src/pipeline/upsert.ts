@@ -3,7 +3,7 @@ import { createId } from "@paralleldrive/cuid2"
 import type { Knex } from "knex"
 
 import db from "../db"
-import type { NormalizedEvent } from "../providers/types"
+import type { NormalizedEvent } from "../types"
 
 export interface UpsertStats {
   created: number

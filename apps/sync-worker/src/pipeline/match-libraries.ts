@@ -1,9 +1,10 @@
+import type { LibraryHint } from "@repo/event-providers"
+
 import {
   isLikelyMatch,
   normalisedDistance,
   type MatchResult,
 } from "../lib/levenshtein"
-import type { LibraryHint } from "../providers/types"
 
 interface MatchOutput {
   result: MatchResult

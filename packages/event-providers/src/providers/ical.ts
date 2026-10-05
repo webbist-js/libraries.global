@@ -1,13 +1,14 @@
 import ICAL from "ical.js"
 
+import { FeedFormatError, ProviderStatusError } from "../errors"
+import { safeFetchText } from "../lib/safe-fetch"
 import type {
   EventProvider,
   EventType,
   LibraryHint,
   ProviderCredentials,
   RawEvent,
-} from "./types"
-import { safeFetchText } from "../lib/safe-fetch"
+} from "../types"
 
 const EVENT_TYPE_MAP: Record<string, EventType> = {
   READING: "reading_group",
@@ -124,7 +125,17 @@ async function fetchFeed(
     headers.Authorization = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`
   }
   const res = await safeFetchText(feedUrl, { headers })
-  if (!res.ok) throw new Error(`iCal feed returned ${res.status}`)
+  if (!res.ok) throw new ProviderStatusError("ical", res.status)
+
+  const icalText = unfoldIcal(res.text)
+  if (!icalText.includes("BEGIN:VCALENDAR")) {
+    throw new FeedFormatError("The address didn't return an iCal calendar")
+  }
+  try {
+    ICAL.parse(icalText)
+  } catch {
+    throw new FeedFormatError("The address didn't return an iCal calendar")
+  }
 
   return res.text
 }
@@ -134,17 +145,11 @@ export const icalProvider: EventProvider = {
   eventTypeMap: EVENT_TYPE_MAP,
 
   async test(credentials: ProviderCredentials) {
-    try {
-      await fetchFeed(
-        credentials.feedUrl!,
-        credentials.username,
-        credentials.password
-      )
-
-      return { ok: true }
-    } catch (err: unknown) {
-      return { ok: false, error: (err as Error).message }
-    }
+    await fetchFeed(
+      credentials.feedUrl!,
+      credentials.username,
+      credentials.password
+    )
   },
 
   async fetch(

@@ -13,32 +13,33 @@ vi.mock("undici", async (importOriginal) => ({
   fetch: mockFetch,
 }))
 
+import { ProviderStatusError } from "../../src/errors"
 import { eventbriteProvider } from "../../src/providers/eventbrite"
 
 beforeEach(() => mockFetch.mockReset())
 
 describe("eventbriteProvider.test()", () => {
-  it("returns ok when org endpoint responds 200", async () => {
+  it("resolves when org endpoint responds 200", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       status: 200,
       text: async () => JSON.stringify({ id: "org_123" }),
     })
-    const r = await eventbriteProvider.test({
-      organizationId: "org_123",
-      accessToken: "tok_abc",
-    })
-    expect(r.ok).toBe(true)
+    await expect(
+      eventbriteProvider.test({
+        organizationId: "org_123",
+        accessToken: "tok_abc",
+      })
+    ).resolves.toBeUndefined()
   })
 
-  it("returns error on 401", async () => {
+  it("throws ProviderStatusError on 401", async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 401 })
-    const r = await eventbriteProvider.test({
-      organizationId: "org_123",
-      accessToken: "bad",
-    })
-    expect(r.ok).toBe(false)
-    expect(r.error).toContain("401")
+    const err = await eventbriteProvider
+      .test({ organizationId: "org_123", accessToken: "bad" })
+      .catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(ProviderStatusError)
+    expect((err as ProviderStatusError).status).toBe(401)
   })
 })
 

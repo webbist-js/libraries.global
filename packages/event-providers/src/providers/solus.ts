@@ -1,11 +1,12 @@
+import { FeedFormatError, ProviderStatusError } from "../errors"
+import { parseJsonBody, safeFetchText } from "../lib/safe-fetch"
 import type {
   EventProvider,
   EventType,
   LibraryHint,
   ProviderCredentials,
   RawEvent,
-} from "./types"
-import { parseJsonBody, safeFetchText } from "../lib/safe-fetch"
+} from "../types"
 
 const MAX_FUTURE_MONTHS = 18
 const PAGE_LIMIT = 100
@@ -35,11 +36,11 @@ async function getToken(endpoint: string, secretKey: string): Promise<string> {
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ secretKey }),
   })
-  if (!res.ok) throw new Error(`Solus feed returned ${res.status}`)
+  if (!res.ok) throw new ProviderStatusError("solus", res.status)
 
   const body = parseJsonBody(res, "Solus")
   const token = body?.data?.token as string | undefined
-  if (!token) throw new Error("Solus auth: no token in response")
+  if (!token) throw new FeedFormatError("Solus auth: no token in response")
 
   return token
 }
@@ -55,30 +56,23 @@ export const solusProvider: EventProvider = {
   async test(credentials: ProviderCredentials) {
     const { endpoint, secretKey } = credentials
     if (!endpoint || !secretKey) {
-      return { ok: false, error: "Missing endpoint or secretKey" }
+      throw new FeedFormatError("Missing endpoint or secretKey")
     }
 
-    try {
-      const base = normaliseEndpoint(endpoint)
-      const token = await getToken(base, secretKey)
+    const base = normaliseEndpoint(endpoint)
+    const token = await getToken(base, secretKey)
 
-      // Quick probe: list 1 event to confirm token works
-      const res = await safeFetchText(
-        `${base}/1.0/event/query?includeCancelled=false&limit=1`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
-        }
-      )
-      if (!res.ok)
-        return { ok: false, error: `Solus feed returned ${res.status}` }
-
-      return { ok: true }
-    } catch (err: unknown) {
-      return { ok: false, error: (err as Error).message }
-    }
+    // Quick probe: list 1 event to confirm token works
+    const res = await safeFetchText(
+      `${base}/1.0/event/query?includeCancelled=false&limit=1`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      }
+    )
+    if (!res.ok) throw new ProviderStatusError("solus", res.status)
   },
 
   async fetch(
@@ -118,7 +112,7 @@ export const solusProvider: EventProvider = {
           Accept: "application/json",
         },
       })
-      if (!res.ok) throw new Error(`Solus feed returned ${res.status}`)
+      if (!res.ok) throw new ProviderStatusError("solus", res.status)
 
       const body = parseJsonBody(res, "Solus")
       const data = body?.data

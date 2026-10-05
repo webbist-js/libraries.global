@@ -1,6 +1,7 @@
 // apps/sync-worker/src/pipeline/sync.ts
 import { randomUUID } from "node:crypto"
 
+import { getProvider } from "@repo/event-providers"
 import pLimit from "p-limit"
 
 import { loadCredentials } from "./load-credentials"
@@ -15,8 +16,7 @@ import {
   finaliseRunRecord,
   updateCredentialStatus,
 } from "./write-run"
-import { getProvider } from "../providers"
-import type { NormalizedEvent } from "../providers/types"
+import type { NormalizedEvent } from "../types"
 
 type TriggerType = "cron" | "manual"
 

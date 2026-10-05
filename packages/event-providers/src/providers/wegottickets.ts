@@ -1,13 +1,14 @@
 import { XMLParser } from "fast-xml-parser"
 
+import { FeedFormatError, ProviderStatusError } from "../errors"
+import { safeFetchText } from "../lib/safe-fetch"
 import type {
   EventProvider,
   EventType,
   LibraryHint,
   ProviderCredentials,
   RawEvent,
-} from "./types"
-import { safeFetchText } from "../lib/safe-fetch"
+} from "../types"
 
 const MAX_EVENTS = 200
 
@@ -86,25 +87,17 @@ export const wegottickets: EventProvider = {
 
   async test(credentials: ProviderCredentials) {
     const { feedUrl } = credentials
-    if (!feedUrl) return { ok: false, error: "Missing feedUrl" }
+    if (!feedUrl) throw new FeedFormatError("Missing feedUrl")
 
-    try {
-      const res = await safeFetchText(feedUrl, {
-        headers: { Accept: "application/xml,text/xml;q=0.9,*/*;q=0.8" },
-      })
-      if (!res.ok)
-        return { ok: false, error: `WeGotTickets feed returned ${res.status}` }
+    const res = await safeFetchText(feedUrl, {
+      headers: { Accept: "application/xml,text/xml;q=0.9,*/*;q=0.8" },
+    })
+    if (!res.ok) throw new ProviderStatusError("wegottickets", res.status)
 
-      const xml = res.text
-      const events = parseXml(xml)
-      const usable = events.some((ev) => ev?.id && ev?.title)
-      if (!usable)
-        return { ok: false, error: "Feed contained no usable events" }
-
-      return { ok: true }
-    } catch (err: unknown) {
-      return { ok: false, error: (err as Error).message }
-    }
+    const xml = res.text
+    const events = parseXml(xml)
+    const usable = events.some((ev) => ev?.id && ev?.title)
+    if (!usable) throw new FeedFormatError("Feed contained no usable events")
   },
 
   async fetch(
@@ -117,7 +110,7 @@ export const wegottickets: EventProvider = {
     const res = await safeFetchText(feedUrl, {
       headers: { Accept: "application/xml,text/xml;q=0.9,*/*;q=0.8" },
     })
-    if (!res.ok) throw new Error(`WeGotTickets feed returned ${res.status}`)
+    if (!res.ok) throw new ProviderStatusError("wegottickets", res.status)
 
     const xml = res.text
     const rawEvents = parseXml(xml)

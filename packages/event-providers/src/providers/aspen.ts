@@ -1,11 +1,12 @@
+import { FeedFormatError, ProviderStatusError } from "../errors"
+import { parseJsonBody, safeFetchText } from "../lib/safe-fetch"
 import type {
   EventProvider,
   EventType,
   LibraryHint,
   ProviderCredentials,
   RawEvent,
-} from "./types"
-import { parseJsonBody, safeFetchText } from "../lib/safe-fetch"
+} from "../types"
 
 const PAGE_SIZE = 100
 const MAX_FUTURE_MONTHS = 18
@@ -61,12 +62,12 @@ async function fetchPage(
   const res = await safeFetchText(url.toString(), {
     headers: { Authorization: authHeader, Accept: "application/json" },
   })
-  if (!res.ok) throw new Error(`Aspen feed returned ${res.status}`)
+  if (!res.ok) throw new ProviderStatusError("aspen", res.status)
 
   const data = parseJsonBody(res, "Aspen")
   const result = data?.result
   if (!result?.success || !Array.isArray(result.items)) {
-    throw new Error("Aspen returned unexpected response payload")
+    throw new FeedFormatError("Aspen returned unexpected response payload")
   }
 
   return result
@@ -88,22 +89,16 @@ export const aspenProvider: EventProvider = {
   async test(credentials: ProviderCredentials) {
     const { endpoint, clientId, clientSecret } = credentials
     if (!endpoint || !clientId || !clientSecret) {
-      return { ok: false, error: "Missing endpoint, clientId, or clientSecret" }
+      throw new FeedFormatError("Missing endpoint, clientId, or clientSecret")
     }
 
-    try {
-      const authHeader = buildAuthHeader(clientId, clientSecret)
-      await fetchPage(
-        endpoint,
-        authHeader,
-        1,
-        new Date().toISOString().split("T")[0]!
-      )
-
-      return { ok: true }
-    } catch (err: unknown) {
-      return { ok: false, error: (err as Error).message }
-    }
+    const authHeader = buildAuthHeader(clientId, clientSecret)
+    await fetchPage(
+      endpoint,
+      authHeader,
+      1,
+      new Date().toISOString().split("T")[0]!
+    )
   },
 
   async fetch(

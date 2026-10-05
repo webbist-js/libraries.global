@@ -1,7 +1,7 @@
+import type { RawEvent } from "@repo/event-providers"
 import { describe, it, expect } from "vitest"
 
 import { normalizeEvent } from "../../src/pipeline/normalize"
-import type { RawEvent } from "../../src/providers/types"
 
 const BASE_RAW: RawEvent = {
   externalId: "evt_001",

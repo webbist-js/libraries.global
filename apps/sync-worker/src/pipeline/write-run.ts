@@ -1,6 +1,7 @@
 // apps/sync-worker/src/pipeline/write-run.ts
+import { redactUrlsInText } from "@repo/event-providers"
+
 import db from "../db"
-import { redactUrlsInText } from "../lib/redact-url"
 
 export interface RunSummary {
   runId: string

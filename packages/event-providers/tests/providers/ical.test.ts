@@ -13,6 +13,7 @@ vi.mock("undici", async (importOriginal) => ({
   fetch: mockFetch,
 }))
 
+import { ProviderStatusError } from "../../src/errors"
 import { icalProvider } from "../../src/providers/ical"
 
 const SAMPLE_ICAL = `BEGIN:VCALENDAR
@@ -28,20 +29,18 @@ END:VEVENT
 END:VCALENDAR`
 
 describe("icalProvider.test()", () => {
-  it("returns ok when feed URL is reachable", async () => {
+  it("resolves when feed URL is reachable", async () => {
     mockFetch.mockResolvedValueOnce({ ok: true, text: async () => SAMPLE_ICAL })
-    const r = await icalProvider.test({
-      feedUrl: "https://example.com/cal.ics",
-    })
-    expect(r.ok).toBe(true)
+    await expect(
+      icalProvider.test({ feedUrl: "https://example.com/cal.ics" })
+    ).resolves.toBeUndefined()
   })
 
-  it("returns error on HTTP failure", async () => {
+  it("throws ProviderStatusError on HTTP failure", async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 404 })
-    const r = await icalProvider.test({
-      feedUrl: "https://example.com/bad.ics",
-    })
-    expect(r.ok).toBe(false)
+    await expect(
+      icalProvider.test({ feedUrl: "https://example.com/bad.ics" })
+    ).rejects.toBeInstanceOf(ProviderStatusError)
   })
 })
 

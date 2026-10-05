@@ -1,11 +1,12 @@
+import { FeedFormatError, ProviderStatusError } from "../errors"
+import { parseJsonBody, safeFetchText } from "../lib/safe-fetch"
 import type {
   EventProvider,
   EventType,
   LibraryHint,
   ProviderCredentials,
   RawEvent,
-} from "./types"
-import { parseJsonBody, safeFetchText } from "../lib/safe-fetch"
+} from "../types"
 
 const BASE = "https://api.ticketsource.io"
 const PER_PAGE = 100
@@ -56,7 +57,7 @@ async function fetchAllPages(
       ...extraParams,
     })
     const res = await safeFetchText(`${url}?${params}`, { headers })
-    if (!res.ok) throw new Error(`TicketSource feed returned ${res.status}`)
+    if (!res.ok) throw new ProviderStatusError("ticketsource", res.status)
 
     const data = parseJsonBody(res, "TicketSource")
     const items: any[] = Array.isArray(data?.data) ? data.data : []
@@ -78,22 +79,16 @@ export const ticketsourceProvider: EventProvider = {
 
   async test(credentials: ProviderCredentials) {
     const { apiKey } = credentials
-    if (!apiKey) return { ok: false, error: "Missing apiKey" }
+    if (!apiKey) throw new FeedFormatError("Missing apiKey")
 
-    try {
-      const res = await safeFetchText(`${BASE}/events?per_page=1&page=1`, {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          Accept: "application/json",
-          "User-Agent": "libraries-global-events/1.0",
-        },
-      })
-      if (res.ok) return { ok: true }
-
-      return { ok: false, error: `TicketSource feed returned ${res.status}` }
-    } catch (err: unknown) {
-      return { ok: false, error: (err as Error).message }
-    }
+    const res = await safeFetchText(`${BASE}/events?per_page=1&page=1`, {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        Accept: "application/json",
+        "User-Agent": "libraries-global-events/1.0",
+      },
+    })
+    if (!res.ok) throw new ProviderStatusError("ticketsource", res.status)
   },
 
   async fetch(

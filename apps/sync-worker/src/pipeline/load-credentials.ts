@@ -1,12 +1,10 @@
 // apps/sync-worker/src/pipeline/load-credentials.ts
+import type { LibraryHint } from "@repo/event-providers"
 import { decrypt } from "@repo/events-crypto"
+import type { EventProviderKey } from "@repo/shared-data"
 
 import db from "../db"
-import type {
-  LoadedCredential,
-  LibraryHint,
-  ProviderKey,
-} from "../providers/types"
+import type { LoadedCredential } from "../types"
 
 function getKey(): string {
   const key = process.env.EVENTS_CREDENTIAL_KEY
@@ -97,7 +95,7 @@ export async function loadCredentials(): Promise<LoadedCredential[]> {
     results.push({
       id: row.id,
       documentId: row.documentId,
-      provider: row.provider as ProviderKey,
+      provider: row.provider as EventProviderKey,
       label: row.label,
       scope: row.scope as "library" | "group",
       isActive: true,
