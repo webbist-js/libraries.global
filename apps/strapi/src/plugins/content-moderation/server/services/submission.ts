@@ -52,6 +52,7 @@ import {
 } from "../utils/record-review"
 import { isSelfReview, type Reviewer } from "../utils/reviewer"
 import { withTargetLabels } from "../utils/target-labels"
+import { applyTopicSuggestion } from "../utils/topic-suggestion"
 import { canTransition } from "../utils/transitions"
 import { ownedUploadIds } from "../utils/uploads"
 
@@ -1150,27 +1151,24 @@ export default ({ strapi }: { strapi: any }) => ({
             }
           }
 
-          // Side-effect: if approving a topic_suggestion, approve the topic
-          // A2: resolve by the reviewed targetDocumentId, never fields.topicDocumentId.
+          // Side-effect: an approved topic_suggestion creates its topic, or
+          // approves the one that has that name (A2: a named target is the
+          // reviewed targetDocumentId, never fields.topicDocumentId).
           if (
             status === "approved" &&
-            submission?.submissionType === "topic_suggestion" &&
-            submission.targetEntityType === "topic" &&
-            submission.targetDocumentId
+            submission?.submissionType === "topic_suggestion"
           ) {
-            await strapi.documents("api::topic.topic").update({
-              documentId: submission.targetDocumentId,
-              data: { status: "approved" },
-            })
-          } else if (
-            status === "approved" &&
-            submission?.submissionType === "topic_suggestion" &&
-            (submission.targetEntityType !== "topic" ||
-              !submission.targetDocumentId)
-          ) {
-            strapi.log.warn(
-              `[content-moderation] topic_suggestion ${documentId} has no topic targetDocumentId; nothing applied`
-            )
+            const topicId = await applyTopicSuggestion(strapi, submission)
+            if (topicId) {
+              await strapi
+                .documents("plugin::content-moderation.submission")
+                .update({ documentId, data: { resultDocumentId: topicId } })
+              updated.resultDocumentId = topicId
+            } else {
+              strapi.log.warn(
+                `[content-moderation] topic_suggestion ${documentId} names no topic; nothing applied`
+              )
+            }
           }
 
           // Side-effect: an approved correction is applied to the library and
