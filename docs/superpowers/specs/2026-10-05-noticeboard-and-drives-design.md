@@ -1,7 +1,7 @@
 # Noticeboard and Drives
 
 **Date:** 2026-10-05
-**Status:** Draft for review
+**Status:** Approved design (2026-10-05)
 **Related:** ADR-0004 (design for three million libraries), ADR-0005 (moderation runs in the frontend), CONTEXT.md (Submission, Moderation Queue, Points, Tier, Badge, Dataset, Saved Library, Place Labels), `2026-09-26-access-contribution-pro-implementation-design.md` §3 (access axes), `2026-09-29-community-moderation-and-audit-design.md` (queues, Change Records), `2026-04-30-community-rewards-design.md` (points, badges). The review this spec follows is in the local, git-ignored `.scratch/noticeboard/review.md`.
 
 ## 1. Summary
@@ -460,7 +460,7 @@ A new Submission type, `drive_proposal`, in the `index` queue. Places to change,
 
 ## 15. Open decisions
 
-Proposed on 2026-10-05. Confirm or change them.
+Proposed and accepted by the owner on 2026-10-05: build every default below. Band 0 (§14) is approved for before go-live, and the whole spec is to be built.
 
 | #    | Question                                                            | Default                                                                            |
 | ---- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
