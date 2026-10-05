@@ -65,9 +65,6 @@ function setup(seed: Record<string, any[]>) {
   const f = makeFakeStrapi(seed)
   const award = vi.fn(async () => {})
   f.services["rewards.points"] = { award }
-  f.services["api::user-profile.quick-wins"] = {
-    computeAndSave: vi.fn(async () => {}),
-  }
   f.services["i18n.locales"] = { find: async () => [{ code: "en" }] }
   f.services["content-moderation.submission-policy"] = {
     loadCapabilities: async () => ({

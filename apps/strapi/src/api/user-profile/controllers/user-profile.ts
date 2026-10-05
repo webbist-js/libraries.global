@@ -454,7 +454,7 @@ export default factories.createCoreController(
      * the Better Auth id. Bridge only: the UI server sends X-Service-Secret
      * and X-Ba-User-Id from the session. Returns the owner view (no
      * visibility rules apply) with the shapes the profile, settings,
-     * onboarding, notification, export and quick-wins pages need.
+     * onboarding, notification and export pages need.
      */
     async findMe(ctx: any) {
       if (!isValidServiceSecret(ctx.request.headers["x-service-secret"]))
@@ -464,7 +464,7 @@ export default factories.createCoreController(
 
       const profile = await strapi.documents(PROFILE).findFirst({
         filters: { baUserId: { $eq: baUserId } },
-        populate: { avatar: true, languages: true, quickWins: true },
+        populate: { avatar: true, languages: true },
       })
       if (!profile) return ctx.notFound("Profile not found")
 

@@ -3175,8 +3175,6 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     >
     publicPrefs: Schema.Attribute.JSON
     publishedAt: Schema.Attribute.DateTime
-    quickWins: Schema.Attribute.Component<"contribute.quick-win", true>
-    quickWinsComputedAt: Schema.Attribute.DateTime
     streak: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
     theme: Schema.Attribute.Enumeration<["dark", "light"]> &
       Schema.Attribute.DefaultTo<"dark">

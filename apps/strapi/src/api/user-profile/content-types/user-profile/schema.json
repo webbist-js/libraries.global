@@ -183,14 +183,6 @@
     },
     "lastActivityDate": {
       "type": "string"
-    },
-    "quickWins": {
-      "type": "component",
-      "component": "contribute.quick-win",
-      "repeatable": true
-    },
-    "quickWinsComputedAt": {
-      "type": "datetime"
     }
   }
 }

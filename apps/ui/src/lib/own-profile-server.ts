@@ -4,7 +4,7 @@ import { cache } from "react"
 
 import { avatarSrc } from "@/lib/avatar"
 import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
-import type { QuickWin, UserProfile } from "@/lib/types/profile"
+import type { UserProfile } from "@/lib/types/profile"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 
@@ -14,14 +14,11 @@ type SessionUser = { id: string; email: string; name?: string | null }
 /**
  * The owner view of the signed-in user's profile, as Strapi's
  * `GET /api/user-profiles/me` returns it: every field the owner may see
- * (notification settings included), avatar, languages, quick wins, follows,
- * claimed libraries and badges. Never carries `baUserId`. `username` is null
- * until onboarding sets it.
+ * (notification settings included), avatar, languages, follows, claimed
+ * libraries and badges. Never carries `baUserId`. `username` is null until
+ * onboarding sets it.
  */
-export type OwnProfile = UserProfile & {
-  quickWins?: QuickWin[] | null
-  quickWinsComputedAt?: string | null
-}
+export type OwnProfile = UserProfile
 
 export type OwnProfileLookup =
   | { ok: true; profile: OwnProfile }

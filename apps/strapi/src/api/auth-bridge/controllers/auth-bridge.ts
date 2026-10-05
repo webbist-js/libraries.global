@@ -225,16 +225,6 @@ export default {
           data: { baUserId, ...data } as any,
         }))
 
-    // Recompute quick wins if personalisation fields changed
-    if (baUserId && ("country" in data || "languages" in data)) {
-      strapi
-        .service("api::user-profile.quick-wins")
-        .computeAndSave(baUserId)
-        .catch((err: unknown) =>
-          strapi.log.warn("[quick-wins] upsertProfile recompute failed:", err)
-        )
-    }
-
     const updated = await strapi
       .query("api::user-profile.user-profile")
       .findOne({
@@ -610,24 +600,5 @@ export default {
         ? profile.dismissedPrompts.filter(isDismissiblePrompt)
         : [],
     })
-  },
-
-  async computeQuickWins(ctx: any) {
-    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
-      return ctx.unauthorized("Invalid or missing service secret")
-    }
-
-    const { baUserId } = ctx.request.body as { baUserId?: string }
-    if (!baUserId) return ctx.badRequest("Missing baUserId")
-
-    try {
-      await strapi
-        .service("api::user-profile.quick-wins")
-        .computeAndSave(baUserId)
-    } catch (err) {
-      strapi.log.warn("[quick-wins] computeAndSave failed:", err)
-    }
-
-    return ctx.send({ ok: true })
   },
 }

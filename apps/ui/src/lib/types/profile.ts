@@ -136,29 +136,6 @@ export type Topic = {
   status: "approved" | "pending" | "rejected"
 }
 
-export type QuickWinType =
-  | "add_library"
-  | "add_nearby_library"
-  | "verify_hours"
-  | "add_hero_image"
-  | "translate_wiki"
-  | "edit_wiki"
-
-export type QuickWin = {
-  winId: string
-  type: QuickWinType
-  title: string
-  description: string
-  points: number
-  estimatedMinutes: number
-  rewardLabel: string
-  actionUrl: string
-  targetEntityRef?: string
-  targetSlug?: string
-  computedForCountry?: string
-  computedForLanguage?: string
-}
-
 export type TierInfo = {
   level: number
   name: string

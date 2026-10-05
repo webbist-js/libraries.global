@@ -41,9 +41,6 @@ const pending = (over: Record<string, any> = {}) => {
 function setup(seed?: Record<string, any[]>) {
   const f = makeFakeStrapi(seed ?? { [SUB]: [pending()] })
   f.services["rewards.points"] = { award: vi.fn(async () => {}) }
-  f.services["api::user-profile.quick-wins"] = {
-    computeAndSave: vi.fn(async () => {}),
-  }
   const svc: any = createService({ strapi: f.strapi })
   f.services["content-moderation.submission"] = svc
 

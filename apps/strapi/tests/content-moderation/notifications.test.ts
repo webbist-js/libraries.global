@@ -76,9 +76,6 @@ function setup(
   }
   f.services["email.email"] = { send }
   f.services["rewards.points"] = { award: vi.fn(async () => {}) }
-  f.services["api::user-profile.quick-wins"] = {
-    computeAndSave: vi.fn(async () => {}),
-  }
   f.services["content-moderation.notifications"] = createNotifications({
     strapi: f.strapi,
   })

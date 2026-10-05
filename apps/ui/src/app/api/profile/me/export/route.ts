@@ -19,13 +19,10 @@ export async function GET() {
     if (!lookup.ok)
       return lookup.reason === "not_found"
         ? NextResponse.json({ error: "Profile not found" }, { status: 404 })
-        : NextResponse.json({ error: "Failed to load profile" }, { status: 502 })
-    // Derived suggestions, not the user's data.
-    const {
-      quickWins: _quickWins,
-      quickWinsComputedAt: _computedAt,
-      ...profile
-    } = lookup.profile
+        : NextResponse.json(
+            { error: "Failed to load profile" },
+            { status: 502 }
+          )
     // Additional user fields are on the session user at runtime, but the
     // customSession type doesn't carry them.
     const user = session.user as typeof session.user & {
@@ -40,7 +37,7 @@ export async function GET() {
         termsVersion: user.termsVersion ?? null,
         termsAcceptedAt: user.termsAcceptedAt ?? null,
       },
-      profile,
+      profile: lookup.profile,
     }
 
     return new NextResponse(JSON.stringify(payload, null, 2), {

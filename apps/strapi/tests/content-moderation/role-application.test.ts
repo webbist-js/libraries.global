@@ -123,7 +123,12 @@ describe("roleApplicationFields", () => {
     })
     expect(
       roleApplicationFields({ role: "moderator", queue: "journal" })
-    ).toEqual({ role: "moderator", queue: "journal", locales: [], sections: [] })
+    ).toEqual({
+      role: "moderator",
+      queue: "journal",
+      locales: [],
+      sections: [],
+    })
     expect(roleApplicationFields({ role: "editorial_board" })).toEqual({
       role: null,
       queue: null,
@@ -208,9 +213,11 @@ describe("role application eligibility", () => {
       scopeLocale,
     })
     const global = setup({ [SUB]: accepted(5), [ROLE_GRANT]: [grant(null)] })
-    expect(
-      await apply(global.policy, fieldsFor({ locales: ["fr"] }))
-    ).toEqual({ ok: false, status: 403, message: "You already have this role." })
+    expect(await apply(global.policy, fieldsFor({ locales: ["fr"] }))).toEqual({
+      ok: false,
+      status: 403,
+      message: "You already have this role.",
+    })
 
     const fr = setup({ [SUB]: accepted(5), [ROLE_GRANT]: [grant("fr")] })
     expect(
@@ -303,9 +310,6 @@ describe("role application approval", () => {
     const f = setup({ [SUB]: [pendingApplication(locales)] })
     const award = vi.fn(async () => {})
     f.services["rewards.points"] = { award }
-    f.services["api::user-profile.quick-wins"] = {
-      computeAndSave: vi.fn(async () => {}),
-    }
 
     return { ...f, award, svc: createService({ strapi: f.strapi }) }
   }
@@ -405,7 +409,11 @@ describe("role application through the controller", () => {
     expect(finalize.body.data).toMatchObject({
       status: "pending",
       submissionType: "role_application",
-      fields: { role: "wiki_editor", locales: ["fr"], acceptedGuidelines: true },
+      fields: {
+        role: "wiki_editor",
+        locales: ["fr"],
+        acceptedGuidelines: true,
+      },
     })
     expect(
       store[SUB]!.find((s) => s.documentId === draft.documentId)!.status

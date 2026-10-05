@@ -267,9 +267,6 @@ describe("approval against an unpublished or divergent library", () => {
     })
     const award = vi.fn(async () => {})
     made.services["rewards.points"] = { award }
-    made.services["api::user-profile.quick-wins"] = {
-      computeAndSave: vi.fn(async () => {}),
-    }
 
     return { ...made, award, svc: createService({ strapi: made.strapi }) }
   }
@@ -348,10 +345,6 @@ describe("new_library approval", () => {
       "api::library-affiliation.library-affiliation": [],
     })
     services["rewards.points"] = { award: vi.fn(async () => {}) }
-    services["api::user-profile.quick-wins"] = {
-      computeAndSave: vi.fn(async () => {}),
-    }
-
     const result = await createService({ strapi }).updateStatus(
       sub.documentId,
       "approved",

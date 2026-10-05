@@ -66,9 +66,6 @@ function setup(library: Record<string, unknown> = {}, sub = facilities({})) {
     ...TAXONOMY,
   })
   f.services["rewards.points"] = { award: vi.fn(async () => {}) }
-  f.services["api::user-profile.quick-wins"] = {
-    computeAndSave: vi.fn(async () => {}),
-  }
 
   return { ...f, svc: createService({ strapi: f.strapi }) }
 }

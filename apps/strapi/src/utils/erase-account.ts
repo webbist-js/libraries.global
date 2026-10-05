@@ -109,8 +109,6 @@ export async function eraseAccount(
           isVerifiedLibrarian: false,
           contributorRole: "reader",
           languages: [],
-          quickWins: [],
-          quickWinsComputedAt: null,
           interests: [],
           notifPrefs: null,
           dismissedPrompts: null,

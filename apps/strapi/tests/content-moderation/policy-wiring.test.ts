@@ -382,9 +382,6 @@ describe("updateStatus keeps the moderator's reviewNote when a wiki_edit is only
     })
     services["content-moderation.submission-policy"] = createPolicy({ strapi })
     services["rewards.points"] = { award: vi.fn(async () => {}) }
-    services["api::user-profile.quick-wins"] = {
-      computeAndSave: vi.fn(async () => {}),
-    }
     strapi.plugin = vi.fn((name: string) =>
       name === "i18n"
         ? { service: () => ({ find: async () => [{ code: "en" }] }) }

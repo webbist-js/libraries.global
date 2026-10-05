@@ -139,9 +139,6 @@ describe("claim approval", () => {
     f.services["rewards.points"] = {
       award: vi.fn(async () => ({ awarded: true })),
     }
-    f.services["api::user-profile.quick-wins"] = {
-      computeAndSave: vi.fn(async () => {}),
-    }
     await createService({ strapi: f.strapi }).updateStatus(
       "s0000000000000000000009",
       "approved",
@@ -184,9 +181,6 @@ describe("claim approval", () => {
     })
     f.services["rewards.points"] = {
       award: vi.fn(async () => ({ awarded: true })),
-    }
-    f.services["api::user-profile.quick-wins"] = {
-      computeAndSave: vi.fn(async () => {}),
     }
     await createService({ strapi: f.strapi }).updateStatus(
       "s0000000000000000000010",

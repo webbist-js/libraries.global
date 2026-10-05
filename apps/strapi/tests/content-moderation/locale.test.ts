@@ -592,9 +592,6 @@ describe("article translations", () => {
     const made = withPolicy(setup({ [SUB]: [sub] }, article(BLOG)))
     const award = vi.fn(async () => {})
     made.services["rewards.points"] = { award }
-    made.services["api::user-profile.quick-wins"] = {
-      computeAndSave: vi.fn(async () => {}),
-    }
     const res = await createService({ strapi: made.strapi }).updateStatus(
       sub.documentId,
       "approved",
@@ -621,9 +618,6 @@ describe("article translations", () => {
     const made = withPolicy(setup({ [SUB]: [sub] }, article(BLOG)))
     const award = vi.fn(async () => {})
     made.services["rewards.points"] = { award }
-    made.services["api::user-profile.quick-wins"] = {
-      computeAndSave: vi.fn(async () => {}),
-    }
     await createService({ strapi: made.strapi }).updateStatus(
       sub.documentId,
       "approved",

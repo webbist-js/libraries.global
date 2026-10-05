@@ -155,9 +155,6 @@ function setup(
     find: async () => [{ code: "en", isDefault: true }, { code: "fr" }],
   }
   f.services["rewards.points"] = { award: vi.fn(async () => {}) }
-  f.services["api::user-profile.quick-wins"] = {
-    computeAndSave: vi.fn(async () => {}),
-  }
   f.services["content-moderation.submission-policy"] = createPolicy({
     strapi: f.strapi,
   })

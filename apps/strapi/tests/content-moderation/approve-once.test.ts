@@ -81,9 +81,6 @@ function setup(seed = pending()) {
   const f = makeFakeStrapi({ [UID]: [seed], ...LIBRARY_SEED })
   const award = vi.fn(async () => {})
   f.services["rewards.points"] = { award }
-  f.services["api::user-profile.quick-wins"] = {
-    computeAndSave: vi.fn(async () => {}),
-  }
 
   return { ...f, award, svc: createService({ strapi: f.strapi }) }
 }
