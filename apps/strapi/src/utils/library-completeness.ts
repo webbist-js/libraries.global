@@ -159,17 +159,23 @@ export async function refreshLibraryCompleteness(
 
 const BACKFILL_PAGE = 200
 const BACKFILL_MAX_PASSES = 1000
+const BACKFILL_STORE = { type: "core", name: "library-completeness" } as const
+const BACKFILL_DONE_KEY = "backfill-v2-done"
 
 /**
  * One-off bootstrap pass: every row (draft and published, all locales) whose
- * `completeness` or `gaps` is still NULL gets both. A no-op once everything
- * is filled.
+ * `completeness` or `gaps` is still NULL gets both. The first full pass that
+ * finds nothing to write sets a core-store flag, and later boots skip the
+ * scan (the lifecycle keeps both current from then on).
  */
 export async function backfillLibraryCompleteness(
   strapi: Core.Strapi
 ): Promise<number> {
   let written = 0
   try {
+    const flag = strapi.store(BACKFILL_STORE)
+    if (await flag.get({ key: BACKFILL_DONE_KEY })) return 0
+
     for (const status of ["draft", "published"] as const) {
       for (let pass = 0; pass < BACKFILL_MAX_PASSES; pass++) {
         const rows = (await strapi.documents(LIBRARY).findMany({
@@ -206,6 +212,11 @@ export async function backfillLibraryCompleteness(
     }
     if (written > 0)
       strapi.log.info(`[completeness] backfilled ${written} library rows`)
+    else
+      await flag.set({
+        key: BACKFILL_DONE_KEY,
+        value: { doneAt: new Date().toISOString() },
+      })
   } catch (err) {
     strapi.log.error("[bootstrap] backfillLibraryCompleteness failed", err)
   }
