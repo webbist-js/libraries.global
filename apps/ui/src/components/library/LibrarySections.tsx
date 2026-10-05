@@ -1,6 +1,7 @@
 // Server-rendered content sections for the library detail page (v2).
 
 import { Icon } from "@iconify/react"
+import { hasOpeningHours } from "@repo/shared-data"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { topFields } from "@/components/library/change-history.helpers"
@@ -176,9 +177,8 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
     (openingTimes?.days ?? []).some(
       (d) => d.enabled && (d.timeframes?.length ?? 0) >= 3
     )
-  const hasHours = Boolean(
-    openingTimes?.days?.some((d) => d.enabled && d.timeframes?.length)
-  )
+  // The shared rule: an enabled day with a timeframe that has both ends.
+  const hasHours = hasOpeningHours(openingTimes)
 
   return (
     <LibrarySectionCard id="visit" title="Visit" iconPath={LIB_ICONS.pin}>
