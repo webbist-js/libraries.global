@@ -16,6 +16,9 @@ test.describe("Community section", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
       "noticeboard"
     )
+    await expect(
+      page.getByRole("heading", { name: "How a drive works" })
+    ).toBeVisible()
 
     const tabs = page.getByRole("navigation", { name: "Community" })
     await tabs.getByRole("link", { name: /Leaderboard/ }).click()
@@ -25,13 +28,19 @@ test.describe("Community section", () => {
     await expect(
       page.getByRole("navigation", { name: "Leaderboard period" })
     ).toBeVisible()
+    await expect(
+      page.getByRole("heading", { name: "Top contributors" })
+    ).toBeVisible()
 
     await tabs.getByRole("link", { name: /Suggestions/ }).click()
     await expect(page).toHaveURL(/\/community\/suggestions$/, {
       timeout: 15_000,
     })
     await expect(
-      page.getByRole("heading", { name: "Vote on additions" })
+      page.getByRole("heading", { name: "Suggest an option" })
+    ).toBeVisible()
+    await expect(
+      page.getByRole("group", { name: "Filter by list" })
     ).toBeVisible()
   })
 

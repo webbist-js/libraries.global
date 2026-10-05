@@ -229,6 +229,8 @@ Top to bottom, as the mockup with the review's changes:
 5. **Recently finished**: the last five closed drives, with their final counts and helper totals.
 6. **Propose band**: "Spotted a gap? _Propose a drive._", the three rules (one Focus per drive, a finish line and an end date, openly licensed sources) and "How drives work" (a Knowledge article).
 
+Note (2026-10-05): the hero's "Propose a drive" pill and the "Propose as a drive" action on each "Gaps worth a drive" row arrive with D2; neither control is shown until then.
+
 Empty states are honest: "No drives are open right now", and "This drive has finished. Thank you" with the final stats.
 
 ### 5.6 Drive page (`/community/drives/[slug]`)
