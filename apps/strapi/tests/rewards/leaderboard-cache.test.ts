@@ -4,18 +4,31 @@ import createLeaderboard from "../../src/plugins/rewards/server/services/leaderb
 
 function fakeStrapi(rows: { ba_user_id: string; periodPoints: string }[]) {
   const runs = vi.fn()
+  let table = ""
   const builder: any = {
     select: () => builder,
     sum: () => builder,
-    from: () => builder,
+    from: (t: string) => {
+      table = t
+
+      return builder
+    },
     groupBy: () => builder,
     orderBy: () => builder,
     limit: () => builder,
     offset: () => builder,
     where: () => builder,
+    whereIn: () => builder,
+    whereNot: () => builder,
+    havingRaw: () => builder,
+    raw: (sql: string, bindings?: unknown[]) => ({ sql, bindings }),
     count: () => builder,
     // eslint-disable-next-line unicorn/no-thenable -- fakes a knex query builder
     then: (resolve: (v: unknown) => void) => {
+      // The submissions aggregate is a separate query added alongside the
+      // points aggregate; `runs` keeps measuring recomputation of the
+      // memoised leaderboard itself, not that extra query.
+      if (table === "cm_submissions") return resolve([])
       runs()
       resolve(rows)
     },

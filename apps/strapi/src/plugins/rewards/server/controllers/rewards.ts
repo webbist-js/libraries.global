@@ -50,10 +50,13 @@ export default ({ strapi }: { strapi: any }) => ({
       return ctx.unauthorized("Authentication required")
     }
 
+    const q = ctx.query as Record<string, unknown>
+    const period = PERIODS.has(String(q.period)) ? String(q.period) : "month"
+
     const standing = await strapi
       .plugin("rewards")
       .service("leaderboard")
-      .getStanding(baUserId)
+      .getStanding(baUserId, period as "today" | "week" | "month" | "all")
 
     return ctx.send({ data: standing })
   },

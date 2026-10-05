@@ -11,15 +11,20 @@ export type LeaderboardEntry = {
   lastName: string | null
   avatarUrl: string | null
   country: string | null
+  city: string | null
   contributorRole: string | null
   periodPoints: number
   totalPoints: number
   tier: string
+  approvedCount: number
+  acceptanceRate: number | null
 }
 
 export type Standing = {
   globalRank: number | null
   countryRank: number | null
+  monthRank: number | null
+  periodRank: number | null
   country: string | null
   tier: TierInfo
   streak: number
@@ -41,6 +46,67 @@ function periodStart(period: Period): Date | null {
 
   // month
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+}
+
+// Role applications aren't index/knowledge/journal work, so they're left out
+// of both the approved count and the acceptance rate.
+const SUBMISSION_COUNT_EXCLUDED_TYPE = "role_application"
+
+/** Sum of `rw_point_events.points` for one user since `start` (or all time). */
+async function sumPointsSince(
+  strapi: any,
+  baUserId: string,
+  start: Date | null
+): Promise<number> {
+  let q = strapi.db.connection
+    .sum({ total: "points" })
+    .from("rw_point_events")
+    .where("ba_user_id", baUserId)
+
+  if (start) q = q.where("awarded_at", ">=", start.toISOString())
+
+  const rows = (await q) as { total: string | number | null }[]
+
+  return Number(rows[0]?.total ?? 0)
+}
+
+/** Count of distinct users whose summed points since `start` exceed `points`. */
+async function countUsersAbove(
+  strapi: any,
+  start: Date | null,
+  points: number
+): Promise<number> {
+  let q = strapi.db.connection
+    .select("ba_user_id")
+    .sum({ total: "points" })
+    .from("rw_point_events")
+    .groupBy("ba_user_id")
+    .havingRaw("SUM(points) > ?", [points])
+
+  if (start) q = q.where("awarded_at", ">=", start.toISOString())
+
+  const rows = (await q) as unknown[]
+
+  return rows.length
+}
+
+/**
+ * Rank among every user by points since the period start (`all` sums every
+ * event). Null when the user has no points in the period — no second query
+ * needed in that case.
+ */
+async function rankForPeriod(
+  strapi: any,
+  baUserId: string,
+  period: Period
+): Promise<number | null> {
+  const start = periodStart(period)
+  const points = await sumPointsSince(strapi, baUserId, start)
+  if (points <= 0) return null
+
+  const above = await countUsersAbove(strapi, start, points)
+
+  return above + 1
 }
 
 // The public leaderboard is the same for everyone, so each (period, page,
@@ -112,6 +178,7 @@ export default ({ strapi }: { strapi: any }) => ({
       lastName: string | null
       avatarUrl: string | null
       country: string | null
+      city: string | null
       contributorRole: string | null
       points: number
       tier: string
@@ -120,6 +187,50 @@ export default ({ strapi }: { strapi: any }) => ({
     }[]
 
     const profileMap = new Map(profiles.map((p) => [p.baUserId, p]))
+
+    // Step 3: approved count (in the period) and all-time acceptance rate,
+    // in one grouped query over the submissions table. Role applications are
+    // excluded from both.
+    const approvedCountExpr: [string, unknown[]] = start
+      ? [
+          "SUM(CASE WHEN status = ? AND reviewed_at >= ? THEN 1 ELSE 0 END) as approved_count",
+          ["approved", start.toISOString()],
+        ]
+      : [
+          "SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as approved_count",
+          ["approved"],
+        ]
+
+    const submissionRows = (await strapi.db.connection
+      .select("submitted_by_user_id")
+      .select(
+        strapi.db.connection.raw(approvedCountExpr[0], approvedCountExpr[1])
+      )
+      .select(
+        strapi.db.connection.raw(
+          "SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as approved_all",
+          ["approved"]
+        )
+      )
+      .select(
+        strapi.db.connection.raw(
+          "SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as rejected_all",
+          ["rejected"]
+        )
+      )
+      .from("cm_submissions")
+      .whereIn("submitted_by_user_id", userIds)
+      .whereNot("submission_type", SUBMISSION_COUNT_EXCLUDED_TYPE)
+      .groupBy("submitted_by_user_id")) as {
+      submitted_by_user_id: string
+      approved_count: string | number
+      approved_all: string | number
+      rejected_all: string | number
+    }[]
+
+    const submissionMap = new Map(
+      submissionRows.map((r) => [r.submitted_by_user_id, r])
+    )
 
     // The snapshot is of a full ISO week, so only the week leaderboard
     // compares like with like; other periods carry no delta.
@@ -142,6 +253,14 @@ export default ({ strapi }: { strapi: any }) => ({
       const isPrivate = !!profile && !isActivityPublic(profile)
       const showLocation = profile?.publicPrefs?.showLocation !== false
 
+      const submission = submissionMap.get(row.ba_user_id)
+      const approvedCount = Number(submission?.approved_count ?? 0)
+      const approvedAll = Number(submission?.approved_all ?? 0)
+      const rejectedAll = Number(submission?.rejected_all ?? 0)
+      const decided = approvedAll + rejectedAll
+      const acceptanceRate =
+        decided > 0 ? Math.round((approvedAll / decided) * 100) : null
+
       return {
         rank: currentRank,
         rankChange,
@@ -150,15 +269,21 @@ export default ({ strapi }: { strapi: any }) => ({
         lastName: isPrivate ? "contributor" : (profile?.lastName ?? null),
         avatarUrl: isPrivate ? null : (profile?.avatarUrl ?? null),
         country: isPrivate || !showLocation ? null : (profile?.country ?? null),
+        city: isPrivate || !showLocation ? null : (profile?.city ?? null),
         contributorRole: isPrivate ? null : (profile?.contributorRole ?? null),
         periodPoints: Number(row.periodPoints),
         totalPoints: profile?.points ?? 0,
         tier: profile?.tier ?? "Reader",
+        approvedCount,
+        acceptanceRate,
       }
     })
   },
 
-  async getStanding(baUserId: string): Promise<Standing> {
+  async getStanding(
+    baUserId: string,
+    period: Period = "month"
+  ): Promise<Standing> {
     const profile = (await strapi.db
       .query("api::user-profile.user-profile")
       .findOne({ where: { baUserId } })) as {
@@ -173,6 +298,8 @@ export default ({ strapi }: { strapi: any }) => ({
       return {
         globalRank: null,
         countryRank: null,
+        monthRank: null,
+        periodRank: null,
         country: null,
         tier: computeTier(0),
         streak: 0,
@@ -218,9 +345,20 @@ export default ({ strapi }: { strapi: any }) => ({
       ? await (this as any).getCountryRank(profile.points ?? 0, profile.country)
       : null
 
+    // The month rank is always wanted (the standing card's default view);
+    // a different requested period reuses it instead of a second pair of
+    // queries when the period is also "month".
+    const monthRank = await rankForPeriod(strapi, baUserId, "month")
+    const periodRank =
+      period === "month"
+        ? monthRank
+        : await rankForPeriod(strapi, baUserId, period)
+
     return {
       globalRank,
       countryRank,
+      monthRank,
+      periodRank,
       country: profile.country ?? null,
       tier,
       streak: profile.streak ?? 0,
