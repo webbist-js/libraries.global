@@ -193,6 +193,16 @@ const FIELD_GROUPS = (attrs: TrackedAttributes) => [
 
 type Change = { field: string; previous: unknown; next: unknown }
 
+/**
+ * A value for the `previous`/`next` jsonb columns. Strapi's JSON field
+ * stringifies objects but passes a string through as is, and Postgres
+ * rejects `Old Library` as JSON: encode strings here. Strapi parses them
+ * back on read.
+ */
+function jsonColumn(value: unknown): unknown {
+  return typeof value === "string" ? JSON.stringify(value) : value
+}
+
 /** The Change Records one library write produces, before actor fields. */
 function libraryChanges(
   action: Action,
@@ -305,8 +315,8 @@ async function recordLibrary(
     versionStatus: args.versionStatus,
     action,
     field: change.field,
-    previous: change.previous,
-    next: change.next,
+    previous: jsonColumn(change.previous),
+    next: jsonColumn(change.next),
     source: actor.source,
     actorKind: actor.actorKind,
     actorId: actor.actorId,

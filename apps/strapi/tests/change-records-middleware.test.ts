@@ -91,8 +91,8 @@ describe("change-records middleware", () => {
       entityRef: "GB-OLD-001",
       contentLocale: "en",
       versionStatus: "draft",
-      previous: "Old Library",
-      next: "New Library",
+      previous: '"Old Library"',
+      next: '"New Library"',
       source: "system",
       actorKind: "system",
       actorId: "system",
@@ -102,6 +102,37 @@ describe("change-records middleware", () => {
       next: ["s1", "s2"],
     })
     expect(typeof byField.name.changedAt).toBe("string")
+  })
+
+  // Strapi's JSON field stringifies objects but passes a string through as
+  // is, and Postgres rejects `Old Library` as jsonb: a string value must
+  // reach the query engine already encoded. Strapi parses it back on read.
+  it("encodes string values as JSON text for the jsonb columns", async () => {
+    const { strapi, run, rows } = setup({
+      [LIBRARY]: [{ ...lib(), phone: "01234 567890", foundedYear: null }],
+    })
+    const params = {
+      documentId: "lib1",
+      data: { phone: null, foundedYear: "1850" },
+    }
+    await run(LIBRARY, "update", params, () =>
+      strapi.documents(LIBRARY).update(params)
+    )
+    const byField = Object.fromEntries(
+      rows(LIBRARY_CHANGE).map((r) => [r.field, r])
+    )
+    expect(byField.phone).toMatchObject({
+      previous: '"01234 567890"',
+      next: null,
+    })
+    expect(byField.foundedYear).toMatchObject({
+      previous: null,
+      next: '"1850"',
+    })
+    for (const r of rows(LIBRARY_CHANGE)) {
+      for (const v of [r.previous, r.next])
+        if (typeof v === "string") expect(() => JSON.parse(v)).not.toThrow()
+    }
   })
 
   it("writes nothing for a no-op update", async () => {
@@ -174,8 +205,8 @@ describe("change-records middleware", () => {
       action: "publish",
       versionStatus: "published",
       field: "name",
-      previous: "Old Library",
-      next: "Draft Name",
+      previous: '"Old Library"',
+      next: '"Draft Name"',
     })
   })
 
@@ -355,8 +386,8 @@ describe("change-records middleware", () => {
     )
     const written = rows(LIBRARY_CHANGE)
     expect(written.map((r) => [r.contentLocale, r.field, r.next])).toEqual([
-      ["fr", "name", "FR draft"],
-      ["de", "name", "DE draft"],
+      ["fr", "name", '"FR draft"'],
+      ["de", "name", '"DE draft"'],
     ])
     expect(new Set(written.map((r) => r.batchId)).size).toBe(1)
     expect(written.every((r) => r.action === "publish")).toBe(true)
