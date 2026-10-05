@@ -1,21 +1,27 @@
 import type { Metadata } from "next"
 import { headers } from "next/headers"
 
+import { PointsTableCard } from "@/components/community/PointsTableCard"
+import { StandingCard } from "@/components/community/StandingCard"
 import { getSessionSSR } from "@/lib/auth-server"
 import {
   fetchLeaderboard,
   fetchStanding,
-  LEADERBOARD_PERIODS,
   parsePeriod,
+  PERIOD_PHRASE,
 } from "@/lib/community/leaderboard-server"
+import { isVotable } from "@/lib/community/suggestions"
+import { fetchPublicSuggestions } from "@/lib/community/suggestions-server"
 import { T } from "@/lib/design-tokens"
-import { fetchOwnProfile } from "@/lib/own-profile-server"
+import { fetchOwnProfile, type OwnProfile } from "@/lib/own-profile-server"
 import { buildMetadata } from "@/lib/seo/metadata"
+import { getInitials } from "@/lib/types/leaderboard"
 
 import { CommunitySectionHeader } from "../_components/CommunitySectionHeader"
+import { LeaderboardPeriodNav } from "./_components/LeaderboardPeriodNav"
 import { LeaderboardPodium } from "./_components/LeaderboardPodium"
 import { LeaderboardRows } from "./_components/LeaderboardRows"
-import { LeaderboardSidebar } from "./_components/LeaderboardSidebar"
+import { ViewerRankCard } from "./_components/ViewerRankCard"
 
 export async function generateMetadata({
   params,
@@ -33,6 +39,21 @@ export async function generateMetadata({
   })
 }
 
+/** The viewer's initials: from their profile, else their account name. */
+function viewerInitials(
+  profile: OwnProfile | null,
+  user: { name?: string | null; email: string }
+): string {
+  if (profile) return getInitials(profile)
+  const words = (user.name || user.email).trim().split(/\s+/)
+
+  return getInitials({
+    firstName: words[0] ?? null,
+    lastName: words.length > 1 ? (words.at(-1) ?? null) : null,
+    username: null,
+  })
+}
+
 export default async function LeaderboardPage({
   searchParams,
 }: {
@@ -40,105 +61,100 @@ export default async function LeaderboardPage({
 }) {
   const { period: periodParam } = await searchParams
   const period = parsePeriod(periodParam)
+  const periodPhrase = PERIOD_PHRASE[period]
 
   const session = await getSessionSSR(await headers())
+  const user = session?.user ?? null
 
-  const [entries, standing, profileUsername] = await Promise.all([
+  const [entries, standing, profile, suggestions] = await Promise.all([
     fetchLeaderboard(period),
-    session?.user ? fetchStanding(session.user.id) : Promise.resolve(null),
-    session?.user
-      ? fetchOwnProfile(session.user).then((p) => p?.username ?? null)
-      : Promise.resolve(null),
+    user ? fetchStanding(user.id, period) : Promise.resolve(null),
+    user ? fetchOwnProfile(user) : Promise.resolve(null),
+    fetchPublicSuggestions(),
   ])
+  const votableCount = suggestions.filter(isVotable).length
+  const initials = user ? viewerInitials(profile, user) : ""
 
-  const podium = entries.slice(0, 3)
-  const rest = entries.slice(3)
+  const periodRank = standing?.periodRank ?? null
+  // Signed in but not on the board: unranked, or ranked below the rows shown.
+  const showViewerRank =
+    standing != null && (periodRank == null || periodRank > entries.length)
 
   return (
     <div
-      style={{ minHeight: "100vh", background: T.bg.void, color: T.ink.base }}
+      className="relative isolate flex min-h-screen w-full flex-col"
+      style={{ background: T.bg.void, color: T.ink.base }}
     >
       <CommunitySectionHeader
         section="Leaderboard"
         title="The community, *in numbers.*"
-        lead="Contributors who keep the atlas accurate and growing. Points are earned for every approved contribution."
+        lead="The people keeping the atlas accurate and growing. Points are earned only for approved contributions."
+        counts={{ suggestions: votableCount }}
       />
 
-      <div className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-16 sm:px-8">
-        <nav
-          aria-label="Leaderboard period"
-          className="mb-8 flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          style={{ borderBottom: `1px solid ${T.border.line}` }}
+      <div
+        className="mx-auto flex w-full max-w-[1360px] flex-wrap items-start"
+        style={{
+          padding:
+            "clamp(28px,3.4vw,44px) clamp(16px,3vw,32px) clamp(56px,7vw,88px)",
+          gap: "clamp(16px,2.4vw,28px)",
+        }}
+      >
+        <section
+          aria-labelledby="leaderboard-heading"
+          className="flex min-w-0 flex-col"
+          style={{ flex: "2 1 440px", gap: "clamp(24px,3vw,36px)" }}
         >
-          {LEADERBOARD_PERIODS.map(({ key, label }) => {
-            const active = period === key
-
-            return (
-              <a
-                key={key}
-                href={`/community/leaderboard?period=${key}`}
-                aria-current={active ? "page" : undefined}
-                className="-mb-px whitespace-nowrap"
-                style={{
-                  fontFamily: T.font.sans,
-                  fontSize: "15px",
-                  fontWeight: active ? 600 : 500,
-                  color: active ? T.ink.base : T.ink.dim,
-                  textDecoration: "none",
-                  padding: "12px 14px 10px",
-                  borderBottom: active
-                    ? `3px solid ${T.accent.primary}`
-                    : "3px solid transparent",
-                  transition: "color 150ms",
-                }}
-              >
-                {label}
-              </a>
-            )
-          })}
-        </nav>
-
-        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <section aria-labelledby="leaderboard-heading" className="min-w-0">
+          <div className="flex flex-wrap items-center justify-between gap-[12px]">
             <h2
               id="leaderboard-heading"
-              className="m-0 mb-5"
+              className="m-0"
               style={{
                 fontFamily: T.font.serif,
-                fontSize: "clamp(26px,3vw,32px)",
                 fontWeight: 500,
-                letterSpacing: "-0.01em",
+                fontSize: "clamp(30px,3.2vw,42px)",
+                lineHeight: 1.1,
                 color: T.ink.base,
               }}
             >
               Top contributors
             </h2>
-            {entries.length === 0 ? (
-              <div
-                className="rounded-[20px] px-6 py-10 text-center"
-                style={{
-                  background: T.bg.deep,
-                  border: `1px solid ${T.border.line}`,
-                }}
-              >
-                <p className="m-0 text-[16px]" style={{ color: T.ink.dim }}>
-                  No contributions recorded for this period yet.
-                </p>
-              </div>
-            ) : (
-              <>
-                <LeaderboardPodium entries={podium} />
-                <LeaderboardRows entries={rest} />
-              </>
-            )}
-          </section>
+            <LeaderboardPeriodNav period={period} />
+          </div>
 
-          <LeaderboardSidebar
-            isSignedIn={!!session?.user}
+          <LeaderboardPodium entries={entries} periodPhrase={periodPhrase} />
+          <LeaderboardRows entries={entries.slice(3)} youRank={periodRank} />
+
+          {showViewerRank ? (
+            <ViewerRankCard
+              initials={initials}
+              rank={periodRank}
+              periodPhrase={periodPhrase}
+            />
+          ) : null}
+
+          <p
+            className="m-0 text-[14px] leading-normal"
+            style={{ marginTop: -12, color: T.ink.dim }}
+          >
+            Points only come from approved changes. Acceptance rate is shown so
+            careful work counts as much as volume.
+          </p>
+        </section>
+
+        <aside
+          aria-label="Sidebar"
+          className="flex min-w-0 flex-col gap-3.5 min-[760px]:sticky min-[760px]:top-24 min-[760px]:max-w-[440px]"
+          style={{ flex: "1 1 290px" }}
+        >
+          <StandingCard
             standing={standing}
-            profileUsername={profileUsername}
+            signedIn={Boolean(user)}
+            initials={initials}
+            signInReturnTo="/community/leaderboard"
           />
-        </div>
+          <PointsTableCard />
+        </aside>
       </div>
     </div>
   )

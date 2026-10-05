@@ -1,112 +1,146 @@
 import GlobalLink from "@/components/global/GlobalLink"
-import { T, TYPE_TINT } from "@/lib/design-tokens"
+import { T } from "@/lib/design-tokens"
 import {
-  type LeaderboardEntry,
+  entryPlace,
   getDisplayName,
   getInitials,
+  type LeaderboardEntry,
 } from "@/lib/types/leaderboard"
 
-const TIER_COLORS: Record<string, string> = {
-  Reader: T.ink.dim,
-  Indexer: T.ink.dim,
-  Cartographer: T.accent.primary,
-  Archivist: TYPE_TINT.national.fg,
-  Scholar: T.accent.warn,
-  Curator: T.accent.warn,
-}
+import { fmt, rankTint } from "./leaderboard-ui"
 
-export function LeaderboardRows({ entries }: { entries: LeaderboardEntry[] }) {
-  if (entries.length === 0) return null
+const GRID = "grid grid-cols-[32px_minmax(0,1fr)_auto] gap-[12px] px-[18px]"
+
+/** The viewer's row: a faint indigo wash with no token of its own. */
+const YOU_ROW_BG = "#F6F5FD"
+
+function Row({
+  entry,
+  you,
+}: {
+  readonly entry: LeaderboardEntry
+  readonly you: boolean
+}) {
+  const tint = rankTint(entry.rank)
+  const name = getDisplayName(entry)
+  const place = entryPlace(entry)
 
   return (
-    <ol
-      className="m-0 list-none overflow-hidden rounded-[20px] p-0"
-      style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
+    <li
+      className={`${GRID} -mt-px items-center py-[12px]`}
+      style={{
+        borderTop: `1px solid ${T.border.divider}`,
+        background: you ? YOU_ROW_BG : T.bg.deep,
+      }}
     >
-      {entries.map((entry, i) => {
-        const rowClassName =
-          "flex items-center gap-3 px-4 py-3.5 no-underline transition-colors hover:bg-(--t-bg-surface) sm:gap-4 sm:px-6"
-        const rowContent = (
-          <>
-            <span
-              className="w-8 shrink-0 text-right text-[15px] font-semibold tabular-nums"
-              style={{ color: T.ink.dim }}
-            >
-              {entry.rank}
-            </span>
-            <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-[14px] font-semibold"
-              style={{ background: T.accent.chip, color: T.accent.primary }}
-            >
-              {entry.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={entry.avatarUrl}
-                  alt=""
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              ) : (
-                getInitials(entry)
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p
-                className="m-0 truncate text-[16px] font-semibold"
-                style={{ color: T.ink.base }}
-              >
-                {getDisplayName(entry)}
-              </p>
-              <p
-                className="m-0 truncate text-[14px] font-medium"
-                style={{ color: TIER_COLORS[entry.tier] ?? T.ink.dim }}
-              >
-                {entry.tier}
-                {entry.country ? (
-                  <span style={{ color: T.ink.dim }}>
-                    {` · ${entry.country}`}
-                  </span>
-                ) : null}
-              </p>
-            </div>
-            <span className="shrink-0 whitespace-nowrap">
-              <span
-                style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "22px",
-                  fontWeight: 500,
-                  letterSpacing: "-0.02em",
-                  color: T.ink.base,
-                }}
-              >
-                {entry.periodPoints.toLocaleString()}
-              </span>
-              <span className="ml-1 text-[14px]" style={{ color: T.ink.dim }}>
-                pts
-              </span>
-            </span>
-          </>
-        )
-
-        return (
-          <li
-            key={entry.rank}
-            style={
-              i > 0 ? { borderTop: `1px solid ${T.border.divider}` } : undefined
-            }
-          >
+      <span className="text-[16px] font-bold" style={{ color: T.ink.dim }}>
+        {entry.rank}
+      </span>
+      <span className="flex min-w-0 items-center gap-[12px]">
+        <span
+          aria-hidden="true"
+          className="flex size-[36px] shrink-0 items-center justify-center rounded-full text-[13px] font-bold"
+          style={{ background: tint.bg, color: tint.fg }}
+        >
+          {getInitials(entry)}
+        </span>
+        <span className="flex min-w-0 flex-col">
+          <span className="flex flex-wrap items-center gap-[8px]">
             {entry.username ? (
               <GlobalLink
                 href={`/profile/${entry.username}`}
-                className={rowClassName}
+                className="min-w-0 text-[16px] font-bold wrap-break-word no-underline hover:underline"
+                style={{ color: T.ink.base }}
               >
-                {rowContent}
+                {name}
               </GlobalLink>
             ) : (
-              <div className={rowClassName}>{rowContent}</div>
+              <span
+                className="min-w-0 text-[16px] font-bold wrap-break-word"
+                style={{ color: T.ink.base }}
+              >
+                {name}
+              </span>
             )}
-          </li>
-        )
-      })}
-    </ol>
+            {you ? (
+              <span
+                className="rounded-full px-[8px] py-[2px] text-[12px] font-bold text-white"
+                style={{ background: T.accent.primary }}
+              >
+                You
+              </span>
+            ) : null}
+          </span>
+          <span className="text-[14px]" style={{ color: T.ink.dim }}>
+            {place ? `${entry.tier} · ${place}` : entry.tier}
+          </span>
+        </span>
+      </span>
+      <span className="flex flex-col items-end gap-[2px] text-right">
+        <span
+          className="leading-none"
+          style={{
+            fontFamily: T.font.serif,
+            fontSize: 24,
+            color: T.ink.base,
+          }}
+        >
+          <span className="sr-only">Points: </span>
+          {fmt(entry.periodPoints)}
+        </span>
+        <span
+          className="text-[13px] whitespace-nowrap"
+          style={{ color: T.ink.dim }}
+        >
+          {fmt(entry.approvedCount)} approved
+          {entry.acceptanceRate == null ? "" : ` · ${entry.acceptanceRate}%`}
+        </span>
+      </span>
+    </li>
+  )
+}
+
+/**
+ * Rank 4 and below, under the podium. Renders nothing when there are none.
+ * The viewer's row (`youRank`) gets a "You" chip and a tinted background.
+ */
+export function LeaderboardRows({
+  entries,
+  youRank = null,
+}: {
+  readonly entries: readonly LeaderboardEntry[]
+  /** The viewer's rank for this period, from their standing. */
+  readonly youRank?: number | null
+}) {
+  if (entries.length === 0) return null
+
+  return (
+    <div
+      className="overflow-hidden rounded-3xl"
+      style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
+    >
+      <div
+        aria-hidden="true"
+        className={`${GRID} py-[12px] text-[14px] font-bold`}
+        style={{
+          background: T.bg.surface,
+          borderBottom: `1px solid ${T.border.divider}`,
+          color: T.ink.dim,
+        }}
+      >
+        <span>#</span>
+        <span>Contributor</span>
+        <span className="text-right">Points</span>
+      </div>
+      <ol className="m-0 list-none p-0" start={entries[0]?.rank}>
+        {entries.map((entry) => (
+          <Row
+            key={entry.rank}
+            entry={entry}
+            you={youRank != null && entry.rank === youRank}
+          />
+        ))}
+      </ol>
+    </div>
   )
 }
