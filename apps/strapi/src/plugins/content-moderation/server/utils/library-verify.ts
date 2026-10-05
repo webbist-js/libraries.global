@@ -148,25 +148,37 @@ export async function applyVerification(
   return mode === "draft_only" ? "applied_draft" : "applied"
 }
 
-/** The live values a Moderator checks a verification against. */
+const STAMP_FIELDS = new Set(["verifiedSections", "lastVerifiedAt"])
+
+/**
+ * The live values a Moderator checks a verification against, with the
+ * section stamps and `lastVerifiedAt`, so the review dates each section by
+ * the shared `sectionCheckedAt` rule, as the library page does.
+ */
 export async function verifyReview(strapi: any, submission: Submission) {
   if (!isVerification(submission.fields)) return null
   const sections = verifySections(submission.fields)
   const base = await defaultLocale(strapi)
   const fields = [
     ...new Set(sections.flatMap((s) => SECTION_FIELDS[s])),
-    "verifiedSections",
+    ...STAMP_FIELDS,
   ]
   const library = await findLibrary(strapi, submission, base, fields)
   if (!library) return null
   const current: Record<string, unknown> = {}
   for (const f of fields)
-    if (f !== "verifiedSections" && library && f in library)
-      current[f] = library[f]
+    if (!STAMP_FIELDS.has(f) && f in library) current[f] = library[f]
+  const last = library.lastVerifiedAt
 
   return {
     sections,
     current,
-    verifiedSections: stampSections(library?.verifiedSections, [], new Date()),
+    verifiedSections: stampSections(library.verifiedSections, [], new Date()),
+    lastVerifiedAt:
+      last instanceof Date
+        ? last.toISOString()
+        : isValidStamp(last)
+          ? last
+          : null,
   }
 }

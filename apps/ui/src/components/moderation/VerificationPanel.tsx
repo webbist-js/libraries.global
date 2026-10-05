@@ -4,6 +4,7 @@ import type { ReactNode } from "react"
 import { Notice } from "@/components/ds/Notice"
 import {
   SECTION_LABELS,
+  sectionCheckedAt,
   statusLabel,
   toSections,
   type VerifySection,
@@ -19,7 +20,11 @@ type VerifyReview = {
   sections?: unknown
   current: Record<string, unknown>
   verifiedSections?: Record<string, unknown> | null
+  lastVerifiedAt?: string | null
 }
+
+/** Strapi loads a review only while the submission is open. */
+const OPEN_STATUSES: ReadonlySet<string> = new Set(["pending", "needs_info"])
 
 const isReview = (v: unknown): v is VerifyReview =>
   !!v &&
@@ -137,17 +142,21 @@ function LiveValue({
 /**
  * "Still right?" (a correction with `fields.kind: "verify"`): the sections
  * a reader confirmed, each with the library's live value (`review.current`,
- * loaded by Strapi) and when it was last checked. Approval changes no
- * values; it stamps each section as checked today.
+ * loaded by Strapi) and when it was last checked, by the same rule as the
+ * library page. Approval changes no values; it stamps each section as
+ * checked today.
  */
 export function VerificationPanel({
   fields,
   review: rawReview,
+  status = null,
   evidenceType = null,
   evidenceUrl = null,
 }: {
   readonly fields: unknown
   readonly review: unknown
+  /** The submission's status: a decided one has no review to show. */
+  readonly status?: string | null
   readonly evidenceType?: string | null
   readonly evidenceUrl?: string | null
 }) {
@@ -155,7 +164,9 @@ export function VerificationPanel({
     (fields as { sections?: unknown } | null)?.sections
   )
   const review = isReview(rawReview) ? rawReview : null
-  const stamps = review?.verifiedSections ?? {}
+  // Without a review, an open submission's library is gone; a decided one
+  // simply isn't reviewed any more.
+  const missing = !review && status !== null && OPEN_STATUSES.has(status)
   const evidence = [
     evidenceType === "on_site_visit"
       ? {
@@ -182,7 +193,7 @@ export function VerificationPanel({
         Approving marks each section below as checked today. Nothing in the
         record changes, so check the live values against how they checked.
       </p>
-      {review ? null : (
+      {missing ? (
         <Notice
           icon="mdi:alert-circle-outline"
           title="The library could not be found"
@@ -190,7 +201,7 @@ export function VerificationPanel({
         >
           It may have been deleted or renamed, so approving changes nothing.
         </Notice>
-      )}
+      ) : null}
       <KeyValueList rows={evidence} />
       <h3
         className="m-0 text-[16px] font-semibold"
@@ -200,7 +211,7 @@ export function VerificationPanel({
       </h3>
       <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
         {sections.map((s) => {
-          const last = checkedOn(stamps[s])
+          const last = checkedOn(review ? sectionCheckedAt(review, s) : null)
 
           return (
             <li

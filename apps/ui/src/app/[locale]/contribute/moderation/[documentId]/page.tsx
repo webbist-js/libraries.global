@@ -123,6 +123,7 @@ const PANELS: Record<
         <VerificationPanel
           fields={d.fields}
           review={d.review}
+          status={d.status}
           evidenceType={d.evidenceType}
           evidenceUrl={d.evidenceUrl}
         />

@@ -539,6 +539,7 @@ describe("GET /moderation/submissions/:documentId", () => {
         phone: "111",
       },
       verifiedSections: { status: "2025-01-01T00:00:00.000Z" },
+      lastVerifiedAt: null,
     })
   })
 })

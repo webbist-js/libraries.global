@@ -77,6 +77,33 @@ describe("verify helpers", () => {
 })
 
 describe("verifyReview", () => {
+  it("returns the live values, the stamps and lastVerifiedAt", async () => {
+    const { strapi } = makeFakeStrapi({
+      [LIBRARY]: [
+        {
+          documentId: "lib00000000000000000001",
+          locale: "en",
+          city: "York",
+          verifiedSections: null,
+          lastVerifiedAt: "2025-03-01T00:00:00.000Z",
+        },
+      ],
+    })
+
+    expect(
+      await verifyReview(strapi, {
+        documentId: "s1",
+        targetDocumentId: "lib00000000000000000001",
+        fields: { kind: "verify", sections: ["address"] },
+      })
+    ).toEqual({
+      sections: ["address"],
+      current: { city: "York" },
+      verifiedSections: {},
+      lastVerifiedAt: "2025-03-01T00:00:00.000Z",
+    })
+  })
+
   it("returns null when the library isn't found", async () => {
     const { strapi } = makeFakeStrapi({ [LIBRARY]: [] })
 

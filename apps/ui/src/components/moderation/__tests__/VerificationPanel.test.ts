@@ -70,13 +70,52 @@ describe("VerificationPanel", () => {
   })
 
   it("says when the library can't be found", () => {
+    for (const status of ["pending", "needs_info"]) {
+      render(
+        createElement(VerificationPanel, {
+          fields: { kind: "verify", sections: ["address"] },
+          review: null,
+          status,
+        })
+      )
+      expect(screen.getByText(/library could not be found/i)).toBeTruthy()
+      expect(screen.getByRole("heading", { name: "Address" })).toBeTruthy()
+      cleanup()
+    }
+  })
+
+  it("doesn't call the library missing once the submission is decided", () => {
+    for (const status of ["approved", "rejected", "draft"]) {
+      render(
+        createElement(VerificationPanel, {
+          fields: { kind: "verify", sections: ["address"] },
+          review: null,
+          status,
+        })
+      )
+      expect(screen.queryByText(/library could not be found/i)).toBeNull()
+      cleanup()
+    }
+  })
+
+  it("dates a legacy record's sections by its last check, as the library page does", () => {
     render(
       createElement(VerificationPanel, {
-        fields: { kind: "verify", sections: ["address"] },
-        review: null,
+        fields: { kind: "verify", sections: ["hours", "address"] },
+        review: {
+          sections: ["hours", "address"],
+          current: { openingTimes: hours, streetAddress: "1 High St" },
+          verifiedSections: {},
+          lastVerifiedAt: "2025-03-01T00:00:00.000Z",
+        },
+        status: "pending",
       })
     )
-    expect(screen.getByText(/library could not be found/i)).toBeTruthy()
-    expect(screen.getByRole("heading", { name: "Address" })).toBeTruthy()
+    expect(
+      within(sectionOf("Opening hours")).getByText("Last checked 1 Mar 2025")
+    ).toBeTruthy()
+    expect(
+      within(sectionOf("Address")).getByText("Last checked 1 Mar 2025")
+    ).toBeTruthy()
   })
 })
