@@ -65,6 +65,9 @@ export const LIBRARY_IGNORED: ReadonlySet<string> = new Set([
   "localizations",
   "completeness",
   "gaps", // derived, like completeness
+  // Per-section check stamps: lastVerifiedAt (the latest of them) is still
+  // recorded, and that's what the history's verification months count.
+  "verifiedSections",
   // Derived from the location slugs by the entityRef lifecycle, which
   // rewrites it with a nested document update; every row still carries it
   // in the `entityRef` column.

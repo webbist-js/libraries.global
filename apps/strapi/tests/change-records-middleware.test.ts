@@ -156,6 +156,19 @@ describe("change-records middleware", () => {
     expect(rows(LIBRARY_CHANGE)).toHaveLength(0)
   })
 
+  it("ignores verifiedSections but records lastVerifiedAt", async () => {
+    const { strapi, run, rows } = setup({ [LIBRARY]: [lib()] })
+    const at = "2026-10-05T12:00:00.000Z"
+    const params = {
+      documentId: "lib1",
+      data: { verifiedSections: { hours: at }, lastVerifiedAt: at },
+    }
+    await run(LIBRARY, "update", params, () =>
+      strapi.documents(LIBRARY).update(params)
+    )
+    expect(rows(LIBRARY_CHANGE).map((r) => r.field)).toEqual(["lastVerifiedAt"])
+  })
+
   it("records actor fields from the change context", async () => {
     const { strapi, run, rows } = setup({ [LIBRARY]: [lib()] })
     const params = { documentId: "lib1", data: { name: "Via submission" } }
