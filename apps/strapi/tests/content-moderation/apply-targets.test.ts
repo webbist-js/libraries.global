@@ -366,6 +366,68 @@ describe("new_library approval", () => {
       connect: [{ documentId: "cty00000000000000000001" }],
     })
   })
+
+  const approveNew = async (fields: Record<string, unknown>) => {
+    const sub = {
+      documentId: "s0000000000000000000021",
+      submissionType: "new_library",
+      status: "pending",
+      submittedByUserId: "u1",
+      fields,
+      draftData: null,
+    }
+    const { strapi, store, services } = makeFakeStrapi({
+      [SUB]: [sub],
+      [LIB]: [],
+      "api::library-affiliation.library-affiliation": [],
+    })
+    services["rewards.points"] = { award: vi.fn(async () => {}) }
+    const result = await createService({ strapi }).updateStatus(
+      sub.documentId,
+      "approved",
+      REVIEWER
+    )
+    expect(result).not.toHaveProperty("error")
+
+    return store[LIB][0]
+  }
+
+  it("stamps the verifiable sections its data sets", async () => {
+    const lib = await approveNew({
+      name: "Lib",
+      city: "York",
+      website: "https://lib.example",
+      operationalStatus: "open",
+      openingTimes: {
+        version: 1,
+        days: [
+          {
+            day: "monday",
+            enabled: true,
+            timeframes: [{ startTime: "09:00", endTime: "17:00" }],
+          },
+        ],
+      },
+    })
+    expect(Object.keys(lib.verifiedSections).sort()).toEqual([
+      "address",
+      "contact",
+      "hours",
+      "status",
+    ])
+    const stamps = Object.values(lib.verifiedSections) as string[]
+    expect(new Set(stamps).size).toBe(1)
+    expect(new Date(lib.lastVerifiedAt).toISOString()).toBe(stamps[0])
+    expect(lib.contentUpdatedAt).toBeInstanceOf(Date)
+  })
+
+  it("checks nothing when its data sets no verifiable section", async () => {
+    const lib = await approveNew({ name: "Lib", summary: "A library" })
+    expect(lib.verifiedSections).toBeUndefined()
+    expect(lib.lastVerifiedAt).toBeUndefined()
+    expect(lib.operationalStatus).toBe("unknown")
+    expect(lib.contentUpdatedAt).toBeInstanceOf(Date)
+  })
 })
 
 describe("ownedUploadIds", () => {

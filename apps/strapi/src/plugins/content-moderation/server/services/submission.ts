@@ -32,6 +32,9 @@ import {
 import {
   applyVerification,
   isVerification,
+  latestStamp,
+  sectionsSetBy,
+  stampSections,
   verifySections,
 } from "../utils/library-verify"
 import {
@@ -944,93 +947,98 @@ export default ({ strapi }: { strapi: any }) => ({
             // and a retry creates another one alongside it.
             let createdLibraryDocumentId: string | undefined
             try {
+              const libraryData: Record<string, unknown> = {
+                name,
+                // Publishing validates the required slug; a draft gets
+                // one from the Content Manager.
+                ...(publishLibrary
+                  ? {
+                      slug: await uniqueLibrarySlug(strapi, librarySlug(name)),
+                    }
+                  : {}),
+                libraryType: (f.libraryType as string) ?? "Other",
+                operationalStatus: (f.operationalStatus as string) ?? "unknown",
+                operatorType: (f.operatorType as string) || undefined,
+                entityRef: tempRef,
+                shortName: (f.shortName as string) || undefined,
+                summary: (f.summary as string) || undefined,
+                streetAddress: (f.streetAddress as string) || undefined,
+                city: (f.city as string) || undefined,
+                district: (f.district as string) || undefined,
+                postalCode: (f.postalCode as string) || undefined,
+                website: link(f.website),
+                catalogueUrl: link(f.catalogueUrl),
+                planVisitUrl: link(f.planVisitUrl),
+                membershipUrl: link(f.membershipUrl),
+                bookingUrl: link(f.bookingUrl),
+                donationUrl: link(f.donationUrl),
+                virtualTourUrl: link(f.virtualTourUrl),
+                virtualTourEmbed: (f.virtualTourEmbed as string) || undefined,
+                email: (f.email as string) || undefined,
+                phone: (f.phone as string) || undefined,
+                admissionInfo: (f.admissionInfo as string) || undefined,
+                transitInfo: (f.transitInfo as string) || undefined,
+                languagesServed: (f.languagesServed as string) || undefined,
+                foundedYear: (f.foundedYear as string) || undefined,
+                openedYear: (f.openedYear as string) || undefined,
+                closedYear: (f.closedYear as string) || undefined,
+                architect: (f.architect as string) || undefined,
+                buildingInfo: (f.buildingInfo as string) || undefined,
+                iiifEndpoint: link(f.iiifEndpoint),
+                classificationSystem:
+                  (f.classificationSystem as string) || undefined,
+                source: (f.source as string) || undefined,
+                sourceUrl: link(f.sourceUrl),
+                closureReason: (f.closureReason as string) || undefined,
+                openingTimes: f.openingTimes || undefined,
+                accessibilityNotes: toBlocks(f.accessibilityNotes),
+                visitNotes: toBlocks(f.visitNotes),
+                contentUpdatedAt: new Date(),
+                location:
+                  f.lat && f.lng
+                    ? {
+                        lat: Number.parseFloat(String(f.lat)),
+                        lng: Number.parseFloat(String(f.lng)),
+                      }
+                    : undefined,
+                continent: connectOne(place.continent),
+                country: connectOne(place.country),
+                region: connectOne(place.region),
+                area: connectOne(place.area),
+                heroImage: heroImage
+                  ? { connect: [{ id: heroImage.strapiId }] }
+                  : undefined,
+                gallery:
+                  galleryImages.length > 0
+                    ? {
+                        connect: galleryImages.map((img) => ({
+                          id: img.strapiId,
+                        })),
+                      }
+                    : undefined,
+                socialLinks:
+                  socialLinksData.length > 0 ? socialLinksData : undefined,
+                services: connectIds(f.services),
+                amenities: connectIds(f.amenities),
+                accessibility: connectIds(f.accessibility),
+              }
+              // The verifiable sections it sets (hours, status, address,
+              // contact) are checked by this approval: each is stamped and
+              // lastVerifiedAt is the latest stamp. Setting none checks
+              // nothing (see utils/library-verify).
+              const checked = sectionsSetBy(libraryData)
+              if (checked.length > 0) {
+                const stamps = stampSections(null, checked, new Date())
+                libraryData.verifiedSections = stamps
+                libraryData.lastVerifiedAt = latestStamp(stamps)
+              }
               const newLibrary = await strapi
                 .documents("api::library.library")
                 .create({
                   // A new library starts in the default locale; translations
                   // are corrections to it.
                   locale: await defaultLocale(strapi),
-                  data: {
-                    name,
-                    // Publishing validates the required slug; a draft gets
-                    // one from the Content Manager.
-                    ...(publishLibrary
-                      ? {
-                          slug: await uniqueLibrarySlug(
-                            strapi,
-                            librarySlug(name)
-                          ),
-                        }
-                      : {}),
-                    libraryType: (f.libraryType as string) ?? "Other",
-                    operationalStatus:
-                      (f.operationalStatus as string) ?? "unknown",
-                    operatorType: (f.operatorType as string) || undefined,
-                    entityRef: tempRef,
-                    shortName: (f.shortName as string) || undefined,
-                    summary: (f.summary as string) || undefined,
-                    streetAddress: (f.streetAddress as string) || undefined,
-                    city: (f.city as string) || undefined,
-                    district: (f.district as string) || undefined,
-                    postalCode: (f.postalCode as string) || undefined,
-                    website: link(f.website),
-                    catalogueUrl: link(f.catalogueUrl),
-                    planVisitUrl: link(f.planVisitUrl),
-                    membershipUrl: link(f.membershipUrl),
-                    bookingUrl: link(f.bookingUrl),
-                    donationUrl: link(f.donationUrl),
-                    virtualTourUrl: link(f.virtualTourUrl),
-                    virtualTourEmbed:
-                      (f.virtualTourEmbed as string) || undefined,
-                    email: (f.email as string) || undefined,
-                    phone: (f.phone as string) || undefined,
-                    admissionInfo: (f.admissionInfo as string) || undefined,
-                    transitInfo: (f.transitInfo as string) || undefined,
-                    languagesServed: (f.languagesServed as string) || undefined,
-                    foundedYear: (f.foundedYear as string) || undefined,
-                    openedYear: (f.openedYear as string) || undefined,
-                    closedYear: (f.closedYear as string) || undefined,
-                    architect: (f.architect as string) || undefined,
-                    buildingInfo: (f.buildingInfo as string) || undefined,
-                    iiifEndpoint: link(f.iiifEndpoint),
-                    classificationSystem:
-                      (f.classificationSystem as string) || undefined,
-                    source: (f.source as string) || undefined,
-                    sourceUrl: link(f.sourceUrl),
-                    closureReason: (f.closureReason as string) || undefined,
-                    openingTimes: f.openingTimes || undefined,
-                    accessibilityNotes: toBlocks(f.accessibilityNotes),
-                    visitNotes: toBlocks(f.visitNotes),
-                    lastVerifiedAt: new Date(),
-                    contentUpdatedAt: new Date(),
-                    location:
-                      f.lat && f.lng
-                        ? {
-                            lat: Number.parseFloat(String(f.lat)),
-                            lng: Number.parseFloat(String(f.lng)),
-                          }
-                        : undefined,
-                    continent: connectOne(place.continent),
-                    country: connectOne(place.country),
-                    region: connectOne(place.region),
-                    area: connectOne(place.area),
-                    heroImage: heroImage
-                      ? { connect: [{ id: heroImage.strapiId }] }
-                      : undefined,
-                    gallery:
-                      galleryImages.length > 0
-                        ? {
-                            connect: galleryImages.map((img) => ({
-                              id: img.strapiId,
-                            })),
-                          }
-                        : undefined,
-                    socialLinks:
-                      socialLinksData.length > 0 ? socialLinksData : undefined,
-                    services: connectIds(f.services),
-                    amenities: connectIds(f.amenities),
-                    accessibility: connectIds(f.accessibility),
-                  },
+                  data: libraryData,
                   status: "draft",
                 })
               createdLibraryDocumentId = newLibrary.documentId
