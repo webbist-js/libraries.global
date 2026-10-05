@@ -378,6 +378,132 @@ describe("applyLibraryRecord", () => {
   })
 })
 
+describe("applyLibraryRecord reports the fields that changed", () => {
+  const A = "acc00000000000000000001"
+  const B = "acc00000000000000000002"
+  const weekday = (startTime: string, id: string) => ({
+    version: 1,
+    days: [
+      {
+        day: "monday",
+        enabled: true,
+        timeframes: [{ id, startTime, endTime: "17:00", staffing: "staffed" }],
+      },
+    ],
+  })
+  const seeded = (extra: Record<string, unknown> = {}) =>
+    memoised({
+      [LIBRARY]: [
+        {
+          documentId: ID,
+          slug: "lib",
+          name: "Lib",
+          locale: "en",
+          city: "York",
+          phone: "01904 000000",
+          website: "https://lib.example",
+          openingTimes: weekday("09:00", "kept-id"),
+          accessibility: [{ documentId: A }],
+          ...extra,
+        },
+      ],
+    })
+
+  it("leaves out fields sent with their current value", async () => {
+    const { strapi } = seeded()
+    const report = { changed: [] as string[] }
+    await applyLibraryRecord(
+      strapi,
+      {
+        documentId: "s1",
+        targetDocumentId: ID,
+        fields: {
+          kind: "record",
+          city: "York",
+          phone: " 01904 000000 ",
+          website: "https://lib.example",
+          streetAddress: "1 High St",
+        },
+      },
+      undefined,
+      report
+    )
+    expect(report.changed).toEqual(["streetAddress"])
+  })
+
+  it("compares hours by their times, not their timeframe ids", async () => {
+    const { strapi } = seeded()
+    const same = { changed: ["stale"] }
+    await applyLibraryRecord(
+      strapi,
+      {
+        documentId: "s1",
+        targetDocumentId: ID,
+        fields: { kind: "record", openingTimes: weekday("09:00", "new-id") },
+      },
+      undefined,
+      same
+    )
+    expect(same.changed).toEqual([])
+
+    const moved = { changed: [] as string[] }
+    await applyLibraryRecord(
+      strapi,
+      {
+        documentId: "s2",
+        targetDocumentId: ID,
+        fields: { kind: "record", openingTimes: weekday("10:00", "new-id") },
+      },
+      undefined,
+      moved
+    )
+    expect(moved.changed).toEqual(["openingTimes"])
+  })
+
+  it("counts a relation change only when it links or unlinks something", async () => {
+    const run = async (accessibility: unknown) => {
+      const { strapi } = seeded()
+      const report = { changed: [] as string[] }
+      await applyLibraryRecord(
+        strapi,
+        {
+          documentId: "s1",
+          targetDocumentId: ID,
+          fields: { kind: "record", accessibility },
+        },
+        undefined,
+        report
+      )
+
+      return report.changed
+    }
+    expect(await run({ connect: [A] })).toEqual([])
+    expect(await run({ disconnect: [B] })).toEqual([])
+    expect(await run([A])).toEqual([])
+    expect(await run({ connect: [B] })).toEqual(["accessibility"])
+    expect(await run({ disconnect: [A] })).toEqual(["accessibility"])
+    expect(await run([A, B])).toEqual(["accessibility"])
+  })
+
+  it("reports nothing when nothing was applied", async () => {
+    const { strapi } = seeded()
+    const report = { changed: ["stale"] }
+    expect(
+      await applyLibraryRecord(
+        strapi,
+        {
+          documentId: "s1",
+          targetSlug: "missing",
+          fields: { kind: "record", city: "Leeds" },
+        },
+        undefined,
+        report
+      )
+    ).toBe("noop")
+    expect(report.changed).toEqual([])
+  })
+})
+
 describe("verifiedActions", () => {
   const hours = sanitizeOpeningTimes({
     version: 1,
@@ -421,6 +547,17 @@ describe("verifiedActions", () => {
   it("earns nothing for other fields", () => {
     expect(verifiedActions({ kind: "record", city: "York" }, false)).toEqual([])
     expect(verifiedActions(null, false)).toEqual([])
+  })
+
+  it("earns only for the sections whose fields changed, when told which did", () => {
+    const both = { openingTimes: hours, operationalStatus: "open" }
+    expect(verifiedActions(both, false, ["operationalStatus"])).toEqual([
+      "status_verified",
+    ])
+    expect(verifiedActions(both, false, ["openingTimes"])).toEqual([
+      "hours_verified",
+    ])
+    expect(verifiedActions(both, false, [])).toEqual([])
   })
 
   it("earns nothing in a translation, which can't change shared fields", () => {

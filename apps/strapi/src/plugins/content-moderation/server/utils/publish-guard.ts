@@ -138,7 +138,8 @@ const META_KEYS = new Set([
   "verifiedSections",
 ])
 
-function canonical(v: unknown): string {
+/** A stable text form for comparing values: null, undefined and "" agree. */
+export function canonical(v: unknown): string {
   if (v === undefined || v === null || v === "") return "null"
   if (Array.isArray(v)) return `[${v.map(canonical).join(",")}]`
   if (typeof v === "object") {

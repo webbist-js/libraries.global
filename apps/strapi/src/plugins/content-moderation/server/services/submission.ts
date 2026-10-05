@@ -27,6 +27,7 @@ import {
   type ApplyRecordOutcome,
   isHttpUrl,
   isRecordCorrection,
+  type RecordChangeReport,
   verifiedActions,
 } from "../utils/library-record"
 import {
@@ -311,25 +312,25 @@ export type SubmissionExtras = Partial<
 >
 
 /**
- * The points action and amount for an approved library edit (a claimant's
- * `library_edit`, or a structured record `correction` — C-L1 applies both
- * the same way): 1–3 allowlisted, non-empty `LIBRARY_FIELDS` keys score a
- * minor edit, 4+ a major one.
+ * The points for an approved library edit (a claimant's `library_edit`, or a
+ * structured record `correction` — C-L1 applies both the same way), from
+ * the `LIBRARY_FIELDS` the apply actually changed (`applyLibraryRecord`'s
+ * report): 1–3 score a minor edit, 4+ a major one. Fields sent with their
+ * current value don't count, so padding a correction earns nothing; one
+ * that changes nothing earns the base correction points.
  */
-function editAction(
-  fields: Record<string, unknown>
-): readonly ["edit_accepted_minor" | "edit_accepted_major", number] {
-  const fieldCount = Object.keys(fields).filter(
-    (k) =>
-      LIBRARY_FIELDS.has(k) &&
-      fields[k] !== null &&
-      fields[k] !== undefined &&
-      fields[k] !== ""
-  ).length
+function editAction(changed: readonly string[]): {
+  action: "edit_accepted_minor" | "edit_accepted_major" | "correction_approved"
+  points: number
+  fieldCount: number
+} {
+  const fieldCount = changed.filter((k) => LIBRARY_FIELDS.has(k)).length
+  if (fieldCount === 0)
+    return { action: "correction_approved", points: 2, fieldCount }
 
   return fieldCount >= 4
-    ? (["edit_accepted_major", 15] as const)
-    : (["edit_accepted_minor", 5] as const)
+    ? { action: "edit_accepted_major", points: 15, fieldCount }
+    : { action: "edit_accepted_minor", points: 5, fieldCount }
 }
 
 const SUBMISSION_UID = "plugin::content-moderation.submission"
@@ -809,6 +810,9 @@ export default ({ strapi }: { strapi: any }) => ({
     // What the article apply actually did; points depend on it, never on
     // the submission alone (a `noop` or a skipped suggestion earns nothing).
     let articleOutcome: ApplyArticleOutcome | null = null
+    // The library fields a record edit actually changed (filled by the
+    // apply); its points depend on them, not on the fields it sent.
+    const recordChange: RecordChangeReport = { changed: [] }
 
     // The status change and everything it applies (library, article,
     // affiliation, role, review markers) commit together: a throw anywhere
@@ -1225,7 +1229,10 @@ export default ({ strapi }: { strapi: any }) => ({
             const outcome: ApplyRecordOutcome =
               submission.submissionType === "library_edit" ||
               isRecordCorrection(submission.fields)
-                ? await (this as any).applyLibraryRecord(submission)
+                ? await (this as any).applyLibraryRecord(
+                    submission,
+                    recordChange
+                  )
                 : isPhotoCorrection(submission.fields)
                   ? await (this as any).applyLibraryPhoto(submission)
                   : isVerification(submission.fields)
@@ -1409,18 +1416,20 @@ export default ({ strapi }: { strapi: any }) => ({
         submission?.submissionType === "library_edit"
       ) {
         try {
-          const fields = (submission.fields ?? {}) as Record<string, unknown>
-          const [action, pts] = editAction(fields)
-
-          await strapi.plugin("rewards").service("points").award(
-            submission.submittedByUserId,
-            action,
-            pts,
-            {
-              submissionId: documentId,
-            },
-            `${documentId}:${action}`
+          const { action, points, fieldCount } = editAction(
+            recordChange.changed
           )
+
+          await strapi
+            .plugin("rewards")
+            .service("points")
+            .award(
+              submission.submittedByUserId,
+              action,
+              points,
+              { submissionId: documentId, fieldCount },
+              `${documentId}:${action}`
+            )
         } catch (err) {
           strapi.log.warn(
             "[content-moderation] rewards.award (edit) failed:",
@@ -1439,22 +1448,28 @@ export default ({ strapi }: { strapi: any }) => ({
         try {
           const fields = submission.fields as Record<string, unknown>
           const kind = fields?.kind
-          const [action, pts] = isRecordCorrection(fields)
-            ? editAction(fields)
+          const edit = isRecordCorrection(fields)
+            ? editAction(recordChange.changed)
+            : null
+          const [action, pts] = edit
+            ? ([edit.action, edit.points] as const)
             : kind === "photo"
               ? (["photo_licensed_cc", 8] as const)
               : kind === "source"
                 ? (["source_added", 3] as const)
                 : (["correction_approved", 2] as const)
-          await strapi.plugin("rewards").service("points").award(
-            submission.submittedByUserId,
-            action,
-            pts,
-            {
-              submissionId: documentId,
-            },
-            `${documentId}:${action}`
-          )
+          await strapi
+            .plugin("rewards")
+            .service("points")
+            .award(
+              submission.submittedByUserId,
+              action,
+              pts,
+              edit
+                ? { submissionId: documentId, fieldCount: edit.fieldCount }
+                : { submissionId: documentId },
+              `${documentId}:${action}`
+            )
         } catch (err) {
           strapi.log.warn(
             "[content-moderation] rewards.award (correction) failed:",
@@ -1493,7 +1508,11 @@ export default ({ strapi }: { strapi: any }) => ({
                     ? (["status_verified"] as const)
                     : []
               )
-            : verifiedActions(submission.fields, locale !== base)
+            : verifiedActions(
+                submission.fields,
+                locale !== base,
+                recordChange.changed
+              )
           for (const action of actions) {
             await strapi
               .plugin("rewards")
@@ -2045,8 +2064,14 @@ export default ({ strapi }: { strapi: any }) => ({
     return applyFacilityAnswers(strapi, submission)
   },
 
-  /** Applies an approved library_edit or record correction (see utils/library-record). */
-  async applyLibraryRecord(submission: any): Promise<ApplyRecordOutcome> {
+  /**
+   * Applies an approved library_edit or record correction (see
+   * utils/library-record); `report` receives the fields it changed.
+   */
+  async applyLibraryRecord(
+    submission: any,
+    report?: RecordChangeReport
+  ): Promise<ApplyRecordOutcome> {
     const f = (submission.fields ?? {}) as Record<string, unknown>
     const claimed = Array.isArray(f.uploadedImages)
       ? (f.uploadedImages as { strapiId?: unknown }[])
@@ -2057,7 +2082,7 @@ export default ({ strapi }: { strapi: any }) => ({
       claimed.map((i) => Number(i.strapiId)).filter(Number.isInteger)
     )
 
-    return applyLibraryRecord(strapi, submission, owned)
+    return applyLibraryRecord(strapi, submission, owned, report)
   },
 
   /** Adds an approved photo to the library (see utils/library-photo). */

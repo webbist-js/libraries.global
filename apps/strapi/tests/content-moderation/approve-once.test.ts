@@ -224,6 +224,95 @@ describe("updateStatus", () => {
     expect(actions).not.toContain("correction_approved")
   })
 
+  it("scores a padded record correction by the fields it changes", async () => {
+    const c = {
+      ...pendingRecordCorrection(),
+      fields: {
+        kind: "record",
+        city: "York",
+        phone: "01904 000000",
+        website: "https://lib.example",
+        streetAddress: "1 High St",
+        previous: {},
+      },
+    }
+    c.payloadHash = payloadHash(c)
+    const f = makeFakeStrapi({
+      [UID]: [c],
+      "api::library.library": [
+        {
+          ...LIBRARY_SEED["api::library.library"][0],
+          city: "York",
+          phone: "01904 000000",
+          website: "https://lib.example",
+        },
+      ],
+    })
+    const award = vi.fn(async () => {})
+    f.services["rewards.points"] = { award }
+    await createService({ strapi: f.strapi }).updateStatus(
+      c.documentId,
+      "approved",
+      REVIEWER
+    )
+    expect(award).toHaveBeenCalledTimes(1)
+    expect(award).toHaveBeenCalledWith(
+      "u4",
+      "edit_accepted_minor",
+      5,
+      { submissionId: c.documentId, fieldCount: 1 },
+      `${c.documentId}:edit_accepted_minor`
+    )
+  })
+
+  it("earns no hours or status points for values identical to the record's", async () => {
+    const edit = pendingHoursEdit()
+    const f = makeFakeStrapi({
+      [UID]: [edit],
+      "api::library.library": [
+        {
+          ...LIBRARY_SEED["api::library.library"][0],
+          openingTimes: {
+            version: 1,
+            days: [
+              {
+                day: "monday",
+                enabled: true,
+                timeframes: [
+                  {
+                    id: "tf1",
+                    startTime: "09:00",
+                    endTime: "17:00",
+                    staffing: "staffed",
+                  },
+                ],
+              },
+            ],
+          },
+          operationalStatus: "open",
+        },
+      ],
+    })
+    const award = vi.fn(async () => {})
+    f.services["rewards.points"] = { award }
+    await createService({ strapi: f.strapi }).updateStatus(
+      edit.documentId,
+      "approved",
+      REVIEWER
+    )
+    const actions = award.mock.calls.map((x: unknown[]) => x[1])
+    expect(actions).not.toContain("hours_verified")
+    expect(actions).not.toContain("status_verified")
+    // Nothing changed: the base correction points, not an edit's.
+    expect(award).toHaveBeenCalledWith(
+      "u3",
+      "correction_approved",
+      2,
+      { submissionId: edit.documentId, fieldCount: 0 },
+      `${edit.documentId}:correction_approved`
+    )
+  })
+
   it("returns conflict when the compare-and-set loses the race", async () => {
     const { strapi, svc, award } = setup()
     const originalQuery = strapi.db.query

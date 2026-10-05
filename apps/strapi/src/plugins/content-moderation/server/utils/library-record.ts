@@ -9,7 +9,7 @@ import {
   recordSuggestion,
 } from "./option-suggestions"
 import { isDocumentId } from "./params"
-import { applyToLocale } from "./publish-guard"
+import { applyToLocale, canonical } from "./publish-guard"
 import {
   findOverlappingTimeframeIndexes,
   normalizeOpeningTimesValue,
@@ -297,10 +297,18 @@ export type VerifiedAction = "hours_verified" | "status_verified"
  */
 export function verifiedActions(
   fields: unknown,
-  localized: boolean
+  localized: boolean,
+  changed?: readonly string[]
 ): VerifiedAction[] {
   if (localized) return []
-  const data = buildLibraryRecordData(fields)
+  const built = buildLibraryRecordData(fields)
+  // When the apply said which fields changed, only those count: sending a
+  // section's current value again checks nothing new.
+  const data = changed
+    ? Object.fromEntries(
+        Object.entries(built).filter(([k]) => changed.includes(k))
+      )
+    : built
   const actions: VerifiedAction[] = []
   if (data.openingTimes) actions.push("hours_verified")
   if (data.operationalStatus && data.operationalStatus !== "unknown")
@@ -510,6 +518,163 @@ async function resolveOptions(
   return ids
 }
 
+/** Relations a record edit changes by documentId. */
+const DOCUMENT_RELATIONS: ReadonlySet<string> = new Set([
+  ...RELATION_SETS,
+  ...Object.values(HIERARCHY),
+])
+/** Media a record edit changes by upload id. */
+const MEDIA_RELATIONS: ReadonlySet<string> = new Set(["heroImage", "gallery"])
+/** Components, read whole. */
+const COMPONENTS: ReadonlySet<string> = new Set(["socialLinks"])
+
+/** A value without its row ids or empty keys, so stored and sent copies compare. */
+function withoutIds(v: unknown): unknown {
+  if (Array.isArray(v)) return v.map(withoutIds)
+  if (!v || typeof v !== "object") return v
+
+  return Object.fromEntries(
+    Object.entries(v as Record<string, unknown>)
+      .filter(
+        ([k, x]) =>
+          k !== "id" && k !== "__component" && x !== null && x !== undefined
+      )
+      .map(([k, x]) => [k, withoutIds(x)])
+  )
+}
+
+/** Opening hours by their days and times; timeframe ids are random per save. */
+function hoursKey(v: unknown): string {
+  if (!v || typeof v !== "object" || !Array.isArray((v as any).days))
+    return canonical(null)
+
+  return canonical(
+    normalizeOpeningTimesValue(v).days.map((d) => ({
+      day: d.day,
+      enabled: d.enabled,
+      timeframes: d.timeframes.map(({ startTime, endTime, staffing }) => ({
+        startTime,
+        endTime,
+        staffing,
+      })),
+    }))
+  )
+}
+
+function locationKey(v: unknown): string {
+  const o = v as { lat?: unknown; lng?: unknown } | null | undefined
+  const lat = num(o?.lat)
+  const lng = num(o?.lng)
+
+  return lat === null || lng === null ? canonical(null) : `${lat},${lng}`
+}
+
+/** The ids a relation holds now: one entry, a list, or nothing. */
+function linked(current: unknown, key: "documentId" | "id"): Set<string> {
+  const list = Array.isArray(current) ? current : current ? [current] : []
+
+  return new Set(
+    list.flatMap((x) => {
+      const v = (x as Record<string, unknown> | null)?.[key]
+
+      return v === null || v === undefined ? [] : [String(v)]
+    })
+  )
+}
+
+/** True when a relation change links or unlinks anything. */
+function relationChanges(
+  change: unknown,
+  current: unknown,
+  key: "documentId" | "id"
+): boolean {
+  const now = linked(current, key)
+  const c = (change ?? {}) as Record<string, unknown>
+  const ids = (list: unknown) =>
+    (Array.isArray(list) ? list : []).map((x) =>
+      String((x as Record<string, unknown> | null)?.[key])
+    )
+  if (Array.isArray(c.set)) {
+    const next = new Set(ids(c.set))
+
+    return next.size !== now.size || [...next].some((id) => !now.has(id))
+  }
+
+  return (
+    ids(c.connect).some((id) => !now.has(id)) ||
+    ids(c.disconnect).some((id) => now.has(id))
+  )
+}
+
+/**
+ * The library attributes in `data` whose value differs from `current` (the
+ * library as it is): hours by their times, a location by its coordinates,
+ * relations only when they link or unlink something, everything else by
+ * value. A field sent with its current value isn't a change.
+ */
+export function changedFields(
+  data: LibraryRecordData,
+  current: Record<string, unknown>
+): string[] {
+  return Object.keys(data).filter((k) => {
+    const next = data[k]
+    const now = current[k]
+    if (k === "openingTimes") return hoursKey(next) !== hoursKey(now)
+    if (k === "location") return locationKey(next) !== locationKey(now)
+    if (DOCUMENT_RELATIONS.has(k))
+      return relationChanges(next, now, "documentId")
+    if (MEDIA_RELATIONS.has(k)) return relationChanges(next, now, "id")
+
+    return canonical(withoutIds(next)) !== canonical(withoutIds(now))
+  })
+}
+
+/**
+ * The published values of the fields `data` writes, in that locale: what
+ * readers see now. Empty when that locale has no published version yet.
+ */
+async function currentValues(
+  strapi: any,
+  documentId: string,
+  locale: string,
+  data: LibraryRecordData
+): Promise<Record<string, unknown>> {
+  const keys = Object.keys(data)
+  const populated = keys.filter(
+    (k) =>
+      DOCUMENT_RELATIONS.has(k) || MEDIA_RELATIONS.has(k) || COMPONENTS.has(k)
+  )
+  const scalars = keys.filter((k) => !populated.includes(k))
+  const row = await strapi.documents(LIBRARY).findOne({
+    documentId,
+    locale,
+    status: "published",
+    fields: ["documentId", ...scalars],
+    ...(populated.length > 0
+      ? {
+          populate: Object.fromEntries(
+            populated.map((k) => [
+              k,
+              COMPONENTS.has(k)
+                ? true
+                : {
+                    fields: [DOCUMENT_RELATIONS.has(k) ? "documentId" : "id"],
+                  },
+            ])
+          ),
+        }
+      : {}),
+  })
+
+  return row ?? {}
+}
+
+/**
+ * Filled in by `applyLibraryRecord`: the library attributes the edit
+ * actually changed, for scoring. Empty when nothing was applied.
+ */
+export type RecordChangeReport = { changed: string[] }
+
 /**
  * "applied_draft": the change reached the library's draft version only,
  * because the draft already held unpublished edits (see utils/publish-guard).
@@ -518,15 +683,18 @@ export type ApplyRecordOutcome = "applied" | "applied_draft" | "noop"
 
 /**
  * Applies the record fields and publishes the library. "noop" when the
- * submission holds nothing valid or its library is gone. Database errors
- * propagate so the approval is reverted, and so does `ApplyRefusedError`
- * when the library has no published version.
+ * submission holds nothing valid or its library is gone. With a `report`,
+ * it also says which fields actually changed. Database errors propagate so
+ * the approval is reverted, and so does `ApplyRefusedError` when the
+ * library has no published version.
  */
 export async function applyLibraryRecord(
   strapi: any,
   submission: Submission,
-  ownedUploadIds?: Set<number>
+  ownedUploadIds?: Set<number>,
+  report?: RecordChangeReport
 ): Promise<ApplyRecordOutcome> {
+  if (report) report.changed = []
   const base = await defaultLocale(strapi)
   const locale = await normaliseLocale(strapi, submissionLocale(submission))
   const localized = locale !== base
@@ -578,6 +746,13 @@ export async function applyLibraryRecord(
 
   // Only new names were suggested: they're logged, the record is unchanged.
   if (Object.keys(data).length === 0) return "applied"
+
+  // Read before the write: which fields differ from what readers see now.
+  if (report)
+    report.changed = changedFields(
+      data,
+      await currentValues(strapi, library.documentId, locale, data)
+    )
 
   // The timestamps are shared by every locale version: a translation leaves
   // them to the default locale's own changes. Setting a verifiable section
