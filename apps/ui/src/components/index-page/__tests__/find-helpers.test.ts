@@ -5,6 +5,7 @@ import type { FindLocation } from "@/lib/find-search"
 import {
   ALL_NEED_KEYS,
   DEFAULT_FIND_STATE,
+  activeFilterCount,
   findQueryOf,
   findStateFromParams,
   findStateToParams,
@@ -83,6 +84,13 @@ describe("place scope", () => {
   it("leaves source null without the param", () => {
     expect(findStateFromParams(new URLSearchParams("")).source).toBeNull()
     expect(findQueryOf(DEFAULT_FIND_STATE, "en").source).toBeUndefined()
+  })
+
+  it("counts a URL-only source filter as active", () => {
+    const state = { ...DEFAULT_FIND_STATE, source: "imls-pls" }
+    expect(hasActiveFindFilters(state)).toBe(true)
+    expect(activeFilterCount(state)).toBe(1)
+    expect(activeFilterCount(DEFAULT_FIND_STATE)).toBe(0)
   })
 })
 

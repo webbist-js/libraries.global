@@ -88,6 +88,12 @@ export function FindFilterChips({
         onChange({ needs: state.needs.filter((n) => n !== need), page: 0 }),
     })
   }
+  if (state.source) {
+    chips.push({
+      label: `Source: ${state.source}`,
+      onRemove: () => onChange({ source: null, page: 0 }),
+    })
+  }
   if (state.nearLat != null) {
     chips.push({
       label: state.radiusKm > 0 ? `Within ${state.radiusKm} km` : "Near you",

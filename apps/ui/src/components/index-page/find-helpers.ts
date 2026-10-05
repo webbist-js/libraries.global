@@ -263,7 +263,23 @@ export function hasActiveFindFilters(s: FindState): boolean {
     s.digital ||
     s.openNow ||
     s.needs.length > 0 ||
-    s.nearLat != null
+    s.nearLat != null ||
+    s.source != null
+  )
+}
+
+/** How many filter chips/badges this state should show (excludes `q`). */
+export function activeFilterCount(s: FindState): number {
+  return (
+    s.groups.length +
+    s.access.length +
+    s.services.length +
+    (s.openNow ? 1 : 0) +
+    (s.digital ? 1 : 0) +
+    s.needs.length +
+    (s.nearLat != null ? 1 : 0) +
+    (s.place ? 1 : 0) +
+    (s.source ? 1 : 0)
   )
 }
 

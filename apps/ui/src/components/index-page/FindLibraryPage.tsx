@@ -31,6 +31,7 @@ import { usePathname, useRouter } from "@/lib/navigation"
 import {
   type FindState,
   DEFAULT_FIND_STATE,
+  activeFilterCount as countActiveFilters,
   distanceKm,
   findQueryOf,
   findStateFromParams,
@@ -142,15 +143,7 @@ export function FindLibraryPage({
     ? placeName(state.place, result?.location)
     : null
 
-  const activeFilterCount =
-    state.groups.length +
-    state.access.length +
-    state.services.length +
-    (state.openNow ? 1 : 0) +
-    (state.digital ? 1 : 0) +
-    state.needs.length +
-    (state.nearLat != null ? 1 : 0) +
-    (state.place ? 1 : 0)
+  const activeFilterCount = countActiveFilters(state)
 
   const clearAll = useCallback(() => {
     setState((s) => ({
