@@ -122,7 +122,7 @@ Library stewards (users with a claim on this library) see the full edit diff flo
 - No claim required. Any logged-in user.
 - Form: category picker + freetext.
 - Submits as `submissionType: "correction"`.
-- Points: 2 on approval.
+- Points: 2 on approval for freetext, facility-answer or photo corrections; a structured record correction (`fields.kind: "record"`) scores like a `library_edit` — 5 (1–3 fields) or 15 (4+ fields). A "Still right?" Verification (`fields.kind: "verify"`) scores 2, plus 5 each for a confirmed hours or status section.
 
 ### My Submissions (`/contribute/submissions`)
 
@@ -165,18 +165,20 @@ Library stewards (users with a claim on this library) see the full edit diff flo
 
 Points are awarded on submission approval by the rewards plugin:
 
-| Action                            | Points | Status                   |
-| --------------------------------- | ------ | ------------------------ |
-| `correction` approved             | 2      | Wired                    |
-| `library_edit` minor (1–3 fields) | 5      | Wired                    |
-| `library_edit` major (4+ fields)  | 15     | Wired                    |
-| `library_claim` approved          | 10     | Wired                    |
-| `wiki_edit` approved              | 5      | Wired                    |
-| `wiki_edit` translation           | 15     | Wired                    |
-| `new_library` approved            | 50     | Wired                    |
-| `photo_licensed_cc`               | 8      | Wired (shared photo)     |
-| `hours_verified`                  | 5      | Wired (edit sets hours)  |
-| `status_verified`                 | 5      | Wired (edit sets status) |
+| Action                                     | Points | Status                                            |
+| ------------------------------------------ | ------ | ------------------------------------------------- |
+| `correction` approved (other kinds)        | 2      | Wired                                             |
+| `correction` (record, 1–3 fields) approved | 5      | Wired                                             |
+| `correction` (record, 4+ fields) approved  | 15     | Wired                                             |
+| `library_edit` minor (1–3 fields)          | 5      | Wired                                             |
+| `library_edit` major (4+ fields)           | 15     | Wired                                             |
+| `library_claim` approved                   | 10     | Wired                                             |
+| `wiki_edit` approved                       | 5      | Wired                                             |
+| `wiki_edit` translation                    | 15     | Wired                                             |
+| `new_library` approved                     | 50     | Wired                                             |
+| `photo_licensed_cc`                        | 8      | Wired (shared photo)                              |
+| `hours_verified`                           | 5      | Wired (edit or Verification sets/confirms hours)  |
+| `status_verified`                          | 5      | Wired (edit or Verification sets/confirms status) |
 
 ### Tiers (wired)
 

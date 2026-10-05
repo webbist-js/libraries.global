@@ -60,6 +60,10 @@ _Avoid_: status (alone — clashes with Strapi's document `status`, which the co
 A Submission in which a user asserts a trusted relationship to a specific Library — either as an employee or institutional affiliate, or as a verified community member who wants to steward that Library's data. Approval gives the claimant a `verified_librarian` Role Grant and a trusted-contributor signal on future Submissions, not a bypass of moderation.
 _Avoid_: ownership claim, takeover
 
+**Verification**:
+A Submission (`correction` with `kind: "verify"`) confirming that some of a Library's sections (hours, status, address, contact) are still right, without changing them. Approval stamps each section in `verifiedSections`; an approved edit stamps the sections it sets. `lastVerifiedAt` is the latest stamp.
+_Avoid_: check-in, confirmation (as a type name)
+
 **Saved Library**:
 A user's bookmarked Library — a wishlist of institutions they want to visit or want to remember. Not a visit record. Saving a Library drives two downstream effects: (1) the Library surfaces in a "Your libraries" filter on the Events browse and Library index, and (2) the user receives in-app and email notifications when significant data changes are approved for that Library (status change, opening hours, new Events).
 _Avoid_: favourite, bookmark, visited library
@@ -139,6 +143,10 @@ _Avoid_: holding, asset
 **Library Stat**:
 A single data point describing how a Library _operates_ — annual visitors, staff count, floor area, budget, etc. Free-form `label` + `value` pairs, display-only.
 _Avoid_: metric, figure, stat (alone — too generic)
+
+**Gap**:
+A record section a Library lacks, as `packages/shared-data/gaps.ts` defines it: photo, hours, address, location, facilities, about, history, contact (the eight completeness sections), accessibility and services. Strapi stores each library's gaps beside its completeness; the search index's `needs` is that list.
+_Avoid_: missing field, hole, need (in prose)
 
 **Entity Reference (entityRef)**:
 A stable, globally unique, human-readable identifier for any entry in the content hierarchy (Continent, Country, Region, Area, Library). It is hierarchically composed from the slugs of its ancestors, colon-separated, making the full path readable without a database lookup. Library entityRefs include the Area slug when a Library belongs to an Area (`europe:united-kingdom:greater-london:camden:barbican-library`), and omit it otherwise (`europe:united-kingdom:scotland:national-library-of-scotland`). Auto-generated; never assigned manually.

@@ -30,7 +30,7 @@ Rules for new code:
 - **Never load every library at once.** No endpoint, page, sitemap, build step or browser view may fetch, hold or loop over the whole library table. Cap every read at a fixed limit, or page through it.
 - **Page by keyset, not offset.** Walk large tables with `id > after` in id order (see `/libraries/slugs` and its `meta.next`). A deep `start=` offset gets slower the further in it goes.
 - **Count in the database.** Use grouped SQL (`utils/library-tally.ts`, `utils/library-location-counts.ts`) or `documents().count()`; never fetch rows only to count them in JS.
-- **Ask Meilisearch the questions.** Filtered counts, facets, viewport (`_geoBoundingBox`) and "near me" queries go to the `library` index, not to Strapi row scans. Find libraries asks for one page plus facet counts (`apps/ui/src/lib/find-search.ts`) over fields the index derives for it (`apps/strapi/src/utils/library-search-fields.ts`: open-now hours, gaps, completeness, a globe grid cell). Take totals from a facet count (the `locale` facet): `totalHits` stops at the index's `maxTotalHits` of 1,000.
+- **Ask Meilisearch the questions.** Filtered counts, facets, viewport (`_geoBoundingBox`) and "near me" queries go to the `library` index, not to Strapi row scans. Find libraries asks for one page plus facet counts (`apps/ui/src/lib/find-search.ts`) over fields the index derives for it (`apps/strapi/src/utils/library-search-fields.ts`: open-now hours, `needs` (every Gap key), completeness, a globe grid cell, and created/verified timestamps). Take totals from a facet count (the `locale` facet): `totalHits` stops at the index's `maxTotalHits` of 1,000.
 - **Split outputs that grow with the index.** Sitemaps are an index of 10,000-URL files (`lib/sitemap/`); exports are capped by `limits.exportRows`.
 - **Index what you filter or sort on.** Any library column used in a filter or sort needs a database index and, if it drives search or maps, a Meilisearch filterable attribute.
 - **Bulk imports bypass per-row paths:** write in batches and reindex Meilisearch in batches, not one Document Service call and one sync per library.
@@ -127,6 +127,8 @@ Each Country's Place Labels (`regionTypeLabel`, `regionsSectionLabel`, `areaType
 | `accessibility`                             | relation (m2m)         | linked `accessibility` entries                                                                                                                                          |
 | `iiifEndpoint`                              | string                 | IIIF manifest endpoint for digital collections                                                                                                                          |
 | `lastVerifiedAt`                            | datetime               | last human-verified date                                                                                                                                                |
+| `gaps`                                      | JSON array             | missing completeness sections, from the `@repo/shared-data` registry; recomputed with `completeness` by `refreshLibraryCompleteness`                                    |
+| `verifiedSections`                          | JSON                   | not i18n; per-section last-verified stamps (hours, status, address, contact) from approved Verifications and edits; the latest feeds `lastVerifiedAt`                   |
 
 **URL pattern:** `/{continentSlug}/{countrySlug}/{regionSlug}/{librarySlug}`
 
@@ -411,6 +413,7 @@ Libraries with `iiifEndpoint` can expose their digital collections. Plan:
 - Always use `formatStrapiMediaUrl()` for Strapi media URLs — it handles relative `/uploads/` paths and absolute CDN paths
 - The `entityRef` field (e.g. `GB-BL-001`) is the stable external identifier for a library — use it for cross-referencing and data imports
 - World places: `apps/strapi/scripts/ingests/gazetteer/` (README) adds every country's Regions and Areas from GeoNames (England from a curated ONS list) and sets Place Labels; it only adds, never renames, moves or deletes.
+- `@repo/shared-data` is consumed from its built `dist/` by both apps: rebuild with `pnpm --filter @repo/shared-data build` after editing it, or the old output keeps shipping.
 
 ### Testing access
 
