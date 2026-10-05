@@ -170,6 +170,8 @@ export interface FindState {
   sort: SortKey
   view: ViewMode
   page: number
+  /** URL-only dataset filter for drive links: no control sets it. */
+  source: string | null
 }
 
 export const DEFAULT_FIND_STATE: FindState = {
@@ -187,6 +189,7 @@ export const DEFAULT_FIND_STATE: FindState = {
   sort: "complete",
   view: "grid",
   page: 0,
+  source: null,
 }
 
 export function findStateFromParams(params: URLSearchParams): FindState {
@@ -225,6 +228,7 @@ export function findStateFromParams(params: URLSearchParams): FindState {
         : "complete",
     view: view === "list" || view === "map" ? view : "grid",
     page: Math.max(0, Number(params.get("page") ?? "0") || 0),
+    source: params.get("source") || null,
   }
 }
 
@@ -244,6 +248,7 @@ export function findStateToParams(s: FindState): URLSearchParams {
   if (s.sort !== "complete") p.set("sort", s.sort)
   if (s.view !== "grid") p.set("view", s.view)
   if (s.page > 0) p.set("page", String(s.page))
+  if (s.source) p.set("source", s.source)
 
   return p
 }
@@ -268,6 +273,7 @@ const PLACE_LISTS = {
   continent: "continents",
   country: "countries",
   region: "regions",
+  area: "areas",
 } as const
 
 export type PlaceChoice = { slug: string; name: string; count?: number }
@@ -281,7 +287,7 @@ export function placePath(
   place: FindPlace | null,
   location?: FindLocation
 ): PlacePath {
-  const path: PlacePath = { continent: "", country: "", region: "" }
+  const path: PlacePath = { continent: "", country: "", region: "", area: "" }
   if (!place) return path
   const named = location?.[place.level]?.slug === place.slug ? location : null
   for (const level of FIND_PLACE_LEVELS) {
@@ -379,6 +385,7 @@ export function findQueryOf(state: FindState, locale: string): FindQuery {
     page: state.page,
     hitsPerPage: 24,
     locale,
+    source: state.source ?? undefined,
   }
 }
 

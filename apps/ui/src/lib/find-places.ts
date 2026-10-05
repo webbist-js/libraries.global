@@ -3,13 +3,14 @@
  * so the page's pure helpers can share them.
  */
 
-export type FindPlaceLevel = "continent" | "country" | "region"
+export type FindPlaceLevel = "continent" | "country" | "region" | "area"
 
 /** Broadest first. */
 export const FIND_PLACE_LEVELS: readonly FindPlaceLevel[] = [
   "continent",
   "country",
   "region",
+  "area",
 ]
 
 /** "north-america" → "North America", for a place the index can't name. */

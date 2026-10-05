@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { placeSelectLabels } from "../place-select-labels"
 
-const empty = { continents: [], countries: [], regions: [] }
+const empty = { continents: [], countries: [], regions: [], areas: [] }
 
 describe("placeSelectLabels", () => {
   it("names the Region select as the chosen country does", () => {
@@ -44,6 +44,51 @@ describe("placeSelectLabels", () => {
       level: "country",
       label: "Country",
       all: "All countries",
+    })
+  })
+
+  it("names the Area select from the country, or says Area with no label", () => {
+    const area = placeSelectLabels({
+      ...empty,
+      country: {
+        slug: "switzerland",
+        name: "Switzerland",
+        areaTypeLabel: "Commune",
+        areasSectionLabel: "Communes",
+      },
+    })[3]
+    expect(area).toEqual({
+      level: "area",
+      label: "Commune",
+      all: "All communes",
+    })
+    expect(placeSelectLabels()[3]).toEqual({
+      level: "area",
+      label: "Area",
+      all: "All areas",
+    })
+  })
+
+  it("prefers a Region's own Area label over its country's", () => {
+    const area = placeSelectLabels({
+      ...empty,
+      country: {
+        slug: "gb",
+        name: "United Kingdom",
+        areaTypeLabel: "District",
+        areasSectionLabel: "Districts",
+      },
+      region: {
+        slug: "greater-london",
+        name: "Greater London",
+        areaTypeLabel: "Borough",
+        areasSectionLabel: "Boroughs",
+      },
+    })[3]
+    expect(area).toEqual({
+      level: "area",
+      label: "Borough",
+      all: "All boroughs",
     })
   })
 })

@@ -6,11 +6,14 @@ import type { FindLocation } from "@/lib/find-search"
 
 import type { PlaceLevel } from "./find-helpers"
 
-/** The Location selects' labels; the Region one in the chosen country's words. */
+/**
+ * The Location selects' labels; the Region and Area ones in the chosen
+ * country's words (a Region naming its own Areas wins for the Area one).
+ */
 export function placeSelectLabels(
   location?: FindLocation
 ): { level: PlaceLevel; label: string; all: string }[] {
-  const region = placeLabels(location?.country).region
+  const { region, area } = placeLabels(location?.country, location?.region)
 
   return [
     { level: "continent", label: "Continent", all: "All continents" },
@@ -19,6 +22,11 @@ export function placeSelectLabels(
       level: "region",
       label: region.name,
       all: `All ${lowerFirst(region.plural)}`,
+    },
+    {
+      level: "area",
+      label: area.name,
+      all: `All ${lowerFirst(area.plural)}`,
     },
   ]
 }

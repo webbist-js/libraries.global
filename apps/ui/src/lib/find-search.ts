@@ -46,6 +46,8 @@ export interface FindQuery {
   nearLng?: number
   /** metres; omit for any distance */
   nearRadius?: number
+  /** URL-only filter for drive links: a dataset's key. */
+  source?: string
   sort?: FindSort
   /** 0-based */
   page?: number
@@ -60,6 +62,9 @@ export interface FindPlaceRef {
   /** The country's Region labels (country level only). */
   regionTypeLabel?: string | null
   regionsSectionLabel?: string | null
+  /** A Region's own Area labels, where it names its Areas (region level only). */
+  areaTypeLabel?: string | null
+  areasSectionLabel?: string | null
 }
 
 export interface FindPlaceOption extends FindPlaceRef {
@@ -78,6 +83,7 @@ export interface FindLocation extends Partial<
   continents: FindPlaceOption[]
   countries: FindPlaceOption[]
   regions: FindPlaceOption[]
+  areas: FindPlaceOption[]
 }
 
 export interface FindResult {
@@ -109,6 +115,7 @@ const PLACE_LIMIT: Record<FindPlaceLevel, number> = {
   continent: 20,
   country: 300,
   region: FIND_MAX_REACHABLE,
+  area: FIND_MAX_REACHABLE,
 }
 
 /** The opening-times normaliser allows six timeframes a day. */
@@ -220,6 +227,7 @@ export function findFilter(q: FindQuery, zones: string[]): string {
   if (q.nearLat != null && q.nearLng != null && q.nearRadius != null)
     parts.push(`_geoRadius(${q.nearLat}, ${q.nearLng}, ${q.nearRadius})`)
   if (q.openNow) parts.push(openNowFilter(zones, q.now ?? new Date()))
+  if (q.source) parts.push(`source = ${JSON.stringify(q.source)}`)
   parts.push(searchLocaleFilter(q.locale))
 
   return parts.join(" AND ")
@@ -418,6 +426,10 @@ export async function searchFind(q: FindQuery): Promise<FindResult> {
     level: "country" as const,
     slug: chain.country.slug,
   }
+  const region = chain.region && {
+    level: "region" as const,
+    slug: chain.region.slug,
+  }
   const anyOf = ANY_OF.filter(({ key }) => q[key]?.length)
   const [{ results }, names] = await Promise.all([
     meiliClient.multiSearch({
@@ -453,6 +465,16 @@ export async function searchFind(q: FindQuery): Promise<FindResult> {
               },
             ]
           : []),
+        ...(region
+          ? [
+              {
+                ...base,
+                filter: `${placeClause(region)} AND ${anywhere}`,
+                limit: 0,
+                facets: ["area_slug"],
+              },
+            ]
+          : []),
         ...anyOf.map(({ key, facet }) => ({
           ...base,
           filter: findFilter({ ...q, [key]: undefined }, zones),
@@ -465,6 +487,7 @@ export async function searchFind(q: FindQuery): Promise<FindResult> {
       placeNames("continent", undefined, q.locale),
       continent ? placeNames("country", continent, q.locale) : NO_PLACES,
       country ? placeNames("region", country, q.locale) : NO_PLACES,
+      region ? placeNames("area", region, q.locale) : NO_PLACES,
     ]),
   ])
   const [main, open, places, ...more] = results as unknown as {
@@ -472,7 +495,9 @@ export async function searchFind(q: FindQuery): Promise<FindResult> {
     facetDistribution?: Distribution
   }[]
   const regions = country ? more[0] : undefined
-  const own = more.slice(country ? 1 : 0)
+  const areaIdx = country ? 1 : 0
+  const areas = region ? more[areaIdx] : undefined
+  const own = more.slice(areaIdx + (region ? 1 : 0))
   const dist = main?.facetDistribution
   const total = countOf(dist, "locale")
   const countsOf = (facet: string) => {
@@ -518,6 +543,11 @@ export async function searchFind(q: FindQuery): Promise<FindResult> {
         names[2],
         regions?.facetDistribution?.region_slug,
         chain.region
+      ),
+      areas: placeOptions(
+        names[3],
+        areas?.facetDistribution?.area_slug,
+        chain.area
       ),
     },
   }

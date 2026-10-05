@@ -63,6 +63,27 @@ describe("place scope", () => {
     expect(hasActiveFindFilters(state)).toBe(true)
     expect(hasActiveFindFilters(DEFAULT_FIND_STATE)).toBe(false)
   })
+
+  it("round-trips area and source through the URL", () => {
+    const state = findStateFromParams(
+      new URLSearchParams(
+        "region=new-york&area=schuyler-county-ny&source=imls-pls"
+      )
+    )
+    expect(state.place).toEqual({
+      level: "area",
+      slug: "schuyler-county-ny",
+    })
+    expect(state.source).toBe("imls-pls")
+    const back = findStateToParams(state)
+    expect(back.get("area")).toBe("schuyler-county-ny")
+    expect(back.get("source")).toBe("imls-pls")
+  })
+
+  it("leaves source null without the param", () => {
+    expect(findStateFromParams(new URLSearchParams("")).source).toBeNull()
+    expect(findQueryOf(DEFAULT_FIND_STATE, "en").source).toBeUndefined()
+  })
 })
 
 describe("Location filter", () => {
@@ -76,6 +97,7 @@ describe("Location filter", () => {
       { slug: "wales", name: "Wales", count: 100 },
     ],
     regions: [{ slug: "hertfordshire", name: "Hertfordshire", count: 40 }],
+    areas: [],
   }
   const region = { level: "region" as const, slug: "hertfordshire" }
 
@@ -84,11 +106,38 @@ describe("Location filter", () => {
       continent: "europe",
       country: "england",
       region: "hertfordshire",
+      area: "",
     })
     expect(placePath(null, location)).toEqual({
       continent: "",
       country: "",
       region: "",
+      area: "",
+    })
+  })
+
+  it("offers an area once a region is chosen, keeping it when the region clears", () => {
+    const withArea: FindLocation = {
+      ...location,
+      area: { slug: "cheshunt", name: "Cheshunt" },
+      areas: [{ slug: "cheshunt", name: "Cheshunt", count: 5 }],
+    }
+    const area = { level: "area" as const, slug: "cheshunt" }
+    expect(placePath(area, withArea)).toEqual({
+      continent: "europe",
+      country: "england",
+      region: "hertfordshire",
+      area: "cheshunt",
+    })
+    const path = placePath(area, withArea)
+    expect(placeChoices("area", path, withArea)).toEqual([
+      { slug: "cheshunt", name: "Cheshunt", count: 5 },
+    ])
+    // Clearing the region also clears the area: there is no level to step to.
+    expect(pickPlace(path, "region", "")).toEqual({
+      level: "country",
+      slug: "england",
+      parents: { continent: "europe" },
     })
   })
 
@@ -102,6 +151,7 @@ describe("Location filter", () => {
       continent: "europe",
       country: "wales",
       region: "",
+      area: "",
     })
     // The regions listed are England's, so Wales offers none yet.
     expect(

@@ -87,6 +87,18 @@ describe("findFilter", () => {
     )
   })
 
+  it("filters by an area and by a source dataset", () => {
+    const filter = findFilter(
+      {
+        place: { level: "area", slug: "schuyler-county-ny" },
+        source: "imls-pls",
+      },
+      []
+    )
+    expect(filter).toContain('area_slug = "schuyler-county-ny"')
+    expect(filter).toContain('source = "imls-pls"')
+  })
+
   it("requires every ticked accessibility and service option", () => {
     expect(
       findFilter(
@@ -303,6 +315,8 @@ describe("searchFind location", () => {
         { slug: "hertfordshire", name: "Hertfordshire", count: 0 },
         { slug: "kent", name: "Kent", count: 7 },
       ],
+      // No area chosen under it, and the area query found nothing.
+      areas: [],
     })
     const [{ queries }] = multiSearch.mock.calls[0] as [
       { queries: { filter: string }[] },
@@ -311,6 +325,71 @@ describe("searchFind location", () => {
     expect(queries[2]!.filter).not.toContain("_slug =")
     expect(queries[2]!.filter).toContain("open_tz")
     expect(queries[3]!.filter).toMatch(/^country_slug = "england" AND /)
+  })
+
+  it("also lists areas once a region is chosen, gated on it", async () => {
+    search.mockImplementation(
+      async (_q: string, params: { limit?: number; distinct?: string }) => {
+        if (params.limit === 1)
+          return {
+            hits: [
+              {
+                continent_slug: "north-america",
+                continent_name: "North America",
+                country_slug: "united-states",
+                country_name: "United States",
+                region_slug: "new-york",
+                region_name: "New York",
+                area_slug: "schuyler-county-ny",
+                area_name: "Schuyler County",
+              },
+            ],
+          }
+        const names: Record<string, Record<string, string>[]> = {
+          area_slug: [
+            {
+              area_slug: "schuyler-county-ny",
+              area_name: "Schuyler County",
+            },
+            { area_slug: "tompkins-county-ny", area_name: "Tompkins County" },
+          ],
+        }
+        if (params.distinct) return { hits: names[params.distinct] ?? [] }
+
+        return { facetDistribution: { open_tz: {} } }
+      }
+    )
+    multiSearch.mockResolvedValue({
+      results: [
+        { hits: [], facetDistribution: { locale: { en: 0 } } },
+        { facetDistribution: { locale: { en: 0 } } },
+        { facetDistribution: {} },
+        { facetDistribution: { region_slug: {} } },
+        { facetDistribution: { area_slug: { "tompkins-county-ny": 4 } } },
+      ],
+    })
+
+    const { location } = await searchFind({
+      locale: "en",
+      place: { level: "area", slug: "schuyler-county-ny" },
+      now: NOW,
+    })
+
+    expect(location.area).toEqual({
+      slug: "schuyler-county-ny",
+      name: "Schuyler County",
+    })
+    expect(location.areas).toEqual([
+      { slug: "schuyler-county-ny", name: "Schuyler County", count: 0 },
+      { slug: "tompkins-county-ny", name: "Tompkins County", count: 4 },
+    ])
+    const [{ queries }] = multiSearch.mock.calls[0] as [
+      { queries: { filter: string; facets?: string[] }[] },
+    ]
+    const areaQuery = queries.find(
+      (q) => q.facets?.length === 1 && q.facets[0] === "area_slug"
+    )!
+    expect(areaQuery.filter).toMatch(/^region_slug = "new-york" AND /)
   })
 
   it("reads the chosen country's Region labels off the chain hit", async () => {
