@@ -86,6 +86,42 @@ describe("getLeaderboard privacy", () => {
     expect(entry.contributorRole).toBeNull()
   })
 
+  it("keeps approvedCount and acceptanceRate for a private profile with submissions", async () => {
+    const strapi = fakeStrapi(
+      [{ ba_user_id: "u1", periodPoints: "10" }],
+      [
+        {
+          baUserId: "u1",
+          username: "alice",
+          firstName: "Alice",
+          lastName: "A",
+          country: "US",
+          city: "Boston",
+          contributorRole: "contributor",
+          profileVisibility: "private",
+        },
+      ],
+      [
+        {
+          submitted_by_user_id: "u1",
+          approved_count: "5",
+          approved_all: "9",
+          rejected_all: "1",
+        },
+      ]
+    )
+    const [entry] = await createLeaderboard({ strapi }).getLeaderboard({
+      period: "all",
+      page: 1,
+      limit: 10,
+    })
+    expect(entry.country).toBeNull()
+    expect(entry.city).toBeNull()
+    expect(entry.approvedCount).toBe(5)
+    // 9 approved / (9 approved + 1 rejected) = 90%
+    expect(entry.acceptanceRate).toBe(90)
+  })
+
   it("anonymises a public profile that opted out of showActivity", async () => {
     const strapi = fakeStrapi(
       [{ ba_user_id: "u2", periodPoints: "5" }],
@@ -238,6 +274,7 @@ describe("getStanding period ranks", () => {
       offset: () => builder,
       where: () => builder,
       count: () => builder,
+      as: () => builder,
       raw: (sql: string, bindings?: unknown[]) => ({ sql, bindings }),
       // eslint-disable-next-line unicorn/no-thenable -- fakes a knex query builder
       then: (resolve: (v: unknown) => void) =>
@@ -272,9 +309,9 @@ describe("getStanding period ranks", () => {
       connectionResponses: [
         [{ count: "4" }], // globalRank: 4 users ahead
         [{ total: "40" }], // monthRank: my points this month
-        [{}, {}], // monthRank: 2 users ahead this month
+        [{ count: "2" }], // monthRank: COUNT(*) of 2 users ahead this month
         [{ total: "10" }], // periodRank (week): my points this week
-        [{}], // periodRank (week): 1 user ahead this week
+        [{ count: "1" }], // periodRank (week): COUNT(*) of 1 user ahead this week
       ],
     })
     const standing = await createLeaderboard({ strapi }).getStanding(
@@ -297,7 +334,7 @@ describe("getStanding period ranks", () => {
       connectionResponses: [
         [{ count: "4" }], // globalRank
         [{ total: "40" }], // monthRank: my points this month
-        [{}, {}], // monthRank: 2 users ahead this month
+        [{ count: "2" }], // monthRank: COUNT(*) of 2 users ahead this month
         [{ total: "0" }], // periodRank (today): no points today
       ],
     })
@@ -321,7 +358,7 @@ describe("getStanding period ranks", () => {
       connectionResponses: [
         [{ count: "4" }], // globalRank
         [{ total: "40" }], // monthRank: my points this month
-        [{}, {}], // monthRank: 2 users ahead this month
+        [{ count: "2" }], // monthRank: COUNT(*) of 2 users ahead this month
       ],
     })
     const standing = await createLeaderboard({ strapi }).getStanding("u1")
@@ -340,5 +377,31 @@ describe("getStanding period ranks", () => {
     )
     expect(standing.monthRank).toBeNull()
     expect(standing.periodRank).toBeNull()
+  })
+
+  it("reaches the all-time ranking code for a real profile", async () => {
+    const strapi = fakeStandingStrapi({
+      profile: {
+        points: 500,
+        pointsThisMonth: 40,
+        tier: "Cartographer",
+        streak: 5,
+        country: null,
+      },
+      connectionResponses: [
+        [{ count: "6" }], // globalRank: 6 users ahead
+        [{ total: "40" }], // monthRank: my points this month
+        [{ count: "2" }], // monthRank: COUNT(*) of 2 users ahead this month
+        [{ total: "500" }], // periodRank (all): my all-time points
+        [{ count: "0" }], // periodRank (all): COUNT(*) of 0 users ahead all-time
+      ],
+    })
+    const standing = await createLeaderboard({ strapi }).getStanding(
+      "u1",
+      "all"
+    )
+    expect(standing.globalRank).toBe(7)
+    expect(standing.monthRank).toBe(3)
+    expect(standing.periodRank).toBe(1)
   })
 })

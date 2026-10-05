@@ -76,18 +76,21 @@ async function countUsersAbove(
   start: Date | null,
   points: number
 ): Promise<number> {
-  let q = strapi.db.connection
+  let subquery = strapi.db.connection
     .select("ba_user_id")
-    .sum({ total: "points" })
     .from("rw_point_events")
     .groupBy("ba_user_id")
     .havingRaw("SUM(points) > ?", [points])
 
-  if (start) q = q.where("awarded_at", ">=", start.toISOString())
+  if (start) subquery = subquery.where("awarded_at", ">=", start.toISOString())
 
-  const rows = (await q) as unknown[]
+  // Count in SQL rather than fetching one row per user ahead: the grouped
+  // HAVING query becomes a subquery that a single COUNT(*) wraps.
+  const rows = (await strapi.db.connection
+    .count("* as count")
+    .from(subquery.as("above"))) as { count: string | number }[]
 
-  return rows.length
+  return Number(rows[0]?.count ?? 0)
 }
 
 /**
