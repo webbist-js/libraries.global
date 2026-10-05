@@ -443,6 +443,71 @@ describe("library record changes in a non-default locale", () => {
     )
   })
 
+  it("a translation leaves the shared stamps and contentUpdatedAt alone", async () => {
+    const STAMP = "2026-01-01T00:00:00.000Z"
+    const { strapi, docs } = setup(
+      {},
+      {
+        [LIBRARY]: [
+          {
+            documentId: ID,
+            locale: "en",
+            published: true,
+            slug: "lib",
+            name: "Library",
+            summary: "English",
+            verifiedSections: { hours: STAMP },
+            lastVerifiedAt: STAMP,
+            contentUpdatedAt: STAMP,
+          },
+          {
+            documentId: ID,
+            locale: "cs",
+            published: true,
+            name: "Knihovna",
+            summary: "Staré",
+          },
+        ],
+      }
+    )
+    const outcome = await applyLibraryRecord(strapi, {
+      documentId: "s1",
+      submissionType: "correction",
+      targetDocumentId: ID,
+      contentLocale: "cs",
+      fields: {
+        kind: "record",
+        summary: "Česky",
+        city: "Praha",
+        openingTimes: {
+          days: [
+            {
+              day: "monday",
+              enabled: true,
+              timeframes: [{ startTime: "09:00", endTime: "17:00" }],
+            },
+          ],
+        },
+      },
+    })
+    expect(outcome).toBe("applied")
+    const written = docs[LIBRARY]!.update.mock.calls.map((c: any[]) => c[0])
+    expect(written).toHaveLength(1)
+    expect(written[0]).toMatchObject({ locale: "cs" })
+    // city is localized (an address field); openingTimes is shared, so dropped.
+    expect(written[0].data).toEqual({ summary: "Česky", city: "Praha" })
+    const [en, cs] = docs[LIBRARY]!.rows
+    expect(en).toMatchObject({
+      verifiedSections: { hours: STAMP },
+      lastVerifiedAt: STAMP,
+      contentUpdatedAt: STAMP,
+    })
+    expect(cs).toMatchObject({ summary: "Česky" })
+    expect(cs).not.toHaveProperty("verifiedSections")
+    expect(cs).not.toHaveProperty("lastVerifiedAt")
+    expect(cs).not.toHaveProperty("contentUpdatedAt")
+  })
+
   it("is a noop when only shared fields were sent", async () => {
     const { strapi, docs } = setup(
       {},
