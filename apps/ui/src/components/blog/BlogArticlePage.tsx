@@ -219,7 +219,9 @@ export function BlogArticlePage({
               className="rounded-3xl border px-6 py-8 sm:px-12 sm:py-11"
               style={{ background: T.bg.deep, borderColor: T.border.line }}
             >
-              <div className="article-drop-cap [&_h2]:mt-10 [&_h2]:[font-family:var(--font-newsreader),Georgia,serif] [&_h2]:text-[28px] [&_h2]:font-medium [&_h2]:tracking-[-0.01em] [&_h3]:mt-8 [&_h3]:[font-family:var(--font-newsreader),Georgia,serif] [&_h3]:text-[21px] [&_h3]:font-medium [&_li]:text-[17px] [&_li]:leading-[1.7] [&_p]:text-[17px] [&_p]:leading-[1.7]">
+              {/* Heading margins are in rem: the spacing scale is em-based,
+                  so mt-* on a 28px heading would scale with it. */}
+              <div className="article-drop-cap [&_h2]:mt-[2.25rem] [&_h2]:mb-[0.75rem] [&_h2]:[font-family:var(--font-newsreader),Georgia,serif] [&_h2]:text-[28px] [&_h2]:font-medium [&_h2]:tracking-[-0.01em] [&_h2:first-child]:mt-0 [&_h3]:mt-[1.75rem] [&_h3]:mb-[0.5rem] [&_h3]:[font-family:var(--font-newsreader),Georgia,serif] [&_h3]:text-[21px] [&_h3]:font-medium [&_h3:first-child]:mt-0 [&_li]:text-[17px] [&_li]:leading-[1.7] [&_p]:text-[17px] [&_p]:leading-[1.7]">
                 <ArticleBodyBlocks blocks={article.body} />
               </div>
             </article>
