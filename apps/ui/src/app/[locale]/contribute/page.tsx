@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { headers } from "next/headers"
 import type { Locale } from "next-intl"
 
+import { SuggestedAdditions } from "@/components/community/SuggestedAdditions"
 import GlobalLink from "@/components/global/GlobalLink"
 import { sessionCapabilities } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
@@ -23,7 +24,6 @@ import {
   type IncompleteRecord,
 } from "./_components/hub/RecordsThatNeedYou"
 import { RolesTable } from "./_components/hub/RolesTable"
-import { SuggestedAdditions } from "./_components/hub/SuggestedAdditions"
 import { TakeOnARole } from "./_components/hub/TakeOnARole"
 import {
   SignInPromptCard,
@@ -288,7 +288,7 @@ export default async function ContributePage({
         ) : (
           <SignInPromptCard />
         )}
-        <SuggestedAdditions />
+        <SuggestedAdditions signInReturnTo="/contribute#suggested-additions" />
       </div>
 
       {/* Bottom links */}

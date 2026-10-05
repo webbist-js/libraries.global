@@ -7,8 +7,6 @@ import GlobalLink from "@/components/global/GlobalLink"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
 
-import { CardHeading, HUB_CARD } from "./YourSubmissionsList"
-
 type Suggestion = {
   documentId: string
   name: string
@@ -46,17 +44,28 @@ const LIST: Record<
 
 const PAGE = 4
 
+const CARD =
+  "flex h-full flex-col rounded-[20px] border border-(--t-border-line) bg-white"
+
 /**
  * Options contributors asked for that aren't in the lists yet. Signed-in
  * contributors vote; the editorial board sees the tally in the moderation
- * plugin and considers new additions monthly.
+ * plugin and considers new additions monthly. As a card (the Contribute hub,
+ * the Noticeboard) it shows the top four and links to the full list at
+ * /community/suggestions; as a page it shows them all.
  */
-export function SuggestedAdditions() {
+export function SuggestedAdditions({
+  variant = "card",
+  signInReturnTo,
+}: {
+  readonly variant?: "card" | "page"
+  /** Where "Sign in to vote" comes back to. */
+  readonly signInReturnTo: string
+}) {
   const { data: session, isPending } = authClient.useSession()
   const signedIn = Boolean(session?.user)
   const [items, setItems] = useState<Suggestion[] | null>(null)
   const [failed, setFailed] = useState(false)
-  const [showAll, setShowAll] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   // Bumped on every vote, so a list requested before it can't undo it.
@@ -113,17 +122,31 @@ export function SuggestedAdditions() {
     }
   }
 
-  const shown = showAll ? (items ?? []) : (items ?? []).slice(0, PAGE)
+  const shown =
+    variant === "page" ? (items ?? []) : (items ?? []).slice(0, PAGE)
   const hidden = (items?.length ?? 0) - shown.length
-  const signIn = `/auth/signin?callbackUrl=${encodeURIComponent("/contribute#suggested-additions")}`
+  const signIn = `/auth/signin?callbackUrl=${encodeURIComponent(signInReturnTo)}`
 
   return (
-    <section aria-labelledby="suggested-additions" className={HUB_CARD}>
+    <section aria-labelledby="suggested-additions" className={CARD}>
       <div
         className="border-b px-5 py-5"
         style={{ borderColor: T.border.divider }}
       >
-        <CardHeading id="suggested-additions">Vote on additions</CardHeading>
+        <h2
+          id="suggested-additions"
+          className="m-0"
+          style={{
+            fontFamily: T.font.serif,
+            fontSize: "24px",
+            fontWeight: 500,
+            lineHeight: 1.2,
+            letterSpacing: "-0.01em",
+            color: T.ink.base,
+          }}
+        >
+          Vote on additions
+        </h2>
         <p className="m-0 mt-0.5 text-[14px]" style={{ color: T.ink.dim }}>
           Features and services contributors want added to the lists
         </p>
@@ -259,14 +282,13 @@ export function SuggestedAdditions() {
         style={{ borderColor: T.border.divider }}
       >
         {hidden > 0 ? (
-          <button
-            type="button"
-            onClick={() => setShowAll(true)}
+          <GlobalLink
+            href="/community/suggestions"
             className="self-start text-[14px] font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
-            Show {hidden} more
-          </button>
+            See all {items?.length ?? 0} suggestions
+          </GlobalLink>
         ) : null}
         {signedIn ? null : (
           <GlobalLink
