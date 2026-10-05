@@ -3464,7 +3464,7 @@ export interface PluginContentModerationOptionSuggestion
   extends Struct.CollectionTypeSchema {
   collectionName: "cm_option_suggestions"
   info: {
-    description: "A new accessibility feature, service or amenity that contributors asked for. The editorial board accepts or declines these monthly."
+    description: "A new accessibility feature, service, amenity or library type that contributors asked for, posted directly or named in a correction. The editorial board reviews them monthly."
     displayName: "Option Suggestion"
     pluralName: "option-suggestions"
     singularName: "option-suggestion"
@@ -3488,6 +3488,10 @@ export interface PluginContentModerationOptionSuggestion
     decidedAt: Schema.Attribute.DateTime
     decidedBy: Schema.Attribute.String
     decisionNote: Schema.Attribute.Text
+    description: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 400
+      }>
     libraries: Schema.Attribute.JSON
     locale: Schema.Attribute.String & Schema.Attribute.Private
     localizations: Schema.Attribute.Relation<
@@ -3506,15 +3510,18 @@ export interface PluginContentModerationOptionSuggestion
         maxLength: 80
       }>
     optionKey: Schema.Attribute.Enumeration<
-      ["accessibility", "amenities", "services"]
+      ["accessibility", "amenities", "services", "library_types"]
     > &
       Schema.Attribute.Required
     publishedAt: Schema.Attribute.DateTime
     requests: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
-    status: Schema.Attribute.Enumeration<["open", "accepted", "declined"]> &
+    status: Schema.Attribute.Enumeration<
+      ["open", "reviewing", "planned", "accepted", "declined", "removed"]
+    > &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<"open">
     submissionIds: Schema.Attribute.JSON
+    suggestedBy: Schema.Attribute.String
     unlinkedLibraries: Schema.Attribute.JSON
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &

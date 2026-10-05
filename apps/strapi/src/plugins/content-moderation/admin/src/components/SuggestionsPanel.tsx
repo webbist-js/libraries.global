@@ -30,13 +30,15 @@ import { relativeTime } from "./submissionMeta"
 export type Suggestion = {
   documentId: string
   name: string
-  optionKey: "accessibility" | "amenities" | "services"
-  status: "open" | "accepted" | "declined"
+  optionKey: "accessibility" | "amenities" | "services" | "library_types"
+  status: "open" | "reviewing" | "planned" | "accepted" | "declined" | "removed"
   requests: number
   votes: number
   libraries: { documentId: string; name: string }[]
   /** Accepted only: libraries the option could not be linked to (follow up by hand). */
   unlinkedLibraries?: UnlinkedLibrary[]
+  description?: string | null
+  suggestedByName?: string | null
   createdAt?: string
   decidedAt?: string | null
   decidedBy?: string | null
@@ -53,7 +55,19 @@ const LIST_LABEL: Record<Suggestion["optionKey"], string> = {
   accessibility: "Accessibility",
   amenities: "Amenities",
   services: "Services",
+  library_types: "Library types",
 }
+
+/** New, under review or planned: the board hasn't decided yet, and
+ * contributors can still vote. The richer New/Under review/Planned/Added/
+ * Not adding board lives on the site at /contribute/moderation/suggestions;
+ * this admin queue keeps the simpler open/accepted/declined split and
+ * treats all three as "open" for the tab badge and this filter. */
+const UNDECIDED = new Set<Suggestion["status"]>([
+  "open",
+  "reviewing",
+  "planned",
+])
 
 const UNLINKED_REASON: Record<UnlinkedLibrary["reason"], string> = {
   not_published: "not published — publish it, then add the option",
@@ -222,7 +236,7 @@ export function SuggestionsPanel({
             []) as Suggestion[]
           setError(null)
           setRows(items)
-          onOpenCount(items.filter((s) => s.status === "open").length)
+          onOpenCount(items.filter((s) => UNDECIDED.has(s.status)).length)
         },
         (err: unknown) => {
           setError("Suggestions couldn't be loaded.")
@@ -237,9 +251,11 @@ export function SuggestionsPanel({
   }, [load])
 
   const shown = (rows ?? []).filter(
-    (s) => s.status === status && (list === "all" || s.optionKey === list)
+    (s) =>
+      (status === "open" ? UNDECIDED.has(s.status) : s.status === status) &&
+      (list === "all" || s.optionKey === list)
   )
-  const open = (rows ?? []).filter((s) => s.status === "open")
+  const open = (rows ?? []).filter((s) => UNDECIDED.has(s.status))
 
   return (
     <Box background="neutral0" padding={6} hasRadius shadow="tableShadow">
@@ -288,6 +304,9 @@ export function SuggestionsPanel({
               <SingleSelectOption value="services">Services</SingleSelectOption>
               <SingleSelectOption value="amenities">
                 Amenities
+              </SingleSelectOption>
+              <SingleSelectOption value="library_types">
+                Library types
               </SingleSelectOption>
             </SingleSelect>
           </Flex>

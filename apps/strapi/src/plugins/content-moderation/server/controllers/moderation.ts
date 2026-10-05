@@ -440,7 +440,8 @@ export default ({ strapi }: { strapi: any }) => {
       if (!auth) return
       if (!isBoard(auth))
         return fail(ctx, 403, "Only the editorial board decides suggestions.")
-      ctx.body = { data: await listSuggestions(strapi) }
+      const rows = await listSuggestions(strapi)
+      ctx.body = { data: rows.filter((r) => r.status !== "removed") }
     },
 
     // PUT /moderation/option-suggestions/:id  (editorial board)

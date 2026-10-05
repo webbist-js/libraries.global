@@ -98,6 +98,11 @@ const HOT_PATH_INDEXES = [
   }),
   index("cm_option_votes", ["suggestion_document_id"]),
 
+  // Option suggestions: a contributor's daily post limit, and the
+  // duplicate-name check on create.
+  index("cm_option_suggestions", ["suggested_by", "created_at"]),
+  index("cm_option_suggestions", ["option_key", "name_key"]),
+
   // Rewards: a user's history, the cron windows, one award per badge and
   // one snapshot per period. Duplicate awards keep the first; duplicate
   // snapshots keep the most recent (highest id).

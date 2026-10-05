@@ -1,15 +1,22 @@
 import { resolveUser } from "./submission"
 import {
+  createSuggestion,
   decideSuggestion,
+  isSuggestionList,
   listSuggestions,
+  setSuggestionStatus,
+  type SuggestionView,
   toggleVote,
 } from "../utils/option-suggestions"
 import { isDocumentId } from "../utils/params"
 
+const DECISIONS = new Set(["accept", "decline", "review", "plan", "remove"])
+
 /**
  * Validates a decision body and applies it: shared by the admin route and
  * the editorial board's content-api route, which differ only in who
- * `decidedBy` names.
+ * `decidedBy` names. `accept`/`decline` are a decision (via decideSuggestion);
+ * `review`/`plan`/`remove` just move the suggestion (via setSuggestionStatus).
  */
 export async function decideFromRequest(
   strapi: any,
@@ -27,17 +34,32 @@ export async function decideFromRequest(
   }
   if (!isDocumentId(id))
     return { ok: false, status: 400, message: "Invalid id" }
-  if (decision !== "accept" && decision !== "decline")
+  if (typeof decision !== "string" || !DECISIONS.has(decision))
     return {
       ok: false,
       status: 400,
-      message: "decision must be accept or decline",
+      message: "decision must be accept, decline, review, plan or remove",
     }
-  const updated = await decideSuggestion(strapi, {
+
+  if (decision === "accept" || decision === "decline")
+    return decideSuggestion(strapi, {
+      documentId: id,
+      decision,
+      decidedBy,
+      name: typeof name === "string" ? name : undefined,
+      note: typeof note === "string" ? note : undefined,
+    })
+
+  const status =
+    decision === "review"
+      ? "reviewing"
+      : decision === "plan"
+        ? "planned"
+        : "removed"
+  const updated = await setSuggestionStatus(strapi, {
     documentId: id,
-    decision,
+    status,
     decidedBy,
-    name: typeof name === "string" ? name : undefined,
     note: typeof note === "string" ? note : undefined,
   })
   if (!updated)
@@ -50,36 +72,86 @@ export async function decideFromRequest(
   return { ok: true, data: updated }
 }
 
+/** The public shape of a suggestion: no library names, no raw suggester id. */
+function toPublicSuggestion(s: SuggestionView) {
+  return {
+    documentId: s.documentId,
+    name: s.name,
+    optionKey: s.optionKey,
+    status: s.status,
+    votes: s.votes,
+    ...(s.voted !== undefined ? { voted: s.voted } : {}),
+    description: s.description,
+    suggestedByName: s.suggestedByName,
+    createdAt: s.createdAt,
+    decidedAt: s.decidedAt ?? null,
+    decisionNote: s.decisionNote ?? null,
+    libraryCount: s.libraries.length,
+  }
+}
+
+function sendError(
+  ctx: any,
+  status: number,
+  message: string,
+  details?: Record<string, unknown>
+): void {
+  ctx.status = status
+  ctx.body = { error: details ? { message, details } : { message } }
+}
+
 /**
- * Suggested options: the public list and votes (content API), and the
- * editorial board's tally and decisions (admin).
+ * Suggested options: the public list, posting and votes (content API), and
+ * the editorial board's tally and decisions (admin).
  */
 export default ({ strapi }: { strapi: any }) => ({
   // GET /api/content-moderation/option-suggestions  (content-api)
-  // Open suggestions, most wanted first; `voted` when the viewer is known.
-  async listOpen(ctx: any) {
+  // Every non-removed suggestion, most wanted first; `voted` when the
+  // viewer is known.
+  async listPublic(ctx: any) {
     const user = await resolveUser(strapi, ctx).catch(() => null)
-    const rows = await listSuggestions(strapi, {
-      status: "open",
-      viewer: user?.id,
-    })
-    // Contributors see names and counts; which libraries asked (and the
-    // board's follow-ups) stay here.
+    const rows = await listSuggestions(strapi, { viewer: user?.id })
     ctx.body = {
-      data: rows.map(
-        ({
-          libraries,
-          unlinkedLibraries: _unlinked,
-          decidedBy,
-          decisionNote,
-          ...r
-        }) => ({
-          ...r,
-          libraryCount: libraries.length,
-          libraries: libraries.slice(0, 3).map((l) => l.name),
-        })
-      ),
+      data: rows
+        .filter((r) => r.status !== "removed")
+        .map((r) => toPublicSuggestion(r)),
     }
+  },
+
+  // POST /api/content-moderation/option-suggestions  (content-api)
+  async create(ctx: any) {
+    const user = await resolveUser(strapi, ctx)
+    if (!user) return ctx.unauthorized("Sign in to suggest an option.")
+    const { optionKey, name, description } = (ctx.request.body ?? {}) as {
+      optionKey?: unknown
+      name?: unknown
+      description?: unknown
+    }
+    if (!isSuggestionList(optionKey))
+      return sendError(
+        ctx,
+        400,
+        "optionKey must be accessibility, amenities, services or library_types."
+      )
+    if (typeof name !== "string" || !name.trim())
+      return sendError(ctx, 400, "name is required")
+    const result = await createSuggestion(strapi, {
+      optionKey,
+      name,
+      description: typeof description === "string" ? description : null,
+      baUserId: user.id,
+    })
+    if (!result.ok)
+      return sendError(
+        ctx,
+        result.status,
+        result.message,
+        result.existingDocumentId
+          ? { existingDocumentId: result.existingDocumentId }
+          : undefined
+      )
+    ctx.status = 201
+    ctx.body = { data: toPublicSuggestion(result.suggestion) }
   },
 
   // POST /api/content-moderation/option-suggestions/:id/vote  (content-api)
@@ -95,7 +167,8 @@ export default ({ strapi }: { strapi: any }) => ({
 
   // GET /content-moderation/option-suggestions  (admin)
   async adminList(ctx: any) {
-    ctx.body = { data: await listSuggestions(strapi) }
+    const rows = await listSuggestions(strapi)
+    ctx.body = { data: rows.filter((r) => r.status !== "removed") }
   },
 
   // PUT /content-moderation/option-suggestions/:id  (admin)

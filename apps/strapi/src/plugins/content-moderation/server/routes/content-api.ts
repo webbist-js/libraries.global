@@ -93,7 +93,13 @@ export default [
   {
     method: "GET",
     path: "/option-suggestions",
-    handler: "option-suggestion.listOpen",
+    handler: "option-suggestion.listPublic",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "POST",
+    path: "/option-suggestions",
+    handler: "option-suggestion.create",
     config: { auth: false, policies: [] },
   },
   {

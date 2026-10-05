@@ -5,7 +5,7 @@
     "singularName": "option-suggestion",
     "pluralName": "option-suggestions",
     "displayName": "Option Suggestion",
-    "description": "A new accessibility feature, service or amenity that contributors asked for. The editorial board accepts or declines these monthly."
+    "description": "A new accessibility feature, service, amenity or library type that contributors asked for, posted directly or named in a correction. The editorial board reviews them monthly."
   },
   "options": { "draftAndPublish": false },
   "pluginOptions": {
@@ -17,12 +17,12 @@
     "nameKey": { "type": "string", "required": true, "maxLength": 80 },
     "optionKey": {
       "type": "enumeration",
-      "enum": ["accessibility", "amenities", "services"],
+      "enum": ["accessibility", "amenities", "services", "library_types"],
       "required": true
     },
     "status": {
       "type": "enumeration",
-      "enum": ["open", "accepted", "declined"],
+      "enum": ["open", "reviewing", "planned", "accepted", "declined", "removed"],
       "default": "open",
       "required": true
     },
@@ -31,6 +31,8 @@
     "submissionIds": { "type": "json" },
     "acceptedOptionDocumentId": { "type": "string" },
     "unlinkedLibraries": { "type": "json" },
+    "description": { "type": "text", "maxLength": 400 },
+    "suggestedBy": { "type": "string" },
     "decidedAt": { "type": "datetime" },
     "decidedBy": { "type": "string" },
     "decisionNote": { "type": "text" }

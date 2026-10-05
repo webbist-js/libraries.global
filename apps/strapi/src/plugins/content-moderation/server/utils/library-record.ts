@@ -501,6 +501,7 @@ async function resolveOptions(
   context: {
     library: { documentId: string; name: string }
     submissionId: string
+    submittedBy?: string
   }
 ): Promise<string[]> {
   const ids: string[] = []
@@ -732,6 +733,7 @@ export async function applyLibraryRecord(
         name: library.name ?? library.documentId,
       },
       submissionId: submission.documentId,
+      submittedBy: submission.submittedByUserId,
     })
     if (ids.length === 0) continue
     const change = (data[key] ?? {}) as {
