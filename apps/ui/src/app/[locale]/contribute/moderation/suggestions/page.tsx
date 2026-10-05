@@ -34,7 +34,7 @@ export default async function OptionSuggestionsPage() {
       <ModerationHero
         title="Option *suggestions*"
         leaf="Option suggestions"
-        lead="New accessibility features, amenities and services contributors asked for, most wanted first. Accepting adds the option and links it to every library that asked."
+        lead="Options contributors asked for, most wanted first. Review, plan, accept or decline them; notes on declined and planned options are shown publicly."
       />
       <div className="mx-auto w-full max-w-[960px] px-4 pt-8 pb-16 sm:px-8">
         {res.status === 200 ? (

@@ -119,12 +119,9 @@ function DecisionModal({
           note,
         }
       )
-      const unlinked: UnlinkedLibrary[] = Array.isArray(
-        (res as { data?: { data?: { unlinkedLibraries?: unknown } } })?.data
-          ?.data?.unlinkedLibraries
-      )
-        ? ((res as { data: { data: { unlinkedLibraries: UnlinkedLibrary[] } } })
-            .data.data.unlinkedLibraries ?? [])
+      const data = (res as { data?: { data?: Suggestion } })?.data?.data
+      const unlinked: UnlinkedLibrary[] = Array.isArray(data?.unlinkedLibraries)
+        ? (data.unlinkedLibraries ?? [])
         : []
       const linked = libraries - unlinked.length
       const libraryTypes = suggestion.optionKey === "library_types"
@@ -132,7 +129,7 @@ function DecisionModal({
         type: "success",
         message: accept
           ? libraryTypes
-            ? `Marked “${name.trim() || suggestion.name}” as added. It appears once that spelling is in the schema.`
+            ? `Marked “${data?.name ?? (name.trim() || suggestion.name)}” as added.`
             : `Added “${name.trim() || suggestion.name}” to ${LIST_LABEL[suggestion.optionKey]} and linked ${linked} ${linked === 1 ? "library" : "libraries"}.`
           : "Declined. It won’t be suggested again.",
       })
@@ -165,7 +162,7 @@ function DecisionModal({
             <Typography textColor="neutral600">
               {accept
                 ? suggestion.optionKey === "library_types"
-                  ? "This marks the type as added once that spelling is in the schema. It creates no option and links no libraries — the enum itself is changed by hand."
+                  ? "Accept only works once the type is in the schema; until then, mark it planned. It creates no option and links no libraries — the enum itself is changed by hand."
                   : `This adds it to the ${LIST_LABEL[suggestion.optionKey].toLowerCase()} list (or reuses an option with the same name) and links it to the ${libraries} ${libraries === 1 ? "library" : "libraries"} that asked for it.`
                 : "Declined names stay declined: later requests for the same name are not counted."}
             </Typography>

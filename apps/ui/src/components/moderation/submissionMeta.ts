@@ -93,11 +93,19 @@ export type ModerationStat = {
 export type OptionSuggestion = {
   documentId: string
   name: string
-  optionKey: "accessibility" | "amenities" | "services"
-  status: "open" | "accepted" | "declined"
+  optionKey: "accessibility" | "amenities" | "services" | "library_types"
+  status: "open" | "reviewing" | "planned" | "accepted" | "declined"
   requests: number
   votes: number
   libraries: { documentId: string; name: string }[]
+  /** Accepted suggestions only: libraries the board still needs to link by hand. */
+  unlinkedLibraries: {
+    documentId: string
+    name: string
+    reason: "not_published" | "not_found"
+  }[]
+  description: string | null
+  suggestedByName: string | null
   createdAt?: string
   decidedAt: string | null
   decidedBy: string | null
