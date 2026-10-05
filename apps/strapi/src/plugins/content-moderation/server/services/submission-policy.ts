@@ -342,6 +342,7 @@ export default ({ strapi }: { strapi: any }) => ({
     fields?: unknown
     targetEntityType?: unknown
     targetDocumentId?: unknown
+    targetSlug?: unknown
     directWikiEdit?: boolean
     directJournalEdit?: boolean
     verificationMethod?: unknown
@@ -408,6 +409,16 @@ export default ({ strapi }: { strapi: any }) => ({
           ok: false,
           status: 400,
           message: "Choose at least one section to confirm.",
+        }
+      const hasTarget =
+        (typeof input.targetDocumentId === "string" &&
+          input.targetDocumentId.trim() !== "") ||
+        (typeof input.targetSlug === "string" && input.targetSlug.trim() !== "")
+      if (!hasTarget)
+        return {
+          ok: false,
+          status: 400,
+          message: "Choose the library you checked.",
         }
       if (
         !isHttpUrl(input.evidenceUrl) &&

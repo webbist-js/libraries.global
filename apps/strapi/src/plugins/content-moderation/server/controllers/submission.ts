@@ -193,6 +193,7 @@ export default ({ strapi }: { strapi: any }) => ({
         fields,
         targetEntityType,
         targetDocumentId,
+        targetSlug,
         directWikiEdit,
         directJournalEdit,
         verificationMethod,
@@ -540,6 +541,7 @@ export default ({ strapi }: { strapi: any }) => ({
             fields: reviewedFields,
             targetEntityType: existing.targetEntityType ?? undefined,
             targetDocumentId: existing.targetDocumentId ?? undefined,
+            targetSlug: existing.targetSlug ?? undefined,
             directWikiEdit:
               existing.submissionType === "wiki_edit" &&
               isDirectWikiEdit(existing.draftData),

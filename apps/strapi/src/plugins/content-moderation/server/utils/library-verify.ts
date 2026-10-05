@@ -70,7 +70,7 @@ export function stampSections(
   if (current && typeof current === "object" && !Array.isArray(current))
     for (const s of VERIFY_SECTIONS) {
       const v = (current as Record<string, unknown>)[s]
-      if (typeof v === "string") map[s] = v
+      if (typeof v === "string" && !Number.isNaN(Date.parse(v))) map[s] = v
     }
   for (const s of sections) map[s] = at.toISOString()
 
@@ -162,6 +162,7 @@ export async function verifyReview(strapi: any, submission: Submission) {
     "verifiedSections",
   ]
   const library = await findLibrary(strapi, submission, base, fields)
+  if (!library) return null
   const current: Record<string, unknown> = {}
   for (const f of fields)
     if (f !== "verifiedSections" && library && f in library)

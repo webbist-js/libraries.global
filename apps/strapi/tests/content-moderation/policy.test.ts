@@ -119,6 +119,7 @@ describe("submission policy", () => {
         baUserId: "u1",
         submissionType: "correction",
         fields: { kind: "verify", sections: ["hours"] },
+        targetDocumentId: "lib0000000000000000000001",
         ...extra,
       })
     expect(
@@ -126,6 +127,7 @@ describe("submission policy", () => {
         baUserId: "u1",
         submissionType: "correction",
         fields: { kind: "verify", sections: ["nope"] },
+        targetDocumentId: "lib0000000000000000000001",
         evidenceType: "on_site_visit",
       })
     ).toMatchObject({ ok: false, status: 400 })
@@ -139,6 +141,38 @@ describe("submission policy", () => {
     expect(await verify({ evidenceUrl: "https://example.org/hours" })).toEqual({
       ok: true,
     })
+  })
+  it("refuses a verify that doesn't name its library", async () => {
+    expect(
+      await setup().check({
+        baUserId: "u1",
+        submissionType: "correction",
+        fields: { kind: "verify", sections: ["hours"] },
+        evidenceType: "on_site_visit",
+      })
+    ).toMatchObject({
+      ok: false,
+      status: 400,
+      message: "Choose the library you checked.",
+    })
+    expect(
+      await setup().check({
+        baUserId: "u1",
+        submissionType: "correction",
+        fields: { kind: "verify", sections: ["hours"] },
+        targetSlug: "",
+        evidenceType: "on_site_visit",
+      })
+    ).toMatchObject({ ok: false, status: 400 })
+    expect(
+      await setup().check({
+        baUserId: "u1",
+        submissionType: "correction",
+        fields: { kind: "verify", sections: ["hours"] },
+        targetSlug: "some-library",
+        evidenceType: "on_site_visit",
+      })
+    ).toEqual({ ok: true })
   })
   it("ignores plan fields on the profile (invariant 3)", async () => {
     const { strapi } = makeFakeStrapi({

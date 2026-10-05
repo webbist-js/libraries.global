@@ -6,6 +6,7 @@ import {
   latestStamp,
   sectionsSetBy,
   stampSections,
+  verifyReview,
   verifySections,
 } from "../../src/plugins/content-moderation/server/utils/library-verify"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
@@ -49,6 +50,30 @@ describe("verify helpers", () => {
     expect(stampSections("junk", ["hours"], AT)).toEqual({
       hours: AT.toISOString(),
     })
+  })
+
+  it("keeps only real timestamps from a hand-edited current value", () => {
+    expect(
+      stampSections(
+        { hours: "junk", status: "2025-01-01T00:00:00.000Z" },
+        [],
+        AT
+      )
+    ).toEqual({ status: "2025-01-01T00:00:00.000Z" })
+  })
+})
+
+describe("verifyReview", () => {
+  it("returns null when the library isn't found", async () => {
+    const { strapi } = makeFakeStrapi({ [LIBRARY]: [] })
+
+    expect(
+      await verifyReview(strapi, {
+        documentId: "s1",
+        targetDocumentId: "lib00000000000000000001",
+        fields: { kind: "verify", sections: ["hours"] },
+      })
+    ).toBeNull()
   })
 })
 
