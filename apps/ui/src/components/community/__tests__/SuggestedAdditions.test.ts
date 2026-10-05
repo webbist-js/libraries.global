@@ -6,9 +6,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 Object.assign(globalThis, { React })
 
+const session = vi.hoisted(() => ({
+  value: { data: { user: { id: "u1" } }, isPending: false } as {
+    data: { user: { id: string } } | null
+    isPending: boolean
+  },
+}))
+
 vi.mock("@/lib/auth-client", () => ({
   authClient: {
-    useSession: () => ({ data: { user: { id: "u1" } }, isPending: false }),
+    useSession: () => session.value,
   },
 }))
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
@@ -39,6 +46,7 @@ const suggestion = (n: number) => ({
 })
 
 beforeEach(() => {
+  session.value = { data: { user: { id: "u1" } }, isPending: false }
   vi.stubGlobal(
     "fetch",
     vi.fn(async () =>
@@ -74,6 +82,35 @@ describe("SuggestedAdditions", () => {
       })
     )
     expect(await screen.findByText("Option 6")).toBeTruthy()
+    expect(screen.queryByRole("link", { name: /See all/ })).toBeNull()
+  })
+
+  it("shows a sign-in link when signed out", async () => {
+    session.value = { data: null, isPending: false }
+    render(
+      createElement(SuggestedAdditions, {
+        signInReturnTo: "/community#suggested-additions",
+      })
+    )
+    expect(await screen.findByText("Option 1")).toBeTruthy()
+    const signIn = screen.getByRole("link", { name: "Sign in to vote" })
+
+    expect(signIn.getAttribute("href")).toBe(
+      `/auth/signin?callbackUrl=${encodeURIComponent("/community#suggested-additions")}`
+    )
+  })
+
+  it("shows all suggestions with no See all link when there are only three", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({ data: [1, 2, 3].map(suggestion) }, { status: 200 })
+      )
+    )
+    render(createElement(SuggestedAdditions, { signInReturnTo: "/contribute" }))
+    expect(await screen.findByText("Option 1")).toBeTruthy()
+    expect(screen.getByText("Option 2")).toBeTruthy()
+    expect(screen.getByText("Option 3")).toBeTruthy()
     expect(screen.queryByRole("link", { name: /See all/ })).toBeNull()
   })
 })

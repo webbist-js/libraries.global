@@ -72,9 +72,9 @@ export default async function CommunityPage() {
             style={{ color: T.ink.dim }}
           >
             A drive is a short, shared effort to fill one kind of gap, such as
-            opening hours for a county&apos;s libraries or photos of a
-            city&apos;s branches. Until the first one opens, you can improve any
-            record from the Index editor.
+            opening hours for a county’s libraries or photos of a city’s
+            branches. Until the first one opens, you can improve any record from
+            the Index editor.
           </p>
           <GlobalLink
             href="/contribute/index"
@@ -104,7 +104,7 @@ export default async function CommunityPage() {
               </h2>
               <GlobalLink
                 href="/community/leaderboard"
-                className="text-[14px] font-semibold underline underline-offset-[3px]"
+                className="shrink-0 text-[14px] font-semibold whitespace-nowrap underline underline-offset-[3px]"
                 style={{ color: T.accent.primary }}
               >
                 Full leaderboard

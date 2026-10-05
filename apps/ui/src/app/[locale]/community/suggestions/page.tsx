@@ -16,7 +16,7 @@ export async function generateMetadata({
   return buildMetadata({
     title: "Suggested additions",
     description:
-      "Services, amenities and accessibility features contributors want added to the lists. Vote for the ones you'd use.",
+      "Services, amenities and accessibility features contributors want added to the lists. Vote for the ones you’d use.",
     path: "community/suggestions",
     locale,
   })
@@ -30,7 +30,7 @@ export default function SuggestionsPage() {
       <CommunitySectionHeader
         section="Suggestions"
         title="What should the lists *include?*"
-        lead="When contributors correct a library, they can name an option the lists don't have yet. Vote for the ones you'd use; the editorial board decides monthly."
+        lead="When contributors correct a library, they can name an option the lists don’t have yet. Vote for the ones you’d use; the editorial board decides monthly."
       />
       <div className="mx-auto w-full max-w-[880px] px-4 pt-8 pb-16 sm:px-8">
         <SuggestedAdditions

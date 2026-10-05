@@ -23,17 +23,11 @@ export function LeaderboardRows({ entries }: { entries: LeaderboardEntry[] }) {
       className="m-0 list-none overflow-hidden rounded-[20px] p-0"
       style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
     >
-      {entries.map((entry, i) => (
-        <li
-          key={entry.rank}
-          style={
-            i > 0 ? { borderTop: `1px solid ${T.border.divider}` } : undefined
-          }
-        >
-          <GlobalLink
-            href={entry.username ? `/profile/${entry.username}` : "#"}
-            className="flex items-center gap-3 px-4 py-3.5 no-underline transition-colors hover:bg-(--t-bg-surface) sm:gap-4 sm:px-6"
-          >
+      {entries.map((entry, i) => {
+        const rowClassName =
+          "flex items-center gap-3 px-4 py-3.5 no-underline transition-colors hover:bg-(--t-bg-surface) sm:gap-4 sm:px-6"
+        const rowContent = (
+          <>
             <span
               className="w-8 shrink-0 text-right text-[15px] font-semibold tabular-nums"
               style={{ color: T.ink.dim }}
@@ -90,9 +84,29 @@ export function LeaderboardRows({ entries }: { entries: LeaderboardEntry[] }) {
                 pts
               </span>
             </span>
-          </GlobalLink>
-        </li>
-      ))}
+          </>
+        )
+
+        return (
+          <li
+            key={entry.rank}
+            style={
+              i > 0 ? { borderTop: `1px solid ${T.border.divider}` } : undefined
+            }
+          >
+            {entry.username ? (
+              <GlobalLink
+                href={`/profile/${entry.username}`}
+                className={rowClassName}
+              >
+                {rowContent}
+              </GlobalLink>
+            ) : (
+              <div className={rowClassName}>{rowContent}</div>
+            )}
+          </li>
+        )
+      })}
     </ol>
   )
 }
