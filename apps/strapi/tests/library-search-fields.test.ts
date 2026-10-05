@@ -126,4 +126,35 @@ describe("drive fields", () => {
     )
     expect(f).not.toHaveProperty("verified_status_ts")
   })
+
+  it("dates every section by lastVerifiedAt on a legacy row with no stamps", () => {
+    const last = Date.parse("2026-10-03T00:00:00.000Z") / 1000
+    for (const verifiedSections of [undefined, null, {}, { hours: "junk" }]) {
+      const f = librarySearchFields(
+        { lastVerifiedAt: "2026-10-03T00:00:00.000Z", verifiedSections },
+        null,
+        null
+      )
+      expect(f.last_verified_ts).toBe(last)
+      expect(f.verified_hours_ts).toBe(last)
+      expect(f.verified_status_ts).toBe(last)
+      expect(f.verified_address_ts).toBe(last)
+      expect(f.verified_contact_ts).toBe(last)
+    }
+  })
+
+  it("never dates an unstamped section by lastVerifiedAt once any is stamped", () => {
+    const f = librarySearchFields(
+      {
+        lastVerifiedAt: "2026-10-03T00:00:00.000Z",
+        verifiedSections: { contact: "2026-10-03T00:00:00.000Z" },
+      },
+      null,
+      null
+    )
+    expect(f.verified_contact_ts).toBe(
+      Date.parse("2026-10-03T00:00:00.000Z") / 1000
+    )
+    expect(f).not.toHaveProperty("verified_hours_ts")
+  })
 })

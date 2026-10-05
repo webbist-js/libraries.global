@@ -1,3 +1,10 @@
+import {
+  isValidStamp,
+  SECTION_FIELDS,
+  VERIFY_SECTIONS,
+  type VerifySection,
+} from "@repo/shared-data"
+
 import type { ApplyRecordOutcome } from "./library-record"
 import { defaultLocale } from "./locales"
 import { applyToPublished } from "./publish-guard"
@@ -12,20 +19,8 @@ import { applyToPublished } from "./publish-guard"
 
 const LIBRARY = "api::library.library"
 
-export const VERIFY_SECTIONS = [
-  "hours",
-  "status",
-  "address",
-  "contact",
-] as const
-export type VerifySection = (typeof VERIFY_SECTIONS)[number]
-
-export const SECTION_FIELDS: Record<VerifySection, readonly string[]> = {
-  hours: ["openingTimes"],
-  status: ["operationalStatus"],
-  address: ["streetAddress", "city", "postalCode", "district"],
-  contact: ["website", "phone", "email"],
-}
+// The sections and their fields are shared with the index and the UI.
+export { SECTION_FIELDS, VERIFY_SECTIONS, type VerifySection }
 
 export function isVerification(fields: unknown): boolean {
   return (
@@ -70,7 +65,7 @@ export function stampSections(
   if (current && typeof current === "object" && !Array.isArray(current))
     for (const s of VERIFY_SECTIONS) {
       const v = (current as Record<string, unknown>)[s]
-      if (typeof v === "string" && !Number.isNaN(Date.parse(v))) map[s] = v
+      if (isValidStamp(v)) map[s] = v
     }
   for (const s of sections) map[s] = at.toISOString()
 

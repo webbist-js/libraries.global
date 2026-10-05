@@ -171,5 +171,7 @@ describe("verify logic", () => {
         "hours"
       )
     ).toBe("2026-03-01T00:00:00.000Z")
+    // The shared rule: a lastVerifiedAt that isn't a date dates nothing.
+    expect(sectionCheckedAt({ lastVerifiedAt: "junk" }, "hours")).toBeNull()
   })
 })

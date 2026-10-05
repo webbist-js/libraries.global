@@ -1,7 +1,12 @@
 // "Still right?": a reader confirms parts of a library's record without
 // changing them. Pure helpers, no React, so they're unit-testable.
 
-import { hasOpeningHours } from "@repo/shared-data"
+import {
+  hasOpeningHours,
+  sectionCheckedAt as sharedSectionCheckedAt,
+  VERIFY_SECTIONS,
+  type VerifySection,
+} from "@repo/shared-data"
 
 import { OPERATIONAL_STATUSES } from "@/app/[locale]/contribute/index/_components/wizard.constants"
 import {
@@ -11,14 +16,8 @@ import {
   type OpeningTimesDay,
 } from "@/components/library/library-page.helpers"
 
-/** The sections a verify can confirm, in Strapi's order. */
-export const VERIFY_SECTIONS = [
-  "hours",
-  "status",
-  "address",
-  "contact",
-] as const
-export type VerifySection = (typeof VERIFY_SECTIONS)[number]
+/** The sections a verify can confirm, shared with Strapi and the index. */
+export { VERIFY_SECTIONS, type VerifySection }
 
 export const SECTION_LABELS: Record<VerifySection, string> = {
   hours: "Opening hours",
@@ -68,34 +67,16 @@ export function toSections(raw: unknown): VerifySection[] {
   return VERIFY_SECTIONS.filter((s) => asked.has(s))
 }
 
-const isValidStamp = (v: unknown): v is string =>
-  typeof v === "string" && !Number.isNaN(Date.parse(v))
-
 /**
- * When a section was last confirmed: its own stamp when `verifiedSections`
- * holds any valid stamp at all (even for a different section — in which case
- * this section just hasn't been checked, so the answer is null, never another
- * section's date); otherwise `lastVerifiedAt` (the legacy case: records
- * checked before sections were stamped one by one — old rows, new_library
- * approvals, imports — have only that).
+ * When a section was last confirmed, by the shared rule (`@repo/shared-data`
+ * `sectionCheckedAt`): its own stamp; else, only on a legacy row with no
+ * valid stamp at all, `lastVerifiedAt`; else null.
  */
 export function sectionCheckedAt(
   library: object,
   section: VerifySection
 ): string | null {
-  const r = library as Record<string, unknown>
-  const sections = r.verifiedSections
-
-  const hasAnyValidStamp =
-    sections !== null &&
-    typeof sections === "object" &&
-    Object.values(sections as Record<string, unknown>).some(isValidStamp)
-
-  if (!hasAnyValidStamp) return str(r.lastVerifiedAt)
-
-  const stamp = (sections as Record<string, unknown>)[section]
-
-  return isValidStamp(stamp) ? stamp : null
+  return sharedSectionCheckedAt(library, section)
 }
 
 /** Only the sections the library has a value for. */

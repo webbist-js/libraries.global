@@ -5,7 +5,7 @@
  * stored completeness, and a 1° grid cell for the homepage globe.
  */
 
-import { isGapKey } from "@repo/shared-data"
+import { isGapKey, sectionCheckedAt, VERIFY_SECTIONS } from "@repo/shared-data"
 
 export const OPEN_DAYS = [
   "monday",
@@ -115,8 +115,6 @@ const seconds = (v: unknown): number | null => {
   return Number.isFinite(t) ? Math.floor(t / 1000) : null
 }
 
-const VERIFIED_SECTIONS = ["hours", "status", "address", "contact"] as const
-
 /** The stored gaps, or the legacy derivation for a row not yet backfilled. */
 function needsOf(entry: Record<string, unknown>): string[] {
   return Array.isArray(entry.gaps)
@@ -124,7 +122,12 @@ function needsOf(entry: Record<string, unknown>): string[] {
     : libraryNeeds(entry)
 }
 
-/** Unix seconds for when the library was created and when each section was last checked. */
+/**
+ * Unix seconds for when the library was created and when each section was
+ * last checked. A section's time follows the shared `sectionCheckedAt` rule,
+ * so a legacy row with only `lastVerifiedAt` gets the same per-section times
+ * the library page shows.
+ */
 export function timestampFields(
   entry: Record<string, unknown>
 ): Record<string, number> {
@@ -133,12 +136,17 @@ export function timestampFields(
   if (created != null) out.created_ts = created
   const last = seconds(entry.lastVerifiedAt)
   if (last != null) out.last_verified_ts = last
-  const map = entry.verifiedSections
-  if (map && typeof map === "object" && !Array.isArray(map))
-    for (const s of VERIFIED_SECTIONS) {
-      const t = seconds((map as Record<string, unknown>)[s])
-      if (t != null) out[`verified_${s}_ts`] = t
-    }
+  const record = {
+    verifiedSections: entry.verifiedSections,
+    lastVerifiedAt:
+      entry.lastVerifiedAt instanceof Date
+        ? entry.lastVerifiedAt.toISOString()
+        : entry.lastVerifiedAt,
+  }
+  for (const s of VERIFY_SECTIONS) {
+    const t = seconds(sectionCheckedAt(record, s))
+    if (t != null) out[`verified_${s}_ts`] = t
+  }
 
   return out
 }
@@ -146,7 +154,7 @@ export function timestampFields(
 export const TIMESTAMP_FIELD_NAMES = [
   "created_ts",
   "last_verified_ts",
-  ...VERIFIED_SECTIONS.map((s) => `verified_${s}_ts`),
+  ...VERIFY_SECTIONS.map((s) => `verified_${s}_ts`),
 ]
 
 export function librarySearchFields(
