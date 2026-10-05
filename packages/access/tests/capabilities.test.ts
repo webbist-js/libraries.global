@@ -206,6 +206,28 @@ describe("resolveCapabilities", () => {
     expect(c.moderation).toEqual([{ queue: "all", locale: null }])
   })
 
+  it("grants drives.manage to editorial_board only", () => {
+    const board = resolveCapabilities(
+      input({
+        grants: [{ role: "editorial_board", queue: "all", locale: null }],
+      })
+    )
+    expect(board.set.has("drives.manage")).toBe(true)
+
+    const moderator = resolveCapabilities(
+      input({ grants: [{ role: "moderator", queue: "all", locale: null }] })
+    )
+    expect(moderator.set.has("drives.manage")).toBe(false)
+
+    const noGrants = resolveCapabilities(input({ grants: [] }))
+    expect(noGrants.set.has("drives.manage")).toBe(false)
+
+    const signedOut = resolveCapabilities(
+      input({ signedIn: false, grants: [] })
+    )
+    expect(signedOut.set.has("drives.manage")).toBe(false)
+  })
+
   it("adds nothing for contributor and verified_librarian grants", () => {
     const base = resolveCapabilities(input({ grants: [] }))
     const c = resolveCapabilities(

@@ -50,6 +50,8 @@ export type Capability =
   | "events.feed"
   | "moderate.queue"
   | "submit.roleApplication"
+  // Create, edit, pin, feature, open, close and cancel drives (editorial board only).
+  | "drives.manage"
 
 /**
  * Most library claims one session carries. The bridge and the submission
@@ -138,6 +140,7 @@ export function resolveCapabilities(input: CapabilityInput): Capabilities {
         docs = "all"
         journal = "all"
         moderation.push({ queue: "all", locale: null })
+        set.add("drives.manage")
         break
       case "moderator":
         moderation.push({ queue: g.queue, locale: g.locale })
