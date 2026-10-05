@@ -1,95 +1,45 @@
+import type { Metadata } from "next"
 import { headers } from "next/headers"
 
 import { getSessionSSR } from "@/lib/auth-server"
+import {
+  fetchLeaderboard,
+  fetchStanding,
+  LEADERBOARD_PERIODS,
+  parsePeriod,
+} from "@/lib/community/leaderboard-server"
 import { T } from "@/lib/design-tokens"
 import { fetchOwnProfile } from "@/lib/own-profile-server"
-import { privateMetadata } from "@/lib/seo/metadata"
-import type { LeaderboardEntry } from "@/lib/types/leaderboard"
+import { buildMetadata } from "@/lib/seo/metadata"
 
-import { ContributeSectionHeader } from "../_components/ContributeSectionHeader"
+import { CommunitySectionHeader } from "../_components/CommunitySectionHeader"
 import { LeaderboardPodium } from "./_components/LeaderboardPodium"
 import { LeaderboardRows } from "./_components/LeaderboardRows"
 import { LeaderboardSidebar } from "./_components/LeaderboardSidebar"
 
-export const metadata = privateMetadata("Community leaderboard")
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
 
-const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
-const API_TOKEN = process.env.STRAPI_REST_READONLY_API_KEY
-const SECRET = process.env.STRAPI_BRIDGE_SECRET
-
-type Period = "today" | "week" | "month" | "all"
-
-const PERIODS: { key: Period; label: string }[] = [
-  { key: "today", label: "Today" },
-  { key: "week", label: "This week" },
-  { key: "month", label: "This month" },
-  { key: "all", label: "All time" },
-]
-
-type Standing = {
-  globalRank: number | null
-  tier: {
-    level: number
-    name: string
-    nextName: string | null
-    nextThreshold: number | null
-    progressPercent: number
-  }
-  streak: number
-  totalPoints: number
-  pointsThisMonth: number
-  recentBadges: { badgeId: string; awardedAt: string }[]
-  suggestedAction: string
+  return buildMetadata({
+    title: "Leaderboard",
+    description:
+      "The contributors who keep the atlas accurate and growing, ranked by points for approved changes.",
+    path: "community/leaderboard",
+    locale,
+  })
 }
 
-async function fetchLeaderboard(period: Period): Promise<LeaderboardEntry[]> {
-  try {
-    const res = await fetch(
-      `${STRAPI}/api/rewards/leaderboard?period=${period}&limit=50`,
-      {
-        next: { revalidate: 3600 },
-        headers: API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {},
-      }
-    )
-    if (!res.ok) return []
-    const json = (await res.json()) as { data?: LeaderboardEntry[] }
-
-    return json.data ?? []
-  } catch {
-    return []
-  }
-}
-
-async function fetchStanding(baUserId: string): Promise<Standing | null> {
-  if (!SECRET) return null
-  try {
-    const res = await fetch(`${STRAPI}/api/rewards/my-standing`, {
-      cache: "no-store",
-      headers: {
-        "X-Service-Secret": SECRET,
-        "X-Ba-User-Id": baUserId,
-      },
-    })
-    if (!res.ok) return null
-    const json = (await res.json()) as { data?: Standing }
-
-    return json.data ?? null
-  } catch {
-    return null
-  }
-}
-
-export default async function CommunityPage({
+export default async function LeaderboardPage({
   searchParams,
 }: {
   searchParams: Promise<{ period?: string }>
 }) {
   const { period: periodParam } = await searchParams
-  const period: Period = ["today", "week", "month", "all"].includes(
-    periodParam ?? ""
-  )
-    ? (periodParam as Period)
-    : "month"
+  const period = parsePeriod(periodParam)
 
   const session = await getSessionSSR(await headers())
 
@@ -108,8 +58,8 @@ export default async function CommunityPage({
     <div
       style={{ minHeight: "100vh", background: T.bg.void, color: T.ink.base }}
     >
-      <ContributeSectionHeader
-        section="Community"
+      <CommunitySectionHeader
+        section="Leaderboard"
         title="The community, *in numbers.*"
         lead="Contributors who keep the atlas accurate and growing. Points are earned for every approved contribution."
       />
@@ -120,13 +70,13 @@ export default async function CommunityPage({
           className="mb-8 flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           style={{ borderBottom: `1px solid ${T.border.line}` }}
         >
-          {PERIODS.map(({ key, label }) => {
+          {LEADERBOARD_PERIODS.map(({ key, label }) => {
             const active = period === key
 
             return (
               <a
                 key={key}
-                href={`/contribute/community?period=${key}`}
+                href={`/community/leaderboard?period=${key}`}
                 aria-current={active ? "page" : undefined}
                 className="-mb-px whitespace-nowrap"
                 style={{

@@ -140,7 +140,7 @@ export function BadgesSection({
           <SectionTitle as="h2" id="rc-progress">
             Progress
           </SectionTitle>
-          <TextLink href="/contribute/community">View leaderboard</TextLink>
+          <TextLink href="/community/leaderboard">View leaderboard</TextLink>
         </div>
 
         {progress != null && nextTierName ? (

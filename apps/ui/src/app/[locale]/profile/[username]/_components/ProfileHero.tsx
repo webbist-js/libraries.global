@@ -135,7 +135,7 @@ export function ProfileHero({
           className="mb-5"
           items={[
             { label: "Home", href: "/" },
-            { label: "Community", href: "/contribute/community" },
+            { label: "Community", href: "/community" },
             { label: `@${profile.username}` },
           ]}
         />
