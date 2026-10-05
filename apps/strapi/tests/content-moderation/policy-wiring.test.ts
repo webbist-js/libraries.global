@@ -567,6 +567,60 @@ describe("controller wiring: content checks", () => {
     expect(store[SUB][0].fields).toEqual({ name: "Fine Library" })
   })
 
+  it("refuses a verify correction without evidence on create", async () => {
+    const { store, controller } = makeControllerHarness({
+      ...contributor,
+      [SUB]: [],
+    })
+    const verify = {
+      submissionType: "correction",
+      targetDocumentId: "l00000000000000000000001",
+      fields: { kind: "verify", sections: ["hours"] },
+    }
+    const refused = ctxFor(verify)
+    await controller.create(refused)
+
+    expect(refused.status).toBe(400)
+    expect(refused.body.error.message).toMatch(/in person/)
+    expect(store[SUB]).toHaveLength(0)
+
+    const ok = ctxFor({ ...verify, evidenceType: "on_site_visit" })
+    await controller.create(ok)
+
+    expect(ok.status).toBeUndefined()
+    expect(store[SUB]).toHaveLength(1)
+  })
+
+  it("finalize checks a verify draft's saved evidence", async () => {
+    const draft = (documentId: string, extra: Record<string, unknown>) => ({
+      documentId,
+      status: "draft",
+      submissionType: "correction",
+      submittedByUserId: "u1",
+      targetDocumentId: "l00000000000000000000001",
+      fields: { kind: "verify", sections: ["status"] },
+      ...extra,
+    })
+    const { store, controller } = makeControllerHarness({
+      ...contributor,
+      [SUB]: [
+        draft("d000000000000000000007", {}),
+        draft("d000000000000000000008", { evidenceType: "on_site_visit" }),
+      ],
+    })
+    const refused = ctxFor({}, { id: "d000000000000000000007" })
+    await controller.finalize(refused)
+
+    expect(refused.status).toBe(400)
+    expect(store[SUB][0].status).toBe("draft")
+
+    const ok = ctxFor({}, { id: "d000000000000000000008" })
+    await controller.finalize(ok)
+
+    expect(ok.status).toBeUndefined()
+    expect(store[SUB][1].status).toBe("pending")
+  })
+
   it("finalize refuses an unsafe link scheme in the body", async () => {
     const draftId = "d000000000000000000006"
     const { store, controller } = makeControllerHarness({

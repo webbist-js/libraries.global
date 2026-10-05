@@ -2510,6 +2510,12 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+    verifiedSections: Schema.Attribute.JSON &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     virtualTourEmbed: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -3634,6 +3640,7 @@ export interface PluginContentModerationSubmission
       [
         "institutional_url",
         "on_site_photo",
+        "on_site_visit",
         "press_release",
         "personal_communication",
         "my_institutional_affiliation",

@@ -30,6 +30,11 @@ import {
   verifiedActions,
 } from "../utils/library-record"
 import {
+  applyVerification,
+  isVerification,
+  verifySections,
+} from "../utils/library-verify"
+import {
   configuredLocales,
   defaultLocale,
   normaliseLocale,
@@ -1177,8 +1182,9 @@ export default ({ strapi }: { strapi: any }) => ({
           // Side-effect: an approved correction is applied to the library and
           // published: "Tap Yes or No" facility answers connect facilities, and
           // a record correction from the Index editor (fields.kind "record")
-          // writes the changed fields (C-L1), and a shared photo joins the
-          // library's images. Free-text corrections still only award points.
+          // writes the changed fields (C-L1), a shared photo joins the
+          // library's images, and a "Still right?" verify stamps the sections
+          // it confirms. Free-text corrections still only award points.
           if (
             status === "approved" &&
             (submission?.submissionType === "correction" ||
@@ -1192,7 +1198,9 @@ export default ({ strapi }: { strapi: any }) => ({
                 ? await (this as any).applyLibraryRecord(submission)
                 : isPhotoCorrection(submission.fields)
                   ? await (this as any).applyLibraryPhoto(submission)
-                  : await (this as any).applyFacilityAnswers(submission)
+                  : isVerification(submission.fields)
+                    ? await applyVerification(strapi, submission)
+                    : await (this as any).applyFacilityAnswers(submission)
             const marker = RECORD_MARKERS[outcome]
             if (marker) {
               const noted = withMarker(reviewNote, marker)
@@ -1433,14 +1441,17 @@ export default ({ strapi }: { strapi: any }) => ({
         }
       }
 
-      // Setting a library's hours or open status checks them: each earns
-      // its verification points on top of the edit's own, which the Shelf
+      // Setting a library's hours or open status checks them, and so does
+      // confirming them with a "Still right?" verify: each earns its
+      // verification points on top of the edit's own, which the Shelf
       // Check, Verifier and Lending Library badges count.
       if (
         status === "approved" &&
         (submission?.submissionType === "library_edit" ||
           (submission?.submissionType === "correction" &&
-            isRecordCorrection(submission.fields)))
+            isRecordCorrection(submission.fields)) ||
+          (submission?.submissionType === "correction" &&
+            isVerification(submission.fields)))
       ) {
         try {
           const base = await defaultLocale(strapi)
@@ -1448,10 +1459,20 @@ export default ({ strapi }: { strapi: any }) => ({
             strapi,
             submissionLocale(submission)
           )
-          for (const action of verifiedActions(
-            submission.fields,
-            locale !== base
-          )) {
+          // A claimant's library_edit is a record edit whatever its kind.
+          const verify =
+            submission.submissionType === "correction" &&
+            isVerification(submission.fields)
+          const actions = verify
+            ? verifySections(submission.fields).flatMap((s) =>
+                s === "hours"
+                  ? (["hours_verified"] as const)
+                  : s === "status"
+                    ? (["status_verified"] as const)
+                    : []
+              )
+            : verifiedActions(submission.fields, locale !== base)
+          for (const action of actions) {
             await strapi
               .plugin("rewards")
               .service("points")

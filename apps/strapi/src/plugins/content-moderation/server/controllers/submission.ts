@@ -196,6 +196,8 @@ export default ({ strapi }: { strapi: any }) => ({
         directWikiEdit,
         directJournalEdit,
         verificationMethod,
+        evidenceType,
+        evidenceUrl,
         locale: contentLocale,
       })
     if (!verdict.ok) {
@@ -544,6 +546,8 @@ export default ({ strapi }: { strapi: any }) => ({
             directJournalEdit:
               existing.submissionType === "blog_submission" &&
               isDirectJournalEdit(existing.draftData),
+            evidenceType: extras.evidenceType ?? existing.evidenceType,
+            evidenceUrl: extras.evidenceUrl ?? existing.evidenceUrl,
             // C-4: this draft isn't `pending` yet, but excluding it keeps a
             // retried finalize from counting the row against its own quota.
             excludeDocumentId: id,

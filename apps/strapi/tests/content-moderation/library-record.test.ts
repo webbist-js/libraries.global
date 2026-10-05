@@ -343,6 +343,34 @@ describe("applyLibraryRecord", () => {
     ).toBe("noop")
   })
 
+  it("stamps only the verifiable sections an edit sets", async () => {
+    const { strapi, store } = memoised({
+      [LIBRARY]: [{ documentId: ID, slug: "lib", name: "Old", locale: "en" }],
+    })
+    await applyLibraryRecord(strapi, {
+      documentId: "s1",
+      targetDocumentId: ID,
+      fields: { kind: "record", city: "York" },
+    })
+    const lib = store[LIBRARY]![0]!
+    expect(Object.keys(lib.verifiedSections ?? {})).toEqual(["address"])
+    expect(lib.lastVerifiedAt).toBeTruthy()
+  })
+
+  it("leaves lastVerifiedAt alone for an edit with no verifiable section", async () => {
+    const { strapi, store } = memoised({
+      [LIBRARY]: [{ documentId: ID, slug: "lib", name: "Old", locale: "en" }],
+    })
+    await applyLibraryRecord(strapi, {
+      documentId: "s1",
+      targetDocumentId: ID,
+      fields: { kind: "record", name: "New" },
+    })
+    const lib = store[LIBRARY]![0]!
+    expect(lib.lastVerifiedAt).toBeUndefined()
+    expect(lib.contentUpdatedAt).toBeInstanceOf(Date)
+  })
+
   it("isRecordCorrection recognises the Index editor's corrections only", () => {
     expect(isRecordCorrection({ kind: "record", city: "x" })).toBe(true)
     expect(isRecordCorrection({ kind: "facilities" })).toBe(false)

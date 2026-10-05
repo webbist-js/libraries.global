@@ -111,6 +111,7 @@ const LIBRARY_LIST_FIELDS = [
   "completeness",
   "gaps",
   "lastVerifiedAt",
+  "verifiedSections",
   "contentUpdatedAt",
   "iiifEndpoint",
   "updatedAt",

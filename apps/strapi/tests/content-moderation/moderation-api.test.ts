@@ -499,6 +499,48 @@ describe("GET /moderation/submissions/:documentId", () => {
     expect(ctx.body.data.canPublish).toBe(false)
     expect(ctx.body.data.article).toBeNull()
   })
+
+  it("a verify correction carries the confirmed sections' live values and stamps", async () => {
+    const { controller } = setup(
+      [
+        sub({
+          submissionType: "correction",
+          contentLocale: "en",
+          targetDocumentId: "l00000000000000000000001",
+          fields: { kind: "verify", sections: ["contact", "status"] },
+          evidenceType: "on_site_visit",
+          draftData: null,
+        }),
+      ],
+      {
+        [LIBRARY]: [
+          {
+            documentId: "l00000000000000000000001",
+            slug: "a",
+            phone: "111",
+            website: "https://a.example.org",
+            operationalStatus: "open",
+            city: "York",
+            verifiedSections: {
+              status: "2025-01-01T00:00:00.000Z",
+              bogus: "x",
+            },
+          },
+        ],
+      }
+    )
+    const ctx = ctxFor({ viewer: INDEX_MOD, params: { documentId: id(1) } })
+    await controller.findOne(ctx)
+    expect(ctx.body.data.review).toEqual({
+      sections: ["status", "contact"],
+      current: {
+        operationalStatus: "open",
+        website: "https://a.example.org",
+        phone: "111",
+      },
+      verifiedSections: { status: "2025-01-01T00:00:00.000Z" },
+    })
+  })
 })
 
 describe("PUT /moderation/submissions/:documentId/status", () => {

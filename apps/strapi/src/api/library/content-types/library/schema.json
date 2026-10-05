@@ -542,6 +542,14 @@
         }
       }
     },
+    "verifiedSections": {
+      "type": "json",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
     "services": {
       "type": "relation",
       "relation": "manyToMany",

@@ -220,6 +220,7 @@ export function describeScopes(
 export const EVIDENCE_TYPE_LABELS: Record<string, string> = {
   institutional_url: "Institutional URL",
   on_site_photo: "On-site photo",
+  on_site_visit: "Checked in person",
   press_release: "Press release",
   personal_communication: "Personal communication",
   my_institutional_affiliation: "Institutional affiliation",

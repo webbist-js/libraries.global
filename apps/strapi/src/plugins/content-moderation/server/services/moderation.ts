@@ -12,11 +12,12 @@ import {
   type SubmissionType,
 } from "@repo/access"
 
+import { acceptedCount } from "./submission-policy"
+import { isVerification, verifyReview } from "../utils/library-verify"
 import { defaultLocale, knownLocale, submissionLocale } from "../utils/locales"
 import { isNewArticleDraft, roleApplicationFields } from "../utils/params"
 import { preloadTopicReviews, recordReview } from "../utils/record-review"
 import { summaryOf } from "../utils/submission-summary"
-import { acceptedCount } from "./submission-policy"
 
 /**
  * The Moderation Queue as community Moderators see it on the site
@@ -488,7 +489,9 @@ export default ({ strapi }: { strapi: any }) => ({
         (await preloadTopicReviews(strapi, [s])).get(s.targetDocumentId) ?? null
       )
     if (s.submissionType === "correction")
-      return recordReview(strapi, s).catch(() => null)
+      return isVerification(s.fields)
+        ? verifyReview(strapi, s).catch(() => null)
+        : recordReview(strapi, s).catch(() => null)
     if (s.submissionType === "library_edit") {
       // A claimant's edit is a record edit whatever `fields.kind` says.
       const fields = s.fields && typeof s.fields === "object" ? s.fields : {}

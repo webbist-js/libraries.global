@@ -67,6 +67,7 @@
       "enum": [
         "institutional_url",
         "on_site_photo",
+        "on_site_visit",
         "press_release",
         "personal_communication",
         "my_institutional_affiliation",

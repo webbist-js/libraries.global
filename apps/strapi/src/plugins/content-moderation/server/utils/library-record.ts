@@ -1,5 +1,6 @@
 import { LOCALIZED_LIBRARY_FIELDS } from "@repo/shared-data"
 
+import { latestStamp, sectionsSetBy, stampSections } from "./library-verify"
 import { defaultLocale, normaliseLocale, submissionLocale } from "./locales"
 import {
   isOptionKey,
@@ -442,7 +443,7 @@ type Submission = {
  * the submission's own locale version may not exist yet.
  */
 async function findLibrary(strapi: any, submission: Submission, base: string) {
-  const fields = ["documentId", "locale", "name"]
+  const fields = ["documentId", "locale", "name", "verifiedSections"]
   if (submission.targetDocumentId)
     return strapi.documents(LIBRARY).findOne({
       documentId: submission.targetDocumentId,
@@ -579,13 +580,28 @@ export async function applyLibraryRecord(
   if (Object.keys(data).length === 0) return "applied"
 
   // The timestamps are shared by every locale version: a translation leaves
-  // them to the default locale's own changes.
+  // them to the default locale's own changes. Setting a verifiable section
+  // (hours, status, address, contact) checks it: it's stamped, and
+  // lastVerifiedAt follows the latest stamp (see utils/library-verify).
   const now = new Date()
+  const touched = sectionsSetBy(data)
+  const stamps = touched.length
+    ? stampSections(library.verifiedSections, touched, now)
+    : null
+  const payload = localized
+    ? data
+    : {
+        ...data,
+        contentUpdatedAt: now,
+        ...(stamps
+          ? { verifiedSections: stamps, lastVerifiedAt: latestStamp(stamps) }
+          : {}),
+      }
   const { mode } = await applyToLocale(
     strapi,
     LIBRARY,
     library.documentId,
-    localized ? data : { ...data, contentUpdatedAt: now, lastVerifiedAt: now },
+    payload,
     { locale, defaultLocale: base }
   )
   strapi.log.info(

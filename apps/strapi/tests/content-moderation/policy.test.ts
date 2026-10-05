@@ -113,6 +113,33 @@ describe("submission policy", () => {
       })
     ).toEqual({ ok: true })
   })
+  it("needs sections and evidence for a verify correction", async () => {
+    const verify = (extra: Record<string, unknown>) =>
+      setup().check({
+        baUserId: "u1",
+        submissionType: "correction",
+        fields: { kind: "verify", sections: ["hours"] },
+        ...extra,
+      })
+    expect(
+      await setup().check({
+        baUserId: "u1",
+        submissionType: "correction",
+        fields: { kind: "verify", sections: ["nope"] },
+        evidenceType: "on_site_visit",
+      })
+    ).toMatchObject({ ok: false, status: 400 })
+    expect(await verify({})).toMatchObject({ ok: false, status: 400 })
+    expect(
+      await verify({ evidenceUrl: "ftp://example.org/hours" })
+    ).toMatchObject({ ok: false, status: 400 })
+    expect(await verify({ evidenceType: "on_site_visit" })).toEqual({
+      ok: true,
+    })
+    expect(await verify({ evidenceUrl: "https://example.org/hours" })).toEqual({
+      ok: true,
+    })
+  })
   it("ignores plan fields on the profile (invariant 3)", async () => {
     const { strapi } = makeFakeStrapi({
       [PROFILE]: [

@@ -13,6 +13,8 @@ import {
 import { findUnsafeContent } from "@repo/shared-data"
 
 import { activeGrants } from "../../../../utils/role-grants"
+import { isHttpUrl } from "../utils/library-record"
+import { isVerification, verifySections } from "../utils/library-verify"
 import { configuredLocales } from "../utils/locales"
 import {
   applicationSectionKind,
@@ -343,6 +345,9 @@ export default ({ strapi }: { strapi: any }) => ({
     directWikiEdit?: boolean
     directJournalEdit?: boolean
     verificationMethod?: unknown
+    /** The submission's evidence; a verify correction needs some. */
+    evidenceType?: unknown
+    evidenceUrl?: unknown
     /**
      * The submission's normalised locale. Direct edits are checked against
      * the editor's locales in it; without one, any direct-edit right counts.
@@ -393,6 +398,26 @@ export default ({ strapi }: { strapi: any }) => ({
         excludeDocumentId: input.excludeDocumentId,
       })
       if (!eligible.ok) return eligible
+    }
+
+    // "Still right?": a verify confirms at least one section, and says how
+    // it was checked: the page looked at, or a visit in person.
+    if (submissionType === "correction" && isVerification(input.fields)) {
+      if (verifySections(input.fields).length === 0)
+        return {
+          ok: false,
+          status: 400,
+          message: "Choose at least one section to confirm.",
+        }
+      if (
+        !isHttpUrl(input.evidenceUrl) &&
+        input.evidenceType !== "on_site_visit"
+      )
+        return {
+          ok: false,
+          status: 400,
+          message: "Add the page you checked, or say you checked in person.",
+        }
     }
 
     const limits = contributionLimits(tier, role)

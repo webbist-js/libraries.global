@@ -135,6 +135,7 @@ const META_KEYS = new Set([
   "updatedBy",
   "contentUpdatedAt",
   "lastVerifiedAt",
+  "verifiedSections",
 ])
 
 function canonical(v: unknown): string {

@@ -66,6 +66,23 @@ const pendingHoursEdit = () => {
   return s
 }
 
+/** "Still right?": confirms a library's hours and address, checked in person. */
+const pendingVerify = () => {
+  const s: any = {
+    documentId: "s0000000000000000000004",
+    submissionType: "correction",
+    status: "pending",
+    submittedByUserId: "u4",
+    targetDocumentId: "lib00000000000000000001",
+    fields: { kind: "verify", sections: ["hours", "address"] },
+    evidenceType: "on_site_visit",
+    draftData: null,
+  }
+  s.payloadHash = payloadHash(s)
+
+  return s
+}
+
 const LIBRARY_SEED = {
   "api::library.library": [
     {
@@ -151,6 +168,16 @@ describe("updateStatus", () => {
       expect.anything(),
       `${edit.documentId}:status_verified`
     )
+  })
+
+  it("awards hours_verified for a confirmed hours section, and the base correction points", async () => {
+    const verify = pendingVerify()
+    const { svc, award } = setup(verify)
+    await svc.updateStatus(verify.documentId, "approved", REVIEWER)
+    const actions = award.mock.calls.map((c: unknown[]) => c[1])
+    expect(actions).toContain("hours_verified")
+    expect(actions).not.toContain("status_verified")
+    expect(actions).toContain("correction_approved")
   })
 
   it("awards no verification points for a free-text correction", async () => {
