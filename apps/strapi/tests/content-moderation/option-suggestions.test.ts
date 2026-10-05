@@ -1,9 +1,12 @@
+import { LANGUAGE_MESSAGE } from "@repo/shared-data"
 import { describe, expect, it, vi } from "vitest"
 
+import { toPublicSuggestion } from "../../src/plugins/content-moderation/server/controllers/option-suggestion"
 import {
   createSuggestion,
   decideSuggestion,
   listSuggestions,
+  NON_REMOVED_STATUSES,
   recordSuggestion,
   setSuggestionStatus,
   SUGGESTION,
@@ -403,9 +406,13 @@ describe("createSuggestion", () => {
     expect(result.suggestion.votes).toBe(1)
     expect(result.suggestion.voted).toBe(true)
     expect(result.suggestion.status).toBe("open")
+    // `requests` counts correction requests for the same name; the
+    // creator's vote (not requests) already counts a direct post.
+    expect(result.suggestion.requests).toBe(0)
     expect(store[SUGGESTION]![0]).toMatchObject({
       name: "Seed library",
       suggestedBy: "u1",
+      requests: 0,
     })
   })
 
@@ -434,16 +441,81 @@ describe("createSuggestion", () => {
     ).toMatchObject({ ok: false, status: 400 })
   })
 
-  it("refuses unsafe text", async () => {
+  it("refuses unsafe text in the name", async () => {
     const { strapi } = memoised()
     const result = await createSuggestion(strapi, {
       ...base,
       name: "Fucking great service",
     })
-    expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected refusal")
-    expect(result.status).toBe(400)
-    expect(result.message).toBeTruthy()
+    expect(result).toMatchObject({
+      ok: false,
+      status: 400,
+      message: LANGUAGE_MESSAGE,
+    })
+  })
+
+  it("refuses unsafe text in the description", async () => {
+    const { strapi } = memoised()
+    const result = await createSuggestion(strapi, {
+      ...base,
+      name: "Study pods",
+      description: "Fucking great service",
+    })
+    expect(result).toMatchObject({
+      ok: false,
+      status: 400,
+      message: LANGUAGE_MESSAGE,
+    })
+  })
+})
+
+describe("createSuggestion: suggester name", () => {
+  it("carries the creator's own suggestedByName when their activity is public", async () => {
+    const { strapi } = memoised({
+      [PROFILE]: [
+        {
+          documentId: "p00000000000000000000001",
+          baUserId: "u1",
+          firstName: "Alex",
+          lastName: "Bennett",
+          username: "alexb",
+          profileVisibility: "public",
+          publicPrefs: {},
+        },
+      ],
+    })
+    const result = await createSuggestion(strapi, {
+      optionKey: "services",
+      name: "Study pods",
+      baUserId: "u1",
+    })
+    expect(result.ok).toBe(true)
+    if (!result.ok) throw new Error("expected ok")
+    expect(result.suggestion.suggestedByName).toBe("Alex B.")
+  })
+
+  it("is null when the creator's activity isn't public", async () => {
+    const { strapi } = memoised({
+      [PROFILE]: [
+        {
+          documentId: "p00000000000000000000001",
+          baUserId: "u1",
+          firstName: "Alex",
+          lastName: "Bennett",
+          username: "alexb",
+          profileVisibility: "private",
+          publicPrefs: {},
+        },
+      ],
+    })
+    const result = await createSuggestion(strapi, {
+      optionKey: "services",
+      name: "Study pods",
+      baUserId: "u1",
+    })
+    expect(result.ok).toBe(true)
+    if (!result.ok) throw new Error("expected ok")
+    expect(result.suggestion.suggestedByName).toBeNull()
   })
 })
 
@@ -518,6 +590,33 @@ describe("createSuggestion: duplicates and limits", () => {
     })
   })
 
+  it("refuses when the match was accepted", async () => {
+    const { strapi } = memoised({
+      [SUGGESTION]: [
+        {
+          documentId: "sug00000000000000000001",
+          name: "Study pods",
+          nameKey: "study pods",
+          optionKey: "services",
+          status: "accepted",
+          requests: 1,
+        },
+      ],
+    })
+    expect(
+      await createSuggestion(strapi, {
+        optionKey: "services",
+        name: "Study Pods",
+        baUserId: "u1",
+      })
+    ).toMatchObject({
+      ok: false,
+      status: 409,
+      message: "Someone has already suggested this. Vote for it instead.",
+      existingDocumentId: "sug00000000000000000001",
+    })
+  })
+
   it("refuses when the match was declined", async () => {
     const { strapi } = memoised({
       [SUGGESTION]: [
@@ -544,6 +643,32 @@ describe("createSuggestion: duplicates and limits", () => {
     })
   })
 
+  it("refuses when the match was removed", async () => {
+    const { strapi } = memoised({
+      [SUGGESTION]: [
+        {
+          documentId: "sug00000000000000000001",
+          name: "Ghost tours",
+          nameKey: "ghost tours",
+          optionKey: "services",
+          status: "removed",
+          requests: 1,
+        },
+      ],
+    })
+    expect(
+      await createSuggestion(strapi, {
+        optionKey: "services",
+        name: "Ghost tours",
+        baUserId: "u1",
+      })
+    ).toMatchObject({
+      ok: false,
+      status: 409,
+      message: "The editorial board decided not to add this one.",
+    })
+  })
+
   it("limits a contributor to 5 suggestions a day", async () => {
     const now = new Date().toISOString()
     const rows = Array.from({ length: 5 }, (_, i) => ({
@@ -552,7 +677,7 @@ describe("createSuggestion: duplicates and limits", () => {
       nameKey: `idea ${i}`,
       optionKey: "services",
       status: "open",
-      requests: 1,
+      requests: 0,
       suggestedBy: "u1",
       createdAt: now,
     }))
@@ -568,6 +693,53 @@ describe("createSuggestion: duplicates and limits", () => {
       status: 429,
       message: "You can suggest up to 5 options a day.",
     })
+  })
+
+  it("only counts a contributor's own suggestions from the last 24 hours", async () => {
+    const now = new Date().toISOString()
+    const twoDaysAgo = new Date(Date.now() - 2 * 86_400_000).toISOString()
+    const own = Array.from({ length: 4 }, (_, i) => ({
+      documentId: `sug000000000000000000${10 + i}`,
+      name: `Idea ${i}`,
+      nameKey: `idea ${i}`,
+      optionKey: "services",
+      status: "open",
+      requests: 0,
+      suggestedBy: "u1",
+      createdAt: now,
+    }))
+    const rows = [
+      ...own,
+      // Older than 24h: doesn't count toward the limit.
+      {
+        documentId: "sug00000000000000000098",
+        name: "Old idea",
+        nameKey: "old idea",
+        optionKey: "services",
+        status: "open",
+        requests: 0,
+        suggestedBy: "u1",
+        createdAt: twoDaysAgo,
+      },
+      // Someone else's suggestion, posted today: doesn't count either.
+      {
+        documentId: "sug00000000000000000099",
+        name: "Someone else's idea",
+        nameKey: "someone else's idea",
+        optionKey: "services",
+        status: "open",
+        requests: 0,
+        suggestedBy: "u2",
+        createdAt: now,
+      },
+    ]
+    const { strapi } = memoised({ [SUGGESTION]: rows })
+    const result = await createSuggestion(strapi, {
+      optionKey: "services",
+      name: "A fifth idea today",
+      baUserId: "u1",
+    })
+    expect(result.ok).toBe(true)
   })
 })
 
@@ -624,55 +796,64 @@ describe("setSuggestionStatus", () => {
     expect(store[SUGGESTION]![0]!.decidedBy).toBeUndefined()
   })
 
-  it("plan moves open or reviewing to planned and stores a note", async () => {
-    const { strapi, store } = memoised({
-      [SUGGESTION]: [{ ...open, status: "reviewing" }],
-    })
-    const result = await setSuggestionStatus(strapi, {
-      documentId: open.documentId,
-      status: "planned",
-      decidedBy: "Board",
-      note: " Coming in Q2 ",
-    })
-    expect(result).toMatchObject({
-      status: "planned",
-      decisionNote: "Coming in Q2",
-      decidedBy: "Board",
-    })
-    expect(store[SUGGESTION]![0]!.decidedAt).toBeDefined()
-  })
+  it.each(["open", "reviewing"] as const)(
+    "plan moves %s to planned and stores a note",
+    async (from) => {
+      const { strapi, store } = memoised({
+        [SUGGESTION]: [{ ...open, status: from }],
+      })
+      const result = await setSuggestionStatus(strapi, {
+        documentId: open.documentId,
+        status: "planned",
+        decidedBy: "Board",
+        note: " Coming in Q2 ",
+      })
+      expect(result).toMatchObject({
+        status: "planned",
+        decisionNote: "Coming in Q2",
+        decidedBy: "Board",
+      })
+      expect(store[SUGGESTION]![0]!.decidedAt).toBeDefined()
+    }
+  )
 
-  it("remove moves open, reviewing or planned to removed", async () => {
-    const { strapi } = memoised({
-      [SUGGESTION]: [{ ...open, status: "planned" }],
-    })
-    const result = await setSuggestionStatus(strapi, {
-      documentId: open.documentId,
-      status: "removed",
-      decidedBy: "Board",
-    })
-    expect(result).toMatchObject({ status: "removed", decidedBy: "Board" })
-  })
-
-  it("can't move a final status", async () => {
-    const { strapi } = memoised({
-      [SUGGESTION]: [{ ...open, status: "accepted" }],
-    })
-    expect(
-      await setSuggestionStatus(strapi, {
+  it.each(["open", "reviewing", "planned"] as const)(
+    "remove moves %s to removed",
+    async (from) => {
+      const { strapi } = memoised({
+        [SUGGESTION]: [{ ...open, status: from }],
+      })
+      const result = await setSuggestionStatus(strapi, {
         documentId: open.documentId,
         status: "removed",
         decidedBy: "Board",
       })
-    ).toBeNull()
-    expect(
-      await setSuggestionStatus(strapi, {
-        documentId: open.documentId,
-        status: "reviewing",
-        decidedBy: "Board",
+      expect(result).toMatchObject({ status: "removed", decidedBy: "Board" })
+    }
+  )
+
+  it.each(["accepted", "declined", "removed"] as const)(
+    "can't move a final status (%s)",
+    async (from) => {
+      const { strapi } = memoised({
+        [SUGGESTION]: [{ ...open, status: from }],
       })
-    ).toBeNull()
-  })
+      expect(
+        await setSuggestionStatus(strapi, {
+          documentId: open.documentId,
+          status: "removed",
+          decidedBy: "Board",
+        })
+      ).toBeNull()
+      expect(
+        await setSuggestionStatus(strapi, {
+          documentId: open.documentId,
+          status: "reviewing",
+          decidedBy: "Board",
+        })
+      ).toBeNull()
+    }
+  )
 })
 
 describe("decideSuggestion: decline validation", () => {
@@ -790,6 +971,30 @@ describe("decideSuggestion: library_types", () => {
     })
     expect(store[SERVICE]).toBeUndefined()
   })
+
+  it("matches the enum against the board's tidied name, not the stored one", async () => {
+    const { strapi, store } = memoised(
+      { [SUGGESTION]: [{ ...libType, name: "Prison library" }] },
+      {
+        contentTypes: {
+          [LIBRARY]: {
+            attributes: { libraryType: { enum: ["National", "Prison"] } },
+          },
+        },
+      }
+    )
+    const result = await decideSuggestion(strapi, {
+      documentId: libType.documentId,
+      decision: "accept",
+      decidedBy: "Board",
+      name: "Prison",
+    })
+    expect(result).toMatchObject({
+      ok: true,
+      data: { status: "accepted", name: "Prison" },
+    })
+    expect(store[SERVICE]).toBeUndefined()
+  })
 })
 
 describe("listSuggestions: suggester names and board notes", () => {
@@ -844,7 +1049,7 @@ describe("listSuggestions: suggester names and board notes", () => {
     expect(byName.B).toBeNull()
   })
 
-  it("nulls decisionNote except for declined and planned", async () => {
+  it("returns the real decisionNote for every status (the board and admin see it all)", async () => {
     const { strapi } = memoised({
       [SUGGESTION]: [
         {
@@ -865,33 +1070,102 @@ describe("listSuggestions: suggester names and board notes", () => {
           requests: 1,
           decisionNote: "Not needed",
         },
-        {
-          documentId: "sug00000000000000000003",
-          name: "C",
-          nameKey: "c",
-          optionKey: "services",
-          status: "planned",
-          requests: 1,
-          decisionNote: "Next quarter",
-        },
-        {
-          documentId: "sug00000000000000000004",
-          name: "D",
-          nameKey: "d",
-          optionKey: "services",
-          status: "open",
-          requests: 1,
-          decisionNote: "Should never appear",
-        },
       ],
     })
     const list = await listSuggestions(strapi)
     const notes = Object.fromEntries(list.map((s) => [s.name, s.decisionNote]))
-    expect(notes).toEqual({
-      A: null,
-      B: "Not needed",
-      C: "Next quarter",
-      D: null,
+    expect(notes).toEqual({ A: "Internal note", B: "Not needed" })
+  })
+})
+
+describe("listSuggestions: statuses filter", () => {
+  it("excludes removed suggestions, the way the public and board lists do", async () => {
+    const { strapi } = memoised({
+      [SUGGESTION]: [
+        {
+          documentId: "sug00000000000000000001",
+          name: "A",
+          nameKey: "a",
+          optionKey: "services",
+          status: "open",
+          requests: 1,
+        },
+        {
+          documentId: "sug00000000000000000002",
+          name: "B",
+          nameKey: "b",
+          optionKey: "services",
+          status: "removed",
+          requests: 1,
+        },
+      ],
     })
+    const list = await listSuggestions(strapi, {
+      statuses: NON_REMOVED_STATUSES,
+    })
+    expect(list.map((s) => s.name)).toEqual(["A"])
+  })
+})
+
+describe("toPublicSuggestion", () => {
+  const base = {
+    documentId: "sug00000000000000000001",
+    name: "A",
+    optionKey: "services" as const,
+    requests: 0,
+    votes: 2,
+    libraries: [],
+    unlinkedLibraries: [],
+    description: null,
+    suggestedBy: null,
+    suggestedByName: null,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    decidedAt: null,
+    decidedBy: null,
+  }
+
+  it("hides the decisionNote outside declined and planned", () => {
+    expect(
+      toPublicSuggestion({
+        ...base,
+        status: "accepted",
+        decisionNote: "Internal note",
+      }).decisionNote
+    ).toBeNull()
+    expect(
+      toPublicSuggestion({
+        ...base,
+        status: "open",
+        decisionNote: "Should never appear",
+      }).decisionNote
+    ).toBeNull()
+  })
+
+  it("shows the decisionNote for declined and planned", () => {
+    expect(
+      toPublicSuggestion({
+        ...base,
+        status: "declined",
+        decisionNote: "Not needed",
+      }).decisionNote
+    ).toBe("Not needed")
+    expect(
+      toPublicSuggestion({
+        ...base,
+        status: "planned",
+        decisionNote: "Coming in Q2",
+      }).decisionNote
+    ).toBe("Coming in Q2")
+  })
+
+  it("has no libraries list, only a count", () => {
+    const result = toPublicSuggestion({
+      ...base,
+      status: "open",
+      decisionNote: null,
+      libraries: [{ documentId: "lib1", name: "Nailsea Library" }],
+    })
+    expect(result).not.toHaveProperty("libraries")
+    expect(result.libraryCount).toBe(1)
   })
 })

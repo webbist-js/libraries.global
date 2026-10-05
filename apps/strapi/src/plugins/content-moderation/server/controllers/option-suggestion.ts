@@ -4,6 +4,8 @@ import {
   decideSuggestion,
   isSuggestionList,
   listSuggestions,
+  NON_REMOVED_STATUSES,
+  NOTE_VISIBLE_STATUSES,
   setSuggestionStatus,
   type SuggestionView,
   toggleVote,
@@ -66,14 +68,19 @@ export async function decideFromRequest(
     return {
       ok: false,
       status: 404,
-      message: "This suggestion was already decided.",
+      message: "This suggestion can’t move to that status.",
     }
 
   return { ok: true, data: updated }
 }
 
-/** The public shape of a suggestion: no library names, no raw suggester id. */
-function toPublicSuggestion(s: SuggestionView) {
+/**
+ * The public shape of a suggestion: no library names, no raw suggester id,
+ * and the board's note hidden outside `NOTE_VISIBLE_STATUSES` (the board
+ * and admin lists see every status's note; this mapping is what hides it
+ * from everyone else).
+ */
+export function toPublicSuggestion(s: SuggestionView) {
   return {
     documentId: s.documentId,
     name: s.name,
@@ -85,7 +92,9 @@ function toPublicSuggestion(s: SuggestionView) {
     suggestedByName: s.suggestedByName,
     createdAt: s.createdAt,
     decidedAt: s.decidedAt ?? null,
-    decisionNote: s.decisionNote ?? null,
+    decisionNote: NOTE_VISIBLE_STATUSES.has(s.status)
+      ? (s.decisionNote ?? null)
+      : null,
     libraryCount: s.libraries.length,
   }
 }
@@ -110,12 +119,11 @@ export default ({ strapi }: { strapi: any }) => ({
   // viewer is known.
   async listPublic(ctx: any) {
     const user = await resolveUser(strapi, ctx).catch(() => null)
-    const rows = await listSuggestions(strapi, { viewer: user?.id })
-    ctx.body = {
-      data: rows
-        .filter((r) => r.status !== "removed")
-        .map((r) => toPublicSuggestion(r)),
-    }
+    const rows = await listSuggestions(strapi, {
+      statuses: NON_REMOVED_STATUSES,
+      viewer: user?.id,
+    })
+    ctx.body = { data: rows.map((r) => toPublicSuggestion(r)) }
   },
 
   // POST /api/content-moderation/option-suggestions  (content-api)
@@ -131,10 +139,10 @@ export default ({ strapi }: { strapi: any }) => ({
       return sendError(
         ctx,
         400,
-        "optionKey must be accessibility, amenities, services or library_types."
+        "Choose a list: accessibility, amenities, services or library types."
       )
     if (typeof name !== "string" || !name.trim())
-      return sendError(ctx, 400, "name is required")
+      return sendError(ctx, 400, "Give the option a name.")
     const result = await createSuggestion(strapi, {
       optionKey,
       name,
@@ -167,8 +175,9 @@ export default ({ strapi }: { strapi: any }) => ({
 
   // GET /content-moderation/option-suggestions  (admin)
   async adminList(ctx: any) {
-    const rows = await listSuggestions(strapi)
-    ctx.body = { data: rows.filter((r) => r.status !== "removed") }
+    ctx.body = {
+      data: await listSuggestions(strapi, { statuses: NON_REMOVED_STATUSES }),
+    }
   },
 
   // PUT /content-moderation/option-suggestions/:id  (admin)

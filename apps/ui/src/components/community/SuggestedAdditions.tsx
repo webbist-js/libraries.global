@@ -11,12 +11,19 @@ type Suggestion = {
   documentId: string
   name: string
   optionKey: "accessibility" | "amenities" | "services"
+  status: "open" | "reviewing" | "planned" | "accepted" | "declined"
   requests: number
   votes: number
   voted?: boolean
   libraryCount: number
-  libraries: string[]
+  libraries?: string[]
 }
+
+// GET now returns every non-removed status; this card only has a vote
+// button, so it keeps the ones a contributor can still vote on. Task 4
+// replaces this component with the New/Under review/Planned/Added/Not
+// adding board.
+const VOTABLE = new Set<Suggestion["status"]>(["open", "reviewing", "planned"])
 
 const LIST: Record<
   Suggestion["optionKey"],
@@ -81,7 +88,8 @@ export function SuggestedAdditions({
         r.ok ? r.json() : Promise.reject(new Error(String(r.status)))
       )
       .then((json: { data?: Suggestion[] }) => {
-        if (live && cast === votesCast.current) setItems(json.data ?? [])
+        if (live && cast === votesCast.current)
+          setItems((json.data ?? []).filter((s) => VOTABLE.has(s.status)))
       })
       .catch(() => live && setFailed(true))
 
@@ -190,7 +198,7 @@ export function SuggestedAdditions({
             const list = LIST[s.optionKey]
             const where =
               s.libraryCount === 1
-                ? (s.libraries[0] ?? "1 library")
+                ? (s.libraries?.[0] ?? "1 library")
                 : `${s.libraryCount} libraries`
 
             return (

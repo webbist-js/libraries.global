@@ -11,8 +11,8 @@ import { isActivityPublic } from "../../../../utils/activity-visibility"
  * approves it, so only vetted names reach the list). Signed-in contributors
  * vote on undecided suggestions; the editorial board reviews them monthly
  * in the moderation plugin, moving them through New → Under review →
- * Planned → Added or Not adding (or Removed, hidden from everyone but the
- * board). Accepting a services/amenities/accessibility suggestion adds the
+ * Planned → Added or Not adding (or Removed, hidden from everyone,
+ * including the board). Accepting a services/amenities/accessibility suggestion adds the
  * option to its list and links it to every library that asked for it;
  * accepting a library type only renames it to the schema's spelling, since
  * the enum itself is changed by hand.
@@ -53,8 +53,26 @@ export const VOTABLE_STATUSES = new Set(["open", "reviewing", "planned"])
 /** A suggestion the board hasn't decided yet: it can still move or be decided. */
 const UNDECIDED_STATUSES = new Set(["open", "reviewing", "planned"])
 
-/** `decisionNote` is shown publicly only for these statuses. */
-const NOTE_VISIBLE_STATUSES = new Set(["declined", "planned"])
+/**
+ * Every status except `removed`, for callers that list suggestions:
+ * `removed` is hidden from everyone, including the board, so it's excluded
+ * in the query rather than filtered out of the result afterwards.
+ */
+export const NON_REMOVED_STATUSES = [
+  "open",
+  "reviewing",
+  "planned",
+  "accepted",
+  "declined",
+] as const
+
+/**
+ * `decisionNote` is shown publicly only for these statuses (declined names
+ * stay declined, so contributors should know why; a planned one tells them
+ * when). The board and admin lists see every status's note (applied only
+ * in the content-api controller's public mapping, not here).
+ */
+export const NOTE_VISIBLE_STATUSES = new Set(["declined", "planned"])
 
 export const DAILY_SUGGESTION_LIMIT = 5
 
@@ -178,7 +196,10 @@ export type SuggestionView = {
   createdAt?: string
   decidedAt?: string | null
   decidedBy?: string | null
-  /** Shown only for declined and planned; null for every other status. */
+  /**
+   * The board's note, whatever the status. Only the content-api
+   * controller's public mapping hides it outside `NOTE_VISIBLE_STATUSES`.
+   */
   decisionNote?: string | null
 }
 
@@ -330,9 +351,9 @@ export async function listSuggestions(
       createdAt: r.createdAt,
       decidedAt: r.decidedAt ?? null,
       decidedBy: r.decidedBy ?? null,
-      decisionNote: NOTE_VISIBLE_STATUSES.has(r.status)
-        ? (r.decisionNote ?? null)
-        : null,
+      // Every caller sees the real note here; the content-api controller's
+      // public mapping is the one that hides it outside NOTE_VISIBLE_STATUSES.
+      decisionNote: r.decisionNote ?? null,
     }))
     .sort(
       (a, b) =>
@@ -477,10 +498,13 @@ export async function decideSuggestion(
   }
 
   if (suggestion.optionKey === "library_types") {
+    // `name` lets the board tidy the wording ("Prison library" → "Prison")
+    // before matching it against the schema enum.
+    const candidateName = (input.name?.trim() || suggestion.name).slice(0, 80)
     const enumValues: string[] =
       strapi.contentType?.(LIBRARY)?.attributes?.libraryType?.enum ?? []
     const match = enumValues.find(
-      (v) => v.toLowerCase() === suggestion.name.toLowerCase()
+      (v) => v.toLowerCase() === candidateName.toLowerCase()
     )
     if (!match)
       return {
@@ -687,13 +711,15 @@ export async function createSuggestion(
       message: "You can suggest up to 5 options a day.",
     }
 
+  // requests counts correction requests for the same name; a direct post
+  // isn't one (the creator's vote, added below, already counts them).
   const created = (await strapi.documents(SUGGESTION).create({
     data: {
       name,
       nameKey,
       optionKey: input.optionKey,
       status: "open",
-      requests: 1,
+      requests: 0,
       libraries: [],
       submissionIds: [],
       description,
@@ -702,6 +728,27 @@ export async function createSuggestion(
   })) as SuggestionRow
   const vote = await toggleVote(strapi, created.documentId, input.baUserId)
 
+  const [profile] = (await strapi.documents(PROFILE).findMany({
+    filters: { baUserId: { $eq: input.baUserId } },
+    fields: [
+      "baUserId",
+      "firstName",
+      "lastName",
+      "username",
+      "profileVisibility",
+      "publicPrefs",
+    ],
+    limit: 1,
+  })) as {
+    firstName?: string | null
+    lastName?: string | null
+    username?: string | null
+    profileVisibility?: string
+    publicPrefs?: { showActivity?: boolean } | null
+  }[]
+  const suggestedByName =
+    profile && isActivityPublic(profile) ? displayName(profile) : null
+
   return {
     ok: true,
     suggestion: {
@@ -709,14 +756,14 @@ export async function createSuggestion(
       name: created.name,
       optionKey: created.optionKey,
       status: created.status,
-      requests: created.requests ?? 1,
+      requests: created.requests ?? 0,
       votes: vote?.votes ?? 1,
       voted: vote?.voted ?? true,
       libraries: created.libraries ?? [],
       unlinkedLibraries: created.unlinkedLibraries ?? [],
       description: created.description ?? null,
       suggestedBy: created.suggestedBy ?? null,
-      suggestedByName: null,
+      suggestedByName,
       createdAt: created.createdAt,
       decidedAt: null,
       decidedBy: null,

@@ -127,13 +127,16 @@ function DecisionModal({
             .data.data.unlinkedLibraries ?? [])
         : []
       const linked = libraries - unlinked.length
+      const libraryTypes = suggestion.optionKey === "library_types"
       toggleNotification({
         type: "success",
         message: accept
-          ? `Added “${name.trim() || suggestion.name}” to ${LIST_LABEL[suggestion.optionKey]} and linked ${linked} ${linked === 1 ? "library" : "libraries"}.`
+          ? libraryTypes
+            ? `Marked “${name.trim() || suggestion.name}” as added. It appears once that spelling is in the schema.`
+            : `Added “${name.trim() || suggestion.name}” to ${LIST_LABEL[suggestion.optionKey]} and linked ${linked} ${linked === 1 ? "library" : "libraries"}.`
           : "Declined. It won’t be suggested again.",
       })
-      if (accept && unlinked.length > 0)
+      if (accept && !libraryTypes && unlinked.length > 0)
         toggleNotification({
           type: "warning",
           message: `Not linked: ${describeUnlinked(unlinked)}. The suggestion stays listed under Accepted with this follow-up.`,
@@ -161,7 +164,9 @@ function DecisionModal({
           <Flex direction="column" alignItems="stretch" gap={4}>
             <Typography textColor="neutral600">
               {accept
-                ? `This adds it to the ${LIST_LABEL[suggestion.optionKey].toLowerCase()} list (or reuses an option with the same name) and links it to the ${libraries} ${libraries === 1 ? "library" : "libraries"} that asked for it.`
+                ? suggestion.optionKey === "library_types"
+                  ? "This marks the type as added once that spelling is in the schema. It creates no option and links no libraries — the enum itself is changed by hand."
+                  : `This adds it to the ${LIST_LABEL[suggestion.optionKey].toLowerCase()} list (or reuses an option with the same name) and links it to the ${libraries} ${libraries === 1 ? "library" : "libraries"} that asked for it.`
                 : "Declined names stay declined: later requests for the same name are not counted."}
             </Typography>
             {accept ? (
@@ -179,7 +184,12 @@ function DecisionModal({
             ) : null}
             <Field.Root
               name="note"
-              hint="Optional. Kept with the decision for the board’s records."
+              required={!accept}
+              hint={
+                accept
+                  ? "Kept with the decision for the board’s records. Not shown publicly."
+                  : "Shown publicly with the suggestion."
+              }
             >
               <Field.Label>Note</Field.Label>
               <Textarea
@@ -198,10 +208,14 @@ function DecisionModal({
             variant={accept ? "success" : "danger-light"}
             startIcon={accept ? <Check /> : <Cross />}
             loading={saving}
-            disabled={accept && !name.trim()}
+            disabled={accept ? !name.trim() : !note.trim()}
             onClick={() => void save()}
           >
-            {accept ? "Accept and link" : "Decline"}
+            {accept
+              ? suggestion.optionKey === "library_types"
+                ? "Mark as added"
+                : "Accept and link"
+              : "Decline"}
           </Button>
         </Modal.Footer>
       </Modal.Content>

@@ -14,7 +14,10 @@ import {
   type ModeratorTarget,
 } from "../services/submission"
 import { knownLocale } from "../utils/locales"
-import { listSuggestions } from "../utils/option-suggestions"
+import {
+  listSuggestions,
+  NON_REMOVED_STATUSES,
+} from "../utils/option-suggestions"
 import { isDocumentId } from "../utils/params"
 import { contributorReviewer } from "../utils/reviewer"
 import { isValidServiceSecret } from "../utils/service-secret"
@@ -440,8 +443,9 @@ export default ({ strapi }: { strapi: any }) => {
       if (!auth) return
       if (!isBoard(auth))
         return fail(ctx, 403, "Only the editorial board decides suggestions.")
-      const rows = await listSuggestions(strapi)
-      ctx.body = { data: rows.filter((r) => r.status !== "removed") }
+      ctx.body = {
+        data: await listSuggestions(strapi, { statuses: NON_REMOVED_STATUSES }),
+      }
     },
 
     // PUT /moderation/option-suggestions/:id  (editorial board)
