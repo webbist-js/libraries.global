@@ -1,6 +1,6 @@
 # Issue tracker: Local Markdown
 
-Issues and PRDs for this repo live as markdown files in `.scratch/`.
+Issues and PRDs for this repo live as markdown files in `.scratch/`. The folder is git-ignored: they stay on this machine and are never committed.
 
 ## Conventions
 

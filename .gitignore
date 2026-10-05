@@ -56,3 +56,6 @@ ingest-dry-log.json
 # Downloaded dataset files (ingests fetch them on demand)
 apps/strapi/scripts/ingests/**/.cache/
 apps/strapi/scripts/ingests/**/.runs/
+
+# Local issue tracker, PRDs and import logs (docs/agents/issue-tracker.md): never committed
+.scratch/
