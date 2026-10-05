@@ -22,7 +22,7 @@ Drives live on a **Noticeboard**, the landing page of a new top-level **Communit
 
 Decisions accepted with the owner on 2026-10-05 (review defaults D1–D15):
 
-1. **A top-level Community section** (D1). `/community` is the Noticeboard; the leaderboard moves from `/contribute/community` to `/community/leaderboard`, and the option votes move off the hub to `/community/suggestions`. Contribute keeps the tools. Community pages are indexable; Contribute stays noindex.
+1. **A top-level Community section** (D1). `/community` is the Noticeboard; the leaderboard moves from `/contribute/community` to `/community/leaderboard`, and the option votes get their own page at `/community/suggestions`, with the hub keeping a card that links to it. Contribute keeps the tools. Community pages are indexable; Contribute stays noindex.
 2. **One Focus per drive** (D2). A Focus is either named field groups (hours, photo, accessibility, contact, verify and so on) or the whole record.
 3. **Scope is fixed when a drive opens** (D3). Libraries created after `openedAt` are left out, so an import mid-drive doesn't move the finish line.
 4. **Drives are finishable** (D4). At most 2,000 tasks when it opens, an end date at most 90 days after the start, no "ongoing" drives.
