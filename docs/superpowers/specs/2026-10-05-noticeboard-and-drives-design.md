@@ -23,7 +23,7 @@ Drives live on a **Noticeboard**, the landing page of a new top-level **Communit
 Decisions accepted with the owner on 2026-10-05 (review defaults D1–D15):
 
 1. **A top-level Community section** (D1). `/community` is the Noticeboard; the leaderboard moves from `/contribute/community` to `/community/leaderboard`, and the option votes get their own page at `/community/suggestions`, with the hub keeping a card that links to it. Contribute keeps the tools. Community pages are indexable; Contribute stays noindex.
-2. **One Focus per drive** (D2). A Focus is either named field groups (hours, photo, accessibility, contact, verify and so on) or the whole record.
+2. **One Focus per drive** (D2). A Focus is gap keys from the registry (hours, photo, accessibility, contact and so on), or verify, or the whole record.
 3. **Scope is fixed when a drive opens** (D3). Libraries created after `openedAt` are left out, so an import mid-drive doesn't move the finish line.
 4. **Drives are finishable** (D4). At most 2,000 tasks when it opens, an end date at most 90 days after the start, no "ongoing" drives.
 5. **Moderators approve proposals, the board pins** (D5). A Drive Proposal is reviewed in the `index` queue; approval schedules the drive. Only the editorial board pins (six at most) and features (one).
@@ -45,7 +45,7 @@ Unchanged: **Library**, **Submission**, **Moderation Queue**, **Moderator**, **P
 New terms (add to CONTEXT.md):
 
 - **Drive**: a time-boxed public effort to close one Focus across a Drive Scope, with a start, an end date and a goal. _Avoid_: campaign, challenge, quest, mission, bounty.
-- **Focus**: what a drive fills: one or more Gaps, or the whole record. _Avoid_: task type, drive type.
+- **Focus**: what a drive fills: one or more Gaps, or verify (sections checked before a date), or the whole record. _Avoid_: task type, drive type.
 - **Gap**: a record section a Library lacks, as the gap registry defines it (hours, photo, accessibility…). One definition serves completeness, the index's `needs`, the library page and drives. _Avoid_: missing field, hole.
 - **Drive Scope**: which libraries a drive covers: places at any level, library types, a source Dataset, a completeness ceiling, or an explicit list (one library is the single-library drive). Fixed at `openedAt`.
 - **Drive Task**: one library in a drive's scope that still has the Focus's Gap; the unit of progress.
@@ -69,7 +69,7 @@ Four places define gaps today, and they disagree:
 | `apps/ui/src/components/library/library-page.helpers.ts` `recordChecklist` | 8, different: name, address, hours, history, links, accessibility, collections, photos    |
 | `apps/ui/src/components/location/location-page.helpers.ts` `GAP_DEFS`      | 4: hours, photo, facilities, contact                                                      |
 
-Add `packages/shared-data/gaps.ts`: `GAPS`, one entry per Gap with its `key`, label, icon, the record fields it reads, `hasGap(record)` (a pure predicate over a typed record shape), the editor that fills it (a `CorrectionEditor` category) and whether it counts toward completeness. Keys: `hours`, `photo`, `address`, `location`, `accessibility`, `facilities`, `contact`, `about`, `history`, `collections`, plus `verify` (time-based, §3.2). `hours` means no enabled day with a timeframe (today's `libraryNeeds` rule). `accessibility` means no accessibility relation and no confirmed "No" for an accessibility item in `absentFacilities`.
+Add `packages/shared-data/gaps.ts`: `GAPS`, one entry per Gap with its `key`, label, icon, the record fields it reads, `hasGap(record)` (a pure predicate over a typed record shape), the editor that fills it (a `CorrectionEditor` category) and whether it counts toward completeness. Keys: `hours`, `photo`, `address`, `location`, `facilities`, `about`, `history`, `contact` (the eight completeness sections), plus `accessibility` and `services`. `facilities` means none of accessibility, services or amenities; `services` means no services and no amenities. `verify` is not a gap but a Focus of its own (time-based, §3.2). `hours` means no enabled day with a timeframe (today's `libraryNeeds` rule). `accessibility` means no accessibility relation and no confirmed "No" for an accessibility item in `absentFacilities`.
 
 Every consumer derives from it: `computeCompleteness` (still 8 sections, now named from the registry), `libraryNeeds` (writes every gap key, not three), `recordChecklist`, region gaps and drives. Parity tests assert that each surface agrees for the same record. Completeness values may shift slightly; `backfillLibraryCompleteness` does not rerun (local data is disposable), the next write of each library refreshes it, and a reseed refreshes the index.
 
@@ -95,7 +95,7 @@ fields: { kind: "verify", sections: ("hours" | "status" | "address" | "contact")
 | Field                                                     | Use                                              | Filterable | Sortable |
 | --------------------------------------------------------- | ------------------------------------------------ | ---------- | -------- |
 | `completeness`                                            | whole-record drives; the comment claims it today | add        | yes      |
-| `id`                                                      | explicit lists, excluding in-review and held ids | add        | add      |
+| `documentId`                                              | explicit lists, excluding in-review and held ids | add        | add      |
 | `source`                                                  | "records from this Dataset"                      | add        |          |
 | `created_ts` (unix seconds)                               | scope frozen at `openedAt`                       | add        |          |
 | `verified_<section>_ts` (hours, status, address, contact) | verify drives (§5.2)                             | add        |          |
@@ -156,10 +156,10 @@ Draft & Publish on (house rule): the published version is what the site reads. T
 | `slug`                         | uid (title), not i18n                    |                                                                                                                         |
 | `summary`                      | text, i18n, required, ≤ 280              | Card and hero lead                                                                                                      |
 | `steps`                        | component `drive.step`, repeatable, i18n | "How to help": 1–5 short steps                                                                                          |
-| `focus`                        | enum                                     | `fields` or `record`                                                                                                    |
-| `gaps`                         | JSON (gap keys)                          | For `fields`: 1–3 keys from the registry, all filled by one panel                                                       |
+| `focus`                        | enum                                     | `gaps`, `verify` or `record`                                                                                            |
+| `gaps`                         | JSON (gap keys)                          | For `gaps`: 1–3 keys from the registry, all filled by one panel                                                         |
 | `recordTarget`                 | integer 50–100                           | For `record`: a library is done at this completeness                                                                    |
-| `verifyBefore`                 | datetime                                 | For `gaps: ["verify"]`: sections verified before this count as gaps; fixed when opened                                  |
+| `verifyBefore`                 | datetime                                 | For `verify`: sections verified before this count as gaps; fixed when opened                                            |
 | `scope`                        | component `drive.scope`                  | §5.2                                                                                                                    |
 | `whereToLook`                  | component `drive.source`                 | `name`, `url`, `licenceNote`: where the answers are, and on what terms                                                  |
 | `unit`                         | enum `library`, `branch`, `record`       | The noun on progress ("142 of 251 branches"); translated in messages                                                    |
@@ -192,7 +192,7 @@ Component `drive.scope` (not i18n):
 
 `packages/shared-data/drive-scope.ts` turns a drive into two things, from one definition:
 
-- `driveFilter(drive)`: a Meilisearch filter string for the scope, and one for scope plus gap. Places become `continent_slug IN [...] OR country_slug IN [...] OR …`; explicit lists become `id IN [...]`; then `libraryType IN`, `source =`, `completeness <`, `created_ts <= openedAt`, `operationalStatus != "permanently_closed"`, and the locale clause. The gap is `needs IN [<gaps>]` (any listed gap is a task), `completeness < recordTarget`, or `verified_hours_ts < verifyBefore` (and status/address/contact likewise).
+- `driveFilter(drive)`: a Meilisearch filter string for the scope, and one for scope plus gap. Places become `continent_slug IN [...] OR country_slug IN [...] OR …`; explicit lists become `documentId IN [...]` (row ids change on every publish); then `libraryType IN`, `source =`, `completeness <`, `created_ts <= openedAt`, `operationalStatus != "permanently_closed"`, and the locale clause. The gap is `needs IN [<gaps>]` (any listed gap is a task), `completeness < recordTarget`, or `verified_hours_ts < verifyBefore` (and status/address/contact likewise).
 - `libraryInDrive(library, drive)`: the same rules as a pure predicate over a library with its place documentIds, for credit at approval (§6.3) and for the policy check (§6.2).
 
 Parity tests run both against the same fixtures. Before a drive opens there is no `openedAt`, so the builder's preview uses now.
@@ -239,7 +239,7 @@ The canonical, shareable page: hero (chips, title, summary, dates, share), `Driv
 
 One builder, two modes: `/community/propose` for anyone eligible and `/community/drives/[slug]/edit` (or New drive) for the editorial board.
 
-1. **Focus**: field gaps (one panel must fill them all, so the builder only offers compatible sets) or whole record with a target.
+1. **Focus**: gap keys (one panel must fill them all, so the builder only offers compatible sets), verify with a date, or whole record with a target.
 2. **Scope**: place pickers at every level (multi-select, reusing the Index editor's cascading selects), types, Dataset, completeness ceiling, or a library list. "Propose a drive from these results" on Find libraries pre-fills this from its `FindQuery`.
 3. **Live counts**: "251 in scope, 109 to do", recomputed as the scope changes. Over 2,000 to do, the builder says so and suggests splitting by region.
 4. **Where to look**: a name, URL and licence note. The help text says that facts from a library's own site are fine and that map services' data isn't.
@@ -267,7 +267,7 @@ The panel hosts the existing editor for the Focus. It never builds a new one.
 | `hours`         | `OpeningTimesEditor` (split periods, staffing, "Copy to…"), starting empty                             | `correction`, `kind: "record"`, `openingTimes` |
 | `photo`         | `PhotoUpload` with credit and licence                                                                  | `correction`, `kind: "photo"`                  |
 | `accessibility` | The library page's Yes/No facility questions                                                           | `correction`, `kind: "facilities"`             |
-| `facilities`    | The services and amenities editors                                                                     | `correction`, `kind: "record"`                 |
+| `services`      | The services and amenities editors                                                                     | `correction`, `kind: "record"`                 |
 | `contact`       | The links editor (website, phone, email)                                                               | `correction`, `kind: "record"`                 |
 | `verify`        | The "Still right?" confirm view (§3.2)                                                                 | `correction`, `kind: "verify"`                 |
 | `record`        | A checklist of that library's own gaps, each opening its editor; one record correction for all of them | `correction`, `kind: "record"`                 |
@@ -329,7 +329,7 @@ It's written after the commit in `updateStatus` (beside the points awards, non-f
 `GET /api/drives/[slug]/tasks?q=&near=lat,lng&page=` asks Meilisearch for one page of 10 libraries, with this filter:
 
 - scope plus gap
-- `NOT id IN [...]` for the pending and held ids (bounded by the 2,000-task cap)
+- `NOT documentId IN [...]` for the pending and held libraries (bounded by the 2,000-task cap)
 
 It sorts by completeness descending: "Most complete first" says what that means. With `near`, it sorts by `_geoPoint` instead. `q` searches name, city, district, area and region names within the scope.
 
@@ -396,7 +396,7 @@ A new Submission type, `drive_proposal`, in the `index` queue. Places to change,
 ## 10. Scale (ADR-0004)
 
 - No read walks the library table. Progress is two count-only Meilisearch queries; task lists are one page; in-review, helper and leaderboard counts are grouped SQL on indexed drive ids.
-- The 2,000-task cap keeps drives finishable and keeps `NOT id IN [...]` filters and credit checks small. A country-wide drive is split by region.
+- The 2,000-task cap keeps drives finishable and keeps `NOT documentId IN [...]` filters and credit checks small. A country-wide drive is split by region.
 - Credit at approval checks one library against the open drives: a pure predicate over a cached list.
 - `progressLog` is at most 90 entries per drive. Drive Credits grow with accepted work, not with the index.
 
