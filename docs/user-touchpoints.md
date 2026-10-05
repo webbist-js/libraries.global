@@ -107,7 +107,7 @@ Library stewards (users with a claim on this library) see the full edit diff flo
 - Diff editor showing current vs. proposed values.
 - **Gated**: `/api/auth-bridge/claim-status` must confirm the user has an affiliation for this library. Non-stewards are redirected to the claim flow.
 - On submit: creates `submissionType: "library_edit"`.
-- Points on approval: 5 (1–3 fields changed), 15 (4+ fields changed).
+- Points on approval: 5 (1–3 fields changed), 15 (4+ fields changed), 2 when nothing differs from the record. Fields sent with their current value don't count.
 
 ### Claim Library (`/contribute/claim`)
 
@@ -122,7 +122,7 @@ Library stewards (users with a claim on this library) see the full edit diff flo
 - No claim required. Any logged-in user.
 - Form: category picker + freetext.
 - Submits as `submissionType: "correction"`.
-- Points: 2 on approval for freetext, facility-answer or photo corrections; a structured record correction (`fields.kind: "record"`) scores like a `library_edit` — 5 (1–3 fields) or 15 (4+ fields). A "Still right?" Verification (`fields.kind: "verify"`) scores 2, plus 5 each for a confirmed hours or status section.
+- Points: 2 on approval for freetext or facility-answer corrections, 8 for a shared photo; a structured record correction (`fields.kind: "record"`) scores like a `library_edit` — 5 (1–3 changed fields), 15 (4+), or 2 when it changes nothing. A "Still right?" Verification (`fields.kind: "verify"`) scores 2, plus 5 each for a confirmed hours or status section.
 
 ### My Submissions (`/contribute/submissions`)
 
@@ -165,20 +165,20 @@ Library stewards (users with a claim on this library) see the full edit diff flo
 
 Points are awarded on submission approval by the rewards plugin:
 
-| Action                                     | Points | Status                                            |
-| ------------------------------------------ | ------ | ------------------------------------------------- |
-| `correction` approved (other kinds)        | 2      | Wired                                             |
-| `correction` (record, 1–3 fields) approved | 5      | Wired                                             |
-| `correction` (record, 4+ fields) approved  | 15     | Wired                                             |
-| `library_edit` minor (1–3 fields)          | 5      | Wired                                             |
-| `library_edit` major (4+ fields)           | 15     | Wired                                             |
-| `library_claim` approved                   | 10     | Wired                                             |
-| `wiki_edit` approved                       | 5      | Wired                                             |
-| `wiki_edit` translation                    | 15     | Wired                                             |
-| `new_library` approved                     | 50     | Wired                                             |
-| `photo_licensed_cc`                        | 8      | Wired (shared photo)                              |
-| `hours_verified`                           | 5      | Wired (edit or Verification sets/confirms hours)  |
-| `status_verified`                          | 5      | Wired (edit or Verification sets/confirms status) |
+| Action                                    | Points | Status                                               |
+| ----------------------------------------- | ------ | ---------------------------------------------------- |
+| `correction` approved (other kinds)       | 2      | Wired                                                |
+| `correction` (record, 1–3 changed fields) | 5      | Wired                                                |
+| `correction` (record, 4+ changed fields)  | 15     | Wired                                                |
+| `library_edit` minor (1–3 changed fields) | 5      | Wired                                                |
+| `library_edit` major (4+ changed fields)  | 15     | Wired                                                |
+| `library_claim` approved                  | 10     | Wired                                                |
+| `wiki_edit` approved                      | 5      | Wired                                                |
+| `wiki_edit` translation                   | 15     | Wired                                                |
+| `new_library` approved                    | 50     | Wired                                                |
+| `photo_licensed_cc`                       | 8      | Wired (shared photo)                                 |
+| `hours_verified`                          | 5      | Wired (edit changes or Verification confirms hours)  |
+| `status_verified`                         | 5      | Wired (edit changes or Verification confirms status) |
 
 ### Tiers (wired)
 

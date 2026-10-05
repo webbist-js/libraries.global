@@ -69,7 +69,7 @@ A user's bookmarked Library — a wishlist of institutions they want to visit or
 _Avoid_: favourite, bookmark, visited library
 
 **Points**:
-The unit of contribution credit awarded when a Submission is approved. Drive Tier progression and Badge eligibility. Tracked as a cumulative all-time total; cannot be spent or traded. Point values by submission type: a structured record `correction` or `library_edit` → 5pts (1–3 fields) or 15pts (4+ fields); a free-text `correction` or a Verification → 2pts, plus 5pts each for confirming or setting hours or open status; a shared photo → 8pts; `library_claim` approved → 10pts; `wiki_edit` approved → 5pts; `wiki_edit` translation → 15pts; `new_library` approved → 50pts.
+The unit of contribution credit awarded when a Submission is approved. Drive Tier progression and Badge eligibility. Tracked as a cumulative all-time total; cannot be spent or traded. Point values by submission type: a structured record `correction` or `library_edit` → 5pts (1–3 changed fields) or 15pts (4+), or 2pts when no field differs from the record; a free-text `correction` or a Verification → 2pts, plus 5pts each for confirming or changing hours or open status; a shared photo → 8pts; `library_claim` approved → 10pts; `wiki_edit` approved → 5pts; `wiki_edit` translation → 15pts; `new_library` approved → 50pts.
 _Avoid_: credits, score, karma
 
 **Tier**:

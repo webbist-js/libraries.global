@@ -6,19 +6,19 @@ The libraries.global rewards system recognises contributor effort through points
 
 ## Point Values
 
-| Action                 | Trigger                                                                            | Points            |
-| ---------------------- | ---------------------------------------------------------------------------------- | ----------------- |
-| `new_library_approved` | New library submission approved by editorial board                                 | +50               |
-| `edit_accepted_major`  | `library_edit`, or a record correction (`fields.kind: "record"`), 4+ fields        | +15               |
-| `wiki_translated`      | Wiki page translation approved                                                     | +15               |
-| `photo_licensed_cc`    | CC-licensed photo accepted                                                         | +8                |
-| `edit_accepted_minor`  | `library_edit`, or a record correction (`fields.kind: "record"`), 1–3 fields       | +5                |
-| `hours_verified`       | Accepted edit, or a confirmed "Still right?" Verification, that sets/checks hours  | +5                |
-| `status_verified`      | Accepted edit, or a confirmed "Still right?" Verification, that sets/checks status | +5                |
-| `correction_approved`  | Any other correction approved (not a record correction, photo or source)           | +2                |
-| `daily_streak`         | Any approved contribution on a consecutive calendar day                            | +1                |
-| `manual_award`         | Admin manual award (reason required in metadata)                                   | Custom            |
-| `manual_deduct`        | Admin manual deduction (reason required in metadata)                               | Custom (negative) |
+| Action                 | Trigger                                                                              | Points            |
+| ---------------------- | ------------------------------------------------------------------------------------ | ----------------- |
+| `new_library_approved` | New library submission approved by editorial board                                   | +50               |
+| `edit_accepted_major`  | `library_edit`, or a record correction (`fields.kind: "record"`), 4+ changed fields  | +15               |
+| `wiki_translated`      | Wiki page translation approved                                                       | +15               |
+| `photo_licensed_cc`    | CC-licensed photo accepted                                                           | +8                |
+| `edit_accepted_minor`  | `library_edit`, or a record correction (`fields.kind: "record"`), 1–3 changed fields | +5                |
+| `hours_verified`       | Accepted edit that changes hours, or a confirmed "Still right?" Verification of them | +5                |
+| `status_verified`      | Accepted edit that changes status, or a confirmed "Still right?" Verification of it  | +5                |
+| `correction_approved`  | Any other correction approved, or a record edit that changes nothing                 | +2                |
+| `daily_streak`         | Any approved contribution on a consecutive calendar day                              | +1                |
+| `manual_award`         | Admin manual award (reason required in metadata)                                     | Custom            |
+| `manual_deduct`        | Admin manual deduction (reason required in metadata)                                 | Custom (negative) |
 
 ---
 
@@ -89,13 +89,14 @@ Action mapping:
 | Submission type | Condition | Action | Points |
 |-----------------|-----------|--------|--------|
 | `new_library` | Approved | `new_library_approved` | 50 |
-| `library_edit` | Approved, <4 fields | `edit_accepted_minor` | 5 |
-| `library_edit` | Approved, 4+ fields | `edit_accepted_major` | 15 |
-| `correction` | Approved, `fields.kind: "record"`, <4 fields | `edit_accepted_minor` | 5 |
-| `correction` | Approved, `fields.kind: "record"`, 4+ fields | `edit_accepted_major` | 15 |
+| `library_edit` | Approved, 1–3 changed fields | `edit_accepted_minor` | 5 |
+| `library_edit` | Approved, 4+ changed fields | `edit_accepted_major` | 15 |
+| `correction` | Approved, `fields.kind: "record"`, 1–3 changed fields | `edit_accepted_minor` | 5 |
+| `correction` | Approved, `fields.kind: "record"`, 4+ changed fields | `edit_accepted_major` | 15 |
 | `correction` | Approved, any other kind (e.g. `verify`, `facilities`, free text) | `correction_approved` | 2 |
-| `library_edit` or `correction` (`record`/`verify`) | Approved, confirms/sets hours | `hours_verified` (additional) | 5 |
-| `library_edit` or `correction` (`record`/`verify`) | Approved, confirms/sets status | `status_verified` (additional) | 5 |
+| `library_edit` or `correction` (`record`) | Approved, no field differs from the record | `correction_approved` | 2 |
+| `library_edit` or `correction` (`record`/`verify`) | Approved, confirms or changes hours | `hours_verified` (additional) | 5 |
+| `library_edit` or `correction` (`record`/`verify`) | Approved, confirms or changes status | `status_verified` (additional) | 5 |
 | `wiki_edit` | Approved, `fields.isTranslation = true` | `wiki_translated` | 15 |
 | `wiki_edit` | Approved, not a translation | `edit_accepted_minor` | 5 |
 
