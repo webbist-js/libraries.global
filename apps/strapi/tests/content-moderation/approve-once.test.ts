@@ -83,6 +83,27 @@ const pendingVerify = () => {
   return s
 }
 
+/** A record correction from the Index editor: structured fields, not free text. */
+const pendingRecordCorrection = () => {
+  const s: any = {
+    documentId: "s0000000000000000000005",
+    submissionType: "correction",
+    status: "pending",
+    submittedByUserId: "u4",
+    targetDocumentId: "lib00000000000000000001",
+    fields: {
+      kind: "record",
+      city: "York",
+      phone: "01904 000000",
+      previous: {},
+    },
+    draftData: null,
+  }
+  s.payloadHash = payloadHash(s)
+
+  return s
+}
+
 const LIBRARY_SEED = {
   "api::library.library": [
     {
@@ -186,6 +207,21 @@ describe("updateStatus", () => {
     const actions = award.mock.calls.map((c: unknown[]) => c[1])
     expect(actions).not.toContain("hours_verified")
     expect(actions).not.toContain("status_verified")
+  })
+
+  it("scores a record correction like a claimant's edit", async () => {
+    const c = pendingRecordCorrection()
+    const { svc, award } = setup(c)
+    await svc.updateStatus(c.documentId, "approved", REVIEWER)
+    expect(award).toHaveBeenCalledWith(
+      "u4",
+      "edit_accepted_minor",
+      5,
+      expect.anything(),
+      `${c.documentId}:edit_accepted_minor`
+    )
+    const actions = award.mock.calls.map((x: unknown[]) => x[1])
+    expect(actions).not.toContain("correction_approved")
   })
 
   it("returns conflict when the compare-and-set loses the race", async () => {

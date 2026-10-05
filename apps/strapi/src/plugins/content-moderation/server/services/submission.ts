@@ -307,6 +307,28 @@ export type SubmissionExtras = Partial<
   Record<(typeof SUBMISSION_EXTRA_KEYS)[number], unknown>
 >
 
+/**
+ * The points action and amount for an approved library edit (a claimant's
+ * `library_edit`, or a structured record `correction` — C-L1 applies both
+ * the same way): 1–3 allowlisted, non-empty `LIBRARY_FIELDS` keys score a
+ * minor edit, 4+ a major one.
+ */
+function editAction(
+  fields: Record<string, unknown>
+): readonly ["edit_accepted_minor" | "edit_accepted_major", number] {
+  const fieldCount = Object.keys(fields).filter(
+    (k) =>
+      LIBRARY_FIELDS.has(k) &&
+      fields[k] !== null &&
+      fields[k] !== undefined &&
+      fields[k] !== ""
+  ).length
+
+  return fieldCount >= 4
+    ? (["edit_accepted_major", 15] as const)
+    : (["edit_accepted_minor", 5] as const)
+}
+
 const SUBMISSION_UID = "plugin::content-moderation.submission"
 /** hours_verified and status_verified, each (rewards "How it works"). */
 const VERIFIED_POINTS = 5
@@ -1380,16 +1402,7 @@ export default ({ strapi }: { strapi: any }) => ({
       ) {
         try {
           const fields = (submission.fields ?? {}) as Record<string, unknown>
-          const fieldCount = Object.keys(fields).filter(
-            (k) =>
-              LIBRARY_FIELDS.has(k) &&
-              fields[k] !== null &&
-              fields[k] !== undefined &&
-              fields[k] !== ""
-          ).length
-          const action =
-            fieldCount >= 4 ? "edit_accepted_major" : "edit_accepted_minor"
-          const pts = fieldCount >= 4 ? 15 : 5
+          const [action, pts] = editAction(fields)
 
           await strapi.plugin("rewards").service("points").award(
             submission.submittedByUserId,
@@ -1397,7 +1410,6 @@ export default ({ strapi }: { strapi: any }) => ({
             pts,
             {
               submissionId: documentId,
-              fieldCount,
             },
             `${documentId}:${action}`
           )
@@ -1417,9 +1429,11 @@ export default ({ strapi }: { strapi: any }) => ({
         submission?.submissionType === "correction"
       ) {
         try {
-          const kind = (submission.fields as Record<string, unknown>)?.kind
-          const [action, pts] =
-            kind === "photo"
+          const fields = submission.fields as Record<string, unknown>
+          const kind = fields?.kind
+          const [action, pts] = isRecordCorrection(fields)
+            ? editAction(fields)
+            : kind === "photo"
               ? (["photo_licensed_cc", 8] as const)
               : kind === "source"
                 ? (["source_added", 3] as const)
