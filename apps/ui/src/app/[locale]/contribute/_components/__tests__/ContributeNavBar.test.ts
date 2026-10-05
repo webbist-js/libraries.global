@@ -68,4 +68,10 @@ describe("ContributeNavBar", () => {
       "moderation"
     )
   })
+
+  it("has no Community tab: Community is its own section", () => {
+    render(createElement(ContributeNavBar))
+    expect(screen.queryByRole("link", { name: /Community/ })).toBeNull()
+    expect(activeContributeTab("/contribute/community")).toBeNull()
+  })
 })

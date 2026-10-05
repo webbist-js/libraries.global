@@ -18,6 +18,7 @@ import { fetchOwnProfileSnippet } from "@/lib/own-profile-server"
 const NAV_LINKS: NavLink[] = [
   { label: "Atlas", href: "/map" },
   { label: "Find libraries", href: "/libraries" },
+  { label: "Community", href: "/community" },
   { label: "Journal", href: "/journal" },
   { label: "Events", href: "/events" },
   { label: "Knowledge", href: "/knowledge" },

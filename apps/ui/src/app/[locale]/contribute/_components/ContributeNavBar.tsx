@@ -14,12 +14,6 @@ const NAV_ITEMS = [
     icon: "mdi:view-dashboard-outline",
   },
   {
-    id: "community",
-    href: "/contribute/community",
-    label: "Community",
-    icon: "mdi:account-group-outline",
-  },
-  {
     id: "index",
     href: "/contribute/index",
     label: "Index editor",
@@ -57,7 +51,6 @@ type TabId = (typeof NAV_ITEMS)[number]["id"] | typeof MODERATION_TAB.id
 
 /** Sub-routes that belong under a tab without being the tab's own page. */
 const SEGMENT_TO_TAB: Record<string, TabId> = {
-  community: "community",
   index: "index",
   claim: "index",
   correct: "index",

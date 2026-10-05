@@ -104,6 +104,17 @@ const STATIC_ROUTES: {
   { path: "events", changeFrequency: "daily", priority: 0.7 },
   { path: "journal", changeFrequency: "weekly", priority: 0.6 },
   { path: "knowledge", changeFrequency: "weekly", priority: 0.6 },
+  { path: "community", changeFrequency: "daily", priority: 0.6 },
+  {
+    path: "community/leaderboard",
+    changeFrequency: "daily",
+    priority: 0.4,
+  },
+  {
+    path: "community/suggestions",
+    changeFrequency: "weekly",
+    priority: 0.4,
+  },
   { path: "contribute", changeFrequency: "monthly", priority: 0.5 },
   {
     path: "contribute/membership",

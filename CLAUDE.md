@@ -138,25 +138,27 @@ Each Country's Place Labels (`regionTypeLabel`, `regionsSectionLabel`, `areaType
 
 All routes are under `app/[locale]/`. Key routes:
 
-| Route                                             | Component                                                      |
-| ------------------------------------------------- | -------------------------------------------------------------- |
-| `/`                                               | HomePage                                                       |
-| `/libraries`                                      | FindLibraryPage (faceted search/browse — "Find libraries")     |
-| `/[continent]`                                    | ContinentDetailPage                                            |
-| `/[continent]/[country]`                          | CountryDetailPage                                              |
-| `/[continent]/[country]/[region]`                 | RegionDetailPage                                               |
-| `/[continent]/[country]/[region]/[library]`       | LibraryDetailPage                                              |
-| `/map`                                            | Atlas: AtlasExplorer (MapLibre GL full-screen)                 |
-| `/knowledge/[section]/[slug]`                     | DocsArticlePage (Knowledge article)                            |
-| `/journal/[section]/[slug]`                       | BlogArticlePage (Journal article)                              |
-| `/contribute/index`, `/new`, `/[slug]`            | Index editor: find a library, add one, improve a record        |
-| `/contribute/knowledge`                           | Knowledge editor landing: write new / edit existing            |
-| `/contribute/knowledge/new?type=`                 | Article editor (TipTap) for a new Knowledge or Journal article |
-| `/contribute/knowledge/[slug]`, `/journal/[slug]` | Article editor for an existing article, incl. translations     |
-| `/contribute/knowledge/apply?role=`               | Role Application: apply to be a Knowledge or Journal editor    |
-| `/contribute/moderation`, `/[documentId]`         | Moderation queue and review page (Moderators only)             |
-| `/contribute/moderation/suggestions`              | Option suggestions (editorial board only)                      |
-| `/auth/*`                                         | Auth flows (sign in, register, OAuth, reset password)          |
+| Route                                              | Component                                                      |
+| -------------------------------------------------- | -------------------------------------------------------------- |
+| `/`                                                | HomePage                                                       |
+| `/libraries`                                       | FindLibraryPage (faceted search/browse — "Find libraries")     |
+| `/community`                                       | Noticeboard: community drives (CommunityPage)                  |
+| `/community/leaderboard`, `/community/suggestions` | Leaderboard; option votes (moved out of Contribute)            |
+| `/[continent]`                                     | ContinentDetailPage                                            |
+| `/[continent]/[country]`                           | CountryDetailPage                                              |
+| `/[continent]/[country]/[region]`                  | RegionDetailPage                                               |
+| `/[continent]/[country]/[region]/[library]`        | LibraryDetailPage                                              |
+| `/map`                                             | Atlas: AtlasExplorer (MapLibre GL full-screen)                 |
+| `/knowledge/[section]/[slug]`                      | DocsArticlePage (Knowledge article)                            |
+| `/journal/[section]/[slug]`                        | BlogArticlePage (Journal article)                              |
+| `/contribute/index`, `/new`, `/[slug]`             | Index editor: find a library, add one, improve a record        |
+| `/contribute/knowledge`                            | Knowledge editor landing: write new / edit existing            |
+| `/contribute/knowledge/new?type=`                  | Article editor (TipTap) for a new Knowledge or Journal article |
+| `/contribute/knowledge/[slug]`, `/journal/[slug]`  | Article editor for an existing article, incl. translations     |
+| `/contribute/knowledge/apply?role=`                | Role Application: apply to be a Knowledge or Journal editor    |
+| `/contribute/moderation`, `/[documentId]`          | Moderation queue and review page (Moderators only)             |
+| `/contribute/moderation/suggestions`               | Option suggestions (editorial board only)                      |
+| `/auth/*`                                          | Auth flows (sign in, register, OAuth, reset password)          |
 
 ### Data fetching
 
@@ -367,7 +369,7 @@ Community-verified accuracy, reviewed by community Moderators on the site and by
 - **Notifications** (`server/services/notifications.ts`, templates in `server/utils/email-templates.ts`): queued after the transition commits, off the request path, and never block or undo it. The submitter is emailed when a submission is approved, rejected or sent back (respecting `notifPrefs.editsReviewed`, except Role Application decisions, which always send); a Role Application reaching `pending` emails `MODERATORS_EMAIL` (default `moderators@libraries.global`). Links use `APP_PUBLIC_URL`. Without Mailgun or Mailtrap credentials (`server/utils/email-config.ts`) every email is logged and skipped.
 - **Audit trail:** the document-service middleware `apps/strapi/src/documentMiddlewares/change-records.ts` (registered in `src/index.ts`) records every library write as Change Records (`api::library-change.library-change`: one row per changed field, grouped by `batchId`, with `action`, `contentLocale`, `versionStatus`, `source` (`submission`, `admin`, `api_token`, `import`, `system`), actor, reviewer and `submissionDocumentId`) and every Knowledge or Journal write as an Article Change (`api::article-change.article-change`: `created`, `edited`, `translated`, `published`, `unpublished` or `deleted`, with a `bodyHash` but no body diff). The actor comes from `utils/change-context.ts`: the moderation apply's context, else the admin user, the API token (`import` when its name starts with `import` or `ingest`) or the bridge user, else `system`. Inserts run inside the caller's transaction, so an approval whose record can't be written rolls back. `strapi.db.query` writes (derived fields) bypass it by design. `CHANGE_RECORDS_ENABLED=false` is the emergency kill switch and logs loudly at boot. Both collections are append-only, with no REST routes.
 - **History:** public content-moderation routes `GET /libraries/:documentId/history` (published Change Batches; previous → next only with `values=1` and the bridge secret), `GET /libraries/:documentId/history/stats` (24 months of batches, top fields, actions, verification months) and `GET /articles/:kind/:documentId/history`. The library page's **Changes** section (`LibraryChangesSection`, `ChangeHistogram`, `LibraryChangeTimeline`) shows them, Pro values as in the Access model; Knowledge and Journal articles show `ArticleEditHistory`. Usernames appear only when the contributor's profile activity is public. A one-off boot backfill (`backfillLibraryHistory`) gives every approved `library_edit` and record `correction` from before Change Records one batch of field names; claims, facility answers, photos and free-text corrections are not backfilled.
-- **UI:** the `/contribute` hub adapts to `useCapabilities()`; tabs Hub, Community, Index editor (`index`, `index/new`, `index/[slug]`, plus `correct/[slug]` and `claim`), Knowledge editor (`knowledge`, `knowledge/new`, `knowledge/[slug]`, `knowledge/journal/[slug]`, `knowledge/apply`), My submissions, Moderation (Moderators only) and Membership; `events` sits under no tab. The article editor lives in `components/contribute/article-editor/` (TipTap; `articleBlocks.ts` converts to and from the Strapi dynamic zone).
+- **UI:** the `/contribute` hub adapts to `useCapabilities()`; tabs Hub, Index editor (`index`, `index/new`, `index/[slug]`, plus `correct/[slug]` and `claim`), Knowledge editor (`knowledge`, `knowledge/new`, `knowledge/[slug]`, `knowledge/journal/[slug]`, `knowledge/apply`), My submissions, Moderation (Moderators only) and Membership; `events` sits under no tab. Community (leaderboard, suggestions, drives) is its own section at `/community`. The article editor lives in `components/contribute/article-editor/` (TipTap; `articleBlocks.ts` converts to and from the Strapi dynamic zone).
 - **Structured corrections:** the "Suggest a correction" drawer and the hub's correction step load the record from `/api/contribute/library/[slug]` and open the Index editor's own fields for the chosen category (`components/contribute/CorrectionEditor.tsx`, rules in `correction.logic.ts`): hours, address, name, links, open status, accessibility, services and amenities. Collections and "Something else" stay free text and are applied by hand. The moderator's review panel shows the library's live values and option names from Strapi (`utils/record-review.ts`), never the contributor's.
 - **Suggested additions:** new option names from approved corrections are tallied in `plugin::content-moderation.option-suggestion` (one per list and name, with requests and libraries); signed-in contributors vote from the hub (`option-vote`, one per user). The editorial board decides at `/contribute/moderation/suggestions` (or the moderation admin's Suggestions tab), monthly: accepting creates (or reuses) the option and links it to every library that asked; declined names stay declined.
 - **Content safety:** `@repo/shared-data` `content-safety.ts` (the `obscenity` matcher plus link rules: adult domains and TLDs, shorteners, non-http schemes) runs in the forms and, authoritatively, in `submission-policy.checkContent` on create and finalize. Real place names are allowed (`SAFE_TERMS`, plus the target library's own name and address).

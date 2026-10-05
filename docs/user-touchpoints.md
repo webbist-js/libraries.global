@@ -128,7 +128,7 @@ Library stewards (users with a claim on this library) see the full edit diff flo
 
 - Lists all of the current user's submissions by type, status, and target. Wired.
 
-### Community Leaderboard (`/contribute/community`)
+### Community Leaderboard (`/community/leaderboard`)
 
 - Ranks contributors by points. Wired.
 
