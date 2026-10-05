@@ -34,6 +34,17 @@ export interface CountryProfile {
   areaSlugSuffix?: "on-clash" | "admin1"
   /** Existing place name → the source's spelling, where the matcher can't join them. */
   aliases?: Record<string, string>
+  /**
+   * Region name → what that Region calls its Areas, where it differs from
+   * the country's `labels.area` (Greater London's boroughs). Set on the
+   * Region in the labels step.
+   */
+  regionLabels?: Record<string, RegionAreaLabels>
+}
+
+export interface RegionAreaLabels {
+  area: string
+  areas: string
 }
 
 export interface ResolvedProfile {
@@ -48,7 +59,10 @@ export interface ResolvedProfile {
   tidyNames: string[]
   areaSlugSuffix: "on-clash" | "admin1"
   aliases: Record<string, string>
+  regionLabels: Record<string, RegionAreaLabels>
 }
+
+const BOROUGHS: RegionAreaLabels = { area: "Borough", areas: "Boroughs" }
 
 export const PROFILES: CountryProfile[] = [
   // ── The UK's four nations ───────────────────────────────────────────────
@@ -63,6 +77,17 @@ export const PROFILES: CountryProfile[] = [
     source: "curated",
     curatedFile: "england.json",
     fill: true,
+    // London boroughs, and the metropolitan boroughs of the six metropolitan
+    // counties; the shire counties keep "District".
+    regionLabels: {
+      "Greater London": BOROUGHS,
+      "Greater Manchester": BOROUGHS,
+      Merseyside: BOROUGHS,
+      "South Yorkshire": BOROUGHS,
+      "Tyne and Wear": BOROUGHS,
+      "West Midlands": BOROUGHS,
+      "West Yorkshire": BOROUGHS,
+    },
   },
   {
     key: "GB-SCT",
@@ -70,6 +95,8 @@ export const PROFILES: CountryProfile[] = [
     geonames: { country: "GB", admin1: "SCT" },
     regionLevel: 2,
     areaLevel: null,
+    // The atlas had 31 of the 32 council areas (no Shetland Islands).
+    fill: true,
     // The Western Isles: the atlas has the Gaelic "Na h-Eileanan Siar", run together.
     aliases: { "Nah-Eileanan Siar": "Eilean Siar" },
   },
@@ -79,6 +106,17 @@ export const PROFILES: CountryProfile[] = [
     geonames: { country: "GB", admin1: "WLS" },
     regionLevel: 2,
     areaLevel: null,
+    // The atlas had 12 of the 22 principal areas.
+    fill: true,
+    // GeoNames: "Bridgend county borough", "City and County of Swansea", "Sir Powys".
+    tidyNames: [
+      " County Borough",
+      " county borough",
+      "City and County of ",
+      "County of ",
+      "Sir ",
+    ],
+    aliases: { "Isle of Anglesey": "Anglesey" },
   },
   // Was "County"; its Regions are the eleven districts.
   {
@@ -661,6 +699,7 @@ export function resolveProfile(
     tidyNames: p?.tidyNames ?? [],
     areaSlugSuffix: p?.areaSlugSuffix ?? "on-clash",
     aliases: p?.aliases ?? {},
+    regionLabels: p?.regionLabels ?? {},
   }
 }
 

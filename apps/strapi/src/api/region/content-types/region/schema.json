@@ -69,6 +69,22 @@
         }
       }
     },
+    "areaTypeLabel": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "areasSectionLabel": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
     "summary": {
       "type": "text",
       "pluginOptions": {

@@ -271,6 +271,8 @@ const REGION_FIELDS = [
   "geonamesId",
   "shortName",
   "typeLabel",
+  "areaTypeLabel",
+  "areasSectionLabel",
   "summary",
   "heroTagline",
   "featured",

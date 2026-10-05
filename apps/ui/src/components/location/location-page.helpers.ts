@@ -101,11 +101,29 @@ function levelLabels(
   }
 }
 
-/** What a country calls its Regions and its Areas. */
-export function placeLabels(country: PlaceLabelFields | null | undefined): {
+/** A Region's own Area labels, where its Areas differ from the country's. */
+export type AreaLabelFields = Pick<
+  PlaceLabelFields,
+  "areaTypeLabel" | "areasSectionLabel"
+>
+
+/**
+ * What a country calls its Regions and its Areas. A Region that names its
+ * own Areas (Greater London's boroughs, in a country of districts) wins for
+ * the Area level.
+ */
+export function placeLabels(
+  country: PlaceLabelFields | null | undefined,
+  region?: AreaLabelFields | null
+): {
   region: ChildLabels
   area: ChildLabels
 } {
+  const areaSource =
+    region?.areaTypeLabel?.trim() || region?.areasSectionLabel?.trim()
+      ? region
+      : country
+
   return {
     region: levelLabels(
       country?.regionTypeLabel,
@@ -113,8 +131,8 @@ export function placeLabels(country: PlaceLabelFields | null | undefined): {
       "Region"
     ),
     area: levelLabels(
-      country?.areaTypeLabel,
-      country?.areasSectionLabel,
+      areaSource?.areaTypeLabel,
+      areaSource?.areasSectionLabel,
       "Area"
     ),
   }

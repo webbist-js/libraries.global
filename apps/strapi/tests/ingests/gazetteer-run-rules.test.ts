@@ -10,6 +10,7 @@ import {
   isRetryable,
   labelChanges,
   needsDumpForNameMatching,
+  regionLabelChanges,
   retryAfterMs,
   statusOf,
   WHOLE_COUNTRY_REGION_ATTRIBUTION,
@@ -213,6 +214,32 @@ describe("isResumable", () => {
         attribution
       )
     ).toBe(false)
+  })
+})
+
+describe("regionLabelChanges", () => {
+  const boroughs = { area: "Borough", areas: "Boroughs" }
+
+  it("sets a Region's own Area labels where they differ", () => {
+    expect(regionLabelChanges({}, boroughs)).toEqual({
+      areaTypeLabel: { from: null, to: "Borough" },
+      areasSectionLabel: { from: null, to: "Boroughs" },
+    })
+    expect(
+      regionLabelChanges(
+        { areaTypeLabel: "Borough", areasSectionLabel: "Districts" },
+        boroughs
+      )
+    ).toEqual({ areasSectionLabel: { from: "Districts", to: "Boroughs" } })
+  })
+
+  it("changes nothing when they already match", () => {
+    expect(
+      regionLabelChanges(
+        { areaTypeLabel: "Borough", areasSectionLabel: "Boroughs" },
+        boroughs
+      )
+    ).toEqual({})
   })
 })
 

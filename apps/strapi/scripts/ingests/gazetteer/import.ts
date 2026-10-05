@@ -49,6 +49,7 @@ import {
   isRetryable,
   labelChanges,
   needsDumpForNameMatching,
+  regionLabelChanges,
   retryAfterMs,
   statusOf,
   WHOLE_COUNTRY_REGION_ATTRIBUTION,
@@ -100,6 +101,9 @@ type StrapiPlace = StrapiEntity & {
   sourceAttribution?: string | null
   country?: Ref
   region?: Ref
+  /** Regions only: what this Region calls its Areas, over its country. */
+  areaTypeLabel?: string | null
+  areasSectionLabel?: string | null
   updatedAt?: string | null
 }
 
@@ -108,6 +112,13 @@ interface CountryReport {
   labels: Record<string, { from: string | null; to: string }>
   /** Set instead of `labels` writing: the country has an unpublished draft. */
   labelsSkipped?: string
+  /** Region name → its Area label changes (the profile's `regionLabels`). */
+  regionLabels: Record<
+    string,
+    Record<string, { from: string | null; to: string }>
+  >
+  /** Regions whose label changes weren't written: an unpublished draft. */
+  regionLabelsSkipped: string[]
   regions: {
     created: number
     matched: number
@@ -182,6 +193,12 @@ type LabelWrite = {
   report: CountryReport
 }
 
+type RegionLabelWrite = {
+  region: StrapiPlace
+  data: Record<string, string>
+  report: CountryReport
+}
+
 const toExisting = (p: StrapiPlace): ExistingPlace => ({
   documentId: p.documentId,
   name: p.name,
@@ -193,6 +210,8 @@ const toExisting = (p: StrapiPlace): ExistingPlace => ({
 const emptyReport = (key: string): CountryReport => ({
   key,
   labels: {},
+  regionLabels: {},
+  regionLabelsSkipped: [],
   regions: {
     created: 0,
     matched: 0,
@@ -404,6 +423,7 @@ async function main() {
   const areaCreates: AreaCreate[] = []
   const fills: Fill[] = []
   const labelWrites: LabelWrite[] = []
+  const regionLabelWrites: RegionLabelWrite[] = []
   // Deferred report-writing for slug suffixes: on a live run, only a create
   // that actually succeeds gets listed (populated in the write phase below).
   const regionSuffixMessage = new Map<string, string>()
@@ -450,6 +470,38 @@ async function main() {
               report,
             })
           }
+        }
+        // Regions whose Areas have their own name (Greater London's boroughs).
+        for (const [name, want] of Object.entries(profile.regionLabels)) {
+          const region = regions.find(
+            (r) =>
+              r.country?.documentId === country.documentId && r.name === name
+          )
+          if (!region) {
+            report.warnings.push(`Region labels: no Region named ${name}`)
+            continue
+          }
+          const changes = regionLabelChanges(region, want)
+          if (Object.keys(changes).length === 0) continue
+          report.regionLabels[name] = changes
+          if (
+            hasUnpublishedChanges(
+              publishedRegionById.get(region.documentId),
+              region
+            )
+          ) {
+            report.regionLabelsSkipped.push(
+              `${name}: unpublished draft changes; set the labels in admin`
+            )
+            continue
+          }
+          regionLabelWrites.push({
+            region,
+            data: Object.fromEntries(
+              Object.entries(changes).map(([f, v]) => [f, v.to])
+            ),
+            report,
+          })
         }
       }
       if (!STEPS.has("regions") && !STEPS.has("areas")) continue
@@ -740,6 +792,24 @@ async function main() {
       }
     }
 
+    for (const w of regionLabelWrites) {
+      if (abortReason) {
+        w.report.notAttempted++
+        continue
+      }
+      try {
+        await withRetry(() =>
+          client.put(`/regions/${w.region.documentId}?status=published`, {
+            data: w.data,
+          })
+        )
+        recordOutcome(true)
+      } catch (err) {
+        recordOutcome(false)
+        w.report.errors.push(`Region labels (${w.region.name}): ${String(err)}`)
+      }
+    }
+
     const createdRegion = new Map<string, string>()
     await inPool(regionCreates, async (c) => {
       if (abortReason) {
@@ -913,6 +983,9 @@ async function main() {
     const line = [
       Object.keys(r.labels).length > 0
         ? `labels ${Object.keys(r.labels).length}`
+        : "",
+      Object.keys(r.regionLabels).length > 0
+        ? `region labels ${Object.keys(r.regionLabels).length}`
         : "",
       `regions +${r.regions.created} =${r.regions.matched}${r.regions.notAdded.length > 0 ? ` (${r.regions.notAdded.length} not added)` : ""}`,
       `areas +${r.areas.created} =${r.areas.matched}${r.areas.notAdded.length > 0 ? ` (${r.areas.notAdded.length} not added)` : ""}`,

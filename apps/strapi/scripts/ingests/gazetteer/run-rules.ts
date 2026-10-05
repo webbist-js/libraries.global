@@ -128,6 +128,30 @@ export function labelChanges(
   return out
 }
 
+/** A Region's own Area label fields (`regionLabelChanges`). */
+export interface LabelableRegion {
+  areaTypeLabel?: string | null
+  areasSectionLabel?: string | null
+}
+
+/** The Region's Area label fields that differ from the profile's `regionLabels` entry. */
+export function regionLabelChanges(
+  region: LabelableRegion,
+  labels: { area: string; areas: string }
+): Record<string, { from: string | null; to: string }> {
+  const out: Record<string, { from: string | null; to: string }> = {}
+  const want = { areaTypeLabel: labels.area, areasSectionLabel: labels.areas }
+  for (const [field, to] of Object.entries(want) as [
+    keyof LabelableRegion,
+    string,
+  ][]) {
+    const from = region[field] ?? null
+    if (from !== to) out[field] = { from, to }
+  }
+
+  return out
+}
+
 /** A draft newer than its published version by more than this has unpublished changes. */
 export const UNPUBLISHED_THRESHOLD_MS = 1000
 

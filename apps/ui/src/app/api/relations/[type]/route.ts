@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 
+import { cacheTagsFor } from "@/lib/strapi-api/cache-tags"
+
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
 
@@ -131,14 +133,18 @@ export async function GET(
   const extraFields = type === "blog-sections" ? "&fields[2]=slug" : ""
   const url = `${STRAPI}/api/${strapiPlural}?sort=name:asc&pagination[limit]=${limit}${status}&fields[0]=name&fields[1]=documentId${extraFields}${filterParam}`
 
-  // Regions and areas change when the world place import runs, so they
-  // refresh within a minute; the other lists change rarely.
-  const revalidate = type === "regions" || type === "areas" ? 60 : 3600
+  // The world place import adds Regions and Areas and sets each Country's
+  // Place Labels (the wizard's select labels), so those lists refresh within
+  // a minute; the other lists change rarely.
+  const revalidate = ["countries", "regions", "areas"].includes(type)
+    ? 60
+    : 3600
   const res = await fetch(url, {
     headers: {
       ...(SECRET ? { "X-Service-Secret": SECRET } : {}),
     },
-    next: { revalidate },
+    // Tagged like every Strapi fetch, so the publish webhook purges it.
+    next: { revalidate, tags: cacheTagsFor(`/${strapiPlural}`, {}) },
   })
 
   if (!res.ok) return NextResponse.json({ data: [] }, { status: 200 })

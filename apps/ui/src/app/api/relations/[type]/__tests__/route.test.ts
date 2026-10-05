@@ -80,6 +80,20 @@ describe("GET /api/relations/countries?iso2=", () => {
     await countries("continentDocumentId=eu")
     expect(strapiUrl()).toContain("pagination[limit]=300")
   })
+
+  it("refreshes countries within a minute, so Place Label edits reach the wizard", async () => {
+    await countries("continentDocumentId=eu")
+    const init = fetchMock.mock.calls[0]?.[1] as {
+      next?: { revalidate?: number }
+    }
+    expect(init.next?.revalidate).toBe(60)
+  })
+
+  it("tags countries like other Strapi fetches, so a publish purges them", async () => {
+    await countries("continentDocumentId=eu")
+    const init = fetchMock.mock.calls[0]?.[1] as { next?: { tags?: string[] } }
+    expect(init.next?.tags).toEqual(["strapi", "country"])
+  })
 })
 
 describe("GET /api/relations/areas", () => {

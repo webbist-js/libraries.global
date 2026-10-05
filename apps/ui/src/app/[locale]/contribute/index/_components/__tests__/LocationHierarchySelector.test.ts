@@ -21,7 +21,15 @@ const LISTS: Record<string, unknown[]> = {
     },
     { documentId: "xx", name: "Nowhere" },
   ],
-  regions: [],
+  regions: [
+    { documentId: "bern", name: "Bern" },
+    {
+      documentId: "geneva",
+      name: "Geneva",
+      areaTypeLabel: "Commune",
+      areasSectionLabel: "Communes",
+    },
+  ],
   areas: [],
 }
 
@@ -30,6 +38,10 @@ beforeEach(() => {
     "fetch",
     vi.fn(async (url: string) => {
       const type = /\/api\/relations\/([a-z]+)/.exec(url)?.[1] ?? ""
+      if (type === "areas" && /regionDocumentId=bern(?:&|$)/.test(url))
+        return Response.json({
+          data: [{ documentId: "a1", name: "Bern-Mittelland" }],
+        })
 
       return Response.json({ data: LISTS[type] ?? [] })
     })
@@ -40,13 +52,21 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-const renderWith = (countryDocumentId: string) =>
+const renderWith = (countryDocumentId: string, regionDocumentId = "") =>
   render(
     createElement(LocationHierarchySelector, {
-      f: { ...EMPTY_FORM, continentDocumentId: "eu", countryDocumentId },
+      f: {
+        ...EMPTY_FORM,
+        continentDocumentId: "eu",
+        countryDocumentId,
+        regionDocumentId,
+      },
       setFormData: () => {},
     })
   )
+
+const areaSelect = () =>
+  screen.getByLabelText(/District/) as unknown as HTMLSelectElement
 
 describe("LocationHierarchySelector", () => {
   it("names the Region and Area selects as the country does", async () => {
@@ -59,6 +79,28 @@ describe("LocationHierarchySelector", () => {
     renderWith("xx")
     await waitFor(() => expect(screen.getByLabelText("Region")).toBeTruthy())
     expect(screen.getByLabelText(/^Area/)).toBeTruthy()
+  })
+
+  it("disables the Area select when the Region has no Areas", async () => {
+    renderWith("ch", "bern-empty")
+    await waitFor(() => expect(screen.getByText("No districts listed")))
+    expect(areaSelect().disabled).toBe(true)
+  })
+
+  it("names the Area select as the Region does, over the country", async () => {
+    renderWith("ch", "geneva")
+    await waitFor(() => expect(screen.getByLabelText(/Commune/)).toBeTruthy())
+    expect(screen.getByText("No communes listed")).toBeTruthy()
+    expect(screen.queryByLabelText(/District/)).toBeNull()
+  })
+
+  it("keeps the Area select open when the Region has Areas", async () => {
+    renderWith("ch", "bern")
+    await waitFor(() =>
+      expect(screen.getByText("Bern-Mittelland")).toBeTruthy()
+    )
+    expect(areaSelect().disabled).toBe(false)
+    expect(screen.queryByText("No districts listed")).toBeNull()
   })
 
   it("offers no Location Request", async () => {

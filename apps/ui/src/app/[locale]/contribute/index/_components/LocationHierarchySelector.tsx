@@ -3,7 +3,11 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 
-import { placeLabels } from "@/components/location/location-page.helpers"
+import {
+  lowerFirst,
+  placeLabels,
+  type AreaLabelFields,
+} from "@/components/location/location-page.helpers"
 import { T } from "@/lib/design-tokens"
 
 import { fieldInputStyle, fieldLabelStyle } from "./wizard.constants"
@@ -16,6 +20,7 @@ type CountryOption = RelationOption & {
   areaTypeLabel?: string | null
   areasSectionLabel?: string | null
 }
+type RegionOption = RelationOption & AreaLabelFields
 
 export function LocationHierarchySelector({
   f,
@@ -26,8 +31,10 @@ export function LocationHierarchySelector({
 }) {
   const [continents, setContinents] = useState<RelationOption[]>([])
   const [countries, setCountries] = useState<CountryOption[]>([])
-  const [regions, setRegions] = useState<RelationOption[]>([])
+  const [regions, setRegions] = useState<RegionOption[]>([])
   const [areas, setAreas] = useState<RelationOption[]>([])
+  // The Region `areas` was loaded for: until it matches, the list is loading.
+  const [areasFor, setAreasFor] = useState("")
 
   useEffect(() => {
     fetch("/api/relations/continents")
@@ -67,17 +74,22 @@ export function LocationHierarchySelector({
   }, [f.countryDocumentId])
 
   useEffect(() => {
-    if (!f.regionDocumentId) {
+    const regionId = f.regionDocumentId
+    if (!regionId) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setAreas([])
+      setAreasFor("")
 
       return
     }
     fetch(
-      `/api/relations/areas?regionDocumentId=${encodeURIComponent(f.regionDocumentId)}`
+      `/api/relations/areas?regionDocumentId=${encodeURIComponent(regionId)}`
     )
       .then((r) => r.json())
-      .then((j) => setAreas(j.data ?? []))
+      .then((j) => {
+        setAreas(j.data ?? [])
+        setAreasFor(regionId)
+      })
       .catch(() => {})
   }, [f.regionDocumentId])
 
@@ -86,10 +98,17 @@ export function LocationHierarchySelector({
     cursor: "pointer",
   }
 
-  // What the chosen country calls its Regions and Areas (UI only).
+  // What the chosen country (or Region, for its Areas) calls its places.
   const labels = placeLabels(
-    countries.find((c) => c.documentId === f.countryDocumentId)
+    countries.find((c) => c.documentId === f.countryDocumentId),
+    regions.find((r) => r.documentId === f.regionDocumentId)
   )
+  // A Region with no Areas (every Scottish council, say): nothing to pick.
+  const noAreas =
+    !!f.regionDocumentId &&
+    areasFor === f.regionDocumentId &&
+    areas.length === 0
+  const areaEnabled = !!f.regionDocumentId && !noAreas
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -204,17 +223,21 @@ export function LocationHierarchySelector({
           <select
             id="hier-area"
             value={f.areaDocumentId}
-            disabled={!f.regionDocumentId}
+            disabled={!areaEnabled}
             onChange={(e) => {
               const v = e.target.value
               setFormData((prev) => ({ ...prev, areaDocumentId: v }))
             }}
             style={{
               ...selectStyle,
-              opacity: f.regionDocumentId ? 1 : 0.4,
+              opacity: areaEnabled ? 1 : 0.4,
             }}
           >
-            <option value="">— select —</option>
+            <option value="">
+              {noAreas
+                ? `No ${lowerFirst(labels.area.plural)} listed`
+                : "— select —"}
+            </option>
             {areas.map((a) => (
               <option key={a.documentId} value={a.documentId}>
                 {a.name}

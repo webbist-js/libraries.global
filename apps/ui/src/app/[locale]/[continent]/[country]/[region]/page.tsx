@@ -62,7 +62,7 @@ export async function generateMetadata({
         libraryCount: data.libraryCount,
         typeCounts: data.libraryTypeCounts,
         childLabel: data.areaCount
-          ? placeLabels(data.country).area.singular
+          ? placeLabels(data.country, data).area.singular
           : null,
       }),
     // Canonicalise to the entity's real parents, not whatever the URL said.

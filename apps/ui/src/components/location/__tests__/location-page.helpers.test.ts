@@ -54,6 +54,25 @@ describe("labels", () => {
     expect(lowerFirst("London Borough")).toBe("London Borough")
   })
 
+  it("lets a Region name its own Areas, over the country's", () => {
+    const england = {
+      regionTypeLabel: "County",
+      regionsSectionLabel: "Counties",
+      areaTypeLabel: "District",
+      areasSectionLabel: "Districts",
+    }
+    const london = { areaTypeLabel: "Borough", areasSectionLabel: "Boroughs" }
+    expect(placeLabels(england, london)).toEqual({
+      region: { name: "County", plural: "Counties", singular: "county" },
+      area: { name: "Borough", plural: "Boroughs", singular: "borough" },
+    })
+    expect(
+      placeLabels(england, { areaTypeLabel: " ", areasSectionLabel: null }).area
+        .name
+    ).toBe("District")
+    expect(placeLabels(england, null).area.name).toBe("District")
+  })
+
   it("derives what a country calls its Regions and Areas", () => {
     expect(
       placeLabels({ regionTypeLabel: "Canton", areaTypeLabel: "District" })

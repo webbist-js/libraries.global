@@ -9,6 +9,7 @@ Spec: `docs/superpowers/specs/2026-10-04-place-labels-and-world-places-design.md
 Regions and Areas are imported for every Country that has an `iso2` in Strapi — whether or not it has an entry in `country-profiles.ts`. A Country with no entry imports GeoNames level 1 as Regions and level 2 as Areas, adds nothing where places already exist, and keeps its current labels.
 
 1. **Labels.** Sets `regionTypeLabel`, `regionsSectionLabel`, `areaTypeLabel` and `areasSectionLabel` to the profile's labels, when they differ and the Country has no unpublished draft changes (see "Unpublished drafts" below). A country with no profile entry keeps whatever labels it has.
+   Then, for each Region named in the profile's `regionLabels`, sets that Region's own `areaTypeLabel` and `areasSectionLabel` (Greater London's "Borough", in a country of districts), under the same unpublished-draft rule, applied to the Region. A Region named there that doesn't exist gets a `warnings` entry; a skipped one is listed in `regionLabelsSkipped`.
 2. **Regions.** If the Country has no Regions yet, creates one per source place. If it has some and the profile sets `fill: true` — or the Country is resumable (see "Resuming a partial run") — creates the source places that don't match an existing Region. Otherwise creates nothing; unmatched source places are listed in the report. A Country whose source lists no subdivisions at all, and that has no Region of its own yet, gets one whole-country Region instead — see "Countries with no subdivisions".
 3. **Areas.** The same three cases, per Region, at the profile's Area level.
 
@@ -85,6 +86,7 @@ One entry per Country in `country-profiles.ts`, `PROFILES: CountryProfile[]`. A 
 | `tidyNames`      | Words to drop from either end of a source name (never down to nothing), e.g. a German "Landkreis " prefix.                                                                                                                                                                                    |
 | `areaSlugSuffix` | `"on-clash"` (default) or `"admin1"` — `"admin1"` (US, IMLS style) suffixes every Area slug with its admin1 code, whether or not it clashes.                                                                                                                                                  |
 | `aliases`        | `{ "existing place name": "source's spelling" }` — maps an existing place's name to the source's own spelling of it, for the rare pair the matcher can't join by name alone even after normalising. CH sets this (its cantons are filed under their local names; GeoNames uses English ones). |
+| `regionLabels`   | `{ "Region name": { area, areas } }` — what one Region calls its Areas, where it differs from the country's `labels.area` (England: Greater London and the six metropolitan counties have boroughs). Written to the Region by the labels step; the site prefers it over the country's.        |
 
 ## Running it
 

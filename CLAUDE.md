@@ -103,7 +103,7 @@ Continent
                     └── Library ← core entity
 ```
 
-Each Country's Place Labels (`regionTypeLabel`, `regionsSectionLabel`, `areaTypeLabel`, `areasSectionLabel`) say what it calls its Regions and Areas (Canton, County, District). They are UI only; `placeLabels()` in `components/location/location-page.helpers.ts` reads them. A label edit, by hand in admin or from the import, reaches Find libraries only after `pnpm --filter @repo/strapi seed:meilisearch`.
+Each Country's Place Labels (`regionTypeLabel`, `regionsSectionLabel`, `areaTypeLabel`, `areasSectionLabel`) say what it calls its Regions and Areas (Canton, County, District). They are UI only; `placeLabels(country, region)` in `components/location/location-page.helpers.ts` reads them. A Region can name its own Areas (`areaTypeLabel`, `areasSectionLabel` on Region, set from the place import profile's `regionLabels`: Greater London and the six metropolitan counties have boroughs, not districts), and that wins over the country's. A label edit, by hand in admin or from the import, reaches Find libraries only after `pnpm --filter @repo/strapi seed:meilisearch`.
 
 ### Library schema (core fields)
 

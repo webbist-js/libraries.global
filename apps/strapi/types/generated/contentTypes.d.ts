@@ -2676,6 +2676,18 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    areasSectionLabel: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    areaTypeLabel: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     continent: Schema.Attribute.Relation<
       "manyToOne",
       "api::continent.continent"

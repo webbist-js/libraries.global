@@ -545,6 +545,7 @@ describe("resolveProfile", () => {
       tidyNames: [],
       areaSlugSuffix: "on-clash",
       aliases: {},
+      regionLabels: {},
     })
     expect(resolveProfile("CH", profiles).labels?.region).toBe("Canton")
   })
