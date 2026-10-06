@@ -355,6 +355,23 @@ describe("drive board gate (controller)", () => {
     expect(c.body.error.message).toBe("Invalid action")
     expect(c.body.error.details.errors).toEqual(["pinOrder must be a number."])
   })
+
+  it("update: a title-only body on an open drive passes (pins down driveInputFromBody's parsing)", async () => {
+    const { controller, store } = build({
+      [DRIVE]: [drive(1, { status: "open" })],
+      [ROLE_GRANT]: [BOARD_GRANT("board-1")],
+    })
+    const c = ctx({
+      body: { title: "A clearer title for this drive" },
+      params: { documentId: "drive1" },
+      baUserId: "board-1",
+    })
+    await controller.update(c)
+
+    expect(c.status).toBeUndefined()
+    expect(c.body.data.title).toBe("A clearer title for this drive")
+    expect(store[DRIVE][0].title).toBe("A clearer title for this drive")
+  })
 })
 
 describe("drive.act", () => {
@@ -372,17 +389,20 @@ describe("drive.act", () => {
     expect(result.status).toBe(409)
   })
 
-  it("refuses to pin a closed or cancelled drive", async () => {
+  it("refuses to pin a closed or cancelled drive, naming the actual status", async () => {
     const { service } = build({
       [DRIVE]: [
         drive(1, { status: "closed" }),
         drive(2, { status: "cancelled" }),
       ],
     })
-    for (const id of ["drive1", "drive2"]) {
-      const result: any = await service.act(id, "pin", {})
-      expect(result.status).toBe(409)
-    }
+    const closed: any = await service.act("drive1", "pin", {})
+    expect(closed.status).toBe(409)
+    expect(closed.errors).toEqual(["A closed drive can't be pinned."])
+
+    const cancelled: any = await service.act("drive2", "pin", {})
+    expect(cancelled.status).toBe(409)
+    expect(cancelled.errors).toEqual(["A cancelled drive can't be pinned."])
   })
 
   it("feature moves the feature from another drive", async () => {
@@ -474,8 +494,19 @@ describe("drive.act", () => {
     const result: any = await service.act("drive1", "cancel", {})
 
     expect(result.status).toBe(409)
+    expect(result.errors).toEqual(["This drive has already closed."])
     expect(store[DRIVE][0].closedReason).toBe("goal")
     expect(store[DRIVE][0].closedAt).toBe("2026-09-01T00:00:00.000Z")
+  })
+
+  it("refuses to cancel a drive that's already cancelled, naming the actual status", async () => {
+    const { service } = build({
+      [DRIVE]: [drive(1, { status: "cancelled" })],
+    })
+    const result: any = await service.act("drive1", "cancel", {})
+
+    expect(result.status).toBe(409)
+    expect(result.errors).toEqual(["This drive has already been cancelled."])
   })
 
   it("answers 400 'Unknown action' for anything unrecognised, including open/close", async () => {
@@ -504,6 +535,27 @@ describe("drive.bySlug", () => {
   it("returns null for an unknown slug (the controller turns this into 404)", async () => {
     const { service } = build({ [DRIVE]: [drive(1)] })
     expect(await service.bySlug("no-such-drive")).toBeNull()
+  })
+
+  it("returns null for a draft drive's slug — draft is never public", async () => {
+    const { service } = build({ [DRIVE]: [drive(1, { status: "draft" })] })
+    expect(await service.bySlug("drive-1")).toBeNull()
+  })
+
+  it("controller: 404s a draft drive's slug", async () => {
+    const { controller } = build({
+      [DRIVE]: [drive(1, { status: "draft" })],
+    })
+    const c = ctx({ params: { slug: "drive-1" } })
+    await controller.bySlug(c)
+    expect(c.status).toBe(404)
+  })
+
+  it("serves a cancelled drive's slug — only draft is excluded", async () => {
+    const { service } = build({ [DRIVE]: [drive(1, { status: "cancelled" })] })
+    expect(await service.bySlug("drive-1")).toMatchObject({
+      documentId: "drive1",
+    })
   })
 
   it("controller: 404s a missing slug", async () => {

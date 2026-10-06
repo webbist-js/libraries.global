@@ -5,8 +5,8 @@
  * content type's own lifecycle is the `status` attribute
  * (draft/scheduled/open/closed/cancelled), and naming it `status` collides
  * with the Document Service's reserved draft/publish meta-field when
- * `draftAndPublish` is on — Strapi refuses to boot without a warning in that
- * case. With it off, every write is live immediately, so no
+ * `draftAndPublish` is on — Strapi still boots, but logs a warning on every
+ * boot in that case. With it off, every write is live immediately, so no
  * `documents()` call needs (or accepts) its own `status` option; `toPublic`
  * strips the two board-only fields unconditionally, so a programming
  * mistake in a field list can never leak them.
@@ -191,13 +191,13 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
     return rows.map((row) => toPublic(row))
   },
 
-  /** The one drive with this slug, or null. */
+  /** The one drive with this slug, or null — never a `draft` (unpublished). */
   async bySlug(
     slug: string,
     locale = "en"
   ): Promise<Record<string, unknown> | null> {
     const rows = (await strapi.documents(UID).findMany({
-      filters: { slug: { $eq: slug } },
+      filters: { slug: { $eq: slug }, status: { $ne: "draft" } },
       locale,
       fields: [...PUBLIC_FIELDS] as never,
       populate: { steps: true, whereToLook: true },
@@ -344,12 +344,13 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
     })) as DriveRow | null
     if (!existing) return { errors: ["Drive not found."], status: 404 }
     const settled = SETTLED_STATES.has(existing.status ?? "")
+    const settledWord = existing.status === "cancelled" ? "cancelled" : "closed"
 
     switch (action) {
       case "pin": {
         if (settled) {
           return {
-            errors: ["A closed drive can't be pinned."],
+            errors: [`A ${settledWord} drive can't be pinned.`],
             status: 409,
           }
         }
@@ -379,7 +380,7 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
       case "feature": {
         if (settled) {
           return {
-            errors: ["A closed drive can't be featured."],
+            errors: [`A ${settledWord} drive can't be featured.`],
             status: 409,
           }
         }
@@ -423,7 +424,11 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
       case "cancel": {
         if (settled) {
           return {
-            errors: ["This drive has already closed."],
+            errors: [
+              existing.status === "cancelled"
+                ? "This drive has already been cancelled."
+                : "This drive has already closed.",
+            ],
             status: 409,
           }
         }
