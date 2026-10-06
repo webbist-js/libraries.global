@@ -6,10 +6,12 @@ import ipaddr from "ipaddr.js"
 import {
   Agent,
   fetch as undiciFetch,
-  type Headers,
+  Headers,
   type RequestInit,
   type Response,
 } from "undici"
+
+import { FeedFormatError } from "./feed-format-error"
 
 /**
  * SSRF guard for provider requests whose URL comes from user-submitted
@@ -340,6 +342,32 @@ export async function boundedFetchText(
   }
 }
 
+function sameOrigin(a: string, b: string): boolean {
+  try {
+    return new URL(a).origin === new URL(b).origin
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Drops `Authorization` and `Cookie` before a request is re-sent to a
+ * different origin: a feed URL's credentials (a bearer token, a signed
+ * query the server also reads as a cookie) are scoped to the origin the
+ * caller meant to call, and undici — unlike a browser — never strips them
+ * on its own across a redirect.
+ */
+function stripCrossOriginAuth(
+  headers: RequestInit["headers"]
+): RequestInit["headers"] {
+  if (!headers) return headers
+  const h = new Headers(headers)
+  h.delete("authorization")
+  h.delete("cookie")
+
+  return h
+}
+
 /**
  * fetch() for user-supplied URLs. Follows redirects manually, re-validating
  * and re-pinning each hop. Returns the raw Response; prefer `safeFetchText`,
@@ -352,6 +380,7 @@ export async function safeFetch(
 ): Promise<Response> {
   const timeoutMs = bounds.timeoutMs ?? DEFAULT_TIMEOUT_MS
   let current = input
+  let headers = init.headers
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     const { addresses } = await resolvePublicUrl(current)
     const agent = pinnedAgent(addresses)
@@ -360,6 +389,7 @@ export async function safeFetch(
     try {
       res = await undiciFetch(current, {
         ...init,
+        headers,
         redirect: "manual",
         signal,
         dispatcher: agent,
@@ -372,7 +402,9 @@ export async function safeFetch(
     const location = res.headers?.get?.("location")
     if (res.status >= 300 && res.status < 400 && location) {
       await agent.close().catch(() => {})
-      current = new URL(location, current).toString()
+      const next = new URL(location, current).toString()
+      if (!sameOrigin(next, current)) headers = stripCrossOriginAuth(headers)
+      current = next
       continue
     }
 
@@ -393,16 +425,19 @@ export async function safeFetchText(
 ): Promise<TextResponse> {
   const { timeoutMs, maxBytes, ...rest } = init
   let current = input
+  let headers = rest.headers
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     const { addresses } = await resolvePublicUrl(current)
-    const res = await boundedFetchText(current, rest, {
-      addresses,
-      timeoutMs,
-      maxBytes,
-    })
+    const res = await boundedFetchText(
+      current,
+      { ...rest, headers },
+      { addresses, timeoutMs, maxBytes }
+    )
     const location = res.headers?.get?.("location")
     if (res.status >= 300 && res.status < 400 && location) {
-      current = new URL(location, current).toString()
+      const next = new URL(location, current).toString()
+      if (!sameOrigin(next, current)) headers = stripCrossOriginAuth(headers)
+      current = next
       continue
     }
 
@@ -416,6 +451,6 @@ export function parseJsonBody(res: TextResponse, provider: string): any {
   try {
     return JSON.parse(res.text)
   } catch {
-    throw new Error(`${provider} feed returned unparseable JSON`)
+    throw new FeedFormatError(`${provider} feed returned unparseable JSON`)
   }
 }

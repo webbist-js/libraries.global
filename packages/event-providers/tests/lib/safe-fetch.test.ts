@@ -14,9 +14,11 @@ vi.mock("undici", async (importOriginal) => ({
   fetch: mockFetch,
 }))
 
+import { FeedFormatError } from "../../src/errors"
 import {
   assertPublicUrl,
   isBlockedAddress,
+  parseJsonBody,
   safeFetch,
   safeFetchText,
 } from "../../src/lib/safe-fetch"
@@ -170,6 +172,38 @@ describe("safeFetch", () => {
     expect(init.dispatcher).toBeDefined()
     expect(typeof init.dispatcher.dispatch).toBe("function")
   })
+
+  // Finding 9: a redirect to a different origin must not carry the first
+  // origin's Authorization/Cookie along — undici, unlike a browser, never
+  // strips these on its own.
+  it("drops Authorization and Cookie across a cross-origin redirect", async () => {
+    mockFetch
+      .mockResolvedValueOnce({
+        status: 302,
+        headers: new Headers({ location: "https://other.example/new" }),
+      })
+      .mockResolvedValueOnce({ status: 200, headers: new Headers() })
+    await safeFetch("https://example.com/old", {
+      headers: { Authorization: "Bearer secret", Cookie: "a=b" },
+    })
+    const secondHeaders = new Headers(mockFetch.mock.calls[1]![1].headers)
+    expect(secondHeaders.get("authorization")).toBeNull()
+    expect(secondHeaders.get("cookie")).toBeNull()
+  })
+
+  it("keeps Authorization across a same-origin redirect", async () => {
+    mockFetch
+      .mockResolvedValueOnce({
+        status: 302,
+        headers: new Headers({ location: "https://example.com/new" }),
+      })
+      .mockResolvedValueOnce({ status: 200, headers: new Headers() })
+    await safeFetch("https://example.com/old", {
+      headers: { Authorization: "Bearer secret" },
+    })
+    const secondHeaders = new Headers(mockFetch.mock.calls[1]![1].headers)
+    expect(secondHeaders.get("authorization")).toBe("Bearer secret")
+  })
 })
 
 describe("safeFetchText", () => {
@@ -234,5 +268,54 @@ describe("safeFetchText", () => {
     })
     const r = await safeFetchText("https://example.com/x")
     expect(r.text).toBe("hello")
+  })
+
+  // Finding 9, on the body-capped entry point too.
+  it("drops Authorization across a cross-origin redirect", async () => {
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 302,
+        headers: new Headers({ location: "https://other.example/new" }),
+        text: async () => "",
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: new Headers(),
+        text: async () => "ok",
+      })
+    await safeFetchText("https://example.com/old", {
+      headers: { Authorization: "Bearer secret" },
+    })
+    const secondHeaders = new Headers(mockFetch.mock.calls[1]![1].headers)
+    expect(secondHeaders.get("authorization")).toBeNull()
+  })
+})
+
+describe("parseJsonBody", () => {
+  it("throws FeedFormatError on unparseable JSON, never echoing the body", () => {
+    const res = {
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      text: "not json {{{",
+    }
+    expect(() => parseJsonBody(res, "TestProvider")).toThrow(FeedFormatError)
+    try {
+      parseJsonBody(res, "TestProvider")
+    } catch (err) {
+      expect(String((err as Error).message)).not.toContain("not json")
+    }
+  })
+
+  it("parses valid JSON", () => {
+    const res = {
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      text: '{"a":1}',
+    }
+    expect(parseJsonBody(res, "TestProvider")).toEqual({ a: 1 })
   })
 })

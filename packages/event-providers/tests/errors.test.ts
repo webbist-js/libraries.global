@@ -9,6 +9,17 @@ import {
   UnsafeUrlError,
 } from "../src"
 
+describe("ProviderStatusError", () => {
+  // Finding 8 (T2): never takes a URL — a feed URL can carry a secret
+  // token, and this message reaches logs and the credential's own
+  // `lastErrorMessage`.
+  it("never includes a URL in its message", () => {
+    const err = new ProviderStatusError("ical", 404)
+    expect(err.message).toBe("ical returned 404")
+    expect(err.message).not.toMatch(/https?:\/\//)
+  })
+})
+
 describe("classifyFailure", () => {
   it.each([
     [new ProviderStatusError("eventbrite", 401), "auth_failed"],

@@ -1,26 +1,25 @@
 import type { FeedTestCode } from "@repo/shared-data"
 
+import { FeedFormatError } from "./lib/feed-format-error"
 import {
   FetchTimeoutError,
   ResponseTooLargeError,
   UnsafeUrlError,
 } from "./lib/safe-fetch"
 
-/** A provider answered with a non-2xx status. */
+export { FeedFormatError } from "./lib/feed-format-error"
+
+/**
+ * A provider answered with a non-2xx status. Never takes a URL: a feed URL
+ * can carry a secret token in its path or query, and this message reaches
+ * logs and (via `classifyFailure`) the credential's `lastErrorMessage`.
+ */
 export class ProviderStatusError extends Error {
   readonly status: number
-  constructor(provider: string, status: number, url?: string) {
-    super(`${provider} returned ${status}${url ? ` for ${url}` : ""}`)
+  constructor(provider: string, status: number) {
+    super(`${provider} returned ${status}`)
     this.name = "ProviderStatusError"
     this.status = status
-  }
-}
-
-/** The response arrived but isn't the format the provider expects. */
-export class FeedFormatError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = "FeedFormatError"
   }
 }
 
