@@ -14,6 +14,9 @@
 
 import {
   DRIVE_MAX_PINNED,
+  DRIVE_MAX_TASKS,
+  driveFilters,
+  driveProgress,
   focusMatches,
   libraryInScope,
   validateDrive,
@@ -25,6 +28,8 @@ import { factories } from "@strapi/strapi"
 
 import { isActivityPublic } from "../../../utils/activity-visibility"
 import { loadDriveLibrary } from "../../../utils/drive-library"
+import { centroidOf } from "../../../utils/meili-centroid"
+import { countLibraries } from "../../../utils/meili-count"
 
 const UID = "api::drive.drive"
 const DRIVE_CREDIT = "api::drive-credit.drive-credit"
@@ -228,6 +233,205 @@ async function creditOne(
   }
 }
 
+// ── Lifecycle ───────────────────────────────────────────────────────────────
+
+/** `countLibraries`/`centroidOf`, injectable so tests never hit the network. */
+type LifecycleDeps = {
+  countLibraries: typeof countLibraries
+  centroidOf: typeof centroidOf
+}
+const DEFAULT_LIFECYCLE_DEPS: LifecycleDeps = { countLibraries, centroidOf }
+
+/** At most 90 days of `progressLog` entries, one per day. */
+const PROGRESS_LOG_MAX = 90
+
+/** Anything `driveFilters`'s `openedAt` accepts. */
+type DateLike = string | Date | null | undefined
+
+type DriveCounts = {
+  total: number
+  todo: number
+  done: number
+  inReview: number
+}
+
+/**
+ * Strapi's configured default locale ("en" with no i18n plugin, or in
+ * tests), for the fixed `locale = "en"` clause every lifecycle count and
+ * centroid search carries. Not memoised here: `runLifecycle` calls it once
+ * per run, and `act`'s open/close call it once per request.
+ */
+async function defaultDriveLocale(strapiInstance: any): Promise<string> {
+  try {
+    const service = strapiInstance?.plugin?.("i18n")?.service?.("locales")
+    if (service) {
+      const rows = ((await service.find?.()) ?? []) as {
+        code?: unknown
+        isDefault?: unknown
+      }[]
+      const flagged = rows.find((r) => r?.isDefault === true)
+      if (typeof flagged?.code === "string" && flagged.code) return flagged.code
+      if (typeof service.getDefaultLocale === "function") {
+        const d = await service.getDefaultLocale()
+        if (typeof d === "string" && d) return d
+      }
+    }
+  } catch {
+    // No i18n plugin (unit tests, a stripped-down app): fall through.
+  }
+
+  return "en"
+}
+
+/**
+ * `total` (in scope), `todo` (in scope and on-focus) and `inReview` for one
+ * drive, with `openedAt` frozen at the value the caller passes — the drive's
+ * own `openedAt` once it has one, `now` while opening it for the first time.
+ */
+async function driveCounts(
+  strapiInstance: any,
+  drive: DriveRow,
+  openedAt: DateLike,
+  locale: string,
+  deps: LifecycleDeps
+): Promise<DriveCounts> {
+  const filters = driveFilters({
+    scope: drive.scope as DriveScope,
+    focus: drive.focus as DriveFocus,
+    openedAt,
+  })
+  const localeClause = `locale = "${locale}"`
+  const [total, todo, inReview] = await Promise.all([
+    deps.countLibraries(`${filters.scope} AND ${localeClause}`),
+    deps.countLibraries(`${filters.todo} AND ${localeClause}`),
+    (strapiInstance.service(UID) as any).countInReview(drive.documentId),
+  ])
+
+  return { total, todo, done: Math.max(0, total - todo), inReview }
+}
+
+/**
+ * Opens one `scheduled` drive now (`openedAt: now`, a fresh `baseline` and
+ * `progressLog`), or leaves it `scheduled` ("held") when its to-do count is
+ * zero or over `DRIVE_MAX_TASKS` — logged either way.
+ */
+async function openOneDrive(
+  strapiInstance: any,
+  drive: DriveRow,
+  now: Date,
+  locale: string,
+  deps: LifecycleDeps
+): Promise<"opened" | "held"> {
+  const filters = driveFilters({
+    scope: drive.scope as DriveScope,
+    focus: drive.focus as DriveFocus,
+    openedAt: now,
+  })
+  const localeClause = `locale = "${locale}"`
+  const todo = await deps.countLibraries(`${filters.todo} AND ${localeClause}`)
+
+  if (todo === 0 || todo > DRIVE_MAX_TASKS) {
+    strapiInstance.log.info(
+      `[drives] "${drive.title ?? drive.documentId}" (${drive.documentId}) stays scheduled: ${todo} tasks to do`
+    )
+
+    return "held"
+  }
+
+  const [total, centroid] = await Promise.all([
+    deps.countLibraries(`${filters.scope} AND ${localeClause}`),
+    deps.centroidOf(`${filters.todo} AND ${localeClause}`),
+  ])
+
+  await strapiInstance.documents(UID).update({
+    documentId: drive.documentId,
+    data: {
+      status: "open",
+      openedAt: now.toISOString(),
+      baseline: {
+        total,
+        done: Math.max(0, total - todo),
+        at: now.toISOString(),
+        centroid,
+      },
+      progressLog: [],
+    } as never,
+  })
+
+  return "opened"
+}
+
+/**
+ * Closes one `open` drive now: `final` is `{ total, done, closedGaps,
+ * helpers, credits }`, where `closedGaps` is how much progress was made
+ * since `baseline` (never negative), and unpins/unfeatures it.
+ */
+async function closeOneDrive(
+  strapiInstance: any,
+  drive: DriveRow,
+  now: Date,
+  counts: DriveCounts,
+  closedReason: "goal" | "ended"
+): Promise<void> {
+  const baseline = (drive.baseline ?? {}) as { done?: number }
+  const closedGaps = Math.max(0, counts.done - (baseline.done ?? 0))
+  const { helpers, credits } = (await strapiInstance
+    .service(UID)
+    .stats(drive.documentId)) as { helpers: number; credits: number }
+
+  await strapiInstance.documents(UID).update({
+    documentId: drive.documentId,
+    data: {
+      status: "closed",
+      closedReason,
+      closedAt: now.toISOString(),
+      final: {
+        total: counts.total,
+        done: counts.done,
+        closedGaps,
+        helpers,
+        credits,
+      },
+      pinned: false,
+      featured: false,
+    } as never,
+  })
+}
+
+/** Whether an open drive's `progressLog` still needs today's (UTC) entry. */
+function needsSnapshotToday(drive: DriveRow, now: Date): boolean {
+  const log = Array.isArray(drive.progressLog)
+    ? (drive.progressLog as { day?: string }[])
+    : []
+  const today = now.toISOString().slice(0, 10)
+  const last = log.at(-1)
+
+  return !last || last.day !== today
+}
+
+/** Appends today's `{ day, total, done, inReview }`, keeping at most 90. */
+async function appendSnapshot(
+  strapiInstance: any,
+  drive: DriveRow,
+  now: Date,
+  counts: DriveCounts
+): Promise<void> {
+  const log = Array.isArray(drive.progressLog)
+    ? [...(drive.progressLog as Record<string, unknown>[])]
+    : []
+  log.push({
+    day: now.toISOString().slice(0, 10),
+    total: counts.total,
+    done: counts.done,
+    inReview: counts.inReview,
+  })
+
+  await strapiInstance.documents(UID).update({
+    documentId: drive.documentId,
+    data: { progressLog: log.slice(-PROGRESS_LOG_MAX) } as never,
+  })
+}
+
 export default factories.createCoreService(UID, ({ strapi }) => ({
   // ── Public reads ──────────────────────────────────────────────────────────
 
@@ -406,12 +610,14 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
   },
 
   /**
-   * Board-only lifecycle actions. `open` and `close` are implemented in
-   * Task 6 and answer "Unknown action" until then, same as any unrecognised
-   * action. `pin`, `feature` and `cancel` refuse once a drive has settled
-   * (`closed` or `cancelled`) — a closed drive's `closedReason`/`closedAt`
-   * is never overwritten, and a settled drive can't be promoted back onto
-   * the Noticeboard's pinned rail.
+   * Board-only lifecycle actions. `open` and `close` run the same lifecycle
+   * step as the hourly cron (`runLifecycle`), immediately and regardless of
+   * `startsAt`/`endsAt` — a hand-closed drive's `closedReason` is always
+   * `"ended"`, never `"goal"`, even when the goal happens to be met. `pin`,
+   * `feature` and `cancel` refuse once a drive has settled (`closed` or
+   * `cancelled`) — a closed drive's `closedReason`/`closedAt` is never
+   * overwritten, and a settled drive can't be promoted back onto the
+   * Noticeboard's pinned rail.
    */
   async act(
     documentId: string,
@@ -538,10 +744,133 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
         return { data: toPublic(updated) }
       }
 
+      case "open": {
+        if (existing.status !== "scheduled") {
+          return {
+            errors: [
+              `A drive must be scheduled to open it (it is ${existing.status}).`,
+            ],
+            status: 409,
+          }
+        }
+        const locale = await defaultDriveLocale(strapi)
+        const outcome = await openOneDrive(
+          strapi,
+          existing,
+          new Date(),
+          locale,
+          DEFAULT_LIFECYCLE_DEPS
+        )
+        if (outcome === "held") {
+          return {
+            errors: [
+              "This drive has no tasks to do, or too many, right now — it stays scheduled.",
+            ],
+            status: 409,
+          }
+        }
+        const updated = (await strapi
+          .documents(UID)
+          .findOne({ documentId })) as DriveRow
+
+        return { data: toPublic(updated) }
+      }
+
+      case "close": {
+        if (existing.status !== "open") {
+          return {
+            errors: [
+              `A drive must be open to close it (it is ${existing.status}).`,
+            ],
+            status: 409,
+          }
+        }
+        const locale = await defaultDriveLocale(strapi)
+        const counts = await driveCounts(
+          strapi,
+          existing,
+          existing.openedAt as string,
+          locale,
+          DEFAULT_LIFECYCLE_DEPS
+        )
+        await closeOneDrive(strapi, existing, new Date(), counts, "ended")
+        const updated = (await strapi
+          .documents(UID)
+          .findOne({ documentId })) as DriveRow
+
+        return { data: toPublic(updated) }
+      }
+
       default:
-        // "open" and "close" land here too until Task 6 implements them.
         return { errors: ["Unknown action"], status: 400 }
     }
+  },
+
+  /**
+   * The hourly lifecycle run: opens every `scheduled` drive whose
+   * `startsAt` has arrived, closes every `open` drive at its goal or past
+   * `endsAt`, and snapshots every other open drive once a day (UTC). Each
+   * list is capped at `OPEN_DRIVES_MAX` (50) — a generous ceiling on
+   * concurrently scheduled or open Drives (ADR-0004). `deps` lets tests
+   * inject fake counters instead of reaching Meilisearch.
+   */
+  async runLifecycle(
+    now: Date,
+    deps: Partial<LifecycleDeps> = {}
+  ): Promise<{ opened: string[]; closed: string[]; held: string[] }> {
+    const fullDeps: LifecycleDeps = { ...DEFAULT_LIFECYCLE_DEPS, ...deps }
+    const locale = await defaultDriveLocale(strapi)
+    const nowIso = now.toISOString()
+
+    const opened: string[] = []
+    const held: string[] = []
+    const closed: string[] = []
+
+    // Close or snapshot drives that were already open before this run — a
+    // drive this run is about to open gets its first snapshot next hour,
+    // not immediately after `openOneDrive` sets its empty `progressLog`.
+    const open = (await strapi.documents(UID).findMany({
+      filters: { status: { $eq: "open" } },
+      limit: OPEN_DRIVES_MAX,
+    })) as DriveRow[]
+    for (const drive of open) {
+      const counts = await driveCounts(
+        strapi,
+        drive,
+        (drive.openedAt as string | undefined) ?? now,
+        locale,
+        fullDeps
+      )
+      const progress = driveProgress(counts, Number(drive.goalPercent ?? 100))
+      const endsAtMs = drive.endsAt
+        ? new Date(drive.endsAt as string).getTime()
+        : null
+      const pastEnd = endsAtMs != null && endsAtMs <= now.getTime()
+
+      if (progress.goalMet || pastEnd) {
+        await closeOneDrive(
+          strapi,
+          drive,
+          now,
+          counts,
+          progress.goalMet ? "goal" : "ended"
+        )
+        closed.push(drive.documentId)
+      } else if (needsSnapshotToday(drive, now)) {
+        await appendSnapshot(strapi, drive, now, counts)
+      }
+    }
+
+    const scheduled = (await strapi.documents(UID).findMany({
+      filters: { status: { $eq: "scheduled" }, startsAt: { $lte: nowIso } },
+      limit: OPEN_DRIVES_MAX,
+    })) as DriveRow[]
+    for (const drive of scheduled) {
+      const outcome = await openOneDrive(strapi, drive, now, locale, fullDeps)
+      ;(outcome === "opened" ? opened : held).push(drive.documentId)
+    }
+
+    return { opened, closed, held }
   },
 
   // ── Credits, stats and leaderboards ────────────────────────────────────────

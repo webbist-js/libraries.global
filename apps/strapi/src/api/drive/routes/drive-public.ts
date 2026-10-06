@@ -5,11 +5,13 @@
  * `GET /drives/:documentId/stats`, `GET /drives/:documentId/leaderboard`)
  * need no auth and serve only public fields — the leaderboard never carries
  * a `baUserId`. Board writes (`POST /drives`,
- * `PUT /drives/:documentId`, `POST /drives/:documentId/actions`) are
- * `auth: false` here too — they are gated in the controller by the
- * Next.js ↔ Strapi bridge secret plus `X-Ba-User-Id`, then by
- * `isBoardMember`, the same two-step pattern as the other bridge-gated
- * routes in this codebase.
+ * `PUT /drives/:documentId`, `POST /drives/:documentId/actions`,
+ * `POST /drives/lifecycle/run`) are `auth: false` here too — they are gated
+ * in the controller by the Next.js ↔ Strapi bridge secret plus
+ * `X-Ba-User-Id`, then by `isBoardMember`, the same two-step pattern as the
+ * other bridge-gated routes in this codebase. `/drives/lifecycle/run` runs
+ * the same hourly cron step (`runLifecycle`) on demand, for local testing
+ * and E2E without waiting for the clock.
  */
 
 export default {
@@ -42,6 +44,12 @@ export default {
       method: "POST",
       path: "/drives/:documentId/actions",
       handler: "drive.act",
+      config: { auth: false },
+    },
+    {
+      method: "POST",
+      path: "/drives/lifecycle/run",
+      handler: "drive.runLifecycle",
       config: { auth: false },
     },
     {

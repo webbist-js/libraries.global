@@ -214,4 +214,15 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     if ("errors" in result) return sendErrors(ctx, result, "Invalid action")
     ctx.body = { data: result.data, meta: {} }
   },
+
+  // POST /drives/lifecycle/run — board only. For local testing and E2E: the
+  // hourly cron (`config/cron-tasks.ts`) calls `runLifecycle` directly and
+  // never reaches this route.
+  async runLifecycle(ctx) {
+    const baUserId = await requireBoardMember(ctx, strapi)
+    if (!baUserId) return
+
+    const data = await strapi.service(UID).runLifecycle(new Date())
+    ctx.body = { data, meta: {} }
+  },
 }))

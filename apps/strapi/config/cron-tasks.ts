@@ -4,7 +4,13 @@ import {
   handleAutoPaused,
   purgeOAuthDrafts,
 } from "../src/plugins/events/server/cron"
+import {
+  DRIVE_LIFECYCLE_LOCK_KEY,
+  withLeaderLock,
+} from "../src/utils/leader-lock"
 import { resyncExpiredRoleGrants } from "../src/utils/role-grants"
+
+const DRIVE_UID = "api::drive.drive"
 
 // Grants that expire fire no lifecycle: re-derive the role of anyone whose
 // grant expired in the last two days (the bridge already ignores them).
@@ -38,7 +44,31 @@ const eventFeedsJob = {
   options: { rule: "*/15 * * * *" },
 }
 
+// Opens scheduled drives whose start has arrived, closes open ones at goal
+// or past their end date, and snapshots every other open drive once a day.
+// Under the same Postgres advisory-lock pattern as the rewards plugin's
+// weekly snapshot, so two Strapi instances never race the same drive.
+const driveLifecycleJob = {
+  task: async ({ strapi }: { strapi: any }) => {
+    try {
+      await withLeaderLock(strapi, DRIVE_LIFECYCLE_LOCK_KEY, async () => {
+        const { opened, closed, held } = await strapi
+          .service(DRIVE_UID)
+          .runLifecycle(new Date())
+        if (opened.length || closed.length || held.length)
+          strapi.log.info(
+            `[drives] lifecycle: opened ${opened.length}, closed ${closed.length}, held ${held.length}`
+          )
+      })
+    } catch (err) {
+      strapi.log.warn("[drives] lifecycle run failed:", err)
+    }
+  },
+  options: { rule: "7 * * * *" },
+}
+
 export default {
   resyncExpiredRoleGrants: resyncExpiredRoleGrantsJob,
   eventFeeds: eventFeedsJob,
+  driveLifecycle: driveLifecycleJob,
 }

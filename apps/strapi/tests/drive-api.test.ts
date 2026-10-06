@@ -509,13 +509,12 @@ describe("drive.act", () => {
     expect(result.errors).toEqual(["This drive has already been cancelled."])
   })
 
-  it("answers 400 'Unknown action' for anything unrecognised, including open/close", async () => {
+  it("answers 400 'Unknown action' for anything unrecognised", async () => {
+    // "open" and "close" are real actions as of Task 6 (`drive-lifecycle.test.ts`).
     const { service } = build({ [DRIVE]: [drive(1)] })
-    for (const action of ["open", "close", "nonsense"]) {
-      const result: any = await service.act("drive1", action, {})
-      expect(result.errors).toEqual(["Unknown action"])
-      expect(result.status).toBe(400)
-    }
+    const result: any = await service.act("drive1", "nonsense", {})
+    expect(result.errors).toEqual(["Unknown action"])
+    expect(result.status).toBe(400)
   })
 
   it("404s a missing drive", async () => {
