@@ -34,7 +34,7 @@ const isLive = (d: Drive) => d.status === "open" || d.status === "scheduled"
  * search index (`{level}_name`, plus `country_name` below country level).
  * Empty on failure: labels fall back to the slug.
  */
-async function fetchPlaceNames(
+export async function fetchPlaceNames(
   refs: readonly PlaceRef[],
   locale: string
 ): Promise<PlaceNames> {

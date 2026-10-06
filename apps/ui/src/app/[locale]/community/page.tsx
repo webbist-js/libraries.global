@@ -1,3 +1,4 @@
+import { Icon } from "@iconify/react"
 import type { Metadata } from "next"
 import { headers } from "next/headers"
 
@@ -6,6 +7,8 @@ import { TopThisMonthCard } from "@/components/community/TopThisMonthCard"
 import { VoteOnAdditionsCard } from "@/components/community/VoteOnAdditionsCard"
 import { FinishedDrives } from "@/components/drives/FinishedDrives"
 import { isFocusFilterKey } from "@/components/drives/focus-meta"
+import { GlobalLink } from "@/components/global/GlobalLink"
+import { hasCapability } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { fetchDriveGaps } from "@/lib/community/drive-gaps-server"
 import {
@@ -111,7 +114,20 @@ export default async function CommunityPage({
         title="The *noticeboard.*"
         lead="Community drives to fill gaps in the index. Pick one, work through small tasks, and see the whole effort move forward."
         counts={{ noticeboard: open.length, suggestions: votableCount }}
-      />
+      >
+        {hasCapability(user, "drives.manage") ? (
+          <div className="flex flex-wrap gap-2.5">
+            <GlobalLink
+              href="/community/drives/new"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white px-[22px] py-3 text-[16px] font-semibold no-underline hover:border-(--t-accent-primary)"
+              style={{ color: T.ink.base }}
+            >
+              <Icon aria-hidden="true" icon="mdi:plus" width={18} />
+              New drive
+            </GlobalLink>
+          </div>
+        ) : null}
+      </CommunitySectionHeader>
 
       <div
         className="mx-auto flex w-full max-w-[1360px] flex-wrap items-start"

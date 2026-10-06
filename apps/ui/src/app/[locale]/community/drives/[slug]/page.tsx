@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
+import { DriveBoardActions } from "@/components/drives/DriveBoardActions"
 import { isVotable } from "@/lib/community/suggestions"
 import { fetchPublicSuggestions } from "@/lib/community/suggestions-server"
 import { plainDriveTitle } from "@/lib/drives/drive-view"
@@ -65,6 +66,7 @@ export default async function DrivePage({ params }: { params: Params }) {
         noticeboard: openCount,
         suggestions: suggestions.filter(isVotable).length,
       }}
+      boardActions={<DriveBoardActions drive={drive} />}
     />
   )
 }

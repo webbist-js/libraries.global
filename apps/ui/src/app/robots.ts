@@ -19,6 +19,8 @@ const PRIVATE_PATHS = [
   "/contribute/moderation",
   "/contribute/knowledge/",
   "/contribute/events",
+  "/community/drives/new",
+  "/community/drives/*/edit",
   "/dev/",
   "/journal/search",
   "/knowledge/search",

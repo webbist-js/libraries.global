@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import type { ReactNode } from "react"
 
 import { DriveDates } from "@/components/drives/DriveDates"
 import { DriveFocusChip } from "@/components/drives/DriveFocusChip"
@@ -166,12 +167,15 @@ export function DriveDetailPage({
   week,
   all,
   counts,
+  boardActions,
 }: {
   readonly drive: Drive
   readonly view: DriveView | null
   readonly week: readonly DriveLeaderboardEntry[]
   readonly all: readonly DriveLeaderboardEntry[]
   readonly counts?: CommunityTabCounts
+  /** The editorial board's controls, at the top of the rail. */
+  readonly boardActions?: ReactNode
 }) {
   const credited = drive.status === "open" || drive.status === "closed"
   const title = plainDriveTitle(drive.title)
@@ -303,6 +307,7 @@ export function DriveDetailPage({
           className="flex min-w-0 flex-col gap-3.5 min-[760px]:sticky min-[760px]:top-24 min-[760px]:max-w-[440px]"
           style={{ flex: "1 1 290px" }}
         >
+          {boardActions}
           {credited ? (
             <DriveHelpers
               week={week}
