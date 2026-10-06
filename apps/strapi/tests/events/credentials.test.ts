@@ -141,6 +141,27 @@ describe("credentials service: admin writes", () => {
       )
     ).rejects.toThrow(/Unexpected field|required/)
   })
+
+  it("a values-only update writes an audit note of exactly 'values'", async () => {
+    const { strapi, store } = seed()
+    store[CRED]![0]!.credentialsEncrypted = sealValues(
+      { feedUrl: "https://x.example/a.ics" },
+      "credA0000000000000000001",
+      "current"
+    )
+    const service = credentialsFactory({ strapi })
+    await service.update(
+      "credA0000000000000000001",
+      { credentials: { feedUrl: "https://y.example/b.ics" } },
+      "admin:5"
+    )
+    const lastEvent = store[EVENTS]!.at(-1)
+    expect(lastEvent).toMatchObject({
+      action: "admin_updated",
+      actor: "admin:5",
+      note: "values",
+    })
+  })
 })
 
 describe("credentials service: reveal", () => {
@@ -191,6 +212,47 @@ describe("credentials service: test", () => {
       await service.test("credA0000000000000000001", "current", "admin:1")
     ).toEqual({ result: "auth_failed" })
     expect(store[CRED]![0]!.lastTestResult).toBe("auth_failed")
+  })
+
+  it("records decrypt_failed when the stored blob can't be opened and does not call testFeed", async () => {
+    const { strapi, store } = seed()
+    // Seal for a different documentId so opening with the real id fails
+    store[CRED]![0]!.credentialsEncrypted = sealValues(
+      { feedUrl: "https://x.example/a.ics" },
+      "credOTHER000000000000000000",
+      "current"
+    )
+    const testFeedSpy = vi.fn(async () => ({
+      result: "ok" as const,
+    }))
+    const service = credentialsFactory({
+      strapi,
+      testFeed: testFeedSpy,
+    })
+    expect(
+      await service.test("credA0000000000000000001", "current", "admin:1")
+    ).toEqual({ result: "decrypt_failed" })
+    expect(store[CRED]![0]!.lastTestResult).toBe("decrypt_failed")
+    expect(testFeedSpy).not.toHaveBeenCalled()
+  })
+
+  it("records provider_error when testFeed rejects", async () => {
+    const { strapi, store } = seed()
+    store[CRED]![0]!.credentialsEncrypted = sealValues(
+      { feedUrl: "https://x.example/a.ics" },
+      "credA0000000000000000001",
+      "current"
+    )
+    const service = credentialsFactory({
+      strapi,
+      testFeed: async () => {
+        throw new Error("Network timeout")
+      },
+    })
+    expect(
+      await service.test("credA0000000000000000001", "current", "admin:1")
+    ).toEqual({ result: "provider_error" })
+    expect(store[CRED]![0]!.lastTestResult).toBe("provider_error")
   })
 })
 

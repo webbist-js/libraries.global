@@ -12,6 +12,7 @@ import { recordCredentialEvent } from "../utils/credential-events"
 export const CREDENTIAL_UID = "plugin::events.event-credential"
 const LIBRARY_UID = "api::library.library"
 const SYNC_COMMAND_UID = "plugin::events.sync-command"
+const EVENT_UID = "plugin::events.event"
 
 /** Every field a client of this plugin may see. Never the encrypted ones. */
 export const CREDENTIAL_PUBLIC_FIELDS = [
@@ -257,19 +258,18 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
       return strapi.db.transaction(async () => {
         await documents().update({ documentId, data: patch })
         const after = await readOne(documentId)
+        const noteItems: string[] = []
+        if (data.label != null) noteItems.push("label")
+        if (data.status != null) noteItems.push("status")
+        if (data.libraryDocumentIds != null) noteItems.push("libraries")
+        if (data.credentials != null) noteItems.push("values")
         await recordCredentialEvent(strapi, {
           credentialDocumentId: documentId,
           provider: before.provider,
           libraryDocumentIds: libraryIdsOf(after),
           action: "admin_updated",
           actor,
-          note:
-            Object.keys(patch)
-              .filter((k) => k !== "credentialsEncrypted")
-              .join(", ") +
-            (patch.credentialsEncrypted
-              ? (Object.keys(patch).length > 1 ? ", " : "") + "values"
-              : ""),
+          note: noteItems.join(", "),
         })
         await syncLibraryFeedFlags([
           ...libraryIdsOf(before),
@@ -286,7 +286,7 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
 
       return strapi.db.transaction(async () => {
         await strapi.db
-          .query("plugin::events.event")
+          .query(EVENT_UID)
           .deleteMany({ where: { credentialId: before.id } })
         await documents().delete({ documentId })
         await recordCredentialEvent(strapi, {
@@ -323,15 +323,39 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
           ? row.credentialsEncrypted
           : row.pendingCredentialsEncrypted
       if (!blob) return null
+
+      let decryptedValues: Record<string, string>
+      try {
+        decryptedValues = openValues(blob, documentId, slot)
+      } catch {
+        const outcome = { result: "decrypt_failed" as const }
+        const at = new Date().toISOString()
+        await documents().update({
+          documentId,
+          data:
+            slot === "current"
+              ? { lastTestedAt: at, lastTestResult: outcome.result }
+              : { pendingTestedAt: at, pendingTestResult: outcome.result },
+        })
+        await recordCredentialEvent(strapi, {
+          credentialDocumentId: documentId,
+          provider: row.provider,
+          action: "tested",
+          actor,
+          resultCode: outcome.result,
+          note: slot,
+        })
+
+        return { result: outcome.result }
+      }
+
       let outcome: { result: FeedTestCode; detail?: string }
       try {
-        outcome = await testFeed(
-          row.provider,
-          openValues(blob, documentId, slot)
-        )
+        outcome = await testFeed(row.provider, decryptedValues)
       } catch {
-        outcome = { result: "decrypt_failed" }
+        outcome = { result: "provider_error" }
       }
+
       const at = new Date().toISOString()
       await documents().update({
         documentId,
