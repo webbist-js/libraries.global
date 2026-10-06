@@ -39,10 +39,38 @@ const fail = (
 ): FeedError => ({
   error: { status, name, message, ...extra },
 })
-const NOT_FOUND = fail(404, "not_found", "Feed not found.")
+/** A fresh object per call: callers never share one `FeedError` reference. */
+const feedNotFound = (): FeedError => fail(404, "not_found", "Feed not found.")
+const libraryNotFound = (): FeedError =>
+  fail(404, "not_found", "Library not found.")
 const actorOf = (user: FeedUser) => `ba:${user.id}`
 const libraryIdsOf = (c: any): string[] =>
   ((c?.libraries as any[]) ?? []).map((l) => l?.documentId).filter(Boolean)
+
+/**
+ * Thrown from inside `strapi.db.transaction` to abort it (the fake and real
+ * transaction both roll back on any throw) without the caller mistaking it
+ * for an unexpected failure: `runTransaction` catches exactly this and turns
+ * it back into the `FeedError` it carries. Anything else thrown propagates.
+ */
+class FeedAbort extends Error {
+  constructor(public readonly feedError: FeedError) {
+    super(feedError.error.name)
+  }
+}
+
+/** Runs `cb` in a transaction, turning an inner `FeedAbort` into its `FeedError`. */
+async function runTransaction<T>(
+  strapi: any,
+  cb: () => Promise<T>
+): Promise<T | FeedError> {
+  try {
+    return await strapi.db.transaction(cb)
+  } catch (err) {
+    if (err instanceof FeedAbort) return err.feedError
+    throw err
+  }
+}
 
 type Deps = {
   strapi: any
@@ -69,16 +97,17 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
       fields: [...CREDENTIAL_PUBLIC_FIELDS, "id"],
       populate: { libraries: { fields: ["documentId", "name"] } },
     })
-    if (!feed) return NOT_FOUND
+    if (!feed) return feedNotFound()
     const claims = await claimedLibraryIds(strapi, user.id)
-    if (!libraryIdsOf(feed).some((id) => claims.has(id))) return NOT_FOUND
+    if (!libraryIdsOf(feed).some((id) => claims.has(id))) return feedNotFound()
     if (feed.scope === "group")
       return fail(403, "group_feed", "Libraries Global manages this feed.")
 
     return { feed, claims }
   }
 
-  async function checkValues(provider: unknown, values: unknown) {
+  /** Nothing here awaits: `validateFeedValues` is synchronous. */
+  function checkValues(provider: unknown, values: unknown) {
     const r = validateFeedValues(provider, values)
 
     return r.ok ? r : fail(400, "invalid_values", r.error, { field: r.field })
@@ -102,6 +131,12 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
         submissionType: "event_feed",
         status: { $in: OPEN },
       },
+    })
+  }
+
+  async function feedsOnLibrary(libraryDocumentId: string): Promise<number> {
+    return creds().count({
+      filters: { libraries: { documentId: { $in: [libraryDocumentId] } } },
     })
   }
 
@@ -214,8 +249,8 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
       input: { libraryDocumentId: string; provider: string; values: unknown }
     ) {
       const claims = await claimedLibraryIds(strapi, user.id)
-      if (!claims.has(input.libraryDocumentId)) return NOT_FOUND
-      const checked = await checkValues(input.provider, input.values)
+      if (!claims.has(input.libraryDocumentId)) return libraryNotFound()
+      const checked = checkValues(input.provider, input.values)
       if ("error" in checked) return checked
 
       return { result: await runTest(input.provider, checked.values) }
@@ -226,8 +261,8 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
       input: { libraryDocumentId: string; provider: string; values: unknown }
     ) {
       const claims = await claimedLibraryIds(strapi, user.id)
-      if (!claims.has(input.libraryDocumentId)) return NOT_FOUND
-      const checked = await checkValues(input.provider, input.values)
+      if (!claims.has(input.libraryDocumentId)) return libraryNotFound()
+      const checked = checkValues(input.provider, input.values)
       if ("error" in checked) return checked
       const provider = input.provider as EventProviderKey
 
@@ -243,18 +278,19 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
           "refused",
           verdict.message ?? "You can't connect a feed here."
         )
+      // Fast pre-checks, so a quota that's already exceeded never pays for
+      // the provider test below (it can take ~15 seconds). Re-checked,
+      // authoritatively, inside the transaction, because a concurrent
+      // connect can still land in between.
       if ((await openFeedSubmissions(user.id)) >= MAX_OPEN_FEED_SUBMISSIONS)
         return fail(
           429,
           "too_many_open",
           "You have feeds waiting for review. Wait for a decision before sending another."
         )
-      const onLibrary = await creds().count({
-        filters: {
-          libraries: { documentId: { $in: [input.libraryDocumentId] } },
-        },
-      })
-      if (onLibrary >= MAX_FEEDS_PER_LIBRARY)
+      if (
+        (await feedsOnLibrary(input.libraryDocumentId)) >= MAX_FEEDS_PER_LIBRARY
+      )
         return fail(
           409,
           "too_many_feeds",
@@ -273,7 +309,29 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
         .documents(LIBRARY_UID)
         .findOne({ documentId: input.libraryDocumentId, fields: ["name"] })
 
-      const outcome = await strapi.db.transaction(async () => {
+      const outcome = await runTransaction(strapi, async () => {
+        // Authoritative re-check: a concurrent connect could have used up
+        // the quota while the provider test above was in flight.
+        if ((await openFeedSubmissions(user.id)) >= MAX_OPEN_FEED_SUBMISSIONS)
+          throw new FeedAbort(
+            fail(
+              429,
+              "too_many_open",
+              "You have feeds waiting for review. Wait for a decision before sending another."
+            )
+          )
+        if (
+          (await feedsOnLibrary(input.libraryDocumentId)) >=
+          MAX_FEEDS_PER_LIBRARY
+        )
+          throw new FeedAbort(
+            fail(
+              409,
+              "too_many_feeds",
+              `A library can have at most ${MAX_FEEDS_PER_LIBRARY} feeds.`
+            )
+          )
+
         const created = await creds().create({
           data: {
             provider,
@@ -329,6 +387,7 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
           submission,
         }
       })
+      if ("error" in outcome) return outcome
       submissions().notifyPending(outcome.submission)
 
       return {
@@ -358,7 +417,7 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
           "replacement_pending",
           "New details are already waiting for review."
         )
-      const checked = await checkValues(feed.provider, input.values)
+      const checked = checkValues(feed.provider, input.values)
       if ("error" in checked) return checked
       const libraryDocumentId = libraryIdsOf(feed).find((id) =>
         access.claims.has(id)
@@ -390,7 +449,33 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
       const testedAt = new Date().toISOString()
       const hints = feedHints(feed.provider, checked.values)
 
-      const outcome = await strapi.db.transaction(async () => {
+      const outcome = await runTransaction(strapi, async () => {
+        // Authoritative re-check, as the first step inside the transaction:
+        // the provider test above can take ~15 seconds, during which the
+        // feed may have been disconnected, or another replace (or the
+        // first review) may already have claimed the pending slot.
+        const fresh = await creds().findOne({
+          documentId,
+          fields: ["documentId", "status", "pendingSubmissionDocumentId"],
+        })
+        if (!fresh) throw new FeedAbort(feedNotFound())
+        if (fresh.status === "pending" || fresh.status === "draft")
+          throw new FeedAbort(
+            fail(
+              409,
+              "review_pending",
+              "This feed is still waiting for review. Withdraw it and connect again."
+            )
+          )
+        if (fresh.pendingSubmissionDocumentId)
+          throw new FeedAbort(
+            fail(
+              409,
+              "replacement_pending",
+              "New details are already waiting for review."
+            )
+          )
+
         const submission = await createSubmission(user, libraryDocumentId, {
           kind: "replace",
           credentialDocumentId: documentId,
@@ -429,6 +514,7 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
           submission,
         }
       })
+      if ("error" in outcome) return outcome
       submissions().notifyPending(outcome.submission)
 
       return {

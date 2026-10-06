@@ -1,3 +1,4 @@
+import { MAX_OPEN_FEED_SUBMISSIONS } from "@repo/shared-data"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import credentialsFactory from "../../src/plugins/events/server/services/credentials"
@@ -17,7 +18,22 @@ beforeEach(() => {
   process.env.EVENTS_CREDENTIAL_KEY = "c".repeat(64)
 })
 
-function setup(opts: { claims?: string[]; test?: string; policy?: any } = {}) {
+/**
+ * `opts` is returned from `setup()` and read live by the fake `testFeed` on
+ * every call, so a test can mutate `opts.test` or `opts.onTest` *between*
+ * calls (e.g. after an initial `connect()` has already run) to change only
+ * the next provider test's behaviour — including mutating the store from
+ * inside `onTest`, to simulate a concurrent write landing while the
+ * (~15 s in real life) provider test is in flight.
+ */
+type SetupOpts = {
+  claims?: string[]
+  test?: string
+  policy?: any
+  onTest?: () => void
+}
+
+function setup(opts: SetupOpts = {}) {
   const fake = makeFakeStrapi({
     [LIB]: [
       {
@@ -40,7 +56,11 @@ function setup(opts: { claims?: string[]; test?: string; policy?: any } = {}) {
     "plugin::events.event": [],
   })
   const { strapi } = fake
-  const testFeed = vi.fn(async () => ({ result: (opts.test ?? "ok") as any }))
+  const testFeed = vi.fn(async () => {
+    opts.onTest?.()
+
+    return { result: (opts.test ?? "ok") as any }
+  })
   const credentials = credentialsFactory({ strapi, testFeed })
   const claims = new Set(opts.claims ?? [L1])
   const policy = {
@@ -79,10 +99,30 @@ function setup(opts: { claims?: string[]; test?: string; policy?: any } = {}) {
   }))
   const feeds = feedsFactory({ strapi, testFeed })
 
-  return { ...fake, feeds, policy, submissions, testFeed }
+  return { ...fake, feeds, policy, submissions, testFeed, opts }
 }
 
 const ICAL = { feedUrl: "https://cal.example.org/private/tok123456/basic.ics" }
+const ICAL_NEW = {
+  feedUrl: "https://cal.example.org/private/new999999/basic.ics",
+}
+
+async function connected(opts: SetupOpts = {}) {
+  const s = setup(opts)
+  const r: any = await s.feeds.connect(USER, {
+    libraryDocumentId: L1,
+    provider: "ical",
+    values: ICAL,
+  })
+  const row = s.store[CRED]![0]!
+  Object.assign(row, {
+    status: "active",
+    pendingSubmissionDocumentId: null,
+    submissionDocumentId: r.submissionDocumentId,
+  })
+
+  return { ...s, row }
+}
 
 describe("feeds.connect", () => {
   it("stores the value encrypted on a pending row and opens a Submission without it", async () => {
@@ -134,7 +174,10 @@ describe("feeds.connect", () => {
       provider: "ical",
       values: ICAL,
     })
-    expect(r.error.status).toBe(404)
+    expect(r.error).toMatchObject({
+      status: 404,
+      message: "Library not found.",
+    })
     expect(store[CRED]).toHaveLength(0)
   })
 
@@ -188,7 +231,7 @@ describe("feeds.connect", () => {
     expect(r.error.status).toBe(429)
   })
 
-  it("refuses a sixth feed on one library and a fourth open feed submission", async () => {
+  it("refuses a sixth feed on one library", async () => {
     const { feeds, store } = setup()
     for (let i = 0; i < 5; i++)
       store[CRED]!.push({
@@ -205,43 +248,47 @@ describe("feeds.connect", () => {
     })
     expect(r.error).toMatchObject({ status: 409, name: "too_many_feeds" })
   })
-})
 
-describe("feeds.replace", () => {
-  async function connected() {
-    const s = setup()
-    const r: any = await s.feeds.connect(USER, {
+  it(`refuses a connect once the user has ${MAX_OPEN_FEED_SUBMISSIONS} open feed submissions`, async () => {
+    const { feeds, store } = setup()
+    for (let i = 0; i < MAX_OPEN_FEED_SUBMISSIONS; i++)
+      store[SUB]!.push({
+        documentId: `subopen000000000000000${i}`,
+        submissionType: "event_feed",
+        submittedByUserId: USER.id,
+        status: "pending",
+      } as any)
+    const r: any = await feeds.connect(USER, {
       libraryDocumentId: L1,
       provider: "ical",
       values: ICAL,
     })
-    const row = s.store[CRED]![0]!
-    Object.assign(row, {
-      status: "active",
-      pendingSubmissionDocumentId: null,
-      submissionDocumentId: r.submissionDocumentId,
-    })
+    expect(r.error).toMatchObject({ status: 429, name: "too_many_open" })
+    expect(store[CRED]).toHaveLength(0)
+  })
+})
 
-    return { ...s, row }
-  }
-
+describe("feeds.replace", () => {
   it("writes the pending slot and keeps the current value", async () => {
     const { feeds, row, store, submissions } = await connected()
     const current = row.credentialsEncrypted
-    const next = {
-      feedUrl: "https://cal.example.org/private/new999999/basic.ics",
-    }
-    const r: any = await feeds.replace(USER, row.documentId, { values: next })
+    const r: any = await feeds.replace(USER, row.documentId, {
+      values: ICAL_NEW,
+    })
     expect(row.credentialsEncrypted).toBe(current)
     expect(
       openValues(row.pendingCredentialsEncrypted, row.documentId, "pending")
-    ).toEqual(next)
+    ).toEqual(ICAL_NEW)
     expect(row.pendingSubmissionDocumentId).toBe(r.submissionDocumentId)
-    expect(store[SUB]!.at(-1)!.fields).toMatchObject({
+    const submission = store[SUB]!.at(-1)!
+    expect(submission.fields).toMatchObject({
       kind: "replace",
       previousHints: row.hints,
     })
     expect(submissions.notifyPending).toHaveBeenCalledTimes(2) // connect + replace
+    // The new secret value never reaches the Submission or the audit log.
+    expect(JSON.stringify(submission)).not.toContain("new999999")
+    expect(JSON.stringify(store[EVENTS])).not.toContain("new999999")
   })
 
   it("refuses a second pending replacement", async () => {
@@ -266,6 +313,111 @@ describe("feeds.replace", () => {
     const r: any = await feeds.replace(USER, row.documentId, { values: ICAL })
     expect(r.error).toMatchObject({ status: 403, name: "group_feed" })
   })
+
+  it("refuses a feed still waiting for its first review", async () => {
+    const { feeds, row } = await connected()
+    row.status = "pending"
+    const r: any = await feeds.replace(USER, row.documentId, { values: ICAL })
+    expect(r.error).toMatchObject({ status: 409, name: "review_pending" })
+  })
+
+  it("refuses a blocking test result and stores nothing new", async () => {
+    const { feeds, row, store, opts } = await connected()
+    // Only this call's test should be blocking: `connected()`'s own
+    // connect must succeed first, so the result is changed afterwards —
+    // `opts` is read live by the fake `testFeed` on every call.
+    opts.test = "auth_failed"
+    const subCountBefore = store[SUB]!.length
+    const r: any = await feeds.replace(USER, row.documentId, {
+      values: ICAL_NEW,
+    })
+    expect(r.error).toMatchObject({
+      status: 422,
+      name: "test_failed",
+      result: "auth_failed",
+    })
+    expect(row.pendingCredentialsEncrypted).toBeUndefined()
+    expect(row.pendingSubmissionDocumentId).toBeNull()
+    expect(store[SUB]!.length).toBe(subCountBefore)
+  })
+
+  it("returns 409 and creates no second Submission when a concurrent replace's Submission lands during the test", async () => {
+    let rowId = ""
+    const s = await connected({
+      onTest: () => {
+        if (!rowId) return
+        const row = s.store[CRED]!.find((r: any) => r.documentId === rowId)
+        if (row) row.pendingSubmissionDocumentId = "docintruder00000000001"
+      },
+    })
+    rowId = s.row.documentId
+    const subCountBefore = s.store[SUB]!.length
+    const r: any = await s.feeds.replace(USER, s.row.documentId, {
+      values: ICAL_NEW,
+    })
+    expect(r.error).toMatchObject({ status: 409, name: "replacement_pending" })
+    expect(s.store[SUB]!.length).toBe(subCountBefore)
+    // The intruding write is left exactly as it was: the aborted replace
+    // didn't overwrite it.
+    expect(s.row.pendingSubmissionDocumentId).toBe("docintruder00000000001")
+  })
+
+  it("returns 404 and creates no Submission when the feed is deleted during the test", async () => {
+    let rowId = ""
+    const s = await connected({
+      onTest: () => {
+        if (!rowId) return
+        const idx = s.store[CRED]!.findIndex((r: any) => r.documentId === rowId)
+        if (idx !== -1) s.store[CRED]!.splice(idx, 1)
+      },
+    })
+    rowId = s.row.documentId
+    const subCountBefore = s.store[SUB]!.length
+    const r: any = await s.feeds.replace(USER, s.row.documentId, {
+      values: ICAL_NEW,
+    })
+    expect(r.error).toMatchObject({ status: 404, message: "Feed not found." })
+    expect(s.store[SUB]!.length).toBe(subCountBefore)
+  })
+})
+
+describe("feeds.testValues", () => {
+  it("returns 404 for a library the user hasn't claimed, without calling testFeed", async () => {
+    const { feeds, testFeed } = setup()
+    const r: any = await feeds.testValues(USER, {
+      libraryDocumentId: L2,
+      provider: "ical",
+      values: ICAL,
+    })
+    expect(r.error).toMatchObject({
+      status: 404,
+      message: "Library not found.",
+    })
+    expect(testFeed).not.toHaveBeenCalled()
+  })
+
+  it("returns 400 on invalid values, without calling testFeed", async () => {
+    const { feeds, testFeed } = setup()
+    const r: any = await feeds.testValues(USER, {
+      libraryDocumentId: L1,
+      provider: "ical",
+      values: { feedUrl: "nope" },
+    })
+    expect(r.error).toMatchObject({ status: 400, field: "feedUrl" })
+    expect(testFeed).not.toHaveBeenCalled()
+  })
+
+  it("returns the result without storing anything", async () => {
+    const { feeds, store } = setup({ test: "unreachable" })
+    const r: any = await feeds.testValues(USER, {
+      libraryDocumentId: L1,
+      provider: "ical",
+      values: ICAL,
+    })
+    expect(r).toEqual({ result: "unreachable" })
+    expect(store[CRED]).toHaveLength(0)
+    expect(store[SUB]).toHaveLength(0)
+  })
 })
 
 describe("feeds.list", () => {
@@ -283,5 +435,31 @@ describe("feeds.list", () => {
     expect(feed.status).toBe("pending")
     expect(feed.review).toMatchObject({ kind: "connect", status: "pending" })
     expect(JSON.stringify(r)).not.toMatch(/credentialsEncrypted|connectedBy/)
+  })
+
+  it("excludes feeds on libraries the user hasn't claimed", async () => {
+    const s = setup({ claims: [L1] })
+    await s.feeds.connect(USER, {
+      libraryDocumentId: L1,
+      provider: "ical",
+      values: ICAL,
+    })
+    // A feed on a library the user has no claim on (seeded directly, as an
+    // admin-managed or another librarian's feed would be).
+    s.store[CRED]!.push({
+      documentId: "credL2feed0000000000001",
+      provider: "ical",
+      status: "active",
+      scope: "library",
+      source: "admin",
+      connectedBy: "ba:someone-else",
+      credentialsEncrypted: "{}",
+      hints: {},
+      libraries: [{ documentId: L2 }],
+    } as any)
+    const r = await s.feeds.list(USER)
+    expect(r.libraries).toHaveLength(1)
+    expect(r.libraries[0]!.library.documentId).toBe(L1)
+    expect(JSON.stringify(r)).not.toContain(L2)
   })
 })
