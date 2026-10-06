@@ -25,6 +25,7 @@ import {
   TYPE_LABELS,
 } from "./submissionMeta"
 import {
+  EventFeedPanel,
   FieldsPanel,
   KeyValueGrid,
   LibraryClaimPanel,
@@ -78,6 +79,7 @@ const NOTE_COPY: Record<
 function Panel({ sub }: { sub: Submission }) {
   if (sub.submissionType === "library_claim")
     return <LibraryClaimPanel sub={sub} />
+  if (sub.submissionType === "event_feed") return <EventFeedPanel sub={sub} />
   if (
     sub.submissionType === "wiki_edit" ||
     sub.submissionType === "blog_submission"
@@ -263,7 +265,9 @@ export function ReviewModal({
                   >
                     {sub.submissionType === "library_claim"
                       ? "Approve & verify"
-                      : "Approve"}
+                      : sub.submissionType === "event_feed"
+                        ? "Approve and activate"
+                        : "Approve"}
                   </Button>
                 </Flex>
               </>

@@ -1,3 +1,5 @@
+import { EVENT_PROVIDERS } from "@repo/shared-data"
+
 /** Shared shapes and labels for the moderation queue. */
 
 export interface UploadedImage {
@@ -74,6 +76,7 @@ export const TYPE_LABELS: Record<string, string> = {
   blog_submission: "Journal",
   topic_suggestion: "Topic",
   role_application: "Role application",
+  event_feed: "Event feed",
 }
 
 /** Design System colour tokens per type: badge background and text. */
@@ -86,6 +89,7 @@ export const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   blog_submission: { bg: "alternative100", text: "alternative600" },
   topic_suggestion: { bg: "neutral150", text: "neutral600" },
   role_application: { bg: "danger100", text: "danger600" },
+  event_feed: { bg: "warning100", text: "warning600" },
 }
 
 export const EVIDENCE_TYPE_LABELS: Record<string, string> = {
@@ -273,6 +277,8 @@ export function summaryOf(sub: Submission): string {
       )
     case "topic_suggestion":
       return str(f.name) ?? "Topic"
+    case "event_feed":
+      return `${EVENT_PROVIDERS[f.provider as keyof typeof EVENT_PROVIDERS]?.label ?? "Event"} feed${f.kind === "replace" ? " (new details)" : ""}`
     case "role_application": {
       const role =
         f.role === "journal_editor"
@@ -359,6 +365,12 @@ export function detailOf(sub: Submission): string | null {
     )
   if (sub.submissionType === "library_claim")
     return typeof f.role === "string" ? f.role.replaceAll("_", " ") : null
+  if (sub.submissionType === "event_feed") {
+    const kind = f.kind === "replace" ? "replace" : "connect"
+    const library = sub.targetSlug ?? "Library"
+
+    return `${library} · ${kind === "replace" ? "new details" : "new connection"}`
+  }
 
   return null
 }

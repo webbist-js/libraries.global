@@ -1,4 +1,9 @@
 import {
+  EVENT_PROVIDERS,
+  FEED_TEST_COPY,
+  FEED_TEST_LABEL,
+} from "@repo/shared-data"
+import {
   Alert,
   Badge,
   Box,
@@ -23,6 +28,7 @@ import {
   type Submission,
   type UploadedImage,
 } from "./submissionMeta"
+import { RevealCredentialButton } from "../../../../events/admin/src/components/RevealCredentialButton"
 
 // ── Building blocks ────────────────────────────────────────────────────────
 
@@ -427,5 +433,72 @@ export function FieldsPanel({ sub }: { sub: Submission }) {
       <SocialLinksPanel links={socialLinks} />
       <OpeningTimesPanel data={fields.openingTimes} />
     </>
+  )
+}
+
+// ── Event feed ─────────────────────────────────────────────────────────────
+
+export function EventFeedPanel({ sub }: { sub: Submission }) {
+  const f = (sub.fields ?? {}) as Record<string, any>
+  const replace = f.kind === "replace"
+  const test = f.test?.result as keyof typeof FEED_TEST_LABEL | undefined
+  const hints = (f.hints ?? {}) as Record<string, string>
+  const previous = (f.previousHints ?? {}) as Record<string, string>
+
+  return (
+    <Flex direction="column" alignItems="stretch" gap={4}>
+      <Alert
+        variant={test === "ok" ? "success" : "warning"}
+        title={`Connection test: ${test ? FEED_TEST_LABEL[test] : "not run"}`}
+        closeLabel="Dismiss"
+        onClose={() => {}}
+      >
+        {test && test !== "ok"
+          ? FEED_TEST_COPY[test]
+          : "The test read events with these details when they were sent."}
+      </Alert>
+      <KeyValueGrid
+        rows={[
+          {
+            label: "Platform",
+            value:
+              EVENT_PROVIDERS[f.provider as keyof typeof EVENT_PROVIDERS]
+                ?.label ?? f.provider,
+          },
+          {
+            label: "Kind",
+            value: replace
+              ? "New details for an active feed"
+              : "New connection",
+          },
+          ...Object.entries(hints).map(([k, v]) => ({
+            label: replace ? `${k} (new)` : k,
+            value: v,
+          })),
+          ...(replace
+            ? Object.entries(previous).map(([k, v]) => ({
+                label: `${k} (current)`,
+                value: v,
+              }))
+            : []),
+        ]}
+      />
+      <Flex gap={2}>
+        <RevealCredentialButton
+          documentId={f.credentialDocumentId}
+          slot={replace ? "pending" : "current"}
+        />
+      </Flex>
+      <Alert
+        variant="default"
+        title="On approval"
+        closeLabel="Dismiss"
+        onClose={() => {}}
+      >
+        {replace
+          ? "The new details replace the current ones and the feed syncs again."
+          : "The feed becomes active and the worker syncs it within a few minutes."}
+      </Alert>
+    </Flex>
   )
 }
