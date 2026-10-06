@@ -148,7 +148,7 @@ The opening-times model can't tell "closed on Sunday" from "Sunday not recorded"
 
 ### 5.1 Content type `api::drive.drive`
 
-Draft & Publish on (house rule): the published version is what the site reads. The lifecycle below is a separate `status`.
+Draft & Publish off, an exception to the house rule: Strapi reserves a `status` attribute under Draft & Publish, and the lifecycle below is the drive's `status`. A lifecycle `draft` is never served publicly.
 
 | Attribute                      | Type                                     | Notes                                                                                                                   |
 | ------------------------------ | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
