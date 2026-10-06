@@ -184,6 +184,42 @@ _Avoid_: region type, area type (those are the per-place `typeLabel`)
 One entry per country in the world place import's profile file: its Place Labels, which source level is its Region and which its Area, whether it opts in to filling gaps, and an optional curated source.
 _Avoid_: country config, country settings
 
+**Noticeboard**:
+The `/community` page: board-run Drives alongside the leaderboard and option-suggestion voting. Shows the Drive Focus filter, the Featured or Pinned Drive as the big card, every other open Drive, and recently finished ones.
+_Avoid_: dashboard, community page (alone — Noticeboard is the proper name)
+
+**Drive**:
+A board-run, time-boxed call to fill a Gap across a scoped set of Libraries — a Noticeboard campaign with a start and end date, a goal percentage, and one to five steps contributors follow. Created and run only by the `editorial_board` (`drives.manage`); contributed work arrives as ordinary Submissions tagged with the Drive's `driveDocumentId` and is credited on approval. `draftAndPublish` is off: its own `status` (draft → scheduled → open → closed/cancelled) is the only lifecycle, advanced hourly by the `driveLifecycle` cron.
+_Avoid_: campaign, challenge, event (Event is a different content type)
+
+**Drive Scope**:
+Which Libraries a Drive can touch: an explicit list, or by place (continent/country/region/area), Library type, Dataset source or a completeness ceiling — always excluding permanently closed Libraries. One definition (`packages/shared-data/drives.ts`) renders it as a Meilisearch filter and as a predicate over a single Library, so Strapi and the UI never disagree on who's in scope.
+_Avoid_: filter (alone — too generic), criteria
+
+**Focus**:
+What a Drive asks contributors to fill within its Drive Scope: specific Gaps (`gaps`), re-confirming sections before a cutoff date (`verify`), or raising every in-scope Library's completeness to a target (`record`). Decides both the Meilisearch "to do" filter and whether a given Submission's fields count as progress against the Drive.
+_Avoid_: goal (that's the Drive's `goalPercent`), topic
+
+**Drive Task**:
+One Library in a Drive's open task list — a page of the Meilisearch `library` index, narrowed by the Drive's Scope and Focus, that the task panel hands a contributor to work on next.
+_Avoid_: item, job
+
+**Pinned Drive**:
+A Drive the board has pinned to the Noticeboard's prominent rail, independent of Featured. At most six open or scheduled Drives may be pinned at once; pin order breaks ties for which shows first.
+_Avoid_: sticky, highlighted
+
+**Featured Drive**:
+The one Drive the board has marked to fill the Noticeboard's big card outright. At most one Drive is Featured at a time; Featured beats a Pinned Drive, which beats the first open Drive, as the Noticeboard's big-card choice.
+_Avoid_: pinned (Pinned is a separate flag; Featured always wins the big card)
+
+**Drive Credit**:
+A hidden ledger row (the `drive-credit` content type, no REST routes) linking one approved Submission to one Drive — explicitly tagged by the contributor, or inferred from the Drive's Scope and Focus matching the Submission's fields. Feeds a Drive's stats and leaderboard; never shown directly.
+_Avoid_: credit (alone — clashes with Points), ledger entry
+
+**Drive Proposal** (D2):
+Planned, not yet built: a way for a non-board contributor to propose a Drive as a Submission, reviewed like any other Submission; approval would create the Drive and record which Submission proposed it. D1 reserves the field (`proposalSubmissionDocumentId`) but only the editorial board creates Drives today.
+_Avoid_: suggestion (that's an Option Suggestion, a different mechanism), drive request
+
 ## Relationships
 
 - Every **Event** belongs to exactly one **Library** — even a multi-venue happening is N Events, one per Library

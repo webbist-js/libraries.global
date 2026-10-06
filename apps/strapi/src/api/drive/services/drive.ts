@@ -116,14 +116,24 @@ function slugify(title: string): string {
   return s || "drive"
 }
 
-/** A slug none of today's drives already hold, across every locale. */
+/** Slugs the board builder and the preview route already own. */
+const RESERVED_SLUGS = new Set(["new", "edit", "preview"])
+
+/**
+ * A slug none of today's drives already hold, across every locale. Never
+ * returns a reserved slug (`new`, `edit`, `preview`): they collide with
+ * `/community/drives/new` and `/api/drives/preview`, so a reserved base is
+ * rewritten to `<base>-drive` before the usual uniqueness check.
+ */
 async function uniqueSlug(
   strapi: any,
   base: string,
   excludeDocumentId?: string
 ): Promise<string> {
+  const base_ = RESERVED_SLUGS.has(base) ? `${base}-drive` : base
+
   const rows = (await strapi.documents(UID).findMany({
-    filters: { slug: { $startsWith: base } },
+    filters: { slug: { $startsWith: base_ } },
     locale: "*",
     fields: ["documentId", "slug"],
     limit: 200,
@@ -131,13 +141,13 @@ async function uniqueSlug(
   const taken = new Set(
     rows.filter((r) => r.documentId !== excludeDocumentId).map((r) => r.slug)
   )
-  if (!taken.has(base)) return base
+  if (!taken.has(base_)) return base_
   for (let n = 2; n < 1000; n++) {
-    const candidate = `${base}-${n}`
+    const candidate = `${base_}-${n}`
     if (!taken.has(candidate)) return candidate
   }
 
-  return `${base}-${Date.now()}`
+  return `${base_}-${Date.now()}`
 }
 
 async function countPinnedOpenOrScheduled(strapi: any): Promise<number> {
