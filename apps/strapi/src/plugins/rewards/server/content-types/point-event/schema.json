@@ -34,7 +34,10 @@
         "source_added",
         "daily_streak",
         "manual_award",
-        "manual_deduct"
+        "manual_deduct",
+        "drive_task_accepted",
+        "drive_finished",
+        "drive_proposal_accepted"
       ]
     },
     "points": { "type": "integer", "required": true },

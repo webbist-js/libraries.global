@@ -159,6 +159,8 @@ const HOT_PATH_INDEXES = [
       dedupe("drive_credits", ["submission_document_id", "drive_document_id"]),
     ],
   }),
+  // Recognition (spec §8): a helper's own badge and ribbon reads.
+  index("drive_credits", ["ba_user_id"]),
 ]
 
 /**

@@ -152,6 +152,50 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     check: (c) => (c.hours_verified ?? 0) + (c.status_verified ?? 0) >= 50,
   },
 
+  // ── Drives (spec §8; names are working names for the owner to confirm) ──
+  {
+    id: "book_drive",
+    name: "Book Drive",
+    description:
+      "Your first accepted task in a drive. Every shelf starts with one book.",
+    rarity: "COMMON",
+    icon: "BD",
+    check: (c) => (c.__drives_credited ?? 0) >= 1,
+  },
+  {
+    id: "regular_reader",
+    name: "Regular Reader",
+    description:
+      "Accepted work in five different drives. You keep coming back.",
+    rarity: "UNCOMMON",
+    icon: "RR",
+    check: (c) => (c.__drives_credited ?? 0) >= 5,
+  },
+  {
+    id: "returned_on_time",
+    name: "Returned on Time",
+    description: "Helped a drive that reached its goal.",
+    rarity: "UNCOMMON",
+    icon: "RT",
+    check: (c) => (c.__drives_finished ?? 0) >= 1,
+  },
+  {
+    id: "pinned_notice",
+    name: "Pinned Notice",
+    description: "A drive you proposed opened on the Noticeboard.",
+    rarity: "RARE",
+    icon: "PN",
+    check: (c) => (c.__drives_started ?? 0) >= 1,
+  },
+  {
+    id: "opening_hours",
+    name: "Opening Hours",
+    description: "Added opening hours to 25 libraries in drives.",
+    rarity: "RARE",
+    icon: "OH",
+    check: (c) => (c.__drive_hours_tasks ?? 0) >= 25,
+  },
+
   // ── Photography ──────────────────────────────────────────────────────────
   {
     id: "first_exposure",
@@ -388,6 +432,50 @@ export default ({ strapi }: { strapi: any }) => ({
         .query("api::user-profile.user-profile")
         .findOne({ where: { baUserId }, select: ["streak"] })
       counts.__streak = Number(profile?.streak ?? 0)
+    }
+
+    // Drive counts (spec §8), zeroed on failure — e.g. a test app without
+    // the drives tables. Read from `drive_credits`/`drives` directly, not
+    // `rw_point_events`: not every credited task or started drive earns a
+    // tracked point action on its own.
+    try {
+      const knex = strapi.db.connection
+      const [driveRow] = (await knex
+        .countDistinct({ credited: "dc.drive_document_id" })
+        .select(
+          knex.raw(
+            "count(distinct case when d.status = 'closed' and d.closed_reason = 'goal' then dc.drive_document_id end) as finished"
+          ),
+          knex.raw(
+            "count(distinct case when dc.filled_gaps like '%,hours,%' then dc.submission_document_id end) as hours"
+          )
+        )
+        .from("drive_credits as dc")
+        .leftJoin("drives as d", "d.document_id", "dc.drive_document_id")
+        .where("dc.ba_user_id", baUserId)) as {
+        credited: string | number
+        finished: string | number
+        hours: string | number
+      }[]
+      counts.__drives_credited = Number(driveRow?.credited ?? 0)
+      counts.__drives_finished = Number(driveRow?.finished ?? 0)
+      counts.__drive_hours_tasks = Number(driveRow?.hours ?? 0)
+
+      const [startedRow] = (await knex
+        .countDistinct({ started: "document_id" })
+        .from("drives")
+        .where("created_by_user_id", `ba:${baUserId}`)
+        .whereNotNull("proposal_submission_document_id")
+        .whereIn("status", ["open", "closed"])) as {
+        started: string | number
+      }[]
+      counts.__drives_started = Number(startedRow?.started ?? 0)
+    } catch (err) {
+      strapi.log.warn(`[rewards] drive counts failed for ${baUserId}:`, err)
+      counts.__drives_credited = 0
+      counts.__drives_finished = 0
+      counts.__drive_hours_tasks = 0
+      counts.__drives_started = 0
     }
 
     // Fetch already-awarded badge IDs to avoid duplicates

@@ -18,6 +18,7 @@ import {
   driveFilters,
   driveProgress,
   focusMatches,
+  gapsFilled,
   libraryInScope,
   validateDrive,
   type DriveFocus,
@@ -221,7 +222,9 @@ async function openDrivesCached(strapiInstance: any): Promise<OpenDriveRow[]> {
  * Creates one Drive Credit, swallowing a duplicate `(submissionDocumentId,
  * driveDocumentId)` — a retried approval, or the same untagged match found
  * twice — the same way the rewards plugin catches a duplicate point event
- * or badge award (`code === "23505"`).
+ * or badge award (`code === "23505"`). Returns whether it created the row
+ * (false on the swallowed duplicate), so the caller knows whether a fresh
+ * credit happened at all.
  */
 async function creditOne(
   strapiInstance: any,
@@ -231,16 +234,25 @@ async function creditOne(
     submissionDocumentId: string
     libraryDocumentId: string
     tagged: boolean
+    filledGaps: string
   }
-): Promise<void> {
+): Promise<boolean> {
   try {
     await strapiInstance.documents(DRIVE_CREDIT).create({
       data: { ...data, acceptedAt: new Date().toISOString() } as never,
     })
+
+    return true
   } catch (err: any) {
-    if (err?.code === "23505" || err?.nativeError?.code === "23505") return
+    if (err?.code === "23505" || err?.nativeError?.code === "23505")
+      return false
     throw err
   }
+}
+
+/** Wraps filled gaps for the `LIKE '%,<gap>,%'` match: `",hours,contact,"`, or `""`. */
+function wrapGaps(gaps: readonly string[]): string {
+  return gaps.length > 0 ? `,${gaps.join(",")},` : ""
 }
 
 // ── Lifecycle ───────────────────────────────────────────────────────────────
@@ -367,6 +379,28 @@ async function openOneDrive(
       progressLog: [],
     } as never,
   })
+
+  // A proposed drive opening is the proposer's moment for Pinned Notice —
+  // check it here rather than waiting for their next point award.
+  const createdBy = drive.createdByUserId
+  if (
+    typeof drive.proposalSubmissionDocumentId === "string" &&
+    drive.proposalSubmissionDocumentId &&
+    typeof createdBy === "string" &&
+    createdBy.startsWith("ba:")
+  ) {
+    try {
+      await strapiInstance
+        .plugin("rewards")
+        .service("badges")
+        .checkAndAward(createdBy.slice(3))
+    } catch (err) {
+      strapiInstance.log.warn(
+        `[drives] badge check failed for proposer of ${drive.documentId}:`,
+        err
+      )
+    }
+  }
 
   return "opened"
 }
@@ -505,11 +539,14 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
   /**
    * Creates a drive in `status: "scheduled"`, slugged from its title.
    * Refused with `validateDrive`'s errors, or with a 409 when `pinned` is
-   * requested and six open/scheduled drives are already pinned.
+   * requested and six open/scheduled drives are already pinned. With
+   * `proposalSubmissionDocumentId`, the drive comes from an approved Drive
+   * Proposal and the row records which one.
    */
   async createDrive(
     input: Partial<DriveInput> & { pinned?: boolean },
-    baUserId: string
+    baUserId: string,
+    opts: { proposalSubmissionDocumentId?: string } = {}
   ): Promise<ServiceResult<Record<string, unknown>>> {
     const errors = validateDrive(input as DriveInput, new Date())
     if (errors.length > 0) return { errors }
@@ -540,6 +577,9 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
         status: "scheduled",
         pinned,
         createdByUserId: `ba:${baUserId}`,
+        ...(opts.proposalSubmissionDocumentId
+          ? { proposalSubmissionDocumentId: opts.proposalSubmissionDocumentId }
+          : {}),
       } as never,
     })) as DriveRow
 
@@ -880,6 +920,9 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
       ;(outcome === "opened" ? opened : held).push(drive.documentId)
     }
 
+    const recognised = await (this as any).recogniseClosedDrives(now)
+    strapi.log.info(`[drives] recognised ${recognised.length}`)
+
     return { opened, closed, held }
   },
 
@@ -889,12 +932,18 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
    * Credits an approved `correction` or `library_edit` on a library target.
    * Tagged (the submission named a Drive at submit time, already checked
    * in scope and on-focus by the submission policy) credits that one
-   * Drive. Untagged, every open Drive whose scope and focus the change
-   * matches is credited — the library is loaded once either way, as the
-   * policy does. Not a library target (no library found): credits nothing.
-   * A second approval of the same submission (a retried transition)
-   * credits nothing twice: `creditOne` swallows the duplicate-key error the
-   * unique `(submissionDocumentId, driveDocumentId)` index throws.
+   * Drive — its Focus is loaded fresh here (not from the open-drives cache,
+   * which only holds today's open Drives) so a tag against a Drive that's
+   * no longer open still records which gaps it filled; no such Drive means
+   * nothing is credited. Untagged, every open Drive whose scope and focus
+   * the change matches is credited — the library is loaded once either
+   * way, as the policy does. Not a library target (no library found):
+   * credits nothing. A second approval of the same submission (a retried
+   * transition) credits nothing twice: `creditOne` swallows the
+   * duplicate-key error the unique `(submissionDocumentId,
+   * driveDocumentId)` index throws. Whenever at least one credit is
+   * freshly created, the contributor earns `drive_task_accepted` once for
+   * this submission, however many Drives it credited.
    */
   async creditApproval(submission: {
     documentId: string
@@ -913,38 +962,66 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
     })
     if (!library) return
 
+    const work = {
+      submissionType: submission.submissionType,
+      fields: submission.fields,
+    }
+    const creditedDriveIds: string[] = []
+
     if (
       typeof submission.driveDocumentId === "string" &&
       submission.driveDocumentId
     ) {
-      await creditOne(strapi, {
+      const drive = (await strapi.documents(UID).findOne({
+        documentId: submission.driveDocumentId,
+        fields: ["documentId", "focus"],
+      })) as { documentId: string; focus?: DriveFocus } | null
+      if (!drive) return
+
+      const created = await creditOne(strapi, {
         driveDocumentId: submission.driveDocumentId,
         baUserId: submission.submittedByUserId,
         submissionDocumentId: submission.documentId,
         libraryDocumentId: library.documentId,
         tagged: true,
+        filledGaps: wrapGaps(gapsFilled(drive.focus as DriveFocus, work)),
       })
-
-      return
+      if (created) creditedDriveIds.push(submission.driveDocumentId)
+    } else {
+      const drives = await openDrivesCached(strapi)
+      for (const drive of drives) {
+        if (!libraryInScope(library, drive.scope, drive.openedAt)) continue
+        if (!focusMatches(drive.focus, work)) continue
+        const created = await creditOne(strapi, {
+          driveDocumentId: drive.documentId,
+          baUserId: submission.submittedByUserId,
+          submissionDocumentId: submission.documentId,
+          libraryDocumentId: library.documentId,
+          tagged: false,
+          filledGaps: wrapGaps(gapsFilled(drive.focus, work)),
+        })
+        if (created) creditedDriveIds.push(drive.documentId)
+      }
     }
 
-    const drives = await openDrivesCached(strapi)
-    for (const drive of drives) {
-      if (!libraryInScope(library, drive.scope, drive.openedAt)) continue
-      if (
-        !focusMatches(drive.focus, {
-          submissionType: submission.submissionType,
-          fields: submission.fields,
-        })
+    if (creditedDriveIds.length === 0) return
+
+    try {
+      await strapi.plugin("rewards").service("points").award(
+        submission.submittedByUserId,
+        "drive_task_accepted",
+        2,
+        {
+          submissionId: submission.documentId,
+          driveDocumentIds: creditedDriveIds,
+        },
+        `${submission.documentId}:drive_task`
       )
-        continue
-      await creditOne(strapi, {
-        driveDocumentId: drive.documentId,
-        baUserId: submission.submittedByUserId,
-        submissionDocumentId: submission.documentId,
-        libraryDocumentId: library.documentId,
-        tagged: false,
-      })
+    } catch (err) {
+      strapi.log.warn(
+        `[drives] drive_task_accepted award failed for ${submission.documentId}:`,
+        err
+      )
     }
   },
 
@@ -1186,5 +1263,202 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
         avatarUrl: profile?.avatar?.url ?? null,
       }
     })
+  },
+
+  // ── Recognition (spec §8) ────────────────────────────────────────────────
+
+  /**
+   * Finisher bonuses, badge checks and thank-you emails for every drive
+   * that closed in the last 14 days and hasn't been recognised yet
+   * (`final.recognisedAt` unset). Returns the documentIds it recognised.
+   * Runs last in `runLifecycle`, inside the same leader lock, so two
+   * Strapi instances never double-recognise a drive. A cancelled drive is
+   * never `closed`, so it never reaches here; a board "close now" is
+   * recognised on the next hourly run.
+   */
+  async recogniseClosedDrives(now: Date): Promise<string[]> {
+    const since = new Date(
+      now.getTime() - 14 * 24 * 60 * 60 * 1000
+    ).toISOString()
+    const rows = (await strapi.documents(UID).findMany({
+      filters: { status: { $eq: "closed" }, closedAt: { $gte: since } },
+      fields: ["documentId", "title", "slug", "unit", "closedReason", "final"],
+      sort: ["closedAt:desc"],
+      limit: 20,
+    })) as DriveRow[]
+
+    const pending = rows.filter((row) => {
+      const final = (row.final ?? {}) as { recognisedAt?: string }
+
+      return !final.recognisedAt
+    })
+
+    const recognised: string[] = []
+
+    for (const drive of pending) {
+      const goalMet = drive.closedReason === "goal"
+      const final = (drive.final ?? {}) as {
+        total?: number
+        done?: number
+        closedGaps?: number
+        helpers?: number
+      }
+
+      const helperRows = (await strapi.db.connection
+        .select("ba_user_id")
+        .countDistinct({ tasks: "submission_document_id" })
+        .from(CREDIT)
+        .where("drive_document_id", drive.documentId)
+        .groupBy("ba_user_id")
+        .limit(HELPER_ID_CAP)) as {
+        ba_user_id: string
+        tasks: string | number
+      }[]
+
+      const helpers: { baUserId: string; tasks: number; bonus: boolean }[] = []
+      for (const row of helperRows) {
+        const baUserId = row.ba_user_id
+        const tasks = Number(row.tasks ?? 0)
+        const bonus = goalMet && tasks >= 5
+        helpers.push({ baUserId, tasks, bonus })
+
+        try {
+          await (bonus
+            ? strapi
+                .plugin("rewards")
+                .service("points")
+                .award(
+                  baUserId,
+                  "drive_finished",
+                  25,
+                  { driveDocumentId: drive.documentId, tasks },
+                  `${drive.documentId}:${baUserId}:drive_finished`
+                )
+            : strapi
+                .plugin("rewards")
+                .service("badges")
+                .checkAndAward(baUserId))
+        } catch (err) {
+          strapi.log.warn(
+            `[drives] recognition award failed for ${drive.documentId}/${baUserId}:`,
+            err
+          )
+        }
+      }
+
+      if (helpers.length > 0) {
+        try {
+          await strapi
+            .plugin("content-moderation")
+            .service("notifications")
+            .driveThanks({
+              drive: {
+                documentId: drive.documentId,
+                title: (drive.title as string) ?? "",
+                slug: (drive.slug as string) ?? "",
+                unit: (drive.unit as string) ?? "library",
+                goalMet,
+                final: {
+                  total: Number(final.total ?? 0),
+                  done: Number(final.done ?? 0),
+                  closedGaps: Number(final.closedGaps ?? 0),
+                  helpers: Number(final.helpers ?? 0),
+                },
+              },
+              helpers: helpers.map(({ baUserId, tasks, bonus }) => ({
+                baUserId,
+                tasks,
+                bonus,
+              })),
+            })
+        } catch (err) {
+          strapi.log.warn(
+            `[drives] thank-you email failed for ${drive.documentId}:`,
+            err
+          )
+        }
+      }
+
+      await strapi.documents(UID).update({
+        documentId: drive.documentId,
+        data: {
+          final: { ...final, recognisedAt: now.toISOString() },
+        } as never,
+      })
+      recognised.push(drive.documentId)
+    }
+
+    return recognised
+  },
+
+  /**
+   * The drives this helper has Drive Credits in, most recently credited
+   * first, with their task count and whether that drive met its goal.
+   * Capped at 50: one grouped `drive_credits` query (indexed on
+   * `ba_user_id`), then one `documents().findMany` for the drives
+   * themselves — a drive that's since been removed (never happens, but
+   * never a `draft`) is dropped rather than shown with blanks.
+   */
+  async helpedBy(baUserId: string): Promise<
+    {
+      documentId: string
+      slug: string
+      title: string
+      status: string
+      goalMet: boolean
+      tasks: number
+    }[]
+  > {
+    const rows = (await strapi.db.connection
+      .select("drive_document_id")
+      .countDistinct({ tasks: "submission_document_id" })
+      .max({ last: "accepted_at" })
+      .from(CREDIT)
+      .where("ba_user_id", baUserId)
+      .groupBy("drive_document_id")
+      .orderBy("last", "desc")
+      .limit(50)) as {
+      drive_document_id: string
+      tasks: string | number
+      last: string
+    }[]
+    if (rows.length === 0) return []
+
+    const documentIds = rows.map((r) => r.drive_document_id)
+    const drives = (await strapi.documents(UID).findMany({
+      filters: { documentId: { $in: documentIds }, status: { $ne: "draft" } },
+      fields: ["documentId", "slug", "title", "status", "closedReason"],
+      limit: 50,
+    })) as {
+      documentId: string
+      slug?: string
+      title?: string
+      status?: string
+      closedReason?: string
+    }[]
+    const driveMap = new Map(drives.map((d) => [d.documentId, d]))
+
+    const out: {
+      documentId: string
+      slug: string
+      title: string
+      status: string
+      goalMet: boolean
+      tasks: number
+    }[] = []
+    for (const row of rows) {
+      const drive = driveMap.get(row.drive_document_id)
+      if (!drive) continue
+      out.push({
+        documentId: drive.documentId,
+        slug: drive.slug ?? "",
+        title: drive.title ?? "",
+        status: drive.status ?? "",
+        goalMet: drive.status === "closed" && drive.closedReason === "goal",
+        tasks: Number(row.tasks ?? 0),
+      })
+    }
+
+    return out
   },
 }))

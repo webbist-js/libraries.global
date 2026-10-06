@@ -18,6 +18,7 @@
     "submissionDocumentId": { "type": "string", "required": true },
     "libraryDocumentId": { "type": "string" },
     "tagged": { "type": "boolean", "default": false },
-    "acceptedAt": { "type": "datetime" }
+    "acceptedAt": { "type": "datetime" },
+    "filledGaps": { "type": "string" }
   }
 }

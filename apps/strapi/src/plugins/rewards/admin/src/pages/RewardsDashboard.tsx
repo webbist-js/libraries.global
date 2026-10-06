@@ -73,6 +73,9 @@ const ACTION_META: Record<string, { label: string; color: string }> = {
   daily_streak: { label: "Streak", color: "#d97706" },
   manual_award: { label: "Manual award", color: "#e8c98a" },
   manual_deduct: { label: "Manual deduct", color: "#d02b20" },
+  drive_task_accepted: { label: "Drive task", color: "#8e8ea9" },
+  drive_finished: { label: "Drive finished", color: "#32324d" },
+  drive_proposal_accepted: { label: "Drive proposal", color: "#4945ff" },
 }
 
 function actionLabel(action: string) {

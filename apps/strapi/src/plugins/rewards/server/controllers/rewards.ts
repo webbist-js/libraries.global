@@ -194,6 +194,21 @@ export default ({ strapi }: { strapi: any }) => ({
             label: "Daily contribution streak",
             points: 1,
           },
+          {
+            action: "drive_task_accepted",
+            label: "Drive task accepted",
+            points: 2,
+          },
+          {
+            action: "drive_finished",
+            label: "Helped finish a drive (5+ accepted tasks)",
+            points: 25,
+          },
+          {
+            action: "drive_proposal_accepted",
+            label: "Drive proposal accepted",
+            points: 10,
+          },
         ],
       },
     })

@@ -21,6 +21,9 @@ export type PointAction =
   | "daily_streak"
   | "manual_award"
   | "manual_deduct"
+  | "drive_task_accepted"
+  | "drive_finished"
+  | "drive_proposal_accepted"
 
 export type TierInfo = {
   level: number

@@ -24,5 +24,11 @@ export default {
       handler: "user-profile.findBadgesByUsername",
       config: { auth: false, policies: [], middlewares: [] },
     },
+    {
+      method: "GET",
+      path: "/user-profiles/by-username/:username/drives",
+      handler: "user-profile.findDrivesByUsername",
+      config: { auth: false, policies: [], middlewares: [] },
+    },
   ],
 }

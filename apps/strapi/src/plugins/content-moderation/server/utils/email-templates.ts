@@ -161,6 +161,42 @@ export function moderatorAlertEmail(i: {
   })
 }
 
+/** Thanks a helper (or several) after a Drive closes, with their own part. */
+export function driveThanksEmail(i: {
+  name: string | null
+  title: string
+  url: string
+  goalMet: boolean
+  done: number
+  total: number
+  unitPlural: string
+  closedGaps: number
+  helpers: number
+  yours: number
+  bonus: boolean
+}): Email {
+  const done = i.done.toLocaleString("en-GB")
+  const total = i.total.toLocaleString("en-GB")
+  const closedGaps = i.closedGaps.toLocaleString("en-GB")
+
+  const lines = [
+    i.goalMet
+      ? `“${i.title}” reached its goal: ${done} of ${total} ${i.unitPlural} are done.`
+      : `“${i.title}” has closed with ${done} of ${total} ${i.unitPlural} done.`,
+    `${closedGaps} gaps were filled by ${i.helpers} ${i.helpers === 1 ? "person" : "people"} while it ran.`,
+    `Your part: ${i.yours} accepted ${i.yours === 1 ? "task" : "tasks"}.`,
+    ...(i.bonus ? ["You earned 25 bonus points for helping it finish."] : []),
+  ]
+
+  return compose(`Thank you for helping with ${i.title}`, {
+    greeting: greeting(i.name),
+    lines,
+    link: { label: "See the drive", url: i.url },
+    footer:
+      "You’re getting this because you helped with this drive. You can turn these emails off in Settings, under Notifications.",
+  })
+}
+
 /** An applicant's Role Application was decided. */
 export function applicationDecidedEmail(i: {
   name: string | null

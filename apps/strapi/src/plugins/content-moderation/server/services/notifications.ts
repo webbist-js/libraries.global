@@ -9,6 +9,7 @@ import { emailConfigured } from "../utils/email-config"
 import {
   applicationDecidedEmail,
   decidedEmail,
+  driveThanksEmail,
   languagesLabel,
   moderatorAlertEmail,
   roleLabel,
@@ -43,6 +44,14 @@ const ALERT_TYPES = new Set([
 /** Matches `people.ts`'s own lookup: no user-profile carries an email, so
  * the one each person's submissions were filed with is the best we know. */
 const EMAIL_ROWS_MAX = 500
+/** Chunk size for an `$in` lookup over an arbitrary number of baUserIds. */
+const ID_CHUNK = 200
+/** `drive.unit` (spec's Drive Scope/Unit) → the plural a thank-you email reads naturally with. */
+const DRIVE_UNIT_PLURAL: Record<string, string> = {
+  library: "libraries",
+  branch: "branches",
+  record: "records",
+}
 
 export type NotificationTask = () => Promise<void>
 type Scheduler = (task: NotificationTask) => void
@@ -268,6 +277,119 @@ export default ({ strapi }: { strapi: any }) => {
       }
 
       return [...out.values()]
+    },
+
+    /**
+     * The latest email each Better Auth user's submissions were filed with,
+     * keyed by baUserId — `emailsOf`'s own query, chunked for an arbitrary
+     * number of ids (`driveThanks` can ask for far more than
+     * `EMAIL_ROWS_MAX` helpers at once).
+     */
+    async emailMapOf(baUserIds: string[]): Promise<Map<string, string>> {
+      const out = new Map<string, string>()
+      for (let i = 0; i < baUserIds.length; i += ID_CHUNK) {
+        const chunk = baUserIds.slice(i, i + ID_CHUNK)
+        if (chunk.length === 0) continue
+        const rows = (await strapi.documents(SUBMISSION_UID).findMany({
+          filters: { submittedByUserId: { $in: chunk } },
+          fields: ["submittedByUserId", "submittedByEmail"],
+          sort: [{ createdAt: "desc" }, { id: "desc" }],
+          limit: 2000,
+        })) as { submittedByUserId?: string; submittedByEmail?: string }[]
+        for (const r of rows) {
+          const email = text(r.submittedByEmail, 320)
+          if (r.submittedByUserId && email && !out.has(r.submittedByUserId))
+            out.set(r.submittedByUserId, email)
+        }
+      }
+
+      return out
+    },
+
+    /**
+     * Thanks every helper of a drive that just closed, with their own part
+     * (spec §8): one task is scheduled for the whole drive, which loads
+     * notification prefs, skips anyone who turned `drives` off, looks up
+     * emails and sends sequentially — one failed send never stops the
+     * rest.
+     */
+    driveThanks(input: {
+      drive: {
+        documentId: string
+        title: string
+        slug: string
+        unit: string
+        goalMet: boolean
+        final: {
+          total: number
+          done: number
+          closedGaps: number
+          helpers: number
+        }
+      }
+      helpers: { baUserId: string; tasks: number; bonus: boolean }[]
+    }): void {
+      const { drive, helpers } = input
+      if (helpers.length === 0) return
+
+      scheduleNotification(
+        strapi,
+        `drive thanks for ${drive.documentId}`,
+        async () => {
+          const byId = new Map(helpers.map((h) => [h.baUserId, h]))
+          const ids = [...byId.keys()]
+
+          const eligible = new Set<string>()
+          const names = new Map<string, string | null>()
+          for (let i = 0; i < ids.length; i += ID_CHUNK) {
+            const chunk = ids.slice(i, i + ID_CHUNK)
+            const profiles = (await strapi.documents(PROFILE).findMany({
+              filters: { baUserId: { $in: chunk } },
+              fields: ["baUserId", "notifPrefs", "firstName", "username"],
+              limit: chunk.length,
+            })) as {
+              baUserId: string
+              notifPrefs?: Record<string, unknown> | null
+              firstName?: string | null
+              username?: string | null
+            }[]
+            for (const p of profiles) {
+              names.set(p.baUserId, text(p.firstName) ?? p.username ?? null)
+              if (p.notifPrefs?.drives === false) continue
+              eligible.add(p.baUserId)
+            }
+          }
+          if (eligible.size === 0) return
+
+          const emailMap = await (this as any).emailMapOf([...eligible])
+          const url = appUrl(`/community/drives/${drive.slug}`)
+          const title = drive.title.replaceAll("*", "")
+          const unitPlural = DRIVE_UNIT_PLURAL[drive.unit] ?? "libraries"
+
+          for (const baUserId of eligible) {
+            const to = emailMap.get(baUserId)
+            if (!to) continue
+            const helper = byId.get(baUserId)
+            if (!helper) continue
+            await send(`drive thanks for ${drive.documentId} to ${baUserId}`, {
+              to,
+              ...driveThanksEmail({
+                name: names.get(baUserId) ?? null,
+                title,
+                url,
+                goalMet: drive.goalMet,
+                done: drive.final.done,
+                total: drive.final.total,
+                unitPlural,
+                closedGaps: drive.final.closedGaps,
+                helpers: drive.final.helpers,
+                yours: helper.tasks,
+                bonus: helper.bonus,
+              }),
+            })
+          }
+        }
+      )
     },
   }
 }

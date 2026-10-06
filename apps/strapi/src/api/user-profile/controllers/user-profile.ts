@@ -630,5 +630,30 @@ export default factories.createCoreController(
 
       return ctx.send({ data: await loadEarnedBadges(profile.baUserId) })
     },
+
+    /** The Drives ribbons for a profile (spec §8): follows the activity rule. */
+    async findDrivesByUsername(ctx: any) {
+      const { username } = ctx.params as { username: string }
+      const results = await strapi
+        .documents("api::user-profile.user-profile")
+        .findMany({
+          filters: { username: { $eq: username } } as any,
+          fields: ["baUserId", "profileVisibility", "publicPrefs"] as any,
+          limit: 1,
+        })
+      const profile = results[0] ?? null
+      if (
+        !profile ||
+        !(await mayShowBadges(ctx, profile, { ownerSeesPrivate: true }))
+      ) {
+        return ctx.notFound("Profile not found")
+      }
+
+      return ctx.send({
+        data: await strapi
+          .service("api::drive.drive")
+          .helpedBy(profile.baUserId),
+      })
+    },
   })
 )
