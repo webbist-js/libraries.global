@@ -1,7 +1,14 @@
+import {
+  EVENT_PROVIDERS,
+  FEED_TEST_LABEL,
+  type EventProviderKey,
+  type FeedTestCode,
+} from "@repo/shared-data"
 import { useFetchClient } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useState } from "react"
 
 import { CredentialForm } from "./CredentialForm"
+import { RevealCredentialButton } from "./RevealCredentialButton"
 
 type Library = {
   documentId: string
@@ -12,26 +19,50 @@ type Library = {
 type Credential = {
   documentId: string
   label: string
-  provider: string
+  provider: EventProviderKey
   scope: string
-  isActive: boolean
+  status: "draft" | "pending" | "active" | "paused"
+  pausedReason?: "library" | "admin" | "sync_failures" | null
+  source: "admin" | "library"
+  hints?: Record<string, string>
+  pendingHints?: Record<string, string> | null
+  pendingSubmissionDocumentId?: string | null
+  lastTestedAt?: string | null
+  lastTestResult?: FeedTestCode | null
   libraries?: Library[]
   lastSyncAt?: string
   lastSyncEventCount?: number
   lastSyncError?: string
 }
 
+function statusLabel(cred: Credential): string {
+  if (cred.status === "active") return "Active"
+  if (cred.status === "paused")
+    return `Paused (${cred.pausedReason ?? "admin"})`
+  if (cred.status === "pending") return "Waiting for review"
+
+  return "Draft"
+}
+
+function statusColor(cred: Credential): string {
+  if (cred.status === "active") return "#1b7c3a"
+  if (cred.status === "paused") return "#d02b20"
+  if (cred.status === "pending") return "#945a00"
+
+  return "#666687"
+}
+
 const PROVIDER_COLORS: Record<string, string> = {
   eventbrite: "#ff6060",
   ical: "#1b7c3a",
-  custom_ical: "#1b7c3a",
-  meetup: "#e8174b",
-  google_events: "#4285f4",
-  facebook_events: "#1877f2",
-  librarycloud: "#0c75af",
+  ticketsource: "#0c75af",
+  wegottickets: "#e8174b",
+  spydus: "#4285f4",
+  solus: "#8a3f22",
+  aspen: "#4a3f8c",
 }
 
-function ProviderBadge({ provider }: { provider: string }) {
+function ProviderBadge({ provider }: { provider: EventProviderKey }) {
   const color = PROVIDER_COLORS[provider] ?? "#8e8ea9"
 
   return (
@@ -49,7 +80,7 @@ function ProviderBadge({ provider }: { provider: string }) {
         letterSpacing: "0.05em",
       }}
     >
-      {provider.replaceAll("_", " ")}
+      {EVENT_PROVIDERS[provider]?.label ?? provider}
     </span>
   )
 }
@@ -94,7 +125,17 @@ function CredentialCard({
         `/events/admin/credentials/${cred.documentId}/test`,
         {}
       )
-      setTestResult(data as { ok: boolean; message?: string; error?: string })
+      const body = data as { result?: FeedTestCode; error?: string }
+      setTestResult(
+        body.result === "ok"
+          ? { ok: true, message: FEED_TEST_LABEL.ok }
+          : {
+              ok: false,
+              error: body.result
+                ? FEED_TEST_LABEL[body.result]
+                : (body.error ?? "Test failed"),
+            }
+      )
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Test failed"
       setTestResult({ ok: false, error: message })
@@ -169,20 +210,46 @@ function CredentialCard({
           >
             {cred.scope}
           </span>
-          {!cred.isActive && (
+          <span
+            style={{
+              fontSize: "10px",
+              fontWeight: 600,
+              color: statusColor(cred),
+              background: `${statusColor(cred)}18`,
+              border: `1px solid ${statusColor(cred)}40`,
+              borderRadius: "4px",
+              padding: "1px 6px",
+            }}
+          >
+            {statusLabel(cred)}
+          </span>
+          <span
+            style={{
+              fontSize: "10px",
+              fontWeight: 600,
+              color: "#666687",
+              background: "#f0f0ff",
+              border: "1px solid #dcdce4",
+              borderRadius: "4px",
+              padding: "1px 6px",
+              textTransform: "uppercase" as const,
+            }}
+          >
+            {cred.source === "library" ? "Library" : "Admin"}
+          </span>
+          {cred.pendingSubmissionDocumentId && (
             <span
               style={{
                 fontSize: "10px",
                 fontWeight: 600,
-                color: "#666687",
-                background: "#f0f0ff",
-                border: "1px solid #dcdce4",
+                color: "#945a00",
+                background: "#fff3d9",
+                border: "1px solid #ffd27a",
                 borderRadius: "4px",
                 padding: "1px 6px",
-                textTransform: "uppercase" as const,
               }}
             >
-              Inactive
+              Pending replacement
             </span>
           )}
         </div>
@@ -191,6 +258,16 @@ function CredentialCard({
       {/* Libraries */}
       <p style={{ margin: 0, fontSize: "12px", color: "#666687" }}>
         {libraryNames}
+      </p>
+
+      {/* Last test */}
+      <p style={{ margin: 0, fontSize: "11px", color: "#8e8ea9" }}>
+        Last test:{" "}
+        {cred.lastTestResult
+          ? `${FEED_TEST_LABEL[cred.lastTestResult]}${
+              cred.lastTestedAt ? ` · ${formatDate(cred.lastTestedAt)}` : ""
+            }`
+          : "Not tested yet"}
       </p>
 
       {/* Last sync info */}
@@ -263,6 +340,10 @@ function CredentialCard({
         >
           {testLoading ? "Testing…" : "Test"}
         </button>
+        <RevealCredentialButton documentId={cred.documentId} slot="current" />
+        {cred.pendingHints ? (
+          <RevealCredentialButton documentId={cred.documentId} slot="pending" />
+        ) : null}
         <button
           onClick={() => void handleDelete()}
           disabled={deleteLoading}

@@ -17,7 +17,7 @@ interface CredentialRow {
   label: string
   provider: string
   scope: string
-  isActive: boolean
+  status: "draft" | "pending" | "active" | "paused"
   lastSyncAt: string | null
   lastSyncStatus: "ok" | "partial" | "error" | null
   lastErrorMessage: string | null
@@ -44,7 +44,7 @@ export function ProviderAnalytics() {
   function syncStatusColor(
     row: CredentialRow
   ): "success" | "warning" | "danger" | "neutral" {
-    if (!row.isActive) return "neutral"
+    if (row.status !== "active") return "neutral"
     if (row.lastSyncStatus === "ok") return "success"
     if (row.lastSyncStatus === "partial") return "warning"
     if (row.lastSyncStatus === "error") return "danger"
@@ -53,8 +53,10 @@ export function ProviderAnalytics() {
   }
 
   function syncStatusLabel(row: CredentialRow): string {
-    if (!row.isActive) return "inactive"
-    if (!row.lastSyncStatus) return "pending"
+    if (row.status === "paused") return "paused"
+    if (row.status === "pending") return "waiting for review"
+    if (row.status === "draft") return "draft"
+    if (!row.lastSyncStatus) return "not synced yet"
 
     return row.lastSyncStatus
   }

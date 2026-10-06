@@ -1,99 +1,122 @@
 import { pageWindow } from "../utils/query"
 
+const adminActor = (ctx: any) =>
+  `admin:${(ctx.state?.user as any)?.id ?? "unknown"}`
+const SLOTS = new Set(["current", "pending"])
+const credentials = (strapi: any) =>
+  strapi.plugin("events").service("credentials")
+
+function badRequest(ctx: any, err: any) {
+  ctx.status = err?.status === 400 ? 400 : 500
+  ctx.body = {
+    error: err?.status === 400 ? err.message : "Couldn't save the credential",
+    field: err?.field,
+  }
+}
+
 export default ({ strapi }: { strapi: any }) => ({
   async listCredentials(ctx: any) {
-    const items = await strapi.plugin("events").service("credentials").findAll()
-    // Mask encrypted blob from response
-    ctx.body = (items as any[]).map((c: any) => ({
-      ...c,
-      credentialsEncrypted: undefined,
-    }))
+    ctx.body = await credentials(strapi).findAll()
   },
 
   async createCredential(ctx: any) {
-    const actor = `admin:${(ctx.state.user as any)?.id}`
-    const { credentials, isActive, ...rest } = ctx.request.body as {
-      credentials: Record<string, string>
-      provider: string
-      label: string
-      scope: string
-      isActive?: boolean
-      libraryDocumentIds?: string[]
-    }
-    const result = await strapi
-      .plugin("events")
-      .service("credentials")
-      .create(
+    const {
+      provider,
+      label,
+      scope,
+      status,
+      libraryDocumentIds,
+      credentials: values,
+    } = (ctx.request.body ?? {}) as Record<string, any>
+    try {
+      ctx.body = await credentials(strapi).create(
         {
-          ...rest,
-          credentials,
-          ...(isActive != null
-            ? { status: isActive ? "active" : "paused" }
-            : {}),
+          provider,
+          label: String(label ?? ""),
+          scope: scope === "group" ? "group" : "library",
+          status,
+          libraryDocumentIds,
+          credentials: values,
         },
-        actor
+        adminActor(ctx)
       )
-    ctx.body = { ...result, credentialsEncrypted: undefined }
+    } catch (err) {
+      badRequest(ctx, err)
+    }
   },
 
   async updateCredential(ctx: any) {
-    const { documentId } = ctx.params as { documentId: string }
-    const actor = `admin:${(ctx.state.user as any)?.id}`
-    const { credentials, isActive, ...rest } = ctx.request.body as {
-      credentials?: Record<string, string>
-      label?: string
-      isActive?: boolean
-      libraryDocumentIds?: string[]
-    }
-    const result = await strapi
-      .plugin("events")
-      .service("credentials")
-      .update(
-        documentId,
+    const {
+      label,
+      status,
+      libraryDocumentIds,
+      credentials: values,
+    } = (ctx.request.body ?? {}) as Record<string, any>
+    try {
+      const result = await credentials(strapi).update(
+        ctx.params.documentId,
         {
-          ...rest,
-          credentials,
-          ...(isActive != null
-            ? { status: isActive ? "active" : "paused" }
-            : {}),
+          label,
+          status:
+            status === "active" || status === "paused" ? status : undefined,
+          libraryDocumentIds,
+          credentials: values,
         },
-        actor
+        adminActor(ctx)
       )
-    ctx.body = { ...result, credentialsEncrypted: undefined }
+      if (!result) {
+        ctx.status = 404
+
+        return
+      }
+      ctx.body = result
+    } catch (err) {
+      badRequest(ctx, err)
+    }
   },
 
   async deleteCredential(ctx: any) {
-    const { documentId } = ctx.params as { documentId: string }
-    const actor = `admin:${(ctx.state.user as any)?.id}`
-    await strapi
-      .plugin("events")
-      .service("credentials")
-      .delete(documentId, actor)
+    await credentials(strapi).delete(ctx.params.documentId, adminActor(ctx))
     ctx.status = 204
   },
 
   async testCredential(ctx: any) {
-    const { documentId } = ctx.params as { documentId: string }
-    const workerUrl = process.env.WORKER_URL ?? "http://localhost:3100"
-    try {
-      const res = await fetch(`${workerUrl}/test-credential`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Worker-Secret": process.env.WORKER_SECRET ?? "",
-        },
-        body: JSON.stringify({ credentialDocumentId: documentId }),
-        signal: AbortSignal.timeout(10_000),
-      })
-      if (!res.ok) {
-        ctx.body = { ok: false, error: `Worker returned ${res.status}` }
+    const slot = ctx.request?.body?.slot === "pending" ? "pending" : "current"
+    const r = await credentials(strapi).test(
+      ctx.params.documentId,
+      slot,
+      adminActor(ctx)
+    )
+    if (!r) {
+      ctx.status = 404
+      ctx.body = { error: "Nothing to test" }
 
-        return
-      }
-      ctx.body = await res.json()
-    } catch (err: any) {
-      ctx.body = { ok: false, error: err.message ?? "Worker unreachable" }
+      return
     }
+    ctx.body = r
+  },
+
+  async revealCredential(ctx: any) {
+    const slot = ctx.request?.body?.slot
+    if (!SLOTS.has(slot)) {
+      ctx.status = 400
+      ctx.body = { error: "slot must be current or pending" }
+
+      return
+    }
+    ctx.set("Cache-Control", "no-store")
+    const data = await credentials(strapi).reveal(
+      ctx.params.documentId,
+      slot,
+      adminActor(ctx)
+    )
+    if (!data) {
+      ctx.status = 404
+      ctx.body = { error: "No value in that slot" }
+
+      return
+    }
+    ctx.body = { data }
   },
 
   async listRuns(ctx: any) {

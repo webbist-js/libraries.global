@@ -63,4 +63,14 @@ describe("events admin routes", () => {
   it("has no test-raw route", () => {
     expect(byPath("POST", "/admin/credentials/test-raw")).toBeUndefined()
   })
+
+  it("gates reveal behind its own permission", () => {
+    const route = evRoutes.find(
+      (r: any) => r.path === "/admin/credentials/:documentId/reveal"
+    )
+    expect(route.method).toBe("POST")
+    expect(route.config.policies[1].config.actions).toEqual([
+      "plugin::events.reveal-credentials",
+    ])
+  })
 })

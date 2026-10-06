@@ -1,4 +1,8 @@
-export type EventsAdminAction = "read" | "manage-credentials" | "review"
+export type EventsAdminAction =
+  | "read"
+  | "manage-credentials"
+  | "review"
+  | "reveal-credentials"
 
 const can = (action: EventsAdminAction) => [
   "admin::isAuthenticatedAdmin",
@@ -38,6 +42,12 @@ export default [
     path: "/admin/credentials/:documentId/test",
     handler: "admin.testCredential",
     config: { policies: can("manage-credentials") },
+  },
+  {
+    method: "POST",
+    path: "/admin/credentials/:documentId/reveal",
+    handler: "admin.revealCredential",
+    config: { policies: can("reveal-credentials") },
   },
   {
     method: "GET",

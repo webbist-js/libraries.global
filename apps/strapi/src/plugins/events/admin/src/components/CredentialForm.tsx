@@ -1,4 +1,9 @@
 // apps/strapi/src/plugins/events/admin/src/components/CredentialForm.tsx
+import {
+  EVENT_PROVIDER_KEYS,
+  EVENT_PROVIDERS,
+  type EventProviderKey,
+} from "@repo/shared-data"
 import { useFetchClient } from "@strapi/strapi/admin"
 import {
   type CSSProperties,
@@ -19,44 +24,12 @@ type Library = {
 type Credential = {
   documentId: string
   label: string
-  provider: string
+  provider: EventProviderKey
   scope: string
-  isActive: boolean
+  status: "draft" | "pending" | "active" | "paused"
+  hints?: Record<string, string>
   libraries?: Library[]
 }
-
-// ── Provider field definitions ────────────────────────────────────────────────
-
-type FieldDef = { key: string; label: string; type: "text" | "password" }
-
-const PROVIDER_FIELDS: Record<string, FieldDef[]> = {
-  eventbrite: [
-    { key: "apiKey", label: "API Key (private token)", type: "password" },
-    { key: "orgId", label: "Organisation ID", type: "text" },
-  ],
-  ical: [{ key: "feedUrl", label: "Feed URL", type: "text" }],
-  custom_ical: [{ key: "feedUrl", label: "Feed URL", type: "text" }],
-  meetup: [{ key: "apiKey", label: "API Key", type: "password" }],
-  google_events: [
-    { key: "apiKey", label: "API Key", type: "password" },
-    { key: "calendarId", label: "Calendar ID", type: "text" },
-  ],
-  facebook_events: [
-    { key: "accessToken", label: "Access Token", type: "password" },
-    { key: "pageId", label: "Page ID", type: "text" },
-  ],
-  librarycloud: [{ key: "apiKey", label: "API Key", type: "password" }],
-}
-
-const PROVIDERS = [
-  { value: "eventbrite", label: "Eventbrite" },
-  { value: "ical", label: "iCal" },
-  { value: "custom_ical", label: "Custom iCal" },
-  { value: "meetup", label: "Meetup" },
-  { value: "google_events", label: "Google Events" },
-  { value: "facebook_events", label: "Facebook Events" },
-  { value: "librarycloud", label: "LibraryCloud" },
-]
 
 // ── Shared input styles ───────────────────────────────────────────────────────
 
@@ -93,6 +66,11 @@ const sectionHeadingStyle: CSSProperties = {
   paddingBottom: "6px",
   borderBottom: "1px solid #f0f0ff",
 }
+
+const PROVIDER_OPTIONS = EVENT_PROVIDER_KEYS.map((k) => ({
+  value: k,
+  label: EVENT_PROVIDERS[k].label,
+}))
 
 // ── Library search multi-select ───────────────────────────────────────────────
 
@@ -318,9 +296,13 @@ export function CredentialForm({
 
   // Form state
   const [label, setLabel] = useState(credential?.label ?? "")
-  const [provider, setProvider] = useState(credential?.provider ?? "eventbrite")
+  const [provider, setProvider] = useState<EventProviderKey>(
+    credential?.provider ?? "eventbrite"
+  )
   const [scope, setScope] = useState(credential?.scope ?? "library")
-  const [isActive, setIsActive] = useState(credential?.isActive ?? true)
+  const [status, setStatus] = useState<"active" | "paused">(
+    credential?.status === "paused" ? "paused" : "active"
+  )
   const [credFields, setCredFields] = useState<Record<string, string>>({})
   const [selectedLibraries, setSelectedLibraries] = useState<Library[]>(
     credential?.libraries ?? []
@@ -336,13 +318,19 @@ export function CredentialForm({
     error?: string
   } | null>(null)
 
-  // Reset cred fields when provider changes
+  // Reset cred fields when provider changes (only meaningful for a new
+  // credential — an edit keeps its own provider, fixed below)
   useEffect(() => {
-    setCredFields({})
-    setTestResult(null)
+    if (!isEdit) {
+      setCredFields({})
+      setTestResult(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provider])
 
-  const providerFields = PROVIDER_FIELDS[provider] ?? []
+  const providerDef = EVENT_PROVIDERS[provider]
+  const providerFields = providerDef?.fields ?? []
+  const hints = credential?.hints ?? {}
 
   const setField = (key: string, value: string) => {
     setCredFields((prev) => ({ ...prev, [key]: value }))
@@ -358,12 +346,14 @@ export function CredentialForm({
     setSaveError(null)
     setTestResult(null)
     try {
-      const hasCredentials = Object.keys(credFields).length > 0
+      const hasCredentials = Object.values(credFields).some(
+        (v) => v.trim().length > 0
+      )
       const payload = {
         label: label.trim(),
         provider,
         scope,
-        isActive,
+        status,
         libraryDocumentIds: selectedLibraries.map((l) => l.documentId),
         ...(hasCredentials ? { credentials: credFields } : {}),
       }
@@ -390,8 +380,11 @@ export function CredentialForm({
         `/events/admin/credentials/${credential!.documentId}/test`,
         {}
       )
+      const body = res.data as { result?: string; error?: string }
       setTestResult(
-        res.data as { ok: boolean; message?: string; error?: string }
+        body.result === "ok"
+          ? { ok: true, message: "Connection OK" }
+          : { ok: false, error: body.result ?? body.error ?? "Test failed" }
       )
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Test failed"
@@ -491,10 +484,14 @@ export function CredentialForm({
             <label style={labelStyle}>Provider</label>
             <select
               value={provider}
-              onChange={(e) => setProvider(e.target.value)}
-              style={inputStyle}
+              onChange={(e) => setProvider(e.target.value as EventProviderKey)}
+              disabled={isEdit}
+              style={{
+                ...inputStyle,
+                ...(isEdit ? { background: "#f6f6f9", color: "#666687" } : {}),
+              }}
             >
-              {PROVIDERS.map((p) => (
+              {PROVIDER_OPTIONS.map((p) => (
                 <option key={p.value} value={p.value}>
                   {p.label}
                 </option>
@@ -546,13 +543,10 @@ export function CredentialForm({
             />
           </div>
 
-          {/* Dynamic credential fields */}
+          {/* Dynamic credential fields, driven by the provider registry */}
           {providerFields.length > 0 && (
             <div>
-              <p style={sectionHeadingStyle}>
-                {PROVIDERS.find((p) => p.value === provider)?.label ?? provider}{" "}
-                Credentials
-              </p>
+              <p style={sectionHeadingStyle}>{providerDef.label} Credentials</p>
               <div
                 style={{
                   display: "flex",
@@ -562,41 +556,55 @@ export function CredentialForm({
               >
                 {providerFields.map((field) => (
                   <div key={field.key}>
-                    <label style={labelStyle}>{field.label}</label>
+                    <label style={labelStyle}>
+                      {field.label}
+                      {!field.required && isEdit ? " (optional)" : ""}
+                    </label>
                     <input
-                      type={field.type}
+                      type={field.secret ? "password" : "text"}
                       value={credFields[field.key] ?? ""}
                       onChange={(e) => setField(field.key, e.target.value)}
                       placeholder={
-                        field.type === "password" ? "••••••••••••••••" : ""
+                        isEdit && hints[field.key]
+                          ? hints[field.key]
+                          : field.secret
+                            ? "••••••••••••••••"
+                            : (field.hint ?? "")
                       }
                       style={inputStyle}
-                      autoComplete="off"
+                      autoComplete={field.secret ? "new-password" : "off"}
                     />
                   </div>
                 ))}
               </div>
+              {isEdit && (
+                <p
+                  style={{
+                    margin: "8px 0 0",
+                    fontSize: "11px",
+                    color: "#8e8ea9",
+                  }}
+                >
+                  Leave fields blank to keep the stored values.
+                </p>
+              )}
             </div>
           )}
 
-          {/* Active toggle */}
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              fontSize: "13px",
-              color: "#32324d",
-              cursor: "pointer",
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={isActive}
-              onChange={(e) => setIsActive(e.target.checked)}
-            />
-            Active (include in sync runs)
-          </label>
+          {/* Status */}
+          <div>
+            <label style={labelStyle}>Status</label>
+            <select
+              value={status}
+              onChange={(e) =>
+                setStatus(e.target.value === "paused" ? "paused" : "active")
+              }
+              style={inputStyle}
+            >
+              <option value="active">Active (include in sync runs)</option>
+              <option value="paused">Paused</option>
+            </select>
+          </div>
         </div>
 
         {/* Modal footer */}
@@ -626,7 +634,7 @@ export function CredentialForm({
             Cancel
           </button>
 
-          {/* Only a saved credential can be tested: the worker reads the
+          {/* Only a saved credential can be tested: the server reads the
               stored, encrypted credentials by documentId, never raw values
               from the browser. Save first, then test. */}
           {isEdit ? (
