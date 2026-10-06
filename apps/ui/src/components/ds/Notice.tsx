@@ -3,10 +3,13 @@ import type { ReactNode } from "react"
 
 import { T } from "@/lib/design-tokens"
 
-const TONES = {
+/** The [bg, fg] pair for each status tone. Reused wherever a tinted status
+ * pill or line needs the same colours as a Notice (e.g. FeedStatusBadge,
+ * EventFeedPanel) rather than re-declaring them. */
+export const TONES = {
   ok: { bg: "var(--tint-public-bg)", fg: T.accent.ok },
   info: { bg: T.accent.chip, fg: T.accent.primaryHover },
-  warn: { bg: "#F5EEDC", fg: "#6B5420" },
+  warn: { bg: "#F5EEDC", fg: T.accent.warn },
 } as const
 
 export type NoticeTone = keyof typeof TONES

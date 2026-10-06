@@ -1,3 +1,4 @@
+import { FEED_TEST_CODES } from "@repo/shared-data"
 import { cookies, headers } from "next/headers"
 import { NextResponse } from "next/server"
 
@@ -16,10 +17,20 @@ type ExchangeResult = {
     organizations: { id: string; name: string }[]
     completed?:
       | { submissionDocumentId: string; result: string }
-      | { error: { status: number; name: string; message: string } }
+      | {
+          error: {
+            status: number
+            name: string
+            message: string
+            result?: string
+          }
+        }
   }
   error?: { status: number; name: string; message: string }
 }
+
+const isFeedTestCode = (v: unknown): v is (typeof FEED_TEST_CODES)[number] =>
+  typeof v === "string" && (FEED_TEST_CODES as readonly string[]).includes(v)
 
 /**
  * Finishes the Eventbrite OAuth round trip: checks the signed `state`
@@ -34,7 +45,15 @@ export async function GET(req: Request) {
 
   const redirectTo = async (path: string) => {
     const res = NextResponse.redirect(new URL(path, url), 302)
-    res.cookies.delete(COOKIE)
+    // `res.cookies.delete` omits `Secure`, which a `__Host-` cookie requires
+    // to clear; set an expired cookie with the same attributes instead.
+    res.cookies.set(COOKIE, "", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 0,
+    })
 
     return res
   }
@@ -83,10 +102,15 @@ export async function GET(req: Request) {
   const library = encodeURIComponent(payload.libraryDocumentId)
 
   if (data.completed) {
-    if ("error" in data.completed)
-      return redirectTo(
-        `/contribute/events?library=${library}&oauth=test_failed`
-      )
+    if ("error" in data.completed) {
+      const { status, result } = data.completed.error
+      if (status === 422 && isFeedTestCode(result))
+        return redirectTo(
+          `/contribute/events?library=${library}&oauth=test_failed&result=${result}`
+        )
+
+      return redirectTo(`/contribute/events?library=${library}&oauth=refused`)
+    }
 
     return redirectTo(`/contribute/events?library=${library}&oauth=sent`)
   }

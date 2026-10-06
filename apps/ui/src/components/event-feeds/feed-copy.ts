@@ -10,7 +10,17 @@ export function isFeedTestCode(v: unknown): v is FeedTestCode {
 }
 
 export function feedStatusOf(feed: FeedView) {
-  if (feed.status === "pending" || feed.status === "draft") {
+  // A draft feed is mid-OAuth (waiting on the organisation choice), not yet
+  // sent for review, so it never carries a review: distinct copy from the
+  // pending states below, which are.
+  if (feed.status === "draft")
+    return {
+      key: "draft",
+      label: "Finishing setup",
+      icon: "mdi:progress-clock",
+      tone: "info",
+    } as const
+  if (feed.status === "pending") {
     return feed.review?.status === "needs_info"
       ? ({
           key: "needs_changes",

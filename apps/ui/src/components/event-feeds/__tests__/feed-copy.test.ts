@@ -24,6 +24,7 @@ describe("feedStatusOf", () => {
       "stopped",
       "Stopped working",
     ],
+    [{ ...base, status: "draft" }, "draft", "Finishing setup"],
     [
       {
         ...base,

@@ -35,7 +35,13 @@ export default async function ReplaceEventFeedPage({
   const libraries = result.body?.data?.libraries ?? []
   let libraryName: string | null = null
   const feed = libraries
-    .flatMap((l) => l.feeds.map((f) => ({ feed: f, name: l.library.name })))
+    .flatMap((l) =>
+      l.feeds.map((f) => ({
+        feed: f,
+        name: l.library.name,
+        libraryDocumentId: l.library.documentId,
+      }))
+    )
     .find((entry) => entry.feed.documentId === documentId)
   if (feed) libraryName = feed.name
 
@@ -56,7 +62,11 @@ export default async function ReplaceEventFeedPage({
         back
       />
       <div className="mx-auto w-full max-w-[820px] px-4 pt-10 pb-20 sm:px-8">
-        <ReplaceFeedForm feed={feed.feed} libraryName={libraryName ?? ""} />
+        <ReplaceFeedForm
+          feed={feed.feed}
+          libraryName={libraryName ?? ""}
+          libraryDocumentId={feed.libraryDocumentId}
+        />
       </div>
     </div>
   )

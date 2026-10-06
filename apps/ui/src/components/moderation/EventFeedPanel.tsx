@@ -46,7 +46,7 @@ function TestLine({
   return (
     <p
       className="m-0 flex items-start gap-2 text-[14px]"
-      style={{ color: ok ? T.accent.ok : "#6B5420" }}
+      style={{ color: ok ? T.accent.ok : T.accent.warn }}
     >
       <Icon
         aria-hidden="true"

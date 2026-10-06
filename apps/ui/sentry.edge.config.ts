@@ -6,6 +6,7 @@
 import * as Sentry from "@sentry/nextjs"
 
 import { getEnvVar } from "@/lib/env-vars"
+import { scrubSentryEvent } from "@/lib/sentry-scrub"
 
 Sentry.init({
   dsn: getEnvVar("NEXT_PUBLIC_SENTRY_DSN"),
@@ -16,16 +17,14 @@ Sentry.init({
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
 
-  // Never send request bodies, cookies or headers: bodies can hold event
-  // feed credentials and personal details. Mirrors Strapi's sentry-scrub.
-  beforeSend(event) {
-    if (event.request) {
-      delete event.request.data
-      delete event.request.cookies
-      const ua = event.request.headers?.["user-agent"]
-      event.request.headers = ua ? { "user-agent": ua } : {}
-    }
-
-    return event
-  },
+  // No httpIntegration({ maxIncomingRequestBodySize }) here: the edge
+  // runtime resolves @sentry/nextjs to @sentry/vercel-edge, which doesn't
+  // instrument Node's http module and has no such option.
+  //
+  // Never send request bodies, cookies or most headers: bodies can hold
+  // event feed credentials and personal details. Mirrors Strapi's
+  // sentry-scrub. Transactions go through beforeSendTransaction, not
+  // beforeSend, so both are scrubbed the same way.
+  beforeSend: scrubSentryEvent,
+  beforeSendTransaction: scrubSentryEvent,
 })

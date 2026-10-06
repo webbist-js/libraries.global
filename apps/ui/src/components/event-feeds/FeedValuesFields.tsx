@@ -32,6 +32,8 @@ export function FeedValuesFields({
       {EVENT_PROVIDERS[provider].fields.map((f) => {
         const inputId = `${id}-${f.key}`
         const hintId = `${inputId}-hint`
+        const currentHint = currentHints?.[f.key]
+        const hasHint = Boolean(f.hint || currentHint)
 
         return (
           <div key={f.key} className="flex flex-col gap-1.5">
@@ -56,17 +58,13 @@ export function FeedValuesFields({
                       : "text"
                 }
                 autoComplete={f.secret ? "new-password" : "off"}
+                data-1p-ignore={f.secret || undefined}
+                data-lpignore={f.secret ? "true" : undefined}
                 spellCheck={false}
                 data-sentry-mask
-                aria-describedby={
-                  f.hint || currentHints?.[f.key] ? hintId : undefined
-                }
+                aria-describedby={hasHint ? hintId : undefined}
                 aria-invalid={errorField === f.key || undefined}
-                placeholder={
-                  currentHints?.[f.key]
-                    ? `Now: ${currentHints[f.key]}`
-                    : undefined
-                }
+                placeholder={currentHint ? `Now: ${currentHint}` : undefined}
                 value={values[f.key] ?? ""}
                 maxLength={f.maxLength}
                 onChange={(e) =>
@@ -83,6 +81,7 @@ export function FeedValuesFields({
                     color: T.ink.base,
                     background: T.bg.deep,
                   }}
+                  aria-label={`${shown[f.key] ? "Hide" : "Show"} ${f.label}`}
                   aria-pressed={!!shown[f.key]}
                   onClick={() =>
                     setShown((s) => ({ ...s, [f.key]: !s[f.key] }))
@@ -92,7 +91,7 @@ export function FeedValuesFields({
                 </button>
               ) : null}
             </div>
-            {f.hint ? (
+            {hasHint ? (
               <p id={hintId} style={fieldHintStyle}>
                 {f.hint}
               </p>

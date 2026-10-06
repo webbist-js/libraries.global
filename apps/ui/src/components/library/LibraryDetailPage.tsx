@@ -232,7 +232,9 @@ export function LibraryDetailPage({
                   {collectionsFull ? null : (
                     <LibraryCollectionsSection library={library} />
                   )}
-                  {hasFeed ? null : <LibraryEventsEmpty />}
+                  {hasFeed ? null : (
+                    <LibraryEventsEmpty documentId={library.documentId} />
+                  )}
                 </div>
 
                 {collectionsFull ? (

@@ -1,4 +1,8 @@
-import { FEED_TEST_COPY } from "@repo/shared-data"
+import {
+  FEED_TEST_CODES,
+  FEED_TEST_COPY,
+  type FeedTestCode,
+} from "@repo/shared-data"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
@@ -32,24 +36,40 @@ const OAUTH_NOTICE: Record<
     title: "Sign-in didn't finish",
     message: "Eventbrite sign-in didn't finish. Try again.",
   },
-  test_failed: {
+  refused: {
     tone: "warn",
     icon: "mdi:alert-circle-outline",
-    title: "Connection test failed",
-    message: FEED_TEST_COPY.auth_failed,
+    title: "Couldn't send for review",
+    message:
+      "Eventbrite connected, but we couldn't send it for review. Try again from the dashboard.",
   },
 }
+
+const isFeedTestCode = (v: unknown): v is FeedTestCode =>
+  typeof v === "string" && (FEED_TEST_CODES as readonly string[]).includes(v)
 
 export default async function ContributeEventsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ library?: string; oauth?: string }>
+  searchParams: Promise<{ library?: string; oauth?: string; result?: string }>
 }) {
   const session = await getSessionSSR(await headers())
   if (!session?.user) redirect("/auth/signin?callbackUrl=/contribute/events")
   const caps = (session.user as { capabilities?: string[] }).capabilities ?? []
-  const { library: highlight, oauth } = await searchParams
-  const oauthNotice = oauth ? OAUTH_NOTICE[oauth] : undefined
+  const { library: highlight, oauth, result: testResult } = await searchParams
+  const oauthNotice =
+    oauth === "test_failed"
+      ? {
+          tone: "warn" as const,
+          icon: "mdi:alert-circle-outline",
+          title: "Connection test failed",
+          message: isFeedTestCode(testResult)
+            ? FEED_TEST_COPY[testResult]
+            : FEED_TEST_COPY.auth_failed,
+        }
+      : oauth
+        ? OAUTH_NOTICE[oauth]
+        : undefined
   const result = caps.includes("events.feed")
     ? await fetchEventFeeds<{ data: { libraries: LibraryFeeds[] } }>(
         session.user

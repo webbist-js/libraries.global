@@ -554,7 +554,11 @@ export function LibraryCollectionsSection({
 }
 
 /** The compact Events card for a library without an event feed. */
-export function LibraryEventsEmpty() {
+export function LibraryEventsEmpty({
+  documentId,
+}: {
+  readonly documentId: string
+}) {
   return (
     <LibrarySectionCard
       id="events"
@@ -573,7 +577,7 @@ export function LibraryEventsEmpty() {
       </p>
       <CardAction>
         <GlobalLink
-          href="/contribute/event-feed"
+          href={`/contribute/events?library=${documentId}`}
           className={LINK}
           style={{ color: T.accent.primary }}
         >

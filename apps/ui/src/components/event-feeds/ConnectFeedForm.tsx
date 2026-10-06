@@ -63,8 +63,13 @@ export function ConnectFeedForm({
   readonly oauth: { eventbrite: boolean }
 }) {
   const router = useRouter()
+  const initialLibraryIsClaimed =
+    initialLibrary !== undefined &&
+    libraries.some((l) => l.documentId === initialLibrary)
   const [libraryDocumentId, setLibraryDocumentId] = useState(
-    initialLibrary ?? libraries[0]?.documentId ?? ""
+    (initialLibraryIsClaimed ? initialLibrary : undefined) ??
+      libraries[0]?.documentId ??
+      ""
   )
   const [provider, setProvider] = useState<EventProviderKey | null>(null)
   const [values, setValues] = useState<Record<string, string>>({})
@@ -75,6 +80,11 @@ export function ConnectFeedForm({
   const [sending, setSending] = useState(false)
   const test = useFeedTest()
   const fieldsRef = useRef<HTMLDivElement>(null)
+
+  function selectLibrary(next: string) {
+    setLibraryDocumentId(next)
+    test.reset()
+  }
 
   function selectProvider(next: EventProviderKey) {
     setProvider(next)
@@ -193,7 +203,7 @@ export function ConnectFeedForm({
             <select
               id="connect-feed-library"
               value={libraryDocumentId}
-              onChange={(e) => setLibraryDocumentId(e.target.value)}
+              onChange={(e) => selectLibrary(e.target.value)}
               style={fieldInputStyle}
             >
               {libraries.map((l) => (

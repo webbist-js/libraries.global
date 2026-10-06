@@ -40,9 +40,11 @@ const secondaryPillSx: React.CSSProperties = {
 export function ReplaceFeedForm({
   feed,
   libraryName,
+  libraryDocumentId,
 }: {
   readonly feed: FeedView
   readonly libraryName: string
+  readonly libraryDocumentId: string
 }) {
   const router = useRouter()
   const [values, setValues] = useState<Record<string, string>>({})
@@ -78,7 +80,7 @@ export function ReplaceFeedForm({
     setLocalError(null)
     setErrorField(undefined)
     await test.run("/api/contribute/event-feeds/test", {
-      libraryDocumentId: feed.documentId,
+      libraryDocumentId,
       provider: feed.provider,
       values,
     })
@@ -98,6 +100,7 @@ export function ReplaceFeedForm({
       )
       const json = await res.json().catch(() => null)
       if (res.ok) {
+        setValues({})
         setSent(true)
         router.refresh()
 

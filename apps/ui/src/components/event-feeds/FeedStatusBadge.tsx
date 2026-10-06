@@ -1,20 +1,15 @@
 import { Icon } from "@iconify/react"
 
+import { NOTICE_TONES } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
 
 import { feedStatusOf } from "./feed-copy"
 import type { FeedView } from "./types"
 
-const TONES = {
-  ok: { bg: "var(--tint-public-bg)", fg: T.accent.ok },
-  info: { bg: T.accent.chip, fg: T.accent.primaryHover },
-  warn: { bg: "#F5EEDC", fg: "#6B5420" },
-} as const
-
 /** A feed's status as a tinted pill: icon plus label, never colour alone. */
 export function FeedStatusBadge({ feed }: { readonly feed: FeedView }) {
   const status = feedStatusOf(feed)
-  const { bg, fg } = TONES[status.tone]
+  const { bg, fg } = NOTICE_TONES[status.tone]
 
   return (
     <span

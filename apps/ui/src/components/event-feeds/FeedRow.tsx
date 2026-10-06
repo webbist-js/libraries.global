@@ -182,15 +182,16 @@ export function FeedRow({
             >
               {busy === "test" ? "Testing…" : "Test"}
             </button>
-            {(feed.status === "active" || feed.status === "paused") && (
-              <GlobalLink
-                href={`/contribute/events/${feed.documentId}/replace`}
-                style={secondaryPillSx}
-                className="no-underline"
-              >
-                Replace details
-              </GlobalLink>
-            )}
+            {(feed.status === "active" || feed.status === "paused") &&
+              !feed.review && (
+                <GlobalLink
+                  href={`/contribute/events/${feed.documentId}/replace`}
+                  style={secondaryPillSx}
+                  className="no-underline"
+                >
+                  Replace details
+                </GlobalLink>
+              )}
             {feed.status === "active" && (
               <button
                 type="button"
