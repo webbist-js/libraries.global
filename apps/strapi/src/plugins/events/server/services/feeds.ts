@@ -168,6 +168,72 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
     })
   }
 
+  /**
+   * The shared part of `connect` and `completeDraft`: opens the review for
+   * a credential that already exists (pending from `connect`, or a draft
+   * from `feed-oauth.exchangeEventbrite` finishing its organisation choice
+   * from `completeDraft`). Called from inside the caller's own
+   * `strapi.db.transaction`. Re-checks the open-submission quota
+   * authoritatively (a concurrent submission could have used it up while
+   * the provider test, which runs outside any transaction, was in flight),
+   * then seals the value under the current slot, stores its hints, moves
+   * the credential to `pending` and records the Submission.
+   */
+  async function openConnectReview(
+    user: FeedUser,
+    documentId: string,
+    libraryDocumentId: string,
+    provider: EventProviderKey,
+    values: Record<string, string>,
+    result: FeedTestCode,
+    testedAt: string
+  ) {
+    if ((await openFeedSubmissions(user.id)) >= MAX_OPEN_FEED_SUBMISSIONS)
+      throw new FeedAbort(
+        fail(
+          429,
+          "too_many_open",
+          "You have feeds waiting for review. Wait for a decision before sending another."
+        )
+      )
+
+    const hints = feedHints(provider, values)
+    const submission = await createSubmission(user, libraryDocumentId, {
+      kind: "connect",
+      credentialDocumentId: documentId,
+      provider,
+      hints,
+      test: { result, testedAt },
+    })
+    await creds().update({
+      documentId,
+      data: {
+        status: "pending",
+        credentialsEncrypted: sealValues(values, documentId, "current"),
+        hints,
+        lastTestedAt: testedAt,
+        lastTestResult: result,
+        pendingSubmissionDocumentId: submission.documentId,
+      },
+    })
+    await recordCredentialEvent(strapi, {
+      credentialDocumentId: documentId,
+      provider,
+      libraryDocumentIds: [libraryDocumentId],
+      action: "connect_submitted",
+      actor: actorOf(user),
+      submissionDocumentId: submission.documentId,
+      resultCode: result,
+    })
+
+    return {
+      credentialDocumentId: documentId,
+      submissionDocumentId: submission.documentId as string,
+      result,
+      submission,
+    }
+  }
+
   return {
     async list(user: FeedUser) {
       const claims = [...(await claimedLibraryIds(strapi, user.id))]
@@ -315,15 +381,8 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
 
       const outcome = await runTransaction(strapi, async () => {
         // Authoritative re-check: a concurrent connect could have used up
-        // the quota while the provider test above was in flight.
-        if ((await openFeedSubmissions(user.id)) >= MAX_OPEN_FEED_SUBMISSIONS)
-          throw new FeedAbort(
-            fail(
-              429,
-              "too_many_open",
-              "You have feeds waiting for review. Wait for a decision before sending another."
-            )
-          )
+        // this quota while the provider test above was in flight. The
+        // open-submission quota is re-checked inside `openConnectReview`.
         if (
           (await feedsOnLibrary(input.libraryDocumentId)) >=
           MAX_FEEDS_PER_LIBRARY
@@ -351,51 +410,138 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
             libraries: [{ documentId: input.libraryDocumentId }],
           },
         })
-        const documentId = created.documentId as string
-        const submission = await createSubmission(
-          user,
-          input.libraryDocumentId,
-          {
-            kind: "connect",
-            credentialDocumentId: documentId,
-            provider,
-            hints,
-            test: { result, testedAt },
-          }
-        )
-        await creds().update({
-          documentId,
-          data: {
-            credentialsEncrypted: sealValues(
-              checked.values,
-              documentId,
-              "current"
-            ),
-            pendingSubmissionDocumentId: submission.documentId,
-          },
-        })
-        await recordCredentialEvent(strapi, {
-          credentialDocumentId: documentId,
-          provider,
-          libraryDocumentIds: [input.libraryDocumentId],
-          action: "connect_submitted",
-          actor: actorOf(user),
-          submissionDocumentId: submission.documentId,
-          resultCode: result,
-        })
 
-        return {
-          credentialDocumentId: documentId,
-          submissionDocumentId: submission.documentId as string,
+        return openConnectReview(
+          user,
+          created.documentId as string,
+          input.libraryDocumentId,
+          provider,
+          checked.values,
           result,
-          submission,
-        }
+          testedAt
+        )
       })
       if ("error" in outcome) return outcome
       submissions().notifyPending(outcome.submission)
 
       return {
         credentialDocumentId: outcome.credentialDocumentId,
+        submissionDocumentId: outcome.submissionDocumentId,
+        result: outcome.result,
+      }
+    },
+
+    /**
+     * Finishes a draft from `feed-oauth.exchangeEventbrite` once the
+     * librarian has chosen (or it auto-chose, for one organisation) an
+     * Eventbrite organisation: validates the choice against the draft's
+     * `hints.organizations`, runs the same policy, quota and test checks as
+     * `connect`, then opens its review through the shared
+     * `openConnectReview`.
+     */
+    async completeDraft(
+      user: FeedUser,
+      documentId: string,
+      organizationId: string
+    ) {
+      const draft = await creds().findOne({
+        documentId,
+        fields: [
+          ...CREDENTIAL_PUBLIC_FIELDS,
+          "id",
+          "connectedBy",
+          "credentialsEncrypted",
+        ],
+        populate: { libraries: { fields: ["documentId"] } },
+      })
+      if (
+        !draft ||
+        draft.status !== "draft" ||
+        draft.connectedBy !== actorOf(user)
+      )
+        return feedNotFound()
+      const claims = await claimedLibraryIds(strapi, user.id)
+      const libraryDocumentId = libraryIdsOf(draft).find((id) => claims.has(id))
+      if (!libraryDocumentId) return feedNotFound()
+
+      const organizations = (draft.hints?.organizations ?? []) as {
+        id: string
+        name: string
+      }[]
+      if (!organizations.some((o) => o.id === organizationId))
+        return fail(
+          400,
+          "invalid_organization",
+          "Choose one of the listed organisations."
+        )
+
+      const current = openValues(
+        draft.credentialsEncrypted,
+        documentId,
+        "current"
+      )
+      const checked = checkValues("eventbrite", {
+        ...current,
+        organizationId,
+      })
+      if ("error" in checked) return checked
+
+      const verdict = await policy().check({
+        baUserId: user.id,
+        submissionType: "event_feed",
+        targetEntityType: "library",
+        targetDocumentId: libraryDocumentId,
+      })
+      if (!verdict.ok)
+        return fail(
+          verdict.status ?? 403,
+          "refused",
+          verdict.message ?? "You can't connect a feed here."
+        )
+      if ((await openFeedSubmissions(user.id)) >= MAX_OPEN_FEED_SUBMISSIONS)
+        return fail(
+          429,
+          "too_many_open",
+          "You have feeds waiting for review. Wait for a decision before sending another."
+        )
+
+      // Outside the transaction: a provider can take 15 seconds to answer.
+      const result = await runTest("eventbrite", checked.values)
+      if (FEED_TEST_BLOCKING.has(result))
+        return fail(422, "test_failed", "The connection test failed.", {
+          result,
+        })
+      const testedAt = new Date().toISOString()
+
+      const outcome = await runTransaction(strapi, async () => {
+        // Authoritative re-check: the draft could have been withdrawn, or
+        // already completed by a concurrent call, while the provider test
+        // above was in flight.
+        const fresh = await creds().findOne({
+          documentId,
+          fields: ["documentId", "status", "connectedBy"],
+        })
+        if (
+          !fresh ||
+          fresh.status !== "draft" ||
+          fresh.connectedBy !== actorOf(user)
+        )
+          throw new FeedAbort(feedNotFound())
+
+        return openConnectReview(
+          user,
+          documentId,
+          libraryDocumentId,
+          "eventbrite",
+          checked.values,
+          result,
+          testedAt
+        )
+      })
+      if ("error" in outcome) return outcome
+      submissions().notifyPending(outcome.submission)
+
+      return {
         submissionDocumentId: outcome.submissionDocumentId,
         result: outcome.result,
       }

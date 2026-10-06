@@ -1,3 +1,10 @@
+import {
+  EVENT_PROVIDERS,
+  type EventProviderKey,
+  FEED_TEST_LABEL,
+  type FeedTestCode,
+} from "@repo/shared-data"
+
 import { emailConfigured } from "../utils/email-config"
 import {
   applicationDecidedEmail,
@@ -26,7 +33,7 @@ const SUBMISSION_UID = "plugin::content-moderation.submission"
 const DEFAULT_MODERATORS_EMAIL = "moderators@libraries.global"
 const DEFAULT_APP_URL = "https://libraries.global"
 /** Only these reaching `pending` alert the moderators (spec §6.3). */
-const ALERT_TYPES = new Set(["role_application"])
+const ALERT_TYPES = new Set(["role_application", "event_feed"])
 /** Matches `people.ts`'s own lookup: no user-profile carries an email, so
  * the one each person's submissions were filed with is the best we know. */
 const EMAIL_ROWS_MAX = 500
@@ -88,6 +95,14 @@ function alertSummary(s: SubmissionRow): string {
     const { role, queue, locales } = roleApplicationFields(s.fields)
 
     return `${who} applied to be a ${roleLabel(role ?? "editor", queue)} for ${languagesLabel(locales)}.`
+  }
+  if (s.submissionType === "event_feed") {
+    const f = (s.fields ?? {}) as Record<string, any>
+    const label =
+      EVENT_PROVIDERS[f.provider as EventProviderKey]?.label ??
+      "An event platform"
+
+    return `${label} feed ${f.kind === "replace" ? "details replaced" : "connected"} for a library; the connection test said "${FEED_TEST_LABEL[f.test?.result as FeedTestCode] ?? "not run"}".`
   }
   const f = (
     s.fields && typeof s.fields === "object" ? s.fields : {}

@@ -45,6 +45,7 @@ export function targetLabelOf(
       return str(f.name) ?? slug
     case "library_edit":
     case "correction":
+    case "event_feed":
       return (slug ? names.library.get(slug) : null) ?? slug
     case "library_claim":
       return str(f.libraryName) ?? str(f.name) ?? str(f.entityRef) ?? slug
@@ -73,7 +74,7 @@ const LOOKUPS = [
     key: "library",
     uid: "api::library.library",
     field: "name",
-    types: ["library_edit", "correction"],
+    types: ["library_edit", "correction", "event_feed"],
   },
   {
     key: "wiki",

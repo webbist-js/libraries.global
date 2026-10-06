@@ -1,3 +1,5 @@
+import { EVENT_PROVIDERS } from "@repo/shared-data"
+
 /**
  * One line describing what a submission is about, for the moderation
  * queue. A port of `summaryOf` in `admin/src/components/submissionMeta.ts`
@@ -30,6 +32,8 @@ export function summaryOf(sub: SummarySource): string {
       )
     case "topic_suggestion":
       return str(f.name) ?? "Topic"
+    case "event_feed":
+      return `${EVENT_PROVIDERS[f.provider as keyof typeof EVENT_PROVIDERS]?.label ?? "Event"} feed${f.kind === "replace" ? " (new details)" : ""}`
     case "role_application": {
       const role =
         f.role === "journal_editor"

@@ -17,6 +17,8 @@ const SUGGESTION = "plugin::content-moderation.option-suggestion"
 const VOTE = "plugin::content-moderation.option-vote"
 const LIBRARY = "api::library.library"
 const WIKI = "api::wiki-article.wiki-article"
+const CRED = "plugin::events.event-credential"
+const AFFILIATION = "api::library-affiliation.library-affiliation"
 const ROLE_GRANT = "api::role-grant.role-grant"
 const CONTINENT = "api::continent.continent"
 const COUNTRY = "api::country.country"
@@ -542,6 +544,115 @@ describe("GET /moderation/submissions/:documentId", () => {
       verifiedSections: { status: "2025-01-01T00:00:00.000Z" },
       lastVerifiedAt: null,
     })
+  })
+})
+
+describe("event feed moderation", () => {
+  const LIBRARY_ID = "l00000000000000000000001"
+  const CRED_ID = "c00000000000000000000001"
+
+  const feedSubmission = (over: Record<string, any> = {}) =>
+    sub({
+      submissionType: "event_feed",
+      contentLocale: "en",
+      targetDocumentId: LIBRARY_ID,
+      targetSlug: "abronhill-library",
+      draftData: null,
+      fields: {
+        kind: "connect",
+        credentialDocumentId: CRED_ID,
+        provider: "ical",
+        hints: { url: "https://example.org/cal.ics" },
+        test: { result: "ok", testedAt: "2026-10-01T00:00:00.000Z" },
+        accessToken: "SHOULD-NOT-LEAK",
+      },
+      ...over,
+    })
+
+  function feedSetup(over: Record<string, any> = {}) {
+    return setup([feedSubmission(over)], {
+      [LIBRARY]: [
+        {
+          documentId: LIBRARY_ID,
+          name: "Abronhill Library",
+          slug: "abronhill-library",
+        },
+      ],
+      [AFFILIATION]: [
+        {
+          documentId: "aff00000000000000000001",
+          baUserId: "u1",
+          library: { documentId: LIBRARY_ID },
+        },
+      ],
+      [CRED]: [
+        {
+          documentId: CRED_ID,
+          status: "pending",
+          hints: { url: "https://example.org/cal.ics" },
+          pendingHints: null,
+          lastTestedAt: null,
+          lastTestResult: null,
+          pendingTestedAt: null,
+          pendingTestResult: null,
+        },
+      ],
+    })
+  }
+
+  it("the detail hides the stray credential value and matches the review shape", async () => {
+    const { controller } = feedSetup()
+    const ctx = ctxFor({ viewer: INDEX_MOD, params: { documentId: id(1) } })
+    await controller.findOne(ctx)
+    expect(ctx.status).toBe(200)
+    expect(ctx.body.data.fields).not.toHaveProperty("accessToken")
+    const raw = JSON.stringify(ctx.body)
+    expect(raw).not.toContain("SHOULD-NOT-LEAK")
+    expect(raw).not.toContain("credentialsEncrypted")
+    expect(ctx.body.data.review).toMatchObject({
+      kind: "connect",
+      provider: "ical",
+      submitterHoldsClaim: true,
+      submittedTest: { result: "ok" },
+    })
+  })
+
+  it("PUT …/feed-test calls the credentials service for the right slot", async () => {
+    const { controller, services } = feedSetup()
+    const test = vi.fn(async () => ({ result: "ok" }))
+    services["events.credentials"] = { test }
+    const ctx = ctxFor({ viewer: INDEX_MOD, params: { documentId: id(1) } })
+    await controller.feedTest(ctx)
+    expect(ctx.status).toBe(200)
+    expect(ctx.body).toEqual({ data: { result: "ok" } })
+    expect(test).toHaveBeenCalledWith(CRED_ID, "current", `ba:${INDEX_MOD}`)
+  })
+
+  it("PUT …/feed-test tests the pending slot for a replacement", async () => {
+    const { controller, services } = feedSetup({
+      fields: {
+        kind: "replace",
+        credentialDocumentId: CRED_ID,
+        provider: "ical",
+        hints: {},
+        previousHints: {},
+      },
+    })
+    const test = vi.fn(async () => ({ result: "ok" }))
+    services["events.credentials"] = { test }
+    const ctx = ctxFor({ viewer: INDEX_MOD, params: { documentId: id(1) } })
+    await controller.feedTest(ctx)
+    expect(ctx.status).toBe(200)
+    expect(test).toHaveBeenCalledWith(CRED_ID, "pending", `ba:${INDEX_MOD}`)
+  })
+
+  it("400s a feed-test on a submission that isn't an event feed", async () => {
+    const { controller } = setup([
+      sub({ submissionType: "library_edit", draftData: null }),
+    ])
+    const ctx = ctxFor({ viewer: INDEX_MOD, params: { documentId: id(1) } })
+    await controller.feedTest(ctx)
+    expect(ctx.status).toBe(400)
   })
 })
 

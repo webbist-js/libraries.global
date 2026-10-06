@@ -101,6 +101,8 @@ export default [
       ["GET", "/feeds/providers", "feeds.providers"],
       ["POST", "/feeds/test", "feeds.testValues"],
       ["POST", "/feeds", "feeds.connect"],
+      ["POST", "/feeds/oauth/eventbrite", "feeds.oauthEventbrite"],
+      ["POST", "/feeds/:documentId/organization", "feeds.organization"],
       ["PUT", "/feeds/:documentId/values", "feeds.replace"],
       ["POST", "/feeds/:documentId/test", "feeds.testCurrent"],
       ["POST", "/feeds/:documentId/pause", "feeds.pause"],

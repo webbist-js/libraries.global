@@ -229,6 +229,31 @@ describe("moderator alerts", () => {
     expect(send).toHaveBeenCalledTimes(1)
     expect((send.mock.calls[0]![0] as any).to).toBe("mods@example.org")
   })
+
+  it("alerts MODERATORS_EMAIL when an event feed reaches pending, naming the platform", async () => {
+    const { svc, send } = setup()
+    await svc.create({
+      submissionType: "event_feed",
+      targetEntityType: "library",
+      targetDocumentId: "l00000000000000000000001",
+      fields: {
+        kind: "connect",
+        credentialDocumentId: "c00000000000000000000001",
+        provider: "ical",
+        hints: {},
+        test: { result: "ok", testedAt: "2026-10-01T00:00:00.000Z" },
+      },
+      submittedByUserId: "u1",
+      submittedByEmail: "u1@example.org",
+      submittedByName: "Ada",
+    })
+    await flush()
+    expect(send).toHaveBeenCalledTimes(1)
+    const msg: any = send.mock.calls[0]![0]
+    expect(msg.to).toBe("moderators@libraries.global")
+    expect(msg.text).toContain("Calendar feed (.ics)")
+    expect(msg.text).toContain("library")
+  })
 })
 
 describe("create's notify option", () => {

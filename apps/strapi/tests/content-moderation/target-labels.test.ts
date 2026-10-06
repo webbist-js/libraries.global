@@ -27,6 +27,15 @@ describe("targetLabelOf", () => {
     ).toBe("gone-library")
   })
 
+  it("names an event feed after the library, same as a library edit", () => {
+    expect(
+      targetLabelOf(
+        { submissionType: "event_feed", targetSlug: "abronhill-library" },
+        names
+      )
+    ).toBe("Abronhill Library")
+  })
+
   it("names a new library and a claim from their fields", () => {
     expect(
       targetLabelOf(

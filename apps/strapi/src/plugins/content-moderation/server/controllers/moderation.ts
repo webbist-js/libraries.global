@@ -424,6 +424,35 @@ export default ({ strapi }: { strapi: any }) => {
       ctx.body = { data: result.data }
     },
 
+    // PUT /moderation/submissions/:documentId/feed-test — re-run the connection
+    // test on the value under review. In scope and not your own, like a decision.
+    async feedTest(ctx: any) {
+      const auth = await authorise(ctx)
+      if (!auth) return
+      const s = await decidable(ctx, auth)
+      if (!s) return
+      if (
+        s.submissionType !== "event_feed" ||
+        !["pending", "needs_info"].includes(s.status)
+      )
+        return fail(
+          ctx,
+          400,
+          "Only an open event feed submission can be tested."
+        )
+      const f = (s.fields ?? {}) as Record<string, any>
+      const r = await strapi
+        .plugin("events")
+        .service("credentials")
+        .test(
+          String(f.credentialDocumentId ?? ""),
+          f.kind === "replace" ? "pending" : "current",
+          `ba:${auth.viewer.id}`
+        )
+      if (!r) return fail(ctx, 404, "This feed no longer has a value to test.")
+      ctx.body = { data: r }
+    },
+
     // GET /moderation/stats
     async stats(ctx: any) {
       const auth = await authorise(ctx)

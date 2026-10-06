@@ -13,6 +13,7 @@ import {
 } from "@repo/access"
 
 import { acceptedCount } from "./submission-policy"
+import { feedReview } from "../utils/feed-review"
 import { isVerification, verifyReview } from "../utils/library-verify"
 import { defaultLocale, knownLocale, submissionLocale } from "../utils/locales"
 import { isNewArticleDraft, roleApplicationFields } from "../utils/params"
@@ -302,16 +303,30 @@ const CLAIM_REVIEW_FIELDS = new Set([
   "claimedWebsiteDomain",
 ])
 
+/** What an event_feed review may show from `fields`: never a value. */
+const FEED_REVIEW_FIELDS = new Set([
+  "kind",
+  "credentialDocumentId",
+  "provider",
+  "hints",
+  "previousHints",
+  "test",
+])
+
 /** `fields` as the moderator sees them. */
 function reviewFields(s: { submissionType?: string; fields?: unknown }) {
   const f = s.fields
-  if (s.submissionType !== "library_claim" || !f || typeof f !== "object")
-    return f ?? null
+  if (!f || typeof f !== "object") return f ?? null
+  const allow =
+    s.submissionType === "library_claim"
+      ? CLAIM_REVIEW_FIELDS
+      : s.submissionType === "event_feed"
+        ? FEED_REVIEW_FIELDS
+        : null
+  if (!allow) return f
 
   return Object.fromEntries(
-    Object.entries(f as Record<string, unknown>).filter(([k]) =>
-      CLAIM_REVIEW_FIELDS.has(k)
-    )
+    Object.entries(f as Record<string, unknown>).filter(([k]) => allow.has(k))
   )
 }
 
@@ -548,6 +563,8 @@ export default ({ strapi }: { strapi: any }) => ({
         fields: { ...fields, kind: "record" },
       }).catch(() => null)
     }
+    if (s.submissionType === "event_feed")
+      return feedReview(strapi, s).catch(() => null)
 
     return null
   },

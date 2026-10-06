@@ -141,6 +141,12 @@ export default [
     config: { auth: false, policies: [] },
   },
   {
+    method: "PUT",
+    path: "/moderation/submissions/:documentId/feed-test",
+    handler: "moderation.feedTest",
+    config: { auth: false, policies: [] },
+  },
+  {
     method: "GET",
     path: "/moderation/stats",
     handler: "moderation.stats",

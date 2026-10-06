@@ -13,6 +13,7 @@ const DOC_ID = /^[a-z0-9]{20,32}$/
  */
 export default ({ strapi }: { strapi: any }) => {
   const feeds = () => strapi.plugin("events").service("feeds")
+  const oauth = () => strapi.plugin("events").service("feedOauth")
 
   function userOf(ctx: any) {
     const h = ctx.request?.headers ?? {}
@@ -98,6 +99,24 @@ export default ({ strapi }: { strapi: any }) => {
           provider: String(body(ctx).provider ?? ""),
           values: body(ctx).values,
         })
+      ),
+    oauthEventbrite: (ctx: any) =>
+      run(ctx, (u) =>
+        oauth().exchangeEventbrite(u, {
+          code: String(body(ctx).code ?? ""),
+          libraryDocumentId: String(body(ctx).libraryDocumentId ?? ""),
+        })
+      ),
+    organization: (ctx: any) =>
+      run(
+        ctx,
+        (u) =>
+          oauth().completeEventbrite(
+            u,
+            ctx.params.documentId,
+            String(body(ctx).organizationId ?? "")
+          ),
+        { docId: true }
       ),
     replace: (ctx: any) =>
       run(
