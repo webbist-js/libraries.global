@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react"
-import type { GapKey } from "@repo/shared-data"
+import { type GapKey, PANEL_GAPS } from "@repo/shared-data"
 import type { Locale } from "next-intl"
 
 import { DrivesHere } from "@/components/drives/DrivesHere"
@@ -33,12 +33,14 @@ import {
   type HeroMapLibraryPin,
   LocationHeroMap,
 } from "@/components/location/LocationHeroMap"
+import { MobilePlaceStops } from "@/components/mobile/MobilePlaceStops"
 import {
   NearbyRegions,
   RegionLibraryList,
 } from "@/components/region/RegionLibraryList"
 import { T } from "@/lib/design-tokens"
 import type { DriveView } from "@/lib/drives/drive-view"
+import { proposeHref } from "@/lib/drives/propose-link"
 import type {
   PopulatedRegionData,
   QuickLink,
@@ -128,6 +130,20 @@ export function RegionDetailPage({
     loaded: libraries.map((l) => ({ name: l.name, gaps: gapsBySlug[l.slug]! })),
     gapCounts,
   })
+
+  // The commonest fillable gap here, as a bonus prefill for the propose link.
+  const commonestGap = gapCounts
+    ? PANEL_GAPS.reduce<{
+        key: (typeof PANEL_GAPS)[number]
+        count: number
+      } | null>((best, key) => {
+        const count = gapCounts.gaps[key] ?? 0
+
+        return count > 0 && (!best || count > best.count)
+          ? { key, count }
+          : best
+      }, null)
+    : null
 
   // ── Hero ────────────────────────────────────────────────────────────────────
   const intro =
@@ -276,6 +292,7 @@ export function RegionDetailPage({
             </div>
 
             <LocationEventsStrip regionSlug={slug} locationLabel={name} />
+            <MobilePlaceStops level="region" slug={slug} name={name} />
 
             {hasQuickLinks ? (
               <section className="scroll-mt-24">
@@ -299,6 +316,13 @@ export function RegionDetailPage({
               actions={locationHelpActions({
                 hoursLibrary: asWizardLibrary(firstWith("hours")),
                 photoLibrary: asWizardLibrary(firstWith("photo")),
+                propose: {
+                  placeName: name,
+                  href: proposeHref({
+                    places: { region: [slug] },
+                    ...(commonestGap ? { gaps: [commonestGap.key] } : {}),
+                  }),
+                },
               })}
             />
           </div>

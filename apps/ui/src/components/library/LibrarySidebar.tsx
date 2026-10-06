@@ -6,7 +6,6 @@ import {
   type OpeningTimesValue,
   recordChecklist,
 } from "@/components/library/library-page.helpers"
-import { LibraryClaimButton } from "@/components/library/LibraryClaimButton"
 import {
   OpenCorrectionLink,
   OpenVerifyLink,
@@ -17,6 +16,7 @@ import {
   type TranslateLocale,
 } from "@/components/library/LibraryHelpPanel"
 import { LIB_ICONS, LibIcon } from "@/components/library/LibrarySectionCard"
+import { StaffLibraryEntry } from "@/components/library/StaffLibraryEntry"
 import {
   availableSections,
   verifyRecordOf,
@@ -90,9 +90,14 @@ export function LibraryRecordPanel({
           <LibIcon d={LIB_ICONS.people} size={16} />
         </span>
         <p className="m-0" style={{ color: T.ink.dim }}>
-          <strong style={{ color: T.ink.base }}>Community maintained.</strong>{" "}
-          No verified staff yet. Changes are checked by reviewers against
-          sources.
+          <strong style={{ color: T.ink.base }}>
+            {rec.hasStaff
+              ? "Maintained by library staff."
+              : "Community maintained."}
+          </strong>{" "}
+          {rec.hasStaff
+            ? "Verified staff keep this record up to date. Community suggestions are welcome."
+            : "No verified staff yet. Changes are checked by reviewers against sources."}
         </p>
       </div>
 
@@ -180,6 +185,7 @@ export function LibraryTasksPanel({
 }) {
   const { items } = libraryChecklist(library)
   const gaps = items.filter((i) => !i.done).map((i) => i.key)
+  const rec = asRecord(library)
 
   return (
     <LibraryHelpPanel
@@ -188,6 +194,11 @@ export function LibraryTasksPanel({
       libraryDocumentId={library.documentId ?? ""}
       libraryName={library.name ?? ""}
       librarySlug={library.slug ?? ""}
+      libraryPlace={{
+        city: library.city,
+        regionName: library.region?.name,
+      }}
+      libraryWebsite={rec.website as string | null}
       translateLocales={translateLocales}
     />
   )
@@ -303,7 +314,7 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
 
 export function LibraryClaimNote({ library }: { readonly library: Lib }) {
   return (
-    <LibraryClaimButton
+    <StaffLibraryEntry
       libraryDocumentId={library.documentId ?? ""}
       libraryEntityRef={library.entityRef ?? undefined}
       libraryName={library.name ?? ""}

@@ -10,7 +10,10 @@ import {
 import { LocationAbout } from "@/components/location/LocationAbout"
 import { LocationChildBrowser } from "@/components/location/LocationChildBrowser"
 import { LocationFeaturedLibraries } from "@/components/location/LocationFeaturedLibraries"
-import { LocationHelpPanel } from "@/components/location/LocationHelpPanel"
+import {
+  locationHelpActions,
+  LocationHelpPanel,
+} from "@/components/location/LocationHelpPanel"
 import {
   LocationHero,
   LocationHeroAction,
@@ -22,6 +25,7 @@ import {
 } from "@/components/location/LocationHeroMap"
 import { T } from "@/lib/design-tokens"
 import type { DriveView } from "@/lib/drives/drive-view"
+import { proposeHref } from "@/lib/drives/propose-link"
 import { buildLocationDescription } from "@/lib/seo/location"
 import type { PopulatedContinentData } from "@/lib/strapi-api/content/server"
 
@@ -212,6 +216,12 @@ export async function ContinentDetailPage({
                   ? "Some countries have no libraries documented yet. Know one? You could add the first."
                   : "Know a library we’ve missed, or seen its hours change? A reviewer checks every addition before it’s published."
               }
+              actions={locationHelpActions({
+                propose: {
+                  placeName: name,
+                  href: proposeHref({ places: { continent: [slug] } }),
+                },
+              })}
             />
           </div>
         </Container>

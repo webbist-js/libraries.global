@@ -14,7 +14,10 @@ import {
 import { LocationAbout } from "@/components/location/LocationAbout"
 import { LocationChildBrowser } from "@/components/location/LocationChildBrowser"
 import { LocationFeaturedLibraries } from "@/components/location/LocationFeaturedLibraries"
-import { LocationHelpPanel } from "@/components/location/LocationHelpPanel"
+import {
+  locationHelpActions,
+  LocationHelpPanel,
+} from "@/components/location/LocationHelpPanel"
 import {
   LocationEmptyState,
   LocationHero,
@@ -28,6 +31,7 @@ import {
 } from "@/components/location/LocationHeroMap"
 import { T } from "@/lib/design-tokens"
 import type { DriveView } from "@/lib/drives/drive-view"
+import { proposeHref } from "@/lib/drives/propose-link"
 import { buildLocationDescription } from "@/lib/seo/location"
 import type {
   PopulatedCountryData,
@@ -253,7 +257,16 @@ export function CountryDetailPage({
 
             <DrivesHere placeName={name} items={drives} />
 
-            <LocationHelpPanel name={name} body={helpBody} />
+            <LocationHelpPanel
+              name={name}
+              body={helpBody}
+              actions={locationHelpActions({
+                propose: {
+                  placeName: name,
+                  href: proposeHref({ places: { country: [slug] } }),
+                },
+              })}
+            />
           </div>
         </Container>
       </main>
