@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Libraries Global//Access E2E fixture//EN
+CALSCALE:GREGORIAN
+X-WR-CALNAME:Library events (test fixture)
+BEGIN:VEVENT
+UID:access-e2e-event-feed-1@libraries.global
+DTSTAMP:20261001T090000Z
+DTSTART:20261101T180000Z
+DTEND:20261101T193000Z
+SUMMARY:Local history talk
+DESCRIPTION:A fixture event used by the event feeds access E2E spec.
+LOCATION:Main branch, reading room
+END:VEVENT
+END:VCALENDAR
