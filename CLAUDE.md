@@ -408,6 +408,7 @@ Libraries with `iiifEndpoint` can expose their digital collections. Plan:
 - **Node 22 required** (`nvm use`) — a v20 shell will start but violates `engines`
 - **TypeScript types** for Strapi are generated into `packages/strapi-types` — regenerate after schema changes
 - **Lint** runs on pre-commit via ESLint + SonarJS; fix all errors before committing (warnings are tolerated)
+- **Tests in multi-step builds:** while working, run only the test files a change creates or touches. Run the full Strapi and UI suites, the typecheck and the plugin build once, at the end of the work, before the final review.
 - **No `overflow-x-hidden` on page wrappers** — it breaks sticky headers and negative margin heroes
 - **`-mt-14` hero pattern** requires the parent chain to have no `overflow: hidden` ancestors
 - Always use `formatStrapiMediaUrl()` for Strapi media URLs — it handles relative `/uploads/` paths and absolute CDN paths
