@@ -31,6 +31,7 @@ function seed() {
     ],
     [CRED]: [
       {
+        id: 1,
         documentId: "credA0000000000000000001",
         provider: "ical",
         label: "A",
@@ -40,6 +41,7 @@ function seed() {
         libraries: [{ documentId: "lib00000000000000000001" }],
       },
       {
+        id: 2,
         documentId: "credB0000000000000000002",
         provider: "ical",
         label: "B",
@@ -189,6 +191,28 @@ describe("credentials service: test", () => {
       await service.test("credA0000000000000000001", "current", "admin:1")
     ).toEqual({ result: "auth_failed" })
     expect(store[CRED]![0]!.lastTestResult).toBe("auth_failed")
+  })
+})
+
+describe("credentials service: delete", () => {
+  it("removes only the deleted credential's events, logs it and resyncs its libraries", async () => {
+    const { strapi, store } = seed()
+    const EVENT_UID = "plugin::events.event"
+    store[EVENT_UID] = [
+      { documentId: "evA1", credentialId: 1 },
+      { documentId: "evB1", credentialId: 2 },
+    ]
+    const service = credentialsFactory({ strapi })
+
+    const removed = await service.delete("credA0000000000000000001", "admin:9")
+
+    expect(removed?.documentId).toBe("credA0000000000000000001")
+    expect(store[EVENT_UID]!.map((e) => e.documentId)).toEqual(["evB1"])
+    expect(store[EVENTS]!.at(-1)).toMatchObject({
+      action: "admin_deleted",
+      actor: "admin:9",
+    })
+    expect(await publishedFlag(strapi, "lib00000000000000000001")).toBe(false)
   })
 })
 

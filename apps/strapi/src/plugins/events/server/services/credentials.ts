@@ -70,9 +70,11 @@ type Deps = {
 
 // Belt and suspenders beyond the Document Service's own `fields` filter:
 // a value never reaches a caller of this service, even if a future change
-// to a query here forgets to list it.
+// to a query here forgets to list it. `id` (the row's internal numeric key,
+// never shown to a client) always comes through: `delete` needs it to scope
+// the credential's Events, and real Strapi returns it regardless of `fields`.
 function pick(row: any, fields: readonly string[]): any {
-  const out: Record<string, unknown> = {}
+  const out: Record<string, unknown> = { id: row.id }
   for (const f of fields) out[f] = row[f]
   out.libraries = row.libraries
 
