@@ -1,5 +1,7 @@
 import "server-only"
 
+import type { Locale } from "next-intl"
+
 import { logNonBlockingError } from "@/lib/logging"
 import { PublicStrapiClient } from "@/lib/strapi-api"
 import type { APIResponse } from "@/types/api"
@@ -55,7 +57,7 @@ export async function fetchDrives(
   try {
     const res = (await PublicStrapiClient.fetchAPI(
       "/drives",
-      { state: status, locale, limit },
+      { state: status, locale: locale as Locale | undefined, limit },
       driveRequestInit()
     )) as APIResponse<Drive[]>
 
@@ -75,7 +77,7 @@ export async function fetchDrive(
   try {
     const res = (await PublicStrapiClient.fetchAPI(
       `/drives/by-slug/${encodeURIComponent(slug)}`,
-      { locale },
+      { locale: locale as Locale | undefined },
       driveRequestInit(slug)
     )) as APIResponse<Drive | null>
 

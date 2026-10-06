@@ -4,6 +4,8 @@ import { headers } from "next/headers"
 import { StandingCard } from "@/components/community/StandingCard"
 import { TopThisMonthCard } from "@/components/community/TopThisMonthCard"
 import { VoteOnAdditionsCard } from "@/components/community/VoteOnAdditionsCard"
+import { FinishedDrives } from "@/components/drives/FinishedDrives"
+import { isFocusFilterKey } from "@/components/drives/focus-meta"
 import { getSessionSSR } from "@/lib/auth-server"
 import { fetchDriveGaps } from "@/lib/community/drive-gaps-server"
 import {
@@ -13,6 +15,11 @@ import {
 import { isVotable } from "@/lib/community/suggestions"
 import { fetchPublicSuggestions } from "@/lib/community/suggestions-server"
 import { T } from "@/lib/design-tokens"
+import {
+  howDrivesWorkHref,
+  loadDriveViews,
+} from "@/lib/drives/drive-view-server"
+import { fetchDrives } from "@/lib/drives/drives-server"
 import { fetchOwnProfile, type OwnProfile } from "@/lib/own-profile-server"
 import { buildMetadata } from "@/lib/seo/metadata"
 import { getInitials } from "@/lib/types/leaderboard"
@@ -20,6 +27,10 @@ import { getInitials } from "@/lib/types/leaderboard"
 import { CommunitySectionHeader } from "./_components/CommunitySectionHeader"
 import { GapsWorthADrive } from "./_components/GapsWorthADrive"
 import { NoDrivesCard } from "./_components/NoDrivesCard"
+import { NoticeboardDrives } from "./_components/NoticeboardDrives"
+
+/** "Recently finished" lists this many closed drives. */
+const FINISHED_SHOWN = 5
 
 export async function generateMetadata({
   params,
@@ -54,21 +65,42 @@ function viewerInitials(
 
 export default async function CommunityPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>
+  searchParams: Promise<{ focus?: string | string[] }>
 }) {
-  const { locale } = await params
+  const [{ locale }, { focus: focusParam }] = await Promise.all([
+    params,
+    searchParams,
+  ])
+  const focus = isFocusFilterKey(focusParam) ? focusParam : null
   const session = await getSessionSSR(await headers())
   const user = session?.user ?? null
 
-  const [standing, profile, top, suggestions, gaps] = await Promise.all([
+  const [
+    standing,
+    profile,
+    top,
+    suggestions,
+    gaps,
+    openDrives,
+    closedDrives,
+    howHref,
+  ] = await Promise.all([
     user ? fetchStanding(user.id, "month") : Promise.resolve(null),
     user ? fetchOwnProfile(user) : Promise.resolve(null),
     fetchLeaderboard("month", 3),
     fetchPublicSuggestions(),
     fetchDriveGaps(locale),
+    fetchDrives("open", locale),
+    fetchDrives("closed", locale, FINISHED_SHOWN),
+    howDrivesWorkHref(locale),
   ])
   const votableCount = suggestions.filter(isVotable).length
+  const views = await loadDriveViews([...openDrives, ...closedDrives], locale)
+  const open = views.slice(0, openDrives.length)
+  const finished = views.slice(openDrives.length)
 
   return (
     <div
@@ -78,7 +110,7 @@ export default async function CommunityPage({
       <CommunitySectionHeader
         title="The *noticeboard.*"
         lead="Community drives to fill gaps in the index. Pick one, work through small tasks, and see the whole effort move forward."
-        counts={{ suggestions: votableCount }}
+        counts={{ noticeboard: open.length, suggestions: votableCount }}
       />
 
       <div
@@ -93,9 +125,20 @@ export default async function CommunityPage({
           className="flex min-w-0 flex-col"
           style={{ flex: "2 1 440px", gap: "clamp(24px,3vw,36px)" }}
         >
-          {/* D1 replaces this card with the pinned drive and open drives. */}
-          <NoDrivesCard hasGaps={gaps.length > 0} />
-          <GapsWorthADrive gaps={gaps} />
+          {open.length > 0 ? (
+            <NoticeboardDrives
+              open={open}
+              finished={finished}
+              focus={focus}
+              howHref={howHref}
+            />
+          ) : (
+            <>
+              <NoDrivesCard hasGaps={gaps.length > 0} />
+              <GapsWorthADrive gaps={gaps} />
+              <FinishedDrives views={finished} />
+            </>
+          )}
         </div>
 
         <aside

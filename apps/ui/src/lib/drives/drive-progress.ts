@@ -42,40 +42,50 @@ export async function driveCounts(
   drive: DriveCountsInput,
   locale?: string
 ): Promise<DriveCounts | null> {
+  const [counts] = await driveCountsMany([drive], locale)
+
+  return counts ?? null
+}
+
+/**
+ * `driveCounts` for several Drives in one `multiSearch` (two queries per
+ * Drive), so the Noticeboard asks Meilisearch once however many drives are
+ * open. One entry per Drive, in order; every entry is null on failure.
+ */
+export async function driveCountsMany(
+  drives: readonly DriveCountsInput[],
+  locale?: string
+): Promise<(DriveCounts | null)[]> {
+  if (drives.length === 0) return []
+
   try {
-    const filters = driveFilters({
-      scope: drive.scope,
-      focus: drive.focus,
-      openedAt: drive.openedAt,
-    })
     const localeClause = searchLocaleFilter(locale)
+    const query = (filter: string) => ({
+      indexUid: "library",
+      filter: `${filter} AND ${localeClause}`,
+      limit: 0,
+      facets: ["locale"],
+    })
 
     const { results } = await meiliClient.multiSearch({
-      queries: [
-        {
-          indexUid: "library",
-          filter: `${filters.scope} AND ${localeClause}`,
-          limit: 0,
-          facets: ["locale"],
-        },
-        {
-          indexUid: "library",
-          filter: `${filters.todo} AND ${localeClause}`,
-          limit: 0,
-          facets: ["locale"],
-        },
-      ],
-    })
-    const [scopeResult, todoResult] = results as unknown as {
-      facetDistribution?: Distribution
-    }[]
+      queries: drives.flatMap((drive) => {
+        const filters = driveFilters({
+          scope: drive.scope,
+          focus: drive.focus,
+          openedAt: drive.openedAt,
+        })
 
-    return {
-      total: countOf(scopeResult?.facetDistribution, "locale"),
-      todo: countOf(todoResult?.facetDistribution, "locale"),
-    }
+        return [query(filters.scope), query(filters.todo)]
+      }),
+    })
+    const facets = results as unknown as { facetDistribution?: Distribution }[]
+
+    return drives.map((_, i) => ({
+      total: countOf(facets[i * 2]?.facetDistribution, "locale"),
+      todo: countOf(facets[i * 2 + 1]?.facetDistribution, "locale"),
+    }))
   } catch {
-    return null
+    return drives.map(() => null)
   }
 }
 

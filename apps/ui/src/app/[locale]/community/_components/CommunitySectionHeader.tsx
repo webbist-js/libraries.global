@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 
-import { PageHero } from "@/components/ds"
+import { type BreadcrumbItem, PageHero } from "@/components/ds"
 
 import { CommunityNavBar, type CommunityTabCounts } from "./CommunityNavBar"
 
@@ -11,6 +11,7 @@ import { CommunityNavBar, type CommunityTabCounts } from "./CommunityNavBar"
  */
 export function CommunitySectionHeader({
   section,
+  crumbs,
   title,
   lead,
   counts,
@@ -18,6 +19,11 @@ export function CommunitySectionHeader({
 }: {
   /** Breadcrumb leaf after "Community". Omit on the Noticeboard itself. */
   readonly section?: string
+  /**
+   * The trail after "Community" when one leaf isn't enough (Community ›
+   * Drives › a drive); wins over `section`. The last item is the page.
+   */
+  readonly crumbs?: readonly BreadcrumbItem[]
   readonly title: string
   readonly lead?: ReactNode
   /** Tab counts (open drives, open suggestions); a zero or missing count shows none. */
@@ -25,14 +31,16 @@ export function CommunitySectionHeader({
   /** Rendered under the lead in the right column. */
   readonly children?: ReactNode
 }) {
+  const trail = crumbs?.length ? crumbs : section ? [{ label: section }] : []
+
   return (
     <PageHero
       breadcrumb={
-        section
+        trail.length > 0
           ? [
               { label: "Home", href: "/" },
               { label: "Community", href: "/community" },
-              { label: section },
+              ...trail,
             ]
           : [{ label: "Home", href: "/" }, { label: "Community" }]
       }

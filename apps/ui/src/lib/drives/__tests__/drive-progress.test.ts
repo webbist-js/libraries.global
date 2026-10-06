@@ -7,7 +7,8 @@ vi.mock("@/lib/meilisearch", () => ({
   searchLocaleFilter: (l?: string) => `locale = "${l ?? "en"}"`,
 }))
 
-const { driveCounts, driveProgressOf } = await import("../drive-progress")
+const { driveCounts, driveCountsMany, driveProgressOf } =
+  await import("../drive-progress")
 
 const SCOPE_FILTER =
   'documentId IN ["lib1", "lib2"] AND operationalStatus != "permanently_closed"'
@@ -92,6 +93,48 @@ describe("driveCounts", () => {
     const result = await driveCounts(drive, "en")
 
     expect(result).toBeNull()
+  })
+})
+
+describe("driveCountsMany", () => {
+  it("counts every drive in one multiSearch, two queries each, in order", async () => {
+    multiSearch.mockResolvedValue({
+      results: [
+        facetResult(120),
+        facetResult(37),
+        facetResult(8),
+        facetResult(8),
+      ],
+    })
+    const other = {
+      scope: { places: { region: ["ohio"] } },
+      focus: { kind: "gaps" as const, gaps: ["photo" as const] },
+    }
+
+    const result = await driveCountsMany([drive, other], "en")
+
+    expect(result).toEqual([
+      { total: 120, todo: 37 },
+      { total: 8, todo: 8 },
+    ])
+    expect(multiSearch).toHaveBeenCalledTimes(1)
+    const [{ queries }] = multiSearch.mock.calls[0] as [
+      { queries: { filter: string }[] },
+    ]
+    expect(queries).toHaveLength(4)
+    expect(queries[2]!.filter).toContain('region_slug IN ["ohio"]')
+    expect(queries[3]!.filter).toContain('needs IN ["photo"]')
+  })
+
+  it("asks nothing for no drives", async () => {
+    expect(await driveCountsMany([], "en")).toEqual([])
+    expect(multiSearch).not.toHaveBeenCalled()
+  })
+
+  it("is null for every drive when Meilisearch fails", async () => {
+    multiSearch.mockRejectedValue(new Error("meilisearch down"))
+
+    expect(await driveCountsMany([drive, drive], "en")).toEqual([null, null])
   })
 })
 

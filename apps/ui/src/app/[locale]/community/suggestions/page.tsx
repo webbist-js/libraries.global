@@ -16,6 +16,7 @@ import {
   fetchPublicSuggestions,
 } from "@/lib/community/suggestions-server"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
+import { openDriveCount } from "@/lib/drives/drive-view-server"
 import { buildMetadata } from "@/lib/seo/metadata"
 
 import { CommunitySectionHeader } from "../_components/CommunitySectionHeader"
@@ -172,11 +173,17 @@ function RecentlyAdded({
   )
 }
 
-export default async function SuggestionsPage() {
-  const [suggestions, optionNames, session] = await Promise.all([
+export default async function SuggestionsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  const [suggestions, optionNames, session, openDrives] = await Promise.all([
     fetchPublicSuggestions(),
     fetchOptionNames(),
     getSessionSSR(await headers()),
+    openDriveCount(locale),
   ])
   const now = new Date()
   const votableCount = suggestions.filter(isVotable).length
@@ -190,7 +197,7 @@ export default async function SuggestionsPage() {
         section="Suggestions"
         title="What should the lists *include?*"
         lead="Name a feature or service the lists don’t have yet. Vote for the ones you’d use; the editorial board decides monthly."
-        counts={{ suggestions: votableCount }}
+        counts={{ noticeboard: openDrives, suggestions: votableCount }}
       >
         <div className="flex flex-wrap gap-2.5">
           <a

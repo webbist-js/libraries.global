@@ -55,6 +55,21 @@ export const TYPE_TINT = {
 
 export type TypeTintKey = keyof typeof TYPE_TINT
 
+/**
+ * [bg, fg] tint pairs for a Drive's Focus (chips, progress bars), built from
+ * the type tints. `other` covers the Focus kinds the task panel can't fill
+ * yet (verify, the whole record, the other gap keys).
+ */
+export const FOCUS_TINT = {
+  hours: TYPE_TINT.public,
+  photo: TYPE_TINT.special,
+  accessibility: TYPE_TINT.academic,
+  contact: TYPE_TINT.national,
+  other: TYPE_TINT.neutral,
+} as const
+
+export type FocusTintKey = keyof typeof FOCUS_TINT
+
 /** Map a Strapi libraryType enum value onto a tint pair. */
 export function tintForLibraryType(libraryType?: string | null) {
   switch (libraryType) {

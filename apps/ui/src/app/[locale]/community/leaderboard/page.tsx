@@ -13,6 +13,7 @@ import {
 import { isVotable } from "@/lib/community/suggestions"
 import { fetchPublicSuggestions } from "@/lib/community/suggestions-server"
 import { T } from "@/lib/design-tokens"
+import { openDriveCount } from "@/lib/drives/drive-view-server"
 import { fetchOwnProfile, type OwnProfile } from "@/lib/own-profile-server"
 import { buildMetadata } from "@/lib/seo/metadata"
 import { getInitials } from "@/lib/types/leaderboard"
@@ -55,23 +56,30 @@ function viewerInitials(
 }
 
 export default async function LeaderboardPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ locale: string }>
   searchParams: Promise<{ period?: string }>
 }) {
-  const { period: periodParam } = await searchParams
+  const [{ locale }, { period: periodParam }] = await Promise.all([
+    params,
+    searchParams,
+  ])
   const period = parsePeriod(periodParam)
   const periodPhrase = PERIOD_PHRASE[period]
 
   const session = await getSessionSSR(await headers())
   const user = session?.user ?? null
 
-  const [entries, standing, profile, suggestions] = await Promise.all([
-    fetchLeaderboard(period),
-    user ? fetchStanding(user.id, period) : Promise.resolve(null),
-    user ? fetchOwnProfile(user) : Promise.resolve(null),
-    fetchPublicSuggestions(),
-  ])
+  const [entries, standing, profile, suggestions, openDrives] =
+    await Promise.all([
+      fetchLeaderboard(period),
+      user ? fetchStanding(user.id, period) : Promise.resolve(null),
+      user ? fetchOwnProfile(user) : Promise.resolve(null),
+      fetchPublicSuggestions(),
+      openDriveCount(locale),
+    ])
   const votableCount = suggestions.filter(isVotable).length
   const initials = user ? viewerInitials(profile, user) : ""
 
@@ -89,7 +97,7 @@ export default async function LeaderboardPage({
         section="Leaderboard"
         title="The community, *in numbers.*"
         lead="The people keeping the atlas accurate and growing. Points are earned only for approved contributions."
-        counts={{ suggestions: votableCount }}
+        counts={{ noticeboard: openDrives, suggestions: votableCount }}
       />
 
       <div

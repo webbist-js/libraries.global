@@ -1,0 +1,133 @@
+import { Icon } from "@iconify/react"
+import type { ReactNode } from "react"
+
+import GlobalLink from "@/components/global/GlobalLink"
+import { T } from "@/lib/design-tokens"
+import { type DriveView, progressMeta } from "@/lib/drives/drive-view"
+
+import { DriveDates } from "./DriveDates"
+import { DriveFocusChip } from "./DriveFocusChip"
+import { DriveProgress } from "./DriveProgress"
+import { DriveTitle } from "./DriveTitle"
+import { focusChipOf, gapPhraseOf } from "./focus-meta"
+
+const CHIP =
+  "inline-flex items-center gap-1.5 rounded-full px-3 py-[5px] text-[14px]"
+
+/**
+ * The Noticeboard's big drive card (mockup: the pinned card). Chips for
+ * "Pinned drive" (or "Featured drive" when it isn't pinned), the focus and
+ * the place, the dates on the right in serif, a serif title and summary,
+ * progress, then "Join this drive" and "How drives work". `children` is the
+ * task list slot.
+ */
+export function FeaturedDrive({
+  view,
+  howHref,
+  now,
+  children,
+}: {
+  readonly view: DriveView
+  /** The "How drives work" Knowledge article; null falls back to the drive's rules. */
+  readonly howHref: string | null
+  readonly now?: Date
+  readonly children?: ReactNode
+}) {
+  const { drive, progress, helpers, href, place } = view
+  const { tint } = focusChipOf(drive.focus)
+
+  return (
+    <article
+      aria-labelledby="featured-drive-heading"
+      className="flex flex-col"
+      style={{
+        background: T.bg.deep,
+        border: `1px solid ${T.border.line}`,
+        borderRadius: 28,
+        padding: "clamp(22px,3vw,36px)",
+        gap: 18,
+      }}
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <span
+          className={`${CHIP} font-bold`}
+          style={{ background: T.accent.primary, color: T.bg.deep }}
+        >
+          <Icon
+            aria-hidden="true"
+            height={14}
+            icon={drive.pinned ? "mdi:pin-outline" : "mdi:star-outline"}
+            width={14}
+          />
+          {drive.pinned ? "Pinned drive" : "Featured drive"}
+        </span>
+        <DriveFocusChip focus={drive.focus} />
+        {place ? (
+          <span
+            className={`${CHIP} font-semibold`}
+            style={{ background: T.bg.muted, color: T.ink.base }}
+          >
+            {place}
+          </span>
+        ) : null}
+        <span className="ml-auto">
+          <DriveDates drive={drive} now={now} size="lg" />
+        </span>
+      </div>
+
+      <h2
+        id="featured-drive-heading"
+        className="m-0 text-balance"
+        style={{
+          fontFamily: T.font.serif,
+          fontWeight: 500,
+          fontSize: "clamp(34px,4vw,52px)",
+          lineHeight: 1.02,
+          letterSpacing: "-0.02em",
+          color: T.ink.base,
+        }}
+      >
+        <DriveTitle title={drive.title} />
+      </h2>
+      <p
+        className="m-0 max-w-[62ch] text-[17px] leading-[1.6]"
+        style={{ color: T.ink.base }}
+      >
+        {drive.summary}
+      </p>
+
+      {progress ? (
+        <DriveProgress
+          progress={progress}
+          unit={drive.unit}
+          gapPhrase={gapPhraseOf(drive.focus)}
+          goalPercent={drive.goalPercent}
+          meta={progressMeta(progress.percent, helpers)}
+          color={tint.fg}
+        />
+      ) : (
+        <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+          Progress shows once the drive is counted, within the hour.
+        </p>
+      )}
+
+      <div className="flex flex-wrap gap-2.5">
+        <GlobalLink
+          href={href}
+          className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-primary) px-[22px] py-3 text-[16px] font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
+        >
+          Join this drive
+        </GlobalLink>
+        <GlobalLink
+          href={howHref ?? `${href}#rules`}
+          className="inline-flex min-h-11 items-center rounded-full border border-(--t-border-hi) bg-white px-[22px] py-3 text-[16px] font-semibold no-underline hover:border-(--t-accent-primary)"
+          style={{ color: T.ink.base }}
+        >
+          How drives work
+        </GlobalLink>
+      </div>
+
+      {children}
+    </article>
+  )
+}
