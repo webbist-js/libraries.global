@@ -71,6 +71,27 @@ describe("resolveCapabilities", () => {
     expect(canSubmit(c, "library_edit")).toBe(false)
   })
 
+  it("allows event_feed only for a claimed library", () => {
+    const c = resolveCapabilities({
+      signedIn: true,
+      grants: [],
+      claims: [{ libraryDocumentId: "lib1" }],
+    })
+    expect(canSubmit(c, "event_feed", { libraryDocumentId: "lib1" })).toBe(true)
+    expect(canSubmit(c, "event_feed", { libraryDocumentId: "lib2" })).toBe(
+      false
+    )
+    expect(canSubmit(c, "event_feed")).toBe(false)
+    const reader = resolveCapabilities({
+      signedIn: true,
+      grants: [],
+      claims: [],
+    })
+    expect(canSubmit(reader, "event_feed", { libraryDocumentId: "lib1" })).toBe(
+      false
+    )
+  })
+
   it("does not let editors edit library records without a claim (D-C2)", () => {
     const c = resolveCapabilities(input({ contributorRole: "editorial_board" }))
     expect(canSubmit(c, "library_edit", { libraryDocumentId: "lib1" })).toBe(

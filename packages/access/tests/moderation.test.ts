@@ -109,7 +109,7 @@ describe("moderation queues", () => {
     )
   })
 
-  it("lists the five index types", () => {
+  it("lists the six index types", () => {
     expect(submissionTypesOfQueue("index").sort()).toEqual(
       [
         "correction",
@@ -117,6 +117,7 @@ describe("moderation queues", () => {
         "library_claim",
         "library_edit",
         "topic_suggestion",
+        "event_feed",
       ].sort()
     )
     expect(submissionTypesOfQueue("knowledge")).toEqual(["wiki_edit"])

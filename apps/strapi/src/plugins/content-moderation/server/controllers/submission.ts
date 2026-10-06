@@ -170,6 +170,22 @@ export default ({ strapi }: { strapi: any }) => ({
       return ctx.badRequest("submissionType is required")
     }
 
+    // Event Feed submissions carry a reference to an encrypted credential and
+    // are created only by the events plugin (POST /api/events/feeds), never
+    // from a client body.
+    if (submissionType === "event_feed") {
+      ctx.status = 400
+      ctx.body = {
+        error: {
+          status: 400,
+          name: "use_event_feed_endpoint",
+          message: "Connect an event feed from the event feeds page.",
+        },
+      }
+
+      return
+    }
+
     if (draftData !== undefined && !isValidDraftData(draftData)) {
       return ctx.badRequest("draftData must be an object under 256KB")
     }

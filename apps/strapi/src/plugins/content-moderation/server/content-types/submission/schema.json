@@ -20,6 +20,7 @@
         "new_library",
         "library_claim",
         "library_edit",
+        "event_feed",
         "wiki_edit",
         "blog_submission",
         "topic_suggestion",

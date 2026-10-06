@@ -104,6 +104,42 @@ describe("controller wiring: policy re-check closes the direct-edit race", () =>
     expect(ctx.status).toBe(403)
   })
 
+  it("rejects event_feed submissions from the generic create route", async () => {
+    const { controller } = makeControllerHarness({
+      [PROFILE]: [
+        {
+          documentId: "p1",
+          baUserId: "u1",
+          contributorRole: "reader",
+          tier: "Reader",
+        },
+      ],
+      [AFF]: [],
+      [SUB]: [],
+    })
+
+    const ctx: any = {
+      request: {
+        body: {
+          submissionType: "event_feed",
+        },
+        headers: serviceHeaders,
+      },
+      state: {},
+      unauthorized: vi.fn(),
+      badRequest: vi.fn(),
+    }
+
+    await controller.create(ctx)
+
+    expect(ctx.status).toBe(400)
+    expect(ctx.body).toMatchObject({
+      error: {
+        name: "use_event_feed_endpoint",
+      },
+    })
+  })
+
   it("(iv) saveDraft's compare-and-set where includes status:'draft', and returns not_draft when updateMany reports count 0", async () => {
     const documentId = "s000000000000000000001"
     const { strapi } = makeFakeStrapi({
