@@ -14,9 +14,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 Object.assign(globalThis, { React })
 
 const refresh = vi.fn()
-vi.mock("@/lib/navigation", () => ({
-  useRouter: () => ({ refresh, push: vi.fn(), replace: vi.fn() }),
-}))
+vi.mock("@/lib/navigation", async () => {
+  const { createElement: h } = await import("react")
+
+  return {
+    useRouter: () => ({ refresh, push: vi.fn(), replace: vi.fn() }),
+    Link: ({ href, children }: { href: string; children?: React.ReactNode }) =>
+      h("a", { href }, children),
+  }
+})
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
 
 const fetchMock = vi.fn(async () => Response.json({ data: {} }))
@@ -143,5 +149,59 @@ describe("ReviewDecisionForm", () => {
     renderForm({ status: "approved" })
     expect(screen.queryByRole("button", { name: "Approve" })).toBeNull()
     expect(screen.getByText(/decisions are final/i)).toBeTruthy()
+  })
+})
+
+describe("ReviewDecisionForm — Next in this drive", () => {
+  const DRIVE = "drv1234567890123456789a"
+  const NEXT = "nextdoc1234567890123456"
+
+  it("shows a link to the next pending submission after a decision", async () => {
+    fetchMock
+      .mockResolvedValueOnce(Response.json({ data: {} }))
+      .mockResolvedValueOnce(
+        Response.json({ data: [{ documentId: DOC }, { documentId: NEXT }] })
+      )
+    renderForm({ driveDocumentId: DRIVE })
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }))
+    await waitFor(() => expect(refresh).toHaveBeenCalled())
+    const link = await screen.findByRole("link", {
+      name: /Next in this drive/,
+    })
+    expect(link.getAttribute("href")).toBe(`/contribute/moderation/${NEXT}`)
+  })
+
+  it("skips a result that's this same submission", async () => {
+    fetchMock
+      .mockResolvedValueOnce(Response.json({ data: {} }))
+      .mockResolvedValueOnce(Response.json({ data: [{ documentId: DOC }] }))
+    renderForm({ driveDocumentId: DRIVE })
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }))
+    await waitFor(() => expect(refresh).toHaveBeenCalled())
+    expect(await screen.findByText("No more in this drive.")).toBeTruthy()
+  })
+
+  it("asks drive, status=pending, pageSize=2", async () => {
+    fetchMock
+      .mockResolvedValueOnce(Response.json({ data: {} }))
+      .mockResolvedValueOnce(Response.json({ data: [] }))
+    renderForm({ driveDocumentId: DRIVE })
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }))
+    await waitFor(() => expect(fetchMock.mock.calls.length).toBe(2))
+    const [url] = fetchMock.mock.calls[1] as unknown as [string]
+    const u = new URL(url, "http://localhost")
+    expect(u.pathname).toBe("/api/moderation/submissions")
+    expect(Object.fromEntries(u.searchParams)).toEqual({
+      drive: DRIVE,
+      status: "pending",
+      pageSize: "2",
+    })
+  })
+
+  it("never asks when the submission isn't tagged with a drive", async () => {
+    renderForm()
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }))
+    await waitFor(() => expect(refresh).toHaveBeenCalled())
+    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 })

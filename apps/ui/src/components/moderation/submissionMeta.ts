@@ -18,6 +18,9 @@ export type ModerationQueueName =
   | "journal"
   | "applications"
 
+/** A Submission's Drive tag: `api::drive.drive`'s id, slug and title. */
+export type DriveTag = { documentId: string; slug: string; title: string }
+
 export type ModerationRow = {
   documentId: string
   submissionType: string
@@ -29,6 +32,7 @@ export type ModerationRow = {
   submittedByName: string | null
   createdAt: string
   reviewedAt: string | null
+  drive: DriveTag | null
 }
 
 export type ArticleVersion = {

@@ -6,6 +6,7 @@ import { Badge, EmptyState, Pager } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
 import { Link, useRouter } from "@/lib/navigation"
 
+import { DriveChip } from "./DriveChip"
 import { ModerationFilters, type QueueFilters } from "./ModerationFilters"
 import { StatusBadge } from "./StatusBadge"
 import {
@@ -30,6 +31,7 @@ export function queueHref(s: QueueState): string {
   if (s.queue) p.set("queue", s.queue)
   if (s.locale) p.set("locale", s.locale)
   if (s.q) p.set("q", s.q)
+  if (s.drive) p.set("drive", s.drive)
   if (s.page > 1) p.set("page", String(s.page))
   const qs = p.toString()
 
@@ -45,6 +47,7 @@ function apiQuery(s: QueueState): string {
   if (s.queue) p.set("queue", s.queue)
   if (s.locale) p.set("locale", s.locale)
   if (s.q) p.set("q", s.q)
+  if (s.drive) p.set("drive", s.drive)
 
   return p.toString()
 }
@@ -138,7 +141,13 @@ export function ModerationQueue({
   const rows = result?.data ?? []
   const total = result?.meta.total ?? 0
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE))
-  const filtered = !!(state.queue || state.locale || state.q)
+  const filtered = !!(state.queue || state.locale || state.q || state.drive)
+  // All rows match the drive filter when one is set, so any row carrying
+  // it names the Drive; a page with no matches shows the banner untitled.
+  const driveTitle = state.drive
+    ? (rows.find((r) => r.drive?.documentId === state.drive)?.drive?.title ??
+      null)
+    : null
   const emptyMessage = filtered
     ? "No submissions match these filters."
     : state.segment === "pending"
@@ -156,6 +165,20 @@ export function ModerationQueue({
         counts={counts}
         onChange={onChange}
       />
+
+      {state.drive ? (
+        <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+          {driveTitle ? `Filtered by drive ${driveTitle}` : "Filtered by drive"}
+          {" · "}
+          <Link
+            href={queueHref({ ...state, drive: "", page: 1 })}
+            className="font-semibold underline-offset-2 hover:underline"
+            style={{ color: T.accent.primary }}
+          >
+            Clear
+          </Link>
+        </p>
+      ) : null}
 
       <p
         aria-live="polite"
@@ -237,13 +260,16 @@ export function ModerationQueue({
                     />
                   </td>
                   <th scope="row" className={`${cell} font-semibold`}>
-                    <Link
-                      href={`${BASE}/${row.documentId}`}
-                      className="underline-offset-2 hover:underline"
-                      style={{ color: T.accent.primary }}
-                    >
-                      {row.summary}
-                    </Link>
+                    <div className="flex flex-col items-start gap-1.5">
+                      <Link
+                        href={`${BASE}/${row.documentId}`}
+                        className="underline-offset-2 hover:underline"
+                        style={{ color: T.accent.primary }}
+                      >
+                        {row.summary}
+                      </Link>
+                      {row.drive ? <DriveChip drive={row.drive} /> : null}
+                    </div>
                   </th>
                   <td className={cell} style={{ color: T.ink.base }}>
                     {row.submittedByName ?? "Anonymous"}

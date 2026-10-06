@@ -63,6 +63,7 @@ export const SUBMISSION_LIST_PARAMS: Record<string, ParamRule> = {
   q: (v) => v.length > 0 && v.length <= 100,
   page: intIn(1, 500),
   pageSize: intIn(1, 50),
+  drive: isDocumentIdParam,
 }
 
 /** `GET /moderation/relation-labels`. */

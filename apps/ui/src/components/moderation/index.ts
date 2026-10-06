@@ -1,5 +1,6 @@
 export { ArticleReviewPanel } from "./ArticleReviewPanel"
 export { ClaimPanel } from "./ClaimPanel"
+export { DriveChip } from "./DriveChip"
 export { EventFeedPanel, type EventFeedReview } from "./EventFeedPanel"
 export { FacilitiesPanel } from "./FacilitiesPanel"
 export { FeedTestButton } from "./FeedTestButton"

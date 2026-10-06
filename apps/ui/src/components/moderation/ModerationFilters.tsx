@@ -17,6 +17,10 @@ export type QueueFilters = {
   queue: ModerationQueueName | ""
   locale: string
   q: string
+  /** A Drive's documentId, or "": not part of the filter controls below,
+   * only carried in the URL by `queueHref`/`apiQuery` (set by a deep
+   * link, cleared from the "Filtered by drive" banner). */
+  drive: string
 }
 
 const selectStyle: React.CSSProperties = {

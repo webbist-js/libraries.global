@@ -5,6 +5,7 @@ import {
   SEGMENTS,
 } from "@/components/moderation"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
+import { isDocumentIdParam } from "@/lib/bridge-params"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 import { privateMetadata } from "@/lib/seo/metadata"
@@ -49,6 +50,7 @@ export default async function ModerationQueuePage({
   const queue = first(sp.queue)
   const locale = first(sp.locale)
   const q = first(sp.q).slice(0, 100)
+  const drive = first(sp.drive)
   const page = Math.min(
     500,
     Math.max(1, Math.trunc(Number(first(sp.page))) || 1)
@@ -62,6 +64,7 @@ export default async function ModerationQueuePage({
       : "",
     locale: filterLocales.some((l) => l.code === locale) ? locale : "",
     q,
+    drive: isDocumentIdParam(drive) ? drive : "",
     page,
   }
 

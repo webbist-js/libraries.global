@@ -84,6 +84,19 @@ describe("proxyModeration", () => {
     expect([...strapiUrl().searchParams.keys()]).toEqual([])
   })
 
+  it("forwards a valid drive documentId", async () => {
+    await list(`?status=pending&drive=${DOC}`)
+    expect(Object.fromEntries(strapiUrl().searchParams)).toEqual({
+      status: "pending",
+      drive: DOC,
+    })
+  })
+
+  it("drops a malformed drive id", async () => {
+    await list("?status=pending&drive=not-an-id!")
+    expect([...strapiUrl().searchParams.keys()]).toEqual(["status"])
+  })
+
   it("sends the bridge identity from the session", async () => {
     await list("")
     const headers = strapiCall()[1].headers as Record<string, string>

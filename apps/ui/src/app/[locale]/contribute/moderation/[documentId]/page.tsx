@@ -6,6 +6,7 @@ import {
   ArticleReviewPanel,
   ClaimPanel,
   detailOf,
+  DriveChip,
   EventFeedPanel,
   type EventFeedReview,
   EVIDENCE_TYPE_LABELS,
@@ -273,6 +274,7 @@ export default async function ReviewSubmissionPage({
           <span className="text-[15px]" style={{ color: T.ink.dim }}>
             {`${moderationRowLabel(d)} · ${language}`}
           </span>
+          {d.drive ? <DriveChip drive={d.drive} /> : null}
         </div>
       </ModerationHero>
 
@@ -338,6 +340,7 @@ export default async function ReviewSubmissionPage({
               submissionType={d.submissionType}
               canPublish={d.canPublish}
               reviewedAt={d.reviewedAt}
+              driveDocumentId={d.drive?.documentId ?? null}
             />
           </Section>
           <Section title="History">

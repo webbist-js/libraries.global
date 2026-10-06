@@ -1,14 +1,17 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useId, useState } from "react"
+import { useEffect, useId, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
-import { useRouter } from "@/lib/navigation"
+import { Link, useRouter } from "@/lib/navigation"
 
 import { decisionErrorMessage, statusMeta } from "./submissionMeta"
 
 type Decision = "approved" | "rejected" | "needs_info"
+
+/** The next pending submission in the same Drive, once found. */
+type NextInDrive = { documentId: string; href: string } | "none" | null
 
 const OPEN = new Set(["pending", "needs_info"])
 const MAX_NOTE = 2000
@@ -36,12 +39,15 @@ export function ReviewDecisionForm({
   submissionType,
   canPublish,
   reviewedAt,
+  driveDocumentId,
 }: {
   readonly documentId: string
   readonly status: string
   readonly submissionType?: string
   readonly canPublish: boolean
   readonly reviewedAt?: string | null
+  /** The Drive this submission is tagged with, when there is one. */
+  readonly driveDocumentId?: string | null
 }) {
   const router = useRouter()
   const noteId = useId()
@@ -51,6 +57,58 @@ export function ReviewDecisionForm({
   const [busy, setBusy] = useState<Decision | "publish" | null>(null)
   const [confirming, setConfirming] = useState(false)
   const [done, setDone] = useState<string | null>(null)
+  const [nextInDrive, setNextInDrive] = useState<NextInDrive>(null)
+
+  // Once a decision has been made here, look for the next pending
+  // submission in the same Drive, so the Moderator can keep moving
+  // through it without going back to the queue.
+  useEffect(() => {
+    if (!done || !driveDocumentId) return
+    let cancelled = false
+    fetch(
+      `/api/moderation/submissions?drive=${encodeURIComponent(driveDocumentId)}&status=pending&pageSize=2`
+    )
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { data?: { documentId: string }[] } | null) => {
+        if (cancelled) return
+        const list = Array.isArray(j?.data) ? j.data : []
+        const next = list.find((r) => r.documentId !== documentId)
+        setNextInDrive(
+          next
+            ? {
+                documentId: next.documentId,
+                href: `/contribute/moderation/${encodeURIComponent(next.documentId)}`,
+              }
+            : "none"
+        )
+      })
+      .catch(() => {
+        if (!cancelled) setNextInDrive("none")
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [done, driveDocumentId, documentId])
+
+  const nextInDriveBlock =
+    done && driveDocumentId ? (
+      <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+        {nextInDrive === "none" ? (
+          "No more in this drive."
+        ) : nextInDrive ? (
+          <Link
+            href={nextInDrive.href}
+            className="font-semibold underline-offset-2 hover:underline"
+            style={{ color: T.accent.primary }}
+          >
+            Next in this drive →
+          </Link>
+        ) : (
+          "Checking the drive…"
+        )}
+      </p>
+    ) : null
 
   if (!OPEN.has(status)) {
     const meta = statusMeta(status)
@@ -72,6 +130,7 @@ export function ReviewDecisionForm({
         >
           {`This submission is ${meta.label.toLowerCase()}${reviewedAt ? ` (${new Date(reviewedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })})` : ""}; decisions are final.`}
         </p>
+        {nextInDriveBlock}
       </div>
     )
   }
@@ -191,6 +250,7 @@ export function ReviewDecisionForm({
       >
         {done}
       </p>
+      {nextInDriveBlock}
 
       {confirming ? (
         <div

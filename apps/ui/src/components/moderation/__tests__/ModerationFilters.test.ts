@@ -21,7 +21,13 @@ vi.mock("@/lib/navigation", async () => {
 const { ModerationFilters } = await import("../ModerationFilters")
 
 const props = (q: string) => ({
-  value: { segment: "pending" as const, queue: "" as const, locale: "", q },
+  value: {
+    segment: "pending" as const,
+    queue: "" as const,
+    locale: "",
+    q,
+    drive: "",
+  },
   queues: ["index" as const],
   locales: [],
   counts: {},
