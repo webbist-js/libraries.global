@@ -1,57 +1,34 @@
-import { Icon } from "@iconify/react"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
-import GlobalLink from "@/components/global/GlobalLink"
+import { LibraryFeedsSection } from "@/components/event-feeds/LibraryFeedsSection"
+import type { LibraryFeeds } from "@/components/event-feeds/types"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
-import { fetchOwnProfile } from "@/lib/own-profile-server"
+import { fetchEventFeeds } from "@/lib/event-feed-proxy"
 import { privateMetadata } from "@/lib/seo/metadata"
 
 import { ContributeSectionHeader } from "../_components/ContributeSectionHeader"
-import { EventFeedForm } from "./_components/EventFeedForm"
+import { ClaimFirst } from "./_components/ClaimFirst"
+import { FeedsAside } from "./_components/FeedsAside"
 
-export const metadata = privateMetadata("Connect an event feed")
-
-const ASIDE_STEPS = [
-  {
-    icon: "mdi:library-outline",
-    title: "Pick your library",
-    body: "Choose the library you're affiliated with. It needs an entity reference in the index.",
-  },
-  {
-    icon: "mdi:calendar-sync-outline",
-    title: "Choose a platform",
-    body: "Eventbrite, iCal, Meetup, TicketSource, WeGotTickets, Spydus or BiblioCommons.",
-  },
-  {
-    icon: "mdi:lock-outline",
-    title: "Add credentials",
-    body: "Credentials are encrypted at rest and only used to sync events.",
-  },
-  {
-    icon: "mdi:shield-check-outline",
-    title: "We review and activate",
-    body: "Our team checks the connection, usually within 48 hours. Events then appear automatically.",
-  },
-]
+export const metadata = privateMetadata("Event feeds")
 
 export default async function ContributeEventsPage({
-  params,
+  searchParams,
 }: {
-  params: Promise<{ locale: string }>
+  searchParams: Promise<{ library?: string }>
 }) {
-  await params // locale unused on this page
-  const hdrs = await headers()
-  const session = await getSessionSSR(hdrs)
-
-  if (!session?.user) {
-    redirect("/auth/signin?callbackUrl=/contribute/events")
-  }
-
-  // Own profile through the bridge: `baUserId` is private.
-  const isVerifiedLibrarian =
-    (await fetchOwnProfile(session.user))?.isVerifiedLibrarian === true
+  const session = await getSessionSSR(await headers())
+  if (!session?.user) redirect("/auth/signin?callbackUrl=/contribute/events")
+  const caps = (session.user as { capabilities?: string[] }).capabilities ?? []
+  const { library: highlight } = await searchParams
+  const result = caps.includes("events.feed")
+    ? await fetchEventFeeds<{ data: { libraries: LibraryFeeds[] } }>(
+        session.user
+      )
+    : null
+  const libraries = result?.body?.data?.libraries ?? []
 
   return (
     <div
@@ -59,156 +36,30 @@ export default async function ContributeEventsPage({
     >
       <ContributeSectionHeader
         compact
-        section="Connect an event feed"
-        title="Connect your library's *event feed.*"
-        lead="Verified librarians can connect their library's Eventbrite, iCal, Meetup, or other event platform. Submitted credentials are reviewed by our team before activation."
+        section="Event feeds"
+        title="Your library's *event feeds.*"
+        lead="Connect the platform your library publishes events on. Every new connection is reviewed before we sync it."
       />
-
       <div className="mx-auto w-full max-w-[1360px] px-4 pt-10 pb-20 sm:px-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-12">
-          <div className="max-w-[760px] min-w-0">
-            {isVerifiedLibrarian ? (
-              <EventFeedForm
-                sessionUser={{
-                  id: session.user.id,
-                  name: session.user.name ?? null,
-                  email: session.user.email,
-                }}
-              />
+          <div className="flex max-w-[820px] min-w-0 flex-col gap-6">
+            {!caps.includes("events.feed") ? (
+              <ClaimFirst />
+            ) : result && result.status !== 200 ? (
+              <p role="alert" style={{ color: T.accent.danger }}>
+                We couldn&apos;t load your feeds. Try again in a minute.
+              </p>
             ) : (
-              <section
-                aria-labelledby="verified-required-heading"
-                className="px-6 py-10 sm:px-10"
-                style={{
-                  border: `1px solid ${T.border.line}`,
-                  borderRadius: "20px",
-                  background: T.bg.deep,
-                }}
-              >
-                <p
-                  className="inline-flex items-center gap-2"
-                  style={{
-                    fontFamily: T.font.sans,
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    color: "var(--tint-special-fg)",
-                    background: "var(--tint-special-bg)",
-                    borderRadius: "999px",
-                    padding: "6px 12px",
-                    margin: "0 0 20px",
-                  }}
-                >
-                  <Icon
-                    icon="mdi:shield-account-outline"
-                    className="size-4"
-                    aria-hidden="true"
-                  />
-                  Verified librarian required
-                </p>
-                <h2
-                  id="verified-required-heading"
-                  style={{
-                    fontFamily: T.font.serif,
-                    fontSize: "clamp(26px, 3vw, 32px)",
-                    fontWeight: 500,
-                    lineHeight: 1.2,
-                    letterSpacing: "-0.01em",
-                    color: T.ink.base,
-                    margin: "0 0 12px",
-                  }}
-                >
-                  This page is for verified librarians only.
-                </h2>
-                <p
-                  style={{
-                    fontFamily: T.font.sans,
-                    fontSize: "16px",
-                    lineHeight: 1.6,
-                    color: T.ink.dim,
-                    maxWidth: "52ch",
-                    margin: "0 0 28px",
-                  }}
-                >
-                  To connect an event feed you must be a verified librarian
-                  affiliated with that library. Claim your library first to get
-                  verified.
-                </p>
-                <GlobalLink
-                  href="/contribute/index"
-                  className="inline-flex items-center gap-2 rounded-full bg-(--t-accent-primary) px-6 py-3 font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
-                  style={{ fontFamily: T.font.sans, fontSize: "15px" }}
-                >
-                  Find your library, then choose Claim
-                  <Icon
-                    icon="mdi:arrow-right"
-                    className="size-4"
-                    aria-hidden="true"
-                  />
-                </GlobalLink>
-              </section>
+              libraries.map((l) => (
+                <LibraryFeedsSection
+                  key={l.library.documentId}
+                  entry={l}
+                  highlight={highlight === l.library.documentId}
+                />
+              ))
             )}
           </div>
-
-          <aside aria-labelledby="event-feed-aside-heading" className="min-w-0">
-            <div
-              className="flex flex-col gap-5 p-6 lg:sticky lg:top-32"
-              style={{
-                border: `1px solid ${T.border.line}`,
-                borderRadius: "20px",
-                background: T.bg.deep,
-              }}
-            >
-              <h2
-                id="event-feed-aside-heading"
-                style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "22px",
-                  fontWeight: 500,
-                  lineHeight: 1.25,
-                  color: T.ink.base,
-                  margin: 0,
-                }}
-              >
-                How feed connections work
-              </h2>
-              <ol className="m-0 flex list-none flex-col gap-4 p-0">
-                {ASIDE_STEPS.map((step) => (
-                  <li key={step.title} className="flex gap-3">
-                    <Icon
-                      icon={step.icon}
-                      className="mt-0.5 size-5 shrink-0"
-                      style={{ color: T.accent.primary }}
-                      aria-hidden="true"
-                    />
-                    <div>
-                      <p
-                        style={{
-                          fontFamily: T.font.sans,
-                          fontSize: "15px",
-                          fontWeight: 600,
-                          color: T.ink.base,
-                          margin: "0 0 2px",
-                        }}
-                      >
-                        {step.title}
-                      </p>
-                      <p
-                        style={{
-                          fontFamily: T.font.sans,
-                          fontSize: "14px",
-                          lineHeight: 1.55,
-                          color: T.ink.dim,
-                          margin: 0,
-                        }}
-                      >
-                        {step.body}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </aside>
+          <FeedsAside />
         </div>
       </div>
     </div>
