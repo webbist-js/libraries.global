@@ -9,6 +9,7 @@
 import {
   EVENT_PROVIDERS,
   type EventProviderKey,
+  type DriveInput,
   proposedDrive,
 } from "@repo/shared-data"
 
@@ -26,6 +27,7 @@ export type ModerationQueueName =
 export type DriveTag = { documentId: string; slug: string; title: string }
 
 export type ModerationRow = {
+  staffReviewHint?: string
   documentId: string
   submissionType: string
   queue: ModerationQueueName
@@ -68,8 +70,10 @@ export type ModerationDetail = ModerationRow & {
     source: (ArticleVersion & { locale: string }) | null
   } | null
   canPublish: boolean
-  /** role_application only: who applied and what they've had accepted. */
+  /** role_application and drive_proposal only: who applied or proposed. */
   applicant?: RoleApplicant | null
+  /** drive_proposal only; null for every other type. */
+  proposal?: DriveProposalReview | null
 }
 
 /** The applicant block on a Role Application's detail (newest first, ≤ 10). */
@@ -77,6 +81,25 @@ export type RoleApplicant = {
   username: string | null
   acceptedCount: number
   recentAccepted: { summary: string; type: string; decidedAt: string }[]
+}
+
+/**
+ * A Drive Proposal's review: the drive approval would create (with any
+ * Moderator date change), how big it is counted now, its problems as it
+ * stands, and, once approved, the drive it created. Mirrors Strapi's
+ * `DriveProposalReview` (content-moderation `services/moderation.ts`).
+ */
+export type DriveProposalReview = {
+  /** The drive as approval would create it: the proposer's definition with the Moderator's dates. */
+  drive: DriveInput
+  /** True when the Moderator's dates have replaced the proposer's. */
+  datesEdited: boolean
+  /** In scope and to do, counted as if it opened now; null when Meilisearch can't answer. */
+  counts: { total: number; todo: number } | null
+  /** validateDrive(drive, now): empty when it would be created as it stands. */
+  errors: string[]
+  /** After approval: the drive it created, for the "Scheduled as …" link. */
+  created: { slug: string; title: string; status: string } | null
 }
 
 export type ReviewEvent = {

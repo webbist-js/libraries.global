@@ -1,5 +1,7 @@
 import {
   describeScopes,
+  type DriveTag,
+  DriveQueueStrip,
   ModerationQueue,
   type QueueState,
   SEGMENTS,
@@ -7,6 +9,7 @@ import {
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { isDocumentIdParam } from "@/lib/bridge-params"
 import { T } from "@/lib/design-tokens"
+import { fetchModeration } from "@/lib/moderation-proxy"
 import { Link } from "@/lib/navigation"
 import { privateMetadata } from "@/lib/seo/metadata"
 
@@ -29,8 +32,16 @@ export default async function ModerationQueuePage({
 }: {
   searchParams: SearchParams
 }) {
-  const { scopes } = await requireModerator("/contribute/moderation")
-  const [sp, locales] = await Promise.all([searchParams, fetchArticleLocales()])
+  const { user, scopes } = await requireModerator("/contribute/moderation")
+  const [sp, locales, driveStatsRes] = await Promise.all([
+    searchParams,
+    fetchArticleLocales(),
+    fetchModeration<{ data?: { drive: DriveTag; waiting: number }[] }>(
+      user,
+      "drive-stats"
+    ),
+  ])
+  const driveStats = driveStatsRes.body?.data ?? []
   const localeNames = Object.fromEntries(locales.map((l) => [l.code, l.name]))
 
   const queues = queuesOf(scopes)
@@ -87,7 +98,8 @@ export default async function ModerationQueuePage({
           </p>
         ) : null}
       </ModerationHero>
-      <div className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-16 sm:px-8">
+      <div className="mx-auto flex w-full max-w-[1360px] flex-col gap-6 px-4 pt-8 pb-16 sm:px-8">
+        {!state.drive ? <DriveQueueStrip rows={driveStats} /> : null}
         <ModerationQueue
           state={state}
           queues={queues}

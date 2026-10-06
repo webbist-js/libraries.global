@@ -7,6 +7,7 @@ import {
   ClaimPanel,
   detailOf,
   DriveChip,
+  DriveProposalPanel,
   EventFeedPanel,
   type EventFeedReview,
   EVIDENCE_TYPE_LABELS,
@@ -127,6 +128,14 @@ const PANELS: Record<
       review={d.review as EventFeedReview | null}
     />
   ),
+  drive_proposal: (d) => (
+    <DriveProposalPanel
+      documentId={d.documentId}
+      status={d.status}
+      proposal={d.proposal ?? null}
+      applicant={d.applicant ?? null}
+    />
+  ),
   correction: (d) => {
     if (d.fields?.kind === "verify")
       return (
@@ -160,6 +169,7 @@ const PANEL_TITLES: Record<string, string> = {
   new_library: "The new library",
   role_application: "The application",
   event_feed: "The event feed",
+  drive_proposal: "The proposed drive",
 }
 
 /**
