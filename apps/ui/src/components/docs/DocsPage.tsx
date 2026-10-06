@@ -90,6 +90,7 @@ export function DocsPage({
   const sections: DocsSectionData = {
     "getting-started": [],
     contributing: [],
+    events: [],
     "data-api": [],
     "design-system": [],
     governance: [],

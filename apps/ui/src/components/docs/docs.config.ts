@@ -6,6 +6,7 @@ export const DOCS_VERSION = "v1.0.0"
 export type DocsSectionKey =
   | "getting-started"
   | "contributing"
+  | "events"
   | "data-api"
   | "design-system"
   | "governance"
@@ -37,6 +38,15 @@ export const DOCS_SECTIONS: DocsSectionConfig[] = [
     icon: "mdi:pencil-outline",
     tintBg: "#F5EEDC",
     tintFg: "#6B5420",
+  },
+  {
+    key: "events",
+    title: "Events",
+    description:
+      "How library events reach the site, and how libraries connect and look after their feeds.",
+    icon: "mdi:calendar-month-outline",
+    tintBg: "var(--tint-neutral-bg)",
+    tintFg: "var(--tint-neutral-fg)",
   },
   {
     key: "data-api",
@@ -73,6 +83,8 @@ export const DOCS_SECTIONS: DocsSectionConfig[] = [
 const GENERIC_WIKI_SECTIONS = new Set(["contributor", "general", "wiki"])
 
 const MATCHERS: { key: DocsSectionKey; pattern: RegExp }[] = [
+  // First, so "Reviewing event feed submissions" isn't filed under Contributing.
+  { key: "events", pattern: /\bevents?\b|event feed|calendar/ },
   { key: "contributing", pattern: /contribut|correction|submission/ },
   { key: "data-api", pattern: /\bdata\b|api|licen[cs]e|export|provenance/ },
   { key: "design-system", pattern: /design|token|component|style/ },

@@ -88,6 +88,7 @@ export function DocsArticlePage({
   const tree: DocsTree = {
     "getting-started": [],
     contributing: [],
+    events: [],
     "data-api": [],
     "design-system": [],
     governance: [],
