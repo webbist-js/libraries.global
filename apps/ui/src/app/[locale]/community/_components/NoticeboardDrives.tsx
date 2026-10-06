@@ -1,4 +1,3 @@
-import { DriveCard } from "@/components/drives/DriveCard"
 import { DriveFocusFilter } from "@/components/drives/DriveFocusFilter"
 import { FeaturedDrive } from "@/components/drives/FeaturedDrive"
 import { FinishedDrives } from "@/components/drives/FinishedDrives"
@@ -6,6 +5,7 @@ import {
   FOCUS_FILTER_META,
   type FocusFilterKey,
 } from "@/components/drives/focus-meta"
+import { OpenDrivesGrid } from "@/components/drives/OpenDrivesGrid"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 import {
@@ -25,12 +25,15 @@ export function NoticeboardDrives({
   finished,
   focus,
   howHref,
+  followed,
   now,
 }: {
   readonly open: readonly DriveView[]
   readonly finished: readonly DriveView[]
   readonly focus: FocusFilterKey | null
   readonly howHref: string | null
+  /** Drive documentIds with work in a place the reader follows; null when signed out. */
+  readonly followed: string[] | null
   readonly now?: Date
 }) {
   const shown = filterByFocus(open, focus)
@@ -91,19 +94,7 @@ export function NoticeboardDrives({
             >
               Other open drives
             </h2>
-            <ul
-              className="m-0 grid list-none gap-3.5 p-0"
-              style={{
-                gridTemplateColumns:
-                  "repeat(auto-fill, minmax(min(100%, 280px), 1fr))",
-              }}
-            >
-              {others.map((view) => (
-                <li key={view.drive.documentId}>
-                  <DriveCard view={view} now={now} />
-                </li>
-              ))}
-            </ul>
+            <OpenDrivesGrid views={others} followed={followed} now={now} />
           </section>
         ) : null}
       </div>

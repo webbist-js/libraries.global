@@ -15,6 +15,7 @@ import {
   type FocusFilterKey,
   focusKeysOf,
 } from "@/components/drives/focus-meta"
+import { distanceKm } from "@/components/index-page/find-helpers"
 import { nameFromSlug } from "@/lib/find-places"
 
 import type { Drive, DriveScope, DriveStats } from "./types"
@@ -220,4 +221,49 @@ export function focusFilterOptions(
         ]
       : []
   })
+}
+
+/** At most this many distinct region slugs come back from `followedRegionSlugs`. */
+const MAX_FOLLOWED_REGIONS = 50
+
+/** Distinct region slugs of the followed libraries' paths, at most 50. */
+export function followedRegionSlugs(
+  follows: readonly { path?: string | null }[] | null | undefined
+): string[] {
+  const slugs = new Set<string>()
+  for (const follow of follows ?? []) {
+    if (slugs.size >= MAX_FOLLOWED_REGIONS) break
+    // Atlas path: /continent/country/region/library — region is segment 2.
+    const region = follow.path?.split("/").filter(Boolean)[2]
+    if (region) slugs.add(region)
+  }
+
+  return [...slugs]
+}
+
+/** Views nearest first by their baseline centroid; views without one keep their order, last. */
+export function orderByDistance<
+  T extends {
+    drive: {
+      baseline?: { centroid?: { lat: number; lng: number } | null } | null
+    }
+  },
+>(views: readonly T[], from: { lat: number; lng: number }): T[] {
+  return views
+    .map((view, index) => {
+      const centroid = view.drive.baseline?.centroid
+      const km = centroid
+        ? distanceKm(from.lat, from.lng, centroid.lat, centroid.lng)
+        : null
+
+      return { view, index, km }
+    })
+    .sort((a, b) => {
+      if (a.km == null && b.km == null) return a.index - b.index
+      if (a.km == null) return 1
+      if (b.km == null) return -1
+
+      return a.km - b.km
+    })
+    .map((entry) => entry.view)
 }

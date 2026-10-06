@@ -16,7 +16,9 @@ import {
 import { isVotable } from "@/lib/community/suggestions"
 import { fetchPublicSuggestions } from "@/lib/community/suggestions-server"
 import { T } from "@/lib/design-tokens"
+import { followedRegionSlugs } from "@/lib/drives/drive-view"
 import {
+  drivesInPlaces,
   howDrivesWorkHref,
   loadDriveViews,
 } from "@/lib/drives/drive-view-server"
@@ -106,6 +108,15 @@ export default async function CommunityPage({
   const finished = views.slice(openDrives.length)
   const board = hasCapability(user, "drives.manage")
   const signedIn = Boolean(user)
+  const followed = user
+    ? [
+        ...(await drivesInPlaces(
+          openDrives,
+          followedRegionSlugs(profile?.followedLibraries),
+          locale
+        )),
+      ]
+    : null
   // Summed per drive: someone helping two drives counts in both.
   const helping = open.reduce((n, v) => n + (v.helpers ?? 0), 0)
 
@@ -145,6 +156,7 @@ export default async function CommunityPage({
               finished={finished}
               focus={focus}
               howHref={howHref}
+              followed={followed}
             />
           ) : (
             <>

@@ -10,9 +10,10 @@ import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
 import { fetchPublicSuggestions } from "@/lib/community/suggestions-server"
 import { KOFI_URL } from "@/lib/constants"
 import { T } from "@/lib/design-tokens"
-import type { DriveView } from "@/lib/drives/drive-view"
-import { loadDriveViews } from "@/lib/drives/drive-view-server"
+import { followedRegionSlugs, type DriveView } from "@/lib/drives/drive-view"
+import { drivesInPlaces, loadDriveViews } from "@/lib/drives/drive-view-server"
 import { fetchDrives } from "@/lib/drives/drives-server"
+import { fetchOwnProfile } from "@/lib/own-profile-server"
 import { buildMetadata } from "@/lib/seo/metadata"
 import {
   fetchHomepageContinents,
@@ -103,17 +104,28 @@ const MAX_HUB_DRIVES = 3
 
 /**
  * The hub's drives (spec §9): pinned drives, featured first, or, with none
- * pinned, the first three open drives. At most three are ever counted.
+ * pinned, the first three open drives — places the reader follows first
+ * (`followedIds`, null when signed out). At most three are ever counted.
  */
-async function fetchHubDriveViews(locale: string): Promise<DriveView[]> {
+async function fetchHubDriveViews(
+  locale: string,
+  followedIds: Set<string> | null
+): Promise<DriveView[]> {
   const drives = await fetchDrives("open", locale)
   const pinned = drives.filter((d) => d.pinned)
   const chosen =
     pinned.length > 0
       ? [...pinned].sort((a, b) => Number(b.featured) - Number(a.featured))
       : drives
+  const ordered = followedIds
+    ? [...chosen].sort(
+        (a, b) =>
+          Number(followedIds.has(b.documentId)) -
+          Number(followedIds.has(a.documentId))
+      )
+    : chosen
 
-  return loadDriveViews(chosen.slice(0, MAX_HUB_DRIVES), locale)
+  return loadDriveViews(ordered.slice(0, MAX_HUB_DRIVES), locale)
 }
 
 /** "loddon-library" → "Loddon library", for rows with nothing better. */
@@ -223,7 +235,8 @@ export default async function ContributePage({
     continentsResponse,
     submissions,
     suggestions,
-    driveViews,
+    profile,
+    openDrives,
   ] = await Promise.all([
     fetchLibraryCount(),
     fetchIncompleteRecords(),
@@ -232,8 +245,17 @@ export default async function ContributePage({
       ? fetchMySubmissions(session.user)
       : Promise.resolve([] as HubSubmission[]),
     fetchPublicSuggestions(),
-    fetchHubDriveViews(locale),
+    session?.user ? fetchOwnProfile(session.user) : Promise.resolve(null),
+    fetchDrives("open", locale),
   ])
+  const followedIds = session?.user
+    ? await drivesInPlaces(
+        openDrives,
+        followedRegionSlugs(profile?.followedLibraries),
+        locale
+      )
+    : null
+  const driveViews = await fetchHubDriveViews(locale, followedIds)
   // From the session (buildSessionAccess): `baUserId` is private, so the
   // public REST filter on it can't find the profile.
   const username = session?.user?.username ?? null

@@ -1,5 +1,6 @@
 import "server-only"
 
+import { driveFilters } from "@repo/shared-data"
 import type { Locale } from "next-intl"
 
 import { docsSectionForArticle } from "@/components/docs/docs.config"
@@ -167,6 +168,66 @@ export async function fetchFeaturedDriveView(
   if (!drive) return null
 
   return (await loadDriveViews([drive], locale))[0] ?? null
+}
+
+type FacetCounts = {
+  facetDistribution?: Record<string, Record<string, number>>
+}
+
+const localeFacetSum = (result: FacetCounts | undefined) =>
+  Object.values(result?.facetDistribution?.locale ?? {}).reduce(
+    (sum, n) => sum + n,
+    0
+  )
+
+/**
+ * The open drives (from `drives`) with work still to do in a followed
+ * region: one `multiSearch` with one `limit: 0` query per drive (its
+ * "to do" filter plus `region_slug IN [...]`), keeping the drives whose
+ * locale-facet sum is above 0 — so a drive counts when it has work to do
+ * in a followed region at any scope level. Empty when either list is
+ * empty, or on any failure.
+ */
+export async function drivesInPlaces(
+  drives: readonly Drive[],
+  regionSlugs: readonly string[],
+  locale: string
+): Promise<Set<string>> {
+  if (drives.length === 0 || regionSlugs.length === 0) return new Set()
+
+  const localeClause = searchLocaleFilter(locale)
+  const placesClause = `region_slug IN [${regionSlugs
+    .map((slug) => JSON.stringify(slug))
+    .join(", ")}]`
+
+  try {
+    const { results } = await meiliClient.multiSearch({
+      queries: drives.map((drive) => {
+        const { todo } = driveFilters({
+          scope: drive.scope,
+          focus: drive.focus,
+          openedAt: drive.openedAt,
+        })
+
+        return {
+          indexUid: "library",
+          filter: `${todo} AND ${placesClause} AND ${localeClause}`,
+          limit: 0,
+          facets: ["locale"],
+        }
+      }),
+    })
+
+    return new Set(
+      drives
+        .filter(
+          (_, i) => localeFacetSum(results[i] as unknown as FacetCounts) > 0
+        )
+        .map((drive) => drive.documentId)
+    )
+  } catch {
+    return new Set()
+  }
 }
 
 /** The "How drives work" Knowledge article's path, or null when unpublished. */
