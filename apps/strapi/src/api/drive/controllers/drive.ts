@@ -173,6 +173,22 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     ctx.body = { data, meta: {} }
   },
 
+  // GET /drives/:documentId/in-review — public. 404 for an unknown or
+  // unpublished (`draft`) Drive. `targetDocumentId`s of this Drive's
+  // pending/needs_info Submissions, so the task panel can hide libraries
+  // already being worked on.
+  async inReview(ctx) {
+    const { documentId } = ctx.params as { documentId: string }
+    const drive = await strapi
+      .documents(UID)
+      .findOne({ documentId, fields: ["documentId", "status"] })
+    if (!drive || drive.status === "draft")
+      return ctx.notFound("Drive not found.")
+
+    const data = await strapi.service(UID).inReviewTargets(documentId)
+    ctx.body = { data, meta: {} }
+  },
+
   // GET /drives/:documentId/leaderboard?period=week|all&limit= — public.
   // 404 for an unknown or unpublished (`draft`) Drive. Never carries a
   // `baUserId`.

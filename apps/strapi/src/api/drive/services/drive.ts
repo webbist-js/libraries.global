@@ -951,6 +951,25 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
     return Number(rows[0]?.count ?? 0)
   },
 
+  /**
+   * Distinct `targetDocumentId`s of this Drive's `pending`/`needs_info`
+   * submissions — the libraries the task panel should hide as already
+   * being worked on. Capped at `DRIVE_MAX_TASKS`, the same ceiling a Drive's
+   * own to-do count never exceeds while open.
+   */
+  async inReviewTargets(documentId: string): Promise<string[]> {
+    const rows = (await strapi.db.connection
+      .select("target_document_id")
+      .from(SUBMISSION)
+      .where("drive_document_id", documentId)
+      .whereIn("status", ["pending", "needs_info"])
+      .whereNotNull("target_document_id")
+      .groupBy("target_document_id")
+      .limit(DRIVE_MAX_TASKS)) as { target_document_id: string }[]
+
+    return rows.map((r) => r.target_document_id)
+  },
+
   /** Count of Drive Credits recorded for this Drive. */
   async countCredits(documentId: string): Promise<number> {
     const rows = (await strapi.db.connection

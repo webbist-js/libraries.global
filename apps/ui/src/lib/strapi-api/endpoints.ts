@@ -19,4 +19,5 @@ export const API_ENDPOINTS: Partial<Record<UID.ContentType, string>> = {
   "api::accessibility.accessibility": "/accessibility-features",
   "api::amenity.amenity": "/amenities",
   "api::service.service": "/services",
+  "api::drive.drive": "/drives",
 } as const
