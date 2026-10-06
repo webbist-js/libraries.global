@@ -60,6 +60,7 @@ async function requireBoardMember(
  */
 function driveInputFromBody(body: unknown): Partial<DriveInput> & {
   pinned?: boolean
+  storySlug?: string | null
 } {
   const b = (body && typeof body === "object" ? body : {}) as Record<
     string,
@@ -81,8 +82,15 @@ function driveInputFromBody(body: unknown): Partial<DriveInput> & {
     if (b[key] !== undefined) out[key] = b[key]
   }
   if (typeof b.pinned === "boolean") out.pinned = b.pinned
+  // Not part of `DriveInput`: the Journal story link, kept like `pinned`.
+  if (typeof b.storySlug === "string" || b.storySlug === null) {
+    out.storySlug = b.storySlug
+  }
 
-  return out as Partial<DriveInput> & { pinned?: boolean }
+  return out as Partial<DriveInput> & {
+    pinned?: boolean
+    storySlug?: string | null
+  }
 }
 
 /** 409 with `ctx.conflict` where the Koa app provides it, else a manual body. */

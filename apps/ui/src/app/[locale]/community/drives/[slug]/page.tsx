@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
+import type { Locale } from "next-intl"
 
 import { DriveBoardActions } from "@/components/drives/DriveBoardActions"
 import { isVotable } from "@/lib/community/suggestions"
@@ -8,6 +9,7 @@ import { plainDriveTitle } from "@/lib/drives/drive-view"
 import { loadDriveViews, openDriveCount } from "@/lib/drives/drive-view-server"
 import { fetchDrive, fetchDriveLeaderboard } from "@/lib/drives/drives-server"
 import { buildMetadata } from "@/lib/seo/metadata"
+import { fetchBlogArticle } from "@/lib/strapi-api/content/server"
 
 import { DriveDetailPage } from "../../_components/DriveDetailPage"
 
@@ -44,17 +46,21 @@ export default async function DrivePage({ params }: { params: Params }) {
   if (!drive) notFound()
 
   const credited = drive.status === "open" || drive.status === "closed"
-  const [[view], week, all, openCount, suggestions] = await Promise.all([
-    loadDriveViews([drive], locale),
-    drive.status === "open"
-      ? fetchDriveLeaderboard(drive.documentId, "week")
-      : Promise.resolve([]),
-    credited
-      ? fetchDriveLeaderboard(drive.documentId, "all")
-      : Promise.resolve([]),
-    openDriveCount(locale),
-    fetchPublicSuggestions(),
-  ])
+  const [[view], week, all, openCount, suggestions, storyRes] =
+    await Promise.all([
+      loadDriveViews([drive], locale),
+      drive.status === "open"
+        ? fetchDriveLeaderboard(drive.documentId, "week")
+        : Promise.resolve([]),
+      credited
+        ? fetchDriveLeaderboard(drive.documentId, "all")
+        : Promise.resolve([]),
+      openDriveCount(locale),
+      fetchPublicSuggestions(),
+      drive.status === "closed" && drive.storySlug
+        ? fetchBlogArticle(drive.storySlug, locale as Locale)
+        : Promise.resolve(undefined),
+    ])
 
   return (
     <DriveDetailPage
@@ -67,6 +73,7 @@ export default async function DrivePage({ params }: { params: Params }) {
         suggestions: suggestions.filter(isVotable).length,
       }}
       boardActions={<DriveBoardActions drive={drive} />}
+      story={storyRes?.data ?? null}
     />
   )
 }

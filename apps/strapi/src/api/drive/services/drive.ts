@@ -77,6 +77,7 @@ const PUBLIC_FIELDS = [
   "baseline",
   "progressLog",
   "final",
+  "storySlug",
   "locale",
   "createdAt",
   "updatedAt",
@@ -97,6 +98,9 @@ const TEXT_FIELDS = new Set<keyof DriveInput>([
   "steps",
   "whereToLook",
 ])
+
+/** A Journal article's slug (same shape as a drive's own slug). */
+const STORY_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 type ServiceResult<T> = { data: T } | { errors: string[]; status?: number }
 
@@ -594,13 +598,14 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
 
   /**
    * Updates a drive. Allowed at any status for the text fields (`title`,
-   * `summary`, `steps`, `whereToLook`); every other field only while the
+   * `summary`, `steps`, `whereToLook`) and for `storySlug` (the Journal
+   * story of a finished drive, spec §5.6); every other field only while the
    * drive is `draft` or `scheduled`. The merged result is re-validated with
    * `validateDrive`.
    */
   async updateDrive(
     documentId: string,
-    input: Partial<DriveInput>
+    input: Partial<DriveInput> & { storySlug?: string | null }
   ): Promise<ServiceResult<Record<string, unknown>>> {
     const existing = (await strapi.documents(UID).findOne({
       documentId,
@@ -608,16 +613,20 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
     })) as DriveRow | null
     if (!existing) return { errors: ["Drive not found."], status: 404 }
 
+    const { storySlug, ...driveInput } = input
+
     // Only count fields the body actually sent — `driveInputFromBody` drops
     // `undefined` keys, but a defensive filter here means a caller that
     // doesn't can't accidentally 409 a pure text edit.
     const lifecycleLocked =
       existing.status !== "draft" && existing.status !== "scheduled"
     if (lifecycleLocked) {
-      const disallowed = (Object.keys(input) as (keyof DriveInput)[]).filter(
+      const disallowed = (
+        Object.keys(driveInput) as (keyof DriveInput)[]
+      ).filter(
         (key) =>
           !TEXT_FIELDS.has(key) &&
-          (input as Record<string, unknown>)[key] !== undefined
+          (driveInput as Record<string, unknown>)[key] !== undefined
       )
       if (disallowed.length > 0) {
         return {
@@ -629,33 +638,48 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
       }
     }
 
+    let storySlugValue: string | null | undefined
+    if (storySlug !== undefined) {
+      if (storySlug === null || storySlug === "") {
+        storySlugValue = null
+      } else if (typeof storySlug === "string" && STORY_SLUG.test(storySlug)) {
+        storySlugValue = storySlug
+      } else {
+        return { errors: ["The Journal story must be an article’s slug."] }
+      }
+    }
+
     const merged: DriveInput = {
-      title: input.title ?? (existing.title as string),
-      summary: input.summary ?? (existing.summary as string),
-      steps: input.steps ?? stepsFromRow(existing),
-      focus: (input.focus ?? existing.focus) as DriveInput["focus"],
-      scope: (input.scope ?? existing.scope) as DriveInput["scope"],
-      unit: (input.unit ?? existing.unit) as DriveInput["unit"],
-      startsAt: (input.startsAt ?? existing.startsAt) as string,
-      endsAt: (input.endsAt ?? existing.endsAt) as string,
-      goalPercent: (input.goalPercent ?? existing.goalPercent) as number,
-      whereToLook: (input.whereToLook ??
+      title: driveInput.title ?? (existing.title as string),
+      summary: driveInput.summary ?? (existing.summary as string),
+      steps: driveInput.steps ?? stepsFromRow(existing),
+      focus: (driveInput.focus ?? existing.focus) as DriveInput["focus"],
+      scope: (driveInput.scope ?? existing.scope) as DriveInput["scope"],
+      unit: (driveInput.unit ?? existing.unit) as DriveInput["unit"],
+      startsAt: (driveInput.startsAt ?? existing.startsAt) as string,
+      endsAt: (driveInput.endsAt ?? existing.endsAt) as string,
+      goalPercent: (driveInput.goalPercent ?? existing.goalPercent) as number,
+      whereToLook: (driveInput.whereToLook ??
         existing.whereToLook) as DriveInput["whereToLook"],
     }
     const errors = validateDrive(merged, new Date())
     if (errors.length > 0) return { errors }
 
     const data: Record<string, unknown> = {}
-    if (input.title !== undefined) data.title = input.title
-    if (input.summary !== undefined) data.summary = input.summary
-    if (input.steps !== undefined) data.steps = stepsToComponent(input.steps)
-    if (input.whereToLook !== undefined) data.whereToLook = input.whereToLook
-    if (input.focus !== undefined) data.focus = input.focus
-    if (input.scope !== undefined) data.scope = input.scope
-    if (input.unit !== undefined) data.unit = input.unit
-    if (input.startsAt !== undefined) data.startsAt = input.startsAt
-    if (input.endsAt !== undefined) data.endsAt = input.endsAt
-    if (input.goalPercent !== undefined) data.goalPercent = input.goalPercent
+    if (driveInput.title !== undefined) data.title = driveInput.title
+    if (driveInput.summary !== undefined) data.summary = driveInput.summary
+    if (driveInput.steps !== undefined)
+      data.steps = stepsToComponent(driveInput.steps)
+    if (driveInput.whereToLook !== undefined)
+      data.whereToLook = driveInput.whereToLook
+    if (driveInput.focus !== undefined) data.focus = driveInput.focus
+    if (driveInput.scope !== undefined) data.scope = driveInput.scope
+    if (driveInput.unit !== undefined) data.unit = driveInput.unit
+    if (driveInput.startsAt !== undefined) data.startsAt = driveInput.startsAt
+    if (driveInput.endsAt !== undefined) data.endsAt = driveInput.endsAt
+    if (driveInput.goalPercent !== undefined)
+      data.goalPercent = driveInput.goalPercent
+    if (storySlugValue !== undefined) data.storySlug = storySlugValue
 
     const updated = (await strapi.documents(UID).update({
       documentId,

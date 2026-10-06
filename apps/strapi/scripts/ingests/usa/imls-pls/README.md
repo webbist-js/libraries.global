@@ -70,3 +70,7 @@ The territories (PR, VI, GU, MP, AS) are Countries of their own in the atlas, as
 ## FY 2023 dry run (all states)
 
 17,586 outlets: 17,584 mapped and 2 skipped (books-by-mail), 127 of them in the territories. 3,089 areas before matching. New York alone: 1,083 outlets in 62 counties.
+
+## After publishing: drives
+
+The survey has no opening hours, website or email, so every record starts with the `hours` and `contact` gaps. Propose one drive per state, for example `/community/propose?source=imls-pls&region=ohio&gaps=hours`. A state with more than 2,000 outlets missing hours (California, New York, Texas) is split by county: use `area=` with the county slugs. Helpers find hours on each library's own website, which is fine to use. Map services' data isn't.

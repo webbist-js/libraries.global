@@ -68,6 +68,115 @@ async function messageOf(res: Response): Promise<string> {
 }
 
 /**
+ * A closed drive's link to its Journal story (spec §5.6): a slug the board
+ * saves once the piece is published. "Save" PUTs it to the drive and
+ * refreshes the page so `DriveDetailPage` can show the "Read the story"
+ * card.
+ */
+function JournalStoryForm({
+  drive,
+}: {
+  readonly drive: Pick<Drive, "documentId" | "storySlug">
+}) {
+  const router = useRouter()
+  const [value, setValue] = useState(drive.storySlug ?? "")
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState<{
+    tone: "ok" | "error"
+    text: string
+  } | null>(null)
+
+  const save = async () => {
+    setBusy(true)
+    setMessage(null)
+    try {
+      const res = await fetch(
+        `/api/drives/${encodeURIComponent(drive.documentId)}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ storySlug: value.trim() || null }),
+        }
+      )
+      if (!res.ok) {
+        setMessage({ tone: "error", text: await messageOf(res) })
+
+        return
+      }
+      setMessage({ tone: "ok", text: "Saved." })
+      router.refresh()
+    } catch {
+      setMessage({
+        tone: "error",
+        text: "That didn’t work. Try again in a moment.",
+      })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div
+      className="flex flex-col gap-2 border-t pt-3.5"
+      style={{ borderColor: T.border.line }}
+    >
+      <label
+        htmlFor="drive-story-slug"
+        className="text-[14px] font-semibold"
+        style={{ color: T.ink.base }}
+      >
+        Journal story
+      </label>
+      <input
+        id="drive-story-slug"
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="ohio-hours-thank-you"
+        className="min-h-11 rounded-[14px] border bg-white px-3.5 text-[15px]"
+        style={{ borderColor: T.border.hi, color: T.ink.base }}
+      />
+      <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
+        The slug of a published Journal article, for example
+        ohio-hours-thank-you.
+      </p>
+      <div>
+        <button
+          type="button"
+          className={PILL}
+          style={{ color: T.ink.base }}
+          disabled={busy}
+          onClick={save}
+        >
+          {busy ? "Saving…" : "Save"}
+        </button>
+      </div>
+      {message ? (
+        <p
+          role="status"
+          aria-live="polite"
+          className="m-0 flex items-center gap-1.5 text-[14px] font-semibold"
+          style={{
+            color: message.tone === "error" ? T.accent.danger : T.accent.ok,
+          }}
+        >
+          <Icon
+            aria-hidden="true"
+            icon={
+              message.tone === "error"
+                ? "mdi:alert-circle-outline"
+                : "mdi:check-circle-outline"
+            }
+            width={16}
+          />
+          {message.text}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
+/**
  * The editorial board's controls on a drive's page: Edit, Pin or Unpin,
  * Feature, Open now, Close now and Cancel (the last two asked about first).
  * Shown only with `drives.manage`; Strapi re-checks the caller's Role
@@ -78,7 +187,7 @@ export function DriveBoardActions({
 }: {
   readonly drive: Pick<
     Drive,
-    "documentId" | "slug" | "status" | "pinned" | "featured"
+    "documentId" | "slug" | "status" | "pinned" | "featured" | "storySlug"
   >
 }) {
   const { has, ready } = useCapabilities()
@@ -206,6 +315,8 @@ export function DriveBoardActions({
               setConfirming("cancel")
             })}
       </div>
+
+      {drive.status === "closed" ? <JournalStoryForm drive={drive} /> : null}
 
       {confirming ? (
         <div

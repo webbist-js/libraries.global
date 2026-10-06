@@ -17,6 +17,8 @@ import {
   progressMeta,
 } from "@/lib/drives/drive-view"
 import type { Drive, DriveLeaderboardEntry } from "@/lib/drives/types"
+import { Link } from "@/lib/navigation"
+import type { BlogArticleSummary } from "@/lib/strapi-api/content/server"
 
 import type { CommunityTabCounts } from "./CommunityNavBar"
 import { CommunitySectionHeader } from "./CommunitySectionHeader"
@@ -155,6 +157,39 @@ function DriveStateNotice({ drive }: { readonly drive: Drive }) {
 }
 
 /**
+ * A finished drive's link to its Journal story (spec §5.6): the article
+ * `storySlug` names, when it exists. The href is built the way
+ * `components/blog/JournalCards.tsx` builds every Journal link.
+ */
+function JournalStoryCard({
+  story,
+}: {
+  readonly story: Pick<BlogArticleSummary, "title" | "slug" | "section">
+}) {
+  const href = `/journal/${story.section?.slug ?? "general"}/${story.slug}`
+
+  return (
+    <section aria-labelledby="drive-story-heading" style={CARD}>
+      <h2 id="drive-story-heading" className="sr-only">
+        Journal story
+      </h2>
+      <Link
+        href={href}
+        className="inline-flex items-center gap-2 text-[16px] font-semibold no-underline"
+        style={{ color: T.accent.primary }}
+      >
+        <Icon
+          aria-hidden="true"
+          icon="mdi:newspaper-variant-outline"
+          width={19}
+        />
+        Read the story: {story.title}
+      </Link>
+    </section>
+  )
+}
+
+/**
  * A drive's own page (spec §5.6): the hero (chips, title, summary, dates,
  * share), then progress with its sparkline, "How to help", the task list
  * and panel with "Your part" while it's open, and the helpers and rules in
@@ -168,6 +203,7 @@ export function DriveDetailPage({
   all,
   counts,
   boardActions,
+  story,
 }: {
   readonly drive: Drive
   readonly view: DriveView | null
@@ -176,6 +212,8 @@ export function DriveDetailPage({
   readonly counts?: CommunityTabCounts
   /** The editorial board's controls, at the top of the rail. */
   readonly boardActions?: ReactNode
+  /** The Journal article `drive.storySlug` names, when it exists. */
+  readonly story?: Pick<BlogArticleSummary, "title" | "slug" | "section"> | null
 }) {
   const credited = drive.status === "open" || drive.status === "closed"
   const title = plainDriveTitle(drive.title)
@@ -260,6 +298,10 @@ export function DriveDetailPage({
               </p>
             )}
           </section>
+
+          {drive.status === "closed" && story ? (
+            <JournalStoryCard story={story} />
+          ) : null}
 
           {!finished && steps.length > 0 ? (
             <section

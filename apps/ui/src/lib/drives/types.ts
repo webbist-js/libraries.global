@@ -79,6 +79,8 @@ export interface Drive {
   publishedAt?: string | null
   steps: DriveStep[]
   whereToLook?: DriveSource | null
+  /** The slug of the Journal article telling a finished drive's story. */
+  storySlug?: string | null
 }
 
 /** `GET /drives/:documentId/stats` — a Drive's progress-card counts. */
