@@ -161,6 +161,18 @@ const HOT_PATH_INDEXES = [
   }),
   // Recognition (spec §8): a helper's own badge and ribbon reads.
   index("drive_credits", ["ba_user_id"]),
+
+  // Drive Holds: one hold per library per drive decides races (a duplicate
+  // keeps the lowest id), the expiry sweep and `activeHolds`'s per-drive
+  // read, and the one-hold-per-helper-per-drive release.
+  index("drive_holds", ["drive_document_id", "library_document_id"], {
+    unique: true,
+    before: [
+      dedupe("drive_holds", ["drive_document_id", "library_document_id"]),
+    ],
+  }),
+  index("drive_holds", ["drive_document_id", "expires_at"]),
+  index("drive_holds", ["ba_user_id"]),
 ]
 
 /**

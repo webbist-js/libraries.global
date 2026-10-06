@@ -92,6 +92,37 @@ function conflict(ctx: any, message: string) {
   ctx.body = { data: null, error: { status: 409, message } }
 }
 
+/** 422 with `ctx.unprocessableEntity` where provided, else a manual body. */
+function unprocessable(ctx: any, message: string) {
+  if (typeof ctx.unprocessableEntity === "function")
+    return ctx.unprocessableEntity(message)
+  ctx.status = 422
+  ctx.body = { data: null, error: { status: 422, message } }
+}
+
+/**
+ * Like `bridgeBaUserId`, but a missing `X-Ba-User-Id` is fine — it answers
+ * "nobody" rather than refusing the request. Only an invalid or missing
+ * service secret fails `secretOk`, so the caller can 401 on that alone.
+ * Used by `GET /drives/:documentId/holds`, where the viewer may be signed
+ * out (the secret is still required: it's a server-to-server read).
+ */
+function optionalBridgeBaUserId(ctx: any): {
+  secretOk: boolean
+  baUserId: string | null
+} {
+  const headers = ctx.request?.headers ?? ctx.request?.header ?? {}
+  if (!isValidServiceSecret(headers["x-service-secret"]))
+    return { secretOk: false, baUserId: null }
+  const id = headers["x-ba-user-id"]
+
+  return {
+    secretOk: true,
+    baUserId:
+      typeof id === "string" && id.length > 0 && id.length <= 200 ? id : null,
+  }
+}
+
 /**
  * A service-result's errors as a 400/404/409. The 400 path always passes
  * `details: { errors }` as `ctx.badRequest`'s second argument — passing the
@@ -258,6 +289,75 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     if (!baUserId) return
 
     const data = await strapi.service(UID).runLifecycle(new Date())
+    ctx.body = { data, meta: {} }
+  },
+
+  // POST /drives/:documentId/holds — signed-in only (bridge secret plus
+  // X-Ba-User-Id). Body: { libraryDocumentId }. "Give me a library" and
+  // picking a row by hand both place a hold here.
+  async hold(ctx) {
+    const baUserId = bridgeBaUserId(ctx)
+    if (!baUserId) return ctx.unauthorized("Service secret and user required.")
+
+    const { documentId } = ctx.params as { documentId: string }
+    const body = (ctx.request.body ?? {}) as { libraryDocumentId?: unknown }
+    const libraryDocumentId = body.libraryDocumentId
+    if (typeof libraryDocumentId !== "string" || libraryDocumentId.length === 0)
+      return ctx.badRequest("Invalid library")
+
+    const drive = await strapi
+      .documents(UID)
+      .findOne({ documentId, fields: ["documentId", "status"] })
+    if (!drive || drive.status === "draft")
+      return ctx.notFound("Drive not found.")
+
+    const result = await strapi
+      .service(UID)
+      .holdLibrary(documentId, libraryDocumentId, baUserId)
+    if (!result.ok) {
+      return result.reason === "not_open"
+        ? unprocessable(ctx, "This drive isn’t open.")
+        : conflict(ctx, "Someone’s on this library.")
+    }
+
+    ctx.body = {
+      data: { libraryDocumentId, expiresAt: result.expiresAt },
+      meta: {},
+    }
+  },
+
+  // DELETE /drives/:documentId/holds/:libraryDocumentId — signed-in only;
+  // releases the caller's own hold only.
+  async releaseHold(ctx) {
+    const baUserId = bridgeBaUserId(ctx)
+    if (!baUserId) return ctx.unauthorized("Service secret and user required.")
+
+    const { documentId, libraryDocumentId } = ctx.params as {
+      documentId: string
+      libraryDocumentId: string
+    }
+    const released = await strapi
+      .service(UID)
+      .releaseHold(documentId, libraryDocumentId, baUserId)
+    ctx.body = { data: { released }, meta: {} }
+  },
+
+  // GET /drives/:documentId/holds — the bridge secret is required;
+  // X-Ba-User-Id is optional. 404 for an unknown or `draft` Drive. Never
+  // carries a baUserId in its response (spec §11).
+  async holds(ctx) {
+    const { secretOk, baUserId } = optionalBridgeBaUserId(ctx)
+    if (!secretOk) return ctx.unauthorized("Service secret required.")
+
+    const { documentId } = ctx.params as { documentId: string }
+    const drive = await strapi
+      .documents(UID)
+      .findOne({ documentId, fields: ["documentId", "status"] })
+    if (!drive || drive.status === "draft")
+      return ctx.notFound("Drive not found.")
+
+    const data = await strapi.service(UID).activeHolds(documentId, baUserId)
+    ctx.set?.("Cache-Control", "no-store")
     ctx.body = { data, meta: {} }
   },
 }))

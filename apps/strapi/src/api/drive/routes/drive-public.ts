@@ -15,6 +15,14 @@
  * other bridge-gated routes in this codebase. `/drives/lifecycle/run` runs
  * the same hourly cron step (`runLifecycle`) on demand, for local testing
  * and E2E without waiting for the clock.
+ *
+ * `POST /drives/:documentId/holds`, `DELETE
+ * /drives/:documentId/holds/:libraryDocumentId` and `GET
+ * /drives/:documentId/holds` are `auth: false` here too and gated in the
+ * controller: the two write routes need the bridge secret plus
+ * `X-Ba-User-Id` (signed-in only, no board check — any helper can hold a
+ * library); the read needs only the bridge secret, with `X-Ba-User-Id`
+ * optional, since a signed-out visitor can still see which rows are held.
  */
 
 export default {
@@ -77,6 +85,24 @@ export default {
       method: "GET",
       path: "/drives/:documentId/mine",
       handler: "drive.mine",
+      config: { auth: false },
+    },
+    {
+      method: "POST",
+      path: "/drives/:documentId/holds",
+      handler: "drive.hold",
+      config: { auth: false },
+    },
+    {
+      method: "DELETE",
+      path: "/drives/:documentId/holds/:libraryDocumentId",
+      handler: "drive.releaseHold",
+      config: { auth: false },
+    },
+    {
+      method: "GET",
+      path: "/drives/:documentId/holds",
+      handler: "drive.holds",
       config: { auth: false },
     },
   ],

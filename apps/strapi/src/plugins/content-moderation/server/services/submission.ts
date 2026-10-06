@@ -715,6 +715,25 @@ export default ({ strapi }: { strapi: any }) => ({
         notifications(strapi).submissionPending(created)
       )
 
+    // The library is now in review, which the task panel already excludes —
+    // this just frees a 20-minute hold early so another helper can pick it
+    // up sooner, rather than waiting it out.
+    if (
+      status === "pending" &&
+      typeof created.driveDocumentId === "string" &&
+      created.driveDocumentId &&
+      typeof created.targetDocumentId === "string" &&
+      created.targetDocumentId
+    ) {
+      try {
+        await strapi
+          .service("api::drive.drive")
+          .releaseHold(created.driveDocumentId, created.targetDocumentId)
+      } catch (err) {
+        strapi.log.warn("[content-moderation] drive hold release failed:", err)
+      }
+    }
+
     return toContributor(created)
   },
 
@@ -791,9 +810,20 @@ export default ({ strapi }: { strapi: any }) => ({
         limit: 100,
       })
 
+    // Drive tags for the rows that carry one, one query for the page.
+    const driveMap = await strapi
+      .plugin("content-moderation")
+      .service("moderation")
+      .driveTitles((rows ?? []).map((r: any) => r.driveDocumentId))
+
     // Named like the public list on the profile: library names and article
     // titles, not slugs.
-    return (await withTargetLabels(strapi, rows ?? [])).map(toContributor)
+    return (await withTargetLabels(strapi, rows ?? [])).map((r: any) => ({
+      ...toContributor(r),
+      drive: r.driveDocumentId
+        ? (driveMap.get(r.driveDocumentId) ?? null)
+        : null,
+    }))
   },
 
   async updateStatus(
@@ -1995,6 +2025,24 @@ export default ({ strapi }: { strapi: any }) => ({
       scheduleNotification(strapi, `alert for ${documentId}`, () =>
         notifications(strapi).submissionPending(finalized)
       )
+
+    // Same early release as `create`'s: the library is already in review,
+    // this just frees the hold's 20 minutes sooner.
+    if (
+      finalized &&
+      typeof finalized.driveDocumentId === "string" &&
+      finalized.driveDocumentId &&
+      typeof finalized.targetDocumentId === "string" &&
+      finalized.targetDocumentId
+    ) {
+      try {
+        await strapi
+          .service("api::drive.drive")
+          .releaseHold(finalized.driveDocumentId, finalized.targetDocumentId)
+      } catch (err) {
+        strapi.log.warn("[content-moderation] drive hold release failed:", err)
+      }
+    }
 
     return toContributor(finalized)
   },

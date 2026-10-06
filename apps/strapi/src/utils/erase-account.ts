@@ -9,6 +9,7 @@ const SAVED_EVENT = "api::saved-event.saved-event"
 const ENTITLEMENT_GRANT = "api::entitlement-grant.entitlement-grant"
 const PRO_VERIFICATION = "api::pro-verification.pro-verification"
 const ROLE_GRANT = "api::role-grant.role-grant"
+const DRIVE_HOLD = "api::drive-hold.drive-hold"
 const SUBSCRIBER = "api::subscriber.subscriber"
 const POINT_EVENT = "plugin::rewards.point-event"
 const BADGE_AWARD = "plugin::rewards.badge-award"
@@ -75,6 +76,31 @@ export async function eraseAccount(
   const filesToRemove: unknown[] = []
 
   await strapi.db.transaction(async () => {
+    await strapi.plugin("mobile-libraries")?.service("live")?.eraseFor(baUserId)
+    await strapi.db.query("api::library-notice.library-notice").updateMany({
+      where: { createdByBaUserId: baUserId },
+      data: { createdByBaUserId: null },
+    })
+    await strapi.db.query("api::library-notice.library-notice").updateMany({
+      where: { endedByBaUserId: baUserId },
+      data: { endedByBaUserId: null },
+    })
+    await strapi.db.query("plugin::library-staff.staff-invite").deleteMany({
+      where: {
+        $or: [
+          { invitedBy: baUserId },
+          ...(email ? [{ email: email.trim().toLowerCase() }] : []),
+        ],
+      },
+    })
+    await strapi.db.query("plugin::library-staff.staff-audit").updateMany({
+      where: { actor: baUserId },
+      data: { actor: null, detail: null },
+    })
+    await strapi.db.query("plugin::library-staff.staff-audit").updateMany({
+      where: { subject: baUserId },
+      data: { subject: null, detail: null },
+    })
     const [profile] = (await strapi.documents(PROFILE).findMany({
       filters: { baUserId: { $eq: baUserId } },
       populate: { avatar: true },
@@ -178,6 +204,7 @@ export async function eraseAccount(
       ENTITLEMENT_GRANT,
       PRO_VERIFICATION,
       ROLE_GRANT,
+      DRIVE_HOLD,
     ]) {
       await strapi.db.query(uid).deleteMany({ where: { baUserId } })
     }

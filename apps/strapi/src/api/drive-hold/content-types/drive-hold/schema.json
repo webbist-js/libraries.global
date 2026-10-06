@@ -1,0 +1,21 @@
+{
+  "kind": "collectionType",
+  "collectionName": "drive_holds",
+  "info": {
+    "singularName": "drive-hold",
+    "pluralName": "drive-holds",
+    "displayName": "Drive Hold",
+    "description": "A hidden 20-minute ledger entry: one helper holds one library in one Drive so two helpers don't fill the same record. No REST routes."
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": false },
+    "content-type-builder": { "visible": false }
+  },
+  "attributes": {
+    "driveDocumentId": { "type": "string", "required": true },
+    "libraryDocumentId": { "type": "string", "required": true },
+    "baUserId": { "type": "string", "required": true },
+    "expiresAt": { "type": "datetime", "required": true }
+  }
+}

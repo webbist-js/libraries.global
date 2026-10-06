@@ -34,8 +34,14 @@ import { countLibraries } from "../../../utils/meili-count"
 
 const UID = "api::drive.drive"
 const DRIVE_CREDIT = "api::drive-credit.drive-credit"
+const HOLD = "api::drive-hold.drive-hold"
 const SUBMISSION = "cm_submissions"
 const CREDIT = "drive_credits"
+const HOLD_TABLE = "drive_holds"
+/** "Give me a library" holds a row for this long before it's up for grabs again. */
+const HOLD_MINUTES = 20
+/** `activeHolds`'s knex read cap (ADR-0004: per-drive checks stay bounded). */
+const HOLD_READ_CAP = 2000
 
 type DriveRow = Record<string, unknown> & {
   documentId: string
@@ -868,6 +874,18 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
     now: Date,
     deps: Partial<LifecycleDeps> = {}
   ): Promise<{ opened: string[]; closed: string[]; held: string[] }> {
+    // Holds carry their own 20-minute expiry (`holdLibrary` clears a stale
+    // row on its own library before handing it out again); this sweep is
+    // just housekeeping for rows nobody ever revisited, so it only drops
+    // what's been stale for over an hour.
+    await strapi.db.query(HOLD).deleteMany({
+      where: {
+        expiresAt: {
+          $lt: new Date(now.getTime() - 60 * 60 * 1000).toISOString(),
+        },
+      },
+    })
+
     const fullDeps: LifecycleDeps = { ...DEFAULT_LIFECYCLE_DEPS, ...deps }
     const locale = await defaultDriveLocale(strapi)
     const nowIso = now.toISOString()
@@ -1460,5 +1478,150 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
     }
 
     return out
+  },
+
+  // ── Holds (spec §4.3, §6.4; "Give me a library") ─────────────────────────
+
+  /**
+   * Places (or renews) a 20-minute hold for `baUserId` on `libraryDocumentId`
+   * within `driveDocumentId`, so two helpers don't fill the same record.
+   * Refuses on a drive that isn't `open` (`not_open`) or a library someone
+   * else already holds (`held`). A helper holds at most one library per
+   * drive: any other hold of theirs in this drive is released first. A
+   * unique `(driveDocumentId, libraryDocumentId)` index is the real race
+   * decider — a `23505` from `create` also comes back as `held`.
+   */
+  async holdLibrary(
+    driveDocumentId: string,
+    libraryDocumentId: string,
+    baUserId: string,
+    now: Date = new Date()
+  ): Promise<
+    { ok: true; expiresAt: string } | { ok: false; reason: "not_open" | "held" }
+  > {
+    const drive = (await strapi.documents(UID).findOne({
+      documentId: driveDocumentId,
+      fields: ["status"],
+    })) as { status?: string } | null
+    if (!drive || drive.status !== "open")
+      return { ok: false, reason: "not_open" }
+
+    // One hold per helper per drive: a fresh hold releases any other
+    // library of theirs in this drive.
+    await strapi.db.query(HOLD).deleteMany({
+      where: {
+        driveDocumentId,
+        baUserId,
+        libraryDocumentId: { $ne: libraryDocumentId },
+      },
+    })
+    // A stale hold on this exact library is cleared before the race check,
+    // so an expired holder's row never blocks a fresh claim.
+    await strapi.db.query(HOLD).deleteMany({
+      where: {
+        driveDocumentId,
+        libraryDocumentId,
+        expiresAt: { $lt: now.toISOString() },
+      },
+    })
+
+    const expiresAt = new Date(
+      now.getTime() + HOLD_MINUTES * 60 * 1000
+    ).toISOString()
+
+    const existing = (await strapi.documents(HOLD).findMany({
+      filters: {
+        driveDocumentId: { $eq: driveDocumentId },
+        libraryDocumentId: { $eq: libraryDocumentId },
+      },
+      limit: 1,
+    })) as { documentId: string; baUserId?: string }[]
+
+    if (existing[0]) {
+      if (existing[0].baUserId !== baUserId)
+        return { ok: false, reason: "held" }
+
+      await strapi.documents(HOLD).update({
+        documentId: existing[0].documentId,
+        data: { expiresAt } as never,
+      })
+
+      return { ok: true, expiresAt }
+    }
+
+    try {
+      await strapi.documents(HOLD).create({
+        data: {
+          driveDocumentId,
+          libraryDocumentId,
+          baUserId,
+          expiresAt,
+        } as never,
+      })
+
+      return { ok: true, expiresAt }
+    } catch (err: any) {
+      if (err?.code === "23505" || err?.nativeError?.code === "23505")
+        return { ok: false, reason: "held" }
+      throw err
+    }
+  },
+
+  /**
+   * Releases a hold on `libraryDocumentId` within `driveDocumentId`. With
+   * `baUserId`, only that helper's own hold is released (used by the public
+   * release route and by a tagged Submission's hold release). Without it,
+   * any hold on that library is released (used internally once a library
+   * leaves the task pool another way). Returns how many rows were deleted.
+   */
+  async releaseHold(
+    driveDocumentId: string,
+    libraryDocumentId: string,
+    baUserId?: string
+  ): Promise<number> {
+    const { count } = await strapi.db.query(HOLD).deleteMany({
+      where: {
+        driveDocumentId,
+        libraryDocumentId,
+        ...(baUserId ? { baUserId } : {}),
+      },
+    })
+
+    return count
+  },
+
+  /**
+   * The library ids currently held in this drive, split into those held by
+   * someone other than `viewerBaUserId` (so the task list can mark them
+   * "Someone's on this") and the viewer's own hold, if any. A plain knex
+   * read, capped at `HOLD_READ_CAP` (2,000) per ADR-0004; it never returns a
+   * `baUserId` to the caller (spec §11).
+   */
+  async activeHolds(
+    driveDocumentId: string,
+    viewerBaUserId: string | null,
+    now: Date = new Date()
+  ): Promise<{ heldByOthers: string[]; mine: string | null }> {
+    const rows = (await strapi.db.connection
+      .select("library_document_id", "ba_user_id")
+      .from(HOLD_TABLE)
+      .where("drive_document_id", driveDocumentId)
+      .where("expires_at", ">", now.toISOString())
+      .limit(HOLD_READ_CAP)) as {
+      library_document_id: string
+      ba_user_id: string
+    }[]
+
+    const heldByOthers: string[] = []
+    let mine: string | null = null
+    for (const row of rows) {
+      if (viewerBaUserId && row.ba_user_id === viewerBaUserId) {
+        mine = row.library_document_id
+      } else {
+        heldByOthers.push(row.library_document_id)
+      }
+    }
+
+    return { heldByOthers, mine }
   },
 }))
