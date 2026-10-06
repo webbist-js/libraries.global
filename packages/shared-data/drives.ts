@@ -347,51 +347,70 @@ export function validateDrive(input: DriveInput, now: Date): string[] {
     errors.push("Add one to five steps, each under 200 characters.")
   }
 
-  const focus = input.focus
-  switch (focus.kind) {
-    case "gaps":
-      if (
-        !Array.isArray(focus.gaps) ||
-        focus.gaps.length < 1 ||
-        focus.gaps.length > 3 ||
-        !focus.gaps.every(isGapKey)
-      ) {
-        errors.push("Choose one to three gaps to fill.")
-      }
+  // `input` comes from an untrusted request body at the Strapi layer, cast
+  // to `DriveInput` before it reaches here — `focus` and `scope` can
+  // genuinely be missing or malformed at runtime despite the type saying
+  // otherwise, so both are re-checked as `unknown` rather than trusted.
+  const rawFocus = input.focus as unknown
+  const focus: DriveFocus | null =
+    rawFocus && typeof rawFocus === "object" && !Array.isArray(rawFocus)
+      ? (rawFocus as DriveFocus)
+      : null
+  if (!focus) {
+    errors.push("Choose what the drive is for.")
+  } else {
+    switch (focus.kind) {
+      case "gaps":
+        if (
+          !Array.isArray(focus.gaps) ||
+          focus.gaps.length < 1 ||
+          focus.gaps.length > 3 ||
+          !focus.gaps.every(isGapKey)
+        ) {
+          errors.push("Choose one to three gaps to fill.")
+        }
 
-      break
+        break
 
-    case "verify":
-      if (
-        !Array.isArray(focus.sections) ||
-        focus.sections.length < 1 ||
-        !isValidStamp(focus.before)
-      ) {
-        errors.push("Choose the sections to confirm and a date.")
-      }
+      case "verify":
+        if (
+          !Array.isArray(focus.sections) ||
+          focus.sections.length < 1 ||
+          !isValidStamp(focus.before)
+        ) {
+          errors.push("Choose the sections to confirm and a date.")
+        }
 
-      break
+        break
 
-    case "record":
-      if (
-        typeof focus.target !== "number" ||
-        focus.target < 50 ||
-        focus.target > 100
-      ) {
-        errors.push("Set a completeness target between 50 and 100.")
-      }
+      case "record":
+        if (
+          typeof focus.target !== "number" ||
+          focus.target < 50 ||
+          focus.target > 100
+        ) {
+          errors.push("Set a completeness target between 50 and 100.")
+        }
 
-      break
+        break
 
-    // No default
+      default:
+        errors.push("Choose what the drive is for.")
+    }
   }
 
-  if (!hasPlacesOrLibraries(input.scope)) {
+  const rawScope = input.scope as unknown
+  const scope: DriveScope | null =
+    rawScope && typeof rawScope === "object" && !Array.isArray(rawScope)
+      ? (rawScope as DriveScope)
+      : null
+  if (!scope || !hasPlacesOrLibraries(scope)) {
     errors.push("Limit the drive to places or to a list of libraries.")
   }
   if (
-    nonEmpty(input.scope.libraries) &&
-    input.scope.libraries.length > DRIVE_MAX_LIBRARIES
+    scope &&
+    nonEmpty(scope.libraries) &&
+    scope.libraries.length > DRIVE_MAX_LIBRARIES
   ) {
     errors.push("A list can hold at most 500 libraries.")
   }
@@ -402,6 +421,8 @@ export function validateDrive(input: DriveInput, now: Date): string[] {
 
   const starts = Date.parse(input.startsAt)
   const ends = Date.parse(input.endsAt)
+  if (!Number.isFinite(starts)) errors.push("Give a valid start date.")
+  if (!Number.isFinite(ends)) errors.push("Give a valid end date.")
   if (Number.isFinite(starts) && Number.isFinite(ends)) {
     if (ends <= starts) {
       errors.push("The drive must end after it starts.")

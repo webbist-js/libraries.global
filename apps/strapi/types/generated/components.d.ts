@@ -65,6 +65,30 @@ export interface ContentRichText extends Struct.ComponentSchema {
   }
 }
 
+export interface DriveSource extends Struct.ComponentSchema {
+  collectionName: "components_drive_sources"
+  info: {
+    description: "Where to look: an optional named, linked, licensed source a Drive points contributors at."
+    displayName: "Source"
+  }
+  attributes: {
+    licenceNote: Schema.Attribute.Text
+    name: Schema.Attribute.String
+    url: Schema.Attribute.String
+  }
+}
+
+export interface DriveStep extends Struct.ComponentSchema {
+  collectionName: "components_drive_steps"
+  info: {
+    description: 'One step in a Drive\'s "How to help" list.'
+    displayName: "Step"
+  }
+  attributes: {
+    text: Schema.Attribute.String & Schema.Attribute.Required
+  }
+}
+
 export interface ElementsFooterItem extends Struct.ComponentSchema {
   collectionName: "components_elements_footer_items"
   info: {
@@ -772,6 +796,8 @@ declare module "@strapi/strapi" {
       "content.image-block": ContentImageBlock
       "content.quote-block": ContentQuoteBlock
       "content.rich-text": ContentRichText
+      "drive.source": DriveSource
+      "drive.step": DriveStep
       "elements.footer-item": ElementsFooterItem
       "forms.contact-form": FormsContactForm
       "forms.newsletter-form": FormsNewsletterForm

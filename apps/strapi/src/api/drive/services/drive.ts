@@ -1,26 +1,25 @@
 /**
  * drive service.
  *
- * Every write goes through `strapi.documents(UID)` with `status: "published"`
- * — a Drive has no meaningful draft state of its own once created, and the
- * public reads only ever serve published rows. `toPublic` strips the two
- * board-only fields unconditionally, so a programming mistake in a field
- * list can never leak them.
+ * `draftAndPublish` is off for `api::drive.drive` (its `schema.json`): the
+ * content type's own lifecycle is the `status` attribute
+ * (draft/scheduled/open/closed/cancelled), and naming it `status` collides
+ * with the Document Service's reserved draft/publish meta-field when
+ * `draftAndPublish` is on — Strapi refuses to boot without a warning in that
+ * case. With it off, every write is live immediately, so no
+ * `documents()` call needs (or accepts) its own `status` option; `toPublic`
+ * strips the two board-only fields unconditionally, so a programming
+ * mistake in a field list can never leak them.
  */
 
 import {
   DRIVE_MAX_PINNED,
-  DRIVE_STATUSES,
   validateDrive,
   type DriveInput,
-  type DriveStatus,
 } from "@repo/shared-data"
 import { factories } from "@strapi/strapi"
 
-// `as any`: the drive content type is not yet in the generated types
-// (`types/generated/contentTypes.d.ts`). Regenerate and drop the cast once
-// `generate:types` has run against a booted Strapi.
-const UID = "api::drive.drive" as any
+const UID = "api::drive.drive"
 
 type DriveRow = Record<string, unknown> & {
   documentId: string
@@ -61,6 +60,13 @@ const PUBLIC_FIELDS = [
   "updatedAt",
   "publishedAt",
 ] as const
+
+/** The lifecycle states a public reader may ask `listPublic` for. */
+const PUBLIC_STATES = ["open", "scheduled", "closed"] as const
+type PublicState = (typeof PUBLIC_STATES)[number]
+
+/** Lifecycle states that can no longer be pinned, featured or cancelled. */
+const SETTLED_STATES = new Set(["closed", "cancelled"])
 
 /** Fields a board write may edit on a drive that has left draft/scheduled. */
 const TEXT_FIELDS = new Set<keyof DriveInput>([
@@ -125,7 +131,6 @@ async function countPinnedOpenOrScheduled(strapi: any): Promise<number> {
       pinned: { $eq: true },
       status: { $in: ["open", "scheduled"] },
     },
-    status: "published",
   })
 }
 
@@ -148,53 +153,53 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
   // ── Public reads ──────────────────────────────────────────────────────────
 
   /**
-   * Published drives in `status`, pinned first then by `pinOrder` then
+   * Drives in `state` (`open`, `scheduled` or `closed` only — a `draft` or
+   * `cancelled` drive is never public), pinned first then by `pinOrder` then
    * `startsAt` (closed drives: by `closedAt` desc instead). `limit` is
    * capped at 50; closed drives default to 5.
    */
   async listPublic(
-    status?: string,
+    state?: string,
     limit?: number,
     locale = "en"
   ): Promise<Record<string, unknown>[]> {
-    const normalisedStatus: DriveStatus = (
-      DRIVE_STATUSES as readonly string[]
-    ).includes(status as string)
-      ? (status as DriveStatus)
+    const normalisedState: PublicState = (
+      PUBLIC_STATES as readonly string[]
+    ).includes(state as string)
+      ? (state as PublicState)
       : "open"
-    const defaultLimit = normalisedStatus === "closed" ? 5 : 50
+    const defaultLimit = normalisedState === "closed" ? 5 : 50
     const take = Math.min(
       typeof limit === "number" && limit > 0 ? Math.trunc(limit) : defaultLimit,
       50
     )
-    const sort =
-      normalisedStatus === "closed"
+    const sort = (
+      normalisedState === "closed"
         ? ["closedAt:desc"]
         : ["pinned:desc", "pinOrder:asc", "startsAt:asc"]
+    ) as never
 
     const rows = (await strapi.documents(UID).findMany({
-      filters: { status: { $eq: normalisedStatus } },
-      status: "published",
+      filters: { status: { $eq: normalisedState } },
       locale,
       sort,
       limit: take,
-      fields: [...PUBLIC_FIELDS],
+      fields: [...PUBLIC_FIELDS] as never,
       populate: { steps: true, whereToLook: true },
     })) as DriveRow[]
 
     return rows.map((row) => toPublic(row))
   },
 
-  /** The one published drive with this slug, or null. */
+  /** The one drive with this slug, or null. */
   async bySlug(
     slug: string,
     locale = "en"
   ): Promise<Record<string, unknown> | null> {
     const rows = (await strapi.documents(UID).findMany({
       filters: { slug: { $eq: slug } },
-      status: "published",
       locale,
-      fields: [...PUBLIC_FIELDS],
+      fields: [...PUBLIC_FIELDS] as never,
       populate: { steps: true, whereToLook: true },
       limit: 1,
     })) as DriveRow[]
@@ -205,15 +210,15 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
   // ── Board writes ──────────────────────────────────────────────────────────
 
   /**
-   * Creates a published drive in `status: "scheduled"`, slugged from its
-   * title. Refused with `validateDrive`'s errors, or with a 409 when
-   * `pinned` is requested and six open/scheduled drives are already pinned.
+   * Creates a drive in `status: "scheduled"`, slugged from its title.
+   * Refused with `validateDrive`'s errors, or with a 409 when `pinned` is
+   * requested and six open/scheduled drives are already pinned.
    */
   async createDrive(
-    input: DriveInput & { pinned?: boolean },
+    input: Partial<DriveInput> & { pinned?: boolean },
     baUserId: string
   ): Promise<ServiceResult<Record<string, unknown>>> {
-    const errors = validateDrive(input, new Date())
+    const errors = validateDrive(input as DriveInput, new Date())
     if (errors.length > 0) return { errors }
 
     const pinned = Boolean(input.pinned)
@@ -224,14 +229,14 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
       return { errors: ["Six drives are already pinned."], status: 409 }
     }
 
-    const slug = await uniqueSlug(strapi, slugify(input.title))
+    const slug = await uniqueSlug(strapi, slugify(input.title!))
 
     const created = (await strapi.documents(UID).create({
       data: {
         title: input.title,
         slug,
         summary: input.summary,
-        steps: stepsToComponent(input.steps),
+        steps: stepsToComponent(input.steps!),
         focus: input.focus,
         scope: input.scope,
         whereToLook: input.whereToLook,
@@ -243,7 +248,6 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
         pinned,
         createdByUserId: `ba:${baUserId}`,
       } as never,
-      status: "published",
     })) as DriveRow
 
     return { data: toPublic(created) }
@@ -261,16 +265,20 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
   ): Promise<ServiceResult<Record<string, unknown>>> {
     const existing = (await strapi.documents(UID).findOne({
       documentId,
-      status: "published",
       populate: { steps: true, whereToLook: true },
     })) as DriveRow | null
     if (!existing) return { errors: ["Drive not found."], status: 404 }
 
+    // Only count fields the body actually sent — `driveInputFromBody` drops
+    // `undefined` keys, but a defensive filter here means a caller that
+    // doesn't can't accidentally 409 a pure text edit.
     const lifecycleLocked =
       existing.status !== "draft" && existing.status !== "scheduled"
     if (lifecycleLocked) {
       const disallowed = (Object.keys(input) as (keyof DriveInput)[]).filter(
-        (key) => !TEXT_FIELDS.has(key)
+        (key) =>
+          !TEXT_FIELDS.has(key) &&
+          (input as Record<string, unknown>)[key] !== undefined
       )
       if (disallowed.length > 0) {
         return {
@@ -313,7 +321,6 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
     const updated = (await strapi.documents(UID).update({
       documentId,
       data: data as never,
-      status: "published",
     })) as DriveRow
 
     return { data: toPublic(updated) }
@@ -322,7 +329,10 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
   /**
    * Board-only lifecycle actions. `open` and `close` are implemented in
    * Task 6 and answer "Unknown action" until then, same as any unrecognised
-   * action.
+   * action. `pin`, `feature` and `cancel` refuse once a drive has settled
+   * (`closed` or `cancelled`) — a closed drive's `closedReason`/`closedAt`
+   * is never overwritten, and a settled drive can't be promoted back onto
+   * the Noticeboard's pinned rail.
    */
   async act(
     documentId: string,
@@ -331,12 +341,18 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
   ): Promise<ServiceResult<Record<string, unknown>>> {
     const existing = (await strapi.documents(UID).findOne({
       documentId,
-      status: "published",
     })) as DriveRow | null
     if (!existing) return { errors: ["Drive not found."], status: 404 }
+    const settled = SETTLED_STATES.has(existing.status ?? "")
 
     switch (action) {
       case "pin": {
+        if (settled) {
+          return {
+            errors: ["A closed drive can't be pinned."],
+            status: 409,
+          }
+        }
         if (!existing.pinned) {
           const pinnedCount = await countPinnedOpenOrScheduled(strapi)
           if (pinnedCount >= DRIVE_MAX_PINNED) {
@@ -346,7 +362,6 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
         const updated = (await strapi.documents(UID).update({
           documentId,
           data: { pinned: true } as never,
-          status: "published",
         })) as DriveRow
 
         return { data: toPublic(updated) }
@@ -356,13 +371,18 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
         const updated = (await strapi.documents(UID).update({
           documentId,
           data: { pinned: false, featured: false } as never,
-          status: "published",
         })) as DriveRow
 
         return { data: toPublic(updated) }
       }
 
       case "feature": {
+        if (settled) {
+          return {
+            errors: ["A closed drive can't be featured."],
+            status: 409,
+          }
+        }
         if (!existing.pinned) {
           return {
             errors: ["Only a pinned drive can be featured."],
@@ -374,20 +394,18 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
             featured: { $eq: true },
             documentId: { $ne: documentId },
           },
-          status: "published",
           fields: ["documentId"],
+          limit: DRIVE_MAX_PINNED,
         })) as { documentId: string }[]
         for (const other of others) {
           await strapi.documents(UID).update({
             documentId: other.documentId,
             data: { featured: false } as never,
-            status: "published",
           })
         }
         const updated = (await strapi.documents(UID).update({
           documentId,
           data: { featured: true } as never,
-          status: "published",
         })) as DriveRow
 
         return { data: toPublic(updated) }
@@ -397,13 +415,18 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
         const updated = (await strapi.documents(UID).update({
           documentId,
           data: { featured: false } as never,
-          status: "published",
         })) as DriveRow
 
         return { data: toPublic(updated) }
       }
 
       case "cancel": {
+        if (settled) {
+          return {
+            errors: ["This drive has already closed."],
+            status: 409,
+          }
+        }
         const updated = (await strapi.documents(UID).update({
           documentId,
           data: {
@@ -413,7 +436,6 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
             pinned: false,
             featured: false,
           } as never,
-          status: "published",
         })) as DriveRow
 
         return { data: toPublic(updated) }
@@ -427,7 +449,6 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
         const updated = (await strapi.documents(UID).update({
           documentId,
           data: { pinOrder } as never,
-          status: "published",
         })) as DriveRow
 
         return { data: toPublic(updated) }

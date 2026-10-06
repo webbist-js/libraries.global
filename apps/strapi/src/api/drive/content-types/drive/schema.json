@@ -8,7 +8,7 @@
     "description": "A board-run Drive: a time-boxed, scoped, focused call to fill gaps in a set of libraries. Contributed work arrives as ordinary Submissions tagged with the Drive and is credited on approval."
   },
   "options": {
-    "draftAndPublish": true
+    "draftAndPublish": false
   },
   "pluginOptions": {
     "i18n": {

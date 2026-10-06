@@ -224,6 +224,41 @@ describe("validateDrive", () => {
       "Set a goal between 1% and 100%.",
     ])
   })
+
+  it("rejects an unrecognised focus kind instead of crashing", () => {
+    expect(
+      validateDrive(
+        { ...ok, focus: { kind: "something-else" } } as never,
+        new Date(OPENED)
+      )
+    ).toContain("Choose what the drive is for.")
+  })
+
+  it("survives a missing focus or scope instead of throwing", () => {
+    const withoutFocus = { ...ok } as Record<string, unknown>
+    delete withoutFocus.focus
+    expect(validateDrive(withoutFocus as never, new Date(OPENED))).toContain(
+      "Choose what the drive is for."
+    )
+
+    const withoutScope = { ...ok } as Record<string, unknown>
+    delete withoutScope.scope
+    expect(validateDrive(withoutScope as never, new Date(OPENED))).toContain(
+      "Limit the drive to places or to a list of libraries."
+    )
+  })
+
+  it("names an unparseable start or end date", () => {
+    expect(
+      validateDrive(
+        { ...ok, startsAt: "not-a-date" } as never,
+        new Date(OPENED)
+      )
+    ).toContain("Give a valid start date.")
+    expect(
+      validateDrive({ ...ok, endsAt: "" } as never, new Date(OPENED))
+    ).toContain("Give a valid end date.")
+  })
 })
 
 describe("driveDateLabel", () => {

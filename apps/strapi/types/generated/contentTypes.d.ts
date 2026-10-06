@@ -1555,6 +1555,194 @@ export interface ApiDatasetDataset extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface ApiDriveDrive extends Struct.CollectionTypeSchema {
+  collectionName: "drives"
+  info: {
+    description: "A board-run Drive: a time-boxed, scoped, focused call to fill gaps in a set of libraries. Contributed work arrives as ordinary Submissions tagged with the Drive and is credited on approval."
+    displayName: "Drive"
+    pluralName: "drives"
+    singularName: "drive"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    i18n: {
+      localized: true
+    }
+  }
+  attributes: {
+    baseline: Schema.Attribute.JSON &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    closedAt: Schema.Attribute.DateTime &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    closedReason: Schema.Attribute.Enumeration<["goal", "ended", "cancelled"]> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    createdByUserId: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    endsAt: Schema.Attribute.DateTime &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    featured: Schema.Attribute.Boolean &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.DefaultTo<false>
+    final: Schema.Attribute.JSON &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    focus: Schema.Attribute.JSON &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    goalPercent: Schema.Attribute.Integer &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 100
+          min: 1
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<100>
+    locale: Schema.Attribute.String
+    localizations: Schema.Attribute.Relation<"oneToMany", "api::drive.drive">
+    openedAt: Schema.Attribute.DateTime &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    pinned: Schema.Attribute.Boolean &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.DefaultTo<false>
+    pinOrder: Schema.Attribute.Integer &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    progressLog: Schema.Attribute.JSON &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    proposalSubmissionDocumentId: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    publishedAt: Schema.Attribute.DateTime
+    scope: Schema.Attribute.JSON &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    slug: Schema.Attribute.UID<"title"> &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    startsAt: Schema.Attribute.DateTime &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    status: Schema.Attribute.Enumeration<
+      ["draft", "scheduled", "open", "closed", "cancelled"]
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.DefaultTo<"draft">
+    steps: Schema.Attribute.Component<"drive.step", true> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    summary: Schema.Attribute.Text &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    title: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    unit: Schema.Attribute.Enumeration<["library", "branch", "record"]> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.DefaultTo<"library">
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    whereToLook: Schema.Attribute.Component<"drive.source", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+  }
+}
+
 export interface ApiEntitlementGrantEntitlementGrant
   extends Struct.CollectionTypeSchema {
   collectionName: "entitlement_grants"
@@ -3682,6 +3870,7 @@ export interface PluginContentModerationSubmission
         "new_library",
         "library_claim",
         "library_edit",
+        "event_feed",
         "wiki_edit",
         "blog_submission",
         "topic_suggestion",
@@ -4797,6 +4986,7 @@ declare module "@strapi/strapi" {
       "api::continent.continent": ApiContinentContinent
       "api::country.country": ApiCountryCountry
       "api::dataset.dataset": ApiDatasetDataset
+      "api::drive.drive": ApiDriveDrive
       "api::entitlement-grant.entitlement-grant": ApiEntitlementGrantEntitlementGrant
       "api::footer.footer": ApiFooterFooter
       "api::homepage.homepage": ApiHomepageHomepage
