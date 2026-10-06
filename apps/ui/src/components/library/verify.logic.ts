@@ -188,11 +188,17 @@ export type VerifyBody = {
   fields: { kind: "verify"; sections: VerifySection[]; libraryName: string }
   evidenceType: "other" | "on_site_visit"
   evidenceUrl?: string
+  /** The library's documentId, when the sender knows it (a drive's panel). */
+  targetDocumentId?: string
+  /** The drive this confirmation counts toward. */
+  driveDocumentId?: string
 }
 
 /**
  * The /api/submissions body. A visit in person is `on_site_visit` (with the
- * page too, when one was given); otherwise the page is the evidence.
+ * page too, when one was given); otherwise the page is the evidence. A
+ * drive's task panel also sends the library's `documentId` and the drive
+ * (`driveDocumentId`, top level), so Strapi can check the drive's Focus.
  */
 export function verifyPayload({
   slug,
@@ -200,9 +206,13 @@ export function verifyPayload({
   sections,
   source,
   inPerson,
+  documentId,
+  driveDocumentId,
 }: VerifyInput & {
   readonly slug: string
   readonly name: string
+  readonly documentId?: string | null
+  readonly driveDocumentId?: string | null
 }): VerifyBody {
   const s = source.trim()
 
@@ -217,5 +227,7 @@ export function verifyPayload({
     },
     evidenceType: inPerson ? "on_site_visit" : "other",
     ...(s && isWebAddress(s) ? { evidenceUrl: s } : {}),
+    ...(documentId ? { targetDocumentId: documentId } : {}),
+    ...(driveDocumentId ? { driveDocumentId } : {}),
   }
 }

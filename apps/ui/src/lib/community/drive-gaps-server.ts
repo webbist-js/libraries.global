@@ -13,6 +13,8 @@ import {
   searchLocaleFilter,
 } from "@/lib/meilisearch"
 
+import { staleCutoff } from "./stale-cutoff"
+
 // "Gaps worth a drive" on the Noticeboard: for each kind of gap, the region
 // with the most records missing it. Every number is a Meilisearch facet
 // count on the `library` index (ADR-0004: never a row scan).
@@ -36,16 +38,8 @@ const NEED_GAPS: { key: DriveGapKey & NeedKey; title: string }[] = [
 
 const STALE_TITLE = "Not checked in over two years"
 
-/**
- * Two years before `now`, in Unix seconds: the unit of the index's
- * `last_verified_ts` (apps/strapi/src/utils/library-search-fields.ts).
- */
-export function staleCutoff(now: Date): number {
-  const d = new Date(now)
-  d.setUTCFullYear(d.getUTCFullYear() - 2)
-
-  return Math.floor(d.getTime() / 1000)
-}
+// The cutoff lives in a pure module so client links can share it.
+export { staleCutoff }
 
 /** The facet value with the highest count; ties go to the first slug. */
 export function topFacet(

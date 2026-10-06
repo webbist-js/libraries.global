@@ -46,7 +46,7 @@ export default async function NewDrivePage({
           { label: "New drive" },
         ]}
         title="New *drive*"
-        lead="Choose the gaps, where they are and where helpers can find the answers. The drive is saved as scheduled; pin it or open it from its page."
+        lead="Choose what the drive does (fill gaps, confirm details are still right, or complete whole records), where, and where helpers can find the answers. The drive is saved as scheduled; pin it or open it from its page."
       />
       <DriveBuilder
         initial={builderStateFromPrefill(prefill, names, "board")}

@@ -6,14 +6,13 @@ import { type FormEvent, useEffect, useId, useRef, useState } from "react"
 import type { WizardLibrary } from "@/components/contribute/wizard.logic"
 import {
   availableSections,
-  SECTION_LABELS,
-  sectionSummary,
   type VerifyRecord,
   type VerifySection,
   verifyPayload,
   verifyProblem,
   verifyProblemField,
 } from "@/components/library/verify.logic"
+import { VerifyFields } from "@/components/library/VerifyFields"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -21,67 +20,12 @@ import { Link } from "@/lib/navigation"
 /** The library the drawer is open on, with the values a reader confirms. */
 export type VerifyLibrary = WizardLibrary & VerifyRecord
 
-// The correction drawer's own field and button styles (ContributionWizard).
-const FIELD =
-  "w-full rounded-[14px] border border-(--t-border-hi) bg-white px-4 py-3 text-[16px] outline-none transition-colors focus:border-(--t-accent-primary)"
+// The correction drawer's own button styles (ContributionWizard).
 const PRIMARY =
   "inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-[16px] font-semibold transition-colors"
 const SECONDARY =
   "inline-flex h-12 items-center justify-center gap-2 rounded-full border bg-white px-5 text-[16px] font-semibold transition-colors hover:bg-(--t-bg-surface)"
 const CTA = `${PRIMARY} bg-(--t-accent-primary) text-white no-underline hover:bg-(--t-accent-primary-hover)`
-
-/** A checkbox row: the label names it, the current value describes it. */
-function SectionChoice({
-  id,
-  label,
-  summary,
-  checked,
-  onChange,
-}: {
-  readonly id: string
-  readonly label: string
-  readonly summary: string
-  readonly checked: boolean
-  readonly onChange: (checked: boolean) => void
-}) {
-  return (
-    <label
-      className="flex cursor-pointer items-start gap-3 rounded-[16px] border p-4"
-      style={{
-        background: checked ? T.accent.chip : T.bg.deep,
-        borderColor: checked ? T.accent.primary : T.border.line,
-      }}
-    >
-      <input
-        aria-describedby={summary ? `${id}-value` : undefined}
-        aria-labelledby={`${id}-label`}
-        checked={checked}
-        className="mt-0.5 size-5 shrink-0"
-        onChange={(e) => onChange(e.target.checked)}
-        style={{ accentColor: "var(--t-accent-primary)" }}
-        type="checkbox"
-      />
-      <span className="flex min-w-0 flex-col gap-0.5">
-        <span
-          id={`${id}-label`}
-          className="text-[16px] font-semibold"
-          style={{ color: T.ink.base }}
-        >
-          {label}
-        </span>
-        {summary ? (
-          <span
-            id={`${id}-value`}
-            className="text-[14.5px] break-words"
-            style={{ color: T.ink.dim }}
-          >
-            {summary}
-          </span>
-        ) : null}
-      </span>
-    </label>
-  )
-}
 
 /**
  * "Is this still right?": the correction drawer's confirm panel. A reader
@@ -116,7 +60,6 @@ export function LibraryVerify({
   const [sent, setSent] = useState(false)
   const [expired, setExpired] = useState(false)
   const thanks = useRef<HTMLHeadingElement>(null)
-  const problemId = `${id}-problem`
 
   // The Send button goes once it's sent, so focus moves to the thanks.
   useEffect(() => {
@@ -130,11 +73,6 @@ export function LibraryVerify({
       ? "/"
       : `${window.location.pathname}${window.location.search}`)
   const signInHref = `/auth/signin?callbackUrl=${encodeURIComponent(back)}`
-
-  const toggle = (section: VerifySection, on: boolean) =>
-    setSections((now) =>
-      available.filter((s) => (s === section ? on : now.includes(s)))
-    )
 
   const send = async (e: FormEvent) => {
     e.preventDefault()
@@ -249,83 +187,19 @@ export function LibraryVerify({
             </p>
           </div>
 
-          <fieldset
-            aria-describedby={problemOn === "sections" ? problemId : undefined}
-            className="m-0 flex min-w-0 flex-col gap-2.5 border-0 p-0"
-          >
-            <legend
-              className="mb-2.5 p-0 text-[15px] font-semibold"
-              style={{ color: T.ink.base }}
-            >
-              What did you check?
-            </legend>
-            {available.length === 0 ? (
-              <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
-                There’s nothing on this record to confirm yet.
-              </p>
-            ) : null}
-            {available.map((s) => (
-              <SectionChoice
-                key={s}
-                checked={sections.includes(s)}
-                id={`${id}-${s}`}
-                label={SECTION_LABELS[s]}
-                onChange={(on) => toggle(s, on)}
-                summary={sectionSummary(s, library)}
-              />
-            ))}
-          </fieldset>
-
-          <div>
-            <label
-              className="mb-2 block text-[15px] font-semibold"
-              htmlFor={`${id}-source`}
-              style={{ color: T.ink.base }}
-            >
-              Where did you check?{" "}
-              <span className="font-normal" style={{ color: T.ink.dim }}>
-                A link to the page
-              </span>
-            </label>
-            <input
-              aria-describedby={problemOn === "source" ? problemId : undefined}
-              aria-invalid={problemOn === "source" ? true : undefined}
-              autoComplete="url"
-              className={FIELD}
-              id={`${id}-source`}
-              inputMode="url"
-              onChange={(e) => setSource(e.target.value)}
-              placeholder="https://"
-              style={{ color: T.ink.base }}
-              type="url"
-              value={source}
-            />
-          </div>
-
-          <label
-            className="flex cursor-pointer items-start gap-3 text-[15px]"
-            style={{ color: T.ink.base }}
-          >
-            <input
-              checked={inPerson}
-              className="mt-0.5 size-5 shrink-0"
-              onChange={(e) => setInPerson(e.target.checked)}
-              style={{ accentColor: "var(--t-accent-primary)" }}
-              type="checkbox"
-            />
-            <span>I checked in person</span>
-          </label>
-
-          {problem ? (
-            <p
-              className="m-0 text-[15px] font-semibold"
-              id={problemId}
-              role="alert"
-              style={{ color: T.accent.danger }}
-            >
-              {problem}
-            </p>
-          ) : null}
+          <VerifyFields
+            available={available}
+            idPrefix={id}
+            inPerson={inPerson}
+            onInPerson={setInPerson}
+            onSections={setSections}
+            onSource={setSource}
+            problem={problem}
+            problemField={problemOn}
+            record={library}
+            sections={sections}
+            source={source}
+          />
         </div>
       </div>
 

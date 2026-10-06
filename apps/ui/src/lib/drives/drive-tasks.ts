@@ -74,9 +74,11 @@ function hrefOf(hit: DriveTaskHit): string | null {
 }
 
 /**
- * A Meilisearch hit as a `DriveTask`. `near` isn't read here (`_geoDistance`
- * on the hit already reflects it when the search was sorted by distance) —
- * it's accepted so callers can pass the same value they searched with.
+ * A Meilisearch hit as a `DriveTask`, keeping `needs` and `completeness`
+ * for a whole-record task's checklist. `near` isn't read here
+ * (`_geoDistance` on the hit already reflects it when the search was
+ * sorted by distance) — it's accepted so callers can pass the same value
+ * they searched with.
  */
 export function taskOf(
   hit: DriveTaskHit,
@@ -86,8 +88,8 @@ export function taskOf(
     continent_slug: _continentSlug,
     country_slug: _countrySlug,
     region_slug: _regionSlug,
-    needs: _needs,
-    completeness: _completeness,
+    needs,
+    completeness,
     _geoDistance,
     ...rest
   } = hit
@@ -96,6 +98,10 @@ export function taskOf(
     ...rest,
     href: hrefOf(hit),
     inReview: false,
+    needs: Array.isArray(needs)
+      ? needs.filter((n): n is string => typeof n === "string")
+      : null,
+    completeness: typeof completeness === "number" ? completeness : null,
     ...(_geoDistance != null ? { distanceKm: _geoDistance / 1000 } : {}),
   }
 }

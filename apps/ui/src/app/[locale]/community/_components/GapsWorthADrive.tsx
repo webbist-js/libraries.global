@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import type { DriveGap, DriveGapKey } from "@/lib/community/drive-gaps-server"
+import { staleCutoffDay } from "@/lib/community/stale-cutoff"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import { proposeHref } from "@/lib/drives/propose-link"
 
@@ -18,10 +19,13 @@ const GAP_LOOK: Record<
 const PILL =
   "inline-flex h-11 items-center gap-1.5 rounded-full border px-4 text-[15px] font-semibold no-underline transition-colors hover:border-(--t-accent-primary)"
 
+/** Every section a verify drive can confirm, for the stale row. */
+const STALE_SECTIONS = ["hours", "status", "address", "contact"] as const
+
 /**
  * A row's action: "Propose as a drive" opens the builder with this gap and
- * region chosen. The stale row keeps "Find these records" until D3 adds
- * verify drives.
+ * region chosen. The stale row proposes a verify drive: confirm every
+ * section not checked since the stale cutoff's day.
  */
 function gapAction(gap: DriveGap): {
   href: string
@@ -29,15 +33,20 @@ function gapAction(gap: DriveGap): {
   icon: string
 } {
   const key = gap.key
-  if (key === "stale") {
-    return { href: gap.href, label: "Find these records", icon: "mdi:magnify" }
-  }
+  const places = { region: [gap.place.slug] }
+  const href =
+    key === "stale"
+      ? proposeHref({
+          focus: {
+            kind: "verify",
+            sections: [...STALE_SECTIONS],
+            before: staleCutoffDay(new Date()),
+          },
+          places,
+        })
+      : proposeHref({ gaps: [key], places })
 
-  return {
-    href: proposeHref({ gaps: [key], places: { region: [gap.place.slug] } }),
-    label: "Propose as a drive",
-    icon: "mdi:plus",
-  }
+  return { href, label: "Propose as a drive", icon: "mdi:plus" }
 }
 
 /**

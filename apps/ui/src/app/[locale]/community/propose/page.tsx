@@ -73,7 +73,7 @@ export default async function ProposeDrivePage({
     <CommunitySectionHeader
       crumbs={[{ label: "Propose a drive" }]}
       title="Propose a *drive*."
-      lead="Pick one gap and a place. A Moderator reviews every proposal, and approved drives open on their start date."
+      lead="Choose what the drive does (fill a gap, confirm details are still right, or complete whole records) and a place. A Moderator reviews every proposal, and approved drives open on their start date."
     />
   )
   const page = (children: ReactNode) => (
@@ -104,7 +104,7 @@ export default async function ProposeDrivePage({
             >
               Sign in
             </GlobalLink>{" "}
-            to choose a gap and a place for a drive.
+            to choose what a drive does and where.
           </p>
         </Notice>
       </NoticeColumn>

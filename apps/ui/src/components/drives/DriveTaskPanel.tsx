@@ -1,7 +1,12 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { findUnsafeContent } from "@repo/shared-data"
+import {
+  findUnsafeContent,
+  type GapKey,
+  gapDefinition,
+  type VerifySection,
+} from "@repo/shared-data"
 import { type ReactNode, type Ref, useEffect, useId, useState } from "react"
 
 import {
@@ -27,12 +32,20 @@ import {
 import { Notice } from "@/components/ds/Notice"
 import { facilityRows } from "@/components/library/facility-rows"
 import { LibraryFacilityAnswers } from "@/components/library/LibraryFacilityAnswers"
+import {
+  SECTION_LABELS,
+  verifyPayload,
+  verifyProblem,
+  verifyProblemField,
+} from "@/components/library/verify.logic"
+import { VerifyFields } from "@/components/library/VerifyFields"
 import { T } from "@/lib/design-tokens"
 import type { Drive, DriveTask } from "@/lib/drives/types"
 import { Link } from "@/lib/navigation"
 
 import { FOCUS_META } from "./focus-meta"
 import {
+  categoryChanges,
   evidenceProblem,
   evidenceRequired,
   MODE_CATEGORIES,
@@ -40,12 +53,17 @@ import {
   panelChanges,
   panelGapsOf,
   type PanelMode,
+  panelModeOf,
   type PendingQuota,
   photoPayload,
   quotaReason,
+  RECORD_EDITORS,
+  recordGapsOf,
   type RecordMode,
   recordPayload,
+  recordTaskPayload,
   taskPlace,
+  verifySectionsFor,
   webSearchHref,
   withoutDrive,
 } from "./task-panel.logic"
@@ -65,6 +83,38 @@ const EVIDENCE_HINTS: Record<RecordMode, string> = {
 
 const isRecordMode = (m: PanelMode | null): m is RecordMode =>
   m === "hours" || m === "contact" || m === "closed"
+
+const isPanelGapMode = (m: PanelMode | null): m is PanelGap =>
+  m !== null && m in FOCUS_META
+
+/** The modes that send one record correction: a gap's editor, or the checklist. */
+type EvidenceMode = RecordMode | "record"
+
+/** "Back to opening hours": the way back from "closed or moved". */
+function backLabelOf(mode: PanelMode | null): string {
+  if (mode === "verify") return "Back to confirming details"
+  if (mode === "record") return "Back to the checklist"
+
+  return isPanelGapMode(mode)
+    ? `Back to ${FOCUS_META[mode].label.toLowerCase()}`
+    : "Back"
+}
+
+/** "Where did you find this?"'s hint: a gap's own, or the checklist's. */
+function evidenceHintOf(mode: RecordMode | null, required: boolean): string {
+  if (mode) return EVIDENCE_HINTS[mode]
+
+  return required
+    ? "Required. The page you found these details on."
+    : "Optional. A link, or where you saw it."
+}
+
+/** "opening hours, address or contact details". */
+function joinOr(items: readonly string[]): string {
+  if (items.length <= 1) return items[0] ?? ""
+
+  return `${items.slice(0, -1).join(", ")} or ${items.at(-1)}`
+}
 
 /** The message a failed /api/submissions answer carries, if any. */
 function errorMessage(json: unknown): string | undefined {
@@ -111,16 +161,26 @@ type PhotoState = {
   licence: boolean
 }
 
+/** What a verify sends: the ticked sections, the page, and "in person". */
+type VerifyState = {
+  sections: VerifySection[]
+  source: string
+  inPerson: boolean
+}
+
 /**
- * Why Send can't go yet, or null: the record (loaded, changed, and with
- * its source for hours and contact), the photo and its licence, then the
- * content-safety check over what the reader wrote.
+ * Why Send can't go yet, or null: for a verify, the record and the
+ * "Still right?" rules; else the record (loaded, changed, and with its
+ * source for hours, addresses and contact details), the photo and its
+ * licence, then the content-safety check over what the reader wrote.
  */
 function panelBlocker({
   mode,
   loaded,
   changes,
   evidence,
+  categories,
+  verify,
   photo,
   name,
 }: {
@@ -128,15 +188,24 @@ function panelBlocker({
   loaded: Loaded
   changes: RecordChanges | null
   evidence: string
+  /** The whole-record checklist's open categories. */
+  categories: readonly string[]
+  verify: VerifyState
   photo: PhotoState
   name: string
 }): string | null {
-  if (isRecordMode(mode)) {
+  if (mode === "verify") {
+    if (!loaded) return "Loading the record…"
+    if (!loaded.record) return NO_RECORD
+
+    return verifyProblem(verify)
+  }
+  if (isRecordMode(mode) || mode === "record") {
     if (!loaded) return "Loading the record…"
     if (!loaded.record) return NO_RECORD
     if (!changes || !hasRecordChange(changes))
       return "Change something to continue."
-    const issue = evidenceProblem(mode, evidence)
+    const issue = evidenceProblem(mode, evidence, categories)
     if (issue) return issue
   }
   if (mode === "photo") {
@@ -403,6 +472,158 @@ function DriveRefusal({
   )
 }
 
+const ROW_ACTION =
+  "inline-flex h-10 items-center justify-center gap-1.5 rounded-full border bg-white px-4 text-[15px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+
+/** One checklist row's action: an editor toggle, a photo, or the Index editor. */
+function LacksAction({
+  gap,
+  label,
+  task,
+  open,
+  regionId,
+  onToggle,
+  onPhoto,
+}: {
+  readonly gap: GapKey
+  readonly label: string
+  readonly task: DriveTask
+  readonly open: boolean
+  readonly regionId: string
+  readonly onToggle: () => void
+  readonly onPhoto: () => void
+}) {
+  const style = { borderColor: T.border.hi, color: T.ink.base }
+
+  if (RECORD_EDITORS[gap])
+    return (
+      <button
+        type="button"
+        aria-controls={open ? regionId : undefined}
+        aria-expanded={open}
+        aria-label={`Add ${label.toLowerCase()} for ${task.name}`}
+        className={ROW_ACTION}
+        onClick={onToggle}
+        style={open ? { ...style, borderColor: T.accent.primary } : style}
+      >
+        <Icon
+          aria-hidden="true"
+          height={16}
+          icon={open ? "mdi:chevron-up" : "mdi:plus"}
+          width={16}
+        />
+        Add
+      </button>
+    )
+
+  if (gap === "photo")
+    return (
+      <button
+        type="button"
+        className={ROW_ACTION}
+        onClick={onPhoto}
+        style={style}
+      >
+        <Icon
+          aria-hidden="true"
+          height={16}
+          icon="mdi:camera-outline"
+          width={16}
+        />
+        Share a photo
+        <span className="sr-only"> of {task.name}</span>
+      </button>
+    )
+
+  return (
+    <Link
+      className={ROW_ACTION}
+      href={`/contribute/index/${task.slug}`}
+      style={style}
+    >
+      Add in the Index editor
+      <span className="sr-only">
+        : {label.toLowerCase()} for {task.name}
+      </span>
+    </Link>
+  )
+}
+
+/**
+ * A whole-record task: "What this record lacks", one row per gap the index
+ * names. Hours, the address, contact details and facilities open their
+ * correction editor under the row; a photo switches the panel to the
+ * photo share; the rest go to the Index editor.
+ */
+function RecordChecklist({
+  id,
+  task,
+  gaps,
+  opened,
+  onToggle,
+  onPhoto,
+  editor,
+}: {
+  readonly id: string
+  readonly task: DriveTask
+  readonly gaps: readonly GapKey[]
+  readonly opened: ReadonlySet<GapKey>
+  readonly onToggle: (gap: GapKey) => void
+  readonly onPhoto: () => void
+  readonly editor: (category: string) => ReactNode
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      <h4
+        className="m-0 text-[16px] font-semibold"
+        style={{ color: T.ink.base }}
+      >
+        What this record lacks
+      </h4>
+      <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
+        {gaps.map((gap) => {
+          const label = gapDefinition(gap).label
+          const category = RECORD_EDITORS[gap]
+          const open = Boolean(category) && opened.has(gap)
+          const regionId = `${id}-lacks-${gap}`
+
+          return (
+            <li
+              key={gap}
+              className="flex flex-col gap-4 rounded-[16px] border p-4"
+              style={{
+                background: T.bg.deep,
+                borderColor: open ? T.accent.primary : T.border.line,
+              }}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span
+                  className="text-[16px] font-semibold"
+                  style={{ color: T.ink.base }}
+                >
+                  {label}
+                </span>
+                <LacksAction
+                  gap={gap}
+                  label={label}
+                  onPhoto={onPhoto}
+                  onToggle={() => onToggle(gap)}
+                  open={open}
+                  regionId={regionId}
+                  task={task}
+                />
+              </div>
+              {open && category ? (
+                <div id={regionId}>{editor(category)}</div>
+              ) : null}
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
 /** Send's reason for being off at the pending limit, and where to look. */
 function QuotaFull({
   id,
@@ -433,13 +654,14 @@ function QuotaFull({
 
 /**
  * The task panel: one library from a drive's task list, with the existing
- * editor for the drive's Focus (hours, contact details, a photo, or the
- * library page's accessibility questions), "Where did you find this?",
- * Send and get the next one, Skip, and "This library has closed or moved".
- * What it sends is an ordinary Submission tagged with the drive, reviewed
- * like any other (ADR-0005). When the drive's rules refuse it (422), the
- * reader can send it without the drive. Key it by the task, so each
- * library starts clean.
+ * editor for the drive's Focus (hours, contact details, a photo, the
+ * library page's accessibility questions, the "Still right?" fields for a
+ * verify drive, or a whole-record drive's checklist of what the record
+ * lacks), "Where did you find this?", Send and get the next one, Skip, and
+ * "This library has closed or moved". What it sends is an ordinary
+ * Submission tagged with the drive, reviewed like any other (ADR-0005).
+ * When the drive's rules refuse it (422), the reader can send it without
+ * the drive. Key it by the task, so each library starts clean.
  */
 export function DriveTaskPanel({
   drive,
@@ -467,11 +689,29 @@ export function DriveTaskPanel({
 }) {
   const id = useId()
   const gaps = panelGapsOf(drive.focus)
-  const [gap, setGap] = useState<PanelGap | null>(gaps[0] ?? null)
+  const focusMode = panelModeOf(drive.focus)
+  const [current, setCurrent] = useState<PanelMode | null>(focusMode)
   const [closed, setClosed] = useState(false)
-  const mode: PanelMode | null = closed ? "closed" : gap
+  const mode: PanelMode | null = closed ? "closed" : current
+  const gap = isPanelGapMode(current) ? current : null
   const loaded = useRecord(task.slug, signedIn)
   const record = loaded?.record ?? null
+
+  // A verify drive: the Focus's sections this record has, all ticked to
+  // start with; "Where did you check?" is the panel's evidence.
+  const [picked, setPicked] = useState<VerifySection[] | null>(null)
+  const [inPerson, setInPerson] = useState(false)
+  const verifyAvailable = record ? verifySectionsFor(drive.focus, record) : []
+  const verifySections = picked ?? verifyAvailable
+
+  // A whole-record drive: the gaps the index names, and the open editors.
+  const recordGaps = recordGapsOf(task)
+  const [opened, setOpened] = useState<ReadonlySet<GapKey>>(() => new Set())
+  const openCategories = recordGaps.flatMap((g) => {
+    const category = RECORD_EDITORS[g]
+
+    return category && opened.has(g) ? [category] : []
+  })
 
   const [edit, setEdit] = useState<RecordEdit>({})
   const [evidence, setEvidence] = useState("")
@@ -492,22 +732,39 @@ export function DriveTaskPanel({
   const drivePath = `/community/drives/${drive.slug}`
   const website = task.website || record?.website || ""
   const recordMode = isRecordMode(mode) ? mode : null
-  const changes =
-    recordMode && record ? panelChanges(recordMode, record, edit) : null
+  const evidenceMode: EvidenceMode | null =
+    recordMode ?? (mode === "record" ? "record" : null)
+  let changes: RecordChanges | null = null
+  if (record && recordMode) changes = panelChanges(recordMode, record, edit)
+  else if (record && mode === "record")
+    changes = categoryChanges(openCategories, record, edit)
+  const verify: VerifyState = {
+    sections: verifySections,
+    source: evidence,
+    inPerson,
+  }
   const full = quotaReason(quota)
   const blocker = panelBlocker({
     mode,
     loaded,
     changes,
     evidence,
+    categories: openCategories,
+    verify,
     photo,
     name: task.name,
   })
   const showBlocker = tried && blocker !== null
   const evidenceInvalid =
     showBlocker &&
-    recordMode !== null &&
-    blocker === evidenceProblem(recordMode, evidence)
+    evidenceMode !== null &&
+    blocker === evidenceProblem(evidenceMode, evidence, openCategories)
+  const evidenceNeeded =
+    evidenceMode !== null && evidenceRequired(evidenceMode, openCategories)
+  // The "Still right?" fields show their own problem, by its field.
+  const verifyOn = mode === "verify" && verifyAvailable.length > 0
+  const verifyIssue =
+    verifyOn && showBlocker && !error && !refusal ? blocker : null
   const blockerId = `${id}-blocker`
   const fullId = `${id}-full`
 
@@ -560,6 +817,22 @@ export function DriveTaskPanel({
       void submit(
         recordPayload(recordMode, target, record, edit, evidence, tag)
       )
+    else if (mode === "record" && record)
+      void submit(
+        recordTaskPayload(openCategories, target, record, edit, evidence, tag)
+      )
+    else if (mode === "verify")
+      void submit(
+        verifyPayload({
+          slug: task.slug,
+          name: task.name,
+          sections: verifySections,
+          source: evidence,
+          inPerson,
+          documentId: task.documentId,
+          driveDocumentId: drive.documentId,
+        })
+      )
     else if (mode === "photo" && photo.photo)
       void submit(
         photoPayload(
@@ -570,8 +843,8 @@ export function DriveTaskPanel({
       )
   }
 
-  const switchTo = (next: { gap?: PanelGap; closed: boolean }) => {
-    if (next.gap) setGap(next.gap)
+  const switchTo = (next: { mode?: PanelMode; closed: boolean }) => {
+    if (next.mode) setCurrent(next.mode)
     setClosed(next.closed)
     setTried(false)
     setError(null)
@@ -590,7 +863,17 @@ export function DriveTaskPanel({
       />
     ) : null
 
-  const needsRecord = recordMode !== null || mode === "accessibility"
+  const toggleOpen = (g: GapKey) =>
+    setOpened((now) => {
+      const next = new Set(now)
+      if (next.has(g)) next.delete(g)
+      else next.add(g)
+
+      return next
+    })
+
+  const needsRecord =
+    recordMode !== null || mode === "accessibility" || mode === "verify"
   let editor: ReactNode
   if (needsRecord && !loaded)
     editor = (
@@ -622,13 +905,83 @@ export function DriveTaskPanel({
       </div>
     )
   else if (recordMode) editor = editorFor(MODE_CATEGORIES[recordMode][0]!)
+  else if (mode === "verify" && record && !verifyOn) {
+    const asked = drive.focus.kind === "verify" ? drive.focus.sections : []
+    const labels = asked.map((s) => SECTION_LABELS[s].toLowerCase())
+    editor = (
+      <Notice
+        icon="mdi:information-outline"
+        tone="info"
+        title={`Nothing to confirm here yet: this library has no ${joinOr(labels)} on record.`}
+      />
+    )
+  } else if (mode === "verify" && record)
+    editor = (
+      <div className="flex flex-col gap-6">
+        <p className={DIM} style={{ color: T.ink.dim }}>
+          Confirm what you’ve checked. A Moderator reviews it, then it shows as
+          checked today.
+        </p>
+        <VerifyFields
+          available={verifyAvailable}
+          idPrefix={`${id}-verify`}
+          inPerson={inPerson}
+          onInPerson={setInPerson}
+          onSections={setPicked}
+          onSource={setEvidence}
+          problem={verifyIssue}
+          problemField={verifyIssue ? verifyProblemField(verify) : null}
+          record={record}
+          sections={verifySections}
+          source={evidence}
+        />
+      </div>
+    )
+  else if (mode === "record" && recordGaps.length > 0)
+    editor = (
+      <RecordChecklist
+        editor={(category) =>
+          record ? (
+            editorFor(category)
+          ) : (
+            <p className={DIM} style={{ color: T.ink.dim }}>
+              {loaded ? NO_RECORD : "Loading the record…"}
+            </p>
+          )
+        }
+        gaps={recordGaps}
+        id={id}
+        onPhoto={() => switchTo({ mode: "photo", closed: false })}
+        onToggle={toggleOpen}
+        opened={opened}
+        task={task}
+      />
+    )
   else if (mode === "photo")
     editor = (
-      <PhotoFields
-        id={id}
-        onChange={(next) => setPhoto((p) => ({ ...p, ...next }))}
-        value={photo}
-      />
+      <div className="flex flex-col gap-5">
+        {focusMode === "record" ? (
+          <button
+            type="button"
+            className={`${LINK} self-start`}
+            onClick={() => switchTo({ mode: "record", closed: false })}
+            style={{ color: T.accent.primary }}
+          >
+            <Icon
+              aria-hidden="true"
+              height={16}
+              icon="mdi:arrow-left"
+              width={16}
+            />
+            Back to the checklist
+          </button>
+        ) : null}
+        <PhotoFields
+          id={id}
+          onChange={(next) => setPhoto((p) => ({ ...p, ...next }))}
+          value={photo}
+        />
+      </div>
     )
   else if (mode === "accessibility" && record)
     editor = (
@@ -661,10 +1014,16 @@ export function DriveTaskPanel({
       </p>
     )
 
-  const sendable = recordMode !== null || mode === "photo"
-  const backLabel = gap
-    ? `Back to ${FOCUS_META[gap].label.toLowerCase()}`
-    : "Back"
+  const sendable =
+    recordMode !== null ||
+    mode === "photo" ||
+    (mode === "verify" && !(record && !verifyOn)) ||
+    (mode === "record" && recordGaps.some((g) => RECORD_EDITORS[g]))
+  const backLabel = backLabelOf(current)
+  const showEvidence =
+    record !== null &&
+    (recordMode !== null || (mode === "record" && openCategories.length > 0))
+  const evidenceHint = evidenceHintOf(recordMode, evidenceNeeded)
 
   return (
     <div className="flex flex-col gap-5">
@@ -680,7 +1039,7 @@ export function DriveTaskPanel({
           gap={gap}
           gaps={gaps}
           name={`${id}-gap`}
-          onPick={(g) => switchTo({ gap: g, closed: false })}
+          onPick={(g) => switchTo({ mode: g, closed: false })}
         />
       ) : null}
 
@@ -688,26 +1047,24 @@ export function DriveTaskPanel({
 
       {editor}
 
-      {recordMode && record ? (
+      {showEvidence ? (
         <div>
-          <Label htmlFor={`${id}-evidence`} hint={EVIDENCE_HINTS[recordMode]}>
+          <Label htmlFor={`${id}-evidence`} hint={evidenceHint}>
             Where did you find this?
           </Label>
           <input
             aria-describedby={evidenceInvalid ? blockerId : undefined}
             aria-invalid={evidenceInvalid || undefined}
-            aria-required={evidenceRequired(recordMode) || undefined}
+            aria-required={evidenceNeeded || undefined}
             className={FIELD}
             id={`${id}-evidence`}
             inputMode="url"
             onChange={(e) => setEvidence(e.target.value)}
             placeholder={
-              evidenceRequired(recordMode)
-                ? "https://"
-                : "A link, or where you saw it"
+              evidenceNeeded ? "https://" : "A link, or where you saw it"
             }
             style={{ color: T.ink.base }}
-            type={evidenceRequired(recordMode) ? "url" : "text"}
+            type={evidenceNeeded ? "url" : "text"}
             value={evidence}
           />
         </div>
@@ -729,7 +1086,7 @@ export function DriveTaskPanel({
           {error}
         </p>
       ) : null}
-      {showBlocker && !error && !refusal ? (
+      {showBlocker && !error && !refusal && !verifyOn ? (
         <p
           id={blockerId}
           className="m-0 text-[15px] font-semibold"

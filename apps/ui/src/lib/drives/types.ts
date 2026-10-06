@@ -127,4 +127,8 @@ export interface DriveTask {
   heldByOther?: boolean
   /** When the current hold on this library (the reader's own) expires. */
   heldUntil?: string | null
+  /** The index's gap keys for this library: a whole-record task's checklist. */
+  needs?: string[] | null
+  /** The library's 0–100 completeness score, from the index. */
+  completeness?: number | null
 }

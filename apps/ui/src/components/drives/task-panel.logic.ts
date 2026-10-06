@@ -1,19 +1,26 @@
 /**
- * Pure rules for a drive's task panel: which editor each Focus gap opens,
- * the /api/submissions bodies it sends (the existing editors' own
- * payloads, tagged with the drive), the "Where did you find this?" rule,
- * the session's skip list, picking the next library, and the quota and
+ * Pure rules for a drive's task panel: which editor each Focus opens (a
+ * gap's editor, the "Still right?" fields for a verify drive, or a
+ * whole-record drive's checklist of the library's own gaps), the
+ * /api/submissions bodies it sends (the existing editors' own payloads,
+ * tagged with the drive), the "Where did you find this?" rule, the
+ * session's skip list, picking the next library, and the quota and
  * earned-Pro lines of "Your part". No React, so it's unit-testable.
  */
 import { isEarnedProTier } from "@repo/access"
 import {
+  COMPLETENESS_GAP_KEYS,
   type DriveFocus,
   type FacilityAnswer,
+  type GapKey,
   PANEL_GAPS,
+  VERIFY_SECTIONS,
+  type VerifySection,
 } from "@repo/shared-data"
 
 import {
   type CorrectionRecord,
+  hasRecordChange,
   type RecordChanges,
   type RecordEdit,
   recordChanges,
@@ -27,12 +34,19 @@ import {
   facilityAnswersBody,
   type FacilityAnswersBody,
 } from "@/components/library/facility-rows"
+import {
+  availableSections,
+  type VerifyRecord,
+} from "@/components/library/verify.logic"
 import type { DriveTask } from "@/lib/drives/types"
 
 export type PanelGap = (typeof PANEL_GAPS)[number]
 
-/** What the panel edits: one of the drive's gaps, or "closed or moved". */
-export type PanelMode = PanelGap | "closed"
+/**
+ * What the panel edits: one of the drive's gaps, "closed or moved", the
+ * "Still right?" fields (verify), or the whole-record checklist (record).
+ */
+export type PanelMode = PanelGap | "closed" | "verify" | "record"
 
 /** The record-correction modes: one record correction each. */
 export type RecordMode = "hours" | "contact" | "closed"
@@ -45,6 +59,18 @@ export function panelGapsOf(focus: DriveFocus): PanelGap[] {
   return focus.kind === "gaps" ? (focus.gaps ?? []).filter(isPanelGap) : []
 }
 
+/**
+ * The panel's first mode for a Focus: a gaps drive's first panel gap, the
+ * "Still right?" fields for verify, the checklist for a whole record. Null
+ * for a gaps drive with no gap the panel fills.
+ */
+export function panelModeOf(focus: DriveFocus): PanelMode | null {
+  if (focus.kind === "verify") return "verify"
+  if (focus.kind === "record") return "record"
+
+  return panelGapsOf(focus)[0] ?? null
+}
+
 export const TASK_VERBS: Record<PanelGap, string> = {
   hours: "Add hours",
   photo: "Add a photo",
@@ -54,6 +80,8 @@ export const TASK_VERBS: Record<PanelGap, string> = {
 
 /** A task row's action: its gap's verb, or a general one for several. */
 export function taskVerb(focus: DriveFocus): string {
+  if (focus.kind === "verify") return "Confirm details"
+  if (focus.kind === "record") return "Complete the record"
   const gaps = panelGapsOf(focus)
   if (gaps.length === 1) return TASK_VERBS[gaps[0]!]
 
@@ -108,9 +136,9 @@ export const MODE_CATEGORIES: Record<RecordMode, readonly string[]> = {
   closed: ["Open or closed", "Address or location"],
 }
 
-/** What a record mode's editors changed, as one change set. */
-export function panelChanges(
-  mode: RecordMode,
+/** What these categories' editors changed, as one change set. */
+export function categoryChanges(
+  categories: readonly string[],
   record: CorrectionRecord,
   edit: RecordEdit
 ): RecordChanges {
@@ -119,7 +147,7 @@ export function panelChanges(
     previous: {},
     suggestedOptions: {},
   }
-  for (const category of MODE_CATEGORIES[mode]) {
+  for (const category of categories) {
     const c = recordChanges(category, record, edit)
     Object.assign(merged.changes, c.changes)
     Object.assign(merged.previous, c.previous)
@@ -127,6 +155,51 @@ export function panelChanges(
   }
 
   return merged
+}
+
+/** What a record mode's editors changed, as one change set. */
+export function panelChanges(
+  mode: RecordMode,
+  record: CorrectionRecord,
+  edit: RecordEdit
+): RecordChanges {
+  return categoryChanges(MODE_CATEGORIES[mode], record, edit)
+}
+
+// ── Verify and whole-record drives ───────────────────────────────────────
+
+/**
+ * The sections a verify drive asks this library to confirm: the Focus's
+ * sections the record has a value for, in VERIFY_SECTIONS order. Empty for
+ * any other Focus.
+ */
+export function verifySectionsFor(
+  focus: DriveFocus,
+  record: VerifyRecord
+): VerifySection[] {
+  if (focus.kind !== "verify") return []
+  const asked = new Set<string>(focus.sections)
+  const has = new Set<string>(availableSections(record))
+
+  return VERIFY_SECTIONS.filter((s) => asked.has(s) && has.has(s))
+}
+
+/** The correction category (and so the editor) each checklist gap opens. */
+export const RECORD_EDITORS: Partial<Record<GapKey, string>> = {
+  hours: "Opening hours",
+  address: "Address or location",
+  contact: "Website or catalogue",
+  facilities: "Services and facilities",
+}
+
+/**
+ * What a whole-record task lacks: the index's `needs` that count toward
+ * completeness, in registry order. Empty when the index sent none.
+ */
+export function recordGapsOf(task: DriveTask): GapKey[] {
+  const needs = new Set<string>(Array.isArray(task.needs) ? task.needs : [])
+
+  return COMPLETENESS_GAP_KEYS.filter((k) => needs.has(k))
 }
 
 type RecordBody = Omit<
@@ -156,6 +229,38 @@ export function recordPayload(
     mode === "closed" && !("operationalStatus" in changes.changes) && second
       ? second
       : first!
+  const body = buildSubmission(
+    "correction",
+    { slug: target.slug, name: target.name },
+    { ...EMPTY_DRAFT, category, source: evidence },
+    changes
+  )
+
+  return {
+    ...tag(body, target, drive),
+    submissionType: drive.claimed ? "library_edit" : "correction",
+  }
+}
+
+/**
+ * A whole-record task's one record correction: what the open categories'
+ * editors changed, as `recordPayload` builds it. Its category is the first
+ * open one that changed something. A claimant's goes in as a
+ * `library_edit`.
+ */
+export function recordTaskPayload(
+  categories: readonly string[],
+  target: TaskTarget,
+  record: CorrectionRecord,
+  edit: RecordEdit,
+  evidence: string,
+  drive: DriveTag
+): RecordBody {
+  const changes = categoryChanges(categories, record, edit)
+  const category =
+    categories.find((c) => hasRecordChange(recordChanges(c, record, edit))) ??
+    categories[0] ??
+    ""
   const body = buildSubmission(
     "correction",
     { slug: target.slug, name: target.name },
@@ -211,20 +316,41 @@ export function facilitiesPayload(
 /** Modes whose "Where did you find this?" must be a web page. */
 const EVIDENCE_REQUIRED: ReadonlySet<PanelMode> = new Set(["hours", "contact"])
 
-export const evidenceRequired = (mode: PanelMode) => EVIDENCE_REQUIRED.has(mode)
+/** Checklist categories whose details need the page they came from. */
+const EVIDENCE_CATEGORIES: ReadonlySet<string> = new Set([
+  "Opening hours",
+  "Address or location",
+  "Website or catalogue",
+])
+
+/**
+ * Whether "Where did you find this?" must be a web page: always for hours
+ * and contact details; for the whole-record checklist, when any open
+ * category is hours, the address or contact details (services and
+ * facilities alone leave it optional).
+ */
+export const evidenceRequired = (
+  mode: PanelMode,
+  categories: readonly string[] = []
+) =>
+  mode === "record"
+    ? categories.some((c) => EVIDENCE_CATEGORIES.has(c))
+    : EVIDENCE_REQUIRED.has(mode)
 
 const isWebAddress = (s: string) => /^https?:\/\/\S+$/i.test(s)
 
 /**
- * Why "Where did you find this?" isn't good enough yet, or null. Hours and
- * contact details need the page they came from; elsewhere it's optional
- * (a written reference goes to the reviewer as a note).
+ * Why "Where did you find this?" isn't good enough yet, or null. Hours,
+ * addresses and contact details need the page they came from; elsewhere
+ * it's optional (a written reference goes to the reviewer as a note).
+ * `categories` are the whole-record checklist's open editors.
  */
 export function evidenceProblem(
   mode: PanelMode,
-  source: string
+  source: string,
+  categories: readonly string[] = []
 ): string | null {
-  if (!evidenceRequired(mode)) return null
+  if (!evidenceRequired(mode, categories)) return null
   const s = source.trim()
   if (!s) return "Add the page you found this on."
   if (!isWebAddress(s)) return "The source must be a web address."
