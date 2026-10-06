@@ -36,6 +36,7 @@
     "@notum-cz/strapi-plugin-tiptap-editor": "^1.0.1",
     "@repo/access": "workspace:*",
     "@repo/design-system": "workspace:*",
+    "@repo/event-providers": "workspace:*",
     "@repo/events-crypto": "workspace:*",
     "@repo/shared-data": "workspace:*",
     "@strapi-community/plugin-seo": "^2.1.1",

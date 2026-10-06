@@ -10,7 +10,6 @@ import {
   parseTypeList,
   publicEventFilters,
 } from "../utils/query"
-import { isValidServiceSecret } from "../utils/service-secret"
 
 const EVENT_UID = "plugin::events.event"
 const LIBRARY_UID = "api::library.library"
@@ -407,83 +406,6 @@ export default ({ strapi }: { strapi: any }) => ({
       'attachment; filename="libraries-events.ics"'
     )
     ctx.body = ics
-  },
-
-  async submitCredential(ctx: any) {
-    if (!isValidServiceSecret(ctx.request.headers["x-service-secret"])) {
-      ctx.status = 403
-      ctx.body = { error: "Forbidden" }
-
-      return
-    }
-
-    const {
-      provider,
-      label,
-      libraryDocumentId,
-      credentials,
-      submittedByBaUserId,
-    } = ctx.request.body as {
-      provider: string
-      label: string
-      libraryDocumentId: string
-      credentials: Record<string, unknown>
-      submittedByBaUserId?: string
-    }
-
-    const VALID_PROVIDERS = [
-      "eventbrite",
-      "ticketsource",
-      "meetup",
-      "ical",
-      "wegottickets",
-      "spydus",
-      "bibliocommons",
-    ]
-    if (!VALID_PROVIDERS.includes(provider)) {
-      ctx.status = 400
-      ctx.body = { error: "Invalid provider" }
-
-      return
-    }
-    if (
-      !label?.trim() ||
-      !libraryDocumentId ||
-      !credentials ||
-      typeof credentials !== "object"
-    ) {
-      ctx.status = 400
-      ctx.body = { error: "Missing required fields" }
-
-      return
-    }
-
-    // Sanitize: only string values, bounded lengths
-    const sanitized: Record<string, string> = {}
-    for (const [k, v] of Object.entries(credentials)) {
-      if (typeof v === "string") {
-        sanitized[String(k).slice(0, 64)] = v.slice(0, 2048)
-      }
-    }
-
-    const result = await strapi
-      .plugin("events")
-      .service("credentials")
-      .create({
-        provider,
-        label: label.trim().slice(0, 200),
-        scope: "library",
-        isActive: false,
-        libraryDocumentIds: [libraryDocumentId],
-        credentials: sanitized,
-      })
-
-    strapi.log.info(
-      `[events] Credential submitted for library ${libraryDocumentId} by ${submittedByBaUserId ?? "unknown"} — pending review`
-    )
-
-    ctx.status = 201
-    ctx.body = { ok: true, documentId: (result as any).documentId ?? null }
   },
 
   async icsLibrary(ctx: any) {

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import { isDocumentId } from "../../src/plugins/content-moderation/server/utils/params"
 import { payloadHash } from "../../src/plugins/content-moderation/server/utils/payload-hash"
 import { canTransition } from "../../src/plugins/content-moderation/server/utils/transitions"
+import { makeFakeStrapi } from "../helpers/fake-strapi"
 
 describe("canTransition", () => {
   it.each([
@@ -55,5 +56,17 @@ describe("isDocumentId", () => {
     expect(isDocumentId("../../auth-bridge")).toBe(false)
     expect(isDocumentId("12")).toBe(false)
     expect(isDocumentId(42)).toBe(false)
+  })
+})
+
+describe("fake-strapi: relation filter on an array-valued relation", () => {
+  it("matches when any related row satisfies the nested filter", async () => {
+    const { strapi } = makeFakeStrapi({
+      "x::a": [{ documentId: "a1", rels: [{ documentId: "r1" }] }],
+    })
+    const found = await strapi
+      .documents("x::a")
+      .findMany({ filters: { rels: { documentId: { $in: ["r1"] } } } })
+    expect(found).toHaveLength(1)
   })
 })

@@ -11,24 +11,35 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   async createCredential(ctx: any) {
-    const { credentials, ...rest } = ctx.request.body as {
+    const actor = `admin:${(ctx.state.user as any)?.id}`
+    const { credentials, isActive, ...rest } = ctx.request.body as {
       credentials: Record<string, string>
       provider: string
       label: string
       scope: string
-      isActive: boolean
+      isActive?: boolean
       libraryDocumentIds?: string[]
     }
     const result = await strapi
       .plugin("events")
       .service("credentials")
-      .create({ ...rest, credentials })
+      .create(
+        {
+          ...rest,
+          credentials,
+          ...(isActive != null
+            ? { status: isActive ? "active" : "paused" }
+            : {}),
+        },
+        actor
+      )
     ctx.body = { ...result, credentialsEncrypted: undefined }
   },
 
   async updateCredential(ctx: any) {
     const { documentId } = ctx.params as { documentId: string }
-    const { credentials, ...rest } = ctx.request.body as {
+    const actor = `admin:${(ctx.state.user as any)?.id}`
+    const { credentials, isActive, ...rest } = ctx.request.body as {
       credentials?: Record<string, string>
       label?: string
       isActive?: boolean
@@ -37,13 +48,27 @@ export default ({ strapi }: { strapi: any }) => ({
     const result = await strapi
       .plugin("events")
       .service("credentials")
-      .update(documentId, { ...rest, credentials })
+      .update(
+        documentId,
+        {
+          ...rest,
+          credentials,
+          ...(isActive != null
+            ? { status: isActive ? "active" : "paused" }
+            : {}),
+        },
+        actor
+      )
     ctx.body = { ...result, credentialsEncrypted: undefined }
   },
 
   async deleteCredential(ctx: any) {
     const { documentId } = ctx.params as { documentId: string }
-    await strapi.plugin("events").service("credentials").delete(documentId)
+    const actor = `admin:${(ctx.state.user as any)?.id}`
+    await strapi
+      .plugin("events")
+      .service("credentials")
+      .delete(documentId, actor)
     ctx.status = 204
   },
 

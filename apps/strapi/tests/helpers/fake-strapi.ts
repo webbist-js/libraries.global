@@ -148,8 +148,10 @@ export function makeFakeStrapi(
           : d[k] === null || d[k] === undefined
 
       // A plain object with no $-operator keys: one level of nested filter
-      // (e.g. `library: { documentId: { $eq } }`). Recurse into the doc's
-      // value for that key, which must itself be an object.
+      // (e.g. `library: { documentId: { $eq } }`, or `libraries: { documentId:
+      // { $in } }` against an array-valued (many) relation, which matches
+      // when any related row matches the nested filter). Recurse into the
+      // doc's value for that key, which must itself be an object or array.
       if (
         v &&
         typeof v === "object" &&
@@ -158,7 +160,9 @@ export function makeFakeStrapi(
         d[k] &&
         typeof d[k] === "object"
       ) {
-        return match(d[k], v)
+        return Array.isArray(d[k])
+          ? d[k].some((item: any) => match(item, v))
+          : match(d[k], v)
       }
 
       return d[k] === v
