@@ -41,6 +41,7 @@ export async function PUT(req: Request) {
       newFollowers: z.boolean(),
       weeklyDigest: z.boolean(),
       editsReviewed: z.boolean(),
+      drives: z.boolean(),
       editorialMessages: z.boolean(),
       productUpdates: z.boolean(),
     })

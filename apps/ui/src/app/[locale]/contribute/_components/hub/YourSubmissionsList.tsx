@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react"
 import type React from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
+import { DriveChip } from "@/components/moderation/DriveChip"
 import { T } from "@/lib/design-tokens"
 
 export type HubSubmission = {
@@ -10,6 +11,7 @@ export type HubSubmission = {
   status: string
   targetName: string | null
   createdAt: string
+  drive: { documentId: string; slug: string; title: string } | null
 }
 
 const ACTION_LABEL: Record<string, string> = {
@@ -169,6 +171,11 @@ export function YourSubmissionsList({
                       style={{ color: T.ink.dim }}
                     >
                       {submission.targetName}
+                    </span>
+                  ) : null}
+                  {submission.drive ? (
+                    <span className="mt-1 block">
+                      <DriveChip drive={submission.drive} />
                     </span>
                   ) : null}
                 </span>

@@ -29,6 +29,8 @@ export interface Submission {
   editSummary?: string | null
   evidenceType?: string | null
   evidenceUrl?: string | null
+  /** The Drive this change is tagged to, when it's part of one. */
+  drive?: { documentId: string; slug: string; title: string } | null
 }
 
 export interface CreateSubmissionPayload {

@@ -145,6 +145,7 @@ async function fetchMySubmissions(user: {
         fields?: Record<string, unknown> | null
         draftData?: Record<string, unknown> | null
         createdAt?: string
+        drive?: { documentId: string; slug: string; title: string } | null
       }[]
     }
     const text = (v: unknown) =>
@@ -166,6 +167,7 @@ async function fetchMySubmissions(user: {
           text(item.fields?.title) ??
           (item.targetSlug ? humaniseSlug(item.targetSlug) : null),
         createdAt: item.createdAt ?? new Date(0).toISOString(),
+        drive: item.drive ?? null,
       }))
   } catch {
     return []

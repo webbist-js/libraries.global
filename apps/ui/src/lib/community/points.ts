@@ -4,10 +4,13 @@
 
 export const POINTS_TABLE: [label: string, value: number][] = [
   ["New library approved", 50],
+  ["Helped finish a drive (5+ tasks)", 25],
   ["Major edit approved", 15],
   ["Knowledge translation", 15],
+  ["Drive proposal accepted", 10],
   ["Minor edit approved", 5],
   ["Hours checked", 5],
   ["Status checked", 5],
+  ["Drive task accepted", 2],
   ["Daily streak", 1],
 ]

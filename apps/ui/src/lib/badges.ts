@@ -146,6 +146,50 @@ export const BADGE_CATALOG: BadgeDefinition[] = [
     variant: "violet",
   },
 
+  // ── Drives ───────────────────────────────────────────────────────────────
+  {
+    id: "book_drive",
+    name: "Book Drive",
+    description:
+      "Your first accepted task in a drive. Every shelf starts with one book.",
+    rarity: "COMMON",
+    icon: "mdi:book-plus-outline",
+    variant: "aurora",
+  },
+  {
+    id: "regular_reader",
+    name: "Regular Reader",
+    description:
+      "Accepted work in five different drives. You keep coming back.",
+    rarity: "UNCOMMON",
+    icon: "mdi:book-multiple-outline",
+    variant: "violet",
+  },
+  {
+    id: "returned_on_time",
+    name: "Returned on Time",
+    description: "Helped a drive that reached its goal.",
+    rarity: "UNCOMMON",
+    icon: "mdi:calendar-check-outline",
+    variant: "gold",
+  },
+  {
+    id: "pinned_notice",
+    name: "Pinned Notice",
+    description: "A drive you proposed opened on the Noticeboard.",
+    rarity: "RARE",
+    icon: "mdi:pin-outline",
+    variant: "ember",
+  },
+  {
+    id: "opening_hours",
+    name: "Opening Hours",
+    description: "Added opening hours to 25 libraries in drives.",
+    rarity: "RARE",
+    icon: "mdi:clock-check-outline",
+    variant: "gold",
+  },
+
   // ── Photography ──────────────────────────────────────────────────────────
   {
     id: "first_exposure",

@@ -20,6 +20,8 @@ export type ContributionItem = {
   targetLabel?: string | null
   editSummary?: string | null
   createdAt: string
+  /** The Drive this change is tagged to, when it's part of one. */
+  drive?: { documentId: string; slug: string; title: string } | null
 }
 
 /** What kind of change: a tinted icon and a noun that fits every status. */

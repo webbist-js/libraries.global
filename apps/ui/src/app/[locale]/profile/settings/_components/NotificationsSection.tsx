@@ -14,6 +14,7 @@ import type { UserProfile } from "@/lib/types/profile"
 type NotifKey =
   | "weeklyDigest"
   | "editsReviewed"
+  | "drives"
   | "newFollowers"
   | "editorialMessages"
   | "soundOn"
@@ -37,6 +38,11 @@ const EMAIL_NOTIFS: NotificationItem[] = [
     key: "editsReviewed",
     label: "Your edits are reviewed",
     desc: "When a change is accepted, returned or commented on.",
+  },
+  {
+    key: "drives",
+    label: "Drives you helped",
+    desc: "A thank-you with the final numbers when a drive closes.",
   },
   {
     key: "newFollowers",
@@ -138,13 +144,15 @@ export function NotificationsSection({
 }) {
   const { updateNotifications } = useProfile()
 
-  const defaults: NotificationPrefs = profile?.notifPrefs ?? {
+  const defaults: NotificationPrefs = {
     weeklyDigest: true,
     editsReviewed: true,
+    drives: true,
     newFollowers: false,
     editorialMessages: true,
     soundOn: false,
     marketing: false,
+    ...profile?.notifPrefs,
   }
 
   const [prefs, setPrefs] = useState<NotificationPrefs>(defaults)

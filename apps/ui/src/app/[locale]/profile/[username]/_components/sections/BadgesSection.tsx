@@ -8,6 +8,7 @@ import { BADGE_CATALOG } from "@/lib/badges"
 import { T } from "@/lib/design-tokens"
 
 import { BadgeTile, CARD, SectionTitle, TextLink } from "../ProfileSectionUI"
+import { DriveRibbons } from "./DriveRibbons"
 
 const TIERS = [
   { name: "Reader", min: 0, next: 100 },
@@ -250,6 +251,8 @@ export function BadgesSection({
           </ul>
         )}
       </section>
+
+      <DriveRibbons username={username} />
 
       {/* Still to earn */}
       {lockedList.length > 0 && !loading ? (

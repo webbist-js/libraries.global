@@ -1,6 +1,7 @@
 import { Icon } from "@iconify/react"
 import type { ReactNode } from "react"
 
+import { DriveChip } from "@/components/moderation/DriveChip"
 import { T } from "@/lib/design-tokens"
 
 import {
@@ -76,6 +77,11 @@ export function ContributionRow({
           >
             “{item.editSummary}”
           </p>
+        ) : null}
+        {item.drive ? (
+          <div className="mt-1.5">
+            <DriveChip drive={item.drive} />
+          </div>
         ) : null}
         {note ? (
           <div

@@ -100,6 +100,7 @@ export type LanguageEntry = {
 export type NotifPrefs = {
   weeklyDigest: boolean
   editsReviewed: boolean
+  drives?: boolean
   newFollowers: boolean
   editorialMessages: boolean
   soundOn: boolean
