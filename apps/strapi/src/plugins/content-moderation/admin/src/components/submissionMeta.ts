@@ -21,6 +21,12 @@ export interface SocialLink {
 }
 
 export type Submission = {
+  staffReviewHint?: string
+  inviteReview?: {
+    invitedByName: string
+    staffRole: "owner" | "editor"
+    invitedAt: string
+  }
   documentId: string
   submissionType: string
   status: string
@@ -359,6 +365,80 @@ const shortDate = (v: unknown): string | null => {
     : null
 }
 
+/** "a, b and c". */
+function joinAnd(items: readonly string[]): string {
+  if (items.length <= 1) return items[0] ?? ""
+
+  return `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`
+}
+
+// The UI's `focusSummary` (`apps/ui/src/components/drives/focus-meta.ts`),
+// copied because the admin can't import UI code: its section labels and its
+// fixed month table (ICU month names vary by build).
+const VERIFY_SECTION_LABELS: Record<string, string> = {
+  hours: "Opening hours",
+  status: "Open or closed",
+  address: "Address",
+  contact: "Contact details",
+}
+const FOCUS_MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const
+
+/** "6 Oct 2025" in UTC; "" when it isn't a date. */
+function focusDate(v: unknown): string {
+  const t = typeof v === "string" ? Date.parse(v) : Number.NaN
+  if (!Number.isFinite(t)) return ""
+  const d = new Date(t)
+
+  return `${d.getUTCDate()} ${FOCUS_MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`
+}
+
+/**
+ * A Drive's Focus in one line: "Opening hours and Contact details", "Confirm
+ * opening hours and open or closed not checked since 6 Oct 2025" or
+ * "Complete records to 75%". Null when it can't be read.
+ */
+function focusSummary(focus: Record<string, unknown> | null): string | null {
+  if (!focus) return null
+  if (focus.kind === "gaps" && Array.isArray(focus.gaps)) {
+    const labels = focus.gaps.map((g) =>
+      isGapKey(g) ? gapDefinition(g).label : String(g)
+    )
+
+    return labels.length > 0 ? joinAnd(labels) : null
+  }
+  if (focus.kind === "verify" && Array.isArray(focus.sections)) {
+    const sections = joinAnd(
+      focus.sections.map((s) =>
+        (VERIFY_SECTION_LABELS[String(s)] ?? String(s)).toLowerCase()
+      )
+    )
+    if (!sections) return null
+    const since = focusDate(focus.before)
+
+    return since
+      ? `Confirm ${sections} not checked since ${since}`
+      : `Confirm ${sections}`
+  }
+  if (focus.kind === "record" && typeof focus.target === "number") {
+    return `Complete records to ${focus.target}%`
+  }
+
+  return null
+}
+
 /** A Drive Proposal's definition in one line, with a Moderator's dates. */
 function driveProposalDetail(draftData: unknown): string | null {
   const drive = proposedDrive(draftData, { withModeratorEdit: true })
@@ -367,13 +447,10 @@ function driveProposalDetail(draftData: unknown): string | null {
   const title = driveTitle(draftData)
   if (title) parts.push(`Title: ${title}`)
 
-  const focus = drive.focus as unknown as Record<string, unknown> | null
-  if (focus && focus.kind === "gaps" && Array.isArray(focus.gaps)) {
-    const labels = focus.gaps.map((g) =>
-      isGapKey(g) ? gapDefinition(g).label : String(g)
-    )
-    if (labels.length > 0) parts.push(`Focus: ${labels.join(", ")}`)
-  }
+  const focus = focusSummary(
+    drive.focus as unknown as Record<string, unknown> | null
+  )
+  if (focus) parts.push(`Focus: ${focus}`)
 
   const scope = drive.scope as unknown as Record<string, unknown> | null
   const places =

@@ -8,7 +8,12 @@ import {
 import { useId, useState } from "react"
 
 import { DriveTitle } from "@/components/drives/DriveTitle"
-import { FOCUS_META, type PanelGap } from "@/components/drives/focus-meta"
+import {
+  FOCUS_FILTER_META,
+  FOCUS_META,
+  focusSummary,
+  type PanelGap,
+} from "@/components/drives/focus-meta"
 import { Badge, Notice } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
 import { driveHref, plainDriveTitle } from "@/lib/drives/drive-view"
@@ -325,6 +330,8 @@ export function DriveProposalPanel({
     drive.focus.kind === "gaps"
       ? (drive.focus.gaps ?? []).filter(isPanelGap)
       : []
+  const kindLook =
+    drive.focus.kind === "gaps" ? null : FOCUS_FILTER_META[drive.focus.kind]
   const whereList = whereLines(drive.scope)
   const detailLines = scopeDetailLines(drive.scope)
 
@@ -352,10 +359,22 @@ export function DriveProposalPanel({
               icon={FOCUS_META[g].icon}
             />
           ))}
+          {kindLook ? (
+            <Badge label={kindLook.label} color="aurora" icon={kindLook.icon} />
+          ) : null}
           <span className="text-[13px]" style={{ color: T.ink.dim }}>
             Per {drive.unit}
           </span>
         </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <h3 className={heading} style={{ color: T.ink.base }}>
+          Focus
+        </h3>
+        <p className="m-0 text-[15px]" style={{ color: T.ink.base }}>
+          {focusSummary(drive.focus)}
+        </p>
       </div>
 
       <div className="flex flex-col gap-2">

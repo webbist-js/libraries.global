@@ -6,7 +6,12 @@
 // submission policy, credit) and the UI (progress, task panel) never drift.
 
 import { type GapKey, isGapKey } from "./gaps"
-import { type VerifySection, isValidStamp, SECTION_FIELDS } from "./verify"
+import {
+  isValidStamp,
+  SECTION_FIELDS,
+  VERIFY_SECTIONS,
+  type VerifySection,
+} from "./verify"
 
 export const DRIVE_MAX_TASKS = 2000
 export const DRIVE_MAX_DAYS = 90
@@ -46,6 +51,15 @@ export const PANEL_GAPS = [
   "accessibility",
   "contact",
 ] as const
+
+/** Gaps a whole-record task fills in the panel, in this order. Others open the Index editor. */
+export const RECORD_PANEL_GAPS = [
+  "hours",
+  "address",
+  "contact",
+  "facilities",
+  "photo",
+] as const satisfies readonly GapKey[]
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -394,19 +408,41 @@ export function proposedDrive(
   return drive as unknown as DriveInput
 }
 
-/** Whether the task panel can fill this Focus. D2: one to three PANEL_GAPS. D3 widens it. */
+const isVerifySection = (v: unknown): v is VerifySection =>
+  typeof v === "string" && (VERIFY_SECTIONS as readonly string[]).includes(v)
+
+/**
+ * Whether the task panel can fill this Focus: one to three `PANEL_GAPS`;
+ * at least one `VERIFY_SECTIONS` section to confirm; or a completeness
+ * target, which `validateDrive` checks is 50 to 100.
+ */
 export function panelCanFill(focus: DriveFocus): boolean {
-  return (
-    focus.kind === "gaps" &&
-    Array.isArray(focus.gaps) &&
-    focus.gaps.length >= 1 &&
-    focus.gaps.length <= 3 &&
-    focus.gaps.every((g) => (PANEL_GAPS as readonly string[]).includes(g))
-  )
+  if (!focus || typeof focus !== "object") return false
+
+  switch (focus.kind) {
+    case "gaps":
+      return (
+        Array.isArray(focus.gaps) &&
+        focus.gaps.length >= 1 &&
+        focus.gaps.length <= 3 &&
+        focus.gaps.every((g) => (PANEL_GAPS as readonly string[]).includes(g))
+      )
+    case "verify":
+      return (
+        Array.isArray(focus.sections) &&
+        focus.sections.length >= 1 &&
+        focus.sections.every(isVerifySection)
+      )
+    case "record":
+      return true
+
+    default:
+      return false
+  }
 }
 
 export const PANEL_FOCUS_MESSAGE =
-  "Choose gaps the task panel can fill: opening hours, photos, accessibility or contact details."
+  "Choose gaps the task panel can fill (opening hours, photos, accessibility or contact details), sections to confirm, or a completeness target."
 
 // ── Validation ────────────────────────────────────────────────────────────────
 
@@ -419,8 +455,7 @@ const hasPlacesOrLibraries = (scope: DriveScope): boolean =>
 
 /** The problems with a Drive's editable fields, in a fixed, user-facing order. */
 export function validateDrive(input: DriveInput, now: Date): string[] {
-  // `now` matches the shared signature (and future `startsAt`-vs-now rules);
-  // nothing below the date rule yet needs it.
+  // `now` dates a verify Focus: its "not confirmed since" can't be ahead.
   const errors: string[] = []
 
   if (!lenOk(input.title, 3, 120)) {
@@ -467,7 +502,10 @@ export function validateDrive(input: DriveInput, now: Date): string[] {
         if (
           !Array.isArray(focus.sections) ||
           focus.sections.length < 1 ||
-          !isValidStamp(focus.before)
+          !focus.sections.every(isVerifySection) ||
+          new Set(focus.sections).size !== focus.sections.length ||
+          !isValidStamp(focus.before) ||
+          Date.parse(focus.before) > now.getTime()
         ) {
           errors.push("Choose the sections to confirm and a date.")
         }

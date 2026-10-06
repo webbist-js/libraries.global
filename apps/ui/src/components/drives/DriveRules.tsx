@@ -3,30 +3,7 @@ import type { ReactNode } from "react"
 import { T } from "@/lib/design-tokens"
 import type { Drive } from "@/lib/drives/types"
 
-import { focusChipOf, unitNoun } from "./focus-meta"
-
-// A fixed table, as `driveDateLabel`: ICU month names vary by Node build.
-const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-]
-
-/** "31 Oct 2026", in UTC like the card dates. */
-function longDate(iso: string): string {
-  const d = new Date(iso)
-
-  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`
-}
+import { focusSummary, longDate, unitNoun } from "./focus-meta"
 
 const isWebUrl = (url?: string | null): url is string =>
   !!url && /^https?:\/\//i.test(url)
@@ -92,7 +69,7 @@ export function DriveRules({
         Rules
       </h2>
       <dl className="m-0">
-        <Rule label="Focus">{focusChipOf(drive.focus).label}</Rule>
+        <Rule label="Focus">{focusSummary(drive.focus)}</Rule>
         {where?.name || isWebUrl(where?.url) ? (
           <Rule label="Where to look">
             {isWebUrl(where?.url) ? (

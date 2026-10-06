@@ -16,7 +16,10 @@ import {
   type DriveScope,
   type DriveUnit,
   type GapKey,
+  PANEL_FOCUS_MESSAGE,
   validateDrive,
+  VERIFY_SECTIONS,
+  type VerifySection,
 } from "@repo/shared-data"
 
 import type { PlaceNames } from "@/lib/drives/drive-view"
@@ -45,9 +48,19 @@ export interface BuilderPlace {
   kind?: string
 }
 
+/** What a drive does: fill gaps, confirm sections, or complete whole records. */
+export type FocusKind = DriveFocus["kind"]
+
 /** The form as typed: numbers and dates stay strings until `toDriveInput`. */
 export interface BuilderState {
+  focusKind: FocusKind
   gaps: GapKey[]
+  /** A verify drive's sections to confirm, from `VERIFY_SECTIONS`. */
+  verifySections: VerifySection[]
+  /** `YYYY-MM-DD` (UTC): a verify drive asks after sections not confirmed since this day. */
+  verifyBefore: string
+  /** A whole-record drive's completeness target (50 to 100), as typed. */
+  recordTarget: string
   places: BuilderPlace[]
   libraryTypes: string[]
   /** A Dataset key; blank means any source. */
@@ -73,6 +86,9 @@ export interface BuilderState {
 /** Every field an error can point at, in the order the form shows them. */
 export const BUILDER_FIELDS = [
   "focus",
+  "verifySections",
+  "verifyBefore",
+  "recordTarget",
   "places",
   "libraryTypes",
   "source",
@@ -104,6 +120,22 @@ export const fieldId = (field: BuilderField) => `drive-${field}`
 /** A new drive runs this many days, counting both ends. */
 export const DEFAULT_DRIVE_DAYS = 30
 
+/** A new verify drive asks after sections not confirmed for this many days. */
+export const DEFAULT_VERIFY_DAYS = 365
+
+/** A new verify drive's sections. */
+export const DEFAULT_VERIFY_SECTIONS: readonly VerifySection[] = [
+  "hours",
+  "status",
+]
+
+/** A new whole-record drive's completeness target. */
+export const DEFAULT_RECORD_TARGET = "75"
+
+/** A whole-record target's bounds, as `validateDrive` checks them. */
+export const RECORD_TARGET_MIN = 50
+export const RECORD_TARGET_MAX = 100
+
 const DAY_MS = 86_400_000
 
 /** A date as `YYYY-MM-DD` in UTC. */
@@ -128,10 +160,75 @@ const startOfDay = (day: string) =>
 /** The end of a day (UTC), as the drive's `endsAt`; "" when not a day. */
 const endOfDay = (day: string) => (validDay(day) ? `${day}T23:59:59.000Z` : "")
 
+/** `YYYY-MM-DD` (UTC) today: the latest "not confirmed since" a verify drive takes. */
+export const todayDay = (now: Date = new Date()) => isoDay(now)
+
+/** The Focus fields of a new drive: gaps chosen, the others at their defaults. */
+function defaultFocusFields(
+  now: Date
+): Pick<
+  BuilderState,
+  "focusKind" | "gaps" | "verifySections" | "verifyBefore" | "recordTarget"
+> {
+  return {
+    focusKind: "gaps",
+    gaps: [],
+    verifySections: [...DEFAULT_VERIFY_SECTIONS],
+    verifyBefore: isoDay(
+      new Date(now.getTime() - DEFAULT_VERIFY_DAYS * DAY_MS)
+    ),
+    recordTarget: DEFAULT_RECORD_TARGET,
+  }
+}
+
+const isVerifySection = (v: unknown): v is VerifySection =>
+  typeof v === "string" && (VERIFY_SECTIONS as readonly string[]).includes(v)
+
+/**
+ * A saved or prefilled Focus as the builder's fields: the chosen kind's own
+ * values, every other kind's at its default.
+ */
+function focusFieldsOf(
+  focus: DriveFocus | null | undefined,
+  now: Date
+): ReturnType<typeof defaultFocusFields> {
+  const fields = defaultFocusFields(now)
+  if (!focus) return fields
+
+  switch (focus.kind) {
+    case "verify": {
+      const sections = Array.isArray(focus.sections)
+        ? [...new Set(focus.sections.filter(isVerifySection))]
+        : []
+
+      return {
+        ...fields,
+        focusKind: "verify",
+        verifySections: sections,
+        verifyBefore: dayOf(focus.before) || fields.verifyBefore,
+      }
+    }
+    case "record":
+      return {
+        ...fields,
+        focusKind: "record",
+        recordTarget:
+          typeof focus.target === "number" && Number.isFinite(focus.target)
+            ? String(focus.target)
+            : fields.recordTarget,
+      }
+    case "gaps":
+      return { ...fields, gaps: [...(focus.gaps ?? [])] }
+
+    default:
+      return fields
+  }
+}
+
 /** A new drive's form: it starts today and runs `DEFAULT_DRIVE_DAYS`. */
 export function emptyBuilderState(now: Date = new Date()): BuilderState {
   return {
-    gaps: [],
+    ...defaultFocusFields(now),
     places: [],
     libraryTypes: [],
     source: "",
@@ -161,7 +258,8 @@ function proposalDates(now: Date): Pick<BuilderState, "startsOn" | "endsOn"> {
 }
 
 /**
- * The builder filled from a link's prefill (`propose-link.ts`): its gaps,
+ * The builder filled from a link's prefill (`propose-link.ts`): its Focus
+ * (gaps, sections to confirm since a date, or a completeness target), its
  * places (named from `names`, else from the slug), types, Dataset and
  * ceiling. A proposal starts `PROPOSAL_LEAD_DAYS` from today and runs
  * `DEFAULT_DRIVE_DAYS`; the board's keeps the new drive's dates.
@@ -184,6 +282,7 @@ export function builderStateFromPrefill(
   return {
     ...state,
     ...(mode === "propose" ? proposalDates(now) : {}),
+    ...(prefill.focus ? focusFieldsOf(prefill.focus, now) : {}),
     gaps: [...(prefill.gaps ?? [])],
     places,
     libraryTypes: [...(prefill.libraryTypes ?? [])],
@@ -293,10 +392,22 @@ function scopeOf(
   return scope
 }
 
-const focusOf = (state: BuilderState): DriveFocus => ({
-  kind: "gaps",
-  gaps: [...state.gaps],
-})
+/** The Focus the builder describes, by the kind chosen. */
+function focusOf(state: BuilderState): DriveFocus {
+  switch (state.focusKind) {
+    case "verify":
+      return {
+        kind: "verify",
+        sections: [...state.verifySections],
+        before: `${state.verifyBefore}T00:00:00.000Z`,
+      }
+    case "record":
+      return { kind: "record", target: Number(state.recordTarget) }
+
+    default:
+      return { kind: "gaps", gaps: [...state.gaps] }
+  }
+}
 
 /**
  * The builder as the shared `DriveInput`. `libraries` replaces the pasted
@@ -353,7 +464,7 @@ export function builderStateFromDrive(
   const where: DriveSource = drive.whereToLook ?? {}
 
   return {
-    gaps: drive.focus?.kind === "gaps" ? [...drive.focus.gaps] : [],
+    ...focusFieldsOf(drive.focus, new Date()),
     places,
     libraryTypes: [...(scope.libraryTypes ?? [])],
     source: scope.source ?? "",
@@ -383,6 +494,8 @@ const MESSAGE_FIELDS: [prefix: string, field: BuilderField][] = [
   ["Add one to five steps", "steps"],
   ["Choose what the drive is for", "focus"],
   ["Choose one to three gaps", "focus"],
+  ["Choose the sections to confirm and a date", "verifySections"],
+  ["Set a completeness target between", "recordTarget"],
   ["Limit the drive to places", "places"],
   ["A list can hold at most", "libraries"],
   ["These libraries weren", "libraries"],
@@ -393,7 +506,7 @@ const MESSAGE_FIELDS: [prefix: string, field: BuilderField][] = [
   ["A drive can run for at most", "endsOn"],
   ["Set a goal between", "goalPercent"],
   ["The source link must be", "whereUrl"],
-  ["Choose gaps the task panel can fill", "focus"],
+  [PANEL_FOCUS_MESSAGE, "focus"],
   ["List libraries by their id", "libraries"],
   ["No library in this scope has that gap", "places"],
 ]
@@ -518,13 +631,34 @@ export interface PreviewRequest {
   focus: DriveFocus
 }
 
+/** Whether the chosen Focus can be counted: a gap, a section and a date, or a target. */
+function focusCountable(state: BuilderState): boolean {
+  switch (state.focusKind) {
+    case "verify":
+      return state.verifySections.length > 0 && validDay(state.verifyBefore)
+    case "record": {
+      const target = wholeNumber(state.recordTarget)
+
+      return (
+        target !== null &&
+        target >= RECORD_TARGET_MIN &&
+        target <= RECORD_TARGET_MAX
+      )
+    }
+
+    default:
+      return state.gaps.length > 0
+  }
+}
+
 /**
  * What `/api/drives/preview` counts, or null while the builder can't be
- * counted yet: no gap, nowhere to look, or a ceiling or list it can't read.
- * A pasted list goes as typed; the server resolves its slugs.
+ * counted yet: no Focus to count (a gap, a section and a date, or a
+ * target), nowhere to look, or a ceiling or list it can't read. A pasted
+ * list goes as typed; the server resolves its slugs.
  */
 export function previewRequest(state: BuilderState): PreviewRequest | null {
-  if (state.gaps.length === 0) return null
+  if (!focusCountable(state)) return null
   const list = parseLibraryList(state.libraryList)
   if (list.invalid.length > 0 || list.overLimit) return null
   if (list.refs.length === 0 && state.places.length === 0) return null

@@ -9,6 +9,8 @@ import {
   type DriveUnit,
   type GapKey,
   PANEL_GAPS,
+  VERIFY_SECTIONS,
+  type VerifySection,
 } from "@repo/shared-data"
 import {
   type FormEvent,
@@ -18,7 +20,7 @@ import {
   useState,
 } from "react"
 
-import { Notice } from "@/components/ds"
+import { ChoiceCard, Notice } from "@/components/ds"
 import {
   type FindPlace,
   pickPlace,
@@ -27,7 +29,8 @@ import {
   placePath,
 } from "@/components/index-page/find-helpers"
 import { placeSelectLabels } from "@/components/index-page/place-select-labels"
-import { T } from "@/lib/design-tokens"
+import { SECTION_LABELS } from "@/components/library/verify.logic"
+import { T, TYPE_TINT } from "@/lib/design-tokens"
 import { driveHref } from "@/lib/drives/drive-view"
 import { type FindLocation, searchFind } from "@/lib/find-search"
 import { LIBRARY_TYPES } from "@/lib/meilisearch"
@@ -44,14 +47,18 @@ import {
   errorsFromResponse,
   type FieldError,
   fieldId,
+  type FocusKind,
   isTooBig,
   parseLibraryList,
   previewRequest,
   PROPOSAL_NOTE_MAX,
+  RECORD_TARGET_MAX,
+  RECORD_TARGET_MIN,
   textOnlyInput,
+  todayDay,
   toDriveInput,
 } from "./builder.logic"
-import { FOCUS_META } from "./focus-meta"
+import { FOCUS_FILTER_META, FOCUS_META } from "./focus-meta"
 
 const SUMMARY_MAX = 280
 const STEPS_MAX = 5
@@ -63,6 +70,44 @@ const UNITS: { value: DriveUnit; label: string }[] = [
   { value: "branch", label: "Branches" },
   { value: "record", label: "Records" },
 ]
+
+/** The three things a drive can do, as the Focus step offers them. */
+const FOCUS_CHOICES: {
+  kind: FocusKind
+  title: string
+  hint: string
+  icon: string
+  tint: { bg: string; fg: string }
+}[] = [
+  {
+    kind: "gaps",
+    title: "Fill gaps",
+    hint: "Add what’s missing, such as opening hours or a photo.",
+    icon: "mdi:plus-circle-outline",
+    tint: TYPE_TINT.public,
+  },
+  {
+    kind: "verify",
+    title: "Confirm details are still right",
+    hint: "Helpers check sections nobody has confirmed since a date, and send what they checked.",
+    icon: FOCUS_FILTER_META.verify.icon,
+    tint: TYPE_TINT.academic,
+  },
+  {
+    kind: "record",
+    title: "Complete whole records",
+    hint: "Helpers fill whatever each record lacks until it reaches the target.",
+    icon: FOCUS_FILTER_META.record.icon,
+    tint: TYPE_TINT.national,
+  },
+]
+
+const SECTION_ICONS: Record<VerifySection, string> = {
+  hours: "mdi:clock-outline",
+  status: "mdi:door-open",
+  address: "mdi:map-marker-outline",
+  contact: "mdi:card-account-phone-outline",
+}
 
 const LEVEL_WORD: Record<BuilderPlace["level"], string> = {
   continent: "Continent",
@@ -412,25 +457,52 @@ type Preview = {
   message?: string
 }
 
+/** What the counts wait for, by Focus. */
+const COUNTS_PROMPT: Record<FocusKind, string> = {
+  gaps: "Choose a gap and a place (or a list) to see how many libraries it covers.",
+  verify:
+    "Choose a section, a date and a place (or a list) to see how many libraries it covers.",
+  record:
+    "Set a target and a place (or a list) to see how many libraries it covers.",
+}
+
+/** Why nothing is left to do in scope, by Focus. */
+const NOTHING_TO_DO: Record<FocusKind, { why: string; change: string }> = {
+  gaps: {
+    why: "Every library in scope already has this.",
+    change: "Choose another place or gap.",
+  },
+  verify: {
+    why: "Every library in scope has been confirmed since then.",
+    change: "Choose another place or an earlier date.",
+  },
+  record: {
+    why: "Every library in scope is already this complete.",
+    change: "Choose another place or a higher target.",
+  },
+}
+
 /** "N in scope, M to do", the too-big warning and an empty drive's note. */
 function LiveCounts({
   pending,
   preview,
   locked,
   mode,
+  focusKind,
 }: {
   readonly pending: boolean
   readonly preview: Preview | null
   readonly locked: boolean
   readonly mode: BuilderMode
+  readonly focusKind: FocusKind
 }) {
   const proposing = mode === "propose"
+  const nothing = NOTHING_TO_DO[focusKind]
   let body: ReactNode
   if (locked) {
     body = "The scope is fixed once a drive opens, so it isn’t counted here."
   } else if (!preview && !pending) {
-    body =
-      "Choose a gap and a place (or a list) to see how many libraries it covers."
+    body = COUNTS_PROMPT[focusKind]
   } else if (pending) {
     body = "Counting…"
   } else if (preview?.status === "error") {
@@ -475,8 +547,8 @@ function LiveCounts({
           >
             <p className="m-0" style={{ color: T.ink.base }}>
               {proposing
-                ? "Every library in scope already has this. Choose another place or gap."
-                : "Every library in scope already has this. A drive with nothing to do stays scheduled."}
+                ? `${nothing.why} ${nothing.change}`
+                : `${nothing.why} A drive with nothing to do stays scheduled.`}
             </p>
           </Notice>
         ) : null}
@@ -849,6 +921,14 @@ export function DriveBuilder({
         ? state.gaps.filter((g) => g !== gap)
         : [...state.gaps, gap],
     })
+  const toggleSection = (section: VerifySection) =>
+    update({
+      verifySections: state.verifySections.includes(section)
+        ? state.verifySections.filter((s) => s !== section)
+        : VERIFY_SECTIONS.filter(
+            (s) => s === section || state.verifySections.includes(s)
+          ),
+    })
   const toggleType = (type: string) =>
     update({
       libraryTypes: state.libraryTypes.includes(type)
@@ -860,6 +940,11 @@ export function DriveBuilder({
 
   const list = parseLibraryList(state.libraryList)
   const listCount = list.refs.length
+  const today = todayDay()
+  const sectionsError = errorOf("verifySections")
+  const beforeInvalid =
+    Boolean(sectionsError) &&
+    (!state.verifyBefore || state.verifyBefore > today)
 
   // Announces the send; it stays mounted while the form gives way.
   const announcement = proposing ? (
@@ -913,30 +998,169 @@ export function DriveBuilder({
           </Notice>
         ) : null}
 
-        <Step
-          n={1}
-          id={fieldId("focus")}
-          title="Focus"
-          hint="The gaps the drive fills: one to three. Each library’s task fills them all in one go."
-          disabled={locked}
-        >
-          <div className="flex flex-wrap gap-2.5">
-            {PANEL_GAPS.map((gap) => {
-              const checked = state.gaps.includes(gap)
+        <Step n={1} id={fieldId("focus")} title="Focus" disabled={locked}>
+          <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
+            <legend
+              className="mb-2 p-0 text-[15px] font-semibold"
+              style={{ color: T.ink.base }}
+            >
+              What will the drive do?
+            </legend>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {FOCUS_CHOICES.map((c) => (
+                <ChoiceCard
+                  key={c.kind}
+                  name="drive-focus-kind"
+                  value={c.kind}
+                  checked={state.focusKind === c.kind}
+                  onChange={() => update({ focusKind: c.kind })}
+                  icon={c.icon}
+                  tint={c.tint}
+                  title={c.title}
+                  hint={c.hint}
+                />
+              ))}
+            </div>
+          </fieldset>
 
-              return (
-                <CheckChip
-                  key={gap}
-                  checked={checked}
-                  disabled={!checked && state.gaps.length >= 3}
-                  onChange={() => toggleGap(gap)}
-                  icon={FOCUS_META[gap].icon}
+          {state.focusKind === "gaps" ? (
+            <div
+              role="group"
+              aria-labelledby="drive-gaps-label"
+              aria-describedby="drive-gaps-hint"
+              className="flex flex-col gap-2"
+            >
+              <p
+                id="drive-gaps-label"
+                className="m-0 text-[15px] font-semibold"
+                style={{ color: T.ink.base }}
+              >
+                Gaps to fill
+              </p>
+              <div className="flex flex-wrap gap-2.5">
+                {PANEL_GAPS.map((gap) => {
+                  const checked = state.gaps.includes(gap)
+
+                  return (
+                    <CheckChip
+                      key={gap}
+                      checked={checked}
+                      disabled={!checked && state.gaps.length >= 3}
+                      onChange={() => toggleGap(gap)}
+                      icon={FOCUS_META[gap].icon}
+                    >
+                      {FOCUS_META[gap].label}
+                    </CheckChip>
+                  )
+                })}
+              </div>
+              <p
+                id="drive-gaps-hint"
+                className={hintClass}
+                style={{ color: T.ink.dim }}
+              >
+                One to three. Each library’s task fills them all in one go.
+              </p>
+            </div>
+          ) : null}
+
+          {state.focusKind === "verify" ? (
+            <div className="flex flex-col gap-4">
+              <fieldset
+                id={fieldId("verifySections")}
+                tabIndex={-1}
+                className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0"
+                aria-describedby={describedBy("verifySections")}
+              >
+                <legend
+                  className="mb-2 p-0 text-[15px] font-semibold"
+                  style={{ color: T.ink.base }}
                 >
-                  {FOCUS_META[gap].label}
-                </CheckChip>
-              )
-            })}
-          </div>
+                  Sections to confirm
+                </legend>
+                <div className="flex flex-wrap gap-2.5">
+                  {VERIFY_SECTIONS.map((section) => (
+                    <CheckChip
+                      key={section}
+                      checked={state.verifySections.includes(section)}
+                      onChange={() => toggleSection(section)}
+                      icon={SECTION_ICONS[section]}
+                    >
+                      {SECTION_LABELS[section]}
+                    </CheckChip>
+                  ))}
+                </div>
+              </fieldset>
+              <label className={labelClass} style={{ color: T.ink.base }}>
+                Not confirmed since
+                <input
+                  id={fieldId("verifyBefore")}
+                  type="date"
+                  max={today}
+                  value={state.verifyBefore}
+                  onChange={(e) => update({ verifyBefore: e.target.value })}
+                  style={{
+                    ...(beforeInvalid ? invalidInput : input),
+                    maxWidth: 240,
+                  }}
+                  aria-describedby={
+                    [
+                      "drive-verify-before-hint",
+                      sectionsError
+                        ? `${fieldId("verifySections")}-error`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" ") || undefined
+                  }
+                  aria-invalid={beforeInvalid || undefined}
+                />
+                <span
+                  id="drive-verify-before-hint"
+                  className={hintClass}
+                  style={{ color: T.ink.dim }}
+                >
+                  Sections nobody has ever confirmed count too.
+                </span>
+              </label>
+              <FieldMessage field="verifySections" message={sectionsError} />
+            </div>
+          ) : null}
+
+          {state.focusKind === "record" ? (
+            <label className={labelClass} style={{ color: T.ink.base }}>
+              Done at this completeness (%)
+              <input
+                id={fieldId("recordTarget")}
+                type="number"
+                inputMode="numeric"
+                min={RECORD_TARGET_MIN}
+                max={RECORD_TARGET_MAX}
+                step={5}
+                value={state.recordTarget}
+                onChange={(e) => update({ recordTarget: e.target.value })}
+                style={{ ...styleOf("recordTarget"), maxWidth: 140 }}
+                aria-describedby={describedBy(
+                  "recordTarget",
+                  "drive-record-hint"
+                )}
+                aria-invalid={Boolean(errorOf("recordTarget")) || undefined}
+              />
+              <span
+                id="drive-record-hint"
+                className={hintClass}
+                style={{ color: T.ink.dim }}
+              >
+                From {RECORD_TARGET_MIN} to {RECORD_TARGET_MAX}. A record is
+                done once it reaches this.
+              </span>
+              <FieldMessage
+                field="recordTarget"
+                message={errorOf("recordTarget")}
+              />
+            </label>
+          ) : null}
+
           <FieldMessage field="focus" message={errorOf("focus")} />
         </Step>
 
@@ -1099,6 +1323,7 @@ export function DriveBuilder({
 
         <LiveCounts
           mode={mode}
+          focusKind={state.focusKind}
           locked={locked}
           pending={Boolean(key) && !current}
           preview={key ? current : null}

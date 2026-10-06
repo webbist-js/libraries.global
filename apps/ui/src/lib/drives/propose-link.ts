@@ -4,6 +4,10 @@
  * `/community/propose` with a prefill in its query, and the board's
  * `/community/drives/new` reads the same parameters. Pure, so the server
  * pages and client links share one reading of the URL.
+ *
+ * The Focus: `focus=verify&sections=hours,status&before=YYYY-MM-DD` (confirm
+ * sections not checked since a day) or `focus=record&target=75` (complete
+ * whole records). With no `focus`, or `focus=gaps`, `gaps=` applies.
  */
 import {
   DRIVE_PLACE_LEVELS,
@@ -11,6 +15,8 @@ import {
   type GapKey,
   isGapKey,
   PANEL_GAPS,
+  VERIFY_SECTIONS,
+  type VerifySection,
 } from "@repo/shared-data"
 
 import {
@@ -18,7 +24,14 @@ import {
   TYPE_GROUPS,
 } from "@/components/index-page/find-helpers"
 
+/** A verify or whole-record Focus; a gaps Focus is `gaps`. */
+export type PrefillFocus =
+  | { kind: "verify"; sections: VerifySection[]; before: string }
+  | { kind: "record"; target: number }
+
 export interface ProposePrefill {
+  /** `before` is `YYYY-MM-DD`. */
+  focus?: PrefillFocus
   gaps?: GapKey[]
   places?: Partial<Record<DrivePlaceLevel, string[]>>
   libraryTypes?: string[]
@@ -39,6 +52,17 @@ const SOURCE_MAX = 80
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const TYPE = /^[A-Za-z ]{1,40}$/
 const PERCENT = /^\d{1,3}$/
+const DAY = /^\d{4}-\d{2}-\d{2}$/
+
+/** A whole-record target's bounds, as `validateDrive` checks them. */
+const TARGET_MIN = 50
+const TARGET_MAX = 100
+
+const isVerifySection = (v: unknown): v is VerifySection =>
+  typeof v === "string" && (VERIFY_SECTIONS as readonly string[]).includes(v)
+
+const isDay = (v: string) =>
+  DAY.test(v) && Number.isFinite(Date.parse(`${v}T00:00:00Z`))
 
 const isPanelGap = (v: unknown): v is GapKey =>
   isGapKey(v) && (PANEL_GAPS as readonly string[]).includes(v)
@@ -49,13 +73,28 @@ const unique = <V>(values: readonly V[]) => [...new Set(values)]
 const joined = (values: readonly string[]) =>
   values.map((v) => encodeURIComponent(v)).join(",")
 
+/** The Focus keys: `focus`, then `sections` and `before`, or `target`. */
+function focusParts(focus: PrefillFocus): string[] {
+  if (focus.kind === "verify") {
+    return [
+      "focus=verify",
+      `sections=${joined(focus.sections)}`,
+      `before=${encodeURIComponent(focus.before)}`,
+    ]
+  }
+
+  return ["focus=record", `target=${focus.target}`]
+}
+
 /**
  * The prefill as a query string ("?gaps=hours&region=ohio", or "" when
- * nothing is set): only the keys that are set, in a fixed order.
+ * nothing is set): only the keys that are set, in a fixed order. A verify
+ * or whole-record Focus comes first and leaves `gaps` out.
  */
 export function prefillQuery(p: ProposePrefill = {}): string {
   const parts: string[] = []
-  if (p.gaps?.length) parts.push(`gaps=${joined(p.gaps)}`)
+  if (p.focus) parts.push(...focusParts(p.focus))
+  else if (p.gaps?.length) parts.push(`gaps=${joined(p.gaps)}`)
   for (const level of DRIVE_PLACE_LEVELS) {
     const slugs = p.places?.[level]
     if (slugs?.length) parts.push(`${level}=${joined(slugs)}`)
@@ -102,11 +141,48 @@ const listOf = (raw: string) =>
       .filter(Boolean)
   )
 
+/**
+ * A verify Focus (one or more known sections and a `YYYY-MM-DD` day) or a
+ * whole-record one (a target from 50 to 100), or null when `focus` asks for
+ * neither or its values are malformed.
+ */
+function focusFromParams(sp: Params): PrefillFocus | null {
+  const kind = firstOf(sp, "focus")
+  if (kind === "verify") {
+    const sections = listOf(paramOf(sp, "sections")).filter(isVerifySection)
+    const before = firstOf(sp, "before")
+
+    return sections.length > 0 && isDay(before)
+      ? { kind: "verify", sections, before }
+      : null
+  }
+  if (kind === "record") {
+    const target = firstOf(sp, "target")
+    const n = PERCENT.test(target) ? Number(target) : Number.NaN
+
+    return n >= TARGET_MIN && n <= TARGET_MAX
+      ? { kind: "record", target: n }
+      : null
+  }
+
+  return null
+}
+
+/** The panel gaps (at most 3) when there's no `focus`, or it's `gaps`; else none. */
+function gapsFromParams(sp: Params): GapKey[] {
+  const kind = firstOf(sp, "focus")
+  if (kind === "verify" || kind === "record") return []
+
+  return listOf(paramOf(sp, "gaps")).filter(isPanelGap).slice(0, MAX_GAPS)
+}
+
 /** The prefill from a page's search params. Unknown or malformed values are dropped. */
 export function prefillFromParams(sp: Params): ProposePrefill {
   const prefill: ProposePrefill = {}
 
-  const gaps = listOf(paramOf(sp, "gaps")).filter(isPanelGap).slice(0, MAX_GAPS)
+  const focus = focusFromParams(sp)
+  if (focus) prefill.focus = focus
+  const gaps = gapsFromParams(sp)
   if (gaps.length > 0) prefill.gaps = gaps
 
   const places: Partial<Record<DrivePlaceLevel, string[]>> = {}

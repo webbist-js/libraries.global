@@ -8,6 +8,10 @@ import {
   type DriveScope,
   type GapKey,
   isGapKey,
+  isValidStamp,
+  PANEL_FOCUS_MESSAGE,
+  VERIFY_SECTIONS,
+  type VerifySection,
 } from "@repo/shared-data"
 import { revalidateTag } from "next/cache"
 import { headers } from "next/headers"
@@ -52,6 +56,7 @@ export const DRIVE_BODY_KEYS = [
   "endsAt",
   "goalPercent",
   "whereToLook",
+  "storySlug",
 ] as const
 
 /** The board's actions (`POST /drives/:documentId/actions` in Strapi). */
@@ -227,16 +232,54 @@ export function cleanFocus(raw: unknown): unknown {
   }
 }
 
-/** The preview's Focus: one to three known gaps, or null. */
-function gapsFocus(raw: unknown): DriveFocus | null {
-  const src = asRecord(raw)
-  if (src.kind !== "gaps" || !Array.isArray(src.gaps)) return null
-  const gaps = [...new Set(src.gaps)].filter(isGapKey) as GapKey[]
-  if (gaps.length < 1 || gaps.length > 3 || gaps.length !== src.gaps.length) {
-    return null
-  }
+const isVerifySection = (v: unknown): v is VerifySection =>
+  typeof v === "string" && (VERIFY_SECTIONS as readonly string[]).includes(v)
 
-  return { kind: "gaps", gaps }
+/**
+ * The preview's Focus, or null: one to three known gaps; one or more
+ * `VERIFY_SECTIONS` (repeats dropped) and a valid `before` stamp; or a
+ * whole-number completeness target from 50 to 100.
+ */
+export function previewFocus(raw: unknown): DriveFocus | null {
+  const src = asRecord(raw)
+  switch (src.kind) {
+    case "gaps": {
+      if (!Array.isArray(src.gaps)) return null
+      const gaps = [...new Set(src.gaps)].filter(isGapKey) as GapKey[]
+      if (
+        gaps.length < 1 ||
+        gaps.length > 3 ||
+        gaps.length !== src.gaps.length
+      ) {
+        return null
+      }
+
+      return { kind: "gaps", gaps }
+    }
+    case "verify": {
+      if (!Array.isArray(src.sections) || !isValidStamp(src.before)) return null
+      const sections: unknown[] = [...new Set(src.sections)]
+      if (sections.length < 1 || !sections.every(isVerifySection)) return null
+
+      return { kind: "verify", sections, before: src.before }
+    }
+    case "record": {
+      const target = src.target
+      if (
+        typeof target !== "number" ||
+        !Number.isInteger(target) ||
+        target < 50 ||
+        target > 100
+      ) {
+        return null
+      }
+
+      return { kind: "record", target }
+    }
+
+    default:
+      return null
+  }
 }
 
 const DOCUMENT_ID = /^[a-z0-9]{20,32}$/
@@ -460,9 +503,9 @@ export async function previewDrive(req: Request): Promise<Response> {
     )
   }
   const src = asRecord(parsed.body)
-  const focus = gapsFocus(src.focus)
+  const focus = previewFocus(src.focus)
   if (!focus) {
-    return invalidDrive(["Choose one to three gaps to fill."])
+    return invalidDrive([PANEL_FOCUS_MESSAGE])
   }
   const scope = cleanScope(src.scope)
   if ((scope.libraries?.length ?? 0) > DRIVE_MAX_LIBRARIES) {
