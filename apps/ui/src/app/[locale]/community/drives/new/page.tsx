@@ -48,10 +48,12 @@ export default async function NewDrivePage({
         title="New *drive*"
         lead="Choose what the drive does (fill gaps, confirm details are still right, or complete whole records), where, and where helpers can find the answers. The drive is saved as scheduled; pin it or open it from its page."
       />
-      <DriveBuilder
-        initial={builderStateFromPrefill(prefill, names, "board")}
-        locale={locale}
-      />
+      <main className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
+        <DriveBuilder
+          initial={builderStateFromPrefill(prefill, names, "board")}
+          locale={locale}
+        />
+      </main>
     </div>
   )
 }

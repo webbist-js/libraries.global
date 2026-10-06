@@ -56,15 +56,17 @@ export default async function EditDrivePage({ params }: { params: Params }) {
         title={`Edit *${title}*`}
         lead="Changes show on the drive’s page and the Noticeboard as soon as they’re saved."
       />
-      <DriveBuilder
-        initial={initial}
-        locale={locale}
-        drive={{
-          documentId: drive.documentId,
-          slug: drive.slug,
-          status: drive.status,
-        }}
-      />
+      <main className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
+        <DriveBuilder
+          initial={initial}
+          locale={locale}
+          drive={{
+            documentId: drive.documentId,
+            slug: drive.slug,
+            status: drive.status,
+          }}
+        />
+      </main>
     </div>
   )
 }

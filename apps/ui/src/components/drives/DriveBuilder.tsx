@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { DRIVE_PROPOSAL_MIN_ACCEPTED } from "@repo/access"
 import {
   checkText,
   DRIVE_MAX_LIBRARIES,
@@ -20,7 +21,7 @@ import {
   useState,
 } from "react"
 
-import { ChoiceCard, Notice } from "@/components/ds"
+import { Badge, ChoiceCard, Notice } from "@/components/ds"
 import {
   type FindPlace,
   pickPlace,
@@ -116,6 +117,9 @@ const LEVEL_WORD: Record<BuilderPlace["level"], string> = {
   area: "Area",
 }
 
+// The role application form's conventions (`RoleApplicationForm.tsx`):
+// its inputs, cards, card titles, legends and hints.
+
 const input: React.CSSProperties = {
   padding: "12px 16px",
   minHeight: 48,
@@ -134,23 +138,43 @@ const invalidInput: React.CSSProperties = {
   borderColor: T.accent.danger,
 }
 
+const card = "rounded-[24px] p-6 sm:p-7"
 const cardStyle: React.CSSProperties = {
   background: T.bg.deep,
   border: `1px solid ${T.border.line}`,
-  borderRadius: 24,
-  padding: "clamp(20px,2.6vw,28px)",
 }
+const cardTitle: React.CSSProperties = {
+  fontFamily: T.font.serif,
+  fontSize: 26,
+  fontWeight: 500,
+  letterSpacing: "-0.01em",
+  color: T.ink.base,
+}
+const legendClass = "m-0 p-0 text-[15px] font-semibold"
+const hintClass = "mt-0.5 mb-3 text-[14px]"
+
+/** The side column's cards, as `RoleApplicationAside` draws them. */
+const railCard = "rounded-[20px] p-5 sm:p-6"
+const railTitleClass = "m-0 text-[16px] font-semibold"
 
 const PRIMARY =
-  "inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-(--t-accent-primary) px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
+  "inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-(--t-accent-primary) px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
 const SECONDARY =
-  "inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white px-[18px] text-[15px] font-semibold transition-colors hover:border-(--t-accent-primary) disabled:cursor-not-allowed disabled:opacity-60"
-
+  "inline-flex cursor-pointer items-center gap-1 rounded-full px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
 const SECONDARY_LINK =
-  "inline-flex min-h-11 items-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white px-[18px] text-[15px] font-semibold no-underline transition-colors hover:border-(--t-accent-primary)"
+  "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+const secondaryStyle: React.CSSProperties = {
+  background: T.bg.deep,
+  border: `1px solid ${T.border.hi}`,
+  color: T.ink.base,
+}
 
-const labelClass = "flex flex-col gap-1.5 text-[15px] font-semibold"
-const hintClass = "m-0 text-[14px] font-normal leading-[1.5]"
+/** A pill that holds a real checkbox or radio. */
+const CHIP =
+  "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-2 text-[14px] font-medium transition-colors has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60 has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-(--t-accent-primary) has-[:focus-visible]:outline-solid"
+
+const linkStyle: React.CSSProperties = { color: T.accent.primary }
+const linkClass = "font-semibold underline underline-offset-[3px]"
 
 /** Once a drive has opened, only its words and where to look change. */
 const LOCKED_STATUSES: ReadonlySet<DriveStatus> = new Set([
@@ -158,6 +182,24 @@ const LOCKED_STATUSES: ReadonlySet<DriveStatus> = new Set([
   "closed",
   "cancelled",
 ])
+
+/** What the propose page knows about the user before they send. */
+export type ProposalStanding = {
+  /** Accepted changes, Role Applications not counted. */
+  accepted: number
+  /** Their proposal waiting on a Moderator, if any ("" when untitled). */
+  open: { title: string } | null
+}
+
+/** "Optional" / "Required" after a field's name. */
+function Tag({ children }: { readonly children: ReactNode }) {
+  return (
+    <span className="font-normal" style={{ color: T.ink.dim }}>
+      {" "}
+      {children}
+    </span>
+  )
+}
 
 /** A numbered step of the builder, as a card with a fieldset. */
 function Step({
@@ -180,39 +222,81 @@ function Step({
       id={id}
       tabIndex={id ? -1 : undefined}
       disabled={disabled}
-      className="m-0 flex min-w-0 flex-col gap-4 disabled:opacity-70"
+      className={`${card} m-0 min-w-0 disabled:opacity-70`}
       style={cardStyle}
     >
       <legend className="sr-only">{title}</legend>
-      <div className="flex items-start gap-3">
+      <div className="mb-6 flex items-start gap-3">
         <span
           aria-hidden="true"
-          className="flex size-8 shrink-0 items-center justify-center rounded-full text-[15px] font-bold"
+          className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full text-[15px] font-bold"
           style={{ background: T.accent.chip, color: T.accent.primaryHover }}
         >
           {n}
         </span>
         <div className="flex min-w-0 flex-col gap-1">
-          <h2
-            className="m-0"
-            style={{
-              fontFamily: T.font.serif,
-              fontWeight: 500,
-              fontSize: "clamp(22px,2.2vw,26px)",
-              color: T.ink.base,
-            }}
-          >
+          <h2 className="m-0" style={cardTitle}>
             {title}
           </h2>
           {hint ? (
-            <p className={hintClass} style={{ color: T.ink.dim }}>
+            <p
+              className="m-0 text-[15px] leading-[1.6]"
+              style={{ color: T.ink.dim }}
+            >
               {hint}
             </p>
           ) : null}
         </div>
       </div>
-      {children}
+      <div className="flex flex-col gap-7">{children}</div>
     </fieldset>
+  )
+}
+
+/**
+ * A labelled control as the role application form lays one out: its name
+ * (and Tag), the hint, then the control and its error.
+ */
+function Field({
+  id,
+  label,
+  tag,
+  hint,
+  hintId,
+  count,
+  children,
+}: {
+  readonly id: string
+  readonly label: ReactNode
+  readonly tag?: ReactNode
+  readonly hint?: ReactNode
+  readonly hintId?: string
+  /** At the end of the name's row, such as a character count. */
+  readonly count?: ReactNode
+  readonly children: ReactNode
+}) {
+  return (
+    <div className="flex min-w-0 flex-col">
+      <div
+        className={`flex flex-wrap items-baseline justify-between gap-2 ${hint ? "" : "mb-2"}`}
+      >
+        <label
+          htmlFor={id}
+          className={legendClass}
+          style={{ color: T.ink.base }}
+        >
+          {label}
+          {tag ? <Tag>{tag}</Tag> : null}
+        </label>
+        {count}
+      </div>
+      {hint ? (
+        <p id={hintId} className={hintClass} style={{ color: T.ink.dim }}>
+          {hint}
+        </p>
+      ) : null}
+      {children}
+    </div>
   )
 }
 
@@ -229,7 +313,7 @@ function FieldMessage({
   return (
     <p
       id={`${fieldId(field)}-error`}
-      className="m-0 flex items-start gap-1.5 text-[14px] font-semibold"
+      className="mt-2 mb-0 flex items-start gap-1.5 text-[14px] font-semibold"
       style={{ color: T.accent.danger }}
     >
       <Icon
@@ -240,6 +324,27 @@ function FieldMessage({
       />
       {message}
     </p>
+  )
+}
+
+/** A character count at the end of a field's name row. */
+function CharCount({
+  id,
+  length,
+  max,
+}: {
+  readonly id: string
+  readonly length: number
+  readonly max: number
+}) {
+  return (
+    <span
+      id={id}
+      className="text-[13px] font-semibold"
+      style={{ color: length > max ? T.accent.danger : T.ink.dim }}
+    >
+      {fmt(length)} of {fmt(max)} characters
+    </span>
   )
 }
 
@@ -259,7 +364,7 @@ function CheckChip({
 }) {
   return (
     <label
-      className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-2 text-[15px] font-medium transition-colors has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60 has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-(--t-accent-primary) has-[:focus-visible]:outline-solid"
+      className={CHIP}
       style={{
         background: checked ? T.accent.chip : T.bg.deep,
         borderColor: checked ? T.accent.primary : T.border.hi,
@@ -276,8 +381,8 @@ function CheckChip({
       <Icon
         aria-hidden="true"
         icon={checked ? "mdi:check" : (icon ?? "mdi:plus")}
-        width={16}
-        height={16}
+        width={15}
+        height={15}
       />
       {children}
     </label>
@@ -346,18 +451,16 @@ function PlacePicker({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {selects.map(({ level: lvl, label, all }, i) => {
           const parent = selects[i - 1]?.level
           if (parent && path[parent] === "") return null
 
           return (
-            <label
-              key={lvl}
-              className={labelClass}
-              style={{ color: T.ink.dim }}
-            >
-              {label}
+            <label key={lvl} className="flex min-w-0 flex-col gap-2">
+              <span className={legendClass} style={{ color: T.ink.base }}>
+                {label}
+              </span>
               <select
                 value={path[lvl]}
                 onChange={(e) => setPlace(pickPlace(path, lvl, e.target.value))}
@@ -379,7 +482,7 @@ function PlacePicker({
         })}
       </div>
       {failed ? (
-        <p className={hintClass} style={{ color: T.accent.danger }}>
+        <p className="m-0 text-[14px]" style={{ color: T.accent.danger }}>
           The places couldn’t be loaded. Try again in a moment.
         </p>
       ) : null}
@@ -387,14 +490,14 @@ function PlacePicker({
         <button
           type="button"
           className={SECONDARY}
-          style={{ color: T.ink.base }}
+          style={secondaryStyle}
           disabled={!chosen || Boolean(added)}
           onClick={() => chosen && onAdd(chosen)}
         >
           <Icon
             aria-hidden="true"
             icon="mdi:map-marker-plus-outline"
-            width={18}
+            width={16}
           />
           {chosen
             ? added
@@ -411,7 +514,7 @@ function PlacePicker({
           {places.map((p) => (
             <li
               key={`${p.level}:${p.slug}`}
-              className="inline-flex items-center gap-1.5 rounded-full py-1 pr-1 pl-3.5 text-[15px] font-semibold"
+              className="inline-flex items-center gap-1.5 rounded-full py-1 pr-1 pl-3.5 text-[14px] font-semibold"
               style={{
                 background: T.accent.chip,
                 color: T.accent.primaryHover,
@@ -420,7 +523,7 @@ function PlacePicker({
               <Icon
                 aria-hidden="true"
                 icon="mdi:map-marker-outline"
-                width={16}
+                width={15}
               />
               {p.name}
               <span className="font-normal" style={{ color: T.ink.dim }}>
@@ -439,7 +542,7 @@ function PlacePicker({
           ))}
         </ul>
       ) : (
-        <p className={hintClass} style={{ color: T.ink.dim }}>
+        <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
           No places yet. A library in any listed place is in the drive.
         </p>
       )}
@@ -482,7 +585,10 @@ const NOTHING_TO_DO: Record<FocusKind, { why: string; change: string }> = {
   },
 }
 
-/** "N in scope, M to do", the too-big warning and an empty drive's note. */
+/**
+ * The side column's "Live counts" card: "N in scope, M to do", the too-big
+ * warning and an empty drive's note, updated as the form changes.
+ */
 function LiveCounts({
   pending,
   preview,
@@ -520,7 +626,10 @@ function LiveCounts({
           className="m-0"
           style={{
             fontFamily: T.font.serif,
-            fontSize: "clamp(24px,2.4vw,30px)",
+            fontSize: 26,
+            fontWeight: 500,
+            letterSpacing: "-0.01em",
+            lineHeight: 1.2,
             color: T.ink.base,
           }}
         >
@@ -559,23 +668,243 @@ function LiveCounts({
   return (
     <section
       aria-labelledby="drive-counts-heading"
-      className="flex flex-col gap-2"
-      style={{ ...cardStyle, background: T.bg.surface }}
+      className={railCard}
+      style={cardStyle}
     >
       <h2
         id="drive-counts-heading"
-        className="m-0 text-[15px] font-semibold"
-        style={{ color: T.ink.dim }}
+        className={railTitleClass}
+        style={{ color: T.ink.base }}
       >
         Live counts
       </h2>
       <div
         aria-live="polite"
-        className="text-[15px]"
+        className="mt-3 text-[15px] leading-[1.6]"
         style={{ color: T.ink.dim }}
       >
         {body}
       </div>
+    </section>
+  )
+}
+
+/**
+ * The propose page's first side card, as the role application form's
+ * "Who can apply": accepted changes against the minimum, and the proposal
+ * still in review, if any. Strapi decides on send; this only explains.
+ */
+function StandingCard({ standing }: { readonly standing: ProposalStanding }) {
+  const { accepted, open } = standing
+  const needed = DRIVE_PROPOSAL_MIN_ACCEPTED
+  const eligible = accepted >= needed
+  const shown = Math.min(accepted, needed)
+  const percent = (shown / needed) * 100
+
+  return (
+    <section
+      aria-labelledby="drive-standing"
+      className={railCard}
+      style={cardStyle}
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h2
+          id="drive-standing"
+          className={railTitleClass}
+          style={{ color: T.ink.base }}
+        >
+          Who can propose
+        </h2>
+        {eligible ? (
+          <Badge label="You can propose" color="ok" icon="mdi:check" />
+        ) : (
+          <Badge label="Not yet" color="dim" icon="mdi:progress-clock" />
+        )}
+      </div>
+      <p
+        className="mt-3 mb-5 text-[15px] leading-[1.6]"
+        style={{ color: T.ink.dim }}
+      >
+        Anyone whose changes have already been accepted by a reviewer can
+        propose a drive. Any kind of change counts: records, photos, sources or
+        articles.
+      </p>
+      <div className="mb-2 flex items-baseline justify-between gap-3 text-[15px]">
+        <span className="font-semibold" style={{ color: T.ink.base }}>
+          {accepted} accepted {accepted === 1 ? "change" : "changes"}
+        </span>
+        <span style={{ color: T.ink.dim }}>{needed} needed</span>
+      </div>
+      <div
+        role="progressbar"
+        aria-label="Accepted changes"
+        aria-valuemin={0}
+        aria-valuemax={needed}
+        aria-valuenow={shown}
+        aria-valuetext={`${accepted} of ${needed} accepted changes`}
+        className="h-2 w-full rounded-full"
+        style={{ background: T.bg.muted2 }}
+      >
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${percent}%`,
+            background: eligible ? T.accent.ok : T.accent.primary,
+          }}
+        />
+      </div>
+      {eligible ? null : (
+        <p className="mt-4 mb-0 text-[15px]" style={{ color: T.ink.dim }}>
+          Keep contributing: corrections, new libraries and photos all count.{" "}
+          <Link href="/contribute" className={linkClass} style={linkStyle}>
+            Improve a record
+          </Link>
+        </p>
+      )}
+      {open ? (
+        <div
+          className="mt-5 flex flex-col gap-2 rounded-[16px] p-4"
+          style={{
+            border: `1px solid ${T.border.line}`,
+            background: T.bg.surface,
+          }}
+        >
+          <p
+            className="m-0 text-[15px] font-semibold"
+            style={{ color: T.ink.base }}
+          >
+            {open.title
+              ? `Your proposal “${open.title}” is waiting for review.`
+              : "Your proposal is waiting for review."}
+          </p>
+          <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+            You can propose another once it’s decided. Follow it in{" "}
+            <Link
+              href="/contribute/submissions"
+              className={linkClass}
+              style={linkStyle}
+            >
+              My submissions
+            </Link>
+            .
+          </p>
+        </div>
+      ) : null}
+    </section>
+  )
+}
+
+/** The board's first side card: no review, and where the drive is run. */
+function BoardCard({ editing }: { readonly editing: boolean }) {
+  return (
+    <section
+      aria-labelledby="drive-board"
+      className={railCard}
+      style={cardStyle}
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h2
+          id="drive-board"
+          className={railTitleClass}
+          style={{ color: T.ink.base }}
+        >
+          Editorial board
+        </h2>
+        <Badge label="No review needed" color="ok" icon="mdi:check" />
+      </div>
+      <p
+        className="mt-3 mb-0 text-[15px] leading-[1.6]"
+        style={{ color: T.ink.dim }}
+      >
+        {editing
+          ? "You’re on the editorial board, so your changes are saved directly. Pin it or feature it from its page."
+          : "You’re on the editorial board, so this drive is created directly and scheduled. Open it, pin it or feature it from its page."}
+      </p>
+    </section>
+  )
+}
+
+/** The side column's "What happens next", by mode and the drive's state. */
+function NextSteps({
+  proposing,
+  status,
+}: {
+  readonly proposing: boolean
+  /** The saved drive's state; null for a new drive. */
+  readonly status: DriveStatus | null
+}) {
+  const runs = status !== "closed" && status !== "cancelled"
+  let steps: ReactNode
+  if (proposing) {
+    steps = (
+      <>
+        <li>A Moderator reviews your proposal.</li>
+        <li>
+          If approved, the drive is scheduled and opens on its start date.
+        </li>
+        <li>
+          You’ll see it on the{" "}
+          <Link
+            href="/community"
+            className="underline underline-offset-[3px]"
+            style={linkStyle}
+          >
+            Noticeboard
+          </Link>
+          , and your proposal on{" "}
+          <Link
+            href="/contribute/submissions"
+            className="underline underline-offset-[3px]"
+            style={linkStyle}
+          >
+            My submissions
+          </Link>
+          .
+        </li>
+      </>
+    )
+  } else if (status === null) {
+    steps = (
+      <>
+        <li>Save creates the drive as scheduled.</li>
+        <li>Open it now, or let the hourly run open it on its start date.</li>
+        <li>Pin or feature it so people find it.</li>
+      </>
+    )
+  } else {
+    steps = (
+      <>
+        <li>
+          Save changes updates the drive’s page and the Noticeboard straight
+          away.
+        </li>
+        {status === "draft" || status === "scheduled" ? (
+          <li>Open it now, or let the hourly run open it on its start date.</li>
+        ) : null}
+        {runs ? <li>Pin or feature it so people find it.</li> : null}
+      </>
+    )
+  }
+
+  return (
+    <section
+      aria-labelledby="drive-next"
+      className={railCard}
+      style={cardStyle}
+    >
+      <h2
+        id="drive-next"
+        className={railTitleClass}
+        style={{ color: T.ink.base }}
+      >
+        What happens next
+      </h2>
+      <ol
+        className="m-0 mt-3 flex list-decimal flex-col gap-2 pl-5 text-[14.5px] leading-[1.5]"
+        style={{ color: T.ink.base }}
+      >
+        {steps}
+      </ol>
     </section>
   )
 }
@@ -661,60 +990,70 @@ function refusalMessage(json: unknown, status: number): string {
   return "You can’t propose a drive right now."
 }
 
-/** "Proposal sent": the ok notice and where to go next, focused on arrival. */
+/**
+ * "Proposal sent", as the role application form's sent card: the ok
+ * notice, a heading focused on arrival, and where to go next.
+ */
 function ProposalSent() {
-  const ref = useRef<HTMLDivElement>(null)
+  const ref = useRef<HTMLHeadingElement>(null)
   useEffect(() => {
     ref.current?.focus()
   }, [])
 
   return (
-    <div
-      className="mx-auto flex w-full max-w-[860px] flex-col"
-      style={{
-        padding:
-          "clamp(28px,3.4vw,44px) clamp(16px,3vw,32px) clamp(56px,7vw,88px)",
-        gap: "clamp(18px,2.4vw,24px)",
-      }}
+    <section
+      aria-labelledby="drive-sent"
+      className={`${card} flex flex-col items-start gap-3`}
+      style={cardStyle}
     >
-      <div ref={ref} tabIndex={-1} style={{ outlineOffset: 4 }}>
-        <Notice icon="mdi:check-circle-outline" tone="ok" title="Proposal sent">
-          <p className="m-0" style={{ color: T.ink.base }}>
-            A Moderator will review it. You’ll get an email when it’s decided.
-          </p>
-        </Notice>
-      </div>
-      <div className="flex flex-wrap gap-2.5">
+      <Notice icon="mdi:check-circle-outline" tone="ok" title="Proposal sent" />
+      <h2
+        id="drive-sent"
+        ref={ref}
+        tabIndex={-1}
+        className="m-0 outline-none"
+        style={cardTitle}
+      >
+        Thanks. We’ve got your proposal.
+      </h2>
+      <p className="m-0 text-[16px] leading-[1.6]" style={{ color: T.ink.dim }}>
+        A Moderator will review it. You’ll get an email when it’s decided.
+      </p>
+      <div className="mt-1 flex flex-wrap gap-2.5">
         <Link
           href="/community"
           className={SECONDARY_LINK}
-          style={{ color: T.ink.base }}
+          style={secondaryStyle}
         >
-          <Icon aria-hidden="true" icon="mdi:arrow-left" width={18} />
+          <Icon aria-hidden="true" icon="mdi:arrow-left" width={16} />
           Back to the Noticeboard
         </Link>
         <Link
           href="/contribute/submissions"
           className={SECONDARY_LINK}
-          style={{ color: T.ink.base }}
+          style={secondaryStyle}
         >
           My submissions
         </Link>
       </div>
-    </div>
+    </section>
   )
 }
 
 /**
- * The drive builder (spec §5.7): Focus, Scope with live counts, where to
- * look, the words, then dates and goal.
+ * The drive builder (spec §5.7): Focus, Scope, where to look, the words,
+ * then dates and goal, laid out like the role application form: step cards
+ * in the main column, and a sticky side column with the user's standing
+ * (or the board's flow), Live counts and what happens next. Pages put it
+ * in the reference's 1360px `main`.
  *
  * - **Board mode** (the editorial board): a new drive saves as scheduled;
  *   the board pins it or opens it from its page. Once a drive has opened
  *   only its words and where to look change.
  * - **Propose mode** (anyone else): the same steps plus a note for the
  *   Moderator, sent as a Drive Proposal (`POST /api/drives/proposals`).
- *   `blocked` disables "Send proposal" and says why.
+ *   `blocked` disables "Send proposal" and says why; `standing` fills the
+ *   side column's "Who can propose" card.
  */
 export function DriveBuilder({
   initial,
@@ -722,6 +1061,7 @@ export function DriveBuilder({
   drive,
   mode = "board",
   blocked = null,
+  standing = null,
 }: {
   readonly initial?: BuilderState
   readonly locale: string
@@ -730,6 +1070,8 @@ export function DriveBuilder({
   readonly mode?: BuilderMode
   /** Why a proposal can't be sent yet, shown by the disabled button. */
   readonly blocked?: string | null
+  /** Propose mode: accepted changes and any proposal in review. */
+  readonly standing?: ProposalStanding | null
 }) {
   const router = useRouter()
   const proposing = mode === "propose"
@@ -953,736 +1295,674 @@ export function DriveBuilder({
     </p>
   ) : null
 
-  if (sent) {
-    return (
-      <>
-        {announcement}
-        <ProposalSent />
-      </>
-    )
-  }
-
-  return (
-    <>
-      {announcement}
-      <form
-        noValidate
-        onSubmit={save}
-        className="mx-auto flex w-full max-w-[860px] flex-col"
-        style={{
-          padding:
-            "clamp(28px,3.4vw,44px) clamp(16px,3vw,32px) clamp(56px,7vw,88px)",
-          gap: "clamp(18px,2.4vw,24px)",
-        }}
-      >
-        {proposing ? (
-          <p
-            className="m-0 text-[17px] leading-[1.6]"
-            style={{ color: T.ink.dim }}
-          >
-            A Moderator reviews every proposal. Approved drives open on their
-            start date.
-          </p>
-        ) : null}
-
-        {locked ? (
-          <Notice
-            icon="mdi:lock-outline"
-            tone="info"
-            title={`This drive is ${drive?.status}`}
-          >
-            <p className="m-0" style={{ color: T.ink.base }}>
-              Only its words and where to look can change now. What it’s for,
-              where it runs and its dates are fixed.
-            </p>
-          </Notice>
-        ) : null}
-
-        <Step n={1} id={fieldId("focus")} title="Focus" disabled={locked}>
-          <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
-            <legend
-              className="mb-2 p-0 text-[15px] font-semibold"
-              style={{ color: T.ink.base }}
-            >
-              What will the drive do?
-            </legend>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {FOCUS_CHOICES.map((c) => (
-                <ChoiceCard
-                  key={c.kind}
-                  name="drive-focus-kind"
-                  value={c.kind}
-                  checked={state.focusKind === c.kind}
-                  onChange={() => update({ focusKind: c.kind })}
-                  icon={c.icon}
-                  tint={c.tint}
-                  title={c.title}
-                  hint={c.hint}
-                />
-              ))}
-            </div>
-          </fieldset>
-
-          {state.focusKind === "gaps" ? (
-            <div
-              role="group"
-              aria-labelledby="drive-gaps-label"
-              aria-describedby="drive-gaps-hint"
-              className="flex flex-col gap-2"
-            >
-              <p
-                id="drive-gaps-label"
-                className="m-0 text-[15px] font-semibold"
-                style={{ color: T.ink.base }}
-              >
-                Gaps to fill
-              </p>
-              <div className="flex flex-wrap gap-2.5">
-                {PANEL_GAPS.map((gap) => {
-                  const checked = state.gaps.includes(gap)
-
-                  return (
-                    <CheckChip
-                      key={gap}
-                      checked={checked}
-                      disabled={!checked && state.gaps.length >= 3}
-                      onChange={() => toggleGap(gap)}
-                      icon={FOCUS_META[gap].icon}
-                    >
-                      {FOCUS_META[gap].label}
-                    </CheckChip>
-                  )
-                })}
-              </div>
-              <p
-                id="drive-gaps-hint"
-                className={hintClass}
-                style={{ color: T.ink.dim }}
-              >
-                One to three. Each library’s task fills them all in one go.
-              </p>
-            </div>
-          ) : null}
-
-          {state.focusKind === "verify" ? (
-            <div className="flex flex-col gap-4">
-              <fieldset
-                id={fieldId("verifySections")}
-                tabIndex={-1}
-                className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0"
-                aria-describedby={describedBy("verifySections")}
-              >
-                <legend
-                  className="mb-2 p-0 text-[15px] font-semibold"
-                  style={{ color: T.ink.base }}
-                >
-                  Sections to confirm
-                </legend>
-                <div className="flex flex-wrap gap-2.5">
-                  {VERIFY_SECTIONS.map((section) => (
-                    <CheckChip
-                      key={section}
-                      checked={state.verifySections.includes(section)}
-                      onChange={() => toggleSection(section)}
-                      icon={SECTION_ICONS[section]}
-                    >
-                      {SECTION_LABELS[section]}
-                    </CheckChip>
-                  ))}
-                </div>
-              </fieldset>
-              <label className={labelClass} style={{ color: T.ink.base }}>
-                Not confirmed since
-                <input
-                  id={fieldId("verifyBefore")}
-                  type="date"
-                  max={today}
-                  value={state.verifyBefore}
-                  onChange={(e) => update({ verifyBefore: e.target.value })}
-                  style={{
-                    ...(beforeInvalid ? invalidInput : input),
-                    maxWidth: 240,
-                  }}
-                  aria-describedby={
-                    [
-                      "drive-verify-before-hint",
-                      sectionsError
-                        ? `${fieldId("verifySections")}-error`
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" ") || undefined
-                  }
-                  aria-invalid={beforeInvalid || undefined}
-                />
-                <span
-                  id="drive-verify-before-hint"
-                  className={hintClass}
-                  style={{ color: T.ink.dim }}
-                >
-                  Sections nobody has ever confirmed count too.
-                </span>
-              </label>
-              <FieldMessage field="verifySections" message={sectionsError} />
-            </div>
-          ) : null}
-
-          {state.focusKind === "record" ? (
-            <label className={labelClass} style={{ color: T.ink.base }}>
-              Done at this completeness (%)
-              <input
-                id={fieldId("recordTarget")}
-                type="number"
-                inputMode="numeric"
-                min={RECORD_TARGET_MIN}
-                max={RECORD_TARGET_MAX}
-                step={5}
-                value={state.recordTarget}
-                onChange={(e) => update({ recordTarget: e.target.value })}
-                style={{ ...styleOf("recordTarget"), maxWidth: 140 }}
-                aria-describedby={describedBy(
-                  "recordTarget",
-                  "drive-record-hint"
-                )}
-                aria-invalid={Boolean(errorOf("recordTarget")) || undefined}
-              />
-              <span
-                id="drive-record-hint"
-                className={hintClass}
-                style={{ color: T.ink.dim }}
-              >
-                From {RECORD_TARGET_MIN} to {RECORD_TARGET_MAX}. A record is
-                done once it reaches this.
-              </span>
-              <FieldMessage
-                field="recordTarget"
-                message={errorOf("recordTarget")}
-              />
-            </label>
-          ) : null}
-
-          <FieldMessage field="focus" message={errorOf("focus")} />
-        </Step>
-
-        <Step
-          n={2}
-          title="Scope"
-          hint="The libraries it covers. Add places at any level, then narrow by type, dataset or completeness. Closed libraries are always left out."
-          disabled={locked}
+  const form = (
+    <form noValidate onSubmit={save} className="flex min-w-0 flex-col gap-5">
+      {locked ? (
+        <Notice
+          icon="mdi:lock-outline"
+          tone="info"
+          title={`This drive is ${drive?.status}`}
         >
-          <div
-            id={fieldId("places")}
-            tabIndex={-1}
-            role="group"
-            aria-label="Places"
-            className="flex flex-col gap-3"
-          >
-            <PlacePicker
-              locale={locale}
-              places={state.places}
-              invalid={Boolean(errorOf("places"))}
-              onAdd={(p) => update({ places: [...state.places, p] })}
-              onRemove={(p) =>
-                update({
-                  places: state.places.filter(
-                    (q) => !(q.level === p.level && q.slug === p.slug)
-                  ),
-                })
-              }
-            />
-            <FieldMessage field="places" message={errorOf("places")} />
-          </div>
+          <p className="m-0" style={{ color: T.ink.base }}>
+            Only its words and where to look can change now. What it’s for,
+            where it runs and its dates are fixed.
+          </p>
+        </Notice>
+      ) : null}
 
-          <fieldset
-            id={fieldId("libraryTypes")}
-            tabIndex={-1}
-            className="m-0 flex flex-col gap-2 border-0 p-0"
+      <Step n={1} id={fieldId("focus")} title="Focus" disabled={locked}>
+        <fieldset className="m-0 min-w-0 border-0 p-0">
+          <legend
+            className={`${legendClass} mb-3`}
+            style={{ color: T.ink.base }}
           >
-            <legend
-              className="mb-2 p-0 text-[15px] font-semibold"
+            What will the drive do?<Tag>Required</Tag>
+          </legend>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            {FOCUS_CHOICES.map((c) => (
+              <ChoiceCard
+                key={c.kind}
+                name="drive-focus-kind"
+                value={c.kind}
+                checked={state.focusKind === c.kind}
+                onChange={() => update({ focusKind: c.kind })}
+                icon={c.icon}
+                tint={c.tint}
+                title={c.title}
+                hint={c.hint}
+              />
+            ))}
+          </div>
+        </fieldset>
+
+        {state.focusKind === "gaps" ? (
+          <div
+            role="group"
+            aria-labelledby="drive-gaps-label"
+            aria-describedby="drive-gaps-hint"
+            className="flex flex-col"
+          >
+            <p
+              id="drive-gaps-label"
+              className={legendClass}
               style={{ color: T.ink.base }}
             >
-              Library types{" "}
-              <span className="font-normal" style={{ color: T.ink.dim }}>
-                None ticked means every type
-              </span>
-            </legend>
-            <div className="flex flex-wrap gap-2">
-              {LIBRARY_TYPES.map((type) => (
-                <CheckChip
-                  key={type}
-                  checked={state.libraryTypes.includes(type)}
-                  onChange={() => toggleType(type)}
-                >
-                  {type}
-                </CheckChip>
-              ))}
-            </div>
-          </fieldset>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className={labelClass} style={{ color: T.ink.base }}>
-              Dataset{" "}
-              <input
-                id={fieldId("source")}
-                type="text"
-                value={state.source}
-                onChange={(e) => update({ source: e.target.value })}
-                autoComplete="off"
-                spellCheck={false}
-                style={styleOf("source")}
-                aria-describedby={describedBy("source", "drive-source-hint")}
-              />
-              <span
-                id="drive-source-hint"
-                className={hintClass}
-                style={{ color: T.ink.dim }}
-              >
-                A dataset key, such as <code>imls-pls</code>: only records
-                imported from it count. Leave it blank for every source.
-              </span>
-            </label>
-            <label className={labelClass} style={{ color: T.ink.base }}>
-              Only libraries below N% complete
-              <span className="flex items-center gap-2">
-                <input
-                  id={fieldId("completenessBelow")}
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  max={100}
-                  value={state.completenessBelow}
-                  onChange={(e) =>
-                    update({ completenessBelow: e.target.value })
-                  }
-                  style={{ ...styleOf("completenessBelow"), maxWidth: 140 }}
-                  aria-describedby={describedBy(
-                    "completenessBelow",
-                    "drive-completeness-hint"
-                  )}
-                  aria-invalid={
-                    Boolean(errorOf("completenessBelow")) || undefined
-                  }
-                />
-                <span aria-hidden="true" style={{ color: T.ink.dim }}>
-                  %
-                </span>
-              </span>
-              <span
-                id="drive-completeness-hint"
-                className={hintClass}
-                style={{ color: T.ink.dim }}
-              >
-                Optional. Leave it blank to include every record.
-              </span>
-              <FieldMessage
-                field="completenessBelow"
-                message={errorOf("completenessBelow")}
-              />
-            </label>
-          </div>
-          <FieldMessage field="source" message={errorOf("source")} />
-
-          <label className={labelClass} style={{ color: T.ink.base }}>
-            Or list the libraries
-            <textarea
-              id={fieldId("libraries")}
-              rows={5}
-              value={state.libraryList}
-              onChange={(e) => update({ libraryList: e.target.value })}
-              spellCheck={false}
-              style={{
-                ...styleOf("libraries"),
-                minHeight: 132,
-                resize: "vertical",
-              }}
-              aria-describedby={describedBy(
-                "libraries",
-                "drive-libraries-hint"
-              )}
-              aria-invalid={Boolean(errorOf("libraries")) || undefined}
-            />
-            <span
-              id="drive-libraries-hint"
+              Gaps to fill<Tag>Required</Tag>
+            </p>
+            <p
+              id="drive-gaps-hint"
               className={hintClass}
               style={{ color: T.ink.dim }}
             >
+              One to three. Each library’s task fills them all in one go.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {PANEL_GAPS.map((gap) => {
+                const checked = state.gaps.includes(gap)
+
+                return (
+                  <CheckChip
+                    key={gap}
+                    checked={checked}
+                    disabled={!checked && state.gaps.length >= 3}
+                    onChange={() => toggleGap(gap)}
+                    icon={FOCUS_META[gap].icon}
+                  >
+                    {FOCUS_META[gap].label}
+                  </CheckChip>
+                )
+              })}
+            </div>
+          </div>
+        ) : null}
+
+        {state.focusKind === "verify" ? (
+          <>
+            <fieldset
+              id={fieldId("verifySections")}
+              tabIndex={-1}
+              className="m-0 min-w-0 border-0 p-0"
+              aria-describedby={describedBy("verifySections")}
+            >
+              <legend
+                className={`${legendClass} mb-3`}
+                style={{ color: T.ink.base }}
+              >
+                Sections to confirm<Tag>Required</Tag>
+              </legend>
+              <div className="flex flex-wrap gap-2">
+                {VERIFY_SECTIONS.map((section) => (
+                  <CheckChip
+                    key={section}
+                    checked={state.verifySections.includes(section)}
+                    onChange={() => toggleSection(section)}
+                    icon={SECTION_ICONS[section]}
+                  >
+                    {SECTION_LABELS[section]}
+                  </CheckChip>
+                ))}
+              </div>
+            </fieldset>
+            <Field
+              id={fieldId("verifyBefore")}
+              label="Not confirmed since"
+              tag="Required"
+              hint="Sections nobody has ever confirmed count too."
+              hintId="drive-verify-before-hint"
+            >
+              <input
+                id={fieldId("verifyBefore")}
+                type="date"
+                max={today}
+                value={state.verifyBefore}
+                onChange={(e) => update({ verifyBefore: e.target.value })}
+                style={{
+                  ...(beforeInvalid ? invalidInput : input),
+                  maxWidth: 240,
+                }}
+                aria-describedby={
+                  [
+                    "drive-verify-before-hint",
+                    sectionsError ? `${fieldId("verifySections")}-error` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" ") || undefined
+                }
+                aria-invalid={beforeInvalid || undefined}
+              />
+              <FieldMessage field="verifySections" message={sectionsError} />
+            </Field>
+          </>
+        ) : null}
+
+        {state.focusKind === "record" ? (
+          <Field
+            id={fieldId("recordTarget")}
+            label="Done at this completeness (%)"
+            tag="Required"
+            hint={`From ${RECORD_TARGET_MIN} to ${RECORD_TARGET_MAX}. A record is done once it reaches this.`}
+            hintId="drive-record-hint"
+          >
+            <input
+              id={fieldId("recordTarget")}
+              type="number"
+              inputMode="numeric"
+              min={RECORD_TARGET_MIN}
+              max={RECORD_TARGET_MAX}
+              step={5}
+              value={state.recordTarget}
+              onChange={(e) => update({ recordTarget: e.target.value })}
+              style={{ ...styleOf("recordTarget"), maxWidth: 140 }}
+              aria-describedby={describedBy(
+                "recordTarget",
+                "drive-record-hint"
+              )}
+              aria-invalid={Boolean(errorOf("recordTarget")) || undefined}
+            />
+            <FieldMessage
+              field="recordTarget"
+              message={errorOf("recordTarget")}
+            />
+          </Field>
+        ) : null}
+
+        <FieldMessage field="focus" message={errorOf("focus")} />
+      </Step>
+
+      <Step
+        n={2}
+        title="Scope"
+        hint="The libraries it covers. Add places at any level, then narrow by type, dataset or completeness. Closed libraries are always left out."
+        disabled={locked}
+      >
+        <div
+          id={fieldId("places")}
+          tabIndex={-1}
+          role="group"
+          aria-label="Places"
+          className="flex flex-col"
+        >
+          <PlacePicker
+            locale={locale}
+            places={state.places}
+            invalid={Boolean(errorOf("places"))}
+            onAdd={(p) => update({ places: [...state.places, p] })}
+            onRemove={(p) =>
+              update({
+                places: state.places.filter(
+                  (q) => !(q.level === p.level && q.slug === p.slug)
+                ),
+              })
+            }
+          />
+          <FieldMessage field="places" message={errorOf("places")} />
+        </div>
+
+        <fieldset
+          id={fieldId("libraryTypes")}
+          tabIndex={-1}
+          className="m-0 min-w-0 border-0 p-0"
+        >
+          <legend className={legendClass} style={{ color: T.ink.base }}>
+            Library types<Tag>Optional</Tag>
+          </legend>
+          <p className={hintClass} style={{ color: T.ink.dim }}>
+            None ticked means every type.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {LIBRARY_TYPES.map((type) => (
+              <CheckChip
+                key={type}
+                checked={state.libraryTypes.includes(type)}
+                onChange={() => toggleType(type)}
+              >
+                {type}
+              </CheckChip>
+            ))}
+          </div>
+        </fieldset>
+
+        <Field
+          id={fieldId("source")}
+          label="Dataset"
+          tag="Optional"
+          hint={
+            <>
+              A dataset key, such as <code>imls-pls</code>: only records
+              imported from it count. Leave it blank for every source.
+            </>
+          }
+          hintId="drive-source-hint"
+        >
+          <input
+            id={fieldId("source")}
+            type="text"
+            value={state.source}
+            onChange={(e) => update({ source: e.target.value })}
+            autoComplete="off"
+            spellCheck={false}
+            style={styleOf("source")}
+            aria-describedby={describedBy("source", "drive-source-hint")}
+          />
+          <FieldMessage field="source" message={errorOf("source")} />
+        </Field>
+
+        <Field
+          id={fieldId("completenessBelow")}
+          label="Only libraries below N% complete"
+          tag="Optional"
+          hint="Leave it blank to include every record."
+          hintId="drive-completeness-hint"
+        >
+          <span className="flex items-center gap-2">
+            <input
+              id={fieldId("completenessBelow")}
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={100}
+              value={state.completenessBelow}
+              onChange={(e) => update({ completenessBelow: e.target.value })}
+              style={{ ...styleOf("completenessBelow"), maxWidth: 140 }}
+              aria-describedby={describedBy(
+                "completenessBelow",
+                "drive-completeness-hint"
+              )}
+              aria-invalid={Boolean(errorOf("completenessBelow")) || undefined}
+            />
+            <span aria-hidden="true" style={{ color: T.ink.dim }}>
+              %
+            </span>
+          </span>
+          <FieldMessage
+            field="completenessBelow"
+            message={errorOf("completenessBelow")}
+          />
+        </Field>
+
+        <Field
+          id={fieldId("libraries")}
+          label="Or list the libraries"
+          tag="Optional"
+          hint={
+            <>
               Slugs or documentIds, one per line, up to{" "}
               {fmt(DRIVE_MAX_LIBRARIES)}. Links to library pages work too. A
               list replaces the places above.
               {listCount > 0 ? ` ${fmt(listCount)} listed.` : ""}
-            </span>
-            {unknownLibraries.length > 0 && !errorOf("libraries") ? (
-              <span className={hintClass} style={{ color: T.accent.danger }}>
-                Not found: {unknownLibraries.join(", ")}.
-              </span>
-            ) : null}
-            <FieldMessage field="libraries" message={errorOf("libraries")} />
-          </label>
-        </Step>
+            </>
+          }
+          hintId="drive-libraries-hint"
+        >
+          <textarea
+            id={fieldId("libraries")}
+            rows={5}
+            value={state.libraryList}
+            onChange={(e) => update({ libraryList: e.target.value })}
+            spellCheck={false}
+            style={{
+              ...styleOf("libraries"),
+              minHeight: 132,
+              resize: "vertical",
+              lineHeight: 1.6,
+            }}
+            aria-describedby={describedBy("libraries", "drive-libraries-hint")}
+            aria-invalid={Boolean(errorOf("libraries")) || undefined}
+          />
+          {unknownLibraries.length > 0 && !errorOf("libraries") ? (
+            <p
+              className="mt-2 mb-0 text-[14px]"
+              style={{ color: T.accent.danger }}
+            >
+              Not found: {unknownLibraries.join(", ")}.
+            </p>
+          ) : null}
+          <FieldMessage field="libraries" message={errorOf("libraries")} />
+        </Field>
+      </Step>
 
-        <LiveCounts
-          mode={mode}
-          focusKind={state.focusKind}
-          locked={locked}
-          pending={Boolean(key) && !current}
-          preview={key ? current : null}
-        />
+      <Step
+        n={3}
+        title="Where to look"
+        hint={
+          proposing
+            ? "Facts from a library’s own website are fine. Data copied from map services isn’t."
+            : "Facts from a library’s own website are fine to use. Data from map services, such as Google Maps, isn’t: their terms don’t allow copying it."
+        }
+      >
+        <Field id={fieldId("whereName")} label="Source name" tag="Optional">
+          <input
+            id={fieldId("whereName")}
+            type="text"
+            value={state.whereName}
+            onChange={(e) => update({ whereName: e.target.value })}
+            style={styleOf("whereName")}
+            aria-describedby={describedBy("whereName")}
+            aria-invalid={Boolean(errorOf("whereName")) || undefined}
+            placeholder="Each library’s own website"
+          />
+          <FieldMessage field="whereName" message={errorOf("whereName")} />
+        </Field>
+        <Field id={fieldId("whereUrl")} label="Link" tag="Optional">
+          <input
+            id={fieldId("whereUrl")}
+            type="url"
+            inputMode="url"
+            value={state.whereUrl}
+            onChange={(e) => update({ whereUrl: e.target.value })}
+            style={styleOf("whereUrl")}
+            aria-describedby={describedBy("whereUrl")}
+            aria-invalid={Boolean(errorOf("whereUrl")) || undefined}
+            placeholder="https://"
+          />
+          <FieldMessage field="whereUrl" message={errorOf("whereUrl")} />
+        </Field>
+        <Field
+          id={fieldId("whereLicence")}
+          label="Licence note"
+          tag="Optional"
+          hint="On what terms the answers can be used, as helpers will read it."
+          hintId="drive-licence-hint"
+        >
+          <textarea
+            id={fieldId("whereLicence")}
+            rows={2}
+            value={state.whereLicence}
+            onChange={(e) => update({ whereLicence: e.target.value })}
+            style={{
+              ...styleOf("whereLicence"),
+              resize: "vertical",
+              lineHeight: 1.6,
+            }}
+            aria-describedby={describedBy("whereLicence", "drive-licence-hint")}
+            aria-invalid={Boolean(errorOf("whereLicence")) || undefined}
+          />
+          <FieldMessage
+            field="whereLicence"
+            message={errorOf("whereLicence")}
+          />
+        </Field>
+      </Step>
 
-        <Step
-          n={3}
-          title="Where to look"
-          hint={
-            proposing
-              ? "Facts from a library’s own website are fine. Data copied from map services isn’t."
-              : "Facts from a library’s own website are fine to use. Data from map services, such as Google Maps, isn’t: their terms don’t allow copying it."
+      <Step
+        n={4}
+        title="Words"
+        hint="What helpers read on the card and the drive’s page."
+      >
+        <Field
+          id={fieldId("title")}
+          label="Title"
+          tag="Required"
+          hint="3 to 120 characters. Wrap words in *asterisks* to set them in italics, as on the card."
+          hintId="drive-title-hint"
+        >
+          <input
+            id={fieldId("title")}
+            type="text"
+            value={state.title}
+            maxLength={120}
+            onChange={(e) => update({ title: e.target.value })}
+            style={styleOf("title")}
+            aria-describedby={describedBy("title", "drive-title-hint")}
+            aria-invalid={Boolean(errorOf("title")) || undefined}
+          />
+          <FieldMessage field="title" message={errorOf("title")} />
+        </Field>
+        <Field
+          id={fieldId("summary")}
+          label="Summary"
+          tag="Required"
+          count={
+            <CharCount
+              id="drive-summary-count"
+              length={state.summary.length}
+              max={SUMMARY_MAX}
+            />
           }
         >
-          <label className={labelClass} style={{ color: T.ink.base }}>
-            Source name
-            <input
-              id={fieldId("whereName")}
-              type="text"
-              value={state.whereName}
-              onChange={(e) => update({ whereName: e.target.value })}
-              style={styleOf("whereName")}
-              aria-describedby={describedBy("whereName")}
-              aria-invalid={Boolean(errorOf("whereName")) || undefined}
-              placeholder="Each library’s own website"
-            />
-            <FieldMessage field="whereName" message={errorOf("whereName")} />
-          </label>
-          <label className={labelClass} style={{ color: T.ink.base }}>
-            Link
-            <input
-              id={fieldId("whereUrl")}
-              type="url"
-              inputMode="url"
-              value={state.whereUrl}
-              onChange={(e) => update({ whereUrl: e.target.value })}
-              style={styleOf("whereUrl")}
-              aria-describedby={describedBy("whereUrl")}
-              aria-invalid={Boolean(errorOf("whereUrl")) || undefined}
-              placeholder="https://"
-            />
-            <FieldMessage field="whereUrl" message={errorOf("whereUrl")} />
-          </label>
-          <label className={labelClass} style={{ color: T.ink.base }}>
-            Licence note
-            <textarea
-              id={fieldId("whereLicence")}
-              rows={2}
-              value={state.whereLicence}
-              onChange={(e) => update({ whereLicence: e.target.value })}
-              style={{ ...styleOf("whereLicence"), resize: "vertical" }}
-              aria-describedby={describedBy(
-                "whereLicence",
-                "drive-licence-hint"
-              )}
-              aria-invalid={Boolean(errorOf("whereLicence")) || undefined}
-            />
-            <span
-              id="drive-licence-hint"
-              className={hintClass}
-              style={{ color: T.ink.dim }}
-            >
-              On what terms the answers can be used, as helpers will read it.
-            </span>
-            <FieldMessage
-              field="whereLicence"
-              message={errorOf("whereLicence")}
-            />
-          </label>
-        </Step>
-
-        <Step
-          n={4}
-          title="Words"
-          hint="What helpers read on the card and the drive’s page."
+          <textarea
+            id={fieldId("summary")}
+            rows={3}
+            value={state.summary}
+            onChange={(e) => update({ summary: e.target.value })}
+            style={{
+              ...styleOf("summary"),
+              resize: "vertical",
+              lineHeight: 1.6,
+            }}
+            aria-describedby={describedBy("summary", "drive-summary-count")}
+            aria-invalid={Boolean(errorOf("summary")) || undefined}
+          />
+          <FieldMessage field="summary" message={errorOf("summary")} />
+        </Field>
+        <div
+          id={fieldId("steps")}
+          tabIndex={-1}
+          role="group"
+          aria-labelledby="drive-steps-label"
+          aria-describedby={describedBy("steps", "drive-steps-hint")}
+          className="flex flex-col"
         >
-          <label className={labelClass} style={{ color: T.ink.base }}>
-            Title
-            <input
-              id={fieldId("title")}
-              type="text"
-              value={state.title}
-              maxLength={120}
-              onChange={(e) => update({ title: e.target.value })}
-              style={styleOf("title")}
-              aria-describedby={describedBy("title", "drive-title-hint")}
-              aria-invalid={Boolean(errorOf("title")) || undefined}
-            />
-            <span
-              id="drive-title-hint"
-              className={hintClass}
-              style={{ color: T.ink.dim }}
-            >
-              3 to 120 characters. Wrap words in *asterisks* to set them in
-              italics, as on the card.
-            </span>
-            <FieldMessage field="title" message={errorOf("title")} />
-          </label>
-          <label className={labelClass} style={{ color: T.ink.base }}>
-            Summary
-            <textarea
-              id={fieldId("summary")}
-              rows={3}
-              value={state.summary}
-              onChange={(e) => update({ summary: e.target.value })}
-              style={{ ...styleOf("summary"), resize: "vertical" }}
-              aria-describedby={describedBy("summary", "drive-summary-count")}
-              aria-invalid={Boolean(errorOf("summary")) || undefined}
-            />
-            <span
-              id="drive-summary-count"
-              className={hintClass}
-              style={{
-                color:
-                  state.summary.length > SUMMARY_MAX
-                    ? T.accent.danger
-                    : T.ink.dim,
-              }}
-            >
-              {state.summary.length} of {SUMMARY_MAX} characters
-            </span>
-            <FieldMessage field="summary" message={errorOf("summary")} />
-          </label>
-          <div
-            id={fieldId("steps")}
-            tabIndex={-1}
-            role="group"
-            aria-labelledby="drive-steps-label"
-            aria-describedby={describedBy("steps")}
-            className="flex flex-col gap-2.5"
+          <p
+            id="drive-steps-label"
+            className={legendClass}
+            style={{ color: T.ink.base }}
           >
-            <p
-              id="drive-steps-label"
-              className="m-0 text-[15px] font-semibold"
-              style={{ color: T.ink.base }}
-            >
-              How to help{" "}
-              <span className="font-normal" style={{ color: T.ink.dim }}>
-                One to five short steps
-              </span>
-            </p>
-            <ol className="m-0 flex list-none flex-col gap-2.5 p-0">
-              {state.steps.map((step, i) => (
-                // Steps have no ids of their own; the order is the identity.
-                // eslint-disable-next-line react/no-array-index-key
-                <li key={i} className="flex items-center gap-2">
-                  <span
-                    aria-hidden="true"
-                    className="flex size-7 shrink-0 items-center justify-center rounded-full text-[14px] font-bold"
-                    style={{
-                      background: T.accent.chip,
-                      color: T.accent.primaryHover,
-                    }}
-                  >
-                    {i + 1}
-                  </span>
-                  <input
-                    type="text"
-                    aria-label={`Step ${i + 1}`}
-                    value={step}
-                    maxLength={200}
-                    onChange={(e) => setStep(i, e.target.value)}
-                    style={styleOf("steps")}
-                  />
-                  {state.steps.length > 1 ? (
-                    <button
-                      type="button"
-                      aria-label={`Remove step ${i + 1}`}
-                      onClick={() =>
-                        update({ steps: state.steps.filter((_, j) => j !== i) })
-                      }
-                      className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-(--t-bg-muted)"
-                      style={{ color: T.ink.dim }}
-                    >
-                      <Icon aria-hidden="true" icon="mdi:close" width={18} />
-                    </button>
-                  ) : null}
-                </li>
-              ))}
-            </ol>
-            <div>
-              <button
-                type="button"
-                className={SECONDARY}
-                style={{ color: T.ink.base }}
-                disabled={state.steps.length >= STEPS_MAX}
-                onClick={() => update({ steps: [...state.steps, ""] })}
-              >
-                <Icon aria-hidden="true" icon="mdi:plus" width={18} />
-                Add a step
-              </button>
-            </div>
-            <FieldMessage field="steps" message={errorOf("steps")} />
-          </div>
-        </Step>
-
-        <Step
-          n={5}
-          title="Dates and goal"
-          hint="It opens at the start of its first day and closes at the end of its last (UTC), at most 90 days later."
-          disabled={locked}
-        >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className={labelClass} style={{ color: T.ink.base }}>
-              Opens on
-              <input
-                id={fieldId("startsOn")}
-                type="date"
-                value={state.startsOn}
-                onChange={(e) => update({ startsOn: e.target.value })}
-                style={styleOf("startsOn")}
-                aria-describedby={describedBy(
-                  "startsOn",
-                  proposing ? "drive-starts-hint" : undefined
-                )}
-                aria-invalid={Boolean(errorOf("startsOn")) || undefined}
-              />
-              {proposing ? (
+            How to help<Tag>Required</Tag>
+          </p>
+          <p
+            id="drive-steps-hint"
+            className={hintClass}
+            style={{ color: T.ink.dim }}
+          >
+            One to five short steps.
+          </p>
+          <ol className="m-0 flex list-none flex-col gap-2 p-0">
+            {state.steps.map((step, i) => (
+              // Steps have no ids of their own; the order is the identity.
+              // eslint-disable-next-line react/no-array-index-key
+              <li key={i} className="flex items-center gap-2">
                 <span
-                  id="drive-starts-hint"
-                  className={hintClass}
-                  style={{ color: T.ink.dim }}
+                  aria-hidden="true"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-full text-[14px] font-bold"
+                  style={{
+                    background: T.accent.chip,
+                    color: T.accent.primaryHover,
+                  }}
                 >
-                  Start a week or more from now: a Moderator reviews it first.
+                  {i + 1}
                 </span>
-              ) : null}
-              <FieldMessage field="startsOn" message={errorOf("startsOn")} />
-            </label>
-            <label className={labelClass} style={{ color: T.ink.base }}>
-              Ends on
-              <input
-                id={fieldId("endsOn")}
-                type="date"
-                value={state.endsOn}
-                onChange={(e) => update({ endsOn: e.target.value })}
-                style={styleOf("endsOn")}
-                aria-describedby={describedBy("endsOn")}
-                aria-invalid={Boolean(errorOf("endsOn")) || undefined}
-              />
-              <FieldMessage field="endsOn" message={errorOf("endsOn")} />
-            </label>
-            <label className={labelClass} style={{ color: T.ink.base }}>
-              Goal
-              <span className="flex items-center gap-2">
                 <input
-                  id={fieldId("goalPercent")}
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  max={100}
-                  value={state.goalPercent}
-                  onChange={(e) => update({ goalPercent: e.target.value })}
-                  style={{ ...styleOf("goalPercent"), maxWidth: 140 }}
-                  aria-describedby={describedBy(
-                    "goalPercent",
-                    "drive-goal-hint"
-                  )}
-                  aria-invalid={Boolean(errorOf("goalPercent")) || undefined}
+                  type="text"
+                  aria-label={`Step ${i + 1}`}
+                  value={step}
+                  maxLength={200}
+                  onChange={(e) => setStep(i, e.target.value)}
+                  style={{ ...styleOf("steps"), minWidth: 0 }}
                 />
-                <span aria-hidden="true" style={{ color: T.ink.dim }}>
-                  %
-                </span>
-              </span>
-              <span
-                id="drive-goal-hint"
-                className={hintClass}
-                style={{ color: T.ink.dim }}
-              >
-                The drive closes early once this share is done.
-              </span>
-              <FieldMessage
-                field="goalPercent"
-                message={errorOf("goalPercent")}
-              />
-            </label>
-            <fieldset
-              id={fieldId("unit")}
-              tabIndex={-1}
-              className="m-0 flex flex-col gap-2 border-0 p-0"
-            >
-              <legend
-                className="mb-1.5 p-0 text-[15px] font-semibold"
-                style={{ color: T.ink.base }}
-              >
-                Counted as
-              </legend>
-              <div className="flex flex-wrap gap-2">
-                {UNITS.map((u) => (
-                  <label
-                    key={u.value}
-                    className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border px-3.5 text-[15px] font-medium has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-(--t-accent-primary) has-[:focus-visible]:outline-solid"
-                    style={{
-                      background:
-                        state.unit === u.value ? T.accent.chip : T.bg.deep,
-                      borderColor:
-                        state.unit === u.value ? T.accent.primary : T.border.hi,
-                      color:
-                        state.unit === u.value
-                          ? T.accent.primaryHover
-                          : T.ink.base,
-                    }}
+                {state.steps.length > 1 ? (
+                  <button
+                    type="button"
+                    aria-label={`Remove step ${i + 1}`}
+                    onClick={() =>
+                      update({ steps: state.steps.filter((_, j) => j !== i) })
+                    }
+                    className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-(--t-bg-muted)"
+                    style={{ color: T.ink.dim }}
                   >
-                    <input
-                      type="radio"
-                      name="drive-unit"
-                      value={u.value}
-                      checked={state.unit === u.value}
-                      onChange={() => update({ unit: u.value })}
-                      className="sr-only"
-                    />
-                    <Icon
-                      aria-hidden="true"
-                      icon={
-                        state.unit === u.value
-                          ? "mdi:radiobox-marked"
-                          : "mdi:radiobox-blank"
-                      }
-                      width={16}
-                    />
-                    {u.label}
-                  </label>
-                ))}
-              </div>
-              <p className={hintClass} style={{ color: T.ink.dim }}>
-                The noun on its progress: “142 of 251 branches”.
-              </p>
-              <FieldMessage field="unit" message={errorOf("unit")} />
-            </fieldset>
+                    <Icon aria-hidden="true" icon="mdi:close" width={18} />
+                  </button>
+                ) : null}
+              </li>
+            ))}
+          </ol>
+          <div className="mt-3">
+            <button
+              type="button"
+              className={SECONDARY}
+              style={secondaryStyle}
+              disabled={state.steps.length >= STEPS_MAX}
+              onClick={() => update({ steps: [...state.steps, ""] })}
+            >
+              <Icon aria-hidden="true" icon="mdi:plus" width={16} />
+              Add a step
+            </button>
           </div>
-        </Step>
+          <FieldMessage field="steps" message={errorOf("steps")} />
+        </div>
+      </Step>
 
-        {proposing ? (
-          <Step
-            n={6}
-            title="Anything the Moderator should know?"
-            hint="Optional. Why this gap matters, or anything about the source."
-          >
-            <label className={labelClass} style={{ color: T.ink.base }}>
-              Note for the Moderator
-              <textarea
-                id="drive-note"
-                rows={4}
-                value={note}
-                maxLength={PROPOSAL_NOTE_MAX}
-                onChange={(e) => updateNote(e.target.value)}
-                style={{ ...input, resize: "vertical" }}
-                aria-describedby="drive-note-count"
-              />
-              <span
-                id="drive-note-count"
-                className={hintClass}
-                style={{ color: T.ink.dim }}
+      <Step
+        n={5}
+        title="Dates and goal"
+        hint="It opens at the start of its first day and closes at the end of its last (UTC), at most 90 days later."
+        disabled={locked}
+      >
+        <Field
+          id={fieldId("startsOn")}
+          label="Opens on"
+          tag="Required"
+          hint={
+            proposing
+              ? "Start a week or more from now: a Moderator reviews it first."
+              : undefined
+          }
+          hintId="drive-starts-hint"
+        >
+          <input
+            id={fieldId("startsOn")}
+            type="date"
+            value={state.startsOn}
+            onChange={(e) => update({ startsOn: e.target.value })}
+            style={{ ...styleOf("startsOn"), maxWidth: 240 }}
+            aria-describedby={describedBy(
+              "startsOn",
+              proposing ? "drive-starts-hint" : undefined
+            )}
+            aria-invalid={Boolean(errorOf("startsOn")) || undefined}
+          />
+          <FieldMessage field="startsOn" message={errorOf("startsOn")} />
+        </Field>
+        <Field id={fieldId("endsOn")} label="Ends on" tag="Required">
+          <input
+            id={fieldId("endsOn")}
+            type="date"
+            value={state.endsOn}
+            onChange={(e) => update({ endsOn: e.target.value })}
+            style={{ ...styleOf("endsOn"), maxWidth: 240 }}
+            aria-describedby={describedBy("endsOn")}
+            aria-invalid={Boolean(errorOf("endsOn")) || undefined}
+          />
+          <FieldMessage field="endsOn" message={errorOf("endsOn")} />
+        </Field>
+        <Field
+          id={fieldId("goalPercent")}
+          label="Goal"
+          tag="Required"
+          hint="The drive closes early once this share is done."
+          hintId="drive-goal-hint"
+        >
+          <span className="flex items-center gap-2">
+            <input
+              id={fieldId("goalPercent")}
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={100}
+              value={state.goalPercent}
+              onChange={(e) => update({ goalPercent: e.target.value })}
+              style={{ ...styleOf("goalPercent"), maxWidth: 140 }}
+              aria-describedby={describedBy("goalPercent", "drive-goal-hint")}
+              aria-invalid={Boolean(errorOf("goalPercent")) || undefined}
+            />
+            <span aria-hidden="true" style={{ color: T.ink.dim }}>
+              %
+            </span>
+          </span>
+          <FieldMessage field="goalPercent" message={errorOf("goalPercent")} />
+        </Field>
+        <fieldset
+          id={fieldId("unit")}
+          tabIndex={-1}
+          className="m-0 min-w-0 border-0 p-0"
+        >
+          <legend className={legendClass} style={{ color: T.ink.base }}>
+            Counted as<Tag>Required</Tag>
+          </legend>
+          <p className={hintClass} style={{ color: T.ink.dim }}>
+            The noun on its progress: “142 of 251 branches”.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {UNITS.map((u) => (
+              <label
+                key={u.value}
+                className={CHIP}
+                style={{
+                  background:
+                    state.unit === u.value ? T.accent.chip : T.bg.deep,
+                  borderColor:
+                    state.unit === u.value ? T.accent.primary : T.border.hi,
+                  color:
+                    state.unit === u.value ? T.accent.primaryHover : T.ink.base,
+                }}
               >
-                {note.length} of {fmt(PROPOSAL_NOTE_MAX)} characters
-              </span>
-            </label>
-          </Step>
-        ) : null}
+                <input
+                  type="radio"
+                  name="drive-unit"
+                  value={u.value}
+                  checked={state.unit === u.value}
+                  onChange={() => update({ unit: u.value })}
+                  className="sr-only"
+                />
+                <Icon
+                  aria-hidden="true"
+                  icon={
+                    state.unit === u.value
+                      ? "mdi:radiobox-marked"
+                      : "mdi:radiobox-blank"
+                  }
+                  width={15}
+                />
+                {u.label}
+              </label>
+            ))}
+          </div>
+          <FieldMessage field="unit" message={errorOf("unit")} />
+        </fieldset>
+      </Step>
 
+      {proposing ? (
+        <Step
+          n={6}
+          title="Anything the Moderator should know?"
+          hint="Optional. Why this gap matters, or anything about the source."
+        >
+          <Field
+            id="drive-note"
+            label="Note for the Moderator"
+            tag="Optional"
+            count={
+              <CharCount
+                id="drive-note-count"
+                length={note.length}
+                max={PROPOSAL_NOTE_MAX}
+              />
+            }
+          >
+            <textarea
+              id="drive-note"
+              rows={4}
+              value={note}
+              maxLength={PROPOSAL_NOTE_MAX}
+              onChange={(e) => updateNote(e.target.value)}
+              style={{ ...input, resize: "vertical", lineHeight: 1.6 }}
+              aria-describedby="drive-note-count"
+            />
+          </Field>
+        </Step>
+      ) : null}
+
+      <div className={`${card} flex flex-col gap-5`} style={cardStyle}>
         <ErrorSummary
           errors={shownErrors}
           summaryRef={summaryRef}
@@ -1703,10 +1983,7 @@ export function DriveBuilder({
           </div>
         ) : null}
 
-        <div
-          className="flex flex-wrap items-center gap-x-4 gap-y-3 border-t pt-5"
-          style={{ borderColor: T.border.divider }}
-        >
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <button
             type="submit"
             className={PRIMARY}
@@ -1744,8 +2021,40 @@ export function DriveBuilder({
             </span>
           )}
         </div>
-      </form>
-    </>
+      </div>
+    </form>
+  )
+
+  return (
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)] lg:gap-6">
+      <div className="flex min-w-0 flex-col gap-5">
+        {announcement}
+        {sent ? <ProposalSent /> : form}
+      </div>
+
+      <aside
+        aria-label="About this drive"
+        className="flex flex-col gap-4 self-start lg:sticky lg:top-24"
+      >
+        {proposing ? (
+          standing ? (
+            <StandingCard standing={standing} />
+          ) : null
+        ) : (
+          <BoardCard editing={Boolean(drive)} />
+        )}
+        {sent ? null : (
+          <LiveCounts
+            mode={mode}
+            focusKind={state.focusKind}
+            locked={locked}
+            pending={Boolean(key) && !current}
+            preview={key ? current : null}
+          />
+        )}
+        <NextSteps proposing={proposing} status={drive?.status ?? null} />
+      </aside>
+    </div>
   )
 }
 
