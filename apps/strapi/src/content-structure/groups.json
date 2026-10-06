@@ -20,6 +20,12 @@
         },
         {
           "parent": null,
+          "name": "Community",
+          "id": "grp_c0mmun1tyd71v35000000001",
+          "children": [{ "uid": "api::drive.drive", "type": "contentType" }]
+        },
+        {
+          "parent": null,
           "name": "Events",
           "id": "grp_m2n3o4p5q6r7s8t9u0v1w2x3",
           "children": [

@@ -1,0 +1,14 @@
+{
+  "collectionName": "components_drive_steps",
+  "info": {
+    "displayName": "Step",
+    "description": "One step in a Drive's \"How to help\" list."
+  },
+  "options": {},
+  "attributes": {
+    "text": {
+      "type": "string",
+      "required": true
+    }
+  }
+}

@@ -620,6 +620,7 @@ describe("library index serves drives", () => {
       "verified_contact_ts",
       "needs",
       "area_slug",
+      "documentId",
     ])
       expect(filterableAttributes).toContain(key)
     expect(sortableAttributes).toContain("id")

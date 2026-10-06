@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_drive_sources",
+  "info": {
+    "displayName": "Source",
+    "description": "Where to look: an optional named, linked, licensed source a Drive points contributors at."
+  },
+  "options": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string"
+    },
+    "licenceNote": {
+      "type": "text"
+    }
+  }
+}

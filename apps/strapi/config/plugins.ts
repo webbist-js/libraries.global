@@ -181,6 +181,7 @@ export default ({ env }) => {
               "locale",
               "completeness",
               "id",
+              "documentId",
               "source",
               ...LIBRARY_SEARCH_FIELDS,
             ],
