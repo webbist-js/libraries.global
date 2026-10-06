@@ -14,4 +14,17 @@ Sentry.init({
 
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
+
+  // Never send request bodies, cookies or headers: bodies can hold event
+  // feed credentials and personal details. Mirrors Strapi's sentry-scrub.
+  beforeSend(event) {
+    if (event.request) {
+      delete event.request.data
+      delete event.request.cookies
+      const ua = event.request.headers?.["user-agent"]
+      event.request.headers = ua ? { "user-agent": ua } : {}
+    }
+
+    return event
+  },
 })
