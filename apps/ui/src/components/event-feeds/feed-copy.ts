@@ -1,4 +1,13 @@
+import { FEED_TEST_CODES, type FeedTestCode } from "@repo/shared-data"
+
 import type { FeedView } from "./types"
+
+/** Narrows an error's `result` string to a known test code, if it is one. */
+export function isFeedTestCode(v: unknown): v is FeedTestCode {
+  return (
+    typeof v === "string" && (FEED_TEST_CODES as readonly string[]).includes(v)
+  )
+}
 
 export function feedStatusOf(feed: FeedView) {
   if (feed.status === "pending" || feed.status === "draft") {

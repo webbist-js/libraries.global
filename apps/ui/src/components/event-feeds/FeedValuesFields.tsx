@@ -1,0 +1,105 @@
+"use client"
+
+import { EVENT_PROVIDERS, type EventProviderKey } from "@repo/shared-data"
+import { useId, useState } from "react"
+
+import {
+  fieldHintStyle,
+  fieldInputStyle,
+  fieldLabelStyle,
+} from "@/app/[locale]/contribute/index/_components/wizard.constants"
+import { T } from "@/lib/design-tokens"
+
+/** One provider's fields from the registry. Secrets are write-only inputs. */
+export function FeedValuesFields({
+  provider,
+  values,
+  onChange,
+  currentHints,
+  errorField,
+}: {
+  readonly provider: EventProviderKey
+  readonly values: Record<string, string>
+  readonly onChange: (next: Record<string, string>) => void
+  readonly currentHints?: Record<string, string>
+  readonly errorField?: string
+}) {
+  const id = useId()
+  const [shown, setShown] = useState<Record<string, boolean>>({})
+
+  return (
+    <div className="flex flex-col gap-5">
+      {EVENT_PROVIDERS[provider].fields.map((f) => {
+        const inputId = `${id}-${f.key}`
+        const hintId = `${inputId}-hint`
+
+        return (
+          <div key={f.key} className="flex flex-col gap-1.5">
+            <label htmlFor={inputId} style={fieldLabelStyle}>
+              {f.label}
+              {f.required ? null : (
+                <span style={{ color: T.ink.dim, fontWeight: 400 }}>
+                  {" "}
+                  (optional)
+                </span>
+              )}
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                id={inputId}
+                name={f.key}
+                type={
+                  f.secret && !shown[f.key]
+                    ? "password"
+                    : f.kind === "url"
+                      ? "url"
+                      : "text"
+                }
+                autoComplete={f.secret ? "new-password" : "off"}
+                spellCheck={false}
+                data-sentry-mask
+                aria-describedby={
+                  f.hint || currentHints?.[f.key] ? hintId : undefined
+                }
+                aria-invalid={errorField === f.key || undefined}
+                placeholder={
+                  currentHints?.[f.key]
+                    ? `Now: ${currentHints[f.key]}`
+                    : undefined
+                }
+                value={values[f.key] ?? ""}
+                maxLength={f.maxLength}
+                onChange={(e) =>
+                  onChange({ ...values, [f.key]: e.target.value })
+                }
+                style={{ ...fieldInputStyle, flex: 1 }}
+              />
+              {f.secret ? (
+                <button
+                  type="button"
+                  className="rounded-full border px-3 py-2 text-[13px] font-semibold"
+                  style={{
+                    borderColor: T.border.hi,
+                    color: T.ink.base,
+                    background: T.bg.deep,
+                  }}
+                  aria-pressed={!!shown[f.key]}
+                  onClick={() =>
+                    setShown((s) => ({ ...s, [f.key]: !s[f.key] }))
+                  }
+                >
+                  {shown[f.key] ? "Hide" : "Show"}
+                </button>
+              ) : null}
+            </div>
+            {f.hint ? (
+              <p id={hintId} style={fieldHintStyle}>
+                {f.hint}
+              </p>
+            ) : null}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
