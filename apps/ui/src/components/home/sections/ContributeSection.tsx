@@ -20,7 +20,9 @@ import type {
   SectionIntro,
   Step,
 } from "@/components/home/homepage.types"
+import { HomeDriveCard } from "@/components/home/sections/HomeDriveCard"
 import { T } from "@/lib/design-tokens"
+import type { DriveView } from "@/lib/drives/drive-view"
 import type { IncompleteLibrary } from "@/lib/strapi-api/content/server"
 
 type TaskCopy = {
@@ -127,11 +129,14 @@ export function ContributeSection({
   steps,
   tasksIntro,
   tasks,
+  featuredDrive,
 }: {
   readonly band: CtaBand
   readonly steps: readonly Step[]
   readonly tasksIntro: SectionIntro
   readonly tasks: readonly ContributionTask[]
+  /** A pinned or featured open drive; replaces the task rows when set. */
+  readonly featuredDrive?: DriveView | null
 }) {
   return (
     <section
@@ -217,7 +222,15 @@ export function ContributeSection({
           >
             {tasksIntro.title}
           </h3>
-          {tasks.length > 0 ? (
+          {featuredDrive ? (
+            <GlobalLink
+              href="/community"
+              className="text-[15px] font-semibold underline underline-offset-[3px]"
+              style={{ color: T.accent.primary }}
+            >
+              All drives
+            </GlobalLink>
+          ) : tasks.length > 0 ? (
             <GlobalLink
               href="/contribute"
               className="text-[15px] font-semibold underline underline-offset-[3px]"
@@ -228,96 +241,100 @@ export function ContributeSection({
           ) : null}
         </div>
 
-        <ul className="m-0 list-none p-0">
-          {tasks.map((task) => {
-            const { label, action, Icon, tint } = TASK_COPY[task.missingKey]!
+        {featuredDrive ? (
+          <HomeDriveCard view={featuredDrive} />
+        ) : (
+          <ul className="m-0 list-none p-0">
+            {tasks.map((task) => {
+              const { label, action, Icon, tint } = TASK_COPY[task.missingKey]!
 
-            return (
-              <li
-                key={task.documentId}
-                className="border-b"
-                style={{ borderColor: T.border.line }}
-              >
-                <GlobalLink href={taskHref(task)} className={ROW}>
+              return (
+                <li
+                  key={task.documentId}
+                  className="border-b"
+                  style={{ borderColor: T.border.line }}
+                >
+                  <GlobalLink href={taskHref(task)} className={ROW}>
+                    <span
+                      aria-hidden="true"
+                      className="flex size-12 shrink-0 items-center justify-center rounded-[12px]"
+                      style={{ background: tint.bg, color: tint.fg }}
+                    >
+                      <Icon className="size-5" strokeWidth={1.8} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className="block text-[14px] font-semibold"
+                        style={{ color: tint.fg }}
+                      >
+                        {label}
+                      </span>
+                      <span
+                        className="block truncate text-[22px] leading-tight transition-colors group-hover:text-(--t-accent-primary)"
+                        style={{
+                          fontFamily: T.font.serif,
+                          fontWeight: 500,
+                          color: T.ink.base,
+                        }}
+                      >
+                        {task.name}
+                      </span>
+                      {task.place ? (
+                        <span
+                          className="block truncate text-[14px]"
+                          style={{ color: T.ink.dim }}
+                        >
+                          {task.place}
+                        </span>
+                      ) : null}
+                    </span>
+                    <span
+                      className="hidden shrink-0 text-[15px] font-semibold sm:inline"
+                      style={{ color: T.accent.primary }}
+                    >
+                      {action} <span aria-hidden="true">→</span>
+                    </span>
+                  </GlobalLink>
+                </li>
+              )
+            })}
+
+            {tasks.length === 0 ? (
+              <li className="border-b" style={{ borderColor: T.border.line }}>
+                <GlobalLink href="/contribute/index/new" className={ROW}>
                   <span
                     aria-hidden="true"
                     className="flex size-12 shrink-0 items-center justify-center rounded-[12px]"
-                    style={{ background: tint.bg, color: tint.fg }}
+                    style={{
+                      background: T.accent.chip,
+                      color: T.accent.primary,
+                    }}
                   >
-                    <Icon className="size-5" strokeWidth={1.8} />
+                    <Plus className="size-5" strokeWidth={2} />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span
-                      className="block text-[14px] font-semibold"
-                      style={{ color: tint.fg }}
-                    >
-                      {label}
-                    </span>
-                    <span
-                      className="block truncate text-[22px] leading-tight transition-colors group-hover:text-(--t-accent-primary)"
+                      className="block text-[22px] leading-tight"
                       style={{
                         fontFamily: T.font.serif,
                         fontWeight: 500,
                         color: T.ink.base,
                       }}
                     >
-                      {task.name}
+                      Your local library missing?
                     </span>
-                    {task.place ? (
-                      <span
-                        className="block truncate text-[14px]"
-                        style={{ color: T.ink.dim }}
-                      >
-                        {task.place}
-                      </span>
-                    ) : null}
-                  </span>
-                  <span
-                    className="hidden shrink-0 text-[15px] font-semibold sm:inline"
-                    style={{ color: T.accent.primary }}
-                  >
-                    {action} <span aria-hidden="true">→</span>
+                    <span
+                      className="block text-[14px]"
+                      style={{ color: T.ink.dim }}
+                    >
+                      Only a name, library type and one source are required.
+                    </span>
                   </span>
                 </GlobalLink>
               </li>
-            )
-          })}
-
-          {tasks.length === 0 ? (
-            <li className="border-b" style={{ borderColor: T.border.line }}>
-              <GlobalLink href="/contribute/index/new" className={ROW}>
-                <span
-                  aria-hidden="true"
-                  className="flex size-12 shrink-0 items-center justify-center rounded-[12px]"
-                  style={{
-                    background: T.accent.chip,
-                    color: T.accent.primary,
-                  }}
-                >
-                  <Plus className="size-5" strokeWidth={2} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span
-                    className="block text-[22px] leading-tight"
-                    style={{
-                      fontFamily: T.font.serif,
-                      fontWeight: 500,
-                      color: T.ink.base,
-                    }}
-                  >
-                    Your local library missing?
-                  </span>
-                  <span
-                    className="block text-[14px]"
-                    style={{ color: T.ink.dim }}
-                  >
-                    Only a name, library type and one source are required.
-                  </span>
-                </span>
-              </GlobalLink>
-            </li>
-          ) : null}
-        </ul>
+            ) : null}
+          </ul>
+        )}
 
         <p
           className="m-0 mt-4 flex items-center gap-2 text-[15px]"

@@ -10,6 +10,9 @@ import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
 import { fetchPublicSuggestions } from "@/lib/community/suggestions-server"
 import { KOFI_URL } from "@/lib/constants"
 import { T } from "@/lib/design-tokens"
+import type { DriveView } from "@/lib/drives/drive-view"
+import { loadDriveViews } from "@/lib/drives/drive-view-server"
+import { fetchDrives } from "@/lib/drives/drives-server"
 import { buildMetadata } from "@/lib/seo/metadata"
 import {
   fetchHomepageContinents,
@@ -17,6 +20,7 @@ import {
 } from "@/lib/strapi-api/content/server"
 
 import { ContributeSectionHeader } from "./_components/ContributeSectionHeader"
+import { DrivesYouCanHelpWith } from "./_components/hub/DrivesYouCanHelpWith"
 import { HowReviewWorks } from "./_components/hub/HowReviewWorks"
 import { HubActionChooser } from "./_components/hub/HubActionChooser"
 import {
@@ -93,6 +97,23 @@ async function fetchIncompleteRecords(): Promise<IncompleteRecord[]> {
     }))
     .filter((record) => record.missing.length > 0)
     .slice(0, 4)
+}
+
+const MAX_HUB_DRIVES = 3
+
+/**
+ * The hub's drives (spec §9): pinned drives, featured first, or, with none
+ * pinned, the first three open drives. At most three are ever counted.
+ */
+async function fetchHubDriveViews(locale: string): Promise<DriveView[]> {
+  const drives = await fetchDrives("open", locale)
+  const pinned = drives.filter((d) => d.pinned)
+  const chosen =
+    pinned.length > 0
+      ? [...pinned].sort((a, b) => Number(b.featured) - Number(a.featured))
+      : drives
+
+  return loadDriveViews(chosen.slice(0, MAX_HUB_DRIVES), locale)
 }
 
 /** "loddon-library" → "Loddon library", for rows with nothing better. */
@@ -200,6 +221,7 @@ export default async function ContributePage({
     continentsResponse,
     submissions,
     suggestions,
+    driveViews,
   ] = await Promise.all([
     fetchLibraryCount(),
     fetchIncompleteRecords(),
@@ -208,6 +230,7 @@ export default async function ContributePage({
       ? fetchMySubmissions(session.user)
       : Promise.resolve([] as HubSubmission[]),
     fetchPublicSuggestions(),
+    fetchHubDriveViews(locale),
   ])
   // From the session (buildSessionAccess): `baUserId` is private, so the
   // public REST filter on it can't find the profile.
@@ -247,6 +270,27 @@ export default async function ContributePage({
 
       {/* What would you like to do? */}
       <section className="mx-auto w-full max-w-[1360px] px-4 pt-12 sm:px-8">
+        {caps.set.has("staff.area") ? (
+          <div
+            className="mb-8 rounded-3xl border p-6"
+            style={{ background: T.bg.deep, borderColor: T.border.line }}
+          >
+            <h2 className="text-2xl" style={{ fontFamily: T.font.serif }}>
+              Look after your library
+            </h2>
+            <p style={{ color: T.ink.dim }}>
+              Update its record, publish notices and review community
+              suggestions.
+            </p>
+            <GlobalLink
+              className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
+              href="/contribute/staff"
+              style={{ color: T.accent.primary }}
+            >
+              Open Staff area →
+            </GlobalLink>
+          </div>
+        ) : null}
         <h2
           className="m-0"
           style={{
@@ -269,7 +313,9 @@ export default async function ContributePage({
         />
       </section>
 
-      {incompleteRecords.length > 0 ? (
+      {driveViews.length > 0 ? (
+        <DrivesYouCanHelpWith views={driveViews} />
+      ) : incompleteRecords.length > 0 ? (
         <RecordsThatNeedYou
           records={incompleteRecords}
           continents={continents}

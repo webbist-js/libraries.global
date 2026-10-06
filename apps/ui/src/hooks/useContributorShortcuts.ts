@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useSyncExternalStore } from "react"
 
 import type { ClaimedLibrary } from "@/app/api/profile/me/affiliations/route"
+import { staffLibrariesOf } from "@/lib/access-server"
 import { authClient } from "@/lib/auth-client"
 import {
   buildContributorShortcuts,
@@ -29,6 +30,7 @@ export function useContributorShortcuts(): ContributorShortcutGroup[] {
   const { data } = authClient.useSession()
   const capabilities = (data?.user?.capabilities ?? []) as string[]
   const canEditLibrary = capabilities.includes("submit.libraryEdit")
+  const signedIn = capabilities.includes("submit.correction")
 
   const { data: claimedLibraries = [] } = useQuery({
     queryKey: ["my-affiliations", data?.user?.id],
@@ -43,7 +45,30 @@ export function useContributorShortcuts(): ContributorShortcutGroup[] {
     },
   })
 
+  // The Contribute menu's "Drives" group: the homepage's one drive, or null
+  // on failure.
+  const { data: featuredDrive = null } = useQuery({
+    queryKey: ["featured-drive"],
+    enabled: signedIn,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const res = await fetch("/api/drives/featured")
+      if (!res.ok) return null
+      const json = (await res.json()) as {
+        data?: { title: string; slug: string } | null
+      }
+
+      return json.data ?? null
+    },
+  })
+
   if (!hydrated) return []
 
-  return buildContributorShortcuts({ capabilities, claimedLibraries })
+  const staffLibraries = staffLibrariesOf(data?.user)
+
+  return buildContributorShortcuts({
+    capabilities,
+    claimedLibraries: staffLibraries.length ? staffLibraries : claimedLibraries,
+    featuredDrive,
+  })
 }

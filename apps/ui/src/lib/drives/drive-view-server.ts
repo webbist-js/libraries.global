@@ -148,6 +148,27 @@ export async function openDriveCount(locale: string): Promise<number> {
   return (await fetchDrives("open", locale)).length
 }
 
+/**
+ * The homepage's one drive: the Featured Drive, else the first pinned drive,
+ * else null — `pickFeatured`'s rule, but over pinned or featured drives
+ * only. An unpinned open drive never reaches the homepage. Shares the
+ * Noticeboard's 60-second cache.
+ */
+export async function fetchFeaturedDriveView(
+  locale: string
+): Promise<DriveView | null> {
+  const drives = await fetchDrives("open", locale)
+  const candidates = drives.filter((d) => d.featured || d.pinned)
+  const drive =
+    candidates.find((d) => d.featured) ??
+    candidates.find((d) => d.pinned) ??
+    candidates[0] ??
+    null
+  if (!drive) return null
+
+  return (await loadDriveViews([drive], locale))[0] ?? null
+}
+
 /** The "How drives work" Knowledge article's path, or null when unpublished. */
 export async function howDrivesWorkHref(
   locale: string

@@ -4,6 +4,7 @@
  * person sees matches what the servers will let them do. UI only: every
  * route behind these links re-checks access.
  */
+import { driveHref } from "@/lib/drives/drive-view"
 
 export type ContributorShortcut = {
   label: string
@@ -15,12 +16,13 @@ export type ContributorShortcut = {
 }
 
 export type ContributorShortcutGroup = {
-  key: "libraries" | "knowledge"
+  key: "libraries" | "knowledge" | "drives"
   title: string
   items: ContributorShortcut[]
 }
 
 export type ShortcutLibrary = {
+  id?: string
   name: string | null
   slug: string | null
 }
@@ -32,13 +34,16 @@ function libraryGroup(
   claimedLibraries: readonly ShortcutLibrary[]
 ): ContributorShortcutGroup {
   const named = claimedLibraries.flatMap((lib) =>
-    lib.name && lib.slug ? [{ name: lib.name, slug: lib.slug }] : []
+    lib.name && lib.slug ? [{ name: lib.name, slug: lib.slug, id: lib.id }] : []
   )
   const items: ContributorShortcut[] = named
     .slice(0, MAX_NAMED_LIBRARIES)
     .map((lib) => ({
       label: `Edit ${lib.name}`,
-      href: `/contribute/index/${encodeURIComponent(lib.slug)}`,
+      href:
+        capabilities.includes("staff.area") && lib.id
+          ? `/contribute/staff/${encodeURIComponent(lib.id)}/edit`
+          : `/contribute/index/${encodeURIComponent(lib.slug)}`,
       icon: "mdi:pencil-outline",
     }))
 
@@ -56,6 +61,12 @@ function libraryGroup(
     })
   }
 
+  if (capabilities.includes("staff.area"))
+    items.unshift({
+      label: "Staff area",
+      href: "/contribute/staff",
+      icon: "mdi:account-group-outline",
+    })
   if (capabilities.includes("events.feed")) {
     items.push({
       label: "Event feeds",
@@ -120,12 +131,44 @@ function knowledgeGroup(
   }
 }
 
+/** Every signed-in user (spec §4.2): the featured drive, then "All drives". */
+function drivesGroup(
+  featuredDrive?: {
+    title: string
+    slug: string
+  } | null
+): ContributorShortcutGroup {
+  return {
+    key: "drives",
+    title: "Drives",
+    items: [
+      ...(featuredDrive
+        ? [
+            {
+              label: featuredDrive.title,
+              href: driveHref(featuredDrive.slug),
+              icon: "mdi:pin-outline",
+            },
+          ]
+        : []),
+      {
+        label: "All drives",
+        href: "/community",
+        icon: "mdi:bulletin-board",
+      },
+    ],
+  }
+}
+
 export function buildContributorShortcuts({
   capabilities,
   claimedLibraries,
+  featuredDrive,
 }: {
   capabilities: readonly string[]
   claimedLibraries: readonly ShortcutLibrary[]
+  /** The homepage's featured (or first pinned) open drive, if any. */
+  featuredDrive?: { title: string; slug: string } | null
 }): ContributorShortcutGroup[] {
   const groups: ContributorShortcutGroup[] = []
   // Library editors: anyone holding a claim (spec D-C2).
@@ -133,6 +176,8 @@ export function buildContributorShortcuts({
     groups.push(libraryGroup(capabilities, claimedLibraries))
   const knowledge = knowledgeGroup(capabilities)
   if (knowledge) groups.push(knowledge)
+  if (capabilities.includes("submit.correction"))
+    groups.push(drivesGroup(featuredDrive))
 
   return groups
 }

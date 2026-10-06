@@ -9,6 +9,7 @@ import HomepageSections from "@/components/home/HomepageSections"
 import { pickTasks } from "@/components/home/sections/ContributeSection"
 import StrapiStructuredData from "@/components/page-builder/components/seo-utilities/StrapiStructuredData"
 import { T } from "@/lib/design-tokens"
+import { fetchFeaturedDriveView } from "@/lib/drives/drive-view-server"
 import { loadJournalTopStories } from "@/lib/journal-landing"
 import { fetchGlobeMarkers, fetchUpcomingEvents } from "@/lib/meilisearch"
 import {
@@ -38,6 +39,7 @@ export function LibraryHomePage({
 
   const statsPromise = fetchHomepageStats()
   const incompletePromise = fetchIncompleteLibraries()
+  const featuredDrivePromise = fetchFeaturedDriveView(locale)
 
   // One marker per 1° cell with libraries, plus each featured library.
   const globeMarkersPromise = fetchGlobeMarkers(locale).catch(() => [])
@@ -50,6 +52,7 @@ export function LibraryHomePage({
   const events = use(eventsPromise)
   const stats = use(statsPromise)
   const tasks = pickTasks(use(incompletePromise), 3)
+  const featuredDrive = use(featuredDrivePromise)
   const content = resolveHomepageContent(homepage)
   const globeMarkers = use(globeMarkersPromise)
 
@@ -94,6 +97,7 @@ export function LibraryHomePage({
             content={content}
             stats={stats}
             tasks={tasks}
+            featuredDrive={featuredDrive}
             atlasImage={homepage?.atlasImage}
             featuredLibraries={homepage?.featuredLibraries}
             continents={continentSummaries}

@@ -19,6 +19,7 @@ import JourneysSection from "@/components/home/sections/JourneysSection"
 import KnowledgeSection from "@/components/home/sections/KnowledgeSection"
 import PlansSection from "@/components/home/sections/PlansSection"
 import StatsStrip from "@/components/home/sections/StatsStrip"
+import type { DriveView } from "@/lib/drives/drive-view"
 import type { JournalTopStories } from "@/lib/journal-landing"
 import type { EventSearchHit } from "@/lib/meilisearch"
 import type {
@@ -36,6 +37,7 @@ export function HomepageSections({
   content,
   stats,
   tasks,
+  featuredDrive,
   atlasImage,
   featuredLibraries,
   continents,
@@ -48,6 +50,8 @@ export function HomepageSections({
   readonly content: HomepageContent
   readonly stats: HomepageStats | null
   readonly tasks: readonly ContributionTask[]
+  /** A pinned or featured open drive; replaces the task rows when set. */
+  readonly featuredDrive?: DriveView | null
   readonly atlasImage?: MediaItem | null
   readonly featuredLibraries?: PopulatedFeaturedLibraryData[] | null
   readonly continents: HomepageContinentSummary[]
@@ -72,6 +76,7 @@ export function HomepageSections({
         steps={content.communitySteps}
         tasksIntro={content.tasksIntro}
         tasks={tasks}
+        featuredDrive={featuredDrive}
       />
       <FeaturedLibrariesSection
         libraries={featuredLibraries}
