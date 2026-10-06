@@ -21,6 +21,8 @@ type HashedSubmission = {
   /** The service-layer name; a stored row carries `contentLocale`. */
   locale?: string | null
   contentLocale?: string | null
+  /** The Drive this change is tagged to, if any. */
+  driveDocumentId?: string | null
 }
 
 function digest(doc: unknown): string {
@@ -32,6 +34,9 @@ function digest(doc: unknown): string {
 /**
  * SHA-256 over exactly what a moderator reviews, including the locale the
  * change is written to. Stored when a submission enters review.
+ *
+ * `driveDocumentId` is included only when it's set, so an untagged
+ * submission's hash is unchanged from before Drives existed.
  */
 export function payloadHash(s: HashedSubmission): string {
   return digest({
@@ -41,6 +46,7 @@ export function payloadHash(s: HashedSubmission): string {
     fields: s.fields ?? null,
     draftData: s.draftData ?? null,
     locale: s.contentLocale ?? s.locale ?? null,
+    ...(s.driveDocumentId ? { driveDocumentId: s.driveDocumentId } : {}),
   })
 }
 

@@ -231,6 +231,11 @@ export default ({ strapi }: { strapi: any }) => {
           return fail(ctx, 400, `q is limited to ${MAX_Q} characters`)
         search = q.q.trim() || undefined
       }
+      let drive: string | undefined
+      if (q.drive !== undefined && q.drive !== "") {
+        if (!isDocumentId(q.drive)) return fail(ctx, 400, "Invalid drive")
+        drive = q.drive
+      }
 
       ctx.body = await moderation().list(
         auth.caps,
@@ -243,6 +248,7 @@ export default ({ strapi }: { strapi: any }) => {
           q: search,
           page: clampInt(q.page, PAGE),
           pageSize: clampInt(q.pageSize, PAGE_SIZE),
+          drive,
         },
         { board: isBoard(auth) }
       )

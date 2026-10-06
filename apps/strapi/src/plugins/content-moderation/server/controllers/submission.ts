@@ -164,6 +164,7 @@ export default ({ strapi }: { strapi: any }) => ({
       asDraft,
       draftData,
       locale,
+      driveDocumentId,
     } = ctx.request.body as Record<string, unknown>
 
     if (!submissionType) {
@@ -216,6 +217,7 @@ export default ({ strapi }: { strapi: any }) => ({
         evidenceType,
         evidenceUrl,
         locale: contentLocale,
+        driveDocumentId,
       })
     if (!verdict.ok) {
       sendVerdict(ctx, verdict)
@@ -257,6 +259,7 @@ export default ({ strapi }: { strapi: any }) => ({
         asDraft: !!asDraft,
         // Already normalised above; the service normalises it again.
         locale: contentLocale,
+        ...(typeof driveDocumentId === "string" ? { driveDocumentId } : {}),
       })
 
     ctx.body = { data: submission }
@@ -570,6 +573,7 @@ export default ({ strapi }: { strapi: any }) => ({
             // retried finalize from counting the row against its own quota.
             excludeDocumentId: id,
             locale: next.locale,
+            driveDocumentId: existing.driveDocumentId ?? undefined,
           })
           if (!verdict.ok) return verdict
 

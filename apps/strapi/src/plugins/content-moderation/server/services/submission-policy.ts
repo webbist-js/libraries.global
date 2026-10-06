@@ -10,7 +10,12 @@ import {
   type RoleGrant,
   SESSION_PROFILE_MAX_CLAIMS,
 } from "@repo/access"
-import { findUnsafeContent } from "@repo/shared-data"
+import {
+  type DriveLibrary,
+  findUnsafeContent,
+  focusMatches,
+  libraryInScope,
+} from "@repo/shared-data"
 
 import { activeGrants } from "../../../../utils/role-grants"
 import { isHttpUrl } from "../utils/library-record"
@@ -39,6 +44,9 @@ export type SubmissionContent = {
 
 const LIBRARY = "api::library.library"
 const SUBMISSION = "plugin::content-moderation.submission"
+const DRIVE = "api::drive.drive"
+/** Submission types a Drive tag may ride on (library changes only). */
+const DRIVE_SUBMISSION_TYPES = new Set(["correction", "library_edit"])
 const SECTION_UID = {
   wiki: "api::wiki-section.wiki-section",
   blog: "api::blog-section.blog-section",
@@ -238,6 +246,61 @@ async function checkRoleApplication(
   return { ok: true }
 }
 
+const DRIVE_LIBRARY_FIELDS = [
+  "documentId",
+  "libraryType",
+  "source",
+  "completeness",
+  "createdAt",
+  "operationalStatus",
+] as const
+const DRIVE_LIBRARY_POPULATE = {
+  continent: { fields: ["slug"] },
+  country: { fields: ["slug"] },
+  region: { fields: ["slug"] },
+  area: { fields: ["slug"] },
+} as const
+
+/**
+ * The library a Drive-tagged submission targets, with its place slugs, for
+ * `libraryInScope`. Looked up by documentId, falling back to `targetSlug`
+ * like `allowedTerms` — a submission may carry only one of the two.
+ */
+async function loadDriveLibrary(
+  strapi: any,
+  target: { targetDocumentId?: unknown; targetSlug?: unknown }
+): Promise<DriveLibrary | null> {
+  let row: Record<string, any> | null = null
+  if (isDocumentId(target.targetDocumentId)) {
+    row = await strapi.documents(LIBRARY).findOne({
+      documentId: target.targetDocumentId,
+      fields: DRIVE_LIBRARY_FIELDS as unknown as string[],
+      populate: DRIVE_LIBRARY_POPULATE,
+    })
+  } else if (typeof target.targetSlug === "string" && target.targetSlug) {
+    ;[row] = await strapi.documents(LIBRARY).findMany({
+      filters: { slug: { $eq: target.targetSlug } },
+      fields: DRIVE_LIBRARY_FIELDS as unknown as string[],
+      populate: DRIVE_LIBRARY_POPULATE,
+      limit: 1,
+    })
+  }
+  if (!row) return null
+
+  return {
+    documentId: row.documentId,
+    continent: row.continent?.slug ?? null,
+    country: row.country?.slug ?? null,
+    region: row.region?.slug ?? null,
+    area: row.area?.slug ?? null,
+    libraryType: row.libraryType ?? null,
+    source: row.source ?? null,
+    completeness: row.completeness ?? null,
+    createdAt: row.createdAt ?? null,
+    operationalStatus: row.operationalStatus ?? null,
+  }
+}
+
 export default ({ strapi }: { strapi: any }) => ({
   /**
    * Loads the submitter's Role Grants, tier and library claims, and
@@ -354,6 +417,8 @@ export default ({ strapi }: { strapi: any }) => ({
      * the editor's locales in it; without one, any direct-edit right counts.
      */
     locale?: string
+    /** The Drive this change claims to fill a gap for, if any. */
+    driveDocumentId?: unknown
     // Finalize re-checks the quota against the same row that's about to be
     // promoted out of `draft`; excluding it here avoids counting it against
     // itself (it isn't `pending`/`needs_info` yet, but the hourly count
@@ -372,6 +437,16 @@ export default ({ strapi }: { strapi: any }) => ({
       )
     )
       return { ok: false, status: 400, message: "Invalid verification method" }
+    if (input.driveDocumentId != null) {
+      if (!isDocumentId(input.driveDocumentId))
+        return { ok: false, status: 400, message: "Invalid drive" }
+      if (!DRIVE_SUBMISSION_TYPES.has(submissionType))
+        return {
+          ok: false,
+          status: 400,
+          message: "Only library changes can join a drive.",
+        }
+    }
 
     const { caps, tier, role } = await (this as any).loadCapabilities(baUserId)
 
@@ -391,6 +466,38 @@ export default ({ strapi }: { strapi: any }) => ({
         status: 403,
         message: "You can't submit this type of change.",
       }
+
+    if (typeof input.driveDocumentId === "string") {
+      const drive = await strapi.documents(DRIVE).findOne({
+        documentId: input.driveDocumentId,
+        fields: ["documentId", "status", "scope", "focus", "openedAt"],
+      })
+      if (!drive || drive.status !== "open")
+        return { ok: false, status: 422, message: "This drive isn’t open." }
+
+      const library = await loadDriveLibrary(strapi, {
+        targetDocumentId: input.targetDocumentId,
+        targetSlug: input.targetSlug,
+      })
+      if (!library || !libraryInScope(library, drive.scope, drive.openedAt))
+        return {
+          ok: false,
+          status: 422,
+          message: "This library isn’t part of the drive.",
+        }
+
+      if (
+        !focusMatches(drive.focus, {
+          submissionType,
+          fields: input.fields,
+        })
+      )
+        return {
+          ok: false,
+          status: 422,
+          message: "This change doesn’t fill the drive’s gap.",
+        }
+    }
 
     if (submissionType === "role_application") {
       const eligible = await checkRoleApplication(strapi, {

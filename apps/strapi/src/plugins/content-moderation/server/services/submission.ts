@@ -634,6 +634,8 @@ export default ({ strapi }: { strapi: any }) => ({
     asDraft?: boolean
     /** Stored as `contentLocale`; normalised to a configured locale. */
     locale?: unknown
+    /** The Drive this change is tagged to, checked by the policy. */
+    driveDocumentId?: string
     /**
      * False skips scheduling the `submissionPending` alert here; the caller
      * takes it over with `notifyPending` once its own transaction (the one

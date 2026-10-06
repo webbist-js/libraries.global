@@ -29,6 +29,7 @@ import { summaryOf } from "../utils/submission-summary"
 
 const SUBMISSION = "plugin::content-moderation.submission"
 const PROFILE = "api::user-profile.user-profile"
+const DRIVE = "api::drive.drive"
 /** Accepted submissions listed on an application's review. */
 const RECENT_ACCEPTED_MAX = 10
 const REVIEW_EVENT = "plugin::content-moderation.review-event"
@@ -73,7 +74,11 @@ const ROW_FIELDS = [
   "reviewedAt",
   "fields",
   "draftData",
+  "driveDocumentId",
 ]
+
+/** A Drive tag, as a row or detail carries it: resolved from the live Drive. */
+export type DriveTag = { documentId: string; slug: string; title: string }
 
 export type ModerationRow = {
   documentId: string
@@ -86,6 +91,7 @@ export type ModerationRow = {
   submittedByName: string | null
   createdAt: string
   reviewedAt: string | null
+  drive: DriveTag | null
 }
 
 type ArticleVersion = { title: unknown; summary: unknown; body: unknown }
@@ -134,6 +140,8 @@ export type ListQuery = {
   q?: string
   page: number
   pageSize: number
+  /** A Drive's documentId: only submissions tagged with it. */
+  drive?: string
 }
 
 /**
@@ -408,7 +416,41 @@ export default ({ strapi }: { strapi: any }) => ({
       .map((r) => r.documentId)
   },
 
-  async toRow(s: any): Promise<ModerationRow> {
+  /**
+   * Resolves distinct Drive documentIds to `{ documentId, slug, title }` in
+   * one query, for a page of rows (`list`) or a single one (`toRow` without
+   * a preloaded map, as `detail` calls it).
+   */
+  async driveTitles(ids: readonly (string | null | undefined)[]) {
+    const distinct = [...new Set(ids.filter((id): id is string => !!id))]
+    const map = new Map<string, DriveTag>()
+    if (distinct.length === 0) return map
+    const rows = (await strapi.documents(DRIVE).findMany({
+      filters: { documentId: { $in: distinct } },
+      fields: ["documentId", "slug", "title"],
+      limit: distinct.length,
+    })) as { documentId: string; slug?: string; title?: string }[]
+    for (const r of rows)
+      map.set(r.documentId, {
+        documentId: r.documentId,
+        slug: r.slug ?? "",
+        title: r.title ?? "",
+      })
+
+    return map
+  },
+
+  async toRow(
+    s: any,
+    driveMap?: Map<string, DriveTag>
+  ): Promise<ModerationRow> {
+    const driveId: string | null = s.driveDocumentId ?? null
+    const drive = driveId
+      ? ((driveMap ?? (await (this as any).driveTitles([driveId]))).get(
+          driveId
+        ) ?? null)
+      : null
+
     return {
       documentId: s.documentId,
       submissionType: s.submissionType,
@@ -420,6 +462,7 @@ export default ({ strapi }: { strapi: any }) => ({
       submittedByName: s.submittedByName ?? null,
       createdAt: s.createdAt,
       reviewedAt: s.reviewedAt ?? null,
+      drive,
     }
   },
 
@@ -447,6 +490,7 @@ export default ({ strapi }: { strapi: any }) => ({
     if (query.type) and.push({ submissionType: { $eq: query.type } })
     if (query.locale)
       and.push(localeFilter(query.locale, await defaultLocale(strapi)))
+    if (query.drive) and.push({ driveDocumentId: { $eq: query.drive } })
     if (query.q)
       // Never the email: personal data the queue doesn't need to search.
       and.push({
@@ -466,10 +510,13 @@ export default ({ strapi }: { strapi: any }) => ({
         limit: query.pageSize,
       }),
     ])
+    const driveMap = await (this as any).driveTitles(
+      (rows ?? []).map((r: any) => r.driveDocumentId)
+    )
     const data: ModerationRow[] = []
     for (const s of rows ?? [])
       if (isSubmissionType(s.submissionType))
-        data.push(await (this as any).toRow(s))
+        data.push(await (this as any).toRow(s, driveMap))
 
     return {
       data,

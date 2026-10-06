@@ -3830,6 +3830,7 @@ export interface PluginContentModerationSubmission
     draftRevision: Schema.Attribute.Integer &
       Schema.Attribute.Private &
       Schema.Attribute.DefaultTo<0>
+    driveDocumentId: Schema.Attribute.String
     editSummary: Schema.Attribute.String
     evidenceType: Schema.Attribute.Enumeration<
       [

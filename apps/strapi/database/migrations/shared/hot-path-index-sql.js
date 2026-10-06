@@ -87,6 +87,8 @@ const HOT_PATH_INDEXES = [
   index("cm_submissions", ["submitted_by_user_id", "status", "created_at"]),
   index("cm_submissions", ["target_document_id", "status"]),
   index("cm_submissions", ["submission_type", "status"]),
+  // The moderation queue's Drive filter.
+  index("cm_submissions", ["drive_document_id", "status"]),
 
   // Option votes: one vote per user and suggestion, and the per-suggestion
   // tally. Duplicates (a lost race) keep the earliest vote.
