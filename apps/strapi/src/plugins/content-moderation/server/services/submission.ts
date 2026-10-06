@@ -54,6 +54,7 @@ import { payloadHash } from "../utils/payload-hash"
 import {
   ApplyRefusedError,
   type ApplyRefusedReason,
+  isApplyRefusedError,
 } from "../utils/publish-guard"
 import {
   preloadRecordReviews,
@@ -1353,8 +1354,10 @@ export default ({ strapi }: { strapi: any }) => ({
           if (submission?.submissionType === "event_feed") {
             const feeds = strapi.plugin("events").service("feeds")
             if (status === "approved") {
-              const { credentialDocumentId } =
-                await feeds.approveSubmission(submission)
+              const { credentialDocumentId } = await feeds.approveSubmission(
+                submission,
+                reviewer.id
+              )
               await strapi
                 .documents("plugin::content-moderation.submission")
                 .update({
@@ -1363,7 +1366,7 @@ export default ({ strapi }: { strapi: any }) => ({
                 })
               updated.resultDocumentId = credentialDocumentId
             } else if (status === "rejected") {
-              await feeds.rejectSubmission(submission)
+              await feeds.rejectSubmission(submission, reviewer.id)
             }
           }
 
@@ -1376,7 +1379,7 @@ export default ({ strapi }: { strapi: any }) => ({
       // back at `priorStatus` and the review can be retried. Confirm that
       // rather than assume it: a failed rollback would leave the row stuck
       // at `status` with none of its effects applied.
-      const refused = err instanceof ApplyRefusedError
+      const refused = isApplyRefusedError(err)
       if (refused)
         strapi.log.warn(
           `[content-moderation] updateStatus for ${documentId} refused (${err.reason}: ${err.uid} ${err.documentId}); rolled back to "${priorStatus}"`
@@ -1686,7 +1689,11 @@ export default ({ strapi }: { strapi: any }) => ({
         scheduleNotification(strapi, `alert for ${documentId}`, () =>
           notifications(strapi).submissionPending(submission)
         )
-      } else {
+      } else if (reviewer.kind !== "system") {
+        // A `system` decision (withdrawing or clearing a pending Submission
+        // when the library disconnects or replaces its feed) isn't a
+        // moderator's review: it never tells the submitter their own
+        // request was "rejected".
         const decided = { ...submission, reviewNote: reviewNote ?? null }
         scheduleNotification(strapi, `${status} email for ${documentId}`, () =>
           notifications(strapi).submissionDecided(decided, status)

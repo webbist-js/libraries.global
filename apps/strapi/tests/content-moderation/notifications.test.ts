@@ -254,6 +254,32 @@ describe("moderator alerts", () => {
     expect(msg.text).toContain("Calendar feed (.ics)")
     expect(msg.text).toContain("library")
   })
+
+  // Finding 6: the library's own name, snapshotted on the submission at
+  // creation, names it instead of the generic "a library".
+  it("names the library when the submission carries libraryName", async () => {
+    const { svc, send } = setup()
+    await svc.create({
+      submissionType: "event_feed",
+      targetEntityType: "library",
+      targetDocumentId: "l00000000000000000000001",
+      targetSlug: "abronhill-library",
+      fields: {
+        kind: "connect",
+        credentialDocumentId: "c00000000000000000000001",
+        provider: "ical",
+        hints: {},
+        test: { result: "ok", testedAt: "2026-10-01T00:00:00.000Z" },
+        libraryName: "Abronhill Library",
+      },
+      submittedByUserId: "u1",
+      submittedByEmail: "u1@example.org",
+      submittedByName: "Ada",
+    })
+    await flush()
+    const msg: any = send.mock.calls[0]![0]
+    expect(msg.text).toContain("Abronhill Library")
+  })
 })
 
 describe("create's notify option", () => {

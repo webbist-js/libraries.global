@@ -277,8 +277,11 @@ export function summaryOf(sub: Submission): string {
       )
     case "topic_suggestion":
       return str(f.name) ?? "Topic"
-    case "event_feed":
-      return `${EVENT_PROVIDERS[f.provider as keyof typeof EVENT_PROVIDERS]?.label ?? "Event"} feed${f.kind === "replace" ? " (new details)" : ""}`
+    case "event_feed": {
+      const library = str(f.libraryName) ?? sub.targetSlug ?? "a library"
+
+      return `${EVENT_PROVIDERS[f.provider as keyof typeof EVENT_PROVIDERS]?.label ?? "Event"} feed for ${library}${f.kind === "replace" ? " (new details)" : ""}`
+    }
     case "role_application": {
       const role =
         f.role === "journal_editor"
@@ -367,7 +370,10 @@ export function detailOf(sub: Submission): string | null {
     return typeof f.role === "string" ? f.role.replaceAll("_", " ") : null
   if (sub.submissionType === "event_feed") {
     const kind = f.kind === "replace" ? "replace" : "connect"
-    const library = sub.targetSlug ?? "Library"
+    const library =
+      (typeof f.libraryName === "string" && f.libraryName.trim()) ||
+      sub.targetSlug ||
+      "Library"
 
     return `${library} · ${kind === "replace" ? "new details" : "new connection"}`
   }

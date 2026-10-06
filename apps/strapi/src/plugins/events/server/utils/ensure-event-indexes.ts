@@ -11,6 +11,8 @@
  *   cron's auto-pause scan filter by status.
  * - `ev_credential_events (credential_document_id, created_at)` — the
  *   reveal and review-history reads page one feed's audit log in order.
+ * - `ev_events (credential_id, start_time)` — `feeds.list`'s `upcomingEvents`
+ *   count (and the worker's own per-credential reads) filter by both.
  *
  * The same statements live in the migration
  * `database/migrations/2026.09.30T00.00.02.events-unique-external-id.js`.
@@ -71,6 +73,12 @@ export const EV_CREDENTIAL_EVENTS_INDEX_SQL =
   `CREATE INDEX IF NOT EXISTS ${EV_CREDENTIAL_EVENTS_INDEX_NAME} ` +
   "ON ev_credential_events (credential_document_id, created_at)"
 
+export const EV_EVENTS_CREDENTIAL_START_INDEX_NAME =
+  "ev_events_credential_start_idx"
+export const EV_EVENTS_CREDENTIAL_START_INDEX_SQL =
+  `CREATE INDEX IF NOT EXISTS ${EV_EVENTS_CREDENTIAL_START_INDEX_NAME} ` +
+  "ON ev_events (credential_id, start_time)"
+
 type Txn = { raw: (sql: string, bindings?: unknown[]) => Promise<unknown> }
 
 async function indexExists(trx: Txn, indexName: string): Promise<boolean> {
@@ -130,6 +138,10 @@ export async function ensureEventIndexes(strapi: any): Promise<void> {
 
       if (!(await indexExists(trx, EV_CREDENTIAL_EVENTS_INDEX_NAME))) {
         await trx.raw(EV_CREDENTIAL_EVENTS_INDEX_SQL)
+      }
+
+      if (!(await indexExists(trx, EV_EVENTS_CREDENTIAL_START_INDEX_NAME))) {
+        await trx.raw(EV_EVENTS_CREDENTIAL_START_INDEX_SQL)
       }
     })
   } catch (err) {

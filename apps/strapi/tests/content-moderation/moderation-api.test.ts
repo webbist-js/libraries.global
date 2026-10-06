@@ -1173,12 +1173,32 @@ describe("summaryOf port", () => {
         submissionType: "role_application",
         fields: { role: "moderator", queue: "index", locales: ["fr"] },
       },
+      // Finding 6: names the library, from the snapshotted `libraryName`
+      // when it's there, else the target slug.
+      {
+        submissionType: "event_feed",
+        fields: {
+          provider: "ical",
+          kind: "connect",
+          libraryName: "Abronhill Library",
+        },
+        targetSlug: "abronhill-library",
+      },
+      {
+        submissionType: "event_feed",
+        fields: { provider: "eventbrite", kind: "replace" },
+        targetSlug: "abronhill-library",
+      },
     ]
     for (const r of rows) expect(summaryOf(r)).toBe(adminSummaryOf(r))
-    expect(rows.slice(-3).map(summaryOf)).toEqual([
+    expect(rows.slice(-5, -2).map(summaryOf)).toEqual([
       "Knowledge editor application (fr, de)",
       "Journal editor application (all languages)",
       "Moderator application: Index (fr)",
+    ])
+    expect(rows.slice(-2).map(summaryOf)).toEqual([
+      "Calendar feed (.ics) feed for Abronhill Library",
+      "Eventbrite feed for abronhill-library (new details)",
     ])
   })
 })

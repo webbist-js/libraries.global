@@ -99,7 +99,7 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
     const feed = await creds().findOne({
       documentId,
       fields: [...CREDENTIAL_PUBLIC_FIELDS, "id"],
-      populate: { libraries: { fields: ["documentId", "name"] } },
+      populate: { libraries: { fields: ["documentId", "name", "slug"] } },
     })
     if (!feed) return feedNotFound()
     const claims = await claimedLibraryIds(strapi, user.id)
@@ -138,10 +138,35 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
     })
   }
 
-  async function feedsOnLibrary(libraryDocumentId: string): Promise<number> {
+  /**
+   * Credentials on a library, for the `MAX_FEEDS_PER_LIBRARY` cap.
+   * `excludeDocumentId` leaves out the credential itself — needed when the
+   * row being counted toward the cap already exists (an Eventbrite draft
+   * completing itself in `completeDraft`), so it doesn't count against its
+   * own limit.
+   */
+  async function feedsOnLibrary(
+    libraryDocumentId: string,
+    excludeDocumentId?: string
+  ): Promise<number> {
     return creds().count({
-      filters: { libraries: { documentId: { $in: [libraryDocumentId] } } },
+      filters: {
+        libraries: { documentId: { $in: [libraryDocumentId] } },
+        ...(excludeDocumentId
+          ? { documentId: { $ne: excludeDocumentId } }
+          : {}),
+      },
     })
+  }
+
+  /** The library a submission is filed against: its name and slug, for the
+   * Submission's `targetSlug` and `fields.libraryName` (Finding 6) — so the
+   * moderation queue, the submitter's own list and the moderator alert all
+   * name the library instead of showing only its id or (worse) nothing. */
+  type LibraryRef = {
+    documentId: string
+    slug?: string | null
+    name?: string | null
   }
 
   /**
@@ -153,14 +178,15 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
    */
   async function createSubmission(
     user: FeedUser,
-    libraryDocumentId: string,
+    library: LibraryRef,
     fields: Record<string, unknown>
   ) {
     return submissions().create({
       submissionType: "event_feed",
       targetEntityType: "library",
-      targetDocumentId: libraryDocumentId,
-      fields,
+      targetDocumentId: library.documentId,
+      targetSlug: library.slug ?? undefined,
+      fields: { ...fields, libraryName: library.name ?? undefined },
       submittedByUserId: user.id,
       submittedByEmail: user.email ?? "",
       submittedByName: user.name ?? undefined,
@@ -182,7 +208,7 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
   async function openConnectReview(
     user: FeedUser,
     documentId: string,
-    libraryDocumentId: string,
+    library: LibraryRef,
     provider: EventProviderKey,
     values: Record<string, string>,
     result: FeedTestCode,
@@ -198,7 +224,7 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
       )
 
     const hints = feedHints(provider, values)
-    const submission = await createSubmission(user, libraryDocumentId, {
+    const submission = await createSubmission(user, library, {
       kind: "connect",
       credentialDocumentId: documentId,
       provider,
@@ -219,7 +245,7 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
     await recordCredentialEvent(strapi, {
       credentialDocumentId: documentId,
       provider,
-      libraryDocumentIds: [libraryDocumentId],
+      libraryDocumentIds: [library.documentId],
       action: "connect_submitted",
       actor: actorOf(user),
       submissionDocumentId: submission.documentId,
@@ -375,9 +401,15 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
         })
       const testedAt = new Date().toISOString()
       const hints = feedHints(provider, checked.values)
-      const library = await strapi
-        .documents(LIBRARY_UID)
-        .findOne({ documentId: input.libraryDocumentId, fields: ["name"] })
+      const library = await strapi.documents(LIBRARY_UID).findOne({
+        documentId: input.libraryDocumentId,
+        fields: ["name", "slug"],
+      })
+      const libraryRef: LibraryRef = {
+        documentId: input.libraryDocumentId,
+        slug: library?.slug ?? null,
+        name: library?.name ?? null,
+      }
 
       const outcome = await runTransaction(strapi, async () => {
         // Authoritative re-check: a concurrent connect could have used up
@@ -414,7 +446,7 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
         return openConnectReview(
           user,
           created.documentId as string,
-          input.libraryDocumentId,
+          libraryRef,
           provider,
           checked.values,
           result,
@@ -452,7 +484,7 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
           "connectedBy",
           "credentialsEncrypted",
         ],
-        populate: { libraries: { fields: ["documentId"] } },
+        populate: { libraries: { fields: ["documentId", "name", "slug"] } },
       })
       if (
         !draft ||
@@ -463,6 +495,14 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
       const claims = await claimedLibraryIds(strapi, user.id)
       const libraryDocumentId = libraryIdsOf(draft).find((id) => claims.has(id))
       if (!libraryDocumentId) return feedNotFound()
+      const draftLibrary = ((draft.libraries as any[]) ?? []).find(
+        (l) => l?.documentId === libraryDocumentId
+      )
+      const libraryRef: LibraryRef = {
+        documentId: libraryDocumentId,
+        slug: draftLibrary?.slug ?? null,
+        name: draftLibrary?.name ?? null,
+      }
 
       const organizations = (draft.hints?.organizations ?? []) as {
         id: string
@@ -504,6 +544,18 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
           "too_many_open",
           "You have feeds waiting for review. Wait for a decision before sending another."
         )
+      // The draft itself already counts toward the library's cap (it's a
+      // row in `creds()`, just not pending/active yet), so it's excluded
+      // here: completing it replaces the draft, it doesn't add a feed.
+      if (
+        (await feedsOnLibrary(libraryDocumentId, documentId)) >=
+        MAX_FEEDS_PER_LIBRARY
+      )
+        return fail(
+          409,
+          "too_many_feeds",
+          `A library can have at most ${MAX_FEEDS_PER_LIBRARY} feeds.`
+        )
 
       // Outside the transaction: a provider can take 15 seconds to answer.
       const result = await runTest("eventbrite", checked.values)
@@ -527,11 +579,25 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
           fresh.connectedBy !== actorOf(user)
         )
           throw new FeedAbort(feedNotFound())
+        // Re-checked, authoritatively, inside the transaction: a concurrent
+        // connect or another draft completing could have used up this
+        // library's quota while the provider test above was in flight.
+        if (
+          (await feedsOnLibrary(libraryDocumentId, documentId)) >=
+          MAX_FEEDS_PER_LIBRARY
+        )
+          throw new FeedAbort(
+            fail(
+              409,
+              "too_many_feeds",
+              `A library can have at most ${MAX_FEEDS_PER_LIBRARY} feeds.`
+            )
+          )
 
         return openConnectReview(
           user,
           documentId,
-          libraryDocumentId,
+          libraryRef,
           "eventbrite",
           checked.values,
           result,
@@ -572,6 +638,14 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
       const libraryDocumentId = libraryIdsOf(feed).find((id) =>
         access.claims.has(id)
       )!
+      const replaceLibrary = ((feed.libraries as any[]) ?? []).find(
+        (l) => l?.documentId === libraryDocumentId
+      )
+      const libraryRef: LibraryRef = {
+        documentId: libraryDocumentId,
+        slug: replaceLibrary?.slug ?? null,
+        name: replaceLibrary?.name ?? null,
+      }
       const verdict = await policy().check({
         baUserId: user.id,
         submissionType: "event_feed",
@@ -626,7 +700,7 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
             )
           )
 
-        const submission = await createSubmission(user, libraryDocumentId, {
+        const submission = await createSubmission(user, libraryRef, {
           kind: "replace",
           credentialDocumentId: documentId,
           provider: feed.provider,
@@ -718,6 +792,22 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
       if ("error" in access) return access
       if (access.feed.status !== "paused")
         return fail(409, "not_paused", "Only a paused feed can be resumed.")
+      // An admin pause is Libraries Global's own decision (abuse, a policy
+      // breach): only staff lift it. An auto-pause from repeated sync
+      // failures needs fixed details, not just a resume — the auto-pause
+      // email already tells the library to replace them.
+      if (access.feed.pausedReason === "admin")
+        return fail(
+          403,
+          "admin_paused",
+          "Libraries Global paused this feed. Contact us to restart it."
+        )
+      if (access.feed.pausedReason === "sync_failures")
+        return fail(
+          409,
+          "replace_required",
+          "Replace this feed's details to restart it."
+        )
       await strapi.db.transaction(async () => {
         await creds().update({
           documentId,
@@ -826,9 +916,14 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
      * longer holds a claim on the library — both leave the submission at
      * its prior status (the generic refusal handling in
      * `submission.updateStatus` reverts and notes it).
+     *
+     * `reviewerId` is who decided it (`ba:<id>`, `admin:<id>` or `system` —
+     * see `content-moderation/server/utils/reviewer.ts`): the credential
+     * audit log's `actor` records the reviewer, not the submitter.
      */
     async approveSubmission(
-      submission: any
+      submission: any,
+      reviewerId: string
     ): Promise<{ credentialDocumentId: string }> {
       const f = (submission.fields ?? {}) as Record<string, any>
       const documentId = String(f.credentialDocumentId ?? "")
@@ -884,6 +979,17 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
           },
         })
       } else {
+        // A connect's credential must still be the one `connect`/`completeDraft`
+        // put up for review: anything else (already active, still a draft,
+        // already disconnected and recreated) means this submission is
+        // stale, even though its `pendingSubmissionDocumentId` still matched
+        // above — refuse rather than silently reactivate the wrong row.
+        if (feed.status !== "pending")
+          throw new ApplyRefusedError(
+            "feed_mismatch",
+            CREDENTIAL_UID,
+            documentId
+          )
         await creds().update({
           documentId,
           data: {
@@ -898,7 +1004,7 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
         provider: feed.provider,
         libraryDocumentIds: libraryIdsOf(feed),
         action: "approved",
-        actor: `ba:${submission.submittedByUserId}`,
+        actor: reviewerId,
         submissionDocumentId: submission.documentId,
         note: f.kind === "replace" ? "replace" : "connect",
       })
@@ -915,8 +1021,13 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
      * or has moved on to a newer submission (withdrawn by the library, or
      * already decided elsewhere) — tolerated so a double-decision can't fail
      * the transaction.
+     *
+     * `reviewerId` is who decided it (`ba:<id>`, `admin:<id>` or `system`
+     * for an automatic withdrawal/disconnect — see
+     * `content-moderation/server/utils/reviewer.ts`): the credential audit
+     * log's `actor` records the reviewer, not the submitter.
      */
-    async rejectSubmission(submission: any): Promise<void> {
+    async rejectSubmission(submission: any, reviewerId: string): Promise<void> {
       const f = (submission.fields ?? {}) as Record<string, any>
       const documentId = String(f.credentialDocumentId ?? "")
       const feed = await creds().findOne({
@@ -927,6 +1038,7 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
           "pendingSubmissionDocumentId",
           "status",
         ],
+        populate: { libraries: { fields: ["documentId"] } },
       })
       if (!feed || feed.pendingSubmissionDocumentId !== submission.documentId)
         return
@@ -945,8 +1057,9 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
       await recordCredentialEvent(strapi, {
         credentialDocumentId: documentId,
         provider: feed.provider,
+        libraryDocumentIds: libraryIdsOf(feed),
         action: "rejected",
-        actor: `ba:${submission.submittedByUserId}`,
+        actor: reviewerId,
         submissionDocumentId: submission.documentId,
       })
     },

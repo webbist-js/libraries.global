@@ -41,6 +41,36 @@ export class ApplyRefusedError extends Error {
   }
 }
 
+const REFUSED_REASONS = new Set<string>([
+  "not_published",
+  "no_hierarchy",
+  "claim_lost",
+  "feed_mismatch",
+] satisfies ApplyRefusedReason[])
+
+/**
+ * Identifies an `ApplyRefusedError` by shape, not identity. Strapi loads
+ * each plugin from its own built `dist/`, so the events plugin's copy of
+ * this module is a *different class* than content-moderation's own import
+ * of it, even though both come from this same source file: an
+ * `err instanceof ApplyRefusedError` check in one plugin never matches an
+ * instance thrown by the other. Every caller that needs to recognise a
+ * refusal across that boundary (`submission.ts`'s `updateStatus` catch
+ * block) must use this guard instead.
+ */
+export function isApplyRefusedError(err: unknown): err is ApplyRefusedError {
+  if (!err || typeof err !== "object") return false
+  const e = err as Record<string, unknown>
+
+  return (
+    e.name === "ApplyRefusedError" &&
+    typeof e.reason === "string" &&
+    REFUSED_REASONS.has(e.reason) &&
+    typeof e.uid === "string" &&
+    typeof e.documentId === "string"
+  )
+}
+
 export type ApplyMode =
   | { mode: "published" }
   | { mode: "draft_only"; divergentKeys: string[] }

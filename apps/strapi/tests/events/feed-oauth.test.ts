@@ -47,6 +47,7 @@ function setup(orgs: { id: string; name: string }[]) {
     result: "ok",
   }))
   const claims = new Set([L1])
+  const check = vi.fn(async () => ({ ok: true }))
   fake.strapi.plugin = vi.fn(() => ({
     service: (s: string) =>
       s === "submission-policy"
@@ -57,6 +58,7 @@ function setup(orgs: { id: string; name: string }[]) {
                 set: new Set(["events.feed"]),
               },
             }),
+            check,
           }
         : undefined,
   }))
@@ -66,7 +68,7 @@ function setup(orgs: { id: string; name: string }[]) {
     completeDraft: complete,
   })
 
-  return { ...fake, svc, http, complete }
+  return { ...fake, svc, http, complete, check }
 }
 
 describe("Eventbrite OAuth", () => {
@@ -110,5 +112,40 @@ describe("Eventbrite OAuth", () => {
     expect(
       await svc.exchangeEventbrite(USER, { code: "c", libraryDocumentId: L1 })
     ).toMatchObject({ error: { status: 503 } })
+  })
+
+  // Finding 4: the OAuth exchange used to skip the submission policy and
+  // the per-library feed quota entirely — only `feeds.connect` ran them.
+  it("passes the submission policy's refusal through, before any token exchange", async () => {
+    const { svc, http, check } = setup([])
+    check.mockResolvedValueOnce({
+      ok: false,
+      status: 429,
+      message: "Too many pending",
+    })
+    const r: any = await svc.exchangeEventbrite(USER, {
+      code: "c0de",
+      libraryDocumentId: L1,
+    })
+    expect(r.error).toMatchObject({ status: 429 })
+    expect(http).not.toHaveBeenCalled()
+  })
+
+  it("refuses a sixth feed on the library, before any token exchange", async () => {
+    const { svc, store, http } = setup([])
+    for (let i = 0; i < 5; i++)
+      store[CRED]!.push({
+        documentId: `credX00000000000000000${i}`,
+        provider: "ical",
+        status: "active",
+        scope: "library",
+        libraries: [{ documentId: L1 }],
+      } as any)
+    const r: any = await svc.exchangeEventbrite(USER, {
+      code: "c0de",
+      libraryDocumentId: L1,
+    })
+    expect(r.error).toMatchObject({ status: 409, name: "too_many_feeds" })
+    expect(http).not.toHaveBeenCalled()
   })
 })

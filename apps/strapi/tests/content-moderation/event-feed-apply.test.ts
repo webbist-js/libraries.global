@@ -1,8 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { setNotificationScheduler } from "../../src/plugins/content-moderation/server/services/notifications"
 import createService from "../../src/plugins/content-moderation/server/services/submission"
 import { payloadHash } from "../../src/plugins/content-moderation/server/utils/payload-hash"
-import { adminReviewer } from "../../src/plugins/content-moderation/server/utils/reviewer"
+import {
+  adminReviewer,
+  systemReviewer,
+} from "../../src/plugins/content-moderation/server/utils/reviewer"
 import credentialsFactory from "../../src/plugins/events/server/services/credentials"
 import feedsFactory from "../../src/plugins/events/server/services/feeds"
 import {
@@ -198,5 +202,135 @@ describe("event_feed decisions", () => {
       "Which branch?"
     )
     expect(cred).toEqual(before)
+  })
+
+  // Finding 3: the credential audit log's `actor` used to record the
+  // submitter (`ba:<submittedByUserId>`) on every decision, even one an
+  // admin or Moderator made. It must record who decided it.
+  it("records the reviewer, not the submitter, as the approval's actor", async () => {
+    const { service, store } = setup("connect")
+    await service.updateStatus("sub00000000000000000001", "approved", REVIEWER)
+    const event = store["plugin::events.credential-event"]!.at(-1)!
+    expect(event.action).toBe("approved")
+    expect(event.actor).toBe(REVIEWER.id)
+    expect(event.actor).not.toBe("ba:ba-owner")
+  })
+
+  it("records the reviewer as the rejection's actor, with the library tagged", async () => {
+    const { service, store } = setup("connect")
+    await service.updateStatus(
+      "sub00000000000000000001",
+      "rejected",
+      REVIEWER,
+      "Wrong calendar"
+    )
+    const event = store["plugin::events.credential-event"]!.at(-1)!
+    expect(event.action).toBe("rejected")
+    expect(event.actor).toBe(REVIEWER.id)
+    expect(event.libraryDocumentIds).toEqual([L1])
+  })
+
+  // Finding 12: a connect approval must still find the credential pending
+  // review — not already active, still a draft, or anything else — even
+  // though its `pendingSubmissionDocumentId` still happens to match.
+  it("refuses a connect approval when the credential isn't pending any more", async () => {
+    const { service, cred, store } = setup("connect")
+    cred.status = "active"
+    const r: any = await service.updateStatus(
+      "sub00000000000000000001",
+      "approved",
+      REVIEWER
+    )
+    expect(r).toEqual({ error: "apply_refused", reason: "feed_mismatch" })
+    expect(store[SUB]![0]!.status).toBe("pending")
+  })
+
+  // Finding 1: Strapi loads each plugin from its own built `dist/`, so the
+  // events plugin's `ApplyRefusedError` is a different *class* than
+  // content-moderation's own import of the same source file — `instanceof`
+  // across that boundary never matches. `isApplyRefusedError` (shape-based)
+  // must recognise a refusal thrown by such a "foreign" class all the same.
+  it("recognises a refusal thrown by a different ApplyRefusedError class as apply_refused (cross-bundle identity)", async () => {
+    const { service, store, strapi } = setup("connect")
+
+    class ForeignApplyRefusedError extends Error {
+      readonly reason = "claim_lost"
+      readonly uid = CRED
+      readonly documentId = CID
+      constructor() {
+        super(`apply refused (claim_lost): ${CRED} ${CID}`)
+        this.name = "ApplyRefusedError"
+      }
+    }
+
+    const realFeeds = strapi.plugin("events").service("feeds")
+    ;(strapi.plugin as any).mockImplementation((name: string) => ({
+      service: (s: string) =>
+        name === "events"
+          ? s === "feeds"
+            ? {
+                ...realFeeds,
+                approveSubmission: async () => {
+                  throw new ForeignApplyRefusedError()
+                },
+              }
+            : realFeeds
+          : s === "submission-policy"
+            ? {
+                loadCapabilities: async () => ({
+                  caps: {
+                    claimedLibraryIds: new Set([L1]),
+                    set: new Set(["events.feed"]),
+                  },
+                }),
+              }
+            : undefined,
+    }))
+    const r: any = await service.updateStatus(
+      "sub00000000000000000001",
+      "approved",
+      REVIEWER
+    )
+    expect(r).toEqual({ error: "apply_refused", reason: "claim_lost" })
+    expect(store[SUB]![0]!.status).toBe("pending")
+    expect(store[SUB]![0]!.reviewNote).toMatch(/no longer holds a claim/)
+  })
+})
+
+describe("decision emails (Finding 11)", () => {
+  afterEach(() => setNotificationScheduler())
+
+  // `withdrawPending`/`disconnect` reject a Submission through
+  // `systemReviewer()` — the library acting on its own feed, not a
+  // moderator's decision. It must never queue the "your submission was
+  // rejected" email a real review would.
+  it("never schedules a decided email for a system reviewer's decision", async () => {
+    const { service } = setup("connect")
+    const tasks: (() => Promise<void>)[] = []
+    setNotificationScheduler((task) => {
+      tasks.push(task)
+    })
+    await service.updateStatus(
+      "sub00000000000000000001",
+      "rejected",
+      systemReviewer(),
+      "Withdrawn by the library"
+    )
+    expect(tasks).toHaveLength(0)
+  })
+
+  it("still schedules a decided email for a human reviewer's decision", async () => {
+    const { service } = setup("connect")
+    const tasks: (() => Promise<void>)[] = []
+    setNotificationScheduler((task) => {
+      tasks.push(task)
+    })
+    await service.updateStatus(
+      "sub00000000000000000001",
+      "rejected",
+      REVIEWER,
+      "Wrong calendar"
+    )
+    expect(tasks).toHaveLength(1)
   })
 })

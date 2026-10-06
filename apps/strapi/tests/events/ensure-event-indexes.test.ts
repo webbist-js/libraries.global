@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 import {
   EV_CREDENTIAL_EVENTS_INDEX_NAME,
   EV_CREDENTIALS_STATUS_INDEX_NAME,
+  EV_EVENTS_CREDENTIAL_START_INDEX_NAME,
   EV_EVENTS_LIBRARY_ENTITY_REF_INDEX_NAME,
   EV_EVENTS_PROVIDER_EXTERNAL_INDEX_NAME,
   ensureEventIndexes,
@@ -101,6 +102,13 @@ describe("ensureEventIndexes", () => {
         )
       )
     ).toBe(true)
+    expect(
+      sql.some((s) =>
+        s.includes(
+          `CREATE INDEX IF NOT EXISTS ${EV_EVENTS_CREDENTIAL_START_INDEX_NAME} ON ev_events (credential_id, start_time)`
+        )
+      )
+    ).toBe(true)
   })
 
   it("skips an index that already exists and never re-runs the dedupe", async () => {
@@ -111,6 +119,7 @@ describe("ensureEventIndexes", () => {
         EV_EVENTS_LIBRARY_ENTITY_REF_INDEX_NAME,
         EV_CREDENTIALS_STATUS_INDEX_NAME,
         EV_CREDENTIAL_EVENTS_INDEX_NAME,
+        EV_EVENTS_CREDENTIAL_START_INDEX_NAME,
       ]),
     })
 

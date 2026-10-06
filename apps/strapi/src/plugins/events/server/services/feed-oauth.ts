@@ -14,7 +14,7 @@
  * Organisations endpoint: `GET /v3/users/me/organizations/`, bearer-token
  * authenticated, returning `{ organizations: [{ id, name, ... }] }`.
  */
-import { feedHints } from "@repo/shared-data"
+import { feedHints, MAX_FEEDS_PER_LIBRARY } from "@repo/shared-data"
 
 import { CREDENTIAL_UID } from "./credentials"
 import { sealValues } from "../utils/credential-crypto"
@@ -23,6 +23,18 @@ import { claimedLibraryIds } from "../utils/feed-access"
 const LIBRARY_UID = "api::library.library"
 const TOKEN_URL = "https://www.eventbrite.com/oauth/token"
 const ORGS_URL = "https://www.eventbriteapi.com/v3/users/me/organizations/"
+
+/** Credentials already on a library, for the `MAX_FEEDS_PER_LIBRARY` cap —
+ * the same count `feeds.ts` keeps (kept here too since this draft is
+ * created before any review opens, through its own transaction). */
+async function feedsOnLibrary(
+  strapi: any,
+  libraryDocumentId: string
+): Promise<number> {
+  return strapi.documents(CREDENTIAL_UID).count({
+    filters: { libraries: { documentId: { $in: [libraryDocumentId] } } },
+  })
+}
 
 type Deps = {
   strapi: any
@@ -67,6 +79,35 @@ export default ({ strapi, http = fetch, completeDraft }: Deps) => {
         return fail(404, "not_found", "Library not found.")
       if (!/^[A-Za-z0-9._-]{4,512}$/.test(input.code))
         return fail(400, "invalid_code", "Invalid authorisation code.")
+
+      // The same checks `feeds.connect` runs, before the draft is created:
+      // `completeDraft` (and the OAuth dance itself) can take a while, so a
+      // quota that's already exceeded shouldn't pay for a token exchange and
+      // an organisations call first.
+      const verdict = await strapi
+        .plugin("content-moderation")
+        .service("submission-policy")
+        .check({
+          baUserId: user.id,
+          submissionType: "event_feed",
+          targetEntityType: "library",
+          targetDocumentId: input.libraryDocumentId,
+        })
+      if (!verdict.ok)
+        return fail(
+          verdict.status ?? 403,
+          "refused",
+          verdict.message ?? "You can't connect a feed here."
+        )
+      if (
+        (await feedsOnLibrary(strapi, input.libraryDocumentId)) >=
+        MAX_FEEDS_PER_LIBRARY
+      )
+        return fail(
+          409,
+          "too_many_feeds",
+          `A library can have at most ${MAX_FEEDS_PER_LIBRARY} feeds.`
+        )
 
       const tokenRes = await http(TOKEN_URL, {
         method: "POST",

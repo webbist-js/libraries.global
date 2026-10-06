@@ -1,9 +1,15 @@
-import { MAX_OPEN_FEED_SUBMISSIONS } from "@repo/shared-data"
+import {
+  MAX_FEEDS_PER_LIBRARY,
+  MAX_OPEN_FEED_SUBMISSIONS,
+} from "@repo/shared-data"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import credentialsFactory from "../../src/plugins/events/server/services/credentials"
 import feedsFactory from "../../src/plugins/events/server/services/feeds"
-import { openValues } from "../../src/plugins/events/server/utils/credential-crypto"
+import {
+  openValues,
+  sealValues,
+} from "../../src/plugins/events/server/utils/credential-crypto"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
 
 const CRED = "plugin::events.event-credential"
@@ -148,6 +154,10 @@ describe("feeds.connect", () => {
     const sub = store[SUB]![0]!
     expect(sub.submissionType).toBe("event_feed")
     expect(sub.targetDocumentId).toBe(L1)
+    // Finding 6: the library's slug and name travel with the submission, so
+    // the moderation queue, the submitter's own list and the moderator
+    // alert can name it without a value or a live lookup.
+    expect(sub.targetSlug).toBe("central")
     expect(JSON.stringify(sub)).not.toContain("tok123456")
     expect(sub.fields).toMatchObject({
       kind: "connect",
@@ -155,6 +165,7 @@ describe("feeds.connect", () => {
       provider: "ical",
       hints: { feedUrl: "https://cal.example.org/…" },
       test: { result: "ok" },
+      libraryName: "Central Library",
     })
     expect(store[EVENTS]!.map((e) => e.action)).toEqual(["connect_submitted"])
     // The submission was created with notify: false, and this service
@@ -272,6 +283,13 @@ describe("feeds.connect", () => {
 describe("feeds.replace", () => {
   it("writes the pending slot and keeps the current value", async () => {
     const { feeds, row, store, submissions } = await connected()
+    // The fake store doesn't resolve relations on populate (it returns
+    // exactly what was written); a real `libraries: { fields: [...] }`
+    // populate would include the library's name and slug, which `replace`
+    // now reads (Finding 6) — seed what that join would actually return.
+    Object.assign(row, {
+      libraries: [{ documentId: L1, name: "Central Library", slug: "central" }],
+    })
     const current = row.credentialsEncrypted
     const r: any = await feeds.replace(USER, row.documentId, {
       values: ICAL_NEW,
@@ -282,9 +300,11 @@ describe("feeds.replace", () => {
     ).toEqual(ICAL_NEW)
     expect(row.pendingSubmissionDocumentId).toBe(r.submissionDocumentId)
     const submission = store[SUB]!.at(-1)!
+    expect(submission.targetSlug).toBe("central")
     expect(submission.fields).toMatchObject({
       kind: "replace",
       previousHints: row.hints,
+      libraryName: "Central Library",
     })
     expect(submissions.notifyPending).toHaveBeenCalledTimes(2) // connect + replace
     // The new secret value never reaches the Submission or the audit log.
@@ -541,6 +561,78 @@ describe("direct actions", () => {
     })
   })
 
+  // Finding 2: an admin pause is Libraries Global's own call (abuse, a
+  // policy breach) — only staff lift it, not the library.
+  it("refuses to resume a feed Libraries Global paused", async () => {
+    const { feeds, row } = await active()
+    Object.assign(row, { status: "paused", pausedReason: "admin" })
+    expect(await feeds.resume(USER, row.documentId)).toMatchObject({
+      error: { status: 403, name: "admin_paused" },
+    })
+  })
+
+  // An auto-pause from repeated sync failures needs fixed details, not just
+  // a resume — the auto-pause email already tells the library to replace
+  // them, so resume must point the same way.
+  it("refuses to resume a feed auto-paused by sync failures", async () => {
+    const { feeds, row } = await active()
+    Object.assign(row, { status: "paused", pausedReason: "sync_failures" })
+    expect(await feeds.resume(USER, row.documentId)).toMatchObject({
+      error: { status: 409, name: "replace_required" },
+    })
+  })
+
+  it("still resumes a feed the library itself paused", async () => {
+    const { feeds, row } = await active()
+    Object.assign(row, { status: "paused", pausedReason: "library" })
+    expect(await feeds.resume(USER, row.documentId)).toEqual({
+      status: "active",
+    })
+  })
+
+  // Finding 7: pause/resume/disconnect/withdrawPending/testCurrent all go
+  // through `manageable()`, same as `replace` — covered there for 404/403.
+  // These confirm the other actions share the same guard.
+  it.each([
+    ["pause", (feeds: any, id: string) => feeds.pause(USER, id)],
+    ["resume", (feeds: any, id: string) => feeds.resume(USER, id)],
+    ["disconnect", (feeds: any, id: string) => feeds.disconnect(USER, id)],
+    [
+      "withdrawPending",
+      (feeds: any, id: string) => feeds.withdrawPending(USER, id),
+    ],
+    ["testCurrent", (feeds: any, id: string) => feeds.testCurrent(USER, id)],
+  ])(
+    "%s answers 404 to someone without a claim on the feed's library",
+    async (_name, call) => {
+      const { feeds, row, policy } = await active()
+      policy.loadCapabilities.mockResolvedValueOnce({
+        caps: {
+          claimedLibraryIds: new Set([L2]),
+          set: new Set(["events.feed"]),
+        },
+      })
+      const r: any = await call(feeds, row.documentId)
+      expect(r.error.status).toBe(404)
+    }
+  )
+
+  it.each([
+    ["pause", (feeds: any, id: string) => feeds.pause(USER, id)],
+    ["resume", (feeds: any, id: string) => feeds.resume(USER, id)],
+    ["disconnect", (feeds: any, id: string) => feeds.disconnect(USER, id)],
+    [
+      "withdrawPending",
+      (feeds: any, id: string) => feeds.withdrawPending(USER, id),
+    ],
+    ["testCurrent", (feeds: any, id: string) => feeds.testCurrent(USER, id)],
+  ])("%s refuses a group feed", async (_name, call) => {
+    const { feeds, row } = await active()
+    row.scope = "group"
+    const r: any = await call(feeds, row.documentId)
+    expect(r.error).toMatchObject({ status: 403, name: "group_feed" })
+  })
+
   it("rate-limits tests per feed", async () => {
     const { feeds, row } = await active()
     row.lastTestedAt = new Date().toISOString()
@@ -595,5 +687,85 @@ describe("direct actions", () => {
     })
     expect(row.pendingCredentialsEncrypted).toBeNull()
     expect(row.pendingSubmissionDocumentId).toBeNull()
+  })
+})
+
+describe("feeds.completeDraft", () => {
+  const DRAFT_ID = "credDraftEB000000000001"
+
+  function draftRow(overrides: Record<string, any> = {}) {
+    return {
+      documentId: DRAFT_ID,
+      provider: "eventbrite",
+      status: "draft",
+      scope: "library",
+      source: "library",
+      connectedBy: "ba:ba-owner",
+      credentialsEncrypted: sealValues(
+        { accessToken: "EB_TOKEN_ABCDEFGHIJKL" },
+        DRAFT_ID,
+        "current"
+      ),
+      hints: { organizations: [{ id: "100200", name: "Central Events" }] },
+      // A real `libraries: { fields: [...] }` populate would return the
+      // library's own name and slug; the fake doesn't resolve relations, so
+      // they're seeded directly here (see the `replace` test's own note).
+      libraries: [{ documentId: L1, name: "Central Library", slug: "central" }],
+      ...overrides,
+    }
+  }
+
+  it("validates the chosen organisation, tests it and opens a review naming the library (Finding 6)", async () => {
+    const { feeds, store } = setup()
+    store[CRED]!.push(draftRow() as any)
+    const r: any = await feeds.completeDraft(USER, DRAFT_ID, "100200")
+    expect(r.result).toBe("ok")
+    const row = store[CRED]!.find((c: any) => c.documentId === DRAFT_ID)!
+    expect(row.status).toBe("pending")
+    expect(row.pendingSubmissionDocumentId).toBe(r.submissionDocumentId)
+    const sub = store[SUB]!.find(
+      (s: any) => s.documentId === r.submissionDocumentId
+    )!
+    expect(sub.targetSlug).toBe("central")
+    expect(sub.fields).toMatchObject({
+      provider: "eventbrite",
+      libraryName: "Central Library",
+    })
+  })
+
+  // Finding 7: no prior test called `completeDraft` directly at all.
+  it("refuses a draft the user doesn't own or hasn't claimed", async () => {
+    const s = setup({ claims: [] })
+    s.store[CRED]!.push(draftRow() as any)
+    const r: any = await s.feeds.completeDraft(USER, DRAFT_ID, "100200")
+    expect(r.error).toMatchObject({ status: 404 })
+  })
+
+  it("refuses an organisation id the draft didn't offer", async () => {
+    const { feeds, store } = setup()
+    store[CRED]!.push(draftRow() as any)
+    const r: any = await feeds.completeDraft(USER, DRAFT_ID, "999999")
+    expect(r.error).toMatchObject({
+      status: 400,
+      name: "invalid_organization",
+    })
+  })
+
+  // Finding 4: completing a draft used to skip the per-library feed cap
+  // entirely. The draft itself already counts toward the cap, so the check
+  // excludes it — 5 *other* feeds plus this draft is the 6th.
+  it("refuses a sixth feed on the library, excluding the draft itself", async () => {
+    const { feeds, store } = setup()
+    store[CRED]!.push(draftRow() as any)
+    for (let i = 0; i < MAX_FEEDS_PER_LIBRARY; i++)
+      store[CRED]!.push({
+        documentId: `credX00000000000000000${i}`,
+        provider: "ical",
+        status: "active",
+        scope: "library",
+        libraries: [{ documentId: L1 }],
+      } as any)
+    const r: any = await feeds.completeDraft(USER, DRAFT_ID, "100200")
+    expect(r.error).toMatchObject({ status: 409, name: "too_many_feeds" })
   })
 })

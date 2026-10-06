@@ -311,6 +311,9 @@ const FEED_REVIEW_FIELDS = new Set([
   "hints",
   "previousHints",
   "test",
+  // Not a secret: the library's own name, snapshotted at submission time so
+  // the queue and alert email can name it without a live lookup (Finding 6).
+  "libraryName",
 ])
 
 /** `fields` as the moderator sees them. */

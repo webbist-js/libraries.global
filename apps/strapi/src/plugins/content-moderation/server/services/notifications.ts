@@ -101,8 +101,9 @@ function alertSummary(s: SubmissionRow): string {
     const label =
       EVENT_PROVIDERS[f.provider as EventProviderKey]?.label ??
       "An event platform"
+    const library = text(f.libraryName) ?? "a library"
 
-    return `${label} feed ${f.kind === "replace" ? "details replaced" : "connected"} for a library; the connection test said "${FEED_TEST_LABEL[f.test?.result as FeedTestCode] ?? "not run"}".`
+    return `${label} feed ${f.kind === "replace" ? "details replaced" : "connected"} for ${library}; the connection test said "${FEED_TEST_LABEL[f.test?.result as FeedTestCode] ?? "not run"}".`
   }
   const f = (
     s.fields && typeof s.fields === "object" ? s.fields : {}
