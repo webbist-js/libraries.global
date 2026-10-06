@@ -1,5 +1,6 @@
 import type { Locale } from "next-intl"
 
+import { DrivesHere } from "@/components/drives/DrivesHere"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import {
@@ -20,6 +21,7 @@ import {
   LocationHeroMap,
 } from "@/components/location/LocationHeroMap"
 import { T } from "@/lib/design-tokens"
+import type { DriveView } from "@/lib/drives/drive-view"
 import { buildLocationDescription } from "@/lib/seo/location"
 import type { PopulatedContinentData } from "@/lib/strapi-api/content/server"
 
@@ -38,10 +40,12 @@ export async function ContinentDetailPage({
   continent,
   locale,
   slug,
+  drives = [],
 }: {
   readonly continent: PopulatedContinentData | null
   readonly locale: Locale
   readonly slug: string
+  readonly drives?: readonly { view: DriveView; here: number }[]
 }) {
   if (!continent) {
     return (
@@ -198,6 +202,8 @@ export async function ContinentDetailPage({
             ) : null}
 
             <LocationAbout name={name} about={continent.about} />
+
+            <DrivesHere placeName={name} items={drives} />
 
             <LocationHelpPanel
               name={name}

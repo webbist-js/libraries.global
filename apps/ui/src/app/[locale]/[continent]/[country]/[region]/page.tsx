@@ -6,6 +6,7 @@ import { use } from "react"
 import { placeLabels } from "@/components/location/location-page.helpers"
 import { RegionDetailPage } from "@/components/region/RegionDetailPage"
 import { JsonLd } from "@/components/seo/JsonLd"
+import { drivesHere } from "@/lib/drives/drives-here-server"
 import { placeGapCounts } from "@/lib/find-search"
 import { isDevelopment } from "@/lib/general-helpers"
 import { buildBreadcrumbSchema } from "@/lib/seo/json-ld"
@@ -114,11 +115,13 @@ export default function RegionPage(props: {
 
   const regionPromise = fetchRegion(slug, locale)
   const gapCountsPromise = placeGapCounts("region", slug, locale)
+  const drivesPromise = drivesHere("region", slug, locale)
 
   const regionData = use(regionPromise)?.data
 
   if (!regionData) notFound()
   const gapCounts = use(gapCountsPromise)
+  const drives = use(drivesPromise)
   const parentContinent =
     regionData.continent?.slug ??
     regionData.country?.continent?.slug ??
@@ -165,6 +168,7 @@ export default function RegionPage(props: {
         countrySlug={countrySlug}
         continentSlug={continentSlug}
         gapCounts={gapCounts}
+        drives={drives}
       />
     </>
   )

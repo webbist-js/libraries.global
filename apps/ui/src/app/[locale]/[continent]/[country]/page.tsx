@@ -6,6 +6,7 @@ import { use } from "react"
 import { CountryDetailPage } from "@/components/country/CountryDetailPage"
 import { placeLabels } from "@/components/location/location-page.helpers"
 import { JsonLd } from "@/components/seo/JsonLd"
+import { drivesHere } from "@/lib/drives/drives-here-server"
 import { isDevelopment } from "@/lib/general-helpers"
 import { buildBreadcrumbSchema } from "@/lib/seo/json-ld"
 import {
@@ -84,9 +85,13 @@ export default function CountryPage(props: {
   const continentSlug = params.continent
   const slug = params.country
 
-  const countryData = use(fetchCountry(slug, locale))?.data
+  const countryPromise = fetchCountry(slug, locale)
+  const drivesPromise = drivesHere("country", slug, locale)
+
+  const countryData = use(countryPromise)?.data
 
   if (!countryData) notFound()
+  const drives = use(drivesPromise)
   const parentSlug = countryData.continent?.slug ?? continentSlug
 
   return (
@@ -117,6 +122,7 @@ export default function CountryPage(props: {
         locale={locale}
         slug={slug}
         continentSlug={continentSlug}
+        drives={drives}
       />
     </>
   )

@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react"
 import type { GapKey } from "@repo/shared-data"
 import type { Locale } from "next-intl"
 
+import { DrivesHere } from "@/components/drives/DrivesHere"
 import { Container } from "@/components/elementary/Container"
 import { LocationEventsStrip } from "@/components/events/LocationEventsStrip"
 import GlobalHeader from "@/components/global/GlobalHeader"
@@ -37,6 +38,7 @@ import {
   RegionLibraryList,
 } from "@/components/region/RegionLibraryList"
 import { T } from "@/lib/design-tokens"
+import type { DriveView } from "@/lib/drives/drive-view"
 import type {
   PopulatedRegionData,
   QuickLink,
@@ -85,6 +87,7 @@ export function RegionDetailPage({
   countrySlug,
   continentSlug,
   gapCounts,
+  drives = [],
 }: {
   region: PopulatedRegionData
   locale: Locale
@@ -95,6 +98,7 @@ export function RegionDetailPage({
     total: number
     gaps: Partial<Record<GapKey, number>>
   } | null
+  drives?: readonly { view: DriveView; here: number }[]
 }) {
   const name = region.name ?? ""
   const countryName = region.country?.name
@@ -286,6 +290,8 @@ export function RegionDetailPage({
                 </div>
               </section>
             ) : null}
+
+            <DrivesHere placeName={name} items={drives} />
 
             <LocationHelpPanel
               name={name}

@@ -5,6 +5,7 @@ import { use } from "react"
 
 import ContinentDetailPage from "@/components/continent/ContinentDetailPage"
 import { JsonLd } from "@/components/seo/JsonLd"
+import { drivesHere } from "@/lib/drives/drives-here-server"
 import { isDevelopment } from "@/lib/general-helpers"
 import { buildBreadcrumbSchema } from "@/lib/seo/json-ld"
 import {
@@ -73,8 +74,12 @@ export default function ContinentPage(props: {
   const locale = params.locale as Locale
   const slug = params.continent
 
-  const continentData = use(fetchContinent(slug, locale))?.data
+  const continentPromise = fetchContinent(slug, locale)
+  const drivesPromise = drivesHere("continent", slug, locale)
+
+  const continentData = use(continentPromise)?.data
   if (!continentData) notFound()
+  const drives = use(drivesPromise)
 
   return (
     <>
@@ -96,6 +101,7 @@ export default function ContinentPage(props: {
         continent={continentData}
         locale={locale}
         slug={slug}
+        drives={drives}
       />
     </>
   )

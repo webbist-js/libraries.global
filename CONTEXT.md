@@ -216,9 +216,9 @@ _Avoid_: pinned (Pinned is a separate flag; Featured always wins the big card)
 A hidden ledger row (the `drive-credit` content type, no REST routes) linking one approved Submission to one Drive — explicitly tagged by the contributor, or inferred from the Drive's Scope and Focus matching the Submission's fields. Feeds a Drive's stats and leaderboard; never shown directly.
 _Avoid_: credit (alone — clashes with Points), ledger entry
 
-**Drive Proposal** (D2):
-Planned, not yet built: a way for a non-board contributor to propose a Drive as a Submission, reviewed like any other Submission; approval would create the Drive and record which Submission proposed it. D1 reserves the field (`proposalSubmissionDocumentId`) but only the editorial board creates Drives today.
-_Avoid_: suggestion (that's an Option Suggestion, a different mechanism), drive request
+**Drive Proposal**:
+A Submission (`drive_proposal`) asking for a drive, reviewed in the `index` queue. Proposing needs 5 accepted Submissions and no other open proposal. Approval schedules the drive (unpinned), and the editorial board pins it.
+_Avoid_: drive request
 
 ## Relationships
 

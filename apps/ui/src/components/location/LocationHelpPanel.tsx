@@ -17,17 +17,21 @@ type HelpAction = {
 }
 
 /**
- * The three contribution routes a location page offers. On a region page,
- * pass the records with the gaps so the links open the hub on that library.
+ * The contribution routes a location page offers. On a region page, pass
+ * the records with the gaps so the links open the hub on that library, and
+ * `propose` to append "Propose a drive for {placeName}".
  */
 export function locationHelpActions({
   hoursLibrary,
   photoLibrary,
+  propose,
 }: {
   hoursLibrary?: WizardLibrary | null
   photoLibrary?: WizardLibrary | null
+  /** Appends "Propose a drive for {placeName}", linked to `href`. */
+  propose?: { href: string; placeName: string }
 } = {}): HelpAction[] {
-  return [
+  const actions: HelpAction[] = [
     {
       icon: "mdi:plus",
       tintBg: T.accent.chip,
@@ -57,6 +61,19 @@ export function locationHelpActions({
       href: hubHref("photo", photoLibrary ?? undefined),
     },
   ]
+
+  if (propose) {
+    actions.push({
+      icon: "mdi:pin-outline",
+      tintBg: T.accent.chip,
+      tintFg: T.accent.primary,
+      title: `Propose a drive for ${propose.placeName}`,
+      description: "Fill one kind of gap across its libraries, together.",
+      href: propose.href,
+    })
+  }
+
+  return actions
 }
 
 /** "Help keep {place}'s index current": a nudge plus the contribution routes. */

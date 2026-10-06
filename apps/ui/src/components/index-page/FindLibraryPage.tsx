@@ -20,6 +20,7 @@ import {
 } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import { T } from "@/lib/design-tokens"
+import type { FindDrive } from "@/lib/drives/find-match"
 import {
   type FindResult,
   type LibrarySearchHitV2,
@@ -40,6 +41,7 @@ import {
 } from "./find-helpers"
 import { LibraryResultCard, LibraryResultRow } from "./FindCards"
 import { FindFilterChips, FindResultsControls } from "./FindControls"
+import { FindDriveBanner } from "./FindDriveBanner"
 import { type FindFacets, FindFilterSidebar } from "./FindFilterSidebar"
 import { FindMapPanel } from "./FindMapPanel"
 import { FindEmptyState, FindErrorState, FindSkeletonGrid } from "./FindStates"
@@ -49,12 +51,15 @@ export function FindLibraryPage({
   initial,
   statsTotal,
   contributeBand,
+  drives,
 }: {
   /** The server's search for this URL's own state; null when it failed. */
   initial: FindResult | null
   statsTotal: number
   /** Rendered between the hero and the results. */
   contributeBand?: ReactNode
+  /** Open drives, for "There's a drive for this search". */
+  drives?: readonly FindDrive[]
 }) {
   const locale = useLocale()
   const router = useRouter()
@@ -267,6 +272,10 @@ export function FindLibraryPage({
               onChange={patch}
               onClearAll={clearAll}
             />
+          </div>
+
+          <div className="mt-4">
+            <FindDriveBanner drives={drives} state={state} />
           </div>
 
           <div className="mt-5">

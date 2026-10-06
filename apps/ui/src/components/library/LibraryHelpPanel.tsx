@@ -7,9 +7,10 @@ import { translateTargets } from "@/app/[locale]/contribute/index/_components/tr
 import { hubHref } from "@/components/contribute/wizard.logic"
 import type { ChecklistKey } from "@/components/library/library-page.helpers"
 import { useCorrectionDrawer } from "@/components/library/LibraryCorrection"
+import { LibraryDriveNote } from "@/components/library/LibraryDriveNote"
 import { useCapabilities } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
-import { Link } from "@/lib/navigation"
+import { Link, usePathname } from "@/lib/navigation"
 
 /** One of Strapi's configured locales. */
 export type TranslateLocale = {
@@ -229,6 +230,8 @@ export function LibraryHelpPanel({
   libraryDocumentId,
   facilityQuestions,
   translateLocales = [],
+  libraryPlace,
+  libraryWebsite,
 }: {
   readonly gaps: readonly ChecklistKey[]
   readonly librarySlug: string
@@ -241,8 +244,15 @@ export function LibraryHelpPanel({
    * "Translate this record" into each non-default locale.
    */
   readonly translateLocales?: readonly TranslateLocale[]
+  /** The library's town and region, for its drive note's task panel. */
+  readonly libraryPlace?: {
+    city?: string | null
+    regionName?: string | null
+  } | null
+  readonly libraryWebsite?: string | null
 }) {
   const routeLocale = useLocale()
+  const pathname = usePathname()
   const { open } = useCorrectionDrawer()
   const { has, claimedLibraryIds, ready } = useCapabilities()
   const steward =
@@ -257,7 +267,21 @@ export function LibraryHelpPanel({
 
   const targets = translateTargets(translateLocales, routeLocale)
 
-  if (!steward && tasks.length === 0 && targets.length === 0) return null
+  const driveNote = (
+    <LibraryDriveNote
+      library={{
+        documentId: libraryDocumentId,
+        slug: librarySlug,
+        name: libraryName,
+        city: libraryPlace?.city,
+        regionName: libraryPlace?.regionName,
+        website: libraryWebsite,
+        href: pathname,
+      }}
+    />
+  )
+
+  if (!steward && tasks.length === 0 && targets.length === 0) return driveNote
 
   return (
     <section
@@ -265,6 +289,7 @@ export function LibraryHelpPanel({
       className="rounded-3xl p-5"
       style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
     >
+      {driveNote}
       <h2
         id="help-h"
         className="m-0 mb-3 text-[15px] font-bold"

@@ -1,5 +1,6 @@
 import type { Locale } from "next-intl"
 
+import { DrivesHere } from "@/components/drives/DrivesHere"
 import { Container } from "@/components/elementary/Container"
 import { LocationEventsStrip } from "@/components/events/LocationEventsStrip"
 import GlobalHeader from "@/components/global/GlobalHeader"
@@ -26,6 +27,7 @@ import {
   LocationHeroMap,
 } from "@/components/location/LocationHeroMap"
 import { T } from "@/lib/design-tokens"
+import type { DriveView } from "@/lib/drives/drive-view"
 import { buildLocationDescription } from "@/lib/seo/location"
 import type {
   PopulatedCountryData,
@@ -41,11 +43,13 @@ export function CountryDetailPage({
   locale,
   slug,
   continentSlug,
+  drives = [],
 }: {
   country: PopulatedCountryData
   locale: Locale
   slug: string
   continentSlug: string
+  drives?: readonly { view: DriveView; here: number }[]
 }) {
   const name = country.name ?? ""
   const regions = country.regions ?? []
@@ -246,6 +250,8 @@ export function CountryDetailPage({
                 locationLabel={name}
               />
             ) : null}
+
+            <DrivesHere placeName={name} items={drives} />
 
             <LocationHelpPanel name={name} body={helpBody} />
           </div>

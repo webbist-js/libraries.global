@@ -16,6 +16,8 @@ import { FindLibraryPage } from "@/components/index-page/FindLibraryPage"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 import { isPromptHidden } from "@/lib/dismissed-prompts"
+import { fetchDrives } from "@/lib/drives/drives-server"
+import type { FindDrive } from "@/lib/drives/find-match"
 import { libraryTotal, searchFind } from "@/lib/find-search"
 import { buildMetadata } from "@/lib/seo/metadata"
 
@@ -66,18 +68,27 @@ export default async function FindLibraryRoute(props: {
       )
     )
   )
-  const [initial, statsTotal, session, cookieStore] = await Promise.all([
-    searchFind(findQueryOf(state, locale)).catch(() => null),
-    libraryTotal(locale).catch(() => strapiLibraryTotal()),
-    headers().then(getSessionSSR),
-    cookies(),
-  ])
+  const [initial, statsTotal, session, cookieStore, openDrives] =
+    await Promise.all([
+      searchFind(findQueryOf(state, locale)).catch(() => null),
+      libraryTotal(locale).catch(() => strapiLibraryTotal()),
+      headers().then(getSessionSSR),
+      cookies(),
+      fetchDrives("open", locale),
+    ])
   const signedIn = Boolean(session?.user)
   const showContribute = !isPromptHidden(
     "find-contribute",
     cookieStore,
     session?.user
   )
+  const drives: FindDrive[] = openDrives.map((d) => ({
+    documentId: d.documentId,
+    slug: d.slug,
+    title: d.title,
+    focus: d.focus,
+    scope: d.scope,
+  }))
 
   return (
     <div
@@ -90,6 +101,7 @@ export default async function FindLibraryRoute(props: {
           <FindLibraryPage
             initial={initial}
             statsTotal={statsTotal}
+            drives={drives}
             contributeBand={
               showContribute ? (
                 <DismissiblePrompt
