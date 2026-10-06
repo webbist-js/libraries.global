@@ -19,8 +19,22 @@ import {
   validateDrive,
 } from "@repo/shared-data"
 
+import type { PlaceNames } from "@/lib/drives/drive-view"
+import type { ProposePrefill } from "@/lib/drives/propose-link"
 import type { Drive, DriveSource } from "@/lib/drives/types"
 import { nameFromSlug } from "@/lib/find-places"
+
+/**
+ * The board writes drives directly; anyone else's builder sends a Drive
+ * Proposal for a Moderator to review (spec §5.7).
+ */
+export type BuilderMode = "board" | "propose"
+
+/** "Anything the Moderator should know?": at most this many characters. */
+export const PROPOSAL_NOTE_MAX = 1000
+
+/** A proposal starts this many days from today, so it can be reviewed first. */
+export const PROPOSAL_LEAD_DAYS = 7
 
 /** One place the drive covers, as a removable chip. */
 export interface BuilderPlace {
@@ -133,6 +147,51 @@ export function emptyBuilderState(now: Date = new Date()): BuilderState {
     endsOn: isoDay(new Date(now.getTime() + (DEFAULT_DRIVE_DAYS - 1) * DAY_MS)),
     goalPercent: "100",
     unit: "library",
+  }
+}
+
+/** A proposal's dates: from `PROPOSAL_LEAD_DAYS` ahead, for `DEFAULT_DRIVE_DAYS`. */
+function proposalDates(now: Date): Pick<BuilderState, "startsOn" | "endsOn"> {
+  const starts = now.getTime() + PROPOSAL_LEAD_DAYS * DAY_MS
+
+  return {
+    startsOn: isoDay(new Date(starts)),
+    endsOn: isoDay(new Date(starts + (DEFAULT_DRIVE_DAYS - 1) * DAY_MS)),
+  }
+}
+
+/**
+ * The builder filled from a link's prefill (`propose-link.ts`): its gaps,
+ * places (named from `names`, else from the slug), types, Dataset and
+ * ceiling. A proposal starts `PROPOSAL_LEAD_DAYS` from today and runs
+ * `DEFAULT_DRIVE_DAYS`; the board's keeps the new drive's dates.
+ */
+export function builderStateFromPrefill(
+  prefill: ProposePrefill,
+  names: PlaceNames,
+  mode: BuilderMode,
+  now: Date = new Date()
+): BuilderState {
+  const state = emptyBuilderState(now)
+  const places = DRIVE_PLACE_LEVELS.flatMap((level) =>
+    (prefill.places?.[level] ?? []).map((slug) => ({
+      level,
+      slug,
+      name: names.get(`${level}:${slug}`)?.name ?? nameFromSlug(slug),
+    }))
+  )
+
+  return {
+    ...state,
+    ...(mode === "propose" ? proposalDates(now) : {}),
+    gaps: [...(prefill.gaps ?? [])],
+    places,
+    libraryTypes: [...(prefill.libraryTypes ?? [])],
+    source: prefill.source ?? "",
+    completenessBelow:
+      prefill.completenessBelow == null
+        ? ""
+        : String(prefill.completenessBelow),
   }
 }
 
@@ -334,6 +393,9 @@ const MESSAGE_FIELDS: [prefix: string, field: BuilderField][] = [
   ["A drive can run for at most", "endsOn"],
   ["Set a goal between", "goalPercent"],
   ["The source link must be", "whereUrl"],
+  ["Choose gaps the task panel can fill", "focus"],
+  ["List libraries by their id", "libraries"],
+  ["No library in this scope has that gap", "places"],
 ]
 
 /** The field a validation message is about; null when it isn't one field's. */
@@ -424,7 +486,10 @@ const SAVE_FAILED = "The drive couldn’t be saved. Try again."
  * A failed response's errors: Strapi's `error.details.errors` (the same
  * `validateDrive` messages), else its message, linked to fields.
  */
-export function errorsFromResponse(json: unknown): FieldError[] {
+export function errorsFromResponse(
+  json: unknown,
+  fallback: string = SAVE_FAILED
+): FieldError[] {
   const error = (json as { error?: unknown } | null)?.error
   if (typeof error === "string" && error)
     return [{ field: null, message: error }]
@@ -443,7 +508,7 @@ export function errorsFromResponse(json: unknown): FieldError[] {
     return [{ field: fieldOfMessage(e.message), message: e.message }]
   }
 
-  return [{ field: null, message: SAVE_FAILED }]
+  return [{ field: null, message: fallback }]
 }
 
 // ── Live counts ──────────────────────────────────────────────────────────────

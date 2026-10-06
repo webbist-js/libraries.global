@@ -1,6 +1,9 @@
-import { emptyBuilderState } from "@/components/drives/builder.logic"
+import { builderStateFromPrefill } from "@/components/drives/builder.logic"
 import { DriveBuilder } from "@/components/drives/DriveBuilder"
 import { T } from "@/lib/design-tokens"
+import { drivePlaceRefs } from "@/lib/drives/drive-view"
+import { fetchPlaceNames } from "@/lib/drives/drive-view-server"
+import { prefillFromParams, prefillQuery } from "@/lib/drives/propose-link"
 import { privateMetadata } from "@/lib/seo/metadata"
 
 import { requireBoardMember } from "../../_components/board"
@@ -8,14 +11,29 @@ import { CommunitySectionHeader } from "../../_components/CommunitySectionHeader
 
 export const metadata = privateMetadata("New drive")
 
-/** The editorial board's builder for a new drive (spec §5.7, board mode). */
+/**
+ * The editorial board's builder for a new drive (spec §5.7, board mode).
+ * A propose link's query (`propose-link.ts`) prefills it, so a board
+ * member sent here from "Propose as a drive" keeps the gap and place.
+ */
 export default async function NewDrivePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const { locale } = await params
-  await requireBoardMember(locale, "/community/drives/new")
+  const [{ locale }, sp] = await Promise.all([params, searchParams])
+  const prefill = prefillFromParams(sp)
+  await requireBoardMember(
+    locale,
+    `/community/drives/new${prefillQuery(prefill)}`
+  )
+
+  const names = await fetchPlaceNames(
+    drivePlaceRefs({ places: prefill.places }),
+    locale
+  )
 
   return (
     <div
@@ -30,7 +48,10 @@ export default async function NewDrivePage({
         title="New *drive*"
         lead="Choose the gaps, where they are and where helpers can find the answers. The drive is saved as scheduled; pin it or open it from its page."
       />
-      <DriveBuilder initial={emptyBuilderState()} locale={locale} />
+      <DriveBuilder
+        initial={builderStateFromPrefill(prefill, names, "board")}
+        locale={locale}
+      />
     </div>
   )
 }

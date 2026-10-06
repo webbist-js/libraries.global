@@ -1,5 +1,6 @@
 import "server-only"
 
+import type { Capability } from "@repo/access"
 import {
   DRIVE_MAX_LIBRARIES,
   DRIVE_PLACE_LEVELS,
@@ -12,7 +13,8 @@ import { revalidateTag } from "next/cache"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
-import { requireCapability } from "@/lib/access-server"
+import { PROPOSAL_NOTE_MAX } from "@/components/drives/builder.logic"
+import { hasCapability, requireCapability } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { isDocumentIdParam, readJsonCapped } from "@/lib/bridge-params"
 import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
@@ -22,11 +24,15 @@ import { driveCounts } from "./drive-progress"
 
 /**
  * The editorial board's drive routes (`/api/drives`, `/api/drives/[id]`,
- * `/api/drives/[id]/actions`, `/api/drives/preview`). Each needs
- * `drives.manage` in the session, counts against a per-user limit, reads a
- * capped JSON body, forwards only the keys its route allows, and carries the
- * caller's identity from the session, never from the request. Strapi
- * re-checks the caller's Role Grants (`isBoardMember`) on every write.
+ * `/api/drives/[id]/actions`), the builder's live counts
+ * (`/api/drives/preview`) and a contributor's Drive Proposal
+ * (`/api/drives/proposals`). Board writes need `drives.manage` in the
+ * session; the counts admit anyone who builds or reviews a drive; a
+ * proposal needs `submit.driveProposal`. Each counts against a per-user
+ * limit, reads a capped JSON body, forwards only the keys its route allows,
+ * and carries the caller's identity from the session, never from the
+ * request. Strapi re-checks the caller's Role Grants (`isBoardMember`, the
+ * submission policy) on every write.
  */
 
 const STRAPI = () => process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
@@ -79,6 +85,20 @@ const previewLimiter = createRateLimiter({
   windowMs: 60_000,
 })
 
+/** Proposals: 10 a minute per user (Strapi allows one in review at a time). */
+const proposalLimiter = createRateLimiter({
+  name: "drive-proposals",
+  max: 10,
+  windowMs: 60_000,
+})
+
+/** Who may ask for the builder's live counts: anyone building or reviewing a drive. */
+const PREVIEW_CAPABILITIES = [
+  "drives.manage",
+  "submit.driveProposal",
+  "moderate.queue",
+] as const satisfies readonly Capability[]
+
 type BoardUser = {
   id: string
   email: string
@@ -88,11 +108,19 @@ type BoardUser = {
 
 type Gate = { user: BoardUser; denied: null } | { user: null; denied: Response }
 
-/** The signed-in board member, or the 401/403/429 to answer instead. */
-async function boardGate(limiter: typeof writeLimiter): Promise<Gate> {
+/**
+ * The signed-in user holding any of `caps`, or the 401/403/429 to answer
+ * instead.
+ */
+async function capabilityGate(
+  limiter: typeof writeLimiter,
+  caps: readonly [Capability, ...Capability[]]
+): Promise<Gate> {
   const session = await getSessionSSR(await headers())
   const user = (session?.user ?? null) as BoardUser | null
-  const denied = requireCapability(user, "drives.manage")
+  const denied = caps.some((cap) => hasCapability(user, cap))
+    ? null
+    : requireCapability(user, caps[0])
   if (denied || !user) {
     return {
       user: null,
@@ -105,6 +133,10 @@ async function boardGate(limiter: typeof writeLimiter): Promise<Gate> {
 
   return { user, denied: null }
 }
+
+/** The signed-in board member, or the 401/403/429 to answer instead. */
+const boardGate = (limiter: typeof writeLimiter) =>
+  capabilityGate(limiter, ["drives.manage"])
 
 const asRecord = (v: unknown): Record<string, unknown> =>
   v && typeof v === "object" && !Array.isArray(v)
@@ -309,28 +341,36 @@ function actionBody(raw: unknown): Record<string, unknown> | Response {
 }
 
 /**
- * A drive body: `DRIVE_BODY_KEYS`, its focus and scope cleaned, and a
- * pasted list's slugs resolved to documentIds (400 naming any not found).
+ * A drive body, as a board create or update and a proposal send it:
+ * `DRIVE_BODY_KEYS`, its focus and scope cleaned, and a pasted list's slugs
+ * resolved to documentIds. The response is the 400 naming any library not
+ * found, or the 502 when Strapi can't be reached to look them up.
  */
-async function driveBody(
+export async function prepareDriveBody(
   raw: unknown
-): Promise<Record<string, unknown> | Response> {
+): Promise<
+  | { ok: true; body: Record<string, unknown> }
+  | { ok: false; response: Response }
+> {
   const body = pickKeys(raw, DRIVE_BODY_KEYS)
   if ("focus" in body) body.focus = cleanFocus(body.focus)
-  if (!("scope" in body)) return body
+  if (!("scope" in body)) return { ok: true, body }
 
   const scope = cleanScope(body.scope)
   if (scope.libraries?.length) {
     const resolved = await resolveLibraryRefs(scope.libraries)
-    if (!resolved) return unavailable()
+    if (!resolved) return { ok: false, response: unavailable() }
     if (resolved.unknown.length > 0) {
-      return invalidDrive([notFoundMessage(resolved.unknown)])
+      return {
+        ok: false,
+        response: invalidDrive([notFoundMessage(resolved.unknown)]),
+      }
     }
     scope.libraries = resolved.ids
   }
   body.scope = scope
 
-  return body
+  return { ok: true, body }
 }
 
 export type BoardWrite =
@@ -370,11 +410,16 @@ export async function proxyBoardWrite(
     )
   }
 
-  const body =
-    write.kind === "action"
-      ? actionBody(parsed.body)
-      : await driveBody(parsed.body)
-  if (body instanceof Response) return body
+  let body: Record<string, unknown>
+  if (write.kind === "action") {
+    const action = actionBody(parsed.body)
+    if (action instanceof Response) return action
+    body = action
+  } else {
+    const prepared = await prepareDriveBody(parsed.body)
+    if (!prepared.ok) return prepared.response
+    body = prepared.body
+  }
 
   const base =
     write.kind === "create" ? "/api/drives" : `/api/drives/${write.documentId}`
@@ -404,7 +449,7 @@ export async function proxyBoardWrite(
  * resolved first, and any that aren't found come back as `unknown`.
  */
 export async function previewDrive(req: Request): Promise<Response> {
-  const gate = await boardGate(previewLimiter)
+  const gate = await capabilityGate(previewLimiter, PREVIEW_CAPABILITIES)
   if (gate.denied) return gate.denied
 
   const parsed = await readJsonCapped(req, MAX_DRIVE_BODY_BYTES)
@@ -463,4 +508,65 @@ export async function previewDrive(req: Request): Promise<Response> {
     },
     { headers: { "Cache-Control": "no-store" } }
   )
+}
+
+/** A proposal's note to the Moderator: trimmed and capped, or null. */
+function proposalNote(raw: unknown): string | null {
+  const note = asRecord(raw).note
+  if (typeof note !== "string") return null
+  const trimmed = note.trim().slice(0, PROPOSAL_NOTE_MAX)
+
+  return trimmed || null
+}
+
+/**
+ * A contributor's Drive Proposal (spec §5.7, §7.2): the same drive body the
+ * board sends, cleaned the same way, posted to Strapi as a `drive_proposal`
+ * Submission with the definition in `draftData.drive` and the optional note
+ * for the Moderator. Strapi's submission policy decides: the standing rule,
+ * one proposal in review, a valid drive the task panel can fill. Its answer
+ * comes back as it is, so the builder reads `error.details.errors`.
+ */
+export async function proposeDrive(req: Request): Promise<Response> {
+  const gate = await capabilityGate(proposalLimiter, ["submit.driveProposal"])
+  if (gate.denied) return gate.denied
+
+  if (!process.env.STRAPI_BRIDGE_SECRET) {
+    return NextResponse.json(
+      { error: "Bridge not configured" },
+      { status: 500 }
+    )
+  }
+
+  const parsed = await readJsonCapped(req, MAX_DRIVE_BODY_BYTES)
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: "Invalid request body" },
+      { status: parsed.status }
+    )
+  }
+  const prepared = await prepareDriveBody(parsed.body)
+  if (!prepared.ok) return prepared.response
+  const note = proposalNote(parsed.body)
+
+  try {
+    const res = await fetch(`${STRAPI()}/api/content-moderation/submissions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...bridgeUserHeaders(gate.user),
+      },
+      body: JSON.stringify({
+        submissionType: "drive_proposal",
+        targetEntityType: "drive",
+        draftData: { drive: prepared.body },
+        ...(note ? { note } : {}),
+      }),
+      cache: "no-store",
+    })
+
+    return await passThrough(res)
+  } catch {
+    return unavailable()
+  }
 }

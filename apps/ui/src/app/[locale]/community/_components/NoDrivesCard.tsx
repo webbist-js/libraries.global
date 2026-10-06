@@ -2,13 +2,17 @@ import { Icon } from "@iconify/react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
+import { proposeHref } from "@/lib/drives/propose-link"
 
 const DRIVE_STEPS = [
   {
     title: "Someone proposes a gap",
     text: "A place plus one missing detail, with a public source.",
   },
-  { title: "A moderator pins it", text: "With a goal and an end date." },
+  {
+    title: "A Moderator reviews it",
+    text: "It opens on its start date, with a goal and an end date.",
+  },
   {
     title: "Everyone chips in",
     text: "Small tasks, each checked by a reviewer.",
@@ -17,7 +21,8 @@ const DRIVE_STEPS = [
 
 /**
  * The Noticeboard's first card until drives exist (D1 replaces it with the
- * pinned drive): what a drive is, a way to help now, and how drives work.
+ * pinned drive): what a drive is, ways to help now (improve a record, or
+ * propose a drive), and how drives work.
  */
 export function NoDrivesCard({ hasGaps }: { readonly hasGaps: boolean }) {
   return (
@@ -63,7 +68,7 @@ export function NoDrivesCard({ hasGaps }: { readonly hasGaps: boolean }) {
         >
           A drive is a short, shared push to fill one kind of gap, like opening
           hours for a county’s libraries. Until one opens, you can improve any
-          record{hasGaps ? ", or work on the gaps below." : "."}
+          record{hasGaps ? ", or propose a drive from the gaps below." : "."}
         </p>
         <div className="mt-1 flex flex-wrap gap-2.5">
           <GlobalLink
@@ -71,6 +76,13 @@ export function NoDrivesCard({ hasGaps }: { readonly hasGaps: boolean }) {
             className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-primary) px-[22px] py-3 text-[16px] font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
           >
             Improve a record
+          </GlobalLink>
+          <GlobalLink
+            href={proposeHref()}
+            className="inline-flex min-h-11 items-center rounded-full border border-(--t-border-hi) bg-white px-[22px] py-3 text-[16px] font-semibold no-underline hover:border-(--t-accent-primary)"
+            style={{ color: T.ink.base }}
+          >
+            Propose a drive
           </GlobalLink>
         </div>
       </div>

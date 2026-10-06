@@ -1,4 +1,3 @@
-import { Icon } from "@iconify/react"
 import type { Metadata } from "next"
 import { headers } from "next/headers"
 
@@ -7,7 +6,6 @@ import { TopThisMonthCard } from "@/components/community/TopThisMonthCard"
 import { VoteOnAdditionsCard } from "@/components/community/VoteOnAdditionsCard"
 import { FinishedDrives } from "@/components/drives/FinishedDrives"
 import { isFocusFilterKey } from "@/components/drives/focus-meta"
-import { GlobalLink } from "@/components/global/GlobalLink"
 import { hasCapability } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { fetchDriveGaps } from "@/lib/community/drive-gaps-server"
@@ -31,6 +29,8 @@ import { CommunitySectionHeader } from "./_components/CommunitySectionHeader"
 import { GapsWorthADrive } from "./_components/GapsWorthADrive"
 import { NoDrivesCard } from "./_components/NoDrivesCard"
 import { NoticeboardDrives } from "./_components/NoticeboardDrives"
+import { NoticeboardHeroActions } from "./_components/NoticeboardHeroActions"
+import { ProposeBand } from "./_components/ProposeBand"
 
 /** "Recently finished" lists this many closed drives. */
 const FINISHED_SHOWN = 5
@@ -104,6 +104,10 @@ export default async function CommunityPage({
   const views = await loadDriveViews([...openDrives, ...closedDrives], locale)
   const open = views.slice(0, openDrives.length)
   const finished = views.slice(openDrives.length)
+  const board = hasCapability(user, "drives.manage")
+  const signedIn = Boolean(user)
+  // Summed per drive: someone helping two drives counts in both.
+  const helping = open.reduce((n, v) => n + (v.helpers ?? 0), 0)
 
   return (
     <div
@@ -115,18 +119,12 @@ export default async function CommunityPage({
         lead="Community drives to fill gaps in the index. Pick one, work through small tasks, and see the whole effort move forward."
         counts={{ noticeboard: open.length, suggestions: votableCount }}
       >
-        {hasCapability(user, "drives.manage") ? (
-          <div className="flex flex-wrap gap-2.5">
-            <GlobalLink
-              href="/community/drives/new"
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white px-[22px] py-3 text-[16px] font-semibold no-underline hover:border-(--t-accent-primary)"
-              style={{ color: T.ink.base }}
-            >
-              <Icon aria-hidden="true" icon="mdi:plus" width={18} />
-              New drive
-            </GlobalLink>
-          </div>
-        ) : null}
+        <NoticeboardHeroActions
+          board={board}
+          signedIn={signedIn}
+          openCount={open.length}
+          helping={helping}
+        />
       </CommunitySectionHeader>
 
       <div
@@ -155,6 +153,7 @@ export default async function CommunityPage({
               <FinishedDrives views={finished} />
             </>
           )}
+          <ProposeBand board={board} signedIn={signedIn} howHref={howHref} />
         </div>
 
         <aside
@@ -164,7 +163,7 @@ export default async function CommunityPage({
         >
           <StandingCard
             standing={standing}
-            signedIn={Boolean(user)}
+            signedIn={signedIn}
             initials={user ? viewerInitials(profile, user) : ""}
             signInReturnTo="/community"
           />
