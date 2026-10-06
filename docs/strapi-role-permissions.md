@@ -107,12 +107,13 @@ Only the owner has admin access today, as Super Admin, which holds every permiss
 
 ### Plugin permissions
 
-| Plugin             | Permission (UID)                                                  | Grants                                                    |
-| ------------------ | ----------------------------------------------------------------- | --------------------------------------------------------- |
-| content-moderation | "Access the moderation queue" (`plugin::content-moderation.read`) | The admin queue, relation labels, option suggestions list |
-| content-moderation | "Update submission status" (`plugin::content-moderation.update`)  | Decisions and option suggestion decisions                 |
-| rewards            | "View rewards data" (`read`)                                      | The rewards dashboard                                     |
-| rewards            | "Manually award or deduct points" (`award`)                       | Point adjustments                                         |
+| Plugin             | Permission (UID)                                                  | Grants                                                                                                                          |
+| ------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| content-moderation | "Access the moderation queue" (`plugin::content-moderation.read`) | The admin queue, relation labels, option suggestions list                                                                       |
+| content-moderation | "Update submission status" (`plugin::content-moderation.update`)  | Decisions and option suggestion decisions                                                                                       |
+| events             | "Reveal event credentials" (`plugin::events.reveal-credentials`)  | Reads one Event Credential's stored value; every reveal is logged to `plugin::events.credential-event` (append-only, no routes) |
+| rewards            | "View rewards data" (`read`)                                      | The rewards dashboard                                                                                                           |
+| rewards            | "Manually award or deduct points" (`award`)                       | Point adjustments                                                                                                               |
 
 ### Collection types
 

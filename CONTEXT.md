@@ -24,6 +24,14 @@ _Avoid_: occurrence, happening, listing
 An external system that supplies Event data — either a ticketing/aggregation platform (Eventbrite, TicketSource, WeGotTickets), a raw iCal feed, or a library management system (Aspen, Solus, Spydus). Each Source Provider requires its own credential stored in Strapi.
 _Avoid_: integration, feed, data source
 
+**Event Feed**:
+A Library's connection to one Source Provider: one Event Credential and the Libraries it feeds. A claimant or staff connects it; it is active, paused or waiting for review.
+_Avoid_: integration
+
+**Event Credential**:
+The stored, encrypted values (tokens, keys, feed URLs) a Source Provider needs, kept on the Event Feed's row. Write-only for everyone except Strapi admin users with the Reveal permission.
+_Avoid_: secret (alone — too generic), token (only one of several value shapes)
+
 **Dataset**:
 An external body of data imported into the index — a published list of libraries — registered in Strapi with its publisher, source address, licence and licence URL, whether that licence has been confirmed in writing, whether redistribution is permitted, the credit it requires, its coverage, the import mechanism, dates and notes. A record points at the Dataset it came from through its `source` field, which equals the Dataset's `key`. Distinct from a Source Provider, which supplies Events, not records.
 _Avoid_: data source, feed, import (for the registry entry itself)

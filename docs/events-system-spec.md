@@ -69,7 +69,7 @@ The system is split into two components that share only the database and the cre
 │  - Bulk-upserts events directly to the database in chunks            │
 │  - Purges expired events                                             │
 │  - Writes import-run audit records with live progress updates        │
-│  - Runs a tiny HTTP server (health + credential test-ping only)      │
+│  - Runs a tiny HTTP server (health only)                              │
 │  - Scheduled by external cron / PM2 / systemd                       │
 │                                                                      │
 │  Never calls Strapi's HTTP API. Direct DB access only.               │
@@ -110,35 +110,28 @@ The sync worker connects to the same PostgreSQL database that Strapi uses. It kn
 
 ### The worker's tiny HTTP server
 
-The sync worker runs a minimal HTTP server on `WORKER_PORT` (default `3100`) serving exactly two endpoints:
+The sync worker runs a minimal HTTP server on `WORKER_PORT` (default `3100`) serving exactly one endpoint:
 
 ```
 GET  /health
      Returns worker liveness, last sync time, next scheduled sync,
      current sync status, and version.
      { ok: true, lastSync: "...", nextSync: "...", status: "idle"|"running", version: "..." }
-
-POST /test-credential
-     Body: { credentialId: number }
-     Loads and decrypts the credential, runs the provider's test() function,
-     returns { ok: boolean, error?: string }
-     Used by the Strapi admin panel "Test" button without duplicating provider logic.
 ```
 
-The Strapi admin API proxies the test-ping: `POST /api/events/admin/credentials/:id/test` → calls `WORKER_URL/test-credential`. On the same host this is a loopback call. On separate deployments it uses an internal network address.
+There is no test-ping endpoint. An Event Feed's connection test (the "Test connection" and "Test again" actions, and the one the content-moderation review panel offers a Moderator) runs in-process in Strapi, using the same provider code the worker imports (`@repo/event-providers`): it never calls out to the worker.
 
 ### Strapi ↔ Worker communication channels
 
-All communication goes through the shared database or the worker's health endpoint. There are no direct Strapi-to-Worker API calls except for the test-ping proxy.
+All communication goes through the shared database or the worker's health endpoint. There are no direct Strapi-to-Worker API calls.
 
-| Direction      | Mechanism                                                                                                                                                                                                        |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Admin → Worker | `POST /api/events/admin/sync` inserts a row into `ev_sync_commands`. Worker polls this table every 2 minutes.                                                                                                    |
-| Worker → Admin | Worker writes live progress to the `ev_import_runs` row (`status`, `eventsFetched`, `eventsCreated`, etc.). Admin dashboard polls `GET /api/events/admin/runs/:runId` every 3 seconds while status is `running`. |
-| Admin → Worker | Credential test-ping: Strapi proxies `POST WORKER_URL/test-credential`.                                                                                                                                          |
-| Worker → Admin | Health check: Admin dashboard polls `GET WORKER_URL/health` every 30 seconds.                                                                                                                                    |
-| Worker → DB    | Direct knex writes to `ev_events`, `ev_import_runs`, `ev_event_credentials` (status fields only).                                                                                                                |
-| Admin → DB     | Strapi Document Service reads/writes credentials and reads events/runs via the plugin's services.                                                                                                                |
+| Direction      | Mechanism                                                                                                                                                                                                                                                                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Admin → Worker | `POST /api/events/admin/sync` inserts a row into `ev_sync_commands`. A command can carry a `credentialDocumentId` to sync one Event Feed only, or none for a full sync. Worker polls this table every 2 minutes.                                                                                                             |
+| Worker → Admin | Worker writes live progress to the `ev_import_runs` row (`status`, `eventsFetched`, `eventsCreated`, etc.). Admin dashboard polls `GET /api/events/admin/runs/:runId` every 3 seconds while status is `running`.                                                                                                             |
+| Worker → Admin | Health check: Admin dashboard polls `GET WORKER_URL/health` every 30 seconds.                                                                                                                                                                                                                                                |
+| Worker → DB    | Direct knex writes to `ev_events`, `ev_import_runs`, `ev_event_credentials` (status, failure count and `lastSyncAt`). After `EVENTS_AUTOPAUSE_AFTER` consecutive failed syncs, the worker pauses the Event Feed itself (`status: paused`, `pausedReason: sync_failures`); Strapi's 15-minute cron then emails its claimants. |
+| Admin → DB     | Strapi Document Service reads/writes credentials and reads events/runs via the plugin's services.                                                                                                                                                                                                                            |
 
 ### Sync concurrency model
 
