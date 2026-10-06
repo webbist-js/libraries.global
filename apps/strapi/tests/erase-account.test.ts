@@ -18,6 +18,8 @@ const BADGES = "plugin::rewards.badge-award"
 const SNAPSHOT = "plugin::rewards.leaderboard-snapshot"
 const UP_USER = "plugin::users-permissions.user"
 const UP_FILE = "plugin::upload.file"
+const CRED = "plugin::events.event-credential"
+const CRED_EVENT = "plugin::events.credential-event"
 
 const ERASED =
   /^deleted-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
@@ -96,6 +98,30 @@ function seed() {
         status: "pending",
         fields: { kind: "record" },
       },
+      {
+        documentId: "s6",
+        status: "pending",
+        submissionType: "event_feed",
+        submittedByUserId: "u1",
+        submittedByEmail: "alice@example.org",
+        fields: { kind: "replace", credentialDocumentId: "cred-active" },
+      },
+    ],
+    [CRED]: [
+      { documentId: "cred-pending", status: "pending", connectedBy: "ba:u1" },
+      {
+        documentId: "cred-active",
+        status: "active",
+        connectedBy: "ba:u1",
+        pendingSubmissionDocumentId: "s6",
+        pendingCredentialsEncrypted: "encrypted-blob",
+        pendingHints: { url: "https://example.org/cal.ics" },
+        pendingTestedAt: "2026-10-01T00:00:00.000Z",
+        pendingTestResult: "ok",
+      },
+    ],
+    [CRED_EVENT]: [
+      { documentId: "ce1", actor: "ba:u1", action: "connect_submitted" },
     ],
     [UP_FILE]: [
       { id: 9, documentId: "f9", name: "pending.jpg" },
@@ -276,6 +302,23 @@ describe("eraseAccount", () => {
     expect(store[SUB][0].submittedByEmail).toBe("deleted@invalid")
     // No email given: the newsletter row can't be matched and stays.
     expect(store[SUBSCRIBER]).toHaveLength(2)
+  })
+
+  it("drops a feed still waiting on this person and forgets who connected an approved one", async () => {
+    const { strapi, store } = seed()
+    await eraseAccount(strapi, { baUserId: "u1", email: "alice@example.org" })
+
+    expect(
+      store[CRED].find((c) => c.documentId === "cred-pending")
+    ).toBeUndefined()
+    const active = store[CRED].find((c) => c.documentId === "cred-active")!
+    expect(active.connectedBy).toBeNull()
+    expect(active.pendingCredentialsEncrypted).toBeNull()
+    expect(active.pendingHints).toBeNull()
+    expect(active.pendingTestedAt).toBeNull()
+    expect(active.pendingTestResult).toBeNull()
+    expect(active.pendingSubmissionDocumentId).toBeNull()
+    expect(store[CRED_EVENT][0]!.actor).toBe("ba:erased")
   })
 
   it("carries on when a file can't be removed", async () => {

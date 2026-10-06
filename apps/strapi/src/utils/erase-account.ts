@@ -15,6 +15,8 @@ const BADGE_AWARD = "plugin::rewards.badge-award"
 const SNAPSHOT = "plugin::rewards.leaderboard-snapshot"
 const UP_USER = "plugin::users-permissions.user"
 const UP_FILE = "plugin::upload.file"
+const CREDENTIAL = "plugin::events.event-credential"
+const CREDENTIAL_EVENT = "plugin::events.credential-event"
 
 /** Submissions that never became public: their content goes with the account. */
 const UNFINISHED_STATUSES = ["draft", "pending", "needs_info"]
@@ -23,6 +25,8 @@ type SnapshotEntry = { baUserId?: string; username?: string | null }
 
 type UnfinishedSubmission = {
   id: number
+  documentId: string
+  submissionType?: string
   fields?: unknown
   draftData?: unknown
 }
@@ -177,6 +181,35 @@ export async function eraseAccount(
     ]) {
       await strapi.db.query(uid).deleteMany({ where: { baUserId } })
     }
+
+    // Event Feeds belong to the library: keep approved ones, forget who
+    // connected them, and drop anything still waiting on this person.
+    const actor = `ba:${baUserId}`
+    await strapi.db.query(CREDENTIAL).deleteMany({
+      where: { connectedBy: actor, status: { $in: ["pending", "draft"] } },
+    })
+    const theirOpen = unfinished
+      .filter((s) => s.submissionType === "event_feed")
+      .map((s) => s.documentId)
+    if (theirOpen.length)
+      await strapi.db.query(CREDENTIAL).updateMany({
+        where: { pendingSubmissionDocumentId: { $in: theirOpen } },
+        data: {
+          pendingCredentialsEncrypted: null,
+          pendingHints: null,
+          pendingTestedAt: null,
+          pendingTestResult: null,
+          pendingSubmissionDocumentId: null,
+        },
+      })
+    await strapi.db.query(CREDENTIAL).updateMany({
+      where: { connectedBy: actor },
+      data: { connectedBy: null },
+    })
+    await strapi.db.query(CREDENTIAL_EVENT).updateMany({
+      where: { actor },
+      data: { actor: "ba:erased" },
+    })
 
     const snapshots = (await strapi.db.query(SNAPSHOT).findMany({})) as {
       id: number

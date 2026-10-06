@@ -26,6 +26,7 @@
     "test": "vitest run",
     "test:unit": "vitest run --exclude tests/app.test.ts",
     "test:watch": "vitest",
+    "events:rekey": "tsx scripts/events-rekey.ts",
     "seed:meilisearch": "tsx scripts/seed-meilisearch.ts",
     "transfer": "strapi transfer",
     "typecheck": "tsc --noEmit"
