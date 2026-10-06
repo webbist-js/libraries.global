@@ -146,7 +146,12 @@ export function FeedRow({
     }
   }
 
-  const hintEntries = Object.entries(feed.hints)
+  // A draft feed awaiting an Eventbrite organisation choice carries a
+  // non-string `organizations` hint (see feed-oauth.exchangeEventbrite);
+  // that one isn't a provider field and never belongs in this list.
+  const hintEntries = Object.entries(feed.hints).filter(
+    (entry): entry is [string, string] => typeof entry[1] === "string"
+  )
 
   return (
     <div

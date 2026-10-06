@@ -463,6 +463,38 @@ describe("feeds.list", () => {
     expect(r.libraries[0]!.library.documentId).toBe(L1)
     expect(JSON.stringify(r)).not.toContain(L2)
   })
+
+  it("includes a draft feed with its hints.organizations, for the organisation page", async () => {
+    const s = setup({ claims: [L1] })
+    // Seeded as `feed-oauth.exchangeEventbrite` leaves it: a draft credential
+    // with the choices the librarian picks from on `/organisation`.
+    s.store[CRED]!.push({
+      documentId: "credDraftEventbrite00001",
+      provider: "eventbrite",
+      status: "draft",
+      scope: "library",
+      source: "library",
+      connectedBy: "ba:ba-owner",
+      credentialsEncrypted: "{}",
+      hints: {
+        organizations: [
+          { id: "org1", name: "Central Library Events" },
+          { id: "org2", name: "Friends of Central Library" },
+        ],
+      },
+      libraries: [{ documentId: L1 }],
+    } as any)
+    const r = await s.feeds.list(USER)
+    const feed: any = r.libraries[0]!.feeds.find(
+      (f: any) => f.documentId === "credDraftEventbrite00001"
+    )
+    expect(feed).toBeDefined()
+    expect(feed.status).toBe("draft")
+    expect(feed.hints.organizations).toEqual([
+      { id: "org1", name: "Central Library Events" },
+      { id: "org2", name: "Friends of Central Library" },
+    ])
+  })
 })
 
 describe("direct actions", () => {

@@ -28,7 +28,8 @@ const BODY_KEYS = [
   "organizationId",
 ] as const
 
-const limiters = {
+/** Shared with the Eventbrite OAuth start route, which uses `limiters.test`. */
+export const limiters = {
   write: createRateLimiter({
     name: "event-feed-write",
     max: 10,

@@ -36,7 +36,8 @@
     "BASIC_AUTH_USERNAME",
     "BASIC_AUTH_PASSWORD",
     "CHANGE_RECORDS_ENABLED",
-    "MODERATORS_EMAIL"
+    "MODERATORS_EMAIL",
+    "EVENTBRITE_CLIENT_ID"
   ],
   "tasks": {
     "build": {
