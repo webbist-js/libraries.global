@@ -72,6 +72,11 @@ export const KIND_META: Record<
     icon: "mdi:calendar-sync-outline",
     label: "Event feed",
   },
+  drive_proposal: {
+    tint: "national",
+    icon: "mdi:pin-outline",
+    label: "Drive proposal",
+  },
   default: {
     tint: "neutral",
     icon: "mdi:message-text-outline",

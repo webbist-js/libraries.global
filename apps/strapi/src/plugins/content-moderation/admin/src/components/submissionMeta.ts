@@ -1,4 +1,10 @@
-import { EVENT_PROVIDERS } from "@repo/shared-data"
+import {
+  DRIVE_PLACE_LEVELS,
+  EVENT_PROVIDERS,
+  gapDefinition,
+  isGapKey,
+  proposedDrive,
+} from "@repo/shared-data"
 
 /** Shared shapes and labels for the moderation queue. */
 
@@ -77,6 +83,7 @@ export const TYPE_LABELS: Record<string, string> = {
   topic_suggestion: "Topic",
   role_application: "Role application",
   event_feed: "Event feed",
+  drive_proposal: "Drive proposal",
 }
 
 /** Design System colour tokens per type: badge background and text. */
@@ -90,6 +97,7 @@ export const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   topic_suggestion: { bg: "neutral150", text: "neutral600" },
   role_application: { bg: "danger100", text: "danger600" },
   event_feed: { bg: "warning100", text: "warning600" },
+  drive_proposal: { bg: "success100", text: "success600" },
 }
 
 export const EVIDENCE_TYPE_LABELS: Record<string, string> = {
@@ -318,10 +326,79 @@ export function summaryOf(sub: Submission): string {
 
       return `${role} application (${languages})`
     }
+    case "drive_proposal": {
+      const title = driveTitle(d)
+
+      return title ? `Drive: ${title}` : "Drive proposal"
+    }
 
     default:
       return sub.targetSlug ?? "Library"
   }
+}
+
+/** A Drive Proposal's title without its `*italic*` markers, or null. */
+function driveTitle(draftData: unknown): string | null {
+  const title = proposedDrive(draftData)?.title
+  if (typeof title !== "string") return null
+  const plain = title.replaceAll("*", "").trim()
+
+  return plain || null
+}
+
+const shortDate = (v: unknown): string | null => {
+  if (typeof v !== "string") return null
+  const t = Date.parse(v)
+
+  return Number.isFinite(t)
+    ? new Date(t).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : null
+}
+
+/** A Drive Proposal's definition in one line, with a Moderator's dates. */
+function driveProposalDetail(draftData: unknown): string | null {
+  const drive = proposedDrive(draftData, { withModeratorEdit: true })
+  if (!drive) return null
+  const parts: string[] = []
+  const title = driveTitle(draftData)
+  if (title) parts.push(`Title: ${title}`)
+
+  const focus = drive.focus as unknown as Record<string, unknown> | null
+  if (focus && focus.kind === "gaps" && Array.isArray(focus.gaps)) {
+    const labels = focus.gaps.map((g) =>
+      isGapKey(g) ? gapDefinition(g).label : String(g)
+    )
+    if (labels.length > 0) parts.push(`Focus: ${labels.join(", ")}`)
+  }
+
+  const scope = drive.scope as unknown as Record<string, unknown> | null
+  const places =
+    scope?.places && typeof scope.places === "object"
+      ? (scope.places as Record<string, unknown>)
+      : {}
+  const placeText = DRIVE_PLACE_LEVELS.flatMap((level) => {
+    const slugs = places[level]
+
+    return Array.isArray(slugs) && slugs.length > 0
+      ? [`${level}: ${slugs.join(", ")}`]
+      : []
+  }).join("; ")
+  if (placeText) parts.push(`Places: ${placeText}`)
+  if (Array.isArray(scope?.libraries) && scope.libraries.length > 0)
+    parts.push(`Library list: ${scope.libraries.length}`)
+
+  const starts = shortDate(drive.startsAt)
+  if (starts) parts.push(`Starts: ${starts}`)
+  const ends = shortDate(drive.endsAt)
+  if (ends) parts.push(`Ends: ${ends}`)
+  if (typeof drive.goalPercent === "number")
+    parts.push(`Goal: ${drive.goalPercent}%`)
+
+  return parts.length > 0 ? parts.join(" · ") : null
 }
 
 /** A second line: what kind of change, in a few words. */
@@ -377,6 +454,8 @@ export function detailOf(sub: Submission): string | null {
 
     return `${library} · ${kind === "replace" ? "new details" : "new connection"}`
   }
+  if (sub.submissionType === "drive_proposal")
+    return driveProposalDetail(sub.draftData)
 
   return null
 }

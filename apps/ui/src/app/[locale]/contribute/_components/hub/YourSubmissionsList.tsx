@@ -20,6 +20,7 @@ const ACTION_LABEL: Record<string, string> = {
   wiki_edit: "Knowledge article",
   blog_submission: "Journal article",
   topic_suggestion: "Suggested a topic",
+  drive_proposal: "Proposed a drive",
 }
 
 const STATUS_CHIP: Record<string, { label: string; bg: string; fg: string }> = {

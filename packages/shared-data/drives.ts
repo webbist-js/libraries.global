@@ -265,6 +265,21 @@ const gapMatches = (
 const SECTION_TOUCH_FIELDS: Record<DriveVerifySection, readonly string[]> =
   SECTION_FIELDS
 
+/** A piece of work's payload fields, its `kind`, and whether it edits the record. */
+function readWork(s: { submissionType: string; fields: unknown }): {
+  fields: Record<string, unknown>
+  kind: string | undefined
+  isRecordKind: boolean
+} {
+  const fields = (
+    s.fields && typeof s.fields === "object" ? s.fields : {}
+  ) as Record<string, unknown>
+  const kind = typeof fields.kind === "string" ? fields.kind : undefined
+  const isRecordKind = kind === "record" || s.submissionType === "library_edit"
+
+  return { fields, kind, isRecordKind }
+}
+
 /**
  * Whether a piece of contributed work (a Submission's type and payload
  * fields) fills a Drive's focus. The "closed or moved" rule comes first: a
@@ -276,12 +291,7 @@ export function focusMatches(
   focus: DriveFocus,
   s: { submissionType: string; fields: unknown }
 ): boolean {
-  const fields = (
-    s.fields && typeof s.fields === "object" ? s.fields : {}
-  ) as Record<string, unknown>
-  const kind = typeof fields.kind === "string" ? fields.kind : undefined
-  const isLibraryEdit = s.submissionType === "library_edit"
-  const isRecordKind = kind === "record" || isLibraryEdit
+  const { fields, kind, isRecordKind } = readWork(s)
 
   if (
     isRecordKind &&
@@ -316,6 +326,87 @@ export function focusMatches(
     (kind === "photo" || kind === "facilities")
   )
 }
+
+/**
+ * The Focus gaps a piece of work fills (the gaps focus.gaps holds that
+ * gapMatches accepts), in focus order. Empty for verify and record focus,
+ * and for a "closed or moved" change that sets none of them.
+ */
+export function gapsFilled(
+  focus: DriveFocus,
+  s: { submissionType: string; fields: unknown }
+): GapKey[] {
+  if (focus.kind !== "gaps" || !Array.isArray(focus.gaps)) return []
+  const { fields, kind, isRecordKind } = readWork(s)
+
+  return focus.gaps.filter((gap) => gapMatches(gap, isRecordKind, kind, fields))
+}
+
+// ── Proposals ─────────────────────────────────────────────────────────────────
+
+/** A drive_proposal's draftData: the proposer's definition, plus a Moderator's dates. */
+export interface DriveProposalData {
+  drive: DriveInput
+  moderatorEdit?: { startsAt?: string; endsAt?: string }
+}
+
+const DRIVE_INPUT_KEYS = [
+  "title",
+  "summary",
+  "steps",
+  "focus",
+  "scope",
+  "unit",
+  "startsAt",
+  "endsAt",
+  "goalPercent",
+  "whereToLook",
+] as const satisfies readonly (keyof DriveInput)[]
+
+const isPlainObject = (v: unknown): v is Record<string, unknown> =>
+  Boolean(v) && typeof v === "object" && !Array.isArray(v)
+
+/**
+ * The drive a proposal asks for: `draftData.drive` with every DriveInput key
+ * copied as it is (validateDrive judges the values), or null when draftData
+ * has no `drive` object. With `withModeratorEdit`, a valid
+ * `moderatorEdit.startsAt`/`endsAt` (isValidStamp) replaces the proposer's.
+ * The policy reads it without the edit, because contributor input can never
+ * set it. The apply and the review detail read it with the edit.
+ */
+export function proposedDrive(
+  draftData: unknown,
+  opts?: { withModeratorEdit?: boolean }
+): DriveInput | null {
+  if (!isPlainObject(draftData) || !isPlainObject(draftData.drive)) return null
+  const source = draftData.drive
+  const drive: Record<string, unknown> = {}
+  for (const key of DRIVE_INPUT_KEYS) {
+    if (key in source) drive[key] = source[key]
+  }
+
+  if (opts?.withModeratorEdit && isPlainObject(draftData.moderatorEdit)) {
+    const edit = draftData.moderatorEdit
+    if (isValidStamp(edit.startsAt)) drive.startsAt = edit.startsAt
+    if (isValidStamp(edit.endsAt)) drive.endsAt = edit.endsAt
+  }
+
+  return drive as unknown as DriveInput
+}
+
+/** Whether the task panel can fill this Focus. D2: one to three PANEL_GAPS. D3 widens it. */
+export function panelCanFill(focus: DriveFocus): boolean {
+  return (
+    focus.kind === "gaps" &&
+    Array.isArray(focus.gaps) &&
+    focus.gaps.length >= 1 &&
+    focus.gaps.length <= 3 &&
+    focus.gaps.every((g) => (PANEL_GAPS as readonly string[]).includes(g))
+  )
+}
+
+export const PANEL_FOCUS_MESSAGE =
+  "Choose gaps the task panel can fill: opening hours, photos, accessibility or contact details."
 
 // ── Validation ────────────────────────────────────────────────────────────────
 

@@ -14,6 +14,7 @@ import {
   roleLabel,
 } from "../utils/email-templates"
 import { roleApplicationFields } from "../utils/params"
+import { driveProposalTitle } from "../utils/submission-summary"
 
 /** What the notifications read from a submission row. */
 export type SubmissionRow = {
@@ -23,6 +24,7 @@ export type SubmissionRow = {
   submittedByEmail?: string | null
   submittedByName?: string | null
   fields?: unknown
+  draftData?: unknown
   reviewNote?: string | null
 }
 
@@ -33,7 +35,11 @@ const SUBMISSION_UID = "plugin::content-moderation.submission"
 const DEFAULT_MODERATORS_EMAIL = "moderators@libraries.global"
 const DEFAULT_APP_URL = "https://libraries.global"
 /** Only these reaching `pending` alert the moderators (spec §6.3). */
-const ALERT_TYPES = new Set(["role_application", "event_feed"])
+const ALERT_TYPES = new Set([
+  "role_application",
+  "event_feed",
+  "drive_proposal",
+])
 /** Matches `people.ts`'s own lookup: no user-profile carries an email, so
  * the one each person's submissions were filed with is the best we know. */
 const EMAIL_ROWS_MAX = 500
@@ -95,6 +101,11 @@ function alertSummary(s: SubmissionRow): string {
     const { role, queue, locales } = roleApplicationFields(s.fields)
 
     return `${who} applied to be a ${roleLabel(role ?? "editor", queue)} for ${languagesLabel(locales)}.`
+  }
+  if (s.submissionType === "drive_proposal") {
+    const title = driveProposalTitle(s.draftData)
+
+    return title ? `Drive proposal: ${title}` : "Drive proposal"
   }
   if (s.submissionType === "event_feed") {
     const f = (s.fields ?? {}) as Record<string, any>
@@ -215,8 +226,8 @@ export default ({ strapi }: { strapi: any }) => {
     },
 
     /**
-     * Alerts `MODERATORS_EMAIL` that a Role Application reached `pending`.
-     * Every other type is silent.
+     * Alerts `MODERATORS_EMAIL` that a Role Application, event feed or
+     * Drive Proposal reached `pending`. Every other type is silent.
      */
     async submissionPending(s: SubmissionRow): Promise<void> {
       if (!ALERT_TYPES.has(s.submissionType)) return

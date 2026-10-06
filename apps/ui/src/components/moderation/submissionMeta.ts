@@ -6,7 +6,11 @@
  * `WikiEditDiffPanel.tsx`); a test keeps them in step.
  */
 
-import { EVENT_PROVIDERS, type EventProviderKey } from "@repo/shared-data"
+import {
+  EVENT_PROVIDERS,
+  type EventProviderKey,
+  proposedDrive,
+} from "@repo/shared-data"
 
 import type { BadgeColor } from "@/components/ds"
 
@@ -132,6 +136,7 @@ export const TYPE_LABELS: Record<string, string> = {
   topic_suggestion: "Topic",
   role_application: "Role application",
   event_feed: "Event feed",
+  drive_proposal: "Drive proposal",
 }
 
 export const TYPE_COLORS: Record<string, BadgeColor> = {
@@ -144,6 +149,7 @@ export const TYPE_COLORS: Record<string, BadgeColor> = {
   topic_suggestion: "dim",
   role_application: "violet",
   event_feed: "gold",
+  drive_proposal: "ok",
 }
 
 /** The Type column's label for a queue row (or any submission). */
@@ -410,10 +416,27 @@ export function summaryOf(sub: SubmissionLike): string {
       return `${EVENT_PROVIDERS[f.provider as EventProviderKey]?.label ?? "Event"} feed${f.kind === "replace" ? " (new details)" : ""}`
     case "role_application":
       return roleApplicationSummary(f)
+    case "drive_proposal": {
+      const title = driveProposalTitle(d)
+
+      return title ? `Drive: ${title}` : "Drive proposal"
+    }
 
     default:
       return sub.targetSlug ?? "Library"
   }
+}
+
+/**
+ * A Drive Proposal's title without its `*italic*` markers, or null when it
+ * has none.
+ */
+export function driveProposalTitle(draftData: unknown): string | null {
+  const title = proposedDrive(draftData)?.title
+  if (typeof title !== "string") return null
+  const plain = title.replaceAll("*", "").trim()
+
+  return plain || null
 }
 
 const APPLICATION_ROLE_NAMES: Record<string, string> = {

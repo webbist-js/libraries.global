@@ -21,6 +21,8 @@ function estimatePoints(s: PublicSubmission): number | null {
       return 5
     case "library_claim":
       return 5
+    case "drive_proposal":
+      return 10
 
     default:
       return null
@@ -39,6 +41,7 @@ const FILTERS = [
     types: ["wiki_edit", "blog_submission"],
   },
   { id: "claimed", label: "Claimed", types: ["library_claim"] },
+  { id: "drives", label: "Drive proposals", types: ["drive_proposal"] },
   { id: "other", label: "Other", types: null },
 ] as const
 

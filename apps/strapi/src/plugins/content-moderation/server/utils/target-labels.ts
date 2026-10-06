@@ -62,6 +62,7 @@ export function targetLabelOf(
       )
     }
     case "role_application":
+    case "drive_proposal":
       return summaryOf(row)
 
     default:

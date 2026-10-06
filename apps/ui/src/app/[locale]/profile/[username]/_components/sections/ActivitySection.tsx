@@ -62,6 +62,12 @@ const ACTIVITY_META: Record<
     color: T.accent.gold,
     verb: "connected an event feed",
   },
+  drive_proposal: {
+    label: "Drive proposal",
+    icon: "mdi:pin-outline",
+    color: T.accent.gold,
+    verb: "proposed a drive",
+  },
 }
 
 // ── Date helpers ───────────────────────────────────────────────────────────────

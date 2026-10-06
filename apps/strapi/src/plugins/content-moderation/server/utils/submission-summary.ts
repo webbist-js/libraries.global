@@ -12,6 +12,25 @@ export type SummarySource = {
   draftData?: Record<string, unknown> | null
 }
 
+/**
+ * A Drive Proposal's title without its `*italic*` markers, or null when it
+ * has none.
+ */
+export function driveProposalTitle(draftData: unknown): string | null {
+  const drive =
+    draftData && typeof draftData === "object"
+      ? (draftData as Record<string, unknown>).drive
+      : null
+  const title =
+    drive && typeof drive === "object"
+      ? (drive as Record<string, unknown>).title
+      : null
+  if (typeof title !== "string") return null
+  const plain = title.replaceAll("*", "").trim()
+
+  return plain || null
+}
+
 export function summaryOf(sub: SummarySource): string {
   const f = sub.fields ?? {}
   const d = sub.draftData ?? {}
@@ -72,6 +91,11 @@ export function summaryOf(sub: SummarySource): string {
       }
 
       return `${role} application (${languages})`
+    }
+    case "drive_proposal": {
+      const title = driveProposalTitle(d)
+
+      return title ? `Drive: ${title}` : "Drive proposal"
     }
 
     default:

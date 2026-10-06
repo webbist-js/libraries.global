@@ -13,6 +13,7 @@ export type PublicSubmission = {
     | "wiki_edit"
     | "blog_submission"
     | "topic_suggestion"
+    | "drive_proposal"
   status: "pending" | "approved" | "rejected" | "needs_info"
   targetEntityType: string | null
   targetSlug: string | null

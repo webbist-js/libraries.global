@@ -19,6 +19,7 @@ const TYPE_LABELS: Record<string, string> = {
   topic_suggestion: "topic suggestion",
   role_application: "role application",
   event_feed: "event feed",
+  drive_proposal: "drive proposal",
 }
 
 const ROLE_LABELS: Record<string, string> = {

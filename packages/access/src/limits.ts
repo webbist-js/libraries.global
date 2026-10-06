@@ -54,6 +54,12 @@ const STAFF_ROLES: ReadonlySet<string> = new Set([
 export const ROLE_APPLICATION_MIN_ACCEPTED = 5
 
 /**
+ * Accepted submissions (not Role Applications) a user needs before proposing
+ * a drive (spec decision D6).
+ */
+export const DRIVE_PROPOSAL_MIN_ACCEPTED = ROLE_APPLICATION_MIN_ACCEPTED
+
+/**
  * Days after a rejected Role Application is decided before the same user
  * may apply for that role again.
  */

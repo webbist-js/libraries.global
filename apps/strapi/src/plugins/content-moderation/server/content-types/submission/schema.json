@@ -24,7 +24,8 @@
         "wiki_edit",
         "blog_submission",
         "topic_suggestion",
-        "role_application"
+        "role_application",
+        "drive_proposal"
       ]
     },
     "status": {
@@ -43,7 +44,8 @@
         "wiki_article",
         "blog_article",
         "user_profile",
-        "topic"
+        "topic",
+        "drive"
       ]
     },
     "targetDocumentId": { "type": "string" },
