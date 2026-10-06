@@ -121,4 +121,8 @@ export interface DriveTask {
   href: string | null
   inReview: boolean
   distanceKm?: number
+  /** Someone else currently holds this library in this drive. */
+  heldByOther?: boolean
+  /** When the current hold on this library (the reader's own) expires. */
+  heldUntil?: string | null
 }

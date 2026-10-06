@@ -216,15 +216,116 @@ export function DriveTaskArea({ drive }: { readonly drive: Drive }) {
   }
 
   const onSkip = (task: DriveTask) => {
+    if (signedIn) {
+      fetch(
+        `/api/drives/${encodeURIComponent(drive.slug)}/holds/${encodeURIComponent(task.documentId)}?locale=${encodeURIComponent(drive.locale)}`,
+        { method: "DELETE" }
+      ).catch(() => {})
+    }
     const nowSkipped = new Set(addSkip(drive.documentId, task.documentId))
     setSkipped(nowSkipped)
     open(nextTask(tasks, task.documentId, nowSkipped, done))
   }
 
-  const onRandom = () => {
-    const pick = randomTask(tasks, skipped, done)
-    if (pick) open(pick)
-    else announce("Every library shown is done, skipped or in review.")
+  // "Give me a library": signed in, a held pick from the server; signed
+  // out, D1's random pick from what's already on screen.
+  const onRandom = async () => {
+    if (!signedIn) {
+      const pick = randomTask(tasks, skipped, done)
+      if (pick) open(pick)
+      else announce("Every library shown is done, skipped or in review.")
+
+      return
+    }
+    try {
+      const res = await fetch(
+        `/api/drives/${encodeURIComponent(drive.slug)}/next`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            skip: [...skipped],
+            q: query,
+            near: near ? `${near.lat},${near.lng}` : undefined,
+            locale: drive.locale,
+          }),
+        }
+      )
+      const json = (await res.json().catch(() => ({}))) as {
+        data?: DriveTask | null
+        message?: string
+        error?: string
+      }
+      if (!res.ok) {
+        announce(json.error ?? "We couldn’t get a library. Try again shortly.")
+
+        return
+      }
+      if (json.data) {
+        const task = json.data
+        setTasks((prev) =>
+          prev.some((t) => t.documentId === task.documentId)
+            ? prev
+            : [task, ...prev]
+        )
+        open(task)
+        announce("Here’s a library. It’s kept for you for 20 minutes.")
+      } else {
+        announce(
+          json.message ?? "Every library left is in review, held or skipped."
+        )
+      }
+    } catch {
+      announce("We couldn’t get a library. Try again shortly.")
+    }
+  }
+
+  // Picking a row by hand: a signed-in reader holds it first, the same as
+  // "Give me a library" (decision 2). A 409 marks the row held by someone
+  // else and keeps the current selection; any other failure still opens
+  // it — a hold is a courtesy, not a gate.
+  const selectRow = async (task: DriveTask) => {
+    if (!signedIn) {
+      open(task)
+
+      return
+    }
+    try {
+      const res = await fetch(
+        `/api/drives/${encodeURIComponent(drive.slug)}/holds`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ libraryDocumentId: task.documentId }),
+        }
+      )
+      if (res.status === 409) {
+        setTasks((prev) =>
+          prev.map((t) =>
+            t.documentId === task.documentId ? { ...t, heldByOther: true } : t
+          )
+        )
+        announce("Someone’s on this library. Pick another.")
+
+        return
+      }
+      if (res.ok) {
+        const json = (await res.json().catch(() => ({}))) as {
+          data?: { expiresAt?: unknown }
+        }
+        const expiresAt = json.data?.expiresAt
+
+        open({
+          ...task,
+          heldUntil: typeof expiresAt === "string" ? expiresAt : null,
+        })
+
+        return
+      }
+      open(task)
+    } catch {
+      open(task)
+    }
   }
 
   const closeDrawer = useCallback(() => setDrawerOpen(false), [])
@@ -234,6 +335,7 @@ export function DriveTaskArea({ drive }: { readonly drive: Drive }) {
       key={selected.documentId}
       claimed={claimedLibraryIds.includes(selected.documentId)}
       drive={drive}
+      heldUntil={selected.heldUntil}
       nameRef={nameRef}
       onSent={onSent}
       onSkip={onSkip}
@@ -303,9 +405,9 @@ export function DriveTaskArea({ drive }: { readonly drive: Drive }) {
             near={near !== null}
             onMore={() => void load(page + 1, query, near)}
             onNear={setNear}
-            onRandom={onRandom}
+            onRandom={() => void onRandom()}
             onSearch={setQuery}
-            onSelect={open}
+            onSelect={(task) => void selectRow(task)}
             query={query}
             selectedId={selected?.documentId ?? null}
             tasks={tasks}

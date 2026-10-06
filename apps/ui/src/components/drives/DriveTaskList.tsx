@@ -210,6 +210,7 @@ export function DriveTaskList({
               verb={verb}
               selected={task.documentId === selectedId}
               inReview={task.inReview || doneIds.has(task.documentId)}
+              heldByOther={task.heldByOther}
               onSelect={onSelect}
             />
           ))}

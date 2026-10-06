@@ -162,17 +162,29 @@ function panelBlocker({
   )
 }
 
+/** "Kept for you until 14:35" (local time), or null without a hold. */
+function heldUntilLabel(heldUntil: string | null | undefined): string | null {
+  if (!heldUntil) return null
+  const at = new Date(heldUntil)
+  if (Number.isNaN(at.getTime())) return null
+
+  return `Kept for you until ${at.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+}
+
 /** The library's name (the focus target), its place, and its website. */
 function PanelHeader({
   task,
   website,
+  heldUntil,
   nameRef,
 }: {
   readonly task: DriveTask
   readonly website: string
+  readonly heldUntil?: string | null
   readonly nameRef?: Ref<HTMLHeadingElement>
 }) {
   const place = taskPlace(task)
+  const held = heldUntilLabel(heldUntil)
 
   return (
     <div className="flex flex-col gap-2">
@@ -194,6 +206,11 @@ function PanelHeader({
       >
         {task.name}
       </h3>
+      {held ? (
+        <p className={DIM} style={{ color: T.ink.dim }}>
+          {held}
+        </p>
+      ) : null}
       {place ? (
         <p className={DIM} style={{ color: T.ink.dim }}>
           {place}
@@ -430,6 +447,7 @@ export function DriveTaskPanel({
   signedIn,
   claimed,
   quota,
+  heldUntil,
   onSent,
   onSkip,
   nameRef,
@@ -440,6 +458,8 @@ export function DriveTaskPanel({
   /** The reader holds a Library Claim on it: record changes are edits. */
   readonly claimed: boolean
   readonly quota: PendingQuota | null
+  /** When the reader's own hold on this library expires, if any. */
+  readonly heldUntil?: string | null
   readonly onSent: (task: DriveTask) => void
   readonly onSkip: (task: DriveTask) => void
   /** The library's name: where focus goes when a new library opens. */
@@ -648,7 +668,12 @@ export function DriveTaskPanel({
 
   return (
     <div className="flex flex-col gap-5">
-      <PanelHeader nameRef={nameRef} task={task} website={website} />
+      <PanelHeader
+        heldUntil={heldUntil}
+        nameRef={nameRef}
+        task={task}
+        website={website}
+      />
 
       {gaps.length > 1 && !closed ? (
         <GapSwitcher
