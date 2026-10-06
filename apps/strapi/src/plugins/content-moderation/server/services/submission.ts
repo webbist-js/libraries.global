@@ -634,8 +634,14 @@ export default ({ strapi }: { strapi: any }) => ({
     asDraft?: boolean
     /** Stored as `contentLocale`; normalised to a configured locale. */
     locale?: unknown
+    /**
+     * False skips scheduling the `submissionPending` alert here; the caller
+     * takes it over with `notifyPending` once its own transaction (the one
+     * `create` was called inside) has committed. Default true.
+     */
+    notify?: boolean
   }) {
-    const { asDraft, locale, ...fields } = data
+    const { asDraft, locale, notify = true, ...fields } = data
     // An application is stored as validated: trimmed, de-duplicated, and
     // without the keys its role ignores (the policy already checked it).
     if (fields.submissionType === "role_application") {
@@ -668,12 +674,26 @@ export default ({ strapi }: { strapi: any }) => ({
           ...(status === "pending" ? { payloadHash: payloadHash(rest) } : {}),
         },
       })
-    if (status === "pending")
+    if (status === "pending" && notify)
       scheduleNotification(strapi, `alert for ${created.documentId}`, () =>
         notifications(strapi).submissionPending(created)
       )
 
     return toContributor(created)
+  },
+
+  /**
+   * Schedules exactly the alert `create` would have for a submission that
+   * reached `pending`, for a caller that passed `notify: false` because the
+   * row was created inside its own transaction: `create`'s scheduled task
+   * (queued with `setImmediate`) could otherwise run before that transaction
+   * commits, or after it rolls back. Call this only once the transaction has
+   * resolved.
+   */
+  notifyPending(submission: any): void {
+    scheduleNotification(strapi, `alert for ${submission.documentId}`, () =>
+      notifications(strapi).submissionPending(submission)
+    )
   },
 
   async findAll(status?: unknown) {

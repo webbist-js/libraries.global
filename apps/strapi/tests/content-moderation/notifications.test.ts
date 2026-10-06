@@ -231,6 +231,55 @@ describe("moderator alerts", () => {
   })
 })
 
+describe("create's notify option", () => {
+  it("schedules nothing when notify is false, even for a type that reaches pending", async () => {
+    const { svc, send } = setup()
+    await svc.create({
+      submissionType: "role_application",
+      targetEntityType: "user_profile",
+      fields: {
+        role: "wiki_editor",
+        locales: [],
+        statement: "I have edited Knowledge articles for a year.",
+        samples: [],
+      },
+      submittedByUserId: "u1",
+      submittedByEmail: "u1@example.org",
+      submittedByName: "Ada",
+      notify: false,
+    })
+    await flush()
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it("notifyPending schedules exactly the alert create would have", async () => {
+    const { svc, send } = setup()
+    const created: any = await svc.create({
+      submissionType: "role_application",
+      targetEntityType: "user_profile",
+      fields: {
+        role: "wiki_editor",
+        locales: [],
+        statement: "I have edited Knowledge articles for a year.",
+        samples: [],
+      },
+      submittedByUserId: "u1",
+      submittedByEmail: "u1@example.org",
+      submittedByName: "Ada",
+      notify: false,
+    })
+    expect(send).not.toHaveBeenCalled()
+    svc.notifyPending(created)
+    await flush()
+    expect(send).toHaveBeenCalledTimes(1)
+    const msg: any = send.mock.calls[0]![0]
+    expect(msg.to).toBe("moderators@libraries.global")
+    expect(msg.text).toContain(
+      `https://app.example.org/contribute/moderation/${created.documentId}`
+    )
+  })
+})
+
 describe("moderator alerts on resubmission", () => {
   const waiting = (submissionType: string, documentId: string) => {
     const s: any = {
