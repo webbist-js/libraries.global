@@ -25,7 +25,7 @@
     "reviewerId": { "type": "string" },
     "reviewerKind": {
       "type": "enumeration",
-      "enum": ["admin", "contributor"]
+      "enum": ["admin", "contributor", "system"]
     },
     "note": { "type": "text" }
   }

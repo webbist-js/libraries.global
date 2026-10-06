@@ -7,6 +7,7 @@ import {
   adminReviewer,
   contributorReviewer,
   isSelfReview,
+  systemReviewer,
 } from "../../src/plugins/content-moderation/server/utils/reviewer"
 import {
   type ChangeContext,
@@ -78,6 +79,19 @@ describe("reviewer helpers", () => {
       isSelfReview(adminReviewer({ id: 1, email: "" }), {
         submittedByUserId: "u1",
         submittedByEmail: "",
+      })
+    ).toBe(false)
+  })
+
+  it("the system reviewer is never a self-review", () => {
+    expect(systemReviewer()).toMatchObject({ id: "system", kind: "system" })
+    expect(isSelfReview(systemReviewer(), { submittedByUserId: "u1" })).toBe(
+      false
+    )
+    expect(
+      isSelfReview(systemReviewer(), {
+        submittedByUserId: "u1",
+        submittedByEmail: "sub@example.org",
       })
     ).toBe(false)
   })

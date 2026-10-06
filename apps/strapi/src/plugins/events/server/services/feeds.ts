@@ -12,9 +12,10 @@ import {
 } from "@repo/shared-data"
 
 import { CREDENTIAL_PUBLIC_FIELDS, CREDENTIAL_UID } from "./credentials"
+import { systemReviewer } from "../../../content-moderation/server/utils/reviewer"
 import { sealValues } from "../utils/credential-crypto"
 import { recordCredentialEvent } from "../utils/credential-events"
-import { claimedLibraryIds } from "../utils/feed-access"
+import { claimedLibraryIds, notifyOtherClaimants } from "../utils/feed-access"
 
 const SUBMISSION_UID = "plugin::content-moderation.submission"
 const LIBRARY_UID = "api::library.library"
@@ -86,6 +87,8 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
     strapi.plugin("content-moderation").service("submission-policy")
   const submissions = () =>
     strapi.plugin("content-moderation").service("submission")
+  const credentialsService = () =>
+    strapi.plugin("events").service("credentials")
 
   /** A feed the user may manage, or a FeedError (404 hides others' feeds). */
   async function manageable(
@@ -521,6 +524,149 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
         submissionDocumentId: outcome.submissionDocumentId,
         result: outcome.result,
       }
+    },
+
+    async testCurrent(user: FeedUser, documentId: string) {
+      const access = await manageable(user, documentId)
+      if ("error" in access) return access
+      const last = access.feed.lastTestedAt
+        ? Date.parse(access.feed.lastTestedAt)
+        : 0
+      if (Date.now() - last < FEED_TEST_COOLDOWN_MS)
+        return fail(429, "too_soon", "Wait half a minute between tests.")
+      const r = await credentialsService().test(
+        documentId,
+        "current",
+        actorOf(user)
+      )
+
+      return r ?? feedNotFound()
+    },
+
+    async pause(user: FeedUser, documentId: string) {
+      const access = await manageable(user, documentId)
+      if ("error" in access) return access
+      if (access.feed.status !== "active")
+        return fail(409, "not_active", "Only an active feed can be paused.")
+      await strapi.db.transaction(async () => {
+        await creds().update({
+          documentId,
+          data: { status: "paused", pausedReason: "library" },
+        })
+        await recordCredentialEvent(strapi, {
+          credentialDocumentId: documentId,
+          provider: access.feed.provider,
+          libraryDocumentIds: libraryIdsOf(access.feed),
+          action: "paused",
+          actor: actorOf(user),
+        })
+      })
+      await credentialsService().syncLibraryFeedFlags(libraryIdsOf(access.feed))
+
+      return { status: "paused" as const }
+    },
+
+    async resume(user: FeedUser, documentId: string) {
+      const access = await manageable(user, documentId)
+      if ("error" in access) return access
+      if (access.feed.status !== "paused")
+        return fail(409, "not_paused", "Only a paused feed can be resumed.")
+      await strapi.db.transaction(async () => {
+        await creds().update({
+          documentId,
+          data: {
+            status: "active",
+            pausedReason: null,
+            consecutiveFailures: 0,
+            autoPauseNotifiedAt: null,
+          },
+        })
+        await recordCredentialEvent(strapi, {
+          credentialDocumentId: documentId,
+          provider: access.feed.provider,
+          libraryDocumentIds: libraryIdsOf(access.feed),
+          action: "resumed",
+          actor: actorOf(user),
+        })
+      })
+      await credentialsService().syncLibraryFeedFlags(libraryIdsOf(access.feed))
+      await credentialsService().queueSync(documentId, actorOf(user))
+
+      return { status: "active" as const }
+    },
+
+    async withdrawPending(user: FeedUser, documentId: string) {
+      const access = await manageable(user, documentId)
+      if ("error" in access) return access
+      const { feed } = access
+      if (!feed.pendingSubmissionDocumentId || feed.status === "pending")
+        return fail(
+          409,
+          "nothing_pending",
+          "There are no new details waiting for review."
+        )
+      await submissions().updateStatus(
+        feed.pendingSubmissionDocumentId,
+        "rejected",
+        systemReviewer(),
+        "Withdrawn by the library"
+      )
+      // The rejection's apply (Task 9) clears the slot; clear it here too in
+      // case the submission had already been decided elsewhere.
+      await creds().update({
+        documentId,
+        data: {
+          pendingCredentialsEncrypted: null,
+          pendingHints: null,
+          pendingTestedAt: null,
+          pendingTestResult: null,
+          pendingSubmissionDocumentId: null,
+        },
+      })
+      await recordCredentialEvent(strapi, {
+        credentialDocumentId: documentId,
+        provider: feed.provider,
+        libraryDocumentIds: libraryIdsOf(feed),
+        action: "withdrawn",
+        actor: actorOf(user),
+        submissionDocumentId: feed.pendingSubmissionDocumentId,
+      })
+
+      return { ok: true as const }
+    },
+
+    async disconnect(user: FeedUser, documentId: string) {
+      const access = await manageable(user, documentId)
+      if ("error" in access) return access
+      const { feed } = access
+      if (feed.pendingSubmissionDocumentId)
+        await submissions().updateStatus(
+          feed.pendingSubmissionDocumentId,
+          "rejected",
+          systemReviewer(),
+          "Withdrawn by the library"
+        )
+      await strapi.db.transaction(async () => {
+        await strapi.db
+          .query(EVENT_UID)
+          .deleteMany({ where: { credentialId: feed.id } })
+        await creds().delete({ documentId })
+        await recordCredentialEvent(strapi, {
+          credentialDocumentId: documentId,
+          provider: feed.provider,
+          libraryDocumentIds: libraryIdsOf(feed),
+          action: feed.status === "pending" ? "withdrawn" : "disconnected",
+          actor: actorOf(user),
+        })
+      })
+      await credentialsService().syncLibraryFeedFlags(libraryIdsOf(feed))
+      if (feed.status !== "pending")
+        void notifyOtherClaimants(strapi, libraryIdsOf(feed), user.id, {
+          subject: "An event feed was disconnected",
+          text: `The ${EVENT_PROVIDERS[feed.provider as EventProviderKey].label} feed for ${feed.libraries?.[0]?.name ?? "your library"} was disconnected by another librarian. Its events have been removed. Reconnect it from ${process.env.APP_PUBLIC_URL ?? ""}/contribute/events.`,
+        })
+
+      return { ok: true as const }
     },
   }
 }

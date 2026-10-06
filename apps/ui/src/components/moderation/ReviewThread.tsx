@@ -7,6 +7,7 @@ import { formatDateTime, type ReviewEvent, statusMeta } from "./submissionMeta"
 function who(e: ReviewEvent): string {
   if (e.byViewer) return "You"
   if (e.toStatus === "pending") return "The contributor"
+  if (e.reviewerKind === "system") return "Libraries Global"
   if (e.reviewerKind === "admin") return "An admin"
 
   return "A moderator"

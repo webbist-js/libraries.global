@@ -6,7 +6,7 @@
  */
 export type Reviewer = {
   id: string
-  kind: "admin" | "contributor"
+  kind: "admin" | "contributor" | "system"
   email: string | null
   baUserId: string | null
 }
@@ -39,6 +39,14 @@ export function contributorReviewer(u: {
     baUserId: u.id,
   }
 }
+
+/** The platform itself, for automatic decisions (a library withdrawing a feed). */
+export const systemReviewer = (): Reviewer => ({
+  id: "system",
+  kind: "system",
+  email: null,
+  baUserId: null,
+})
 
 const norm = (v: unknown) =>
   String(v ?? "")

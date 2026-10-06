@@ -22,10 +22,14 @@ export type SubmissionRow = {
 type Decision = "approved" | "rejected" | "needs_info"
 
 const PROFILE = "api::user-profile.user-profile"
+const SUBMISSION_UID = "plugin::content-moderation.submission"
 const DEFAULT_MODERATORS_EMAIL = "moderators@libraries.global"
 const DEFAULT_APP_URL = "https://libraries.global"
 /** Only these reaching `pending` alert the moderators (spec §6.3). */
 const ALERT_TYPES = new Set(["role_application"])
+/** Matches `people.ts`'s own lookup: no user-profile carries an email, so
+ * the one each person's submissions were filed with is the best we know. */
+const EMAIL_ROWS_MAX = 500
 
 export type NotificationTask = () => Promise<void>
 type Scheduler = (task: NotificationTask) => void
@@ -213,6 +217,30 @@ export default ({ strapi }: { strapi: any }) => {
       } catch (err) {
         strapi.log.warn(`[notifications] could not prepare ${what}`, err)
       }
+    },
+
+    /**
+     * The latest email each Better Auth user's submissions were filed with
+     * (no user-profile carries one). Used only to reach a librarian outside
+     * a submission's own flow, e.g. another claimant of a feed that was
+     * changed; never a credential value.
+     */
+    async emailsOf(baUserIds: string[]): Promise<string[]> {
+      if (baUserIds.length === 0) return []
+      const rows = (await strapi.documents(SUBMISSION_UID).findMany({
+        filters: { submittedByUserId: { $in: baUserIds } },
+        fields: ["submittedByUserId", "submittedByEmail"],
+        sort: [{ createdAt: "desc" }, { id: "desc" }],
+        limit: EMAIL_ROWS_MAX,
+      })) as { submittedByUserId?: string; submittedByEmail?: string }[]
+      const out = new Map<string, string>()
+      for (const r of rows) {
+        const email = text(r.submittedByEmail, 320)
+        if (r.submittedByUserId && email && !out.has(r.submittedByUserId))
+          out.set(r.submittedByUserId, email)
+      }
+
+      return [...out.values()]
     },
   }
 }

@@ -86,6 +86,7 @@ function setup(opts: SetupOpts = {}) {
       return doc
     }),
     notifyPending: vi.fn(),
+    updateStatus: vi.fn(async () => ({ data: {} })),
   }
   strapi.plugin = vi.fn((name: string) => ({
     service: (s: string) =>
@@ -461,5 +462,106 @@ describe("feeds.list", () => {
     expect(r.libraries).toHaveLength(1)
     expect(r.libraries[0]!.library.documentId).toBe(L1)
     expect(JSON.stringify(r)).not.toContain(L2)
+  })
+})
+
+describe("direct actions", () => {
+  async function active() {
+    const s = setup()
+    const r: any = await s.feeds.connect(USER, {
+      libraryDocumentId: L1,
+      provider: "ical",
+      values: ICAL,
+    })
+    const row = s.store[CRED]![0]!
+    Object.assign(row, {
+      status: "active",
+      pendingSubmissionDocumentId: null,
+      id: 42,
+    })
+    s.store[SUB]![0]!.status = "approved"
+
+    return { ...s, row, sub: r.submissionDocumentId }
+  }
+
+  it("pauses and resumes, recomputing the flag and queueing a sync", async () => {
+    const { feeds, row, store } = await active()
+    expect(await feeds.pause(USER, row.documentId)).toEqual({
+      status: "paused",
+    })
+    expect(row).toMatchObject({ status: "paused", pausedReason: "library" })
+    expect(await feeds.resume(USER, row.documentId)).toEqual({
+      status: "active",
+    })
+    expect(
+      store["plugin::events.sync-command"]!.at(-1)!.credentialDocumentId
+    ).toBe(row.documentId)
+    expect(store[EVENTS]!.map((e) => e.action)).toEqual(
+      expect.arrayContaining(["paused", "resumed"])
+    )
+  })
+
+  it("won't resume a feed that is waiting for review", async () => {
+    const { feeds, row } = await active()
+    Object.assign(row, { status: "pending" })
+    expect(await feeds.resume(USER, row.documentId)).toMatchObject({
+      error: { status: 409 },
+    })
+  })
+
+  it("rate-limits tests per feed", async () => {
+    const { feeds, row } = await active()
+    row.lastTestedAt = new Date().toISOString()
+    expect(await feeds.testCurrent(USER, row.documentId)).toMatchObject({
+      error: { status: 429, name: "too_soon" },
+    })
+  })
+
+  it("disconnect deletes the row, its events and rejects an open review", async () => {
+    const { feeds, row, store, strapi } = await active()
+    await feeds.replace(USER, row.documentId, { values: ICAL })
+    store["plugin::events.event"]!.push({
+      documentId: "ev1",
+      credentialId: 42,
+    } as any)
+    const updateStatus = vi.fn(async () => ({ data: {} }))
+    ;(strapi.plugin as any).mockImplementation((name: string) => ({
+      service: (s: string) =>
+        s === "credentials"
+          ? credentialsFactory({ strapi })
+          : s === "submission"
+            ? { updateStatus, create: vi.fn() }
+            : s === "submission-policy"
+              ? {
+                  loadCapabilities: async () => ({
+                    caps: {
+                      claimedLibraryIds: new Set([L1]),
+                      set: new Set(["events.feed"]),
+                    },
+                  }),
+                  check: async () => ({ ok: true }),
+                }
+              : undefined,
+    }))
+    expect(await feeds.disconnect(USER, row.documentId)).toEqual({ ok: true })
+    expect(store[CRED]).toHaveLength(0)
+    expect(store["plugin::events.event"]).toHaveLength(0)
+    expect(updateStatus).toHaveBeenCalledWith(
+      expect.any(String),
+      "rejected",
+      expect.objectContaining({ kind: "system" }),
+      "Withdrawn by the library"
+    )
+    expect(store[EVENTS]!.at(-1)!.action).toBe("disconnected")
+  })
+
+  it("withdrawing a pending replacement clears the slot", async () => {
+    const { feeds, row } = await active()
+    await feeds.replace(USER, row.documentId, { values: ICAL })
+    expect(await feeds.withdrawPending(USER, row.documentId)).toEqual({
+      ok: true,
+    })
+    expect(row.pendingCredentialsEncrypted).toBeNull()
+    expect(row.pendingSubmissionDocumentId).toBeNull()
   })
 })

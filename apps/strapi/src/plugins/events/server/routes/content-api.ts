@@ -95,4 +95,23 @@ export default [
     handler: "events.icsLibrary",
     config: { auth: false },
   },
+  ...(
+    [
+      ["GET", "/feeds", "feeds.list"],
+      ["GET", "/feeds/providers", "feeds.providers"],
+      ["POST", "/feeds/test", "feeds.testValues"],
+      ["POST", "/feeds", "feeds.connect"],
+      ["PUT", "/feeds/:documentId/values", "feeds.replace"],
+      ["POST", "/feeds/:documentId/test", "feeds.testCurrent"],
+      ["POST", "/feeds/:documentId/pause", "feeds.pause"],
+      ["POST", "/feeds/:documentId/resume", "feeds.resume"],
+      ["DELETE", "/feeds/:documentId/pending", "feeds.withdrawPending"],
+      ["DELETE", "/feeds/:documentId", "feeds.disconnect"],
+    ] as const
+  ).map(([method, path, handler]) => ({
+    method,
+    path,
+    handler,
+    config: { auth: false, policies: [] },
+  })),
 ]
