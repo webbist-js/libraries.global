@@ -135,6 +135,12 @@ export default [
     config: { auth: false, policies: [] },
   },
   {
+    method: "PUT",
+    path: "/moderation/submissions/:documentId/drive-dates",
+    handler: "moderation.setDriveDates",
+    config: { auth: false, policies: [] },
+  },
+  {
     method: "GET",
     path: "/moderation/submissions/:documentId/events",
     handler: "moderation.events",
@@ -150,6 +156,12 @@ export default [
     method: "GET",
     path: "/moderation/stats",
     handler: "moderation.stats",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
+    path: "/moderation/drive-stats",
+    handler: "moderation.driveStats",
     config: { auth: false, policies: [] },
   },
   {

@@ -36,15 +36,22 @@ const ARTICLE_KINDS = new Set(["wiki", "blog"])
 const HISTORY_CACHE = "public, max-age=60"
 
 // One place to map a policy verdict to the response, used by both `create`
-// and `finalize`.
+// and `finalize`. A verdict with `details` (a drive proposal's validation
+// errors) carries them as `error.details`.
 function sendVerdict(
   ctx: any,
-  verdict: { status: number; message: string }
+  verdict: { status: number; message: string; details?: unknown }
 ): void {
   ctx.status = verdict.status
   // A6: rate-limited callers are told when to come back (quotas are hourly).
   if (verdict.status === 429) ctx.set("Retry-After", "3600")
-  ctx.body = { error: { status: verdict.status, message: verdict.message } }
+  ctx.body = {
+    error: {
+      status: verdict.status,
+      message: verdict.message,
+      ...(verdict.details ? { details: verdict.details } : {}),
+    },
+  }
 }
 
 type StatsData = {
@@ -218,6 +225,7 @@ export default ({ strapi }: { strapi: any }) => ({
         evidenceUrl,
         locale: contentLocale,
         driveDocumentId,
+        draftData,
       })
     if (!verdict.ok) {
       sendVerdict(ctx, verdict)
@@ -585,6 +593,7 @@ export default ({ strapi }: { strapi: any }) => ({
             excludeDocumentId: id,
             locale: next.locale,
             driveDocumentId: existing.driveDocumentId ?? undefined,
+            draftData: existing.draftData,
           })
           if (!verdict.ok) return verdict
 

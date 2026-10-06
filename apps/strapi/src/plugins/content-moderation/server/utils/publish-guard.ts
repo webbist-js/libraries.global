@@ -19,13 +19,16 @@
  * `new_library` approved with `publish` lacks its continent, country or
  * region. `claim_lost`: an `event_feed` submitter no longer holds a claim
  * on the library. `feed_mismatch`: the credential isn't waiting on this
- * submission (withdrawn, replaced or already decided).
+ * submission (withdrawn, replaced or already decided). `invalid_drive`: a
+ * `drive_proposal` doesn't make a valid drive as it stands (with the
+ * Moderator's dates, if any); the Moderator changes its dates or rejects it.
  */
 export type ApplyRefusedReason =
   | "not_published"
   | "no_hierarchy"
   | "claim_lost"
   | "feed_mismatch"
+  | "invalid_drive"
 
 export class ApplyRefusedError extends Error {
   readonly reason: ApplyRefusedReason
@@ -46,6 +49,7 @@ const REFUSED_REASONS = new Set<string>([
   "no_hierarchy",
   "claim_lost",
   "feed_mismatch",
+  "invalid_drive",
 ] satisfies ApplyRefusedReason[])
 
 /**

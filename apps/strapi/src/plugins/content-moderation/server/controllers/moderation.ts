@@ -36,6 +36,15 @@ const PAGE_SIZE = { def: 25, min: 1, max: 50 }
 const MAX_Q = 100
 const MAX_NOTE = 2000
 const DECISIONS = new Set(["approved", "rejected", "needs_info"])
+/** The longest date string a Moderator's drive dates may be. */
+const MAX_DATE = 40
+
+/** A date string `Date.parse` accepts, of at most `MAX_DATE` characters. */
+const isDateString = (v: unknown): v is string =>
+  typeof v === "string" &&
+  v.length > 0 &&
+  v.length <= MAX_DATE &&
+  !Number.isNaN(Date.parse(v))
 
 type Viewer = { id: string; email: string | null; name: string | null }
 
@@ -339,7 +348,9 @@ export default ({ strapi }: { strapi: any }) => {
                   ? "The submitter no longer holds a claim on this library. Reject it instead."
                   : result.reason === "feed_mismatch"
                     ? "This feed is no longer waiting on this submission. Reject it instead."
-                    : "This record has no published version; an admin must publish it first.",
+                    : result.reason === "invalid_drive"
+                      ? "This drive isn’t valid as it stands: change its dates, or reject it."
+                      : "This record has no published version; an admin must publish it first.",
               { name: "apply_refused", reason: result.reason }
             )
           case "apply_failed":
@@ -424,6 +435,53 @@ export default ({ strapi }: { strapi: any }) => {
       ctx.body = { data: result.data }
     },
 
+    // PUT /moderation/submissions/:documentId/drive-dates  { startsAt, endsAt }
+    // The dates a Drive Proposal's drive is created with on approval.
+    async setDriveDates(ctx: any) {
+      const auth = await authorise(ctx)
+      if (!auth) return
+      const s = await decidable(ctx, auth)
+      if (!s) return
+      const body = ctx.request?.body
+      const { startsAt, endsAt } = (
+        body && typeof body === "object" && !Array.isArray(body) ? body : {}
+      ) as Record<string, unknown>
+      if (!isDateString(startsAt) || !isDateString(endsAt))
+        return fail(ctx, 400, "Give a start and an end date.")
+
+      const result = await submissions().setModeratorEdit(s.documentId, {
+        startsAt,
+        endsAt,
+      })
+      if ("error" in result) {
+        if (result.error === "wrong_type")
+          return fail(ctx, 400, "Only drive proposals have dates to change.")
+        if (result.error === "invalid")
+          return fail(ctx, 400, "Invalid dates", {
+            details: { errors: result.errors },
+          })
+        if (result.error === "not_found") return fail(ctx, 404, NOT_FOUND)
+        if (result.error === "tampered")
+          return fail(
+            ctx,
+            422,
+            "This submission changed after it was submitted for review.",
+            { name: "tampered" }
+          )
+
+        return fail(
+          ctx,
+          409,
+          "This submission was already decided or changed meanwhile.",
+          { name: result.error }
+        )
+      }
+      const fresh = await strapi
+        .documents("plugin::content-moderation.submission")
+        .findOne({ documentId: s.documentId })
+      ctx.body = { data: await moderation().detail(fresh ?? s) }
+    },
+
     // PUT /moderation/submissions/:documentId/feed-test — re-run the connection
     // test on the value under review. In scope and not your own, like a decision.
     async feedTest(ctx: any) {
@@ -459,6 +517,17 @@ export default ({ strapi }: { strapi: any }) => {
       if (!auth) return
       ctx.body = {
         data: await moderation().stats(auth.caps, auth.viewer.id, {
+          board: isBoard(auth),
+        }),
+      }
+    },
+
+    // GET /moderation/drive-stats — pending tagged submissions per open drive
+    async driveStats(ctx: any) {
+      const auth = await authorise(ctx)
+      if (!auth) return
+      ctx.body = {
+        data: await moderation().driveStats(auth.caps, auth.viewer.id, {
           board: isBoard(auth),
         }),
       }
