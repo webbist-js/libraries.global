@@ -159,6 +159,42 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     ctx.body = { data: result.data, meta: {} }
   },
 
+  // GET /drives/:documentId/stats — public. 404 for an unknown or
+  // unpublished (`draft`) Drive.
+  async stats(ctx) {
+    const { documentId } = ctx.params as { documentId: string }
+    const drive = await strapi
+      .documents(UID)
+      .findOne({ documentId, fields: ["documentId", "status"] })
+    if (!drive || drive.status === "draft")
+      return ctx.notFound("Drive not found.")
+
+    const data = await strapi.service(UID).stats(documentId)
+    ctx.body = { data, meta: {} }
+  },
+
+  // GET /drives/:documentId/leaderboard?period=week|all&limit= — public.
+  // 404 for an unknown or unpublished (`draft`) Drive. Never carries a
+  // `baUserId`.
+  async leaderboard(ctx) {
+    const { documentId } = ctx.params as { documentId: string }
+    const drive = await strapi
+      .documents(UID)
+      .findOne({ documentId, fields: ["documentId", "status"] })
+    if (!drive || drive.status === "draft")
+      return ctx.notFound("Drive not found.")
+
+    const { period, limit } = ctx.query as Record<string, unknown>
+    const data = await strapi
+      .service(UID)
+      .leaderboard(
+        documentId,
+        period === "week" ? "week" : "all",
+        limit !== undefined ? Number(limit) : 20
+      )
+    ctx.body = { data, meta: {} }
+  },
+
   // POST /drives/:documentId/actions — board only. Body: { action, ...payload }.
   async act(ctx) {
     const baUserId = await requireBoardMember(ctx, strapi)

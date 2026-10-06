@@ -146,6 +146,19 @@ const HOT_PATH_INDEXES = [
   ),
   index("cm_review_events", ["submission_document_id", "created_at"]),
   index("cm_submissions", ["content_locale", "status"]),
+
+  // Drive Credits: a drive's per-user tally (leaderboard, helpers count) and
+  // its credits-over-time window, plus the one credit per submission-drive
+  // pair that makes a retried approval idempotent (a duplicate keeps the
+  // lowest id).
+  index("drive_credits", ["drive_document_id", "ba_user_id"]),
+  index("drive_credits", ["drive_document_id", "accepted_at"]),
+  index("drive_credits", ["submission_document_id", "drive_document_id"], {
+    unique: true,
+    before: [
+      dedupe("drive_credits", ["submission_document_id", "drive_document_id"]),
+    ],
+  }),
 ]
 
 /**

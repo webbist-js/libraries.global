@@ -1631,6 +1631,24 @@ export default ({ strapi }: { strapi: any }) => ({
         }
       }
 
+      // Credit the Drives this approved change filled a gap for — tagged,
+      // or inferred from scope and focus (Task 5). After the commit and
+      // off the request path; never fails the transition.
+      if (
+        status === "approved" &&
+        (submission?.submissionType === "correction" ||
+          submission?.submissionType === "library_edit")
+      ) {
+        try {
+          await strapi.service("api::drive.drive").creditApproval(submission)
+        } catch (err) {
+          strapi.log.warn(
+            "[content-moderation] drive creditApproval failed:",
+            err
+          )
+        }
+      }
+
       // After the commit and off the request path; never fails the
       // transition. A decision tells the submitter (with the moderator's own
       // note, not the markers appended for moderators); a resubmission from

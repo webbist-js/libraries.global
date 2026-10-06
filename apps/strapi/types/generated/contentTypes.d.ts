@@ -1555,6 +1555,48 @@ export interface ApiDatasetDataset extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface ApiDriveCreditDriveCredit extends Struct.CollectionTypeSchema {
+  collectionName: "drive_credits"
+  info: {
+    description: "A hidden ledger entry crediting one approved submission to one Drive \u2014 tagged by the contributor, or inferred from the Drive's scope and focus. Feeds a Drive's stats and leaderboard; no REST routes."
+    displayName: "Drive Credit"
+    pluralName: "drive-credits"
+    singularName: "drive-credit"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    acceptedAt: Schema.Attribute.DateTime
+    baUserId: Schema.Attribute.String & Schema.Attribute.Required
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    driveDocumentId: Schema.Attribute.String & Schema.Attribute.Required
+    libraryDocumentId: Schema.Attribute.String
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::drive-credit.drive-credit"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    submissionDocumentId: Schema.Attribute.String & Schema.Attribute.Required
+    tagged: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface ApiDriveDrive extends Struct.CollectionTypeSchema {
   collectionName: "drives"
   info: {
@@ -3791,7 +3833,9 @@ export interface PluginContentModerationReviewEvent
     note: Schema.Attribute.Text
     publishedAt: Schema.Attribute.DateTime
     reviewerId: Schema.Attribute.String
-    reviewerKind: Schema.Attribute.Enumeration<["admin", "contributor"]>
+    reviewerKind: Schema.Attribute.Enumeration<
+      ["admin", "contributor", "system"]
+    >
     submissionDocumentId: Schema.Attribute.String & Schema.Attribute.Required
     toStatus: Schema.Attribute.Enumeration<
       ["draft", "pending", "approved", "rejected", "needs_info"]
@@ -4987,6 +5031,7 @@ declare module "@strapi/strapi" {
       "api::continent.continent": ApiContinentContinent
       "api::country.country": ApiCountryCountry
       "api::dataset.dataset": ApiDatasetDataset
+      "api::drive-credit.drive-credit": ApiDriveCreditDriveCredit
       "api::drive.drive": ApiDriveDrive
       "api::entitlement-grant.entitlement-grant": ApiEntitlementGrantEntitlementGrant
       "api::footer.footer": ApiFooterFooter

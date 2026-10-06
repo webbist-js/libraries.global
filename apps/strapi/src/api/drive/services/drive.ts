@@ -14,12 +14,22 @@
 
 import {
   DRIVE_MAX_PINNED,
+  focusMatches,
+  libraryInScope,
   validateDrive,
+  type DriveFocus,
   type DriveInput,
+  type DriveScope,
 } from "@repo/shared-data"
 import { factories } from "@strapi/strapi"
 
+import { isActivityPublic } from "../../../utils/activity-visibility"
+import { loadDriveLibrary } from "../../../utils/drive-library"
+
 const UID = "api::drive.drive"
+const DRIVE_CREDIT = "api::drive-credit.drive-credit"
+const SUBMISSION = "cm_submissions"
+const CREDIT = "drive_credits"
 
 type DriveRow = Record<string, unknown> & {
   documentId: string
@@ -147,6 +157,75 @@ function stepsFromRow(row: DriveRow): string[] {
       s && typeof s === "object" ? (s as { text?: unknown }).text : s
     )
     .filter((t): t is string => typeof t === "string")
+}
+
+/** Submission types `creditApproval` credits — library changes only. */
+const CREDITABLE_TYPES = new Set(["correction", "library_edit"])
+/** `openDrivesCached`'s cap — a generous ceiling on concurrently open Drives. */
+const OPEN_DRIVES_MAX = 50
+const OPEN_DRIVES_TTL_MS = 60_000
+/** A distinct-id list's cap for `countHelpers`'s in-JS union (ADR-0004). */
+const HELPER_ID_CAP = 10_000
+const LEADERBOARD_MAX = 20
+
+type OpenDriveRow = {
+  documentId: string
+  scope: DriveScope
+  focus: DriveFocus
+  openedAt?: string | null
+}
+
+// Every open drive, scope and focus only, memoised for 60s per strapi
+// instance (tests get their own fake, so they never share this). `status:
+// "open"` is the only "published" a drive needs — `draftAndPublish` is off
+// for this content type (see the file header).
+const openDrivesCache = new WeakMap<
+  object,
+  { expires: number; value: OpenDriveRow[] }
+>()
+
+async function openDrivesCached(strapiInstance: any): Promise<OpenDriveRow[]> {
+  const cached = openDrivesCache.get(strapiInstance)
+  if (cached && cached.expires > Date.now()) return cached.value
+
+  const rows = (await strapiInstance.documents(UID).findMany({
+    filters: { status: { $eq: "open" } },
+    fields: ["documentId", "scope", "focus", "openedAt"],
+    limit: OPEN_DRIVES_MAX,
+  })) as OpenDriveRow[]
+
+  openDrivesCache.set(strapiInstance, {
+    expires: Date.now() + OPEN_DRIVES_TTL_MS,
+    value: rows,
+  })
+
+  return rows
+}
+
+/**
+ * Creates one Drive Credit, swallowing a duplicate `(submissionDocumentId,
+ * driveDocumentId)` — a retried approval, or the same untagged match found
+ * twice — the same way the rewards plugin catches a duplicate point event
+ * or badge award (`code === "23505"`).
+ */
+async function creditOne(
+  strapiInstance: any,
+  data: {
+    driveDocumentId: string
+    baUserId: string
+    submissionDocumentId: string
+    libraryDocumentId: string
+    tagged: boolean
+  }
+): Promise<void> {
+  try {
+    await strapiInstance.documents(DRIVE_CREDIT).create({
+      data: { ...data, acceptedAt: new Date().toISOString() } as never,
+    })
+  } catch (err: any) {
+    if (err?.code === "23505" || err?.nativeError?.code === "23505") return
+    throw err
+  }
 }
 
 export default factories.createCoreService(UID, ({ strapi }) => ({
@@ -463,5 +542,250 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
         // "open" and "close" land here too until Task 6 implements them.
         return { errors: ["Unknown action"], status: 400 }
     }
+  },
+
+  // ── Credits, stats and leaderboards ────────────────────────────────────────
+
+  /**
+   * Credits an approved `correction` or `library_edit` on a library target.
+   * Tagged (the submission named a Drive at submit time, already checked
+   * in scope and on-focus by the submission policy) credits that one
+   * Drive. Untagged, every open Drive whose scope and focus the change
+   * matches is credited — the library is loaded once either way, as the
+   * policy does. Not a library target (no library found): credits nothing.
+   * A second approval of the same submission (a retried transition)
+   * credits nothing twice: `creditOne` swallows the duplicate-key error the
+   * unique `(submissionDocumentId, driveDocumentId)` index throws.
+   */
+  async creditApproval(submission: {
+    documentId: string
+    submissionType: string
+    driveDocumentId?: string | null
+    targetDocumentId?: string | null
+    targetSlug?: string | null
+    fields?: unknown
+    submittedByUserId: string
+  }): Promise<void> {
+    if (!CREDITABLE_TYPES.has(submission.submissionType)) return
+
+    const library = await loadDriveLibrary(strapi, {
+      targetDocumentId: submission.targetDocumentId,
+      targetSlug: submission.targetSlug,
+    })
+    if (!library) return
+
+    if (
+      typeof submission.driveDocumentId === "string" &&
+      submission.driveDocumentId
+    ) {
+      await creditOne(strapi, {
+        driveDocumentId: submission.driveDocumentId,
+        baUserId: submission.submittedByUserId,
+        submissionDocumentId: submission.documentId,
+        libraryDocumentId: library.documentId,
+        tagged: true,
+      })
+
+      return
+    }
+
+    const drives = await openDrivesCached(strapi)
+    for (const drive of drives) {
+      if (!libraryInScope(library, drive.scope, drive.openedAt)) continue
+      if (
+        !focusMatches(drive.focus, {
+          submissionType: submission.submissionType,
+          fields: submission.fields,
+        })
+      )
+        continue
+      await creditOne(strapi, {
+        driveDocumentId: drive.documentId,
+        baUserId: submission.submittedByUserId,
+        submissionDocumentId: submission.documentId,
+        libraryDocumentId: library.documentId,
+        tagged: false,
+      })
+    }
+  },
+
+  /** Count of `cm_submissions` still in review (`pending`/`needs_info`) for this Drive. */
+  async countInReview(documentId: string): Promise<number> {
+    const rows = (await strapi.db.connection
+      .count({ count: "*" })
+      .from(SUBMISSION)
+      .where("drive_document_id", documentId)
+      .whereIn("status", ["pending", "needs_info"])) as {
+      count: string | number
+    }[]
+
+    return Number(rows[0]?.count ?? 0)
+  },
+
+  /** Count of Drive Credits recorded for this Drive. */
+  async countCredits(documentId: string): Promise<number> {
+    const rows = (await strapi.db.connection
+      .count({ count: "*" })
+      .from(CREDIT)
+      .where("drive_document_id", documentId)) as { count: string | number }[]
+
+    return Number(rows[0]?.count ?? 0)
+  },
+
+  /**
+   * Count of distinct helpers for this Drive: the union of everyone
+   * credited and everyone with a non-draft Submission tagged to it. Two
+   * capped (10,000) distinct-id lists, unioned in JS (ADR-0004) rather than
+   * one SQL UNION, so the same grouped-query shape as every other count
+   * here is enough.
+   */
+  async countHelpers(documentId: string): Promise<number> {
+    const [creditRows, submissionRows] = (await Promise.all([
+      strapi.db.connection
+        .select("ba_user_id")
+        .from(CREDIT)
+        .where("drive_document_id", documentId)
+        .groupBy("ba_user_id")
+        .limit(HELPER_ID_CAP),
+      strapi.db.connection
+        .select("submitted_by_user_id")
+        .from(SUBMISSION)
+        .where("drive_document_id", documentId)
+        .whereNot("status", "draft")
+        .groupBy("submitted_by_user_id")
+        .limit(HELPER_ID_CAP),
+    ])) as [{ ba_user_id: string }[], { submitted_by_user_id: string }[]]
+
+    const ids = new Set<string>()
+    for (const r of creditRows) ids.add(r.ba_user_id)
+    for (const r of submissionRows) ids.add(r.submitted_by_user_id)
+
+    return ids.size
+  },
+
+  /** `{ inReview, helpers, credits }` for a Drive's progress card. */
+  async stats(
+    documentId: string
+  ): Promise<{ inReview: number; helpers: number; credits: number }> {
+    const [inReview, helpers, credits] = await Promise.all([
+      (this as any).countInReview(documentId),
+      (this as any).countHelpers(documentId),
+      (this as any).countCredits(documentId),
+    ])
+
+    return { inReview, helpers, credits }
+  },
+
+  /** Credits per helper for this Drive, `period` applied, ranked, capped at `limit`. */
+  async leaderboardCredits(
+    documentId: string,
+    period: "week" | "all",
+    limit: number
+  ): Promise<{ baUserId: string; credits: number }[]> {
+    let q = strapi.db.connection
+      .select("ba_user_id")
+      .count({ credits: "*" })
+      .from(CREDIT)
+      .where("drive_document_id", documentId)
+      .groupBy("ba_user_id")
+      .orderBy("credits", "desc")
+      .limit(limit)
+    if (period === "week") {
+      q = q.where(
+        "accepted_at",
+        ">=",
+        new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+      )
+    }
+    const rows = (await q) as { ba_user_id: string; credits: string | number }[]
+
+    return rows.map((r) => ({
+      baUserId: r.ba_user_id,
+      credits: Number(r.credits),
+    }))
+  },
+
+  /**
+   * `[{ rank, credits, username, displayName, avatarUrl }]` for this
+   * Drive's helpers, `period` "week" (last 7 days) or "all", capped at 20.
+   * A private profile, or one with `publicPrefs.showActivity === false`
+   * (`isActivityPublic`), is anonymised: `username: null, displayName: "A
+   * contributor", avatarUrl: null` — never a `baUserId`.
+   */
+  async leaderboard(
+    documentId: string,
+    period: "week" | "all",
+    limit: number
+  ): Promise<
+    {
+      rank: number
+      credits: number
+      username: string | null
+      displayName: string | null
+      avatarUrl: string | null
+    }[]
+  > {
+    const take = Math.min(
+      Math.max(1, Math.trunc(limit) || LEADERBOARD_MAX),
+      LEADERBOARD_MAX
+    )
+    const rows = (await (this as any).leaderboardCredits(
+      documentId,
+      period,
+      take
+    )) as { baUserId: string; credits: number }[]
+    if (rows.length === 0) return []
+
+    const baUserIds = rows.map((r) => r.baUserId)
+    const profiles = (await strapi
+      .documents("api::user-profile.user-profile")
+      .findMany({
+        filters: { baUserId: { $in: baUserIds } },
+        fields: [
+          "baUserId",
+          "username",
+          "firstName",
+          "lastName",
+          "profileVisibility",
+          "publicPrefs",
+        ],
+        populate: { avatar: true },
+        limit: baUserIds.length,
+      })) as {
+      baUserId: string
+      username?: string | null
+      firstName?: string | null
+      lastName?: string | null
+      profileVisibility?: string
+      publicPrefs?: { showActivity?: boolean } | null
+      avatar?: { url?: string | null } | null
+    }[]
+    const profileMap = new Map(profiles.map((p) => [p.baUserId, p]))
+
+    return rows.map((row, i) => {
+      const profile = profileMap.get(row.baUserId)
+      const isPublic = !!profile && isActivityPublic(profile)
+      if (!isPublic) {
+        return {
+          rank: i + 1,
+          credits: row.credits,
+          username: null,
+          displayName: "A contributor",
+          avatarUrl: null,
+        }
+      }
+      const name = [profile?.firstName, profile?.lastName]
+        .filter((v): v is string => !!v)
+        .join(" ")
+        .trim()
+
+      return {
+        rank: i + 1,
+        credits: row.credits,
+        username: profile?.username ?? null,
+        displayName: name || profile?.username || "A contributor",
+        avatarUrl: profile?.avatar?.url ?? null,
+      }
+    })
   },
 }))

@@ -1,0 +1,23 @@
+{
+  "kind": "collectionType",
+  "collectionName": "drive_credits",
+  "info": {
+    "singularName": "drive-credit",
+    "pluralName": "drive-credits",
+    "displayName": "Drive Credit",
+    "description": "A hidden ledger entry crediting one approved submission to one Drive — tagged by the contributor, or inferred from the Drive's scope and focus. Feeds a Drive's stats and leaderboard; no REST routes."
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": false },
+    "content-type-builder": { "visible": false }
+  },
+  "attributes": {
+    "driveDocumentId": { "type": "string", "required": true },
+    "baUserId": { "type": "string", "required": true },
+    "submissionDocumentId": { "type": "string", "required": true },
+    "libraryDocumentId": { "type": "string" },
+    "tagged": { "type": "boolean", "default": false },
+    "acceptedAt": { "type": "datetime" }
+  }
+}

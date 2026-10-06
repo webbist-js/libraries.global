@@ -11,12 +11,12 @@ import {
   SESSION_PROFILE_MAX_CLAIMS,
 } from "@repo/access"
 import {
-  type DriveLibrary,
   findUnsafeContent,
   focusMatches,
   libraryInScope,
 } from "@repo/shared-data"
 
+import { loadDriveLibrary } from "../../../../utils/drive-library"
 import { activeGrants } from "../../../../utils/role-grants"
 import { isHttpUrl } from "../utils/library-record"
 import { isVerification, verifySections } from "../utils/library-verify"
@@ -244,61 +244,6 @@ async function checkRoleApplication(
     }
 
   return { ok: true }
-}
-
-const DRIVE_LIBRARY_FIELDS = [
-  "documentId",
-  "libraryType",
-  "source",
-  "completeness",
-  "createdAt",
-  "operationalStatus",
-] as const
-const DRIVE_LIBRARY_POPULATE = {
-  continent: { fields: ["slug"] },
-  country: { fields: ["slug"] },
-  region: { fields: ["slug"] },
-  area: { fields: ["slug"] },
-} as const
-
-/**
- * The library a Drive-tagged submission targets, with its place slugs, for
- * `libraryInScope`. Looked up by documentId, falling back to `targetSlug`
- * like `allowedTerms` — a submission may carry only one of the two.
- */
-async function loadDriveLibrary(
-  strapi: any,
-  target: { targetDocumentId?: unknown; targetSlug?: unknown }
-): Promise<DriveLibrary | null> {
-  let row: Record<string, any> | null = null
-  if (isDocumentId(target.targetDocumentId)) {
-    row = await strapi.documents(LIBRARY).findOne({
-      documentId: target.targetDocumentId,
-      fields: DRIVE_LIBRARY_FIELDS as unknown as string[],
-      populate: DRIVE_LIBRARY_POPULATE,
-    })
-  } else if (typeof target.targetSlug === "string" && target.targetSlug) {
-    ;[row] = await strapi.documents(LIBRARY).findMany({
-      filters: { slug: { $eq: target.targetSlug } },
-      fields: DRIVE_LIBRARY_FIELDS as unknown as string[],
-      populate: DRIVE_LIBRARY_POPULATE,
-      limit: 1,
-    })
-  }
-  if (!row) return null
-
-  return {
-    documentId: row.documentId,
-    continent: row.continent?.slug ?? null,
-    country: row.country?.slug ?? null,
-    region: row.region?.slug ?? null,
-    area: row.area?.slug ?? null,
-    libraryType: row.libraryType ?? null,
-    source: row.source ?? null,
-    completeness: row.completeness ?? null,
-    createdAt: row.createdAt ?? null,
-    operationalStatus: row.operationalStatus ?? null,
-  }
 }
 
 export default ({ strapi }: { strapi: any }) => ({
