@@ -1,3 +1,5 @@
+import { proposedDrive, validateDrive } from "@repo/shared-data"
+
 import createNotifications, { scheduleNotification } from "./notifications"
 import { isActivityPublic } from "../../../../utils/activity-visibility"
 import {
@@ -16,6 +18,7 @@ import {
   applyArticleSubmissionWithResult,
   isTranslationSubmission,
 } from "../utils/article-apply"
+import { applyDriveProposal } from "../utils/drive-proposal"
 import { applyFacilityAnswers } from "../utils/facility-answers"
 import {
   applyLibraryPhoto,
@@ -62,6 +65,7 @@ import {
   recordReview,
 } from "../utils/record-review"
 import { isSelfReview, type Reviewer } from "../utils/reviewer"
+import { staffReviewHint } from "../utils/staff-review-hint"
 import { withTargetLabels } from "../utils/target-labels"
 import { applyTopicSuggestion } from "../utils/topic-suggestion"
 import { canTransition } from "../utils/transitions"
@@ -101,13 +105,21 @@ export const CLAIM_LOST_MARKER =
 // An event_feed approval found its credential no longer waiting on it.
 export const FEED_MISMATCH_MARKER =
   " [Not applied: this feed is no longer waiting on this submission. Reject it instead]"
+// A drive_proposal approval found its definition no longer makes a valid
+// drive (with the Moderator's dates, if they set any).
+export const INVALID_DRIVE_MARKER =
+  " [Not applied: the drive isn’t valid as proposed. Change its dates, or reject it]"
 
 const REFUSED_MARKERS: Record<ApplyRefusedReason, string> = {
   not_published: NOT_PUBLISHED_MARKER,
   no_hierarchy: NO_HIERARCHY_MARKER,
   claim_lost: CLAIM_LOST_MARKER,
   feed_mismatch: FEED_MISMATCH_MARKER,
+  invalid_drive: INVALID_DRIVE_MARKER,
 }
+
+/** The dates a Moderator gives a `drive_proposal`'s drive. */
+export type ModeratorEdit = { startsAt: string; endsAt: string }
 
 /** The places a `new_library` is filed under. */
 export const HIERARCHY_KEYS = [
@@ -295,6 +307,10 @@ const LIBRARY_FIELDS = new Set([
   "iiifEndpoint",
   "classificationSystem",
   "openingTimes",
+  "mobileTimetable",
+  "homeLibrary",
+  "operatorName",
+  "timetableUrl",
   "accessibilityNotes",
   "visitNotes",
   "services",
@@ -591,7 +607,8 @@ export function toContributor<T>(sub: T): T {
  * the row already holds; always a configured locale, the default otherwise.
  * A Role Application is always filed in the default locale: the languages
  * it asks for are `fields.locales`, and moderation scope reads those
- * (`canModerateApplication`), never a locale the client picked.
+ * (`canModerateApplication`), never a locale the client picked. A Drive
+ * Proposal is too: drive text is written in the default locale.
  */
 export async function resolveSubmissionLocale(
   strapi: any,
@@ -602,7 +619,11 @@ export async function resolveSubmissionLocale(
     contentLocale?: unknown
   } = {}
 ): Promise<string> {
-  if (row.submissionType === "role_application") return defaultLocale(strapi)
+  if (
+    row.submissionType === "role_application" ||
+    row.submissionType === "drive_proposal"
+  )
+    return defaultLocale(strapi)
   const isArticle =
     row.submissionType === "wiki_edit" ||
     row.submissionType === "blog_submission"
@@ -673,6 +694,10 @@ export default ({ strapi }: { strapi: any }) => ({
       ...(fields.submissionType === "role_application"
         ? { targetEntityType: "user_profile" }
         : {}),
+      // A Drive Proposal's target is the drive approval creates.
+      ...(fields.submissionType === "drive_proposal"
+        ? { targetEntityType: "drive" }
+        : {}),
       contentLocale: await resolveSubmissionLocale(strapi, locale, fields),
     }
 
@@ -741,7 +766,11 @@ export default ({ strapi }: { strapi: any }) => ({
 
     return Promise.all(
       (rows ?? []).map(async (row: any) => {
-        const client = toClient(row)
+        const hint = await staffReviewHint(strapi, row)
+        const client = {
+          ...toClient(row),
+          ...(hint ? { staffReviewHint: hint } : {}),
+        }
         if (!open.includes(row)) return client
         const review =
           row.submissionType === "topic_suggestion"
@@ -1026,6 +1055,17 @@ export default ({ strapi }: { strapi: any }) => ({
                 sourceUrl: link(f.sourceUrl),
                 closureReason: (f.closureReason as string) || undefined,
                 openingTimes: f.openingTimes || undefined,
+                ...(f.libraryType === "Mobile"
+                  ? {
+                      mobileTimetable: f.mobileTimetable ?? undefined,
+                      homeLibrary: connectOne(f.homeLibrary),
+                      operatorName:
+                        typeof f.operatorName === "string"
+                          ? f.operatorName.trim() || undefined
+                          : undefined,
+                      timetableUrl: link(f.timetableUrl),
+                    }
+                  : {}),
                 accessibilityNotes: toBlocks(f.accessibilityNotes),
                 visitNotes: toBlocks(f.visitNotes),
                 contentUpdatedAt: new Date(),
@@ -1188,9 +1228,14 @@ export default ({ strapi }: { strapi: any }) => ({
                 `[content-moderation] claim ${documentId} has no valid targetDocumentId; skipping affiliation`
               )
             } else {
+              const inviteRole = await strapi
+                .plugin("library-staff")
+                ?.service("staff")
+                ?.approveInvite(submission)
               const affiliation = await upsertAffiliation(strapi, {
                 baUserId: submission.submittedByUserId,
                 libraryDocumentId: targetLibrary.documentId,
+                ...(inviteRole ? { staffRole: inviteRole } : {}),
                 // Pass through undefined (not null) when the claim didn't supply
                 // a value, so an update doesn't null out an existing one.
                 role: fields.role as string | undefined,
@@ -1345,6 +1390,23 @@ export default ({ strapi }: { strapi: any }) => ({
                 data: { resultDocumentId: profileDocumentId },
               })
             updated.resultDocumentId = profileDocumentId
+          }
+
+          // ── drive_proposal approval ───────────────────────────────────────
+          // Creates the drive as scheduled (ADR-0005: approval only
+          // schedules it). An invalid drive refuses, rolling this back.
+          if (
+            status === "approved" &&
+            submission?.submissionType === "drive_proposal"
+          ) {
+            const driveDocumentId = await applyDriveProposal(strapi, submission)
+            await strapi
+              .documents("plugin::content-moderation.submission")
+              .update({
+                documentId,
+                data: { resultDocumentId: driveDocumentId },
+              })
+            updated.resultDocumentId = driveDocumentId
           }
 
           // ── event_feed ───────────────────────────────────────────────────
@@ -1610,6 +1672,30 @@ export default ({ strapi }: { strapi: any }) => ({
         }
       }
 
+      // Award points for an accepted Drive Proposal — 10pts
+      if (
+        status === "approved" &&
+        submission?.submissionType === "drive_proposal"
+      ) {
+        try {
+          await strapi.plugin("rewards").service("points").award(
+            submission.submittedByUserId,
+            "drive_proposal_accepted",
+            10,
+            {
+              submissionId: documentId,
+              driveDocumentId: updated.resultDocumentId,
+            },
+            `${documentId}:drive_proposal_accepted`
+          )
+        } catch (err) {
+          strapi.log.warn(
+            "[content-moderation] rewards.award (drive proposal) failed:",
+            err
+          )
+        }
+      }
+
       // Award points for Knowledge and Journal approvals: a new article
       // earns the most, a translation next, an edit to an existing one least.
       // "New" comes from `draftData.kind` and "translation" from the target
@@ -1787,12 +1873,25 @@ export default ({ strapi }: { strapi: any }) => ({
     beforeTransition?: (
       existing: any,
       next: { locale: string }
-    ) => Promise<{ ok: true } | { ok: false; status: number; message: string }>
+    ) => Promise<
+      | { ok: true }
+      | {
+          ok: false
+          status: number
+          message: string
+          details?: { errors: string[] }
+        }
+    >
   ): Promise<
     | null
     | {
         error: "policy"
-        verdict: { ok: false; status: number; message: string }
+        verdict: {
+          ok: false
+          status: number
+          message: string
+          details?: { errors: string[] }
+        }
       }
     | Record<string, unknown>
   > {
@@ -2133,6 +2232,78 @@ export default ({ strapi }: { strapi: any }) => ({
     return {
       data: { documentId, moderatorTarget: hasTarget ? clean : null },
     }
+  },
+
+  /**
+   * Sets the dates a `drive_proposal`'s drive is created with on approval,
+   * as `draftData.moderatorEdit`. Only while the proposal is in review, and
+   * only dates that make a valid drive with the rest of it (`invalid` lists
+   * `validateDrive`'s errors). The stored payloadHash is re-pinned in the
+   * same compare-and-set, as `setModeratorTarget` does: the Moderator's
+   * change is part of what is reviewed, never tampering. The caller checks
+   * the Moderator's scope.
+   */
+  async setModeratorEdit(
+    documentId: string,
+    edit: ModeratorEdit
+  ): Promise<
+    | {
+        error: "not_found" | "wrong_type" | "not_open" | "conflict" | "tampered"
+      }
+    | { error: "invalid"; errors: string[] }
+    | { data: { documentId: string; moderatorEdit: ModeratorEdit } }
+  > {
+    const submission = await strapi
+      .documents("plugin::content-moderation.submission")
+      .findOne({ documentId })
+    if (!submission || submission.status === "draft")
+      return { error: "not_found" }
+    if (submission.submissionType !== "drive_proposal")
+      return { error: "wrong_type" }
+    if (submission.status !== "pending" && submission.status !== "needs_info")
+      return { error: "not_open" }
+    // Never re-pin a hash the stored content no longer matches.
+    if (
+      submission.payloadHash &&
+      submission.payloadHash !== payloadHash(submission)
+    )
+      return { error: "tampered" }
+
+    const moderatorEdit: ModeratorEdit = {
+      startsAt: edit.startsAt,
+      endsAt: edit.endsAt,
+    }
+    const draftData: Record<string, unknown> = {
+      ...asObject(submission.draftData),
+      moderatorEdit,
+    }
+    const drive = proposedDrive(draftData, { withModeratorEdit: true })
+    const errors = drive
+      ? validateDrive(drive, new Date())
+      : ["Describe the drive you’re proposing."]
+    if (errors.length > 0) return { error: "invalid", errors }
+    const next = { ...submission, draftData }
+
+    const { count } = await strapi.db
+      .query("plugin::content-moderation.submission")
+      .updateMany({
+        where: {
+          documentId,
+          status: submission.status,
+          ...(submission.payloadHash
+            ? { payloadHash: submission.payloadHash }
+            : {}),
+        },
+        data: {
+          draftData,
+          // Re-pinned: draftData is hashed, and the Moderator's own change
+          // must not make the approval read as `tampered`.
+          ...(submission.payloadHash ? { payloadHash: payloadHash(next) } : {}),
+        },
+      })
+    if (count !== 1) return { error: "conflict" }
+
+    return { data: { documentId, moderatorEdit } }
   },
 
   /** Applies an approved facilities correction (see utils/facility-answers). */

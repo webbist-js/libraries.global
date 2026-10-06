@@ -2,25 +2,33 @@ import {
   canSubmit,
   type Capabilities,
   contributionLimits,
+  DRIVE_PROPOSAL_MIN_ACCEPTED,
   highestRole,
   isSubmissionType,
   resolveCapabilities,
   ROLE_APPLICATION_COOLDOWN_DAYS,
   ROLE_APPLICATION_MIN_ACCEPTED,
   type RoleGrant,
-  SESSION_PROFILE_MAX_CLAIMS,
 } from "@repo/access"
 import {
+  DRIVE_MAX_TASKS,
+  driveFilters,
   findUnsafeContent,
   focusMatches,
   libraryInScope,
+  PANEL_FOCUS_MESSAGE,
+  panelCanFill,
+  proposedDrive,
+  validateDrive,
 } from "@repo/shared-data"
 
 import { loadDriveLibrary } from "../../../../utils/drive-library"
+import { countLibraries } from "../../../../utils/meili-count"
 import { activeGrants } from "../../../../utils/role-grants"
+import { loadStaffClaims } from "../../../../utils/staff"
 import { isHttpUrl } from "../utils/library-record"
 import { isVerification, verifySections } from "../utils/library-verify"
-import { configuredLocales } from "../utils/locales"
+import { configuredLocales, defaultLocale } from "../utils/locales"
 import {
   applicationSectionKind,
   isDocumentId,
@@ -31,7 +39,12 @@ import {
 
 type Result =
   | { ok: true }
-  | { ok: false; status: 400 | 403 | 429; message: string }
+  | {
+      ok: false
+      status: 400 | 403 | 422 | 429
+      message: string
+      details?: { errors: string[] }
+    }
 
 /** The contributor-written parts of a submission. */
 export type SubmissionContent = {
@@ -267,6 +280,105 @@ async function checkRoleApplication(
   return { ok: true }
 }
 
+/**
+ * Drive Proposal rules (D2): the definition is a valid drive the task panel
+ * can fill, its library list holds ids only, the proposer has at least
+ * `DRIVE_PROPOSAL_MIN_ACCEPTED` accepted changes and no other proposal in
+ * review, and the scope has work in it now (1 to `DRIVE_MAX_TASKS`
+ * libraries to do, counted as if it opened now). The definition is read
+ * without `moderatorEdit`: contributor input can never set it.
+ */
+export async function checkDriveProposal(
+  strapi: any,
+  input: { baUserId: string; draftData: unknown; excludeDocumentId?: string }
+): Promise<Result> {
+  const drive = proposedDrive(input.draftData)
+  if (!drive)
+    return {
+      ok: false,
+      status: 400,
+      message: "Describe the drive you’re proposing.",
+    }
+  const now = new Date()
+  const errors = validateDrive(drive, now)
+  if (errors.length > 0)
+    return {
+      ok: false,
+      status: 400,
+      message: "Invalid drive",
+      details: { errors },
+    }
+  if (!panelCanFill(drive.focus))
+    return { ok: false, status: 400, message: PANEL_FOCUS_MESSAGE }
+  const libraries: unknown = drive.scope?.libraries
+  if (
+    libraries !== undefined &&
+    libraries !== null &&
+    (!Array.isArray(libraries) || !libraries.every((id) => isDocumentId(id)))
+  )
+    return { ok: false, status: 400, message: "List libraries by their id." }
+
+  const accepted = await acceptedCount(strapi, input.baUserId)
+  if (accepted < DRIVE_PROPOSAL_MIN_ACCEPTED)
+    return {
+      ok: false,
+      status: 403,
+      message: `Drives are proposed by people with at least ${DRIVE_PROPOSAL_MIN_ACCEPTED} accepted changes.`,
+    }
+
+  const open = Number(
+    (await strapi.documents(SUBMISSION).count({
+      filters: {
+        submittedByUserId: { $eq: input.baUserId },
+        submissionType: { $eq: "drive_proposal" },
+        status: { $in: ["draft", "pending", "needs_info"] },
+        ...(input.excludeDocumentId
+          ? { documentId: { $ne: input.excludeDocumentId } }
+          : {}),
+      },
+    })) ?? 0
+  )
+  if (open > 0)
+    return {
+      ok: false,
+      status: 403,
+      message: "You already have a drive proposal in review.",
+    }
+
+  try {
+    const { todo } = driveFilters({
+      scope: drive.scope,
+      focus: drive.focus,
+      openedAt: now,
+    })
+    const count = await countLibraries(
+      `${todo} AND locale = "${await defaultLocale(strapi)}"`
+    )
+    if (count === 0)
+      return {
+        ok: false,
+        status: 400,
+        message: "No library in this scope has that gap right now.",
+      }
+    if (count > DRIVE_MAX_TASKS)
+      return {
+        ok: false,
+        status: 400,
+        message:
+          "This drive has more than 2,000 libraries to do. Split it by region.",
+      }
+  } catch (err) {
+    // The review panel shows the counts, and the lifecycle's cap still
+    // holds the drive when it opens.
+    strapi.log.warn(
+      "[content-moderation] drive proposal: couldn't count its libraries; letting it through",
+      err
+    )
+  }
+
+  return { ok: true }
+}
+
 export default ({ strapi }: { strapi: any }) => ({
   /**
    * Loads the submitter's Role Grants, tier and library claims, and
@@ -288,14 +400,6 @@ export default ({ strapi }: { strapi: any }) => ({
         limit: 1,
       })) as { tier?: string }[]
 
-    const affiliations = (await strapi
-      .documents("api::library-affiliation.library-affiliation")
-      .findMany({
-        filters: { baUserId: { $eq: baUserId }, ...CLAIM_AFFILIATION_FILTER },
-        populate: { library: { fields: ["documentId"] } },
-        limit: SESSION_PROFILE_MAX_CLAIMS,
-      })) as { library?: { documentId?: string } }[]
-
     // Role Grants are the source of truth; `contributorRole` on the profile
     // is only their derived display value.
     const grants = await activeGrants(strapi, baUserId)
@@ -303,10 +407,7 @@ export default ({ strapi }: { strapi: any }) => ({
     const caps = resolveCapabilities({
       signedIn: true,
       grants,
-      claims: affiliations
-        .map((a) => a.library?.documentId)
-        .filter((id): id is string => !!id)
-        .map((libraryDocumentId) => ({ libraryDocumentId })),
+      claims: await loadStaffClaims(strapi, baUserId),
     })
 
     return {
@@ -404,6 +505,11 @@ export default ({ strapi }: { strapi: any }) => ({
     locale?: string
     /** The Drive this change claims to fill a gap for, if any. */
     driveDocumentId?: unknown
+    /**
+     * The submission's `draftData`: the body's on create, the stored row's
+     * on finalize. A `drive_proposal` carries its definition in it.
+     */
+    draftData?: unknown
     // Finalize re-checks the quota against the same row that's about to be
     // promoted out of `draft`; excluding it here avoids counting it against
     // itself (it isn't `pending`/`needs_info` yet, but the hourly count
@@ -491,6 +597,15 @@ export default ({ strapi }: { strapi: any }) => ({
         excludeDocumentId: input.excludeDocumentId,
       })
       if (!eligible.ok) return eligible
+    }
+
+    if (submissionType === "drive_proposal") {
+      const proposal = await checkDriveProposal(strapi, {
+        baUserId,
+        draftData: input.draftData,
+        excludeDocumentId: input.excludeDocumentId,
+      })
+      if (!proposal.ok) return proposal
     }
 
     // "Still right?": a verify confirms at least one section, and says how

@@ -11,13 +11,22 @@ import {
   submissionTypesOfQueue,
   type SubmissionType,
 } from "@repo/access"
+import {
+  type DriveInput,
+  driveFilters,
+  isValidStamp,
+  proposedDrive,
+  validateDrive,
+} from "@repo/shared-data"
 
 import { acceptedCount } from "./submission-policy"
+import { countLibraries } from "../../../../utils/meili-count"
 import { feedReview } from "../utils/feed-review"
 import { isVerification, verifyReview } from "../utils/library-verify"
 import { defaultLocale, knownLocale, submissionLocale } from "../utils/locales"
 import { isNewArticleDraft, roleApplicationFields } from "../utils/params"
 import { preloadTopicReviews, recordReview } from "../utils/record-review"
+import { staffReviewHint } from "../utils/staff-review-hint"
 import { summaryOf } from "../utils/submission-summary"
 
 /**
@@ -70,6 +79,7 @@ const ROW_FIELDS = [
   "status",
   "contentLocale",
   "targetSlug",
+  "targetDocumentId",
   "submittedByName",
   "createdAt",
   "reviewedAt",
@@ -82,6 +92,7 @@ const ROW_FIELDS = [
 export type DriveTag = { documentId: string; slug: string; title: string }
 
 export type ModerationRow = {
+  staffReviewHint?: string
   documentId: string
   submissionType: string
   queue: ModerationQueue
@@ -97,7 +108,24 @@ export type ModerationRow = {
 
 type ArticleVersion = { title: unknown; summary: unknown; body: unknown }
 
-/** Who applied, on a Role Application's review. */
+/** A Drive Proposal's review: the drive approval would create, and how big it is. */
+export type DriveProposalReview = {
+  /** The drive as approval would create it: the proposer's definition with the Moderator's dates. */
+  drive: DriveInput
+  /** True when draftData.moderatorEdit holds dates. */
+  datesEdited: boolean
+  /** In scope and to do, counted as if it opened now; null when Meilisearch can't answer. */
+  counts: { total: number; todo: number } | null
+  /** validateDrive(drive, now): empty when it would be created as it stands. */
+  errors: string[]
+  /** After approval: the drive it created, for the "Scheduled as …" link. */
+  created: { slug: string; title: string; status: string } | null
+}
+
+/** An open Drive and how many of its tagged submissions wait for review. */
+export type DriveStat = { drive: DriveTag; waiting: number }
+
+/** Who applied (or proposed a drive), on a Role Application's or Drive Proposal's review. */
 export type ApplicantSummary = {
   username: string | null
   acceptedCount: number
@@ -129,8 +157,10 @@ export type ModerationDetail = ModerationRow & {
     source: (ArticleVersion & { locale: string }) | null
   } | null
   canPublish: boolean
-  /** Role Applications only; null for every other type. */
+  /** Role Applications and Drive Proposals only; null for every other type. */
   applicant: ApplicantSummary | null
+  /** Drive Proposals only; null for every other type. */
+  proposal: DriveProposalReview | null
 }
 
 export type ListQuery = {
@@ -165,6 +195,9 @@ export function localeFilter(
 }
 
 const APPLICATION = "role_application"
+const DRIVE_PROPOSAL = "drive_proposal"
+/** Open drives read for the queue's drive counts (the open-drive list holds at most 50). */
+const OPEN_DRIVES_MAX = 50
 
 /** Matches no row: every document has a documentId. */
 const NOTHING = { documentId: { $null: true } }
@@ -462,6 +495,7 @@ export default ({ strapi }: { strapi: any }) => ({
     s: any,
     driveMap?: Map<string, DriveTag>
   ): Promise<ModerationRow> {
+    const staffHint = await staffReviewHint(strapi, s)
     const driveId: string | null = s.driveDocumentId ?? null
     const drive = driveId
       ? ((driveMap ?? (await (this as any).driveTitles([driveId]))).get(
@@ -470,6 +504,7 @@ export default ({ strapi }: { strapi: any }) => ({
       : null
 
     return {
+      ...(staffHint ? { staffReviewHint: staffHint } : {}),
       documentId: s.documentId,
       submissionType: s.submissionType,
       queue: QUEUE_OF_SUBMISSION_TYPE[s.submissionType as SubmissionType],
@@ -650,12 +685,14 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   /**
-   * A Role Application's applicant: their username, how many of their
-   * submissions were accepted and the latest ten (applications excluded,
-   * the same count the eligibility rule reads). Null for any other type.
+   * A Role Application's applicant, or a Drive Proposal's proposer: their
+   * username, how many of their submissions were accepted and the latest
+   * ten (applications excluded, the same count the eligibility rules read).
+   * Null for any other type.
    */
   async applicant(s: any): Promise<ApplicantSummary | null> {
-    if (s.submissionType !== APPLICATION) return null
+    if (s.submissionType !== APPLICATION && s.submissionType !== DRIVE_PROPOSAL)
+      return null
     const baUserId = str(s.submittedByUserId)
     if (!baUserId)
       return { username: null, acceptedCount: 0, recentAccepted: [] }
@@ -696,14 +733,84 @@ export default ({ strapi }: { strapi: any }) => ({
     }
   },
 
+  /**
+   * A Drive Proposal's review: the drive approval would create (with the
+   * Moderator's dates), its problems as it stands, its size counted as if
+   * it opened now, and, once approved, the drive it created. Null for any
+   * other type, or when the proposal holds no drive.
+   */
+  async proposal(s: any): Promise<DriveProposalReview | null> {
+    if (s.submissionType !== DRIVE_PROPOSAL) return null
+    const drive = proposedDrive(s.draftData, { withModeratorEdit: true })
+    if (!drive) return null
+    const now = new Date()
+    const edit = (s.draftData as Record<string, unknown> | null)?.moderatorEdit
+    const datesEdited =
+      !!edit &&
+      typeof edit === "object" &&
+      (isValidStamp((edit as Record<string, unknown>).startsAt) ||
+        isValidStamp((edit as Record<string, unknown>).endsAt))
+
+    const countsOf = async (): Promise<DriveProposalReview["counts"]> => {
+      try {
+        const filters = driveFilters({
+          scope: drive.scope,
+          focus: drive.focus,
+          openedAt: now,
+        })
+        const locale = `locale = "${await defaultLocale(strapi)}"`
+        const [total, todo] = await Promise.all([
+          countLibraries(`${filters.scope} AND ${locale}`),
+          countLibraries(`${filters.todo} AND ${locale}`),
+        ])
+
+        return { total, todo }
+      } catch (err) {
+        strapi.log.warn(
+          `[content-moderation] couldn't count drive proposal ${s.documentId}'s libraries`,
+          err
+        )
+
+        return null
+      }
+    }
+    const createdOf = async (): Promise<DriveProposalReview["created"]> => {
+      if (typeof s.resultDocumentId !== "string" || !s.resultDocumentId)
+        return null
+      const row = (await strapi.documents(DRIVE).findOne({
+        documentId: s.resultDocumentId,
+        fields: ["slug", "title", "status"],
+      })) as { slug?: string; title?: string; status?: string } | null
+
+      return row
+        ? {
+            slug: row.slug ?? "",
+            title: row.title ?? "",
+            status: row.status ?? "",
+          }
+        : null
+    }
+    const [counts, created] = await Promise.all([countsOf(), createdOf()])
+
+    return {
+      drive,
+      datesEdited,
+      counts,
+      errors: validateDrive(drive, now),
+      created,
+    }
+  },
+
   async detail(s: any): Promise<ModerationDetail> {
     const row: ModerationRow = await (this as any).toRow(s)
-    const [review, article, canPublish, applicant] = await Promise.all([
-      (this as any).review(s),
-      (this as any).article(s, row.locale),
-      (this as any).canPublish(s, row.locale),
-      (this as any).applicant(s),
-    ])
+    const [review, article, canPublish, applicant, proposal] =
+      await Promise.all([
+        (this as any).review(s),
+        (this as any).article(s, row.locale),
+        (this as any).canPublish(s, row.locale),
+        (this as any).applicant(s),
+        (this as any).proposal(s),
+      ])
 
     return {
       ...row,
@@ -721,6 +828,7 @@ export default ({ strapi }: { strapi: any }) => ({
       article,
       canPublish,
       applicant: applicant ?? null,
+      proposal: proposal ?? null,
     }
   },
 
@@ -770,5 +878,59 @@ export default ({ strapi }: { strapi: any }) => ({
     )
 
     return cells.map((c, i) => ({ ...c, count: Number(counts[i] ?? 0) }))
+  },
+
+  /**
+   * Per open drive, how many of its tagged submissions are `pending` within
+   * the viewer's scope (never their own): the queue's drive counts. Only
+   * drives with work waiting, most first. Empty when the viewer's scope
+   * doesn't cover the `index` queue, where every tagged change is filed.
+   */
+  async driveStats(
+    caps: Capabilities,
+    viewer: string,
+    opts: ViewerOptions = {}
+  ): Promise<DriveStat[]> {
+    if (!queuesInScope(caps.moderation).includes("index")) return []
+    const drives = (await strapi.documents(DRIVE).findMany({
+      filters: { status: { $eq: "open" } },
+      fields: ["documentId", "slug", "title"],
+      limit: OPEN_DRIVES_MAX,
+    })) as { documentId: string; slug?: string; title?: string }[]
+    if (!drives?.length) return []
+    // Tagged submissions are library changes, never Role Applications, so
+    // the applications a locale scope covers don't need resolving here.
+    const base = baseFilters(
+      caps,
+      viewer,
+      await defaultLocale(strapi),
+      [],
+      opts
+    )
+    const counts = await Promise.all(
+      drives.map((d) =>
+        strapi.documents(SUBMISSION).count({
+          filters: {
+            $and: [
+              ...base,
+              { driveDocumentId: { $eq: d.documentId } },
+              { status: STATUS_FILTER.pending },
+            ],
+          },
+        })
+      )
+    )
+
+    return drives
+      .map((d, i) => ({
+        drive: {
+          documentId: d.documentId,
+          slug: d.slug ?? "",
+          title: d.title ?? "",
+        },
+        waiting: Number(counts[i] ?? 0),
+      }))
+      .filter((r) => r.waiting > 0)
+      .sort((a, b) => b.waiting - a.waiting)
   },
 })
