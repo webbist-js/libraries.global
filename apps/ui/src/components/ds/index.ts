@@ -7,6 +7,7 @@ export { CardImageBlock } from "./CardImageBlock"
 export { ChoiceCard } from "./ChoiceCard"
 export { CtaBannerSection } from "./CtaBannerSection"
 export { DismissiblePrompt, PromptDismissButton } from "./DismissiblePrompt"
+export { Drawer } from "./Drawer"
 export { EditorialSection } from "./EditorialSection"
 export { EmptyState } from "./EmptyState"
 export {
