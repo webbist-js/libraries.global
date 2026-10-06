@@ -6,6 +6,8 @@
  * `WikiEditDiffPanel.tsx`); a test keeps them in step.
  */
 
+import { EVENT_PROVIDERS, type EventProviderKey } from "@repo/shared-data"
+
 import type { BadgeColor } from "@/components/ds"
 
 // ── API shapes (Strapi `/api/content-moderation/moderation/*`) ───────────────
@@ -125,6 +127,7 @@ export const TYPE_LABELS: Record<string, string> = {
   blog_submission: "Journal",
   topic_suggestion: "Topic",
   role_application: "Role application",
+  event_feed: "Event feed",
 }
 
 export const TYPE_COLORS: Record<string, BadgeColor> = {
@@ -136,6 +139,7 @@ export const TYPE_COLORS: Record<string, BadgeColor> = {
   blog_submission: "ember",
   topic_suggestion: "dim",
   role_application: "violet",
+  event_feed: "gold",
 }
 
 /** The Type column's label for a queue row (or any submission). */
@@ -398,6 +402,8 @@ export function summaryOf(sub: SubmissionLike): string {
       )
     case "topic_suggestion":
       return str(f.name) ?? "Topic"
+    case "event_feed":
+      return `${EVENT_PROVIDERS[f.provider as EventProviderKey]?.label ?? "Event"} feed${f.kind === "replace" ? " (new details)" : ""}`
     case "role_application":
       return roleApplicationSummary(f)
 
@@ -497,6 +503,12 @@ export function detailOf(sub: SubmissionLike): string | null {
       )
     case "library_claim":
       return typeof f.role === "string" ? f.role.replaceAll("_", " ") : null
+    case "event_feed": {
+      const kind = f.kind === "replace" ? "replace" : "connect"
+      const library = sub.targetSlug ?? "Library"
+
+      return `${library} · ${kind === "replace" ? "new details" : "new connection"}`
+    }
 
     default:
       return null
@@ -632,6 +644,10 @@ const REFUSAL_COPY: Record<string, string> = {
     "This library needs a continent, country and region before it can be published. Set its location, then approve again.",
   not_published:
     "This record has no published version; an admin must publish it first.",
+  claim_lost:
+    "The submitter no longer holds a claim on this library. Reject it instead.",
+  feed_mismatch:
+    "This feed is no longer waiting on this submission. Reject it instead.",
 }
 
 /** What to tell the Moderator when Strapi refused a decision. */

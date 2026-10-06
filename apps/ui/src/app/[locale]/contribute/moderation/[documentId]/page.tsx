@@ -6,6 +6,8 @@ import {
   ArticleReviewPanel,
   ClaimPanel,
   detailOf,
+  EventFeedPanel,
+  type EventFeedReview,
   EVIDENCE_TYPE_LABELS,
   FacilitiesPanel,
   FieldsList,
@@ -117,6 +119,13 @@ const PANELS: Record<
       review={d.review}
     />
   ),
+  event_feed: (d) => (
+    <EventFeedPanel
+      documentId={d.documentId}
+      status={d.status}
+      review={d.review as EventFeedReview | null}
+    />
+  ),
   correction: (d) => {
     if (d.fields?.kind === "verify")
       return (
@@ -149,6 +158,7 @@ const PANEL_TITLES: Record<string, string> = {
   blog_submission: "The article",
   new_library: "The new library",
   role_application: "The application",
+  event_feed: "The event feed",
 }
 
 /**
@@ -182,7 +192,9 @@ function targetLinks(
           },
         ]
   if (
-    ["correction", "library_edit", "library_claim"].includes(d.submissionType)
+    ["correction", "library_edit", "library_claim", "event_feed"].includes(
+      d.submissionType
+    )
   )
     return [
       {
@@ -323,6 +335,7 @@ export default async function ReviewSubmissionPage({
             <ReviewDecisionForm
               documentId={d.documentId}
               status={d.status}
+              submissionType={d.submissionType}
               canPublish={d.canPublish}
               reviewedAt={d.reviewedAt}
             />

@@ -76,6 +76,18 @@ const SAMPLES = [
     targetSlug: "british-library",
     fields: { kind: "verify", sections: ["hours"], libraryName: "BL" },
   },
+  {
+    ...base,
+    submissionType: "event_feed",
+    targetSlug: "british-library",
+    fields: { provider: "ical", kind: "connect" },
+  },
+  {
+    ...base,
+    submissionType: "event_feed",
+    targetSlug: "british-library",
+    fields: { provider: "eventbrite", kind: "replace" },
+  },
 ]
 
 // Expected values are the Strapi admin helpers' own outputs for these rows
@@ -93,6 +105,8 @@ const EXPECTED: [summary: string, detail: string | null][] = [
   ["british-library", "1 field changed"],
   ["Maps", null],
   ["british-library", "Still right?"],
+  ["Calendar feed (.ics) feed", "british-library · new connection"],
+  ["Eventbrite feed (new details)", "british-library · new details"],
 ]
 
 describe("submissionMeta port", () => {
@@ -182,6 +196,16 @@ describe("decisionErrorMessage", () => {
         error: { name: "apply_refused", reason: "not_published" },
       })
     ).toMatch(/no published version/)
+    expect(
+      decisionErrorMessage(409, {
+        error: { name: "apply_refused", reason: "claim_lost" },
+      })
+    ).toMatch(/no longer holds a claim/)
+    expect(
+      decisionErrorMessage(409, {
+        error: { name: "apply_refused", reason: "feed_mismatch" },
+      })
+    ).toMatch(/no longer waiting on this submission/)
     expect(decisionErrorMessage(409, { error: { name: "conflict" } })).toMatch(
       /already decided or changed/
     )

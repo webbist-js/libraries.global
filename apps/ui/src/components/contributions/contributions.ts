@@ -67,6 +67,11 @@ export const KIND_META: Record<
     icon: "mdi:account-star-outline",
     label: "Role application",
   },
+  event_feed: {
+    tint: "national",
+    icon: "mdi:calendar-sync-outline",
+    label: "Event feed",
+  },
   default: {
     tint: "neutral",
     icon: "mdi:message-text-outline",

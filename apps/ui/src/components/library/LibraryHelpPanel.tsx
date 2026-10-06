@@ -288,11 +288,11 @@ export function LibraryHelpPanel({
           </Link>
           {has("events.feed") ? (
             <Link
-              href="/contribute/events"
+              href={`/contribute/events?library=${libraryDocumentId}`}
               className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
               style={{ borderColor: T.border.hi, color: T.ink.base }}
             >
-              Connect an event feed
+              Manage event feeds
             </Link>
           ) : null}
           <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>

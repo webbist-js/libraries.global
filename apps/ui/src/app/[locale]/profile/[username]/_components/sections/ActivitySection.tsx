@@ -56,6 +56,12 @@ const ACTIVITY_META: Record<
     color: T.ink.dim,
     verb: "submitted article",
   },
+  event_feed: {
+    label: "Event feed",
+    icon: "mdi:calendar-sync-outline",
+    color: T.accent.gold,
+    verb: "connected an event feed",
+  },
 }
 
 // ── Date helpers ───────────────────────────────────────────────────────────────

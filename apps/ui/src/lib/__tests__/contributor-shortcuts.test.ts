@@ -76,7 +76,7 @@ describe("buildContributorShortcuts", () => {
     expect(groups[0]?.items.map((i) => [i.label, i.href])).toEqual([
       ["Edit British Library", "/contribute/index/british-library"],
       ["Edit Bodleian", "/contribute/index/bodleian"],
-      ["Connect an event feed", "/contribute/events"],
+      ["Event feeds", "/contribute/events"],
       ["Add a library", "/contribute/index/new"],
     ])
   })

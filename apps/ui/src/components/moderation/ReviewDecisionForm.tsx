@@ -13,6 +13,11 @@ type Decision = "approved" | "rejected" | "needs_info"
 const OPEN = new Set(["pending", "needs_info"])
 const MAX_NOTE = 2000
 
+/** The primary Approve button's label for a type that reads differently. */
+const APPROVE_LABEL: Record<string, string> = {
+  event_feed: "Approve and activate",
+}
+
 const PRIMARY =
   "inline-flex items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-5 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
 const SECONDARY =
@@ -28,11 +33,13 @@ const SECONDARY =
 export function ReviewDecisionForm({
   documentId,
   status,
+  submissionType,
   canPublish,
   reviewedAt,
 }: {
   readonly documentId: string
   readonly status: string
+  readonly submissionType?: string
   readonly canPublish: boolean
   readonly reviewedAt?: string | null
 }) {
@@ -119,6 +126,7 @@ export function ReviewDecisionForm({
   }
 
   const disabled = busy !== null
+  const approveLabel = APPROVE_LABEL[submissionType ?? ""] ?? "Approve"
 
   return (
     <form
@@ -229,7 +237,7 @@ export function ReviewDecisionForm({
           onClick={() => void decide("approved")}
         >
           <Icon aria-hidden="true" icon="mdi:check" width={18} height={18} />
-          {busy === "approved" ? "Approving…" : "Approve"}
+          {busy === "approved" ? "Approving…" : approveLabel}
         </button>
         {canPublish ? (
           <button

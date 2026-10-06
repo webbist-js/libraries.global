@@ -58,7 +58,7 @@ function libraryGroup(
 
   if (capabilities.includes("events.feed")) {
     items.push({
-      label: "Connect an event feed",
+      label: "Event feeds",
       href: "/contribute/events",
       icon: "mdi:calendar-sync-outline",
     })

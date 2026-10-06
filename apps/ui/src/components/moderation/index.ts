@@ -1,6 +1,8 @@
 export { ArticleReviewPanel } from "./ArticleReviewPanel"
 export { ClaimPanel } from "./ClaimPanel"
+export { EventFeedPanel, type EventFeedReview } from "./EventFeedPanel"
 export { FacilitiesPanel } from "./FacilitiesPanel"
+export { FeedTestButton } from "./FeedTestButton"
 export { KeyValueList } from "./KeyValueList"
 export { ModerationFilters, type QueueFilters } from "./ModerationFilters"
 export { ModerationQueue, queueHref, type QueueState } from "./ModerationQueue"
