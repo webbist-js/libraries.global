@@ -1,7 +1,7 @@
 // apps/sync-worker/src/pipeline/sync.ts
 import { randomUUID } from "node:crypto"
 
-import { getProvider } from "@repo/event-providers"
+import { classifyFailure, getProvider } from "@repo/event-providers"
 import pLimit from "p-limit"
 
 import { loadCredentials } from "./load-credentials"
@@ -22,7 +22,8 @@ type TriggerType = "cron" | "manual"
 
 export async function runSync(
   triggeredBy: TriggerType = "cron",
-  triggeredByUserId?: number
+  triggeredByUserId?: number,
+  opts?: { credentialDocumentId?: string }
 ): Promise<void> {
   const runId = randomUUID()
   const startedAt = new Date()
@@ -59,7 +60,7 @@ export async function runSync(
 
   try {
     // Step 1+2: load + validate
-    all = await loadCredentials()
+    all = await loadCredentials(opts)
     ;({ valid, failed } = await validateCredentials(all))
     for (const f of failed) {
       failedCredentials.push({
@@ -68,6 +69,11 @@ export async function runSync(
         error: f.error,
       })
       errorCount++
+      await updateCredentialStatus(f.credential.id, {
+        ok: false,
+        code: f.code,
+        message: f.error,
+      })
     }
     await updateRunProgress(runId, {
       credentialsAttempted: valid.length,
@@ -98,11 +104,11 @@ export async function runSync(
               label: cred.label,
               error: `Unknown provider "${cred.provider}"`,
             })
-            await updateCredentialStatus(
-              cred.id,
-              "error",
-              `Unknown provider "${cred.provider}"`
-            )
+            await updateCredentialStatus(cred.id, {
+              ok: false,
+              code: "provider_error",
+              message: `Unknown provider "${cred.provider}"`,
+            })
 
             return
           }
@@ -118,11 +124,11 @@ export async function runSync(
               label: cred.label,
               error: err.message as string,
             })
-            await updateCredentialStatus(
-              cred.id,
-              "error",
-              err.message as string
-            )
+            await updateCredentialStatus(cred.id, {
+              ok: false,
+              code: classifyFailure(err),
+              message: err.message as string,
+            })
 
             return
           }
@@ -182,7 +188,7 @@ export async function runSync(
           totalUnchanged += stats.unchanged
           totalPendingReview += credPendingReview
 
-          await updateCredentialStatus(cred.id, "ok")
+          await updateCredentialStatus(cred.id, { ok: true })
           await updateRunProgress(runId, {
             eventsFetched: totalFetched,
             eventsCreated: totalCreated,

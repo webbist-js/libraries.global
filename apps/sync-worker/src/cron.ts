@@ -54,6 +54,7 @@ export function registerCronJobs(): void {
     let command: Record<string, unknown> | undefined
     try {
       command = (await db("ev_sync_commands")
+        .select("id", "requested_by_user_id", "credential_document_id")
         .whereNull("consumed_at")
         .orderBy("requested_at", "asc")
         .first()) as Record<string, unknown> | undefined
@@ -84,7 +85,11 @@ export function registerCronJobs(): void {
     try {
       await runSync(
         "manual",
-        (command.requested_by_user_id as number | undefined) ?? undefined
+        (command.requested_by_user_id as number | undefined) ?? undefined,
+        {
+          credentialDocumentId:
+            (command.credential_document_id as string | undefined) ?? undefined,
+        }
       )
     } catch (err: any) {
       console.error("[cron:poll] runSync error:", err.message)

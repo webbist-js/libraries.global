@@ -4,40 +4,51 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
  * A knex-shaped fake: `db(table)` returns a chainable builder that records
  * `whereIn` calls and resolves the rows registered for that table.
  */
-const { fakeDb, state, mockDecrypt } = vi.hoisted(() => {
-  const state = {
-    rows: {} as Record<string, unknown[]>,
-    tableCalls: [] as string[],
-    whereIns: [] as { table: string; column: string; values: unknown[] }[],
-  }
-  const fakeDb = (table: string) => {
-    state.tableCalls.push(table)
-    const builder: any = {
-      select: () => builder,
-      join: () => builder,
-      where: () => builder,
-      whereIn: (column: string, values: unknown[]) => {
-        state.whereIns.push({ table, column, values })
-
-        return builder
-      },
-      // A knex builder is awaitable; the stub has to be too.
-      // eslint-disable-next-line unicorn/no-thenable
-      then: (
-        resolve: (v: unknown) => unknown,
-        reject?: (e: unknown) => unknown
-      ) => Promise.resolve(state.rows[table] ?? []).then(resolve, reject),
+const { fakeDb, state, mockDecrypt, mockUpdateCredentialStatus } = vi.hoisted(
+  () => {
+    const state = {
+      rows: {} as Record<string, unknown[]>,
+      tableCalls: [] as string[],
+      whereIns: [] as { table: string; column: string; values: unknown[] }[],
+      wheres: [] as { table: string; column: string; value: unknown }[],
     }
+    const fakeDb = (table: string) => {
+      state.tableCalls.push(table)
+      const builder: any = {
+        select: () => builder,
+        join: () => builder,
+        where: (column: string, value: unknown) => {
+          state.wheres.push({ table, column, value })
 
-    return builder
+          return builder
+        },
+        whereIn: (column: string, values: unknown[]) => {
+          state.whereIns.push({ table, column, values })
+
+          return builder
+        },
+        // A knex builder is awaitable; the stub has to be too.
+        // eslint-disable-next-line unicorn/no-thenable
+        then: (
+          resolve: (v: unknown) => unknown,
+          reject?: (e: unknown) => unknown
+        ) => Promise.resolve(state.rows[table] ?? []).then(resolve, reject),
+      }
+
+      return builder
+    }
+    const mockDecrypt = vi.fn()
+    const mockUpdateCredentialStatus = vi.fn()
+
+    return { fakeDb, state, mockDecrypt, mockUpdateCredentialStatus }
   }
-  const mockDecrypt = vi.fn()
-
-  return { fakeDb, state, mockDecrypt }
-})
+)
 
 vi.mock("../../src/db", () => ({ default: fakeDb }))
 vi.mock("@repo/events-crypto", () => ({ decrypt: mockDecrypt }))
+vi.mock("../../src/pipeline/write-run", () => ({
+  updateCredentialStatus: mockUpdateCredentialStatus,
+}))
 
 import { loadCredentials } from "../../src/pipeline/load-credentials"
 
@@ -45,10 +56,12 @@ beforeEach(() => {
   state.rows = {}
   state.tableCalls.length = 0
   state.whereIns.length = 0
+  state.wheres.length = 0
   mockDecrypt.mockReset()
   mockDecrypt.mockImplementation(() =>
     JSON.stringify({ feedUrl: "https://example.com/x" })
   )
+  mockUpdateCredentialStatus.mockReset()
   process.env.EVENTS_CREDENTIAL_KEY = "a".repeat(64)
 })
 
@@ -177,5 +190,38 @@ describe("loadCredentials", () => {
     state.tableCalls.length = 0
     await loadCredentials()
     expect(state.tableCalls).toEqual(["ev_event_credentials as ec"])
+  })
+
+  it("records decrypt_failed on a credential whose value can't be decrypted", async () => {
+    state.rows["ev_event_credentials as ec"] = [
+      {
+        id: 1,
+        documentId: "credA",
+        provider: "ical",
+        label: "A",
+        scope: "library",
+        status: "active",
+        credentialsEncrypted: "bad",
+      },
+    ]
+    mockDecrypt.mockImplementation(() => {
+      throw new Error("nope")
+    })
+    await loadCredentials()
+    expect(mockUpdateCredentialStatus).toHaveBeenCalledWith(1, {
+      ok: false,
+      code: "decrypt_failed",
+      message: "Stored value could not be decrypted",
+    })
+  })
+
+  it("filters by credentialDocumentId when given one", async () => {
+    state.rows["ev_event_credentials as ec"] = []
+    await loadCredentials({ credentialDocumentId: "credA" })
+    expect(state.wheres).toContainEqual({
+      table: "ev_event_credentials as ec",
+      column: "ec.document_id",
+      value: "credA",
+    })
   })
 })

@@ -5,6 +5,7 @@ import type { EventProviderKey } from "@repo/shared-data"
 
 import db from "../db"
 import type { LoadedCredential } from "../types"
+import { updateCredentialStatus } from "./write-run"
 
 function getKey(): string {
   const key = process.env.EVENTS_CREDENTIAL_KEY
@@ -59,8 +60,10 @@ async function loadLibraryHints(
   return byCredential
 }
 
-export async function loadCredentials(): Promise<LoadedCredential[]> {
-  const rows = (await db("ev_event_credentials as ec")
+export async function loadCredentials(opts?: {
+  credentialDocumentId?: string
+}): Promise<LoadedCredential[]> {
+  const query = db("ev_event_credentials as ec")
     .select(
       "ec.id",
       "ec.document_id as documentId",
@@ -69,7 +72,11 @@ export async function loadCredentials(): Promise<LoadedCredential[]> {
       "ec.scope",
       "ec.credentials_encrypted as credentialsEncrypted"
     )
-    .where("ec.status", "active")) as CredentialRow[]
+    .where("ec.status", "active")
+  if (opts?.credentialDocumentId)
+    query.where("ec.document_id", opts.credentialDocumentId)
+
+  const rows = (await query) as CredentialRow[]
 
   const key = getKey()
   const prevKey = getPrevKey()
@@ -87,6 +94,11 @@ export async function loadCredentials(): Promise<LoadedCredential[]> {
       console.error(
         `[load-credentials] Failed to decrypt credential ${row.id} ("${row.label}") — skipping`
       )
+      await updateCredentialStatus(row.id, {
+        ok: false,
+        code: "decrypt_failed",
+        message: "Stored value could not be decrypted",
+      })
       continue
     }
 

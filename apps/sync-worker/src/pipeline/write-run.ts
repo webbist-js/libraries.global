@@ -1,5 +1,6 @@
 // apps/sync-worker/src/pipeline/write-run.ts
 import { redactUrlsInText } from "@repo/event-providers"
+import type { FeedTestCode } from "@repo/shared-data"
 
 import db from "../db"
 
@@ -116,18 +117,58 @@ export async function finaliseRunRecord(summary: RunSummary): Promise<void> {
     })
 }
 
+const autoPauseAfter = () =>
+  Math.max(1, Number(process.env.EVENTS_AUTOPAUSE_AFTER ?? 4) || 4)
+
+/**
+ * One feed's sync outcome on its credential row. Failures count up; after
+ * EVENTS_AUTOPAUSE_AFTER in a row the feed is paused (`sync_failures`) and
+ * Strapi's cron tells its librarians. Messages are redacted; only Strapi
+ * admin reads them, everyone else sees the code.
+ */
 export async function updateCredentialStatus(
   credentialId: number,
-  status: "ok" | "error",
-  errorMessage?: string
+  outcome: { ok: true } | { ok: false; code: FeedTestCode; message: string }
 ): Promise<void> {
+  const now = new Date().toISOString()
+  if (outcome.ok) {
+    await db("ev_event_credentials").where("id", credentialId).update({
+      last_sync_at: now,
+      last_sync_status: "ok",
+      last_error_code: null,
+      last_error_message: null,
+      consecutive_failures: 0,
+      updated_at: now,
+    })
+
+    return
+  }
+
   await db("ev_event_credentials")
     .where("id", credentialId)
     .update({
-      last_sync_at: new Date().toISOString(),
-      last_sync_status: status,
-      last_error_message:
-        status === "error" ? redactUrlsInText(errorMessage ?? null) : null,
-      updated_at: new Date().toISOString(),
+      last_sync_at: now,
+      last_sync_status: "error",
+      last_error_code: outcome.code,
+      last_error_message: redactUrlsInText(outcome.message).slice(0, 1000),
+      consecutive_failures: db.raw("COALESCE(consecutive_failures, 0) + 1"),
+      updated_at: now,
     })
+
+  const row = (await db("ev_event_credentials")
+    .where("id", credentialId)
+    .first("consecutive_failures")) as
+    | { consecutive_failures: number }
+    | undefined
+
+  if ((row?.consecutive_failures ?? 0) >= autoPauseAfter())
+    await db("ev_event_credentials")
+      .where("id", credentialId)
+      .where("status", "active")
+      .update({
+        status: "paused",
+        paused_reason: "sync_failures",
+        auto_pause_notified_at: null,
+        updated_at: now,
+      })
 }
