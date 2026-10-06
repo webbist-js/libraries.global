@@ -48,6 +48,8 @@ const OPTION_LABEL: Record<OptionKey, { title: string; noun: string }> = {
 const TEXT_HINTS: Partial<Record<TextKey, string>> = {
   shortName: "Optional. What people call it locally, if that’s different.",
   website: "The library’s own page, if it has one.",
+  phone: "The number people call to reach the library.",
+  email: "The library’s public enquiries address.",
   catalogueUrl: "Where people search or reserve books.",
 }
 
@@ -308,7 +310,12 @@ export function CorrectionEditor({
       body = [field("name"), field("shortName")]
       break
     case "links":
-      body = [field("website", "url"), field("catalogueUrl", "url")]
+      body = [
+        field("website", "url"),
+        field("phone", "tel"),
+        field("email", "email"),
+        field("catalogueUrl", "url"),
+      ]
       break
     case "status":
       body = (

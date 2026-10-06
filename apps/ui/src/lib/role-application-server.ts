@@ -30,6 +30,55 @@ export async function fetchMySubmissions(user: {
   }
 }
 
+/** A whole, non-negative count, or null when it isn't one. */
+function countOf(v: unknown): number | null {
+  return typeof v === "number" && Number.isFinite(v)
+    ? Math.max(0, Math.floor(v))
+    : null
+}
+
+/**
+ * The signed-in user's submission counts from Strapi's accepted-count
+ * route: `accepted` (approved, not counting Role Applications: what
+ * applying for an editor role needs), and the pending quota as the
+ * submission policy counts it (`pending` waiting for review, at most
+ * `pendingLimit`). Accepted is 0 and the quota null when the bridge is
+ * down; Strapi still decides on submit.
+ */
+export async function fetchSubmissionCounts(user: {
+  id: string
+  email: string
+  name?: string | null
+}): Promise<{
+  accepted: number
+  pending: number | null
+  pendingLimit: number | null
+}> {
+  const none = { accepted: 0, pending: null, pendingLimit: null }
+  if (!process.env.STRAPI_BRIDGE_SECRET) return none
+  try {
+    const res = await fetch(
+      `${STRAPI}/api/content-moderation/submissions/my/accepted-count`,
+      { cache: "no-store", headers: bridgeUserHeaders(user) }
+    )
+    if (!res.ok) return none
+    const json = (await res.json()) as {
+      data?: { accepted?: unknown; pending?: unknown; pendingLimit?: unknown }
+    }
+    const pending = countOf(json.data?.pending)
+    const pendingLimit = countOf(json.data?.pendingLimit)
+
+    return {
+      accepted: countOf(json.data?.accepted) ?? 0,
+      // Both or neither: a quota needs its limit.
+      pending: pendingLimit === null ? null : pending,
+      pendingLimit: pending === null ? null : pendingLimit,
+    }
+  } catch {
+    return none
+  }
+}
+
 /**
  * How many of the signed-in user's submissions were approved, not counting
  * Role Applications: what applying for an editor role needs. Strapi counts
@@ -41,20 +90,5 @@ export async function fetchAcceptedCount(user: {
   email: string
   name?: string | null
 }): Promise<number> {
-  if (!process.env.STRAPI_BRIDGE_SECRET) return 0
-  try {
-    const res = await fetch(
-      `${STRAPI}/api/content-moderation/submissions/my/accepted-count`,
-      { cache: "no-store", headers: bridgeUserHeaders(user) }
-    )
-    if (!res.ok) return 0
-    const json = (await res.json()) as { data?: { accepted?: unknown } }
-    const accepted = json.data?.accepted
-
-    return typeof accepted === "number" && Number.isFinite(accepted)
-      ? Math.max(0, Math.floor(accepted))
-      : 0
-  } catch {
-    return 0
-  }
+  return (await fetchSubmissionCounts(user)).accepted
 }

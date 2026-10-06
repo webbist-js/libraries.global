@@ -3,7 +3,10 @@
 import { Icon } from "@iconify/react"
 import { useEffect, useState } from "react"
 
-import type { FacilityRow } from "@/components/library/facility-rows"
+import {
+  facilityAnswersBody,
+  type FacilityRow,
+} from "@/components/library/facility-rows"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -39,18 +42,30 @@ const answerPill =
  * The accessibility grid: documented facilities are marked Yes, confirmed
  * absences No; for the rest, readers tap Yes or No and send their answers together as one
  * correction for a reviewer. Signed-out answers are kept for the session,
- * so they're still there after signing in.
+ * so they're still there after signing in. A drive's task panel passes
+ * `driveDocumentId` to tag the answers with its drive (and `onSent` to move
+ * on); when the drive's rules refuse them (422), the reader can send them
+ * without the drive instead.
  */
 export function LibraryFacilityAnswers({
   rows,
   librarySlug,
   libraryName,
   libraryPath,
+  libraryDocumentId,
+  driveDocumentId,
+  onSent,
 }: {
   readonly rows: FacilityRow[]
   readonly librarySlug: string
   readonly libraryName: string
   readonly libraryPath: string
+  /** Names the library by id too, so a drive can tell it's in review. */
+  readonly libraryDocumentId?: string
+  /** The drive these answers count toward, sent at the top level. */
+  readonly driveDocumentId?: string
+  /** Called once the answers are with a reviewer. */
+  readonly onSent?: () => void
 }) {
   const { data: session, isPending } = authClient.useSession()
   const [answers, setAnswers] = useState<Record<string, Answer>>({})
@@ -58,6 +73,8 @@ export function LibraryFacilityAnswers({
     "idle"
   )
   const [error, setError] = useState<string | null>(null)
+  // The drive's rules refused the answers: offer them without the drive.
+  const [refused, setRefused] = useState(false)
 
   useEffect(() => {
     setAnswers(readSaved(librarySlug))
@@ -84,30 +101,29 @@ export function LibraryFacilityAnswers({
   const pending = Object.entries(answers).filter(([label]) => open.has(label))
   const count = pending.length
 
-  const send = async () => {
+  const send = async (withDrive = true) => {
     setState("sending")
     setError(null)
-    const list = pending
+    setRefused(false)
+    const drive = withDrive ? driveDocumentId : undefined
     try {
       const res = await fetch("/api/submissions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          submissionType: "correction",
-          targetEntityType: "library",
-          targetSlug: librarySlug,
-          editSummary: `Accessibility: ${list.map(([k, v]) => `${k} ${v}`).join(", ")}`,
-          fields: {
-            kind: "facilities",
-            category: "Accessibility",
-            libraryName,
-            answers: Object.fromEntries(list),
-          },
-        }),
+        body: JSON.stringify(
+          facilityAnswersBody({
+            slug: librarySlug,
+            name: libraryName,
+            answers: pending,
+            documentId: libraryDocumentId,
+            driveDocumentId: drive,
+          })
+        ),
       })
       if (res.ok) {
         writeSaved(librarySlug, null)
         setState("sent")
+        onSent?.()
 
         return
       }
@@ -118,6 +134,7 @@ export function LibraryFacilityAnswers({
         (typeof json.error === "string" ? json.error : json.error?.message) ??
           "We couldn’t send your answers. Please try again."
       )
+      setRefused(res.status === 422 && Boolean(drive))
       setState("error")
     } catch {
       setError("Network error. Please try again.")
@@ -236,7 +253,7 @@ export function LibraryFacilityAnswers({
             {isPending ? null : session?.user ? (
               <button
                 type="button"
-                onClick={send}
+                onClick={() => void send()}
                 disabled={state === "sending"}
                 className="rounded-full bg-(--t-accent-primary) px-4 py-2 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:opacity-70"
               >
@@ -259,6 +276,16 @@ export function LibraryFacilityAnswers({
           >
             {error}
           </p>
+        ) : null}
+        {state === "error" && refused ? (
+          <button
+            type="button"
+            onClick={() => void send(false)}
+            className="mt-2 rounded-full border border-(--t-border-hi) bg-white px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface)"
+            style={{ color: T.ink.base }}
+          >
+            Send without the drive
+          </button>
         ) : null}
       </div>
     </div>

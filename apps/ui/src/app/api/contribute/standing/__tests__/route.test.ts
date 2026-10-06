@@ -46,6 +46,31 @@ describe("GET /api/contribute/standing", () => {
     ).toBe(true)
   })
 
+  it("adds the pending quota from the same route", async () => {
+    fetchMock.mockImplementation(async (url: string) =>
+      url.includes("my-standing")
+        ? Response.json({ data: { points: 10 } })
+        : Response.json({ data: { accepted: 2, pending: 3, pendingLimit: 5 } })
+    )
+    const json = await (await GET()).json()
+    expect(json).toMatchObject({
+      acceptedCount: 2,
+      pendingCount: 3,
+      pendingLimit: 5,
+    })
+  })
+
+  it("leaves the quota out when Strapi doesn't give one", async () => {
+    fetchMock.mockImplementation(async (url: string) =>
+      url.includes("my-standing")
+        ? Response.json({ data: { points: 10 } })
+        : Response.json({ data: { accepted: 2, pending: 3 } })
+    )
+    const json = await (await GET()).json()
+    expect(json.pendingCount).toBeNull()
+    expect(json.pendingLimit).toBeNull()
+  })
+
   it("reports 0 accepted when the submissions bridge fails", async () => {
     fetchMock.mockImplementation(async (url: string) =>
       url.includes("my-standing")
@@ -54,5 +79,6 @@ describe("GET /api/contribute/standing", () => {
     )
     const json = await (await GET()).json()
     expect(json.acceptedCount).toBe(0)
+    expect(json.pendingCount).toBeNull()
   })
 })

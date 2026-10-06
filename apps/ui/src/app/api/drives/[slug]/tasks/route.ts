@@ -2,6 +2,7 @@ import { driveFilters } from "@repo/shared-data"
 import { NextResponse } from "next/server"
 
 import { fetchDrive, fetchDriveInReview } from "@/lib/drives/drives-server"
+import type { DriveTask } from "@/lib/drives/types"
 import { meiliClient, searchLocaleFilter } from "@/lib/meilisearch"
 import {
   clientIp,
@@ -48,21 +49,6 @@ interface DriveTaskHit {
   website?: string | null
   _geo?: { lat: number; lng: number } | null
   _geoDistance?: number
-}
-
-export interface DriveTask {
-  documentId: string
-  slug: string
-  name: string
-  city?: string | null
-  district?: string | null
-  area_name?: string | null
-  region_name?: string | null
-  website?: string | null
-  _geo?: { lat: number; lng: number } | null
-  href: string | null
-  inReview: boolean
-  distanceKm?: number
 }
 
 const quotedIds = (ids: readonly string[]) =>

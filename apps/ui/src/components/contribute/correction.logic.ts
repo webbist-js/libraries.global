@@ -27,6 +27,8 @@ export type CorrectionRecord = {
   city: string
   postalCode: string
   website: string
+  phone: string
+  email: string
   catalogueUrl: string
   operationalStatus: string
   closureReason: string
@@ -34,6 +36,8 @@ export type CorrectionRecord = {
   accessibility: OptionRef[]
   amenities: OptionRef[]
   services: OptionRef[]
+  /** Facility questions confirmed "No" (the library page's Yes/No answers). */
+  absentFacilities: string[]
 }
 
 export const TEXT_KEYS = [
@@ -44,6 +48,8 @@ export const TEXT_KEYS = [
   "city",
   "postalCode",
   "website",
+  "phone",
+  "email",
   "catalogueUrl",
   "operationalStatus",
   "closureReason",
@@ -89,7 +95,7 @@ const KEYS: Record<EditorKind, readonly string[]> = {
   hours: ["openingTimes"],
   address: ["streetAddress", "district", "city", "postalCode"],
   name: ["name", "shortName"],
-  links: ["website", "catalogueUrl"],
+  links: ["website", "phone", "email", "catalogueUrl"],
   status: ["operationalStatus", "closureReason"],
   accessibility: ["accessibility"],
   facilities: ["services", "amenities"],
@@ -110,6 +116,8 @@ export const TEXT_LABELS: Record<TextKey, string> = {
   city: "Town or city",
   postalCode: "Postcode",
   website: "Website",
+  phone: "Phone",
+  email: "Email",
   catalogueUrl: "Catalogue link",
   operationalStatus: "Status",
   closureReason: "What’s happening",
@@ -144,6 +152,8 @@ export function toCorrectionRecord(
     city: str(lib.city),
     postalCode: str(lib.postalCode),
     website: str(lib.website),
+    phone: str(lib.phone),
+    email: str(lib.email),
     catalogueUrl: str(lib.catalogueUrl),
     operationalStatus: str(lib.operationalStatus),
     closureReason: str(lib.closureReason),
@@ -152,6 +162,9 @@ export function toCorrectionRecord(
     accessibility: refs(lib.accessibility),
     amenities: refs(lib.amenities),
     services: refs(lib.services),
+    absentFacilities: Array.isArray(lib.absentFacilities)
+      ? lib.absentFacilities.filter((x): x is string => typeof x === "string")
+      : [],
   }
 }
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { facilityRows } from "../facility-rows"
+import { facilityAnswersBody, facilityRows } from "../facility-rows"
 
 const states = (rows: ReturnType<typeof facilityRows>) =>
   Object.fromEntries(rows.map((r) => [r.label, r.state]))
@@ -46,5 +46,42 @@ describe("facilityRows", () => {
     )
 
     expect(s["Hearing loop"]).toBe("yes")
+  })
+})
+
+describe("facilityAnswersBody", () => {
+  const answers: [string, "yes" | "no"][] = [
+    ["Hearing loop", "yes"],
+    ["Wi-Fi", "no"],
+  ]
+
+  it("sends the answers as one facilities correction", () => {
+    expect(
+      facilityAnswersBody({ slug: "nailsea", name: "Nailsea Library", answers })
+    ).toEqual({
+      submissionType: "correction",
+      targetEntityType: "library",
+      targetSlug: "nailsea",
+      editSummary: "Accessibility: Hearing loop yes, Wi-Fi no",
+      fields: {
+        kind: "facilities",
+        category: "Accessibility",
+        libraryName: "Nailsea Library",
+        answers: { "Hearing loop": "yes", "Wi-Fi": "no" },
+      },
+    })
+  })
+
+  it("names the library and the drive at the top level when given", () => {
+    const body = facilityAnswersBody({
+      slug: "nailsea",
+      name: "Nailsea Library",
+      answers,
+      documentId: "lib00000000000000000001",
+      driveDocumentId: "drv00000000000000000001",
+    })
+    expect(body.targetDocumentId).toBe("lib00000000000000000001")
+    expect(body.driveDocumentId).toBe("drv00000000000000000001")
+    expect(body.fields).not.toHaveProperty("driveDocumentId")
   })
 })

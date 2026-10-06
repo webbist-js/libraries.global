@@ -4,7 +4,9 @@
  * Public reads (`GET /drives`, `GET /drives/by-slug/:slug`,
  * `GET /drives/:documentId/stats`, `GET /drives/:documentId/leaderboard`,
  * `GET /drives/:documentId/in-review`) need no auth and serve only public
- * fields — the leaderboard never carries a `baUserId`. Board writes
+ * fields — the leaderboard never carries a `baUserId`.
+ * `GET /drives/:documentId/mine` is the caller's own counts: the bridge
+ * secret plus `X-Ba-User-Id`, checked in the controller. Board writes
  * (`POST /drives`,
  * `PUT /drives/:documentId`, `POST /drives/:documentId/actions`,
  * `POST /drives/lifecycle/run`) are `auth: false` here too — they are gated
@@ -69,6 +71,12 @@ export default {
       method: "GET",
       path: "/drives/:documentId/in-review",
       handler: "drive.inReview",
+      config: { auth: false },
+    },
+    {
+      method: "GET",
+      path: "/drives/:documentId/mine",
+      handler: "drive.mine",
       config: { auth: false },
     },
   ],

@@ -37,6 +37,15 @@ vi.mock("@/components/ds", async () => {
     }) => h("div", { role: "note" }, h("p", null, title), children),
   }
 })
+// The task area is a client island with its own tests (DriveTaskArea.test).
+vi.mock("@/components/drives/DriveTaskArea", async () => {
+  const { createElement: h } = await import("react")
+
+  return {
+    DriveTaskArea: ({ drive }: { drive: { slug: string } }) =>
+      h("div", { "data-testid": "task-area" }, `Tasks for ${drive.slug}`),
+  }
+})
 vi.mock("../CommunitySectionHeader", async () => {
   const { createElement: h } = await import("react")
 
@@ -159,6 +168,19 @@ describe("DriveDetailPage", () => {
     expect(screen.getByText("Add its week of hours.")).toBeTruthy()
     expect(screen.getByRole("list", { name: "This week" })).toBeTruthy()
     expect(screen.getByRole("heading", { name: "Rules" })).toBeTruthy()
+  })
+
+  it("puts the task list and panel on an open drive only", () => {
+    renderPage(drive())
+    expect(screen.getByTestId("task-area").textContent).toBe(
+      "Tasks for ohio-hours"
+    )
+    cleanup()
+    for (const status of ["scheduled", "closed", "cancelled"] as const) {
+      renderPage(drive({ status, pinned: false }))
+      expect(screen.queryByTestId("task-area")).toBeNull()
+      cleanup()
+    }
   })
 
   it("shows a finished drive's final numbers and public helpers, with no steps", () => {

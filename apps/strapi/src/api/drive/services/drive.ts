@@ -970,6 +970,47 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
     return rows.map((r) => r.target_document_id)
   },
 
+  /**
+   * The caller's part in this Drive: the Submissions they sent tagged with
+   * it (drafts aside), those still in review (`pending`/`needs_info`), and
+   * their Drive Credits (accepted work, tagged or matched after approval).
+   * One grouped count over `cm_submissions(drive_document_id, status)` and
+   * one count over the indexed `drive_credits` columns.
+   */
+  async mine(
+    documentId: string,
+    baUserId: string
+  ): Promise<{ sent: number; inReview: number; accepted: number }> {
+    const [byStatus, credited] = (await Promise.all([
+      strapi.db
+        .connection(SUBMISSION)
+        .select("status")
+        .count({ count: "*" })
+        .where("drive_document_id", documentId)
+        .where("submitted_by_user_id", baUserId)
+        .groupBy("status"),
+      strapi.db
+        .connection(CREDIT)
+        .count({ count: "*" })
+        .where("drive_document_id", documentId)
+        .where("ba_user_id", baUserId),
+    ])) as [
+      { status: string; count: string | number }[],
+      { count: string | number }[],
+    ]
+
+    let sent = 0
+    let inReview = 0
+    for (const row of byStatus) {
+      const n = Number(row.count ?? 0)
+      if (row.status === "draft") continue
+      sent += n
+      if (row.status === "pending" || row.status === "needs_info") inReview += n
+    }
+
+    return { sent, inReview, accepted: Number(credited[0]?.count ?? 0) }
+  },
+
   /** Count of Drive Credits recorded for this Drive. */
   async countCredits(documentId: string): Promise<number> {
     const rows = (await strapi.db.connection

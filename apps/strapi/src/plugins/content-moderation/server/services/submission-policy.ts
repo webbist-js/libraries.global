@@ -131,6 +131,27 @@ export async function acceptedCount(
 }
 
 /**
+ * How many of the user's submissions wait for review (`pending` or
+ * `needs_info`): what the pending quota counts. `excludeDocumentId` leaves
+ * out the row a finalize is about to promote.
+ */
+export async function pendingCount(
+  strapi: any,
+  baUserId: string,
+  excludeDocumentId?: string
+): Promise<number> {
+  const n = await strapi.documents(SUBMISSION).count({
+    filters: {
+      submittedByUserId: { $eq: baUserId },
+      status: { $in: ["pending", "needs_info"] },
+      ...(excludeDocumentId ? { documentId: { $ne: excludeDocumentId } } : {}),
+    },
+  })
+
+  return Number(n ?? 0)
+}
+
+/**
  * The date the user may apply for `role` again, when an application of
  * theirs for it was rejected less than `ROLE_APPLICATION_COOLDOWN_DAYS`
  * ago; otherwise null.
@@ -292,6 +313,25 @@ export default ({ strapi }: { strapi: any }) => ({
       caps,
       tier: profile?.tier ?? null,
       role: highestRole(grants),
+    }
+  },
+
+  /**
+   * The user's pending quota: how many submissions wait for review, and the
+   * most their tier (or staff role) may have waiting at once. The same
+   * numbers `check()` refuses a new submission on.
+   */
+  async pendingQuota(
+    baUserId: string
+  ): Promise<{ pending: number; limit: number }> {
+    const [{ tier, role }, pending] = await Promise.all([
+      (this as any).loadCapabilities(baUserId),
+      pendingCount(strapi, baUserId),
+    ])
+
+    return {
+      pending,
+      limit: contributionLimits(tier, role).pendingSubmissions,
     }
   },
 
@@ -488,15 +528,11 @@ export default ({ strapi }: { strapi: any }) => ({
       ? { documentId: { $ne: input.excludeDocumentId } }
       : {}
 
-    const pending = await strapi
-      .documents("plugin::content-moderation.submission")
-      .count({
-        filters: {
-          submittedByUserId: { $eq: baUserId },
-          status: { $in: ["pending", "needs_info"] },
-          ...excludeFilter,
-        },
-      })
+    const pending = await pendingCount(
+      strapi,
+      baUserId,
+      input.excludeDocumentId
+    )
     if (pending >= limits.pendingSubmissions)
       return {
         ok: false,

@@ -101,3 +101,24 @@ export type DriveLeaderboardPeriod = "week" | "all"
 
 /** The lifecycle states the public list and detail routes ever serve. */
 export type PublicDriveStatus = "open" | "scheduled" | "closed"
+
+/**
+ * One library in a Drive's open task list (`GET /api/drives/[slug]/tasks`):
+ * a page of the Meilisearch `library` index, with the library page's path
+ * (`href`, null when a parent slug is missing), and `distanceKm` when the
+ * list was asked for "near" a point.
+ */
+export interface DriveTask {
+  documentId: string
+  slug: string
+  name: string
+  city?: string | null
+  district?: string | null
+  area_name?: string | null
+  region_name?: string | null
+  website?: string | null
+  _geo?: { lat: number; lng: number } | null
+  href: string | null
+  inReview: boolean
+  distanceKm?: number
+}

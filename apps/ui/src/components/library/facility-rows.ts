@@ -1,7 +1,7 @@
 // Rows for the library page's accessibility & facilities grid. Pure, so
 // the page and the tests share it.
 
-import { FACILITY_CHECKLIST } from "@repo/shared-data"
+import { FACILITY_CHECKLIST, type FacilityAnswer } from "@repo/shared-data"
 
 import {
   facilityIcon,
@@ -78,4 +78,53 @@ export function facilityRows(library: {
   }))
 
   return [...documented, ...open]
+}
+
+export type FacilityAnswersBody = {
+  submissionType: "correction"
+  targetEntityType: "library"
+  targetSlug: string
+  targetDocumentId?: string
+  editSummary: string
+  fields: {
+    kind: "facilities"
+    category: "Accessibility"
+    libraryName: string
+    answers: Record<string, FacilityAnswer>
+  }
+  driveDocumentId?: string
+}
+
+/**
+ * The /api/submissions body for a reader's Yes/No answers: one
+ * `kind: "facilities"` correction for a reviewer. A drive's task panel
+ * names the library and the drive at the top level too.
+ */
+export function facilityAnswersBody({
+  slug,
+  name,
+  answers,
+  documentId,
+  driveDocumentId,
+}: {
+  readonly slug: string
+  readonly name: string
+  readonly answers: readonly (readonly [string, FacilityAnswer])[]
+  readonly documentId?: string
+  readonly driveDocumentId?: string
+}): FacilityAnswersBody {
+  return {
+    submissionType: "correction",
+    targetEntityType: "library",
+    targetSlug: slug,
+    ...(documentId ? { targetDocumentId: documentId } : {}),
+    editSummary: `Accessibility: ${answers.map(([k, v]) => `${k} ${v}`).join(", ")}`,
+    fields: {
+      kind: "facilities",
+      category: "Accessibility",
+      libraryName: name,
+      answers: Object.fromEntries(answers),
+    },
+    ...(driveDocumentId ? { driveDocumentId } : {}),
+  }
 }

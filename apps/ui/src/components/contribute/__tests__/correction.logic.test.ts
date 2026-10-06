@@ -90,6 +90,41 @@ describe("recordChanges", () => {
   })
 })
 
+describe("contact details", () => {
+  it("reads phone, email and confirmed absences from the record", () => {
+    const r = toCorrectionRecord({
+      documentId: "lib00000000000000000002",
+      phone: "01275 123456",
+      email: "nailsea@example.org",
+      absentFacilities: ["Hearing loop", 4, null],
+    })
+    expect(r.phone).toBe("01275 123456")
+    expect(r.email).toBe("nailsea@example.org")
+    expect(r.absentFacilities).toEqual(["Hearing loop"])
+    expect(toCorrectionRecord({ documentId: "x" }).absentFacilities).toEqual([])
+  })
+
+  it("lets the links editor change the website, phone, email and catalogue", () => {
+    const c = recordChanges("Website or catalogue", record, {
+      phone: " 01275 123456 ",
+      email: "nailsea@example.org",
+      catalogueUrl: "https://cat.example.org",
+      openingTimes: record.openingTimes!,
+    })
+    expect(c.changes).toEqual({
+      phone: "01275 123456",
+      email: "nailsea@example.org",
+      catalogueUrl: "https://cat.example.org",
+    })
+    expect(c.previous).toEqual({ phone: "", email: "", catalogueUrl: "" })
+    expect(describeChanges(c, {})).toEqual([
+      "Phone: 01275 123456",
+      "Email: nailsea@example.org",
+      "Catalogue link: https://cat.example.org",
+    ])
+  })
+})
+
 describe("buildSubmission for a structured correction", () => {
   it("sends a record correction with the source as evidence, not a field", () => {
     const library = { slug: "nailsea-library", name: "Nailsea Library" }

@@ -369,8 +369,10 @@ export default ({ strapi }: { strapi: any }) => ({
 
   // GET /api/content-moderation/submissions/my/accepted-count  (content-api route)
   // How many of the caller's changes were accepted, Role Applications aside:
-  // the Role Application eligibility count. Bridge secret and X-Ba-User-Id
-  // only; the id is trusted after the secret, never on its own.
+  // the Role Application eligibility count. Also the pending quota (`pending`
+  // and `pendingLimit`, as the submission policy counts them), for "3 of 5
+  // waiting for review". Bridge secret and X-Ba-User-Id only; the id is
+  // trusted after the secret, never on its own.
   async acceptedCount(ctx: any) {
     const headers = ctx.request?.headers ?? {}
     const baUserId = headers["x-ba-user-id"]
@@ -380,9 +382,18 @@ export default ({ strapi }: { strapi: any }) => ({
       !baUserId.trim()
     )
       return ctx.unauthorized("Service secret and user required.")
-    const accepted = await countAccepted(strapi, baUserId.trim())
+    const id = baUserId.trim()
+    const [accepted, quota] = await Promise.all([
+      countAccepted(strapi, id),
+      strapi
+        .plugin("content-moderation")
+        .service("submission-policy")
+        .pendingQuota(id) as Promise<{ pending: number; limit: number }>,
+    ])
     ctx.set?.("Cache-Control", "no-store")
-    ctx.body = { data: { accepted } }
+    ctx.body = {
+      data: { accepted, pending: quota.pending, pendingLimit: quota.limit },
+    }
   },
 
   // GET /content-moderation/relation-labels?type=services  (admin route only)

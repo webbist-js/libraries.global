@@ -6,6 +6,7 @@ import { DriveHelpers } from "@/components/drives/DriveHelpers"
 import { DriveProgress } from "@/components/drives/DriveProgress"
 import { DriveRules } from "@/components/drives/DriveRules"
 import { DriveShareButton } from "@/components/drives/DriveShareButton"
+import { DriveTaskArea } from "@/components/drives/DriveTaskArea"
 import { focusChipOf, gapPhraseOf } from "@/components/drives/focus-meta"
 import { Notice } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
@@ -154,8 +155,9 @@ function DriveStateNotice({ drive }: { readonly drive: Drive }) {
 
 /**
  * A drive's own page (spec §5.6): the hero (chips, title, summary, dates,
- * share), then progress with its sparkline, "How to help", and the helpers
- * and rules in the rail. A finished drive shows its final numbers and only
+ * share), then progress with its sparkline, "How to help", the task list
+ * and panel with "Your part" while it's open, and the helpers and rules in
+ * the rail. A finished drive shows its final numbers and only
  * the helpers whose activity is public, and no steps or tasks.
  */
 export function DriveDetailPage({
@@ -293,7 +295,7 @@ export function DriveDetailPage({
             </section>
           ) : null}
 
-          {/* The task list and panel, then Your part, go here for an open drive. */}
+          {drive.status === "open" ? <DriveTaskArea drive={drive} /> : null}
         </div>
 
         <aside

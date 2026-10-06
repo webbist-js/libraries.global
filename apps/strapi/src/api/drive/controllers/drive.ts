@@ -189,6 +189,25 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     ctx.body = { data, meta: {} }
   },
 
+  // GET /drives/:documentId/mine — the bridge secret plus X-Ba-User-Id
+  // (401 otherwise): the caller's sent, in-review and accepted counts for
+  // this Drive ("Your part"). 404 for an unknown or `draft` Drive.
+  async mine(ctx) {
+    const baUserId = bridgeBaUserId(ctx)
+    if (!baUserId) return ctx.unauthorized("Service secret and user required.")
+
+    const { documentId } = ctx.params as { documentId: string }
+    const drive = await strapi
+      .documents(UID)
+      .findOne({ documentId, fields: ["documentId", "status"] })
+    if (!drive || drive.status === "draft")
+      return ctx.notFound("Drive not found.")
+
+    const data = await strapi.service(UID).mine(documentId, baUserId)
+    ctx.set?.("Cache-Control", "no-store")
+    ctx.body = { data, meta: {} }
+  },
+
   // GET /drives/:documentId/leaderboard?period=week|all&limit= — public.
   // 404 for an unknown or unpublished (`draft`) Drive. Never carries a
   // `baUserId`.
