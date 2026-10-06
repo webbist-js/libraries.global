@@ -335,7 +335,11 @@ export default ({ strapi }: { strapi: any }) => {
               409,
               result.reason === "no_hierarchy"
                 ? "This library needs a continent, country and region before it can be published. Set its location, then approve again."
-                : "This record has no published version; an admin must publish it first.",
+                : result.reason === "claim_lost"
+                  ? "The submitter no longer holds a claim on this library. Reject it instead."
+                  : result.reason === "feed_mismatch"
+                    ? "This feed is no longer waiting on this submission. Reject it instead."
+                    : "This record has no published version; an admin must publish it first.",
               { name: "apply_refused", reason: result.reason }
             )
           case "apply_failed":

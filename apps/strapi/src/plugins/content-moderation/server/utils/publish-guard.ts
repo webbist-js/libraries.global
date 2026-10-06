@@ -17,9 +17,15 @@
 /**
  * `not_published`: the record has no published version. `no_hierarchy`: a
  * `new_library` approved with `publish` lacks its continent, country or
- * region, so it can't get a real entityRef (see services/submission).
+ * region. `claim_lost`: an `event_feed` submitter no longer holds a claim
+ * on the library. `feed_mismatch`: the credential isn't waiting on this
+ * submission (withdrawn, replaced or already decided).
  */
-export type ApplyRefusedReason = "not_published" | "no_hierarchy"
+export type ApplyRefusedReason =
+  | "not_published"
+  | "no_hierarchy"
+  | "claim_lost"
+  | "feed_mismatch"
 
 export class ApplyRefusedError extends Error {
   readonly reason: ApplyRefusedReason

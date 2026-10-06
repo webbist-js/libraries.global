@@ -94,10 +94,18 @@ export const NOT_PUBLISHED_MARKER =
 // (or they didn't give it a real entityRef): set the target, then approve again.
 export const NO_HIERARCHY_MARKER =
   " [Not published: the library needs a continent, country and region. Set its location, then approve again]"
+// An event_feed approval found the submitter without a claim on the library.
+export const CLAIM_LOST_MARKER =
+  " [Not applied: the submitter no longer holds a claim on this library. Reject it instead]"
+// An event_feed approval found its credential no longer waiting on it.
+export const FEED_MISMATCH_MARKER =
+  " [Not applied: this feed is no longer waiting on this submission. Reject it instead]"
 
 const REFUSED_MARKERS: Record<ApplyRefusedReason, string> = {
   not_published: NOT_PUBLISHED_MARKER,
   no_hierarchy: NO_HIERARCHY_MARKER,
+  claim_lost: CLAIM_LOST_MARKER,
+  feed_mismatch: FEED_MISMATCH_MARKER,
 }
 
 /** The places a `new_library` is filed under. */
@@ -1336,6 +1344,27 @@ export default ({ strapi }: { strapi: any }) => ({
                 data: { resultDocumentId: profileDocumentId },
               })
             updated.resultDocumentId = profileDocumentId
+          }
+
+          // ── event_feed ───────────────────────────────────────────────────
+          // The events plugin owns the credential: approval activates the
+          // value under review, rejection destroys it. Both run in this
+          // transaction.
+          if (submission?.submissionType === "event_feed") {
+            const feeds = strapi.plugin("events").service("feeds")
+            if (status === "approved") {
+              const { credentialDocumentId } =
+                await feeds.approveSubmission(submission)
+              await strapi
+                .documents("plugin::content-moderation.submission")
+                .update({
+                  documentId,
+                  data: { resultDocumentId: credentialDocumentId },
+                })
+              updated.resultDocumentId = credentialDocumentId
+            } else if (status === "rejected") {
+              await feeds.rejectSubmission(submission)
+            }
           }
 
           return "ok" as const

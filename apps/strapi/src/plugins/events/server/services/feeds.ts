@@ -12,8 +12,9 @@ import {
 } from "@repo/shared-data"
 
 import { CREDENTIAL_PUBLIC_FIELDS, CREDENTIAL_UID } from "./credentials"
+import { ApplyRefusedError } from "../../../content-moderation/server/utils/publish-guard"
 import { systemReviewer } from "../../../content-moderation/server/utils/reviewer"
-import { sealValues } from "../utils/credential-crypto"
+import { openValues, sealValues } from "../utils/credential-crypto"
 import { recordCredentialEvent } from "../utils/credential-events"
 import { claimedLibraryIds, notifyOtherClaimants } from "../utils/feed-access"
 
@@ -667,6 +668,141 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
         })
 
       return { ok: true as const }
+    },
+
+    /**
+     * Applies an approved `event_feed` Submission: activates a connection,
+     * or swaps a replacement's pending value into the current slot. Runs
+     * inside the caller's transaction (the submission's own status change).
+     * Throws `ApplyRefusedError("feed_mismatch")` when the credential isn't
+     * waiting on this submission any more (withdrawn, replaced, already
+     * decided), and `ApplyRefusedError("claim_lost")` when the submitter no
+     * longer holds a claim on the library — both leave the submission at
+     * its prior status (the generic refusal handling in
+     * `submission.updateStatus` reverts and notes it).
+     */
+    async approveSubmission(
+      submission: any
+    ): Promise<{ credentialDocumentId: string }> {
+      const f = (submission.fields ?? {}) as Record<string, any>
+      const documentId = String(f.credentialDocumentId ?? "")
+      const feed = await creds().findOne({
+        documentId,
+        fields: [...CREDENTIAL_PUBLIC_FIELDS, "pendingCredentialsEncrypted"],
+        populate: { libraries: { fields: ["documentId"] } },
+      })
+      if (!feed || feed.pendingSubmissionDocumentId !== submission.documentId)
+        throw new ApplyRefusedError("feed_mismatch", CREDENTIAL_UID, documentId)
+      const claims = await claimedLibraryIds(
+        strapi,
+        submission.submittedByUserId
+      )
+      if (!libraryIdsOf(feed).some((id) => claims.has(id)))
+        throw new ApplyRefusedError("claim_lost", CREDENTIAL_UID, documentId)
+
+      if (f.kind === "replace") {
+        if (!feed.pendingCredentialsEncrypted)
+          throw new ApplyRefusedError(
+            "feed_mismatch",
+            CREDENTIAL_UID,
+            documentId
+          )
+        const values = openValues(
+          feed.pendingCredentialsEncrypted,
+          documentId,
+          "pending"
+        )
+        await creds().update({
+          documentId,
+          data: {
+            credentialsEncrypted: sealValues(values, documentId, "current"),
+            hints: feed.pendingHints ?? feed.hints,
+            lastTestedAt: feed.pendingTestedAt ?? null,
+            lastTestResult: feed.pendingTestResult ?? null,
+            pendingCredentialsEncrypted: null,
+            pendingHints: null,
+            pendingTestedAt: null,
+            pendingTestResult: null,
+            pendingSubmissionDocumentId: null,
+            submissionDocumentId: submission.documentId,
+            consecutiveFailures: 0,
+            lastErrorCode: null,
+            ...(feed.status === "paused" &&
+            feed.pausedReason === "sync_failures"
+              ? {
+                  status: "active",
+                  pausedReason: null,
+                  autoPauseNotifiedAt: null,
+                }
+              : {}),
+          },
+        })
+      } else {
+        await creds().update({
+          documentId,
+          data: {
+            status: "active",
+            pendingSubmissionDocumentId: null,
+            submissionDocumentId: submission.documentId,
+          },
+        })
+      }
+      await recordCredentialEvent(strapi, {
+        credentialDocumentId: documentId,
+        provider: feed.provider,
+        libraryDocumentIds: libraryIdsOf(feed),
+        action: "approved",
+        actor: `ba:${submission.submittedByUserId}`,
+        submissionDocumentId: submission.documentId,
+        note: f.kind === "replace" ? "replace" : "connect",
+      })
+      await credentialsService().syncLibraryFeedFlags(libraryIdsOf(feed))
+      await credentialsService().queueSync(documentId)
+
+      return { credentialDocumentId: documentId }
+    },
+
+    /**
+     * Applies a rejected `event_feed` Submission: deletes a pending
+     * connection's credential, or clears a replacement's pending slot and
+     * keeps the feed as it was. A no-op when the credential is already gone
+     * or has moved on to a newer submission (withdrawn by the library, or
+     * already decided elsewhere) — tolerated so a double-decision can't fail
+     * the transaction.
+     */
+    async rejectSubmission(submission: any): Promise<void> {
+      const f = (submission.fields ?? {}) as Record<string, any>
+      const documentId = String(f.credentialDocumentId ?? "")
+      const feed = await creds().findOne({
+        documentId,
+        fields: [
+          "documentId",
+          "provider",
+          "pendingSubmissionDocumentId",
+          "status",
+        ],
+      })
+      if (!feed || feed.pendingSubmissionDocumentId !== submission.documentId)
+        return
+      await (f.kind === "replace"
+        ? creds().update({
+            documentId,
+            data: {
+              pendingCredentialsEncrypted: null,
+              pendingHints: null,
+              pendingTestedAt: null,
+              pendingTestResult: null,
+              pendingSubmissionDocumentId: null,
+            },
+          })
+        : creds().delete({ documentId }))
+      await recordCredentialEvent(strapi, {
+        credentialDocumentId: documentId,
+        provider: feed.provider,
+        action: "rejected",
+        actor: `ba:${submission.submittedByUserId}`,
+        submissionDocumentId: submission.documentId,
+      })
     },
   }
 }
