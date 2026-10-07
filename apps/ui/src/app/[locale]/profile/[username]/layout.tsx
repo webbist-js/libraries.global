@@ -99,6 +99,12 @@ export async function generateMetadata({
   })
 }
 
+/** The Following tab's count: stewarded and followed libraries, followed drives. */
+const followingCount = (profile: UserProfile) =>
+  (profile.followedLibraries?.length ?? 0) +
+  (profile.followedDrives?.length ?? 0) +
+  (profile.claimedLibraries?.length ?? 0)
+
 export default async function ProfileLayout({
   children,
   params,
@@ -172,9 +178,7 @@ export default async function ProfileLayout({
               username={username}
               counts={{
                 contributions: contributionCount,
-                libraries:
-                  (profile.followedLibraries?.length ?? 0) +
-                  (profile.claimedLibraries?.length ?? 0),
+                following: followingCount(profile),
                 recognition: profile.earnedBadges?.length ?? 0,
               }}
             />

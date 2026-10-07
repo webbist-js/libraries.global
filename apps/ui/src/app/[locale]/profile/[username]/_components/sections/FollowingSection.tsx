@@ -1,4 +1,7 @@
+import { DriveCard } from "@/components/drives/DriveCard"
 import { T } from "@/lib/design-tokens"
+import type { DriveView } from "@/lib/drives/drive-view"
+import { Link } from "@/lib/navigation"
 import type {
   ClaimedLibrary,
   FollowedLibrary,
@@ -11,7 +14,8 @@ import { CARD, SectionTitle } from "../ProfileSectionUI"
 
 // ── FollowingSection ──────────────────────────────────────────────────────────
 //
-// "Libraries" tab: stewarded libraries (when any), followed libraries, people.
+// "Following" tab: stewarded libraries (when any), followed libraries,
+// followed drives and people.
 
 function SectionHead({
   id,
@@ -40,14 +44,51 @@ function plural(n: number, one: string, many: string) {
   return `${n} ${n === 1 ? one : many}`
 }
 
+/** The drives a profile follows, as Noticeboard cards, or an empty state. */
+function FollowedDrivesGrid({ drives }: { drives: readonly DriveView[] }) {
+  if (drives.length === 0) {
+    return (
+      <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+        Not following any drives yet. Follow one from its page to keep an eye on
+        it.{" "}
+        <Link
+          href="/community"
+          className="font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+          style={{ color: T.accent.primary }}
+        >
+          See the drives
+        </Link>
+      </p>
+    )
+  }
+
+  return (
+    <ul
+      className="m-0 grid list-none gap-4 p-0"
+      style={{
+        gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))",
+      }}
+    >
+      {drives.map((view) => (
+        <li key={view.drive.documentId} className="flex min-w-0 flex-col">
+          <DriveCard view={view} />
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 export function FollowingSection({
   username,
   followedLibraries,
+  followedDrives = [],
   followedUsers = [],
   claimedLibraries = [],
 }: {
   username: string
   followedLibraries: FollowedLibrary[]
+  /** Followed drives as cards, open and scheduled first (`loadFollowedDriveViews`). */
+  followedDrives?: readonly DriveView[]
   followedUsers?: FollowedUser[]
   /** Libraries this user stewards (profile.claimedLibraries). */
   claimedLibraries?: ClaimedLibrary[]
@@ -75,7 +116,7 @@ export function FollowingSection({
       <section aria-labelledby="fl-libraries" style={cardStyle}>
         <SectionHead
           id="fl-libraries"
-          title="Following"
+          title="Libraries"
           count={
             followedLibraries.length > 0
               ? plural(followedLibraries.length, "library", "libraries")
@@ -87,6 +128,19 @@ export function FollowingSection({
           username={username}
           variant="grid"
         />
+      </section>
+
+      <section aria-labelledby="fl-drives" style={cardStyle}>
+        <SectionHead
+          id="fl-drives"
+          title="Drives"
+          count={
+            followedDrives.length > 0
+              ? plural(followedDrives.length, "drive", "drives")
+              : undefined
+          }
+        />
+        <FollowedDrivesGrid drives={followedDrives} />
       </section>
 
       <section aria-labelledby="fl-people" style={cardStyle}>

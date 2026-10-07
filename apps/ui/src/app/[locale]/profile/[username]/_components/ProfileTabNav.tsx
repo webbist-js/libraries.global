@@ -18,10 +18,10 @@ const TABS = [
     icon: "mdi:pencil-outline",
   },
   {
-    id: "libraries",
-    label: "Libraries",
+    id: "following",
+    label: "Following",
     path: "/following",
-    icon: "mdi:bank-outline",
+    icon: "mdi:heart-outline",
   },
   {
     id: "recognition",

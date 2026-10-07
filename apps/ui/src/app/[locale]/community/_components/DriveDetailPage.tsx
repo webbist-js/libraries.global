@@ -3,6 +3,7 @@ import type { ReactNode } from "react"
 
 import { DriveDates } from "@/components/drives/DriveDates"
 import { DriveFocusChip } from "@/components/drives/DriveFocusChip"
+import { DriveFollowButton } from "@/components/drives/DriveFollowButton"
 import { DriveHelpers } from "@/components/drives/DriveHelpers"
 import { DriveProgress } from "@/components/drives/DriveProgress"
 import { DriveRules } from "@/components/drives/DriveRules"
@@ -191,7 +192,7 @@ function JournalStoryCard({
 
 /**
  * A drive's own page (spec §5.6): the hero (chips, title, summary, dates,
- * share), then progress with its sparkline, "How to help", the task list
+ * follow, share), then progress with its sparkline, "How to help", the task list
  * and panel with "Your part" while it's open, and the helpers and rules in
  * the rail. A finished drive shows its final numbers and only
  * the helpers whose activity is public, and no steps or tasks.
@@ -251,6 +252,13 @@ export function DriveDetailPage({
           </div>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
             <DriveDates drive={drive} size="lg" />
+            {drive.status === "draft" ? null : (
+              <DriveFollowButton
+                driveDocumentId={drive.documentId}
+                driveSlug={drive.slug}
+                driveTitle={title}
+              />
+            )}
             <DriveShareButton title={title} />
           </div>
         </div>

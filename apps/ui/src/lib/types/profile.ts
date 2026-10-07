@@ -9,6 +9,12 @@ export type FollowedLibrary = {
   path?: string | null
 }
 
+/** A drive the profile holder follows: its page is `/community/drives/{slug}`. */
+export type FollowedDrive = {
+  documentId: string
+  slug: string
+}
+
 export type FollowedUser = {
   username: string
   displayName: string
@@ -80,6 +86,8 @@ export type UserProfile = {
   /** Owner view only: prompts hidden in Settings (`lib/dismissed-prompts.ts`). */
   dismissedPrompts?: string[] | null
   followedLibraries?: FollowedLibrary[]
+  /** Drives past draft, when `publicPrefs.showFollows` lets the viewer see them. */
+  followedDrives?: FollowedDrive[]
   followedProfiles?: FollowedUser[]
   claimedLibraries?: ClaimedLibrary[]
   points?: number | null
@@ -112,6 +120,7 @@ export type PublicPrefs = {
   showLocation: boolean
   showAffiliation: boolean
   showActivity: boolean
+  /** Followed libraries and drives (and the people followed). */
   showFollows: boolean
 }
 

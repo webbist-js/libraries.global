@@ -2,6 +2,7 @@ import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 
 import { getSessionSSR } from "@/lib/auth-server"
+import { loadFollowedDriveViews } from "@/lib/drives/followed-drives-server"
 import { fetchOwnProfile } from "@/lib/own-profile-server"
 import type { UserProfile } from "@/lib/types/profile"
 
@@ -38,9 +39,9 @@ async function fetchProfile(
 export default async function FollowingPage({
   params,
 }: {
-  params: Promise<{ username: string }>
+  params: Promise<{ locale: string; username: string }>
 }) {
-  const { username } = await params
+  const { locale, username } = await params
   const [publicProfile, session] = await Promise.all([
     fetchProfile(username),
     getSessionSSR(await headers()),
@@ -68,10 +69,17 @@ export default async function FollowingPage({
 
   if (!profile) notFound()
 
+  // Empty when the owner hides their follows (Strapi sends none).
+  const followedDrives = await loadFollowedDriveViews(
+    profile.followedDrives ?? [],
+    locale
+  )
+
   return (
     <FollowingSection
       username={username}
       followedLibraries={profile.followedLibraries ?? []}
+      followedDrives={followedDrives}
       followedUsers={profile.followedProfiles ?? []}
       claimedLibraries={profile.claimedLibraries ?? []}
     />

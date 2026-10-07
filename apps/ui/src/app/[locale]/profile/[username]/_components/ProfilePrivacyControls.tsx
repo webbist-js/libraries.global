@@ -10,7 +10,7 @@ const PREF_ITEMS: { key: keyof PublicPrefs; label: string }[] = [
   { key: "showLocation", label: "Location" },
   { key: "showAffiliation", label: "Verified affiliation" },
   { key: "showActivity", label: "Activity graph" },
-  { key: "showFollows", label: "Libraries I follow" },
+  { key: "showFollows", label: "Libraries and drives I follow" },
 ]
 
 /** Owner-only banner: visibility message, "Manage what's public" toggle panel, and trailing actions. */

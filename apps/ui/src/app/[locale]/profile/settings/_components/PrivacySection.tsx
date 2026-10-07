@@ -94,8 +94,8 @@ export function PrivacySection({
     },
     {
       key: "showFollows",
-      label: "Libraries you follow",
-      desc: firstFollow ?? "Libraries you save",
+      label: "Libraries and drives you follow",
+      desc: firstFollow ?? "Libraries and drives you keep an eye on",
     },
   ]
 
