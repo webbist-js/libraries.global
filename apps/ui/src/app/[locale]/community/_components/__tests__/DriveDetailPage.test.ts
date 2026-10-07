@@ -46,6 +46,29 @@ vi.mock("@/components/drives/DriveTaskArea", async () => {
       h("div", { "data-testid": "task-area" }, `Tasks for ${drive.slug}`),
   }
 })
+vi.mock("@/lib/navigation", async () => {
+  const { createElement: h } = await import("react")
+
+  return {
+    Link: ({
+      href,
+      children,
+      ...rest
+    }: {
+      href: string
+      children?: React.ReactNode
+    }) => h("a", { href, ...rest }, children),
+  }
+})
+// The follow button is a client island with its own tests (DriveFollowButton.test).
+vi.mock("@/components/drives/DriveFollowButton", async () => {
+  const { createElement: h } = await import("react")
+
+  return {
+    DriveFollowButton: ({ driveDocumentId }: { driveDocumentId: string }) =>
+      h("button", { "data-drive": driveDocumentId }, "Follow drive"),
+  }
+})
 vi.mock("../CommunitySectionHeader", async () => {
   const { createElement: h } = await import("react")
 
@@ -153,6 +176,21 @@ describe("DriveDetailPage", () => {
     expect(
       screen.getByRole("button", { name: "Share this drive" })
     ).toBeTruthy()
+  })
+
+  it("offers to follow the drive in the hero, finished or not", () => {
+    for (const status of [
+      "open",
+      "scheduled",
+      "closed",
+      "cancelled",
+    ] as const) {
+      renderPage(drive({ status, pinned: false }))
+      const follow = screen.getByRole("button", { name: "Follow drive" })
+      expect(follow.dataset.drive).toBe("d1")
+      expect(follow.closest("header")).toBeTruthy()
+      cleanup()
+    }
   })
 
   it("shows an open drive's progress, steps, helpers and rules", () => {
