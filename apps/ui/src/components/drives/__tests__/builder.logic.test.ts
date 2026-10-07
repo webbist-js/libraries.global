@@ -7,16 +7,36 @@ import {
   type BuilderState,
   builderErrors,
   builderStateFromDrive,
+  CLEAN_WORDS,
   countsLine,
+  DEFAULT_DRIVE_DAYS,
+  dirtyOf,
+  draftStorageKey,
+  draftWords,
   emptyBuilderState,
+  endsOnFor,
   errorsFromResponse,
   fieldId,
   fieldOfMessage,
+  GOAL_CHOICES,
+  goalCount,
   isTooBig,
   parseLibraryList,
+  parseSavedDraft,
+  previewDriveView,
+  previewPlaceLine,
   previewRequest,
+  RUN_CHOICES,
+  runDaysOf,
+  serializeDraft,
+  stepsDone,
   textOnlyInput,
   toDriveInput,
+  WEBSITE_SOURCE,
+  whereFieldsFor,
+  whereKindOf,
+  withDraftedWords,
+  withStartsOn,
 } from "../builder.logic"
 
 const NOW = new Date("2026-10-06T10:30:00Z")
@@ -39,14 +59,26 @@ const valid = (over: Partial<BuilderState> = {}): BuilderState => ({
 })
 
 describe("emptyBuilderState", () => {
-  it("starts today (UTC) and runs 30 days, aiming for 100%", () => {
+  it("starts today (UTC) and runs 4 weeks, aiming for all of them", () => {
     const s = emptyBuilderState(NOW)
     expect(s.startsOn).toBe("2026-10-06")
-    expect(s.endsOn).toBe("2026-11-04")
+    expect(s.endsOn).toBe("2026-11-02")
+    expect(runDaysOf(s)).toBe(DEFAULT_DRIVE_DAYS)
+    expect(DEFAULT_DRIVE_DAYS).toBe(28)
     expect(s.goalPercent).toBe("100")
     expect(s.unit).toBe("library")
     expect(s.steps).toEqual([""])
     expect(s.gaps).toEqual([])
+  })
+
+  it("sends helpers to each library's own website, with no link", () => {
+    const s = emptyBuilderState(NOW)
+    expect(s.whereKind).toBe("website")
+    expect(toDriveInput(s).whereToLook).toEqual({
+      name: WEBSITE_SOURCE,
+      url: "",
+      licenceNote: "",
+    })
   })
 })
 
@@ -114,7 +146,7 @@ describe("toDriveInput", () => {
       scope: { places: { region: ["vermont"] }, libraryTypes: ["Public"] },
       unit: "library",
       startsAt: "2026-10-06T00:00:00.000Z",
-      endsAt: "2026-11-04T23:59:59.000Z",
+      endsAt: "2026-11-02T23:59:59.000Z",
       goalPercent: 100,
       whereToLook: {
         name: "Each library's own website",
@@ -362,9 +394,21 @@ describe("previewRequest", () => {
     })
   })
 
-  it("is null with no gap, no place or list, or a bad ceiling or list", () => {
-    expect(previewRequest(valid({ gaps: [] }))).toBeNull()
+  it("counts the scope alone while no gap is chosen, for the gap chips", () => {
+    expect(previewRequest(valid({ gaps: [] }))).toEqual({
+      scope: { places: { region: ["vermont"] }, libraryTypes: ["Public"] },
+      focus: { kind: "gaps", gaps: [] },
+    })
+  })
+
+  it("is null with no place or list, an unfinished focus, or a bad ceiling or list", () => {
     expect(previewRequest(valid({ places: [] }))).toBeNull()
+    expect(
+      previewRequest(valid({ focusKind: "verify", verifySections: [] }))
+    ).toBeNull()
+    expect(
+      previewRequest(valid({ focusKind: "record", recordTarget: "40" }))
+    ).toBeNull()
     expect(previewRequest(valid({ completenessBelow: "abc" }))).toBeNull()
     expect(previewRequest(valid({ libraryList: "bad_line" }))).toBeNull()
   })
@@ -385,8 +429,8 @@ describe("countsLine and isTooBig", () => {
   })
 
   it("is too big past 2,000 to do", () => {
-    expect(isTooBig({ total: 5000, todo: 2000 })).toBe(false)
-    expect(isTooBig({ total: 5000, todo: 2001 })).toBe(true)
+    expect(isTooBig({ todo: 2000 })).toBe(false)
+    expect(isTooBig({ todo: 2001 })).toBe(true)
   })
 })
 
@@ -453,5 +497,469 @@ describe("builderStateFromDrive", () => {
     } as Drive)
     expect(s.libraryList).toBe(`${ID_A}\n${ID_B}`)
     expect(s.places).toEqual([])
+  })
+})
+
+// ── The v2 builder: drafted words, runs for, goal, where, steps, drafts ──────
+
+const EALING = { level: "area" as const, slug: "ealing", name: "Ealing" }
+const CAMDEN = { level: "area" as const, slug: "camden", name: "Camden" }
+const CROYDON = { level: "area" as const, slug: "croydon", name: "Croydon" }
+const BROMLEY = { level: "area" as const, slug: "bromley", name: "Bromley" }
+const HACKNEY = { level: "area" as const, slug: "hackney", name: "Hackney" }
+
+/** A new proposal's form with only its choices made: no words yet. */
+const chosen = (over: Partial<BuilderState> = {}): BuilderState => ({
+  ...emptyBuilderState(NOW),
+  gaps: ["hours"],
+  places: [EALING, CAMDEN, CROYDON],
+  ...over,
+})
+
+describe("draftWords", () => {
+  it("drafts a one-gap drive as the mockup: italic gap, places, three steps", () => {
+    expect(draftWords(chosen())).toEqual({
+      title: "*Opening hours* for Ealing, Camden and Croydon",
+      summary:
+        "Help us add opening hours for libraries in Ealing, Camden and Croydon. Each task takes a few minutes.",
+      steps: [
+        "Open a library from the list",
+        "Find the details on the library’s own website",
+        "Add them with the source link",
+      ],
+    })
+  })
+
+  it("joins several gaps with 'and', in the order chosen, with their phrases", () => {
+    const words = draftWords(
+      chosen({ gaps: ["photo", "accessibility"], places: [EALING] })
+    )
+    expect(words.title).toBe("*Photos and accessibility* for Ealing")
+    expect(words.summary).toBe(
+      "Help us add photos and accessibility details for libraries in Ealing. Each task takes a few minutes."
+    )
+    expect(
+      draftWords(chosen({ gaps: ["hours", "photo", "contact"] })).summary
+    ).toContain(
+      "add opening hours, photos and contact details for libraries in"
+    )
+  })
+
+  it("drafts a confirm-details drive from its sections, in the shared order", () => {
+    const words = draftWords(
+      chosen({
+        focusKind: "verify",
+        verifySections: ["status", "hours"],
+        places: [CAMDEN],
+      })
+    )
+    expect(words.title).toBe(
+      "Still right? *Opening hours and open or closed* in Camden"
+    )
+    expect(words.summary).toBe(
+      "Help us confirm opening hours and open or closed are still right for libraries in Camden. Check the library’s website and mark what you checked."
+    )
+    expect(words.steps).toEqual([
+      "Open a library from the list",
+      "Check its website for the details",
+      "Mark what you confirmed, with the link",
+    ])
+  })
+
+  it("drafts a complete-records drive with its target", () => {
+    const words = draftWords(
+      chosen({ focusKind: "record", recordTarget: "90", places: [CROYDON] })
+    )
+    expect(words.title).toBe("Complete the records for Croydon")
+    expect(words.summary).toBe(
+      "Help us bring every library in Croydon to 90% complete. Each task fills what’s missing."
+    )
+    expect(words.steps).toEqual([
+      "Open a library from the list",
+      "Fill in whatever the checklist shows",
+      "Save with a source link",
+    ])
+  })
+
+  it("names up to three places, then two and a count", () => {
+    expect(draftWords(chosen({ places: [EALING] })).title).toBe(
+      "*Opening hours* for Ealing"
+    )
+    expect(draftWords(chosen({ places: [EALING, CAMDEN] })).title).toBe(
+      "*Opening hours* for Ealing and Camden"
+    )
+    expect(
+      draftWords(
+        chosen({ places: [EALING, CAMDEN, CROYDON, BROMLEY, HACKNEY] })
+      ).title
+    ).toBe("*Opening hours* for Ealing, Camden and 3 more places")
+  })
+
+  it("says 'your chosen places' before any place, and counts a pasted list", () => {
+    expect(draftWords(chosen({ places: [] })).title).toBe(
+      "*Opening hours* for your chosen places"
+    )
+    const listed = draftWords(
+      chosen({ libraryList: `${ID_A}\n${ID_B}\nsome-library` })
+    )
+    expect(listed.title).toBe("*Opening hours* for 3 libraries")
+    expect(listed.summary).toBe(
+      "Help us add opening hours for these 3 libraries. Each task takes a few minutes."
+    )
+    expect(
+      draftWords(chosen({ focusKind: "record", libraryList: ID_A })).summary
+    ).toBe(
+      "Help us bring each of these 1 library to 75% complete. Each task fills what’s missing."
+    )
+  })
+
+  it("names fewer places when the title would pass 120 characters", () => {
+    const long = (slug: string) => ({
+      level: "region" as const,
+      slug,
+      name: `The Very Long Metropolitan Borough of ${slug}`,
+    })
+    const words = draftWords(
+      chosen({ places: [long("a"), long("b"), long("c")] })
+    )
+    expect(words.title.length).toBeLessThanOrEqual(120)
+    expect(words.title).toBe(
+      "*Opening hours* for The Very Long Metropolitan Borough of a and 2 more places"
+    )
+    expect(words.summary.length).toBeLessThanOrEqual(280)
+  })
+
+  it("always drafts words validateDrive accepts once there's a gap and a place", () => {
+    const state = withDraftedWords(chosen(), CLEAN_WORDS)
+    expect(builderErrors(state, NOW)).toEqual([])
+  })
+})
+
+describe("dirty tracking", () => {
+  it("treats words already there as hand-written, and blanks as draftable", () => {
+    expect(dirtyOf(emptyBuilderState(NOW))).toEqual(CLEAN_WORDS)
+    expect(dirtyOf(valid())).toEqual({
+      title: true,
+      summary: true,
+      steps: true,
+    })
+    expect(dirtyOf({ title: " ", summary: "", steps: ["", " "] })).toEqual(
+      CLEAN_WORDS
+    )
+  })
+
+  it("redrafts only the fields not written by hand", () => {
+    const state = chosen({
+      title: "My own title",
+      summary: "old",
+      steps: ["old"],
+    })
+    const next = withDraftedWords(state, {
+      title: true,
+      summary: false,
+      steps: false,
+    })
+    expect(next.title).toBe("My own title")
+    expect(next.summary).toContain("Ealing, Camden and Croydon")
+    expect(next.steps).toHaveLength(3)
+  })
+
+  it("follows the choices while clean, and stops once a field is edited", () => {
+    let dirty = CLEAN_WORDS
+    let state = withDraftedWords(chosen({ places: [EALING] }), dirty)
+    expect(state.title).toBe("*Opening hours* for Ealing")
+
+    state = withDraftedWords({ ...state, places: [EALING, CAMDEN] }, dirty)
+    expect(state.title).toBe("*Opening hours* for Ealing and Camden")
+
+    dirty = { ...dirty, title: true }
+    state = withDraftedWords(
+      { ...state, title: "Hours in *west London*" },
+      dirty
+    )
+    state = withDraftedWords({ ...state, places: [CROYDON] }, dirty)
+    expect(state.title).toBe("Hours in *west London*")
+    expect(state.summary).toContain("libraries in Croydon")
+  })
+
+  it("leaves a fully hand-written state alone", () => {
+    const state = valid()
+    expect(
+      withDraftedWords(state, { title: true, summary: true, steps: true })
+    ).toBe(state)
+  })
+
+  it("redrafts everything after 'Redraft from my choices' (all clean)", () => {
+    const state = withDraftedWords(valid({ places: [EALING] }), CLEAN_WORDS)
+    expect(state.title).toBe("*Opening hours* for Ealing")
+    expect(state.steps[0]).toBe("Open a library from the list")
+  })
+})
+
+describe("runs for", () => {
+  it("offers 2 weeks, 4 weeks, 60 and 90 days", () => {
+    expect(RUN_CHOICES.map((c) => [c.label, c.days])).toEqual([
+      ["2 weeks", 14],
+      ["4 weeks", 28],
+      ["60 days", 60],
+      ["90 days", 90],
+    ])
+  })
+
+  it("sets the last day as the start plus the days, less one", () => {
+    expect(endsOnFor("2026-10-13", 28)).toBe("2026-11-09")
+    expect(endsOnFor("2026-10-13", 14)).toBe("2026-10-26")
+    expect(endsOnFor("2026-12-20", 14)).toBe("2027-01-02")
+    expect(endsOnFor("", 14)).toBe("")
+    expect(endsOnFor("13/10/2026", 14)).toBe("")
+  })
+
+  it("reads how long a drive runs, counting both ends", () => {
+    expect(runDaysOf({ startsOn: "2026-10-13", endsOn: "2026-11-09" })).toBe(28)
+    expect(runDaysOf({ startsOn: "2026-10-13", endsOn: "2026-10-13" })).toBe(1)
+    expect(runDaysOf({ startsOn: "2026-10-13", endsOn: "2026-10-12" })).toBe(
+      null
+    )
+    expect(runDaysOf({ startsOn: "", endsOn: "2026-10-12" })).toBe(null)
+  })
+
+  it("keeps the length when the start moves, and 4 weeks when it can't be read", () => {
+    expect(
+      withStartsOn(
+        { startsOn: "2026-10-13", endsOn: "2026-10-26" },
+        "2026-11-01"
+      )
+    ).toEqual({ startsOn: "2026-11-01", endsOn: "2026-11-14" })
+    expect(withStartsOn({ startsOn: "", endsOn: "" }, "2026-11-01")).toEqual({
+      startsOn: "2026-11-01",
+      endsOn: "2026-11-28",
+    })
+  })
+
+  it("every pill gives a drive validateDrive accepts, 90 days included", () => {
+    for (const { days } of RUN_CHOICES) {
+      const s = valid({
+        startsOn: "2026-10-13",
+        endsOn: endsOnFor("2026-10-13", days),
+      })
+      expect(builderErrors(s, NOW)).toEqual([])
+    }
+  })
+})
+
+describe("goal", () => {
+  it("offers 50%, 75% and all of them, which send that percent", () => {
+    expect(GOAL_CHOICES.map((g) => g.label)).toEqual([
+      "50%",
+      "75%",
+      "All of them",
+    ])
+    expect(
+      GOAL_CHOICES.map(
+        (g) =>
+          toDriveInput(valid({ goalPercent: String(g.percent) })).goalPercent
+      )
+    ).toEqual([50, 75, 100])
+  })
+
+  it("counts how many of the to-do meet the goal, counting libraries already done", () => {
+    expect(goalCount({ total: 40, todo: 40 }, 100)).toBe(40)
+    expect(goalCount({ total: 40, todo: 40 }, 75)).toBe(30)
+    expect(goalCount({ total: 40, todo: 40 }, 50)).toBe(20)
+    // 30 of 40 are already done: 75% needs 30, so it's met before it opens.
+    expect(goalCount({ total: 40, todo: 10 }, 75)).toBe(0)
+    expect(goalCount({ total: 33, todo: 1 }, 100)).toBe(1)
+    expect(goalCount({ total: 3, todo: 3 }, 50)).toBe(2)
+  })
+})
+
+describe("where to look", () => {
+  it("reads a saved source as the website choice or another source", () => {
+    expect(whereKindOf({})).toBe("website")
+    expect(whereKindOf({ name: WEBSITE_SOURCE })).toBe("website")
+    expect(whereKindOf({ name: "Each library's own website" })).toBe("website")
+    expect(whereKindOf({ name: WEBSITE_SOURCE, url: "https://x.org" })).toBe(
+      "other"
+    )
+    expect(whereKindOf({ name: "Council list" })).toBe("other")
+  })
+
+  it("names the website with no link or note, and clears it on leaving", () => {
+    const website = whereFieldsFor(
+      {
+        whereKind: "other",
+        whereName: "Council list",
+        whereUrl: "https://x.org",
+        whereLicence: "OGL",
+      },
+      "website"
+    )
+    expect(website).toEqual({
+      whereKind: "website",
+      whereName: WEBSITE_SOURCE,
+      whereUrl: "",
+      whereLicence: "",
+    })
+    expect(whereFieldsFor(website, "dataset")).toEqual({
+      whereKind: "dataset",
+      whereName: "",
+      whereUrl: "",
+      whereLicence: "",
+    })
+    expect(
+      whereFieldsFor(
+        {
+          whereKind: "dataset",
+          whereName: "Survey",
+          whereUrl: "https://x.org",
+          whereLicence: "",
+        },
+        "other"
+      )
+    ).toEqual({
+      whereKind: "other",
+      whereName: "Survey",
+      whereUrl: "https://x.org",
+      whereLicence: "",
+    })
+  })
+
+  it("fills the choice from a saved drive", () => {
+    const s = builderStateFromDrive({
+      title: "t",
+      summary: "s",
+      steps: [],
+      focus: { kind: "gaps", gaps: ["hours"] },
+      scope: {},
+      whereToLook: { name: "Sites", url: "https://x.org" },
+    } as unknown as Drive)
+    expect(s.whereKind).toBe("other")
+  })
+})
+
+describe("stepsDone", () => {
+  it("is every card for a valid drive", () => {
+    const s = valid({ whereKind: "website" })
+    expect(stepsDone(s, builderErrors(s, NOW))).toEqual([
+      true,
+      true,
+      true,
+      true,
+      true,
+    ])
+  })
+
+  it("marks the cards whose fields have problems", () => {
+    const s = valid({ gaps: [], places: [], title: "", endsOn: "" })
+    expect(stepsDone(s, builderErrors(s, NOW))).toEqual([
+      false,
+      false,
+      true,
+      false,
+      false,
+    ])
+  })
+
+  it("wants a name or link for a dataset or another source", () => {
+    const s = valid({ whereKind: "dataset", whereName: "", whereUrl: "" })
+    expect(stepsDone(s, builderErrors(s, NOW))[2]).toBe(false)
+    const named = { ...s, whereName: "Council list" }
+    expect(stepsDone(named, builderErrors(named, NOW))[2]).toBe(true)
+  })
+})
+
+describe("saved drafts", () => {
+  it("has one key per user and mode", () => {
+    expect(draftStorageKey("propose", "u1")).toBe("drive-proposal-draft:u1")
+    expect(draftStorageKey("board", "u1")).toBe("drive-board-draft:u1")
+  })
+
+  it("round-trips the form, the note and which words were hand-written", () => {
+    const draft = {
+      state: valid({ places: [{ ...EALING, kind: "Borough" }] }),
+      note: "Councils publish these.",
+      dirty: { title: true, summary: false, steps: false },
+    }
+    expect(parseSavedDraft(serializeDraft(draft), NOW)).toEqual(draft)
+  })
+
+  it("is null for nothing, broken JSON or another shape", () => {
+    expect(parseSavedDraft(null, NOW)).toBeNull()
+    expect(parseSavedDraft("{", NOW)).toBeNull()
+    expect(parseSavedDraft(JSON.stringify({ state: {} }), NOW)).toBeNull()
+    expect(parseSavedDraft(JSON.stringify({ v: 1 }), NOW)).toBeNull()
+  })
+
+  it("keeps a new drive's value for every field that doesn't fit", () => {
+    const saved = parseSavedDraft(
+      JSON.stringify({
+        v: 1,
+        state: {
+          focusKind: "explode",
+          gaps: ["hours", "nope", 3],
+          places: [{ level: "planet", slug: "x", name: "X" }],
+          unit: "furlong",
+          whereKind: "carrier-pigeon",
+          title: 42,
+          steps: [],
+          startsOn: "2026-10-20",
+        },
+        dirty: { title: "yes" },
+      }),
+      NOW
+    )!
+    const fresh = emptyBuilderState(NOW)
+    expect(saved.state.focusKind).toBe("gaps")
+    expect(saved.state.gaps).toEqual(["hours"])
+    expect(saved.state.places).toEqual([])
+    expect(saved.state.unit).toBe("library")
+    expect(saved.state.whereKind).toBe("other")
+    expect(saved.state.title).toBe(fresh.title)
+    expect(saved.state.steps).toEqual([""])
+    expect(saved.state.startsOn).toBe("2026-10-20")
+    expect(saved.dirty).toEqual(CLEAN_WORDS)
+    expect(saved.note).toBe("")
+  })
+})
+
+describe("the live preview", () => {
+  it("lists up to three places, then counts the rest, or a list's size", () => {
+    expect(
+      previewPlaceLine({ places: [EALING, CAMDEN, CROYDON], libraryList: "" })
+    ).toBe("Ealing · Camden · Croydon")
+    expect(
+      previewPlaceLine({
+        places: [EALING, CAMDEN, CROYDON, BROMLEY, HACKNEY],
+        libraryList: "",
+      })
+    ).toBe("Ealing · Camden · Croydon · 2 more")
+    expect(
+      previewPlaceLine({ places: [], libraryList: `${ID_A}\n${ID_B}` })
+    ).toBe("2 chosen libraries")
+    expect(previewPlaceLine({ places: [], libraryList: "" })).toBeNull()
+  })
+
+  it("is a scheduled DriveView at 0 of the to-do, from the form", () => {
+    const state = withDraftedWords(
+      chosen({ startsOn: "2026-10-13", endsOn: "2026-11-09" }),
+      CLEAN_WORDS
+    )
+    const view = previewDriveView(state, 12)
+    expect(view.drive).toMatchObject({
+      title: "*Opening hours* for Ealing, Camden and Croydon",
+      status: "scheduled",
+      startsAt: "2026-10-13T00:00:00.000Z",
+      focus: { kind: "gaps", gaps: ["hours"] },
+      unit: "library",
+    })
+    expect(view.place).toBe("Ealing · Camden · Croydon")
+    expect(view.progress).toMatchObject({ done: 0, total: 12, percent: 0 })
+    expect(view.helpers).toBeNull()
+  })
+
+  it("isn't counted until the to-do count is known, and has a stand-in title", () => {
+    const view = previewDriveView(emptyBuilderState(NOW), null)
+    expect(view.progress).toBeNull()
+    expect(view.drive.title).toBe("Your drive’s title")
   })
 })

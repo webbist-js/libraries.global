@@ -144,3 +144,52 @@ describe("DriveCard", () => {
     expect(screen.queryByText(/helping/)).toBeNull()
   })
 })
+
+describe("DriveCard preview", () => {
+  const scheduled = () =>
+    view({
+      drive: drive({
+        status: "scheduled",
+        startsAt: "2026-10-13T00:00:00.000Z",
+        title: "*Opening hours* for Ealing",
+        summary: "Help us add opening hours for libraries in Ealing.",
+      }),
+      place: "Ealing",
+      source: null,
+      progress: {
+        total: 12,
+        done: 0,
+        todo: 12,
+        inReview: 0,
+        percent: 0,
+        goalMet: false,
+      },
+      helpers: null,
+    })
+
+  it("draws a drive that doesn't exist yet: no link, the full opening date, its summary", () => {
+    const { container } = render(
+      createElement(DriveCard, { view: scheduled(), now: NOW, preview: true })
+    )
+
+    expect(screen.queryByRole("link")).toBeNull()
+    expect(
+      screen.getByRole("heading", { name: "Opening hours for Ealing" })
+    ).toBeTruthy()
+    expect(container.querySelector("em")?.textContent).toBe("Opening hours")
+    expect(screen.getByText("Opens 13 Oct 2026")).toBeTruthy()
+    expect(
+      screen.getByText("Help us add opening hours for libraries in Ealing.")
+    ).toBeTruthy()
+    expect(container.textContent).toContain("0 of 12 records")
+  })
+
+  it("leaves the summary off the Noticeboard's own card", () => {
+    render(createElement(DriveCard, { view: scheduled(), now: NOW }))
+
+    expect(
+      screen.queryByText("Help us add opening hours for libraries in Ealing.")
+    ).toBeNull()
+    expect(screen.getByText("Opens 13 Oct")).toBeTruthy()
+  })
+})

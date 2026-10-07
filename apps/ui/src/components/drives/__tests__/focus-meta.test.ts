@@ -110,6 +110,14 @@ describe("focusChipOf", () => {
     })
   })
 
+  it("reads 'Fill gaps' before a gap is chosen (the builder's live preview)", () => {
+    expect(focusChipOf({ kind: "gaps", gaps: [] })).toEqual({
+      label: "Fill gaps",
+      icon: "mdi:plus",
+      tint: FOCUS_TINT.other,
+    })
+  })
+
   it("labels verify and whole-record drives", () => {
     expect(
       focusChipOf({ kind: "verify", sections: ["hours"], before: "2026-01-01" })
@@ -142,7 +150,7 @@ describe("gapPhraseOf", () => {
   it("has phrases for verify and whole-record drives", () => {
     expect(
       gapPhraseOf({ kind: "verify", sections: ["hours"], before: "2026-01-01" })
-    ).toBe("have been checked")
-    expect(gapPhraseOf({ kind: "record", target: 80 })).toBe("are complete")
+    ).toBe("have been checked since 1 Jan 2026")
+    expect(gapPhraseOf({ kind: "record", target: 80 })).toBe("are 80% complete")
   })
 })
