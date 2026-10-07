@@ -6,10 +6,14 @@
  * `totalHits` itself stops at the index's `maxTotalHits`.
  */
 import {
+  DRIVE_PLACE_LEVELS,
   driveFilters,
   driveProgress,
   type DriveFocus,
+  type DrivePlaceLevel,
   type DriveScope,
+  PANEL_GAPS,
+  scopeFilter,
 } from "@repo/shared-data"
 
 import { meiliClient, searchLocaleFilter } from "@/lib/meilisearch"
@@ -86,6 +90,142 @@ export async function driveCountsMany(
     }))
   } catch {
     return drives.map(() => null)
+  }
+}
+
+/** The places a preview counts one by one; the rest still count in the totals. */
+export const PREVIEW_MAX_PLACES = 12
+
+export type PreviewGap = (typeof PANEL_GAPS)[number]
+
+/** No library missing any gap: an empty preview's `gaps`. */
+export const PANEL_GAP_ZEROS: Readonly<Record<PreviewGap, number>> = {
+  hours: 0,
+  photo: 0,
+  accessibility: 0,
+  contact: 0,
+}
+
+/** One place in the scope, with its own share of the counts. */
+export interface DrivePreviewPlace {
+  level: DrivePlaceLevel
+  slug: string
+  /** From the index; the slug as words when no library carries it. */
+  name: string
+  total: number
+  /** Null when the preview counts the scope only. */
+  todo: number | null
+}
+
+export interface DrivePreviewCounts {
+  total: number
+  /** Null when the preview counts the scope only (no gap chosen yet). */
+  todo: number | null
+  /** Libraries in scope missing each gap the task panel can fill. */
+  gaps: Record<PreviewGap, number>
+  /** Each place in the scope, broadest first, at most `PREVIEW_MAX_PLACES`. */
+  places: DrivePreviewPlace[]
+}
+
+const titleCase = (slug: string) =>
+  slug
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ")
+
+/** The scope's places, broadest level first, capped. A list replaces them. */
+function previewPlaces(
+  scope: DriveScope
+): { level: DrivePlaceLevel; slug: string }[] {
+  if (scope.libraries?.length) return []
+
+  return DRIVE_PLACE_LEVELS.flatMap((level) =>
+    (scope.places?.[level] ?? []).map((slug) => ({ level, slug }))
+  ).slice(0, PREVIEW_MAX_PLACES)
+}
+
+/**
+ * The drive builder's live preview, in one `multiSearch`: the scope
+ * (faceted on `needs` too, for the gap chips) and its to-do, then for each
+ * place (at most 12) the scope and to-do within it, the first also naming
+ * the place from one hit. Counts come from the `locale` facet, as
+ * `driveCountsMany`. With `focus: null` it counts the scope only, leaving
+ * every to-do count null. Null on any Meilisearch failure.
+ */
+export async function drivePreviewCounts(
+  drive: {
+    scope: DriveScope
+    focus: DriveFocus | null
+    openedAt?: string | null
+  },
+  locale?: string
+): Promise<DrivePreviewCounts | null> {
+  try {
+    const localeClause = searchLocaleFilter(locale)
+    const scope = scopeFilter(drive.scope, { openedAt: drive.openedAt })
+    const todo = drive.focus
+      ? driveFilters({
+          scope: drive.scope,
+          focus: drive.focus,
+          openedAt: drive.openedAt,
+        }).todo
+      : null
+    const count = (filter: string, extra: Record<string, unknown> = {}) => ({
+      indexUid: "library",
+      filter: `${filter} AND ${localeClause}`,
+      limit: 0,
+      facets: ["locale"],
+      ...extra,
+    })
+    const places = previewPlaces(drive.scope)
+
+    const queries = [
+      count(scope, { facets: ["locale", "needs"] }),
+      ...(todo ? [count(todo)] : []),
+      ...places.flatMap(({ level, slug }) => {
+        const clause = `${level}_slug = ${JSON.stringify(slug)}`
+
+        return [
+          count(`${scope} AND ${clause}`, {
+            limit: 1,
+            attributesToRetrieve: [`${level}_name`],
+          }),
+          ...(todo ? [count(`${todo} AND ${clause}`)] : []),
+        ]
+      }),
+    ]
+
+    const { results } = await meiliClient.multiSearch({ queries })
+    const rows = results as unknown as {
+      facetDistribution?: Distribution
+      hits?: Record<string, unknown>[]
+    }[]
+    const step = todo ? 2 : 1
+    const needs = rows[0]?.facetDistribution?.needs ?? {}
+
+    return {
+      total: countOf(rows[0]?.facetDistribution, "locale"),
+      todo: todo ? countOf(rows[1]?.facetDistribution, "locale") : null,
+      gaps: Object.fromEntries(
+        PANEL_GAPS.map((gap) => [gap, needs[gap] ?? 0])
+      ) as Record<PreviewGap, number>,
+      places: places.map(({ level, slug }, i) => {
+        const inPlace = rows[step + i * step]
+        const name = inPlace?.hits?.[0]?.[`${level}_name`]
+
+        return {
+          level,
+          slug,
+          name: typeof name === "string" && name ? name : titleCase(slug),
+          total: countOf(inPlace?.facetDistribution, "locale"),
+          todo: todo
+            ? countOf(rows[step + i * step + 1]?.facetDistribution, "locale")
+            : null,
+        }
+      }),
+    }
+  } catch {
+    return null
   }
 }
 

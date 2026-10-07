@@ -10,22 +10,29 @@ import {
   DRIVE_MAX_LIBRARIES,
   DRIVE_MAX_TASKS,
   DRIVE_PLACE_LEVELS,
+  DRIVE_UNITS,
   type DriveFocus,
+  driveProgress,
   type DriveInput,
   type DrivePlaceLevel,
   type DriveScope,
   type DriveUnit,
   type GapKey,
+  isGapKey,
   PANEL_FOCUS_MESSAGE,
+  PANEL_GAPS,
   validateDrive,
   VERIFY_SECTIONS,
   type VerifySection,
 } from "@repo/shared-data"
 
-import type { PlaceNames } from "@/lib/drives/drive-view"
+import { SECTION_LABELS } from "@/components/library/verify.logic"
+import type { DriveView, PlaceNames } from "@/lib/drives/drive-view"
 import type { ProposePrefill } from "@/lib/drives/propose-link"
 import type { Drive, DriveSource } from "@/lib/drives/types"
 import { nameFromSlug } from "@/lib/find-places"
+
+import { FOCUS_META, type PanelGap } from "./focus-meta"
 
 /**
  * The board writes drives directly; anyone else's builder sends a Drive
@@ -51,6 +58,18 @@ export interface BuilderPlace {
 /** What a drive does: fill gaps, confirm sections, or complete whole records. */
 export type FocusKind = DriveFocus["kind"]
 
+/**
+ * Where helpers look: each library's own website (no fields), a public
+ * dataset, or another source (both with a name, link and licence note).
+ * The form's choice only; the drive stores `whereToLook` as before.
+ */
+export type WhereKind = "website" | "dataset" | "other"
+
+export const WHERE_KINDS: readonly WhereKind[] = ["website", "dataset", "other"]
+
+/** The source name a "Each library's own website" drive carries. */
+export const WEBSITE_SOURCE = "Each library’s own website"
+
 /** The form as typed: numbers and dates stay strings until `toDriveInput`. */
 export interface BuilderState {
   focusKind: FocusKind
@@ -69,6 +88,7 @@ export interface BuilderState {
   completenessBelow: string
   /** Slugs or documentIds, one per line; when set, it replaces the places. */
   libraryList: string
+  whereKind: WhereKind
   whereName: string
   whereUrl: string
   whereLicence: string
@@ -117,8 +137,26 @@ export interface FieldError {
 /** The element id a field's control (or group) carries, for summary links. */
 export const fieldId = (field: BuilderField) => `drive-${field}`
 
-/** A new drive runs this many days, counting both ends. */
-export const DEFAULT_DRIVE_DAYS = 30
+/** "Runs for": the lengths a drive can run, counting both ends. */
+export const RUN_CHOICES: readonly { days: number; label: string }[] = [
+  { days: 14, label: "2 weeks" },
+  { days: 28, label: "4 weeks" },
+  { days: 60, label: "60 days" },
+  { days: 90, label: "90 days" },
+]
+
+/** A new drive runs this many days (4 weeks), counting both ends. */
+export const DEFAULT_DRIVE_DAYS = 28
+
+/** "Goal": the shares of the scope a drive can aim for. */
+export const GOAL_CHOICES: readonly { percent: number; label: string }[] = [
+  { percent: 50, label: "50%" },
+  { percent: 75, label: "75%" },
+  { percent: 100, label: "All of them" },
+]
+
+/** A whole-record drive's completeness targets, as pills. */
+export const RECORD_TARGET_CHOICES: readonly number[] = [50, 75, 90, 100]
 
 /** A new verify drive asks after sections not confirmed for this many days. */
 export const DEFAULT_VERIFY_DAYS = 365
@@ -234,7 +272,8 @@ export function emptyBuilderState(now: Date = new Date()): BuilderState {
     source: "",
     completenessBelow: "",
     libraryList: "",
-    whereName: "",
+    whereKind: "website",
+    whereName: WEBSITE_SOURCE,
     whereUrl: "",
     whereLicence: "",
     title: "",
@@ -316,7 +355,10 @@ function refOf(token: string): string {
   if (!token.includes("/")) return token.toLowerCase()
   const path = token.split(/[?#]/)[0] ?? ""
 
-  return (path.split("/").findLast(Boolean) ?? "").toLowerCase()
+  return path
+    .split("/")
+    .reduce((last, segment) => segment || last, "")
+    .toLowerCase()
 }
 
 /**
@@ -471,6 +513,7 @@ export function builderStateFromDrive(
     completenessBelow:
       scope.completenessBelow == null ? "" : String(scope.completenessBelow),
     libraryList: (scope.libraries ?? []).join("\n"),
+    whereKind: whereKindOf(where),
     whereName: where.name ?? "",
     whereUrl: where.url ?? "",
     whereLicence: where.licenceNote ?? "",
@@ -653,12 +696,15 @@ function focusCountable(state: BuilderState): boolean {
 
 /**
  * What `/api/drives/preview` counts, or null while the builder can't be
- * counted yet: no Focus to count (a gap, a section and a date, or a
- * target), nowhere to look, or a ceiling or list it can't read. A pasted
- * list goes as typed; the server resolves its slugs.
+ * counted yet: no Focus to count (a section and a date, or a target),
+ * nowhere to look, or a ceiling or list it can't read. A gaps drive with no
+ * gap chosen yet still counts its scope (`gaps: []`), so the gap chips can
+ * show how many libraries miss each one. A pasted list goes as typed; the
+ * server resolves its slugs.
  */
 export function previewRequest(state: BuilderState): PreviewRequest | null {
-  if (!focusCountable(state)) return null
+  const scopeOnly = state.focusKind === "gaps" && state.gaps.length === 0
+  if (!scopeOnly && !focusCountable(state)) return null
   const list = parseLibraryList(state.libraryList)
   if (list.invalid.length > 0 || list.overLimit) return null
   if (list.refs.length === 0 && state.places.length === 0) return null
@@ -679,3 +725,506 @@ export const countsLine = (c: { total: number; todo: number }) =>
 
 /** More to do than a drive may open with. */
 export const isTooBig = (c: { todo: number }) => c.todo > DRIVE_MAX_TASKS
+
+// ── Runs for and goal ────────────────────────────────────────────────────────
+
+const dayMs = (day: string) => Date.parse(`${day}T00:00:00Z`)
+
+/**
+ * The last day of a drive that starts on `startsOn` and runs `days` days,
+ * counting both ends; "" when `startsOn` isn't a day.
+ */
+export function endsOnFor(startsOn: string, days: number): string {
+  if (!validDay(startsOn)) return ""
+
+  return isoDay(new Date(dayMs(startsOn) + (days - 1) * DAY_MS))
+}
+
+/** How many days the drive runs, counting both ends; null without two days in order. */
+export function runDaysOf(
+  state: Pick<BuilderState, "startsOn" | "endsOn">
+): number | null {
+  if (!validDay(state.startsOn) || !validDay(state.endsOn)) return null
+  const days =
+    Math.round((dayMs(state.endsOn) - dayMs(state.startsOn)) / DAY_MS) + 1
+
+  return days >= 1 ? days : null
+}
+
+/**
+ * A new start day that keeps how long the drive runs (4 weeks when that
+ * can't be read): "Runs for" is the only end-date control.
+ */
+export function withStartsOn(
+  state: Pick<BuilderState, "startsOn" | "endsOn">,
+  startsOn: string
+): Pick<BuilderState, "startsOn" | "endsOn"> {
+  const days = runDaysOf(state) ?? DEFAULT_DRIVE_DAYS
+
+  return { startsOn, endsOn: endsOnFor(startsOn, days) || state.endsOn }
+}
+
+/**
+ * How many of the libraries to do must be done to meet the goal. The goal
+ * is a share of every library in scope (`driveProgress`), so libraries
+ * already done count towards it: 0 means it's met before the drive opens.
+ */
+export function goalCount(
+  counts: { total: number; todo: number },
+  goalPercent: number
+): number {
+  const needed =
+    Math.ceil((counts.total * goalPercent) / 100) - (counts.total - counts.todo)
+
+  return Math.min(counts.todo, Math.max(0, needed))
+}
+
+// ── Where to look ────────────────────────────────────────────────────────────
+
+const plainApostrophes = (s: string) => s.replaceAll("’", "'").trim()
+
+/**
+ * The "Where should helpers look?" choice a saved source reads as: the
+ * library's own website when it names it (or nothing) without a link,
+ * else another source.
+ */
+export function whereKindOf(where: DriveSource): WhereKind {
+  const name = plainApostrophes(where.name ?? "")
+  const url = (where.url ?? "").trim()
+  const licence = (where.licenceNote ?? "").trim()
+  if (url) return "other"
+  if (!name && !licence) return "website"
+
+  return name === plainApostrophes(WEBSITE_SOURCE) ? "website" : "other"
+}
+
+/**
+ * The source fields for a new choice: the website names itself with no
+ * link or note; leaving it clears its name for the one the user types.
+ */
+export function whereFieldsFor(
+  state: Pick<
+    BuilderState,
+    "whereKind" | "whereName" | "whereUrl" | "whereLicence"
+  >,
+  kind: WhereKind
+): Pick<BuilderState, "whereKind" | "whereName" | "whereUrl" | "whereLicence"> {
+  if (kind === "website") {
+    return {
+      whereKind: kind,
+      whereName: WEBSITE_SOURCE,
+      whereUrl: "",
+      whereLicence: "",
+    }
+  }
+  if (state.whereKind === "website") {
+    return { whereKind: kind, whereName: "", whereUrl: "", whereLicence: "" }
+  }
+
+  return { ...state, whereKind: kind }
+}
+
+// ── Drafted words ────────────────────────────────────────────────────────────
+
+/** The words the builder drafts until the user writes their own. */
+export type DraftField = "title" | "summary" | "steps"
+
+/** Which words the user has written by hand; drafting leaves those alone. */
+export type WordsDirty = Record<DraftField, boolean>
+
+export const CLEAN_WORDS: WordsDirty = {
+  title: false,
+  summary: false,
+  steps: false,
+}
+
+export interface DraftedWords {
+  title: string
+  summary: string
+  steps: string[]
+}
+
+const TITLE_MAX = 120
+const SUMMARY_MAX = 280
+
+/** "a, b and c", as written. */
+function joinAnd(items: readonly string[]): string {
+  if (items.length <= 1) return items[0] ?? ""
+
+  return `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`
+}
+
+/** "A, b and c": every label after the first lower-cased. */
+function joinLabels(labels: readonly string[]): string {
+  const [first = "", ...rest] = labels
+
+  return joinAnd([first, ...rest.map((l) => l.toLowerCase())].filter(Boolean))
+}
+
+const isPanelGap = (g: GapKey): g is PanelGap =>
+  (PANEL_GAPS as readonly string[]).includes(g)
+
+/** How a gap reads in a drafted summary: "opening hours", "photos". */
+export const GAP_PHRASES: Record<PanelGap, string> = {
+  hours: "opening hours",
+  photo: "photos",
+  accessibility: "accessibility details",
+  contact: "contact details",
+}
+
+const plural = (n: number, one: string, many: string) =>
+  `${n.toLocaleString("en-GB")} ${n === 1 ? one : many}`
+
+/**
+ * The places as words, shorter at each `level` so a long title still
+ * fits: up to three names ("A, B and C") or two and a count ("A, B and 4
+ * more places"); then one name and a count; then a count alone.
+ */
+function placesText(names: readonly string[], level: number): string {
+  if (names.length === 0) return "your chosen places"
+  const named = Math.max(0, 3 - level)
+  if (names.length <= named) return joinAnd(names)
+  const shown = names.slice(0, Math.max(0, named - 1))
+  if (shown.length === 0) return plural(names.length, "place", "places")
+  const rest = plural(names.length - shown.length, "more place", "more places")
+
+  return `${shown.join(", ")} and ${rest}`
+}
+
+/** Where the drive runs, as the drafts say it. */
+interface DraftPlace {
+  /** "Ealing, Camden and Croydon", or "12 libraries" for a list. */
+  name: string
+  /** "libraries in Ealing …", or "these 12 libraries". */
+  libraries: string
+  /** "in Ealing …", or "for 12 libraries". */
+  at: string
+}
+
+function draftPlace(state: BuilderState, level: number): DraftPlace {
+  const listed = parseLibraryList(state.libraryList).refs.length
+  if (listed > 0) {
+    const name = plural(listed, "library", "libraries")
+
+    return { name, libraries: `these ${name}`, at: `for ${name}` }
+  }
+  const name = placesText(
+    state.places.map((p) => p.name),
+    level
+  )
+
+  return { name, libraries: `libraries in ${name}`, at: `in ${name}` }
+}
+
+function draftVerify(state: BuilderState, place: DraftPlace): DraftedWords {
+  const sections = VERIFY_SECTIONS.filter((s) =>
+    state.verifySections.includes(s)
+  ).map((s) => SECTION_LABELS[s])
+  const label = sections.length > 0 ? joinLabels(sections) : "Details"
+  const lower = sections.length > 0 ? label.toLowerCase() : "the details"
+
+  return {
+    title: `Still right? *${label}* ${place.at}`,
+    summary: `Help us confirm ${lower} are still right for ${place.libraries}. Check the library’s website and mark what you checked.`,
+    steps: [
+      "Open a library from the list",
+      "Check its website for the details",
+      "Mark what you confirmed, with the link",
+    ],
+  }
+}
+
+function draftRecord(state: BuilderState, place: DraftPlace): DraftedWords {
+  const typed = state.recordTarget.trim()
+  const target = /^\d{1,3}$/.test(typed) ? `${typed}%` : "the target"
+  const every = place.libraries.startsWith("these ")
+    ? `each of ${place.libraries}`
+    : `every library in ${place.name}`
+
+  return {
+    title: `Complete the records for ${place.name}`,
+    summary: `Help us bring ${every} to ${target} complete. Each task fills what’s missing.`,
+    steps: [
+      "Open a library from the list",
+      "Fill in whatever the checklist shows",
+      "Save with a source link",
+    ],
+  }
+}
+
+function draftGaps(state: BuilderState, place: DraftPlace): DraftedWords {
+  const gaps = state.gaps.filter(isPanelGap)
+  const label =
+    gaps.length > 0
+      ? joinLabels(gaps.map((g) => FOCUS_META[g].label))
+      : "Missing details"
+  const phrase =
+    gaps.length > 0
+      ? joinAnd(gaps.map((g) => GAP_PHRASES[g]))
+      : "missing details"
+
+  return {
+    title: `*${label}* for ${place.name}`,
+    summary: `Help us add ${phrase} for ${place.libraries}. Each task takes a few minutes.`,
+    steps: [
+      "Open a library from the list",
+      "Find the details on the library’s own website",
+      "Add them with the source link",
+    ],
+  }
+}
+
+/** One draft of the words at a `level` of place detail. */
+function draftAt(state: BuilderState, level: number): DraftedWords {
+  const place = draftPlace(state, level)
+  if (state.focusKind === "verify") return draftVerify(state, place)
+  if (state.focusKind === "record") return draftRecord(state, place)
+
+  return draftGaps(state, place)
+}
+
+/**
+ * The card's words drafted from the builder's choices: a title, a summary
+ * and three steps for its Focus and places (or list). A long title or
+ * summary names fewer places so it fits its limit.
+ */
+export function draftWords(state: BuilderState): DraftedWords {
+  const drafts = [0, 1, 2, 3].map((level) => draftAt(state, level))
+  const fit = <K extends "title" | "summary">(key: K, max: number) =>
+    drafts.find((d) => d[key].length <= max)?.[key] ??
+    drafts.at(-1)![key].slice(0, max)
+
+  return {
+    title: fit("title", TITLE_MAX),
+    summary: fit("summary", SUMMARY_MAX),
+    steps: drafts[0]!.steps,
+  }
+}
+
+/** The words a user has already written count as hand-written. */
+export function dirtyOf(state: Pick<BuilderState, DraftField>): WordsDirty {
+  return {
+    title: state.title.trim() !== "",
+    summary: state.summary.trim() !== "",
+    steps: state.steps.some((s) => s.trim() !== ""),
+  }
+}
+
+/** The state with every word not written by hand redrafted. */
+export function withDraftedWords(
+  state: BuilderState,
+  dirty: WordsDirty
+): BuilderState {
+  if (dirty.title && dirty.summary && dirty.steps) return state
+  const draft = draftWords(state)
+
+  return {
+    ...state,
+    title: dirty.title ? state.title : draft.title,
+    summary: dirty.summary ? state.summary : draft.summary,
+    steps: dirty.steps ? state.steps : draft.steps,
+  }
+}
+
+// ── Steps done ───────────────────────────────────────────────────────────────
+
+/** The builder's five cards, by the fields each one holds. */
+export const STEP_FIELDS: readonly (readonly BuilderField[])[] = [
+  ["focus", "verifySections", "verifyBefore", "recordTarget"],
+  ["places", "libraryTypes", "source", "completenessBelow", "libraries"],
+  ["whereName", "whereUrl", "whereLicence"],
+  ["title", "summary", "steps"],
+  ["startsOn", "endsOn", "goalPercent", "unit"],
+]
+
+/**
+ * Whether each card is complete: none of its fields has a problem, and a
+ * dataset or other source has a name or a link.
+ */
+export function stepsDone(
+  state: BuilderState,
+  errors: readonly FieldError[]
+): boolean[] {
+  const bad = new Set(errors.map((e) => e.field))
+
+  return STEP_FIELDS.map((fields, i) => {
+    if (fields.some((f) => bad.has(f))) return false
+    if (i === 2 && state.whereKind !== "website") {
+      return state.whereName.trim() !== "" || state.whereUrl.trim() !== ""
+    }
+
+    return true
+  })
+}
+
+// ── A saved draft ────────────────────────────────────────────────────────────
+
+/** What "Save draft" keeps in the browser. */
+export interface SavedDraft {
+  state: BuilderState
+  note: string
+  dirty: WordsDirty
+}
+
+/** The browser storage key for a user's draft: one per user and mode. */
+export const draftStorageKey = (mode: BuilderMode, userId: string) =>
+  `${mode === "propose" ? "drive-proposal-draft" : "drive-board-draft"}:${userId}`
+
+export function serializeDraft(draft: SavedDraft): string {
+  return JSON.stringify({ v: 1, ...draft })
+}
+
+const PLACE_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+
+/** The strings in a saved list; null when it isn't a list. */
+const asStrings = (v: unknown): string[] | null =>
+  Array.isArray(v) ? v.filter((s): s is string => typeof s === "string") : null
+
+function savedPlaces(v: unknown): BuilderPlace[] | null {
+  if (!Array.isArray(v)) return null
+  const places: BuilderPlace[] = []
+  for (const p of v as Record<string, unknown>[]) {
+    if (
+      !p ||
+      !(DRIVE_PLACE_LEVELS as readonly unknown[]).includes(p.level) ||
+      typeof p.slug !== "string" ||
+      !PLACE_SLUG.test(p.slug) ||
+      typeof p.name !== "string"
+    ) {
+      return null
+    }
+    places.push({
+      level: p.level as DrivePlaceLevel,
+      slug: p.slug,
+      name: p.name,
+      ...(typeof p.kind === "string" ? { kind: p.kind } : {}),
+    })
+  }
+
+  return places
+}
+
+/**
+ * A draft read back from the browser, or null when there's none or it
+ * can't be read. Every field is checked against its type; one that doesn't
+ * fit keeps a new drive's value, so an older or tampered draft can't break
+ * the form.
+ */
+export function parseSavedDraft(
+  raw: string | null,
+  now: Date = new Date()
+): SavedDraft | null {
+  if (!raw) return null
+  let json: unknown
+  try {
+    json = JSON.parse(raw)
+  } catch {
+    return null
+  }
+  const src = json as Record<string, unknown> | null
+  if (!src || src.v !== 1 || !src.state || typeof src.state !== "object") {
+    return null
+  }
+  const saved = src.state as Record<string, unknown>
+  const state = emptyBuilderState(now)
+  const out = state as unknown as Record<string, unknown>
+
+  for (const [key, fallback] of Object.entries(state)) {
+    const value = saved[key]
+    if (typeof fallback === "string" && typeof value === "string") {
+      out[key] = value
+    }
+  }
+  if (!["gaps", "verify", "record"].includes(state.focusKind)) {
+    state.focusKind = "gaps"
+  }
+  if (!WHERE_KINDS.includes(state.whereKind)) state.whereKind = "other"
+  if (!(DRIVE_UNITS as readonly string[]).includes(state.unit)) {
+    state.unit = "library"
+  }
+  state.gaps = (asStrings(saved.gaps) ?? []).filter(isGapKey).slice(0, 3)
+  state.verifySections = (asStrings(saved.verifySections) ?? []).filter(
+    (s): s is VerifySection =>
+      (VERIFY_SECTIONS as readonly string[]).includes(s)
+  )
+  state.libraryTypes = asStrings(saved.libraryTypes) ?? []
+  const steps = asStrings(saved.steps)
+  state.steps = steps && steps.length > 0 ? steps.slice(0, 5) : [""]
+  state.places = savedPlaces(saved.places) ?? []
+
+  const dirtySrc = (src.dirty ?? {}) as Record<string, unknown>
+
+  return {
+    state,
+    note: typeof src.note === "string" ? src.note : "",
+    dirty: {
+      title: dirtySrc.title === true,
+      summary: dirtySrc.summary === true,
+      steps: dirtySrc.steps === true,
+    },
+  }
+}
+
+// ── The live preview ─────────────────────────────────────────────────────────
+
+/** Places the preview card names before counting the rest. */
+const PREVIEW_PLACES = 3
+
+/** "Ealing · Camden · Croydon", "12 chosen libraries", or null. */
+export function previewPlaceLine(
+  state: Pick<BuilderState, "places" | "libraryList">
+): string | null {
+  const listed = parseLibraryList(state.libraryList).refs.length
+  if (listed > 0)
+    return `${plural(listed, "chosen library", "chosen libraries")}`
+  const names = state.places.map((p) => p.name)
+  if (names.length === 0) return null
+  const shown = names.slice(0, PREVIEW_PLACES).join(" · ")
+  const rest = names.length - PREVIEW_PLACES
+
+  return rest > 0 ? `${shown} · ${plural(rest, "more", "more")}` : shown
+}
+
+/**
+ * The form as the Noticeboard card would show it, for the builder's live
+ * preview: scheduled, nobody helping, nothing done yet, so its bar reads
+ * "0 of 12" once the count of what's left is known, and "Not counted yet"
+ * before.
+ */
+export function previewDriveView(
+  state: BuilderState,
+  todo: number | null
+): DriveView {
+  const input = toDriveInput(state)
+  const goal = input.goalPercent || 100
+
+  return {
+    drive: {
+      documentId: "preview",
+      slug: "preview",
+      title: input.title || "Your drive’s title",
+      summary: input.summary,
+      focus: input.focus,
+      scope: input.scope,
+      unit: input.unit,
+      startsAt: input.startsAt,
+      endsAt: input.endsAt,
+      goalPercent: goal,
+      status: "scheduled",
+      pinned: false,
+      featured: false,
+      locale: "en",
+      createdAt: "",
+      updatedAt: "",
+      steps: input.steps.map((text) => ({ text })),
+    },
+    href: "",
+    place: previewPlaceLine(state),
+    source: input.scope.source ?? null,
+    progress:
+      todo == null
+        ? null
+        : driveProgress({ total: todo, todo, inReview: 0 }, goal),
+    helpers: null,
+  }
+}

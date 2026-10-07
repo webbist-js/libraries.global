@@ -24,7 +24,7 @@ import { isDocumentIdParam, readJsonCapped } from "@/lib/bridge-params"
 import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
 import { createRateLimiter, rateLimitResponse } from "@/lib/rate-limit"
 
-import { driveCounts } from "./drive-progress"
+import { drivePreviewCounts, PANEL_GAP_ZEROS } from "./drive-progress"
 
 /**
  * The editorial board's drive routes (`/api/drives`, `/api/drives/[id]`,
@@ -486,10 +486,57 @@ export async function proxyBoardWrite(
   }
 }
 
+/** A gaps Focus with no gap chosen yet: the preview counts the scope only. */
+function isScopeOnly(raw: unknown): boolean {
+  const src = asRecord(raw)
+
+  return src.kind === "gaps" && Array.isArray(src.gaps) && src.gaps.length === 0
+}
+
 /**
- * The builder's live counts: `{ scope, focus }` → `{ total, todo }`, counted
- * as the drive would be if it opened now. A pasted list's slugs are
- * resolved first, and any that aren't found come back as `unknown`.
+ * The preview's Focus and Scope from its body, or the 400 to answer: a
+ * Focus `previewFocus` accepts (or a gaps Focus with no gap yet, as null),
+ * and a scope with places or a list of at most 500.
+ */
+function previewInput(
+  body: unknown
+):
+  | { ok: true; focus: DriveFocus | null; scope: DriveScope }
+  | { ok: false; response: Response } {
+  const src = asRecord(body)
+  const scopeOnly = isScopeOnly(src.focus)
+  const focus = scopeOnly ? null : previewFocus(src.focus)
+  if (!focus && !scopeOnly) {
+    return { ok: false, response: invalidDrive([PANEL_FOCUS_MESSAGE]) }
+  }
+  const scope = cleanScope(src.scope)
+  if ((scope.libraries?.length ?? 0) > DRIVE_MAX_LIBRARIES) {
+    return {
+      ok: false,
+      response: invalidDrive(["A list can hold at most 500 libraries."]),
+    }
+  }
+  if (!scope.libraries?.length && !scope.places) {
+    return {
+      ok: false,
+      response: invalidDrive([
+        "Limit the drive to places or to a list of libraries.",
+      ]),
+    }
+  }
+
+  return { ok: true, focus, scope }
+}
+
+/**
+ * The builder's live preview: `{ scope, focus }` →
+ * `{ total, todo, gaps, places }`, counted as the drive would be if it
+ * opened now. `gaps` is how many libraries in scope miss each gap the task
+ * panel fills; `places` gives each place its own counts (`level`, `slug`,
+ * `name`, `total` and what's left), at most 12. A gaps Focus with no gap
+ * yet counts the scope alone, with nothing left to count. A pasted list's
+ * slugs are resolved first, and any that aren't found come back as
+ * `unknown`.
  */
 export async function previewDrive(req: Request): Promise<Response> {
   const gate = await capabilityGate(previewLimiter, PREVIEW_CAPABILITIES)
@@ -502,20 +549,9 @@ export async function previewDrive(req: Request): Promise<Response> {
       { status: parsed.status }
     )
   }
-  const src = asRecord(parsed.body)
-  const focus = previewFocus(src.focus)
-  if (!focus) {
-    return invalidDrive([PANEL_FOCUS_MESSAGE])
-  }
-  const scope = cleanScope(src.scope)
-  if ((scope.libraries?.length ?? 0) > DRIVE_MAX_LIBRARIES) {
-    return invalidDrive(["A list can hold at most 500 libraries."])
-  }
-  if (!scope.libraries?.length && !scope.places) {
-    return invalidDrive([
-      "Limit the drive to places or to a list of libraries.",
-    ])
-  }
+  const input = previewInput(parsed.body)
+  if (!input.ok) return input.response
+  const { focus, scope } = input
 
   let unknown: string[] = []
   if (scope.libraries?.length) {
@@ -524,14 +560,20 @@ export async function previewDrive(req: Request): Promise<Response> {
     unknown = resolved.unknown
     if (resolved.ids.length === 0) {
       return NextResponse.json(
-        { total: 0, todo: 0, unknown },
+        {
+          total: 0,
+          todo: focus ? 0 : null,
+          gaps: { ...PANEL_GAP_ZEROS },
+          places: [],
+          unknown,
+        },
         { headers: { "Cache-Control": "no-store" } }
       )
     }
     scope.libraries = resolved.ids
   }
 
-  const counts = await driveCounts({
+  const counts = await drivePreviewCounts({
     scope,
     focus,
     openedAt: new Date().toISOString(),
@@ -544,11 +586,7 @@ export async function previewDrive(req: Request): Promise<Response> {
   }
 
   return NextResponse.json(
-    {
-      total: counts.total,
-      todo: counts.todo,
-      ...(unknown.length ? { unknown } : {}),
-    },
+    { ...counts, ...(unknown.length ? { unknown } : {}) },
     { headers: { "Cache-Control": "no-store" } }
   )
 }

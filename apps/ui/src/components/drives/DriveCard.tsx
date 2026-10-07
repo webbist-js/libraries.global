@@ -5,7 +5,7 @@ import type { DriveView } from "@/lib/drives/drive-view"
 import { DriveDates } from "./DriveDates"
 import { DriveFocusChip } from "./DriveFocusChip"
 import { DriveTitle } from "./DriveTitle"
-import { focusChipOf, unitNoun } from "./focus-meta"
+import { focusChipOf, longDate, unitNoun } from "./focus-meta"
 
 const fmt = (n: number) => n.toLocaleString("en-GB")
 
@@ -15,22 +15,41 @@ const fmt = (n: number) => n.toLocaleString("en-GB")
  * target), the place on one line and "Records from" on the next, then a
  * bar with "61 of 88 records" and how many are helping. The bar is
  * decorative: the count beside it says the same.
+ *
+ * `preview` draws a drive that doesn't exist yet, for the builder's live
+ * preview: no link, "Opens 13 Oct 2026" in full, and its summary.
  */
 export function DriveCard({
   view,
   now,
+  preview = false,
 }: {
   readonly view: DriveView
   readonly now?: Date
+  readonly preview?: boolean
 }) {
   const { drive, progress, helpers, href, place, source } = view
   const { tint } = focusChipOf(drive.focus)
+  const opens = preview ? longDate(drive.startsAt) : ""
 
   return (
-    <article className="relative flex h-full flex-col gap-2.5 rounded-[24px] border border-(--t-border-line) bg-white p-5 transition-[border-color,box-shadow] focus-within:border-[#B9B4F5] hover:border-[#B9B4F5] hover:shadow-[0_12px_28px_rgba(23,22,43,.08)]">
+    <article
+      className={`relative flex h-full flex-col gap-2.5 rounded-[24px] border border-(--t-border-line) bg-white p-5 ${preview ? "" : "transition-[border-color,box-shadow] focus-within:border-[#B9B4F5] hover:border-[#B9B4F5] hover:shadow-[0_12px_28px_rgba(23,22,43,.08)]"}`}
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <DriveFocusChip focus={drive.focus} />
-        <DriveDates drive={drive} now={now} />
+        {preview ? (
+          opens ? (
+            <span
+              className="text-[14px] font-semibold whitespace-nowrap"
+              style={{ color: T.ink.dim }}
+            >
+              Opens {opens}
+            </span>
+          ) : null
+        ) : (
+          <DriveDates drive={drive} now={now} />
+        )}
       </div>
       <h3
         className="m-0"
@@ -41,14 +60,20 @@ export function DriveCard({
           lineHeight: 1.15,
         }}
       >
-        <GlobalLink
-          href={href}
-          className="no-underline hover:underline"
-          style={{ color: T.ink.base }}
-        >
-          <DriveTitle title={drive.title} />
-          <span aria-hidden="true" className="absolute inset-0" />
-        </GlobalLink>
+        {preview ? (
+          <span style={{ color: T.ink.base }}>
+            <DriveTitle title={drive.title} />
+          </span>
+        ) : (
+          <GlobalLink
+            href={href}
+            className="no-underline hover:underline"
+            style={{ color: T.ink.base }}
+          >
+            <DriveTitle title={drive.title} />
+            <span aria-hidden="true" className="absolute inset-0" />
+          </GlobalLink>
+        )}
       </h3>
       {place || source ? (
         <div className="flex flex-col gap-0.5">
@@ -63,6 +88,14 @@ export function DriveCard({
             </p>
           ) : null}
         </div>
+      ) : null}
+      {preview && drive.summary ? (
+        <p
+          className="m-0 text-[14px] leading-[1.55]"
+          style={{ color: T.ink.base }}
+        >
+          {drive.summary}
+        </p>
       ) : null}
 
       <div className="mt-auto flex flex-col gap-1.5 pt-1">

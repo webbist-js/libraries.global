@@ -153,7 +153,11 @@ export function focusChipOf(focus: DriveFocus): FocusLook {
   if (focus.kind !== "gaps") return FOCUS_FILTER_META[focus.kind]
 
   const gaps = focus.gaps ?? []
-  const lead = gaps[0] ? gapLook(gaps[0]) : FOCUS_FILTER_META.record
+  // No gap chosen yet: only the builder's live preview draws one.
+  if (!gaps[0]) {
+    return { label: "Fill gaps", icon: "mdi:plus", tint: FOCUS_TINT.other }
+  }
+  const lead = gapLook(gaps[0])
 
   return {
     label: joinLabels(gaps.map((g) => gapLook(g).label)) || lead.label,

@@ -1,5 +1,6 @@
 import { builderStateFromPrefill } from "@/components/drives/builder.logic"
 import { DriveBuilder } from "@/components/drives/DriveBuilder"
+import { BOARD_FLOW, DriveFlowPills } from "@/components/drives/DriveFlowPills"
 import { T } from "@/lib/design-tokens"
 import { drivePlaceRefs } from "@/lib/drives/drive-view"
 import { fetchPlaceNames } from "@/lib/drives/drive-view-server"
@@ -25,7 +26,7 @@ export default async function NewDrivePage({
 }) {
   const [{ locale }, sp] = await Promise.all([params, searchParams])
   const prefill = prefillFromParams(sp)
-  await requireBoardMember(
+  const user = await requireBoardMember(
     locale,
     `/community/drives/new${prefillQuery(prefill)}`
   )
@@ -46,12 +47,16 @@ export default async function NewDrivePage({
           { label: "New drive" },
         ]}
         title="New *drive*"
-        lead="Choose what the drive does (fill gaps, confirm details are still right, or complete whole records), where, and where helpers can find the answers. The drive is saved as scheduled; pin it or open it from its page."
-      />
+        lead="Create a drive for the community. Pick the job and the place, and the live preview shows what helpers will see."
+      >
+        <DriveFlowPills steps={BOARD_FLOW} />
+      </CommunitySectionHeader>
       <main className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
         <DriveBuilder
           initial={builderStateFromPrefill(prefill, names, "board")}
           locale={locale}
+          userId={user.id}
+          restoreDraft={prefillQuery(prefill) === ""}
         />
       </main>
     </div>

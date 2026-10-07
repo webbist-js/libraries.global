@@ -5,6 +5,10 @@ import type { ReactNode } from "react"
 
 import { builderStateFromPrefill } from "@/components/drives/builder.logic"
 import { DriveBuilder } from "@/components/drives/DriveBuilder"
+import {
+  DriveFlowPills,
+  PROPOSE_FLOW,
+} from "@/components/drives/DriveFlowPills"
 import { Notice } from "@/components/ds"
 import GlobalLink from "@/components/global/GlobalLink"
 import { sessionCapabilities } from "@/lib/access-server"
@@ -64,8 +68,10 @@ export default async function ProposeDrivePage({
     <CommunitySectionHeader
       crumbs={[{ label: "Propose a drive" }]}
       title="Propose a *drive*."
-      lead="Choose what the drive does (fill a gap, confirm details are still right, or complete whole records) and a place. A Moderator reviews every proposal, and approved drives open on their start date."
-    />
+      lead="A drive gets the community working on one job in one place for a few weeks. Pick the job and the place, and the live preview shows what helpers will see."
+    >
+      <DriveFlowPills steps={PROPOSE_FLOW} />
+    </CommunitySectionHeader>
   )
   const page = (children: ReactNode) => (
     <div
@@ -126,6 +132,8 @@ export default async function ProposeDrivePage({
         initial={initial}
         locale={locale}
         blocked={blocked}
+        userId={user.id}
+        restoreDraft={prefillQuery(prefill) === ""}
         standing={{
           accepted: standing.accepted,
           open: standing.open ? { title: standing.open.title } : null,
