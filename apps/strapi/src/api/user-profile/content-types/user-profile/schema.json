@@ -157,6 +157,11 @@
       "relation": "manyToMany",
       "target": "api::library.library"
     },
+    "followedDrives": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::drive.drive"
+    },
     "followedProfiles": {
       "type": "relation",
       "relation": "manyToMany",

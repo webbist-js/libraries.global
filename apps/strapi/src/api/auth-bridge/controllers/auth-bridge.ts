@@ -11,6 +11,7 @@ import { loadPlanRows } from "../../../utils/entitlement-inputs"
 import { eraseAccount } from "../../../utils/erase-account"
 import { activeGrants } from "../../../utils/role-grants"
 import { isValidServiceSecret } from "../../../utils/service-secret"
+import { loadStaffClaims } from "../../../utils/staff"
 import { isValidUsername, nextContributorNumber } from "../../../utils/username"
 
 /**
@@ -43,6 +44,37 @@ function domainOf(url: unknown): string {
   } catch {
     return ""
   }
+}
+
+/** What a follow points at: a library or a drive, by documentId. */
+type FollowTarget = { kind: "library" | "drive"; documentId: string }
+
+/** The profile relation that holds each kind of follow. */
+const FOLLOW_RELATION = {
+  library: "followedLibraries",
+  drive: "followedDrives",
+} as const
+
+/** A non-empty string id, or null. */
+const nonEmptyId = (value: unknown): string | null =>
+  typeof value === "string" && value.length > 0 ? value : null
+
+/**
+ * The follow target in a request: exactly one of `libraryDocumentId` and
+ * `driveDocumentId`, as a non-empty string. Null when neither or both are
+ * given (a repeated query key arrives as an array, which is refused too).
+ */
+function followTargetOf(input: {
+  libraryDocumentId?: unknown
+  driveDocumentId?: unknown
+}): FollowTarget | null {
+  const library = nonEmptyId(input.libraryDocumentId)
+  const drive = nonEmptyId(input.driveDocumentId)
+  if (library && drive) return null
+  if (library) return { kind: "library", documentId: library }
+  if (drive) return { kind: "drive", documentId: drive }
+
+  return null
 }
 
 export default {
@@ -245,20 +277,32 @@ export default {
       return ctx.unauthorized("Invalid or missing service secret")
     }
 
-    const { baUserId, libraryDocumentId } = ctx.query as {
-      baUserId?: string
-      libraryDocumentId?: string
-    }
-    if (!baUserId || !libraryDocumentId)
-      return ctx.badRequest("Missing baUserId or libraryDocumentId")
+    const { baUserId } = ctx.query as { baUserId?: unknown }
+    const target = followTargetOf(ctx.query ?? {})
+    if (typeof baUserId !== "string" || !baUserId || !target)
+      return ctx.badRequest(
+        "Missing baUserId, or one of libraryDocumentId and driveDocumentId"
+      )
 
+    const relation = FOLLOW_RELATION[target.kind]
     const profile = await strapi.db
       .query("api::user-profile.user-profile")
-      .findOne({ where: { baUserId }, populate: { followedLibraries: true } })
+      .findOne({
+        where: { baUserId },
+        populate: {
+          [relation]:
+            target.kind === "drive"
+              ? {
+                  where: { documentId: target.documentId },
+                  select: ["documentId"],
+                }
+              : true,
+        },
+      })
     if (!profile) return ctx.send({ following: false })
 
-    const following = (profile.followedLibraries ?? []).some(
-      (lib: any) => lib.documentId === libraryDocumentId
+    const following = ((profile[relation] ?? []) as any[]).some(
+      (row: any) => row.documentId === target.documentId
     )
 
     return ctx.send({ following })
@@ -436,23 +480,59 @@ export default {
       return ctx.unauthorized("Invalid or missing service secret")
     }
 
-    const { baUserId, libraryDocumentId, action } = ctx.request.body as {
+    const body = (ctx.request.body ?? {}) as {
       baUserId?: string
-      libraryDocumentId?: string
       action?: "follow" | "unfollow"
+      libraryDocumentId?: unknown
+      driveDocumentId?: unknown
     }
-    if (!baUserId || !libraryDocumentId || !action)
-      return ctx.badRequest("Missing baUserId, libraryDocumentId, or action")
+    const { baUserId, action } = body
+    const target = followTargetOf(body)
+    if (!baUserId || !target || (action !== "follow" && action !== "unfollow"))
+      return ctx.badRequest(
+        "Missing baUserId, action, or one of libraryDocumentId and driveDocumentId"
+      )
 
     const profile = await strapi.db
       .query("api::user-profile.user-profile")
       .findOne({ where: { baUserId } })
     if (!profile) return ctx.notFound("Profile not found")
 
+    if (target.kind === "drive") {
+      // A drive has one row per locale. Only a drive past `draft` (its
+      // lifecycle status; drives have no draft & publish) can be followed;
+      // the follow links its first row, and an unfollow unlinks every row,
+      // whatever the drive's status is now.
+      const rows = (await strapi.db.query("api::drive.drive").findMany({
+        where: {
+          documentId: target.documentId,
+          ...(action === "follow" ? { status: { $ne: "draft" } } : {}),
+        },
+        select: ["id"],
+        orderBy: { id: "asc" },
+      })) as { id: number }[]
+      if (rows.length === 0) return ctx.notFound("Drive not found")
+
+      await strapi.db.query("api::user-profile.user-profile").update({
+        where: { id: profile.id },
+        data: {
+          followedDrives:
+            action === "follow"
+              ? { connect: [{ id: rows[0]!.id }] }
+              : { disconnect: rows.map((row) => ({ id: row.id })) },
+        },
+      })
+
+      return ctx.send({ following: action === "follow" })
+    }
+
     // Only a published row can be followed: the relation links to a row id,
     // so linking a draft would make the follow vanish from every read.
     const library = await strapi.db.query("api::library.library").findOne({
-      where: { documentId: libraryDocumentId, publishedAt: { $notNull: true } },
+      where: {
+        documentId: target.documentId,
+        publishedAt: { $notNull: true },
+      },
     })
     if (!library) return ctx.notFound("Library not found")
 
@@ -587,6 +667,26 @@ export default {
 
     return ctx.send({
       contributorRole: profile?.contributorRole ?? "reader",
+      staff: await Promise.all(
+        (await loadStaffClaims(strapi, baUserId)).map(async (claim) => {
+          const library = await strapi
+            .documents("api::library.library")
+            .findOne({
+              documentId: claim.libraryDocumentId,
+              status: "published",
+              fields: ["name", "slug", "libraryType"],
+            })
+
+          return library
+            ? {
+                ...claim,
+                name: library.name ?? "Library",
+                slug: library.slug ?? "",
+                libraryType: library.libraryType ?? "",
+              }
+            : null
+        })
+      ).then((rows) => rows.filter(Boolean)),
       username: profile?.username ?? null,
       tier: profile?.tier ?? null,
       claims: affiliations

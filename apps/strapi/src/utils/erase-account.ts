@@ -144,6 +144,7 @@ export async function eraseAccount(
           dismissedPrompts: null,
           publicPrefs: null,
           followedLibraries: { set: [] },
+          followedDrives: { set: [] },
           followedProfiles: { set: [] },
           points: 0,
           pointsThisMonth: 0,

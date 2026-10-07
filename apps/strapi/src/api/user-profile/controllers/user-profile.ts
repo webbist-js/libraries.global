@@ -77,6 +77,7 @@ function applyPublicPrefs(
   }
   if (!prefs.showFollows) {
     out.followedLibraries = []
+    out.followedDrives = []
     out.followedProfiles = []
   }
   if (!prefs.showActivity) {
@@ -104,6 +105,30 @@ function publishedFollowedLibraries(rows: unknown): Record<string, unknown>[] {
       heroImageUrl: lib.heroImage?.url ?? null,
       path: buildLibraryPath(lib),
     }))
+}
+
+/** At most this many followed drives come back with a profile. */
+const MAX_FOLLOWED_DRIVES = 100
+
+/**
+ * Followed drives as `{ documentId, slug }`, once each: a drive has one row
+ * per locale, and a draft drive (lifecycle `status`) never surfaces.
+ */
+function publicFollowedDrives(
+  rows: unknown
+): { documentId: string; slug: string }[] {
+  const seen = new Set<string>()
+  const out: { documentId: string; slug: string }[] = []
+  for (const row of (rows ?? []) as any[]) {
+    const documentId = row?.documentId
+    const slug = row?.slug
+    if (typeof documentId !== "string" || typeof slug !== "string") continue
+    if (row.status === "draft" || seen.has(documentId)) continue
+    seen.add(documentId)
+    out.push({ documentId, slug })
+  }
+
+  return out.slice(0, MAX_FOLLOWED_DRIVES)
 }
 
 /**
@@ -258,17 +283,20 @@ function toClaimedLibraries(affiliations: any[]): Record<string, unknown>[] {
 }
 
 /**
- * Followed libraries (published only) and followed profiles (public only).
- * Follows are written via db.query connect/disconnect, so they are read back
- * the same way: Document Service populate does not reliably reflect those
- * writes. A library unpublished since it was followed must not surface, and
- * private or limited profiles are never listed.
+ * Followed libraries (published only), followed drives (never a draft) and
+ * followed profiles (public only). Follows are written via db.query
+ * connect/disconnect, so they are read back the same way: Document Service
+ * populate does not reliably reflect those writes. A library unpublished
+ * since it was followed must not surface, and private or limited profiles
+ * are never listed.
  */
 async function loadFollows(baUserId: string | null | undefined): Promise<{
   followedLibraries: Record<string, unknown>[]
+  followedDrives: { documentId: string; slug: string }[]
   followedProfiles: Record<string, unknown>[]
 }> {
-  if (!baUserId) return { followedLibraries: [], followedProfiles: [] }
+  if (!baUserId)
+    return { followedLibraries: [], followedDrives: [], followedProfiles: [] }
   const row = await strapi.db.query(PROFILE).findOne({
     where: { baUserId },
     populate: {
@@ -281,12 +309,19 @@ async function loadFollows(baUserId: string | null | undefined): Promise<{
           region: true,
         },
       },
+      followedDrives: {
+        where: { status: { $ne: "draft" } },
+        select: ["documentId", "slug", "status"],
+        orderBy: { id: "asc" },
+        limit: MAX_FOLLOWED_DRIVES,
+      },
       followedProfiles: { populate: { avatar: true } },
     },
   })
 
   return {
     followedLibraries: publishedFollowedLibraries(row?.followedLibraries),
+    followedDrives: publicFollowedDrives(row?.followedDrives),
     followedProfiles: ((row?.followedProfiles ?? []) as any[])
       .filter((p: any) => p.profileVisibility === "public")
       .map((p: any) => ({
@@ -407,15 +442,16 @@ export default factories.createCoreController(
         ? []
         : await loadEarnedBadges(profile.baUserId)
 
-      // Published libraries and public profiles only (see loadFollows).
-      const { followedLibraries, followedProfiles } = await loadFollows(
-        profile.baUserId
-      )
+      // Published libraries, drives past draft and public profiles only
+      // (see loadFollows).
+      const { followedLibraries, followedDrives, followedProfiles } =
+        await loadFollows(profile.baUserId)
 
       // Fields always stripped from public responses
       const safe = publicProfile({
         ...profile,
         followedLibraries,
+        followedDrives,
         followedProfiles,
       } as any)
 

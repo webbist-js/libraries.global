@@ -3367,6 +3367,7 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     dismissedPrompts: Schema.Attribute.JSON & Schema.Attribute.Private
     earnedProUntil: Schema.Attribute.DateTime & Schema.Attribute.Private
     firstName: Schema.Attribute.String
+    followedDrives: Schema.Attribute.Relation<"manyToMany", "api::drive.drive">
     followedLibraries: Schema.Attribute.Relation<
       "manyToMany",
       "api::library.library"

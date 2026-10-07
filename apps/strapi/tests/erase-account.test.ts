@@ -198,6 +198,7 @@ describe("eraseAccount", () => {
       dismissedPrompts: null,
       publicPrefs: null,
       followedLibraries: { set: [] },
+      followedDrives: { set: [] },
       followedProfiles: { set: [] },
       points: 0,
       streak: 0,
