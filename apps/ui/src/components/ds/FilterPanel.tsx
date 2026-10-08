@@ -493,7 +493,7 @@ export function FilterDrawer({
         aria-label="Close filters"
         onClick={onClose}
         className="absolute inset-0 border-0"
-        style={{ background: "rgba(23,22,43,.4)" }}
+        style={{ background: T.overlay.scrim }}
       />
       <div
         className="scrollbar-thin absolute inset-y-0 left-0 w-[min(340px,88vw)] overflow-y-auto p-5"

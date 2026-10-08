@@ -10,8 +10,9 @@ export type SectionTab = {
   href: string
   /** Iconify id, e.g. "mdi:shield-outline". Indigo on the active tab. */
   icon?: string
-  /** Trailing count, e.g. pages in a Knowledge section. */
+  /** Trailing count, e.g. pages in a Knowledge section. Zero is not shown. */
   count?: number
+  badge?: ReactNode
 }
 
 /**
@@ -41,7 +42,8 @@ export function SectionTabs({
     <nav
       aria-label={label}
       className={[
-        "-mb-px flex gap-1 overflow-x-auto [scrollbar-width:none] print:hidden [&::-webkit-scrollbar]:hidden",
+        // A right-edge fade says the row scrolls on narrow screens.
+        "relative -mb-px flex gap-1 overflow-x-auto [scrollbar-width:none] after:pointer-events-none after:sticky after:right-0 after:-ml-8 after:w-8 after:shrink-0 after:bg-linear-to-l after:from-(--t-bg-space) after:to-transparent sm:after:hidden print:hidden [&::-webkit-scrollbar]:hidden",
         className,
       ]
         .filter(Boolean)
@@ -54,7 +56,7 @@ export function SectionTabs({
           <Link
             aria-current={active ? "page" : undefined}
             className={[
-              "inline-flex shrink-0 items-center gap-2 rounded-t-[14px] border border-b-0 px-4 py-2.5 text-[14px] font-semibold whitespace-nowrap transition-colors",
+              "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-t-[14px] border border-b-0 px-4 py-2.5 text-[14px] font-semibold whitespace-nowrap transition-colors",
               active
                 ? "border-(--t-border-line) bg-(--t-bg-void) text-(--t-ink-base)"
                 : "border-transparent text-(--t-ink-dim) hover:text-(--t-ink-base)",
@@ -73,7 +75,8 @@ export function SectionTabs({
               />
             ) : null}
             {tab.label}
-            {tab.count != null ? (
+            {tab.badge}
+            {tab.count ? (
               <span
                 className="rounded-full px-2 text-[13px] font-bold tabular-nums"
                 style={{ background: T.bg.muted, color: T.ink.dim }}

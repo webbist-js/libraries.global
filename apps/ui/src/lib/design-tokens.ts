@@ -4,6 +4,12 @@
 // Token values reference CSS custom properties defined in globals.css.
 
 export const T = {
+  map: {
+    stopRing: "#2F5D3A",
+    route: "#2F5D3A",
+    coarseRing: "#3730A3",
+    coarseOpacity: 0.12,
+  },
   bg: {
     void: "var(--t-bg-void)", // page root — warm paper
     space: "var(--t-bg-space)", // deeper band — footer, cover strips
@@ -11,6 +17,7 @@ export const T = {
     surface: "var(--t-bg-surface)", // nested surface — row hover, inputs
     muted: "var(--t-bg-muted)", // muted fills — disabled, neutral chips
     muted2: "var(--t-bg-muted-2)", // nav hover, segmented-control track
+    selected: "var(--t-bg-selected)",
   },
   ink: {
     base: "var(--t-ink-base)",
@@ -18,6 +25,18 @@ export const T = {
     low: "var(--t-ink-low)",
     faint: "var(--t-ink-faint)",
     ghost: "var(--t-ink-ghost)",
+    /** Secondary text on an ink-dark surface (the staff card, the console). */
+    onDark: "var(--t-ink-on-dark)",
+  },
+  overlay: {
+    /** The dimmed backdrop behind a Drawer, Sheet or console overlay. */
+    scrim: "var(--t-scrim)",
+  },
+  edge: {
+    ok: "var(--t-edge-ok)",
+    info: "var(--t-edge-info)",
+    warn: "var(--t-edge-warn)",
+    danger: "var(--t-edge-danger)",
   },
   border: {
     line: "var(--t-border-line)",

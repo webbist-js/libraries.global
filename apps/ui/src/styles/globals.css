@@ -15,64 +15,103 @@
   --font-fraunces: var(--font-newsreader);
 
   /* backgrounds — warm paper */
-  --t-bg-void:    #FAF8F4;   /* page root */
-  --t-bg-space:   #F1EDE5;   /* deeper band — footer, cover strips */
-  --t-bg-deep:    #FFFFFF;   /* card / panel surface */
-  --t-bg-surface: #FBFAF7;   /* nested surface — row hover, inputs */
-  --t-bg-muted:   #F3F0EA;   /* muted fills — disabled, neutral chips */
-  --t-bg-muted-2: #EFEBE3;   /* nav hover, segmented-control track */
+  --t-bg-void: #faf8f4; /* page root */
+  --t-bg-space: #f1ede5; /* deeper band — footer, cover strips */
+  --t-bg-deep: #ffffff; /* card / panel surface */
+  --t-bg-surface: #fbfaf7; /* nested surface — row hover, inputs */
+  --t-bg-muted: #f3f0ea; /* muted fills — disabled, neutral chips */
+  --t-edge-ok: #c9dccb;
+  --t-edge-info: #d6d2f5;
+  --t-edge-warn: #e4d3a8;
+  --t-edge-danger: #e4bfae;
+  --t-bg-selected: #f6f5fd;
+  --t-bg-muted-2: #efebe3; /* nav hover, segmented-control track */
 
   /* ink / text */
-  --t-ink-base:  #17162B;
-  --t-ink-dim:   #55536A;
-  --t-ink-low:   rgba(23,22,43,.52);
-  --t-ink-faint: rgba(23,22,43,.36);
-  --t-ink-ghost: rgba(23,22,43,.16);
+  --t-ink-base: #17162b;
+  --t-ink-dim: #55536a;
+  --t-ink-low: rgba(23, 22, 43, 0.52);
+  --t-ink-faint: rgba(23, 22, 43, 0.36);
+  --t-ink-ghost: rgba(23, 22, 43, 0.16);
 
   /* borders — solid, they carry elevation (no shadows) */
-  --t-border-line: #E7E3DB;
-  --t-border-hi:   #D9D3C9;
-  --t-divider:     #F0ECE5;
+  --t-border-line: #e7e3db;
+  --t-border-hi: #d9d3c9;
+  --t-divider: #f0ece5;
 
   /* primary accent — indigo */
-  --t-accent-primary:       #4338CA;
-  --t-accent-primary-hover: #3730A3;
-  --t-accent-chip:          #ECEBFB;
+  --t-accent-primary: #4338ca;
+  --t-accent-primary-hover: #3730a3;
+  --t-accent-chip: #ecebfb;
 
   /* legacy accent slots, re-pointed at the v2 palette */
-  --t-accent-aurora:  #4338CA;
-  --t-accent-violet:  #4A3F8C;
-  --t-accent-ember:   #8A3F22;
-  --t-accent-gold:    #6B5420;
-  --t-accent-ok:      #2F5D3A;
-  --t-accent-warn:    #6B5420;
-  --t-accent-danger:  #A13A1A;
+  --t-accent-aurora: #4338ca;
+  --t-accent-violet: #4a3f8c;
+  --t-accent-ember: #8a3f22;
+  --t-accent-gold: #6b5420;
+  --t-accent-ok: #2f5d3a;
+  --t-accent-warn: #6b5420;
+  --t-accent-danger: #a13a1a;
 
   /* library-type tints — [bg, fg] pairs for badges, monograms, stat cards */
-  --tint-national-bg: #ECE8F6;  --tint-national-fg: #4A3F8C;
-  --tint-public-bg:   #E6EFE6;  --tint-public-fg:   #2F5D3A;
-  --tint-academic-bg: #E4ECF5;  --tint-academic-fg: #28496E;
-  --tint-special-bg:  #F6E3DA;  --tint-special-fg:  #8A3F22;
-  --tint-neutral-bg:  #F3F0EA;  --tint-neutral-fg:  #55536A;
+  --tint-national-bg: #ece8f6;
+  --tint-national-fg: #4a3f8c;
+  --tint-public-bg: #e6efe6;
+  --tint-public-fg: #2f5d3a;
+  --tint-academic-bg: #e4ecf5;
+  --tint-academic-fg: #28496e;
+  --tint-special-bg: #f6e3da;
+  --tint-special-fg: #8a3f22;
+  --tint-neutral-bg: #f3f0ea;
+  --tint-neutral-fg: #55536a;
 
   /* soft tints — active states, selected rows */
-  --t-aurora-soft: rgba(67,56,202,.08);
-  --t-aurora-edge: rgba(67,56,202,.30);
-  --t-danger-soft: rgba(161,58,26,.07);
-  --t-danger-edge: rgba(161,58,26,.30);
+  --t-aurora-soft: rgba(67, 56, 202, 0.08);
+  --t-aurora-edge: rgba(67, 56, 202, 0.3);
+  --t-danger-soft: rgba(161, 58, 26, 0.07);
+  --t-danger-edge: rgba(161, 58, 26, 0.3);
+
+  /* overlays */
+  --t-scrim: rgba(
+    23,
+    22,
+    43,
+    0.32
+  ); /* modal backdrops: Drawer, Sheet, console */
+  --t-ink-on-dark: rgba(
+    255,
+    255,
+    255,
+    0.76
+  ); /* secondary text on an ink-dark surface */
 
   /* header animation reference */
-  --t-header-bg: rgba(250,248,244,.92);
+  --t-header-bg: rgba(250, 248, 244, 0.92);
 
   /* library hero image overlays — moderate vignette, fade to page bg */
-  --library-hero-main-overlay: linear-gradient(180deg, rgba(0,0,0,.38) 0%, rgba(0,0,0,.42) 55%, var(--t-bg-void) 100%);
-  --library-hero-side-overlay: linear-gradient(90deg, rgba(0,0,0,.50) 0%, transparent 65%);
+  --library-hero-main-overlay: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.38) 0%,
+    rgba(0, 0, 0, 0.42) 55%,
+    var(--t-bg-void) 100%
+  );
+  --library-hero-side-overlay: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.5) 0%,
+    transparent 65%
+  );
 
   /* library card — photo fully visible, gradient only for text contrast */
   --lib-card-img-opacity: 0.88;
   --lib-card-img-opacity-hover: 1;
-  --lib-card-overlay: linear-gradient(180deg, transparent 0%, transparent 30%, rgba(0,0,0,.52) 70%, var(--t-bg-void) 100%);
-  --lib-card-border: rgba(23,22,43,.28);
+  --lib-card-overlay: linear-gradient(
+    180deg,
+    transparent 0%,
+    transparent 30%,
+    rgba(0, 0, 0, 0.52) 70%,
+    var(--t-bg-void) 100%
+  );
+  --lib-card-border: rgba(23, 22, 43, 0.28);
 }
 
 /* ── Transparent-until-scroll global header ─────────────────────────────────
@@ -85,7 +124,7 @@
    to theme-appropriate (solid) so text stays readable over dark hero canvases. */
 
 @property --header-opacity {
-  syntax: '<number>';
+  syntax: "<number>";
   initial-value: 1;
   inherits: false;
 }
@@ -299,4 +338,43 @@ body:has([data-homepage="true"]) .strapi-layout-footer {
 
 body:has([data-hide-footer="true"]) .strapi-layout-footer {
   display: none;
+}
+
+.live-console button,
+.live-console a,
+.live-controls button,
+.live-controls a {
+  min-height: 56px;
+}
+.live-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--t-border-hi);
+  border-radius: 0.75rem;
+  font-weight: 600;
+}
+.live-button:disabled {
+  opacity: 0.55;
+}
+.live-primary {
+  color: white;
+  background: var(--t-accent-primary);
+  border-color: var(--t-accent-primary);
+}
+.live-input {
+  display: block;
+  width: 100%;
+  min-height: 56px;
+  padding: 0.75rem;
+  border: 1px solid var(--t-border-hi);
+  border-radius: 0.5rem;
+  background: var(--t-bg-deep);
+}
+.live-controls input,
+.live-controls select {
+  min-height: 56px;
 }

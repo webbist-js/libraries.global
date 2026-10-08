@@ -1,13 +1,13 @@
 import { Icon } from "@iconify/react"
 import type { ReactNode } from "react"
 
-import { T } from "@/lib/design-tokens"
+import { T, TYPE_TINT } from "@/lib/design-tokens"
 
 /** The [bg, fg] pair for each status tone. Reused wherever a tinted status
  * pill or line needs the same colours as a Notice (e.g. FeedStatusBadge,
  * EventFeedPanel) rather than re-declaring them. */
 export const TONES = {
-  ok: { bg: "var(--tint-public-bg)", fg: T.accent.ok },
+  ok: { bg: TYPE_TINT.public.bg, fg: T.accent.ok },
   info: { bg: T.accent.chip, fg: T.accent.primaryHover },
   warn: { bg: "#F5EEDC", fg: T.accent.warn },
 } as const

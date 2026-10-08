@@ -16,23 +16,35 @@ import { Breadcrumb, type BreadcrumbItem } from "./Breadcrumb"
  *
  * `title` accepts `*italic*` markup, rendered as indigo italic.
  * `tabs` takes a `SectionTabs` row for sections with sub-pages.
+ * `chips` adds pills after the eyebrow pill (a type tint, a status);
+ * `meta` is one line under the title (operator, links, a plan chip).
  */
 export function PageHero({
   breadcrumb,
   eyebrow,
   eyebrowIcon,
   eyebrowAccent,
+  chips,
   title,
+  meta,
   lead,
   compact = false,
   plainTitle = false,
   tabs,
   back,
   children,
+  leadPlacement = "right",
+  actions,
 }: {
   /** Optional breadcrumb trail rendered above the eyebrow pill. */
   readonly breadcrumb?: BreadcrumbItem[]
-  readonly eyebrow: ReactNode
+  /** The eyebrow pill's label. Omit it (and `back`) to skip the pill row. */
+  readonly eyebrow?: ReactNode
+  /**
+   * Pills rendered in the same row as the eyebrow pill, after it: a
+   * library-type tint, a status. Each chip styles itself.
+   */
+  readonly chips?: ReactNode
   /** Iconify id, e.g. "mdi:book-open-outline". */
   readonly eyebrowIcon?: string
   /** Trailing indigo text inside the pill, e.g. a version number. */
@@ -43,11 +55,16 @@ export function PageHero({
    * titles that mustn't be read as `*italic*` markup.
    */
   readonly plainTitle?: boolean
+  /** One line under the title: operator, "View public page", a plan chip. */
+  readonly meta?: ReactNode
   readonly lead?: ReactNode
   /** Tighter band + smaller title for task pages (forms, wizards). */
   readonly compact?: boolean
   /** Rendered under the lead in the right column (search field, status line). */
   readonly children?: ReactNode
+  /** Put the lead and actions below the title, leaving the right slot for stats. */
+  readonly leadPlacement?: "left" | "right"
+  readonly actions?: ReactNode
   /**
    * Section tabs (`SectionTabs`) on the band's bottom edge, for sections
    * with sub-pages (Contribute, Knowledge).
@@ -71,83 +88,115 @@ export function PageHero({
       ) : null}
       <Container
         className={[
-          "grid gap-x-16 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-end",
+          leadPlacement === "left"
+            ? "grid gap-x-16 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:items-end"
+            : "grid gap-x-16 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-end",
           compact ? "gap-y-5" : "gap-y-8",
-          bandPadding({
-            breadcrumb: Boolean(breadcrumb?.length),
-            compact,
-            tabs: Boolean(tabs),
-          }),
+          leadPlacement === "left" && breadcrumb?.length
+            ? "pt-3 pb-12 sm:pb-16"
+            : bandPadding({
+                breadcrumb: Boolean(breadcrumb?.length),
+                compact,
+                tabs: Boolean(tabs),
+              }),
         ].join(" ")}
       >
         <div>
-          <p className={compact ? "m-0 mb-4" : "m-0 mb-5"}>
-            {back ? (
-              <Link
-                href={back.href}
-                className="inline-flex items-center gap-1 rounded-full border py-1 pr-3 pl-2 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
-                style={{
-                  background: T.bg.deep,
-                  borderColor: T.border.line,
-                  color: T.ink.base,
-                }}
-              >
-                <Icon
-                  aria-hidden="true"
-                  height={16}
-                  icon="mdi:chevron-left"
-                  width={16}
-                  style={{ color: T.ink.dim }}
-                />
-                {back.label}
-              </Link>
-            ) : (
-              <span
-                className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[14px] font-semibold"
-                style={{
-                  background: T.bg.deep,
-                  borderColor: T.border.line,
-                  color: T.ink.base,
-                }}
-              >
-                {eyebrowIcon ? (
+          {back || eyebrow || chips ? (
+            <div
+              className={[
+                "flex flex-wrap items-center gap-2",
+                compact ? "mb-4" : "mb-5",
+              ].join(" ")}
+            >
+              {back ? (
+                <Link
+                  href={back.href}
+                  className="inline-flex min-h-11 items-center gap-1 rounded-full border py-1 pr-3 pl-2 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+                  style={{
+                    background: T.bg.deep,
+                    borderColor: T.border.line,
+                    color: T.ink.base,
+                  }}
+                >
                   <Icon
                     aria-hidden="true"
-                    height={15}
-                    icon={eyebrowIcon}
-                    style={{ color: T.accent.primary }}
-                    width={15}
+                    height={16}
+                    icon="mdi:chevron-left"
+                    width={16}
+                    style={{ color: T.ink.dim }}
                   />
-                ) : null}
-                {eyebrow}
-                {eyebrowAccent ? (
-                  <span style={{ color: T.accent.primary }}>
-                    {eyebrowAccent}
-                  </span>
-                ) : null}
-              </span>
-            )}
-          </p>
+                  {back.label}
+                </Link>
+              ) : eyebrow ? (
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[14px] font-semibold"
+                  style={{
+                    background: T.bg.deep,
+                    borderColor: T.border.line,
+                    color: T.ink.base,
+                  }}
+                >
+                  {eyebrowIcon ? (
+                    <Icon
+                      aria-hidden="true"
+                      height={15}
+                      icon={eyebrowIcon}
+                      style={{ color: T.accent.primary }}
+                      width={15}
+                    />
+                  ) : null}
+                  {eyebrow}
+                  {eyebrowAccent ? (
+                    <span style={{ color: T.accent.primary }}>
+                      {eyebrowAccent}
+                    </span>
+                  ) : null}
+                </span>
+              ) : null}
+              {chips}
+            </div>
+          ) : null}
           <h1
             className="m-0 text-balance"
             style={{
               fontFamily: T.font.serif,
               fontSize: compact
                 ? "clamp(32px,3.6vw,46px)"
-                : "clamp(40px,5vw,68px)",
+                : leadPlacement === "left"
+                  ? "clamp(48px,6.5vw,88px)"
+                  : "clamp(40px,5vw,68px)",
               fontWeight: 500,
               lineHeight: 1.04,
               letterSpacing: "-0.02em",
               color: T.ink.base,
+              whiteSpace: "pre-line",
             }}
           >
             {plainTitle ? title : parseHeroText(title)}
           </h1>
+          {meta ? (
+            <div
+              className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-[15px]"
+              style={{ color: T.ink.dim }}
+            >
+              {meta}
+            </div>
+          ) : null}
+          {leadPlacement === "left" && lead ? (
+            <p
+              className="mt-6 mb-0 max-w-[56ch] text-[17px] leading-[1.6]"
+              style={{ color: T.ink.dim }}
+            >
+              {lead}
+            </p>
+          ) : null}
+          {actions ? <div className="mt-6">{actions}</div> : null}
         </div>
 
-        {lead || children ? (
+        {(leadPlacement === "right" && lead) || children ? (
           <div className="flex flex-col gap-5">
-            {lead ? (
+            {leadPlacement === "right" && lead ? (
               <p
                 className="m-0 max-w-[52ch] text-[17px] leading-[1.6]"
                 style={{ color: T.ink.dim }}

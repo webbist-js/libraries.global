@@ -26,15 +26,21 @@ function firstControl(panel: HTMLElement): HTMLElement | null {
  * optional line under it, Close). While open it locks the page's scroll,
  * keeps Tab inside the panel, closes on Escape or a backdrop click, and
  * gives focus back to whatever had it when it opened. `children` fill the
- * panel below the header, as flex children of a full-height column.
+ * panel below the header, as flex children of a column.
+ * `size="md"` is an inset, rounded paper panel (the staff drawer); the
+ * default is the wider full-height paper sheet.
  */
 export function Drawer({
   titleId,
   title,
   subtitle,
+  eyebrow,
+  headerContent,
+  footer,
   icon,
   onClose,
   initialFocus = firstControl,
+  size = "lg",
   children,
 }: {
   /** The header title's id: the dialog's accessible name. */
@@ -42,6 +48,12 @@ export function Drawer({
   readonly title: ReactNode
   /** One line under the title, e.g. the library and its place. */
   readonly subtitle?: ReactNode
+  /** A badge above the title, sharing a row with the close button. */
+  readonly eyebrow?: ReactNode
+  /** Controls beneath the title, inside the tinted header. */
+  readonly headerContent?: ReactNode
+  /** Fixed below the scrolling content in an inset panel. */
+  readonly footer?: ReactNode
   /** Iconify id and its tint pair, shown in a circle before the title. */
   readonly icon?: {
     readonly name: string
@@ -51,6 +63,8 @@ export function Drawer({
   readonly onClose: () => void
   /** Picks the element focused on open; the first control by default. */
   readonly initialFocus?: (panel: HTMLElement) => HTMLElement | null
+  /** `lg`: full-height 760 px sheet. `md`: inset 440 px paper panel. */
+  readonly size?: "lg" | "md"
   readonly children?: ReactNode
 }) {
   const panel = useRef<HTMLDivElement>(null)
@@ -101,28 +115,63 @@ export function Drawer({
     }
   }, [])
 
-  return (
-    <div className="fixed inset-0 z-[80]">
-      <button
-        aria-label="Close"
-        className="absolute inset-0 cursor-default border-0"
-        onClick={() => close.current()}
-        style={{ background: "rgba(23,22,43,.32)" }}
-        tabIndex={-1}
-        type="button"
-      />
-      <div
-        ref={panel}
-        aria-labelledby={titleId}
-        aria-modal="true"
-        className="absolute inset-y-0 right-0 flex w-full flex-col border-l sm:w-[min(760px,100vw)]"
-        role="dialog"
-        style={{ background: T.bg.void, borderColor: T.border.hi }}
+  const heading = (
+    <div className="min-w-0">
+      <h2
+        id={titleId}
+        className="m-0"
+        style={{
+          fontFamily: T.font.serif,
+          fontSize:
+            size === "md" ? "clamp(26px,4vw,34px)" : "clamp(22px,3vw,28px)",
+          fontWeight: 500,
+          lineHeight: size === "md" ? 1.1 : 1.15,
+          letterSpacing: "-0.01em",
+          color: T.ink.base,
+        }}
       >
-        <div
-          className="flex shrink-0 items-center justify-between gap-4 border-b px-5 py-4 sm:px-6"
-          style={{ background: T.bg.deep, borderColor: T.border.line }}
+        {title}
+      </h2>
+      {subtitle ? (
+        <p
+          className="m-0 mt-0.5 truncate text-[15px]"
+          style={{ color: T.ink.dim }}
         >
+          {subtitle}
+        </p>
+      ) : null}
+    </div>
+  )
+  const closeButton = (
+    <button
+      aria-label="Close"
+      className="flex size-11 shrink-0 items-center justify-center rounded-full border bg-white hover:bg-(--t-bg-surface)"
+      onClick={() => close.current()}
+      style={{ borderColor: T.border.line, color: T.ink.base }}
+      type="button"
+    >
+      <Icon aria-hidden="true" height={20} icon="mdi:close" width={20} />
+    </button>
+  )
+
+  const header = (
+    <div
+      className={`shrink-0 border-b px-5 ${size === "md" ? "py-5" : "py-4 sm:px-6"}`}
+      style={{
+        background: size === "md" ? T.bg.space : T.bg.deep,
+        borderColor: T.border.line,
+      }}
+    >
+      {eyebrow ? (
+        <>
+          <div className="mb-3 flex items-center justify-between gap-4">
+            {eyebrow}
+            {closeButton}
+          </div>
+          {heading}
+        </>
+      ) : (
+        <div className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3.5">
             {icon ? (
               <span
@@ -133,42 +182,53 @@ export function Drawer({
                 <Icon height={20} icon={icon.name} width={20} />
               </span>
             ) : null}
-            <div className="min-w-0">
-              <h2
-                id={titleId}
-                className="m-0"
-                style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "clamp(22px,3vw,28px)",
-                  fontWeight: 500,
-                  lineHeight: 1.15,
-                  letterSpacing: "-0.01em",
-                  color: T.ink.base,
-                }}
-              >
-                {title}
-              </h2>
-              {subtitle ? (
-                <p
-                  className="m-0 mt-0.5 truncate text-[15px]"
-                  style={{ color: T.ink.dim }}
-                >
-                  {subtitle}
-                </p>
-              ) : null}
-            </div>
+            {heading}
           </div>
-          <button
-            aria-label="Close"
-            className="flex size-11 shrink-0 items-center justify-center rounded-full border bg-white hover:bg-(--t-bg-surface)"
-            onClick={() => close.current()}
-            style={{ borderColor: T.border.line, color: T.ink.base }}
-            type="button"
-          >
-            <Icon aria-hidden="true" height={20} icon="mdi:close" width={20} />
-          </button>
+          {closeButton}
         </div>
-        {children}
+      )}
+      {headerContent ? <div className="mt-4">{headerContent}</div> : null}
+    </div>
+  )
+
+  return (
+    <div className="fixed inset-0 z-[80]">
+      <button
+        aria-hidden="true"
+        className="absolute inset-0 cursor-default border-0"
+        onClick={() => close.current()}
+        style={{ background: T.overlay.scrim }}
+        tabIndex={-1}
+        type="button"
+      />
+      <div
+        ref={panel}
+        aria-labelledby={titleId}
+        aria-modal="true"
+        className={[
+          "absolute flex flex-col overscroll-contain",
+          size === "md"
+            ? "inset-y-2 right-4 w-[calc(100%-2rem)] max-w-[440px] overflow-hidden rounded-[28px] border"
+            : "inset-y-0 right-0 w-full border-l sm:w-[min(760px,100vw)]",
+        ].join(" ")}
+        role="dialog"
+        style={{
+          background: T.bg.void,
+          borderColor: T.border.hi,
+        }}
+      >
+        {size === "md" ? (
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            {header}
+            {children}
+          </div>
+        ) : (
+          <>
+            {header}
+            {children}
+          </>
+        )}
+        {footer}
       </div>
     </div>
   )

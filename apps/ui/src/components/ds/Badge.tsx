@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react"
 
-import { T } from "@/lib/design-tokens"
+import { T, TYPE_TINT } from "@/lib/design-tokens"
 
 export type BadgeColor =
   | "aurora"
@@ -23,14 +23,14 @@ const COLOR_MAP: Record<
     bg: "var(--t-accent-chip)",
   },
   violet: {
-    text: "var(--tint-national-fg)",
+    text: TYPE_TINT.national.fg,
     border: "transparent",
-    bg: "var(--tint-national-bg)",
+    bg: TYPE_TINT.national.bg,
   },
   ember: {
-    text: "var(--tint-special-fg)",
+    text: TYPE_TINT.special.fg,
     border: "transparent",
-    bg: "var(--tint-special-bg)",
+    bg: TYPE_TINT.special.bg,
   },
   gold: {
     text: "#6B5420",
@@ -38,9 +38,9 @@ const COLOR_MAP: Record<
     bg: "#F5EEDC",
   },
   ok: {
-    text: "var(--tint-public-fg)",
+    text: TYPE_TINT.public.fg,
     border: "transparent",
-    bg: "var(--tint-public-bg)",
+    bg: TYPE_TINT.public.bg,
   },
   warn: {
     text: "#6B5420",
@@ -53,9 +53,9 @@ const COLOR_MAP: Record<
     bg: "#F6E3DA",
   },
   dim: {
-    text: "var(--tint-neutral-fg)",
+    text: TYPE_TINT.neutral.fg,
     border: "transparent",
-    bg: "var(--tint-neutral-bg)",
+    bg: TYPE_TINT.neutral.bg,
   },
 }
 
