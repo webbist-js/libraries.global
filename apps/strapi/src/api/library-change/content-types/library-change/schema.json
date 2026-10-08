@@ -30,7 +30,7 @@
     "next": { "type": "json" },
     "source": {
       "type": "enumeration",
-      "enum": ["submission", "admin", "api_token", "import", "system"]
+      "enum": ["submission", "staff", "admin", "api_token", "import", "system"]
     },
     "actorKind": {
       "type": "enumeration",

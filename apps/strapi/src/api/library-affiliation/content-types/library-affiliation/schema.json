@@ -6,24 +6,68 @@
     "pluralName": "library-affiliations",
     "displayName": "Library Affiliation"
   },
-  "options": { "draftAndPublish": false },
+  "options": {
+    "draftAndPublish": false
+  },
   "pluginOptions": {
-    "content-manager": { "visible": false },
-    "content-type-builder": { "visible": false }
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
   },
   "attributes": {
-    "baUserId": { "type": "string", "required": true },
+    "baUserId": {
+      "type": "string",
+      "required": true
+    },
     "library": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::library.library"
     },
-    "role": { "type": "string" },
-    "department": { "type": "string" },
+    "role": {
+      "type": "string"
+    },
+    "department": {
+      "type": "string"
+    },
     "verificationMethod": {
       "type": "enumeration",
-      "enum": ["email_domain", "vouching", "contact_us"],
+      "enum": [
+        "email_domain",
+        "vouching",
+        "contact_us",
+        "team"
+      ],
       "default": "contact_us"
+    },
+    "staffRole": {
+      "type": "enumeration",
+      "enum": [
+        "owner",
+        "editor"
+      ]
+    },
+    "canGoLive": {
+      "type": "boolean",
+      "default": true
+    },
+    "approvedAt": {
+      "type": "datetime"
+    },
+    "source": {
+      "type": "enumeration",
+      "enum": [
+        "claim",
+        "team"
+      ]
+    },
+    "teamMember": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::access.team-member"
     }
   }
 }

@@ -110,6 +110,9 @@ export const LIBRARY_COMPARE_FIELDS: readonly string[] = [
   "location",
   "timezone",
   "openingTimes",
+  "mobileTimetable",
+  "operatorName",
+  "timetableUrl",
   "website",
   "catalogueUrl",
   "membershipUrl",
@@ -324,9 +327,12 @@ export async function applyToLocale(
     // The guard refuses it like any unpublished record.
     return applyToPublished(strapi, uid, documentId, data, { locale, fields })
 
-  const seeded = requiredLocalizedScalars(strapi, uid).filter(
-    (k) => !(k in data)
-  )
+  const seeded = [
+    ...new Set([
+      ...requiredLocalizedScalars(strapi, uid),
+      ...uidAttributes(strapi, uid),
+    ]),
+  ].filter((k) => !(k in data))
   const base = await strapi.documents(uid).findOne({
     documentId,
     locale: defaultLocale,
@@ -337,7 +343,10 @@ export async function applyToLocale(
 
   // A new locale version must still satisfy the schema: required localized
   // fields the change doesn't carry (a library's name) start as the default
-  // locale's, for a translator to replace.
+  // locale's, for a translator to replace. Its uid (the slug) is the
+  // default locale's too: Strapi's i18n never copies a uid into a new
+  // locale version, and a version without one is created as a draft but
+  // can't be published.
   const seed: Record<string, unknown> = {}
   for (const k of seeded) if (base[k] != null) seed[k] = base[k]
 
@@ -352,6 +361,22 @@ export async function applyToLocale(
   )
 
   return { mode: "created_locale" }
+}
+
+/**
+ * The `uid` attributes of `uid` (a slug). Strapi's i18n treats every uid
+ * as localized whatever its `pluginOptions` say (`isLocalizedAttribute`),
+ * so `copyNonLocalizedFields` leaves it null on a new locale version; the
+ * records here share one slug across locales (an article or a library is
+ * found by slug in any locale), so a new version takes the base's.
+ */
+function uidAttributes(strapi: any, uid: string): string[] {
+  const attributes: Record<string, any> =
+    strapi?.contentType?.(uid)?.attributes ?? {}
+
+  return Object.entries(attributes).flatMap(([k, a]) =>
+    a?.type === "uid" ? [k] : []
+  )
 }
 
 /** Required, localized scalar attributes of `uid` (from its schema). */

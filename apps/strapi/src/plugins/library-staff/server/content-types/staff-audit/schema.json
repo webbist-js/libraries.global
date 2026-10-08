@@ -1,0 +1,62 @@
+{
+  "kind": "collectionType",
+  "collectionName": "staff_audits",
+  "info": {
+    "singularName": "staff-audit",
+    "pluralName": "staff-audits",
+    "displayName": "Staff Audit"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "library": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::library.library"
+    },
+    "actor": {
+      "type": "string",
+      "private": true
+    },
+    "action": {
+      "type": "enumeration",
+      "enum": [
+        "invite_sent",
+        "invite_revoked",
+        "joined",
+        "level_changed",
+        "removed",
+        "left",
+        "can_go_live_changed",
+        "live_settings_changed",
+        "access_reported",
+        "stepup_locked",
+        "notice_created",
+        "notice_updated",
+        "notice_ended"
+      ],
+      "required": true
+    },
+    "subject": {
+      "type": "string",
+      "private": true
+    },
+    "detail": {
+      "type": "json",
+      "private": true
+    },
+    "at": {
+      "type": "datetime",
+      "required": true
+    }
+  }
+}

@@ -12,6 +12,7 @@ import { isValidServiceSecret } from "./service-secret"
 
 export type ChangeSource =
   | "submission"
+  | "staff"
   | "admin"
   | "api_token"
   | "import"

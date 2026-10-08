@@ -85,14 +85,11 @@ export async function eraseAccount(
       where: { endedByBaUserId: baUserId },
       data: { endedByBaUserId: null },
     })
-    await strapi.db.query("plugin::library-staff.staff-invite").deleteMany({
-      where: {
-        $or: [
-          { invitedBy: baUserId },
-          ...(email ? [{ email: email.trim().toLowerCase() }] : []),
-        ],
-      },
-    })
+    // Team seats: invites by email go, active rows are anonymised.
+    await strapi
+      .plugin("access")
+      ?.service("teams")
+      ?.eraseFor(baUserId, email ?? null)
     await strapi.db.query("plugin::library-staff.staff-audit").updateMany({
       where: { actor: baUserId },
       data: { actor: null, detail: null },

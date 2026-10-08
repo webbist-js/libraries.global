@@ -6,7 +6,7 @@
  */
 export type Reviewer = {
   id: string
-  kind: "admin" | "contributor" | "system"
+  kind: "admin" | "contributor" | "staff" | "system"
   email: string | null
   baUserId: string | null
 }
@@ -40,6 +40,13 @@ export function contributorReviewer(u: {
   }
 }
 
+export function staffReviewer(u: {
+  id: string
+  email?: string | null
+}): Reviewer {
+  return { ...contributorReviewer(u), kind: "staff" }
+}
+
 /** The platform itself, for automatic decisions (a library withdrawing a feed). */
 export const systemReviewer = (): Reviewer => ({
   id: "system",
@@ -62,7 +69,7 @@ export function isSelfReview(
   r: Reviewer,
   s: { submittedByUserId: string; submittedByEmail?: string | null }
 ): boolean {
-  if (r.kind === "contributor")
+  if (r.kind === "contributor" || r.kind === "staff")
     return !!r.baUserId && r.baUserId === s.submittedByUserId
   const mine = norm(r.email)
 

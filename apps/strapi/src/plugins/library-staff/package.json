@@ -1,0 +1,32 @@
+{
+  "name": "library-staff",
+  "version": "0.1.0",
+  "description": "Verified library staff access, teams and audit",
+  "strapi": {
+    "kind": "plugin",
+    "name": "library-staff",
+    "displayName": "Library staff",
+    "description": "Verified library staff access, teams and audit"
+  },
+  "main": "./dist/server/index.js",
+  "exports": {
+    "./package.json": "./package.json",
+    "./strapi-server": {
+      "source": "./strapi-server.ts",
+      "import": "./dist/server/index.mjs",
+      "require": "./dist/server/index.js",
+      "default": "./dist/server/index.js"
+    }
+  },
+  "dependencies": {
+    "@repo/access": "workspace:*",
+    "@repo/shared-data": "workspace:*"
+  },
+  "scripts": {
+    "build": "strapi-plugin build"
+  },
+  "files": [
+    "dist",
+    "strapi-server.ts"
+  ]
+}

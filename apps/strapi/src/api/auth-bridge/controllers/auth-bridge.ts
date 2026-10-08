@@ -197,6 +197,19 @@ export default {
       if (key in fields) data[key] = fields[key] === "" ? null : fields[key]
     }
 
+    // Recognition preferences are independent, and never grant a plan.
+    for (const key of ["supporterListed", "supporterBadgeVisible"] as const) {
+      if (!(key in fields)) continue
+      if (typeof fields[key] !== "boolean")
+        return ctx.badRequest(`${key} must be a boolean`)
+      data[key] = fields[key]
+    }
+    // Taking a profile out of public view also opts it out of the directory.
+    // Returning to public requires an explicit opt-in rather than relisting it.
+    const visibility =
+      fields.profileVisibility ?? existing?.profileVisibility ?? "public"
+    if (visibility !== "public") data.supporterListed = false
+
     // dismissedPrompts: the prompts the user has hidden, known keys only.
     if ("dismissedPrompts" in fields) {
       data.dismissedPrompts = Array.isArray(fields.dismissedPrompts)
@@ -665,28 +678,64 @@ export default {
       activeGrants(strapi, baUserId),
     ])
 
+    // Teams (R2-B): active memberships, with each Team's libraries, so the
+    // session resolves Pro (source `team`) and `teamLibraryIds` itself.
+    const teams: {
+      id: string
+      name: string
+      slug: string
+      role: "organiser" | "member"
+      libraryCount: number
+      libraryDocumentIds: string[]
+      expiresAt: string | null
+      status: "active" | "lapsed"
+      organiserName: string | null
+    }[] =
+      (await strapi
+        .plugin("access")
+        ?.service("teams")
+        ?.listMine(baUserId)
+        .catch((err: unknown) => {
+          strapi.log.warn("[auth-bridge] teams lookup failed", err)
+
+          return []
+        })) ?? []
+
+    // Staff memberships, then one query for their libraries' names.
+    const staffClaims = await loadStaffClaims(strapi, baUserId)
+    const staffLibraries = new Map<string, any>(
+      staffClaims.length
+        ? (
+            (await strapi.documents("api::library.library").findMany({
+              filters: {
+                documentId: {
+                  $in: staffClaims.map((claim) => claim.libraryDocumentId),
+                },
+              },
+              status: "published",
+              fields: ["documentId", "name", "slug", "libraryType"],
+              limit: staffClaims.length,
+            })) as any[]
+          ).map((library) => [library.documentId, library])
+        : []
+    )
+
     return ctx.send({
       contributorRole: profile?.contributorRole ?? "reader",
-      staff: await Promise.all(
-        (await loadStaffClaims(strapi, baUserId)).map(async (claim) => {
-          const library = await strapi
-            .documents("api::library.library")
-            .findOne({
-              documentId: claim.libraryDocumentId,
-              status: "published",
-              fields: ["name", "slug", "libraryType"],
-            })
+      staff: staffClaims.flatMap((claim) => {
+        const library = staffLibraries.get(claim.libraryDocumentId)
 
-          return library
-            ? {
+        return library
+          ? [
+              {
                 ...claim,
                 name: library.name ?? "Library",
                 slug: library.slug ?? "",
                 libraryType: library.libraryType ?? "",
-              }
-            : null
-        })
-      ).then((rows) => rows.filter(Boolean)),
+              },
+            ]
+          : []
+      }),
       username: profile?.username ?? null,
       tier: profile?.tier ?? null,
       claims: affiliations
@@ -695,6 +744,17 @@ export default {
       grants: planRows.grants,
       roleGrants,
       verifications: planRows.verifications,
+      teams: teams.map((t) => ({
+        id: t.id,
+        name: t.name,
+        slug: t.slug,
+        role: t.role,
+        libraryCount: t.libraryCount,
+        libraryDocumentIds: t.libraryDocumentIds,
+        expiresAt: t.expiresAt,
+        status: t.status,
+        organiserName: t.organiserName,
+      })),
       earnedProUntil: profile?.earnedProUntil ?? null,
       dismissedPrompts: Array.isArray(profile?.dismissedPrompts)
         ? profile.dismissedPrompts.filter(isDismissiblePrompt)
