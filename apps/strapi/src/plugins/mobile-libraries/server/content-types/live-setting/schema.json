@@ -1,0 +1,52 @@
+{
+  "kind": "collectionType",
+  "collectionName": "mobile_live_settings",
+  "info": {
+    "singularName": "live-setting",
+    "pluralName": "live-settings",
+    "displayName": "Live Setting"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "library": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::library.library"
+    },
+    "libraryDocumentId": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "precision": {
+      "type": "enumeration",
+      "enum": ["stops", "approximate"],
+      "default": "stops"
+    },
+    "autoStopMinutes": {
+      "type": "integer",
+      "default": 30
+    },
+    "enabledBy": {
+      "type": "string",
+      "private": true
+    },
+    "enabledAt": {
+      "type": "datetime"
+    }
+  }
+}

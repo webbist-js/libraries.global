@@ -1,0 +1,68 @@
+{
+  "kind": "collectionType",
+  "collectionName": "mobile_live_events",
+  "info": {
+    "singularName": "live-event",
+    "pluralName": "live-events",
+    "displayName": "Live Event"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "session": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::mobile-libraries.live-session"
+    },
+    "sessionDocumentId": {
+      "type": "string",
+      "required": true,
+      "private": true
+    },
+    "eventKey": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "private": true
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "start",
+        "arrived",
+        "left",
+        "delay",
+        "skip",
+        "not_running",
+        "end"
+      ]
+    },
+    "stopId": {
+      "type": "string"
+    },
+    "delayMin": {
+      "type": "integer"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "at": {
+      "type": "datetime"
+    },
+    "clientAt": {
+      "type": "datetime"
+    },
+    "flagged": {
+      "type": "string"
+    }
+  }
+}

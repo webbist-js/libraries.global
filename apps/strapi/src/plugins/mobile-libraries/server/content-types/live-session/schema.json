@@ -1,0 +1,91 @@
+{
+  "kind": "collectionType",
+  "collectionName": "mobile_live_sessions",
+  "info": {
+    "singularName": "live-session",
+    "pluralName": "live-sessions",
+    "displayName": "Live Session"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "library": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::library.library"
+    },
+    "libraryDocumentId": {
+      "type": "string",
+      "required": true
+    },
+    "startedBy": {
+      "type": "string",
+      "required": true,
+      "private": true
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["active", "ended"],
+      "default": "active"
+    },
+    "mode": {
+      "type": "enumeration",
+      "enum": ["checkins", "approximate"]
+    },
+    "serviceDate": {
+      "type": "date"
+    },
+    "cycleWeek": {
+      "type": "integer"
+    },
+    "day": {
+      "type": "string"
+    },
+    "startedAt": {
+      "type": "datetime"
+    },
+    "endsAt": {
+      "type": "datetime"
+    },
+    "endedAt": {
+      "type": "datetime"
+    },
+    "endReason": {
+      "type": "enumeration",
+      "enum": [
+        "manual",
+        "auto",
+        "breakdown",
+        "takeover",
+        "revoked",
+        "expired",
+        "kill_switch"
+      ]
+    },
+    "tokenHash": {
+      "type": "string",
+      "private": true
+    },
+    "state": {
+      "type": "json",
+      "private": true
+    },
+    "position": {
+      "type": "json",
+      "private": true
+    },
+    "route": {
+      "type": "json",
+      "private": true
+    }
+  }
+}

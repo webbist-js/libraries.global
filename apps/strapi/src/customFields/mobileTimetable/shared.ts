@@ -1,0 +1,7 @@
+export {
+  MOBILE_TIMETABLE_FIELD_NAME,
+  MOBILE_TIMETABLE_CUSTOM_FIELD_UID,
+  MOBILE_TIMETABLE_VERSION,
+  MOBILE_TIMETABLE_LIMITS,
+  normalizeMobileTimetable,
+} from "@repo/shared-data"

@@ -14,6 +14,8 @@ const DROPPED_HEADERS = new Set([
   "cookie",
   "x-ba-user-email",
   "x-ba-user-name",
+  "x-live-token",
+  "x-live-proof",
 ])
 
 export interface ScrubbableEvent {

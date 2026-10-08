@@ -12,6 +12,16 @@ const icons = path.resolve(__dirname, "../../node_modules/@strapi/icons/dist")
 export default (config: UserConfig) => {
   // Important: always return the modified config
   return mergeConfig(config, {
+    // Workspace packages resolve outside node_modules. shared-data builds as
+    // CommonJS for Strapi's server, so Vite must convert it for the admin too.
+    optimizeDeps: {
+      include: ["@repo/shared-data"],
+    },
+    build: {
+      commonjsOptions: {
+        include: [/node_modules/, /packages\/shared-data\/dist\//],
+      },
+    },
     resolve: {
       alias: [
         { find: "@", replacement: "/src" },
