@@ -30,6 +30,10 @@
     "order": {
       "type": "integer"
     },
+    "icon": {
+      "type": "string",
+      "description": "Iconify id shown on the Knowledge pages, e.g. mdi:code-tags"
+    },
     "articles": {
       "type": "relation",
       "relation": "oneToMany",

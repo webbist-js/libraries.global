@@ -9,7 +9,7 @@ export default factories.createCoreController(
       const sections = (await strapi
         .documents("api::wiki-section.wiki-section")
         .findMany({
-          fields: ["name", "label", "slug", "description", "order"],
+          fields: ["name", "label", "slug", "description", "order", "icon"],
           status: "published",
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           sort: ["order:asc", "name:asc"] as any,
@@ -37,6 +37,7 @@ export default factories.createCoreController(
         slug: string
         description?: string | null
         order?: number | null
+        icon?: string | null
         articles: {
           id: number
           documentId: string
@@ -56,6 +57,7 @@ export default factories.createCoreController(
           slug: section.slug,
           description: section.description ?? null,
           order: section.order ?? null,
+          icon: section.icon ?? null,
           articles: section.articles ?? [],
         }
       })
