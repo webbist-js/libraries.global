@@ -42,6 +42,17 @@
  * is written, so a re-run is a no-op. Submissions converge too: a fixture
  * keeps only its `trackRecord` accepted ones, so whatever the specs
  * submitted is deleted.
+ *
+ * Staff area round 2 (ACCESS_SEED_OPTIONS: libraries, team, timezone,
+ * openingTimes, timetable): the fixture libraries are found by slug and
+ * created (published) or converged; the Team is found by slug, kept
+ * verified and active, its member rows converged to the fixtures' seats
+ * (any other row, such as an invite a spec sent, is deleted); each
+ * fixture's affiliations converge to its `staff` list (level, source, Team
+ * Member); and the Mobile library's live sessions, events and sharing
+ * settings are cleared. Library writes go through the Document Service, so
+ * the timetable middleware validates the timetable the same way the admin
+ * and the staff area do.
  */
 const { createRequire } = require("node:module")
 const path = require("node:path")
@@ -56,6 +67,18 @@ const SUBMISSION = "plugin::content-moderation.submission"
 const AFFILIATION = "api::library-affiliation.library-affiliation"
 const GRANT = "api::entitlement-grant.entitlement-grant"
 const VERIFICATION = "api::pro-verification.pro-verification"
+const LIBRARY = "api::library.library"
+const TEAM = "plugin::access.team"
+const TEAM_MEMBER = "plugin::access.team-member"
+const LIVE_SETTING = "plugin::mobile-libraries.live-setting"
+const LIVE_SESSION = "plugin::mobile-libraries.live-session"
+const LIVE_EVENT = "plugin::mobile-libraries.live-event"
+
+const LIBRARY_KEYS = new Set(["public", "second", "mobile"])
+const STAFF_ROLES = new Set(["owner", "editor"])
+const STAFF_SOURCES = new Set(["claim", "team"])
+const TEAM_ROLES = new Set(["organiser", "member"])
+const SLUG = /^[a-z0-9-]{3,100}$/
 
 const DAY_MS = 86_400_000
 // pro-verified's verification runs a year. One with under 30 days left is
@@ -120,6 +143,19 @@ function standing(plan) {
 
 // null, undefined and an empty list all count as cleared.
 const isCleared = (v) => v == null || (Array.isArray(v) && v.length === 0)
+
+/** JSON with object keys sorted, so a jsonb round trip compares equal. */
+function canonical(value) {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`
+  if (value && typeof value === "object")
+    return `{${Object.keys(value)
+      .sort()
+      .map((k) => `${JSON.stringify(k)}:${canonical(value[k])}`)
+      .join(",")}}`
+
+  return JSON.stringify(value === undefined ? null : value)
+}
+const sameJson = (a, b) => canonical(a ?? null) === canonical(b ?? null)
 
 const matches = (current, target) =>
   isCleared(target) ? isCleared(current) : current === target
@@ -359,44 +395,400 @@ async function ensureLocales(strapi, codes) {
 }
 
 /**
- * Converges affiliations: the claiming fixture ends with exactly one, on
- * claimLibrary; every other fixture ends with none.
+ * The affiliations a fixture should hold: its `staff` entries on the fixture
+ * libraries (converged exactly) and, for the legacy `claim` fixture, one row
+ * on `claimLibrary` matched on the library alone and never rewritten.
  */
-async function applyClaim(strapi, item) {
+function wantedAffiliations(item, libraries, memberId) {
+  const wanted = (item.staff ?? []).map((s) => ({
+    libraryDocumentId: libraries[s.library].documentId,
+    exact: true,
+    data: {
+      staffRole: s.staffRole,
+      source: s.source,
+      canGoLive: s.canGoLive !== false,
+      verificationMethod: s.source === "team" ? "team" : "contact_us",
+      teamMemberDocumentId: s.source === "team" ? memberId : null,
+    },
+  }))
+  if (item.claimLibrary)
+    wanted.push({ libraryDocumentId: item.claimLibrary, exact: false })
+
+  return wanted
+}
+
+/**
+ * Converges affiliations: the fixture ends with exactly its wanted rows (a
+ * `claim` fixture's legacy row is matched on the library only; a `staff`
+ * row also on level, source, live permission and Team Member); every other
+ * row is deleted. Each write runs the affiliation lifecycle (hasStaff, the
+ * session cache, the audit and emails), as a claim approval would.
+ */
+async function applyAffiliations(strapi, item, wanted) {
   const existing = await strapi.documents(AFFILIATION).findMany({
     filters: { baUserId: { $eq: item.baUserId } },
-    populate: { library: { fields: ["documentId"] } },
+    populate: {
+      library: { fields: ["documentId"] },
+      teamMember: { fields: ["documentId"] },
+    },
     limit: 100,
   })
-  let kept = false
+  const pending = wanted.map((w) => ({ ...w, kept: false }))
   let removed = 0
+  let updated = 0
   for (const a of existing) {
-    if (
-      item.claimLibrary &&
-      !kept &&
-      a.library?.documentId === item.claimLibrary
-    ) {
-      kept = true
+    const match = pending.find(
+      (w) => !w.kept && a.library?.documentId === w.libraryDocumentId
+    )
+    if (!match) {
+      await strapi.documents(AFFILIATION).delete({ documentId: a.documentId })
+      removed++
       continue
     }
-    await strapi.documents(AFFILIATION).delete({ documentId: a.documentId })
-    removed++
+    match.kept = true
+    if (!match.exact) continue
+    const { teamMemberDocumentId, ...fields } = match.data
+    const differs =
+      Object.keys(fields).some((k) => a[k] !== fields[k]) ||
+      (a.teamMember?.documentId ?? null) !== teamMemberDocumentId
+    if (!differs) continue
+    await strapi.documents(AFFILIATION).update({
+      documentId: a.documentId,
+      data: {
+        ...fields,
+        teamMember: {
+          set: teamMemberDocumentId
+            ? [{ documentId: teamMemberDocumentId }]
+            : [],
+        },
+      },
+    })
+    updated++
   }
-  let created = false
-  if (item.claimLibrary && !kept) {
+  let created = 0
+  for (const w of pending) {
+    if (w.kept) continue
+    const { teamMemberDocumentId, ...fields } = w.exact
+      ? w.data
+      : // Schema enum is email_domain | vouching | contact_us | team; a
+        // moderated (manually reviewed) claim is contact_us, the default.
+        { verificationMethod: "contact_us", teamMemberDocumentId: null }
     await strapi.documents(AFFILIATION).create({
       data: {
         baUserId: item.baUserId,
-        // Schema enum is email_domain | vouching | contact_us; a moderated
-        // (manually reviewed) claim is contact_us, the schema default.
-        verificationMethod: "contact_us",
-        library: { connect: [{ documentId: item.claimLibrary }] },
+        ...fields,
+        approvedAt: new Date().toISOString(),
+        library: { connect: [{ documentId: w.libraryDocumentId }] },
+        ...(teamMemberDocumentId
+          ? { teamMember: { connect: [{ documentId: teamMemberDocumentId }] } }
+          : {}),
       },
     })
-    created = true
+    created++
   }
 
-  return { claimCreated: created, claimsRemoved: removed }
+  return {
+    claimCreated: created > 0 && !!item.claimLibrary,
+    claimsRemoved: removed,
+    staffCreated: created,
+    staffUpdated: updated,
+    staffRemoved: removed,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Fixture libraries, Team and live state (staff area round 2).
+// ---------------------------------------------------------------------------
+
+/**
+ * The continent, country and region of the first published library that
+ * has all three (the fixtures' own excluded), so the fixture libraries get
+ * a public path and can be published.
+ */
+async function basePlaces(strapi, fixtureSlugs) {
+  const rows = await strapi.documents(LIBRARY).findMany({
+    status: "published",
+    filters: {
+      libraryType: { $ne: "Mobile" },
+      slug: { $notIn: fixtureSlugs },
+    },
+    fields: ["documentId", "slug"],
+    populate: {
+      continent: { fields: ["documentId"] },
+      country: { fields: ["documentId"] },
+      region: { fields: ["documentId"] },
+    },
+    sort: "id:asc",
+    limit: 50,
+  })
+  const base = rows.find(
+    (r) =>
+      r.continent?.documentId && r.country?.documentId && r.region?.documentId
+  )
+  if (!base)
+    throw new Error(
+      "Refusing: no published library with a continent, country and region to place the fixture libraries under"
+    )
+
+  return {
+    continent: base.continent.documentId,
+    country: base.country.documentId,
+    region: base.region.documentId,
+  }
+}
+
+/** The library's current row: the published version, else its draft. */
+async function libraryBySlug(strapi, slug) {
+  for (const status of ["published", "draft"]) {
+    const [row] = await strapi.documents(LIBRARY).findMany({
+      filters: { slug: { $eq: slug } },
+      status,
+      populate: { homeLibrary: { fields: ["documentId"] } },
+      limit: 1,
+    })
+    if (row) return { row, published: status === "published" }
+  }
+
+  return { row: null, published: false }
+}
+
+/**
+ * Finds or creates one fixture library, published, and converges the
+ * fields the specs change (hours, address, name). A Mobile library carries
+ * the timetable and its home base, whose location the timetable middleware
+ * copies.
+ */
+async function ensureLibrary(strapi, spec, options, places, shared) {
+  const mobile = spec.libraryType === "Mobile"
+  const data = {
+    name: spec.name,
+    libraryType: spec.libraryType,
+    operationalStatus: "open",
+    summary: spec.summary,
+    timezone: options.timezone,
+    ...(mobile
+      ? {
+          operatorName: "Access Fixture Library Service",
+          homeLibrary: { set: [{ documentId: shared.public.documentId }] },
+          mobileTimetable: options.timetable,
+        }
+      : {
+          location: spec.location,
+          streetAddress: spec.streetAddress,
+          city: spec.city,
+          postalCode: spec.postalCode,
+          openingTimes: options.openingTimes,
+        }),
+  }
+  const { row, published } = await libraryBySlug(strapi, spec.slug)
+  if (!row) {
+    const created = await strapi.documents(LIBRARY).create({
+      data: {
+        ...data,
+        slug: spec.slug,
+        entityRef: `ACCESS-FIXTURE-${spec.key.toUpperCase()}`,
+        continent: { connect: [{ documentId: places.continent }] },
+        country: { connect: [{ documentId: places.country }] },
+        region: { connect: [{ documentId: places.region }] },
+      },
+      status: "published",
+    })
+
+    return { documentId: created.documentId, created: true, updated: false }
+  }
+  const { normalizeMobileTimetable, timetableHash } = shared.timetable
+  const differs =
+    !published ||
+    ["name", "libraryType", "operationalStatus", "summary", "timezone"].some(
+      (k) => row[k] !== data[k]
+    ) ||
+    (mobile
+      ? row.operatorName !== data.operatorName ||
+        row.homeLibrary?.documentId !== shared.public.documentId ||
+        timetableHash(normalizeMobileTimetable(row.mobileTimetable)) !==
+          timetableHash(normalizeMobileTimetable(options.timetable))
+      : ["streetAddress", "city", "postalCode"].some(
+          (k) => row[k] !== data[k]
+        ) ||
+        !sameJson(row.location, data.location) ||
+        !sameJson(row.openingTimes, data.openingTimes))
+  if (differs)
+    await strapi.documents(LIBRARY).update({
+      documentId: row.documentId,
+      data,
+      status: "published",
+    })
+
+  return { documentId: row.documentId, created: false, updated: differs }
+}
+
+/** The fixture libraries, Public ones first (the Mobile one needs its home). */
+async function ensureLibraries(strapi, options) {
+  const places = await basePlaces(
+    strapi,
+    options.libraries.map((l) => l.slug)
+  )
+  const shared = {
+    public: null,
+    timetable: requireFromStrapi("@repo/shared-data"),
+  }
+  const out = {}
+  const ordered = [...options.libraries].sort((a, b) =>
+    a.libraryType === b.libraryType ? 0 : a.libraryType === "Mobile" ? 1 : -1
+  )
+  for (const spec of ordered) {
+    out[spec.key] = await ensureLibrary(strapi, spec, options, places, shared)
+    if (spec.key === "public") shared.public = out[spec.key]
+  }
+
+  return out
+}
+
+/**
+ * Finds or creates the fixture Team by slug: verified (set once, never
+ * cleared), active, open-ended, with the fixture libraries it covers.
+ */
+async function ensureTeam(strapi, team, libraryIds) {
+  const [existing] = await strapi.documents(TEAM).findMany({
+    filters: { slug: { $eq: team.slug } },
+    populate: { libraries: { fields: ["documentId"] } },
+    limit: 1,
+  })
+  const data = {
+    name: team.name,
+    seats: team.seats,
+    status: "active",
+    source: "admin",
+    expiresAt: null,
+    libraries: { set: libraryIds.map((documentId) => ({ documentId })) },
+  }
+  const now = new Date().toISOString()
+  if (!existing) {
+    const created = await strapi.documents(TEAM).create({
+      data: {
+        ...data,
+        slug: team.slug,
+        verifiedAt: now,
+        notes: "Access fixture Team (seeded by qa/tests/playwright)",
+        createdByAdmin: "seed:access",
+      },
+    })
+
+    return { documentId: created.documentId, created: true, updated: false }
+  }
+  const covered = (existing.libraries ?? []).map((l) => l.documentId).sort()
+  const differs =
+    existing.name !== data.name ||
+    existing.seats !== data.seats ||
+    existing.status !== data.status ||
+    existing.expiresAt != null ||
+    existing.verifiedAt == null ||
+    canonical(covered) !== canonical([...libraryIds].sort())
+  if (differs)
+    await strapi.documents(TEAM).update({
+      documentId: existing.documentId,
+      data: { ...data, verifiedAt: existing.verifiedAt ?? now },
+    })
+
+  return { documentId: existing.documentId, created: false, updated: differs }
+}
+
+/**
+ * Converges the Team's member rows to the fixtures' seats: one active row
+ * per seated fixture (matched on email), and every other row deleted, so
+ * the invites a spec sent are gone. Returns each seated email's row id.
+ */
+async function applyTeamMembers(strapi, teamId, seats) {
+  const rows = await strapi.documents(TEAM_MEMBER).findMany({
+    filters: { team: { documentId: { $eq: teamId } } },
+    sort: "id:asc",
+    limit: 600,
+  })
+  const now = new Date().toISOString()
+  const pending = seats.map((seat) => ({ ...seat, state: null, rowId: null }))
+  let strayRemoved = 0
+  for (const row of rows) {
+    const seat = pending.find(
+      (s) => !s.rowId && (row.email ?? "").toLowerCase() === s.email
+    )
+    if (!seat) {
+      await strapi.documents(TEAM_MEMBER).delete({ documentId: row.documentId })
+      strayRemoved++
+      continue
+    }
+    seat.rowId = row.documentId
+    const data = {
+      baUserId: seat.baUserId,
+      teamRole: seat.teamRole,
+      status: "active",
+      tokenHash: null,
+      removedAt: null,
+      preassign: null,
+    }
+    const differs = Object.keys(data).some((k) => (row[k] ?? null) !== data[k])
+    if (!differs) {
+      seat.state = "present"
+      continue
+    }
+    await strapi.documents(TEAM_MEMBER).update({
+      documentId: row.documentId,
+      data: { ...data, acceptedAt: row.acceptedAt ?? now },
+    })
+    seat.state = "updated"
+  }
+  for (const seat of pending) {
+    if (seat.rowId) continue
+    const created = await strapi.documents(TEAM_MEMBER).create({
+      data: {
+        team: { connect: [{ documentId: teamId }] },
+        email: seat.email,
+        baUserId: seat.baUserId,
+        teamRole: seat.teamRole,
+        status: "active",
+        tokenHash: null,
+        invitedBy: "seed:access",
+        invitedAt: now,
+        acceptedAt: now,
+        removedAt: null,
+        preassign: null,
+      },
+    })
+    seat.rowId = created.documentId
+    seat.state = "created"
+  }
+
+  return {
+    strayRemoved,
+    seats: new Map(pending.map((s) => [s.baUserId, s])),
+  }
+}
+
+/**
+ * Clears the Mobile fixture library's live state: every session (and its
+ * events) and the sharing settings, so the live spec starts from "sharing
+ * off" and never meets a session an earlier run left active.
+ */
+async function resetLive(strapi, libraryDocumentId) {
+  const sessions = await strapi.documents(LIVE_SESSION).findMany({
+    filters: { libraryDocumentId: { $eq: libraryDocumentId } },
+    fields: ["documentId"],
+    limit: 500,
+  })
+  for (const s of sessions) {
+    await strapi.db
+      .query(LIVE_EVENT)
+      .deleteMany({ where: { sessionDocumentId: s.documentId } })
+    await strapi.documents(LIVE_SESSION).delete({ documentId: s.documentId })
+  }
+  const settings = await strapi.documents(LIVE_SETTING).findMany({
+    filters: { libraryDocumentId: { $eq: libraryDocumentId } },
+    fields: ["documentId"],
+    limit: 10,
+  })
+  for (const row of settings)
+    await strapi.documents(LIVE_SETTING).delete({ documentId: row.documentId })
+
+  return { sessionsRemoved: sessions.length, settingsRemoved: settings.length }
 }
 
 /** The one entitlement-grant a fixture's plan wants, or null for none. */
@@ -513,6 +905,26 @@ function assertPlan(plan) {
         !(g?.locale === null || LOCALE_CODE.test(String(g?.locale)))
       )
         throw new Error(`Refusing: plan item ${i} has an invalid role grant`)
+    if (item.staff !== undefined) {
+      if (!Array.isArray(item.staff))
+        throw new Error(`Refusing: plan item ${i} has an invalid staff list`)
+      for (const st of item.staff)
+        if (
+          !LIBRARY_KEYS.has(st?.library) ||
+          !STAFF_ROLES.has(st?.staffRole) ||
+          !STAFF_SOURCES.has(st?.source) ||
+          typeof st?.canGoLive !== "boolean"
+        )
+          throw new Error(`Refusing: plan item ${i} has an invalid staff entry`)
+    }
+    if (
+      !(
+        item.team === null ||
+        item.team === undefined ||
+        TEAM_ROLES.has(item.team)
+      )
+    )
+      throw new Error(`Refusing: plan item ${i} has an invalid team role`)
   }
 }
 
@@ -522,8 +934,57 @@ function readOptions() {
   const locales = Array.isArray(options.locales) ? options.locales : []
   if (!locales.every((c) => typeof c === "string" && LOCALE_CODE.test(c)))
     throw new Error("Refusing: ACCESS_SEED_OPTIONS has an invalid locale")
+  const libraries = Array.isArray(options.libraries) ? options.libraries : []
+  if (
+    libraries.length !== LIBRARY_KEYS.size ||
+    !libraries.every(
+      (l) =>
+        LIBRARY_KEYS.has(l?.key) &&
+        typeof l.slug === "string" &&
+        SLUG.test(l.slug) &&
+        typeof l.name === "string" &&
+        l.name.length > 0 &&
+        (l.libraryType === "Public" || l.libraryType === "Mobile") &&
+        typeof l.summary === "string" &&
+        typeof l.location?.lat === "number" &&
+        typeof l.location?.lng === "number" &&
+        typeof l.streetAddress === "string" &&
+        typeof l.city === "string" &&
+        typeof l.postalCode === "string"
+    ) ||
+    new Set(libraries.map((l) => l.key)).size !== libraries.length
+  )
+    throw new Error("Refusing: ACCESS_SEED_OPTIONS has invalid libraries")
+  const team = options.team
+  if (
+    typeof team?.slug !== "string" ||
+    !SLUG.test(team.slug) ||
+    typeof team.name !== "string" ||
+    !Number.isInteger(team.seats) ||
+    team.seats < 1 ||
+    !Array.isArray(team.libraries) ||
+    !team.libraries.every((k) => LIBRARY_KEYS.has(k))
+  )
+    throw new Error("Refusing: ACCESS_SEED_OPTIONS has an invalid team")
+  if (typeof options.timezone !== "string" || !options.timezone)
+    throw new Error("Refusing: ACCESS_SEED_OPTIONS has no timezone")
+  if (!Array.isArray(options.openingTimes?.days))
+    throw new Error("Refusing: ACCESS_SEED_OPTIONS has no openingTimes")
+  if (
+    options.timetable?.version !== 1 ||
+    !Array.isArray(options.timetable.stops) ||
+    !Array.isArray(options.timetable.visits)
+  )
+    throw new Error("Refusing: ACCESS_SEED_OPTIONS has no timetable")
 
-  return { locales }
+  return {
+    locales,
+    libraries,
+    team,
+    timezone: options.timezone,
+    openingTimes: options.openingTimes,
+    timetable: options.timetable,
+  }
 }
 
 async function main() {
@@ -548,12 +1009,38 @@ async function main() {
   const fixtures = []
   const now = Date.now()
   let localesCreated = []
+  let libraries = {}
+  let team = null
+  let live
   try {
     localesCreated = await ensureLocales(strapi, options.locales)
+    libraries = await ensureLibraries(strapi, options)
+    const teamRow = await ensureTeam(
+      strapi,
+      options.team,
+      options.team.libraries.map((k) => libraries[k].documentId)
+    )
+    const members = await applyTeamMembers(
+      strapi,
+      teamRow.documentId,
+      plan
+        .filter((item) => item.team)
+        .map((item) => ({
+          email: item.email.toLowerCase(),
+          baUserId: item.baUserId,
+          teamRole: item.team,
+        }))
+    )
+    team = { ...teamRow, strayMembersRemoved: members.strayRemoved }
     for (const item of plan) {
       const profileChanged = await applyProfile(strapi, item)
       const roles = await applyRoleGrants(strapi, item, syncDerivedRole)
-      const claim = await applyClaim(strapi, item)
+      const seat = members.seats.get(item.baUserId) ?? null
+      const affiliations = await applyAffiliations(
+        strapi,
+        item,
+        wantedAffiliations(item, libraries, seat?.rowId ?? null)
+      )
       const grant = await applyGrants(strapi, item)
       const verification = await applyVerifications(strapi, item, now)
       const submissions = await applySubmissions(strapi, item, now)
@@ -561,17 +1048,19 @@ async function main() {
         baUserId: item.baUserId,
         profileChanged,
         ...roles,
-        ...claim,
+        ...affiliations,
+        teamSeat: seat?.state ?? null,
         ...grant,
         ...verification,
         ...submissions,
       })
     }
+    live = await resetLive(strapi, libraries.mobile.documentId)
   } finally {
     await strapi.destroy()
   }
   process.stdout.write(
-    `ACCESS_SEED_RESULT ${JSON.stringify({ fixtures, localesCreated })}\n`
+    `ACCESS_SEED_RESULT ${JSON.stringify({ fixtures, localesCreated, libraries, team, live })}\n`
   )
 }
 

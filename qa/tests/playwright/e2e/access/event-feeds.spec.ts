@@ -43,6 +43,10 @@ let librarian: APIRequestContext
 let moderator: APIRequestContext
 let otherLibraryId = ""
 let feedSubmissionId = ""
+/** The librarian's claimed library: its feeds live at /staff/[slug]/events;
+ * the API calls keep its document id. */
+let libraryId = ""
+let librarySlug = ""
 
 const reviewLink = (documentId: string) =>
   `a[href$="/contribute/moderation/${documentId}"]`
@@ -58,6 +62,10 @@ test.beforeAll(async ({ playwright }, testInfo) => {
     throw new Error(
       "librarian lacks events.feed. Run `pnpm seed:access` (it needs a claim)."
     )
+  libraryId = librarianUser.staffLibraries[0]?.id ?? ""
+  librarySlug = librarianUser.staffLibraries[0]?.slug ?? ""
+  if (!libraryId || !librarySlug)
+    throw new Error("librarian's session lists no staff library")
 
   // The seed claims the first published library (sorted by id) for
   // `librarian`. A second, different library is needed for the refusal
@@ -81,15 +89,18 @@ test("a reader without a claim is asked to claim a library first", async ({
   browser,
   baseURL,
 }) => {
+  // Event feeds live in the Staff area; a reader has no library there.
   const page = await pageAs(browser, reader, baseURL!)
   browserContexts.push(page.context())
-  await page.goto("/contribute/events", NAVIGATION)
+  await page.goto("/staff", NAVIGATION)
   await expect(
-    page.getByRole("heading", { name: /Claim your library first/ })
+    page.getByRole("link", { name: "Claim your library" })
   ).toBeVisible(NAVIGATION)
   await expect(page.getByRole("link", { name: "Connect a feed" })).toHaveCount(
     0
   )
+  const denied = await page.goto(`/staff/${librarySlug}/events`, NAVIGATION)
+  expect(denied?.status()).toBe(404)
 })
 
 test("a librarian connects, tests and sends an iCal feed for review", async ({
@@ -99,12 +110,14 @@ test("a librarian connects, tests and sends an iCal feed for review", async ({
   const page = await pageAs(browser, librarian, baseURL!)
   browserContexts.push(page.context())
 
-  await page.goto("/contribute/events", NAVIGATION)
+  await page.goto(`/staff/${librarySlug}/events`, NAVIGATION)
   await expect(
-    page.getByRole("heading", { level: 1, name: /event feeds/i })
+    page.getByRole("navigation", { name: "Staff area" }).getByRole("link", {
+      name: "Event feeds",
+    })
   ).toBeVisible(NAVIGATION)
   await page.getByRole("link", { name: "Connect a feed" }).click()
-  await page.waitForURL(/\/contribute\/events\/connect/, NAVIGATION)
+  await page.waitForURL(/\/staff\/[a-z0-9._-]+\/events\/connect/, NAVIGATION)
 
   await page.getByText("Calendar feed (.ics)", { exact: true }).click()
   const addressField = page.getByLabel("Calendar address")
@@ -116,7 +129,7 @@ test("a librarian connects, tests and sends an iCal feed for review", async ({
   ).toBeVisible(NAVIGATION)
 
   await page.getByRole("button", { name: "Send for review" }).click()
-  await page.waitForURL(/\/contribute\/events(\?|$)/, NAVIGATION)
+  await page.waitForURL(/\/staff\/[a-z0-9._-]+\/events(\?|$)/, NAVIGATION)
   await expect(page.getByText("Waiting for review")).toBeVisible(NAVIGATION)
 
   // The submission it just created, for the Moderator steps below. Event
@@ -172,7 +185,7 @@ test("the librarian sees the feed active, pauses it and disconnects it", async (
 
   // One claimed library, one feed (just approved above), so page-level
   // locators are unambiguous: no need to scope to its row.
-  await page.goto("/contribute/events", NAVIGATION)
+  await page.goto(`/staff/${librarySlug}/events`, NAVIGATION)
   await expect(page.getByText("Active", { exact: true })).toBeVisible(
     NAVIGATION
   )

@@ -22,6 +22,15 @@
  * removed, and every submission the specs created is deleted (the
  * applicant's five accepted ones stay). It also adds any locale the fixture
  * grants name (fr) to Strapi's i18n plugin if it's missing.
+ *
+ * Staff area round 2: the writer also creates the three fixture libraries
+ * (FIXTURE_LIBRARIES: two Public, one Mobile with a timetable, placed under
+ * the first published library's continent, country and region), the
+ * verified fixture Team (FIXTURE_TEAM) with its members, each staff
+ * fixture's affiliations (level, source, Team Member), and clears the
+ * Mobile library's live sessions and sharing settings. All of it converges:
+ * a run after the specs restores the hours they published, removes the
+ * invites they sent and the assignments they made.
  */
 import { execFile } from "node:child_process"
 import { createRequire } from "node:module"
@@ -36,8 +45,15 @@ import {
   derivedRole,
   emailFor,
   type FixtureGrant,
+  FIXTURE_LIBRARIES,
   FIXTURE_LOCALES,
+  FIXTURE_OPENING_TIMES,
+  FIXTURE_TEAM,
+  FIXTURE_TIMEZONE,
   type FixturePlan,
+  type FixtureStaff,
+  type FixtureTeamRole,
+  fixtureMobileTimetable,
   fixturePassword,
   FIXTURES,
   retryAfterMs,
@@ -65,6 +81,10 @@ type PlanItem = {
   username: string | null
   plan: FixturePlan | null
   claimLibrary: string | null
+  /** Affiliations on the fixture libraries, converged exactly. */
+  staff: readonly FixtureStaff[]
+  /** An active seat on the fixture Team, or none. */
+  team: FixtureTeamRole | null
   trackRecord: number
   signedUpNow: boolean
   passwordReset: boolean
@@ -78,6 +98,10 @@ type WriteResult = {
   roleGrantsRemoved: number
   claimCreated: boolean
   claimsRemoved: number
+  staffCreated: number
+  staffUpdated: number
+  staffRemoved: number
+  teamSeat: "created" | "updated" | "present" | null
   grantCreated: boolean
   grantsRemoved: number
   verificationCreated: boolean
@@ -85,9 +109,18 @@ type WriteResult = {
   submissionsCreated: number
   submissionsRemoved: number
 }
+type LibraryResult = { documentId: string; created: boolean; updated: boolean }
 type WriterOutput = {
   fixtures: WriteResult[]
   localesCreated: string[]
+  libraries: Record<string, LibraryResult>
+  team: {
+    documentId: string
+    created: boolean
+    updated: boolean
+    strayMembersRemoved: number
+  }
+  live: { sessionsRemoved: number; settingsRemoved: number }
 }
 
 function assertLocal(): void {
@@ -116,7 +149,11 @@ function assertLocal(): void {
 /** Strapi REST reads (GET only). */
 async function strapiGet(pathAndQuery: string) {
   const res = await fetch(`${process.env.STRAPI_URL}${pathAndQuery}`, {
-    headers: { Authorization: `Bearer ${process.env.STRAPI_SEED_TOKEN}` },
+    // Library selection exercises the same published public API as the UI.
+    // Sending an expired admin token would reject an otherwise public read.
+    headers: pathAndQuery.startsWith("/api/libraries?")
+      ? undefined
+      : { Authorization: `Bearer ${process.env.STRAPI_SEED_TOKEN}` },
   })
   if (!res.ok)
     throw new Error(`GET ${pathAndQuery} → ${res.status} ${await res.text()}`)
@@ -238,11 +275,23 @@ async function runWriter(plan: PlanItem[]): Promise<WriterOutput> {
           username: item.username,
           plan: item.plan,
           claimLibrary: item.claimLibrary,
+          staff: item.staff.map((s) => ({
+            library: s.library,
+            staffRole: s.staffRole,
+            source: s.source,
+            canGoLive: s.canGoLive ?? true,
+          })),
+          team: item.team,
           trackRecord: item.trackRecord,
         }))
       ),
       ACCESS_SEED_OPTIONS: JSON.stringify({
         locales: FIXTURE_LOCALES,
+        libraries: Object.values(FIXTURE_LIBRARIES),
+        team: FIXTURE_TEAM,
+        timezone: FIXTURE_TIMEZONE,
+        openingTimes: FIXTURE_OPENING_TIMES,
+        timetable: fixtureMobileTimetable(),
       }),
     },
     maxBuffer: 16 * 1024 * 1024,
@@ -271,6 +320,14 @@ function describeResult(item: PlanItem, r: WriteResult): string {
       `onboarding ${r.profileChanged ? "reset" : "pending"}`,
     ],
     [item.claimLibrary !== null, `claim ${createdOrPresent(r.claimCreated)}`],
+    [
+      item.staff.length > 0,
+      `staff of ${item.staff.map((s) => `${s.library} (${s.staffRole}, ${s.source})`).join(", ")}` +
+        `${r.staffCreated > 0 ? `, ${r.staffCreated} created` : ""}` +
+        `${r.staffUpdated > 0 ? `, ${r.staffUpdated} updated` : ""}`,
+    ],
+    [r.staffRemoved > 0, `${r.staffRemoved} stray affiliation(s) removed`],
+    [item.team !== null, `team ${item.team} (seat ${r.teamSeat ?? "present"})`],
     [granted, `grant ${createdOrPresent(r.grantCreated)}`],
     [
       item.plan === "pro-verified",
@@ -350,6 +407,8 @@ export async function seedAccessFixtures(): Promise<void> {
           f.username === null ? null : `access_${f.key.replaceAll("-", "_")}`,
         plan: f.plan ?? null,
         claimLibrary: f.claim ? claimLibrary : null,
+        staff: f.staff ?? [],
+        team: f.team ?? null,
         trackRecord: f.trackRecord ?? 0,
         signedUpNow,
         passwordReset,
@@ -362,6 +421,18 @@ export async function seedAccessFixtures(): Promise<void> {
   const output = await runWriter(plan)
   for (const code of output.localesCreated)
     console.log(`Strapi locale ${code} added (fixture grants name it)`)
+  for (const [key, lib] of Object.entries(output.libraries))
+    console.log(
+      `library ${key}: ${lib.created ? "created" : lib.updated ? "updated" : "present"} (${lib.documentId})`
+    )
+  console.log(
+    `team ${FIXTURE_TEAM.slug}: ${output.team.created ? "created" : output.team.updated ? "updated" : "present"}` +
+      `${output.team.strayMembersRemoved > 0 ? `, ${output.team.strayMembersRemoved} stray member row(s) removed` : ""}`
+  )
+  if (output.live.sessionsRemoved || output.live.settingsRemoved)
+    console.log(
+      `mobile live: ${output.live.sessionsRemoved} session(s) and ${output.live.settingsRemoved} setting row(s) cleared`
+    )
   let mayBeStale = false
   for (const item of plan) {
     const r = output.fixtures.find((x) => x.baUserId === item.baUserId)
@@ -374,6 +445,11 @@ export async function seedAccessFixtures(): Promise<void> {
       r.roleGrantsRemoved > 0 ||
       r.claimCreated ||
       r.claimsRemoved > 0 ||
+      r.staffCreated > 0 ||
+      r.staffUpdated > 0 ||
+      r.staffRemoved > 0 ||
+      r.teamSeat === "created" ||
+      r.teamSeat === "updated" ||
       r.grantCreated ||
       r.grantsRemoved > 0 ||
       r.verificationCreated ||
@@ -383,6 +459,12 @@ export async function seedAccessFixtures(): Promise<void> {
     // is cached for them. An existing one might, and the cache only expires.
     if (changed && !item.signedUpNow) mayBeStale = true
   }
+  if (
+    output.team.created ||
+    output.team.updated ||
+    Object.values(output.libraries).some((l) => l.created)
+  )
+    mayBeStale = true
   if (mayBeStale) {
     console.log("existing fixture changed; waiting out the 60 s session cache")
     await sleep(SESSION_CACHE_TTL_MS + 1000)
@@ -391,6 +473,8 @@ export async function seedAccessFixtures(): Promise<void> {
 
 if (require.main === module) {
   dotenv.config({ path: path.resolve(__dirname, "../.env"), quiet: true })
+  // Local fixtures use the running UI's bridge when qa has no override.
+  dotenv.config({ path: path.join(UI_APP_DIR, ".env.local"), quiet: true })
   // CommonJS entry point (require.main), so no top-level await here.
   // eslint-disable-next-line unicorn/prefer-top-level-await
   seedAccessFixtures().then(

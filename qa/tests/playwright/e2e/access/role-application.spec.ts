@@ -92,13 +92,20 @@ test("an applicant with five accepted changes applies; once approved, their sess
   ).toBeChecked()
 
   const send = page.getByRole("button", { name: "Send application" })
-  const sent = page.getByRole("heading", { name: "Application sent" })
+  // The confirmation is a Notice titled "Application sent" (not a heading)
+  // above the "Thanks. We’ve got your application." heading.
+  const sent = page.getByText("Application sent", { exact: true })
   let documentId = ""
   // The statement is React state, and a submit before hydration reloads the
   // page, so each try fills it again.
   await expect(async () => {
     if (await sent.isVisible()) return
     await page.getByLabel(/Why you.re applying/).fill(STATEMENT)
+    // The form refuses to send until the guidelines are confirmed; the box
+    // is React state too, so it is ticked again on every try.
+    await page
+      .getByRole("checkbox", { name: /read the editor guidelines/ })
+      .check()
     const posted = page.waitForResponse(
       (r) =>
         new URL(r.url()).pathname === "/api/submissions" &&

@@ -72,6 +72,11 @@ if (accessProjectEnabled) {
     // per IP: one worker makes the files take turns rather than race.
     workers: 1,
     retries: 0,
+    // The project timeout is also the beforeAll/afterAll hook timeout
+    // (test.describe.configure only covers tests). A hook that signs in
+    // three or four fixtures after another file has spent the minute's
+    // budget waits out a 429 or two, which the 30 s default cut short.
+    timeout: 300_000,
     use: {
       ...devices["Desktop Chrome"],
       // A trace would record the fixture password in the sign-in POST

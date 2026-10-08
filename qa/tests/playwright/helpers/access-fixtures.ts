@@ -72,6 +72,27 @@ export type FixtureGrant = {
   locale?: string | null
 }
 
+export type StaffRole = "owner" | "editor"
+
+/** The libraries the seed creates for the staff and team specs. */
+export type FixtureLibraryKey = "public" | "second" | "mobile"
+
+/**
+ * One staff membership (a `library-affiliation`) on a fixture library. The
+ * seed converges staffRole, source, canGoLive and, for `team`, the Team
+ * Member it hangs off; every other affiliation of the fixture is deleted.
+ */
+export type FixtureStaff = {
+  library: FixtureLibraryKey
+  staffRole: StaffRole
+  /** `claim`: an approved Library Claim. `team`: a Team organiser's assignment. */
+  source: "claim" | "team"
+  /** Whether they may open the live console (Mobile). Default true. */
+  canGoLive?: boolean
+}
+
+export type FixtureTeamRole = "organiser" | "member"
+
 export type Fixture = {
   key: string
   /**
@@ -80,8 +101,15 @@ export type Fixture = {
    * Plans never change them: money never buys trust.
    */
   grants: readonly FixtureGrant[]
-  /** Holds one approved library claim (a library-affiliation). */
+  /**
+   * Holds one approved library claim on the first published library (the
+   * `librarian` fixture's legacy shape; matched on the library only).
+   */
   claim: boolean
+  /** Staff memberships on the fixture libraries (FIXTURE_LIBRARIES). */
+  staff?: readonly FixtureStaff[]
+  /** An active seat on the fixture Team (FIXTURE_TEAM), in this role. */
+  team?: FixtureTeamRole
   plan?: FixturePlan
   /**
    * null: every seed clears the username and the fields onboarding writes,
@@ -140,7 +168,279 @@ export const FIXTURES: readonly Fixture[] = [
   { key: "pro-earned", grants: [], claim: false, plan: "pro-earned" },
   { key: "pro-verified", grants: [], claim: false, plan: "pro-verified" },
   { key: "team", grants: [], claim: false, plan: "team-grant" },
+  // Staff area round 2 (staff-area, team, staff-drawer and live specs). The
+  // claim-sourced rows stand for approved Library Claims, so these fixtures
+  // hold the `verified_librarian` grant a claim approval gives.
+  //
+  // Owner of the Public fixture library and of the Second one, which no
+  // Team covers (the Team gate panel).
+  {
+    key: "staff-owner",
+    grants: holds("verified_librarian"),
+    claim: false,
+    staff: [
+      { library: "public", staffRole: "owner", source: "claim" },
+      { library: "second", staffRole: "owner", source: "claim" },
+    ],
+  },
+  // Editor of the Public library by claim, and a member of the Team that
+  // covers it: Team features are on only for the libraries of the viewer's
+  // own Team, so the no-lock check needs the seat.
+  {
+    key: "staff-editor",
+    grants: holds("verified_librarian"),
+    claim: false,
+    staff: [{ library: "public", staffRole: "editor", source: "claim" }],
+    team: "member",
+  },
+  // Owner of the Mobile library, allowed to go live.
+  {
+    key: "mobile-owner",
+    grants: holds("verified_librarian"),
+    claim: false,
+    staff: [
+      {
+        library: "mobile",
+        staffRole: "owner",
+        source: "claim",
+        canGoLive: true,
+      },
+    ],
+  },
+  // Organises the Team (Public + Mobile, 5 seats); staff of the Public
+  // library through the Team.
+  {
+    key: "team-organiser",
+    grants: holds("verified_librarian"),
+    claim: false,
+    team: "organiser",
+    staff: [{ library: "public", staffRole: "owner", source: "team" }],
+  },
+  // An active member, assigned to the Mobile library as editor.
+  {
+    key: "team-member",
+    grants: holds("verified_librarian"),
+    claim: false,
+    team: "member",
+    staff: [{ library: "mobile", staffRole: "editor", source: "team" }],
+  },
 ]
+
+// ---------------------------------------------------------------------------
+// The fixture libraries and Team the seed creates (local Strapi only). Keys
+// are stable: the seed finds each library by slug and converges its fields,
+// so a run after the specs (which publish hours changes) restores them.
+// ---------------------------------------------------------------------------
+
+export type FixtureLibrary = {
+  key: FixtureLibraryKey
+  slug: string
+  name: string
+  libraryType: "Public" | "Mobile"
+  summary: string
+  location: { lat: number; lng: number }
+  streetAddress: string
+  city: string
+  postalCode: string
+}
+
+export const FIXTURE_LIBRARIES: Record<FixtureLibraryKey, FixtureLibrary> = {
+  public: {
+    key: "public",
+    slug: "access-fixture-public-library",
+    name: "Access Fixture Public Library",
+    libraryType: "Public",
+    summary: "A test library for the access E2E. Safe to ignore.",
+    location: { lat: 50.1548, lng: -5.0712 },
+    streetAddress: "1 Fixture Street",
+    city: "Falmouth",
+    postalCode: "TR11 3AA",
+  },
+  second: {
+    key: "second",
+    slug: "access-fixture-second-library",
+    name: "Access Fixture Second Library",
+    libraryType: "Public",
+    summary: "A second test library for the access E2E, outside any Team.",
+    location: { lat: 50.2632, lng: -5.051 },
+    streetAddress: "2 Fixture Lane",
+    city: "Truro",
+    postalCode: "TR1 2AA",
+  },
+  mobile: {
+    key: "mobile",
+    slug: "access-fixture-mobile-library",
+    name: "Access Fixture Mobile Library",
+    libraryType: "Mobile",
+    summary:
+      "A test mobile library for the access E2E, based at the Public one.",
+    location: { lat: 50.1548, lng: -5.0712 },
+    streetAddress: "1 Fixture Street",
+    city: "Falmouth",
+    postalCode: "TR11 3AA",
+  },
+}
+
+/** The fixture libraries' slugs, to tell them from the owner's own data. */
+export const FIXTURE_LIBRARY_SLUGS: readonly string[] = Object.values(
+  FIXTURE_LIBRARIES
+).map((l) => l.slug)
+
+/** The Team covering the Public and Mobile fixture libraries. */
+export const FIXTURE_TEAM = {
+  slug: "access-fixture-team",
+  name: "Access Fixture Team",
+  seats: 5,
+  libraries: ["public", "mobile"] as readonly FixtureLibraryKey[],
+} as const
+
+export const FIXTURE_TIMEZONE = "Europe/London"
+
+/**
+ * The Public library's hours: Monday to Friday 09:00–17:00, Saturday
+ * 10:00–13:00, Sunday closed. Fixed timeframe ids keep a re-run a no-op.
+ * The staff-area spec toggles Monday's closing time and the seed resets it.
+ */
+export const FIXTURE_OPENING_TIMES = {
+  version: 1,
+  days: [
+    ["monday", "09:00", "17:00"],
+    ["tuesday", "09:00", "17:00"],
+    ["wednesday", "09:00", "17:00"],
+    ["thursday", "09:00", "17:00"],
+    ["friday", "09:00", "17:00"],
+    ["saturday", "10:00", "13:00"],
+    ["sunday", null, null],
+  ].map(([day, start, end]) => ({
+    day,
+    enabled: start !== null,
+    timeframes:
+      start === null
+        ? []
+        : [
+            {
+              id: `access-fixture-${day}`,
+              startTime: start,
+              endTime: end,
+              staffing: "staffed",
+            },
+          ],
+  })),
+}
+
+/** The Mobile library's stops, around Falmouth. Ids are 10 lowercase alphanumerics. */
+export const FIXTURE_STOPS = [
+  {
+    id: "stopfx0001",
+    name: "Harbour Car Park",
+    where: "By the slipway",
+    lat: 50.154,
+    lng: -5.068,
+  },
+  {
+    id: "stopfx0002",
+    name: "Village Hall",
+    where: "Front car park",
+    lat: 50.161,
+    lng: -5.081,
+  },
+  {
+    id: "stopfx0003",
+    name: "Primary School",
+    where: "Lay-by on School Road",
+    lat: 50.148,
+    lng: -5.092,
+  },
+  {
+    id: "stopfx0004",
+    name: "Health Centre",
+    where: "Visitor bays",
+    lat: 50.17,
+    lng: -5.06,
+  },
+  {
+    id: "stopfx0005",
+    name: "Market Square",
+    where: "Outside the post office",
+    lat: 50.158,
+    lng: -5.055,
+  },
+  {
+    id: "stopfx0006",
+    name: "Depot Lay-by",
+    where: "Late return stop by the depot",
+    lat: 50.152,
+    lng: -5.076,
+  },
+] as const
+
+/** A Monday: 5 January 2026. */
+export const FIXTURE_TIMETABLE_ANCHOR = "2026-01-05"
+
+const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const
+
+/**
+ * A two-week timetable over six stops: three daytime visits every day of
+ * both weeks (which stops rotate with the day and week) and a late visit to
+ * the Depot Lay-by until 23:55, so a live session can start whenever the
+ * live spec runs (a route that has already finished can't go live). No
+ * westmere fixture exists in @repo/shared-data, so this stands in for it.
+ */
+export function fixtureMobileTimetable() {
+  const visits: {
+    id: string
+    stopId: string
+    day: (typeof WEEKDAYS)[number]
+    arrive: string
+    depart: string
+    repeat: { kind: "cycle"; weeks: number[] }
+    termTimeOnly: boolean
+    validFrom: null
+    validTo: null
+  }[] = []
+  let n = 0
+  const visit = (
+    day: (typeof WEEKDAYS)[number],
+    week: number,
+    stop: number,
+    arrive: string,
+    depart: string
+  ) => {
+    n++
+    visits.push({
+      id: `visitfx${String(n).padStart(3, "0")}`,
+      stopId: FIXTURE_STOPS[stop]!.id,
+      day,
+      arrive,
+      depart,
+      repeat: { kind: "cycle", weeks: [week] },
+      termTimeOnly: false,
+      validFrom: null,
+      validTo: null,
+    })
+  }
+  WEEKDAYS.forEach((day, d) => {
+    for (const week of [1, 2]) {
+      visit(day, week, (d + week) % 5, "09:30", "10:15")
+      visit(day, week, (d + week + 2) % 5, "11:00", "12:00")
+      visit(day, week, (d + week + 4) % 5, "14:00", "15:30")
+      visit(day, week, 5, "22:30", "23:55")
+    }
+  })
+
+  return {
+    version: 1 as const,
+    cycle: { weeks: 2 as const, anchor: FIXTURE_TIMETABLE_ANCHOR },
+    stops: FIXTURE_STOPS.map((s) => ({
+      id: s.id,
+      name: s.name,
+      where: s.where,
+      location: { lat: s.lat, lng: s.lng },
+      areaDocumentId: null,
+    })),
+    visits,
+  }
+}
 
 /** Contributor Roles, lowest first (`CONTRIBUTOR_ROLES` in @repo/access). */
 const ROLE_ORDER = [
@@ -269,6 +569,14 @@ export type SessionUser = {
   capabilities: string[]
   moderationScopes: { queue: string; locale: string | null }[]
   editorLocales: { docs: "all" | string[]; journal: "all" | string[] }
+  staffLibraries: {
+    id: string
+    name: string
+    slug: string
+    libraryType: string | null
+    role: "owner" | "editor"
+    canGoLive: boolean
+  }[]
 }
 
 export async function sessionOf(
@@ -277,6 +585,26 @@ export async function sessionOf(
   const res = await api.get("/api/auth/get-session")
 
   return ((await res.json()) as { user?: SessionUser } | null)?.user ?? null
+}
+
+/**
+ * The fixture library `key` as it appears in `user`'s session, by its slug.
+ * Throws when the session doesn't list it: the seed hasn't run, or Strapi
+ * was rebuilt since.
+ */
+export function staffLibraryOf(
+  user: SessionUser,
+  key: FixtureLibraryKey,
+  fixtureKey: string
+): SessionUser["staffLibraries"][number] {
+  const slug = FIXTURE_LIBRARIES[key].slug
+  const row = user.staffLibraries.find((l) => l.slug === slug)
+  if (!row)
+    throw new Error(
+      `${emailFor(fixtureKey)}'s session lists no staff library "${slug}". Run \`pnpm seed:access\` (after rebuilding Strapi).`
+    )
+
+  return row
 }
 
 /** Throws unless the session loaded its profile (Strapi is reachable). */
@@ -394,7 +722,9 @@ export async function strapiRead<T>(pathAndQuery: string): Promise<T> {
   if (!base || !token)
     throw new Error("Set STRAPI_URL and STRAPI_SEED_TOKEN in qa .env")
   const res = await fetch(`${base}${pathAndQuery}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: pathAndQuery.startsWith("/api/libraries?")
+      ? undefined
+      : { Authorization: `Bearer ${token}` },
   })
   if (!res.ok) throw new Error(`Strapi GET ${pathAndQuery} → ${res.status}`)
 

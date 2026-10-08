@@ -18,6 +18,9 @@ const ALL_SIGNED_IN = [
   "submit.journalPitch",
   "submit.topicSuggestion",
   "submit.roleApplication",
+  // Drives (D1): anyone signed in may propose one; standing is checked at
+  // submit, not in the capability.
+  "submit.driveProposal",
 ]
 
 type Scope = { queue: string; locale: string | null }
@@ -54,8 +57,9 @@ const MATRIX: readonly {
     editorLocales: { docs: [], journal: [] },
   },
   {
+    // An approved claim is a staff membership too (staff area round 2).
     key: "librarian",
-    extra: ["submit.libraryEdit", "events.feed"],
+    extra: ["submit.libraryEdit", "events.feed", "staff.area"],
     directEdit: false,
     journalEdit: false,
     scopes: [],
@@ -78,8 +82,14 @@ const MATRIX: readonly {
     editorLocales: { docs: [], journal: "all" },
   },
   {
+    // The board alone runs Drives (drives.manage).
     key: "editorial",
-    extra: ["docs.directEdit", "journal.directEdit", "moderate.queue"],
+    extra: [
+      "docs.directEdit",
+      "journal.directEdit",
+      "moderate.queue",
+      "drives.manage",
+    ],
     directEdit: true,
     journalEdit: true,
     scopes: [{ queue: "all", locale: null }],
