@@ -59,3 +59,6 @@ apps/strapi/scripts/ingests/**/.runs/
 
 # Local issue tracker, PRDs and import logs (docs/agents/issue-tracker.md): never committed
 .scratch/
+
+# Project docs (specs, plans, ADRs, handoffs): kept locally, not committed
+/docs/
