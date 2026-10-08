@@ -1,0 +1,75 @@
+{
+  "kind": "collectionType",
+  "collectionName": "library_notices",
+  "info": {
+    "singularName": "library-notice",
+    "pluralName": "library-notices",
+    "displayName": "Library Notice",
+    "description": "Temporary service notices, published immediately."
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "library": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::library.library",
+      "required": true
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "closure",
+        "changed_hours",
+        "service",
+        "not_running",
+        "times_changed",
+        "stop_moved",
+        "extra_visit"
+      ],
+      "required": true
+    },
+    "scope": {
+      "type": "enumeration",
+      "enum": ["library", "service", "day", "stop", "term_time"],
+      "default": "library",
+      "required": true
+    },
+    "scopeWeek": { "type": "integer", "min": 1, "max": 4 },
+    "scopeDay": {
+      "type": "enumeration",
+      "enum": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+    },
+    "stopId": { "type": "string", "maxLength": 10 },
+    "reason": {
+      "type": "enumeration",
+      "enum": [
+        "holiday",
+        "school_holidays",
+        "maintenance",
+        "breakdown",
+        "weather",
+        "staffing",
+        "works",
+        "other"
+      ]
+    },
+    "from": { "type": "date", "required": true },
+    "to": { "type": "date" },
+    "hours": { "type": "customField", "customField": "global::opening-times" },
+    "message": {
+      "type": "text",
+      "minLength": 1,
+      "maxLength": 280,
+      "required": true
+    },
+    "source": {
+      "type": "enumeration",
+      "enum": ["staff", "live", "admin"],
+      "default": "admin",
+      "required": true
+    },
+    "createdByBaUserId": { "type": "string", "private": true },
+    "endedByBaUserId": { "type": "string", "private": true },
+    "endedAt": { "type": "datetime" }
+  }
+}
