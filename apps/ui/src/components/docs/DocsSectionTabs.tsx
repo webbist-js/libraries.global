@@ -3,39 +3,52 @@
 import { useSearchParams } from "next/navigation"
 import { Suspense } from "react"
 
-import { DOCS_SECTIONS } from "@/components/docs/docs.config"
+import type { DocsSection } from "@/components/docs/docs.config"
 import { type SectionTab, SectionTabs } from "@/components/ds/SectionTabs"
 
-import { activeDocsSection, type DocsSectionCounts } from "./docs-sections"
+import {
+  activeDocsSection,
+  ALL_SECTIONS,
+  type DocsSectionCounts,
+} from "./docs-sections"
 
-function tabsFor(counts: DocsSectionCounts): SectionTab[] {
+function tabsFor(
+  sections: readonly DocsSection[],
+  counts: DocsSectionCounts
+): SectionTab[] {
   return [
     {
-      id: "all",
+      id: ALL_SECTIONS,
       label: "All sections",
       href: "/knowledge",
       icon: "mdi:book-open-outline",
-      count: DOCS_SECTIONS.reduce((sum, s) => sum + (counts[s.key] ?? 0), 0),
+      count: sections.reduce((sum, s) => sum + (counts[s.slug] ?? 0), 0),
     },
-    ...DOCS_SECTIONS.map((s) => ({
-      id: s.key,
+    ...sections.map((s) => ({
+      id: s.slug,
       label: s.title,
-      href: `/knowledge?section=${s.key}`,
+      href: `/knowledge?section=${s.slug}`,
       icon: s.icon,
-      count: counts[s.key] ?? 0,
+      count: counts[s.slug] ?? 0,
     })),
   ]
 }
 
-function TabsFromUrl({ counts }: { readonly counts: DocsSectionCounts }) {
-  const active = activeDocsSection(useSearchParams().get("section"))
+function TabsFromUrl({
+  sections,
+  counts,
+}: {
+  readonly sections: readonly DocsSection[]
+  readonly counts: DocsSectionCounts
+}) {
+  const active = activeDocsSection(useSearchParams().get("section"), sections)
 
   return (
     <SectionTabs
       activeId={active}
       label="Knowledge sections"
       scroll={false}
-      tabs={tabsFor(counts)}
+      tabs={tabsFor(sections, counts)}
     />
   )
 }
@@ -45,21 +58,23 @@ function TabsFromUrl({ counts }: { readonly counts: DocsSectionCounts }) {
  * is static, so the active section is read from ?section= on the client.
  */
 export function DocsSectionTabs({
+  sections,
   counts,
 }: {
+  readonly sections: readonly DocsSection[]
   readonly counts: DocsSectionCounts
 }) {
   return (
     <Suspense
       fallback={
         <SectionTabs
-          activeId="all"
+          activeId={ALL_SECTIONS}
           label="Knowledge sections"
-          tabs={tabsFor(counts)}
+          tabs={tabsFor(sections, counts)}
         />
       }
     >
-      <TabsFromUrl counts={counts} />
+      <TabsFromUrl counts={counts} sections={sections} />
     </Suspense>
   )
 }

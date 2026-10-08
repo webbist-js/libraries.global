@@ -8,7 +8,7 @@ import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 
 import { openSectionsByDefault } from "./docs-sections"
-import { DOCS_SECTIONS, type DocsSectionKey } from "./docs.config"
+import type { DocsSection } from "./docs.config"
 
 export type DocsTreePage = {
   documentId: string
@@ -17,20 +17,27 @@ export type DocsTreePage = {
   active: boolean
 }
 
-export type DocsTree = Record<DocsSectionKey, DocsTreePage[]>
+/** Pages by section slug. */
+export type DocsTree = Record<string, DocsTreePage[]>
 
 /** Left docs sidebar: filter input + the section tree with the active page
  * highlighted as an indigo chip. Sections collapse; only the one holding the
  * current page starts open, and filtering opens every section that matches. */
-export function DocsSidebarTree({ tree }: { readonly tree: DocsTree }) {
+export function DocsSidebarTree({
+  sections,
+  tree,
+}: {
+  readonly sections: readonly DocsSection[]
+  readonly tree: DocsTree
+}) {
   const [filter, setFilter] = useState("")
-  const [open, setOpen] = useState<ReadonlySet<DocsSectionKey>>(() =>
+  const [open, setOpen] = useState<ReadonlySet<string>>(() =>
     openSectionsByDefault(tree)
   )
   const query = filter.trim().toLowerCase()
-  const allOpen = DOCS_SECTIONS.every((s) => open.has(s.key))
+  const allOpen = sections.every((s) => open.has(s.slug))
 
-  const toggle = (key: DocsSectionKey) =>
+  const toggle = (key: string) =>
     setOpen((prev) => {
       const next = new Set(prev)
       if (next.has(key)) next.delete(key)
@@ -68,7 +75,7 @@ export function DocsSidebarTree({ tree }: { readonly tree: DocsTree }) {
             style={{ color: T.ink.dim }}
             onClick={() =>
               setOpen(
-                allOpen ? new Set() : new Set(DOCS_SECTIONS.map((s) => s.key))
+                allOpen ? new Set() : new Set(sections.map((s) => s.slug))
               )
             }
           >
@@ -78,8 +85,8 @@ export function DocsSidebarTree({ tree }: { readonly tree: DocsTree }) {
       </div>
 
       <ul className="m-0 flex list-none flex-col gap-3 p-0">
-        {DOCS_SECTIONS.map((section) => {
-          const pages = tree[section.key] ?? []
+        {sections.map((section) => {
+          const pages = tree[section.slug] ?? []
           const visiblePages = query
             ? pages.filter((page) => page.title.toLowerCase().includes(query))
             : pages
@@ -88,18 +95,18 @@ export function DocsSidebarTree({ tree }: { readonly tree: DocsTree }) {
           if (query && !sectionMatches && visiblePages.length === 0) {
             return null
           }
-          const expanded = query ? true : open.has(section.key)
-          const listId = `docs-tree-${section.key}`
+          const expanded = query ? true : open.has(section.slug)
+          const listId = `docs-tree-${section.slug}`
 
           return (
-            <li key={section.key}>
+            <li key={section.slug}>
               <button
                 type="button"
                 aria-controls={listId}
                 aria-expanded={expanded}
                 className="flex w-full cursor-pointer items-center gap-2.5 rounded-[10px] border-0 bg-transparent px-1 py-1 text-left text-[15px] font-semibold transition-colors hover:bg-(--t-bg-muted)"
                 style={{ color: T.ink.base }}
-                onClick={() => toggle(section.key)}
+                onClick={() => toggle(section.slug)}
               >
                 <span
                   aria-hidden="true"

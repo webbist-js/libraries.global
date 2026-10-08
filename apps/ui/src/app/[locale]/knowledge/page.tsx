@@ -2,9 +2,13 @@ import type { Metadata } from "next"
 import type { Locale } from "next-intl"
 import { use } from "react"
 
+import { toDocsSections } from "@/components/docs/docs.config"
 import DocsPage from "@/components/docs/DocsPage"
 import { buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
-import { fetchDocsWikiArticles } from "@/lib/strapi-api/content/server"
+import {
+  fetchDocsWikiArticles,
+  fetchWikiSections,
+} from "@/lib/strapi-api/content/server"
 
 export const dynamic = "force-static"
 export const revalidate = 300
@@ -30,7 +34,15 @@ export default function DocsRoute(props: {
   const params = use(props.params)
   const locale = params.locale as Locale
 
-  const articles = use(fetchDocsWikiArticles(locale))?.data ?? []
+  const [articlesRes, sectionsRes] = use(
+    Promise.all([fetchDocsWikiArticles(locale), fetchWikiSections()])
+  )
 
-  return <DocsPage articles={articles} locale={locale} />
+  return (
+    <DocsPage
+      articles={articlesRes?.data ?? []}
+      locale={locale}
+      sections={toDocsSections(sectionsRes.data)}
+    />
+  )
 }

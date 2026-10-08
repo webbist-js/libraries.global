@@ -7,9 +7,8 @@ import {
   isArticleKind,
 } from "@/components/contribute/article-editor/article.types"
 import {
-  DOCS_SECTIONS,
-  docsSectionForArticle,
-  docsSectionsOf,
+  docsSectionSlugsOf,
+  toDocsSections,
 } from "@/components/docs/docs.config"
 import { sessionCapabilities } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
@@ -20,6 +19,7 @@ import { privateMetadata } from "@/lib/seo/metadata"
 import {
   fetchDocsWikiArticles,
   fetchRecentBlogArticles,
+  fetchWikiSections,
 } from "@/lib/strapi-api/content/server"
 
 import { ContributeSectionHeader } from "../_components/ContributeSectionHeader"
@@ -106,10 +106,11 @@ export default async function KnowledgeEditorPage({
   const initialKind: ArticleKind =
     isArticleKind(type) && kinds.includes(type) ? type : kinds[0]!
 
-  const [wiki, blog, drafts] = await Promise.all([
+  const [wiki, wikiSections, blog, drafts] = await Promise.all([
     kinds.includes("knowledge")
       ? fetchDocsWikiArticles(locale as Locale)
       : Promise.resolve(null),
+    kinds.includes("knowledge") ? fetchWikiSections() : Promise.resolve(null),
     kinds.includes("journal")
       ? fetchRecentBlogArticles(locale as Locale)
       : Promise.resolve(null),
@@ -118,19 +119,17 @@ export default async function KnowledgeEditorPage({
     ),
   ])
 
-  const sectionTitle = (key: string) =>
-    DOCS_SECTIONS.find((s) => s.key === key)?.title ?? key
+  const docsSections = toDocsSections(wikiSections?.data)
+  const sectionTitle = (slug: string) =>
+    docsSections.find((s) => s.slug === slug)?.title ?? slug
   const articles: EditableArticle[] = [
     ...(wiki?.data ?? []).map((a) => {
-      const tagged = docsSectionsOf(a)
-      const keys = tagged.length > 0 ? tagged : [docsSectionForArticle(a)]
-
       return {
         kind: "knowledge" as const,
         documentId: a.documentId,
         slug: a.slug ?? "",
         title: a.title ?? a.slug ?? "Untitled",
-        sections: keys.map(sectionTitle),
+        sections: docsSectionSlugsOf(a).map(sectionTitle),
         publishedAt: a.publishedAt ?? null,
         updatedAt: a.updatedAt ?? null,
         contributorCount: 0,

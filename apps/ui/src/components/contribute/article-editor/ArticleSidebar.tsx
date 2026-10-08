@@ -4,7 +4,6 @@ import { Icon } from "@iconify/react"
 import { useLocale } from "next-intl"
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { DOCS_SECTIONS } from "@/components/docs/docs.config"
 import { T } from "@/lib/design-tokens"
 import { searchLibraryNames } from "@/lib/meilisearch"
 import { Link } from "@/lib/navigation"
@@ -230,27 +229,30 @@ export function SectionsCard({
   onChange: (next: string[]) => void
   disabled?: boolean
 }) {
-  const [journalSections, setJournalSections] = useState<
-    { slug: string; name: string }[]
-  >([])
+  // Both taxonomies live in Strapi: Wiki Sections and Journal sections. The
+  // editor shell remounts when the kind changes, so no reset is needed here.
+  const [options, setOptions] = useState<{ key: string; label: string }[]>([])
   useEffect(() => {
-    if (kind !== "journal") return
-    fetch("/api/relations/blog-sections")
+    let cancelled = false
+    fetch(
+      `/api/relations/${kind === "knowledge" ? "wiki-sections" : "blog-sections"}`
+    )
       .then((r) => r.json())
-      .then((j: { data?: { slug?: string; name?: string }[] }) =>
-        setJournalSections(
+      .then((j: { data?: { slug?: string; name?: string }[] }) => {
+        if (cancelled) return
+        setOptions(
           (j.data ?? []).flatMap((s) =>
-            s.slug && s.name ? [{ slug: s.slug, name: s.name }] : []
+            s.slug && s.name ? [{ key: s.slug, label: s.name }] : []
           )
         )
-      )
+      })
       .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
   }, [kind])
 
-  const options =
-    kind === "knowledge"
-      ? DOCS_SECTIONS.map((s) => ({ key: s.key, label: s.title }))
-      : journalSections.map((s) => ({ key: s.slug, label: s.name }))
   const multi = kind === "knowledge"
 
   const toggle = (key: string) => {
@@ -289,7 +291,7 @@ export function SectionsCard({
       >
         {options.length === 0 && (
           <p className="m-0 text-[14px]" style={{ color: T.ink.faint }}>
-            {kind === "journal" ? "No sections set up yet." : ""}
+            Loading sections…
           </p>
         )}
         {options.map((o) => {

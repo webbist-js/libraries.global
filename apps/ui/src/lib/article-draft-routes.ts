@@ -1,9 +1,9 @@
 import type { Capability } from "@repo/access"
 
-import { userHeaders } from "@/app/api/submissions/route"
 import { requireCapability } from "@/lib/access-server"
 import { auth } from "@/lib/auth"
 import { isDocumentIdParam, readJsonCapped } from "@/lib/bridge-params"
+import { userHeaders } from "@/lib/bridge-user-headers"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 

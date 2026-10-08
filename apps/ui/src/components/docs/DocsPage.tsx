@@ -4,12 +4,12 @@ import type { Locale } from "next-intl"
 import { EditorOnly } from "@/components/contribute/EditorOnly"
 import {
   DOCS_REPO_URL,
-  DOCS_SECTIONS,
   DOCS_VERSION,
   docsArticlePath,
-  docsSectionForArticle,
-  docsSectionsOf,
+  docsSectionSlugsOf,
+  homeSectionOf,
   readingTimeMinutes,
+  type DocsSection,
 } from "@/components/docs/docs.config"
 import {
   DocsSectionsExplorer,
@@ -69,11 +69,14 @@ function formatDate(iso: string | null | undefined): string | null {
   })
 }
 
-function toRow(article: DocsWikiArticle): DocsPageRow {
+function toRow(
+  article: DocsWikiArticle,
+  sections: readonly DocsSection[]
+): DocsPageRow {
   return {
     documentId: article.documentId,
     title: article.title ?? article.slug ?? "Untitled",
-    href: docsArticlePath(article),
+    href: docsArticlePath(article, sections),
     summary: article.summary ?? null,
     updatedLabel: formatDate(article.updatedAt),
     readMinutes: readingTimeMinutes(article.body),
@@ -82,27 +85,34 @@ function toRow(article: DocsWikiArticle): DocsPageRow {
 
 export function DocsPage({
   articles,
+  sections,
   locale,
 }: {
   readonly articles: DocsWikiArticle[]
+  /** The Knowledge taxonomy from Strapi, in display order. */
+  readonly sections: DocsSection[]
   readonly locale: Locale
 }) {
-  const sections: DocsSectionData = {
-    "getting-started": [],
-    contributing: [],
-    events: [],
-    "data-api": [],
-    "design-system": [],
-    governance: [],
-  }
+  const rowsBySection = new Map(
+    sections.map((section) => [section.slug, [] as DocsPageRow[]])
+  )
   articles.forEach((article) => {
-    // Home section first; an article tagged to more sections is listed in each.
-    const keys = new Set([
-      docsSectionForArticle(article),
-      ...docsSectionsOf(article),
-    ])
-    keys.forEach((key) => sections[key].push(toRow(article)))
+    // Filed under its home section (the first section when it has none),
+    // and listed again under any other section the editor tagged.
+    const home = homeSectionOf(article, sections)
+    if (!home) return
+    const row = toRow(article, sections)
+    new Set([home.slug, ...docsSectionSlugsOf(article)]).forEach((slug) =>
+      rowsBySection.get(slug)?.push(row)
+    )
   })
+  const sectionData: DocsSectionData = sections.map((section) => ({
+    section,
+    rows: rowsBySection.get(section.slug) ?? [],
+  }))
+  const counts = Object.fromEntries(
+    sectionData.map(({ section, rows }) => [section.slug, rows.length])
+  )
 
   // Recent changes — articles are already sorted by updatedAt desc
   const recent = articles.slice(0, 5)
@@ -130,13 +140,7 @@ export function DocsPage({
           eyebrowIcon="mdi:book-open-outline"
           lead="How to improve library records, run the platform locally, use the open data, and build on our design system."
           title="Build, contribute, *extend the index.*"
-          tabs={
-            <DocsSectionTabs
-              counts={Object.fromEntries(
-                DOCS_SECTIONS.map((s) => [s.key, sections[s.key].length])
-              )}
-            />
-          }
+          tabs={<DocsSectionTabs counts={counts} sections={sections} />}
         >
           <form action={`/${locale}/knowledge/search`} method="get">
             <SearchField
@@ -201,7 +205,7 @@ export function DocsPage({
           {/* Sections + sidebar */}
           <div className="mt-10 flex flex-col gap-8 lg:flex-row">
             <div className="min-w-0 flex-1">
-              <DocsSectionsExplorer sections={sections} />
+              <DocsSectionsExplorer sections={sectionData} />
             </div>
 
             <aside className="flex w-full shrink-0 flex-col gap-5 lg:w-[300px]">
@@ -230,10 +234,8 @@ export function DocsPage({
                 </h2>
                 <ul className="m-0 mt-3 flex list-none flex-col gap-3 p-0">
                   {recent.map((article) => {
-                    const row = toRow(article)
-                    const sectionTitle = DOCS_SECTIONS.find(
-                      (s) => s.key === docsSectionForArticle(article)
-                    )?.title
+                    const row = toRow(article, sections)
+                    const sectionTitle = homeSectionOf(article, sections)?.title
 
                     return (
                       <li key={article.documentId}>

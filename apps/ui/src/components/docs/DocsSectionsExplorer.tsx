@@ -5,14 +5,15 @@ import { useSearchParams } from "next/navigation"
 import { Suspense } from "react"
 
 import { EditorOnly } from "@/components/contribute/EditorOnly"
-import {
-  DOCS_SECTIONS,
-  type DocsSectionKey,
-} from "@/components/docs/docs.config"
+import type { DocsSection } from "@/components/docs/docs.config"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 
-import { activeDocsSection } from "./docs-sections"
+import {
+  activeDocsSection,
+  ALL_SECTIONS,
+  sectionPreview,
+} from "./docs-sections"
 
 export type DocsPageRow = {
   documentId: string
@@ -23,7 +24,11 @@ export type DocsPageRow = {
   readMinutes: number | null
 }
 
-export type DocsSectionData = Record<DocsSectionKey, DocsPageRow[]>
+/** Each Knowledge section with the pages filed under it, in display order. */
+export type DocsSectionData = {
+  section: DocsSection
+  rows: DocsPageRow[]
+}[]
 
 function SectionChip({ count }: { readonly count: number }) {
   if (count === 0) {
@@ -47,23 +52,185 @@ function SectionChip({ count }: { readonly count: number }) {
   )
 }
 
-/** Section cards; which ones show follows ?section= (the hero's tabs). */
+/**
+ * Section cards; which ones show follows ?section= (the hero's tabs). The
+ * "All sections" view lists a few pages per section with a link to the
+ * section's own tab, which lists every page.
+ */
 export function DocsSectionsExplorer({
   sections,
 }: {
   readonly sections: DocsSectionData
 }) {
   return (
-    <Suspense fallback={<SectionsBody active="all" sections={sections} />}>
+    <Suspense
+      fallback={<SectionsBody active={ALL_SECTIONS} sections={sections} />}
+    >
       <SectionsFromUrl sections={sections} />
     </Suspense>
   )
 }
 
 function SectionsFromUrl({ sections }: { readonly sections: DocsSectionData }) {
-  const active = activeDocsSection(useSearchParams().get("section"))
+  const active = activeDocsSection(
+    useSearchParams().get("section"),
+    sections.map((entry) => entry.section)
+  )
 
   return <SectionsBody active={active} sections={sections} />
+}
+
+function PageRow({ row }: { readonly row: DocsPageRow }) {
+  return (
+    <li className="border-t" style={{ borderColor: T.border.divider }}>
+      <GlobalLink
+        className="group flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-3.5"
+        href={row.href}
+      >
+        <span className="min-w-0">
+          <span
+            className="block text-[17px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors group-hover:decoration-current"
+            style={{ fontFamily: T.font.serif, color: T.ink.base }}
+          >
+            {row.title}
+          </span>
+          {row.summary ? (
+            <span
+              className="mt-1 block max-w-[64ch] text-[14px] leading-[1.5]"
+              style={{ color: T.ink.dim }}
+            >
+              {row.summary}
+            </span>
+          ) : null}
+        </span>
+        <span
+          className="flex shrink-0 items-center gap-4 text-[14px]"
+          style={{ color: T.ink.low }}
+        >
+          {row.readMinutes != null ? (
+            <span className="inline-flex items-center gap-1">
+              <Icon
+                aria-hidden="true"
+                height={14}
+                icon="mdi:clock-outline"
+                width={14}
+              />
+              {row.readMinutes} min read
+            </span>
+          ) : null}
+          {row.updatedLabel ? <span>Updated {row.updatedLabel}</span> : null}
+        </span>
+      </GlobalLink>
+    </li>
+  )
+}
+
+function SectionCard({
+  section,
+  rows,
+  showAll,
+}: {
+  readonly section: DocsSection
+  readonly rows: DocsPageRow[]
+  readonly showAll: boolean
+}) {
+  const preview = sectionPreview(rows, showAll)
+
+  return (
+    <section
+      aria-labelledby={`docs-${section.slug}`}
+      className="rounded-[20px] border p-6"
+      id={section.slug}
+      style={{ background: T.bg.deep, borderColor: T.border.line }}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <span
+            aria-hidden="true"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full"
+            style={{ background: section.tintBg, color: section.tintFg }}
+          >
+            <Icon height={20} icon={section.icon} width={20} />
+          </span>
+          <div>
+            <h2
+              className="m-0"
+              id={`docs-${section.slug}`}
+              style={{
+                fontFamily: T.font.serif,
+                fontSize: "24px",
+                fontWeight: 500,
+                color: T.ink.base,
+              }}
+            >
+              {section.title}
+            </h2>
+            {section.description ? (
+              <p className="mt-1 mb-0 text-[15px]" style={{ color: T.ink.dim }}>
+                {section.description}
+              </p>
+            ) : null}
+          </div>
+        </div>
+        <SectionChip count={rows.length} />
+      </div>
+
+      {rows.length === 0 ? (
+        <div
+          className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t pt-4"
+          style={{ borderColor: T.border.divider }}
+        >
+          <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+            No pages written yet.
+          </p>
+          <EditorOnly kind="knowledge">
+            <GlobalLink
+              className="inline-flex items-center gap-1 text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+              href={`/contribute/knowledge/new?type=knowledge&section=${section.slug}`}
+              style={{ color: T.accent.primary }}
+            >
+              Write the first page
+              <Icon
+                aria-hidden="true"
+                height={14}
+                icon="mdi:arrow-right"
+                width={14}
+              />
+            </GlobalLink>
+          </EditorOnly>
+        </div>
+      ) : (
+        <>
+          <ul className="m-0 mt-5 list-none p-0">
+            {preview.rows.map((row) => (
+              <PageRow key={row.documentId} row={row} />
+            ))}
+          </ul>
+          {preview.hidden > 0 ? (
+            <div
+              className="flex border-t pt-4"
+              style={{ borderColor: T.border.divider }}
+            >
+              <GlobalLink
+                className="inline-flex items-center gap-1 text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+                href={`/knowledge?section=${section.slug}`}
+                style={{ color: T.accent.primary }}
+              >
+                Show all {rows.length} pages
+                <span className="sr-only"> in {section.title}</span>
+                <Icon
+                  aria-hidden="true"
+                  height={14}
+                  icon="mdi:arrow-right"
+                  width={14}
+                />
+              </GlobalLink>
+            </div>
+          ) : null}
+        </>
+      )}
+    </section>
+  )
 }
 
 function SectionsBody({
@@ -71,16 +238,14 @@ function SectionsBody({
   active,
 }: {
   readonly sections: DocsSectionData
-  readonly active: "all" | DocsSectionKey
+  /** A section slug, or "all". */
+  readonly active: string
 }) {
-  const totalPages = DOCS_SECTIONS.reduce(
-    (sum, s) => sum + sections[s.key].length,
-    0
-  )
-  const visibleSections =
-    active === "all"
-      ? DOCS_SECTIONS
-      : DOCS_SECTIONS.filter((s) => s.key === active)
+  const showAll = active !== ALL_SECTIONS
+  const totalPages = sections.reduce((sum, s) => sum + s.rows.length, 0)
+  const visibleSections = showAll
+    ? sections.filter((entry) => entry.section.slug === active)
+    : sections
 
   return (
     <div>
@@ -89,138 +254,22 @@ function SectionsBody({
         still need writing.
       </p>
 
-      {/* Section cards */}
-      <div className="mt-5 flex flex-col gap-5">
-        {visibleSections.map((section) => {
-          const rows = sections[section.key]
-
-          return (
-            <section
-              aria-labelledby={`docs-${section.key}`}
-              className="rounded-[20px] border p-6"
-              id={section.key}
-              key={section.key}
-              style={{ background: T.bg.deep, borderColor: T.border.line }}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-4">
-                  <span
-                    aria-hidden="true"
-                    className="flex size-10 shrink-0 items-center justify-center rounded-full"
-                    style={{
-                      background: section.tintBg,
-                      color: section.tintFg,
-                    }}
-                  >
-                    <Icon height={20} icon={section.icon} width={20} />
-                  </span>
-                  <div>
-                    <h2
-                      className="m-0"
-                      id={`docs-${section.key}`}
-                      style={{
-                        fontFamily: T.font.serif,
-                        fontSize: "24px",
-                        fontWeight: 500,
-                        color: T.ink.base,
-                      }}
-                    >
-                      {section.title}
-                    </h2>
-                    <p
-                      className="mt-1 mb-0 text-[15px]"
-                      style={{ color: T.ink.dim }}
-                    >
-                      {section.description}
-                    </p>
-                  </div>
-                </div>
-                <SectionChip count={rows.length} />
-              </div>
-
-              {rows.length === 0 ? (
-                <div
-                  className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t pt-4"
-                  style={{ borderColor: T.border.divider }}
-                >
-                  <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
-                    No pages written yet.
-                  </p>
-                  <EditorOnly kind="knowledge">
-                    <GlobalLink
-                      className="inline-flex items-center gap-1 text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
-                      href={`/contribute/knowledge/new?type=knowledge&section=${section.key}`}
-                      style={{ color: T.accent.primary }}
-                    >
-                      Write the first page
-                      <Icon
-                        aria-hidden="true"
-                        height={14}
-                        icon="mdi:arrow-right"
-                        width={14}
-                      />
-                    </GlobalLink>
-                  </EditorOnly>
-                </div>
-              ) : (
-                <ul className="m-0 mt-5 list-none p-0">
-                  {rows.map((row) => (
-                    <li
-                      className="border-t"
-                      key={row.documentId}
-                      style={{ borderColor: T.border.divider }}
-                    >
-                      <GlobalLink
-                        className="group flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-3.5"
-                        href={row.href}
-                      >
-                        <span className="min-w-0">
-                          <span
-                            className="block text-[17px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors group-hover:decoration-current"
-                            style={{
-                              fontFamily: T.font.serif,
-                              color: T.ink.base,
-                            }}
-                          >
-                            {row.title}
-                          </span>
-                          {row.summary ? (
-                            <span
-                              className="mt-1 block max-w-[64ch] text-[14px] leading-[1.5]"
-                              style={{ color: T.ink.dim }}
-                            >
-                              {row.summary}
-                            </span>
-                          ) : null}
-                        </span>
-                        <span
-                          className="flex shrink-0 items-center gap-4 text-[14px]"
-                          style={{ color: T.ink.low }}
-                        >
-                          {row.readMinutes != null ? (
-                            <span className="inline-flex items-center gap-1">
-                              <Icon
-                                aria-hidden="true"
-                                height={14}
-                                icon="mdi:clock-outline"
-                                width={14}
-                              />
-                              {row.readMinutes} min read
-                            </span>
-                          ) : null}
-                          {row.updatedLabel ? (
-                            <span>Updated {row.updatedLabel}</span>
-                          ) : null}
-                        </span>
-                      </GlobalLink>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          )
-        })}
-      </div>
+      {sections.length === 0 ? (
+        <p className="mt-5 mb-0 text-[15px]" style={{ color: T.ink.dim }}>
+          No sections set up yet.
+        </p>
+      ) : (
+        <div className="mt-5 flex flex-col gap-5">
+          {visibleSections.map(({ section, rows }) => (
+            <SectionCard
+              key={section.slug}
+              rows={rows}
+              section={section}
+              showAll={showAll}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

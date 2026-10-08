@@ -8,7 +8,6 @@ import type {
   ArticleTag,
   ExistingArticle,
 } from "@/components/contribute/article-editor/article.types"
-import { docsSectionForArticle } from "@/components/docs/docs.config"
 import {
   type ArticleForEditing,
   fetchArticleForEditing,
@@ -68,19 +67,11 @@ export function toExistingArticle(
   const docsSections = Array.isArray(article.docsSections)
     ? article.docsSections.filter((k): k is string => typeof k === "string")
     : []
+  // Every tagged section (home first) for Knowledge; the section relation
+  // is the home for both kinds, and all a Journal article has.
   const sections =
-    kind === "knowledge"
-      ? docsSections.length > 0
-        ? docsSections
-        : [
-            docsSectionForArticle({
-              documentId: article.documentId,
-              title: article.title,
-              slug: article.slug,
-              section: null,
-              category: null,
-            }),
-          ]
+    docsSections.length > 0
+      ? docsSections
       : article.section?.slug
         ? [article.section.slug]
         : []

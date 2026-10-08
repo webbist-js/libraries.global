@@ -18,11 +18,10 @@ import type {
 } from "@/lib/strapi-api/content/server"
 
 import {
-  DOCS_SECTIONS,
   docsArticlePath,
-  docsSectionForArticle,
+  homeSectionOf,
   readingTimeMinutes,
-  type DocsSectionKey,
+  type DocsSection,
 } from "./docs.config"
 import { DocsSidebarTree, type DocsTree } from "./DocsSidebarTree"
 
@@ -46,15 +45,18 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 /** Ordered flat page list: section order first, then title. Drives prev/next. */
-function orderedPages(articles: DocsWikiArticle[]) {
+function orderedPages(
+  articles: DocsWikiArticle[],
+  sections: readonly DocsSection[]
+) {
   const sectionOrder = new Map(
-    DOCS_SECTIONS.map((section, index) => [section.key, index])
+    sections.map((section, index) => [section.slug, index])
   )
+  const indexOf = (article: DocsWikiArticle) =>
+    sectionOrder.get(homeSectionOf(article, sections)?.slug ?? "") ?? 0
 
   return [...articles].sort((a, b) => {
-    const bySection =
-      (sectionOrder.get(docsSectionForArticle(a)) ?? 0) -
-      (sectionOrder.get(docsSectionForArticle(b)) ?? 0)
+    const bySection = indexOf(a) - indexOf(b)
     if (bySection !== 0) return bySection
 
     return (a.title ?? "").localeCompare(b.title ?? "")
@@ -64,18 +66,21 @@ function orderedPages(articles: DocsWikiArticle[]) {
 export function DocsArticlePage({
   article,
   articles,
+  sections,
+  section,
   locale,
-  sectionKey,
   untranslatedLocale = null,
 }: {
   readonly article: WikiArticleDetail
   readonly articles: DocsWikiArticle[]
+  /** The Knowledge taxonomy from Strapi, in display order. */
+  readonly sections: readonly DocsSection[]
+  /** The section this article is filed under. */
+  readonly section: DocsSection
   readonly locale: Locale
-  readonly sectionKey: DocsSectionKey
   /** Set when this is the default-locale stand-in for a missing translation. */
   readonly untranslatedLocale?: string | null
 }) {
-  const section = DOCS_SECTIONS.find((s) => s.key === sectionKey)
   const title = article.title ?? article.slug ?? "Untitled"
   const body: ArticleBodyBlock[] = article.body ?? []
   const headings = extractHeadings(body).filter((h) => h.level <= 3)
@@ -85,24 +90,21 @@ export function DocsArticlePage({
   const status =
     STATUS_LABEL[(article.articleStatus ?? "stable") as string] ?? "Stable"
 
-  const tree: DocsTree = {
-    "getting-started": [],
-    contributing: [],
-    events: [],
-    "data-api": [],
-    "design-system": [],
-    governance: [],
-  }
+  const tree: DocsTree = Object.fromEntries(
+    sections.map((s) => [s.slug, [] as DocsTree[string]])
+  )
   articles.forEach((entry) => {
-    tree[docsSectionForArticle(entry)].push({
+    const home = homeSectionOf(entry, sections)
+    if (!home) return
+    tree[home.slug]?.push({
       documentId: entry.documentId,
       title: entry.title ?? entry.slug ?? "Untitled",
-      href: docsArticlePath(entry),
+      href: docsArticlePath(entry, sections),
       active: entry.slug === article.slug,
     })
   })
 
-  const ordered = orderedPages(articles)
+  const ordered = orderedPages(articles, sections)
   const currentIndex = ordered.findIndex((a) => a.slug === article.slug)
   const previous = currentIndex > 0 ? ordered[currentIndex - 1] : null
   const next =
@@ -122,7 +124,7 @@ export function DocsArticlePage({
           {/* ── Left: docs tree ── */}
           <aside className="hidden lg:block">
             <div className="sticky top-[76px]">
-              <DocsSidebarTree tree={tree} />
+              <DocsSidebarTree sections={sections} tree={tree} />
             </div>
           </aside>
 
@@ -132,20 +134,21 @@ export function DocsArticlePage({
               items={[
                 { label: "Home", href: "/" },
                 { label: "Knowledge", href: "/knowledge" },
-                ...(section?.title ? [{ label: section.title }] : []),
+                {
+                  label: section.title,
+                  href: `/knowledge?section=${section.slug}`,
+                },
                 { label: title },
               ]}
             />
 
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              {section ? (
-                <span
-                  className="rounded-full px-3 py-1 text-[13px] font-semibold"
-                  style={{ background: section.tintBg, color: section.tintFg }}
-                >
-                  {section.title}
-                </span>
-              ) : null}
+              <span
+                className="rounded-full px-3 py-1 text-[13px] font-semibold"
+                style={{ background: section.tintBg, color: section.tintFg }}
+              >
+                {section.title}
+              </span>
               <span
                 className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[13px] font-semibold"
                 style={{
@@ -294,7 +297,7 @@ export function DocsArticlePage({
                 {previous ? (
                   <GlobalLink
                     className="rounded-[20px] border p-5 transition-colors hover:border-(--t-border-hi)"
-                    href={docsArticlePath(previous)}
+                    href={docsArticlePath(previous, sections)}
                     style={{
                       background: T.bg.deep,
                       borderColor: T.border.line,
@@ -319,7 +322,7 @@ export function DocsArticlePage({
                 {next ? (
                   <GlobalLink
                     className="rounded-[20px] border p-5 text-right transition-colors hover:border-(--t-border-hi)"
-                    href={docsArticlePath(next)}
+                    href={docsArticlePath(next, sections)}
                     style={{
                       background: T.bg.deep,
                       borderColor: T.border.line,

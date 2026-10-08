@@ -1,167 +1,154 @@
-import type { WikiArticleSummary } from "@/lib/strapi-api/content/server"
+import { T } from "@/lib/design-tokens"
+import type {
+  WikiArticleSummary,
+  WikiSection,
+} from "@/lib/strapi-api/content/server"
 
 export const DOCS_REPO_URL = "https://github.com/webbist-js/libraries.global"
 export const DOCS_VERSION = "v1.0.0"
 
-export type DocsSectionKey =
-  | "getting-started"
-  | "contributing"
-  | "events"
-  | "data-api"
-  | "design-system"
-  | "governance"
-
-export type DocsSectionConfig = {
-  key: DocsSectionKey
+/**
+ * A Knowledge section as the pages render it, built from a Strapi Wiki
+ * Section by `toDocsSections`. The taxonomy lives in Strapi: adding a
+ * section there adds a tab, a card and a sidebar group here.
+ */
+export type DocsSection = {
+  documentId: string
+  slug: string
   title: string
-  description: string
+  description: string | null
+  /** Iconify id from the section's `icon` field; a book when it has none. */
   icon: string
+  order: number | null
   tintBg: string
   tintFg: string
 }
 
-/** The fixed docs taxonomy. Wiki articles are mapped in via docsSectionForArticle. */
-export const DOCS_SECTIONS: DocsSectionConfig[] = [
-  {
-    key: "getting-started",
-    title: "Getting started",
-    description: "What the project is, and how to run it on your own machine.",
-    icon: "mdi:code-tags",
-    tintBg: "var(--tint-academic-bg)",
-    tintFg: "var(--tint-academic-fg)",
-  },
-  {
-    key: "contributing",
-    title: "Contributing",
-    description:
-      "Adding and correcting records, citing sources and sharing photos.",
-    icon: "mdi:pencil-outline",
-    tintBg: "#F5EEDC",
-    tintFg: "#6B5420",
-  },
-  {
-    key: "events",
-    title: "Events",
-    description:
-      "How library events reach the site, and how libraries connect and look after their feeds.",
-    icon: "mdi:calendar-month-outline",
-    tintBg: "var(--tint-neutral-bg)",
-    tintFg: "var(--tint-neutral-fg)",
-  },
-  {
-    key: "data-api",
-    title: "Data & API",
-    description: "Data licence, bulk exports, provenance and the public API.",
-    icon: "mdi:database-outline",
-    tintBg: "var(--tint-public-bg)",
-    tintFg: "var(--tint-public-fg)",
-  },
-  {
-    key: "design-system",
-    title: "Design system",
-    description: "Tokens and components for building on the platform.",
-    icon: "mdi:view-grid-outline",
-    tintBg: "var(--tint-national-bg)",
-    tintFg: "var(--tint-national-fg)",
-  },
-  {
-    key: "governance",
-    title: "Governance",
-    description:
-      "Who reviews changes, how decisions are made, and the code of conduct.",
-    icon: "mdi:account-group-outline",
-    tintBg: "var(--tint-special-bg)",
-    tintFg: "var(--tint-special-fg)",
-  },
-]
+export const DEFAULT_SECTION_ICON = "mdi:book-open-outline"
+
+/** How many pages a section card lists on the "All sections" view. */
+export const SECTION_PREVIEW_SIZE = 4
 
 /**
- * Wiki sections that are generic catch-alls rather than docs topics — they
- * carry no signal for the docs taxonomy, so matching falls through to the
- * article's own title/category.
+ * The path segment for an article that has no section, when the sections
+ * list isn't to hand. The article route redirects it to the article's
+ * section, as the Journal does with its `general` segment.
  */
-const GENERIC_WIKI_SECTIONS = new Set(["contributor", "general", "wiki"])
+export const UNFILED_SECTION_SEGMENT = "general"
 
-const MATCHERS: { key: DocsSectionKey; pattern: RegExp }[] = [
-  // First, so "Reviewing event feed submissions" isn't filed under Contributing.
-  { key: "events", pattern: /\bevents?\b|event feed|calendar/ },
-  { key: "contributing", pattern: /contribut|correction|submission/ },
-  { key: "data-api", pattern: /\bdata\b|api|licen[cs]e|export|provenance/ },
-  { key: "design-system", pattern: /design|token|component|style/ },
-  { key: "governance", pattern: /govern|conduct|steward|review|moderat/ },
-  {
-    key: "getting-started",
-    pattern: /getting|start|guide|setup|install|run|local/,
-  },
+export type SectionTint = { bg: string; fg: string }
+
+/**
+ * Section tints, picked by `order`, so a section's colour is stable without
+ * anyone choosing it. Seven pairs: six sections keep distinct colours.
+ */
+const SECTION_TINTS: readonly SectionTint[] = [
+  { bg: "var(--tint-neutral-bg)", fg: "var(--tint-neutral-fg)" },
+  { bg: "var(--tint-academic-bg)", fg: "var(--tint-academic-fg)" },
+  { bg: T.accent.chip, fg: T.accent.primaryHover },
+  { bg: "#F5EEDC", fg: "#6B5420" },
+  { bg: "var(--tint-public-bg)", fg: "var(--tint-public-fg)" },
+  { bg: "var(--tint-national-bg)", fg: "var(--tint-national-fg)" },
+  { bg: "var(--tint-special-bg)", fg: "var(--tint-special-fg)" },
 ]
 
-const SECTION_KEYS = new Set<string>(DOCS_SECTIONS.map((s) => s.key))
+/** The tint pair for a section's `order`; a missing order takes the first. */
+export function tintForOrder(order: number | null | undefined): SectionTint {
+  const n =
+    typeof order === "number" && Number.isFinite(order)
+      ? Math.abs(Math.trunc(order))
+      : 0
 
-/** The sections an article was tagged to in the editor (home first), if any. */
-export function docsSectionsOf(article: WikiArticleSummary): DocsSectionKey[] {
-  const raw = (article as { docsSections?: unknown }).docsSections
+  return SECTION_TINTS[n % SECTION_TINTS.length]!
+}
 
-  return Array.isArray(raw)
-    ? raw.filter(
-        (k): k is DocsSectionKey => typeof k === "string" && SECTION_KEYS.has(k)
+/** Strapi Wiki Sections as Knowledge sections, in display order. */
+export function toDocsSections(
+  sections: readonly WikiSection[] | null | undefined
+): DocsSection[] {
+  return [...(sections ?? [])]
+    .filter((s) => Boolean(s.slug) && Boolean(s.name))
+    .sort(
+      (a, b) =>
+        (a.order ?? Number.MAX_SAFE_INTEGER) -
+          (b.order ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name)
+    )
+    .map((s) => {
+      const tint = tintForOrder(s.order)
+
+      return {
+        documentId: s.documentId,
+        slug: s.slug,
+        title: s.name,
+        description: s.description?.trim() || null,
+        icon: s.icon?.trim() || DEFAULT_SECTION_ICON,
+        order: s.order ?? null,
+        tintBg: tint.bg,
+        tintFg: tint.fg,
+      }
+    })
+}
+
+type SectionLike = Pick<WikiArticleSummary, "section" | "docsSections">
+
+/**
+ * The section slugs an article is listed under: its home section (the
+ * `section` relation) first, then any extra sections the editor tagged in
+ * `docsSections`. An article with no relation takes its first tag as home.
+ */
+export function docsSectionSlugsOf(article: SectionLike): string[] {
+  const tagged = Array.isArray(article.docsSections)
+    ? article.docsSections.filter(
+        (s): s is string => typeof s === "string" && s.length > 0
       )
     : []
+  const home = article.section?.slug ?? tagged[0] ?? null
+
+  return [...new Set([...(home ? [home] : []), ...tagged])]
 }
 
-/** Map a wiki article into the docs taxonomy. An article tagged in the
- * editor uses its home section. Otherwise title and category signal first;
- * the wiki section only counts when it isn't a generic catch-all, and
- * everything unmatched lands in Getting started. */
-export function docsSectionForArticle(
-  article: WikiArticleSummary
-): DocsSectionKey {
-  const tagged = docsSectionsOf(article)[0]
-  if (tagged) return tagged
-  const sectionSlug = article.section?.slug?.toLowerCase() ?? ""
-  const primary = [
-    article.title ?? "",
-    article.category?.slug ?? "",
-    article.category?.name ?? "",
-  ]
-    .join(" ")
-    .toLowerCase()
-  const secondary = GENERIC_WIKI_SECTIONS.has(sectionSlug)
-    ? ""
-    : `${sectionSlug} ${article.section?.name ?? ""}`.toLowerCase()
-
-  for (const { key, pattern } of MATCHERS) {
-    if (pattern.test(primary)) return key
-  }
-  for (const { key, pattern } of MATCHERS) {
-    if (secondary && pattern.test(secondary)) return key
-  }
-
-  return "getting-started"
+/** The slug of an article's home section, or null when it has none. */
+export function homeSectionSlug(article: SectionLike): string | null {
+  return docsSectionSlugsOf(article)[0] ?? null
 }
 
-/** Canonical docs path for a wiki article, under its mapped docs section. */
-export function docsArticlePath(article: WikiArticleSummary): string {
-  return `/knowledge/${docsSectionForArticle(article)}/${article.slug ?? ""}`
+/**
+ * The section an article is filed under: its home section when that exists,
+ * else the first section, so every article is reachable. Null only when
+ * there are no sections at all.
+ */
+export function homeSectionOf<S extends { slug: string }>(
+  article: SectionLike,
+  sections: readonly S[]
+): S | null {
+  const home = homeSectionSlug(article)
+
+  return sections.find((s) => s.slug === home) ?? sections[0] ?? null
 }
 
-/** Same, but from a MeiliSearch wiki-article hit (flat section/category slugs). */
+/**
+ * Canonical path of a Knowledge article, under its home section. Pass the
+ * sections list where it's to hand, so an unfiled article links straight to
+ * the first section; without it the path uses `general` and the article
+ * route redirects.
+ */
+export function docsArticlePath(
+  article: SectionLike & { slug?: string | null },
+  sections?: readonly { slug: string }[]
+): string {
+  const home = sections
+    ? homeSectionOf(article, sections)?.slug
+    : homeSectionSlug(article)
+
+  return `/knowledge/${home ?? UNFILED_SECTION_SEGMENT}/${article.slug ?? ""}`
+}
+
+/** Same, from a MeiliSearch wiki-article hit (flat section slug). */
 export function docsPathForSearchHit(hit: {
-  documentId: string
   slug: string
-  title?: string | null
   section_slug?: string | null
-  section_name?: string | null
-  category_slug?: string | null
 }): string {
-  return docsArticlePath({
-    documentId: hit.documentId,
-    title: hit.title,
-    slug: hit.slug,
-    section: hit.section_slug
-      ? { slug: hit.section_slug, name: hit.section_name ?? null }
-      : null,
-    category: hit.category_slug ? { slug: hit.category_slug } : null,
-  } as WikiArticleSummary)
+  return `/knowledge/${hit.section_slug ?? UNFILED_SECTION_SEGMENT}/${hit.slug}`
 }
 
 /** Rough reading time from a Strapi dynamic-zone body: walk every string,

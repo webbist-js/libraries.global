@@ -2,13 +2,13 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import type { Locale } from "next-intl"
 
-import { docsSectionForArticle } from "@/components/docs/docs.config"
 import {
   type HeldRoles,
   type LocaleOption,
   RoleApplicationForm,
   type SectionOption,
 } from "@/components/contribute/RoleApplicationForm"
+import { docsArticlePath } from "@/components/docs/docs.config"
 import { sessionCapabilities } from "@/lib/access-server"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { getSessionSSR } from "@/lib/auth-server"
@@ -78,7 +78,7 @@ async function knowledgeHref(
   const article = res?.data
   if (!article?.slug) return null
 
-  return `/knowledge/${docsSectionForArticle(article)}/${article.slug}`
+  return docsArticlePath(article)
 }
 
 export default async function ApplyForRolePage({
