@@ -77,13 +77,15 @@ describe("ChangeHistogram", () => {
     expect(getByText("Checked")).toBeTruthy()
   })
 
-  it("labels every sixth month on the axis", () => {
+  it("labels the first and last month on the axis", () => {
     const { container } = render(
       createElement(ChangeHistogram, {
         months: months(),
         verificationEvents: [],
       })
     )
-    expect(container.querySelectorAll("text[data-axis]")).toHaveLength(4)
+    const axis = container.querySelectorAll("[data-axis]")
+    expect(axis).toHaveLength(2)
+    expect(axis[0]!.textContent).toBe("Nov 2024")
   })
 })

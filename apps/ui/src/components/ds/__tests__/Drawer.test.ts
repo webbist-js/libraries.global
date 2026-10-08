@@ -81,9 +81,15 @@ describe("Drawer", () => {
     const { onClose } = open()
     fireEvent.keyDown(document, { key: "Escape" })
     expect(onClose).toHaveBeenCalledTimes(1)
-    const [backdrop, close] = screen.getAllByRole("button", { name: "Close" })
-    fireEvent.click(close!)
-    fireEvent.click(backdrop!)
+    fireEvent.click(screen.getByRole("button", { name: "Close" }))
+    // The backdrop is a click target only: hidden from assistive tech and
+    // out of the Tab order, so it never reads as a second "Close".
+    const backdrop = document.querySelector<HTMLButtonElement>(
+      'button[aria-hidden="true"]'
+    )!
+    expect(backdrop.tabIndex).toBe(-1)
+    expect(screen.getAllByRole("button", { name: "Close" }).length).toBe(1)
+    fireEvent.click(backdrop)
     expect(onClose).toHaveBeenCalledTimes(3)
   })
 
@@ -91,7 +97,7 @@ describe("Drawer", () => {
     open()
     const send = screen.getByRole("button", { name: "Send" })
     // The header's Close is the first stop; Send is the last.
-    const close = screen.getAllByRole("button", { name: "Close" })[1]!
+    const close = screen.getByRole("button", { name: "Close" })
     send.focus()
     fireEvent.keyDown(document, { key: "Tab" })
     expect(document.activeElement).toBe(close)

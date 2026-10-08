@@ -33,11 +33,16 @@ beforeEach(() => {
 })
 
 describe("GET /api/geocode/search", () => {
-  it("is for signed-in users only", async () => {
+  it("supports public stop finding with a lower per-IP rate limit", async () => {
     session.value = null
     const res = await search.GET(get("/api/geocode/search?q=British"))
-    expect(res.status).toBe(401)
-    expect(photon.searchPlaces).not.toHaveBeenCalled()
+    expect(res.status).toBe(200)
+    expect(photon.searchPlaces).toHaveBeenCalledWith("British")
+    for (let i = 1; i < 20; i++)
+      await search.GET(get("/api/geocode/search?q=British"))
+    expect(
+      (await search.GET(get("/api/geocode/search?q=British"))).status
+    ).toBe(429)
   })
 
   it("needs 3 to 200 characters", async () => {

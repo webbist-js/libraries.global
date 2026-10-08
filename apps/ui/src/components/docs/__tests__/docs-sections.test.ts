@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest"
 
-import { openSectionsByDefault } from "../docs-sections"
+import {
+  activeDocsSection,
+  openSectionsByDefault,
+  sectionPreview,
+} from "../docs-sections"
 
 const page = (active: boolean) => ({
   documentId: active ? "a" : "b",
@@ -16,8 +20,6 @@ describe("openSectionsByDefault", () => {
       contributing: [page(false), page(true)],
       events: [page(false)],
       "data-api": [],
-      "design-system": [],
-      governance: [],
     })
     expect([...open]).toEqual(["contributing"])
   })
@@ -26,11 +28,45 @@ describe("openSectionsByDefault", () => {
     const open = openSectionsByDefault({
       "getting-started": [page(false)],
       contributing: [],
-      events: [],
-      "data-api": [],
-      "design-system": [],
-      governance: [],
     })
     expect(open.size).toBe(0)
+  })
+})
+
+describe("activeDocsSection", () => {
+  const sections = [{ slug: "contributing" }, { slug: "events" }]
+
+  it("selects a known section slug", () => {
+    expect(activeDocsSection("events", sections)).toBe("events")
+  })
+
+  it.each([null, undefined, "", "all", "no-such-section"])(
+    "shows every section for %s",
+    (value) => {
+      expect(activeDocsSection(value, sections)).toBe("all")
+    }
+  )
+})
+
+describe("sectionPreview", () => {
+  const rows = ["a", "b", "c", "d", "e", "f"]
+
+  it("lists the first four pages on the All sections view, counting the rest", () => {
+    expect(sectionPreview(rows, false)).toEqual({
+      rows: ["a", "b", "c", "d"],
+      hidden: 2,
+    })
+  })
+
+  it("lists every page on the section's own tab", () => {
+    expect(sectionPreview(rows, true)).toEqual({ rows, hidden: 0 })
+  })
+
+  it("hides nothing when a section fits within the preview", () => {
+    expect(sectionPreview(["a", "b"], false)).toEqual({
+      rows: ["a", "b"],
+      hidden: 0,
+    })
+    expect(sectionPreview(["a", "b", "c", "d"], false).hidden).toBe(0)
   })
 })

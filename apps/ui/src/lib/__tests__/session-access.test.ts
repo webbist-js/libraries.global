@@ -14,11 +14,13 @@ const baseProfile: SessionProfile = {
   username: "x",
   tier: null,
   claims: [],
+  staff: [],
   grants: [],
   roleGrants: [],
   verifications: [],
   earnedProUntil: null,
   dismissedPrompts: [],
+  teams: [],
 }
 
 describe("buildSessionAccess", () => {
@@ -29,6 +31,7 @@ describe("buildSessionAccess", () => {
       username: null,
       capabilities: [],
       claimedLibraryIds: [],
+      staffLibraries: [],
       moderationScopes: [],
       editorLocales: { docs: [], journal: [] },
       plan: "free",
@@ -36,6 +39,8 @@ describe("buildSessionAccess", () => {
       features: [],
       limits: FREE_LIMITS,
       dismissedPrompts: [],
+      teams: [],
+      teamLibraryIds: [],
     })
   })
 
@@ -67,10 +72,72 @@ describe("buildSessionAccess", () => {
       username: "lib",
       tier: null,
       claims: ["libA"],
+      staff: [
+        {
+          libraryDocumentId: "libA",
+          staffRole: "owner",
+          canGoLive: false,
+          name: "Library A",
+          slug: "library-a",
+          libraryType: "Public",
+        },
+      ],
       roleGrants: [{ role: "verified_librarian", queue: "all", locale: null }],
     })
     expect(a.capabilities).toContain("submit.libraryEdit")
     expect(a.claimedLibraryIds).toEqual(["libA"])
+    expect(a.staffLibraries).toEqual([
+      {
+        id: "libA",
+        role: "owner",
+        canGoLive: false,
+        name: "Library A",
+        slug: "library-a",
+        libraryType: "Public",
+      },
+    ])
+  })
+
+  it("no longer treats a legacy claim without a staff entry as staff", () => {
+    const a = buildSessionAccess({
+      ...baseProfile,
+      contributorRole: "verified_librarian",
+      claims: ["libA"],
+      roleGrants: [{ role: "verified_librarian", queue: "all", locale: null }],
+    })
+    expect(a.capabilities).not.toContain("submit.libraryEdit")
+    expect(a.staffLibraries).toEqual([])
+  })
+
+  it("an active team gives Pro via team and scopes its libraries", () => {
+    const a = buildSessionAccess({
+      ...baseProfile,
+      teams: [
+        {
+          id: "t1",
+          name: "Kent Libraries",
+          slug: "kent-libraries",
+          role: "organiser",
+          libraryCount: 2,
+          libraryDocumentIds: ["libA", "libB"],
+          expiresAt: null,
+          status: "active",
+          organiserName: null,
+        },
+      ],
+    })
+    expect(a.plan).toBe("pro")
+    expect(a.planSource).toBe("team")
+    expect(a.teamLibraryIds).toEqual(["libA", "libB"])
+    expect(a.teams).toEqual([
+      {
+        id: "t1",
+        name: "Kent Libraries",
+        slug: "kent-libraries",
+        role: "organiser",
+        libraryCount: 2,
+      },
+    ])
   })
 
   it("coerces an unknown role to reader", () => {

@@ -8,6 +8,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 Object.assign(globalThis, { React })
 
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
+vi.mock("@/lib/env-vars", () => ({ getEnvVar: () => {} }))
+vi.mock("@/lib/auth-client", () => ({
+  authClient: { useSession: () => ({ data: null, isPending: false }) },
+}))
 vi.mock("@/lib/navigation", () => ({
   Link: ({ href, children }: { href: string; children: React.ReactNode }) =>
     createElement("a", { href }, children),

@@ -9,12 +9,20 @@ vi.mock("next/navigation", () => ({
 import { ConnectFeedForm } from "../ConnectFeedForm"
 
 const LIBS = [
-  { documentId: "lib00000000000000000001", name: "Central Library" },
+  {
+    documentId: "lib00000000000000000001",
+    name: "Central Library",
+    slug: "central-library",
+  },
 ]
 
 const TWO_LIBS = [
   ...LIBS,
-  { documentId: "lib00000000000000000002", name: "Branch Library" },
+  {
+    documentId: "lib00000000000000000002",
+    name: "Branch Library",
+    slug: "branch-library",
+  },
 ]
 
 beforeEach(() => {
@@ -87,7 +95,7 @@ describe("ConnectFeedForm", () => {
     expect(
       (
         screen.getByRole("button", {
-          name: "Send for review",
+          name: "Connect",
         }) as HTMLButtonElement
       ).disabled
     ).toBe(true)
@@ -106,7 +114,7 @@ describe("ConnectFeedForm", () => {
     expect(
       (
         screen.getByRole("button", {
-          name: "Send for review",
+          name: "Connect",
         }) as HTMLButtonElement
       ).disabled
     ).toBe(true)

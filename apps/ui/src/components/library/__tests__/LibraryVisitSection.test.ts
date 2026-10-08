@@ -60,6 +60,10 @@ describe("LibraryVisitSection hours note", () => {
       ],
     })
     expect(screen.queryByText("Add the opening hours")).toBeNull()
-    expect(screen.getByText(/Not yet checked by a contributor/)).toBeTruthy()
+    expect(
+      screen.getByText(
+        /Not yet checked\. Temporary changes appear in the notices above/
+      )
+    ).toBeTruthy()
   })
 })

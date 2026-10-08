@@ -1,3 +1,4 @@
+import { emptyTimetable, timetableHash } from "@repo/shared-data"
 import { describe, expect, it } from "vitest"
 
 import {
@@ -50,6 +51,22 @@ describe("editorFor", () => {
 })
 
 describe("recordChanges", () => {
+  it("submits a complete proposed timetable and the live hash for mobile corrections", () => {
+    const before = emptyTimetable("2026-10-05"),
+      after = { ...before, cycle: { ...before.cycle, weeks: 2 as const } }
+    const current = toCorrectionRecord({
+      documentId: "lib00000000000000000001",
+      libraryType: "Mobile",
+      mobileTimetable: before,
+    })
+    const changes = recordChanges("Stops & times", current, {
+      mobileTimetable: after,
+    })
+    expect(editorFor("Stops & times")).toBe("timetable")
+    expect(changes.changes).toEqual({ mobileTimetable: after })
+    expect(changes.previousHash).toBe(timetableHash(before))
+    expect(describeChanges(changes, {})).toEqual(["cycle changed"])
+  })
   it("sends nothing until something differs, ignoring timeframe ids", () => {
     const same = structuredClone(record.openingTimes!)
     same.days[0]!.timeframes[0]!.id = "different"

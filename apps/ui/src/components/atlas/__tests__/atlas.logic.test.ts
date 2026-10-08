@@ -155,7 +155,7 @@ describe("layers", () => {
     expect(layerAccess(layerDef("complete"), "public")).toBe("signin")
     expect(layerAccess(layerDef("complete"), "free")).toBe("available")
     expect(layerAccess(layerDef("deprivation"), "free")).toBe("pro")
-    expect(layerAccess(layerDef("mobile"), "public")).toBe("soon")
+    expect(layerAccess(layerDef("mobile"), "public")).toBe("available")
     // Not built yet: no sign-in prompt, but Pro layers still read as Pro.
     expect(layerAccess(layerDef("population"), "public")).toBe("soon")
     expect(layerAccess(layerDef("transit"), "free")).toBe("pro")

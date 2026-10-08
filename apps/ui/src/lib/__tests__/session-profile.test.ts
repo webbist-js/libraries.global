@@ -42,11 +42,13 @@ describe("fetchSessionProfile", () => {
       username: "ada",
       tier: "Reader",
       claims: [],
+      staff: [],
       grants: [],
       roleGrants: [{ role: "contributor", queue: "all", locale: null }],
       verifications: [],
       earnedProUntil: null,
       dismissedPrompts: [],
+      teams: [],
     }
     expect(await fetchSessionProfile("u1")).toEqual(expected)
     expect(await fetchSessionProfile("u1")).toEqual(expected)
@@ -186,6 +188,24 @@ describe("fetchSessionProfile", () => {
       { expiresAt: "2099-01-01T00:00:00Z" },
     ])
     expect(profile?.earnedProUntil).toBe("2099-01-01T00:00:00Z")
+  })
+
+  it("carries Supporter through the bridge into the session without Pro permissions", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          ...body,
+          grants: [{ plan: "supporter", expiresAt: null }],
+        })
+      )
+    )
+    const profile = await fetchSessionProfile("u1")
+    const access = buildSessionAccess(profile)
+    expect(access.plan).toBe("supporter")
+    expect(access.features).toEqual([])
+    expect(access.limits.savedViews).toBe(3)
+    expect(access.capabilities).not.toContain("moderate.queue")
   })
 
   it("defaults grants, verifications and earnedProUntil when the bridge omits them", async () => {

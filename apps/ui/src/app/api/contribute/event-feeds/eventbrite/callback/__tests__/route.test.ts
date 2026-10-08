@@ -24,6 +24,7 @@ const { signState } = await import("@/lib/oauth-state")
 
 const USER_ID = "user-1"
 const LIBRARY_ID = "lib00000000000000000001"
+const LIBRARY_SLUG = "central-library"
 
 const get = (search: string) =>
   GET(
@@ -34,7 +35,21 @@ const get = (search: string) =>
 
 function signIn(id = USER_ID) {
   getSession.mockResolvedValue({
-    user: { id, email: "u@x.org", name: "U" },
+    user: {
+      id,
+      email: "u@x.org",
+      name: "U",
+      staffLibraries: [
+        {
+          id: LIBRARY_ID,
+          name: "Central Library",
+          slug: "central-library",
+          libraryType: "Public",
+          role: "owner",
+          canGoLive: false,
+        },
+      ],
+    },
     session: { id: "s1" },
   })
 }
@@ -67,7 +82,7 @@ describe("GET /api/contribute/event-feeds/eventbrite/callback", () => {
     const res = await get("?code=abc123&state=not-a-valid-signature")
 
     expect(res.headers.get("location")).toBe(
-      "http://localhost/contribute/events?oauth=failed"
+      "http://localhost/staff?oauth=failed"
     )
     const setCookie = res.headers.get("set-cookie") ?? ""
     expect(setCookie).toMatch(/__Host-eb_oauth=;/)
@@ -80,29 +95,29 @@ describe("GET /api/contribute/event-feeds/eventbrite/callback", () => {
     const res = await get(`?code=abc123&state=${encodeURIComponent(state)}`)
 
     expect(res.headers.get("location")).toBe(
-      "http://localhost/contribute/events?oauth=failed"
+      "http://localhost/staff?oauth=failed"
     )
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it("redirects to oauth=failed when the nonce doesn't match the cookie", async () => {
+  it("redirects to the library's Event feeds tab with oauth=failed when the nonce doesn't match the cookie", async () => {
     const state = validState()
     cookieStore.nonce = "a-different-nonce"
     const res = await get(`?code=abc123&state=${encodeURIComponent(state)}`)
 
     expect(res.headers.get("location")).toBe(
-      "http://localhost/contribute/events?oauth=failed"
+      `http://localhost/staff/${LIBRARY_SLUG}/events?oauth=failed`
     )
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it("redirects to oauth=failed when the cookie is missing", async () => {
+  it("redirects to the library's Event feeds tab with oauth=failed when the cookie is missing", async () => {
     const state = validState()
     cookieStore.nonce = undefined
     const res = await get(`?code=abc123&state=${encodeURIComponent(state)}`)
 
     expect(res.headers.get("location")).toBe(
-      "http://localhost/contribute/events?oauth=failed"
+      `http://localhost/staff/${LIBRARY_SLUG}/events?oauth=failed`
     )
     expect(fetchMock).not.toHaveBeenCalled()
   })
@@ -113,7 +128,7 @@ describe("GET /api/contribute/event-feeds/eventbrite/callback", () => {
     const res = await get(`?code=abc123&state=${encodeURIComponent(state)}`)
 
     expect(res.headers.get("location")).toBe(
-      "http://localhost/contribute/events?oauth=failed"
+      "http://localhost/staff?oauth=failed"
     )
     expect(fetchMock).not.toHaveBeenCalled()
   })
@@ -144,7 +159,7 @@ describe("GET /api/contribute/event-feeds/eventbrite/callback", () => {
       ]
     ).toBe(USER_ID)
     expect(res.headers.get("location")).toBe(
-      `http://localhost/contribute/events?library=${LIBRARY_ID}&oauth=sent`
+      `http://localhost/staff/${LIBRARY_SLUG}/events?oauth=sent`
     )
   })
 
@@ -164,7 +179,7 @@ describe("GET /api/contribute/event-feeds/eventbrite/callback", () => {
     const res = await get(`?code=abc123&state=${encodeURIComponent(state)}`)
 
     expect(res.headers.get("location")).toBe(
-      "http://localhost/contribute/events/cred1/organisation"
+      `http://localhost/staff/${LIBRARY_SLUG}/events/cred1/organisation`
     )
   })
 
@@ -189,7 +204,7 @@ describe("GET /api/contribute/event-feeds/eventbrite/callback", () => {
     const res = await get(`?code=abc123&state=${encodeURIComponent(state)}`)
 
     expect(res.headers.get("location")).toBe(
-      `http://localhost/contribute/events?library=${LIBRARY_ID}&oauth=test_failed&result=auth_failed`
+      `http://localhost/staff/${LIBRARY_SLUG}/events?oauth=test_failed&result=auth_failed`
     )
   })
 
@@ -213,7 +228,7 @@ describe("GET /api/contribute/event-feeds/eventbrite/callback", () => {
     const res = await get(`?code=abc123&state=${encodeURIComponent(state)}`)
 
     expect(res.headers.get("location")).toBe(
-      `http://localhost/contribute/events?library=${LIBRARY_ID}&oauth=refused`
+      `http://localhost/staff/${LIBRARY_SLUG}/events?oauth=refused`
     )
   })
 })

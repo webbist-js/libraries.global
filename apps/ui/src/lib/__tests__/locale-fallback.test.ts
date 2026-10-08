@@ -34,7 +34,13 @@ function strapiWith(locales: string[]) {
   fetchOneBySlug.mockImplementation(
     async (_uid: string, _slug: string, params?: Params) => respond(params)
   )
-  fetchAPI.mockImplementation(async (_path: string, params?: Params) => {
+  fetchAPI.mockImplementation(async (path: string, params?: Params) => {
+    // `/libraries/by-slug/:slug` is a list: empty for a missing locale.
+    if (path.startsWith("/libraries/by-slug/")) {
+      const one = respond(params)
+
+      return { data: one.data ? [one.data] : [], meta: {} }
+    }
     // The article detail routes 404 for a missing locale; the client throws.
     if (!params?.locale || !locales.includes(params.locale))
       throw new Error("404")

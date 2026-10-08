@@ -5,6 +5,24 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }))
+// GlobalLink reads next-intl's navigation, which needs the app's routing.
+vi.mock("@/lib/navigation", () => ({
+  Link: ({
+    href,
+    children,
+    ...rest
+  }: {
+    href: string
+    children?: React.ReactNode
+  }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
+  formatHref: (href: string) => href,
+  isAppLink: () => true,
+  routing: { locales: ["cs", "en"], defaultLocale: "en" },
+}))
 
 import { ReplaceFeedForm } from "../ReplaceFeedForm"
 import type { FeedView } from "../types"
@@ -49,6 +67,7 @@ describe("ReplaceFeedForm", () => {
         feed={FEED}
         libraryName="Central Library"
         libraryDocumentId={LIBRARY_ID}
+        librarySlug="central-library"
       />
     )
 
@@ -78,6 +97,7 @@ describe("ReplaceFeedForm", () => {
         feed={FEED}
         libraryName="Central Library"
         libraryDocumentId={LIBRARY_ID}
+        librarySlug="central-library"
       />
     )
 

@@ -33,7 +33,7 @@ const stored = (dismissedPrompts: unknown) =>
     profile: { username: "ada", dismissedPrompts },
   })
 const savedList = () =>
-  JSON.parse(fetchMock.mock.calls[0][1].body as string) as {
+  JSON.parse(fetchMock.mock.calls[0]![1].body as string) as {
     baUserId: string
     dismissedPrompts: string[]
   }
@@ -52,7 +52,7 @@ describe("PUT /api/profile/me/prompts", () => {
     const res = await put({ prompt: "find-contribute", dismissed: true })
 
     expect(res.status).toBe(200)
-    expect(fetchMock.mock.calls[0][0]).toBe(
+    expect(fetchMock.mock.calls[0]![0]).toBe(
       "http://strapi.test/api/auth-bridge/upsert-profile"
     )
     expect(savedList()).toEqual({

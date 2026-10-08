@@ -27,6 +27,10 @@ vi.mock("@/components/ds", () => ({
       {children}
     </div>
   ),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  StatusBadge: ({ tone, children }: any) => (
+    <span data-tone={tone}>{children}</span>
+  ),
   NOTICE_TONES: {
     ok: { bg: "#E6EFE6", fg: "#2F5D3A" },
     info: { bg: "#ECEBFB", fg: "#3730A3" },
@@ -58,8 +62,21 @@ const BASE: FeedView = {
 
 describe("FeedRow", () => {
   it("shows Replace details for an active feed with no pending review", () => {
-    render(<FeedRow feed={BASE} libraryName="Central Library" />)
-    expect(screen.getByText("Replace details")).toBeTruthy()
+    render(
+      <ul>
+        <FeedRow
+          feed={BASE}
+          libraryDocumentId="lib1"
+          librarySlug="central-library"
+          libraryName="Central Library"
+        />
+      </ul>
+    )
+    const replace = screen.getByText("Replace details").closest("a")
+    expect(replace?.getAttribute("href")).toBe(
+      `/staff/central-library/events/${BASE.documentId}/replace`
+    )
+    expect(screen.getByRole("listitem")).toBeTruthy()
   })
 
   it("hides Replace details while a replacement's review is pending", () => {
@@ -73,7 +90,16 @@ describe("FeedRow", () => {
         note: null,
       },
     }
-    render(<FeedRow feed={feed} libraryName="Central Library" />)
+    render(
+      <ul>
+        <FeedRow
+          feed={feed}
+          libraryDocumentId="lib1"
+          librarySlug="central-library"
+          libraryName="Central Library"
+        />
+      </ul>
+    )
     expect(screen.queryByText("Replace details")).toBeNull()
   })
 
@@ -90,7 +116,16 @@ describe("FeedRow", () => {
         note: "Try a different key.",
       },
     }
-    render(<FeedRow feed={feed} libraryName="Central Library" />)
+    render(
+      <ul>
+        <FeedRow
+          feed={feed}
+          libraryDocumentId="lib1"
+          librarySlug="central-library"
+          libraryName="Central Library"
+        />
+      </ul>
+    )
     expect(screen.queryByText("Replace details")).toBeNull()
   })
 })

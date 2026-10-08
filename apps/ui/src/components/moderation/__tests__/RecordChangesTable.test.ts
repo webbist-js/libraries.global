@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 Object.assign(globalThis, { React })
 
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
+vi.mock("@/lib/navigation", () => ({ Link: () => null }))
 
 const { RecordChangesTable } = await import("../RecordChangesTable")
 

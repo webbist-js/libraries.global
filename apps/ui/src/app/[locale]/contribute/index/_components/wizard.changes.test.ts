@@ -1,3 +1,4 @@
+import { emptyTimetable, timetableHash } from "@repo/shared-data"
 import { describe, expect, it } from "vitest"
 
 import {
@@ -45,6 +46,20 @@ describe("changedFieldKeys", () => {
 })
 
 describe("recordChangesPayload", () => {
+  it("keeps the timetable before value and its separate stale-check hash", () => {
+    const before = emptyTimetable("2026-10-05"),
+      after = { ...before, cycle: { ...before.cycle, weeks: 2 as const } }
+    const payload = recordChangesPayload(
+      { ...base, libraryType: "Mobile", mobileTimetable: before },
+      { ...base, libraryType: "Mobile", mobileTimetable: after }
+    )
+    expect(payload).toEqual({
+      kind: "record",
+      mobileTimetable: after,
+      previous: { mobileTimetable: before },
+      previousHash: timetableHash(before),
+    })
+  })
   it("tags the payload and keeps the values being replaced", () => {
     expect(
       recordChangesPayload(base, { ...base, city: "Watford", note: "hi" })

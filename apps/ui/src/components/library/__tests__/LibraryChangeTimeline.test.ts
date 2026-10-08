@@ -80,8 +80,8 @@ describe("LibraryChangeTimeline", () => {
         initial: page([batch()]),
       })
     )
-    expect(getByText("Changed")).toBeTruthy()
-    expect(container.textContent).toContain("2 fields")
+    expect(getByText("Website and Phone updated")).toBeTruthy()
+    expect(container.textContent).toContain("2 details changed")
     expect(container.textContent).toContain("Website")
     expect(container.textContent).toContain("Phone")
     const link = getByText("@ada").closest("a")!
@@ -158,7 +158,7 @@ describe("LibraryChangeTimeline", () => {
     )
   })
 
-  it("loads older changes from the history route", async () => {
+  it("loads older entries from the history route", async () => {
     fetchMock.mockResolvedValue(
       Response.json({
         data: [batch({ batchId: "b2", fields: [{ field: "email" }] })],
@@ -171,7 +171,7 @@ describe("LibraryChangeTimeline", () => {
         initial: page([batch()], 21),
       })
     )
-    fireEvent.click(getByRole("button", { name: /older changes/i }))
+    fireEvent.click(getByRole("button", { name: /show all|older entries/i }))
     await waitFor(() => expect(container.textContent).toContain("Email"))
     expect(fetchMock.mock.calls[0]![0]).toBe(
       `/api/libraries/${DOC}/history?page=2`
@@ -322,7 +322,7 @@ describe("the Pro reload", () => {
         initial: page([batch({ fields: [{ field: "website" }] })], 21),
       })
     )
-    fireEvent.click(getByRole("button", { name: /older changes/i }))
+    fireEvent.click(getByRole("button", { name: /show all|older entries/i }))
     await waitFor(() => expect(container.textContent).toContain("Email"))
 
     features.ready = true

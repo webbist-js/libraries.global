@@ -16,11 +16,11 @@ vi.mock("@iconify/react", async () => {
       h("span", { "data-icon": icon, "aria-hidden": "true" }),
   }
 })
-vi.mock("next/navigation", () => ({ usePathname: () => nav.path }))
 vi.mock("@/lib/navigation", async () => {
   const { createElement: h } = await import("react")
 
   return {
+    usePathname: () => nav.path,
     Link: ({
       href,
       children,

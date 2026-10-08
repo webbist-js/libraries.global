@@ -81,11 +81,11 @@ describe("compareGroups", () => {
     })
   })
 
-  it("marks coming-soon includes as soon, without the suffix", () => {
-    const downloads = row("open-data-downloads")
-    expect(downloads.label).toBe("Open-data downloads")
+  it("shows public library record downloads as available for every plan", () => {
+    const downloads = row("library-record-downloads")
+    expect(downloads.label).toBe("Library record downloads")
     expect(Object.values(downloads.cells)).toEqual(
-      Array.from({ length: 5 }, () => "soon")
+      Array.from({ length: 5 }, () => "yes")
     )
   })
 
@@ -100,7 +100,7 @@ describe("availableNow", () => {
     const groups = availableNow(compareGroups())
     const ids = groups.flatMap((g) => g.rows.map((r) => r.id))
     expect(ids).toContain("atlas.export")
-    expect(ids).not.toContain("open-data-downloads")
+    expect(ids).toContain("library-record-downloads")
     expect(ids).not.toContain("team.workspace")
     for (const g of groups) expect(g.rows.length).toBeGreaterThan(0)
   })
