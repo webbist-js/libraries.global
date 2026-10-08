@@ -8,11 +8,21 @@ import { isDocumentId } from "./params"
  */
 
 const LIBRARY = "api::library.library"
+const REVIEW_COLLECTIONS = { ...OPTION_COLLECTIONS, homeLibrary: LIBRARY }
+const linkedValues = (
+  value: unknown
+): { documentId?: string; name?: string }[] =>
+  Array.isArray(value)
+    ? value
+    : value && typeof value === "object"
+      ? [value]
+      : []
 
 /** Keys in `fields` that describe the submission, not library fields. */
 export const RECORD_META_KEYS = new Set([
   "kind",
   "previous",
+  "previousHash",
   "category",
   "libraryName",
   "suggestedOptions",
@@ -25,6 +35,7 @@ export type RecordReview = {
 
 /** documentIds anywhere in a relation change: a list, or connect/disconnect. */
 function relationIds(raw: unknown): string[] {
+  if (isDocumentId(raw)) return [raw]
   if (Array.isArray(raw)) return raw.filter(isDocumentId)
   if (!raw || typeof raw !== "object") return []
   const { connect, disconnect } = raw as Record<string, unknown>
@@ -57,10 +68,10 @@ function reviewKeys(fields: Record<string, unknown>) {
   const keys = Object.keys(fields).filter((k) => !RECORD_META_KEYS.has(k))
 
   return {
-    relations: keys.filter((k) => k in OPTION_COLLECTIONS),
+    relations: keys.filter((k) => k in REVIEW_COLLECTIONS),
     scalars: keys.filter(
       (k) =>
-        !(k in OPTION_COLLECTIONS) &&
+        !(k in REVIEW_COLLECTIONS) &&
         /^[a-zA-Z]+$/.test(k) &&
         k !== "lat" &&
         k !== "lng"
@@ -105,6 +116,7 @@ export async function preloadRecordReviews(
 
   const query = {
     fields: ["documentId", "slug", ...scalars],
+    status: "published",
     populate: Object.fromEntries(
       [...relations].map((k) => [k, { fields: ["documentId", "name"] }])
     ),
@@ -134,15 +146,13 @@ export async function preloadRecordReviews(
     const names = new Map<string, string>()
     preloaded.options.set(rel, names)
     for (const lib of preloaded.libraries.values()) {
-      const linked = Array.isArray(lib[rel])
-        ? (lib[rel] as { documentId?: string; name?: string }[])
-        : []
+      const linked = linkedValues(lib[rel])
       for (const o of linked)
         if (o.documentId && o.name) names.set(o.documentId, o.name)
     }
     const unknown = [...set].filter((id) => !names.has(id))
     if (unknown.length === 0) continue
-    const found = (await strapi.documents(OPTION_COLLECTIONS[rel]).findMany({
+    const found = (await strapi.documents(REVIEW_COLLECTIONS[rel]).findMany({
       filters: { documentId: { $in: unknown } },
       fields: ["documentId", "name"],
       limit: unknown.length,
@@ -174,6 +184,7 @@ export async function recordReview(
   } else {
     const query = {
       fields: ["documentId", ...scalars],
+      status: "published",
       populate: Object.fromEntries(
         relations.map((k) => [k, { fields: ["documentId", "name"] }])
       ),
@@ -199,12 +210,13 @@ export async function recordReview(
   for (const key of scalars)
     if (library && key in library) current[key] = library[key]
   for (const key of relations) {
-    const linked = Array.isArray(library?.[key])
-      ? (library![key] as { documentId?: string; name?: string }[])
-      : []
+    const linked = linkedValues(library?.[key])
     for (const o of linked)
       if (o.documentId && o.name) names[o.documentId] = o.name
-    current[key] = linked.map((o) => o.documentId).filter(Boolean)
+    current[key] =
+      key === "homeLibrary"
+        ? (linked[0]?.documentId ?? null)
+        : linked.map((o) => o.documentId).filter(Boolean)
 
     const unknown = relationIds(fields[key]).filter((id) => !names[id])
     if (unknown.length === 0) continue
@@ -216,7 +228,7 @@ export async function recordReview(
       }
       continue
     }
-    const found = (await strapi.documents(OPTION_COLLECTIONS[key]).findMany({
+    const found = (await strapi.documents(REVIEW_COLLECTIONS[key]).findMany({
       filters: { documentId: { $in: unknown } },
       fields: ["documentId", "name"],
       limit: unknown.length,

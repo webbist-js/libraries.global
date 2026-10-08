@@ -1,5 +1,11 @@
 import { randomUUID } from "node:crypto"
 
+import {
+  diffTimetable,
+  normalizeMobileTimetable,
+  summarizeDiff,
+} from "@repo/shared-data"
+
 import { isActivityPublic } from "../../../../utils/activity-visibility"
 import { isRecordCorrection, recordFieldNames } from "../utils/library-record"
 
@@ -28,7 +34,12 @@ export type LibraryHistoryBatch = {
   action: string
   source: string
   actor: HistoryActor
-  fields: { field: string; previous?: unknown; next?: unknown }[]
+  fields: {
+    field: string
+    summary?: string
+    previous?: unknown
+    next?: unknown
+  }[]
   submissionDocumentId: string | null
 }
 
@@ -203,11 +214,21 @@ export default ({ strapi }: { strapi: any }) => ({
           action: head.action ?? "update",
           source: head.source ?? "system",
           actor: actorOf(head, names),
-          fields: group.map((r) =>
-            o.values
-              ? { field: r.field, previous: r.previous, next: r.next }
-              : { field: r.field }
-          ),
+          fields: group.map((r) => ({
+            field: r.field,
+            ...(r.field === "mobileTimetable" &&
+            (r.previous != null || r.next != null)
+              ? {
+                  summary: summarizeDiff(
+                    diffTimetable(
+                      normalizeMobileTimetable(r.previous),
+                      normalizeMobileTimetable(r.next)
+                    )
+                  ),
+                }
+              : {}),
+            ...(o.values ? { previous: r.previous, next: r.next } : {}),
+          })),
           submissionDocumentId: head.submissionDocumentId ?? null,
         },
       ]

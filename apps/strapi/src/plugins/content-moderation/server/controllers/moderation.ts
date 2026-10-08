@@ -6,6 +6,7 @@ import {
 } from "@repo/access"
 
 import { decideFromRequest } from "./option-suggestion"
+import { claimAffiliationFilter } from "../../../../utils/affiliations"
 import { decodeHeaderName } from "../../../../utils/header-name"
 import { LIST_STATUSES, type ListStatus } from "../services/moderation"
 import {
@@ -214,6 +215,142 @@ export default ({ strapi }: { strapi: any }) => {
   }
 
   return {
+    /**
+     * POST /moderation/staff/:affiliationDocumentId/remove
+     * Removes a library staff member (1.3). Needs a Moderation Scope over
+     * the `index` queue (or every queue); the affiliation is deleted through
+     * the Document Service so its lifecycle ends live sessions, emails the
+     * person and writes the staff audit. 404 for a missing or proposer row.
+     */
+    async removeStaff(ctx: any) {
+      const auth = await authorise(ctx)
+      if (!auth) return
+      if (
+        !auth.caps.moderation.some(
+          (m) => m.queue === "all" || m.queue === "index"
+        )
+      )
+        return fail(ctx, 403, "You don't moderate the index queue.")
+      const { affiliationDocumentId } = (ctx.params ?? {}) as {
+        affiliationDocumentId?: unknown
+      }
+      if (!isDocumentId(affiliationDocumentId))
+        return fail(ctx, 400, "Invalid documentId")
+      const row = await strapi
+        .documents("api::library-affiliation.library-affiliation")
+        .findOne({
+          documentId: affiliationDocumentId,
+          fields: ["documentId", "baUserId", "role"] as any,
+          populate: { library: { fields: ["documentId"] } } as any,
+        })
+      if (!row || row.role === "proposer" || !row.library?.documentId)
+        return fail(ctx, 404, "Staff member not found.")
+      if (row.baUserId === auth.viewer.id)
+        return fail(ctx, 403, "Leave the library from its staff area instead.")
+      await strapi
+        .plugin("library-staff")
+        ?.service("staff")
+        ?.audit(
+          row.library.documentId,
+          auth.viewer.id,
+          "removed",
+          row.baUserId,
+          { by: "moderator" }
+        )
+      await strapi
+        .documents("api::library-affiliation.library-affiliation")
+        .delete({ documentId: affiliationDocumentId })
+      strapi.log.info(
+        `[content-moderation] moderator ${auth.viewer.id} removed staff ${affiliationDocumentId} from ${row.library.documentId}`
+      )
+      ctx.body = { data: { removed: true } }
+    },
+
+    /**
+     * GET /moderation/staff/:libraryDocumentId
+     * Who has staff access at one library, for a Moderator reviewing an
+     * access report (the report email links here). Same scope as
+     * `removeStaff`: `index` or every queue. 404 for an unknown or
+     * unpublished library, so the route can't be used to probe ids.
+     */
+    async staffList(ctx: any) {
+      const auth = await authorise(ctx)
+      if (!auth) return
+      if (
+        !auth.caps.moderation.some(
+          (m) => m.queue === "all" || m.queue === "index"
+        )
+      )
+        return fail(ctx, 403, "You don't moderate the index queue.")
+      const { libraryDocumentId } = (ctx.params ?? {}) as {
+        libraryDocumentId?: unknown
+      }
+      if (!isDocumentId(libraryDocumentId))
+        return fail(ctx, 400, "Invalid documentId")
+      const library = await strapi.documents("api::library.library").findOne({
+        documentId: libraryDocumentId,
+        status: "published",
+        fields: ["documentId", "name", "slug"] as any,
+        populate: {
+          continent: { fields: ["slug"] },
+          country: { fields: ["slug"] },
+          region: { fields: ["slug"] },
+        } as any,
+      })
+      if (!library) return fail(ctx, 404, "Library not found.")
+      // Claims only, read as `listStaff` reads them: `role <> 'proposer'`
+      // alone drops every row whose role is NULL (a claim without a job
+      // title), so the shared filter allows a null role explicitly.
+      const { baUserId: _user, ...claimFilter } = claimAffiliationFilter("")
+      const rows = (await strapi
+        .documents("api::library-affiliation.library-affiliation")
+        .findMany({
+          filters: {
+            ...claimFilter,
+            library: { documentId: { $eq: libraryDocumentId } },
+          },
+          fields: [
+            "documentId",
+            "baUserId",
+            "staffRole",
+            "source",
+            "approvedAt",
+            "createdAt",
+          ] as any,
+          sort: ["createdAt:asc", "id:asc"],
+          limit: 500,
+        })) as Record<string, any>[]
+      const names: Map<string, string> =
+        (await strapi
+          .plugin("access")
+          ?.service("people")
+          ?.namesOf?.(rows.map((r) => r.baUserId).filter(Boolean))) ?? new Map()
+      const parts = [
+        library.continent?.slug,
+        library.country?.slug,
+        library.region?.slug,
+        library.slug,
+      ]
+      ctx.body = {
+        data: {
+          library: {
+            documentId: library.documentId,
+            name: library.name,
+            path: parts.every(Boolean) ? `/${parts.join("/")}` : null,
+          },
+          staff: rows.map((r) => ({
+            affiliationDocumentId: r.documentId,
+            name: names.get(r.baUserId) ?? "Library staff",
+            staffRole: r.staffRole === "owner" ? "owner" : "editor",
+            source: r.source === "team" ? "team" : "claim",
+            approvedAt: r.approvedAt ?? r.createdAt ?? null,
+            // Moderators can't remove themselves from a library this way.
+            canRemove: r.baUserId !== auth.viewer.id,
+          })),
+        },
+      }
+    },
+
     // GET /moderation/submissions?status&queue&type&locale&q&page&pageSize
     async list(ctx: any) {
       const auth = await authorise(ctx)

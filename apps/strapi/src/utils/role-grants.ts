@@ -21,7 +21,7 @@ const INVALIDATE_TIMEOUT_MS = 3000
 export type RoleGrantRow = RoleGrant & {
   documentId: string
   baUserId: string
-  source: "admin" | "claim" | "application" | "migration"
+  source: "admin" | "claim" | "application" | "migration" | "team"
   grantedBy: string | null
   reason: string | null
   expiresAt: string | null

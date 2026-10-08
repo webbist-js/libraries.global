@@ -1,5 +1,6 @@
 import admin from "./admin"
 import contentApi from "./content-api"
+import staff from "./staff"
 
 export default {
   admin: {
@@ -8,6 +9,6 @@ export default {
   },
   "content-api": {
     type: "content-api",
-    routes: contentApi,
+    routes: [...contentApi, ...staff],
   },
 }

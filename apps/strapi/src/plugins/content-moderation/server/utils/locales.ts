@@ -133,7 +133,7 @@ export async function backfillSubmissionLocales(
       sort: "id:asc",
       start,
       limit: BACKFILL_PAGE,
-    })) as Record<string, any>[]
+    })) as (Record<string, any> & { submissionType: string })[]
 
     for (const row of rows) {
       const current: unknown = row.contentLocale

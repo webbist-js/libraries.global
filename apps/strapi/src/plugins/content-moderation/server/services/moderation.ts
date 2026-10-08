@@ -26,7 +26,7 @@ import { isVerification, verifyReview } from "../utils/library-verify"
 import { defaultLocale, knownLocale, submissionLocale } from "../utils/locales"
 import { isNewArticleDraft, roleApplicationFields } from "../utils/params"
 import { preloadTopicReviews, recordReview } from "../utils/record-review"
-import { staffReviewHint } from "../utils/staff-review-hint"
+import { claimReview, staffReviewHint } from "../utils/staff-review-hint"
 import { summaryOf } from "../utils/submission-summary"
 
 /**
@@ -583,6 +583,9 @@ export default ({ strapi }: { strapi: any }) => ({
 
   /** What the review needs to know, read from Strapi, never the contributor. */
   async review(s: any): Promise<unknown | null> {
+    // A claim's review (the claimant's current staff row) is shown whatever
+    // its status, so a Moderator can remove staff from a decided claim.
+    if (s.submissionType === "library_claim") return claimReview(strapi, s)
     if (!OPEN.has(s.status)) return null
     if (s.submissionType === "topic_suggestion")
       return (

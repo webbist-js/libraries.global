@@ -65,7 +65,11 @@ import {
   recordReview,
 } from "../utils/record-review"
 import { isSelfReview, type Reviewer } from "../utils/reviewer"
-import { staffReviewHint } from "../utils/staff-review-hint"
+import {
+  staffReviewHint,
+  claimReview,
+  preloadStaffReviewHints,
+} from "../utils/staff-review-hint"
 import { withTargetLabels } from "../utils/target-labels"
 import { applyTopicSuggestion } from "../utils/topic-suggestion"
 import { canTransition } from "../utils/transitions"
@@ -163,7 +167,13 @@ const asObject = (v: unknown): Record<string, unknown> =>
  * `finalizeDraft` drop them, so a submitter can't file their own library on
  * approval.
  */
-const MODERATOR_KEYS: readonly string[] = ["moderatorTarget", "moderatorEdit"]
+const MODERATOR_KEYS: readonly string[] = [
+  "moderatorTarget",
+  "moderatorEdit",
+  // The "Staff request" queue chip: set only by the staff publish path
+  // (`create({ requestedByStaff: true })`), never from a submitted body.
+  "requestedByStaff",
+]
 
 export function withoutModeratorKeys<T>(draftData: T): T {
   if (!draftData || typeof draftData !== "object" || Array.isArray(draftData))
@@ -672,8 +682,19 @@ export default ({ strapi }: { strapi: any }) => ({
      * `create` was called inside) has committed. Default true.
      */
     notify?: boolean
+    /**
+     * Internal: marks a moderated field request filed by library staff. The
+     * controller never forwards it, so a contributor cannot forge the chip.
+     */
+    requestedByStaff?: boolean
   }) {
-    const { asDraft, locale, notify = true, ...fields } = data
+    const {
+      asDraft,
+      locale,
+      notify = true,
+      requestedByStaff = false,
+      ...fields
+    } = data
     // An application is stored as validated: trimmed, de-duplicated, and
     // without the keys its role ignores (the policy already checked it).
     if (fields.submissionType === "role_application") {
@@ -684,11 +705,17 @@ export default ({ strapi }: { strapi: any }) => ({
       if (parsed.ok) fields.fields = parsed.value
     }
     const status = asDraft ? "draft" : "pending"
+    const draftData = requestedByStaff
+      ? {
+          ...withoutModeratorKeys(fields.draftData ?? {}),
+          requestedByStaff: true,
+        }
+      : fields.draftData === undefined
+        ? undefined
+        : withoutModeratorKeys(fields.draftData)
     const rest = {
       ...fields,
-      ...(fields.draftData === undefined
-        ? {}
-        : { draftData: withoutModeratorKeys(fields.draftData) }),
+      ...(draftData === undefined ? {} : { draftData }),
       // An application is always about the applicant's own profile; the
       // client's value is ignored.
       ...(fields.submissionType === "role_application"
@@ -778,17 +805,23 @@ export default ({ strapi }: { strapi: any }) => ({
     const open = (rows ?? []).filter(
       (row: any) => row.status === "pending" || row.status === "needs_info"
     )
-    const [preloaded, topics] = await Promise.all([
+    const [preloaded, topics, staffHints] = await Promise.all([
       preloadRecordReviews(strapi, open),
       preloadTopicReviews(strapi, open),
+      preloadStaffReviewHints(strapi, open),
     ])
 
     return Promise.all(
       (rows ?? []).map(async (row: any) => {
-        const hint = await staffReviewHint(strapi, row)
+        const hint = await staffReviewHint(strapi, row, staffHints)
+        const claim =
+          row.submissionType === "library_claim"
+            ? await claimReview(strapi, row).catch(() => null)
+            : null
         const client = {
           ...toClient(row),
           ...(hint ? { staffReviewHint: hint } : {}),
+          ...(claim?.team ? { teamReview: claim.team } : {}),
         }
         if (!open.includes(row)) return client
         const review =
@@ -811,10 +844,12 @@ export default ({ strapi }: { strapi: any }) => ({
       })
 
     // Drive tags for the rows that carry one, one query for the page.
-    const driveMap = await strapi
-      .plugin("content-moderation")
-      .service("moderation")
-      .driveTitles((rows ?? []).map((r: any) => r.driveDocumentId))
+    const driveMap: Map<string, unknown> =
+      (await strapi
+        .plugin("content-moderation")
+        ?.service("moderation")
+        ?.driveTitles?.((rows ?? []).map((r: any) => r.driveDocumentId))) ??
+      new Map()
 
     // Named like the public list on the profile: library names and article
     // titles, not slugs.
@@ -1258,14 +1293,23 @@ export default ({ strapi }: { strapi: any }) => ({
                 `[content-moderation] claim ${documentId} has no valid targetDocumentId; skipping affiliation`
               )
             } else {
-              const inviteRole = await strapi
-                .plugin("library-staff")
-                ?.service("staff")
-                ?.approveInvite(submission)
+              // A claim an unverified Team's organiser filed by assigning a
+              // member carries the level and member to record; any other
+              // claim (including an ordinary vouched one) is a plain claim.
+              const teamContext = await strapi
+                .plugin("access")
+                ?.service("teams")
+                ?.claimContext(submission)
               const affiliation = await upsertAffiliation(strapi, {
                 baUserId: submission.submittedByUserId,
                 libraryDocumentId: targetLibrary.documentId,
-                ...(inviteRole ? { staffRole: inviteRole } : {}),
+                ...(teamContext
+                  ? {
+                      staffRole: teamContext.staffRole,
+                      source: "team" as const,
+                      teamMemberDocumentId: teamContext.teamMemberDocumentId,
+                    }
+                  : {}),
                 // Pass through undefined (not null) when the claim didn't supply
                 // a value, so an update doesn't null out an existing one.
                 role: fields.role as string | undefined,

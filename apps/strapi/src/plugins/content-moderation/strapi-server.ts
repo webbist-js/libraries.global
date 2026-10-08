@@ -22,12 +22,6 @@ export default {
         uid: "update",
         pluginName: "content-moderation",
       },
-      {
-        section: "plugins",
-        displayName: "Manage contributor roles",
-        uid: "manage-roles",
-        pluginName: "content-moderation",
-      },
     ])
     // One-off, flag-guarded: Submissions from before they carried a locale.
     try {

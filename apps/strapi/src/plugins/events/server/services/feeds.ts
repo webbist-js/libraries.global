@@ -900,7 +900,7 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
       if (feed.status !== "pending")
         void notifyOtherClaimants(strapi, libraryIdsOf(feed), user.id, {
           subject: "An event feed was disconnected",
-          text: `The ${EVENT_PROVIDERS[feed.provider as EventProviderKey].label} feed for ${feed.libraries?.[0]?.name ?? "your library"} was disconnected by another librarian. Its events have been removed. Reconnect it from ${process.env.APP_PUBLIC_URL ?? ""}/contribute/events.`,
+          text: `The ${EVENT_PROVIDERS[feed.provider as EventProviderKey].label} feed for ${feed.libraries?.[0]?.name ?? "your library"} was disconnected by another librarian. Its events have been removed. Reconnect it from ${process.env.APP_PUBLIC_URL ?? ""}${feed.libraries?.[0]?.slug ? `/staff/${feed.libraries[0].slug}/events` : "/staff"}.`,
         })
 
       return { ok: true as const }

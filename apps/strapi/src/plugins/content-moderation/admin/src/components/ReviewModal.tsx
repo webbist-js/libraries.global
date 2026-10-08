@@ -1,3 +1,4 @@
+import { isStaleTimetableSuggestion } from "@repo/shared-data"
 import {
   Alert,
   Badge,
@@ -115,8 +116,14 @@ export function ReviewModal({
   const [busy, setBusy] = useState(false)
   if (!sub) return null
   const reviewable = sub.status === "pending" || sub.status === "needs_info"
+  const staleTimetable = isStaleTimetableSuggestion(
+    sub.submissionType,
+    sub.fields,
+    sub.review?.current?.mobileTimetable
+  )
 
   const decide = async (status: Decision) => {
+    if (staleTimetable && status !== "rejected") return
     setBusy(true)
     const ok = await onDecide(
       sub.documentId,
@@ -137,6 +144,7 @@ export function ReviewModal({
         <Modal.Header>
           <Flex gap={2} alignItems="center" wrap="wrap">
             <TypeBadge type={sub.submissionType} />
+            {sub.staffReviewHint && <Badge>{sub.staffReviewHint}</Badge>}
             <Modal.Title>{summaryOf(sub)}</Modal.Title>
             <StatusPill status={sub.status} />
           </Flex>
@@ -245,7 +253,7 @@ export function ReviewModal({
                     variant="secondary"
                     startIcon={<Information />}
                     onClick={() => setPending("needs_info")}
-                    disabled={busy}
+                    disabled={busy || Boolean(staleTimetable)}
                   >
                     Needs info
                   </Button>
@@ -261,6 +269,7 @@ export function ReviewModal({
                     variant="success"
                     startIcon={<Check />}
                     onClick={() => void decide("approved")}
+                    disabled={Boolean(staleTimetable)}
                     loading={busy}
                   >
                     {sub.submissionType === "library_claim"

@@ -1,5 +1,6 @@
 import {
   FACILITY_CHECKLIST,
+  MOBILE_FACILITY_CHECKLIST,
   type FacilityAnswer,
   type FacilityCheck,
   type FacilityCollection,
@@ -43,7 +44,12 @@ export function parseFacilityAnswers(fields: unknown): ParsedAnswer[] {
     return []
   const answers = f.answers as Record<string, unknown>
 
-  return FACILITY_CHECKLIST.flatMap((check) => {
+  return [
+    ...FACILITY_CHECKLIST,
+    ...MOBILE_FACILITY_CHECKLIST.filter(
+      (c) => !FACILITY_CHECKLIST.some((existing) => existing.label === c.label)
+    ),
+  ].flatMap((check) => {
     const answer = answers[check.label]
 
     return answer === "yes" || answer === "no" ? [{ check, answer }] : []
@@ -64,7 +70,9 @@ export function nextAbsentFacilities(
     if (answer === "no") absent.add(check.label)
     else absent.delete(check.label)
   }
-  const order = FACILITY_CHECKLIST.map((c) => c.label)
+  const order = [...FACILITY_CHECKLIST, ...MOBILE_FACILITY_CHECKLIST].map(
+    (c) => c.label
+  )
 
   return [...absent].sort((a, b) => order.indexOf(a) - order.indexOf(b))
 }

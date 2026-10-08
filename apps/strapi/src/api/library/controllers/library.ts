@@ -5,6 +5,7 @@ import {
   getAtlasCache,
   setAtlasCache,
 } from "../../../utils/atlas-cache"
+import { BUILDING_LIBRARY_FILTER } from "../../../utils/library-building-filter"
 import {
   compactHours,
   type OpeningTimes,
@@ -111,6 +112,36 @@ export default factories.createCoreController(
   "api::library.library",
   ({ strapi }) => ({
     /**
+     * GET /libraries/by-slug/:slug
+     * The core `find` with the slug pinned, under the detail populate shape
+     * (routes/library-by-slug.ts). Locale, status and sort pass through as
+     * for the list route; the client's own filters are replaced, so a slug
+     * read can never widen into a scan.
+     */
+    async findBySlug(ctx) {
+      const { slug } = ctx.params as { slug?: unknown }
+      if (
+        typeof slug !== "string" ||
+        slug.length === 0 ||
+        slug.length > 255 ||
+        !/^[a-z0-9][a-z0-9._-]*$/i.test(slug)
+      )
+        return ctx.badRequest("Invalid slug")
+      const {
+        filters: _ignored,
+        pagination: _page,
+        ...rest
+      } = (ctx.query ?? {}) as Record<string, unknown>
+      ctx.query = {
+        ...rest,
+        filters: { slug: { $eq: slug } },
+        pagination: { pageSize: 5 },
+      }
+
+      return super.find(ctx)
+    },
+
+    /**
      * GET /libraries/atlas
      * Every published library as a compact GeoJSON FeatureCollection for the
      * Atlas Explorer map. Filtering happens client-side, so this carries the
@@ -133,7 +164,11 @@ export default factories.createCoreController(
           const batch = (await strapi
             .documents("api::library.library")
             .findMany({
-              filters: { id: { $gt: lastId } } as never,
+              // Scheduled mobile services are drawn as stop pins, not a depot.
+              filters: {
+                id: { $gt: lastId },
+                ...BUILDING_LIBRARY_FILTER,
+              } as never,
               fields: [
                 "name",
                 "slug",

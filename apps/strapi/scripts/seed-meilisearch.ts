@@ -12,6 +12,8 @@
 import { readFileSync } from "node:fs"
 import path from "node:path"
 
+import type { LibraryNotice } from "@repo/shared-data"
+
 import pluginsConfig from "../config/plugins"
 
 type EntriesQuery = {
@@ -23,7 +25,10 @@ type Entry = Record<string, unknown>
 type IndexConfig = {
   settings: Record<string, unknown>
   entriesQuery: EntriesQuery
-  transformEntry: (args: { entry: Entry }) => Entry
+  transformEntry: (args: {
+    entry: Entry
+    notices?: LibraryNotice[]
+  }) => Entry | Promise<Entry>
 }
 
 /** Index → REST collection. */
@@ -94,7 +99,30 @@ export function entriesQueryParams(
   return params
 }
 
-function readEnvFile(): Record<string, string> {
+/**
+ * The list route's shape leaves `mobileTimetable` out (1.8: lists and the
+ * index carry `stop_count` and `cycle_weeks` only), so a Mobile entry's
+ * timetable comes from its public timetable route, once per vehicle across
+ * its locales. The transform derives the two counts from it and drops it.
+ * `get` resolves to the route's JSON, or null when the route answers 404.
+ */
+export async function attachMobileTimetables(
+  entries: Entry[],
+  get: (path: string) => Promise<{ timetable?: unknown } | null>
+): Promise<void> {
+  const byId = new Map<string, Entry[]>()
+  for (const entry of entries) {
+    if (entry.libraryType !== "Mobile" || typeof entry.documentId !== "string")
+      continue
+    byId.set(entry.documentId, [...(byId.get(entry.documentId) ?? []), entry])
+  }
+  for (const [id, rows] of byId) {
+    const json = await get(`/api/mobile/${id}/timetable`)
+    for (const row of rows) row.mobileTimetable = json?.timetable ?? null
+  }
+}
+
+export function readEnvFile(): Record<string, string> {
   return Object.fromEntries(
     readFileSync(path.resolve(__dirname, "..", ".env"), "utf8")
       .split("\n")
@@ -161,6 +189,40 @@ async function main() {
     return all
   }
 
+  /**
+   * Active notices for the libraries being seeded, 100 libraries a request,
+   * so closures and changed hours reach the index (the transform has no
+   * `strapi` here). A failure stops the seed rather than indexing none.
+   */
+  async function fetchNotices(entries: Entry[]) {
+    const notices = new Map<string, LibraryNotice[]>()
+    const ids = [
+      ...new Set(
+        entries.flatMap((e) =>
+          typeof e.documentId === "string" ? [e.documentId] : []
+        )
+      ),
+    ]
+    for (let offset = 0; offset < ids.length; offset += 100) {
+      const chunk = ids.slice(offset, offset + 100)
+      const res = await fetch(
+        `${STRAPI}/api/library-notices/for-libraries?ids=${encodeURIComponent(chunk.join(","))}`,
+        { headers: { Authorization: `Bearer ${TOKEN}` } }
+      )
+      if (!res.ok)
+        throw new Error(
+          `Strapi library-notices/for-libraries ${res.status}: ${await res.text()}`
+        )
+      const json = (await res.json()) as {
+        data?: Record<string, LibraryNotice[]>
+      }
+      for (const [id, rows] of Object.entries(json.data ?? {}))
+        notices.set(id, rows)
+    }
+
+    return notices
+  }
+
   async function waitForTask(taskUid: number) {
     for (;;) {
       const t = await meili<{ status: string; error?: unknown }>(
@@ -207,11 +269,23 @@ async function main() {
     console.log(`${indexName} index: ${stats.numberOfDocuments} documents ✓`)
   }
 
+  async function getJson(apiPath: string) {
+    const res = await fetch(`${STRAPI}${apiPath}`, {
+      headers: { Authorization: `Bearer ${TOKEN}` },
+    })
+    if (res.status === 404) return null
+    if (!res.ok)
+      throw new Error(`Strapi ${apiPath} ${res.status}: ${await res.text()}`)
+
+    return res.json() as Promise<{ timetable?: unknown }>
+  }
+
   for (const index of seededIndexes()) {
     const entries = await fetchAll(index.apiPath, index.entriesQuery)
     console.log(
       `Fetched ${entries.length} published ${index.apiPath} (all locales)`
     )
+    if (index.name === "library") await attachMobileTimetables(entries, getJson)
     // Every seeded type is localized and every search filters by `locale`,
     // so an entry without one would be indexed but never found.
     const unlocalized = entries.filter((e) => !e.locale).length
@@ -221,10 +295,23 @@ async function main() {
           "does the route's populate shape include it?"
       )
     }
+    const notices =
+      index.name === "library" ? await fetchNotices(entries) : null
     await seedIndex(
       index.name,
       index.settings,
-      entries.map((entry) => index.transformEntry({ entry }))
+      await Promise.all(
+        entries.map((entry) =>
+          index.transformEntry(
+            notices
+              ? {
+                  entry,
+                  notices: notices.get(String(entry.documentId)) ?? [],
+                }
+              : { entry }
+          )
+        )
+      )
     )
   }
 }

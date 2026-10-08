@@ -49,16 +49,20 @@ const TARGETS: Record<
     uid: string
     /** The `@repo/access` editor kind whose locales may direct-edit. */
     editor: "docs" | "journal"
-    /** Knowledge articles carry the docs taxonomy; Journal ones a section relation. */
+    /**
+     * Both kinds file an article under its home section (the editor's first
+     * pick). Knowledge articles also keep every pick in `docsSections`, so
+     * one article can be listed in more than one section.
+     */
     docsSections: boolean
-    sectionUid: string | null
+    sectionUid: string
   }
 > = {
   wiki: {
     uid: "api::wiki-article.wiki-article",
     editor: "docs",
     docsSections: true,
-    sectionUid: null,
+    sectionUid: "api::wiki-section.wiki-section",
   },
   journal: {
     uid: "api::blog-article.blog-article",
@@ -208,16 +212,15 @@ async function submitterProfileId(strapi: any, baUserId: unknown) {
   return profile?.documentId ?? null
 }
 
-async function journalSectionTarget(strapi: any, keys: string[]) {
+/** The section the first key names, by slug: the article's home section. */
+async function sectionTarget(strapi: any, uid: string, keys: string[]) {
   const slug = keys[0]
   if (!slug) return null
-  const [section] = (await strapi
-    .documents(TARGETS.journal.sectionUid)
-    .findMany({
-      filters: { slug: { $eq: slug } },
-      fields: ["documentId"],
-      limit: 1,
-    })) as { documentId: string }[]
+  const [section] = (await strapi.documents(uid).findMany({
+    filters: { slug: { $eq: slug } },
+    fields: ["documentId"],
+    limit: 1,
+  })) as { documentId: string }[]
 
   return section ? { documentId: section.documentId } : null
 }
@@ -277,10 +280,8 @@ async function relationData(
   const data: Record<string, unknown> = {}
   const sections = cleanSectionKeys(source.sections)
   if (target.docsSections && sections.length > 0) data.docsSections = sections
-  if (target.sectionUid) {
-    const section = await journalSectionTarget(strapi, sections)
-    if (section) data.section = { set: [section] }
-  }
+  const section = await sectionTarget(strapi, target.sectionUid, sections)
+  if (section) data.section = { set: [section] }
   if (Array.isArray(source.tags)) {
     const tags = cleanTags(source.tags)
     data.topics = { set: await topicTargets(strapi, tags) }

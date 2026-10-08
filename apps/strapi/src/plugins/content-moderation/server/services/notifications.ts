@@ -8,6 +8,7 @@ import {
 import { emailConfigured } from "../utils/email-config"
 import {
   applicationDecidedEmail,
+  claimApprovedEmail,
   decidedEmail,
   driveThanksEmail,
   languagesLabel,
@@ -178,6 +179,26 @@ export default ({ strapi }: { strapi: any }) => {
      * Tells the submitter their submission was decided. Respects
      * `editsReviewed`, except for Role Applications, which always send.
      */
+    /**
+     * The library an approved claim is for: its `targetDocumentId`, else
+     * the published library its `targetSlug` names. Null when neither
+     * resolves (the email then links the Staff area index).
+     */
+    async claimLibraryId(s: SubmissionRow): Promise<string | null> {
+      const target = text((s as Record<string, unknown>).targetDocumentId, 64)
+      if (target) return target
+      const slug = text((s as Record<string, unknown>).targetSlug, 255)
+      if (!slug) return null
+      const [row] = (await strapi.documents("api::library.library").findMany({
+        filters: { slug: { $eq: slug } },
+        fields: ["documentId"],
+        status: "published",
+        limit: 1,
+      })) as { documentId?: string }[]
+
+      return row?.documentId ?? null
+    },
+
     async submissionDecided(s: SubmissionRow, status: Decision): Promise<void> {
       const what = `the ${status} email for ${s.documentId}`
       try {
@@ -203,6 +224,34 @@ export default ({ strapi }: { strapi: any }) => {
               status,
               note,
               url,
+            }),
+          })
+
+          return
+        }
+
+        // An approved Library Claim opens the Staff area: that email always
+        // goes, with the link, whatever `notifPrefs.editsReviewed` says.
+        if (s.submissionType === "library_claim" && status === "approved") {
+          const libraryDocumentId = await (this as any).claimLibraryId(s)
+          const library = libraryDocumentId
+            ? await strapi.documents("api::library.library").findOne({
+                documentId: libraryDocumentId,
+                status: "published",
+                fields: ["slug"],
+              })
+            : null
+          await send(what, {
+            to,
+            ...claimApprovedEmail({
+              name,
+              libraryName: text(
+                (s.fields as Record<string, unknown> | null)?.libraryName
+              ),
+              url: library?.slug
+                ? appUrl(`/staff/${library.slug}`)
+                : appUrl("/staff"),
+              note,
             }),
           })
 

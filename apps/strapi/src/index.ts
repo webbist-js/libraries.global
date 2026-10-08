@@ -1,18 +1,22 @@
 import type { Core } from "@strapi/strapi"
 
 import { LOCATION_PICKER_FIELD_NAME } from "./customFields/locationPicker/shared"
+import { MOBILE_TIMETABLE_FIELD_NAME } from "./customFields/mobileTimetable/shared"
 import { OPENING_TIMES_FIELD_NAME } from "./customFields/openingTimes/shared"
 import { registerChangeRecordsMiddleware } from "./documentMiddlewares/change-records"
 import { registerLibraryPublishPlacesMiddleware } from "./documentMiddlewares/library-publish-places"
+import { registerMobileTimetableMiddleware } from "./documentMiddlewares/mobile-timetable"
 import { registerAdminUserSubscriber } from "./lifeCycles/adminUser"
 import { registerEntityRefSubscriber } from "./lifeCycles/entityRef"
 import { registerRoleGrantSubscriber } from "./lifeCycles/roleGrant"
 import { registerUserSubscriber } from "./lifeCycles/user"
 import { seedDatasets } from "./seeds/datasets"
 import { seedLegalDocuments } from "./seeds/legal-documents"
+import { seedMobileFacilities } from "./seeds/mobile-facilities"
 import { ensureHotPathIndexes } from "./utils/ensure-hot-path-indexes"
 import { ensureUniqueIndexes } from "./utils/ensure-unique-indexes"
 import { backfillLibraryCompleteness } from "./utils/library-completeness"
+import { ensurePublicSearchKey } from "./utils/meilisearch-search-key"
 import { migrateContributorRolesToGrants } from "./utils/role-grants"
 
 const SEED_TOPICS = [
@@ -76,6 +80,10 @@ export default {
       name: OPENING_TIMES_FIELD_NAME,
       type: "json",
     })
+    strapi.customFields.register({
+      name: MOBILE_TIMETABLE_FIELD_NAME,
+      type: "json",
+    })
   },
 
   /**
@@ -94,9 +102,11 @@ export default {
     registerChangeRecordsMiddleware({ strapi })
     // Refuse to publish a library into a draft place (Strapi drops the link).
     registerLibraryPublishPlacesMiddleware({ strapi })
+    registerMobileTimetableMiddleware({ strapi })
 
     // Seed approved topics (idempotent — skips existing names)
     await seedTopics(strapi)
+    await seedMobileFacilities(strapi)
 
     // Draft legal documents with placeholder copy on first boot (idempotent)
     await seedLegalDocuments(strapi)
@@ -128,6 +138,12 @@ export default {
     // auth-bridge. Keep users-permissions self-registration off everywhere so
     // nobody can mint a Strapi JWT by POSTing to /api/auth/local/register.
     await disableUsersPermissionsRegistration(strapi)
+
+    // The browser's search key must cover every public index, mobile-stop
+    // included. Off the boot path: Meilisearch being down never blocks Strapi.
+    ensurePublicSearchKey(strapi).catch((err) =>
+      strapi.log.warn("[meilisearch] Public search key check failed:", err)
+    )
   },
 }
 

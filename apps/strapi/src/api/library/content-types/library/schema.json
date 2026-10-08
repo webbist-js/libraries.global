@@ -609,6 +609,36 @@
           "localized": true
         }
       }
+    },
+    "mobileTimetable": {
+      "type": "customField",
+      "customField": "global::mobile-timetable",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "homeLibrary": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::library.library",
+      "inversedBy": "mobileLibraries",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "mobileLibraries": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::library.library",
+      "mappedBy": "homeLibrary",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "operatorName": { "type": "string", "pluginOptions": { "i18n": { "localized": false } } },
+    "timetableUrl": { "type": "string", "pluginOptions": { "i18n": { "localized": false } } },
+    "hasStaff": {
+      "type": "boolean",
+      "default": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     }
   }
 }

@@ -1017,7 +1017,7 @@ export default factories.createCoreService(UID, ({ strapi }) => ({
       const drive = (await strapi.documents(UID).findOne({
         documentId: submission.driveDocumentId,
         fields: ["documentId", "focus"],
-      })) as { documentId: string; focus?: DriveFocus } | null
+      })) as unknown as { documentId: string; focus?: DriveFocus } | null
       if (!drive) return
 
       const created = await creditOne(strapi, {

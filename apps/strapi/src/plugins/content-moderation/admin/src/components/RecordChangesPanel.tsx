@@ -13,11 +13,13 @@ import {
 } from "@strapi/design-system"
 
 import { humanise, renderValue, type Submission } from "./submissionMeta"
+import { TimetableReviewPanel } from "./TimetableReviewPanel"
 
 /** Keys in `fields` that describe the submission, not library fields. */
 const META_KEYS = new Set([
   "kind",
   "previous",
+  "previousHash",
   "category",
   "libraryName",
   "suggestedOptions",
@@ -116,6 +118,8 @@ export function RecordChangesPanel({ sub }: { sub: Submission }) {
     const source = current ?? previous
     if (!(key in source)) return ["—"]
     const v = source[key]
+    if (key === "homeLibrary")
+      return [typeof v === "string" ? nameOf(v) : "None"]
     if (RELATIONS.has(key))
       return Array.isArray(v) && v.length
         ? [v.map(nameOf).join(", ")]
@@ -125,6 +129,8 @@ export function RecordChangesPanel({ sub }: { sub: Submission }) {
   }
 
   const after = (key: string, v: unknown): string[] => {
+    if (key === "homeLibrary")
+      return [typeof v === "string" && v ? nameOf(v) : "None"]
     if (RELATIONS.has(key)) {
       if (Array.isArray(v))
         return [v.length ? v.map(nameOf).join(", ") : "None"]
@@ -151,6 +157,9 @@ export function RecordChangesPanel({ sub }: { sub: Submission }) {
 
   return (
     <>
+      {Object.prototype.hasOwnProperty.call(fields, "mobileTimetable") && (
+        <TimetableReviewPanel sub={sub} />
+      )}
       <Box paddingBottom={4}>
         <Alert
           variant="default"
@@ -181,27 +190,31 @@ export function RecordChangesPanel({ sub }: { sub: Submission }) {
           </Tr>
         </Thead>
         <Tbody>
-          {changes.map(([key, value]) => {
-            const was = before(key)
+          {changes
+            .filter(([key]) => key !== "mobileTimetable")
+            .map(([key, value]) => {
+              const was = before(key)
 
-            return (
-              <Tr key={key}>
-                <Td>
-                  <Typography fontWeight="semiBold">{humanise(key)}</Typography>
-                </Td>
-                <Td>
-                  <Lines
-                    lines={was}
-                    strike={!RELATIONS.has(key) && was[0] !== "—"}
-                    tone="neutral500"
-                  />
-                </Td>
-                <Td>
-                  <Lines lines={after(key, value)} tone="success700" />
-                </Td>
-              </Tr>
-            )
-          })}
+              return (
+                <Tr key={key}>
+                  <Td>
+                    <Typography fontWeight="semiBold">
+                      {humanise(key)}
+                    </Typography>
+                  </Td>
+                  <Td>
+                    <Lines
+                      lines={was}
+                      strike={!RELATIONS.has(key) && was[0] !== "—"}
+                      tone="neutral500"
+                    />
+                  </Td>
+                  <Td>
+                    <Lines lines={after(key, value)} tone="success700" />
+                  </Td>
+                </Tr>
+              )
+            })}
           {suggested.map(([key, list]) => (
             <Tr key={`new-${key}`}>
               <Td>

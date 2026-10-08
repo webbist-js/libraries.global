@@ -110,6 +110,21 @@ export default [
   },
   // Community moderation: bridge secret + X-Ba-User-Id, scopes re-checked
   // per request (controllers/moderation).
+  // Moderator removal of library staff (1.3): an `index` or `all` scope.
+  {
+    method: "POST",
+    path: "/moderation/staff/:affiliationDocumentId/remove",
+    handler: "moderation.removeStaff",
+    config: { auth: false, policies: [] },
+  },
+  // A library's staff list for a Moderator reviewing an access report
+  // (same scope as removal).
+  {
+    method: "GET",
+    path: "/moderation/staff/:libraryDocumentId",
+    handler: "moderation.staffList",
+    config: { auth: false, policies: [] },
+  },
   {
     method: "GET",
     path: "/moderation/submissions",

@@ -5,7 +5,20 @@
  * stored completeness, and a 1° grid cell for the homepage globe.
  */
 
-import { isGapKey, sectionCheckedAt, VERIFY_SECTIONS } from "@repo/shared-data"
+import {
+  addDays,
+  closedNoticeDates,
+  effectiveLibraryWeekHours,
+  isGapKey,
+  localDateTime,
+  normalizeMobileTimetable,
+  sectionCheckedAt,
+  summarizeTimetable,
+  VERIFY_SECTIONS,
+  weekFrames,
+  WEEKDAYS,
+  type LibraryNotice,
+} from "@repo/shared-data"
 
 export const OPEN_DAYS = [
   "monday",
@@ -18,7 +31,7 @@ export const OPEN_DAYS = [
 ] as const
 
 /** The opening-times normaliser allows six timeframes a day. */
-export const OPEN_FRAMES_PER_DAY = 6
+export const OPEN_FRAMES_PER_DAY = 10
 
 /** `open_mon_0_from`: minutes after local midnight on that weekday. */
 export const openField = (day: string, frame: number, edge: "from" | "to") =>
@@ -160,14 +173,49 @@ export const TIMESTAMP_FIELD_NAMES = [
 export function librarySearchFields(
   entry: Record<string, unknown>,
   lat: number | null,
-  lng: number | null
+  lng: number | null,
+  opts: { now?: Date; notices?: LibraryNotice[] } = {}
 ): Record<string, unknown> {
   const cell = geoCell(lat, lng)
+  const tt =
+    entry.libraryType === "Mobile"
+      ? normalizeMobileTimetable(entry.mobileTimetable)
+      : null
+  const tz =
+    typeof entry.timezone === "string" && entry.timezone !== ""
+      ? entry.timezone
+      : "UTC"
+  const local = localDateTime(opts.now ?? new Date(), tz)
+  const weekStart = addDays(local.date, -WEEKDAYS.indexOf(local.weekday))
+  const branchNotices = (opts.notices ?? []).some((notice) =>
+    ["closure", "changed_hours"].includes(notice.type)
+  )
+  const openingTimes = tt
+    ? weekFrames(tt, opts.notices ?? [], weekStart, OPEN_FRAMES_PER_DAY)
+    : branchNotices
+      ? effectiveLibraryWeekHours(
+          entry.openingTimes,
+          opts.notices ?? [],
+          weekStart
+        )
+      : entry.openingTimes
+  const summary = summarizeTimetable(tt)
 
   return {
     completeness:
       typeof entry.completeness === "number" ? entry.completeness : 0,
-    has_hours: days(entry.openingTimes).length > 0,
+    has_hours: tt ? tt.visits.length > 0 : days(entry.openingTimes).length > 0,
+    has_staff: entry.hasStaff === true,
+    ...(tt || branchNotices ? { openingTimes } : {}),
+    closed_dates: closedNoticeDates(opts.notices ?? [], local.date),
+    notice_active: (opts.notices ?? []).some(
+      (notice) =>
+        !notice.endedAt &&
+        notice.from <= local.date &&
+        (notice.to ?? addDays(notice.from, 29)) >= local.date
+    ),
+    stop_count: summary.stopCount,
+    cycle_weeks: summary.cycleWeeks,
     has_iiif:
       typeof entry.iiifEndpoint === "string" &&
       entry.iiifEndpoint.trim() !== "",
@@ -176,7 +224,7 @@ export function librarySearchFields(
       typeof entry.timezone === "string" && entry.timezone !== ""
         ? entry.timezone
         : "UTC",
-    ...openFields(entry.openingTimes),
+    ...openFields(openingTimes),
     ...(cell ? { geo_cell: cell } : {}),
     ...timestampFields(entry),
   }

@@ -25,7 +25,6 @@ import { Layouts, useFetchClient, useNotification } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 
-import { PluginNav } from "../components/PluginNav"
 import { ReviewModal, StatusPill, TypeBadge } from "../components/ReviewModal"
 import {
   detailOf,
@@ -46,11 +45,7 @@ type Decision = "approved" | "rejected" | "needs_info"
  * before approving, rejecting or asking for more information. `?type=`
  * preselects the type filter (People links here with `role_application`).
  */
-export function ModerationDashboard({
-  canManageRoles = false,
-}: {
-  canManageRoles?: boolean
-}) {
+export function ModerationDashboard() {
   const { get, put } = useFetchClient()
   const [searchParams] = useSearchParams()
   const { toggleNotification } = useNotification()
@@ -191,7 +186,6 @@ export function ModerationDashboard({
         }
       />
       <Layouts.Content>
-        <PluginNav current="queue" canManageRoles={canManageRoles} />
         {error && (
           <Box paddingBottom={4}>
             <Alert
@@ -352,6 +346,9 @@ export function ModerationDashboard({
                           >
                             <Td>
                               <TypeBadge type={sub.submissionType} />
+                              {sub.staffReviewHint && (
+                                <Badge size="S">{sub.staffReviewHint}</Badge>
+                              )}
                             </Td>
                             <Td>
                               <Flex

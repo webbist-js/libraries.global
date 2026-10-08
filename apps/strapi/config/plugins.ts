@@ -1,3 +1,6 @@
+import type { LibraryNotice } from "@repo/shared-data"
+
+import { noticesForIndexing } from "../src/utils/library-notices"
 import {
   OPEN_FIELD_NAMES,
   TIMESTAMP_FIELD_NAMES,
@@ -224,7 +227,14 @@ export default ({ env }) => {
           },
           // Flatten nested relations so they are searchable/filterable,
           // and map the location custom field to MeiliSearch's _geo format.
-          transformEntry({ entry }: { entry: Record<string, unknown> }) {
+          async transformEntry({
+            entry,
+            notices: given,
+          }: {
+            entry: Record<string, unknown>
+            /** The seed script passes the notices it fetched over REST. */
+            notices?: LibraryNotice[]
+          }) {
             const continent = asRecord(entry.continent)
             const country = asRecord(entry.country)
             const region = asRecord(entry.region)
@@ -232,6 +242,14 @@ export default ({ env }) => {
             const location = asRecord(entry.location)
             const lat = coordinate(location?.lat)
             const lng = coordinate(location?.lng)
+            // Inside Strapi the loader answers a reindex batch with one query
+            // per 100 libraries; outside it (tests) a library has none.
+            const notices =
+              given ??
+              (typeof strapi !== "undefined" &&
+              typeof entry.documentId === "string"
+                ? await noticesForIndexing(strapi, entry.documentId)
+                : [])
 
             return {
               ...pick(entry, LIBRARY_DOC_KEYS),
@@ -253,7 +271,7 @@ export default ({ env }) => {
               service_names: optionNames(entry.services),
               amenity_names: optionNames(entry.amenities),
               // Find libraries' filters, counts and sorts; see the module.
-              ...librarySearchFields(entry, lat, lng),
+              ...librarySearchFields(entry, lat, lng, { notices }),
               // _geo enables MeiliSearch geo radius filtering and distance sorting
               ...(lat != null && lng != null ? { _geo: { lat, lng } } : {}),
             }
@@ -297,6 +315,15 @@ export default ({ env }) => {
     "content-moderation": {
       enabled: true,
       resolve: "./src/plugins/content-moderation",
+    },
+
+    "library-staff": { enabled: true, resolve: "./src/plugins/library-staff" },
+    // People (Role Grants), Teams and Plans.
+    access: { enabled: true, resolve: "./src/plugins/access" },
+
+    "mobile-libraries": {
+      enabled: true,
+      resolve: "./src/plugins/mobile-libraries",
     },
 
     rewards: {
@@ -404,6 +431,10 @@ const LIBRARY_FIELDS = [
   "featured",
   "timezone",
   "openingTimes",
+  "mobileTimetable",
+  "hasStaff",
+  "operatorName",
+  "timetableUrl",
   "iiifEndpoint",
   "completeness",
   "location",
@@ -415,8 +446,10 @@ const LIBRARY_FIELDS = [
   "publishedAt",
   "updatedAt",
 ]
-// Fetched only to derive other fields; never stored as is.
+// Fetched only to derive other fields; never stored as is. The timetable
+// (up to 200 KB) feeds `stop_count` and `cycle_weeks` only (1.8).
 const DERIVE_ONLY = new Set([
+  "mobileTimetable",
   "location",
   "gaps",
   "verifiedSections",
@@ -430,6 +463,11 @@ const LIBRARY_DOC_KEYS = [
 /** Derived by librarySearchFields; completeness is a document key and is filterable too. */
 const LIBRARY_SEARCH_FIELDS = [
   "has_hours",
+  "has_staff",
+  "closed_dates",
+  "notice_active",
+  "stop_count",
+  "cycle_weeks",
   "has_iiif",
   "needs",
   "open_tz",

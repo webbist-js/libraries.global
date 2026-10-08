@@ -173,6 +173,25 @@ const HOT_PATH_INDEXES = [
   }),
   index("drive_holds", ["drive_document_id", "expires_at"]),
   index("drive_holds", ["ba_user_id"]),
+  // Staff membership and private live records. No record backfill is needed.
+  index("library_affiliations", ["ba_user_id"]),
+  index("library_affiliations", ["source"]),
+  // Teams (access plugin): a person's seats (session bridge, entitlements),
+  // the invite token lookup, a Team's seat count and the email uniqueness
+  // check. `team` is a relation, so its link table carries its own index.
+  index("team_members", ["ba_user_id", "status"]),
+  index("team_members", ["token_hash"]),
+  index("team_members", ["email"]),
+  index("team_members", ["status"]),
+  index("staff_audits", ["at"]),
+  index("library_notices", ['"from"', '"to"', "ended_at"], {
+    name: "library_notices_dates_ended_at_idx",
+  }),
+  index("mobile_live_sessions", ["library_document_id", "status"]),
+  index("mobile_live_sessions", ["started_by", "status"]),
+  index("mobile_live_sessions", ["ends_at"]),
+  index("mobile_live_events", ["session_document_id", "client_at"]),
+  index("mobile_live_events", ["at"]),
 ]
 
 /**

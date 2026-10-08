@@ -1,4 +1,8 @@
-import { LOCALIZED_LIBRARY_FIELDS } from "@repo/shared-data"
+import {
+  FACILITY_CHECKLIST,
+  LOCALIZED_LIBRARY_FIELDS,
+  MOBILE_FACILITY_CHECKLIST,
+} from "@repo/shared-data"
 
 import { latestStamp, sectionsSetBy, stampSections } from "./library-verify"
 import { defaultLocale, normaliseLocale, submissionLocale } from "./locales"
@@ -15,6 +19,11 @@ import {
   normalizeOpeningTimesValue,
   type OpeningTimesValue,
 } from "../../../../customFields/openingTimes/shared"
+import {
+  assertTimetableHash,
+  prepareMobileLibraryData,
+  validatedTimetable,
+} from "../../../../utils/mobile-timetable"
 
 /**
  * Applies an approved record edit to a library and publishes it (C-L1).
@@ -62,6 +71,8 @@ const STRING_FIELDS = new Set([
   "closedYear",
   "source",
   "sourceUrl",
+  "operatorName",
+  "timetableUrl",
 ])
 
 /** Fields that can't be cleared: the schema requires them or they're enums. */
@@ -110,6 +121,32 @@ const ENUM_FIELDS: Record<string, readonly string[]> = {
 
 /** Plain text in the form, Strapi blocks on the record. */
 const BLOCKS_FIELDS = new Set(["accessibilityNotes", "visitNotes"])
+
+/** Every checklist label, in checklist order (the Mobile list after the branch one). */
+const FACILITY_LABELS: readonly string[] = [
+  ...FACILITY_CHECKLIST,
+  ...MOBILE_FACILITY_CHECKLIST,
+]
+  .map((check) => check.label)
+  .filter((label, index, all) => all.indexOf(label) === index)
+
+/**
+ * The library's `absentFacilities` from a submitted value: the checklist
+ * labels the staff answered "No" to, with the same meaning as an approved
+ * facilities correction (`utils/facility-answers`). Unknown or malformed
+ * items are dropped, the rest return in checklist order; `null` or `""`
+ * clears the list. `null` (not written) for anything that isn't a list.
+ */
+export function absentFacilityLabels(raw: unknown): string[] | null {
+  if (raw === null || raw === "") return []
+  if (!Array.isArray(raw)) return null
+  const kept = new Set<string>()
+  for (const item of raw)
+    if (typeof item === "string" && FACILITY_LABELS.includes(item.trim()))
+      kept.add(item.trim())
+
+  return FACILITY_LABELS.filter((label) => kept.has(label))
+}
 
 const RELATION_SETS = new Set(["services", "amenities", "accessibility"])
 
@@ -252,8 +289,11 @@ export const RECORD_FIELD_KEYS: ReadonlySet<string> = new Set([
   ...RELATION_SETS,
   ...Object.keys(HIERARCHY),
   "openingTimes",
+  "mobileTimetable",
+  "homeLibrary",
   "socialLinks",
   "uploadedImages",
+  "absentFacilities",
   "lat",
   "lng",
 ])
@@ -325,7 +365,7 @@ export type LibraryRecordData = Record<string, unknown>
  */
 export function buildLibraryRecordData(
   fields: unknown,
-  opts: { ownedUploadIds?: Set<number> } = {}
+  opts: { ownedUploadIds?: Set<number>; skipMobileTimetable?: boolean } = {}
 ): LibraryRecordData {
   const data: LibraryRecordData = {}
   if (!fields || typeof fields !== "object") return data
@@ -371,6 +411,22 @@ export function buildLibraryRecordData(
         const hours = sanitizeOpeningTimes(raw)
         if (hours) data.openingTimes = hours
       }
+      continue
+    }
+    if (key === "mobileTimetable") {
+      if (opts.skipMobileTimetable) continue
+      data.mobileTimetable = validatedTimetable(raw)
+      continue
+    }
+    if (key === "absentFacilities") {
+      const labels = absentFacilityLabels(raw)
+      if (labels) data.absentFacilities = labels
+      continue
+    }
+    if (key === "homeLibrary") {
+      if (raw === "" || raw === null) data.homeLibrary = { set: [] }
+      else if (isDocumentId(raw))
+        data.homeLibrary = { set: [{ documentId: raw }] }
       continue
     }
     if (key === "socialLinks") {
@@ -451,7 +507,16 @@ type Submission = {
  * the submission's own locale version may not exist yet.
  */
 async function findLibrary(strapi: any, submission: Submission, base: string) {
-  const fields = ["documentId", "locale", "name", "verifiedSections"]
+  const fields = [
+    "documentId",
+    "locale",
+    "name",
+    "verifiedSections",
+    "libraryType",
+    "mobileTimetable",
+    "location",
+    "timezone",
+  ]
   if (submission.targetDocumentId)
     return strapi.documents(LIBRARY).findOne({
       documentId: submission.targetDocumentId,
@@ -523,6 +588,7 @@ async function resolveOptions(
 const DOCUMENT_RELATIONS: ReadonlySet<string> = new Set([
   ...RELATION_SETS,
   ...Object.values(HIERARCHY),
+  "homeLibrary",
 ])
 /** Media a record edit changes by upload id. */
 const MEDIA_RELATIONS: ReadonlySet<string> = new Set(["heroImage", "gallery"])
@@ -699,7 +765,10 @@ export async function applyLibraryRecord(
   const base = await defaultLocale(strapi)
   const locale = await normaliseLocale(strapi, submissionLocale(submission))
   const localized = locale !== base
-  let data = buildLibraryRecordData(submission.fields, { ownedUploadIds })
+  let data = buildLibraryRecordData(submission.fields, {
+    ownedUploadIds,
+    skipMobileTimetable: localized,
+  })
   // Option suggestions are shared relations: they belong to the default
   // locale, so a translation never raises one.
   const suggested = localized ? {} : parseSuggestedOptions(submission.fields)
@@ -722,6 +791,33 @@ export async function applyLibraryRecord(
 
     return "noop"
   }
+  if (
+    !localized &&
+    Object.prototype.hasOwnProperty.call(data, "mobileTimetable")
+  ) {
+    const fields = submission.fields as Record<string, unknown>
+    // A suggestion made from a timetable the submitter loaded carries its
+    // hash; once that timetable has changed (a staff edit, say) the change
+    // is refused, whichever submission type carried it.
+    if (fields.previousHash != null) {
+      const published = await strapi.documents(LIBRARY).findOne({
+        documentId: library.documentId,
+        locale: base,
+        status: "published",
+        fields: ["mobileTimetable"],
+      })
+      assertTimetableHash(
+        published?.mobileTimetable ?? library.mobileTimetable,
+        fields.previousHash
+      )
+    }
+  }
+  if (
+    !localized &&
+    (Object.prototype.hasOwnProperty.call(data, "mobileTimetable") ||
+      Object.prototype.hasOwnProperty.call(data, "homeLibrary"))
+  )
+    data = await prepareMobileLibraryData(strapi, data, library, base)
 
   // Suggested names: an existing option is connected alongside the rest; a
   // new one joins the editorial board's suggestions, open to votes.

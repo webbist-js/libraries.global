@@ -148,6 +148,27 @@ export function decidedEmail(i: {
   })
 }
 
+/** An approved Library Claim: the Staff area is open. Never switched off. */
+export function claimApprovedEmail(i: {
+  name: string | null
+  libraryName: string | null
+  url: string
+  note: string | null
+}): Email {
+  const library = i.libraryName ?? "your library"
+
+  return compose(`You're now staff of ${library}`, {
+    greeting: greeting(i.name),
+    lines: [
+      `A moderator approved your claim on ${library}. You can keep its page up to date from the Staff area: edit the record, post notices, connect an events feed and review suggested changes.`,
+    ],
+    note: i.note,
+    link: { label: "Open the Staff area", url: i.url },
+    footer:
+      "This email is sent whenever a claim is approved; it isn't covered by the review-email setting.",
+  })
+}
+
 /** A new submission that moderators are alerted to. */
 export function moderatorAlertEmail(i: {
   type: string

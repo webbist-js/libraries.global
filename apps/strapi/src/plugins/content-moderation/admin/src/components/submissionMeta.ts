@@ -22,11 +22,8 @@ export interface SocialLink {
 
 export type Submission = {
   staffReviewHint?: string
-  inviteReview?: {
-    invitedByName: string
-    staffRole: "owner" | "editor"
-    invitedAt: string
-  }
+  /** A claim an unverified Team's organiser filed by assigning a member. */
+  teamReview?: { name: string; staffRole: "owner" | "editor" }
   documentId: string
   submissionType: string
   status: string

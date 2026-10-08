@@ -317,6 +317,12 @@ export function LibraryClaimPanel({ sub }: { sub: Submission }) {
   const domainMatch = hasDomains && f.userEmailDomain === f.libraryWebsiteDomain
   const rows = [
     { label: "Library", value: f.name ?? sub.targetSlug ?? "" },
+    ...(sub.teamReview
+      ? [
+          { label: "Filed by team", value: sub.teamReview.name },
+          { label: "Assigned level", value: sub.teamReview.staffRole },
+        ]
+      : []),
     { label: "Entity ref", value: f.entityRef ?? "" },
     {
       label: "Role",
@@ -343,7 +349,7 @@ export function LibraryClaimPanel({ sub }: { sub: Submission }) {
             onClose={() => {}}
           >
             {domainMatch
-              ? "The claimant's email domain matches the library's website. Eligible for auto-verification."
+              ? "The claimant's email domain matches the library's website. Check their relationship to the library before approving."
               : "The claimant's email domain doesn't match the library's website. Verify by another route before approving."}
           </Alert>
         </Box>

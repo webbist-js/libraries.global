@@ -108,6 +108,9 @@ const LIBRARY_LIST_FIELDS = [
   "closedYear",
   "featured",
   "hasActiveFeed",
+  "hasStaff",
+  "operatorName",
+  "timetableUrl",
   "completeness",
   "gaps",
   "lastVerifiedAt",
@@ -140,6 +143,9 @@ export const LIBRARY_SHAPES: ShapeSet = {
   detail: {
     fields: [
       ...LIBRARY_LIST_FIELDS,
+      // The timetable (up to 200 KB a vehicle) is a detail field only; lists
+      // and the search index carry its stop count and cycle length.
+      "mobileTimetable",
       "alternateNames",
       "description",
       "catalogueUrl",
@@ -165,6 +171,36 @@ export const LIBRARY_SHAPES: ShapeSet = {
     ],
     populate: {
       ...LIBRARY_LIST_POPULATE,
+      homeLibrary: {
+        fields: [
+          "name",
+          "slug",
+          "location",
+          "streetAddress",
+          "city",
+          "postalCode",
+        ],
+        populate: {
+          continent: continentRef,
+          country: locationRef,
+          region: locationRef,
+        },
+      },
+      mobileLibraries: {
+        fields: [
+          "name",
+          "slug",
+          "libraryType",
+          "mobileTimetable",
+          "timezone",
+          "operationalStatus",
+        ],
+        populate: {
+          continent: continentRef,
+          country: locationRef,
+          region: locationRef,
+        },
+      },
       gallery: mediaPopulate,
       socialLinks: { fields: ["platform", "label", "url"] },
       libraryStats: { fields: ["value", "label", "note"] },

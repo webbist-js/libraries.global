@@ -15,6 +15,9 @@ export type OpeningTimes = {
 export type CompletenessSource = {
   heroImage?: unknown
   openingTimes?: OpeningTimes
+  libraryType?: string | null
+  mobileTimetable?: unknown
+  homeLibrary?: unknown
   streetAddress?: string | null
   location?: unknown
   accessibility?: unknown[] | null
@@ -34,6 +37,8 @@ export type CompletenessSource = {
 /** Scalar attributes completeness reads. */
 export const COMPLETENESS_FIELDS = [
   "openingTimes",
+  "libraryType",
+  "mobileTimetable",
   "streetAddress",
   "location",
   "summary",
@@ -53,6 +58,7 @@ export const COMPLETENESS_POPULATE = {
   services: { fields: ["id"] },
   amenities: { fields: ["id"] },
   collectionStats: { fields: ["id"] },
+  homeLibrary: { fields: ["id"] },
 }
 
 /** Every write key that can change a library's completeness. */

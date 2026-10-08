@@ -23,7 +23,7 @@ export async function handleAutoPaused(
       autoPauseNotifiedAt: { $null: true },
     },
     fields: ["documentId", "provider", "lastErrorCode"],
-    populate: { libraries: { fields: ["documentId", "name"] } },
+    populate: { libraries: { fields: ["documentId", "name", "slug"] } },
     limit: 200,
   })) as any[]
   for (const row of rows) {
@@ -50,7 +50,7 @@ export async function handleAutoPaused(
       FEED_TEST_COPY[(row.lastErrorCode ?? "provider_error") as FeedTestCode]
     await notify(strapi, libraryIds, null, {
       subject: `Your library's ${label} feed stopped working`,
-      text: `The ${label} feed for ${row.libraries?.[0]?.name ?? "your library"} stopped working and has been paused. ${why} Replace its details to restart it: ${process.env.APP_PUBLIC_URL ?? ""}/contribute/events`,
+      text: `The ${label} feed for ${row.libraries?.[0]?.name ?? "your library"} stopped working and has been paused. ${why} Replace its details to restart it: ${process.env.APP_PUBLIC_URL ?? ""}${row.libraries?.[0]?.slug ? `/staff/${row.libraries[0].slug}/events` : "/staff"}`,
     })
   }
 
