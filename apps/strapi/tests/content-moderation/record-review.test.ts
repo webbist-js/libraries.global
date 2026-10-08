@@ -10,6 +10,45 @@ const LIFT = "acc00000000000000000001"
 const LOOP = "acc00000000000000000002"
 
 describe("recordReview", () => {
+  it("uses the published timetable and populated names for a home branch change", async () => {
+    const target = "lib00000000000000000001",
+      oldHome = "lib00000000000000000002",
+      newHome = "lib00000000000000000003"
+    const live = { version: 1 },
+      draft = { version: 2 }
+    const { strapi } = makeFakeStrapi({
+      [LIBRARY]: [
+        {
+          documentId: target,
+          mobileTimetable: draft,
+          __published: {
+            documentId: target,
+            mobileTimetable: live,
+            homeLibrary: { documentId: oldHome, name: "Old branch" },
+          },
+        },
+        { documentId: newHome, name: "New branch" },
+      ],
+    })
+    const review = await recordReview(strapi, {
+      targetDocumentId: target,
+      fields: {
+        kind: "record",
+        mobileTimetable: live,
+        previousHash: "base",
+        homeLibrary: newHome,
+      },
+    })
+    expect(review).toEqual({
+      current: { mobileTimetable: live, homeLibrary: oldHome },
+      names: { [oldHome]: "Old branch", [newHome]: "New branch" },
+    })
+    const reads = strapi.documents.mock.results.flatMap(
+      (result: any) => result.value.findOne?.mock.calls ?? []
+    )
+    expect(reads[0][0].fields).not.toContain("homeLibrary")
+    expect(reads[0][0].fields).not.toContain("previousHash")
+  })
   it("reads live values and option names from Strapi, not the contributor", async () => {
     const { strapi } = makeFakeStrapi({
       [LIBRARY]: [
@@ -133,7 +172,9 @@ describe("recordReview", () => {
     expect(byId.s4.review).toEqual({
       topic: { name: "Ghost tours", slug: "ghost-tours", status: "pending" },
     })
-    expect(made.strapi.documents(LIBRARY).findMany).toHaveBeenCalledTimes(1)
+    // Live field values and the published staff hint each use one batched
+    // query; neither query runs once per submission.
+    expect(made.strapi.documents(LIBRARY).findMany).toHaveBeenCalledTimes(2)
     expect(made.strapi.documents(LIBRARY).findOne).not.toHaveBeenCalled()
     expect(made.strapi.documents(ACC).findMany).toHaveBeenCalledTimes(1)
     expect(made.strapi.documents(TOPIC).findMany).toHaveBeenCalledTimes(1)

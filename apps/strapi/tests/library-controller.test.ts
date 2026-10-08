@@ -72,8 +72,14 @@ describe("library.atlas (E2, E3)", () => {
       expect(params.sort).toBe("id:asc")
       expect(params.status).toBe("published")
     }
-    expect(calls[0].filters).toEqual({ id: { $gt: 0 } })
-    expect(calls[1].filters).toEqual({ id: { $gt: 1000 } })
+    expect(calls[0].filters).toEqual({
+      id: { $gt: 0 },
+      $or: [
+        { libraryType: { $ne: "Mobile" } },
+        { mobileTimetable: { $null: true } },
+      ],
+    })
+    expect(calls[1].filters).toMatchObject({ id: { $gt: 1000 } })
     expect(c.body.features).toHaveLength(1001)
   })
 

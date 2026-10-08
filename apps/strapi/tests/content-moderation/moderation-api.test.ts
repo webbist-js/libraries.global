@@ -114,11 +114,14 @@ function expandContainsi(filters: any, rows: any[]): any {
 function setup(
   rows: any[],
   extra: Record<string, any[]> = {},
-  { lifecycle = true }: { lifecycle?: boolean } = {}
+  {
+    lifecycle = true,
+    contentTypes,
+  }: { lifecycle?: boolean; contentTypes?: Record<string, any> } = {}
 ) {
   const f = makeFakeStrapi(
     { [SUB]: rows, [ROLE_GRANT]: GRANTS, ...extra },
-    { tables: { cm_option_votes: VOTE } }
+    { tables: { cm_option_votes: VOTE }, contentTypes }
   )
   const fresh = f.strapi.documents
   const perUid = new Map<string, any>()
@@ -790,6 +793,68 @@ describe("PUT /moderation/submissions/:documentId/status", () => {
       expect(ctx.status).toBe(200)
       expect(store[WIKI]![0].title).toBe("New title")
       expect(store[WIKI]![0].__published?.title).toBe("New title")
+    })
+
+    it("publishes a French suggestion as the article's first French version, and the French moderator's review page still answers", async () => {
+      const { controller, store } = setup(
+        [
+          sub({
+            draftData: { locale: "fr", proposedTitle: "Comment contribuer" },
+          }),
+        ],
+        { [WIKI]: [article()] },
+        {
+          contentTypes: {
+            [WIKI]: {
+              uid: WIKI,
+              attributes: {
+                title: {
+                  type: "string",
+                  required: true,
+                  pluginOptions: { i18n: { localized: true } },
+                },
+                slug: {
+                  type: "uid",
+                  required: true,
+                  targetField: "title",
+                  pluginOptions: { i18n: { localized: false } },
+                },
+              },
+            },
+          },
+        }
+      )
+      const ctx = ctxFor({
+        viewer: FR_KNOWLEDGE,
+        params: { documentId: id(1) },
+        body: { status: "approved", publish: true },
+      })
+      await controller.updateStatus(ctx)
+      expect(ctx.status).toBe(200)
+      expect(ctx.body.data.status).toBe("approved")
+      const [en, fr] = store[WIKI]!
+      expect(en).toMatchObject({ locale: "en", title: "Old title" })
+      // Strapi never copies a uid into a new locale version, so the apply
+      // seeds the shared slug; without it the French version is a draft
+      // that can't be published, and the approval fails.
+      expect(fr).toMatchObject({
+        locale: "fr",
+        slug: "how-to",
+        title: "Comment contribuer",
+      })
+      expect(fr!.__published?.title).toBe("Comment contribuer")
+
+      const detail = ctxFor({
+        viewer: FR_KNOWLEDGE,
+        params: { documentId: id(1) },
+      })
+      await controller.findOne(detail)
+      expect(detail.status).toBe(200)
+      expect(detail.body.data).toMatchObject({
+        status: "approved",
+        locale: "fr",
+        article: { current: { title: "Comment contribuer" } },
+      })
     })
 
     it("without publish, the suggestion only reaches the draft", async () => {

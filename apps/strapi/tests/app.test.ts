@@ -38,6 +38,24 @@ describe("App Test Suite", () => {
     })
   })
 
+  describe("access plugin", () => {
+    it("links a library affiliation to the access plugin's team member at boot", () => {
+      const contentTypes = Object.keys(strapi.contentTypes)
+      expect(contentTypes).toContain("plugin::access.team")
+      expect(contentTypes).toContain("plugin::access.team-member")
+      const meta = strapi.db.metadata.get(
+        "api::library-affiliation.library-affiliation"
+      )
+      expect(meta.attributes.teamMember).toMatchObject({
+        type: "relation",
+        relation: "manyToOne",
+        target: "plugin::access.team-member",
+      })
+      const members = strapi.db.metadata.get("plugin::access.team-member")
+      expect(members.tableName).toBe("team_members")
+    })
+  })
+
   describe("library content type", () => {
     it("has the core atlas fields", () => {
       const { attributes } = strapi.contentTypes["api::library.library"]

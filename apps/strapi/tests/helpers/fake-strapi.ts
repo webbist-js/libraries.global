@@ -58,6 +58,19 @@ export function makeFakeStrapi(
 
     return structuredClone(rest) as Doc
   }
+  // Strapi hands `data.id` to the insert as it is (the entity validator
+  // keeps unknown keys, and the db layer's `processData` copies every scalar
+  // attribute, `id` included), where Postgres refuses it. A client-set id
+  // is a bug the fake surfaces too, instead of quietly adopting it.
+  const refuseClientId = (uid: string, data: Record<string, any>) => {
+    if (data && typeof data === "object" && "id" in data)
+      throw Object.assign(
+        new Error(
+          `fake-strapi: ${uid} create refuses a client-set id (${JSON.stringify(data.id)}); Postgres would too`
+        ),
+        { code: "22P02" }
+      )
+  }
   const uniqueViolation = (uid: string, data: Record<string, any>) => {
     for (const key of options.uniqueKeys?.[uid] ?? []) {
       const dup = table(uid).some((d) => key.every((k) => d[k] === data[k]))
@@ -239,6 +252,7 @@ export function makeFakeStrapi(
         table(uid).filter((d) => match(d, filters)).length
     ),
     create: vi.fn(async ({ data }: { data: Record<string, any> }) => {
+      refuseClientId(uid, data)
       uniqueViolation(uid, data)
       const doc = {
         id: ++n,
@@ -254,14 +268,33 @@ export function makeFakeStrapi(
       async ({
         documentId,
         status,
+        locale,
         data,
       }: {
         documentId: string
         status?: string
+        locale?: string
         data: Record<string, any>
       }) => {
-        const doc = table(uid).find((d) => d.documentId === documentId)
-        if (!doc) return null
+        const rows = table(uid)
+        let doc = rows.find(
+          (d) => d.documentId === documentId && inLocale(d, locale)
+        )
+        if (!doc) {
+          // A locale the document has no version in yet: Strapi creates it
+          // from `data` (as a draft unless the write publishes). Nothing is
+          // copied from the other locales here.
+          if (!locale || !rows.some((d) => d.documentId === documentId))
+            return null
+          doc = {
+            id: ++n,
+            documentId,
+            locale,
+            createdAt: new Date().toISOString(),
+            publishedAt: null,
+          }
+          rows.push(doc)
+        }
         Object.assign(doc, data)
         if (status === "published") {
           doc.publishedAt ??= new Date().toISOString()
@@ -348,6 +381,8 @@ export function makeFakeStrapi(
       groupBy: [] as string[],
       whereIn: [] as { column: string; values: unknown[] }[],
       where: [] as { column: string; value: unknown }[],
+      whereNotNull: [] as string[],
+      distinct: false,
       first: false,
     }
     const run = () => {
@@ -355,7 +390,9 @@ export function makeFakeStrapi(
         (d) =>
           state.whereIn.every((w) =>
             w.values.includes(d[camelCase(w.column)])
-          ) && state.where.every((w) => d[camelCase(w.column)] === w.value)
+          ) &&
+          state.where.every((w) => d[camelCase(w.column)] === w.value) &&
+          state.whereNotNull.every((col) => d[camelCase(col)] != null)
       )
       const project = (group: Doc[], sample: Doc) => {
         const out: Record<string, unknown> = {}
@@ -382,6 +419,16 @@ export function makeFakeStrapi(
         result = [project(rows, rows[0] ?? ({} as Doc))]
       } else {
         result = rows.map((r) => project([r], r))
+      }
+      if (state.distinct) {
+        const seen = new Set<string>()
+        result = result.filter((row) => {
+          const key = JSON.stringify(row)
+          if (seen.has(key)) return false
+          seen.add(key)
+
+          return true
+        })
       }
 
       return state.first ? (result[0] ?? undefined) : result
@@ -426,8 +473,29 @@ export function makeFakeStrapi(
 
         return builder
       },
-      where: (column: string, a: unknown, b?: unknown) => {
-        state.where.push({ column, value: b === undefined ? a : b })
+      // `where(column, value)`, `where(column, op, value)` or `where({ col: value })`.
+      where: (
+        column: string | Record<string, unknown>,
+        a?: unknown,
+        b?: unknown
+      ) => {
+        if (typeof column === "string")
+          state.where.push({ column, value: b === undefined ? a : b })
+        else
+          for (const [col, value] of Object.entries(column))
+            state.where.push({ column: col, value })
+
+        return builder
+      },
+      whereNotNull: (column: string) => {
+        state.whereNotNull.push(column)
+
+        return builder
+      },
+      // `distinct(...cols)`: selects them and drops duplicate result rows.
+      distinct: (...cols: string[]) => {
+        state.selects.push(...cols.flat())
+        state.distinct = true
 
         return builder
       },
@@ -483,6 +551,7 @@ export function makeFakeStrapi(
           table(uid).filter((d) => match(d, where)).length
       ),
       create: vi.fn(async ({ data }: { data: Record<string, any> }) => {
+        refuseClientId(uid, data)
         const doc = {
           id: ++n,
           documentId: `doc${String(n).padStart(21, "0")}`,
@@ -496,6 +565,7 @@ export function makeFakeStrapi(
       createMany: vi.fn(async ({ data }: { data: Record<string, any>[] }) => {
         const ids: number[] = []
         for (const row of data) {
+          refuseClientId(uid, row)
           const doc = {
             id: ++n,
             documentId: `doc${String(n).padStart(21, "0")}`,
@@ -559,4 +629,54 @@ export function makeFakeStrapi(
   }
 
   return { strapi, store, services, tables, contentTypes }
+}
+
+/**
+ * Seeded relations are nested objects, but a Document Service `create` or
+ * `update` sends `{ connect: [{ documentId }] }` or `{ set: [...] }`, which
+ * the fake stores as is. This wraps one uid's writes so each named relation
+ * lands as `{ documentId }` (or an array for `many`), the shape the fake's
+ * nested filters match. Call it once, before the code under test runs.
+ */
+export function materialiseRelations(
+  fake: ReturnType<typeof makeFakeStrapi>,
+  uid: string,
+  relations: string[],
+  many: string[] = []
+): void {
+  const fresh = fake.strapi.documents
+  const perUid = new Map<string, any>()
+  const refs = (v: any): Record<string, unknown>[] | null => {
+    if (!v || typeof v !== "object" || Array.isArray(v)) return null
+    const list = v.connect ?? v.set
+    if (!Array.isArray(list)) return null
+
+    return list.map((r: any) => (typeof r === "object" ? r : { documentId: r }))
+  }
+  const materialise = (data: Record<string, any>) => {
+    const out = { ...data }
+    for (const key of relations) {
+      const list = refs(out[key])
+      if (!list) continue
+      out[key] = many.includes(key) ? list : (list[0] ?? null)
+    }
+
+    return out
+  }
+  fake.strapi.documents = vi.fn((target: string) => {
+    if (perUid.has(target)) return perUid.get(target)
+    const api = fresh(target)
+    if (target === uid) {
+      const { create, update } = api
+      api.create = vi.fn(async (args: any) =>
+        create({ ...args, data: materialise(args.data ?? {}) })
+      )
+      api.update = vi.fn(async (args: any) =>
+        update({ ...args, data: materialise(args.data ?? {}) })
+      )
+    }
+    perUid.set(target, api)
+
+    return api
+  })
 }

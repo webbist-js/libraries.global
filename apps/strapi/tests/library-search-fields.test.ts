@@ -40,13 +40,53 @@ describe("openFields", () => {
     })
   })
 
-  it("names 84 fields: seven days, six timeframes, from and to", () => {
-    expect(OPEN_FIELD_NAMES).toHaveLength(84)
+  it("names 140 fields: seven days, ten timeframes, from and to", () => {
+    expect(OPEN_FIELD_NAMES).toHaveLength(140)
     expect(OPEN_FIELD_NAMES).toContain("open_sun_5_to")
   })
 })
 
 describe("librarySearchFields", () => {
+  it("uses date-limited changed hours in the indexed week without treating them as a closure", () => {
+    const notice = {
+      id: "notice",
+      type: "changed_hours" as const,
+      scope: "library" as const,
+      scopeWeek: null,
+      scopeDay: null,
+      stopId: null,
+      from: "2026-10-06",
+      to: "2026-10-06",
+      endedAt: null,
+      message: "Shorter hours today",
+      reason: null,
+      hours: {
+        days: [
+          {
+            day: "tuesday",
+            enabled: true,
+            timeframes: [{ startTime: "12:00", endTime: "14:00" }],
+          },
+        ],
+      },
+    }
+    const result = librarySearchFields(
+      { openingTimes: hours, timezone: "Europe/London" },
+      null,
+      null,
+      { now: new Date("2026-10-06T12:00:00Z"), notices: [notice] }
+    )
+    expect(result.open_tue_0_from).toBe(720)
+    expect(result.open_tue_0_to).toBe(840)
+    expect(result.open_mon_0_from).toBe(570)
+    expect(result.closed_dates).toEqual([])
+    expect(result.notice_active).toBe(true)
+    expect(result.openingTimes).toMatchObject({
+      days: expect.arrayContaining([
+        expect.objectContaining({ day: "tuesday", enabled: true }),
+      ]),
+    })
+  })
   it("derives the Find libraries filters", () => {
     expect(
       librarySearchFields(
@@ -65,6 +105,11 @@ describe("librarySearchFields", () => {
     ).toEqual({
       completeness: 63,
       has_hours: true,
+      has_staff: false,
+      stop_count: 0,
+      cycle_weeks: 0,
+      closed_dates: [],
+      notice_active: false,
       has_iiif: true,
       needs: ["photo"],
       open_tz: "Europe/London",
@@ -80,6 +125,11 @@ describe("librarySearchFields", () => {
     expect(librarySearchFields({}, null, null)).toEqual({
       completeness: 0,
       has_hours: false,
+      has_staff: false,
+      stop_count: 0,
+      cycle_weeks: 0,
+      closed_dates: [],
+      notice_active: false,
       has_iiif: false,
       needs: ["hours", "photo", "facilities"],
       open_tz: "UTC",

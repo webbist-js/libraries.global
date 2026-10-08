@@ -114,7 +114,14 @@ describe("auth-bridge createAffiliation: email-domain auto-claim (E6)", () => {
       status: "published",
       filters: { entityRef: { $eq: "GB-BL-001" } },
     })
-    expect(fake.db.query).not.toHaveBeenCalledWith(LIBRARY)
+    const libraryQueries = fake.db.query.mock.results.filter(
+      (_: unknown, index: number) =>
+        fake.db.query.mock.calls[index][0] === LIBRARY
+    )
+    // The lookup uses published documents. hasStaff is derived across both
+    // versions through updateMany; it must not read an unpublished library.
+    for (const query of libraryQueries)
+      expect(query.value.findOne).not.toHaveBeenCalled()
   })
 
   it("does not verify on a match with the library's contact email domain alone", async () => {

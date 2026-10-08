@@ -414,10 +414,10 @@ describe.each(INDEXES)("Meilisearch index %s", (name) => {
       expect(displayed, `${key} is used but not displayed`).toContain(key)
   })
 
-  it("transformEntry builds the document from an allowlist", () => {
+  it("transformEntry builds the document from an allowlist", async () => {
     const transform = meili[name].transformEntry
     expect(transform).toBeTypeOf("function")
-    const doc = transform!({ entry: structuredClone(FIXTURES[name]) })
+    const doc = await transform!({ entry: structuredClone(FIXTURES[name]) })
     const displayed = meili[name].settings.displayedAttributes ?? []
 
     // Exactly the displayed keys: nothing extra, nothing missing. The
@@ -482,8 +482,8 @@ describe("Meilisearch indexes every locale", () => {
 })
 
 describe("Meilisearch transforms keep their derived fields", () => {
-  it("library: flattened location, facet arrays and _geo", () => {
-    const doc = meili.library.transformEntry!({
+  it("library: flattened location, facet arrays and _geo", async () => {
+    const doc = await meili.library.transformEntry!({
       entry: structuredClone(FIXTURES.library),
     })
     expect(doc).toMatchObject({
@@ -503,9 +503,9 @@ describe("Meilisearch transforms keep their derived fields", () => {
     })
   })
 
-  it("carries the country's Region labels into library documents", () => {
+  it("carries the country's Region labels into library documents", async () => {
     const libraryTransform = meili.library.transformEntry!
-    const doc = libraryTransform({
+    const doc = await libraryTransform({
       entry: {
         name: "Bern Public Library",
         country: {
@@ -673,9 +673,11 @@ describe("scripts/seed-meilisearch.ts", () => {
     // missing `locale` hides every library from the locale-filtered search.
     const { fields, populate } = libraryQuery()
     const shape = LIBRARY_SHAPES.list
+    // `mobileTimetable` is the one derive-only field the list shape leaves
+    // out (1.8); the seed fills it from the timetable route (next test).
     expect(
       fields.filter((f) => f !== "documentId" && !shape.fields.includes(f))
-    ).toEqual([])
+    ).toEqual(["mobileTimetable"])
     const missing = Object.entries(populate).flatMap(([relation, node]) => {
       const shaped = shape.populate[relation] as
         | { fields?: string[] }
@@ -687,6 +689,23 @@ describe("scripts/seed-meilisearch.ts", () => {
         .map((f) => `${relation}.${f}`)
     })
     expect(missing).toEqual([])
+  })
+
+  it("library: fills a Mobile entry's timetable from its timetable route, once per vehicle", async () => {
+    const entries: Record<string, unknown>[] = [
+      { documentId: "m1", locale: "en", libraryType: "Mobile" },
+      { documentId: "m1", locale: "fr", libraryType: "Mobile" },
+      { documentId: "b1", locale: "en", libraryType: "Public" },
+    ]
+    const get = vi.fn(async () => ({ timetable: { version: 1 } }))
+    await seed.attachMobileTimetables(entries, get)
+    expect(get).toHaveBeenCalledExactlyOnceWith("/api/mobile/m1/timetable")
+    expect(entries[0]!.mobileTimetable).toEqual({ version: 1 })
+    expect(entries[1]!.mobileTimetable).toEqual({ version: 1 })
+    expect(entries[2]).not.toHaveProperty("mobileTimetable")
+    const missing = vi.fn(async () => null)
+    await seed.attachMobileTimetables([entries[0]!], missing)
+    expect(entries[0]!.mobileTimetable).toBeNull()
   })
 
   it("asks REST for exactly the configured fields and populate", () => {

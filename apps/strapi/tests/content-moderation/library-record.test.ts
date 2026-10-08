@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 
 import {
+  absentFacilityLabels,
   applyLibraryRecord,
   buildLibraryRecordData,
   isRecordCorrection,
@@ -40,6 +41,26 @@ describe("buildLibraryRecordData", () => {
         previous: { name: "Old" },
       })
     ).toEqual({ name: "New name", website: null, phone: "0123" })
+  })
+
+  it("keeps absent facilities as checklist labels in checklist order, and clears with null", () => {
+    expect(
+      buildLibraryRecordData({
+        absentFacilities: [
+          "Wi-Fi",
+          "Step-free entrance",
+          "Wi-Fi",
+          "Not a facility",
+          7,
+        ],
+      })
+    ).toEqual({ absentFacilities: ["Step-free entrance", "Wi-Fi"] })
+    expect(buildLibraryRecordData({ absentFacilities: null })).toEqual({
+      absentFacilities: [],
+    })
+    expect(buildLibraryRecordData({ absentFacilities: "Wi-Fi" })).toEqual({})
+    // The Mobile checklist's own items count too.
+    expect(absentFacilityLabels(["Step-free lift"])).toEqual(["Step-free lift"])
   })
 
   it("never clears the name", () => {

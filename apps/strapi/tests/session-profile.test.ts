@@ -133,12 +133,14 @@ describe("auth-bridge sessionProfile", () => {
       username: "ada",
       tier: "Indexer",
       claims: ["libA", "libD"],
+      staff: [],
       grants: [{ plan: "pro", expiresAt: null }],
       roleGrants: [
         { role: "verified_librarian", queue: "all", locale: null },
         { role: "moderator", queue: "knowledge", locale: "fr" },
       ],
       verifications: [{ expiresAt: FUTURE_ISO }],
+      teams: [],
       earnedProUntil: FUTURE_ISO,
       dismissedPrompts: ["find-contribute"],
     })
@@ -152,9 +154,11 @@ describe("auth-bridge sessionProfile", () => {
       username: null,
       tier: null,
       claims: [],
+      staff: [],
       grants: [],
       roleGrants: [],
       verifications: [],
+      teams: [],
       earnedProUntil: null,
       dismissedPrompts: [],
     })

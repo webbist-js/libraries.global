@@ -333,6 +333,55 @@ describe("applyToLocale", () => {
     })
   })
 
+  it("seeds the record's uid (slug) into the new locale version", async () => {
+    const { strapi, docs } = setup(
+      {},
+      {
+        [LIBRARY]: [
+          {
+            documentId: ID,
+            locale: "en",
+            published: true,
+            name: "Library",
+            slug: "library",
+          },
+        ],
+      }
+    )
+    strapi.contentType = vi.fn(() => ({
+      attributes: {
+        name: {
+          type: "string",
+          required: true,
+          pluginOptions: { i18n: { localized: true } },
+        },
+        // Not localized in the schema, but Strapi's i18n treats every uid
+        // as per-locale and never copies it into a new version; without
+        // the base's slug the version is a draft that can't be published.
+        slug: {
+          type: "uid",
+          required: true,
+          targetField: "name",
+          pluginOptions: { i18n: { localized: false } },
+        },
+      },
+    }))
+    const res = await applyToLocale(
+      strapi,
+      LIBRARY,
+      ID,
+      { summary: "Shrnutí" },
+      { locale: "cs", defaultLocale: "en" }
+    )
+    expect(res).toEqual({ mode: "created_locale" })
+    expect(docs[LIBRARY]!.rows.find((r) => r.locale === "cs")).toMatchObject({
+      published: true,
+      summary: "Shrnutí",
+      name: "Library",
+      slug: "library",
+    })
+  })
+
   it("refuses when the default-locale version is unpublished", async () => {
     const { strapi, docs } = setup(
       {},

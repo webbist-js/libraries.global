@@ -98,6 +98,69 @@ const libraryFindManyCalls = (strapi: any) =>
   )
 
 describe("tallyLibrariesByChild (E4)", () => {
+  it("counts every Mobile library, scheduled or not, in tallies, centres and type counts (2.13)", async () => {
+    // Only the Atlas pins drop a scheduled vehicle's depot (its stops are
+    // pinned instead); location counts, tallies and type counts keep it.
+    const { strapi } = makeFakeStrapi({
+      [LIBRARY]: [
+        {
+          documentId: "branch",
+          libraryType: "Public",
+          location: { lat: 10, lng: 20 },
+          country: { documentId: "gb" },
+          region: { documentId: "regA" },
+        },
+        {
+          documentId: "legacy-mobile",
+          libraryType: "Mobile",
+          mobileTimetable: null,
+          location: { lat: 20, lng: 30 },
+          country: { documentId: "gb" },
+          region: { documentId: "regA" },
+        },
+        {
+          documentId: "scheduled-mobile",
+          libraryType: "Mobile",
+          mobileTimetable: { version: 1 },
+          location: { lat: 90, lng: 100 },
+          country: { documentId: "gb" },
+          region: { documentId: "regA" },
+        },
+      ],
+    })
+    strapi.db.dialect = { client: "sqlite" }
+    const tallies = await tallyLibrariesByChild(strapi, {
+      parent: "country",
+      parentDocumentId: "gb",
+      child: "region",
+      status: "published",
+    })
+    expect(tallies.get("regA")).toEqual({
+      count: 3,
+      center: { lat: 40, lng: 50 },
+    })
+    const types = await countLibrariesByType(strapi, "region", "regA", {
+      status: "published",
+    })
+    expect([...types].sort((a, b) => a.type.localeCompare(b.type))).toEqual([
+      { type: "Mobile", count: 2 },
+      { type: "Public", count: 1 },
+    ])
+  })
+
+  it("applies no building predicate in Postgres tallies and type counts", async () => {
+    const { strapi, args } = postgres()
+    await tallyLibrariesByChild(strapi, {
+      parent: "country",
+      parentDocumentId: "gb",
+      child: "region",
+      status: "published",
+    })
+    await countLibrariesByType(strapi, "region", "regA", {
+      status: "published",
+    })
+    for (const index of [0, 1]) expect(args(index, "whereRaw")).toEqual([])
+  })
   it("on Postgres runs one grouped query over the link tables and never loads library rows", async () => {
     const { strapi, queries, ops, args, knex } = postgres({}, () => [
       { child_id: "regA", count: "3", lat: "51.5", lng: "-0.1" },

@@ -61,6 +61,11 @@ function database(rows: unknown[]) {
 }
 
 describe("countLibrariesByLocationPath", () => {
+  it("counts Mobile libraries like any other: no building predicate (2.13)", async () => {
+    const { strapi, args } = database([])
+    await countLibrariesByLocationPath(strapi as any, { status: "published" })
+    expect(args("whereRaw")).toEqual([])
+  })
   it("runs one grouped query over the three link tables", async () => {
     const { strapi, tables, args } = database([])
 
@@ -85,7 +90,12 @@ describe("countLibrariesByLocationPath", () => {
 
   it("rolls region rows up into country and continent totals", async () => {
     const { strapi } = database([
-      { continent: "europe", country: "france", region: "brittany", count: "3" },
+      {
+        continent: "europe",
+        country: "france",
+        region: "brittany",
+        count: "3",
+      },
       { continent: "europe", country: "france", region: "normandy", count: 2 },
       { continent: "europe", country: "spain", region: null, count: "1" },
       { continent: "asia", country: null, region: null, count: "4" },

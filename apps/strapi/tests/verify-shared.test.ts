@@ -13,7 +13,7 @@ describe("shared verification module", () => {
   it("names the four sections and the fields each covers", () => {
     expect(VERIFY_SECTIONS).toEqual(["hours", "status", "address", "contact"])
     expect(SECTION_FIELDS).toEqual({
-      hours: ["openingTimes"],
+      hours: ["openingTimes", "mobileTimetable"],
       status: ["operationalStatus"],
       address: ["streetAddress", "city", "postalCode", "district"],
       contact: ["website", "phone", "email"],
