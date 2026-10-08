@@ -1,8 +1,13 @@
 "use client"
 
+import type { PublicLiveState } from "@repo/shared-data"
 import type * as MapLibre from "maplibre-gl"
 import type { GeoJSONSource, Map as MapLibreMap, Marker } from "maplibre-gl"
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react"
+
+import { T } from "@/lib/design-tokens"
+import type { PublicMobileTimetable } from "@/lib/mobile/types"
+import type { MobileStopHit } from "@/lib/mobile-stop-search"
 
 import {
   addPinImages,
@@ -21,6 +26,7 @@ import {
   type LayerId,
   typeGroupOf,
 } from "./atlas.logic"
+import { mobileMapData } from "./mobile-map-data"
 import { BASEMAP_ATTRIBUTION } from "../map/map.helpers"
 
 // v2 is light-only — Voyager's warm tones sit well on the paper palette
@@ -58,6 +64,13 @@ interface AtlasMapProps {
   onReady: () => void
   onError: (reason: "webgl" | "style") => void
   className?: string
+  mobileStops?: MobileStopHit[]
+  mobileClusters?: { lat: number; lng: number; count: number }[]
+  mobileRoutes?: PublicMobileTimetable[]
+  mobileLive?: Record<string, PublicLiveState>
+  mobileZoomIn?: boolean
+  now?: Date
+  onStopSelect?: (id: string) => void
 }
 
 function toGeoJSON(libs: AtlasLibrary[]) {
@@ -259,6 +272,122 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
           })
           map.addSource("atlas-raw", { type: "geojson", data: empty })
           map.addSource("atlas-closed", { type: "geojson", data: empty })
+          for (const source of [
+            "mobile-stops",
+            "mobile-clusters",
+            "mobile-routes",
+            "mobile-vehicles",
+            "mobile-rings",
+          ])
+            map.addSource(source, { type: "geojson", data: empty })
+          const square = document.createElement("canvas")
+          square.width = 40
+          square.height = 40
+          const context = square.getContext("2d")!
+          context.fillStyle = "#fff"
+          context.strokeStyle = T.map.stopRing
+          context.lineWidth = 4
+          context.beginPath()
+          context.roundRect(3, 3, 34, 34, 9)
+          context.fill()
+          context.stroke()
+          map.addImage(
+            "atlas-stop-square",
+            context.getImageData(0, 0, 40, 40),
+            { pixelRatio: 2 }
+          )
+          map.addLayer({
+            id: "mobile-route-lines",
+            type: "line",
+            source: "mobile-routes",
+            filter: ["!=", ["get", "live"], true],
+            paint: {
+              "line-color": T.map.route,
+              "line-width": 3,
+              "line-dasharray": [2, 2.67],
+            },
+          })
+          map.addLayer({
+            id: "mobile-live-lines",
+            type: "line",
+            source: "mobile-routes",
+            filter: ["==", ["get", "live"], true],
+            paint: { "line-color": T.map.route, "line-width": 4 },
+          })
+          map.addLayer({
+            id: "mobile-coarse-rings",
+            type: "fill",
+            source: "mobile-rings",
+            minzoom: 12,
+            paint: { "fill-color": T.map.route, "fill-opacity": 0.15 },
+          })
+          map.addLayer({
+            id: "mobile-stop-squares",
+            type: "symbol",
+            source: "mobile-stops",
+            layout: {
+              "icon-image": "atlas-stop-square",
+              "icon-allow-overlap": true,
+            },
+          })
+          map.addLayer({
+            id: "mobile-cluster-squares",
+            type: "symbol",
+            source: "mobile-clusters",
+            layout: {
+              "icon-image": "atlas-stop-square",
+              "icon-size": 1.5,
+              "icon-allow-overlap": true,
+            },
+          })
+          map.addLayer({
+            id: "mobile-vehicle",
+            type: "circle",
+            source: "mobile-vehicles",
+            minzoom: 12,
+            paint: {
+              "circle-color": T.map.route,
+              "circle-radius": 10,
+              "circle-stroke-color": "#fff",
+              "circle-stroke-width": 3,
+            },
+          })
+          if (map.getStyle().glyphs) {
+            map.addLayer({
+              id: "mobile-stop-labels",
+              type: "symbol",
+              source: "mobile-stops",
+              minzoom: 12,
+              layout: {
+                "text-field": [
+                  "concat",
+                  ["get", "number"],
+                  " ",
+                  ["get", "label"],
+                ],
+                "text-font": ["Montserrat Medium"],
+                "text-size": 12,
+                "text-offset": [0, 1.9],
+              },
+              paint: {
+                "text-color": T.map.stopRing,
+                "text-halo-color": "#fff",
+                "text-halo-width": 2,
+              },
+            })
+            map.addLayer({
+              id: "mobile-cluster-count",
+              type: "symbol",
+              source: "mobile-clusters",
+              layout: {
+                "text-field": ["to-string", ["get", "count"]],
+                "text-font": ["Montserrat Medium"],
+                "text-size": 12,
+                "text-allow-overlap": true,
+              },
+              paint: { "text-color": T.map.stopRing },
+            })
+          }
 
           // Order: heat, then area/pin styling, then pins, then clusters.
           map.addLayer({
@@ -413,6 +542,24 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
           // ── Interaction ──────────────────────────────────────────────────
           const selectable = ["pins", "styled-pins", "closed-pins"]
           map.on("click", (e) => {
+            const mobile = map.queryRenderedFeatures(e.point, {
+              layers: ["mobile-stop-squares", "mobile-cluster-squares"],
+            })[0]
+            if (mobile) {
+              if (mobile.properties.id)
+                latest.current.onStopSelect?.(String(mobile.properties.id))
+              else
+                map.easeTo({
+                  center: (mobile.geometry as GeoJSON.Point).coordinates as [
+                    number,
+                    number,
+                  ],
+                  zoom: Math.max(9, map.getZoom() + 2),
+                  duration: reducedMotion() ? 0 : 400,
+                })
+
+              return
+            }
             const cluster = map.queryRenderedFeatures(e.point, {
               layers: ["clusters"],
             })[0]
@@ -443,7 +590,12 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
             })[0]
             latest.current.onSelect(hit ? (hit.properties.id as string) : null)
           })
-          for (const l of [...selectable, "clusters"]) {
+          for (const l of [
+            ...selectable,
+            "clusters",
+            "mobile-stop-squares",
+            "mobile-cluster-squares",
+          ]) {
             map.on(
               "mouseenter",
               l,
@@ -471,6 +623,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
 
           readyRef.current = true
           syncData()
+          syncMobileData()
           syncLayers()
           syncMarkers()
           report()
@@ -501,6 +654,23 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
       ;(map.getSource("atlas-closed") as GeoJSONSource).setData(
         toGeoJSON(closures)
       )
+    }
+
+    // The mobile sources depend on the clock (vehicle position between
+    // stops), so they refresh on their own without rebuilding the pins.
+    function syncMobileData() {
+      const map = mapRef.current
+      if (!map || !readyRef.current) return
+      const p = latest.current
+      const mobile = mobileMapData(
+        p.mobileStops ?? [],
+        p.mobileZoomIn ? (p.mobileClusters ?? []) : [],
+        p.mobileRoutes ?? [],
+        p.mobileLive ?? {},
+        p.now ?? new Date()
+      )
+      for (const [source, data] of Object.entries(mobile))
+        (map.getSource(`mobile-${source}`) as GeoJSONSource).setData(data)
     }
 
     function syncLayers() {
@@ -560,6 +730,17 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
 
       vis("late-halo", on("openLate"))
       vis("closed-pins", on("closures"))
+      for (const layer of [
+        "mobile-route-lines",
+        "mobile-live-lines",
+        "mobile-coarse-rings",
+        "mobile-stop-squares",
+        "mobile-cluster-squares",
+        "mobile-vehicle",
+        "mobile-stop-labels",
+        "mobile-cluster-count",
+      ])
+        if (map.getLayer(layer)) vis(layer, on("mobile"))
     }
 
     function syncMarkers() {
@@ -590,6 +771,14 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
     }
 
     useEffect(syncData, [props.libraries, props.closures])
+    useEffect(syncMobileData, [
+      props.mobileStops,
+      props.mobileClusters,
+      props.mobileRoutes,
+      props.mobileLive,
+      props.mobileZoomIn,
+      props.now,
+    ])
     useEffect(syncLayers, [props.layers, props.heatOpacity])
     useEffect(syncMarkers, [props.selected, props.hovered])
     useEffect(() => {

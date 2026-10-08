@@ -292,6 +292,15 @@ export function FindFilterSidebar({
             <FilterHelper>Turn on “Use my location” to enable</FilterHelper>
           ) : null}
         </fieldset>
+        <label className="mt-3 flex min-h-11 items-center gap-3">
+          <input
+            type="checkbox"
+            checked={state.nearIncludeMobile !== false}
+            disabled={state.nearLat == null}
+            onChange={(e) => onChange({ nearIncludeMobile: e.target.checked })}
+          />
+          Include mobile library stops
+        </label>
       </FilterGroup>
     </div>
   )

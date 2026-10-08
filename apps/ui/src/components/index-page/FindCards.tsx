@@ -1,6 +1,8 @@
 // apps/ui/src/components/index-page/FindCards.tsx
 "use client"
 
+import { noticeLocalDate } from "@repo/shared-data"
+
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import type { LibrarySearchHitV2 } from "@/lib/find-search"
 import { buildLibraryPath } from "@/lib/meilisearch"
@@ -13,7 +15,21 @@ import {
   openStatus,
 } from "./find-helpers"
 
-function statusBadge(hit: LibrarySearchHitV2, status: OpenStatus) {
+function statusBadge(hit: LibrarySearchHitV2, status: OpenStatus, now?: Date) {
+  if (
+    hit.closed_dates?.includes(noticeLocalDate(now ?? new Date(), hit.timezone))
+  )
+    return {
+      label: "Closed today",
+      bg: "var(--t-danger-soft)",
+      fg: T.accent.danger,
+    }
+  if (hit.libraryType === "Mobile" && hit.stop_count)
+    return {
+      label: status.open ? "At a stop · timetable" : "No visit now · timetable",
+      bg: status.open ? TYPE_TINT.public.bg : T.bg.muted,
+      fg: status.open ? TYPE_TINT.public.fg : T.ink.dim,
+    }
   if (hit.operationalStatus === "permanently_closed") {
     return {
       label: "Permanently closed",
@@ -37,7 +53,14 @@ function statusBadge(hit: LibrarySearchHitV2, status: OpenStatus) {
 
 function locationLine(hit: LibrarySearchHitV2, distanceKmValue?: number) {
   const parts = [hit.city, hit.region_name, hit.country_name].filter(Boolean)
-  const base = parts.join(", ")
+  const base = [
+    parts.join(", "),
+    ...(hit.libraryType === "Mobile" && hit.stop_count
+      ? [`${hit.stop_count} stops · ${hit.cycle_weeks ?? 1}-week cycle`]
+      : []),
+  ]
+    .filter(Boolean)
+    .join(" · ")
 
   return distanceKmValue != null
     ? `${base} · ${distanceKmValue < 10 ? distanceKmValue.toFixed(1) : Math.round(distanceKmValue)} km`
@@ -101,8 +124,12 @@ export function LibraryResultCard({
   now?: Date
 }) {
   const tint = TYPE_TINT[groupForLibraryType(hit.libraryType)]
-  const status = openStatus(hit.openingTimes, hit.timezone, now)
-  const badge = statusBadge(hit, status)
+  const status = hit.closed_dates?.includes(
+    noticeLocalDate(now ?? new Date(), hit.timezone)
+  )
+    ? { known: true, open: false }
+    : openStatus(hit.openingTimes, hit.timezone, now)
+  const badge = statusBadge(hit, status, now)
   const href = buildLibraryPath(hit)
   const hasPhoto = Boolean(hit.heroImage?.url)
 
@@ -173,11 +200,13 @@ export function LibraryResultCard({
           className="m-0 mt-auto pt-1 text-[14px] leading-[1.5]"
           style={{ color: T.ink.dim }}
         >
-          {hit.summary
-            ? hit.summary.length > 110
-              ? `${hit.summary.slice(0, 110)}…`
-              : hit.summary
-            : "Collections not yet documented"}
+          {hit.libraryType === "Mobile" && hit.stop_count
+            ? `${hit.stop_count} stops · ${hit.cycle_weeks ?? 1}-week cycle`
+            : hit.summary
+              ? hit.summary.length > 110
+                ? `${hit.summary.slice(0, 110)}…`
+                : hit.summary
+              : "Collections not yet documented"}
         </p>
       </div>
     </article>
@@ -194,8 +223,12 @@ export function LibraryResultRow({
   now?: Date
 }) {
   const tint = TYPE_TINT[groupForLibraryType(hit.libraryType)]
-  const status = openStatus(hit.openingTimes, hit.timezone, now)
-  const badge = statusBadge(hit, status)
+  const status = hit.closed_dates?.includes(
+    noticeLocalDate(now ?? new Date(), hit.timezone)
+  )
+    ? { known: true, open: false }
+    : openStatus(hit.openingTimes, hit.timezone, now)
+  const badge = statusBadge(hit, status, now)
   const href = buildLibraryPath(hit)
 
   const name = (

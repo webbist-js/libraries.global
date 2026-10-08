@@ -11,6 +11,7 @@ import {
 
 import { useEntitlements } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
+import type { MobileStopHit, MobileVisitFilter } from "@/lib/mobile-stop-search"
 import { cn } from "@/lib/styles"
 
 import { Icon, type IconName, PANEL_STYLE } from "./atlas-ui"
@@ -45,6 +46,8 @@ import { AtlasLayersTab } from "./AtlasLayersTab"
 import { AtlasLibraryPanel } from "./AtlasLibraryPanel"
 import { AtlasListView } from "./AtlasListView"
 import { AtlasMap, type AtlasMapHandle, type AtlasView } from "./AtlasMap"
+import { AtlasMobileSearch } from "./AtlasMobileSearch"
+import { AtlasMobileFilters, AtlasMobileStops } from "./AtlasMobileStops"
 import { AtlasPlansSheet } from "./AtlasPlansSheet"
 import {
   AtlasSearchTab,
@@ -52,6 +55,8 @@ import {
   type Place,
   type RecentItem,
 } from "./AtlasSearchTab"
+import { AtlasStopPanel } from "./AtlasStopPanel"
+import { useMobileAtlas } from "./useMobileAtlas"
 
 type Tab = "search" | "filter" | "layers"
 type SheetSize = "peek" | "half" | "full"
@@ -129,6 +134,8 @@ export function AtlasExplorer({
   const [online, setOnline] = useState(true)
   const [view, setView] = useState<AtlasView | null>(null)
   const [now, setNow] = useState(() => new Date())
+  const [mobileMode, setMobileMode] = useState<MobileVisitFilter>("any")
+  const [selectedStop, setSelectedStop] = useState<MobileStopHit | null>(null)
 
   const [tab, setTab] = useState<Tab>("search")
   const [collapsed, setCollapsed] = useState(false)
@@ -151,7 +158,10 @@ export function AtlasExplorer({
     setQuery(params.get("q") ?? "")
     setInitialView(s.view)
     setFilters(s.filters)
-    setLayers(s.layers)
+    setLayers(params.has("layers") ? s.layers : [...s.layers, "mobile"])
+    const mode = params.get("visits")
+    if (mode === "today" || mode === "week" || mode === "live")
+      setMobileMode(mode)
     setSelectedId(s.library)
     setList(s.list)
     setProjection(s.projection)
@@ -197,6 +207,12 @@ export function AtlasExplorer({
       layers.filter((id) => layerAccess(layerDef(id), tier) === "available"),
     [layers, tier]
   )
+  const mobiles = useMobileAtlas(
+    view,
+    usableLayers.includes("mobile"),
+    mobileMode,
+    now
+  )
 
   // ── URL sync ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -212,11 +228,14 @@ export function AtlasExplorer({
         list,
         projection,
       })
-      const qs = params.toString()
+      params.set("layers", usableLayers.join(","))
+      if (query) params.set("q", query)
+      if (mobileMode !== "any") params.set("visits", mobileMode)
+      const mobileQs = params.toString()
       window.history.replaceState(
         null,
         "",
-        `${window.location.pathname}${qs ? `?${qs}` : ""}`
+        `${window.location.pathname}${mobileQs ? `?${mobileQs}` : ""}`
       )
     }, 400)
 
@@ -230,6 +249,8 @@ export function AtlasExplorer({
     selectedId,
     list,
     projection,
+    query,
+    mobileMode,
   ])
 
   // ── Derived data ──────────────────────────────────────────────────────────
@@ -293,6 +314,7 @@ export function AtlasExplorer({
   const selectLibrary = useCallback(
     (lib: AtlasLibrary, fly = true) => {
       setSelectedId(lib.id)
+      setSelectedStop(null)
       setList(false)
       if (fly) mapRef.current?.flyTo(lib.lat, lib.lng, 14)
       remember({
@@ -319,10 +341,30 @@ export function AtlasExplorer({
   const onMapSelect = useCallback(
     (id: string | null) => {
       setSelectedId(id)
+      setSelectedStop(null)
       if (id && isMobile) setSheet("half")
     },
     [isMobile]
   )
+  const pickStop = useCallback(
+    (stop: MobileStopHit, fly = true) => {
+      setSelectedId(null)
+      setSelectedStop(stop)
+      setList(false)
+      if (fly && stop._geo)
+        mapRef.current?.flyTo(stop._geo.lat, stop._geo.lng, 14)
+      if (isMobile) setSheet("half")
+    },
+    [isMobile]
+  )
+  const stopList = usableLayers.includes("mobile") ? (
+    <AtlasMobileStops
+      stops={mobiles.stops}
+      total={mobiles.total}
+      zoomIn={mobiles.zoomIn}
+      onPick={pickStop}
+    />
+  ) : null
 
   const onToggleLayer = useCallback(
     (id: LayerId) => {
@@ -353,6 +395,17 @@ export function AtlasExplorer({
   // ── Pieces shared by desktop and mobile ──────────────────────────────────
   const tabContent = (
     <>
+      {usableLayers.includes("mobile") ? (
+        <AtlasMobileFilters value={mobileMode} onChange={setMobileMode} />
+      ) : null}
+      {mobiles.error ? (
+        <p role="status" className="text-sm">
+          Mobile stops are unavailable. The library map is still available.
+        </p>
+      ) : null}
+      {tab === "search" ? (
+        <AtlasMobileSearch query={query} onPick={pickStop} />
+      ) : null}
       {tab === "search" ? (
         <AtlasSearchTab
           query={query}
@@ -454,7 +507,7 @@ export function AtlasExplorer({
   )
 
   const legends = <AtlasLegends groups={groupsInView} layers={usableLayers} />
-  const countSub = view ? "libraries in view" : "libraries"
+  const countSub = `${view ? "libraries in view" : "libraries"}${usableLayers.includes("mobile") ? ` · ${mobiles.total.toLocaleString()} stops${mobiles.zoomIn ? " · Zoom in" : ""}` : ""}`
   const center = view ?? { lat: 30, lng: 10 }
 
   // Notices about the data, shown over the map or inside the list.
@@ -539,9 +592,19 @@ export function AtlasExplorer({
       hovered={hovered}
       projection={projection}
       initialView={initialView}
+      mobileStops={mobiles.stops}
+      mobileClusters={mobiles.clusters}
+      mobileRoutes={mobiles.routes}
+      mobileLive={mobiles.live}
+      mobileZoomIn={mobiles.zoomIn}
+      now={now}
+      onStopSelect={(id) => {
+        const stop = mobiles.stops.find((row) => row.id === id)
+        if (stop) pickStop(stop, false)
+      }}
       padding={{
         left: isMobile || collapsed ? 0 : LEFT_W + GAP,
-        right: !isMobile && selected ? RIGHT_W + GAP : 0,
+        right: !isMobile && (selected || selectedStop) ? RIGHT_W + GAP : 0,
         bottom: isMobile ? 200 : 90,
       }}
       onSelect={onMapSelect}
@@ -579,7 +642,7 @@ export function AtlasExplorer({
     // A selected library needs more than the peek height.
     const size: SheetSize = list
       ? "full"
-      : selected && sheet === "peek"
+      : (selected || selectedStop) && sheet === "peek"
         ? "half"
         : sheet
 
@@ -626,13 +689,26 @@ export function AtlasExplorer({
             {list ? (
               <AtlasListView
                 compact
-                notice={dataNotices}
+                notice={
+                  <>
+                    {dataNotices}
+                    {stopList}
+                  </>
+                }
                 libraries={inView}
                 center={center}
                 now={now}
                 onHover={setHovered}
                 onShowMap={() => setList(false)}
                 onSeePlans={() => setPlansOpen(true)}
+              />
+            ) : selectedStop ? (
+              <AtlasStopPanel
+                key={selectedStop.id}
+                stop={selectedStop}
+                live={mobiles.live[selectedStop.library_document_id]}
+                now={now}
+                onClose={() => setSelectedStop(null)}
               />
             ) : selected ? (
               <AtlasLibraryPanel
@@ -656,7 +732,7 @@ export function AtlasExplorer({
                   Library or place
                 </button>
                 <div className="flex items-center justify-between">
-                  <AtlasCount count={inView.length} sub="in view" />
+                  <AtlasCount count={inView.length} sub={countSub} />
                   <ViewToggle list={list} onChange={setList} />
                 </div>
               </div>
@@ -688,7 +764,8 @@ export function AtlasExplorer({
 
   // ── Desktop ───────────────────────────────────────────────────────────────
   const leftEdge = collapsed ? 72 + GAP * 2 : LEFT_W + GAP * 2
-  const rightEdge = selected && !list ? RIGHT_W + GAP * 2 : GAP
+  const rightEdge =
+    (selected || selectedStop) && !list ? RIGHT_W + GAP * 2 : GAP
 
   return (
     <div
@@ -762,6 +839,21 @@ export function AtlasExplorer({
         </section>
       )}
 
+      {selectedStop && !list ? (
+        <aside
+          aria-label="Selected mobile stop"
+          className="absolute top-4 right-4 bottom-4 z-20 overflow-auto rounded-[22px]"
+          style={{ ...PANEL_STYLE, width: RIGHT_W }}
+        >
+          <AtlasStopPanel
+            key={selectedStop.id}
+            stop={selectedStop}
+            live={mobiles.live[selectedStop.library_document_id]}
+            now={now}
+            onClose={() => setSelectedStop(null)}
+          />
+        </aside>
+      ) : null}
       {selected && !list ? (
         <aside
           aria-label="Selected library"
@@ -850,7 +942,12 @@ export function AtlasExplorer({
           style={{ ...PANEL_STYLE, left: leftEdge, right: GAP }}
         >
           <AtlasListView
-            notice={dataNotices}
+            notice={
+              <>
+                {dataNotices}
+                {stopList}
+              </>
+            }
             libraries={inView}
             center={center}
             now={now}

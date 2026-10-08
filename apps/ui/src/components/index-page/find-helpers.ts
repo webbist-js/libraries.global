@@ -3,7 +3,12 @@
 // Pure helpers for the Find-a-library page: URL state and its search query,
 // the open-now badge and the POC's broad library-type groups.
 
-import type { GapKey } from "@repo/shared-data"
+import {
+  type GapKey,
+  effectiveLibraryHours,
+  noticeLocalDate,
+  type LibraryNotice,
+} from "@repo/shared-data"
 
 import {
   type FindPlaceLevel,
@@ -88,8 +93,16 @@ const minutesOf = (hm: string) => {
 export function openStatus(
   openingTimes?: unknown,
   timezone?: string | null,
-  now: Date = new Date()
+  now: Date = new Date(),
+  notices: readonly LibraryNotice[] = []
 ): OpenStatus {
+  const effective = effectiveLibraryHours(
+    openingTimes,
+    notices,
+    noticeLocalDate(now, timezone)
+  )
+  if (effective.closed) return { known: true, open: false }
+  openingTimes = effective.hours
   const days = (openingTimes as OpeningTimes | null | undefined)?.days
   if (!Array.isArray(days) || days.length === 0) {
     return { known: false, open: false }
@@ -169,6 +182,7 @@ export interface FindState {
   nearLng?: number
   /** km; 0 = any distance */
   radiusKm: number
+  nearIncludeMobile?: boolean
   sort: SortKey
   view: ViewMode
   page: number
@@ -188,6 +202,7 @@ export const DEFAULT_FIND_STATE: FindState = {
   nearLat: undefined,
   nearLng: undefined,
   radiusKm: 0,
+  nearIncludeMobile: true,
   sort: "complete",
   view: "grid",
   page: 0,
@@ -221,6 +236,7 @@ export function findStateFromParams(params: URLSearchParams): FindState {
     nearLat: params.get("nlat") ? Number(params.get("nlat")) : undefined,
     nearLng: params.get("nlng") ? Number(params.get("nlng")) : undefined,
     radiusKm: params.get("nr") ? Number(params.get("nr")) : 0,
+    nearIncludeMobile: params.get("nm") !== "0",
     sort:
       sort === "name" ||
       sort === "near" ||
@@ -247,6 +263,7 @@ export function findStateToParams(s: FindState): URLSearchParams {
   if (s.nearLat != null) p.set("nlat", s.nearLat.toFixed(4))
   if (s.nearLng != null) p.set("nlng", s.nearLng.toFixed(4))
   if (s.radiusKm > 0) p.set("nr", String(s.radiusKm))
+  if (s.nearIncludeMobile === false) p.set("nm", "0")
   if (s.sort !== "complete") p.set("sort", s.sort)
   if (s.view !== "grid") p.set("view", s.view)
   if (s.page > 0) p.set("page", String(s.page))

@@ -1,6 +1,7 @@
 import "@/styles/globals.css"
 
 import type { Metadata } from "next"
+import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import Script from "next/script"
 import type { Locale } from "next-intl"
@@ -15,6 +16,7 @@ import GlobalFooter from "@/components/global/GlobalFooter"
 import { ClientProviders } from "@/components/providers/ClientProviders"
 import { ServerProviders } from "@/components/providers/ServerProviders"
 import TrackingScripts from "@/components/providers/TrackingScripts"
+import { StaffDrawerMount } from "@/components/staff/StaffDrawerMount"
 import { Toaster } from "@/components/ui/sonner"
 import { debugStaticParams } from "@/lib/build"
 import { fontFigtree, fontJetBrainsMono, fontNewsreader } from "@/lib/fonts"
@@ -63,9 +65,14 @@ export default async function RootLayout({
   params,
 }: LayoutProps<"/[locale]">) {
   const { locale } = (await params) as { locale: Locale }
+  const requestHeaders = await headers()
+  const liveConsole = requestHeaders.get("x-live-console") === "true"
+  const nonce = requestHeaders.get("x-nonce") ?? undefined
   const [footerRes, legalRes] = await Promise.all([
-    fetchFooter(locale),
-    fetchLegalDocuments(locale, "published"),
+    liveConsole ? Promise.resolve(null) : fetchFooter(locale),
+    liveConsole
+      ? Promise.resolve(null)
+      : fetchLegalDocuments(locale, "published"),
   ])
   const footer = footerRes?.data
 
@@ -99,7 +106,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
-        <Script id="csr-config" strategy="beforeInteractive">
+        <Script id="csr-config" strategy="beforeInteractive" nonce={nonce}>
           {`
          window.CSR_CONFIG = window.CSR_CONFIG || {};
          window.CSR_CONFIG = ${JSON.stringify({
@@ -126,10 +133,10 @@ export default async function RootLayout({
         <a href="#main" className="skip-link">
           Skip to main content
         </a>
-        <TrackingScripts />
+        {!liveConsole && <TrackingScripts />}
         <ServerProviders>
-          <StrapiPreviewListener />
-          <ClientProviders>
+          {!liveConsole && <StrapiPreviewListener />}
+          <ClientProviders nonce={nonce}>
             <EventModalProvider>
               <div className="relative flex min-h-screen flex-col">
                 <div
@@ -139,21 +146,24 @@ export default async function RootLayout({
                   {children}
                 </div>
 
-                <TailwindIndicator />
+                {!liveConsole && <TailwindIndicator />}
 
                 <Toaster />
 
-                <div className="strapi-layout-footer">
-                  <ErrorBoundary hideFallback>
-                    <GlobalFooter
-                      locale={locale}
-                      footer={footer}
-                      legalDocuments={legalRes.data}
-                    />
-                  </ErrorBoundary>
-                </div>
+                {!liveConsole && (
+                  <div className="strapi-layout-footer">
+                    <ErrorBoundary hideFallback>
+                      <GlobalFooter
+                        locale={locale}
+                        footer={footer}
+                        legalDocuments={legalRes?.data ?? []}
+                      />
+                    </ErrorBoundary>
+                  </div>
+                )}
               </div>
-              <EventModal />
+              {!liveConsole && <EventModal />}
+              {!liveConsole && <StaffDrawerMount />}
             </EventModalProvider>
           </ClientProviders>
         </ServerProviders>

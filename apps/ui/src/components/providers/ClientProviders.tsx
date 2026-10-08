@@ -16,8 +16,14 @@ const queryClient = new QueryClient()
 
 export function ClientProviders({
   children,
+  nonce,
 }: {
   readonly children: React.ReactNode
+  /**
+   * The request's CSP nonce (`x-nonce`): next-themes injects an inline
+   * bootstrap script, and without the nonce `script-src` blocks it.
+   */
+  readonly nonce?: string
 }) {
   useTranslatedZod(z)
 
@@ -29,6 +35,7 @@ export function ClientProviders({
         defaultTheme="light"
         forcedTheme="light"
         enableSystem={false}
+        nonce={nonce}
       >
         <QueryClientProvider client={queryClient}>
           {children}

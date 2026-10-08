@@ -9,7 +9,7 @@
  * Location filter's place names come from `distinct` searches on the
  * `<level>_slug` fields, one library per place.
  */
-import { isGapKey, type GapKey } from "@repo/shared-data"
+import { isGapKey, noticeLocalDate, type GapKey } from "@repo/shared-data"
 
 import {
   type FindPlaceLevel,
@@ -27,6 +27,10 @@ import {
 export { localDayMinute } from "@/lib/local-time"
 
 export interface LibrarySearchHitV2 extends LibrarySearchHit {
+  stop_count?: number
+  cycle_weeks?: number
+  closed_dates?: string[]
+  notice_active?: boolean
   openingTimes?: unknown
   timezone?: string | null
   iiifEndpoint?: string | null
@@ -121,7 +125,7 @@ const PLACE_LIMIT: Record<FindPlaceLevel, number> = {
 }
 
 /** The opening-times normaliser allows six timeframes a day. */
-const FRAMES_PER_DAY = 6
+const FRAMES_PER_DAY = 10
 
 const RETRIEVE = [
   "id",
@@ -145,6 +149,10 @@ const RETRIEVE = [
   "operatorType",
   "heroImage",
   "openingTimes",
+  "closed_dates",
+  "notice_active",
+  "stop_count",
+  "cycle_weeks",
   "timezone",
   "iiifEndpoint",
   "completeness",
@@ -193,7 +201,7 @@ export function openNowFilter(zones: string[], now: Date): string {
   for (const zone of zones) {
     const local = localDayMinute(zone, now)
     if (!local) continue
-    const key = `${local.day}:${local.minute}`
+    const key = `${noticeLocalDate(now, zone)}:${local.day}:${local.minute}`
     const group = groups.get(key) ?? { ...local, zones: [] }
     group.zones.push(zone)
     groups.set(key, group)
@@ -207,7 +215,7 @@ export function openNowFilter(zones: string[], now: Date): string {
         `(open_${day}_${n}_from <= ${minute} AND open_${day}_${n}_to > ${minute})`
     ).join(" OR ")
 
-    return `(open_tz IN ${quoted(z)} AND (${frames}))`
+    return `(open_tz IN ${quoted(z)} AND (${frames}) AND NOT closed_dates = ${JSON.stringify(noticeLocalDate(now, z[0]))})`
   })
 
   return clauses.length === 1 ? clauses[0]! : `(${clauses.join(" OR ")})`

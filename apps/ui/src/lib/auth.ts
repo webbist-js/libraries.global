@@ -1,7 +1,13 @@
 import "server-only"
 
+import { passkey } from "@better-auth/passkey"
 import { betterAuth } from "better-auth"
-import { APIError, createAuthMiddleware, getOAuthState } from "better-auth/api"
+import {
+  getSessionFromCtx,
+  APIError,
+  createAuthMiddleware,
+  getOAuthState,
+} from "better-auth/api"
 import { customSession, magicLink } from "better-auth/plugins"
 import { Pool } from "pg"
 
@@ -18,6 +24,12 @@ import {
   sendVerificationEmail,
 } from "./email"
 import { TERMS_VERSION } from "./legal-consent"
+import { liveCookieOptions, signLiveProof } from "./live-proof"
+import {
+  confirmationLocked,
+  recordFailure,
+  withConfirmation,
+} from "./mobile-live/confirmation-store"
 import { buildSessionAccess } from "./session-access"
 import { fetchSessionProfile } from "./session-profile"
 
@@ -128,10 +140,66 @@ export const auth = betterAuth({
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
       if (
+        ctx.path === "/passkey/verify-authentication" &&
+        ctx.headers?.get("x-live-confirm") === "true"
+      ) {
+        const existing = await getSessionFromCtx(ctx)
+        if (!existing)
+          throw new APIError("UNAUTHORIZED", { message: "Sign in first" })
+        const locked = await withConfirmation(
+          pool,
+          existing.user.id,
+          async (state) => confirmationLocked(state)
+        )
+        if (locked)
+          throw new APIError("TOO_MANY_REQUESTS", {
+            message: "Try again in 15 minutes",
+          })
+        const liveContext = ctx.context as unknown as { liveUserId?: string }
+        liveContext.liveUserId = existing.user.id
+      }
+      if (
         ctx.path === "/sign-up/email" &&
         ctx.body?.termsVersion !== TERMS_VERSION
       ) {
         throw new APIError("BAD_REQUEST", { message: TERMS_REQUIRED_MESSAGE })
+      }
+    }),
+    after: createAuthMiddleware(async (ctx) => {
+      if (
+        ctx.path !== "/passkey/verify-authentication" ||
+        ctx.headers?.get("x-live-confirm") !== "true"
+      )
+        return
+      const liveUserId = (ctx.context as unknown as { liveUserId?: string })
+        .liveUserId
+      const fresh = ctx.context.newSession
+      if (fresh && fresh.user.id === liveUserId) {
+        await withConfirmation(pool, fresh.user.id, async (state) => {
+          state.attempts = 0
+          state.lockedUntil = 0
+        })
+        ctx.setCookie(
+          "lg_live",
+          signLiveProof(fresh.user.id, fresh.session.id),
+          liveCookieOptions
+        )
+      } else if (liveUserId) {
+        const locked = await withConfirmation(pool, liveUserId, async (state) =>
+          recordFailure(state)
+        )
+        if (locked && process.env.STRAPI_BRIDGE_SECRET)
+          await fetch(
+            `${process.env.STRAPI_URL ?? "http://127.0.0.1:1337"}/api/mobile-libraries/live/locked`,
+            {
+              method: "POST",
+              headers: {
+                "X-Service-Secret": process.env.STRAPI_BRIDGE_SECRET,
+                "X-Ba-User-Id": liveUserId,
+              },
+              signal: AbortSignal.timeout(5000),
+            }
+          ).catch(() => {})
       }
     }),
   },
@@ -184,6 +252,10 @@ export const auth = betterAuth({
     },
   },
   plugins: [
+    passkey({
+      rpName: "Libraries Global",
+      origin: process.env.APP_PUBLIC_URL ?? "http://localhost:3000",
+    }),
     magicLink({
       // Sign-in only: new accounts must come through a flow that shows the
       // terms and the 18+ confirmation.

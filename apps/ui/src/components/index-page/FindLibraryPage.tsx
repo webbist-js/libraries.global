@@ -19,6 +19,8 @@ import {
   useFilterSidebar,
 } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
+import { MobilePlaceStops } from "@/components/mobile/MobilePlaceStops"
+import { NearbyMobileLibraries } from "@/components/mobile/NearbyMobileLibraries"
 import { T } from "@/lib/design-tokens"
 import type { FindDrive } from "@/lib/drives/find-match"
 import {
@@ -27,6 +29,7 @@ import {
   FIND_MAX_REACHABLE,
   searchFind,
 } from "@/lib/find-search"
+import type { MobileStopHit } from "@/lib/mobile-stop-search"
 import { usePathname, useRouter } from "@/lib/navigation"
 
 import {
@@ -74,6 +77,7 @@ export function FindLibraryPage({
   const [error, setError] = useState(false)
   const [locating, setLocating] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [nearbyStops, setNearbyStops] = useState<MobileStopHit[]>([])
   const filterSidebar = useFilterSidebar("find")
   const fetchSeq = useRef(0)
   const didMount = useRef(false)
@@ -279,6 +283,24 @@ export function FindLibraryPage({
           </div>
 
           <div className="mt-5">
+            {state.nearLat != null &&
+              state.nearLng != null &&
+              state.nearIncludeMobile !== false && (
+                <NearbyMobileLibraries
+                  lat={state.nearLat}
+                  lng={state.nearLng}
+                  radiusKm={state.radiusKm}
+                  onStops={setNearbyStops}
+                />
+              )}
+            {state.place?.level === "area" && (
+              <div className="mb-8">
+                <MobilePlaceStops
+                  slug={state.place.slug}
+                  name={chosenPlaceName ?? state.place.slug}
+                />
+              </div>
+            )}
             {error ? (
               <FindErrorState onRetry={() => runFetch(state)} />
             ) : loading && !result ? (
@@ -323,7 +345,16 @@ export function FindLibraryPage({
                   ))}
                 </ul>
                 <div className="xl:w-[420px] xl:shrink-0">
-                  <FindMapPanel hits={pageHits} />
+                  <FindMapPanel
+                    hits={pageHits}
+                    stops={
+                      state.nearLat != null &&
+                      state.nearLng != null &&
+                      state.nearIncludeMobile !== false
+                        ? nearbyStops
+                        : []
+                    }
+                  />
                 </div>
               </div>
             ) : (

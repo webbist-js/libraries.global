@@ -1,5 +1,10 @@
 // Pure logic for the Atlas Explorer map: filtering, facet counts, layer
 // registry and URL state. No React or MapLibre imports — unit-testable.
+import {
+  effectiveLibraryHours,
+  noticeLocalDate,
+  type LibraryNotice,
+} from "@repo/shared-data"
 
 // ── Data ────────────────────────────────────────────────────────────────────
 
@@ -19,6 +24,8 @@ export interface AtlasLibrary {
   tz: string | null
   /** 7 arrays (Mon–Sun) of [startMinute, endMinute]; null when hours unknown. */
   hours: number[][][] | null
+  notices?: LibraryNotice[]
+  closedDates?: string[]
   founded: number | null
   closed: number | null
   events: boolean
@@ -215,6 +222,37 @@ export function todayHoursLabel(lib: AtlasLibrary, now: Date): string {
 export type OpenNow = "open" | "closed" | "unknown"
 
 export function openNow(lib: AtlasLibrary, now: Date): OpenNow {
+  const date = noticeLocalDate(now, lib.tz)
+  const effective = effectiveLibraryHours(null, lib.notices ?? [], date)
+  if (effective.closed || lib.closedDates?.includes(date)) return "closed"
+  if (effective.hours) {
+    const local = nowIn(lib.tz, now)
+    const keys = [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday",
+    ]
+    const day = (effective.hours as any).days?.find(
+      (d: any) => d.day === keys[local.day]
+    )
+
+    return day?.enabled &&
+      day.timeframes?.some((tf: any) => {
+        const minutes = (v: string) =>
+          Number(v.split(":")[0]) * 60 + Number(v.split(":")[1])
+
+        return (
+          minutes(tf.startTime) <= local.minutes &&
+          local.minutes < minutes(tf.endTime)
+        )
+      })
+      ? "open"
+      : "closed"
+  }
   if (!lib.hours) return "unknown"
   const { day, minutes } = nowIn(lib.tz, now)
 
@@ -514,7 +552,7 @@ export const LAYERS: LayerDef[] = [
     sub: "Lines and stops",
     group: "libraries",
     tier: "public",
-    ready: false,
+    ready: true,
   },
   {
     id: "population",
