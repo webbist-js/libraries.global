@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { isStaleTimetableSuggestion } from "@repo/shared-data"
 import { notFound } from "next/navigation"
 import type { ReactNode } from "react"
 
@@ -35,6 +36,7 @@ import { Link } from "@/lib/navigation"
 import { privateMetadata } from "@/lib/seo/metadata"
 import { fetchPlaceLink, type PlaceLink } from "@/lib/strapi-api/content/server"
 
+import { ModerationAccessUnavailable } from "../_components/ModerationAccessUnavailable"
 import { ModerationHero } from "../_components/ModerationHero"
 import { requireModerator } from "../_components/moderator"
 
@@ -95,7 +97,12 @@ const PANELS: Record<
   (d: ModerationDetail, ctx: PanelContext) => ReactNode
 > = {
   library_claim: (d) => (
-    <ClaimPanel fields={d.fields} targetSlug={d.targetSlug} />
+    <ClaimPanel
+      fields={d.fields}
+      targetSlug={d.targetSlug}
+      libraryDocumentId={d.targetDocumentId}
+      review={d.review}
+    />
   ),
   wiki_edit: (d) => <ArticleReviewPanel detail={d} />,
   blog_submission: (d) => <ArticleReviewPanel detail={d} />,
@@ -240,10 +247,20 @@ export default async function ReviewSubmissionPage({
   params: Promise<{ locale: string; documentId: string }>
 }) {
   const { documentId } = await params
-  const { user } = await requireModerator(
+  const { user, accessUnknown } = await requireModerator(
     `/contribute/moderation/${encodeURIComponent(documentId)}`
   )
   if (!isDocumentIdParam(documentId)) notFound()
+  // The bridge didn't answer: the viewer may well moderate, and the
+  // submission may well exist. Never a 404 for that.
+  if (accessUnknown)
+    return (
+      <ModerationAccessUnavailable
+        title="Review a *submission*"
+        leaf="Review"
+        path={`/contribute/moderation/${documentId}`}
+      />
+    )
 
   const [detailRes, eventsRes, locales] = await Promise.all([
     fetchModeration<{ data?: ModerationDetail }>(
@@ -345,6 +362,17 @@ export default async function ReviewSubmissionPage({
         >
           <Section title="Your decision">
             <ReviewDecisionForm
+              canApprove={
+                !isStaleTimetableSuggestion(
+                  d.submissionType,
+                  d.fields,
+                  (
+                    d.review as {
+                      current?: Record<string, unknown>
+                    } | null
+                  )?.current?.mobileTimetable
+                )
+              }
               documentId={d.documentId}
               status={d.status}
               submissionType={d.submissionType}

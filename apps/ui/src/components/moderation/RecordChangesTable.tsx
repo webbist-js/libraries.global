@@ -1,11 +1,15 @@
+import { normalizeMobileTimetable } from "@repo/shared-data"
+
 import { T } from "@/lib/design-tokens"
 
 import { humanise, type RecordReview, renderValue } from "./submissionMeta"
+import { TimetableReviewPanel } from "./TimetableReviewPanel"
 
 /** Keys in `fields` that describe the submission, not library fields. */
 const META_KEYS = new Set([
   "kind",
   "previous",
+  "previousHash",
   "category",
   "libraryName",
   "suggestedOptions",
@@ -109,6 +113,10 @@ export function RecordChangesTable({
   const nameOf = (id: unknown) =>
     typeof id === "string" ? (names[id] ?? `Unknown option (${id})`) : "?"
   const changes = Object.entries(fields).filter(([k]) => !META_KEYS.has(k))
+  const mobileTimetableChanged = Object.prototype.hasOwnProperty.call(
+    fields,
+    "mobileTimetable"
+  )
   const suggested = Object.entries(
     (fields.suggestedOptions ?? {}) as Record<string, unknown>
   ).filter(([, v]) => Array.isArray(v) && v.length > 0) as [string, string[]][]
@@ -124,6 +132,8 @@ export function RecordChangesTable({
     const source = current ?? previous
     if (!(key in source)) return ["—"]
     const v = source[key]
+    if (key === "homeLibrary")
+      return [typeof v === "string" ? nameOf(v) : "None"]
     if (RELATIONS.has(key))
       return Array.isArray(v) && v.length
         ? [v.map(nameOf).join(", ")]
@@ -133,6 +143,8 @@ export function RecordChangesTable({
   }
 
   const after = (key: string, v: unknown): string[] => {
+    if (key === "homeLibrary")
+      return [typeof v === "string" && v ? nameOf(v) : "None"]
     if (RELATIONS.has(key)) {
       if (Array.isArray(v))
         return [v.length ? v.map(nameOf).join(", ") : "None"]
@@ -159,6 +171,19 @@ export function RecordChangesTable({
 
   return (
     <div className="flex flex-col gap-4">
+      {mobileTimetableChanged && (
+        <TimetableReviewPanel
+          before={normalizeMobileTimetable(
+            (current ?? previous).mobileTimetable
+          )}
+          after={normalizeMobileTimetable(fields.mobileTimetable)}
+          previousHash={
+            typeof fields.previousHash === "string"
+              ? fields.previousHash
+              : undefined
+          }
+        />
+      )}
       <div
         className="rounded-[14px] px-4 py-3 text-[14px] leading-[1.55]"
         style={{
@@ -200,34 +225,36 @@ export function RecordChangesTable({
             </tr>
           </thead>
           <tbody>
-            {changes.map(([key, value]) => {
-              const was = before(key)
+            {changes
+              .filter(([key]) => key !== "mobileTimetable")
+              .map(([key, value]) => {
+                const was = before(key)
 
-              return (
-                <tr
-                  key={key}
-                  style={{ borderTop: `1px solid ${T.border.divider}` }}
-                >
-                  <th
-                    scope="row"
-                    className={`${cell} font-semibold`}
-                    style={{ color: T.ink.base }}
+                return (
+                  <tr
+                    key={key}
+                    style={{ borderTop: `1px solid ${T.border.divider}` }}
                   >
-                    {humanise(key)}
-                  </th>
-                  <td className={cell}>
-                    <Lines
-                      lines={was}
-                      color={T.ink.dim}
-                      strike={!RELATIONS.has(key) && was[0] !== "—"}
-                    />
-                  </td>
-                  <td className={cell}>
-                    <Lines lines={after(key, value)} color={T.accent.ok} />
-                  </td>
-                </tr>
-              )
-            })}
+                    <th
+                      scope="row"
+                      className={`${cell} font-semibold`}
+                      style={{ color: T.ink.base }}
+                    >
+                      {humanise(key)}
+                    </th>
+                    <td className={cell}>
+                      <Lines
+                        lines={was}
+                        color={T.ink.dim}
+                        strike={!RELATIONS.has(key) && was[0] !== "—"}
+                      />
+                    </td>
+                    <td className={cell}>
+                      <Lines lines={after(key, value)} color={T.accent.ok} />
+                    </td>
+                  </tr>
+                )
+              })}
             {suggested.map(([key, list]) => (
               <tr
                 key={`new-${key}`}

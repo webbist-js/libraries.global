@@ -148,13 +148,31 @@ export function ModerationQueue({
     ? (rows.find((r) => r.drive?.documentId === state.drive)?.drive?.title ??
       null)
     : null
-  const emptyMessage = filtered
-    ? "No submissions match these filters."
+  const empty = filtered
+    ? {
+        icon: "mdi:filter-variant-remove",
+        lead: "No submissions match these filters",
+        detail:
+          "Clear the queue, language, search or drive filter to see more.",
+      }
     : state.segment === "pending"
-      ? "Nothing waiting. Thank you."
+      ? {
+          icon: "mdi:check-decagram-outline",
+          lead: "Nothing waiting",
+          detail: "New submissions in your scope appear here. Thank you.",
+        }
       : state.segment === "needs_info"
-        ? "Nothing is waiting on a contributor."
-        : "Nothing decided yet."
+        ? {
+            icon: "mdi:message-reply-text-outline",
+            lead: "Nothing is waiting on a contributor",
+            detail: "Submissions sent back for changes appear here.",
+          }
+        : {
+            icon: "mdi:archive-outline",
+            lead: "Nothing decided yet",
+            detail: "Approved and rejected submissions appear here.",
+          }
+  const emptyList = !loading && !error && rows.length === 0
 
   return (
     <div className="flex flex-col gap-6">
@@ -182,14 +200,16 @@ export function ModerationQueue({
 
       <p
         aria-live="polite"
-        className="m-0 text-[14px]"
+        className={emptyList ? "sr-only" : "m-0 text-[14px]"}
         style={{ color: T.ink.dim }}
       >
         {loading
           ? "Loading submissions…"
           : error
             ? ""
-            : `${total} submission${total === 1 ? "" : "s"}${pages > 1 ? ` · page ${state.page} of ${pages}` : ""}`}
+            : emptyList
+              ? empty.lead
+              : `${total} submission${total === 1 ? "" : "s"}${pages > 1 ? ` · page ${state.page} of ${pages}` : ""}`}
       </p>
 
       {error ? (
@@ -202,7 +222,7 @@ export function ModerationQueue({
         </p>
       ) : null}
 
-      {!loading && !error && rows.length === 0 ? (
+      {emptyList ? (
         <div
           className="rounded-[20px]"
           style={{
@@ -210,7 +230,29 @@ export function ModerationQueue({
             border: `1px solid ${T.border.line}`,
           }}
         >
-          <EmptyState message={emptyMessage} />
+          <EmptyState
+            icon={empty.icon}
+            lead={empty.lead}
+            detail={empty.detail}
+            action={
+              filtered ? (
+                <Link
+                  href={queueHref({
+                    ...state,
+                    queue: "",
+                    locale: "",
+                    q: "",
+                    drive: "",
+                    page: 1,
+                  })}
+                  className="inline-flex min-h-11 items-center rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+                  style={{ borderColor: T.border.hi, color: T.ink.base }}
+                >
+                  Clear filters
+                </Link>
+              ) : undefined
+            }
+          />
         </div>
       ) : null}
 
@@ -269,6 +311,9 @@ export function ModerationQueue({
                         {row.summary}
                       </Link>
                       {row.drive ? <DriveChip drive={row.drive} /> : null}
+                      {row.staffReviewHint ? (
+                        <Badge label={row.staffReviewHint} color="aurora" />
+                      ) : null}
                     </div>
                   </th>
                   <td className={cell} style={{ color: T.ink.base }}>

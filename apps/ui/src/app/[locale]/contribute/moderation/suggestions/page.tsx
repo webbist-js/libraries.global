@@ -8,6 +8,7 @@ import { T } from "@/lib/design-tokens"
 import { fetchModeration } from "@/lib/moderation-proxy"
 import { privateMetadata } from "@/lib/seo/metadata"
 
+import { ModerationAccessUnavailable } from "../_components/ModerationAccessUnavailable"
 import { ModerationHero } from "../_components/ModerationHero"
 import { coversEverything, requireModerator } from "../_components/moderator"
 
@@ -19,9 +20,17 @@ export const metadata = privateMetadata("Option suggestions")
  * requires an `editorial_board` Role Grant to list or decide.
  */
 export default async function OptionSuggestionsPage() {
-  const { user, scopes } = await requireModerator(
+  const { user, scopes, accessUnknown } = await requireModerator(
     "/contribute/moderation/suggestions"
   )
+  if (accessUnknown)
+    return (
+      <ModerationAccessUnavailable
+        title="Option *suggestions*"
+        leaf="Option suggestions"
+        path="/contribute/moderation/suggestions"
+      />
+    )
   if (!coversEverything(scopes)) notFound()
 
   const res = await fetchModeration<{ data?: OptionSuggestion[] }>(

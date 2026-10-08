@@ -13,6 +13,7 @@ import { fetchModeration } from "@/lib/moderation-proxy"
 import { Link } from "@/lib/navigation"
 import { privateMetadata } from "@/lib/seo/metadata"
 
+import { ModerationAccessUnavailable } from "./_components/ModerationAccessUnavailable"
 import { ModerationHero } from "./_components/ModerationHero"
 import {
   coversEverything,
@@ -32,7 +33,16 @@ export default async function ModerationQueuePage({
 }: {
   searchParams: SearchParams
 }) {
-  const { user, scopes } = await requireModerator("/contribute/moderation")
+  const { user, scopes, accessUnknown } = await requireModerator(
+    "/contribute/moderation"
+  )
+  if (accessUnknown)
+    return (
+      <ModerationAccessUnavailable
+        title="Review *submissions*"
+        path="/contribute/moderation"
+      />
+    )
   const [sp, locales, driveStatsRes] = await Promise.all([
     searchParams,
     fetchArticleLocales(),

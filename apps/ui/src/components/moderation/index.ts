@@ -1,5 +1,6 @@
 export { ArticleReviewPanel } from "./ArticleReviewPanel"
 export { ClaimPanel } from "./ClaimPanel"
+export { StaffAccessList, type StaffAccessRow } from "./StaffAccessList"
 export { DriveChip } from "./DriveChip"
 export { DriveProposalPanel } from "./DriveProposalPanel"
 export { DriveQueueStrip } from "./DriveQueueStrip"

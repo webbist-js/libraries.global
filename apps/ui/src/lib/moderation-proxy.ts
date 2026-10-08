@@ -26,14 +26,17 @@ const BASE = "/api/content-moderation/moderation"
 /** The largest JSON body a moderation PUT accepts (a note is ≤ 2,000 chars). */
 export const MAX_BODY_BYTES = 16 * 1024
 
-// Per user, each on its own key: decisions (PUT) 30 a minute; reads (GET)
-// 120 a minute, since paging and filtering the queue cost one read each.
+// Per user, each on its own key: decisions (PUT and POST) 30 a minute;
+// reads (GET) 120 a minute, since paging and filtering the queue cost one
+// read each.
+const writeLimiter = createRateLimiter({
+  name: "moderation-write",
+  max: 30,
+  windowMs: 60_000,
+})
 const limiters = {
-  PUT: createRateLimiter({
-    name: "moderation-write",
-    max: 30,
-    windowMs: 60_000,
-  }),
+  PUT: writeLimiter,
+  POST: writeLimiter,
   GET: createRateLimiter({
     name: "moderation-read",
     max: 120,
@@ -74,12 +77,12 @@ export const RELATION_LABEL_PARAMS: Record<string, ParamRule> = {
 export type ProxyOptions = {
   /** Path under `/api/content-moderation/moderation/`. */
   path: string
-  method?: "GET" | "PUT"
+  method?: "GET" | "PUT" | "POST"
   /** The query parameters forwarded, each with its own check. */
   params?: Record<string, ParamRule>
   /** Path ids to validate as Strapi documentIds (400 otherwise). */
   ids?: string[]
-  /** For a PUT: the body keys forwarded; every other key is dropped. */
+  /** For a PUT or POST: the body keys forwarded; every other key is dropped. */
   bodyKeys?: readonly string[]
 }
 
@@ -164,7 +167,7 @@ export async function proxyModeration(
     return NextResponse.json({ error: "Invalid id" }, { status: 400 })
 
   let body: string | undefined
-  if (method === "PUT") {
+  if (method !== "GET") {
     const parsed = await readJsonCapped(req, MAX_BODY_BYTES)
     if (!parsed.ok)
       return NextResponse.json(

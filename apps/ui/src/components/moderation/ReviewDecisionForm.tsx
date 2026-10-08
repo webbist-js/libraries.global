@@ -38,6 +38,7 @@ export function ReviewDecisionForm({
   status,
   submissionType,
   canPublish,
+  canApprove = true,
   reviewedAt,
   driveDocumentId,
 }: {
@@ -45,6 +46,7 @@ export function ReviewDecisionForm({
   readonly status: string
   readonly submissionType?: string
   readonly canPublish: boolean
+  readonly canApprove?: boolean
   readonly reviewedAt?: string | null
   /** The Drive this submission is tagged with, when there is one. */
   readonly driveDocumentId?: string | null
@@ -136,6 +138,13 @@ export function ReviewDecisionForm({
   }
 
   async function decide(decision: Decision, publish = false) {
+    if (!canApprove && decision !== "rejected") {
+      setError(
+        "This timetable changed after the suggestion. Decline it so a new suggestion can be made."
+      )
+
+      return
+    }
     const text = note.trim()
     if (decision !== "approved" && !text) {
       setError(
@@ -293,13 +302,13 @@ export function ReviewDecisionForm({
         <button
           type="button"
           className={PRIMARY}
-          disabled={disabled}
+          disabled={disabled || !canApprove}
           onClick={() => void decide("approved")}
         >
           <Icon aria-hidden="true" icon="mdi:check" width={18} height={18} />
           {busy === "approved" ? "Approving…" : approveLabel}
         </button>
-        {canPublish ? (
+        {canPublish && canApprove ? (
           <button
             type="button"
             className={SECONDARY}
@@ -324,7 +333,7 @@ export function ReviewDecisionForm({
           type="button"
           className={SECONDARY}
           style={{ color: T.ink.base }}
-          disabled={disabled}
+          disabled={disabled || !canApprove}
           onClick={() => void decide("needs_info")}
         >
           <Icon
