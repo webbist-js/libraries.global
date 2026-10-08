@@ -11,10 +11,12 @@ const DETAIL: Record<string, string> = {
     "It’s complimentary, so there’s nothing to pay. Stay at Archivist and it renews by itself.",
   verified:
     "It’s complimentary, so there’s nothing to pay. It renews each year.",
+  team: "Your library service pays for the Team; its organiser manages the seats.",
 }
 
 const ACTION: Record<string, { label: string; href: string }> = {
   earned: { label: "See your contributions", href: "/contribute/submissions" },
+  team: { label: "Open the Staff area", href: "/staff" },
 }
 
 /** How the member holds Pro or Team. Renders nothing for free and public. */

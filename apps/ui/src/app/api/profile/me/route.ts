@@ -30,6 +30,9 @@ export async function PUT(req: Request) {
   if (!session?.user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
+  if (!isSameOrigin(req, process.env.APP_PUBLIC_URL))
+    return sameOriginResponse()
+
   let body: Record<string, unknown>
   try {
     body = (await req.json()) as Record<string, unknown>
@@ -104,6 +107,9 @@ export async function PATCH(req: Request) {
   if (!session?.user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
+  if (!isSameOrigin(req, process.env.APP_PUBLIC_URL))
+    return sameOriginResponse()
+
   let body: Record<string, unknown>
   try {
     body = (await req.json()) as Record<string, unknown>
@@ -116,11 +122,20 @@ export async function PATCH(req: Request) {
     "notifPrefs",
     "profileVisibility",
     "publicPrefs",
+    "supporterListed",
+    "supporterBadgeVisible",
   ]
   const data: Record<string, unknown> = { baUserId: session.user.id }
   for (const key of patchAllowed) {
     if (key in body) data[key] = body[key]
   }
+
+  for (const key of ["supporterListed", "supporterBadgeVisible"])
+    if (key in body && typeof body[key] !== "boolean")
+      return NextResponse.json(
+        { error: `${key} must be a boolean` },
+        { status: 400 }
+      )
 
   if (Object.keys(data).length <= 1)
     return NextResponse.json({ error: "No valid fields" }, { status: 400 })

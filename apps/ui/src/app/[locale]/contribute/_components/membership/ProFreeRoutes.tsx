@@ -76,7 +76,11 @@ const LINK_PILL =
 /** The three ways to hold Pro without paying. */
 export function ProFreeRoutes() {
   return (
-    <section aria-labelledby="get-pro-free-h" id="get-pro-free">
+    <section
+      aria-labelledby="get-pro-free-h"
+      className="scroll-mt-28"
+      id="get-pro-free"
+    >
       <PlanSectionHeader
         id="get-pro-free-h"
         sub="If you qualify for complimentary Pro, you’re never asked to pay."

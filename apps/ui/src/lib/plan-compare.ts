@@ -1,5 +1,6 @@
 /**
- * The "compare every plan" matrix for /pro and the Atlas plans sheet. Rows
+ * The "compare every plan" matrix for /contribute/membership and the Atlas
+ * plans sheet. Rows
  * are derived from lib/plans.ts (each plan's includes) and the entitlement
  * resolver (which Pro features each plan gets), so the table can't claim
  * more than the plans do. Status comes from the copy: "soon" never shows ✓.
@@ -62,7 +63,14 @@ const FEATURE_GROUPS: Record<string, readonly Feature[]> = {
     "events.personalFeed",
     "index.export",
   ],
-  teams: ["team.workspace", "team.bulkUpload", "team.embed", "api.key"],
+  teams: [
+    "library.team",
+    "library.traffic",
+    "team.workspace",
+    "team.bulkUpload",
+    "team.embed",
+    "api.key",
+  ],
 }
 
 const GROUP_TITLES: [id: string, title: string][] = [

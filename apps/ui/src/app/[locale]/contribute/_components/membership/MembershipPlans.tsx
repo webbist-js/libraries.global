@@ -23,7 +23,7 @@ const MEMBERSHIP: readonly PlanCardKey[] = ["supporter", "pro", "team"]
 /** One line on what the unbuilt features add up to, per plan. */
 const ROADMAP_SUMMARY: Partial<Record<PlanCardKey, string>> = {
   pro: "Analysis layers, reach tools, library watching and side-by-side comparison.",
-  team: "A shared workspace, bulk updates, an embeddable finder and higher API quotas.",
+  team: "Traffic reports, a shared workspace, bulk updates, an embeddable finder and higher API quotas.",
 }
 
 const PILL =
@@ -280,9 +280,10 @@ function PlanColumn({
 
   return (
     <li
+      id={`plan-${plan.key}`}
       // From md up the cards share row tracks (subgrid), so each price,
       // blurb, button and list starts at the same height in all three.
-      className="flex min-w-0 flex-col gap-5 rounded-[22px] bg-white md:row-span-4 md:grid md:grid-rows-subgrid"
+      className="flex min-w-0 scroll-mt-28 flex-col gap-5 rounded-[22px] bg-white md:row-span-4 md:grid md:grid-rows-subgrid"
       style={{
         border: current
           ? `2px solid ${T.accent.primary}`

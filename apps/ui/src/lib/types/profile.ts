@@ -77,6 +77,12 @@ export type UserProfile = {
   linkedin?: string | null
   avatar?: AvatarMedia | null
   profileVisibility: "public" | "limited" | "private"
+  /** Fresh, server-resolved recognition. Public responses carry only the mark. */
+  supporterMark?: boolean
+  /** Owner-only plan eligibility and visibility preferences. */
+  isSupporter?: boolean
+  supporterListed?: boolean
+  supporterBadgeVisible?: boolean
   isVerifiedLibrarian: boolean
   contributorNumber?: number | null
   languages?: LanguageEntry[]

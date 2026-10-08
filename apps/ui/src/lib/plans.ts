@@ -48,6 +48,14 @@ export const PRO_FEATURE_COPY: Record<
   Feature,
   { label: string; status: "live" | "soon" }
 > = {
+  "library.team": {
+    label: "Team organiser: assign staff to your libraries",
+    status: "live",
+  },
+  "library.traffic": {
+    label: "Traffic reports",
+    status: "soon",
+  },
   "atlas.export": {
     label: "Export Atlas results as CSV or GeoJSON",
     status: "live",
@@ -136,7 +144,29 @@ function featureItems(features: readonly Feature[]): PlanInclude[] {
 
 const PRO_ONLY = featuresOf("pro")
 const TEAM_ONLY = featuresOf("team").filter((f) => !PRO_ONLY.includes(f))
+const TEAM_FEATURES = featureItems(TEAM_ONLY)
 
+/**
+ * Team's list: Pro for every seat, then what the Team organiser and a
+ * covered library's owners can do today (`library.team` plus choosing who
+ * may go live, which the knowledge base describes as one feature), then
+ * what's on the roadmap.
+ */
+const TEAM_TRAFFIC = soon(PRO_FEATURE_COPY["library.traffic"].label)
+const TEAM_INCLUDES: PlanInclude[] = [
+  feature("Pro for every seat"),
+  ...TEAM_FEATURES.filter((i) => i.kind === "feature"),
+  feature("Choose who can go live for a mobile library"),
+  TEAM_TRAFFIC,
+  ...TEAM_FEATURES.filter(
+    (i) => i.kind === "soon" && i.text !== TEAM_TRAFFIC.text
+  ),
+  note(
+    "Bought per library service, not per person, and invoiced yearly. We set up the Team, its libraries and its seats; the team organiser invites colleagues and assigns them to your libraries."
+  ),
+]
+
+/** "Ask about Team for your service": a mailto until checkout exists. */
 export const TEAM_CONTACT_HREF = `mailto:${CONTACT_EMAIL}?subject=Team%20plan`
 
 export const PLANS: readonly PlanCard[] = [
@@ -148,7 +178,9 @@ export const PLANS: readonly PlanCard[] = [
     includes: [
       feature("Every library record, with hours and services"),
       feature("Search, the map and lists"),
-      soon("Open-data downloads"),
+      feature("Read the Journal, Knowledge articles, events and noticeboard"),
+      feature("Browse community drives and library notices and timetables"),
+      feature("Library record downloads"),
     ],
     cta: { kind: "none", label: "No account needed" },
   },
@@ -161,6 +193,10 @@ export const PLANS: readonly PlanCard[] = [
       feature("Everything in Public"),
       feature("Contribute corrections, photos and new libraries"),
       feature("Follow libraries and save events"),
+      feature("Join community drives; propose one after 5 accepted changes"),
+      feature("Suggest Knowledge edits and pitch Journal stories"),
+      feature("Apply for Knowledge or Journal editing roles"),
+      feature("Claim your library and use the free staff tools"),
       soon("3 saved views and 3 saved searches"),
       soon("A weekly digest of followed libraries"),
     ],
@@ -178,7 +214,7 @@ export const PLANS: readonly PlanCard[] = [
     includes: [
       feature("Everything in Free account"),
       feature("An optional Supporter mark you can hide"),
-      feature("Credit on the supporters page"),
+      feature("Optional credit on the supporters page"),
       note("No extra features and no extra trust: it’s patronage."),
     ],
     cta: { kind: "soon", label: "Coming soon" },
@@ -203,14 +239,66 @@ export const PLANS: readonly PlanCard[] = [
       note: "Includes 5 seats; £96 per extra seat. Public library services get 20% off.",
     },
     who: "Library services, councils, universities, consultancies",
-    includes: [
-      feature("Pro for every seat"),
-      feature("Invoiced yearly; we set up your seats"),
-      ...featureItems(TEAM_ONLY),
-    ],
+    includes: TEAM_INCLUDES,
     cta: { kind: "contact", label: "Talk to us", href: TEAM_CONTACT_HREF },
   },
 ]
+
+/** Short summaries for the supporters page; planned status follows the plan copy. */
+export const FREE_FEATURE_SUMMARIES = [
+  {
+    title: "Every library record",
+    icon: "mdi:bank-outline",
+    description:
+      "Hours, addresses, accessibility and sources, without an account.",
+    include: "Every library record",
+  },
+  {
+    title: "Library record downloads",
+    icon: "mdi:download",
+    description:
+      "Export from any library page as CSV or JSON, with sources and licence.",
+    include: "Library record downloads",
+  },
+  {
+    title: "Suggest corrections and add libraries",
+    icon: "mdi:pencil-outline",
+    description: "Every change is reviewed, then credited to you.",
+    include: "Contribute corrections",
+  },
+  {
+    title: "Noticeboard and drives",
+    icon: "mdi:pin-outline",
+    description:
+      "Join community drives, or propose one once you have 5 accepted changes.",
+    include: "Join community drives",
+  },
+  {
+    title: "Knowledge and journal editing",
+    icon: "mdi:file-document-outline",
+    description:
+      "Suggest edits and pitch stories; apply for an editor role to write and review articles.",
+    include: "Apply for Knowledge",
+  },
+  {
+    title: "Saved views and searches",
+    icon: "mdi:bookmark-outline",
+    description: "Keep 3 of each on a free account.",
+    include: "3 saved views",
+  },
+  {
+    title: "Weekly digest",
+    icon: "mdi:email-outline",
+    description: "A weekly email about the libraries you follow.",
+    include: "A weekly digest",
+  },
+].map(({ include, ...copy }) => ({
+  ...copy,
+  planned:
+    PLANS.filter((plan) => plan.key === "public" || plan.key === "free")
+      .flatMap((plan) => plan.includes)
+      .find((item) => item.text.startsWith(include))?.kind === "soon",
+}))
 
 /**
  * The homepage's short take on each plan: a one-line "who pays" and a
@@ -241,7 +329,7 @@ export const PLAN_TEASERS: readonly {
     key: "team",
     tagline: "For library services",
     summary:
-      "Pro for every seat, invoiced yearly, with shared workspaces to come.",
+      "Pro for every seat and a team organiser who assigns staff to your libraries, with traffic reports to come.",
   },
 ]
 
@@ -273,6 +361,26 @@ export function priceHeadline(price: PlanPrice): string {
 }
 
 /**
+ * The plan's short name for a menu chip: "Free", "Supporter", "Pro" or
+ * "Team". A missing or unknown plan reads as Free (missing session fields
+ * deny), so the account menu and the Contribute menu never say more than
+ * the session does.
+ */
+export function planShortName(plan: string | null | undefined): string {
+  switch (plan) {
+    case "team":
+      return "Team"
+    case "pro":
+      return "Pro"
+    case "supporter":
+      return "Supporter"
+
+    default:
+      return "Free"
+  }
+}
+
+/**
  * One line on how the member holds their plan, or null when there's nothing
  * to say (free, public, or a value we don't recognise).
  */
@@ -280,7 +388,14 @@ export function planStatusCopy(
   plan: string | null | undefined,
   planSource: string | null | undefined
 ): string | null {
-  const name = plan === "pro" ? "Pro" : plan === "team" ? "Team" : null
+  const name =
+    plan === "supporter"
+      ? "Supporter"
+      : plan === "pro"
+        ? "Pro"
+        : plan === "team"
+          ? "Team"
+          : null
   if (!name) return null
 
   switch (planSource) {
@@ -290,6 +405,8 @@ export function planStatusCopy(
       return `You have ${name} for your contributions (Archivist tier).`
     case "verified":
       return `You have ${name} as verified library staff, student or charity.`
+    case "team":
+      return `You have ${name} through your Team seat.`
     case "paid":
       return `You're on ${name}.`
 

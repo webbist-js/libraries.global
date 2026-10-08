@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { toast } from "sonner"
 
+import { SupporterPreferences } from "@/components/community/SupporterPreferences"
 import { SectionCard } from "@/components/profile-form/FormParts"
 import { VisibilityChoice } from "@/components/profile-form/ProfileSections"
 import { ToggleSwitch } from "@/components/settings/ToggleSwitch"
@@ -160,6 +161,23 @@ export function PrivacySection({
           </div>
         ))}
       </div>
+
+      {profile?.isSupporter ? (
+        <div>
+          <p
+            className="m-0 mb-2 text-[15px] font-semibold"
+            style={{ color: T.ink.base }}
+          >
+            Supporter recognition
+          </p>
+          <SupporterPreferences
+            key={`${profile.supporterListed}-${profile.supporterBadgeVisible}-${visibility}`}
+            listed={profile.supporterListed}
+            badgeVisible={profile.supporterBadgeVisible}
+            visibility={visibility}
+          />
+        </div>
+      ) : null}
     </SectionCard>
   )
 }

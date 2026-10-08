@@ -126,3 +126,18 @@ export async function sendVerificationEmail(
     text: `Confirm your email address to finish creating your ${SITE_NAME} account: ${verifyUrl}\n\nThe link works for ${VERIFICATION_LINK_LIFETIME}. If you didn't sign up, you can ignore this email.`,
   })
 }
+
+/** Confirmation codes are credentials, so even development requires real delivery. */
+export async function sendLiveConfirmationEmail(
+  to: string,
+  code: string
+): Promise<void> {
+  const transporter = createTransporter()
+  if (!transporter) throw new Error("Email delivery is not configured")
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM ?? DEFAULT_FROM,
+    to,
+    subject: "Confirm it is you — Libraries Global Live",
+    text: `Your confirmation code is ${code}. It works once, within 10 minutes.\n\nIf you did not request it, ignore this email.`,
+  })
+}
