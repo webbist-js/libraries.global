@@ -65,31 +65,30 @@ export function LibraryDriveNote({
   const [announcement, setAnnouncement] = useState("")
 
   useEffect(() => {
-    let live = true
+    const controller = new AbortController()
     fetch(
-      `/api/drives/for-library/${encodeURIComponent(library.documentId)}?locale=${encodeURIComponent(locale)}`
+      `/api/drives/for-library/${encodeURIComponent(library.documentId)}?locale=${encodeURIComponent(locale)}`,
+      { signal: controller.signal }
     )
       .then((r) => (r.ok ? r.json() : null))
       .then((json: { data?: ForLibraryDrive | null } | null) => {
-        if (live) setDrive(json?.data ?? null)
+        if (!controller.signal.aborted) setDrive(json?.data ?? null)
       })
       .catch(() => {
-        if (live) setDrive(null)
+        if (!controller.signal.aborted) setDrive(null)
       })
 
-    return () => {
-      live = false
-    }
+    return () => controller.abort()
   }, [library.documentId, locale])
 
   useEffect(() => {
     if (!open) return
-    let live = true
-    fetch("/api/contribute/standing")
+    const controller = new AbortController()
+    fetch("/api/contribute/standing", { signal: controller.signal })
       .then((r) => (r.ok ? r.json() : null))
       .then(
         (json: { pendingCount?: unknown; pendingLimit?: unknown } | null) => {
-          if (!live || !json) return
+          if (controller.signal.aborted || !json) return
           const { pendingCount, pendingLimit } = json
           setQuota(
             typeof pendingCount === "number" && typeof pendingLimit === "number"
@@ -100,9 +99,7 @@ export function LibraryDriveNote({
       )
       .catch(() => {})
 
-    return () => {
-      live = false
-    }
+    return () => controller.abort()
   }, [open])
 
   if (!drive || hidden) return null

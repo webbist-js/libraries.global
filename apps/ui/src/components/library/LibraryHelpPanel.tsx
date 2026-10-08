@@ -8,7 +8,6 @@ import { hubHref } from "@/components/contribute/wizard.logic"
 import type { ChecklistKey } from "@/components/library/library-page.helpers"
 import { useCorrectionDrawer } from "@/components/library/LibraryCorrection"
 import { LibraryDriveNote } from "@/components/library/LibraryDriveNote"
-import { useCapabilities } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
 import { Link, usePathname } from "@/lib/navigation"
 
@@ -219,7 +218,7 @@ function TranslateRecord({
 
 /**
  * "Help finish this record": up to three quick tasks for the record's gaps.
- * The library's own stewards get an edit link first. UI only: every route
+ * Staff have their own card (`StaffLibraryEntry`). UI only: every route
  * behind these re-checks access, and signed-out readers are asked to sign
  * in by the form they open.
  */
@@ -254,11 +253,6 @@ export function LibraryHelpPanel({
   const routeLocale = useLocale()
   const pathname = usePathname()
   const { open } = useCorrectionDrawer()
-  const { has, claimedLibraryIds, ready } = useCapabilities()
-  const steward =
-    ready &&
-    has("submit.libraryEdit") &&
-    claimedLibraryIds.includes(libraryDocumentId)
   const tasks = tasksFor(
     gaps,
     { slug: librarySlug, name: libraryName },
@@ -281,7 +275,7 @@ export function LibraryHelpPanel({
     />
   )
 
-  if (!steward && tasks.length === 0 && targets.length === 0) return driveNote
+  if (tasks.length === 0 && targets.length === 0) return driveNote
 
   return (
     <section
@@ -295,36 +289,8 @@ export function LibraryHelpPanel({
         className="m-0 mb-3 text-[15px] font-bold"
         style={{ color: T.ink.base }}
       >
-        {steward ? "You look after this library" : "Help finish this record"}
+        Help finish this record
       </h2>
-      {steward ? (
-        <div className="mb-3 flex flex-col gap-2">
-          <Link
-            href={`/contribute/index/${librarySlug}`}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-4 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
-          >
-            <Icon
-              aria-hidden="true"
-              height={16}
-              icon="mdi:pencil-outline"
-              width={16}
-            />
-            Edit this record
-          </Link>
-          {has("events.feed") ? (
-            <Link
-              href={`/contribute/events?library=${libraryDocumentId}`}
-              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
-              style={{ borderColor: T.border.hi, color: T.ink.base }}
-            >
-              Manage event feeds
-            </Link>
-          ) : null}
-          <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
-            Your edits go to a reviewer first.
-          </p>
-        </div>
-      ) : null}
       {tasks.length > 0 ? (
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {tasks.map((task) => (

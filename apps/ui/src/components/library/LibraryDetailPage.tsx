@@ -1,10 +1,13 @@
+import type { LibraryNotice } from "@repo/shared-data"
 import Image from "next/image"
 import type { Locale } from "next-intl"
 
 import type { BreadcrumbItem } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
+import { CurrentLibraryMarker } from "@/components/library/CurrentLibraryMarker"
 import { facilityRows } from "@/components/library/facility-rows"
+import { LibrariesOnTheMove } from "@/components/library/LibrariesOnTheMove"
 import { LIBRARY_ANCHORS } from "@/components/library/library-anchors"
 import { toLatLng } from "@/components/library/library-page.helpers"
 import { LibraryAnchorNav } from "@/components/library/LibraryAnchorNav"
@@ -13,6 +16,7 @@ import { LibraryCorrectionProvider } from "@/components/library/LibraryCorrectio
 import { LibraryEvents } from "@/components/library/LibraryEvents"
 import type { TranslateLocale } from "@/components/library/LibraryHelpPanel"
 import { LibraryHero } from "@/components/library/LibraryHero"
+import { LibraryNoticeBanners } from "@/components/library/LibraryNoticeBanners"
 import {
   LIB_ICONS,
   LibrarySectionCard,
@@ -34,6 +38,7 @@ import {
   LibraryTasksPanel,
 } from "@/components/library/LibrarySidebar"
 import { verifyRecordOf } from "@/components/library/verify.logic"
+import { StopsTimesSection } from "@/components/mobile/StopsTimesSection"
 import { T } from "@/lib/design-tokens"
 import type { DatasetRecord } from "@/lib/strapi-api/content/datasets"
 import type { LibraryAreaData } from "@/lib/strapi-api/content/library-area"
@@ -52,6 +57,7 @@ const NO_AREA: LibraryAreaData = {
 }
 
 interface LibraryDetailPageProps {
+  readonly notices?: LibraryNotice[]
   readonly library: PopulatedLibraryData | null
   readonly locale: Locale
   /** Nearby libraries and area figures, from the index. */
@@ -73,6 +79,7 @@ interface LibraryDetailPageProps {
 }
 
 export function LibraryDetailPage({
+  notices = [],
   library,
   locale,
   area = NO_AREA,
@@ -84,6 +91,7 @@ export function LibraryDetailPage({
   untranslatedLocale = null,
   translateLocales = [],
 }: LibraryDetailPageProps) {
+  if (library) library = { ...library, notices } as PopulatedLibraryData
   if (!library) {
     return (
       <div
@@ -164,7 +172,9 @@ export function LibraryDetailPage({
   )
 
   const anchors = [
-    LIBRARY_ANCHORS.visit,
+    library.libraryType === "Mobile"
+      ? LIBRARY_ANCHORS.stops
+      : LIBRARY_ANCHORS.visit,
     LIBRARY_ANCHORS.access,
     LIBRARY_ANCHORS.history,
     LIBRARY_ANCHORS.collections,
@@ -180,6 +190,7 @@ export function LibraryDetailPage({
       style={{ background: T.bg.void, color: T.ink.base }}
     >
       <GlobalHeader locale={locale} />
+      <CurrentLibraryMarker documentId={library.documentId} />
 
       <LibraryCorrectionProvider
         library={wizardLibrary}
@@ -224,8 +235,37 @@ export function LibraryDetailPage({
                   </figure>
                 ) : null}
 
-                <LibraryVisitSection library={library} />
+                {library.libraryType === "Mobile" ? (
+                  <StopsTimesSection
+                    slug={library.slug ?? undefined}
+                    id={library.documentId}
+                    name={library.name ?? "Mobile library"}
+                    value={rec.mobileTimetable}
+                    timezone={String(rec.timezone ?? "UTC")}
+                    status={library.operationalStatus}
+                    notices={notices}
+                    timetableUrl={
+                      typeof rec.timetableUrl === "string"
+                        ? rec.timetableUrl
+                        : null
+                    }
+                  />
+                ) : (
+                  <>
+                    <LibraryNoticeBanners
+                      notices={notices}
+                      timezone={
+                        typeof rec.timezone === "string" ? rec.timezone : null
+                      }
+                    />
+                    <LibraryVisitSection library={library} />
+                  </>
+                )}
                 <LibraryFacilitiesSection library={library} path={path} />
+                {library.libraryType !== "Mobile" &&
+                library.mobileLibraries?.length ? (
+                  <LibrariesOnTheMove libraries={library.mobileLibraries} />
+                ) : null}
 
                 <div className="grid gap-4 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
                   <LibraryHistorySection library={library} />
@@ -233,7 +273,11 @@ export function LibraryDetailPage({
                     <LibraryCollectionsSection library={library} />
                   )}
                   {hasFeed ? null : (
-                    <LibraryEventsEmpty documentId={library.documentId} />
+                    <LibraryEventsEmpty
+                      documentId={library.documentId}
+                      libraryName={library.name ?? ""}
+                      librarySlug={library.slug ?? ""}
+                    />
                   )}
                 </div>
 

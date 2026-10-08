@@ -11,6 +11,7 @@ import LibraryDetailPage from "@/components/library/LibraryDetailPage"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { isDevelopment } from "@/lib/general-helpers"
+import { fetchPublicLibraryNotices } from "@/lib/library-notices"
 import { buildBreadcrumbSchema, buildLibrarySchema } from "@/lib/seo/json-ld"
 import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
 import { fetchDataset } from "@/lib/strapi-api/content/datasets"
@@ -150,6 +151,7 @@ export default function LibraryRoutePage(props: {
 
   // Start every dependent fetch before suspending on any of them, so they
   // run in parallel instead of one per render pass.
+  const noticesPromise = fetchPublicLibraryNotices(library.documentId)
   const areaPromise = fetchLibraryArea({
     slug: librarySlug,
     regionSlug: library.region?.slug,
@@ -167,6 +169,7 @@ export default function LibraryRoutePage(props: {
   const followersPromise = fetchLibraryFollowerCount(library.documentId)
   const localesPromise = fetchArticleLocales()
 
+  const notices = use(noticesPromise)
   const area = use(areaPromise)
   const history = use(historyPromise)
   const historyStats = use(historyStatsPromise)
@@ -229,6 +232,7 @@ export default function LibraryRoutePage(props: {
       />
       <LibraryDetailPage
         library={library}
+        notices={notices}
         locale={locale}
         area={area}
         history={history}

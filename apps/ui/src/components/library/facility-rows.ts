@@ -1,7 +1,7 @@
 // Rows for the library page's accessibility & facilities grid. Pure, so
 // the page and the tests share it.
 
-import { FACILITY_CHECKLIST, type FacilityAnswer } from "@repo/shared-data"
+import { facilityChecklistFor, type FacilityAnswer } from "@repo/shared-data"
 
 import {
   facilityIcon,
@@ -30,6 +30,7 @@ type TagItem = {
  * entry (FACILITY_CHECKLIST) or by a documented name that clearly means it.
  */
 export function facilityRows(library: {
+  libraryType?: string | null
   accessibility?: unknown
   services?: unknown
   amenities?: unknown
@@ -61,21 +62,23 @@ export function facilityRows(library: {
       : []
   )
 
-  const open = FACILITY_CHECKLIST.filter(({ label, name }) => {
-    const lower = label.toLowerCase()
+  const open = facilityChecklistFor(library.libraryType)
+    .filter(({ label, name }) => {
+      const lower = label.toLowerCase()
 
-    return !names.some(
-      (doc) =>
-        doc === name.toLowerCase() ||
-        doc.includes(lower) ||
-        lower.includes(doc) ||
-        sameFacility(label, doc)
-    )
-  }).map(({ label }) => ({
-    label,
-    icon: facilityIcon(label, "accessibility"),
-    state: absent.has(label) ? ("no" as const) : ("unknown" as const),
-  }))
+      return !names.some(
+        (doc) =>
+          doc === name.toLowerCase() ||
+          doc.includes(lower) ||
+          lower.includes(doc) ||
+          sameFacility(label, doc)
+      )
+    })
+    .map(({ label }) => ({
+      label,
+      icon: facilityIcon(label, "accessibility"),
+      state: absent.has(label) ? ("no" as const) : ("unknown" as const),
+    }))
 
   return [...documented, ...open]
 }

@@ -8,11 +8,11 @@ import { monthName } from "./change-history.helpers"
 
 type Month = LibraryHistoryStats["months"][number]
 
-const BAR = 14
-const GAP = 6
-const CHART_H = 96
+const BAR = 36
+const GAP = 4
+const CHART_H = 64
 const TOP = 12 // room for the "Checked" dots
-const AXIS_H = 18
+const EMPTY_H = 3 // a stub bar so quiet months still read as months
 
 /** "Changes per month, last 24 months: 3 in Oct 2025, 1 in Jan 2026." */
 export function histogramLabel(months: readonly Month[]): string {
@@ -23,14 +23,6 @@ export function histogramLabel(months: readonly Month[]): string {
   return `Changes per month, last ${months.length} months: ${
     busy.length ? busy.join(", ") : "none"
   }.`
-}
-
-/** "Oct ’25": the short axis label. */
-function axisLabel(month: string): string {
-  const [y, m] = month.split("-")
-  const name = monthName(month).split(" ")[0] ?? month
-
-  return y && m ? `${name} ’${y.slice(2)}` : month
 }
 
 export function ChangeHistogram({
@@ -45,17 +37,20 @@ export function ChangeHistogram({
   const width = months.length * (BAR + GAP) - GAP
   const baseline = TOP + CHART_H
   const anyChecked = months.some((m) => checked.has(m.month))
+  const latest = months.reduce((at, m, i) => (m.batches > 0 ? i : at), -1)
 
   return (
     <figure className="m-0 min-w-0">
       <svg
         role="img"
         aria-label={histogramLabel(months)}
-        viewBox={`0 0 ${Math.max(width, 1)} ${baseline + AXIS_H}`}
-        className="block h-auto w-full max-w-[560px]"
+        viewBox={`0 0 ${Math.max(width, 1)} ${baseline}`}
+        className="block h-auto w-full"
       >
         {months.map((m, i) => {
-          const h = Math.round((m.batches / max) * CHART_H)
+          const h = m.batches
+            ? Math.max(EMPTY_H * 2, Math.round((m.batches / max) * CHART_H))
+            : EMPTY_H
           const x = i * (BAR + GAP)
 
           return (
@@ -66,8 +61,9 @@ export function ChangeHistogram({
                 y={baseline - h}
                 width={BAR}
                 height={h}
-                rx={2}
+                rx={m.batches ? 3 : 1.5}
                 fill={T.accent.primary}
+                fillOpacity={i === latest ? 1 : 0.55}
               />
               {checked.has(m.month) ? (
                 <circle
@@ -78,43 +74,16 @@ export function ChangeHistogram({
                   fill={T.accent.ok}
                 />
               ) : null}
-              {i % 6 === 0 ? (
-                <text
-                  data-axis
-                  x={x}
-                  y={baseline + AXIS_H - 3}
-                  fontSize={10}
-                  fill={T.ink.dim}
-                  style={{ fontFamily: T.font.sans }}
-                >
-                  {axisLabel(m.month)}
-                </text>
-              ) : null}
             </g>
           )
         })}
-        <line
-          x1={0}
-          x2={Math.max(width, 1)}
-          y1={baseline + 0.5}
-          y2={baseline + 0.5}
-          stroke={T.border.line}
-          strokeWidth={1}
-        />
       </svg>
 
       <figcaption
-        className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px]"
+        className="mt-2 flex items-center justify-between gap-4 text-[14px]"
         style={{ color: T.ink.dim }}
       >
-        <span className="inline-flex items-center gap-1.5">
-          <span
-            aria-hidden="true"
-            className="inline-block size-2.5 rounded-[2px]"
-            style={{ background: T.accent.primary }}
-          />
-          Changes per month
-        </span>
+        <span data-axis>{months[0] ? monthName(months[0].month) : null}</span>
         {anyChecked ? (
           <span className="inline-flex items-center gap-1.5">
             <span
@@ -125,6 +94,9 @@ export function ChangeHistogram({
             Checked
           </span>
         ) : null}
+        <span data-axis>
+          {months.at(-1) ? monthName(months.at(-1)!.month) : null}
+        </span>
       </figcaption>
 
       <table className="sr-only">

@@ -1,4 +1,10 @@
 import "server-only"
+import {
+  noticeLocalDate,
+  noticeAddDays,
+  weekdayOf,
+  WEEKDAYS,
+} from "@repo/shared-data"
 
 import {
   distanceKm,
@@ -40,6 +46,8 @@ const NEIGHBOUR_RADIUS_M = 50_000
 const REGION_SCAN_LIMIT = 1000
 
 type Hit = {
+  closed_dates?: string[]
+  open_tz?: string | null
   documentId: string
   name: string
   slug: string
@@ -177,13 +185,26 @@ export async function fetchLibraryArea({
         ? index.search<Hit>("", {
             filter: withSearchLocale([inRegion], locale),
             limit: REGION_SCAN_LIMIT,
-            attributesToRetrieve: ["slug", "openingTimes"],
+            attributesToRetrieve: [
+              "slug",
+              "openingTimes",
+              "closed_dates",
+              "open_tz",
+            ],
           })
         : Promise.resolve(null)
     ),
   ])
 
   const regionHits = region?.hits ?? []
+  const sundayOpen = (hit: Hit) => {
+    const date = noticeLocalDate(new Date(), hit.open_tz)
+    const sunday = noticeAddDays(date, 6 - WEEKDAYS.indexOf(weekdayOf(date)))
+
+    return (
+      opensOn(hit.openingTimes, "sunday") && !hit.closed_dates?.includes(sunday)
+    )
+  }
   const regionTotal = region
     ? (region.estimatedTotalHits ?? regionHits.length)
     : null
@@ -191,10 +212,15 @@ export async function fetchLibraryArea({
   const sundays =
     region && regionHits.length === regionTotal
       ? {
-          open: regionHits.filter((h) => opensOn(h.openingTimes, "sunday"))
-            .length,
+          open: regionHits.filter(sundayOpen).length,
           total: regionHits.length,
-          includesThis: opensOn(openingTimes, "sunday"),
+          includesThis: (() => {
+            const current = regionHits.find((hit) => hit.slug === slug)
+
+            return current
+              ? sundayOpen(current)
+              : opensOn(openingTimes, "sunday")
+          })(),
         }
       : null
 

@@ -64,8 +64,8 @@ export function LibraryClaimButton({
       >
         Ask to look after this record
       </Link>
-      . A reviewer checks with the library first. Claiming a record
-      doesn&rsquo;t mean the library endorses Libraries Global.
+      . A moderator checks each claim first. Claiming a record doesn&rsquo;t
+      mean the library endorses Libraries Global.
     </p>
   )
 }

@@ -1,4 +1,9 @@
 import { Icon } from "@iconify/react"
+import {
+  normalizeMobileTimetable,
+  type LibraryNotice,
+  type TimetableNotice,
+} from "@repo/shared-data"
 
 import {
   hubHref,
@@ -27,6 +32,9 @@ import {
   LibraryTodayFact,
 } from "@/components/library/LibraryHoursTable"
 import { LIB_ICONS, LibIcon } from "@/components/library/LibrarySectionCard"
+import { MobileHeroFacts } from "@/components/mobile/MobileHeroFacts"
+import { MobileLiveBadge } from "@/components/mobile/MobileLiveBadge"
+import { MobileRouteMap } from "@/components/mobile/MobileRouteMap"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
 import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
 
@@ -57,6 +65,8 @@ export function LibraryHero({
   readonly untranslatedLocale?: string | null
 }) {
   const rec = library as unknown as Record<string, unknown>
+  const mobile = library.libraryType === "Mobile"
+  const timetable = normalizeMobileTimetable(rec.mobileTimetable)
   const tint = tintForLibraryType(library.libraryType)
   const typeLabel = library.libraryType
     ? library.libraryType === "Other"
@@ -111,7 +121,17 @@ export function LibraryHero({
               <LibraryOpenStatusBadge
                 openingTimes={openingTimes}
                 timezone={timezone}
+                notices={rec.notices as LibraryNotice[] | undefined}
               />
+              {mobile && library.documentId ? (
+                <MobileLiveBadge
+                  id={library.documentId}
+                  tt={timetable}
+                  notices={(rec.notices as TimetableNotice[]) ?? []}
+                  timezone={timezone ?? "UTC"}
+                  status={rec.operationalStatus as string | null}
+                />
+              ) : null}
               <span
                 className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold"
                 style={{ color: T.ink.base }}
@@ -119,7 +139,9 @@ export function LibraryHero({
                 <span style={{ color: T.ink.dim }}>
                   <LibIcon d={LIB_ICONS.people} size={15} />
                 </span>
-                Community maintained
+                {rec.hasStaff
+                  ? "Maintained by library staff"
+                  : "Community maintained"}
               </span>
             </div>
 
@@ -162,37 +184,56 @@ export function LibraryHero({
               />
             </div>
 
-            <div className="mt-5 grid grid-cols-1 gap-2 min-[480px]:grid-cols-2 xl:grid-cols-3">
-              <LibraryTodayFact
-                openingTimes={openingTimes}
-                timezone={timezone}
-              />
-              {hours ? (
-                <>
-                  <FactCard
-                    icon="mdi:weather-night"
-                    label={hours.lateLabel}
-                    value={hours.lateValue}
-                  />
-                  <FactCard
-                    icon="mdi:white-balance-sunny"
-                    label="Sundays"
-                    value={hours.sunday}
-                  />
-                </>
-              ) : null}
-              <FactCard
-                icon="mdi:wheelchair-accessibility"
-                label="Step-free access"
-                value={
-                  stepFree === "yes"
-                    ? "Yes"
-                    : stepFree === "no"
-                      ? "No"
-                      : "Not documented yet"
-                }
-              />
-            </div>
+            {mobile ? (
+              <div className="mt-5">
+                <MobileHeroFacts
+                  tt={timetable}
+                  notices={(rec.notices as TimetableNotice[]) ?? []}
+                  timezone={timezone ?? "UTC"}
+                />
+                <p className="mt-3 text-sm" style={{ color: T.ink.dim }}>
+                  {typeof rec.operatorName === "string" && rec.operatorName
+                    ? `Run by ${rec.operatorName}`
+                    : ""}
+                  {library.homeLibrary?.name
+                    ? ` · Based at ${library.homeLibrary.name}`
+                    : ""}
+                </p>
+              </div>
+            ) : (
+              <div className="mt-5 grid grid-cols-1 gap-2 min-[480px]:grid-cols-2 xl:grid-cols-3">
+                <LibraryTodayFact
+                  openingTimes={openingTimes}
+                  timezone={timezone}
+                  notices={rec.notices as LibraryNotice[] | undefined}
+                />
+                {hours ? (
+                  <>
+                    <FactCard
+                      icon="mdi:weather-night"
+                      label={hours.lateLabel}
+                      value={hours.lateValue}
+                    />
+                    <FactCard
+                      icon="mdi:white-balance-sunny"
+                      label="Sundays"
+                      value={hours.sunday}
+                    />
+                  </>
+                ) : null}
+                <FactCard
+                  icon="mdi:wheelchair-accessibility"
+                  label="Step-free access"
+                  value={
+                    stepFree === "yes"
+                      ? "Yes"
+                      : stepFree === "no"
+                        ? "No"
+                        : "Not documented yet"
+                  }
+                />
+              </div>
+            )}
 
             <p
               className="mt-4 mb-0 flex flex-wrap items-center gap-1.5 text-[13.5px]"
@@ -212,7 +253,16 @@ export function LibraryHero({
           </div>
 
           <div className="min-w-0">
-            {coords && directionsUrl ? (
+            {mobile && timetable ? (
+              <MobileRouteMap
+                libraryDocumentId={rec.documentId as string}
+                status={rec.operationalStatus as string}
+                tt={timetable}
+                notices={(rec.notices as TimetableNotice[]) ?? []}
+                timezone={timezone ?? "UTC"}
+                compact
+              />
+            ) : coords && directionsUrl ? (
               <LibraryHeroMap
                 atlasHref={atlasHref}
                 directionsUrl={directionsUrl}

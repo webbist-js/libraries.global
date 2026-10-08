@@ -270,6 +270,8 @@ export type LibrarySeoData = {
 }
 
 export type PopulatedLibraryData = Data.ContentType<"api::library.library"> & {
+  homeLibrary?: PopulatedLibraryData | null
+  mobileLibraries?: PopulatedLibraryData[]
   heroImage?: Data.ContentType<"plugin::upload.file"> | null
   continent?: Data.ContentType<"api::continent.continent"> | null
   country?: Data.ContentType<"api::country.country"> | null
@@ -286,29 +288,33 @@ export async function fetchLibrary(slug: string, locale: Locale) {
   return withLocaleFallback(locale, (l) => fetchLibraryIn(slug, l))
 }
 
+/**
+ * One library by slug through `GET /libraries/by-slug/:slug`, whose
+ * response is Strapi's **detail** shape (`LIBRARY_SHAPES.detail`): the
+ * Mobile timetable, home base and vehicles, social links and long text.
+ * The list route (`fetchOneBySlug`) keeps the light list shape and drops
+ * them. The last published version wins, as `fetchOneBySlug` does.
+ */
+async function fetchLibraryBySlug<T>(
+  slug: string,
+  params: { locale: Locale; status: "draft" | "published" }
+): Promise<APIResponse<T>> {
+  const res = (await PublicStrapiClient.fetchAPI(
+    `/libraries/by-slug/${encodeURIComponent(slug)}`,
+    { ...params, sort: { publishedAt: "desc" } }
+  )) as { data?: T[] | null }
+
+  return { data: res.data?.pop() ?? null, meta: {} } as APIResponse<T>
+}
+
 async function fetchLibraryIn(slug: string, locale: Locale) {
   const dm = await draftMode()
 
   try {
-    return (await PublicStrapiClient.fetchOneBySlug(
-      "api::library.library",
-      slug,
-      {
-        locale,
-        status: dm.isEnabled ? "draft" : "published",
-        populate: {
-          heroImage: true,
-          continent: true,
-          country: true,
-          region: true,
-          area: true,
-          services: { fields: ["name", "summary", "category", "icon"] },
-          amenities: { fields: ["name", "summary", "category", "icon"] },
-          accessibility: { fields: ["name", "summary", "category", "icon"] },
-          seo: { populate: ["metaImage", "openGraph"] },
-        },
-      } as Parameters<typeof PublicStrapiClient.fetchOneBySlug>[2]
-    )) as APIResponse<PopulatedLibraryData>
+    return await fetchLibraryBySlug<PopulatedLibraryData>(slug, {
+      locale,
+      status: dm.isEnabled ? "draft" : "published",
+    })
   } catch (e: unknown) {
     logNonBlockingError({
       message: `Error fetching library '${slug}' for locale '${locale}'`,
@@ -1259,6 +1265,8 @@ export type WikiSection = {
   slug: string
   description?: string | null
   order?: number | null
+  /** Iconify id for the section's icon, e.g. "mdi:code-tags". */
+  icon?: string | null
 }
 
 export type WikiArticleStatus =
@@ -1299,11 +1307,16 @@ export type WikiArticleDetail = WikiArticleSummary & {
   seo?: LibrarySeoData | null
 }
 
-/** Knowledge (wiki) sections in their display order, for pickers. */
+/**
+ * The Knowledge taxonomy: every Wiki Section in display order (`order`,
+ * then name). The Knowledge pages, the sitemap and the editor's section
+ * picker all read it from here, so a section added in Strapi appears
+ * everywhere at once.
+ */
 export async function fetchWikiSections() {
   try {
     return (await PublicStrapiClient.fetchAPI("/wiki-sections", {
-      fields: ["name", "label", "slug", "order"] as any,
+      fields: ["name", "label", "slug", "description", "order", "icon"] as any,
       sort: ["order:asc", "name:asc"] as any,
       pagination: { pageSize: 50 } as any,
     })) as APIResponseCollection<WikiSection>
@@ -1349,8 +1362,8 @@ async function fetchWikiArticleIn(slug: string, locale: Locale) {
 export type DocsWikiArticle = WikiArticleSummary & { body?: unknown }
 
 /**
- * Every published wiki article with its body — the /knowledge front door maps
- * these into the fixed docs taxonomy and derives reading time from the body.
+ * Every published wiki article with its body — the /knowledge front door
+ * files these under their Wiki Sections and derives reading time from the body.
  */
 export async function fetchDocsWikiArticles(locale: Locale) {
   // draftMode() throws outside a request scope (generateStaticParams) —
@@ -1536,6 +1549,7 @@ export interface HistoryActor {
 /** One field of a Change Batch. Values only for `library.history`. */
 export interface LibraryHistoryField {
   field: string
+  summary?: string
   previous?: unknown
   next?: unknown
 }
@@ -1638,6 +1652,7 @@ function toBatch(v: unknown, values: boolean): LibraryHistoryBatch | null {
   const fields = (Array.isArray(v.fields) ? v.fields : []).flatMap((f) => {
     if (!isObject(f) || typeof f.field !== "string") return []
     const out: LibraryHistoryField = { field: f.field }
+    if (typeof f.summary === "string") out.summary = f.summary
     if (values && "previous" in f) out.previous = f.previous
     if (values && "next" in f) out.next = f.next
 
@@ -2010,25 +2025,12 @@ export async function fetchLibraryForEditing(slug: string, locale: Locale) {
 
 async function fetchLibraryForEditingIn(slug: string, locale: Locale) {
   try {
-    return (await PublicStrapiClient.fetchOneBySlug(
-      "api::library.library",
-      slug,
-      {
-        locale,
-        status: "published",
-        populate: {
-          heroImage: { fields: ["url", "alternativeText"] },
-          continent: { fields: ["name", "slug"] },
-          country: { fields: ["name", "slug"] },
-          region: { fields: ["name", "slug"] },
-          area: { fields: ["name", "slug"] },
-          services: { fields: ["name"] },
-          amenities: { fields: ["name"] },
-          accessibility: { fields: ["name"] },
-          socialLinks: true,
-        },
-      } as Parameters<typeof PublicStrapiClient.fetchOneBySlug>[2]
-    )) as APIResponse<LibraryForEditing>
+    // The detail shape carries `socialLinks` and the long text the editor
+    // prefills; the list route does not.
+    return await fetchLibraryBySlug<LibraryForEditing>(slug, {
+      locale,
+      status: "published",
+    })
   } catch (e: unknown) {
     logNonBlockingError({
       message: `Error fetching library '${slug}' for editing`,

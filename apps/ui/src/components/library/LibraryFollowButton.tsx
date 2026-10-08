@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
+import { useMounted } from "@/hooks/useMounted"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
 
@@ -18,6 +19,10 @@ export function LibraryFollowButton({
   const { data: session, isPending } = authClient.useSession()
   const [following, setFollowing] = useState<boolean | null>(null)
   const [loading, setLoading] = useState(false)
+  // Better Auth's store can already hold a session on the client's first
+  // render while the server rendered none, so every session-dependent
+  // branch waits for mount; a same-height placeholder keeps the layout.
+  const mounted = useMounted()
 
   useEffect(() => {
     if (!session?.user || !libraryDocumentId) return
@@ -56,7 +61,14 @@ export function LibraryFollowButton({
     }
   }
 
-  if (isPending) return null
+  if (!mounted || isPending)
+    return (
+      <span
+        aria-hidden="true"
+        className="inline-block rounded-[10px]"
+        style={{ height: 34, width: 120, background: "rgba(255,255,255,.07)" }}
+      />
+    )
 
   if (!session?.user) {
     return (

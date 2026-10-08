@@ -64,10 +64,15 @@ export function cacheTagsFor(
   if (!model) return tags
   tags.push(model)
 
-  const [, second] = segments(path)
+  const [, second, third] = segments(path)
+  // `/libraries/by-slug/<slug>` names its entry in the third segment.
   const entry =
     slugFilter(params) ??
-    (second && !ACTION_SEGMENTS.has(second) ? entryKey(second) : null)
+    (second === "by-slug"
+      ? entryKey(third)
+      : second && !ACTION_SEGMENTS.has(second)
+        ? entryKey(second)
+        : null)
   if (entry) tags.push(`${model}:${entry}`)
 
   return tags

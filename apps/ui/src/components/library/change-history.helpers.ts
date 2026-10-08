@@ -2,6 +2,8 @@
 // history panel. Kept out of the client timeline so the server section can
 // import them as values.
 
+import { normalizeMobileTimetable, summarizeTimetable } from "@repo/shared-data"
+
 import type {
   HistoryActor,
   LibraryHistoryBatch,
@@ -50,6 +52,10 @@ export const FIELD_LABELS: Record<string, string> = {
   transitInfo: "Getting there",
   languagesServed: "Languages",
   openingTimes: "Opening hours",
+  mobileTimetable: "Stops & times",
+  homeLibrary: "Home base",
+  operatorName: "Run by",
+  timetableUrl: "Timetable link",
   timezone: "Time zone",
   services: "Services",
   amenities: "Amenities",
@@ -131,6 +137,7 @@ export function actorLabel(b: { source?: string; actor: HistoryActor }): {
   href?: string
 } {
   if (b.source === "import") return { text: "Data import" }
+  if (b.source === "staff") return { text: "Library staff" }
   switch (b.actor.kind) {
     case "contributor":
       return b.actor.username
@@ -180,6 +187,12 @@ export const UNRECORDED_NOTE = "Earlier change: values weren't recorded."
 /** A value as one short line: "Empty" for nothing, JSON for objects. */
 export function formatValue(v: unknown, max = 160): string {
   if (v === null || v === undefined || v === "") return "Empty"
+  const timetable = normalizeMobileTimetable(v)
+  if (timetable) {
+    const summary = summarizeTimetable(timetable)
+
+    return `${summary.stopCount} ${summary.stopCount === 1 ? "stop" : "stops"}, ${summary.visitCount} ${summary.visitCount === 1 ? "visit" : "visits"}, ${summary.cycleWeeks}-week cycle`
+  }
   const text =
     typeof v === "string"
       ? v
@@ -226,3 +239,67 @@ export function topFields(
     .slice(0, n)
     .map((f) => ({ ...f, label: fieldLabel(f.field) }))
 }
+
+const PHOTO_FIELDS = new Set(["heroImage", "gallery", "imageCredit"])
+
+export type RowTone = "indigo" | "ok" | "photo" | "import"
+
+/** "1 detail changed", "3 details confirmed". */
+export const detailCount = (n: number, verb: string) =>
+  `${n} ${n === 1 ? "detail" : "details"} ${verb}`
+
+/**
+ * A timeline row's headline, icon, tint and detail count, worded for
+ * readers: "Opening hours updated", "Details checked", "Photo added".
+ */
+export function batchRow(
+  b: Pick<LibraryHistoryBatch, "action" | "source" | "fields">
+): { title: string; icon: string; tone: RowTone; count: string | null } {
+  const keys = b.fields.map((f) => f.field)
+  const n = keys.length
+  if (b.source === "import")
+    return {
+      title:
+        b.action === "create" ? "Record created" : "Updated from a dataset",
+      icon: LIB_ICONS.download,
+      tone: "import",
+      count: n ? detailCount(n, "imported") : null,
+    }
+  if (keys.includes("lastVerifiedAt")) {
+    const rest = n - 1
+
+    return {
+      title: "Details checked",
+      icon: LIB_ICONS.shield,
+      tone: "ok",
+      count: rest > 0 ? detailCount(rest, "confirmed") : null,
+    }
+  }
+  if (n > 0 && keys.every((k) => PHOTO_FIELDS.has(k)))
+    return {
+      title: "Photo added",
+      icon: LIB_ICONS.camera,
+      tone: "photo",
+      count: null,
+    }
+  const { verb, icon } = batchVerb(b)
+  if (b.action !== "update" || n === 0)
+    return {
+      title: b.action === "create" ? "Record added" : verb,
+      icon,
+      tone: "indigo",
+      count: n ? detailCount(n, "changed") : null,
+    }
+
+  return {
+    title: `${fieldNames(b.fields, 2)} updated`,
+    icon,
+    tone: "indigo",
+    count: detailCount(n, "changed"),
+  }
+}
+
+/** The import that created the record: shown as the "Record created" row. */
+export const isImportCreate = (
+  b: Pick<LibraryHistoryBatch, "action" | "source">
+) => b.source === "import" && b.action === "create"

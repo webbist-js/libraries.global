@@ -6,6 +6,7 @@ import { hubHref } from "@/components/contribute/wizard.logic"
 import { announceFollow } from "@/components/library/follow-events"
 import { useCorrectionDrawer } from "@/components/library/LibraryCorrection"
 import { LIB_ICONS, LibIcon } from "@/components/library/LibrarySectionCard"
+import { useMounted } from "@/hooks/useMounted"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -87,6 +88,9 @@ function FollowPill({
   const { data: session, isPending } = authClient.useSession()
   const [following, setFollowing] = useState<boolean | null>(null)
   const [loading, setLoading] = useState(false)
+  // Better Auth's store can already hold a session on the client's first
+  // render while the server rendered none: wait for mount before branching.
+  const mounted = useMounted()
 
   useEffect(() => {
     if (!session?.user || !libraryDocumentId) return
@@ -123,7 +127,7 @@ function FollowPill({
     }
   }
 
-  if (isPending) return null
+  if (!mounted || isPending) return null
 
   if (!session?.user) {
     return (

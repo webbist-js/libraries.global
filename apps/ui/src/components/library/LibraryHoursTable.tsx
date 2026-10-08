@@ -1,6 +1,13 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import {
+  effectiveLibraryHours,
+  effectiveLibraryWeekHours,
+  noticeLocalDate,
+  noticeAddDays,
+  type LibraryNotice,
+} from "@repo/shared-data"
 import { Fragment, useEffect, useState } from "react"
 
 import {
@@ -15,6 +22,37 @@ import {
   type OpeningTimesValue,
 } from "@/components/library/library-page.helpers"
 import { T } from "@/lib/design-tokens"
+
+const NO_NOTICES: readonly LibraryNotice[] = []
+
+function useNoticeWeekHours(
+  hours: OpeningTimesValue | null,
+  timezone: string | null,
+  notices: readonly LibraryNotice[]
+) {
+  const [value, setValue] = useState(hours)
+  useEffect(() => {
+    const update = () => {
+      const date = noticeLocalDate(new Date(), timezone)
+      const weekday = new Date(`${date}T12:00:00Z`).getUTCDay()
+      setValue(
+        notices.length
+          ? (effectiveLibraryWeekHours(
+              hours,
+              notices,
+              noticeAddDays(date, -(weekday + 6) % 7)
+            ) as OpeningTimesValue)
+          : hours
+      )
+    }
+    update()
+    const timer = setInterval(update, 60_000)
+
+    return () => clearInterval(timer)
+  }, [hours, timezone, notices])
+
+  return value
+}
 
 function todayKeyInZone(timezone: string | null | undefined): DayKey | null {
   try {
@@ -44,21 +82,23 @@ function useToday(timezone: string | null) {
 /** Live open/closed status, recomputed every minute on the client. */
 function useOpenStatus(
   openingTimes: OpeningTimesValue | null,
-  timezone: string | null
+  timezone: string | null,
+  notices: readonly LibraryNotice[]
 ) {
   const [status, setStatus] = useState<ReturnType<typeof getOpenStatus> | null>(
     null
   )
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- status must only compute client-side (never cache-stale)
-    setStatus(getOpenStatus(openingTimes, timezone))
+    setStatus(getOpenStatus(openingTimes, timezone, new Date(), notices))
     const interval = setInterval(
-      () => setStatus(getOpenStatus(openingTimes, timezone)),
+      () =>
+        setStatus(getOpenStatus(openingTimes, timezone, new Date(), notices)),
       60_000
     )
 
     return () => clearInterval(interval)
-  }, [openingTimes, timezone])
+  }, [openingTimes, timezone, notices])
 
   return status
 }
@@ -74,11 +114,14 @@ const SELF_SERVICE = `repeating-linear-gradient(135deg, ${STAFFED} 0 2px, color-
 export function LibraryHoursTable({
   openingTimes,
   timezone,
+  notices = NO_NOTICES,
 }: {
   readonly openingTimes: OpeningTimesValue | null
   readonly timezone: string | null
+  readonly notices?: readonly LibraryNotice[]
 }) {
   const today = useToday(timezone)
+  openingTimes = useNoticeWeekHours(openingTimes, timezone, notices)
   const days = openingTimes?.days
   const hasHours = Boolean(days?.some((d) => d.enabled && d.timeframes?.length))
 
@@ -244,11 +287,13 @@ export function LibraryHoursTable({
 export function LibraryOpenStatusBadge({
   openingTimes,
   timezone,
+  notices = NO_NOTICES,
 }: {
   readonly openingTimes: OpeningTimesValue | null
   readonly timezone: string | null
+  readonly notices?: readonly LibraryNotice[]
 }) {
-  const status = useOpenStatus(openingTimes, timezone)
+  const status = useOpenStatus(openingTimes, timezone, notices)
   if (!status || status.state === "unknown") return null
   const open = status.state === "open"
 
@@ -272,12 +317,42 @@ export function LibraryOpenStatusBadge({
 export function LibraryTodayFact({
   openingTimes,
   timezone,
+  notices = NO_NOTICES,
 }: {
   readonly openingTimes: OpeningTimesValue | null
   readonly timezone: string | null
+  readonly notices?: readonly LibraryNotice[]
 }) {
-  const today = useToday(timezone)
-  const status = useOpenStatus(openingTimes, timezone)
+  const status = useOpenStatus(openingTimes, timezone, notices)
+  // Today and the notice-adjusted hours are only known on the client (the
+  // page is static), so both come from one effect: the HTML never bakes in
+  // a date, and hydration stays stable around midnight.
+  const [fact, setFact] = useState<{
+    today: DayKey | null
+    hours: OpeningTimesValue | null
+    closed: boolean
+  } | null>(null)
+  useEffect(() => {
+    const update = () => {
+      const effective = effectiveLibraryHours(
+        openingTimes,
+        notices,
+        noticeLocalDate(new Date(), timezone)
+      )
+
+      setFact({
+        today: todayKeyInZone(timezone),
+        hours: effective.hours as OpeningTimesValue | null,
+        closed: effective.closed,
+      })
+    }
+    update()
+    const timer = setInterval(update, 60_000)
+
+    return () => clearInterval(timer)
+  }, [openingTimes, timezone, notices])
+  const today = fact?.today ?? null
+  openingTimes = fact ? fact.hours : openingTimes
   const day = today ? openingTimes?.days?.find((d) => d.day === today) : null
   const hasHours = Boolean(
     openingTimes?.days?.some((d) => d.enabled && d.timeframes?.length)
@@ -285,7 +360,8 @@ export function LibraryTodayFact({
   const dayName = today ? today.charAt(0).toUpperCase() + today.slice(1) : null
 
   let value = "Hours not added yet"
-  if (hasHours && today) {
+  if (fact?.closed && today) value = "Closed today"
+  else if (hasHours && today) {
     const times = formatDayTimes(day ?? undefined)
     const now =
       status?.state === "open"

@@ -13,6 +13,7 @@ export interface AnchorItem {
 
 export const LIBRARY_ANCHORS = {
   visit: { href: "#visit", label: "Visit", icon: LIB_ICONS.pin },
+  stops: { href: "#stops", label: "Stops & times", icon: LIB_ICONS.pin },
   access: { href: "#access", label: "Accessibility", icon: LIB_ICONS.access },
   history: { href: "#history", label: "History", icon: LIB_ICONS.clock },
   collections: {

@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "react"
 import GlobalLink from "@/components/global/GlobalLink"
 import { LibIcon } from "@/components/library/LibrarySectionCard"
 import { useEntitlements } from "@/lib/access-client"
-import { T } from "@/lib/design-tokens"
+import { T, TYPE_TINT } from "@/lib/design-tokens"
 import { LIBRARY_HISTORY_UPGRADE } from "@/lib/plans"
 import type {
   LibraryHistoryBatch,
@@ -18,19 +18,21 @@ import type {
 
 import {
   actorLabel,
-  batchVerb,
+  batchRow,
   dayName,
   fieldLabel,
   fieldNames,
   formatValue,
   hasValues,
+  isImportCreate,
   isUnrecorded,
   isWithheld,
+  type RowTone,
   UNRECORDED_NOTE,
 } from "./change-history.helpers"
 
 const SECONDARY_PILL =
-  "inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:opacity-60"
+  "inline-flex items-center gap-1.5 rounded-full border px-5 py-2.5 text-[15px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:opacity-60"
 
 const historyUrl = (documentId: string, page: number) =>
   `/api/libraries/${documentId}/history?page=${page}`
@@ -53,12 +55,98 @@ async function loadPage(
 /** Some field's values exist but weren't sent to this viewer. */
 const withheld = (b: LibraryHistoryBatch) => b.fields.some(isWithheld)
 
+/** Rows shown before "Show all". */
+const FIRST_ROWS = 4
+
+const ROW_TINT: Record<RowTone, { bg: string; fg: string }> = {
+  indigo: { bg: T.accent.chip, fg: T.accent.primary },
+  ok: TYPE_TINT.public,
+  photo: TYPE_TINT.special,
+  import: TYPE_TINT.academic,
+}
+
+/** One timeline entry: tinted icon, headline, meta line, details. */
+export function TimelineRow({
+  icon,
+  tone,
+  title,
+  lead,
+  meta,
+  children,
+}: {
+  readonly icon: string
+  readonly tone: RowTone
+  readonly title: string
+  readonly lead?: React.ReactNode
+  readonly meta: React.ReactNode[]
+  readonly children?: React.ReactNode
+}) {
+  const tint = ROW_TINT[tone]
+  const parts = meta.filter(Boolean)
+
+  return (
+    <li
+      className="flex gap-4 py-5"
+      style={{ borderTop: `1px solid ${T.border.divider}` }}
+    >
+      <span
+        aria-hidden="true"
+        className="flex size-9 shrink-0 items-center justify-center rounded-full"
+        style={{ background: tint.bg, color: tint.fg }}
+      >
+        <LibIcon d={icon} size={16} />
+      </span>
+      <div className="min-w-0 flex-1 text-[15px] leading-normal">
+        <p className="m-0" style={{ color: T.ink.dim }}>
+          <strong style={{ color: T.ink.base }}>{title}</strong>
+          {lead ? <> {lead}</> : null}
+        </p>
+        {parts.length > 0 ? (
+          <p className="mt-1 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
+            {parts.map((p, i) => (
+              <span key={i}>
+                {i > 0 ? " · " : ""}
+                {p}
+              </span>
+            ))}
+          </p>
+        ) : null}
+        {children}
+      </div>
+    </li>
+  )
+}
+
+/** "3 details imported", opening a list of what's behind it. */
+export function DetailsDisclosure({
+  label,
+  children,
+}: {
+  readonly label: string
+  readonly children: React.ReactNode
+}) {
+  return (
+    <details className="mt-2.5">
+      <summary
+        className="cursor-pointer text-[14px] font-semibold"
+        style={{ color: T.accent.primary }}
+      >
+        {label}
+      </summary>
+      <div className="mt-2">{children}</div>
+    </details>
+  )
+}
+
 function BatchRow({ batch }: { readonly batch: LibraryHistoryBatch }) {
-  const { verb, icon } = batchVerb(batch)
+  const row = batchRow(batch)
   const actor = actorLabel(batch)
-  const n = batch.fields.length
   const shown = batch.fields.filter(hasValues)
   const unrecorded = batch.fields.some(isUnrecorded)
+  const lead = batch.fields
+    .map((f) => f.summary)
+    .filter(Boolean)
+    .join(" ")
   const note = (
     <p className="m-0 mt-2 text-[13px]" style={{ color: T.ink.dim }}>
       {UNRECORDED_NOTE}
@@ -66,46 +154,31 @@ function BatchRow({ batch }: { readonly batch: LibraryHistoryBatch }) {
   )
 
   return (
-    <li
-      className="flex gap-3.5 py-3.5"
-      style={{ borderTop: `1px solid ${T.border.divider}` }}
+    <TimelineRow
+      icon={row.icon}
+      tone={row.tone}
+      title={row.title}
+      lead={lead || null}
+      meta={[
+        actor.href ? (
+          <GlobalLink
+            href={actor.href}
+            className="underline underline-offset-2"
+          >
+            {actor.text}
+          </GlobalLink>
+        ) : (
+          actor.text
+        ),
+        <time key="t" dateTime={batch.changedAt}>
+          {dayName(batch.changedAt)}
+        </time>,
+      ]}
     >
-      <span
-        aria-hidden="true"
-        className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full"
-        style={{ background: T.bg.muted, color: T.ink.dim }}
-      >
-        <LibIcon d={icon} size={15} />
-      </span>
-      <div className="min-w-0 flex-1 text-[15px] leading-normal">
-        <p className="m-0" style={{ color: T.ink.base }}>
-          <strong>{verb}</strong>
-          {n > 0 ? ` ${n} ${n === 1 ? "field" : "fields"}: ` : null}
-          {n > 0 ? fieldNames(batch.fields) : null}
-        </p>
-        <p className="mt-0.5 mb-0 text-[13px]" style={{ color: T.ink.dim }}>
-          {actor.href ? (
-            <GlobalLink
-              href={actor.href}
-              className="underline underline-offset-2"
-            >
-              {actor.text}
-            </GlobalLink>
-          ) : (
-            actor.text
-          )}
-          {" · "}
-          <time dateTime={batch.changedAt}>{dayName(batch.changedAt)}</time>
-        </p>
-        {shown.length > 0 ? (
-          <details className="mt-2">
-            <summary
-              className="cursor-pointer text-[14px] font-semibold"
-              style={{ color: T.accent.primary }}
-            >
-              Show what changed
-            </summary>
-            <dl className="m-0 mt-2 grid gap-2">
+      {row.count ? (
+        <DetailsDisclosure label={row.count}>
+          {shown.length > 0 ? (
+            <dl className="m-0 grid gap-2">
               {shown.map((f) => (
                 <div
                   key={f.field}
@@ -134,23 +207,30 @@ function BatchRow({ batch }: { readonly batch: LibraryHistoryBatch }) {
                 </div>
               ))}
             </dl>
-            {unrecorded ? note : null}
-          </details>
-        ) : unrecorded ? (
-          note
-        ) : null}
-      </div>
-    </li>
+          ) : (
+            <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+              {fieldNames(batch.fields, 12)}
+            </p>
+          )}
+          {unrecorded ? note : null}
+        </DetailsDisclosure>
+      ) : unrecorded ? (
+        note
+      ) : null}
+    </TimelineRow>
   )
 }
 
 export function LibraryChangeTimeline({
   documentId,
   initial,
+  created = null,
 }: {
   readonly documentId: string
   /** Page 1, as the static page fetched it (without values). */
   readonly initial: LibraryHistoryPage
+  /** The "Record created" row, shown last once every batch is listed. */
+  readonly created?: React.ReactNode
 }) {
   const { can, ready } = useEntitlements()
   const pro = ready && can("library.history")
@@ -159,6 +239,7 @@ export function LibraryChangeTimeline({
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const [failed, setFailed] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const upgraded = useRef(false)
 
   // A Pro viewer of the static page: fetch page 1 again, with values.
@@ -205,22 +286,38 @@ export function LibraryChangeTimeline({
     })
   }
 
-  if (batches.length === 0)
+  // The import that created the record is the `created` row.
+  const rows = created ? batches.filter((b) => !isImportCreate(b)) : batches
+  const entries = total - (batches.length - rows.length) + (created ? 1 : 0)
+  const more = batches.length < total && page < 100
+  const visible = expanded ? rows : rows.slice(0, FIRST_ROWS)
+  const showCreated = created && !more && visible.length === rows.length
+  const hidden = ready && !pro && batches.some(withheld)
+
+  if (rows.length === 0 && !created)
     return (
       <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
         No changes recorded yet.
       </p>
     )
 
-  const hidden = ready && !pro && batches.some(withheld)
-  const more = batches.length < total && page < 100
+  function showMore() {
+    if (!expanded) {
+      setExpanded(true)
+      if (rows.length > FIRST_ROWS || !more) return
+    }
+    loadMore()
+  }
+
+  const collapsed = !expanded && rows.length > FIRST_ROWS
 
   return (
     <div>
       <ul className="m-0 list-none p-0">
-        {batches.map((b) => (
+        {visible.map((b) => (
           <BatchRow key={b.batchId} batch={b} />
         ))}
+        {showCreated ? created : null}
       </ul>
 
       {hidden ? (
@@ -235,32 +332,34 @@ export function LibraryChangeTimeline({
         </p>
       ) : null}
 
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <p
-          aria-live="polite"
-          className="m-0 text-[13px]"
-          style={{ color: T.ink.dim }}
-        >
-          Showing {batches.length} of {total}{" "}
-          {total === 1 ? "change" : "changes"}.
-          {failed ? " Older changes couldn’t be loaded. Try again." : ""}
+      <p aria-live="polite" className="sr-only">
+        Showing {visible.length + (showCreated ? 1 : 0)} of {entries}{" "}
+        {entries === 1 ? "entry" : "entries"}.
+      </p>
+      {failed ? (
+        <p className="mt-3 mb-0 text-[13px]" style={{ color: T.ink.dim }}>
+          Older entries couldn’t be loaded. Try again.
         </p>
-        {more ? (
-          <button
-            type="button"
-            className={SECONDARY_PILL}
-            style={{
-              background: T.bg.deep,
-              borderColor: T.border.hi,
-              color: T.ink.base,
-            }}
-            disabled={loading}
-            onClick={loadMore}
-          >
-            {loading ? "Loading…" : "Show older changes"}
-          </button>
-        ) : null}
-      </div>
+      ) : null}
+      {collapsed || more ? (
+        <button
+          type="button"
+          className={`${SECONDARY_PILL} mt-4`}
+          style={{
+            background: T.bg.deep,
+            borderColor: T.border.hi,
+            color: T.ink.base,
+          }}
+          disabled={loading}
+          onClick={showMore}
+        >
+          {loading
+            ? "Loading…"
+            : collapsed || entries - rows.length <= initial.meta.pageSize
+              ? `Show all ${entries} entries`
+              : "Show older entries"}
+        </button>
+      ) : null}
     </div>
   )
 }

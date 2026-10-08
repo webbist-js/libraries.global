@@ -6,6 +6,9 @@ import {
   type CompletenessSection as RegistrySection,
   type GapKey,
   type GapRecord,
+  effectiveLibraryHours,
+  noticeLocalDate,
+  type LibraryNotice,
 } from "@repo/shared-data"
 
 export const DAY_ORDER = [
@@ -93,8 +96,16 @@ function nowInZone(timezone: string | null | undefined, now: Date) {
 export function getOpenStatus(
   openingTimes: OpeningTimesValue | null | undefined,
   timezone: string | null | undefined,
-  now: Date = new Date()
+  now: Date = new Date(),
+  notices: readonly LibraryNotice[] = []
 ): OpenStatus {
+  const effective = effectiveLibraryHours(
+    openingTimes,
+    notices,
+    noticeLocalDate(now, timezone)
+  )
+  if (effective.closed) return { state: "closed", label: "Closed today" }
+  openingTimes = effective.hours as OpeningTimesValue | null
   const days = openingTimes?.days
   if (!Array.isArray(days) || days.length === 0) {
     return { state: "unknown", label: "Hours not added yet" }

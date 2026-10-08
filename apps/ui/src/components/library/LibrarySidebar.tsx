@@ -319,6 +319,8 @@ export function LibraryClaimNote({ library }: { readonly library: Lib }) {
       libraryEntityRef={library.entityRef ?? undefined}
       libraryName={library.name ?? ""}
       librarySlug={library.slug ?? ""}
+      libraryType={library.libraryType}
+      hasActiveFeed={Boolean(asRecord(library).hasActiveFeed)}
     />
   )
 }
