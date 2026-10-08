@@ -109,10 +109,11 @@ describe("moderation queues", () => {
     )
   })
 
-  it("lists the six index types", () => {
+  it("lists the index types", () => {
     expect(submissionTypesOfQueue("index").sort()).toEqual(
       [
         "correction",
+        "drive_proposal",
         "new_library",
         "library_claim",
         "library_edit",
@@ -136,7 +137,9 @@ describe("session capabilities", () => {
         { role: "journal_editor", queue: "all", locale: null },
         { role: "moderator", queue: "index", locale: "en" },
       ],
-      claims: [{ libraryDocumentId: "lib1" }],
+      claims: [
+        { libraryDocumentId: "lib1", staffRole: "editor", canGoLive: true },
+      ],
     })
     const back = fromSessionCapabilities(
       // eslint-disable-next-line unicorn/prefer-structured-clone -- proves the session form survives JSON, which structuredClone would not test

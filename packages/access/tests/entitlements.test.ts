@@ -18,6 +18,53 @@ const base = (over: Partial<EntitlementInput> = {}): EntitlementInput => ({
   ...over,
 })
 
+describe("Supporter recognition plan", () => {
+  it("has free limits and no Pro features, and expires like other plans", () => {
+    const ent = resolveEntitlements(
+      base({ grants: [{ plan: "supporter", expiresAt: null }] })
+    )
+    expect(ent.plan).toBe("supporter")
+    expect(ent.features.size).toBe(0)
+    expect(ent.limits).toEqual({
+      savedViews: 3,
+      savedSearches: 3,
+      exportRows: 0,
+    })
+    expect(
+      resolveEntitlements(
+        base({ grants: [{ plan: "supporter", expiresAt: days(-1) }] })
+      ).plan
+    ).toBe("free")
+  })
+
+  it("recognizes paid Supporter and chooses Pro when it is also earned", () => {
+    expect(
+      resolveEntitlements(
+        base({ subscription: { plan: "supporter", status: "active" } })
+      ).plan
+    ).toBe("supporter")
+    expect(
+      resolveEntitlements(
+        base({
+          grants: [{ plan: "supporter", expiresAt: null }],
+          rewardsTier: "Archivist",
+        })
+      ).plan
+    ).toBe("pro")
+    expect(
+      resolveEntitlements(
+        base({
+          subscription: {
+            plan: "supporter",
+            status: "canceled",
+            periodEnd: days(1),
+          },
+        })
+      ).plan
+    ).toBe("supporter")
+  })
+})
+
 describe("resolveEntitlements: plan baseline", () => {
   it("is public when signed out, whatever else is passed", () => {
     const e = resolveEntitlements(

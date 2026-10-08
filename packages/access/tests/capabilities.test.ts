@@ -59,7 +59,9 @@ describe("resolveCapabilities", () => {
     const c = resolveCapabilities(
       input({
         contributorRole: "verified_librarian",
-        claims: [{ libraryDocumentId: "lib1" }],
+        claims: [
+          { libraryDocumentId: "lib1", staffRole: "editor", canGoLive: true },
+        ],
       })
     )
     expect(canSubmit(c, "library_edit", { libraryDocumentId: "lib1" })).toBe(
@@ -75,7 +77,9 @@ describe("resolveCapabilities", () => {
     const c = resolveCapabilities({
       signedIn: true,
       grants: [],
-      claims: [{ libraryDocumentId: "lib1" }],
+      claims: [
+        { libraryDocumentId: "lib1", staffRole: "editor", canGoLive: true },
+      ],
     })
     expect(canSubmit(c, "event_feed", { libraryDocumentId: "lib1" })).toBe(true)
     expect(canSubmit(c, "event_feed", { libraryDocumentId: "lib2" })).toBe(
