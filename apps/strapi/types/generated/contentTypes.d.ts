@@ -1581,6 +1581,7 @@ export interface ApiDriveCreditDriveCredit extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
     driveDocumentId: Schema.Attribute.String & Schema.Attribute.Required
+    filledGaps: Schema.Attribute.String
     libraryDocumentId: Schema.Attribute.String
     locale: Schema.Attribute.String & Schema.Attribute.Private
     localizations: Schema.Attribute.Relation<
@@ -1591,6 +1592,46 @@ export interface ApiDriveCreditDriveCredit extends Struct.CollectionTypeSchema {
     publishedAt: Schema.Attribute.DateTime
     submissionDocumentId: Schema.Attribute.String & Schema.Attribute.Required
     tagged: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface ApiDriveHoldDriveHold extends Struct.CollectionTypeSchema {
+  collectionName: "drive_holds"
+  info: {
+    description: "A hidden 20-minute ledger entry: one helper holds one library in one Drive so two helpers don't fill the same record. No REST routes."
+    displayName: "Drive Hold"
+    pluralName: "drive-holds"
+    singularName: "drive-hold"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    baUserId: Schema.Attribute.String & Schema.Attribute.Required
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    driveDocumentId: Schema.Attribute.String & Schema.Attribute.Required
+    expiresAt: Schema.Attribute.DateTime & Schema.Attribute.Required
+    libraryDocumentId: Schema.Attribute.String & Schema.Attribute.Required
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::drive-hold.drive-hold"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -1752,6 +1793,15 @@ export interface ApiDriveDrive extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
+    storySlug: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 120
+      }>
     summary: Schema.Attribute.Text &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
@@ -1789,7 +1839,7 @@ export interface ApiEntitlementGrantEntitlementGrant
   extends Struct.CollectionTypeSchema {
   collectionName: "entitlement_grants"
   info: {
-    description: "Complimentary Pro or Team, granted by staff. Read only by the session-profile bridge."
+    description: "Complimentary Supporter, Pro or Team, granted by staff. Read only by the session-profile bridge."
     displayName: "Entitlement Grant"
     pluralName: "entitlement-grants"
     singularName: "entitlement-grant"
@@ -1810,7 +1860,7 @@ export interface ApiEntitlementGrantEntitlementGrant
       "api::entitlement-grant.entitlement-grant"
     > &
       Schema.Attribute.Private
-    plan: Schema.Attribute.Enumeration<["pro", "team"]> &
+    plan: Schema.Attribute.Enumeration<["supporter", "pro", "team"]> &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<"pro">
     publishedAt: Schema.Attribute.DateTime
@@ -2219,7 +2269,9 @@ export interface ApiLibraryAffiliationLibraryAffiliation
     }
   }
   attributes: {
+    approvedAt: Schema.Attribute.DateTime
     baUserId: Schema.Attribute.String & Schema.Attribute.Required
+    canGoLive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -2233,11 +2285,17 @@ export interface ApiLibraryAffiliationLibraryAffiliation
       Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
     role: Schema.Attribute.String
+    source: Schema.Attribute.Enumeration<["claim", "team"]>
+    staffRole: Schema.Attribute.Enumeration<["owner", "editor"]>
+    teamMember: Schema.Attribute.Relation<
+      "manyToOne",
+      "plugin::access.team-member"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
     verificationMethod: Schema.Attribute.Enumeration<
-      ["email_domain", "vouching", "contact_us"]
+      ["email_domain", "vouching", "contact_us", "team"]
     > &
       Schema.Attribute.DefaultTo<"contact_us">
   }
@@ -2292,13 +2350,104 @@ export interface ApiLibraryChangeLibraryChange
     publishedAt: Schema.Attribute.DateTime
     reviewerId: Schema.Attribute.String
     source: Schema.Attribute.Enumeration<
-      ["submission", "admin", "api_token", "import", "system"]
+      ["submission", "staff", "admin", "api_token", "import", "system"]
     >
     submissionDocumentId: Schema.Attribute.String
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
     versionStatus: Schema.Attribute.Enumeration<["draft", "published"]>
+  }
+}
+
+export interface ApiLibraryNoticeLibraryNotice
+  extends Struct.CollectionTypeSchema {
+  collectionName: "library_notices"
+  info: {
+    description: "Temporary service notices, published immediately."
+    displayName: "Library Notice"
+    pluralName: "library-notices"
+    singularName: "library-notice"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    createdByBaUserId: Schema.Attribute.String & Schema.Attribute.Private
+    endedAt: Schema.Attribute.DateTime
+    endedByBaUserId: Schema.Attribute.String & Schema.Attribute.Private
+    from: Schema.Attribute.Date & Schema.Attribute.Required
+    hours: Schema.Attribute.JSON &
+      Schema.Attribute.CustomField<"global::opening-times">
+    library: Schema.Attribute.Relation<"manyToOne", "api::library.library"> &
+      Schema.Attribute.Required
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::library-notice.library-notice"
+    > &
+      Schema.Attribute.Private
+    message: Schema.Attribute.Text &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 280
+        minLength: 1
+      }>
+    publishedAt: Schema.Attribute.DateTime
+    reason: Schema.Attribute.Enumeration<
+      [
+        "holiday",
+        "school_holidays",
+        "maintenance",
+        "breakdown",
+        "weather",
+        "staffing",
+        "works",
+        "other",
+      ]
+    >
+    scope: Schema.Attribute.Enumeration<
+      ["library", "service", "day", "stop", "term_time"]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"library">
+    scopeDay: Schema.Attribute.Enumeration<
+      ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+    >
+    scopeWeek: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 4
+          min: 1
+        },
+        number
+      >
+    source: Schema.Attribute.Enumeration<["staff", "live", "admin"]> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"admin">
+    stopId: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 10
+      }>
+    to: Schema.Attribute.Date
+    type: Schema.Attribute.Enumeration<
+      [
+        "closure",
+        "changed_hours",
+        "service",
+        "not_running",
+        "times_changed",
+        "stop_moved",
+        "extra_visit",
+      ]
+    > &
+      Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
   }
 }
 
@@ -2507,7 +2656,23 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
         }
       }> &
       Schema.Attribute.DefaultTo<false>
+    hasStaff: Schema.Attribute.Boolean &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.DefaultTo<false>
     heroImage: Schema.Attribute.Media<"images"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    homeLibrary: Schema.Attribute.Relation<
+      "manyToOne",
+      "api::library.library"
+    > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
@@ -2580,6 +2745,22 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    mobileLibraries: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::library.library"
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    mobileTimetable: Schema.Attribute.JSON &
+      Schema.Attribute.CustomField<"global::mobile-timetable"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     name: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
@@ -2619,6 +2800,12 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
         }
       }> &
       Schema.Attribute.DefaultTo<"open">
+    operatorName: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     operatorType: Schema.Attribute.Enumeration<
       [
         "National Government",
@@ -2722,6 +2909,12 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true
+        }
+      }>
+    timetableUrl: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
         }
       }>
     timezone: Schema.Attribute.Text &
@@ -3124,7 +3317,7 @@ export interface ApiRoleGrantRoleGrant extends Struct.CollectionTypeSchema {
       Schema.Attribute.Required
     scopeLocale: Schema.Attribute.String
     source: Schema.Attribute.Enumeration<
-      ["admin", "claim", "application", "migration"]
+      ["admin", "claim", "application", "migration", "team"]
     > &
       Schema.Attribute.DefaultTo<"admin">
     updatedAt: Schema.Attribute.DateTime
@@ -3255,6 +3448,56 @@ export interface ApiServiceService extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface ApiSiteConfigSiteConfig extends Struct.SingleTypeSchema {
+  collectionName: "site_configs"
+  info: {
+    description: "Public site configuration and copy. Leave costs blank until real figures are available."
+    displayName: "Site config"
+    pluralName: "site-configs"
+    singularName: "site-config"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  attributes: {
+    costBreakdown: Schema.Attribute.Text
+    costCurrency: Schema.Attribute.Enumeration<["GBP", "EUR", "USD"]> &
+      Schema.Attribute.DefaultTo<"GBP">
+    costMonth: Schema.Attribute.Date
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::site-config.site-config"
+    > &
+      Schema.Attribute.Private
+    monthlyRunningCosts: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0
+        },
+        number
+      >
+    monthlySupportIncome: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0
+        },
+        number
+      >
+    publishedAt: Schema.Attribute.DateTime
+    supportersLead: Schema.Attribute.Text &
+      Schema.Attribute.DefaultTo<"Support helps cover the servers, maps and data behind Libraries Global. Library records, downloads and community contributions stay free for everyone.">
+    supportersTitle: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<"The people who *keep it open.*">
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -3394,6 +3637,7 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     notifPrefs: Schema.Attribute.JSON &
       Schema.Attribute.Private &
       Schema.Attribute.DefaultTo<{
+        drives: true
         editorialMessages: true
         editsReviewed: true
         marketing: false
@@ -3414,6 +3658,12 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     publicPrefs: Schema.Attribute.JSON
     publishedAt: Schema.Attribute.DateTime
     streak: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
+    supporterBadgeVisible: Schema.Attribute.Boolean &
+      Schema.Attribute.Private &
+      Schema.Attribute.DefaultTo<true>
+    supporterListed: Schema.Attribute.Boolean &
+      Schema.Attribute.Private &
+      Schema.Attribute.DefaultTo<true>
     theme: Schema.Attribute.Enumeration<["dark", "light"]> &
       Schema.Attribute.DefaultTo<"dark">
     tier: Schema.Attribute.String & Schema.Attribute.DefaultTo<"Reader">
@@ -3674,6 +3924,7 @@ export interface ApiWikiSectionWikiSection extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
     description: Schema.Attribute.Text
+    icon: Schema.Attribute.String
     label: Schema.Attribute.String
     locale: Schema.Attribute.String & Schema.Attribute.Private
     localizations: Schema.Attribute.Relation<
@@ -3685,6 +3936,116 @@ export interface ApiWikiSectionWikiSection extends Struct.CollectionTypeSchema {
     order: Schema.Attribute.Integer
     publishedAt: Schema.Attribute.DateTime
     slug: Schema.Attribute.UID<"name"> & Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginAccessTeam extends Struct.CollectionTypeSchema {
+  collectionName: "teams"
+  info: {
+    description: "A Team organisation: a library service's organiser and members. Active membership gives Pro personally and Team features on the Team's libraries only. Edited from the access plugin's Teams page."
+    displayName: "Team"
+    pluralName: "teams"
+    singularName: "team"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    createdByAdmin: Schema.Attribute.String & Schema.Attribute.Private
+    expiresAt: Schema.Attribute.DateTime
+    libraries: Schema.Attribute.Relation<"manyToMany", "api::library.library">
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::access.team"
+    > &
+      Schema.Attribute.Private
+    name: Schema.Attribute.String & Schema.Attribute.Required
+    notes: Schema.Attribute.Text & Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    seats: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 1
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<5>
+    slug: Schema.Attribute.UID<"name">
+    source: Schema.Attribute.Enumeration<["admin", "checkout"]> &
+      Schema.Attribute.DefaultTo<"admin">
+    status: Schema.Attribute.Enumeration<["active", "lapsed"]> &
+      Schema.Attribute.DefaultTo<"active">
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    verifiedAt: Schema.Attribute.DateTime
+  }
+}
+
+export interface PluginAccessTeamMember extends Struct.CollectionTypeSchema {
+  collectionName: "team_members"
+  info: {
+    description: "A person's seat on a Team: invited (by email, with a token), active (after accepting) or removed. Unique per team and email, enforced by the teams service under the team's lock."
+    displayName: "Team Member"
+    pluralName: "team-members"
+    singularName: "team-member"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    acceptedAt: Schema.Attribute.DateTime
+    baUserId: Schema.Attribute.String
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    email: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    invitedAt: Schema.Attribute.DateTime
+    invitedBy: Schema.Attribute.String & Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::access.team-member"
+    > &
+      Schema.Attribute.Private
+    preassign: Schema.Attribute.JSON & Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    removedAt: Schema.Attribute.DateTime
+    status: Schema.Attribute.Enumeration<["invited", "active", "removed"]> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"invited">
+    team: Schema.Attribute.Relation<"manyToOne", "plugin::access.team">
+    teamRole: Schema.Attribute.Enumeration<["organiser", "member"]> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"member">
+    tokenHash: Schema.Attribute.String &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -3835,7 +4196,7 @@ export interface PluginContentModerationReviewEvent
     publishedAt: Schema.Attribute.DateTime
     reviewerId: Schema.Attribute.String
     reviewerKind: Schema.Attribute.Enumeration<
-      ["admin", "contributor", "system"]
+      ["admin", "contributor", "staff", "system"]
     >
     submissionDocumentId: Schema.Attribute.String & Schema.Attribute.Required
     toStatus: Schema.Attribute.Enumeration<
@@ -3921,6 +4282,7 @@ export interface PluginContentModerationSubmission
         "blog_submission",
         "topic_suggestion",
         "role_application",
+        "drive_proposal",
       ]
     > &
       Schema.Attribute.Required
@@ -3938,6 +4300,7 @@ export interface PluginContentModerationSubmission
         "blog_article",
         "user_profile",
         "topic",
+        "drive",
       ]
     >
     targetSlug: Schema.Attribute.String
@@ -4505,6 +4868,232 @@ export interface PluginI18NLocale extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface PluginLibraryStaffStaffAudit
+  extends Struct.CollectionTypeSchema {
+  collectionName: "staff_audits"
+  info: {
+    displayName: "Staff Audit"
+    pluralName: "staff-audits"
+    singularName: "staff-audit"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    action: Schema.Attribute.Enumeration<
+      [
+        "invite_sent",
+        "invite_revoked",
+        "joined",
+        "level_changed",
+        "removed",
+        "left",
+        "can_go_live_changed",
+        "live_settings_changed",
+        "access_reported",
+        "stepup_locked",
+        "notice_created",
+        "notice_updated",
+        "notice_ended",
+      ]
+    > &
+      Schema.Attribute.Required
+    actor: Schema.Attribute.String & Schema.Attribute.Private
+    at: Schema.Attribute.DateTime & Schema.Attribute.Required
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    detail: Schema.Attribute.JSON & Schema.Attribute.Private
+    library: Schema.Attribute.Relation<"manyToOne", "api::library.library">
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::library-staff.staff-audit"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    subject: Schema.Attribute.String & Schema.Attribute.Private
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginMobileLibrariesLiveEvent
+  extends Struct.CollectionTypeSchema {
+  collectionName: "mobile_live_events"
+  info: {
+    displayName: "Live Event"
+    pluralName: "live-events"
+    singularName: "live-event"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    at: Schema.Attribute.DateTime
+    clientAt: Schema.Attribute.DateTime
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    delayMin: Schema.Attribute.Integer
+    eventKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    flagged: Schema.Attribute.String
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::mobile-libraries.live-event"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    reason: Schema.Attribute.String
+    session: Schema.Attribute.Relation<
+      "manyToOne",
+      "plugin::mobile-libraries.live-session"
+    >
+    sessionDocumentId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    stopId: Schema.Attribute.String
+    type: Schema.Attribute.Enumeration<
+      ["start", "arrived", "left", "delay", "skip", "not_running", "end"]
+    >
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginMobileLibrariesLiveSession
+  extends Struct.CollectionTypeSchema {
+  collectionName: "mobile_live_sessions"
+  info: {
+    displayName: "Live Session"
+    pluralName: "live-sessions"
+    singularName: "live-session"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    cycleWeek: Schema.Attribute.Integer
+    day: Schema.Attribute.String
+    endedAt: Schema.Attribute.DateTime
+    endReason: Schema.Attribute.Enumeration<
+      [
+        "manual",
+        "auto",
+        "breakdown",
+        "takeover",
+        "revoked",
+        "expired",
+        "kill_switch",
+      ]
+    >
+    endsAt: Schema.Attribute.DateTime
+    library: Schema.Attribute.Relation<"manyToOne", "api::library.library">
+    libraryDocumentId: Schema.Attribute.String & Schema.Attribute.Required
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::mobile-libraries.live-session"
+    > &
+      Schema.Attribute.Private
+    mode: Schema.Attribute.Enumeration<["checkins", "approximate"]>
+    position: Schema.Attribute.JSON & Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    route: Schema.Attribute.JSON & Schema.Attribute.Private
+    serviceDate: Schema.Attribute.Date
+    startedAt: Schema.Attribute.DateTime
+    startedBy: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    state: Schema.Attribute.JSON & Schema.Attribute.Private
+    status: Schema.Attribute.Enumeration<["active", "ended"]> &
+      Schema.Attribute.DefaultTo<"active">
+    tokenHash: Schema.Attribute.String & Schema.Attribute.Private
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginMobileLibrariesLiveSetting
+  extends Struct.CollectionTypeSchema {
+  collectionName: "mobile_live_settings"
+  info: {
+    displayName: "Live Setting"
+    pluralName: "live-settings"
+    singularName: "live-setting"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    autoStopMinutes: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<30>
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    enabled: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
+    enabledAt: Schema.Attribute.DateTime
+    enabledBy: Schema.Attribute.String & Schema.Attribute.Private
+    library: Schema.Attribute.Relation<"manyToOne", "api::library.library">
+    libraryDocumentId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::mobile-libraries.live-setting"
+    > &
+      Schema.Attribute.Private
+    precision: Schema.Attribute.Enumeration<["stops", "approximate"]> &
+      Schema.Attribute.DefaultTo<"stops">
+    publishedAt: Schema.Attribute.DateTime
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface PluginReviewWorkflowsWorkflow
   extends Struct.CollectionTypeSchema {
   collectionName: "strapi_workflows"
@@ -4721,6 +5310,9 @@ export interface PluginRewardsPointEvent extends Struct.CollectionTypeSchema {
         "daily_streak",
         "manual_award",
         "manual_deduct",
+        "drive_task_accepted",
+        "drive_finished",
+        "drive_proposal_accepted",
       ]
     > &
       Schema.Attribute.Required
@@ -5033,6 +5625,7 @@ declare module "@strapi/strapi" {
       "api::country.country": ApiCountryCountry
       "api::dataset.dataset": ApiDatasetDataset
       "api::drive-credit.drive-credit": ApiDriveCreditDriveCredit
+      "api::drive-hold.drive-hold": ApiDriveHoldDriveHold
       "api::drive.drive": ApiDriveDrive
       "api::entitlement-grant.entitlement-grant": ApiEntitlementGrantEntitlementGrant
       "api::footer.footer": ApiFooterFooter
@@ -5040,6 +5633,7 @@ declare module "@strapi/strapi" {
       "api::legal-document.legal-document": ApiLegalDocumentLegalDocument
       "api::library-affiliation.library-affiliation": ApiLibraryAffiliationLibraryAffiliation
       "api::library-change.library-change": ApiLibraryChangeLibraryChange
+      "api::library-notice.library-notice": ApiLibraryNoticeLibraryNotice
       "api::library.library": ApiLibraryLibrary
       "api::page.page": ApiPagePage
       "api::pro-verification.pro-verification": ApiProVerificationProVerification
@@ -5048,12 +5642,15 @@ declare module "@strapi/strapi" {
       "api::role-grant.role-grant": ApiRoleGrantRoleGrant
       "api::saved-event.saved-event": ApiSavedEventSavedEvent
       "api::service.service": ApiServiceService
+      "api::site-config.site-config": ApiSiteConfigSiteConfig
       "api::subscriber.subscriber": ApiSubscriberSubscriber
       "api::topic.topic": ApiTopicTopic
       "api::user-profile.user-profile": ApiUserProfileUserProfile
       "api::wiki-article.wiki-article": ApiWikiArticleWikiArticle
       "api::wiki-landing.wiki-landing": ApiWikiLandingWikiLanding
       "api::wiki-section.wiki-section": ApiWikiSectionWikiSection
+      "plugin::access.team": PluginAccessTeam
+      "plugin::access.team-member": PluginAccessTeamMember
       "plugin::content-moderation.option-suggestion": PluginContentModerationOptionSuggestion
       "plugin::content-moderation.option-vote": PluginContentModerationOptionVote
       "plugin::content-moderation.review-event": PluginContentModerationReviewEvent
@@ -5067,6 +5664,10 @@ declare module "@strapi/strapi" {
       "plugin::events.import-run": PluginEventsImportRun
       "plugin::events.sync-command": PluginEventsSyncCommand
       "plugin::i18n.locale": PluginI18NLocale
+      "plugin::library-staff.staff-audit": PluginLibraryStaffStaffAudit
+      "plugin::mobile-libraries.live-event": PluginMobileLibrariesLiveEvent
+      "plugin::mobile-libraries.live-session": PluginMobileLibrariesLiveSession
+      "plugin::mobile-libraries.live-setting": PluginMobileLibrariesLiveSetting
       "plugin::review-workflows.workflow": PluginReviewWorkflowsWorkflow
       "plugin::review-workflows.workflow-stage": PluginReviewWorkflowsWorkflowStage
       "plugin::rewards.badge-award": PluginRewardsBadgeAward
