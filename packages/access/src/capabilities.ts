@@ -1,4 +1,11 @@
 import type { ContributorRole, GrantableRole } from "./roles"
+import {
+  canStaffReview,
+  parseSessionStaff,
+  type StaffClaim,
+  type StaffEntry,
+  type StaffRole,
+} from "./staff"
 
 export const SUBMISSION_TYPES = [
   "correction",
@@ -10,6 +17,7 @@ export const SUBMISSION_TYPES = [
   "blog_submission",
   "topic_suggestion",
   "role_application",
+  "drive_proposal",
 ] as const
 export type SubmissionType = (typeof SUBMISSION_TYPES)[number]
 
@@ -33,6 +41,7 @@ export const QUEUE_OF_SUBMISSION_TYPE: Record<SubmissionType, ModerationQueue> =
     wiki_edit: "knowledge",
     blog_submission: "journal",
     role_application: "applications",
+    drive_proposal: "index",
   }
 
 export function submissionTypesOfQueue(q: ModerationQueue): SubmissionType[] {
@@ -50,10 +59,13 @@ export type Capability =
   | "journal.directEdit"
   | "submit.topicSuggestion"
   | "events.feed"
+  | "staff.area"
   | "moderate.queue"
   | "submit.roleApplication"
   // Create, edit, pin, feature, open, close and cancel drives (editorial board only).
   | "drives.manage"
+  // Propose a drive (every signed-in user; the policy checks standing).
+  | "submit.driveProposal"
 
 /**
  * Most library claims one session carries. The bridge and the submission
@@ -80,7 +92,7 @@ export type EditorLocales = "all" | ReadonlySet<string>
 export interface CapabilityInput {
   signedIn: boolean
   grants: RoleGrant[]
-  claims: { libraryDocumentId: string }[]
+  claims: StaffClaim[]
   // Deliberately no plan, subscription or entitlement fields (spec §3.1).
 }
 
@@ -89,6 +101,7 @@ export interface Capabilities {
   claimedLibraryIds: ReadonlySet<string>
   moderation: readonly ModerationScope[]
   editorLocales: { docs: EditorLocales; journal: EditorLocales }
+  staff: ReadonlyMap<string, StaffEntry>
 }
 
 type MutableLocales = "all" | Set<string>
@@ -104,8 +117,9 @@ const hasLocales = (l: EditorLocales) => l === "all" || l.size > 0
 
 export function resolveCapabilities(input: CapabilityInput): Capabilities {
   const set = new Set<Capability>()
+  const staff = new Map<string, StaffEntry>()
   const claimedLibraryIds = new Set(
-    input.claims.map((c) => c.libraryDocumentId)
+    input.signedIn ? input.claims.map((c) => c.libraryDocumentId) : []
   )
   let docs: MutableLocales = new Set<string>()
   let journal: MutableLocales = new Set<string>()
@@ -113,6 +127,7 @@ export function resolveCapabilities(input: CapabilityInput): Capabilities {
   if (!input.signedIn)
     return {
       set,
+      staff,
       claimedLibraryIds,
       moderation,
       editorLocales: { docs, journal },
@@ -125,7 +140,14 @@ export function resolveCapabilities(input: CapabilityInput): Capabilities {
   set.add("submit.journalPitch")
   set.add("submit.topicSuggestion")
   set.add("submit.roleApplication")
+  set.add("submit.driveProposal")
   if (claimedLibraryIds.size > 0) {
+    for (const claim of input.claims)
+      staff.set(claim.libraryDocumentId, {
+        role: claim.staffRole,
+        canGoLive: claim.canGoLive,
+      })
+    set.add("staff.area")
     set.add("submit.libraryEdit")
     set.add("events.feed")
   }
@@ -159,6 +181,7 @@ export function resolveCapabilities(input: CapabilityInput): Capabilities {
 
   return {
     set,
+    staff,
     claimedLibraryIds,
     moderation,
     editorLocales: { docs, journal },
@@ -185,16 +208,24 @@ export function canModerate(
     submissionType: SubmissionType
     locale: string
     submittedByUserId: string
+    targetLibraryDocumentId?: string | null
   },
   viewerBaUserId: string
 ): boolean {
   if (s.submittedByUserId === viewerBaUserId) return false
   const queue = QUEUE_OF_SUBMISSION_TYPE[s.submissionType]
 
-  return c.moderation.some(
-    (m) =>
-      (m.queue === "all" || m.queue === queue) &&
-      (m.locale === null || m.locale === s.locale)
+  return (
+    c.moderation.some(
+      (m) =>
+        (m.queue === "all" || m.queue === queue) &&
+        (m.locale === null || m.locale === s.locale)
+    ) ||
+    canStaffReview(
+      c,
+      { ...s, targetLibraryDocumentId: s.targetLibraryDocumentId ?? null },
+      viewerBaUserId
+    )
   )
 }
 
@@ -283,6 +314,8 @@ export function canSubmit(
       return c.set.has("submit.topicSuggestion")
     case "role_application":
       return c.set.has("submit.roleApplication")
+    case "drive_proposal":
+      return c.set.has("submit.driveProposal")
 
     default:
       return false
@@ -300,6 +333,7 @@ export function grantsFromLegacyRole(
 
 /** JSON-safe form carried in the Better Auth session, and its inverse. */
 export interface SessionCapabilities {
+  staffLibraries: { id: string; role: StaffRole; canGoLive: boolean }[]
   capabilities: Capability[]
   claimedLibraryIds: string[]
   moderationScopes: ModerationScope[]
@@ -321,6 +355,7 @@ const localesFromJson = (l: unknown): EditorLocales =>
 export function toSessionCapabilities(c: Capabilities): SessionCapabilities {
   return {
     capabilities: [...c.set],
+    staffLibraries: [...c.staff].map(([id, entry]) => ({ id, ...entry })),
     claimedLibraryIds: [...c.claimedLibraryIds],
     moderationScopes: c.moderation.map((m) => ({
       queue: m.queue,
@@ -338,6 +373,12 @@ export function fromSessionCapabilities(
 ): Capabilities {
   return {
     set: new Set(Array.isArray(s?.capabilities) ? s.capabilities : []),
+    staff: new Map(
+      parseSessionStaff(s?.staffLibraries).map(({ id, role, canGoLive }) => [
+        id,
+        { role, canGoLive },
+      ])
+    ),
     claimedLibraryIds: new Set(
       Array.isArray(s?.claimedLibraryIds) ? s.claimedLibraryIds : []
     ),
