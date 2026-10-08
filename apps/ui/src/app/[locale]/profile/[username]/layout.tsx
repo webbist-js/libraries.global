@@ -176,6 +176,7 @@ export default async function ProfileLayout({
           tabs={
             <ProfileTabNav
               username={username}
+              isOwnProfile={isOwnProfile}
               counts={{
                 contributions: contributionCount,
                 following: followingCount(profile),

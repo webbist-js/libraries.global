@@ -1,8 +1,7 @@
 "use client"
 
-import { usePathname } from "next/navigation"
-
 import { type SectionTab, SectionTabs } from "@/components/ds/SectionTabs"
+import { usePathname } from "@/lib/navigation"
 
 const TABS = [
   {
@@ -36,25 +35,20 @@ type ProfileTabId = (typeof TABS)[number]["id"]
 /** Profile section tabs, on the bottom edge of the ProfileHero band. */
 export function ProfileTabNav({
   username,
+  isOwnProfile = false,
   counts,
 }: {
   username: string
+  isOwnProfile?: boolean
   counts?: Partial<Record<Exclude<ProfileTabId, "overview">, number>>
 }) {
   const pathname = usePathname()
   const base = `/profile/${username}`
 
-  function isActive(path: string) {
-    if (path === "") {
-      return (
-        pathname === base ||
-        pathname === `${base}/` ||
-        pathname.startsWith(`${base}/activity`) ||
-        pathname.startsWith(`${base}/collections`)
-      )
-    }
+  function isActive(href: string) {
+    if (pathname === href || pathname === `${href}/`) return true
 
-    return pathname.startsWith(`${base}${path}`)
+    return href !== base && pathname.startsWith(`${href}/`)
   }
 
   const tabs: SectionTab[] = TABS.map((tab) => {
@@ -69,11 +63,20 @@ export function ProfileTabNav({
     }
   })
 
+  if (isOwnProfile) {
+    tabs.push({
+      id: "settings",
+      label: "Settings",
+      href: "/profile/settings",
+      icon: "mdi:cog-outline",
+    })
+  }
+
   return (
     <SectionTabs
       label="Profile sections"
       tabs={tabs}
-      activeId={TABS.find((tab) => isActive(tab.path))?.id ?? null}
+      activeId={tabs.find((tab) => isActive(tab.href))?.id ?? null}
     />
   )
 }

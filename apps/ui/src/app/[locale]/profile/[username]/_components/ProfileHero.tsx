@@ -8,7 +8,6 @@ import { T } from "@/lib/design-tokens"
 import { resolvePublicPrefs, type UserProfile } from "@/lib/types/profile"
 
 import { ProfileFollowButton } from "./ProfileFollowButton"
-import { ProfilePrivacyControls } from "./ProfilePrivacyControls"
 
 function countryName(code?: string | null): string | null {
   if (!code) return null
@@ -118,13 +117,6 @@ export function ProfileHero({
     year: "numeric",
   })
 
-  const visibilityLabel =
-    profile.profileVisibility === "private"
-      ? "private"
-      : profile.profileVisibility === "limited"
-        ? "limited"
-        : "public"
-
   return (
     <section
       className="border-b"
@@ -139,39 +131,6 @@ export function ProfileHero({
             { label: `@${profile.username}` },
           ]}
         />
-
-        {/* Own-profile banner */}
-        {isOwnProfile && (
-          <ProfilePrivacyControls
-            initialPrefs={profile.publicPrefs}
-            message={
-              profile.profileVisibility === "public" ? (
-                <>
-                  <strong style={{ color: T.accent.primaryHover }}>
-                    This is your public profile.
-                  </strong>{" "}
-                  Choose what others can see.
-                </>
-              ) : (
-                <>
-                  <strong style={{ color: T.accent.primaryHover }}>
-                    This profile is {visibilityLabel}.
-                  </strong>{" "}
-                  Visibility can be changed in settings.
-                </>
-              )
-            }
-            actions={
-              <GlobalLink
-                href="/profile/settings"
-                className="text-[15px] font-semibold underline underline-offset-4"
-                style={{ color: T.accent.primary }}
-              >
-                Edit profile
-              </GlobalLink>
-            }
-          />
-        )}
 
         {/* Hero row */}
         <div className="flex flex-wrap items-start gap-7 pb-8">
@@ -234,6 +193,14 @@ export function ProfileHero({
 
             {/* Role cards */}
             <div className="mt-5 flex flex-wrap gap-3">
+              {profile.supporterMark ? (
+                <RoleCard
+                  icon="mdi:heart-outline"
+                  bg="var(--tint-national-bg)"
+                  fg="var(--tint-national-fg)"
+                  title="Supporter"
+                />
+              ) : null}
               {profile.isVerifiedLibrarian ? (
                 <RoleCard
                   icon="mdi:shield-check-outline"

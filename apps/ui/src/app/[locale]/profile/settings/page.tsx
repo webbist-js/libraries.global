@@ -3,12 +3,13 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import type { Locale } from "next-intl"
 
+import { ProfileHero } from "@/app/[locale]/profile/[username]/_components/ProfileHero"
+import { ProfileTabNav } from "@/app/[locale]/profile/[username]/_components/ProfileTabNav"
 import { PageHero } from "@/components/ds"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { getSessionSSR } from "@/lib/auth-server"
 import { avatarSrc } from "@/lib/avatar"
 import { T } from "@/lib/design-tokens"
-import { Link } from "@/lib/navigation"
 import { fetchOwnProfile } from "@/lib/own-profile-server"
 
 import { SettingsShell } from "./_components/SettingsShell"
@@ -47,37 +48,23 @@ export default async function ProfileSettingsPage({
         className="relative isolate flex min-h-screen w-full flex-col"
         style={{ background: T.bg.void, color: T.ink.base }}
       >
-        <PageHero
-          compact
-          breadcrumb={[
-            { label: "Home", href: "/" },
-            ...(username
-              ? [{ label: `@${username}`, href: `/profile/${username}` }]
-              : []),
-            { label: "Settings" },
-          ]}
-          eyebrow="Account settings"
-          eyebrowIcon="mdi:cog-outline"
-          title={`Welcome back, *${name}.*`}
-          lead="Your public profile, who can see it, what we email you about, and your account."
-        >
-          {username ? (
-            <p className="m-0">
-              <Link
-                href={`/profile/${username}`}
-                className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[15px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
-                style={{
-                  background: T.bg.deep,
-                  border: `1px solid ${T.border.hi}`,
-                  color: T.ink.base,
-                }}
-              >
-                View your public profile
-                <span aria-hidden="true">→</span>
-              </Link>
-            </p>
-          ) : null}
-        </PageHero>
+        {profile && username ? (
+          <ProfileHero
+            profile={profile}
+            isOwnProfile
+            isSignedIn
+            tabs={<ProfileTabNav username={username} isOwnProfile />}
+          />
+        ) : (
+          <PageHero
+            compact
+            breadcrumb={[{ label: "Home", href: "/" }, { label: "Settings" }]}
+            eyebrow="Account settings"
+            eyebrowIcon="mdi:cog-outline"
+            title={`Welcome back, *${name}.*`}
+            lead="Your public profile, who can see it, what we email you about, and your account."
+          />
+        )}
         <SettingsShell
           profile={profile}
           sessionUser={session.user}

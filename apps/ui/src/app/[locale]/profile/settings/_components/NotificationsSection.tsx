@@ -31,8 +31,8 @@ type NotificationItem = ToggleItem<NotifKey>
 const EMAIL_NOTIFS: NotificationItem[] = [
   {
     key: "weeklyDigest",
-    label: "Weekly digest",
-    desc: "Activity on libraries you follow and your contributions.",
+    label: "Weekly digest (coming soon)",
+    desc: "Save your preference for a weekly email about libraries you follow. Delivery is not available yet.",
   },
   {
     key: "editsReviewed",

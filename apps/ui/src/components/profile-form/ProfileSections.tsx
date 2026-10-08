@@ -274,15 +274,7 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
 // ── Affiliation ───────────────────────────────────────────────────────────────
 
 /** A claim the profile already has, or the one just made on this page. */
-function ClaimNotice({
-  name,
-  verified,
-  method,
-}: {
-  name: string
-  verified: boolean
-  method?: string
-}) {
+function ClaimNotice({ name, verified }: { name: string; verified: boolean }) {
   if (verified)
     return (
       <Notice
@@ -291,7 +283,7 @@ function ClaimNotice({
         title={`Verified at ${name}`}
       >
         <p className="m-0" style={{ color: T.ink.base }}>
-          You can look after this library’s record as a Verified Librarian.
+          You can look after this library’s record from its Staff area.
         </p>
       </Notice>
     )
@@ -303,9 +295,7 @@ function ClaimNotice({
       title={`Claim sent for ${name}`}
     >
       <p className="m-0" style={{ color: T.ink.base }}>
-        {method === "vouching"
-          ? "A verified librarian at this library will confirm it."
-          : "Our team will check it and email you."}
+        A moderator will check it and email you.
       </p>
     </Notice>
   )
@@ -386,7 +376,6 @@ export function AffiliationSection({
         <ClaimNotice
           name={form.claimResult.libraryName}
           verified={form.claimResult.status === "verified"}
-          method={form.claimResult.method}
         />
       ) : null}
 
