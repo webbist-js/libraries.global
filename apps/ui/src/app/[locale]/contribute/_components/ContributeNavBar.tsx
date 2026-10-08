@@ -66,7 +66,6 @@ export function activeContributeTab(pathname: string): string | null {
   const segment = match[1]
   if (!segment) return "hub"
 
-  // events/ sits in the section but under no tab
   return SEGMENT_TO_TAB[segment] ?? null
 }
 

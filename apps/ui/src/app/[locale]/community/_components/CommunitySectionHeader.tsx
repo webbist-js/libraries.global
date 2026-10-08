@@ -16,6 +16,10 @@ export function CommunitySectionHeader({
   lead,
   counts,
   children,
+  leadPlacement,
+  actions,
+  showEyebrow = true,
+  showTabs = true,
 }: {
   /** Breadcrumb leaf after "Community". Omit on the Noticeboard itself. */
   readonly section?: string
@@ -30,6 +34,10 @@ export function CommunitySectionHeader({
   readonly counts?: CommunityTabCounts
   /** Rendered under the lead in the right column. */
   readonly children?: ReactNode
+  readonly leadPlacement?: "left" | "right"
+  readonly actions?: ReactNode
+  readonly showEyebrow?: boolean
+  readonly showTabs?: boolean
 }) {
   const trail = crumbs?.length ? crumbs : section ? [{ label: section }] : []
 
@@ -44,11 +52,13 @@ export function CommunitySectionHeader({
             ]
           : [{ label: "Home", href: "/" }, { label: "Community" }]
       }
-      eyebrow="Community"
+      eyebrow={showEyebrow ? "Community" : undefined}
       eyebrowIcon="mdi:account-group-outline"
       title={title}
       lead={lead}
-      tabs={<CommunityNavBar counts={counts} />}
+      leadPlacement={leadPlacement}
+      actions={actions}
+      tabs={showTabs ? <CommunityNavBar counts={counts} /> : undefined}
     >
       {children}
     </PageHero>

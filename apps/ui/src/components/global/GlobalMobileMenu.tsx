@@ -14,8 +14,8 @@ function normalizePathname(pathname: string): string {
 
 /**
  * Collapsed header navigation for narrow screens (below `lg`). A disclosure
- * button opens a panel under the header with the main links and the actions
- * that don't fit in the bar (language, account, Contribute).
+ * button opens a panel under the header with the main links, the Contribute
+ * section and the actions that don't fit in the bar (language, account).
  */
 export function GlobalMobileMenu({
   links,
@@ -23,7 +23,7 @@ export function GlobalMobileMenu({
   actions,
 }: {
   readonly links: NavLink[]
-  /** Role shortcuts, shown under the main links when the user has any. */
+  /** The Contribute section, shown under the main links. */
   readonly shortcuts?: React.ReactNode
   /** Server-rendered actions (locale switcher, auth, Contribute). */
   readonly actions: React.ReactNode

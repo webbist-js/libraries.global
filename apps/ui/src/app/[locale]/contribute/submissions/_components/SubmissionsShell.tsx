@@ -1,15 +1,25 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useQuery } from "@tanstack/react-query"
+import { useLocale } from "next-intl"
 import { useEffect } from "react"
 
 import { ContributionList } from "@/components/contributions/ContributionList"
+import { docsPathForSearchHit } from "@/components/docs/docs.config"
 import { StatCard } from "@/components/ds"
 import { useMySubmissions, type Submission } from "@/hooks/useSubmissions"
 import { useCapabilities } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
 import { editorApplyHref, isArticleEditor } from "@/lib/editor-gate"
+import {
+  buildLibraryPath,
+  searchBlogArticles,
+  searchLibraryNames,
+  searchWikiArticles,
+} from "@/lib/meilisearch"
 import { Link } from "@/lib/navigation"
+import { staffLibraryHref } from "@/lib/staff/paths"
 
 import { ContributeSectionHeader } from "../../_components/ContributeSectionHeader"
 
@@ -70,6 +80,166 @@ function continueLink(
     : { href: editorApplyHref(kind), label: "Apply to edit" }
 }
 
+// ── "View" links ─────────────────────────────────────────────────────────────
+// A sent submission links to what it's about: the library's page or the
+// article. Strapi gives the rows a target id or slug, not a path, so the
+// paths come from Meilisearch: libraries in one `documentId IN` query, and
+// articles by title, matched back on slug (slug isn't filterable there).
+
+/**
+ * Submission types whose target is a library the row can link to (the
+ * hook's union lags Strapi's, so these are plain strings).
+ */
+const LIBRARY_TARGET_TYPES = new Set<string>([
+  "library_edit",
+  "correction",
+  "library_claim",
+  "event_feed",
+])
+
+/** Statuses that get a "View" link: in review and accepted. */
+const VIEWABLE_STATUSES = new Set<Submission["status"]>(["pending", "approved"])
+
+/** A new library has no target; its id arrives in `resultDocumentId` once created. */
+type WithResult = Submission & { resultDocumentId?: string | null }
+
+const MAX_LIBRARY_LOOKUPS = 50
+const MAX_ARTICLE_LOOKUPS = 10
+
+/** The library a viewable row links to, by documentId, or null. */
+function libraryIdOf(s: Submission): string | null {
+  if (LIBRARY_TARGET_TYPES.has(s.submissionType))
+    return s.targetDocumentId ?? null
+  if (s.submissionType === "new_library" && s.status === "approved")
+    return (s as WithResult).resultDocumentId ?? null
+
+  return null
+}
+
+const isArticle = (s: Submission) =>
+  (s.submissionType === "wiki_edit" ||
+    s.submissionType === "blog_submission") &&
+  Boolean(s.targetSlug)
+
+async function libraryPaths(
+  ids: readonly string[],
+  locale: string
+): Promise<Map<string, string>> {
+  const paths = new Map<string, string>()
+  if (ids.length === 0) return paths
+  try {
+    const { hits } = await searchLibraryNames("", {
+      hitsPerPage: ids.length,
+      attributesToRetrieve: [
+        "documentId",
+        "slug",
+        "continent_slug",
+        "country_slug",
+        "region_slug",
+      ],
+      filters: [
+        `documentId IN [${ids.map((id) => JSON.stringify(id)).join(", ")}]`,
+      ],
+      locale,
+    })
+    for (const hit of hits) {
+      const path = buildLibraryPath(hit)
+      if (path) paths.set(hit.documentId, path)
+    }
+  } catch {
+    // Meilisearch down: the rows simply have no "View" link.
+  }
+
+  return paths
+}
+
+async function articlePath(
+  s: Submission,
+  locale: string
+): Promise<string | null> {
+  const slug = s.targetSlug!
+  const query = s.targetLabel?.trim() || slug
+  try {
+    if (s.submissionType === "wiki_edit") {
+      const { hits } = await searchWikiArticles(query, null, 5, locale)
+      const hit = hits.find((h) => h.slug === slug)
+
+      return hit ? docsPathForSearchHit(hit) : null
+    }
+    const { hits } = await searchBlogArticles(query, 5, locale)
+    const hit = hits.find((h) => h.slug === slug)
+
+    return hit ? `/journal/${hit.section_slug ?? "general"}/${hit.slug}` : null
+  } catch {
+    return null
+  }
+}
+
+/** Submission documentId → the page it's about, for the rows that have one. */
+async function resolveTargetHrefs(
+  submissions: readonly Submission[],
+  locale: string
+): Promise<Record<string, string>> {
+  const rows = submissions.filter((s) => VIEWABLE_STATUSES.has(s.status))
+  const ids = [
+    ...new Set(rows.map(libraryIdOf).filter((id): id is string => !!id)),
+  ].slice(0, MAX_LIBRARY_LOOKUPS)
+  const articles = rows.filter(isArticle).slice(0, MAX_ARTICLE_LOOKUPS)
+  const [libraries, articleHrefs] = await Promise.all([
+    libraryPaths(ids, locale),
+    Promise.all(articles.map((s) => articlePath(s, locale))),
+  ])
+
+  const hrefs: Record<string, string> = {}
+  for (const s of rows) {
+    const id = libraryIdOf(s)
+    const path = id ? libraries.get(id) : undefined
+    if (path) hrefs[s.documentId] = path
+  }
+  articles.forEach((s, i) => {
+    const href = articleHrefs[i]
+    if (href) hrefs[s.documentId] = href
+  })
+
+  return hrefs
+}
+
+function useTargetHrefs(submissions: readonly Submission[]) {
+  const locale = useLocale()
+  const key = submissions
+    .filter((s) => VIEWABLE_STATUSES.has(s.status))
+    .map((s) => s.documentId)
+    .sort((a, b) => a.localeCompare(b))
+    .join(",")
+  const { data } = useQuery({
+    queryKey: ["submission-target-hrefs", locale, key],
+    queryFn: () => resolveTargetHrefs(submissions, locale),
+    enabled: key.length > 0,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  return data ?? {}
+}
+
+function ViewLink({
+  href,
+  kind,
+}: {
+  href: string
+  kind: "library" | "article"
+}) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex items-center gap-1 rounded-full border bg-white px-4 py-1.5 text-[14px] font-semibold whitespace-nowrap no-underline transition-colors hover:bg-(--t-bg-surface)"
+      style={{ borderColor: T.border.hi, color: T.ink.base }}
+    >
+      View {kind}
+      <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
+    </Link>
+  )
+}
+
 function SkeletonList() {
   return (
     <div className="flex flex-col gap-4" aria-hidden="true">
@@ -95,6 +265,7 @@ function SkeletonList() {
 export function SubmissionsShell({ username }: { username: string | null }) {
   const { data: submissions = [], isLoading, refetch } = useMySubmissions()
   const { has, ready } = useCapabilities()
+  const targetHrefs = useTargetHrefs(submissions)
 
   useEffect(() => {
     refetch()
@@ -133,6 +304,31 @@ export function SubmissionsShell({ username }: { username: string | null }) {
           tone:
             s.status === "needs_info" ? ("warn" as const) : ("danger" as const),
         },
+      }
+    const href = targetHrefs[s.documentId]
+    // An approved claim opened a Staff area: that beats the public page.
+    if (
+      s.submissionType === "library_claim" &&
+      s.status === "approved" &&
+      s.targetDocumentId
+    )
+      return {
+        action: (
+          <Link
+            href={staffLibraryHref(s.targetSlug)}
+            className="inline-flex min-h-11 items-center gap-1 rounded-full px-4 text-[14px] font-semibold whitespace-nowrap text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+            style={{ background: T.accent.primary }}
+          >
+            Open Staff area
+            <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
+          </Link>
+        ),
+      }
+    if (href)
+      return {
+        action: (
+          <ViewLink href={href} kind={isArticle(s) ? "article" : "library"} />
+        ),
       }
 
     return {}

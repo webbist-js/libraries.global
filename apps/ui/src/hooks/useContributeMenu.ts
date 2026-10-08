@@ -1,0 +1,183 @@
+"use client"
+
+import type { PlanKey } from "@repo/access"
+import { useQuery } from "@tanstack/react-query"
+import { useState } from "react"
+
+import { useHydratedSession } from "@/lib/access-client"
+import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
+import {
+  buildContributeMenu,
+  type ContributeMenuModel,
+  type ContributeMenuStatus,
+  type FeaturedDriveSummary,
+  namedLibraries,
+  selectedLibrary,
+} from "@/lib/contributor-shortcuts"
+import { useCurrentLibrary } from "@/lib/staff/current-library"
+import {
+  readLastDrawerLibrary,
+  rememberDrawerLibrary,
+} from "@/lib/staff/drawer"
+
+const STALE = 60_000
+
+/** Shared between the Contribute menu and the staff drawer. */
+export function useFeaturedDrive(enabled: boolean) {
+  return useQuery({
+    queryKey: ["featured-drive"],
+    enabled,
+    staleTime: STALE,
+    queryFn: async (): Promise<FeaturedDriveSummary | null> => {
+      const res = await fetch("/api/drives/featured")
+      if (!res.ok) return null
+      const json = (await res.json()) as {
+        data?: FeaturedDriveSummary | null
+      }
+
+      return json.data ?? null
+    },
+  })
+}
+
+type ModerationStat = { queue: string; status: string; count: number }
+
+/** Submissions pending in the Moderator's scope, from the queue's stats. */
+function useModerationWaiting(enabled: boolean) {
+  return useQuery({
+    queryKey: ["contribute-menu", "moderation"],
+    enabled,
+    staleTime: STALE,
+    queryFn: async (): Promise<number | null> => {
+      const res = await fetch("/api/moderation/stats")
+      if (!res.ok) return null
+      const json = (await res.json()) as { data?: ModerationStat[] }
+
+      return (json.data ?? [])
+        .filter((s) => s.status === "pending")
+        .reduce((sum, s) => sum + (Number(s.count) || 0), 0)
+    },
+  })
+}
+
+/** Suggested changes waiting on one staff library (the drawer's summary). */
+function useSuggestionsWaiting(libraryId: string | null, enabled: boolean) {
+  return useQuery({
+    queryKey: ["contribute-menu", "suggestions", libraryId],
+    enabled: enabled && !!libraryId,
+    staleTime: STALE,
+    queryFn: async (): Promise<number | null> => {
+      const res = await fetch(
+        `/api/staff/${encodeURIComponent(libraryId ?? "")}/drawer`,
+        { cache: "no-store" }
+      )
+      if (!res.ok) return null
+      const json = (await res.json()) as { suggestions?: unknown }
+
+      return typeof json.suggestions === "number" ? json.suggestions : null
+    },
+  })
+}
+
+/** The viewer's own submissions in review (`pendingCount`, when known). */
+function useInReview(enabled: boolean) {
+  return useQuery({
+    queryKey: ["contribute-menu", "in-review"],
+    enabled,
+    staleTime: STALE,
+    queryFn: async (): Promise<number | null> => {
+      const res = await fetch("/api/contribute/standing")
+      if (!res.ok) return null
+      const json = (await res.json()) as { pendingCount?: unknown }
+
+      return typeof json.pendingCount === "number" ? json.pendingCount : null
+    },
+  })
+}
+
+export type ContributeMenu = ContributeMenuModel & {
+  status: ContributeMenuStatus
+  /** The viewer's plan, or null while signed out or loading. */
+  plan: PlanKey | null
+  /** The Your libraries card's selector: options only with two or more. */
+  library: {
+    options: { id: string; name: string }[]
+    selectedId: string | null
+    select: (id: string) => void
+  }
+}
+
+/**
+ * The Contribute menu for the current viewer. The session says who they
+ * are; the counts and the featured drive load only while `active` (the
+ * panel is open), and never block the cards. The selected library starts
+ * as the page's own when the viewer is its staff, else the one the drawer
+ * last showed, else the first, and a choice here is remembered for the
+ * drawer too.
+ */
+export function useContributeMenu(active: boolean): ContributeMenu {
+  const { data, isPending } = useHydratedSession()
+  const user = data?.user
+  const status: ContributeMenuStatus = isPending
+    ? "loading"
+    : user
+      ? "signedIn"
+      : "signedOut"
+  const signedIn = status === "signedIn"
+  const capabilities = (user?.capabilities ?? []) as string[]
+  const libraries = staffLibrariesOf(user)
+  const teams = sessionTeamsOf(user)
+  const isStaff = capabilities.includes("staff.area")
+
+  const current = useCurrentLibrary()
+  const [chosen, setChosen] = useState<string | null>(null)
+  const options = namedLibraries(libraries)
+  const preferred =
+    chosen ?? current ?? (signedIn ? readLastDrawerLibrary() : null)
+  const selectedId = selectedLibrary(options, preferred)?.id ?? null
+
+  const featured = useFeaturedDrive(active)
+  const suggestions = useSuggestionsWaiting(
+    selectedId,
+    active && signedIn && isStaff
+  )
+  const moderation = useModerationWaiting(
+    active && signedIn && capabilities.includes("moderate.queue")
+  )
+  const inReview = useInReview(active && signedIn)
+
+  const model = buildContributeMenu({
+    status,
+    capabilities,
+    claimedLibraries: libraries,
+    teams,
+    selectedLibraryId: selectedId,
+    featuredDrive: active
+      ? featured.isPending
+        ? "loading"
+        : (featured.data ?? null)
+      : null,
+    counts: {
+      suggestions: suggestions.data ?? null,
+      moderation: moderation.data ?? null,
+      inReview: inReview.data ?? null,
+    },
+  })
+
+  return {
+    ...model,
+    status,
+    plan: user ? ((user.plan as PlanKey | undefined) ?? "free") : null,
+    library: {
+      options:
+        options.length > 1
+          ? options.map((lib) => ({ id: lib.id, name: lib.name }))
+          : [],
+      selectedId,
+      select: (id: string) => {
+        setChosen(id)
+        rememberDrawerLibrary(id)
+      },
+    },
+  }
+}

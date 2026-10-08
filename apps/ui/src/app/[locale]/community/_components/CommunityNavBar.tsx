@@ -27,6 +27,12 @@ const COMMUNITY_TABS: readonly SectionTab[] = [
     label: "Suggestions",
     icon: "mdi:thumb-up-outline",
   },
+  {
+    id: "supporters",
+    href: "/community/supporters",
+    label: "Supporters",
+    icon: "mdi:heart-outline",
+  },
 ]
 
 /** Sub-routes that belong under a tab: drive pages sit under the Noticeboard. */
@@ -35,6 +41,7 @@ const SEGMENT_TO_TAB: Record<string, string> = {
   propose: "noticeboard",
   leaderboard: "leaderboard",
   suggestions: "suggestions",
+  supporters: "supporters",
 }
 
 export function activeCommunityTab(pathname: string): string | null {

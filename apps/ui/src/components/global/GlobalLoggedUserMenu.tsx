@@ -1,6 +1,7 @@
 import { Icon } from "@iconify/react"
 import type React from "react"
 
+import { StaffDrawerMenuItem } from "@/components/staff/StaffDrawerMenuItem"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,9 +9,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { sessionTeamsOf } from "@/lib/access-server"
 import type { BetterAuthUser } from "@/lib/auth-server"
-import { T } from "@/lib/design-tokens"
+import { T, TYPE_TINT } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
+import { planShortName } from "@/lib/plans"
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/)
@@ -54,14 +57,14 @@ function Avatar({
         width: size,
         height: size,
         borderRadius: "50%",
-        background: "var(--tint-national-bg)",
+        background: TYPE_TINT.national.bg,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         fontFamily: T.font.sans,
         fontSize: size * 0.4,
         fontWeight: 700,
-        color: "var(--tint-national-fg)",
+        color: TYPE_TINT.national.fg,
         flexShrink: 0,
       }}
     >
@@ -130,12 +133,14 @@ export function GlobalLoggedUserMenu({
   // UI only: the routes behind these links re-check every capability.
   const caps = new Set<string>(user.capabilities)
   const canModerate = caps.has("moderate.queue")
+  const isStaff = caps.has("staff.area")
+  const teams = sessionTeamsOf(user)
+  const organises = teams.some((t) => t.role === "organiser")
   const holdsEditorOrModerator =
     canModerate || caps.has("docs.directEdit") || caps.has("journal.directEdit")
   // Missing plan means free (missing session fields deny).
   const hasPro = user.plan === "pro" || user.plan === "team"
-  const planName =
-    user.plan === "team" ? "Team" : user.plan === "pro" ? "Pro" : "Free"
+  const planName = planShortName(user.plan)
 
   return (
     <DropdownMenu>
@@ -146,8 +151,8 @@ export function GlobalLoggedUserMenu({
             display: "flex",
             alignItems: "center",
             gap: "10px",
-            height: "36px",
-            padding: "2px 14px 2px 2px",
+            minHeight: "44px",
+            padding: "2px 14px 2px 4px",
             borderRadius: "999px",
             border: `1px solid ${T.border.line}`,
             background: T.bg.deep,
@@ -160,7 +165,7 @@ export function GlobalLoggedUserMenu({
           }}
           className="hover:bg-(--t-bg-surface)"
         >
-          <Avatar src={avatarSrc} initials={initials} size={30} />
+          <Avatar src={avatarSrc} initials={initials} size={32} />
           <span>{firstName}</span>
         </button>
       </DropdownMenuTrigger>
@@ -169,11 +174,7 @@ export function GlobalLoggedUserMenu({
         align="end"
         sideOffset={8}
         className="w-[272px] rounded-[20px] border p-2 shadow-none"
-        style={{
-          background: T.bg.deep,
-          borderColor: T.border.line,
-          boxShadow: "0 12px 28px rgba(23,22,43,.08)",
-        }}
+        style={{ background: T.bg.deep, borderColor: T.border.hi }}
       >
         {/* Identity header */}
         <div
@@ -227,6 +228,19 @@ export function GlobalLoggedUserMenu({
           </MenuLink>
         ) : null}
 
+        {isStaff ? (
+          <>
+            <MenuLink href="/staff" icon="mdi:shield-account-outline">
+              Staff area
+            </MenuLink>
+            <StaffDrawerMenuItem />
+          </>
+        ) : null}
+        {teams.length > 0 ? (
+          <MenuLink href="/staff/team" icon="mdi:account-group-outline">
+            {organises ? "Your team (organiser)" : "Your team"}
+          </MenuLink>
+        ) : null}
         {canModerate ? (
           <MenuLink
             href="/contribute/moderation"

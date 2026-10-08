@@ -1,7 +1,6 @@
 import { headers } from "next/headers"
 import type { Locale } from "next-intl"
 
-import AppLink from "@/components/elementary/AppLink"
 import LocaleSwitcher from "@/components/elementary/LocaleSwitcher"
 import GlobalContributeMenu from "@/components/global/GlobalContributeMenu"
 import GlobalContributorShortcuts from "@/components/global/GlobalContributorShortcuts"
@@ -101,7 +100,8 @@ export async function GlobalHeader({
           <GlobalContributeMenu />
         </div>
 
-        {/* Below lg: Contribute stays visible from sm; everything else is in the menu */}
+        {/* Below lg: Contribute stays visible from sm; below that the menu's
+            Contribute section covers it, and everything else is in the menu */}
         <div className="flex shrink-0 items-center gap-2 lg:hidden">
           <GlobalContributeMenu className="hidden sm:inline-flex" />
           <GlobalMobileMenu
@@ -111,14 +111,6 @@ export async function GlobalHeader({
               <>
                 {localeSwitcher}
                 {auth}
-                {/* A plain link here: a dropdown would open under the panel */}
-                <AppLink
-                  href="/contribute"
-                  size="sm"
-                  className="h-9 rounded-full border-0 bg-(--t-accent-primary) px-4 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) sm:hidden"
-                >
-                  Contribute
-                </AppLink>
               </>
             }
           />

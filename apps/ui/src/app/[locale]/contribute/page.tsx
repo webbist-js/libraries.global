@@ -4,7 +4,11 @@ import type { Locale } from "next-intl"
 
 import { VoteOnAdditionsCard } from "@/components/community/VoteOnAdditionsCard"
 import GlobalLink from "@/components/global/GlobalLink"
-import { sessionCapabilities } from "@/lib/access-server"
+import {
+  KNOWLEDGE_SLUGS,
+  knowledgeHref,
+} from "@/components/staff/knowledge-links"
+import { sessionCapabilities, staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
 import { fetchPublicSuggestions } from "@/lib/community/suggestions-server"
@@ -15,6 +19,8 @@ import { drivesInPlaces, loadDriveViews } from "@/lib/drives/drive-view-server"
 import { fetchDrives } from "@/lib/drives/drives-server"
 import { fetchOwnProfile } from "@/lib/own-profile-server"
 import { buildMetadata } from "@/lib/seo/metadata"
+import type { StaffOverview } from "@/lib/staff/types"
+import { fetchStaff } from "@/lib/staff-proxy"
 import {
   fetchHomepageContinents,
   fetchIncompleteLibraries,
@@ -36,6 +42,7 @@ import {
   YourSubmissionsList,
   type HubSubmission,
 } from "./_components/hub/YourSubmissionsList"
+import { StaffContributeBanner } from "./_components/StaffContributeBanner"
 
 // The hub is public and indexable; every other /contribute route inherits
 // noindex from contribute/layout.tsx (forms, dashboards, auth-gated flows).
@@ -228,6 +235,12 @@ export default async function ContributePage({
 }) {
   const { locale } = await params
   const session = await getSessionSSR(await headers())
+  // UI only; staff endpoints re-check the selected library's access.
+  const caps = sessionCapabilities(session?.user)
+  const staffLibraries = caps.set.has("staff.area")
+    ? staffLibrariesOf(session?.user)
+    : []
+  const firstStaffLibrary = staffLibraries[0]
 
   const [
     libraryCount,
@@ -237,6 +250,8 @@ export default async function ContributePage({
     suggestions,
     profile,
     openDrives,
+    howToContributeHref,
+    staffOverview,
   ] = await Promise.all([
     fetchLibraryCount(),
     fetchIncompleteRecords(),
@@ -247,6 +262,14 @@ export default async function ContributePage({
     fetchPublicSuggestions(),
     session?.user ? fetchOwnProfile(session.user) : Promise.resolve(null),
     fetchDrives("open", locale),
+    // The "How to Contribute" article, when one is published under that slug.
+    knowledgeHref(KNOWLEDGE_SLUGS.contribute, locale as Locale),
+    session?.user && firstStaffLibrary
+      ? fetchStaff<StaffOverview>(
+          session.user,
+          `libraries/${firstStaffLibrary.id}/overview`
+        )
+      : Promise.resolve(null),
   ])
   const followedIds = session?.user
     ? await drivesInPlaces(
@@ -259,8 +282,14 @@ export default async function ContributePage({
   // From the session (buildSessionAccess): `baUserId` is private, so the
   // public REST filter on it can't find the profile.
   const username = session?.user?.username ?? null
-  // UI only: which "Take on a role" cards to hide. Strapi decides.
-  const caps = sessionCapabilities(session?.user)
+  const initialStaffMetrics =
+    staffOverview?.status === 200 && staffOverview.body
+      ? {
+          suggestions: staffOverview.body.counts.suggestions,
+          noticesActive: staffOverview.body.counts.noticesActive ?? null,
+          completeness: staffOverview.body.library.completeness ?? null,
+        }
+      : null
 
   const continents: ContinentCount[] = (continentsResponse?.data ?? [])
     .map((continent) => ({
@@ -280,9 +309,12 @@ export default async function ContributePage({
         lead="Add a missing library, fix a detail you know is wrong, or share a photo you took. Accuracy matters more than volume. A single well-sourced correction helps more than ten guesses."
       >
         <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
-          Community maintained, every change reviewed. New here? Read{" "}
+          {staffLibraries.length > 0
+            ? "Community maintained. Your staff tools are below."
+            : "Community maintained, every change reviewed."}{" "}
+          New here? Read{" "}
           <GlobalLink
-            href="/knowledge"
+            href={howToContributeHref ?? "/knowledge"}
             className="font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
@@ -294,26 +326,19 @@ export default async function ContributePage({
 
       {/* What would you like to do? */}
       <section className="mx-auto w-full max-w-[1360px] px-4 pt-12 sm:px-8">
-        {caps.set.has("staff.area") ? (
-          <div
-            className="mb-8 rounded-3xl border p-6"
-            style={{ background: T.bg.deep, borderColor: T.border.line }}
-          >
-            <h2 className="text-2xl" style={{ fontFamily: T.font.serif }}>
-              Look after your library
-            </h2>
-            <p style={{ color: T.ink.dim }}>
-              Update its record, publish notices and review community
-              suggestions.
-            </p>
-            <GlobalLink
-              className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
-              href="/contribute/staff"
-              style={{ color: T.accent.primary }}
-            >
-              Open Staff area →
-            </GlobalLink>
-          </div>
+        {session?.user && staffLibraries.length > 0 ? (
+          <StaffContributeBanner
+            userId={session.user.id}
+            libraries={staffLibraries.map(
+              ({ id, slug, name, libraryType }) => ({
+                id,
+                slug,
+                name,
+                libraryType,
+              })
+            )}
+            initialMetrics={initialStaffMetrics}
+          />
         ) : null}
         <h2
           className="m-0"
