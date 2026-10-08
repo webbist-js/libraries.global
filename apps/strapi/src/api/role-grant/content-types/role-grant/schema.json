@@ -30,7 +30,7 @@
     "scopeLocale": { "type": "string" },
     "source": {
       "type": "enumeration",
-      "enum": ["admin", "claim", "application", "migration"],
+      "enum": ["admin", "claim", "application", "migration", "team"],
       "default": "admin"
     },
     "grantedBy": { "type": "string" },

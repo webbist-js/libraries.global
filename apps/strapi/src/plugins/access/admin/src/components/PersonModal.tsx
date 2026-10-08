@@ -42,8 +42,11 @@ import {
   usesLocale,
   usesQueue,
 } from "./peopleMeta"
-import { formatDateTime } from "./submissionMeta"
-import { KeyValueGrid, Section } from "./SubmissionPanels"
+import { formatDateTime } from "../../../../content-moderation/admin/src/components/submissionMeta"
+import {
+  KeyValueGrid,
+  Section,
+} from "../../../../content-moderation/admin/src/components/SubmissionPanels"
 
 const ANY = "any"
 
@@ -103,7 +106,8 @@ function AddRoleForm({
     }
   }
 
-  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
+  // Read once per mount: render stays pure (react-hooks/purity).
+  const [tomorrow] = useState(() => new Date(Date.now() + 24 * 60 * 60 * 1000))
 
   return (
     <Box background="neutral100" padding={4} hasRadius>
@@ -129,7 +133,10 @@ function AddRoleForm({
             <Box width="14rem">
               <Field.Root name="queue" hint="What they may review.">
                 <Field.Label>Queue</Field.Label>
-                <SingleSelect value={queue} onChange={(v) => setQueue(String(v))}>
+                <SingleSelect
+                  value={queue}
+                  onChange={(v) => setQueue(String(v))}
+                >
                   {Object.entries(QUEUE_LABELS).map(([id, label]) => (
                     <SingleSelectOption key={id} value={id}>
                       {label}
@@ -148,7 +155,9 @@ function AddRoleForm({
                   value={locale}
                   onChange={(v) => setLocale(String(v))}
                 >
-                  <SingleSelectOption value={ANY}>Any language</SingleSelectOption>
+                  <SingleSelectOption value={ANY}>
+                    Any language
+                  </SingleSelectOption>
                   {locales.map((code) => (
                     <SingleSelectOption key={code} value={code}>
                       {code}
@@ -236,7 +245,7 @@ export function PersonModal({
     setError(null)
     try {
       const { data } = await get(
-        `/content-moderation/people/${encodeURIComponent(baUserId)}`
+        `/access/people/${encodeURIComponent(baUserId)}`
       )
       setPerson((data as { data: Person }).data)
     } catch (err) {
@@ -259,7 +268,7 @@ export function PersonModal({
     setBusy(true)
     try {
       const { data } = await post(
-        `/content-moderation/people/${encodeURIComponent(baUserId)}/grants`,
+        `/access/people/${encodeURIComponent(baUserId)}/grants`,
         body
       )
       setPerson((data as { data: Person }).data)
@@ -293,7 +302,7 @@ export function PersonModal({
     setBusy(true)
     try {
       const { data } = await post(
-        `/content-moderation/grants/${revoking.documentId}/revoke`,
+        `/access/grants/${revoking.documentId}/revoke`,
         { reason }
       )
       const next = (data as { data: Person | null }).data
@@ -347,7 +356,9 @@ export function PersonModal({
                   rows={[
                     {
                       label: "Username",
-                      value: person.username ? `@${person.username}` : "Not set",
+                      value: person.username
+                        ? `@${person.username}`
+                        : "Not set",
                     },
                     {
                       label: "Email",
@@ -396,7 +407,7 @@ export function PersonModal({
               <Section title="Roles">
                 {person.grants.length === 0 ? (
                   <Typography textColor="neutral600">
-                    No roles yet. They're a reader until someone grants one.
+                    No roles yet. They’re a reader until someone grants one.
                   </Typography>
                 ) : (
                   <Table colCount={7} rowCount={person.grants.length + 1}>
@@ -477,7 +488,9 @@ export function PersonModal({
                           </Td>
                           <Td>
                             <Typography>
-                              {g.expiresAt ? formatDateTime(g.expiresAt) : "Never"}
+                              {g.expiresAt
+                                ? formatDateTime(g.expiresAt)
+                                : "Never"}
                             </Typography>
                           </Td>
                           <Td>
@@ -506,12 +519,7 @@ export function PersonModal({
                 )}
               </Section>
               {revoking && (
-                <Box
-                  background="danger100"
-                  padding={4}
-                  hasRadius
-                  marginTop={4}
-                >
+                <Box background="danger100" padding={4} hasRadius marginTop={4}>
                   <Flex direction="column" alignItems="stretch" gap={3}>
                     <Typography fontWeight="semiBold">
                       Revoke {ROLE_LABELS[revoking.role] ?? revoking.role}

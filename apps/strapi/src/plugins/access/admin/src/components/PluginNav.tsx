@@ -1,30 +1,34 @@
 import { Box, Flex, LinkButton } from "@strapi/design-system"
 import { Link } from "react-router-dom"
 
-import { PEOPLE_PATH, PLUGIN_PATH } from "./peopleMeta"
+import { PEOPLE_PATH, PLANS_PATH, TEAMS_PATH } from "./peopleMeta"
+
+export type AccessSection = "people" | "teams" | "plans"
 
 /**
- * The plugin's two pages: the moderation queue and People. People only
- * shows for admins with "Manage contributor roles".
+ * The plugin's three pages. Each shows only to an admin whose role holds
+ * that page's permission (`App` passes the allowed set).
  */
 export function PluginNav({
   current,
-  canManageRoles,
+  allowed = { people: true, teams: true, plans: true },
 }: {
-  current: "queue" | "people"
-  canManageRoles: boolean
+  current: AccessSection
+  allowed?: Record<AccessSection, boolean>
 }) {
-  if (!canManageRoles) return null
   const links = [
-    { id: "queue", label: "Moderation queue", to: PLUGIN_PATH },
     { id: "people", label: "People", to: PEOPLE_PATH },
+    { id: "teams", label: "Teams", to: TEAMS_PATH },
+    { id: "plans", label: "Plans", to: PLANS_PATH },
   ] as const
+  const visible = links.filter((l) => allowed[l.id])
+  if (visible.length < 2) return null
 
   return (
     <Box paddingBottom={4}>
-      <nav aria-label="Moderation sections">
+      <nav aria-label="Access sections">
         <Flex gap={2}>
-          {links.map((l) => (
+          {visible.map((l) => (
             <LinkButton
               key={l.id}
               tag={Link}

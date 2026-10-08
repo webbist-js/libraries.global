@@ -28,14 +28,18 @@ import {
   ROLE_LABELS,
 } from "../components/peopleMeta"
 import { PersonModal } from "../components/PersonModal"
-import { PluginNav } from "../components/PluginNav"
+import { type AccessSection, PluginNav } from "../components/PluginNav"
 
 /**
  * People: find a contributor by name, username or the email their
  * submissions came from, then see and change their Role Grants. With no
  * search, the people who most recently got a role.
  */
-export function PeoplePage() {
+export function PeoplePage({
+  allowed,
+}: {
+  allowed?: Record<AccessSection, boolean>
+}) {
   const { get } = useFetchClient()
   const [query, setQuery] = useState("")
   const [searched, setSearched] = useState("")
@@ -49,9 +53,7 @@ export function PeoplePage() {
       setLoading(true)
       setError(null)
       try {
-        const { data } = await get(
-          `/content-moderation/people?q=${encodeURIComponent(q)}`
-        )
+        const { data } = await get(`/access/people?q=${encodeURIComponent(q)}`)
         setRows((data as { data?: PersonRow[] })?.data ?? [])
         setSearched(q)
       } catch (err) {
@@ -98,7 +100,7 @@ export function PeoplePage() {
         }
       />
       <Layouts.Content>
-        <PluginNav current="people" canManageRoles />
+        <PluginNav current="people" allowed={allowed} />
         {error && (
           <Box paddingBottom={4}>
             <Alert
@@ -192,7 +194,10 @@ export function PeoplePage() {
                   >
                     <Td>
                       <Flex direction="column" alignItems="flex-start" gap={0}>
-                        <Typography fontWeight="semiBold" textColor="neutral800">
+                        <Typography
+                          fontWeight="semiBold"
+                          textColor="neutral800"
+                        >
                           {nameOf(p)}
                         </Typography>
                         {p.displayName && p.username && (

@@ -1,0 +1,70 @@
+{
+  "kind": "collectionType",
+  "collectionName": "team_members",
+  "info": {
+    "singularName": "team-member",
+    "pluralName": "team-members",
+    "displayName": "Team Member",
+    "description": "A person's seat on a Team: invited (by email, with a token), active (after accepting) or removed. Unique per team and email, enforced by the teams service under the team's lock."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "team": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::access.team"
+    },
+    "baUserId": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string",
+      "required": true,
+      "private": true
+    },
+    "teamRole": {
+      "type": "enumeration",
+      "enum": ["organiser", "member"],
+      "default": "member",
+      "required": true
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["invited", "active", "removed"],
+      "default": "invited",
+      "required": true
+    },
+    "tokenHash": {
+      "type": "string",
+      "unique": true,
+      "private": true
+    },
+    "invitedBy": {
+      "type": "string",
+      "private": true
+    },
+    "invitedAt": {
+      "type": "datetime"
+    },
+    "acceptedAt": {
+      "type": "datetime"
+    },
+    "removedAt": {
+      "type": "datetime"
+    },
+    "preassign": {
+      "type": "json",
+      "private": true
+    }
+  }
+}

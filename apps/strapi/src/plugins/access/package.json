@@ -1,0 +1,50 @@
+{
+  "name": "access",
+  "version": "0.1.0",
+  "description": "Access plugin for libraries.global: People (Role Grants), Teams and Plans",
+  "exports": {
+    "./package.json": "./package.json",
+    "./strapi-admin": {
+      "source": "./strapi-admin.tsx",
+      "import": "./dist/admin/index.mjs",
+      "require": "./dist/admin/index.js",
+      "default": "./dist/admin/index.js"
+    },
+    "./strapi-server": {
+      "source": "./strapi-server.ts",
+      "import": "./dist/server/index.mjs",
+      "require": "./dist/server/index.js",
+      "default": "./dist/server/index.js"
+    }
+  },
+  "main": "./dist/server/index.js",
+  "files": [
+    "dist",
+    "strapi-admin.tsx",
+    "strapi-server.ts"
+  ],
+  "scripts": {
+    "build": "strapi-plugin build",
+    "watch": "strapi-plugin watch"
+  },
+  "dependencies": {
+    "@repo/access": "workspace:*",
+    "@repo/shared-data": "workspace:*",
+    "@strapi/design-system": "2.2.4",
+    "@strapi/icons": "2.2.4"
+  },
+  "peerDependencies": {
+    "@strapi/design-system": "^2.0.0",
+    "@strapi/icons": "^2.0.0",
+    "@strapi/strapi": "^5.0.0",
+    "react": "^17.0.0 || ^18.0.0",
+    "react-dom": "^17.0.0 || ^18.0.0",
+    "react-router-dom": "^6.0.0"
+  },
+  "strapi": {
+    "kind": "plugin",
+    "name": "access",
+    "displayName": "Access",
+    "description": "People (Role Grants), Teams and Plans"
+  }
+}

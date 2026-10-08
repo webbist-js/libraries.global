@@ -108,6 +108,10 @@ export function nameOf(p: {
 }
 
 /** Where the plugin's pages live, under the admin's base path. */
-export const PLUGIN_PATH = "/plugins/content-moderation"
-export const PEOPLE_PATH = `${PLUGIN_PATH}/people`
-export const APPLICATIONS_QUEUE_PATH = `${PLUGIN_PATH}?type=role_application`
+export const PLUGIN_PATH = "/plugins/access"
+export const PEOPLE_PATH = PLUGIN_PATH
+export const TEAMS_PATH = `${PLUGIN_PATH}/teams`
+export const PLANS_PATH = `${PLUGIN_PATH}/plans`
+/** The moderation queue, filtered to Role Applications (content-moderation). */
+export const APPLICATIONS_QUEUE_PATH =
+  "/plugins/content-moderation?type=role_application"

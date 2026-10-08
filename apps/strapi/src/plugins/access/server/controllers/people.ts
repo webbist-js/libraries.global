@@ -1,31 +1,18 @@
-import { configuredLocales } from "../utils/locales"
-import { isDocumentId } from "../utils/params"
+import { configuredLocales } from "../../../content-moderation/server/utils/locales"
 import {
   isBaUserId,
   parseGrantInput,
   parseRevokeReason,
 } from "../services/people"
+import { adminOf, fail, isDocumentId } from "../utils/admin"
 
 /**
- * The People tab (admin routes, `plugin::content-moderation.manage-roles`).
- * The admin is always `ctx.state.user`; nothing about who acts comes from
- * the body.
+ * The People page (admin routes, `plugin::access.manage-roles`). The admin
+ * is always `ctx.state.user`; nothing about who acts comes from the body.
  */
 
-function fail(ctx: any, status: number, message: string): void {
-  ctx.status = status
-  ctx.body = { error: { status, message } }
-}
-
-const adminOf = (ctx: any): { id: string | number } | null => {
-  const admin = ctx.state?.user ?? ctx.state?.admin
-  const id = admin?.id
-
-  return typeof id === "number" || typeof id === "string" ? { id } : null
-}
-
 export default ({ strapi }: { strapi: any }) => {
-  const people = () => strapi.plugin("content-moderation").service("people")
+  const people = () => strapi.plugin("access").service("people")
 
   return {
     // GET /people?q=
@@ -71,7 +58,7 @@ export default ({ strapi }: { strapi: any }) => {
               "They already hold this role for that queue and language."
             )
       strapi.log.info(
-        `[content-moderation] admin:${admin.id} granted ${parsed.value.role} to ${baUserId}`
+        `[access] admin:${admin.id} granted ${parsed.value.role} to ${baUserId}`
       )
       ctx.status = 201
       ctx.body = { data: await people().person(baUserId) }
@@ -91,9 +78,7 @@ export default ({ strapi }: { strapi: any }) => {
         return result.error === "not_found"
           ? fail(ctx, 404, "Grant not found.")
           : fail(ctx, 409, "This grant has already ended.")
-      strapi.log.info(
-        `[content-moderation] admin:${admin.id} revoked grant ${documentId}`
-      )
+      strapi.log.info(`[access] admin:${admin.id} revoked grant ${documentId}`)
       ctx.body = {
         data: result.baUserId ? await people().person(result.baUserId) : null,
       }

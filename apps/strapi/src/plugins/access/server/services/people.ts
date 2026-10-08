@@ -11,14 +11,14 @@ import {
   MAX_ACTIVE_GRANTS,
   ROLE_GRANT,
 } from "../../../../utils/role-grants"
-import { configuredLocales } from "../utils/locales"
-import { summaryOf } from "../utils/submission-summary"
-import { acceptedCount } from "./submission-policy"
+import { acceptedCount } from "../../../content-moderation/server/services/submission-policy"
+import { configuredLocales } from "../../../content-moderation/server/utils/locales"
+import { summaryOf } from "../../../content-moderation/server/utils/submission-summary"
 
 /**
- * The People tab of the admin moderation plugin: find a contributor, see
- * their Role Grants (active, expired and revoked), grant a role and revoke
- * one. Admin routes only, behind `plugin::content-moderation.manage-roles`.
+ * The People page of the access plugin: find a contributor, see their Role
+ * Grants (active, expired and revoked), grant a role and revoke one. Admin
+ * routes only, behind `plugin::access.manage-roles`.
  *
  * A user-profile is not linked to a users-permissions user or a Better Auth
  * user in Strapi, so the email shown and searched is the one the person's
@@ -44,7 +44,7 @@ const LOCALE_ROLES: ReadonlySet<string> = new Set([
   "wiki_editor",
   "journal_editor",
 ])
-const GRANT_QUEUES: readonly string[] = ["all", ...MODERATION_QUEUES]
+const GRANT_QUEUES: ReadonlySet<string> = new Set(["all", ...MODERATION_QUEUES])
 
 /** Better Auth ids: URL-safe, bounded. */
 const BA_USER_ID = /^[A-Za-z0-9_-]{1,128}$/
@@ -117,7 +117,10 @@ function displayNameOf(p: ProfileRow): string | null {
 const isUnexpired = (g: StoredGrant, now: Date) =>
   !g.expiresAt || new Date(g.expiresAt).getTime() > now.getTime()
 
-export function grantStatus(g: StoredGrant, now: Date = new Date()): GrantStatus {
+export function grantStatus(
+  g: StoredGrant,
+  now: Date = new Date()
+): GrantStatus {
   if (isUnexpired(g, now)) return "active"
 
   return (g.reason ?? "").includes(REVOKED_MARKER) ? "revoked" : "expired"
@@ -128,7 +131,7 @@ function toRoleGrants(rows: StoredGrant[]): RoleGrant[] {
   return rows.flatMap((g): RoleGrant[] => {
     if (!isGrantableRole(g.role)) return []
     const queue = g.queue ?? "all"
-    if (!GRANT_QUEUES.includes(queue)) return []
+    if (!GRANT_QUEUES.has(queue)) return []
 
     return [
       {
@@ -178,7 +181,7 @@ export function parseGrantInput(
   if (rawQueue !== null && rawQueue !== "") {
     if (role !== "moderator")
       return { ok: false, message: "Only moderator roles take a queue." }
-    if (typeof rawQueue !== "string" || !GRANT_QUEUES.includes(rawQueue))
+    if (typeof rawQueue !== "string" || !GRANT_QUEUES.has(rawQueue))
       return { ok: false, message: "Choose a queue from the list." }
     queue = rawQueue as RoleGrant["queue"]
   }
@@ -208,7 +211,9 @@ export function parseGrantInput(
   let expiresAt: string | null = null
   if (b.expiresAt !== undefined && b.expiresAt !== null && b.expiresAt !== "") {
     const at =
-      typeof b.expiresAt === "string" ? new Date(b.expiresAt) : new Date(NaN)
+      typeof b.expiresAt === "string"
+        ? new Date(b.expiresAt)
+        : new Date(Number.NaN)
     if (Number.isNaN(at.getTime()))
       return { ok: false, message: "The expiry must be a date." }
     if (at.getTime() <= now.getTime())
@@ -320,6 +325,48 @@ export default ({ strapi }: { strapi: any }) => {
   }
 
   return {
+    /**
+     * The Better Auth id whose submissions were last filed from `email`, or
+     * null. Plans and Teams accept an email where an admin has no id.
+     */
+    async baUserIdByEmail(email: string): Promise<string | null> {
+      const needle = email.trim().toLowerCase()
+      if (!needle || needle.length > 254) return null
+      const rows = (await submissions().findMany({
+        filters: { submittedByEmail: { $eqi: needle } },
+        fields: ["submittedByUserId"],
+        sort: [{ createdAt: "desc" }, { id: "desc" }],
+        limit: 1,
+      })) as { submittedByUserId?: string }[]
+
+      return rows[0]?.submittedByUserId ?? null
+    },
+
+    /** The profile row for a Better Auth id, or null. */
+    async profile(baUserId: string): Promise<ProfileRow | null> {
+      return profileOf(baUserId)
+    },
+
+    /** Display names for several Better Auth ids (one query). */
+    async namesOf(ids: string[]): Promise<Map<string, string>> {
+      const out = new Map<string, string>()
+      const unique = [...new Set(ids.filter(Boolean))]
+      if (unique.length === 0) return out
+      const rows = (await profiles().findMany({
+        filters: { baUserId: { $in: unique } },
+        fields: PROFILE_FIELDS,
+        limit: unique.length,
+      })) as ProfileRow[]
+      for (const p of rows)
+        if (p.baUserId)
+          out.set(
+            p.baUserId,
+            displayNameOf(p) ?? (p.username ? `@${p.username}` : p.baUserId)
+          )
+
+      return out
+    },
+
     /**
      * Up to 25 people. With `q`: every word must match a username, first or
      * last name, and profiles whose submissions were filed from a matching
@@ -436,7 +483,13 @@ export default ({ strapi }: { strapi: any }) => {
             submissionType: { $eq: "role_application" },
             status: { $in: ["pending", "needs_info"] },
           },
-          fields: ["documentId", "status", "submissionType", "fields", "createdAt"],
+          fields: [
+            "documentId",
+            "status",
+            "submissionType",
+            "fields",
+            "createdAt",
+          ],
           sort: [{ createdAt: "desc" }, { id: "desc" }],
           limit: OPEN_APPLICATIONS_MAX,
         }) as Promise<Record<string, any>[]>,
@@ -504,9 +557,7 @@ export default ({ strapi }: { strapi: any }) => {
         expiresAt: input.expiresAt,
       })
 
-      return created
-        ? { ok: true, documentId }
-        : { ok: false, error: "exists" }
+      return created ? { ok: true, documentId } : { ok: false, error: "exists" }
     },
 
     /**

@@ -1,4 +1,4 @@
-const can = (action: "read" | "update" | "manage-roles") => [
+const can = (action: "read" | "update") => [
   "admin::isAuthenticatedAdmin",
   {
     name: "admin::hasPermissions",
@@ -36,30 +36,5 @@ export default [
     path: "/option-suggestions/:id",
     handler: "option-suggestion.decide",
     config: { policies: can("update") },
-  },
-  // The People tab: contributors' Role Grants.
-  {
-    method: "GET",
-    path: "/people",
-    handler: "people.search",
-    config: { policies: can("manage-roles") },
-  },
-  {
-    method: "GET",
-    path: "/people/:baUserId",
-    handler: "people.findOne",
-    config: { policies: can("manage-roles") },
-  },
-  {
-    method: "POST",
-    path: "/people/:baUserId/grants",
-    handler: "people.createGrant",
-    config: { policies: can("manage-roles") },
-  },
-  {
-    method: "POST",
-    path: "/grants/:documentId/revoke",
-    handler: "people.revokeGrant",
-    config: { policies: can("manage-roles") },
   },
 ]
