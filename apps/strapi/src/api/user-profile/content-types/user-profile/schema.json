@@ -32,13 +32,7 @@
     },
     "pronouns": {
       "type": "enumeration",
-      "enum": [
-        "he_him",
-        "she_her",
-        "they_them",
-        "other",
-        "prefer_not_to_say"
-      ]
+      "enum": ["he_him", "she_her", "they_them", "other", "prefer_not_to_say"]
     },
     "affiliation": {
       "type": "string"
@@ -82,17 +76,11 @@
       "type": "media",
       "multiple": false,
       "required": false,
-      "allowedTypes": [
-        "images"
-      ]
+      "allowedTypes": ["images"]
     },
     "profileVisibility": {
       "type": "enumeration",
-      "enum": [
-        "public",
-        "limited",
-        "private"
-      ],
+      "enum": ["public", "limited", "private"],
       "default": "public"
     },
     "isVerifiedLibrarian": {
@@ -146,10 +134,7 @@
     },
     "theme": {
       "type": "enumeration",
-      "enum": [
-        "dark",
-        "light"
-      ],
+      "enum": ["dark", "light"],
       "default": "dark"
     },
     "followedLibraries": {
@@ -189,6 +174,16 @@
     },
     "lastActivityDate": {
       "type": "string"
+    },
+    "supporterListed": {
+      "type": "boolean",
+      "default": true,
+      "private": true
+    },
+    "supporterBadgeVisible": {
+      "type": "boolean",
+      "default": true,
+      "private": true
     }
   }
 }

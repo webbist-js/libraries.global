@@ -1,0 +1,30 @@
+{
+  "kind": "singleType",
+  "collectionName": "site_configs",
+  "info": {
+    "singularName": "site-config",
+    "pluralName": "site-configs",
+    "displayName": "Site config",
+    "description": "Public site configuration and copy. Leave costs blank until real figures are available."
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "supportersTitle": {
+      "type": "string",
+      "default": "The people who *keep it open.*"
+    },
+    "supportersLead": {
+      "type": "text",
+      "default": "Support helps cover the servers, maps and data behind Libraries Global. Library records, downloads and community contributions stay free for everyone."
+    },
+    "costMonth": { "type": "date" },
+    "costCurrency": {
+      "type": "enumeration",
+      "enum": ["GBP", "EUR", "USD"],
+      "default": "GBP"
+    },
+    "monthlyRunningCosts": { "type": "decimal", "min": 0 },
+    "monthlySupportIncome": { "type": "decimal", "min": 0 },
+    "costBreakdown": { "type": "text" }
+  }
+}

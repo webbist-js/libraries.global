@@ -1,6 +1,9 @@
+import { isSupporterPlan } from "@repo/access"
 import { factories } from "@strapi/strapi"
 
+import { resolveUserEntitlements } from "../../../utils/entitlement-inputs"
 import { isValidServiceSecret } from "../../../utils/service-secret"
+import { supporterMark } from "../../../utils/supporters"
 
 /** Atlas URL for a library (/continent/country/region/slug), or null if any segment is missing. */
 function buildLibraryPath(library: any): string | null {
@@ -145,6 +148,8 @@ const PRIVATE_PROFILE_FIELDS = [
   "dismissedPrompts",
   "contributorNumber",
   "earnedProUntil",
+  "supporterListed",
+  "supporterBadgeVisible",
 ] as const
 
 /** Strip every field in `PRIVATE_PROFILE_FIELDS` from a profile-shaped object. */
@@ -450,6 +455,7 @@ export default factories.createCoreController(
       // Fields always stripped from public responses
       const safe = publicProfile({
         ...profile,
+        supporterMark: await supporterMark(strapi, profile),
         followedLibraries,
         followedDrives,
         followedProfiles,
@@ -504,15 +510,21 @@ export default factories.createCoreController(
       })
       if (!profile) return ctx.notFound("Profile not found")
 
-      const [affiliations, follows, earnedBadges] = await Promise.all([
-        loadAffiliations(baUserId),
-        loadFollows(baUserId),
-        loadEarnedBadges(baUserId),
-      ])
+      const [affiliations, follows, earnedBadges, entitlements] =
+        await Promise.all([
+          loadAffiliations(baUserId),
+          loadFollows(baUserId),
+          loadEarnedBadges(baUserId),
+          resolveUserEntitlements(strapi, baUserId),
+        ])
 
       const owner: Record<string, unknown> = {
         ...profile,
         ...follows,
+        isSupporter: isSupporterPlan(entitlements.plan),
+        supporterMark:
+          isSupporterPlan(entitlements.plan) &&
+          profile.supporterBadgeVisible !== false,
         claimedLibraries: toClaimedLibraries(affiliations),
         earnedBadges,
       }
@@ -597,7 +609,11 @@ export default factories.createCoreController(
         profileWithFollows2?.followedLibraries
       )
 
-      const safe = publicProfile({ ...profile, followedLibraries } as any)
+      const safe = publicProfile({
+        ...profile,
+        followedLibraries,
+        supporterMark: await supporterMark(strapi, profile),
+      } as any)
 
       if (profile.profileVisibility === "limited") {
         const {
