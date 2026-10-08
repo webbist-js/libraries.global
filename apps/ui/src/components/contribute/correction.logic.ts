@@ -1,4 +1,12 @@
 import {
+  diffTimetable,
+  normalizeMobileTimetable,
+  summarizeDiff,
+  timetableHash,
+  type MobileTimetable,
+} from "@repo/shared-data"
+
+import {
   DAY_LABELS,
   DAY_ORDER,
   emptyOpeningTimes,
@@ -33,6 +41,8 @@ export type CorrectionRecord = {
   operationalStatus: string
   closureReason: string
   openingTimes: OpeningTimesData | null
+  libraryType?: string
+  mobileTimetable?: MobileTimetable | null
   accessibility: OptionRef[]
   amenities: OptionRef[]
   services: OptionRef[]
@@ -60,6 +70,7 @@ export type TextKey = (typeof TEXT_KEYS)[number]
 /** What the contributor changed. Absent keys mean "as the record has it". */
 export type RecordEdit = Partial<Record<TextKey, string>> & {
   openingTimes?: OpeningTimesData
+  mobileTimetable?: MobileTimetable | null
   accessibility?: string[]
   amenities?: string[]
   services?: string[]
@@ -69,6 +80,7 @@ export type RecordEdit = Partial<Record<TextKey, string>> & {
 
 export type EditorKind =
   | "hours"
+  | "timetable"
   | "address"
   | "name"
   | "links"
@@ -79,6 +91,7 @@ export type EditorKind =
 
 const EDITORS: Record<string, EditorKind> = {
   "Opening hours": "hours",
+  "Stops & times": "timetable",
   "Address or location": "address",
   Accessibility: "accessibility",
   Name: "name",
@@ -93,6 +106,7 @@ export const editorFor = (category: string): EditorKind =>
 /** The keys each structured editor may change. */
 const KEYS: Record<EditorKind, readonly string[]> = {
   hours: ["openingTimes"],
+  timetable: ["mobileTimetable"],
   address: ["streetAddress", "district", "city", "postalCode"],
   name: ["name", "shortName"],
   links: ["website", "phone", "email", "catalogueUrl"],
@@ -159,6 +173,8 @@ export function toCorrectionRecord(
     closureReason: str(lib.closureReason),
     openingTimes:
       hours && Array.isArray(hours.days) ? (hours as OpeningTimesData) : null,
+    libraryType: str(lib.libraryType),
+    mobileTimetable: normalizeMobileTimetable(lib.mobileTimetable),
     accessibility: refs(lib.accessibility),
     amenities: refs(lib.amenities),
     services: refs(lib.services),
@@ -208,6 +224,7 @@ export type RecordChanges = {
   /** What the record said, for the contributor's own summary. */
   previous: Record<string, unknown>
   suggestedOptions: Partial<Record<OptionKey, string[]>>
+  previousHash?: string
 }
 
 /** Only what this category's editor changed, compared with the record. */
@@ -222,6 +239,17 @@ export function recordChanges(
   const suggestedOptions: Partial<Record<OptionKey, string[]>> = {}
 
   for (const key of keys) {
+    if (key === "mobileTimetable") {
+      if (
+        edit.mobileTimetable !== undefined &&
+        timetableHash(edit.mobileTimetable) !==
+          timetableHash(current.mobileTimetable ?? null)
+      ) {
+        changes.mobileTimetable = edit.mobileTimetable
+        previous.mobileTimetable = current.mobileTimetable ?? null
+      }
+      continue
+    }
     if (key === "openingTimes") {
       if (
         edit.openingTimes &&
@@ -264,7 +292,14 @@ export function recordChanges(
     previous[k] = currentText(current, k)
   }
 
-  return { changes, previous, suggestedOptions }
+  return {
+    changes,
+    previous,
+    suggestedOptions,
+    ...(Object.prototype.hasOwnProperty.call(changes, "mobileTimetable")
+      ? { previousHash: timetableHash(current.mobileTimetable ?? null) }
+      : {}),
+  }
 }
 
 export const hasRecordChange = (c: RecordChanges) =>
@@ -294,6 +329,17 @@ export function describeChanges(
   for (const [key, value] of Object.entries(c.changes)) {
     if (key === "openingTimes") {
       lines.push("New opening hours for the week")
+      continue
+    }
+    if (key === "mobileTimetable") {
+      lines.push(
+        summarizeDiff(
+          diffTimetable(
+            normalizeMobileTimetable(c.previous.mobileTimetable),
+            normalizeMobileTimetable(value)
+          )
+        )
+      )
       continue
     }
     if ((OPTION_KEYS as readonly string[]).includes(key)) {

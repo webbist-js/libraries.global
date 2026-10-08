@@ -53,6 +53,11 @@ export const EMPTY_DRAFT: WizardDraft = {
 /** What a correction is about: a card in the drawer, an option in the hub. */
 export const CATEGORY_OPTIONS = [
   {
+    value: "Stops & times",
+    icon: "mdi:bus-clock",
+    placeholder: "e.g. The Tuesday stop now starts at 10:30",
+  },
+  {
     value: "Opening hours",
     icon: "mdi:clock-outline",
     placeholder: "e.g. Open until 8pm on Thursdays since September",
@@ -100,6 +105,12 @@ export const CATEGORY_OPTIONS = [
 ] as const
 
 export const CATEGORIES = CATEGORY_OPTIONS.map((c) => c.value)
+export const categoriesFor = (libraryType?: string | null) =>
+  CATEGORY_OPTIONS.filter((option) =>
+    libraryType === "Mobile"
+      ? option.value !== "Opening hours"
+      : option.value !== "Stops & times"
+  )
 
 export const categoryOption = (value: string) =>
   CATEGORY_OPTIONS.find((c) => c.value === value)
@@ -206,7 +217,7 @@ export function blockerFor(
    * Set when this category has a structured editor and the record loaded:
    * the step needs a change to the record rather than a description.
    */
-  structured?: { changed: boolean }
+  structured?: { changed: boolean; invalid?: string | null }
 ): string | null {
   if (isHandoff(action)) return null
   if (step === 1 && locked)
@@ -220,7 +231,10 @@ export function blockerFor(
     return null
   }
   if (action === "correction" && structured)
-    return structured.changed ? null : "Change something to continue."
+    return (
+      structured.invalid ??
+      (structured.changed ? null : "Change something to continue.")
+    )
   if (action === "correction" && !draft.text.trim())
     return "Describe what’s correct to continue."
   if (action === "source" && step === 3 && !draft.source.trim())
@@ -283,6 +297,7 @@ export function buildSubmission(
         libraryName: library.name,
         ...record.changes,
         previous: record.previous,
+        ...(record.previousHash ? { previousHash: record.previousHash } : {}),
         ...(Object.keys(suggestedOptions).length ? { suggestedOptions } : {}),
       },
       ...(note ? { note } : {}),

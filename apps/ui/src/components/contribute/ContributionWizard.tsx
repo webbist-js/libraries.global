@@ -1,7 +1,12 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { findUnsafeContent } from "@repo/shared-data"
+import {
+  findUnsafeContent,
+  hasErrors,
+  normalizeMobileTimetable,
+  validateMobileTimetable,
+} from "@repo/shared-data"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 
@@ -27,8 +32,8 @@ import {
   blockerFor,
   buildSubmission,
   CATEGORIES,
-  CATEGORY_OPTIONS,
   categoryOption,
+  categoriesFor,
   DRAWER_STEPS,
   draftKey,
   EMPTY_DRAFT,
@@ -292,18 +297,20 @@ function CategoryCards({
   value,
   onChange,
   labelledBy,
+  libraryType,
 }: {
   readonly name: string
   readonly value: string
   readonly onChange: (value: string) => void
   readonly labelledBy: string
+  readonly libraryType?: string
 }) {
   return (
     <fieldset
       aria-labelledby={labelledBy}
       className="m-0 grid min-w-0 grid-cols-1 gap-3 border-0 p-0 min-[420px]:grid-cols-2"
     >
-      {CATEGORY_OPTIONS.map((c) => {
+      {categoriesFor(libraryType).map((c) => {
         const checked = value === c.value
         // The catch-all closes the grid at full width.
         const wide = c.value === "Something else"
@@ -534,7 +541,23 @@ export function ContributionWizard({
           library,
           draft,
           drawer,
-          changes ? { changed: hasRecordChange(changes) } : undefined
+          changes
+            ? {
+                changed: hasRecordChange(changes),
+                invalid:
+                  changes.changes.mobileTimetable &&
+                  (!normalizeMobileTimetable(changes.changes.mobileTimetable) ||
+                    hasErrors(
+                      validateMobileTimetable(
+                        normalizeMobileTimetable(
+                          changes.changes.mobileTimetable
+                        )!
+                      )
+                    ))
+                    ? "Resolve the timetable errors to continue."
+                    : null,
+              }
+            : undefined
         )) ?? (step > 1 ? (unsafe?.message ?? null) : null)
   const firstStep: Step = lockLibrary && !drawer ? 2 : 1
   const labels = drawer ? DRAWER_STEPS.labels : STEP_LABELS[action]
@@ -832,6 +855,7 @@ export function ContributionWizard({
           <div className="flex flex-col gap-5">
             {restoredNotice}
             <CategoryCards
+              libraryType={record?.libraryType}
               labelledBy={stepTitleId}
               name={`${titleId}-category`}
               onChange={(category) => patch({ category })}
@@ -969,8 +993,8 @@ export function ContributionWizard({
                     style={{ color: T.ink.base }}
                     value={draft.category}
                   >
-                    {CATEGORIES.map((c) => (
-                      <option key={c}>{c}</option>
+                    {categoriesFor(record?.libraryType).map((c) => (
+                      <option key={c.value}>{c.value}</option>
                     ))}
                   </select>
                 </div>

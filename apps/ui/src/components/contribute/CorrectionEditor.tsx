@@ -14,6 +14,7 @@ import {
   TextareaField,
   WizardSelect,
 } from "@/app/[locale]/contribute/index/_components/WizardFields"
+import { TimetableEditor } from "@/components/mobile/TimetableEditor"
 import { T } from "@/lib/design-tokens"
 
 import {
@@ -234,6 +235,7 @@ export function CorrectionEditor({
   readonly changedKeys: readonly string[]
 }) {
   const kind = editorFor(category)
+  const [stopId, setStopId] = useState("")
   const changed = useMemo(
     () => new Set(changedKeys as (keyof FormData)[]),
     [changedKeys]
@@ -286,6 +288,78 @@ export function CorrectionEditor({
 
   let body: React.ReactNode = null
   switch (kind) {
+    case "timetable": {
+      const timetable =
+        edit.mobileTimetable === undefined
+          ? (current.mobileTimetable ?? null)
+          : edit.mobileTimetable
+      const chosenStop = timetable?.stops.find((stop) => stop.id === stopId)
+      body = (
+        <div className="space-y-4">
+          <p>
+            Choose a stop to change its visits, remove every visit if the
+            vehicle no longer stops there, or move its pin. This suggestion
+            includes the full timetable and will be checked against the version
+            you loaded.
+          </p>
+          {timetable && (
+            <div className="space-y-3">
+              <label className="block">
+                Which stop?
+                <select
+                  className="mt-1 min-h-11 w-full rounded-md border px-3"
+                  style={{ borderColor: T.border.hi, background: T.bg.deep }}
+                  value={stopId}
+                  onChange={(event) => setStopId(event.target.value)}
+                >
+                  <option value="">Choose a stop</option>
+                  {timetable.stops.map((stop) => (
+                    <option key={stop.id} value={stop.id}>
+                      {stop.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {chosenStop && (
+                <button
+                  type="button"
+                  className="min-h-11 rounded-md border px-3"
+                  style={{ borderColor: T.border.hi }}
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        `Remove every visit to ${chosenStop.name}?`
+                      )
+                    )
+                      onChange({
+                        ...edit,
+                        mobileTimetable: {
+                          ...timetable,
+                          stops: timetable.stops.filter(
+                            (stop) => stop.id !== chosenStop.id
+                          ),
+                          visits: timetable.visits.filter(
+                            (visit) => visit.stopId !== chosenStop.id
+                          ),
+                        },
+                      })
+                  }}
+                >
+                  No longer stops here
+                </button>
+              )}
+            </div>
+          )}
+          <TimetableEditor
+            value={timetable}
+            onChange={(mobileTimetable) =>
+              onChange({ ...edit, mobileTimetable })
+            }
+          />
+        </div>
+      )
+      break
+    }
     case "hours":
       body = (
         <div className="flex flex-col gap-3">
