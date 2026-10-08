@@ -57,16 +57,72 @@ Editorial and narrative content — stories, features, guest pieces — managed 
 _Avoid_: posts, news
 
 **Submission**:
-A user-initiated change request that enters a Moderation Queue before any data is altered. Covers corrections to existing entries, new Library proposals, Library Claims, wiki and blog contributions, topic suggestions and Role Applications. Each carries the locale it was written in (stored as `contentLocale`), which decides which Moderators may review it and which language version an approval changes. All submissions go through review regardless of the submitter's trust level.
+A user-initiated change request recorded through the contribution system. Covers corrections to existing entries, new Library proposals, Library Claims, wiki and blog contributions, topic suggestions and Role Applications. Each carries the locale it was written in (stored as `contentLocale`), which decides which Moderators may review it and which language version an approval changes. Community submissions enter a Moderation Queue before data changes. An approved Library's own staff can publish ordinary record edits directly through an audited Submission, under ADR-0006; changes to placement, address, coordinates, type, slug, entity reference, home base or permanent closure still need a Moderator.
 _Avoid_: edit, change request, contribution (alone — too generic; use the specific type)
 
 **Submission State**:
-Where a Submission is in moderation: `draft` (saved, not sent) → `pending` (waiting for review) → `approved`, `rejected` or `needs_info` (the reviewer asked for more). `needs_info` returns to `pending` when the submitter resubmits (their edit-and-resubmit flow is still to come, C-M1); a moderator can also approve or reject it directly. `approved` and `rejected` are final. Only these transitions are allowed (content-moderation `utils/transitions.ts`), each is logged as a Review Event, and approval side effects (applying the change, awarding Points) run once. Users see Draft, Submitted, Needs changes, Accepted and Not accepted.
+Where a Submission is in moderation: `draft` (saved, not sent) → `pending` (waiting for review) → `approved`, `rejected` or `needs_info` (the reviewer asked for more). `needs_info` returns to `pending` when the submitter resubmits (their edit-and-resubmit flow is still to come, C-M1); a moderator can also approve or reject it directly. `approved` and `rejected` are final. A staff publish alone may go directly from `draft` to `approved`, without awarding Points. These transitions are allowed by content-moderation `utils/transitions.ts`, each is logged as a Review Event, and approval side effects (applying the change, awarding Points) run once. Users see Draft, Submitted, Needs changes, Accepted and Not accepted.
 _Avoid_: status (alone — clashes with Strapi's document `status`, which the content-manager shows as `published` for every Submission)
 
 **Library Claim**:
-A Submission in which a user asserts a trusted relationship to a specific Library — either as an employee or institutional affiliate, or as a verified community member who wants to steward that Library's data. Approval gives the claimant a `verified_librarian` Role Grant and a trusted-contributor signal on future Submissions, not a bypass of moderation.
-_Avoid_: ownership claim, takeover
+A Submission in which a user asserts a trusted relationship to a specific Library — either as an employee or institutional affiliate, or as a verified community member who wants to steward that Library's data. Approval gives the claimant a `verified_librarian` Role Grant and Staff access to that Library through a `library-affiliation` with `source: "claim"` (an older affiliation with no `source` is a legacy claim). Staff publish ordinary edits, post Notices and decide community corrections about their own Library; the sensitive fields in ADR-0006 still go to Moderators. A proposer affiliation gives no Staff access. A claim is one of two ways in: the other is a Team Organiser's assignment on a verified Team, which creates the affiliation (`source: "team"`) with no Moderator; on an unverified Team the assignment files a vouched claim instead. There are no per-library email invites.
+_Avoid_: ownership claim, takeover, invite (a Team invite joins a Team, not a Library)
+
+**Staff Role**:
+A Library-specific level on an approved affiliation: `owner` or `editor`. Both can edit the record, post Notices, connect Event Feeds and review other people’s community corrections. Owners also control live sharing; when the Library is covered by a Team they can change levels, remove staff and set who may go live, and the Team Organiser can invite colleagues and assign them. The first approved claimant of a Library becomes its owner and later ones editors, unless an assignment says otherwise; the last owner can't leave or be demoted. Staff Role is separate from Contributor Role and Plan; no payment grants Staff access, and a Team Seat gives none until the organiser assigns the person to a Library.
+_Avoid_: global staff role, admin, team role (that is organiser or member within a Team)
+
+**Staff Publish**:
+A change a Library's own staff make to its record, timetable or Notices from the Staff area, which appears at once (ADR-0006). It is recorded as a `library_edit` Submission that goes `draft → approved` in one transaction, a Review Event with `reviewerKind: "staff"`, and Change Records with `source: "staff"`; it earns no Points. The moderated fields (placement, map location, street address, a Mobile service's home base, type, slug, entity reference, permanent closure) are split off into a pending `library_edit` request instead. A stale field, changed by someone else after the editor loaded it, is refused and reloaded rather than overwritten.
+_Avoid_: direct edit (alone), admin edit, instant edit
+
+**Staff Drawer**:
+The pull-out panel that opens from any page for someone with Staff access: a fixed edge tab on wide screens, `Alt+S`, or "Staff drawer" in the user menu. It shows one Library at a time (the page's Library when the viewer is its staff, else the last used): the live strip for a Mobile Library, suggestions waiting, quick links to each Staff area tab and the public page, Drives that include the Library, and "Open staff area". Never shown on the Atlas, the live console or inside the Staff area.
+_Avoid_: sidebar, staff menu, panel (alone)
+
+**Contribute Menu**:
+The header's Contribute panel: one small card per kind of work the viewer can do, combined for someone with several roles (their own work first, then Drives and Contribute for everyone, with Membership as a row at the bottom). Built from the session's Capabilities, Staff access and Teams, never from the displayed Contributor Role or the Plan. It opens signed out too, with a sign-in card, and shows only the Everyone cards until the session has loaded. The mobile menu's Contribute section and the footer's editor pills read the same cards.
+_Avoid_: Contribute dropdown, role menu, shortcuts (alone)
+
+**Team**:
+A library service's organisation on the site, bought per service (`plugin::access.team`): a name, a number of Team Seats, the Libraries it covers, an organiser, and whether an admin has verified it (`verifiedAt`). An active, unexpired Team gives each active member Pro personally (Plan Source `team`) and the library-scoped Team features (Traffic, choosing who can go live, team management) on the Team's Libraries only. Verification is set only by an admin, never by payment: on a verified Team an assignment creates Staff access at once; on an unverified one it files a vouched Library Claim. A lapsed Team keeps every level and permission it set. Not a per-person grant: a personal `team` Entitlement Grant gives Pro but unlocks nothing library-scoped.
+_Avoid_: organisation (alone), workspace, group, team plan (the Plan is what a Team gives its members)
+
+**Team Member**:
+A person's row in a Team (`plugin::access.team-member`): their email, Better Auth id once they accept, a team role of `organiser` or `member`, and a status of `invited`, `active` or `removed`. Invited by email, accepted by signing in with that address; a member holds a Team Seat but no Staff access until assigned to a Library. Removal deletes only the affiliations the Team created.
+_Avoid_: seat (that is the capacity), staff (that is per Library), employee
+
+**Team Organiser**:
+The Team Member with `teamRole: organiser`. Invites colleagues by email (optionally pre-assigning them to a Library), resends and revokes invites, changes team roles, assigns and unassigns members to the Team's Libraries as owner or editor, and removes members, from `/staff/team`. Other members see that page read only. The organiser's trust comes from the Team's verification, not from their Plan.
+_Avoid_: admin, team owner, manager
+
+**Team Seat**:
+One place in a Team's capacity (`seats`, default 5). Active and invited members together never exceed it; an invite past the cap is refused. Each occupied seat gives its holder Pro.
+_Avoid_: licence, user slot
+
+**Library Notice**:
+A dated, immediately published message from a Library’s staff about a temporary closure, changed hours or a Mobile service disruption. Mobile notices may cover a service, a Cycle day or a Stop, and a `not_running` notice cancels the Visits in its scope on its dates. Dates are inclusive in the Library’s timezone; an open-ended notice covers 30 days. Its `source` is `staff` (the Notices tab), `live` (the console's "Not running", which posts one for the rest of today and ends the Live Session) or `admin`. Notices affect visitor information, search and timetable cancellations, and never change the permanent record status.
+_Avoid_: permanent closure, Event, alert
+
+**Mobile Timetable**:
+A Mobile Library’s recurring route (`mobileTimetable`, one per vehicle, not localised): a Cycle, its Stops and the Visits to them, with holidays and dated exceptions. Route order follows arrival time. The public page derives upcoming visits in the service’s timezone, and the `mobile-stop` search index holds one document per mapped Stop. Live sharing is separate and never changes scheduled visits.
+_Avoid_: opening hours of the base, live route, schedule (alone)
+
+**Stop**:
+A named place a Mobile Library visits: a name ("Ford Cross"), where exactly ("Lay-by opposite the Plough Inn"), a map pin and the Area the pin falls in. A Stop has a stable id that is never reused, so corrections and search keys survive edits. A Stop with no pin isn't mapped; one with no Visits isn't shown.
+_Avoid_: location, site, venue, station
+
+**Visit**:
+One scheduled call at a Stop: a weekday, an arrival and a departure on a five-minute grid, how it repeats (chosen weeks of the Cycle, the nth weekday of the month, or specific dates), whether it runs in term time only, and an optional validity window. Two Visits on the same date never overlap, because the vehicle can't be in two places at once. A Visit on a date is an occurrence; a `not_running` Library Notice cancels occurrences without removing the Visit.
+_Avoid_: slot, session (that is a Live Session), stop time
+
+**Cycle**:
+The repeating period of a Mobile Timetable: one to four weeks, anchored on the Monday that starts Week 1. Every date falls in exactly one week of the Cycle, so "Tuesday, Week 1" names a route. Repeats, notices scoped to a Cycle day and the "next four weeks" preview all count from the anchor.
+_Avoid_: rota, rotation, period (alone)
+
+**Live Session**:
+One run of a Mobile Library's live sharing from the `/live` console: started by a staff member who may go live, for one service date and Cycle day, in check-ins or approximate-position mode, with a per-device token. Check-ins (arrived, left, delay, skip) fold into its public state; the public sees the vehicle's state and Stop, never a name. It ends by hand, after the last departure plus the auto-stop, by a breakdown notice, by a takeover from another device, by revocation (staff removed, "can go live" off, sharing off), by the 12-hour cap or by the kill switch, and every end clears the position. One active Live Session per Library; sessions and their events are kept 90 days.
+_Avoid_: trip, track, broadcast, route (that is the day's Visits)
 
 **Verification**:
 A Submission (`correction` with `kind: "verify"`) confirming that some of a Library's sections (hours, status, address, contact) are still right, without changing them. Approval stamps each section in `verifiedSections`; an approved edit stamps the sections it sets. `lastVerifiedAt` is the latest stamp.
@@ -129,19 +185,23 @@ One edit event on a Knowledge or Journal article: who, when, locale and kind (cr
 _Avoid_: revision, version
 
 **Capability**:
-Something a signed-in user may do in the contribution system: submit a correction, a new Library, a Library Claim, a doc suggestion, a journal pitch, a topic suggestion or a Role Application; submit a `library_edit` or connect an event feed for a Library they have claimed; edit Wiki or Blog articles directly (`docs.directEdit`, `journal.directEdit`, in the locales of the editor's grants); or review Submissions (`moderate.queue`, within a Moderation Scope). Resolved only from Role Grants and Library Claims (`resolveCapabilities` in `@repo/access`); Tier and Plan never feed it. Strapi's `submission-policy` is the real gate; the session's copy drives the UI and route pre-checks only.
+Something a signed-in user may do in the contribution system: submit a correction, a new Library, a Library Claim, a doc suggestion, a journal pitch, a topic suggestion or a Role Application; submit a `library_edit` or connect an event feed for a Library they are staff of (by claim or Team assignment); edit Wiki or Blog articles directly (`docs.directEdit`, `journal.directEdit`, in the locales of the editor's grants); or review Submissions (`moderate.queue`, within a Moderation Scope). Resolved only from Role Grants and Library Claims (`resolveCapabilities` in `@repo/access`); Tier and Plan never feed it. Strapi's `submission-policy` is the real gate; the session's copy drives the UI and route pre-checks only.
 _Avoid_: permission (Strapi admin's word for its own roles), entitlement (that is what a Plan gives)
 
 **Entitlement**:
-A Plan-gated feature or numeric limit, such as the `atlas.export` feature or the `exportRows` limit (free 0, pro 10 000, team 50 000). Resolved by `resolveEntitlements` in `@repo/access` from the user's Plan and always enforced on the server (`requireEntitlement`); UI locks only explain. An Entitlement never grants a Capability or changes Points, Tier, Badges, Contributor Role or moderation: money never buys trust.
+A Plan-gated feature or numeric limit, such as the `atlas.export` feature or the `exportRows` limit (free 0, pro 10 000, team 50 000). Resolved by `resolveEntitlements` in `@repo/access` from the user's Plan and always enforced on the server (`requireEntitlement`); UI locks only explain. The library-scoped features (`library.team`, `library.traffic`) are checked per Library with `canForLibrary` and hold only on the Libraries of the user's active Teams. An Entitlement never grants a Capability or changes Points, Tier, Badges, Contributor Role or moderation: money never buys trust.
 _Avoid_: capability, perk, permission
 
 **Plan**:
-A user's membership level, which decides their Entitlements: `public` (signed out), `free` (any account), `supporter` (planned: patronage only, with Free's features), `pro` and `team`. Resolved on the server for every session; when several Plan Sources apply, the highest Plan wins. Library facts are free on every Plan, including `public`.
+A user's membership level, which decides their Entitlements: `public` (signed out), `free` (any account), `supporter` (patronage only, with Free's features and limits), `pro` and `team`. Resolved on the server for every session; when several Plan Sources apply, the highest Plan wins. Library facts are free on every Plan, including `public`.
 _Avoid_: tier (Tier is the Points ladder), subscription (only one way to hold a Plan)
 
+**Supporter recognition**:
+Optional credit on `/community/supporters` and a Supporter mark on the profile, available with an active Supporter, Pro or Team Plan, including earned/verified Pro and active Team Seats. These are independent private preferences (`supporterListed`, `supporterBadgeVisible`), not contribution Badges or Contributor Roles. Only public profiles may be listed; a hidden public location stays hidden here. Moving a profile to private or limited also opts it out, and making it public again does not relist it without an explicit opt-in. Expired access removes both recognition surfaces. Monthly cost figures and the supporter hero copy live in the Site config single type.
+_Avoid_: trust badge, paid role
+
 **Plan Source**:
-How a user holds their Plan: `grant` (an admin Entitlement Grant, for example for press, partners or a Team), `verified` (a Pro Verification for library staff, students and charities), `earned` (Archivist Tier or above, plus a 90-day hold after dropping below) or `paid` (reserved: there is no checkout yet). `public` and `free` have the source `none`. At equal Plan, `paid` beats `grant`, which beats `verified`, which beats `earned`. Grants and verifications live in the admin-only `entitlement-grant` and `pro-verification` collections.
+How a user holds their Plan: `team` (an active Team Seat: Pro, plus the library-scoped Team features on that Team's Libraries), `grant` (an admin Entitlement Grant, for example for press or partners), `verified` (a Pro Verification for library staff, students and charities), `earned` (Archivist Tier or above, plus a 90-day hold after dropping below) or `paid` (reserved: there is no checkout yet). `public` and `free` have the source `none`. At equal Plan, `paid` beats `team`, which beats `grant`, which beats `verified`, which beats `earned`. Grants and verifications live in the admin-only `entitlement-grant` and `pro-verification` collections, and Teams in the `access` plugin's `team` and `team-member` types.
 _Avoid_: reason, plan type
 
 **Collection Stat**:
@@ -225,10 +285,13 @@ _Avoid_: drive request
 - Every **Event** belongs to exactly one **Library** — even a multi-venue happening is N Events, one per Library
 - A **Library** belongs to a **Country** → **Region** → optionally an **Area**
 - An **Area** belongs to exactly one **Region**; not every **Region** has **Areas**
-- A **Library Claim** links a user to a specific **Library** and, when approved, elevates their trust signal on future **Submissions** against that Library
+- An approved **Library Claim**, or a **Team Organiser**'s assignment on a verified **Team**, links a user to a specific **Library** and grants its **Staff Role** and Staff access
+- A **Team** covers one or more **Libraries** and holds **Team Members** in **Team Seats**; one of them is the **Team Organiser**. A seat gives Pro; only an assignment gives a **Staff Role**
+- A **Mobile Timetable** has one **Cycle**, many **Stops** and many **Visits**; a **Library Notice** can cancel a Visit's occurrences, and a **Live Session** reports progress along one day's Visits without changing them
+- A **Staff Publish** leaves a **Submission**, a **Review Event** and **Change Records**, like any other change, and earns no **Points**
 - **Points** accumulate per approved **Submission** and determine a user's **Tier** and **Badge** eligibility
 - A user's **Capabilities** come only from their **Role Grants** (their **Contributor Roles**) and **Library Claims**, and their **Entitlements** only from their **Plan**. The two never feed each other; **Tier** feeds only contribution limits and earned Pro
-- Every **Submission** moves through the **Submission States**; no **Plan**, **Tier** or **Contributor Role** lets it skip review
+- Every **Submission** moves through the **Submission States**; an audited staff publish uses `draft → approved` under ADR-0006. No **Plan** or **Tier** changes review authority
 - Every **Submission** belongs to one **Moderation Queue**; a **Moderator** reviews it only when the queue and its locale are in their **Moderation Scope**, and never their own
 - Every change to a **Library**'s content leaves **Change Records**, whoever made it; every write to a Wiki or Blog article leaves an **Article Change**
 - A **Pillar Institution** is a **Library** flagged `featured: true` by editorial choice; there is no maximum per Region or Country
@@ -239,15 +302,18 @@ _Avoid_: drive request
 > **Domain expert:** "Yes — every **Submission** goes through review. The British Library is a **Pillar Institution** but that doesn't change the flow."
 >
 > **Dev:** "What if the submitter has a **Library Claim** on the British Library?"
-> **Domain expert:** "Their claim gives them a trusted-contributor signal, but the **Submission** still gets reviewed. The claim doesn't bypass moderation."
+> **Domain expert:** "As approved staff, they can publish hours directly from the Staff area. Moving the library or marking it permanently closed still needs a Moderator. Their direct publish leaves a **Submission**, **Review Event** and **Change Records**, and earns no **Points**."
 >
 > **Dev:** "And if they get approved — do they earn **Points**?"
-> **Domain expert:** "Yes. Minor edits (1–3 fields) earn 5 Points; major edits (4+ fields) earn 15. That pushes them toward the next **Tier**."
+> **Domain expert:** "Community contributions earn Points when accepted: minor edits (1–3 fields) earn 5 and major edits (4+ fields) earn 15. A staff member accepting a community correction awards its contributor the normal Points; publishing their own record earns none."
+>
+> **Dev:** "A council has bought Team. Does that make its librarians staff of every branch?"
+> **Domain expert:** "No. Team is the council's **Team**: its **Team Organiser** invites people into **Team Seats**, which gives them Pro, and then assigns each one to a **Library** as owner or editor. On a verified Team that assignment is the **Staff Role**; on an unverified one it's a vouched **Library Claim** for a Moderator. Nobody is staff of a branch they haven't been assigned to, and the Team's **Plan** never changes who reviews what."
 
 ## Flagged ambiguities
 
 - The `library` relation on the Event schema is not marked `required`, but every Event must belong to a Library — this is a schema gap to fix.
-- `correction` and `library_edit` are both Submission types that change Library data. Resolved: `library_edit` is a comprehensive multi-field diff produced by the full edit wizard and requires a Library Claim; `correction` is a targeted single-issue report (category picker + freetext) available to any logged-in user with no claim required, produced by the inline correction CTA on library detail pages. Non-logged-in users see a "Sign in to suggest a correction" prompt. Library stewards (claimants) bypass corrections entirely — they use the full edit diff flow.
+- `correction` and `library_edit` are both Submission types that change Library data. Resolved: `library_edit` is a comprehensive multi-field diff produced by the full edit wizard and requires a Library Claim; `correction` is a targeted single-issue report (category picker + freetext) available to any logged-in user with no claim required, produced by the inline correction CTA on library detail pages. Non-logged-in users see a "Sign in to suggest a correction" prompt. Approved staff use the full edit wizard in the Staff area. Their ordinary changes publish directly, while the sensitive fields in ADR-0006 become moderated `library_edit` requests.
 - `pendingReview` on Event is dead code — filtering happens at the import layer, not in Strapi. Candidate for removal.
 - Library `entityRef` auto-generation is not yet implemented (lifecycle hook exists for Country/Region/Area but not Library). The current format (`GB-BL-001`) in the CLAUDE.md is a relic of manual entry; the intended scheme is hierarchically composed from parent entityRefs + the Library's short name.
 
