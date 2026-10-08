@@ -15,7 +15,11 @@ const TYPE_MAP: Record<string, string> = {
   regions: "regions",
   areas: "areas",
   "blog-sections": "blog-sections",
+  "wiki-sections": "wiki-sections",
 }
+
+/** Section lists: no draft state, carry a slug, and Wiki Sections keep their own order. */
+const SECTION_TYPES = new Set(["blog-sections", "wiki-sections"])
 
 /** Curated, approved topics from the topics plugin (its own route shape). */
 async function approvedTopics() {
@@ -129,9 +133,13 @@ export async function GET(
 
   // The largest real parents hold about 850 places (Minas Gerais, Brazil).
   const limit = type === "countries" ? 300 : 1000
-  const status = type === "blog-sections" ? "" : "&status=published"
-  const extraFields = type === "blog-sections" ? "&fields[2]=slug" : ""
-  const url = `${STRAPI}/api/${strapiPlural}?sort=name:asc&pagination[limit]=${limit}${status}&fields[0]=name&fields[1]=documentId${extraFields}${filterParam}`
+  const status = SECTION_TYPES.has(type) ? "" : "&status=published"
+  const extraFields = SECTION_TYPES.has(type) ? "&fields[2]=slug" : ""
+  const sort =
+    type === "wiki-sections"
+      ? "sort[0]=order:asc&sort[1]=name:asc"
+      : "sort=name:asc"
+  const url = `${STRAPI}/api/${strapiPlural}?${sort}&pagination[limit]=${limit}${status}&fields[0]=name&fields[1]=documentId${extraFields}${filterParam}`
 
   // The world place import adds Regions and Areas and sets each Country's
   // Place Labels (the wizard's select labels), so those lists refresh within

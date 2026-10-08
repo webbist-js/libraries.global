@@ -1,8 +1,8 @@
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
-import { userHeaders } from "@/app/api/submissions/route"
 import { auth } from "@/lib/auth"
+import { userHeaders } from "@/lib/bridge-user-headers"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 

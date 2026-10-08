@@ -3,7 +3,7 @@ import "server-only"
 import { driveFilters } from "@repo/shared-data"
 import type { Locale } from "next-intl"
 
-import { docsSectionForArticle } from "@/components/docs/docs.config"
+import { docsArticlePath } from "@/components/docs/docs.config"
 import { meiliClient, searchLocaleFilter } from "@/lib/meilisearch"
 import { fetchDataset } from "@/lib/strapi-api/content/datasets"
 import { fetchWikiArticle } from "@/lib/strapi-api/content/server"
@@ -238,5 +238,5 @@ export async function howDrivesWorkHref(
   const article = res?.data
   if (!article?.slug) return null
 
-  return `/knowledge/${docsSectionForArticle(article)}/${article.slug}`
+  return docsArticlePath(article)
 }

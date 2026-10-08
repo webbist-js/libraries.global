@@ -5,7 +5,11 @@ import { isDocumentIdParam } from "@/lib/bridge-params"
 import { loadDriveViews } from "@/lib/drives/drive-view-server"
 import { fetchDrives } from "@/lib/drives/drives-server"
 import type { Drive } from "@/lib/drives/types"
-import { meiliClient, searchLocaleFilter } from "@/lib/meilisearch"
+import {
+  meiliClient,
+  searchLocale,
+  searchLocaleFilter,
+} from "@/lib/meilisearch"
 import {
   clientIp,
   createRateLimiter,
@@ -96,7 +100,7 @@ export async function GET(
   }
 
   const { searchParams } = new URL(req.url)
-  const locale = searchParams.get("locale") ?? undefined
+  const locale = searchLocale(searchParams.get("locale"))
 
   const drives = await fetchDrives("open", locale)
   if (drives.length === 0) return noData()

@@ -2,9 +2,9 @@ import { revalidateTag } from "next/cache"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
-import { userHeaders } from "@/app/api/submissions/route"
 import { requireCapability } from "@/lib/access-server"
 import { auth } from "@/lib/auth"
+import { userHeaders } from "@/lib/bridge-user-headers"
 import { createRateLimiter, rateLimitResponse } from "@/lib/rate-limit"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"

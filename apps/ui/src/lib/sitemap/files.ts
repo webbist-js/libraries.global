@@ -1,7 +1,8 @@
 /**
  * The sitemap is an index (`/sitemap.xml`) of files split by category and
  * locale, each capped at `URLS_PER_FILE` URLs: `/sitemaps/pages-en-1.xml`,
- * `locations-en-1.xml`, `events-en-1.xml`, `libraries-en-1.xml` and on. The
+ * `locations-en-1.xml`, `events-en-1.xml`, `drives-en-1.xml`,
+ * `libraries-en-1.xml` and on. The
  * protocol allows 50,000 URLs a file; 10,000 keeps each one cheap to build
  * and to crawl, and an index of up to 50,000 files covers any index size.
  */
@@ -11,6 +12,7 @@ export const SITEMAP_SEGMENTS = [
   "pages",
   "locations",
   "events",
+  "drives",
   "libraries",
 ] as const
 

@@ -43,17 +43,19 @@ const PasswordFormSchema = z.object({
   password: z.string().min(1, "Enter your password"),
 })
 
-export function SignInForm() {
+export function SignInForm({ returnTo }: { readonly returnTo?: string } = {}) {
   return (
     <UseSearchParamsWrapper>
-      <SuspensedSignInForm />
+      <SuspensedSignInForm returnTo={returnTo} />
     </UseSearchParamsWrapper>
   )
 }
 
-function SuspensedSignInForm() {
+function SuspensedSignInForm({ returnTo }: { readonly returnTo?: string }) {
   const searchParams = useSearchParams()
-  const callbackUrl = safeRedirectPath(searchParams.get("callbackUrl"))
+  const callbackUrl = safeRedirectPath(
+    returnTo ?? searchParams.get("callbackUrl")
+  )
   const { signInMutation } = useUserMutations()
   const [magicPending, setMagicPending] = useState(false)
 

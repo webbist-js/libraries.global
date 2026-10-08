@@ -9,9 +9,6 @@ import { createRateLimiter, rateLimitResponse } from "@/lib/rate-limit"
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
 
-// Other routes import this from here; it lives in lib/bridge-user-headers.
-export { userHeaders }
-
 const limiter = createRateLimiter({
   name: "submissions",
   max: 30,

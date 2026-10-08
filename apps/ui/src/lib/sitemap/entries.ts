@@ -2,7 +2,9 @@ import "server-only"
 
 import type { Locale } from "next-intl"
 
-import { docsArticlePath } from "@/components/docs/docs.config"
+import { docsArticlePath, toDocsSections } from "@/components/docs/docs.config"
+import { fetchDrives } from "@/lib/drives/drives-server"
+import type { Drive } from "@/lib/drives/types"
 import { getEnvVar } from "@/lib/env-vars"
 import { isDevelopment, isProduction } from "@/lib/general-helpers"
 import { isIndexableLocation } from "@/lib/seo/location"
@@ -20,6 +22,7 @@ import {
   fetchAllRegions,
   fetchDocsWikiArticles,
   fetchLegalDocuments,
+  fetchWikiSections,
 } from "@/lib/strapi-api/content/server"
 
 import { filesFor, pageOf, type SitemapFile, URLS_PER_FILE } from "./files"
@@ -36,9 +39,10 @@ export function sitemapEnabled(): boolean {
 export async function sitemapFiles(): Promise<SitemapFile[]> {
   const perLocale = await Promise.all(
     LIVE_LOCALES.map(async (locale) => {
-      const [locations, events, libraries] = await Promise.all([
+      const [locations, events, drives, libraries] = await Promise.all([
         locationEntries(locale as Locale),
         fetchUpcomingEventTotal(),
+        driveEntries(locale as Locale),
         fetchLibrarySlugCount(locale as Locale),
       ])
       const files = (segment: SitemapFile["segment"], count: number) =>
@@ -52,6 +56,7 @@ export async function sitemapFiles(): Promise<SitemapFile[]> {
         ...files("pages", 1),
         ...files("locations", filesFor(locations.length)),
         ...files("events", filesFor(events)),
+        ...files("drives", filesFor(drives.length)),
         ...files("libraries", filesFor(libraries)),
       ]
     })
@@ -82,6 +87,10 @@ export async function sitemapEntries(
       entries = await eventEntries(locale, file.page)
       break
 
+    case "drives":
+      entries = pageOf(await driveEntries(locale), file.page)
+      break
+
     case "libraries":
       entries = await libraryEntries(locale, file.page)
       break
@@ -105,6 +114,7 @@ const STATIC_ROUTES: {
   { path: "journal", changeFrequency: "weekly", priority: 0.6 },
   { path: "knowledge", changeFrequency: "weekly", priority: 0.6 },
   { path: "community", changeFrequency: "daily", priority: 0.6 },
+  { path: "community/supporters", changeFrequency: "weekly", priority: 0.4 },
   {
     path: "community/leaderboard",
     changeFrequency: "daily",
@@ -134,11 +144,13 @@ async function settle<T>(p: Promise<T>, fallback: T): Promise<T> {
 /** Static routes, Journal, Knowledge and legal pages. */
 async function pageEntries(locale: Locale): Promise<SitemapEntry[]> {
   const url = (path: string) => absoluteUrl(path, locale)
-  const [journal, knowledge, legal] = await Promise.all([
+  const [journal, knowledge, sections, legal] = await Promise.all([
     settle(fetchAllBlogArticleSlugs(locale), { data: [] }),
     settle(fetchDocsWikiArticles(locale), undefined),
+    settle(fetchWikiSections(), { data: [] }),
     settle(fetchLegalDocuments(locale), { data: [] }),
   ])
+  const docsSections = toDocsSections(sections.data)
 
   const entries: SitemapEntry[] = STATIC_ROUTES.map((r) => ({
     url: url(r.path),
@@ -158,7 +170,7 @@ async function pageEntries(locale: Locale): Promise<SitemapEntry[]> {
   for (const a of knowledge?.data ?? []) {
     if (!a.slug) continue
     entries.push({
-      url: url(docsArticlePath(a)),
+      url: url(docsArticlePath(a, docsSections)),
       ...(a.updatedAt ? { lastModified: a.updatedAt } : {}),
       changeFrequency: "monthly",
       priority: 0.5,
@@ -267,6 +279,40 @@ async function eventEntries(
     }
     if (batch.length < EVENTS_PAGE_SIZE) break
   }
+
+  return entries
+}
+
+// ── Drives ──────────────────────────────────────────────────────────────────
+
+/**
+ * The most drives of one state the sitemap lists. Drives are board-run
+ * campaigns, a handful at a time, so one capped read of each public state
+ * is the whole list; `/drives?state=` never serves a draft or a scheduled
+ * one's page before it opens.
+ */
+const DRIVES_PER_STATE = 1000
+
+/** Open and closed drives: a drive's page is public from the day it opens. */
+async function driveEntries(locale: Locale): Promise<SitemapEntry[]> {
+  const [open, closed] = await Promise.all([
+    fetchDrives("open", locale, DRIVES_PER_STATE),
+    fetchDrives("closed", locale, DRIVES_PER_STATE),
+  ])
+  const seen = new Set<string>()
+  const entries: SitemapEntry[] = []
+  const add = (d: Drive, priority: number) => {
+    if (!d.slug || seen.has(d.slug)) return
+    seen.add(d.slug)
+    entries.push({
+      url: absoluteUrl(`community/drives/${d.slug}`, locale),
+      ...(d.updatedAt ? { lastModified: d.updatedAt } : {}),
+      changeFrequency: d.status === "open" ? "daily" : "monthly",
+      priority,
+    })
+  }
+  for (const d of open) add(d, 0.6)
+  for (const d of closed) add(d, 0.3)
 
   return entries
 }
