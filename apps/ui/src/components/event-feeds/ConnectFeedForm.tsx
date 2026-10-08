@@ -9,7 +9,6 @@ import {
   validateFeedValues,
 } from "@repo/shared-data"
 import { useRouter } from "next/navigation"
-import type React from "react"
 import { useRef, useState } from "react"
 
 import {
@@ -19,8 +18,15 @@ import {
 import { ChoiceCard } from "@/components/ds/ChoiceCard"
 import { Notice } from "@/components/ds/Notice"
 import { T } from "@/lib/design-tokens"
+import { staffLibraryHref } from "@/lib/staff/paths"
 
 import { isFeedTestCode } from "./feed-copy"
+import {
+  PRIMARY_PILL,
+  SECONDARY_PILL,
+  secondaryPillStyle,
+  TOO_MANY_REQUESTS,
+} from "./feed-ui"
 import { FeedValuesFields } from "./FeedValuesFields"
 import { useFeedTest } from "./useFeedTest"
 
@@ -34,31 +40,13 @@ const PROVIDER_ICON: Record<EventProviderKey, string> = {
   aspen: "mdi:compass-outline",
 }
 
-const primaryPillSx: React.CSSProperties = {
-  fontFamily: T.font.sans,
-  fontSize: "14px",
-  fontWeight: 600,
-}
-
-const secondaryPillSx: React.CSSProperties = {
-  fontFamily: T.font.sans,
-  fontSize: "14px",
-  fontWeight: 600,
-  color: T.ink.base,
-  background: T.bg.deep,
-  border: `1px solid ${T.border.hi}`,
-  borderRadius: "999px",
-  padding: "10px 20px",
-  cursor: "pointer",
-}
-
 /** Connect a new event feed: pick a library, a platform, then its details. */
 export function ConnectFeedForm({
   libraries,
   initialLibrary,
   oauth,
 }: {
-  readonly libraries: { documentId: string; name: string }[]
+  readonly libraries: { documentId: string; name: string; slug: string }[]
   readonly initialLibrary?: string
   readonly oauth: { eventbrite: boolean }
 }) {
@@ -138,14 +126,20 @@ export function ConnectFeedForm({
       const json = await res.json().catch(() => null)
       if (res.ok) {
         setValues({})
-        router.push(`/contribute/events?library=${libraryDocumentId}`)
+        router.push(
+          staffLibraryHref(
+            libraries.find((l) => l.documentId === libraryDocumentId)?.slug,
+            "/events"
+          )
+        )
 
         return
       }
       const result: unknown = json?.error?.result
-      if (res.status === 422 && isFeedTestCode(result))
+      if (res.status === 429) setSendError(TOO_MANY_REQUESTS)
+      else if (res.status === 422 && isFeedTestCode(result))
         setSendError(FEED_TEST_COPY[result] ?? json.error.message)
-      else setSendError(json?.error?.message ?? "That didn't work. Try again.")
+      else setSendError(json?.error?.message ?? "That didn’t work. Try again.")
     } catch {
       setSendError("That didn't work. Check your connection.")
     } finally {
@@ -165,33 +159,26 @@ export function ConnectFeedForm({
         e.preventDefault()
       }}
     >
-      <fieldset
-        className="m-0 flex flex-col gap-3 p-5 sm:p-8"
-        style={{
-          border: `1px solid ${T.border.line}`,
-          borderRadius: "20px",
-          background: T.bg.deep,
-        }}
+      <section
+        aria-labelledby="connect-library-heading"
+        className="flex flex-col gap-3 rounded-[20px] border p-5 sm:p-8"
+        style={{ borderColor: T.border.line, background: T.bg.deep }}
       >
-        <legend
+        <h2
+          id="connect-library-heading"
+          className="m-0 text-[20px]"
           style={{
-            fontFamily: T.font.sans,
-            fontSize: "15px",
-            fontWeight: 600,
+            fontFamily: T.font.serif,
+            fontWeight: 500,
             color: T.ink.base,
-            padding: 0,
           }}
         >
           Library
-        </legend>
+        </h2>
         {libraries.length <= 1 ? (
           <p
-            style={{
-              fontFamily: T.font.serif,
-              fontSize: "18px",
-              color: T.ink.base,
-              margin: 0,
-            }}
+            className="m-0 text-[16px] font-semibold"
+            style={{ color: T.ink.base }}
           >
             {libraries[0]?.name ?? "No claimed library"}
           </p>
@@ -214,97 +201,85 @@ export function ConnectFeedForm({
             </select>
           </div>
         )}
-      </fieldset>
+      </section>
 
-      <fieldset
-        className="m-0 flex flex-col gap-4 p-5 sm:p-8"
-        style={{
-          border: `1px solid ${T.border.line}`,
-          borderRadius: "20px",
-          background: T.bg.deep,
-        }}
+      <section
+        aria-labelledby="connect-platform-heading"
+        className="flex flex-col gap-3 rounded-[20px] border p-5 sm:p-8"
+        style={{ borderColor: T.border.line, background: T.bg.deep }}
       >
-        <legend
+        <h2
+          id="connect-platform-heading"
+          className="m-0 text-[20px]"
           style={{
-            fontFamily: T.font.sans,
-            fontSize: "15px",
-            fontWeight: 600,
+            fontFamily: T.font.serif,
+            fontWeight: 500,
             color: T.ink.base,
-            padding: 0,
           }}
         >
           Platform
-        </legend>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {EVENT_PROVIDER_KEYS.map((key) => {
-            const def = EVENT_PROVIDERS[key]
+        </h2>
+        <fieldset className="m-0 border-0 p-0">
+          <legend className="sr-only">Platform</legend>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {EVENT_PROVIDER_KEYS.map((key) => {
+              const def = EVENT_PROVIDERS[key]
 
-            return (
-              <ChoiceCard
-                key={key}
-                name="feed-provider"
-                value={key}
-                checked={provider === key}
-                onChange={() => selectProvider(key)}
-                icon={PROVIDER_ICON[key]}
-                tint={{ bg: T.bg.muted, fg: T.accent.primary }}
-                title={def.label}
-                hint={def.description}
-              />
-            )
-          })}
-        </div>
+              return (
+                <ChoiceCard
+                  key={key}
+                  name="feed-provider"
+                  value={key}
+                  checked={provider === key}
+                  onChange={() => selectProvider(key)}
+                  icon={PROVIDER_ICON[key]}
+                  tint={{ bg: T.bg.muted, fg: T.accent.primary }}
+                  title={def.label}
+                  hint={def.description}
+                />
+              )
+            })}
+          </div>
+        </fieldset>
 
         {provider === "eventbrite" && oauth.eventbrite && !manualToken ? (
           <div className="flex flex-col items-start gap-2">
             <a
               href={`/api/contribute/event-feeds/eventbrite/start?library=${libraryDocumentId}`}
-              className="inline-flex items-center gap-2 rounded-full bg-(--t-accent-primary) px-6 py-3 text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
-              style={primaryPillSx}
+              className={PRIMARY_PILL}
             >
               Connect with Eventbrite
             </a>
             <button
               type="button"
-              className="underline"
-              style={{
-                fontFamily: T.font.sans,
-                fontSize: "14px",
-                color: T.ink.dim,
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: 0,
-              }}
+              className="inline-flex min-h-11 items-center text-[14px] font-semibold underline underline-offset-[3px]"
+              style={{ color: T.accent.primary }}
               onClick={() => setManualToken(true)}
             >
               Or paste a private token
             </button>
           </div>
         ) : null}
-      </fieldset>
+      </section>
 
       {provider &&
       (provider !== "eventbrite" || !oauth.eventbrite || manualToken) ? (
-        <fieldset
-          className="m-0 flex flex-col gap-5 p-5 sm:p-8"
-          style={{
-            border: `1px solid ${T.border.line}`,
-            borderRadius: "20px",
-            background: T.bg.deep,
-          }}
+        <section
+          aria-labelledby="connect-details-heading"
+          className="flex flex-col gap-5 rounded-[20px] border p-5 sm:p-8"
+          style={{ borderColor: T.border.line, background: T.bg.deep }}
         >
-          <legend
+          <h2
+            id="connect-details-heading"
+            className="m-0 text-[20px]"
             style={{
-              fontFamily: T.font.sans,
-              fontSize: "15px",
-              fontWeight: 600,
+              fontFamily: T.font.serif,
+              fontWeight: 500,
               color: T.ink.base,
-              padding: 0,
             }}
           >
             Details
-          </legend>
+          </h2>
           <div ref={fieldsRef}>
             <FeedValuesFields
               provider={provider}
@@ -347,10 +322,11 @@ export function ConnectFeedForm({
             </p>
           )}
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
-              style={secondaryPillSx}
+              className={SECONDARY_PILL}
+              style={secondaryPillStyle}
               disabled={test.busy}
               onClick={runTest}
             >
@@ -358,15 +334,35 @@ export function ConnectFeedForm({
             </button>
             <button
               type="button"
-              className="rounded-full bg-(--t-accent-primary) px-6 py-2.5 text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
-              style={primaryPillSx}
+              className={PRIMARY_PILL}
+              aria-describedby={canSend ? undefined : "connect-feed-hint"}
               disabled={!canSend || sending}
               onClick={send}
             >
-              {sending ? "Sending…" : "Send for review"}
+              {sending ? "Connecting…" : "Connect"}
             </button>
+            {!canSend ? (
+              <span
+                id="connect-feed-hint"
+                className="text-[13.5px]"
+                style={{ color: T.ink.dim }}
+              >
+                Test the connection first.
+              </span>
+            ) : null}
           </div>
-        </fieldset>
+          <p
+            className="m-0"
+            style={{
+              fontFamily: T.font.sans,
+              fontSize: "13.5px",
+              color: T.ink.dim,
+            }}
+          >
+            A moderator checks the connection before it syncs. They see whether
+            the test passed, never the details themselves.
+          </p>
+        </section>
       ) : null}
     </form>
   )

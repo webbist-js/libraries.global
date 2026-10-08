@@ -5,9 +5,11 @@ import {
   grantsFromLegacyRole,
   isContributorRole,
   isGrantableRole,
+  isSupporterPlan,
   MODERATION_QUEUES,
   type RoleGrant,
   SESSION_PROFILE_MAX_CLAIMS,
+  type StaffClaim,
 } from "@repo/access"
 import { type DismissiblePrompt, isDismissiblePrompt } from "@repo/shared-data"
 import { z } from "zod"
@@ -15,10 +17,27 @@ import { z } from "zod"
 export const SESSION_PROFILE_TTL_MS = 60_000
 export const SESSION_PROFILE_MAX_ROLE_GRANTS = 50
 
-export type SessionGrant = { plan: "pro" | "team"; expiresAt: string | null }
+export type SessionGrant = {
+  plan: "supporter" | "pro" | "team"
+  expiresAt: string | null
+}
 export type SessionVerification = { expiresAt: string | null }
+/** A Team the user is an active member of, as the bridge reports it. */
+export type SessionProfileTeam = {
+  id: string
+  name: string
+  slug: string
+  role: "organiser" | "member"
+  libraryCount: number
+  libraryDocumentIds: string[]
+  expiresAt: string | null
+  status: "active" | "lapsed"
+  organiserName: string | null
+}
+export const SESSION_PROFILE_MAX_TEAMS = 10
 
 export type SessionProfile = {
+  staff: (StaffClaim & { name: string; slug: string; libraryType: string })[]
   contributorRole: ContributorRole
   username: string | null
   tier: string | null
@@ -31,9 +50,24 @@ export type SessionProfile = {
   earnedProUntil: string | null
   /** Prompts the user has hidden in their settings. */
   dismissedPrompts: DismissiblePrompt[]
+  /** Teams (entitlements: Pro personally, Team on their libraries). */
+  teams: SessionProfileTeam[]
 }
 
 const Body = z.object({
+  staff: z
+    .array(
+      z.object({
+        libraryDocumentId: z.string().min(1),
+        staffRole: z.enum(["owner", "editor"]),
+        canGoLive: z.boolean(),
+        name: z.string(),
+        slug: z.string(),
+        libraryType: z.string(),
+      })
+    )
+    .max(SESSION_PROFILE_MAX_CLAIMS)
+    .optional(),
   contributorRole: z.string(),
   username: z.string().nullable().optional(),
   tier: z.string().nullable().optional(),
@@ -48,6 +82,22 @@ const Body = z.object({
     .optional(),
   earnedProUntil: z.string().nullable().optional(),
   dismissedPrompts: z.array(z.unknown()).max(20).optional(),
+  teams: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        name: z.string(),
+        slug: z.string(),
+        role: z.enum(["organiser", "member"]),
+        libraryCount: z.number().int().nonnegative(),
+        libraryDocumentIds: z.array(z.string()).max(200),
+        expiresAt: z.string().nullable(),
+        status: z.enum(["active", "lapsed"]),
+        organiserName: z.string().nullable().optional(),
+      })
+    )
+    .max(SESSION_PROFILE_MAX_TEAMS)
+    .optional(),
   // Elements stay loose so one unknown role or queue is dropped, not fatal.
   roleGrants: z
     .array(z.unknown())
@@ -180,17 +230,22 @@ async function loadSessionProfile(
       ? d.contributorRole
       : "reader"
     const value: SessionProfile = {
+      staff: d.staff ?? [],
       contributorRole,
       username: d.username ?? null,
       tier: d.tier ?? null,
       claims: d.claims ?? [],
-      grants: (d.grants ?? []).filter(
-        (g): g is SessionGrant => g.plan === "pro" || g.plan === "team"
+      grants: (d.grants ?? []).filter((g): g is SessionGrant =>
+        isSupporterPlan(g.plan)
       ),
       roleGrants: parseRoleGrants(d.roleGrants, contributorRole),
       verifications: d.verifications ?? [],
       earnedProUntil: d.earnedProUntil ?? null,
       dismissedPrompts: (d.dismissedPrompts ?? []).filter(isDismissiblePrompt),
+      teams: (d.teams ?? []).map((t) => ({
+        ...t,
+        organiserName: t.organiserName ?? null,
+      })),
     }
     if (generations.get(baUserId) === gen) {
       setBounded(cache, baUserId, { at: startedAt, value })

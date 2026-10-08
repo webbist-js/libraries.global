@@ -29,8 +29,8 @@ const TIPS: Record<number, WizardTip> = {
     body: "Upload only images you took or that carry an open licence, and say which licence in the credit field.",
   },
   7: {
-    title: "Editorial tip",
-    body: "Verified librarians submitting from a confirmed institutional address see a fast-track review (avg. ~6 hours instead of 3 days).",
+    title: "Work at this library?",
+    body: "Once it's published, you can claim it. An approved claim lets you publish changes to its record yourself, from the Staff area.",
   },
 }
 
@@ -45,7 +45,35 @@ const IMPROVE_TIPS: Record<number, WizardTip> = {
   },
 }
 
-/** The tip shown under a step's fields. Improve mode has its own for some steps. */
-export function tipFor(step: number, improving: boolean): WizardTip {
-  return (improving ? IMPROVE_TIPS[step] : null) ?? TIPS[step] ?? TIPS[1]!
+/**
+ * Staff editing their own library: no reviewer, so the tips say what
+ * happens instead. Each change publishes straight away and is recorded in
+ * the public history with its source.
+ */
+const STAFF_TIPS: Record<number, WizardTip> = {
+  1: {
+    title: "Change only what you can source",
+    body: "Each change publishes straight away and is recorded in the public history with your source. Leave the rest as it is.",
+  },
+  7: {
+    title: "Say what changed and why",
+    body: "A one-line summary and a link to the source go into the public history alongside the change. Visitors can see who kept the record accurate.",
+  },
+}
+
+/**
+ * The tip shown under a step's fields. Improve mode has its own for some
+ * steps; staff mode (publishing straight away) has its own again.
+ */
+export function tipFor(
+  step: number,
+  improving: boolean,
+  staff = false
+): WizardTip {
+  return (
+    (staff ? STAFF_TIPS[step] : null) ??
+    (improving ? IMPROVE_TIPS[step] : null) ??
+    TIPS[step] ??
+    TIPS[1]!
+  )
 }

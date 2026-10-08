@@ -1,3 +1,5 @@
+import { timetableHash } from "@repo/shared-data"
+
 import { SUBMISSION_META_KEYS, type FormData } from "./wizard.types"
 
 const META = new Set<string>(SUBMISSION_META_KEYS)
@@ -48,6 +50,8 @@ export function recordChangesPayload(
     previous[key] = initial[key]
   }
   fields.previous = previous
+  if (changed.includes("mobileTimetable"))
+    fields.previousHash = timetableHash(initial.mobileTimetable)
 
   return fields
 }
@@ -63,6 +67,7 @@ export const STEP_FIELDS: Record<number, readonly (keyof FormData)[]> = {
     "officialName",
     "summary",
     "closureReason",
+    "operatorName",
   ],
   2: [
     "streetAddress",
@@ -76,6 +81,7 @@ export const STEP_FIELDS: Record<number, readonly (keyof FormData)[]> = {
     "countryDocumentId",
     "regionDocumentId",
     "areaDocumentId",
+    "homeLibrary",
   ],
   3: [
     "website",
@@ -94,6 +100,8 @@ export const STEP_FIELDS: Record<number, readonly (keyof FormData)[]> = {
     "transitInfo",
     "languagesServed",
     "openingTimes",
+    "mobileTimetable",
+    "timetableUrl",
     "services",
     "amenities",
     "accessibility",

@@ -2,8 +2,9 @@
 
 import { Icon } from "@iconify/react"
 import type React from "react"
-import { useState } from "react"
+import { useContext, useState } from "react"
 
+import { HomeLibraryPicker } from "@/components/mobile/HomeLibraryPicker"
 import { T } from "@/lib/design-tokens"
 import { formatCoord, parseCoordinatePair } from "@/lib/geocode/coordinates"
 import type { Place } from "@/lib/geocode/place"
@@ -16,6 +17,8 @@ import { useLocationFill } from "./useLocationFill"
 import type { StepProps } from "./wizard.types"
 import {
   Field,
+  ModeratedFieldsContext,
+  ModeratedTag,
   SharedBlock,
   StepHeader,
   SubSection,
@@ -77,6 +80,7 @@ function HierarchyNote() {
 export function StepLocation({ f, set, setFormData, improving }: StepProps) {
   // Translation mode: the coordinates are shared, and Photon answers in English.
   const translating = useIsShared("lat")
+  const staff = useContext(ModeratedFieldsContext)
   const fill = useLocationFill(f, setFormData)
   const { offer } = fill
   // A new library's search starts from the name given on step 1.
@@ -110,11 +114,49 @@ export function StepLocation({ f, set, setFormData, improving }: StepProps) {
       <legend style={{ display: "contents" }}>
         <StepHeader
           n={2}
-          label="Location"
-          title="Where is it?"
-          sub="Search for the library or its address and the rest fills in, pin included. You can always type it yourself."
+          label={f.libraryType === "Mobile" ? "Base & area" : "Location"}
+          title={
+            f.libraryType === "Mobile"
+              ? "Where is the vehicle based?"
+              : "Where is it?"
+          }
+          sub={
+            f.libraryType === "Mobile"
+              ? "Choose a home branch or depot, then check the region and area for this vehicle. Placement is reviewed by a Moderator."
+              : "Search for the library or its address and the rest fills in, pin included. You can always type it yourself."
+          }
         />
       </legend>
+      {f.libraryType === "Mobile" && staff && (
+        <div>
+          <ModeratedTag />
+        </div>
+      )}
+      {f.libraryType === "Mobile" && !translating && (
+        <HomeLibraryPicker
+          value={f.homeLibrary}
+          onChange={(homeLibrary, home) =>
+            setFormData((prev) => ({
+              ...prev,
+              homeLibrary,
+              ...(home
+                ? {
+                    streetAddress: home.streetAddress ?? "",
+                    city: home.city ?? "",
+                    postalCode: home.postalCode ?? "",
+                    lat: home.location ? formatCoord(home.location.lat) : "",
+                    lng: home.location ? formatCoord(home.location.lng) : "",
+                    country: home.country?.name ?? "",
+                    continentDocumentId: home.continent?.documentId ?? "",
+                    countryDocumentId: home.country?.documentId ?? "",
+                    regionDocumentId: home.region?.documentId ?? "",
+                    areaDocumentId: home.area?.documentId ?? "",
+                  }
+                : {}),
+            }))
+          }
+        />
+      )}
       {translating ? null : (
         <LocationLookup
           initialQuery={startQuery}
@@ -135,7 +177,7 @@ export function StepLocation({ f, set, setFormData, improving }: StepProps) {
           id="city"
           value={f.city}
           onChange={set}
-          required
+          required={f.libraryType !== "Mobile"}
           autoComplete="address-level2"
         />
         <Field
@@ -200,6 +242,11 @@ export function StepLocation({ f, set, setFormData, improving }: StepProps) {
         sub="Link this library to its place in the atlas — used for breadcrumbs and location browsing."
       />
       {fill.hierarchyFilled ? <HierarchyNote /> : null}
+      {staff ? (
+        <div>
+          <ModeratedTag />
+        </div>
+      ) : null}
       <SharedBlock
         fields={[
           "continentDocumentId",

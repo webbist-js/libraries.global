@@ -2,9 +2,11 @@ import { FEED_TEST_CODES } from "@repo/shared-data"
 import { cookies, headers } from "next/headers"
 import { NextResponse } from "next/server"
 
+import { staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
 import { verifyState } from "@/lib/oauth-state"
+import { staffLibraryHref } from "@/lib/staff/paths"
 
 export const dynamic = "force-dynamic"
 
@@ -65,17 +67,22 @@ export async function GET(req: Request) {
   const session = await getSessionSSR(await headers())
   const user = session?.user ?? null
 
-  if (
-    !code ||
-    !payload ||
-    !user ||
-    payload.nonce !== nonce ||
-    payload.userId !== user.id
-  )
-    return redirectTo("/contribute/events?oauth=failed")
+  // A signed state names the library, so its Event feeds tab can show the
+  // failure to the person who started the round trip. Without one (a bad
+  // signature, an expired state) or for another account there is no
+  // library tab to return to, and the Staff area index says so.
+  const library =
+    payload && user && payload.userId === user.id
+      ? staffLibrariesOf(user).find(
+          (row) => row.id === payload.libraryDocumentId
+        )
+      : null
+  const feeds = library ? staffLibraryHref(library.slug, "/events") : null
+  if (!code || !payload || !feeds || !user || payload.nonce !== nonce)
+    return redirectTo(feeds ? `${feeds}?oauth=failed` : "/staff?oauth=failed")
 
   if (!process.env.STRAPI_BRIDGE_SECRET)
-    return redirectTo("/contribute/events?oauth=failed")
+    return redirectTo(`${feeds}?oauth=failed`)
 
   let body: ExchangeResult | null = null
   try {
@@ -92,33 +99,27 @@ export async function GET(req: Request) {
       cache: "no-store",
     })
     body = (await res.json().catch(() => null)) as ExchangeResult | null
-    if (!res.ok || !body?.data)
-      return redirectTo("/contribute/events?oauth=failed")
+    if (!res.ok || !body?.data) return redirectTo(`${feeds}?oauth=failed`)
   } catch {
-    return redirectTo("/contribute/events?oauth=failed")
+    return redirectTo(`${feeds}?oauth=failed`)
   }
 
   const { data } = body
-  const library = encodeURIComponent(payload.libraryDocumentId)
 
   if (data.completed) {
     if ("error" in data.completed) {
       const { status, result } = data.completed.error
       if (status === 422 && isFeedTestCode(result))
-        return redirectTo(
-          `/contribute/events?library=${library}&oauth=test_failed&result=${result}`
-        )
+        return redirectTo(`${feeds}?oauth=test_failed&result=${result}`)
 
-      return redirectTo(`/contribute/events?library=${library}&oauth=refused`)
+      return redirectTo(`${feeds}?oauth=refused`)
     }
 
-    return redirectTo(`/contribute/events?library=${library}&oauth=sent`)
+    return redirectTo(`${feeds}?oauth=sent`)
   }
 
   if (data.organizations.length > 1)
-    return redirectTo(
-      `/contribute/events/${data.credentialDocumentId}/organisation`
-    )
+    return redirectTo(`${feeds}/${data.credentialDocumentId}/organisation`)
 
-  return redirectTo("/contribute/events?oauth=failed")
+  return redirectTo(`${feeds}?oauth=failed`)
 }

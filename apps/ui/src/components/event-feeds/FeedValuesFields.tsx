@@ -75,7 +75,7 @@ export function FeedValuesFields({
               {f.secret ? (
                 <button
                   type="button"
-                  className="rounded-full border px-3 py-2 text-[13px] font-semibold"
+                  className="inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-[13.5px] font-semibold hover:bg-(--t-bg-surface)"
                   style={{
                     borderColor: T.border.hi,
                     color: T.ink.base,

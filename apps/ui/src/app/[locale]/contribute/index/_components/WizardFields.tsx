@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { isModeratedLibraryChange } from "@repo/shared-data"
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 
@@ -43,8 +44,11 @@ function FieldFrame({
   changed: boolean
   children: React.ReactNode
 }) {
+  // The change rule sits in the step card's gutter from `sm` up; at phone
+  // width there is no gutter, so the rule stays inside the card.
   return (
     <div
+      className={changed ? "sm:-ml-[17px]" : undefined}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -53,7 +57,6 @@ function FieldFrame({
           ? {
               borderLeft: `3px solid ${T.accent.primary}`,
               paddingLeft: "14px",
-              marginLeft: "-17px",
             }
           : {}),
       }}
@@ -89,6 +92,36 @@ export function SharedTag({ id }: { id?: string }) {
     >
       <Icon icon="mdi:earth" width={12} aria-hidden="true" />
       Shared across languages
+    </span>
+  )
+}
+
+// ── Moderated fields — staff mode marks what a Moderator reviews first ──────
+
+/**
+ * True in the staff editor: a change to a moderated field (placement,
+ * address, coordinates, type, home base, permanent closure) goes to a
+ * Moderator instead of publishing at once, and the field says so.
+ */
+export const ModeratedFieldsContext = createContext(false)
+
+/** True when `key` (at `value`) is reviewed by a Moderator in staff mode. */
+export function useIsModerated(key?: keyof FormData, value?: unknown): boolean {
+  const staff = useContext(ModeratedFieldsContext)
+
+  return staff && !!key && isModeratedLibraryChange(key, value)
+}
+
+/** "Reviewed by a moderator": the per-field note in the staff editor. */
+export function ModeratedTag({ id }: { id?: string }) {
+  return (
+    <span
+      id={id}
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12.5px] font-semibold"
+      style={{ background: T.bg.muted, color: T.ink.dim }}
+    >
+      <Icon icon="mdi:shield-check-outline" width={12} aria-hidden="true" />
+      Reviewed by a moderator
     </span>
   )
 }
@@ -224,6 +257,7 @@ export function Field({
   const hintId = hint ? `${id}-hint` : undefined
   const changed = useIsChanged(id)
   const shared = useIsShared(id)
+  const moderated = useIsModerated(id, value)
   const error = useFieldError(id)
 
   return (
@@ -233,6 +267,7 @@ export function Field({
         {required && !shared && <RequiredTag />}
         {changed && <ChangedTag />}
         {shared && <SharedTag id={`${id}-shared`} />}
+        {moderated && <ModeratedTag id={`${id}-moderated`} />}
       </label>
       <input
         id={id}
@@ -249,6 +284,7 @@ export function Field({
         aria-describedby={joinIds(
           error.invalid && error.id,
           shared && `${id}-shared`,
+          moderated && `${id}-moderated`,
           hintId
         )}
         autoComplete={autoComplete}
@@ -287,6 +323,7 @@ export function WizardSelect({
 }) {
   const changed = useIsChanged(id)
   const shared = useIsShared(id)
+  const moderated = useIsModerated(id, value)
   const error = useFieldError(id)
 
   return (
@@ -297,6 +334,7 @@ export function WizardSelect({
         {required && !shared && <RequiredTag />}
         {changed && <ChangedTag />}
         {shared && <SharedTag id={`${id}-shared`} />}
+        {moderated && <ModeratedTag id={`${id}-moderated`} />}
       </span>
       <RadixSelect
         value={value}
@@ -310,7 +348,8 @@ export function WizardSelect({
           aria-labelledby={`${id}-label`}
           aria-describedby={joinIds(
             error.invalid && error.id,
-            shared && `${id}-shared`
+            shared && `${id}-shared`,
+            moderated && `${id}-moderated`
           )}
           aria-required={required && !shared}
           aria-invalid={error.invalid || undefined}
@@ -451,11 +490,28 @@ export function TagSelector({
   >([])
   const [showAll, setShowAll] = useState(false)
 
+  const [unavailable, setUnavailable] = useState(false)
+
   useEffect(() => {
+    let live = true
     fetch(endpoint)
-      .then((r) => r.json())
-      .then((j) => setOptions(j.data ?? []))
-      .catch(() => {})
+      .then((r) => {
+        if (!r.ok) throw new Error(String(r.status))
+
+        return r.json()
+      })
+      .then((j) => {
+        if (!live) return
+        setOptions(j.data ?? [])
+        setUnavailable(false)
+      })
+      .catch(() => {
+        if (live) setUnavailable(true)
+      })
+
+    return () => {
+      live = false
+    }
   }, [endpoint])
 
   const toggle = (id: string) => {
@@ -486,6 +542,7 @@ export function TagSelector({
     <div
       role="group"
       aria-label={label}
+      className={changed ? "sm:-ml-[17px]" : undefined}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -494,7 +551,6 @@ export function TagSelector({
           ? {
               borderLeft: `3px solid ${T.accent.primary}`,
               paddingLeft: "14px",
-              marginLeft: "-17px",
             }
           : {}),
       }}
@@ -504,6 +560,12 @@ export function TagSelector({
         {changed && <ChangedTag />}
         {shared && <SharedTag />}
       </span>
+      {unavailable && options.length === 0 ? (
+        <p role="status" className="m-0" style={fieldHintStyle}>
+          The {label.toLowerCase()} options couldn’t be loaded. Reload the page
+          to try again; what you’ve chosen so far is kept.
+        </p>
+      ) : null}
       <fieldset
         disabled={shared}
         style={{
@@ -618,6 +680,13 @@ export function SubSection({ label, sub }: { label: string; sub?: string }) {
 
 // ── StepHeading — eyebrow + serif display heading + lead ─────────────────────
 
+/**
+ * True inside the staff shell, whose hero already carries the library's
+ * name at display size: step headings then step down to 28–32 px, so the
+ * question never outranks the subject.
+ */
+export const CompactStepHeadingContext = createContext(false)
+
 export function StepHeading({
   eyebrow,
   title,
@@ -627,6 +696,8 @@ export function StepHeading({
   title: string
   lead: string
 }) {
+  const compact = useContext(CompactStepHeadingContext)
+
   return (
     <div style={{ marginBottom: "12px" }}>
       <p
@@ -643,12 +714,14 @@ export function StepHeading({
       <h2
         style={{
           fontFamily: T.font.serif,
-          fontSize: "clamp(40px, 5vw, 64px)",
+          fontSize: compact
+            ? "clamp(28px, 2.6vw, 32px)"
+            : "clamp(40px, 5vw, 64px)",
           fontWeight: 500,
-          lineHeight: 1.05,
-          letterSpacing: "-0.02em",
+          lineHeight: compact ? 1.12 : 1.05,
+          letterSpacing: compact ? "-0.01em" : "-0.02em",
           color: T.ink.base,
-          margin: "0 0 16px",
+          margin: compact ? "0 0 10px" : "0 0 16px",
         }}
       >
         {title}
@@ -656,7 +729,7 @@ export function StepHeading({
       <p
         style={{
           fontFamily: T.font.sans,
-          fontSize: "18px",
+          fontSize: compact ? "16px" : "18px",
           color: T.ink.dim,
           margin: 0,
           lineHeight: 1.55,

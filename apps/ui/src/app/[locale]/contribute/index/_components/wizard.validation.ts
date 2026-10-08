@@ -1,3 +1,5 @@
+import { hasErrors, validateMobileTimetable } from "@repo/shared-data"
+
 import { coordIsValid } from "@/lib/geocode/coordinates"
 
 import { type FormData, SUBMISSION_META_KEYS } from "./wizard.types"
@@ -59,7 +61,11 @@ export function missingFields(
   scope: ValidationScope
 ): (keyof FormData)[] {
   const { record, editable } = scope
-  const empty = requiredFields(step, !!record).filter((key) => {
+  const required =
+    step === 2 && form.libraryType === "Mobile"
+      ? (["country", "regionDocumentId"] as (keyof FormData)[])
+      : requiredFields(step, !!record)
+  const empty = required.filter((key) => {
     if (editable && !editable.has(key)) return false
     if (record && !META.has(key) && blank(record[key])) return false
 
@@ -68,6 +74,14 @@ export function missingFields(
   const malformed = (FORMATTED_BY_STEP[step] ?? []).filter(
     (key) => (!editable || editable.has(key)) && !coordIsValid(key, form[key])
   )
+
+  if (
+    step === 3 &&
+    form.libraryType === "Mobile" &&
+    form.mobileTimetable &&
+    hasErrors(validateMobileTimetable(form.mobileTimetable))
+  )
+    return [...empty, ...malformed, "mobileTimetable"]
 
   return [...empty, ...malformed]
 }
@@ -78,7 +92,8 @@ export function firstIncompleteStep(
   scope: ValidationScope
 ): number | null {
   return (
-    STEPS_CHECKED.find((step) => missingFields(step, form, scope).length > 0) ??
-    null
+    [...new Set([...STEPS_CHECKED, 3])]
+      .sort((a, b) => a - b)
+      .find((step) => missingFields(step, form, scope).length > 0) ?? null
   )
 }

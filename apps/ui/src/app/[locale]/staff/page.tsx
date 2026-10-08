@@ -1,0 +1,310 @@
+import { Icon } from "@iconify/react"
+import { headers } from "next/headers"
+import { redirect } from "next/navigation"
+
+import { Badge, Notice, PageHero } from "@/components/ds"
+import { Container } from "@/components/elementary/Container"
+import { StaffAccessRequired } from "@/components/staff/StaffAccessRequired"
+import { YourTeamCard } from "@/components/staff/YourTeamCard"
+import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
+import { getSessionSSR } from "@/lib/auth-server"
+import { T, tintForLibraryType } from "@/lib/design-tokens"
+import { Link } from "@/lib/navigation"
+import { staffLibraryHref } from "@/lib/staff/paths"
+import type { StaffOverview, TeamSummary } from "@/lib/staff/types"
+import { fetchStaff } from "@/lib/staff-proxy"
+
+const ROLE_LABEL = { owner: "Owner", editor: "Editor" } as const
+
+const QUICK_LINK =
+  "inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+
+/** What `?oauth=` means after an Eventbrite sign-in came back here. */
+const OAUTH_NOTICE: Record<string, { title: string; message: string }> = {
+  failed: {
+    title: "Eventbrite sign-in didn’t finish",
+    message:
+      "Nothing was connected. Open the library’s Event feeds and try again.",
+  },
+  refused: {
+    title: "Couldn’t send the feed for review",
+    message:
+      "Eventbrite connected, but the feed couldn’t be sent for review. Try again from the library’s Event feeds.",
+  },
+}
+
+/**
+ * Your libraries as cards, "Claim another library", and for team members
+ * a "Your team" card. With exactly one library and no team, straight to it,
+ * unless an OAuth result needs showing first.
+ */
+export default async function StaffLibrariesPage({
+  searchParams,
+}: {
+  readonly searchParams: Promise<{ oauth?: string | string[] }>
+}) {
+  const [session, query] = await Promise.all([
+    getSessionSSR(await headers()),
+    searchParams,
+  ])
+  if (!session?.user) return <StaffAccessRequired />
+  const libraries = staffLibrariesOf(session.user)
+  const teams = sessionTeamsOf(session.user)
+  if (!libraries.length && !teams.length)
+    return <StaffAccessRequired signedIn />
+  const oauthParam = Array.isArray(query.oauth) ? query.oauth[0] : query.oauth
+  const oauth = oauthParam
+    ? (OAUTH_NOTICE[oauthParam] ?? OAUTH_NOTICE.failed)
+    : null
+  if (!oauth && libraries.length === 1 && teams.length === 0)
+    redirect(staffLibraryHref(libraries[0]!.slug))
+  const [summaries, teamsResult] = await Promise.all([
+    Promise.all(
+      libraries.map((lib) =>
+        fetchStaff<StaffOverview>(session.user, `libraries/${lib.id}/overview`)
+      )
+    ),
+    teams.length
+      ? fetchStaff<{ teams: TeamSummary[] }>(
+          session.user,
+          "teams/mine",
+          "access"
+        )
+      : Promise.resolve(null),
+  ])
+  const teamRows = teamsResult?.body?.teams
+
+  return (
+    <>
+      <PageHero
+        compact
+        title="Your *Staff area*"
+        eyebrow="Library staff"
+        eyebrowIcon="mdi:shield-account-outline"
+        lead="Publish record changes, answer suggestions and post notices for the libraries you run."
+      >
+        <Link
+          href="/contribute/claim"
+          className="inline-flex min-h-11 w-fit items-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+          style={{ borderColor: T.border.hi, color: T.ink.base }}
+        >
+          <Icon
+            aria-hidden="true"
+            height={16}
+            icon="mdi:plus"
+            width={16}
+            style={{ color: T.accent.primary }}
+          />
+          Claim another library
+        </Link>
+      </PageHero>
+      <Container className="py-10">
+        {oauth ? (
+          <div className="mb-6">
+            <Notice
+              icon="mdi:alert-circle-outline"
+              tone="warn"
+              title={oauth.title}
+            >
+              <p className="m-0" style={{ color: T.ink.base }}>
+                {oauth.message}
+              </p>
+              {libraries.length === 1 ? (
+                <p className="m-0 mt-1">
+                  <Link
+                    href={staffLibraryHref(libraries[0]!.slug, "/events")}
+                    className="inline-flex min-h-11 items-center gap-1 font-semibold underline underline-offset-[3px]"
+                    style={{ color: T.accent.primary }}
+                  >
+                    Open Event feeds
+                    <Icon
+                      aria-hidden="true"
+                      height={15}
+                      icon="mdi:arrow-right"
+                      width={15}
+                    />
+                  </Link>
+                </p>
+              ) : null}
+            </Notice>
+          </div>
+        ) : null}
+        {libraries.length ? (
+          <ul className="m-0 grid list-none gap-5 p-0 md:grid-cols-2">
+            {libraries.map((lib, index) => {
+              const overview = summaries[index]?.body ?? null
+              const done = overview
+                ? overview.health.filter((row) => row.status === "ok").length
+                : null
+              const tint = tintForLibraryType(lib.libraryType)
+              const mobile = lib.libraryType === "Mobile"
+              const base = staffLibraryHref(lib.slug)
+              const waiting = overview?.counts.suggestions ?? 0
+
+              return (
+                <li
+                  key={lib.id}
+                  className="flex flex-col gap-4 rounded-[20px] border p-6"
+                  style={{ background: T.bg.deep, borderColor: T.border.line }}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold"
+                      style={{ background: tint.bg, color: tint.fg }}
+                    >
+                      <Icon
+                        aria-hidden="true"
+                        height={14}
+                        icon={mobile ? "mdi:bus-side" : "mdi:library-outline"}
+                        width={14}
+                      />
+                      {mobile ? "Mobile library" : `${lib.libraryType} library`}
+                    </span>
+                    <Badge label={ROLE_LABEL[lib.role]} color="dim" />
+                  </div>
+                  <h2
+                    className="m-0"
+                    style={{
+                      fontFamily: T.font.serif,
+                      fontSize: "clamp(24px,2.6vw,30px)",
+                      fontWeight: 500,
+                      lineHeight: 1.15,
+                      letterSpacing: "-0.01em",
+                      color: T.ink.base,
+                    }}
+                  >
+                    <Link
+                      href={base}
+                      className="underline decoration-(--t-border-hi) underline-offset-4 hover:decoration-(--t-accent-primary)"
+                      style={{ color: T.ink.base }}
+                    >
+                      {lib.name}
+                    </Link>
+                  </h2>
+                  <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+                    {overview ? (
+                      <>
+                        <span
+                          className="font-semibold"
+                          style={{ color: T.ink.base }}
+                        >
+                          {done} of {overview.health.length}
+                        </span>{" "}
+                        record checks complete ·{" "}
+                        {waiting === 0 ? (
+                          "nothing waiting for review"
+                        ) : (
+                          <Link
+                            href={`${base}#suggestions`}
+                            className="font-semibold underline underline-offset-[3px]"
+                            style={{ color: T.accent.primary }}
+                          >
+                            {waiting} suggested{" "}
+                            {waiting === 1 ? "change" : "changes"} to review
+                          </Link>
+                        )}
+                      </>
+                    ) : (
+                      "The record summary is unavailable right now."
+                    )}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Link
+                      href={base}
+                      className="inline-flex min-h-11 items-center gap-1 rounded-full bg-(--t-accent-primary) px-4 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+                    >
+                      Open Staff area
+                      <Icon
+                        aria-hidden="true"
+                        height={14}
+                        icon="mdi:arrow-right"
+                        width={14}
+                      />
+                    </Link>
+                    {mobile && lib.canGoLive ? (
+                      <Link
+                        href={`/live/${lib.id}`}
+                        className={QUICK_LINK}
+                        style={{ borderColor: T.border.hi, color: T.ink.base }}
+                      >
+                        <Icon
+                          aria-hidden="true"
+                          height={11}
+                          icon="mdi:circle"
+                          width={11}
+                          style={{ color: T.accent.ok }}
+                        />
+                        Go live
+                      </Link>
+                    ) : null}
+                    <Link
+                      href={`${base}/edit`}
+                      className={QUICK_LINK}
+                      style={{ borderColor: T.border.hi, color: T.ink.base }}
+                    >
+                      Edit record
+                    </Link>
+                    <Link
+                      href={`${base}/notices#post-notice`}
+                      className={QUICK_LINK}
+                      style={{ borderColor: T.border.hi, color: T.ink.base }}
+                    >
+                      Post a notice
+                    </Link>
+                    {mobile ? (
+                      <Link
+                        href={`${base}/timetable`}
+                        className={QUICK_LINK}
+                        style={{ borderColor: T.border.hi, color: T.ink.base }}
+                      >
+                        Edit timetable
+                      </Link>
+                    ) : null}
+                    <Link
+                      href={`${base}/events`}
+                      className={QUICK_LINK}
+                      style={{ borderColor: T.border.hi, color: T.ink.base }}
+                    >
+                      Event feeds
+                    </Link>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        ) : (
+          <section
+            className="rounded-[20px] border p-6 sm:p-8"
+            style={{ background: T.bg.deep, borderColor: T.border.line }}
+          >
+            <h2
+              className="m-0 mb-2"
+              style={{
+                fontFamily: T.font.serif,
+                fontSize: "clamp(24px,2.6vw,30px)",
+                fontWeight: 500,
+                color: T.ink.base,
+              }}
+            >
+              Keep your library’s page up to date
+            </h2>
+            <p
+              className="m-0 mb-4 max-w-[52ch] text-[15px]"
+              style={{ color: T.ink.dim }}
+            >
+              An approved Library Claim gives you staff access. A moderator
+              checks each claim.
+            </p>
+            <Link
+              href="/contribute/claim"
+              className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-primary) px-5 font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+            >
+              Claim your library
+            </Link>
+          </section>
+        )}
+        <YourTeamCard teams={teamRows} />
+      </Container>
+    </>
+  )
+}

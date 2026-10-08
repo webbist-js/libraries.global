@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { routing } from "@/lib/navigation"
 
-const authPages = ["/auth/change-password", "/auth"]
+const authPages = ["/auth/change-password"]
 
 const authPathnameRegex = new RegExp(
   `^(/(${routing.locales.join("|")}))?(${authPages.join("|")})/?$`,

@@ -54,11 +54,11 @@ const NEXT_STEPS = [
   },
   {
     icon: "mdi:clock-outline",
-    copy: "They check your affiliation, usually within 2–5 days.",
+    copy: "They check that you work there, usually within 2 to 5 days.",
   },
   {
     icon: "mdi:check-decagram-outline",
-    copy: "Once approved, you're a verified librarian for this record.",
+    copy: "Once approved, you're verified staff for this library and its Staff area opens.",
   },
 ] as const
 
@@ -111,7 +111,7 @@ export function ClaimLibraryForm({
         compact
         section="Claim a library"
         title={`Claim *${libraryName}.*`}
-        lead="Tell us your role at this institution. A moderator will verify and approve your claim before you can submit edits on behalf of this library."
+        lead="Tell us your role at this library. A moderator checks and approves your claim before you can look after its record."
       />
 
       <div className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8 lg:py-12">
@@ -321,11 +321,13 @@ export function ClaimLibraryForm({
                 borderTop: `1px solid ${T.border.divider}`,
               }}
             >
-              If approved, you become a verified librarian for{" "}
+              If approved, you become verified staff for{" "}
               <strong style={{ color: T.ink.base, fontWeight: 600 }}>
                 {libraryName}
-              </strong>{" "}
-              and can submit edits that bypass the standard review queue.
+              </strong>
+              . Most changes you make to its record publish straight away.
+              Moving it, changing its type or marking it permanently closed
+              still go to a moderator.
             </p>
           </aside>
         </div>

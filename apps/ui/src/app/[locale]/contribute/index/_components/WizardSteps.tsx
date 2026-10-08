@@ -1,7 +1,11 @@
 "use client"
 
 import type React from "react"
+import { useContext } from "react"
 
+import { TimetableEditor } from "@/components/mobile/TimetableEditor"
+
+import { FacilityChecklistRows } from "./FacilityChecklistRows"
 import { ImageUploadEditor } from "./ImageUploadEditor"
 import { OpeningTimesEditor } from "./OpeningTimesEditor"
 import { SocialLinksEditor } from "./SocialLinksEditor"
@@ -15,6 +19,7 @@ import {
 import type { StepProps } from "./wizard.types"
 import {
   Field,
+  ModeratedFieldsContext,
   SharedBlock,
   SubSection,
   StepHeader,
@@ -93,6 +98,15 @@ function StepBasics({ f, set }: StepProps) {
         options={OPERATIONAL_STATUSES}
         required
       />
+      {f.libraryType === "Mobile" && (
+        <Field
+          label="Run by"
+          id="operatorName"
+          value={f.operatorName}
+          onChange={set}
+          hint="The council, organisation or service that runs this vehicle."
+        />
+      )}
       <TextareaField
         label="Summary / description"
         id="summary"
@@ -119,6 +133,8 @@ function StepBasics({ f, set }: StepProps) {
 // ── Step 3 — Visit ────────────────────────────────────────────────────────────
 
 function StepVisit({ f, set, setFormData }: StepProps) {
+  const staff = useContext(ModeratedFieldsContext)
+
   return (
     <fieldset
       style={{
@@ -133,11 +149,36 @@ function StepVisit({ f, set, setFormData }: StepProps) {
       <legend style={{ display: "contents" }}>
         <StepHeader
           n={3}
-          label="Visit"
-          title="How do people visit?"
-          sub="Links, contact details, opening hours and access: what a visitor needs to know before setting off."
+          label={f.libraryType === "Mobile" ? "Stops & times" : "Visit"}
+          title={
+            f.libraryType === "Mobile"
+              ? "Where does the vehicle stop?"
+              : "How do people visit?"
+          }
+          sub={
+            f.libraryType === "Mobile"
+              ? "Add the stops and visits for this vehicle. A timetable is optional; the base and area are required."
+              : "Links, contact details, opening hours and access: what a visitor needs to know before setting off."
+          }
         />
       </legend>
+      {f.libraryType === "Mobile" && (
+        <>
+          <TimetableEditor
+            value={f.mobileTimetable}
+            onChange={(mobileTimetable) =>
+              setFormData((prev) => ({ ...prev, mobileTimetable }))
+            }
+          />
+          <Field
+            label="Published timetable page or PDF"
+            id="timetableUrl"
+            value={f.timetableUrl}
+            onChange={set}
+            type="url"
+          />
+        </>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
@@ -260,7 +301,8 @@ function StepVisit({ f, set, setFormData }: StepProps) {
         placeholder="What visitors should know — queues, bag policies, photography rules…"
       />
 
-      {f.operationalStatus !== "permanently_closed" &&
+      {f.libraryType !== "Mobile" &&
+        f.operationalStatus !== "permanently_closed" &&
         f.operationalStatus !== "temporarily_closed" && (
           <>
             <SubSection
@@ -282,6 +324,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
         label="Services & amenities"
         sub="Tag what's actually offered — relations to canonical services / amenities / accessibility records."
       />
+      {staff && <FacilityChecklistRows f={f} setFormData={setFormData} />}
       <TagSelector
         label="Services"
         endpoint="/api/relations/services"

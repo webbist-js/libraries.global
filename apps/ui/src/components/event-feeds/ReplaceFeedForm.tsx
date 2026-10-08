@@ -7,44 +7,35 @@ import {
   validateFeedValues,
 } from "@repo/shared-data"
 import { useRouter } from "next/navigation"
-import type React from "react"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { Notice } from "@/components/ds/Notice"
+import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
+import { staffLibraryHref } from "@/lib/staff/paths"
 
 import { isFeedTestCode } from "./feed-copy"
+import {
+  PRIMARY_PILL,
+  SECONDARY_PILL,
+  secondaryPillStyle,
+  TOO_MANY_REQUESTS,
+} from "./feed-ui"
 import { FeedValuesFields } from "./FeedValuesFields"
 import type { FeedView } from "./types"
 import { useFeedTest } from "./useFeedTest"
-
-const primaryPillSx: React.CSSProperties = {
-  fontFamily: T.font.sans,
-  fontSize: "14px",
-  fontWeight: 600,
-}
-
-const secondaryPillSx: React.CSSProperties = {
-  fontFamily: T.font.sans,
-  fontSize: "14px",
-  fontWeight: 600,
-  color: T.ink.base,
-  background: T.bg.deep,
-  border: `1px solid ${T.border.hi}`,
-  borderRadius: "999px",
-  padding: "10px 20px",
-  cursor: "pointer",
-}
 
 /** Replace a connected feed's details. The current values keep working. */
 export function ReplaceFeedForm({
   feed,
   libraryName,
   libraryDocumentId,
+  librarySlug,
 }: {
   readonly feed: FeedView
   readonly libraryName: string
   readonly libraryDocumentId: string
+  readonly librarySlug: string
 }) {
   const router = useRouter()
   const [values, setValues] = useState<Record<string, string>>({})
@@ -55,7 +46,12 @@ export function ReplaceFeedForm({
   const [sending, setSending] = useState(false)
   const test = useFeedTest()
   const fieldsRef = useRef<HTMLDivElement>(null)
+  const doneRef = useRef<HTMLDivElement>(null)
   const providerDef = EVENT_PROVIDERS[feed.provider]
+  // The form goes away on success: move focus to the confirmation.
+  useEffect(() => {
+    if (sent) doneRef.current?.focus()
+  }, [sent])
 
   function onValuesChange(next: Record<string, string>) {
     setValues(next)
@@ -107,11 +103,12 @@ export function ReplaceFeedForm({
         return
       }
       const result: unknown = json?.error?.result
-      if (res.status === 422 && isFeedTestCode(result))
+      if (res.status === 429) setSendError(TOO_MANY_REQUESTS)
+      else if (res.status === 422 && isFeedTestCode(result))
         setSendError(FEED_TEST_COPY[result] ?? json.error.message)
-      else setSendError(json?.error?.message ?? "That didn't work. Try again.")
+      else setSendError(json?.error?.message ?? "That didn’t work. Try again.")
     } catch {
-      setSendError("That didn't work. Check your connection.")
+      setSendError("That didn’t work. Check your connection.")
     } finally {
       setSending(false)
     }
@@ -121,16 +118,27 @@ export function ReplaceFeedForm({
 
   if (sent)
     return (
-      <Notice
-        icon="mdi:check-circle-outline"
-        tone="ok"
-        title="New details sent for review"
-      >
-        <p className="m-0">
-          Your current details keep working until a moderator approves the new
-          ones.
-        </p>
-      </Notice>
+      <div ref={doneRef} tabIndex={-1} className="outline-none">
+        <Notice
+          icon="mdi:check-circle-outline"
+          tone="ok"
+          title="New details sent for review"
+        >
+          <p className="m-0">
+            Your current details keep working until a moderator approves the new
+            ones.
+          </p>
+          <p className="m-0 mt-2">
+            <GlobalLink
+              href={staffLibraryHref(librarySlug, "/events")}
+              className={SECONDARY_PILL}
+              style={secondaryPillStyle}
+            >
+              Back to event feeds
+            </GlobalLink>
+          </p>
+        </Notice>
+      </div>
     )
 
   return (
@@ -198,10 +206,11 @@ export function ReplaceFeedForm({
         </p>
       )}
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
-          style={secondaryPillSx}
+          className={SECONDARY_PILL}
+          style={secondaryPillStyle}
           disabled={test.busy}
           onClick={runTest}
         >
@@ -209,13 +218,22 @@ export function ReplaceFeedForm({
         </button>
         <button
           type="button"
-          className="rounded-full bg-(--t-accent-primary) px-6 py-2.5 text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
-          style={primaryPillSx}
+          className={PRIMARY_PILL}
+          aria-describedby={canSend ? undefined : "replace-feed-hint"}
           disabled={!canSend || sending}
           onClick={send}
         >
           {sending ? "Sending…" : "Send for review"}
         </button>
+        {!canSend ? (
+          <span
+            id="replace-feed-hint"
+            className="text-[13.5px]"
+            style={{ color: T.ink.dim }}
+          >
+            Test the connection first.
+          </span>
+        ) : null}
       </div>
     </form>
   )

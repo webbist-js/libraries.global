@@ -37,6 +37,9 @@ const CSV_COLUMNS = [
   "openedYear",
   "url",
   "licence",
+  "attribution",
+  "source",
+  "updatedAt",
 ] as const
 
 const names = (items: unknown) =>
@@ -156,6 +159,9 @@ export async function GET(
     openedYear: record.history.openedYear,
     url: pageUrl,
     licence: LICENCE,
+    attribution: ATTRIBUTION,
+    source: record.source,
+    updatedAt: record.updatedAt,
   }
 
   return new NextResponse([...csvChunks([row], CSV_COLUMNS)].join(""), {

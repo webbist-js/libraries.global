@@ -3,8 +3,13 @@ import {
   type Capability,
   type Feature,
   fromSessionCapabilities,
+  LIBRARY_SCOPED_FEATURES,
   MODERATION_QUEUES,
   type ModerationScope,
+  canStaff,
+  parseSessionStaff,
+  type StaffAction,
+  type StaffRole,
 } from "@repo/access"
 
 type WithCaps = { capabilities?: unknown } | null | undefined
@@ -50,6 +55,7 @@ export function sessionCapabilities(user: unknown): Capabilities {
   ) as Record<string, unknown>
 
   return fromSessionCapabilities({
+    staffLibraries: parseSessionStaff(u.staffLibraries),
     capabilities: strings(u.capabilities) as Capability[],
     claimedLibraryIds: strings(u.claimedLibraryIds),
     moderationScopes: Array.isArray(u.moderationScopes)
@@ -60,6 +66,119 @@ export function sessionCapabilities(user: unknown): Capabilities {
       journal: locales(editor.journal),
     },
   })
+}
+
+export type StaffLibrarySummary = {
+  id: string
+  name: string
+  slug: string
+  libraryType: string
+  role: StaffRole
+  canGoLive: boolean
+}
+
+export function staffLibrariesOf(user: unknown): StaffLibrarySummary[] {
+  const raw =
+    user && typeof user === "object"
+      ? (user as Record<string, unknown>).staffLibraries
+      : null
+  const valid = new Map(parseSessionStaff(raw).map((row) => [row.id, row]))
+
+  return Array.isArray(raw)
+    ? raw.flatMap((row) => {
+        if (!row || typeof row !== "object") return []
+        const r = row as Record<string, unknown>
+        const entry = typeof r.id === "string" ? valid.get(r.id) : null
+
+        return entry &&
+          typeof r.name === "string" &&
+          typeof r.slug === "string" &&
+          typeof r.libraryType === "string"
+          ? [
+              {
+                ...entry,
+                name: r.name,
+                slug: r.slug,
+                libraryType: r.libraryType,
+              },
+            ]
+          : []
+      })
+    : []
+}
+
+/** A Team the viewer belongs to (the session field arrives with Teams). */
+export type SessionTeam = {
+  id: string
+  name: string
+  slug: string
+  role: "organiser" | "member"
+  libraryCount: number
+}
+
+const isTeam = (v: unknown): v is SessionTeam => {
+  if (!v || typeof v !== "object") return false
+  const t = v as Record<string, unknown>
+
+  return (
+    typeof t.id === "string" &&
+    typeof t.name === "string" &&
+    typeof t.slug === "string" &&
+    (t.role === "organiser" || t.role === "member") &&
+    typeof t.libraryCount === "number"
+  )
+}
+
+/** The session's `teams` (summaries), or none. */
+export function sessionTeamsOf(user: unknown): SessionTeam[] {
+  const raw =
+    user && typeof user === "object"
+      ? (user as Record<string, unknown>).teams
+      : null
+
+  return Array.isArray(raw) ? raw.filter(isTeam) : []
+}
+
+/** The session's `teamLibraryIds`: libraries of the user's active Teams. */
+export function teamLibraryIdsOf(user: unknown): string[] {
+  const raw =
+    user && typeof user === "object"
+      ? (user as Record<string, unknown>).teamLibraryIds
+      : null
+
+  return strings(raw)
+}
+
+/**
+ * Whether `feature` is unlocked for one library in this session: a
+ * library-scoped feature (`library.team`, `library.traffic`) needs an active
+ * Team of the user's covering it; any other feature is the personal plan.
+ */
+export function hasEntitlementForLibrary(
+  user: unknown,
+  feature: Feature,
+  libraryDocumentId: string
+): boolean {
+  if (!user) return false
+  if (LIBRARY_SCOPED_FEATURES.includes(feature))
+    return teamLibraryIdsOf(user).includes(libraryDocumentId)
+
+  return listHas((user as WithFeatures)?.features, feature)
+}
+
+export function requireStaff(
+  user: unknown,
+  libraryDocumentId: string,
+  action: StaffAction
+): Response | null {
+  if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 })
+  const c = sessionCapabilities(user)
+  if (!c.set.has("staff.area") || !c.staff.has(libraryDocumentId))
+    return Response.json({ error: "Not found" }, { status: 404 })
+
+  return canStaff(c, action, libraryDocumentId)
+    ? null
+    : Response.json({ error: "Forbidden" }, { status: 403 })
 }
 
 export function requireCapability(
@@ -79,6 +198,31 @@ export function requireEntitlement(
 ): Response | null {
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 })
   if (!listHas(user.features, feature))
+    return Response.json(
+      {
+        error: "Upgrade required",
+        feature,
+        upgradeUrl: "/contribute/membership",
+      },
+      { status: 402 }
+    )
+
+  return null
+}
+
+/**
+ * `requireEntitlement` for a feature used on one library: `library.team`
+ * and `library.traffic` are on only for the libraries of the user's active
+ * Teams (`teamLibraryIds` in the session); other features are personal.
+ * A pre-check: Strapi's `hasLibraryFeature` decides on every write.
+ */
+export function requireEntitlementForLibrary(
+  user: WithFeatures,
+  feature: Feature,
+  libraryDocumentId: string
+): Response | null {
+  if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 })
+  if (!hasEntitlementForLibrary(user, feature, libraryDocumentId))
     return Response.json(
       {
         error: "Upgrade required",

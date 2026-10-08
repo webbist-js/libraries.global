@@ -2,20 +2,15 @@
 
 import { FEED_TEST_COPY } from "@repo/shared-data"
 import { useRouter } from "next/navigation"
-import type React from "react"
 import { useState } from "react"
 
 import { ChoiceCard } from "@/components/ds/ChoiceCard"
 import { Notice } from "@/components/ds/Notice"
 import { T } from "@/lib/design-tokens"
+import { staffLibraryHref } from "@/lib/staff/paths"
 
 import { isFeedTestCode } from "./feed-copy"
-
-const primaryPillSx: React.CSSProperties = {
-  fontFamily: T.font.sans,
-  fontSize: "14px",
-  fontWeight: 600,
-}
+import { PRIMARY_PILL } from "./feed-ui"
 
 /**
  * Radio cards for the Eventbrite organisations found on the account that
@@ -25,10 +20,12 @@ const primaryPillSx: React.CSSProperties = {
 export function OrganisationPicker({
   documentId,
   libraryDocumentId,
+  librarySlug,
   organizations,
 }: {
   readonly documentId: string
   readonly libraryDocumentId: string
+  readonly librarySlug: string
   readonly organizations: { id: string; name: string }[]
 }) {
   const router = useRouter()
@@ -53,9 +50,7 @@ export function OrganisationPicker({
       )
       const json = await res.json().catch(() => null)
       if (res.ok) {
-        router.push(
-          `/contribute/events?library=${encodeURIComponent(libraryDocumentId)}&oauth=sent`
-        )
+        router.push(staffLibraryHref(librarySlug, "/events?oauth=sent"))
 
         return
       }
@@ -117,8 +112,7 @@ export function OrganisationPicker({
       <div>
         <button
           type="button"
-          className="rounded-full bg-(--t-accent-primary) px-6 py-2.5 text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
-          style={primaryPillSx}
+          className={PRIMARY_PILL}
           disabled={!organizationId || sending}
           onClick={send}
         >

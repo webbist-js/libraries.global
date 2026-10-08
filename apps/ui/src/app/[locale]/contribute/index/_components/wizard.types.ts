@@ -1,3 +1,4 @@
+import type { MobileTimetable } from "@repo/shared-data"
 import type React from "react"
 
 import { emptyOpeningTimes, type OpeningTimesData } from "./opening-times.types"
@@ -55,6 +56,10 @@ export interface FormData {
   languagesServed: string
   // Step 3 – Opening times
   openingTimes: OpeningTimesData
+  mobileTimetable: MobileTimetable | null
+  homeLibrary: string
+  operatorName: string
+  timetableUrl: string
   // Step 3 – Relations
   services: string[]
   amenities: string[]
@@ -123,6 +128,10 @@ export const EMPTY_FORM: FormData = {
   transitInfo: "",
   languagesServed: "",
   openingTimes: emptyOpeningTimes(),
+  mobileTimetable: null,
+  homeLibrary: "",
+  operatorName: "",
+  timetableUrl: "",
   services: [],
   amenities: [],
   accessibility: [],
@@ -183,7 +192,10 @@ export interface WizardLocale {
 
 export interface IndexRecordWizardProps {
   /** `new` adds a library; `improve` edits the given target. */
-  mode: "new" | "improve"
+  mode: "new" | "improve" | "staff"
+  publicPath?: string
+  /** The step to open on (1–7), e.g. from `?step=` in the staff area. */
+  initialStep?: number
   /** Improve mode: the record's current values. New mode: optional prefill. */
   initialData?: Partial<FormData>
   target?: WizardTarget

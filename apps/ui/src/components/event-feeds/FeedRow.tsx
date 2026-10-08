@@ -10,24 +10,27 @@ import { useRouter } from "next/navigation"
 import type React from "react"
 import { useRef, useState } from "react"
 
-import { Notice } from "@/components/ds"
+import { Notice, StatusBadge } from "@/components/ds"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
+import { staffLibraryHref } from "@/lib/staff/paths"
 
-import { syncLine } from "./feed-copy"
-import { FeedStatusBadge } from "./FeedStatusBadge"
+import { feedStatusOf, syncLine } from "./feed-copy"
+import {
+  SECONDARY_PILL,
+  secondaryPillStyle,
+  TOO_MANY_REQUESTS,
+} from "./feed-ui"
 import type { FeedView } from "./types"
 
-const secondaryPillSx: React.CSSProperties = {
-  fontFamily: T.font.sans,
-  fontSize: "13.5px",
-  fontWeight: 600,
-  color: T.ink.base,
-  background: T.bg.deep,
-  border: `1px solid ${T.border.hi}`,
-  borderRadius: "999px",
-  padding: "8px 16px",
-  cursor: "pointer",
+const PROVIDER_ICON: Record<string, string> = {
+  eventbrite: "mdi:ticket-confirmation-outline",
+  ical: "mdi:calendar-sync-outline",
+  ticketsource: "mdi:ticket-outline",
+  wegottickets: "mdi:ticket-percent-outline",
+  spydus: "mdi:bookshelf",
+  solus: "mdi:application-outline",
+  aspen: "mdi:compass-outline",
 }
 
 const labelSx: React.CSSProperties = {
@@ -43,14 +46,24 @@ const valueSx: React.CSSProperties = {
   fontSize: "14px",
   color: T.ink.base,
   margin: "2px 0 0",
+  overflowWrap: "anywhere",
 }
+
+/** The one-line error for a failed feed action. */
+const failed = (res: Response) =>
+  res.status === 429 ? TOO_MANY_REQUESTS : "That didn’t work. Try again."
 
 /** One connected or pending feed, for a library the signed-in user claims. */
 export function FeedRow({
   feed,
+  libraryDocumentId,
+  librarySlug,
   libraryName,
 }: {
   readonly feed: FeedView
+  readonly libraryDocumentId: string
+  /** For the staff page links; the API calls keep the id. */
+  readonly librarySlug: string | null
   readonly libraryName: string
 }) {
   const router = useRouter()
@@ -69,13 +82,13 @@ export function FeedRow({
         { method: "POST" }
       )
       if (!res.ok) {
-        setActionError("That didn't work. Try again.")
+        setActionError(failed(res))
 
         return
       }
       router.refresh()
     } catch {
-      setActionError("That didn't work. Check your connection.")
+      setActionError("That didn’t work. Check your connection.")
     } finally {
       setBusy(null)
     }
@@ -92,10 +105,11 @@ export function FeedRow({
       )
       const json = await res.json().catch(() => null)
       if (res.ok && json?.data?.result) setTestResult(json.data.result)
-      else setActionError("The test couldn't run. Try again.")
+      else if (res.status === 429) setActionError(TOO_MANY_REQUESTS)
+      else setActionError("The test couldn’t run. Try again.")
       router.refresh()
     } catch {
-      setActionError("The test couldn't run. Check your connection.")
+      setActionError("The test couldn’t run. Check your connection.")
     } finally {
       setBusy(null)
     }
@@ -110,13 +124,13 @@ export function FeedRow({
         { method: "DELETE" }
       )
       if (!res.ok) {
-        setActionError("That didn't work. Try again.")
+        setActionError(failed(res))
 
         return
       }
       router.refresh()
     } catch {
-      setActionError("That didn't work. Check your connection.")
+      setActionError("That didn’t work. Check your connection.")
     } finally {
       setBusy(null)
     }
@@ -134,13 +148,13 @@ export function FeedRow({
         }
       )
       if (!res.ok) {
-        setActionError("That didn't work. Try again.")
+        setActionError(failed(res))
 
         return
       }
       router.refresh()
     } catch {
-      setActionError("That didn't work. Check your connection.")
+      setActionError("That didn’t work. Check your connection.")
     } finally {
       setBusy(null)
     }
@@ -153,30 +167,67 @@ export function FeedRow({
     (entry): entry is [string, string] => typeof entry[1] === "string"
   )
 
+  const status = feedStatusOf(feed)
+  const tone =
+    status.key === "stopped"
+      ? "danger"
+      : status.tone === "ok"
+        ? "ok"
+        : status.tone === "warn"
+          ? "warn"
+          : "info"
+
   return (
-    <div
-      className="flex flex-col gap-3 py-5"
-      style={{ borderTop: `1px solid ${T.border.divider}` }}
+    <li
+      className="flex flex-col gap-3 rounded-[16px] border p-4 sm:p-5"
+      style={{ borderColor: T.border.line, background: T.bg.deep }}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
           <span
-            style={{
-              fontFamily: T.font.sans,
-              fontSize: "15.5px",
-              fontWeight: 600,
-              color: T.ink.base,
-            }}
+            aria-hidden="true"
+            className="flex size-9 shrink-0 items-center justify-center rounded-full"
+            style={{ background: T.accent.chip, color: T.accent.primary }}
           >
-            {providerDef.label}
+            <Icon
+              icon={PROVIDER_ICON[feed.provider] ?? "mdi:calendar-sync-outline"}
+              width={18}
+              height={18}
+            />
           </span>
-          <FeedStatusBadge feed={feed} />
+          <span className="flex min-w-0 flex-col">
+            <span
+              style={{
+                fontFamily: T.font.sans,
+                fontSize: "15.5px",
+                fontWeight: 600,
+                color: T.ink.base,
+              }}
+            >
+              {providerDef.label}
+            </span>
+            {feed.managedBy === "admin_group" ? null : (
+              <span
+                style={{
+                  fontFamily: T.font.sans,
+                  fontSize: "13.5px",
+                  color: T.ink.dim,
+                }}
+              >
+                {syncLine(feed)}
+              </span>
+            )}
+          </span>
+          <StatusBadge tone={tone} icon={status.icon}>
+            {status.label}
+          </StatusBadge>
         </div>
         {feed.managedBy === "admin_group" ? null : (
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              style={secondaryPillSx}
+              className={SECONDARY_PILL}
+              style={secondaryPillStyle}
               disabled={busy !== null}
               onClick={runTest}
             >
@@ -185,9 +236,12 @@ export function FeedRow({
             {(feed.status === "active" || feed.status === "paused") &&
               !feed.review && (
                 <GlobalLink
-                  href={`/contribute/events/${feed.documentId}/replace`}
-                  style={secondaryPillSx}
-                  className="no-underline"
+                  href={staffLibraryHref(
+                    librarySlug,
+                    `/events/${feed.documentId}/replace`
+                  )}
+                  className={SECONDARY_PILL}
+                  style={secondaryPillStyle}
                 >
                   Replace details
                 </GlobalLink>
@@ -195,7 +249,8 @@ export function FeedRow({
             {feed.status === "active" && (
               <button
                 type="button"
-                style={secondaryPillSx}
+                className={SECONDARY_PILL}
+                style={secondaryPillStyle}
                 disabled={busy !== null}
                 onClick={() => post("/pause")}
               >
@@ -205,7 +260,8 @@ export function FeedRow({
             {feed.status === "paused" && feed.pausedReason === "library" && (
               <button
                 type="button"
-                style={secondaryPillSx}
+                className={SECONDARY_PILL}
+                style={secondaryPillStyle}
                 disabled={busy !== null}
                 onClick={() => post("/resume")}
               >
@@ -214,7 +270,8 @@ export function FeedRow({
             )}
             <button
               type="button"
-              style={{ ...secondaryPillSx, color: T.accent.danger }}
+              className={SECONDARY_PILL}
+              style={{ ...secondaryPillStyle, color: T.accent.danger }}
               disabled={busy !== null}
               onClick={() => dialogRef.current?.showModal()}
             >
@@ -252,17 +309,6 @@ export function FeedRow({
             </dl>
           )}
 
-          <p
-            style={{
-              fontFamily: T.font.sans,
-              fontSize: "13.5px",
-              color: T.ink.dim,
-              margin: 0,
-            }}
-          >
-            {syncLine(feed)}
-          </p>
-
           {feed.lastErrorCode && feed.lastErrorCode !== "ok" && (
             <Notice
               icon="mdi:alert-circle-outline"
@@ -291,17 +337,8 @@ export function FeedRow({
             >
               <button
                 type="button"
-                className="mt-1 underline"
-                style={{
-                  fontFamily: T.font.sans,
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  color: T.accent.primary,
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0,
-                }}
+                className={`${SECONDARY_PILL} mt-2 self-start`}
+                style={secondaryPillStyle}
                 disabled={busy !== null}
                 onClick={withdraw}
               >
@@ -336,7 +373,7 @@ export function FeedRow({
           <dialog
             ref={dialogRef}
             aria-labelledby={`disconnect-${feed.documentId}-title`}
-            className="m-auto rounded-[20px] p-0 backdrop:bg-black/40"
+            className="m-auto rounded-[20px] p-0 backdrop:bg-(--t-scrim)"
             style={{ border: `1px solid ${T.border.line}`, maxWidth: "440px" }}
           >
             <div className="flex flex-col gap-4 p-6">
@@ -358,18 +395,18 @@ export function FeedRow({
                 Disconnect the {providerDef.label} feed for {libraryName}? Its
                 events will be removed from Libraries Global.
               </p>
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-wrap justify-end gap-2">
                 <button
                   type="button"
-                  style={secondaryPillSx}
+                  className={SECONDARY_PILL}
+                  style={secondaryPillStyle}
                   onClick={() => dialogRef.current?.close()}
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  className="rounded-full bg-(--t-accent-danger) px-4 py-2 font-semibold text-white"
-                  style={{ fontFamily: T.font.sans, fontSize: "13.5px" }}
+                  className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-danger) px-5 text-[14px] font-semibold text-white"
                   onClick={disconnect}
                 >
                   Disconnect
@@ -379,6 +416,6 @@ export function FeedRow({
           </dialog>
         </>
       )}
-    </div>
+    </li>
   )
 }

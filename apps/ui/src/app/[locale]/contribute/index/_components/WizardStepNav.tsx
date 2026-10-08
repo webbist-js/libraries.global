@@ -20,7 +20,14 @@ export const WIZARD_STEPS = [
   { n: 7, label: "Sources & send", sub: "Evidence · Review" },
 ] as const
 
+/** Step 7 for staff, who publish rather than send for review. */
+const STAFF_LAST_STEP = {
+  label: "Sources & publish",
+  sub: "Evidence · Publish",
+}
+
 interface WizardStepNavProps {
+  staff?: boolean
   currentStep: number
   /** Each step's completeness: a tick once done, "required" until then. */
   progress: StepProgress[]
@@ -167,12 +174,15 @@ export function WizardStepNav({
   changedSteps = [],
   onStepClick,
   findHref,
+  staff = false,
 }: WizardStepNavProps) {
   return (
     <nav aria-label="Wizard steps">
       <ol className="-mx-4 my-0 flex list-none gap-1 overflow-x-auto px-4 pb-2 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
         {WIZARD_STEPS.map((step) => {
           if (step.n === 0) {
+            if (staff) return null
+
             return (
               <li key={step.n} className="shrink-0 lg:shrink">
                 <Link
@@ -198,6 +208,7 @@ export function WizardStepNav({
           const isDone = !!state?.done
           const changed = changedSteps.includes(step.n)
           const changedText = changed ? ", has changes" : ""
+          const { label, sub } = staff && step.n === 7 ? STAFF_LAST_STEP : step
 
           return (
             <li key={step.n} className="shrink-0 lg:shrink">
@@ -205,14 +216,14 @@ export function WizardStepNav({
                 type="button"
                 onClick={() => onStepClick(step.n)}
                 aria-current={isActive ? "step" : undefined}
-                aria-label={`Step ${step.n}: ${step.label}${stepStatusText(state)}${changedText}`}
+                aria-label={`Step ${step.n}: ${label}${stepStatusText(state)}${changedText}`}
                 className={itemClass}
                 style={itemStyle(isActive)}
               >
                 <StepCircle n={step.n} isActive={isActive} isDone={isDone} />
                 <StepLabel
-                  label={step.label}
-                  sub={step.sub}
+                  label={label}
+                  sub={sub}
                   changed={changed}
                   required={!!state?.required && !isDone}
                 />
