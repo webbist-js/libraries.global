@@ -62,3 +62,6 @@ apps/strapi/scripts/ingests/**/.runs/
 
 # Project docs (specs, plans, ADRs, handoffs): kept locally, not committed
 /docs/
+
+# pnpm content-addressable store
+/.pnpm-store/
