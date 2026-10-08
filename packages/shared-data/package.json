@@ -15,9 +15,11 @@
     "dev": "tsc",
     "lint": "eslint -c ../../eslint.config.mjs './**/*.{js,ts,jsx,tsx,cjs,mjs}'",
     "lint:fix": "pnpm lint --fix",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "devDependencies": {
+    "vitest": "^2.0.0",
     "typescript": "^5"
   },
   "dependencies": {

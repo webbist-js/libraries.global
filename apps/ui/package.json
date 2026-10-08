@@ -20,6 +20,7 @@
     "not op_mini all"
   ],
   "dependencies": {
+    "@better-auth/passkey": "1.4.18",
     "@hookform/error-message": "^2.0.1",
     "@hookform/resolvers": "^5.2.2",
     "@iconify/react": "^5.2.1",
@@ -84,6 +85,7 @@
     "pg": "^8.13.1",
     "postprocessing": "^6.38.3",
     "prosemirror-model": "^1.25.4",
+    "qrcode.react": "^4.2.0",
     "qs": "^6.14.1",
     "react": "19.2.4",
     "react-day-picker": "9.13.0",

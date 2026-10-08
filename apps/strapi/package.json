@@ -6,7 +6,7 @@
   "types": "./types",
   "scripts": {
     "build": "pnpm run build:plugins && strapi build",
-    "build:plugins": "cd src/plugins/content-moderation && pnpm exec strapi-plugin build && cd - && cd src/plugins/rewards && pnpm exec strapi-plugin build && cd - && cd src/plugins/events && pnpm exec strapi-plugin build && cd -",
+    "build:plugins": "cd src/plugins/content-moderation && pnpm exec strapi-plugin build && cd - && cd src/plugins/rewards && pnpm exec strapi-plugin build && cd - && cd src/plugins/events && pnpm exec strapi-plugin build && cd - && cd src/plugins/library-staff && ../../../node_modules/.bin/strapi-plugin build && cd - && cd src/plugins/mobile-libraries && ../../../node_modules/.bin/strapi-plugin build && cd - && cd src/plugins/access && ../../../node_modules/.bin/strapi-plugin build && cd -",
     "config:dump": "strapi configuration:dump -f dump.json",
     "config:restore": "strapi configuration:restore -f dump.json",
     "dev": "pnpm run run:db && pnpm run develop",
@@ -28,6 +28,7 @@
     "test:watch": "vitest",
     "events:rekey": "tsx scripts/events-rekey.ts",
     "seed:meilisearch": "tsx scripts/seed-meilisearch.ts",
+    "seed:mobile-stops": "tsx scripts/seed-mobile-stops.ts",
     "transfer": "strapi transfer",
     "typecheck": "tsc --noEmit"
   },
@@ -66,7 +67,8 @@
     "strapi-plugin-meilisearch": "^0.16.5",
     "strapi-plugin-timezone-select": "2.0.0",
     "styled-components": "^6.0.0",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "tz-lookup": "^6.1.25"
   },
   "devDependencies": {
     "@strapi/icons": "2.2.4",
