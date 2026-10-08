@@ -47,3 +47,30 @@ export const FACILITY_CHECKLIST: readonly FacilityCheck[] = [
 ]
 
 export type FacilityAnswer = "yes" | "no"
+
+export const MOBILE_FACILITY_CHECKLIST: readonly FacilityCheck[] = [
+  {
+    label: "Step-free lift",
+    collection: "accessibility",
+    name: "Step-free lift",
+  },
+  { label: "Wi-Fi", collection: "amenity", name: "Wi-Fi" },
+  {
+    label: "Low-height shelves",
+    collection: "accessibility",
+    name: "Low-height shelves",
+  },
+  {
+    label: "Wheelchair space inside",
+    collection: "accessibility",
+    name: "Wheelchair space inside",
+  },
+  { label: "Hearing loop", collection: "accessibility", name: "Hearing loop" },
+]
+export function facilityChecklistFor(
+  libraryType: string | null | undefined
+): readonly FacilityCheck[] {
+  return libraryType === "Mobile"
+    ? MOBILE_FACILITY_CHECKLIST
+    : FACILITY_CHECKLIST
+}

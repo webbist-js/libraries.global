@@ -13,7 +13,7 @@ export type VerifySection = (typeof VERIFY_SECTIONS)[number]
 
 /** The library fields each section covers. */
 export const SECTION_FIELDS: Record<VerifySection, readonly string[]> = {
-  hours: ["openingTimes"],
+  hours: ["openingTimes", "mobileTimetable"],
   status: ["operationalStatus"],
   address: ["streetAddress", "city", "postalCode", "district"],
   contact: ["website", "phone", "email"],

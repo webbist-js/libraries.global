@@ -5,7 +5,11 @@
 // completeness; `accessibility` and `services` are the narrower gaps that
 // filters and drives use.
 
-import { FACILITY_CHECKLIST } from "./facility-checklist"
+import {
+  FACILITY_CHECKLIST,
+  MOBILE_FACILITY_CHECKLIST,
+} from "./facility-checklist"
+import { normalizeMobileTimetable } from "./mobile-timetable/normalize"
 
 export type GapKey =
   | "photo"
@@ -23,6 +27,9 @@ export type GapKey =
 export interface GapRecord {
   heroImage?: unknown
   openingTimes?: unknown
+  libraryType?: string | null
+  mobileTimetable?: unknown
+  homeLibrary?: unknown
   streetAddress?: string | null
   location?: unknown
   accessibility?: unknown[] | null
@@ -75,9 +82,9 @@ export function hasOpeningHours(openingTimes: unknown): boolean {
 }
 
 const ACCESSIBILITY_QUESTIONS: Set<string> = new Set(
-  FACILITY_CHECKLIST.filter((c) => c.collection === "accessibility").map(
-    (c) => c.label
-  )
+  [...FACILITY_CHECKLIST, ...MOBILE_FACILITY_CHECKLIST]
+    .filter((c) => c.collection === "accessibility")
+    .map((c) => c.label)
 )
 
 /** A confirmed "No" to an accessibility question is an answer (OD-3). */
@@ -98,21 +105,34 @@ export const GAPS: readonly GapDefinition[] = [
     label: "Opening hours",
     phrase: "opening hours",
     completeness: true,
-    filled: (r) => hasOpeningHours(r.openingTimes),
+    filled: (r) =>
+      r.libraryType === "Mobile"
+        ? Boolean(normalizeMobileTimetable(r.mobileTimetable)?.visits.length)
+        : hasOpeningHours(r.openingTimes),
   },
   {
     key: "address",
     label: "Address",
     phrase: "an address",
     completeness: true,
-    filled: (r) => text(r.streetAddress),
+    filled: (r) =>
+      r.libraryType === "Mobile"
+        ? Boolean(r.homeLibrary) || text(r.streetAddress)
+        : text(r.streetAddress),
   },
   {
     key: "location",
     label: "Map location",
     phrase: "a map location",
     completeness: true,
-    filled: (r) => Boolean(r.location),
+    filled: (r) =>
+      Boolean(r.location) ||
+      (r.libraryType === "Mobile" &&
+        Boolean(
+          normalizeMobileTimetable(r.mobileTimetable)?.stops.some(
+            (s) => s.location
+          )
+        )),
   },
   {
     key: "facilities",
@@ -170,8 +190,16 @@ export const COMPLETENESS_GAP_KEYS: readonly GapKey[] = GAPS.filter(
 export const isGapKey = (v: unknown): v is GapKey =>
   typeof v === "string" && (GAP_KEYS as readonly string[]).includes(v)
 
-export const gapDefinition = (key: GapKey): GapDefinition =>
-  GAPS.find((g) => g.key === key)!
+export const gapDefinition = (
+  key: GapKey,
+  libraryType?: string | null
+): GapDefinition => {
+  const definition = GAPS.find((g) => g.key === key)!
+
+  return key === "hours" && libraryType === "Mobile"
+    ? { ...definition, label: "Stops & times", phrase: "stops and times" }
+    : definition
+}
 
 /** The record's gaps, in registry order. */
 export function gapsOf(r: GapRecord): GapKey[] {
@@ -193,7 +221,7 @@ export function completenessOf(r: GapRecord): {
 } {
   const sections = GAPS.filter((g) => g.completeness).map((g) => ({
     key: g.key,
-    label: g.label,
+    label: gapDefinition(g.key, r.libraryType).label,
     filled: g.filled(r),
   }))
   const filled = sections.filter((s) => s.filled).length
