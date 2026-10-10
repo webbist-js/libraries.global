@@ -82,13 +82,6 @@ export function StaffShell({
     ...(mobile
       ? [
           {
-            id: "timetable",
-            label: "Timetable",
-            href: `${base}/timetable`,
-            icon: "mdi:calendar-clock",
-            badge: MOBILE_TAG,
-          },
-          {
             id: "live",
             label: "Go live",
             href: `${base}/live`,
@@ -101,7 +94,7 @@ export function StaffShell({
       id: "notices",
       label: "Notices",
       href: `${base}/notices`,
-      icon: "mdi:bullhorn-outline",
+      icon: "mdi:bell-outline",
     },
     {
       id: "events",
@@ -127,6 +120,7 @@ export function StaffShell({
 
   return (
     <PageHero
+      staff
       breadcrumb={[
         { label: "Staff area", href: "/staff" },
         { label: library.name },
@@ -135,7 +129,7 @@ export function StaffShell({
       eyebrowIcon="mdi:shield-account-outline"
       chips={
         <span
-          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[14px] font-semibold"
+          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[14px] font-semibold"
           style={{ background: tint.bg, color: tint.fg }}
         >
           <Icon
@@ -183,7 +177,9 @@ export function StaffShell({
           <PlanChip plan={plan} covered={teamCovered} />
         </>
       }
-      tabs={<SectionTabs tabs={tabs} activeId={segment} label="Staff area" />}
+      tabs={
+        <SectionTabs tabs={tabs} activeId={segment} label="Staff area" roomy />
+      }
     >
       <div className="flex w-full max-w-[440px] flex-col gap-1 lg:ml-auto">
         <LibrarySwitcher
@@ -193,19 +189,29 @@ export function StaffShell({
             staffLibraryHref(libraries.find((lib) => lib.id === id)?.slug)
           }
         />
-        <Link
-          href="/contribute/claim"
-          className="inline-flex min-h-11 w-fit items-center gap-1 text-[14px] font-semibold underline underline-offset-[3px]"
-          style={{ color: T.accent.primary }}
-        >
-          Claim another library
-          <Icon
-            aria-hidden="true"
-            height={15}
-            icon="mdi:arrow-right"
-            width={15}
-          />
-        </Link>
+        <div className="flex flex-wrap gap-x-4">
+          <Link
+            href="/contribute/claim"
+            className="inline-flex min-h-11 w-fit items-center gap-1 text-[14px] font-semibold underline underline-offset-[3px]"
+            style={{ color: T.accent.primary }}
+          >
+            Claim another library
+            <Icon
+              aria-hidden="true"
+              height={15}
+              icon="mdi:arrow-right"
+              width={15}
+            />
+          </Link>
+          <Link
+            href="/staff/new"
+            className="inline-flex min-h-11 items-center gap-1 text-[14px] font-semibold underline underline-offset-[3px]"
+            style={{ color: T.accent.primary }}
+          >
+            Add a new library
+            <Icon icon="mdi:plus" aria-hidden="true" width={15} />
+          </Link>
+        </div>
       </div>
     </PageHero>
   )

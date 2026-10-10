@@ -4,7 +4,7 @@
   "info": {
     "singularName": "library-notice",
     "pluralName": "library-notices",
-    "displayName": "Library Notice",
+    "displayName": "Notice",
     "description": "Temporary service notices, published immediately."
   },
   "options": { "draftAndPublish": false },

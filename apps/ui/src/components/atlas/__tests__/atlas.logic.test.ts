@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest"
 
 import {
   applyFilters,
+  hasAccessibility,
+  accessibilityOptions,
+  accessibilityLibraries,
+  accessibilitySummary,
   type AtlasLibrary,
   EMPTY_FILTERS,
   inBounds,
@@ -11,12 +15,16 @@ import {
   layerDef,
   loosenSuggestions,
   mergeRanges,
+  pinDependentLayers,
   parseUrlState,
   tierForPlan,
   toggleLayer,
   toUrlParams,
   typeGroupOf,
-} from "../atlas.logic"
+  withRequiredLibraryLocations,
+  type LayerId,
+  type Tier,
+} from "@/components/atlas/atlas.logic"
 
 const weekdays9to5 = [
   [[540, 1020]],
@@ -154,23 +162,67 @@ describe("layers", () => {
     expect(layerAccess(layerDef("density"), "public")).toBe("available")
     expect(layerAccess(layerDef("complete"), "public")).toBe("signin")
     expect(layerAccess(layerDef("complete"), "free")).toBe("available")
-    expect(layerAccess(layerDef("deprivation"), "free")).toBe("pro")
+    expect(layerAccess(layerDef("deprivation"), "free")).toBe("soon")
     expect(layerAccess(layerDef("mobile"), "public")).toBe("available")
-    // Not built yet: no sign-in prompt, but Pro layers still read as Pro.
+    // Readiness wins, so no plan can unlock an unbuilt layer.
     expect(layerAccess(layerDef("population"), "public")).toBe("soon")
-    expect(layerAccess(layerDef("transit"), "free")).toBe("pro")
+    expect(layerAccess(layerDef("transit"), "free")).toBe("soon")
     expect(layerAccess(layerDef("transit"), "pro")).toBe("soon")
   })
 
   it("replaces a layer in the same exclusive group", () => {
-    expect(toggleLayer(["density", "openLate"], "events")).toEqual({
-      layers: ["openLate", "events"],
+    expect(toggleLayer(["pins", "density", "openLate"], "events")).toEqual({
+      layers: ["pins", "openLate", "events"],
       replaced: "density",
     })
     expect(toggleLayer(["density"], "density")).toEqual({
       layers: [],
       replaced: null,
     })
+  })
+
+  it.each(["access", "complete", "openLate"] as LayerId[])(
+    "requires pins while %s is active and unlocks them when it is removed",
+    (id) => {
+      const enabled = toggleLayer([], id).layers
+      expect(enabled).toEqual(["pins", id])
+      expect(toggleLayer(enabled, "pins").layers).toEqual(enabled)
+      const disabled = toggleLayer(enabled, id).layers
+      expect(disabled).toEqual(["pins"])
+      expect(toggleLayer(disabled, "pins").layers).toEqual([])
+    }
+  )
+
+  it("keeps the dependency through exclusive replacements and multiple marker layers", () => {
+    const legacy = withRequiredLibraryLocations(["access", "openLate"])
+    expect(legacy).toEqual(["pins", "access", "openLate"])
+    const replacement = toggleLayer(legacy, "complete")
+    expect(replacement).toEqual({
+      layers: ["pins", "openLate", "complete"],
+      replaced: "access",
+    })
+    expect(withRequiredLibraryLocations(replacement.layers)).toEqual(
+      replacement.layers
+    )
+    const remaining = toggleLayer(replacement.layers, "complete").layers
+    expect(pinDependentLayers(remaining).map((def) => def.id)).toEqual([
+      "openLate",
+    ])
+    expect(toggleLayer(remaining, "pins").layers).toEqual(remaining)
+  })
+
+  it("does not force pins for overlays or unavailable shared-link layers", () => {
+    const overlays: LayerId[] = ["mobile", "density", "closures", "perCapita"]
+    expect(withRequiredLibraryLocations(overlays)).toEqual(overlays)
+    for (const [id, tier] of [
+      ["access", "public"],
+      ["founded", "pro"],
+    ] as [LayerId, Tier][]) {
+      const available = [id].filter(
+        (layer) => layerAccess(layerDef(layer), tier) === "available"
+      )
+      expect(withRequiredLibraryLocations(available)).toEqual([])
+    }
   })
 })
 
@@ -192,7 +244,9 @@ describe("url state", () => {
       view: { lat: 55.86, lng: -4.27, zoom: 11 },
       filters: {
         ...EMPTY_FILTERS,
-        types: ["public" as const],
+        types: ["public" as const, "mobile" as const],
+        mobileFrequency: ["fortnightly" as const],
+        mobileSharesLive: true,
         opening: "at" as const,
         atDay: 6,
         atMinutes: 720,
@@ -200,6 +254,8 @@ describe("url state", () => {
         founded: [1850, 2024] as [number, number],
       },
       layers: ["density" as const],
+      accessibility: ["Hearing loop", "Quiet room"],
+      accessibilityView: "compare" as const,
       library: "mitchell-library",
       list: true,
       projection: "flat" as const,
@@ -215,6 +271,7 @@ describe("url state", () => {
     expect(s.filters.types).toEqual([])
     expect(s.layers).toEqual(["density"])
     expect(s.filters.opening).toBe("any")
+    expect(s.accessibilityView).toBe("matches")
   })
 })
 
@@ -226,5 +283,104 @@ describe("tierForPlan", () => {
     expect(tierForPlan("team")).toBe("pro")
     for (const plan of ["platinum", "PRO", "", null, undefined])
       expect(tierForPlan(plan)).toBe("free")
+  })
+})
+
+describe("accessibility layers", () => {
+  it("distinguishes complete and partial records without treating missing facts as absence", () => {
+    const selected = ["Hearing loop", "Quiet room"]
+    const libraries = [
+      lib({ id: "match", access: selected }),
+      lib({ id: "partial", access: ["Hearing loop"] }),
+      lib({ id: "different", access: ["Accessible toilets"] }),
+      lib({ id: "unknown", access: [] }),
+    ]
+    expect(accessibilitySummary(libraries, selected)).toEqual({
+      total: 4,
+      matches: 1,
+      partial: 1,
+      unconfirmed: 3,
+    })
+    expect(
+      accessibilityLibraries(libraries, selected, "matches").map((l) => l.id)
+    ).toEqual(["match"])
+    expect(
+      accessibilityLibraries(libraries, selected, "gaps").map((l) => l.id)
+    ).toEqual(["partial", "different", "unknown"])
+    expect(accessibilityLibraries(libraries, selected, "compare")).toEqual(
+      libraries
+    )
+    expect(accessibilitySummary(libraries)).toEqual({
+      total: 4,
+      matches: 3,
+      partial: 0,
+      unconfirmed: 1,
+    })
+  })
+
+  it("handles empty populations and preserves the comparison choice in shared URLs", () => {
+    expect(accessibilitySummary([], ["Quiet room"])).toEqual({
+      total: 0,
+      matches: 0,
+      partial: 0,
+      unconfirmed: 0,
+    })
+    for (const view of ["matches", "compare", "gaps"] as const) {
+      const state = parseUrlState(
+        new URLSearchParams(
+          `layers=access&access=Quiet+room&accessView=${view}`
+        )
+      )
+      expect(parseUrlState(toUrlParams(state)).accessibilityView).toBe(view)
+    }
+    expect(
+      parseUrlState(new URLSearchParams("accessView=negative"))
+        .accessibilityView
+    ).toBe("matches")
+  })
+  it("highlights any recorded feature or every chosen feature, without guessing step-free access", () => {
+    const library = lib({ access: ["Hearing loop", "Quiet room"] })
+    expect(hasAccessibility(library)).toBe(true)
+    expect(hasAccessibility(library, ["Hearing loop", "Quiet room"])).toBe(true)
+    expect(
+      hasAccessibility(library, ["Hearing loop", "Step-free access"])
+    ).toBe(false)
+    expect(hasAccessibility(lib({ access: [] }))).toBe(false)
+    expect(
+      accessibilityOptions(
+        [library],
+        ["Braille signage"],
+        ["Accessible toilets"]
+      )
+    ).toEqual([
+      { name: "Accessible toilets", count: 0 },
+      { name: "Braille signage", count: 0 },
+      { name: "Hearing loop", count: 1 },
+      { name: "Quiet room", count: 1 },
+    ])
+  })
+  it("starts with library pins and preserves explicit layer selections", () => {
+    expect(parseUrlState(new URLSearchParams()).layers).toEqual(["pins"])
+    expect(parseUrlState(new URLSearchParams("layers=mobile")).layers).toEqual([
+      "mobile",
+    ])
+    expect(parseUrlState(new URLSearchParams("layers=")).layers).toEqual([])
+  })
+  it("lets readers choose Mobile independently from Public", () => {
+    const mobile = lib({ type: "Mobile" })
+    expect(
+      applyFilters(
+        [mobile],
+        { ...EMPTY_FILTERS, types: ["public"] },
+        new Date()
+      )
+    ).toEqual([])
+    expect(
+      applyFilters(
+        [mobile],
+        { ...EMPTY_FILTERS, types: ["mobile"] },
+        new Date()
+      )
+    ).toEqual([mobile])
   })
 })

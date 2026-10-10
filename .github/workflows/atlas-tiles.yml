@@ -1,0 +1,35 @@
+name: Atlas archive
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * *"
+permissions:
+  contents: read
+concurrency:
+  group: atlas-archive
+  cancel-in-progress: false
+jobs:
+  build:
+    # Enable only after provisioning a Linux runner with private DB access,
+    # pinned native tools, Node/pnpm and AWS CLI; local environments stay off.
+    if: vars.ATLAS_BUILD_ENABLED == 'true'
+    runs-on: [self-hosted, linux, atlas]
+    timeout-minutes: 360
+    environment: atlas-production
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack pnpm install --frozen-lockfile --ignore-scripts
+      - run: corepack pnpm --filter @repo/shared-data build
+      - run: corepack pnpm --filter @repo/sync-worker atlas:build
+        env:
+          ATLAS_BUILD_ENABLED: "true"
+          ATLAS_DATABASE_URL: ${{ secrets.ATLAS_DATABASE_URL }}
+          ATLAS_DETAIL_ZOOM: ${{ vars.ATLAS_DETAIL_ZOOM }}
+          ATLAS_PUBLIC_BASE_URL: ${{ vars.ATLAS_PUBLIC_BASE_URL }}
+          ATLAS_R2_BUCKET: ${{ vars.ATLAS_R2_BUCKET }}
+          ATLAS_R2_ENDPOINT: ${{ vars.ATLAS_R2_ENDPOINT }}
+          ATLAS_UI_ORIGIN: ${{ vars.ATLAS_UI_ORIGIN }}
+          ATLAS_VALIDATOR_PATH: ../../qa/benchmarks/atlas/validate_archive.py
+          AWS_ACCESS_KEY_ID: ${{ secrets.ATLAS_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.ATLAS_R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto

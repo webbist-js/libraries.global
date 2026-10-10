@@ -1,6 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 
 import { decodeHeaderName } from "./header-name"
+import { LIBRARIES_GLOBAL_BOT } from "./ingest-actor"
 import { isValidServiceSecret } from "./service-secret"
 
 /**
@@ -104,8 +105,15 @@ function fromRequest(req: any): ChangeContext | null {
     ? state.auth?.credentials?.name
     : undefined
   if (typeof tokenName === "string" && tokenName.length > 0) {
+    if (
+      IMPORT_TOKEN.test(tokenName) ||
+      (header(req, "x-library-ingest") === "true" &&
+        isValidServiceSecret(header(req, "x-service-secret")))
+    )
+      return { ...LIBRARIES_GLOBAL_BOT }
+
     return {
-      source: IMPORT_TOKEN.test(tokenName) ? "import" : "api_token",
+      source: "api_token",
       actorKind: "token",
       actorId: tokenName,
     }

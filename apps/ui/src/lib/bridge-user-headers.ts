@@ -21,3 +21,10 @@ export function bridgeUserHeaders(user: {
 
 /** The name the API routes use for the same headers. */
 export const userHeaders = bridgeUserHeaders
+
+/** Anonymous server reads still come from the trusted application. */
+export function strapiServiceHeaders(): Record<string, string> {
+  return process.env.STRAPI_BRIDGE_SECRET
+    ? { "X-Service-Secret": process.env.STRAPI_BRIDGE_SECRET }
+    : {}
+}

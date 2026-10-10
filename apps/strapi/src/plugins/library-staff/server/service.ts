@@ -79,7 +79,7 @@ export function facilityHealth(
     total,
     action: {
       label: answered >= total ? "Still right" : "Finish",
-      href: `${edit}?step=3`,
+      href: `${edit}?step=access`,
     },
   }
 }
@@ -280,7 +280,7 @@ export default ({ strapi }: { strapi: any }) => ({
                 : checked
                   ? "Still right"
                   : "Confirm times",
-              href: `/staff/${lib.slug}/timetable`,
+              href: `${edit}?step=timetable`,
             },
           }
         : {
@@ -309,7 +309,7 @@ export default ({ strapi }: { strapi: any }) => ({
         note: lib.catalogueUrl ? "Added" : "Not added",
         status: lib.catalogueUrl ? "ok" : "todo",
         // catalogueUrl lives on the wizard's step 3 (links), not step 1.
-        action: { label: "Add link", href: `${edit}?step=3` },
+        action: { label: "Add link", href: `${edit}?step=links` },
       },
       ...(!mobile
         ? [

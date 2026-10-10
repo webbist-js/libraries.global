@@ -150,7 +150,7 @@ describe("/staff", () => {
     ).toBe(`/live/${MOBILE.id}`)
     expect(
       mobile.getByRole("link", { name: "Edit timetable" }).getAttribute("href")
-    ).toBe(`/staff/${MOBILE.slug}/timetable`)
+    ).toBe(`/staff/${MOBILE.slug}/edit?step=timetable`)
     expect(
       mobile.getByRole("link", { name: "Event feeds" }).getAttribute("href")
     ).toBe(`/staff/${MOBILE.slug}/events`)

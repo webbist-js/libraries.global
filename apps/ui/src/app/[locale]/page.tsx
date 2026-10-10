@@ -5,7 +5,7 @@ import type { Locale } from "next-intl"
 import { LibraryHomePage } from "@/components/home/LibraryHomePage"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { getSessionSSR } from "@/lib/auth-server"
-import { buildWebSiteSchema } from "@/lib/seo/json-ld"
+import { buildOrganizationSchema, buildWebSiteSchema } from "@/lib/seo/json-ld"
 import {
   absoluteUrl,
   buildMetadata,
@@ -24,8 +24,9 @@ export async function generateMetadata(props: {
   const seo = (await fetchHomepage(locale as Locale))?.data?.seo
 
   return buildMetadata({
-    absoluteTitle: seo?.metaTitle ?? DEFAULT_TITLE,
-    description: seo?.metaDescription ?? DEFAULT_DESCRIPTION,
+    seo,
+    absoluteTitle: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
     path: "",
     locale,
     image: formatStrapiMediaUrl(seo?.metaImage?.url),
@@ -43,10 +44,13 @@ export default async function HomePage(props: {
   return (
     <>
       <JsonLd
-        data={buildWebSiteSchema({
-          siteUrl: absoluteUrl("", locale),
-          searchUrlTemplate: `${absoluteUrl("index", locale)}?q={search_term_string}`,
-        })}
+        data={[
+          buildOrganizationSchema(absoluteUrl("", locale)),
+          buildWebSiteSchema({
+            siteUrl: absoluteUrl("", locale),
+            searchUrlTemplate: `${absoluteUrl("libraries", locale)}?q={search_term_string}`,
+          }),
+        ]}
       />
       <LibraryHomePage locale={locale} viewerPlan={viewerPlan} />
     </>

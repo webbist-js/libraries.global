@@ -142,7 +142,8 @@ export function ContributeSection({
     <section
       id="contribute"
       aria-labelledby="contribute-title"
-      className="mx-auto grid w-full max-w-[1360px] grid-cols-1 items-start gap-[clamp(40px,7vw,120px)] px-4 pt-[clamp(80px,10vw,140px)] sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+      data-homepage-surface="paper"
+      className="mx-auto grid w-full max-w-[1360px] grid-cols-1 items-start gap-[clamp(40px,7vw,120px)] px-4 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
     >
       <div>
         <h2

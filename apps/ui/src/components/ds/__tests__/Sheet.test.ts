@@ -12,6 +12,8 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 Object.assign(globalThis, { React })
 
+vi.mock("@iconify/react", () => ({ Icon: () => null }))
+
 const { Sheet } = await import("../Sheet")
 
 afterEach(cleanup)

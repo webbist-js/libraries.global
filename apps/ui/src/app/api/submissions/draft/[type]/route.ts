@@ -36,6 +36,8 @@ export async function GET(
     `${STRAPI}/api/content-moderation/submissions/draft/${encodeURIComponent(type)}`
   )
   if (targetSlug) strapiUrl.searchParams.set("targetSlug", targetSlug)
+  if (type === "new_library" && searchParams.get("staffCreation") === "true")
+    strapiUrl.searchParams.set("staffCreation", "true")
   // Translation drafts are looked up per locale; Strapi maps an unknown one
   // to the default. Only a locale-shaped code is forwarded.
   const locale = searchParams.get("locale")

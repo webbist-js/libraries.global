@@ -37,6 +37,14 @@ export const env = createEnv({
     BASIC_AUTH_ENABLED: optionalZodBoolean(),
     BASIC_AUTH_USERNAME: z.string().optional(),
     BASIC_AUTH_PASSWORD: z.string().optional(),
+    BETA_GATE_ENABLED: optionalZodBoolean(),
+    BETA_PASSWORD: z.string().optional(),
+    BETA_ACCESS_SECRET: z.string().optional(),
+    BETA_ACCESS_VERSION: z.string().optional(),
+    BETA_CONTACT_EMAIL: z.string().email().optional(),
+    BETA_SOURCE_URL: z.string().url().optional(),
+    MEILISEARCH_HOST: z.string().url().optional(),
+    MEILISEARCH_SEARCH_API_KEY: z.string().optional(),
   },
 
   /*
@@ -51,8 +59,6 @@ export const env = createEnv({
     NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
     NEXT_PUBLIC_RECAPTCHA_SITE_KEY: z.string().optional(),
     NEXT_PUBLIC_PREVENT_UNUSED_FUNCTIONS_ERROR_LOGS: optionalZodBoolean(),
-    NEXT_PUBLIC_MEILISEARCH_HOST: z.string().optional(),
-    NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY: z.string().optional(),
     NEXT_PUBLIC_STRAPI_URL: z.string().url().optional(),
   },
 
@@ -93,6 +99,14 @@ export const env = createEnv({
     BASIC_AUTH_ENABLED: process.env.BASIC_AUTH_ENABLED,
     BASIC_AUTH_USERNAME: process.env.BASIC_AUTH_USERNAME,
     BASIC_AUTH_PASSWORD: process.env.BASIC_AUTH_PASSWORD,
+    BETA_GATE_ENABLED: process.env.BETA_GATE_ENABLED,
+    BETA_PASSWORD: process.env.BETA_PASSWORD,
+    BETA_ACCESS_SECRET: process.env.BETA_ACCESS_SECRET,
+    BETA_ACCESS_VERSION: process.env.BETA_ACCESS_VERSION,
+    BETA_CONTACT_EMAIL: process.env.BETA_CONTACT_EMAIL,
+    BETA_SOURCE_URL: process.env.BETA_SOURCE_URL,
+    MEILISEARCH_HOST: process.env.MEILISEARCH_HOST,
+    MEILISEARCH_SEARCH_API_KEY: process.env.MEILISEARCH_SEARCH_API_KEY,
 
     // client
     // @dominik-juriga - find out if these are specific per environment
@@ -100,9 +114,6 @@ export const env = createEnv({
     NEXT_PUBLIC_RECAPTCHA_SITE_KEY: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
     NEXT_PUBLIC_PREVENT_UNUSED_FUNCTIONS_ERROR_LOGS:
       process.env.NEXT_PUBLIC_PREVENT_UNUSED_FUNCTIONS_ERROR_LOGS,
-    NEXT_PUBLIC_MEILISEARCH_HOST: process.env.NEXT_PUBLIC_MEILISEARCH_HOST,
-    NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY:
-      process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY,
     NEXT_PUBLIC_STRAPI_URL: process.env.NEXT_PUBLIC_STRAPI_URL,
 
     // shared

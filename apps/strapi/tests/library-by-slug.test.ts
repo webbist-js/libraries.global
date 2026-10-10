@@ -99,14 +99,14 @@ function shaped(query: Record<string, unknown>) {
 }
 
 describe("GET /libraries/by-slug/:slug (the library page's read)", () => {
-  it("is a public route under the detail populate shape, which carries the timetable", () => {
+  it("uses the public find permission so Strapi retains readable relations in the detail shape", () => {
     expect(bySlugRoutes.routes).toEqual([
       {
         method: "GET",
         path: "/libraries/by-slug/:slug",
         handler: "library.findBySlug",
         config: {
-          auth: false,
+          auth: { scope: ["api::library.library.find"] },
           middlewares: [
             {
               name: "api::library.library-populate",

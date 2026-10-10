@@ -11,6 +11,8 @@ const withNextIntl = plugin("./src/lib/i18n.ts")
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Separate build output for a concurrent local beta/E2E preview.
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
   output: env.NEXT_OUTPUT,
   reactStrictMode: true,
   devIndicators: {

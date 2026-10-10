@@ -1,93 +1,110 @@
 import type { Locale } from "next-intl"
 
 import { staffPathname } from "@/app/[locale]/staff/_lib/staff-pathname"
-import { PlanGatePanel, Notice } from "@/components/ds"
+import { PlanGatePanel } from "@/components/ds"
 import { KNOWLEDGE_SLUGS } from "@/components/staff/knowledge-links"
 import { LearnMoreLink } from "@/components/staff/LearnMoreLink"
 import { requireEntitlementForLibrary } from "@/lib/access-server"
+import { T } from "@/lib/design-tokens"
 import { TEAM_CONTACT_HREF } from "@/lib/plans"
 import { privateMetadata } from "@/lib/seo/metadata"
-import { staffLibraryHref } from "@/lib/staff/paths"
 import { loadStaffPage } from "@/lib/staff/server"
-import {
-  SampleTrafficSource,
-  parseTrafficRange,
-  trafficSource,
-  type TrafficSummary,
-} from "@/lib/staff/traffic-source"
-
-import { TrafficPreview } from "../_components/TrafficPreview"
 
 export const metadata = privateMetadata("Traffic")
 
+/** Decorative shapes for the plan explanation, without fabricated metrics. */
+function TrafficIllustration() {
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="grid grid-cols-2 gap-3">
+        {["Page views", "Visitors"].map((label) => (
+          <div
+            key={label}
+            className="rounded-[16px] border bg-white p-4"
+            style={{ borderColor: T.border.line }}
+          >
+            <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+              {label}
+            </p>
+            <span
+              className="mt-3 block h-5 w-16 rounded-full"
+              style={{ background: T.bg.muted2 }}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="flex h-32 items-end gap-2">
+        {[40, 55, 48, 70, 35, 60, 78, 52, 85, 65, 90, 72].map((height) => (
+          <span
+            key={height}
+            className="flex-1 rounded-t"
+            style={{ height: `${height}%`, background: T.accent.chip }}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default async function TrafficPage({
   params,
-  searchParams,
 }: {
   readonly params: Promise<{ locale: string; slug: string }>
-  readonly searchParams: Promise<{ range?: string | string[] }>
 }) {
-  const [{ locale, slug }, query] = await Promise.all([params, searchParams])
+  const { locale, slug } = await params
   const { user, documentId } = await loadStaffPage(slug, await staffPathname())
-  const range = parseTrafficRange(query.range)
   const covered =
     requireEntitlementForLibrary(user, "library.traffic", documentId) === null
-  const base = staffLibraryHref(slug, "/traffic")
-  const rangeHref = (r: number) => `${base}?range=${r}`
-  // Uncovered libraries only ever see the sample; covered ones ask the
-  // configured source and fall back to the sample until it exists.
-  let summary: TrafficSummary
-  let unavailable = false
-  try {
-    summary = await (
-      covered ? trafficSource() : new SampleTrafficSource()
-    ).getSummary(documentId, range)
-  } catch {
-    unavailable = true
-    summary = await new SampleTrafficSource().getSummary(documentId, range)
-  }
 
-  return covered ? (
-    <div className="flex flex-col gap-6">
-      <Notice
-        icon="mdi:information-outline"
-        title={
-          unavailable
-            ? "Traffic reports are not connected yet"
-            : "Traffic reports are coming soon"
-        }
-        tone="info"
-      >
-        <p className="m-0">
-          This preview uses sample data. Your library’s traffic is not measured
-          here yet.
-        </p>
-      </Notice>
-      <TrafficPreview summary={summary} rangeHref={rangeHref} locale={locale} />
-    </div>
-  ) : (
-    <div className="flex flex-col gap-4">
-      <PlanGatePanel
-        title="See how people find your library"
-        lead="Understand visits to your library’s page with the Team plan."
-        points={[
-          "Page views and visitors",
-          "Directions and catalogue clicks",
-          "Referrers and searches",
-          "Choose 7, 30 or 90 days",
-        ]}
-        comingSoon
-        compareHref="/contribute/membership"
-        contactHref={TEAM_CONTACT_HREF}
-        preview={
-          <TrafficPreview
-            summary={summary}
-            rangeHref={rangeHref}
-            locale={locale}
-            ghost
-          />
-        }
-      />
+  return (
+    <div className="max-w-[1180px] space-y-4">
+      {covered ? (
+        <section
+          className="rounded-[28px] border p-5 sm:p-10"
+          style={{ background: T.bg.deep, borderColor: T.border.line }}
+          aria-labelledby="traffic-heading"
+        >
+          <h2
+            id="traffic-heading"
+            className="m-0 text-[32px] leading-[1.1] sm:text-[40px]"
+            style={{ fontFamily: T.font.serif, fontWeight: 500 }}
+          >
+            Page traffic
+          </h2>
+          <p className="mt-3 mb-0 text-[17px]" style={{ color: T.ink.dim }}>
+            Visits to your library’s page on Libraries Global.
+          </p>
+          <div
+            className="mt-8 rounded-[20px] border p-5 sm:p-6"
+            style={{ background: T.bg.surface, borderColor: T.border.line }}
+          >
+            <h3 className="m-0 text-[18px] font-semibold">
+              Traffic reports are coming soon
+            </h3>
+            <p
+              className="mt-2 mb-0 max-w-[65ch] text-[16px] leading-relaxed"
+              style={{ color: T.ink.dim }}
+            >
+              Your Team plan includes this feature. Traffic reporting is not
+              connected yet, so there are no figures to show for your library.
+            </p>
+          </div>
+        </section>
+      ) : (
+        <PlanGatePanel
+          title="See how people find your library"
+          lead="Understand visits to your library’s page with the Team plan. Traffic reports are coming soon."
+          points={[
+            "Page views and visitors",
+            "Daily views for 7, 30 or 90 days",
+            "Where visitors came from",
+          ]}
+          comingSoon
+          compareHref="/contribute/membership"
+          contactHref={TEAM_CONTACT_HREF}
+          preview={<TrafficIllustration />}
+        />
+      )}
       <LearnMoreLink slug={KNOWLEDGE_SLUGS.plans} locale={locale as Locale} />
     </div>
   )

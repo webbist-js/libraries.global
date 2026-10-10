@@ -723,3 +723,7 @@ describe("scripts/seed-meilisearch.ts", () => {
     ).toBe(false)
   })
 })
+
+it("does not expose a separate population index", () => {
+  expect(meili).not.toHaveProperty("population-observation")
+})

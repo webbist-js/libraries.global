@@ -10,31 +10,60 @@ import {
   type MobileStopHit,
 } from "@/lib/mobile-stop-search"
 
+import { Icon } from "./atlas-ui"
+import { ResultGroup, ResultRow } from "./AtlasSearchResults"
+
+export type MobileSearchStatus = {
+  query: string
+  count: number
+  pending: boolean
+  failed?: boolean
+}
+
 export function AtlasMobileSearch({
   query,
   onPick,
+  onStatus,
+  libraryIds,
 }: {
   readonly query: string
   readonly onPick: (stop: MobileStopHit) => void
+  readonly onStatus: (status: MobileSearchStatus) => void
+  readonly libraryIds: Set<string>
 }) {
-  const locale = useLocale(),
-    [stops, setStops] = useState<MobileStopHit[]>([]),
-    [libraries, setLibraries] = useState<LibrarySearchHit[]>([])
+  const locale = useLocale()
+  const term = query.trim()
+  const [loaded, setLoaded] = useState<{
+    query: string
+    stops: MobileStopHit[]
+    libraries: LibrarySearchHit[]
+  } | null>(null)
+  const [failed, setFailed] = useState<string | null>(null)
   useEffect(() => {
-    if (query.trim().length < 2) return
+    if (term.length < 2) return
     let cancelled = false
+    onStatus({ query: term, count: 0, pending: true })
     const timer = setTimeout(() => {
-      atlasMobileMultiSearch(query.trim(), locale)
+      atlasMobileMultiSearch(term, locale)
         .then((result) => {
           if (cancelled) return
-          setLibraries((result.results[0]?.hits ?? []) as LibrarySearchHit[])
-          setStops((result.results[1]?.hits ?? []) as MobileStopHit[])
+          const stops = (result.results[1]?.hits ?? []) as MobileStopHit[]
+          const libraries = (result.results[0]?.hits ??
+            []) as LibrarySearchHit[]
+          setLoaded({ query: term, stops, libraries })
+          setFailed(null)
+          onStatus({
+            query: term,
+            count:
+              stops.length +
+              libraries.filter((library) => buildLibraryPath(library)).length,
+            pending: false,
+          })
         })
         .catch(() => {
-          if (!cancelled) {
-            setStops([])
-            setLibraries([])
-          }
+          if (cancelled) return
+          setFailed(term)
+          onStatus({ query: term, count: 0, pending: false, failed: true })
         })
     }, 300)
 
@@ -42,49 +71,75 @@ export function AtlasMobileSearch({
       cancelled = true
       clearTimeout(timer)
     }
-  }, [query, locale])
-  if (query.trim().length < 2 || (!stops.length && !libraries.length))
-    return null
+  }, [term, locale, onStatus])
+  if (term.length < 2) return null
+  if (failed === term)
+    return (
+      <p role="status" className="m-0 text-sm" style={{ color: T.ink.dim }}>
+        Mobile stop search is unavailable. Try again shortly.
+      </p>
+    )
+  if (loaded?.query !== term)
+    return (
+      <p role="status" className="m-0 text-sm" style={{ color: T.ink.dim }}>
+        Searching libraries and stops…
+      </p>
+    )
+  const libraries = loaded.libraries.filter(
+    (library) =>
+      !libraryIds.has(library.documentId) && buildLibraryPath(library)
+  )
 
   return (
-    <section
-      className="mt-4 border-t pt-4"
-      style={{ borderColor: T.border.line }}
-      aria-label="Library and mobile stop search results"
-    >
-      <h3 className="text-sm font-bold">Libraries and stops</h3>
-      <ul className="m-0 list-none p-0">
-        {libraries.map((library) => {
-          const path = buildLibraryPath(library)
-
-          return path ? (
+    <>
+      {loaded.stops.length ? (
+        <ResultGroup title="Mobile library stops">
+          {loaded.stops.map((stop) => (
+            <ResultRow
+              key={stop.id}
+              icon="bus"
+              title={stop.name}
+              sub={[stop.where, stop.library_name].filter(Boolean).join(" · ")}
+              onClick={() => onPick(stop)}
+            />
+          ))}
+        </ResultGroup>
+      ) : null}
+      {libraries.length ? (
+        <ResultGroup title="More libraries">
+          {libraries.map((library) => (
             <li key={library.documentId}>
               <GlobalLink
-                className="flex min-h-11 items-center py-2 underline"
-                href={path}
+                href={buildLibraryPath(library)}
+                className="flex min-h-14 items-center gap-3 rounded-xl py-2 hover:bg-(--t-bg-surface)"
               >
-                {library.name}
+                <span
+                  className="flex size-8 items-center justify-center rounded-lg border-2"
+                  style={{ color: T.map.stopRing, borderColor: T.map.stopRing }}
+                >
+                  <Icon
+                    name={library.libraryType === "Mobile" ? "bus" : "book"}
+                    size={18}
+                  />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px] font-semibold">
+                    {library.name}
+                  </span>
+                  <span
+                    className="block text-[13px]"
+                    style={{ color: T.ink.dim }}
+                  >
+                    {library.libraryType === "Mobile"
+                      ? "Mobile library"
+                      : "Library"}
+                  </span>
+                </span>
               </GlobalLink>
             </li>
-          ) : null
-        })}
-        {stops.map((stop) => (
-          <li key={stop.id}>
-            <button
-              type="button"
-              className="min-h-11 w-full py-2 text-left"
-              style={{ color: T.map.stopRing }}
-              onClick={() => onPick(stop)}
-            >
-              <span aria-hidden="true">▢ </span>
-              {stop.name}
-              <span className="block text-sm" style={{ color: T.ink.dim }}>
-                {stop.library_name}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </section>
+          ))}
+        </ResultGroup>
+      ) : null}
+    </>
   )
 }

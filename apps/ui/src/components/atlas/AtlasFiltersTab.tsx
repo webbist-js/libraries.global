@@ -1,5 +1,6 @@
 "use client"
 
+import type { AtlasCountsResponse } from "@repo/shared-data"
 import { useMemo, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -49,6 +50,13 @@ export function AtlasFiltersTab({
   now,
   onShowResults,
   showResultsLabel = "Show",
+  mobileEnabled = false,
+  onEnableMobile,
+  mobileCount = 0,
+  mobileSharesLiveCount = 0,
+  serverCounts,
+  onFacilitySearch,
+  onMoreFacilities,
 }: {
   readonly filters: AtlasFilters
   readonly onChange: (f: AtlasFilters) => void
@@ -57,6 +65,13 @@ export function AtlasFiltersTab({
   readonly now: Date
   readonly onShowResults: () => void
   readonly showResultsLabel?: string
+  readonly mobileEnabled?: boolean
+  readonly onEnableMobile?: () => void
+  readonly mobileCount?: number
+  readonly mobileSharesLiveCount?: number
+  readonly serverCounts?: AtlasCountsResponse
+  readonly onFacilitySearch?: (query: string) => void
+  readonly onMoreFacilities?: () => void
 }) {
   const [allFacilities, setAllFacilities] = useState(false)
   const set = (patch: Partial<AtlasFilters>) =>
@@ -69,37 +84,48 @@ export function AtlasFiltersTab({
       new Map(
         TYPE_GROUPS.map((g) => [
           g.key,
-          countWith(libraries, filters, { types: [g.key] }, now),
+          serverCounts
+            ? (serverCounts.typeGroups[g.key] ?? 0)
+            : countWith(libraries, filters, { types: [g.key] }, now),
         ])
       ),
-    [libraries, filters, now]
+    [libraries, filters, now, serverCounts]
   )
   const operatorCounts = useMemo(
     () =>
       new Map(
         OPERATOR_GROUPS.map((g) => [
           g.key,
-          countWith(libraries, filters, { operators: [g.key] }, now),
+          serverCounts
+            ? (serverCounts.operatorGroups[
+                g.key as keyof AtlasCountsResponse["operatorGroups"]
+              ] ?? 0)
+            : countWith(libraries, filters, { operators: [g.key] }, now),
         ])
       ),
-    [libraries, filters, now]
+    [libraries, filters, now, serverCounts]
   )
   const facilities = useMemo(
-    () => facilityOptions(libraries.filter(isListed)),
-    [libraries]
+    () =>
+      serverCounts?.facilities ?? facilityOptions(libraries.filter(isListed)),
+    [libraries, serverCounts]
   )
   const facilityCount = (name: string) =>
-    countWith(
-      libraries,
-      filters,
-      {
-        facilities: filters.facilities.includes(name)
-          ? filters.facilities
-          : [...filters.facilities, name],
-      },
-      now
-    )
+    serverCounts
+      ? (serverCounts.facilities.find((option) => option.name === name)
+          ?.count ?? 0)
+      : countWith(
+          libraries,
+          filters,
+          {
+            facilities: filters.facilities.includes(name)
+              ? filters.facilities
+              : [...filters.facilities, name],
+          },
+          now
+        )
   const years = useMemo(() => {
+    if (serverCounts) return serverCounts.foundedRange
     const ys = libraries
       .map((l) => l.founded)
       .filter((y): y is number => y !== null)
@@ -107,12 +133,14 @@ export function AtlasFiltersTab({
     return ys.length > 0
       ? ([Math.min(...ys), new Date().getFullYear()] as [number, number])
       : null
-  }, [libraries])
+  }, [libraries, serverCounts])
 
   // Show groups that exist in the data, plus any that are selected.
   const typeOptions = TYPE_GROUPS.filter(
     (g) =>
+      g.key === "mobile" ||
       filters.types.includes(g.key) ||
+      (serverCounts && Object.hasOwn(serverCounts.typeGroups, g.key)) ||
       libraries.some(
         (l) =>
           isListed(l) &&
@@ -122,6 +150,7 @@ export function AtlasFiltersTab({
   const operatorOptions = OPERATOR_GROUPS.filter(
     (g) =>
       filters.operators.includes(g.key) ||
+      (serverCounts && Object.hasOwn(serverCounts.operatorGroups, g.key)) ||
       libraries.some((l) => l.operator && g.values.includes(l.operator))
   )
   const facilityShown = allFacilities
@@ -134,7 +163,7 @@ export function AtlasFiltersTab({
       ]
 
   return (
-    <div className="flex min-h-full flex-col gap-[14px]">
+    <div className="flex min-h-full flex-col gap-5">
       <div className="flex items-center justify-between">
         <p className="m-0 text-[15px] font-bold">
           {active === 0
@@ -163,9 +192,13 @@ export function AtlasFiltersTab({
                 key={g.key}
                 on={on}
                 tint={tintOfGroup(g.key as TypeGroupKey)}
-                onClick={() => set({ types: toggle(filters.types, g.key) })}
+                onClick={() => {
+                  set({ types: toggle(filters.types, g.key) })
+                  if (g.key === "mobile" && !on) onEnableMobile?.()
+                }}
+                preserveGlyph
               >
-                {on ? null : <PinGlyph group={g.key} />}
+                <PinGlyph group={g.key} size={12} />
                 {g.label}
                 <span className="sr-only">
                   , {typeCounts.get(g.key)} libraries
@@ -181,7 +214,7 @@ export function AtlasFiltersTab({
           label="Opening"
           value={filters.opening}
           onChange={(opening) => set({ opening })}
-          className="self-start"
+          className="w-full rounded-[16px] [&>button]:min-h-11 [&>button]:px-2"
           options={[
             { value: "any", label: "Any time" },
             { value: "now", label: "Open now", icon: "clock" },
@@ -229,9 +262,73 @@ export function AtlasFiltersTab({
           </div>
         ) : null}
         <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
-          Libraries without recorded hours are left out when this is on.
+          Libraries without recorded hours are left out. For mobile libraries,
+          open means a vehicle is at the stop, from live updates or its
+          timetable.
         </p>
       </Group>
+
+      <fieldset
+        className="m-0 flex min-w-0 flex-col gap-3 rounded-[18px] border px-3.5 pt-2 pb-4"
+        style={{ background: T.bg.surface, borderColor: T.border.line }}
+      >
+        <legend className="flex items-center gap-2 px-2 text-[15px] font-bold">
+          <Icon name="bus" size={18} color={T.map.stopRing} />
+          Mobile library stops
+        </legend>
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              ["weekly", "Weekly"],
+              ["fortnightly", "Every 2 weeks"],
+              ["monthly", "Monthly"],
+            ] as const
+          ).map(([frequency, label]) => (
+            <Chip
+              key={frequency}
+              on={filters.mobileFrequency?.includes(frequency) ?? false}
+              onClick={() => {
+                set({
+                  mobileFrequency: toggle(
+                    filters.mobileFrequency ?? [],
+                    frequency
+                  ),
+                })
+                onEnableMobile?.()
+              }}
+            >
+              {label}
+            </Chip>
+          ))}
+        </div>
+        <label
+          className="flex min-h-11 items-center gap-2.5 text-[15px]"
+          style={{ color: T.ink.dim }}
+        >
+          <input type="checkbox" disabled className="size-5" />
+          Step-free stop
+          <span className="ml-auto text-[12px]">Not recorded yet</span>
+        </label>
+        <Check
+          label="Shares live updates"
+          checked={filters.mobileSharesLive ?? false}
+          count={mobileSharesLiveCount}
+          onChange={() => {
+            set({ mobileSharesLive: !filters.mobileSharesLive })
+            onEnableMobile?.()
+          }}
+        />
+        {!mobileEnabled ? (
+          <button
+            type="button"
+            onClick={onEnableMobile}
+            className="min-h-9 self-start font-semibold underline"
+            style={{ color: T.accent.primary }}
+          >
+            Show mobile stops on the map
+          </button>
+        ) : null}
+      </fieldset>
 
       {operatorOptions.length > 0 ? (
         <Group legend="Operated by">
@@ -255,6 +352,19 @@ export function AtlasFiltersTab({
       ) : null}
 
       <Group legend="Services & accessibility">
+        {onFacilitySearch ? (
+          <input
+            type="search"
+            aria-label="Search services and accessibility"
+            placeholder="Find a feature"
+            maxLength={80}
+            onChange={(event) => {
+              onFacilitySearch(event.target.value)
+              setAllFacilities(true)
+            }}
+            className="h-10 rounded-xl border px-3"
+          />
+        ) : null}
         <div className="flex flex-col">
           {facilityShown.map((f) => (
             <Check
@@ -270,13 +380,19 @@ export function AtlasFiltersTab({
           <Check
             label="Has upcoming events"
             checked={filters.events}
-            count={countWith(libraries, filters, { events: true }, now)}
+            count={
+              serverCounts?.events ??
+              countWith(libraries, filters, { events: true }, now)
+            }
             onChange={() => set({ events: !filters.events })}
           />
           <Check
             label="Live catalogue link"
             checked={filters.catalogue}
-            count={countWith(libraries, filters, { catalogue: true }, now)}
+            count={
+              serverCounts?.catalogue ??
+              countWith(libraries, filters, { catalogue: true }, now)
+            }
             onChange={() => set({ catalogue: !filters.catalogue })}
           />
         </div>
@@ -291,6 +407,17 @@ export function AtlasFiltersTab({
             {allFacilities
               ? "Show fewer"
               : `Show ${facilities.length - FACILITIES_SHOWN} more`}
+          </button>
+        ) : null}
+        {allFacilities &&
+        serverCounts?.facilitiesHasMore &&
+        onMoreFacilities ? (
+          <button
+            type="button"
+            onClick={onMoreFacilities}
+            className="text-sm underline"
+          >
+            Next features
           </button>
         ) : null}
       </Group>
@@ -329,7 +456,7 @@ export function AtlasFiltersTab({
       ) : null}
 
       <div
-        className="sticky bottom-0 -mx-5 mt-auto flex items-center gap-2.5 border-t bg-white px-5 pt-3 pb-1"
+        className="sticky bottom-0 -mx-4 mt-auto flex items-center gap-2.5 border-t bg-white px-4 pt-3 pb-1 md:-mx-5 md:px-5"
         style={{ borderColor: T.border.divider }}
       >
         <p className="m-0 flex-1 text-[15px]" aria-live="polite">
@@ -337,18 +464,18 @@ export function AtlasFiltersTab({
             className="text-[22px] font-medium"
             style={{ fontFamily: T.font.serif }}
           >
-            {matchCount.toLocaleString()}
+            {(matchCount + mobileCount).toLocaleString()}
           </strong>{" "}
-          match
+          matches
+          {mobileCount ? ` · ${mobileCount.toLocaleString()} mobile stops` : ""}
         </p>
         <button
           type="button"
           onClick={onShowResults}
-          disabled={matchCount === 0}
+          disabled={matchCount + mobileCount === 0}
           className="inline-flex h-11 items-center gap-2 rounded-full bg-(--t-accent-primary) px-5 text-[15px] font-semibold text-white hover:bg-(--t-accent-primary-hover) disabled:opacity-50"
         >
-          {showResultsLabel} {matchCount.toLocaleString()}{" "}
-          {matchCount === 1 ? "library" : "libraries"}
+          {showResultsLabel} results
         </button>
       </div>
     </div>
@@ -366,7 +493,7 @@ function Group({
 }) {
   return (
     <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
-      <legend className="mb-2 flex w-full justify-between p-0 text-[14px] font-bold">
+      <legend className="mb-2 flex w-full justify-between p-0 text-[15px] font-bold">
         {legend}
         {aside ? <span className="font-semibold">{aside}</span> : null}
       </legend>
@@ -387,7 +514,7 @@ function Check({
   readonly onChange: () => void
 }) {
   return (
-    <label className="flex min-h-8 cursor-pointer items-center gap-2.5 text-[15px]">
+    <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-[15px]">
       <input
         type="checkbox"
         checked={checked}

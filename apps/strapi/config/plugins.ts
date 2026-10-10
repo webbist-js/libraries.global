@@ -353,7 +353,6 @@ type Rec = Record<string, unknown>
  * straight through, and its Strapi 4 spelling `"all"` matches no rows.
  */
 const ALL_LOCALES = "*"
-
 const MEDIA_FIELDS = ["url", "alternativeText", "formats"]
 
 const ARTICLE_FIELDS = [
@@ -600,10 +599,25 @@ const prepareAwsS3Config = (env) => {
 }
 
 const prepareEmailConfig = (env) => {
+  if (env("SMTP_HOST") && env("SMTP_USER") && env("SMTP_PASS")) {
+    return {
+      provider: "nodemailer",
+      providerOptions: {
+        host: env("SMTP_HOST"),
+        port: Number.parseInt(env("SMTP_PORT", "587"), 10),
+        secure: env("SMTP_SECURE", "false") === "true",
+        auth: { user: env("SMTP_USER"), pass: env("SMTP_PASS") },
+      },
+      settings: {
+        defaultFrom: env("EMAIL_FROM", "noreply@libraries.global"),
+        defaultReplyTo: env("EMAIL_REPLY_TO", "hello@libraries.global"),
+      },
+    }
+  }
   const hasMailgunCreds = env("MAILGUN_API_KEY") && env("MAILGUN_DOMAIN")
   const hasMailtrapCreds = env("MAILTRAP_USER") && env("MAILTRAP_PASS")
 
-  // Mailgun has bigger priority
+  // Mailgun takes priority over the development Mailtrap sandbox.
   // Mailtrap is only for development/testing purposes
 
   if (hasMailgunCreds) {

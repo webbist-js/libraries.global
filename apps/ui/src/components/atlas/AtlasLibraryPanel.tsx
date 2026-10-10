@@ -1,5 +1,6 @@
 "use client"
 
+import { effectiveLibraryHours, noticeLocalDate } from "@repo/shared-data"
 import { useEffect, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -12,12 +13,7 @@ import { T } from "@/lib/design-tokens"
 import { formatStrapiMediaUrlForClient } from "@/lib/strapi-helpers"
 
 import { Icon, tintOfGroup, TypeBadge } from "./atlas-ui"
-import {
-  type AtlasLibrary,
-  hasStepFree,
-  OPERATOR_GROUPS,
-  typeGroupOf,
-} from "./atlas.logic"
+import { type AtlasLibrary, OPERATOR_GROUPS, typeGroupOf } from "./atlas.logic"
 
 interface LibraryDetail {
   summary?: string | null
@@ -49,7 +45,11 @@ async function fetchDetail(id: string): Promise<LibraryDetail | null> {
   if (!res.ok) return null
   const json = (await res.json()) as { data?: LibraryDetail[] }
   const detail = json.data?.[0] ?? null
-  if (detail) detailCache.set(id, detail)
+  if (detail) {
+    if (detailCache.size >= 100)
+      detailCache.delete(detailCache.keys().next().value!)
+    detailCache.set(id, detail)
+  }
 
   return detail
 }
@@ -95,7 +95,14 @@ export function AtlasLibraryPanel({
 
   const group = typeGroupOf(library.type)
   const tint = tintOfGroup(group)
-  const status = getOpenStatus(detail?.openingTimes ?? null, library.tz)
+  const effective = effectiveLibraryHours(
+    detail?.openingTimes ?? null,
+    library.notices ?? [],
+    noticeLocalDate(new Date(), library.tz)
+  )
+  const status = effective.closed
+    ? { state: "closed", label: "Closed today" }
+    : getOpenStatus(effective.hours as OpeningTimesValue | null, library.tz)
   const operator = OPERATOR_GROUPS.find(
     (g) => library.operator && g.values.includes(library.operator)
   )
@@ -145,7 +152,6 @@ export function AtlasLibraryPanel({
           style={{ background: tint.bg }}
         >
           {img ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={img}
               alt={detail?.heroImage?.alternativeText ?? ""}
@@ -267,7 +273,7 @@ export function AtlasLibraryPanel({
               [library.city, library.region, library.country]
                 .filter(Boolean)
                 .join(", ")}
-            {!compact ? (
+            {!compact && library.mapped !== false ? (
               <span
                 className="block text-[13px]"
                 style={{ fontFamily: T.font.mono, color: T.ink.dim }}
@@ -276,13 +282,13 @@ export function AtlasLibraryPanel({
               </span>
             ) : null}
           </dd>
-          {hasStepFree(library) ? (
+          {library.access.length > 0 ? (
             <>
               <dt className="pt-0.5" style={{ color: T.ink.dim }}>
                 <Icon name="acc" size={18} />
                 <span className="sr-only">Accessibility</span>
               </dt>
-              <dd className="m-0">Step-free access recorded</dd>
+              <dd className="m-0">{library.access.join(", ")}</dd>
             </>
           ) : null}
         </dl>

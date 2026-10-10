@@ -391,6 +391,16 @@ describe("off the request path", () => {
 
 describe("email configuration", () => {
   it("is configured with Mailgun or Mailtrap credentials, as prepareEmailConfig reads them", () => {
+    expect(
+      emailConfigured({ SMTP_HOST: "smtp.example.org", SMTP_USER: "u" })
+    ).toBe(false)
+    expect(
+      emailConfigured({
+        SMTP_HOST: "smtp.example.org",
+        SMTP_USER: "u",
+        SMTP_PASS: "p",
+      })
+    ).toBe(true)
     expect(emailConfigured({})).toBe(false)
     expect(emailConfigured({ MAILGUN_API_KEY: "k" })).toBe(false)
     expect(emailConfigured({ MAILGUN_API_KEY: "k", MAILGUN_DOMAIN: "d" })).toBe(

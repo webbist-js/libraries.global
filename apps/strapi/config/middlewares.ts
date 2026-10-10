@@ -112,6 +112,7 @@ export default ({ env }: { env: any }) => [
   "strapi::poweredBy",
   "strapi::logger",
   "strapi::query",
+  "global::beta-gate",
   // C1: drop ?status (drafts) on /api/* unless the bridge secret is present.
   // Must run after strapi::query, which installs the querystring parser.
   "global::strip-draft-status",

@@ -148,7 +148,6 @@ describe("StaffShell", () => {
     expect(tabNames()).toEqual([
       "Overview2",
       "Editrecord",
-      "TimetableMobile",
       "GoliveMobile",
       "Notices",
       "Eventfeeds",
@@ -159,7 +158,6 @@ describe("StaffShell", () => {
     expect(links.map((a) => a.getAttribute("href"))).toEqual([
       `/staff/${SLUG}`,
       `/staff/${SLUG}/edit`,
-      `/staff/${SLUG}/timetable`,
       `/staff/${SLUG}/live`,
       `/staff/${SLUG}/notices`,
       `/staff/${SLUG}/events`,

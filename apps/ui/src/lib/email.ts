@@ -21,6 +21,14 @@ const VERIFICATION_LINK_LIFETIME = linkLifetime(VERIFICATION_LINK_TTL_SECONDS)
 const RESET_LINK_LIFETIME = linkLifetime(RESET_LINK_TTL_SECONDS)
 
 function createTransporter(): Transporter | null {
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+    return nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number.parseInt(process.env.SMTP_PORT ?? "587", 10),
+      secure: process.env.SMTP_SECURE === "true",
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    })
+  }
   if (process.env.MAILTRAP_USER && process.env.MAILTRAP_PASS) {
     return nodemailer.createTransport({
       host: process.env.MAILTRAP_HOST ?? "sandbox.smtp.mailtrap.io",
@@ -55,7 +63,7 @@ function createTransporter(): Transporter | null {
 function logLinkInDevelopment(label: string, to: string, url: string): void {
   if (process.env.NODE_ENV === "production") {
     throw new Error(
-      "Email delivery is not configured (set MAILGUN_SMTP_USER/PASS)."
+      "Email delivery is not configured (set SMTP_HOST/USER/PASS or MAILGUN_SMTP_USER/PASS)."
     )
   }
   console.warn(`[email] No provider configured. ${label} for ${to}: ${url}`)
@@ -76,6 +84,7 @@ export async function sendMagicLinkEmail(
 
   await transporter.sendMail({
     from,
+    replyTo: process.env.EMAIL_REPLY_TO,
     to,
     subject: MAGIC_LINK_EMAIL_SUBJECT,
     html: `<p>Click the link below to sign in to ${SITE_NAME}. It works once, within ${MAGIC_LINK_LIFETIME}.</p><p><a href="${magicUrl}">${magicUrl}</a></p>`,
@@ -98,6 +107,7 @@ export async function sendResetPasswordEmail(
 
   await transporter.sendMail({
     from,
+    replyTo: process.env.EMAIL_REPLY_TO,
     to,
     subject: RESET_EMAIL_SUBJECT,
     html: `<p>Choose a new ${SITE_NAME} password: <a href="${resetUrl}">${resetUrl}</a></p><p>The link works once, for ${RESET_LINK_LIFETIME}. If you didn't ask for it, you can ignore this email: your password stays the same.</p>`,
@@ -120,6 +130,7 @@ export async function sendVerificationEmail(
 
   await transporter.sendMail({
     from,
+    replyTo: process.env.EMAIL_REPLY_TO,
     to,
     subject: VERIFICATION_EMAIL_SUBJECT,
     html: `<p>Confirm your email address to finish creating your ${SITE_NAME} account:</p><p><a href="${verifyUrl}">${verifyUrl}</a></p><p>The link works for ${VERIFICATION_LINK_LIFETIME}. If you didn't sign up, you can ignore this email.</p>`,
@@ -136,6 +147,7 @@ export async function sendLiveConfirmationEmail(
   if (!transporter) throw new Error("Email delivery is not configured")
   await transporter.sendMail({
     from: process.env.EMAIL_FROM ?? DEFAULT_FROM,
+    replyTo: process.env.EMAIL_REPLY_TO,
     to,
     subject: "Confirm it is you — Libraries Global Live",
     text: `Your confirmation code is ${code}. It works once, within 10 minutes.\n\nIf you did not request it, ignore this email.`,

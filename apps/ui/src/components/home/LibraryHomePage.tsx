@@ -91,6 +91,7 @@ export function LibraryHomePage({
             title={content.heroTitle}
             text={content.heroText}
             markers={globeMarkers}
+            stats={stats}
           />
 
           <HomepageSections
@@ -98,7 +99,7 @@ export function LibraryHomePage({
             stats={stats}
             tasks={tasks}
             featuredDrive={featuredDrive}
-            atlasImage={homepage?.atlasImage}
+            globeMarkers={globeMarkers}
             featuredLibraries={homepage?.featuredLibraries}
             continents={continentSummaries}
             countryBreakdown={countryBreakdown}

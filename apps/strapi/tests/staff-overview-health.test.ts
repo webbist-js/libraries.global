@@ -170,7 +170,7 @@ describe("staff overview health rows", () => {
     expect((await staff.overview("editor", ID)).library.completeness).toBeNull()
   })
 
-  it("sends the catalogue link to the wizard's links step (3) and the events feed to Connect", async () => {
+  it("sends the catalogue link to the wizard's links group and the events feed to Connect", async () => {
     const { staff, store } = setup()
     const todo = await staff.overview("owner", ID)
 
@@ -182,7 +182,7 @@ describe("staff overview health rows", () => {
     expect(rowOf(todo, "catalogue")).toMatchObject({
       status: "todo",
       note: "Not added",
-      action: { label: "Add link", href: `/staff/central/edit?step=3` },
+      action: { label: "Add link", href: `/staff/central/edit?step=links` },
     })
     expect(rowOf(todo, "feed")).toMatchObject({
       status: "todo",
@@ -221,17 +221,29 @@ describe("staff overview health rows", () => {
       label: "Timetable",
       status: "todo",
       note: "No stops yet",
-      action: { label: "Add stops", href: `/staff/central/timetable` },
+      action: {
+        label: "Add stops",
+        href: `/staff/central/edit?step=timetable`,
+      },
     })
     expect(rowOf(empty, "feed")).toBeUndefined()
     expect(rowOf(empty, "accessibility").label).toBe("Vehicle details")
+    expect(rowOf(empty, "accessibility").action.href).toBe(
+      `/staff/central/edit?step=access`
+    )
+    expect(rowOf(empty, "catalogue").action.href).toBe(
+      `/staff/central/edit?step=links`
+    )
 
     store[LIBRARY]![0]!.mobileTimetable = timetable
     const stops = await staff.overview("owner", ID)
     expect(rowOf(stops, "hours")).toMatchObject({
       status: "ok",
       note: "2 stops · not confirmed yet",
-      action: { label: "Confirm times", href: `/staff/central/timetable` },
+      action: {
+        label: "Confirm times",
+        href: `/staff/central/edit?step=timetable`,
+      },
     })
 
     store[LIBRARY]![0]!.verifiedSections = {

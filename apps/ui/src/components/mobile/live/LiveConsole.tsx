@@ -678,7 +678,7 @@ export function LiveConsole({
             {!online
               ? `Offline. ${queued} check-ins are saved on this phone.`
               : !visible
-                ? "Paused: the screen locked. Check-ins still work."
+                ? "Screen locked. Reopen the console to check in."
                 : live.mode === "approximate"
                   ? "Live · position shared · keep screen on"
                   : "Live · check-ins only"}

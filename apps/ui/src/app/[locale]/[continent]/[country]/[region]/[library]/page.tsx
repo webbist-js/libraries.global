@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, permanentRedirect } from "next/navigation"
 import type { Locale } from "next-intl"
 import { use } from "react"
 
@@ -13,7 +13,12 @@ import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { isDevelopment } from "@/lib/general-helpers"
 import { fetchPublicLibraryNotices } from "@/lib/library-notices"
 import { buildBreadcrumbSchema, buildLibrarySchema } from "@/lib/seo/json-ld"
-import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
+import {
+  absoluteUrl,
+  buildMetadata,
+  libraryTitle,
+  localizedPath,
+} from "@/lib/seo/metadata"
 import { fetchDataset } from "@/lib/strapi-api/content/datasets"
 import { fetchLibraryArea } from "@/lib/strapi-api/content/library-area"
 import {
@@ -101,9 +106,7 @@ export async function generateMetadata({
   const seo = library.seo
   const name = library.name ?? "Library"
   const place = [library.city, library.country?.name].filter(Boolean).join(", ")
-  const title = seo?.metaTitle ?? (place ? `${name}, ${place}` : name)
   const description =
-    seo?.metaDescription ??
     library.summary ??
     `${name}${place ? ` in ${place}` : ""} — opening hours, collections, location, services and accessibility.`
   const image = formatStrapiMediaUrl(
@@ -114,18 +117,16 @@ export async function generateMetadata({
   const { path } = libraryPath(library, { continent, country, region })
 
   return buildMetadata({
-    title,
+    seo,
+    alternateLocales: [locale],
+    ...libraryTitle(name, library.city, library.country?.name),
     description,
     path,
     locale,
     image,
     imageAlt: library.heroImage?.alternativeText ?? name,
     // A default-locale stand-in for a missing translation isn't indexed.
-    robots: seo?.metaRobots?.replaceAll(" ", "").startsWith("noindex")
-      ? "noindex"
-      : res?.localeFallback
-        ? "noindex-follow"
-        : "index",
+    robots: res?.localeFallback ? "noindex-follow" : "index",
   })
 }
 
@@ -147,6 +148,16 @@ export default function LibraryRoutePage(props: {
 
   if (!library) {
     notFound()
+  }
+
+  const canonicalPath = libraryPath(library, {
+    continent: params.continent,
+    country: params.country,
+    region: params.region,
+  }).path
+  const requestedPath = `${params.continent}/${params.country}/${params.region}/${librarySlug}`
+  if (canonicalPath.replace(/^\//, "") !== requestedPath) {
+    permanentRedirect(localizedPath(canonicalPath, locale))
   }
 
   // Start every dependent fetch before suspending on any of them, so they

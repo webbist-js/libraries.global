@@ -1,7 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
-
+import { Drawer } from "@/components/ds/Drawer"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 import {
@@ -74,7 +73,7 @@ function sheetRows(): SheetRow[] {
       "closures",
     ]),
     follow!,
-    layerRow("Step-free, events and completeness layers", [
+    layerRow("Accessibility, events and completeness layers", [
       "access",
       "events",
       "complete",
@@ -203,78 +202,33 @@ export function AtlasPlansSheet({
   readonly onClose: () => void
   readonly signInHref: string
 }) {
-  const closeRef = useRef<HTMLButtonElement>(null)
-  const returnFocus = useRef<Element | null>(null)
-
-  useEffect(() => {
-    returnFocus.current = document.activeElement
-    closeRef.current?.focus()
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose()
-    window.addEventListener("keydown", onKey)
-
-    return () => {
-      window.removeEventListener("keydown", onKey)
-      ;(returnFocus.current as HTMLElement | null)?.focus?.()
-    }
-  }, [onClose])
-
   const current: PlanCardKey = tier
 
   return (
-    <>
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 z-[70]"
-        style={{ background: "rgba(23,22,43,.28)" }}
-        onClick={onClose}
-      />
-      <aside
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="atlas-plans-h"
-        className="absolute inset-y-0 right-0 z-[71] flex flex-col gap-4 overflow-auto border-l px-5 py-6 sm:px-8"
-        style={{
-          background: T.bg.void,
-          borderColor: T.border.hi,
-          // Wider on big screens, never wider than the viewport.
-          width: "min(100%, max(920px, 60vw), 1120px)",
-        }}
-      >
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2
-              id="atlas-plans-h"
-              className="m-0 text-[32px] leading-none tracking-[-.015em] sm:text-[40px]"
-              style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-            >
-              Library facts are free.{" "}
-              <em className="font-normal" style={{ color: T.accent.primary }}>
-                Always.
-              </em>
-            </h2>
-            <p
-              className="mt-3 mb-0 max-w-[680px] text-[17px] leading-normal"
-              style={{ color: "#45435A" }}
-            >
-              Addresses, hours, services and every community record stay open to
-              everyone. Pro will pay for the analysis tools and licensed data
-              that cost money to run, and help keep the rest free.
-            </p>
-          </div>
-          <button
-            ref={closeRef}
-            type="button"
-            aria-label="Close plans"
-            onClick={onClose}
-            className="flex size-11 shrink-0 items-center justify-center rounded-full border bg-white"
-            style={{ borderColor: T.border.line }}
-          >
-            <Icon name="x" size={20} />
-          </button>
-        </div>
-
+    <Drawer
+      titleId="atlas-plans-h"
+      title={
+        <>
+          Library facts are free.{" "}
+          <em className="font-normal" style={{ color: T.accent.primary }}>
+            Always.
+          </em>
+        </>
+      }
+      onClose={onClose}
+      size="xl"
+    >
+      <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 py-5 sm:px-8">
+        <p
+          className="mt-0 mb-5 max-w-[680px] text-[17px]"
+          style={{ color: T.ink.dim }}
+        >
+          Addresses, hours, services and every community record stay open to
+          everyone. Pro will pay for the analysis tools and licensed data that
+          cost money to run, and help keep the rest free.
+        </p>
         <div
-          className="shrink-0 overflow-x-auto rounded-[22px] border bg-white"
+          className="max-w-full shrink-0 overflow-x-auto rounded-[22px] border bg-white"
           style={{ borderColor: T.border.line }}
         >
           <table className="w-full min-w-[680px] border-collapse text-[15px]">
@@ -362,7 +316,7 @@ export function AtlasPlansSheet({
         </div>
 
         <div
-          className="grid gap-4 text-[14px] leading-normal sm:grid-cols-2"
+          className="mt-5 grid gap-4 text-[14px] leading-normal sm:grid-cols-2"
           style={{ color: "#45435A" }}
         >
           <p className="m-0 flex gap-2">
@@ -393,7 +347,7 @@ export function AtlasPlansSheet({
             </span>
           </p>
         </div>
-      </aside>
-    </>
+      </div>
+    </Drawer>
   )
 }

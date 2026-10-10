@@ -1,0 +1,31 @@
+name: atlas-benchmark
+services:
+  meili:
+    image: getmeili/meilisearch@sha256:e13a16ddc45f66fd065b3416230c2669426cfa8907f4a43f14a9c09a17691fa4
+    labels:
+      atlas.disposable: "true"
+    ports: ["127.0.0.1:17700:7700"]
+    cpus: 2
+    mem_limit: 3g
+    environment:
+      MEILI_ENV: development
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_MASTER_KEY: atlas-disposable-benchmark-only
+      MEILI_MAX_INDEXING_MEMORY: 1Gb
+      MEILI_MAX_INDEXING_THREADS: "2"
+    volumes: ["meili:/meili_data"]
+  db:
+    image: postgres@sha256:acf5271bbecd4b8733f4e93959a8d2b536a57aeee6cc4b6a71890aaf646425b8
+    labels:
+      atlas.disposable: "true"
+    ports: ["127.0.0.1:15432:5432"]
+    cpus: 1
+    mem_limit: 512m
+    environment:
+      POSTGRES_DB: atlas_benchmark
+      POSTGRES_USER: atlas_benchmark
+      POSTGRES_PASSWORD: atlas-disposable-benchmark-only
+    volumes: ["db:/var/lib/postgresql/data"]
+volumes:
+  meili:
+  db:

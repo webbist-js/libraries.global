@@ -12,7 +12,7 @@ import { useStaffLibraryHref } from "@/lib/staff/use-library-href"
 import { liveRequest } from "./ConfirmIdentity"
 import { registerLiveIcons } from "./icons"
 
-const card = "rounded-[20px] border p-6"
+const card = "rounded-[24px] border p-5 sm:p-6"
 const cardStyle = { background: T.bg.deep, borderColor: T.border.line }
 
 /**

@@ -36,6 +36,7 @@ export default factories.createCoreController(
             "publishedAt",
             "updatedAt",
             "articleStatus",
+            "docsSections",
           ],
           locale,
           status,

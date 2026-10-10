@@ -25,6 +25,11 @@
     },
     "monthlyRunningCosts": { "type": "decimal", "min": 0 },
     "monthlySupportIncome": { "type": "decimal", "min": 0 },
-    "costBreakdown": { "type": "text" }
+    "costBreakdown": { "type": "text" },
+    "populationEstimates": {
+      "type": "json",
+      "private": true,
+      "description": "Sourced world population estimates, including year and import attribution."
+    }
   }
 }

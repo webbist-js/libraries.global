@@ -59,7 +59,7 @@ export async function GlobalHeader({
   return (
     <header
       data-global-header=""
-      className="global-header sticky top-0 z-[60] w-full border-b border-(--t-border-line) backdrop-blur-xl"
+      className="global-header sticky top-0 z-[60] w-full border-b border-(--t-border-hi) backdrop-blur-xl"
       style={{ background: app ? "var(--t-bg-void)" : "var(--t-header-bg)" }}
     >
       <div
@@ -106,7 +106,7 @@ export async function GlobalHeader({
           <GlobalContributeMenu className="hidden sm:inline-flex" />
           <GlobalMobileMenu
             links={NAV_LINKS}
-            shortcuts={<GlobalContributorShortcuts variant="mobile" />}
+            shortcuts={<GlobalContributorShortcuts />}
             actions={
               <>
                 {localeSwitcher}

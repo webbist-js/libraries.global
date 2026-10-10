@@ -29,7 +29,7 @@ export async function generateMetadata({
   return buildMetadata({
     title: "Plans and Pro",
     description:
-      "Library facts are free, always. Membership keeps the index running; Pro adds analysis on top. See the plans and the ways to get Pro free.",
+      "Library facts are free, always. Membership keeps the index running; Pro and Team add Library access population comparisons and other analysis tools. See the plans and the ways to get Pro free.",
     path: "contribute/membership",
     locale,
   })
@@ -55,7 +55,7 @@ export default async function MembershipPage() {
       <ContributeSectionHeader
         section="Membership"
         title="Plans and *Pro*"
-        lead="Library facts are free, always. Membership keeps the index running; Pro adds analysis on top."
+        lead="Library facts are free, always. Membership keeps the index running; Pro and Team add Library access population comparisons and other analysis tools."
       >
         <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
           {PROMISES.map((text) => (

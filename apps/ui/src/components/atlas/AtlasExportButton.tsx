@@ -1,5 +1,6 @@
 "use client"
 
+import type { AtlasExportRequest } from "@repo/shared-data"
 import { useId, useState } from "react"
 
 import {
@@ -59,8 +60,11 @@ export function useAtlasExport(onUpgrade: () => void) {
   const [busy, setBusy] = useState(false)
   const [outcome, setOutcome] = useState<Outcome | null>(null)
 
-  const run = async (format: ExportFormat, ids: string[]) => {
-    if (ids.length > MAX_EXPORT_IDS) {
+  const run = async (
+    format: ExportFormat,
+    selection: string[] | AtlasExportRequest
+  ) => {
+    if (Array.isArray(selection) && selection.length > MAX_EXPORT_IDS) {
       setOutcome({
         tone: "error",
         text: `One export holds up to ${MAX_EXPORT_IDS.toLocaleString()} libraries. ${narrow}`,
@@ -74,7 +78,11 @@ export function useAtlasExport(onUpgrade: () => void) {
       const res = await fetch("/api/export/atlas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ format, ids }),
+        body: JSON.stringify(
+          Array.isArray(selection)
+            ? { format, ids: selection }
+            : { ...selection, format }
+        ),
       })
       if (res.status === 402) {
         onUpgrade()
@@ -112,9 +120,13 @@ export function useAtlasExport(onUpgrade: () => void) {
 export function AtlasExportButton({
   libraries,
   onSeePlans,
+  request,
+  total,
 }: {
   readonly libraries: AtlasLibrary[]
   readonly onSeePlans: () => void
+  readonly request?: AtlasExportRequest
+  readonly total?: number
 }) {
   const { can, ready } = useEntitlements()
   const { busy, outcome, run } = useAtlasExport(onSeePlans)
@@ -163,7 +175,7 @@ export function AtlasExportButton({
           <button
             type="button"
             aria-busy={busy}
-            disabled={libraries.length === 0}
+            disabled={(total ?? libraries.length) === 0}
             className={BUTTON}
             style={style}
           >
@@ -186,10 +198,7 @@ export function AtlasExportButton({
             <DropdownMenuItem
               key={f.value}
               onSelect={() =>
-                void run(
-                  f.value,
-                  libraries.map((l) => l.id)
-                )
+                void run(f.value, request ?? libraries.map((l) => l.id))
               }
               className="cursor-pointer flex-col items-start gap-0 rounded-[12px] px-2.5 py-2 focus:bg-(--t-bg-muted-2) focus:text-(--t-ink-base)"
             >

@@ -37,9 +37,10 @@ export async function generateMetadata({
   const name = data.name ?? "Continent"
 
   return buildMetadata({
+    seo: data.seo,
+    alternateLocales: [locale],
     title: locationTitle(data.seo, `Libraries in ${name}`),
     description:
-      data.seo?.metaDescription ??
       data.summary ??
       buildLocationDescription({
         name,

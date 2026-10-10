@@ -83,6 +83,7 @@
     "node-html-parser": "^7.0.2",
     "nodemailer": "^7.0.3",
     "pg": "^8.13.1",
+    "pmtiles": "4.4.0",
     "postprocessing": "^6.38.3",
     "prosemirror-model": "^1.25.4",
     "qrcode.react": "^4.2.0",

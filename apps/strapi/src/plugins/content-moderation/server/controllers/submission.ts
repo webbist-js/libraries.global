@@ -2,6 +2,7 @@ import { can } from "@repo/access"
 
 import { resolveUserEntitlements } from "../../../../utils/entitlement-inputs"
 import { decodeHeaderName } from "../../../../utils/header-name"
+import { AccessError } from "../../../access/server/utils/admin"
 import {
   resolveSubmissionLocale,
   splitSubmissionBody,
@@ -15,6 +16,7 @@ import {
 } from "../utils/params"
 import { adminReviewer } from "../utils/reviewer"
 import { isValidServiceSecret } from "../utils/service-secret"
+import { resolveStaffLibraryCreation } from "../utils/staff-library-creation"
 
 /** Parses a query value as an integer within [min, max]; anything else → def. */
 function clampInt(
@@ -172,10 +174,28 @@ export default ({ strapi }: { strapi: any }) => ({
       draftData,
       locale,
       driveDocumentId,
+      staffCreation: requestedStaffCreation,
     } = ctx.request.body as Record<string, unknown>
 
     if (!submissionType) {
       return ctx.badRequest("submissionType is required")
+    }
+    let staffCreation
+    if (requestedStaffCreation !== undefined) {
+      if (submissionType !== "new_library")
+        return ctx.badRequest("Staff creation is only for new libraries.")
+      try {
+        staffCreation = await resolveStaffLibraryCreation(
+          strapi,
+          user.id,
+          requestedStaffCreation
+        )
+      } catch (error) {
+        if (!(error instanceof AccessError)) throw error
+        sendVerdict(ctx, { status: error.status, message: error.code })
+
+        return
+      }
     }
 
     // Event Feed submissions carry a reference to an encrypted credential and
@@ -251,6 +271,7 @@ export default ({ strapi }: { strapi: any }) => ({
       .service("submission")
       .create({
         submissionType,
+        ...(staffCreation ? { staffCreation } : {}),
         targetEntityType,
         targetDocumentId,
         targetSlug,
@@ -728,9 +749,10 @@ export default ({ strapi }: { strapi: any }) => ({
     const user = await resolveUser(strapi, ctx)
     if (!user) return ctx.unauthorized("You must be signed in.")
     const { type } = ctx.params as { type: string }
-    const { targetSlug, locale } = ctx.query as {
+    const { targetSlug, locale, staffCreation } = ctx.query as {
       targetSlug?: unknown
       locale?: unknown
+      staffCreation?: unknown
     }
     const draft = await strapi
       .plugin("content-moderation")
@@ -740,7 +762,8 @@ export default ({ strapi }: { strapi: any }) => ({
         type,
         typeof targetSlug === "string" ? targetSlug : undefined,
         // Strings only (an object would be a filter); unknown → default.
-        typeof locale === "string" ? locale : undefined
+        typeof locale === "string" ? locale : undefined,
+        type === "new_library" && staffCreation === "true"
       )
     ctx.body = { data: draft }
   },

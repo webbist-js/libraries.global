@@ -5,6 +5,7 @@ import { useLocale } from "next-intl"
 import type React from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { StepHeading } from "@/components/library-editor/WizardFields"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
 import {
   buildLibraryPath,
@@ -12,8 +13,6 @@ import {
   searchLibraryNames,
 } from "@/lib/meilisearch"
 import { Link } from "@/lib/navigation"
-
-import { StepHeading } from "./WizardFields"
 
 export const INDEX_EDITOR_PATH = "/contribute/index"
 

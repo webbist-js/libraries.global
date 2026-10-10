@@ -1,0 +1,22 @@
+FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587 AS tools
+ARG TARGETARCH
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl g++ make libsqlite3-dev zlib1g-dev && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+RUN curl -fsSL https://codeload.github.com/felt/tippecanoe/tar.gz/68ab8dcc229f95b8b25877697d5e8d66783af503 | tar -xz --strip-components=1 && make -j2 && make install
+RUN case "$TARGETARCH" in \
+      arm64) arch=arm64; digest=f8bd47e7ea866863489cad588fbaf2f31f42e5821f7a03f009b3769f05801cb1 ;; \
+      amd64) arch=x86_64; digest=3ed7dbf4ec2e6dfe5e25b6f70d1ffc932729f93c86db353bf514dd71010a312f ;; \
+      *) exit 1 ;; \
+    esac && \
+    curl -fsSL "https://github.com/protomaps/go-pmtiles/releases/download/v1.31.2/go-pmtiles_1.31.2_Linux_${arch}.tar.gz" -o /tmp/pmtiles.tar.gz && \
+    printf '%s  /tmp/pmtiles.tar.gz\n' "$digest" | sha256sum -c - && \
+    tar -xzf /tmp/pmtiles.tar.gz -C /usr/local/bin pmtiles
+
+FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587
+RUN apt-get update && apt-get install -y --no-install-recommends python3 libsqlite3-0 zlib1g ca-certificates && rm -rf /var/lib/apt/lists/*
+COPY --from=tools /usr/local/bin/tippecanoe /usr/local/bin/tippecanoe
+COPY --from=tools /usr/local/bin/tippecanoe-decode /usr/local/bin/tippecanoe-decode
+COPY --from=tools /usr/local/bin/pmtiles /usr/local/bin/pmtiles
+COPY validate_archive.py /opt/atlas/validate_archive.py
+COPY validate_countries.py /opt/atlas/validate_countries.py
+WORKDIR /data

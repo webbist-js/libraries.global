@@ -19,7 +19,8 @@ export function EventsSection({
   return (
     <section
       aria-labelledby="events-title"
-      className="mx-auto w-full max-w-[1360px] px-4 pt-[clamp(80px,10vw,140px)] sm:px-8"
+      data-homepage-surface="paper"
+      className="mx-auto w-full max-w-[1360px] px-4 sm:px-8"
     >
       <SectionHeader
         id="events-title"

@@ -7,6 +7,8 @@ import Script from "next/script"
 import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 
+import { BetaFeedback } from "@/components/beta/BetaFeedback"
+import { EditorialDrawerMount } from "@/components/editorial/EditorialDrawerMount"
 import { ErrorBoundary } from "@/components/elementary/ErrorBoundary"
 import StrapiPreviewListener from "@/components/elementary/StrapiPreviewListener"
 import { TailwindIndicator } from "@/components/elementary/TailwindIndicator"
@@ -18,15 +20,16 @@ import { ServerProviders } from "@/components/providers/ServerProviders"
 import TrackingScripts from "@/components/providers/TrackingScripts"
 import { StaffDrawerMount } from "@/components/staff/StaffDrawerMount"
 import { Toaster } from "@/components/ui/sonner"
+import { betaEnabled } from "@/lib/beta/access"
 import { debugStaticParams } from "@/lib/build"
 import { fontFigtree, fontJetBrainsMono, fontNewsreader } from "@/lib/fonts"
+import { isProduction } from "@/lib/general-helpers"
 import { routing } from "@/lib/navigation"
 import {
   DEFAULT_DESCRIPTION,
   DEFAULT_TITLE,
   getSiteUrl,
   SITE_NAME,
-  TWITTER_SITE,
 } from "@/lib/seo/metadata"
 import {
   fetchFooter,
@@ -49,14 +52,24 @@ export const metadata: Metadata = {
   },
   description: DEFAULT_DESCRIPTION,
   applicationName: SITE_NAME,
-  robots: { index: true, follow: true },
+  robots: { index: isProduction(), follow: true },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "16x16 32x32 48x48 64x64 256x256" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: {
+      url: "/apple-touch-icon.png",
+      sizes: "180x180",
+      type: "image/png",
+    },
+  },
   openGraph: {
     siteName: SITE_NAME,
     type: "website",
   },
   twitter: {
     card: "summary",
-    site: TWITTER_SITE,
   },
 }
 
@@ -65,12 +78,14 @@ export default async function RootLayout({
   params,
 }: LayoutProps<"/[locale]">) {
   const { locale } = (await params) as { locale: Locale }
+  if (!routing.locales.includes(locale)) notFound()
   const requestHeaders = await headers()
   const liveConsole = requestHeaders.get("x-live-console") === "true"
+  const betaShell = requestHeaders.get("x-beta-public-shell") === "true"
   const nonce = requestHeaders.get("x-nonce") ?? undefined
   const [footerRes, legalRes] = await Promise.all([
-    liveConsole ? Promise.resolve(null) : fetchFooter(locale),
-    liveConsole
+    liveConsole || betaShell ? Promise.resolve(null) : fetchFooter(locale),
+    liveConsole || betaShell
       ? Promise.resolve(null)
       : fetchLegalDocuments(locale, "published"),
   ])
@@ -80,9 +95,27 @@ export default async function RootLayout({
   // https://next-intl-docs.vercel.app/docs/getting-started/app-router/with-i18n-routing#static-rendering
   setRequestLocale(locale)
 
-  if (!routing.locales.includes(locale)) {
-    notFound()
-  }
+  // The public entrance must render without CMS reads or application providers.
+  if (betaShell)
+    return (
+      <html lang={locale}>
+        <body
+          className={cn(
+            "min-h-screen antialiased",
+            fontFigtree.variable,
+            fontNewsreader.variable,
+            fontJetBrainsMono.variable
+          )}
+        >
+          <a href="#main" className="skip-link">
+            {locale === "cs" ? "Přejít k obsahu" : "Skip to main content"}
+          </a>
+          <ServerProviders>
+            <main id="main">{children}</main>
+          </ServerProviders>
+        </body>
+      </html>
+    )
 
   /**
    * This allows you to make following env variables RUNTIME.
@@ -164,6 +197,15 @@ export default async function RootLayout({
               </div>
               {!liveConsole && <EventModal />}
               {!liveConsole && <StaffDrawerMount />}
+              {!liveConsole && <EditorialDrawerMount />}
+              {betaEnabled() && (
+                <BetaFeedback
+                  email={
+                    process.env.BETA_CONTACT_EMAIL ?? "hello@libraries.global"
+                  }
+                  label={locale === "cs" ? "Zpětná vazba" : "Feedback"}
+                />
+              )}
             </EventModalProvider>
           </ClientProviders>
         </ServerProviders>

@@ -13,7 +13,8 @@ import {
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
-export const dynamic = "force-static"
+// The layout reads proxy headers to show the public legal shell during beta.
+export const dynamic = "auto"
 export const revalidate = 300
 export const dynamicParams = true
 
@@ -38,11 +39,10 @@ export async function generateMetadata({
   if (!doc) return { title: "Page not found", robots: { index: false } }
 
   return buildMetadata({
-    title: doc.seo?.metaTitle ?? doc.title ?? "Legal",
-    description:
-      doc.seo?.metaDescription ??
-      doc.lead ??
-      `${doc.title ?? "Legal"} — ${SITE_NAME}.`,
+    seo: doc.seo,
+    alternateLocales: [locale],
+    title: doc.title ?? "Legal",
+    description: doc.lead ?? `${doc.title ?? "Legal"} — ${SITE_NAME}.`,
     path: `legal/${slug}`,
     locale,
     image: formatStrapiMediaUrl(doc.seo?.metaImage?.url),

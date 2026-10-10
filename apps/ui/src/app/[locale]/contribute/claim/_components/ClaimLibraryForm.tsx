@@ -6,17 +6,17 @@ import type React from "react"
 import { useState } from "react"
 import { toast } from "sonner"
 
+import {
+  fieldHintStyle,
+  fieldInputStyle,
+  fieldLabelStyle,
+} from "@/components/library-editor/wizard.constants"
+import { RequiredTag } from "@/components/library-editor/WizardFields"
 import { useCreateSubmission } from "@/hooks/useSubmissions"
 import { T } from "@/lib/design-tokens"
 import { primaryCtaSm } from "@/lib/styles"
 
 import { ContributeSectionHeader } from "../../_components/ContributeSectionHeader"
-import {
-  fieldHintStyle,
-  fieldInputStyle,
-  fieldLabelStyle,
-} from "../../index/_components/wizard.constants"
-import { RequiredTag } from "../../index/_components/WizardFields"
 
 interface ClaimLibraryFormProps {
   libraryDocumentId: string

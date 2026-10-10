@@ -35,8 +35,11 @@ export async function generateMetadata({
     description: drive.summary,
     path: `community/drives/${drive.slug}`,
     locale,
-    // Open and finished drives are indexable (D15); a cancelled one isn't.
-    robots: drive.status === "cancelled" ? "noindex" : "index",
+    // Match sitemap discovery: a Drive is indexed once it opens, including after it closes.
+    robots:
+      drive.status === "open" || drive.status === "closed"
+        ? "index"
+        : "noindex-follow",
   })
 }
 

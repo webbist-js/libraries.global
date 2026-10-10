@@ -6,16 +6,15 @@ import {
   Map as MapIcon,
   Target,
 } from "lucide-react"
-import Image from "next/image"
 
 import GlobalLink from "@/components/global/GlobalLink"
+import AtlasGlobePreview from "@/components/home/AtlasGlobePreview"
 import Emphasis from "@/components/home/Emphasis"
 import { displayStyle } from "@/components/home/homepage.constants"
 import type { CtaBand } from "@/components/home/homepage.types"
+import type { LibraryMarker } from "@/components/home/knowledge-globe-data"
 import { T } from "@/lib/design-tokens"
 import { PRO_FEATURE_COPY } from "@/lib/plans"
-import type { MediaItem } from "@/lib/strapi-api/content/server"
-import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 // Ink band palette: text and rules tuned for the #17162B ground.
 const LAVENDER = "#B9B4F5"
@@ -31,7 +30,7 @@ const ACCESS_BADGE: Record<Access, { label: string; bg: string; fg: string }> =
   {
     free: { label: "Free", bg: "#E6EFE6", fg: "#2F5D3A" },
     account: { label: "Free account", bg: T.bg.space, fg: T.ink.base },
-    pro: { label: "Pro", bg: T.accent.chip, fg: T.accent.primary },
+    pro: { label: "Pro / Team", bg: T.accent.chip, fg: T.accent.primary },
   }
 
 const FEATURES: {
@@ -51,9 +50,16 @@ const FEATURES: {
   },
   {
     title: "Access and events layers",
-    text: "Step-free entry, events feeds and record completeness",
+    text: "Accessibility features, events feeds and record completeness",
     access: "account",
     Icon: Accessibility,
+    live: true,
+  },
+  {
+    title: "Library access",
+    text: "Libraries per 100k people or people per library, across countries and UK local areas",
+    access: "pro",
+    Icon: Globe,
     live: true,
   },
   {
@@ -73,26 +79,23 @@ const FEATURES: {
 ]
 
 /** What the atlas is for, and which parts are free, need an account or
- * Pro, on a full-width ink band beside a screenshot of the atlas. */
+ * Pro, on a full-width ink band beside a globe preview of library locations. */
 export function AtlasSection({
   band,
-  image,
+  markers,
 }: {
   readonly band: CtaBand
-  /** The CMS's atlas screenshot; without one the panel links to the atlas. */
-  readonly image?: MediaItem | null
+  readonly markers: readonly LibraryMarker[]
 }) {
   if (!band.title) return null
-
-  const imgUrl = formatStrapiMediaUrl(image?.url)
 
   return (
     <section
       aria-labelledby="atlas-title"
-      className="mt-[clamp(80px,10vw,140px)] w-full text-white"
+      className="w-full text-white"
       style={{ background: T.ink.base }}
     >
-      <div className="mx-auto grid w-full max-w-[1360px] grid-cols-1 items-center gap-[clamp(40px,7vw,120px)] px-4 py-[clamp(72px,9vw,128px)] sm:px-8 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1fr)]">
+      <div className="mx-auto grid w-full max-w-[1360px] grid-cols-1 items-stretch gap-[clamp(40px,7vw,120px)] px-4 sm:px-8 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1fr)]">
         <div>
           <p
             className="m-0 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[14px] font-semibold"
@@ -191,39 +194,10 @@ export function AtlasSection({
           </div>
         </div>
 
-        {imgUrl ? (
-          <figure
-            className="relative m-0 aspect-8/7 overflow-hidden rounded-[24px] border"
-            style={{ borderColor: OUTLINE, background: TILE }}
-          >
-            <Image
-              src={imgUrl}
-              alt={image?.alternativeText ?? "The atlas, with library pins"}
-              fill
-              sizes="(min-width: 1024px) 760px, 100vw"
-              className="object-cover"
-            />
-          </figure>
-        ) : (
-          <GlobalLink
-            href={band.primaryHref ?? "/map"}
-            className="group flex aspect-8/7 flex-col items-center justify-center gap-3 rounded-[24px] border border-dashed p-8 text-center no-underline"
-            style={{ borderColor: OUTLINE, background: "#33314D" }}
-          >
-            <MapIcon
-              aria-hidden="true"
-              className="size-8"
-              strokeWidth={1.5}
-              style={{ color: LAVENDER }}
-            />
-            <span className="text-[16px]" style={{ color: BODY }}>
-              Every published library, on one map
-            </span>
-            <span className="text-[15px] font-semibold text-white underline underline-offset-[3px] group-hover:text-(--t-accent-chip)">
-              Open the atlas
-            </span>
-          </GlobalLink>
-        )}
+        <AtlasGlobePreview
+          markers={markers}
+          href={band.primaryHref ?? "/map"}
+        />
       </div>
     </section>
   )

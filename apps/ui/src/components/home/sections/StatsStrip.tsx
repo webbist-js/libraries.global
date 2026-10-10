@@ -2,7 +2,7 @@ import GlobalLink from "@/components/global/GlobalLink"
 import type { HomepageStats } from "@/components/home/homepage.types"
 import { T } from "@/lib/design-tokens"
 
-/** Live proof the index is real, in one line under the hero. Community
+/** Live proof the index is real, beneath the hero search. Community
  * counts are hidden while they're zero rather than shown as an empty boast. */
 export function StatsStrip({
   stats,
@@ -41,43 +41,46 @@ export function StatsStrip({
   return (
     <section
       aria-label="The index so far"
-      className="border-y"
-      style={{ borderColor: T.border.line, background: T.bg.deep }}
+      className="mt-6 border-t pt-5 sm:pt-6"
+      style={{ borderColor: T.border.line }}
     >
-      <div className="mx-auto flex w-full max-w-[1360px] flex-wrap items-baseline justify-between gap-x-10 gap-y-3 px-4 py-6 sm:px-8">
-        <dl className="m-0 flex flex-wrap items-baseline gap-x-[clamp(32px,5vw,72px)] gap-y-3">
-          {cells.map((cell) => (
-            <div
-              key={cell.label}
-              className="flex flex-row-reverse items-baseline gap-2.5"
-            >
-              <dt className="text-[15px]" style={{ color: T.ink.dim }}>
-                {cell.label}
-              </dt>
-              <dd
-                className="m-0"
-                style={{
-                  fontFamily: T.font.serif,
-                  fontWeight: 500,
-                  fontSize: "clamp(40px,4.2vw,58px)",
-                  lineHeight: 1,
-                  letterSpacing: "-0.02em",
-                  color: T.ink.base,
-                }}
-              >
-                {cell.value.toLocaleString("en-US")}
-              </dd>
-            </div>
-          ))}
-        </dl>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <p
+          className="m-0 text-[11px] font-semibold tracking-[0.12em] uppercase"
+          style={{ color: T.ink.dim }}
+        >
+          The index so far
+        </p>
         <GlobalLink
           href="/knowledge/data-api/how-we-count"
-          className="text-[15px] font-semibold underline underline-offset-[3px]"
-          style={{ color: T.accent.primary }}
+          className="inline-flex items-center gap-1.5 text-[12px] font-medium text-(--t-accent-primary) no-underline transition-colors hover:text-(--t-accent-primary-hover) hover:underline hover:underline-offset-4"
         >
           How we count
+          <span aria-hidden="true">→</span>
         </GlobalLink>
       </div>
+      <dl className="m-0 grid grid-cols-2 gap-x-6 gap-y-5 sm:auto-cols-fr sm:grid-flow-col sm:grid-cols-none">
+        {cells.map((cell) => (
+          <div key={cell.label} className="flex min-w-0 flex-col gap-2">
+            <dt
+              className="order-2 text-[13px] leading-5"
+              style={{ color: T.ink.dim }}
+            >
+              {cell.label}
+            </dt>
+            <dd
+              className="order-1 m-0 text-[36px] leading-none tracking-[-0.02em] tabular-nums sm:text-[42px]"
+              style={{
+                fontFamily: T.font.serif,
+                fontWeight: 500,
+                color: T.ink.base,
+              }}
+            >
+              {cell.value.toLocaleString("en-US")}
+            </dd>
+          </div>
+        ))}
+      </dl>
     </section>
   )
 }

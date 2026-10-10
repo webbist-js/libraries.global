@@ -24,7 +24,7 @@ function TeamPreview() {
 
   return (
     <ul className="m-0 flex list-none flex-col gap-3 p-0">
-      {rows.map((row, i) => (
+      {rows.map((row) => (
         <li
           key={row.role + row.name}
           className="flex items-center gap-3 rounded-[16px] border px-4 py-3"
@@ -33,25 +33,20 @@ function TeamPreview() {
           <span
             className="size-10 shrink-0 rounded-full"
             style={{
-              background:
-                i === 0 ? T.accent.chip : i === 1 ? T.bg.muted2 : T.bg.muted,
+              background: T.accent.chip,
             }}
           />
           <span className="flex min-w-0 flex-1 flex-col gap-1.5">
             <span
-              className={`block h-3 ${row.name} max-w-full rounded-full`}
+              className="block h-2.5 w-full rounded-full"
               style={{ background: T.bg.muted2 }}
-            />
-            <span
-              className="block h-2.5 w-20 rounded-full"
-              style={{ background: T.bg.muted }}
             />
           </span>
           <span
-            className="rounded-full px-2.5 py-0.5 text-[12px] font-semibold"
+            className="rounded-full border px-2.5 py-0.5 text-[12px] font-semibold"
             style={{
-              background: i === 0 ? T.accent.chip : T.bg.muted,
-              color: i === 0 ? T.accent.primaryHover : T.ink.dim,
+              background: T.bg.deep,
+              color: T.ink.dim,
             }}
           >
             {row.role}
@@ -96,7 +91,7 @@ export default async function TeamPage({
   const outsideTeam = !full && !!covering && !covering.viewerIsMember
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-[1180px] space-y-6">
       {outsideTeam ? (
         <Notice
           icon="mdi:account-group-outline"
@@ -120,9 +115,9 @@ export default async function TeamPage({
         <>
           <PlanGatePanel
             title="Manage your library’s staff"
-            lead="With the Team plan, your service’s organiser gives colleagues staff access on your libraries, sets Owner and Editor levels and chooses who can go live. Without it, each staff member claims access on their own and a moderator checks each claim."
+            lead="Invite colleagues, give them roles, and choose who can edit or go live. Your Team organiser manages access. Without Team, each staff member claims access on their own."
             points={[
-              "A Team organiser who assigns staff to your libraries",
+              "Invite colleagues through your Team organiser",
               "Owner and Editor levels per library",
               "Choose who can go live on mobile libraries",
             ]}

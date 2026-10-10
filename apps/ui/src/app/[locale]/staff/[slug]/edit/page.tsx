@@ -1,58 +1,24 @@
 import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
 
-import { IndexRecordWizard } from "@/app/[locale]/contribute/index/_components/IndexRecordWizard"
+import { staffPathname } from "@/app/[locale]/staff/_lib/staff-pathname"
+import { IndexRecordWizard } from "@/components/library-editor/IndexRecordWizard"
 import {
   resolveEditLocale,
   translationMode,
-} from "@/app/[locale]/contribute/index/_components/translation-mode"
-import { prefillLibrary } from "@/app/[locale]/contribute/index/_components/wizard.prefill"
-import { staffPathname } from "@/app/[locale]/staff/_lib/staff-pathname"
+} from "@/components/library-editor/translation-mode"
+import { prefillLibrary } from "@/components/library-editor/wizard.prefill"
+import { wizardStepOf } from "@/components/library-editor/wizard.steps"
+import type { StaffNoticesData } from "@/components/staff/StaffNotices"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { languageName } from "@/lib/locale-fallback"
 import { routing } from "@/lib/navigation"
 import { privateMetadata } from "@/lib/seo/metadata"
 import { loadStaffPage } from "@/lib/staff/server"
+import { fetchStaff } from "@/lib/staff-proxy"
 import { fetchLibraryForEditing } from "@/lib/strapi-api/content/server"
 
 export const metadata = privateMetadata("Edit your library")
-
-/**
- * `?step=` aliases (`edit?step=hours`): a step's name from `WIZARD_STEPS`,
- * or a field group it holds, maps to its number. Digits 1–7 still work.
- */
-const STEP_ALIASES: Record<string, number> = {
-  identity: 1,
-  name: 1,
-  type: 1,
-  status: 1,
-  location: 2,
-  address: 2,
-  coordinates: 2,
-  visit: 3,
-  hours: 3,
-  links: 3,
-  access: 3,
-  accessibility: 3,
-  facilities: 3,
-  stops: 3,
-  timetable: 3,
-  collections: 4,
-  history: 5,
-  building: 5,
-  photo: 6,
-  image: 6,
-  sources: 7,
-}
-
-/** The wizard step a `?step=` value names, or undefined for anything else. */
-function wizardStepOf(value: string | undefined): number | undefined {
-  if (!value) return undefined
-  const key = value.trim().toLowerCase()
-  if (/^[1-7]$/.test(key)) return Number(key)
-
-  return STEP_ALIASES[key]
-}
 
 export default async function StaffEditPage({
   params,
@@ -69,7 +35,7 @@ export default async function StaffEditPage({
     searchParams,
     fetchArticleLocales(),
   ])
-  const { overview, documentId } = await loadStaffPage(
+  const { overview, documentId, user } = await loadStaffPage(
     slug,
     await staffPathname()
   )
@@ -82,16 +48,40 @@ export default async function StaffEditPage({
   )
   const library = response?.data
   if (!library || library.documentId !== documentId) notFound()
+  const notices =
+    library.libraryType === "Mobile"
+      ? await fetchStaff<StaffNoticesData>(
+          user,
+          `libraries/${documentId}/notices`
+        )
+      : null
+  if (notices && !notices.body)
+    throw new Error("Service notices could not be loaded")
   // `?step=3` or `?step=hours` opens the wizard on that step (the
   // Overview's quick actions and the health rows).
   const stepParam = Array.isArray(query.step) ? query.step[0] : query.step
-  const initialStep = wizardStepOf(stepParam)
+  const initialStep = wizardStepOf(stepParam, library.libraryType === "Mobile")
 
   return (
     <IndexRecordWizard
       mode="staff"
       initialStep={initialStep}
       initialData={prefillLibrary(library)}
+      timetableContext={
+        notices?.body
+          ? {
+              notices: notices.body.data,
+              timezone: notices.body.timezone,
+              today: notices.body.today,
+              staff: {
+                documentId,
+                slug: overview.library.slug,
+                stops: notices.body.stops,
+                cycleWeeks: notices.body.cycleWeeks,
+              },
+            }
+          : undefined
+      }
       target={{
         documentId,
         slug: overview.library.slug,

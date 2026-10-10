@@ -153,13 +153,13 @@ export function StaffSuggestions({
     <section
       id="suggestions"
       aria-labelledby="staff-suggestions-heading"
-      className="rounded-[20px] border p-6"
+      className="rounded-[28px] border p-5 sm:p-8"
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
       <div className="mb-5">
         <h2
           id="staff-suggestions-heading"
-          className="m-0 text-[26px]"
+          className="m-0 text-[32px] leading-[1.1] sm:text-[40px]"
           style={{ fontFamily: T.font.serif, fontWeight: 500 }}
         >
           Suggested changes
@@ -173,7 +173,7 @@ export function StaffSuggestions({
             </span>
           ) : null}
         </h2>
-        <p className="m-0 mt-1 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 mt-2 text-[16px]" style={{ color: T.ink.dim }}>
           From the community. As staff, your decision publishes straight away.
         </p>
       </div>

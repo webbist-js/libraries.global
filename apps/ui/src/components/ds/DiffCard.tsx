@@ -1,4 +1,3 @@
-import { Icon } from "@iconify/react"
 import type { ReactNode } from "react"
 
 import { T, TYPE_TINT } from "@/lib/design-tokens"
@@ -27,10 +26,10 @@ export function DiffCard({
 }) {
   return (
     <article
-      className="flex flex-col gap-4 rounded-[20px] border p-5"
+      className="flex flex-col gap-3 rounded-[22px] border p-4 sm:p-5"
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
-      <div>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h3
           className="m-0 text-[17px] font-semibold"
           style={{ color: T.ink.base }}
@@ -44,41 +43,37 @@ export function DiffCard({
       <dl className="m-0 flex flex-col gap-3">
         {rows.map((row, index) => (
           <div key={`${row.label}-${index}`} className="flex flex-col gap-1.5">
-            <dt className="text-[14px] font-semibold">{row.label}</dt>
+            <dt
+              className={
+                rows.length === 1 && row.label === title
+                  ? "sr-only"
+                  : "text-[14px] font-semibold"
+              }
+            >
+              {row.label}
+            </dt>
             <dd className="m-0 grid gap-2 sm:grid-cols-2">
               <span
-                className="flex items-start gap-2 rounded-[14px] px-3.5 py-2.5 text-[15px]"
+                className="flex flex-col rounded-[14px] px-3.5 py-2.5 text-[16px]"
                 style={{
                   background: TYPE_TINT.special.bg,
                   color: TYPE_TINT.special.fg,
                 }}
               >
-                <Icon
-                  aria-hidden="true"
-                  icon="mdi:minus-circle-outline"
-                  width={16}
-                  className="mt-1 shrink-0"
-                />
-                <span>
-                  <span className="sr-only">Now: </span>
-                  <del className="wrap-break-word">{row.now || "Empty"}</del>
-                </span>
+                <span className="text-[13px] font-semibold">Now</span>
+                <del className="wrap-break-word" style={{ color: T.ink.base }}>
+                  {row.now || "Empty"}
+                </del>
               </span>
               <span
-                className="flex items-start gap-2 rounded-[14px] px-3.5 py-2.5 text-[15px]"
+                className="flex flex-col rounded-[14px] px-3.5 py-2.5 text-[16px]"
                 style={{
                   background: TYPE_TINT.public.bg,
                   color: TYPE_TINT.public.fg,
                 }}
               >
-                <Icon
-                  aria-hidden="true"
-                  icon="mdi:plus-circle-outline"
-                  width={16}
-                  className="mt-1 shrink-0"
-                />
-                <span className="wrap-break-word">
-                  <span className="sr-only">Suggested: </span>
+                <span className="text-[13px] font-semibold">Suggested</span>
+                <span className="wrap-break-word" style={{ color: T.ink.base }}>
                   {row.suggested || "Empty"}
                 </span>
               </span>

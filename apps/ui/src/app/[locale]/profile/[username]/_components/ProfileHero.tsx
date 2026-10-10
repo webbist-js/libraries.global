@@ -5,6 +5,7 @@ import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import GlobalLink from "@/components/global/GlobalLink"
 import { avatarSrc } from "@/lib/avatar"
 import { T } from "@/lib/design-tokens"
+import { isFounder } from "@/lib/founder"
 import { resolvePublicPrefs, type UserProfile } from "@/lib/types/profile"
 
 import { ProfileFollowButton } from "./ProfileFollowButton"
@@ -20,6 +21,40 @@ function countryName(code?: string | null): string | null {
   } catch {
     return code
   }
+}
+
+/**
+ * Role cards for the derived `contributorRole`. Verified staff has its own
+ * card (from `isVerifiedLibrarian`); readers and contributors get none.
+ */
+const ROLE_CARDS: Record<
+  string,
+  { icon: string; title: string; note: string; tint: string }
+> = {
+  editorial_board: {
+    icon: "mdi:bookshelf",
+    title: "Editorial board",
+    note: "Reviews every queue and language",
+    tint: "national",
+  },
+  moderator: {
+    icon: "mdi:shield-account-outline",
+    title: "Moderator",
+    note: "Reviews community changes",
+    tint: "academic",
+  },
+  wiki_editor: {
+    icon: "mdi:book-open-page-variant-outline",
+    title: "Knowledge editor",
+    note: "Edits the Knowledge base",
+    tint: "public",
+  },
+  journal_editor: {
+    icon: "mdi:newspaper-variant-outline",
+    title: "Journal editor",
+    note: "Edits the Journal",
+    tint: "public",
+  },
 }
 
 function getInitials(p: UserProfile): string {
@@ -108,6 +143,9 @@ export function ProfileHero({
   // Prefer the verified claimed library (canonical name + link) over free-text affiliation
   const staffLibrary = profile.claimedLibraries?.find((l) => l.name)
   const affiliationName = staffLibrary?.name ?? profile.affiliation
+  const roleCard = profile.contributorRole
+    ? ROLE_CARDS[profile.contributorRole]
+    : undefined
   const displayName =
     [profile.firstName, profile.lastName].filter(Boolean).join(" ") ||
     profile.username
@@ -177,6 +215,12 @@ export function ProfileHero({
               <MetaItem icon="mdi:calendar-blank-outline">
                 Contributor since {joined}
               </MetaItem>
+              {typeof profile.followerCount === "number" ? (
+                <MetaItem icon="mdi:account-multiple-outline">
+                  {profile.followerCount.toLocaleString("en-GB")}{" "}
+                  {profile.followerCount === 1 ? "follower" : "followers"}
+                </MetaItem>
+              ) : null}
               {showLocation && location ? (
                 <MetaItem icon="mdi:map-marker-outline">{location}</MetaItem>
               ) : null}
@@ -193,6 +237,24 @@ export function ProfileHero({
 
             {/* Role cards */}
             <div className="mt-5 flex flex-wrap gap-3">
+              {isFounder(profile.username) ? (
+                <RoleCard
+                  icon="mdi:star-four-points-outline"
+                  bg="var(--tint-special-bg)"
+                  fg="var(--tint-special-fg)"
+                  title="Founder"
+                  note="Started Libraries Global"
+                />
+              ) : null}
+              {roleCard ? (
+                <RoleCard
+                  icon={roleCard.icon}
+                  bg={`var(--tint-${roleCard.tint}-bg)`}
+                  fg={`var(--tint-${roleCard.tint}-fg)`}
+                  title={roleCard.title}
+                  note={roleCard.note}
+                />
+              ) : null}
               {profile.supporterMark ? (
                 <RoleCard
                   icon="mdi:heart-outline"

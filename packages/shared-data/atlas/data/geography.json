@@ -1,0 +1,3151 @@
+{
+  "version": "ae52f07bb76593ae",
+  "year": 2024,
+  "retrievedAt": "2026-10-09T18:58:10.744Z",
+  "populationSource": "World Bank · World Development Indicators (SP.POP.TOTL)",
+  "populationUrl": "https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?date=2024&format=json&per_page=400&source=2",
+  "populationLicence": "CC BY 4.0",
+  "boundarySource": "Natural Earth 5.1.2 · Admin 0 · 1:50m",
+  "boundaryUrl": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_50m_admin_0_countries.geojson",
+  "boundaryLicence": "Public domain",
+  "geometrySha256": "a786ca1df034714e843a2d96c3f99a88529e9fc768f859b977537de93c302f68",
+  "geometryUrl": "/atlas/countries-a786ca1df034714e.geojson",
+  "countries": [
+    {
+      "iso3": "ABW",
+      "iso2": "AW",
+      "name": "Aruba",
+      "population": null,
+      "featureId": 98,
+      "bounds": {
+        "west": -70.066113,
+        "south": 12.422998,
+        "east": -69.895703,
+        "north": 12.614111
+      }
+    },
+    {
+      "iso3": "AFG",
+      "iso2": "AF",
+      "name": "Afghanistan",
+      "population": null,
+      "featureId": 236,
+      "bounds": {
+        "west": 60.485742,
+        "south": 29.391943,
+        "east": 74.891309,
+        "north": 38.456396
+      }
+    },
+    {
+      "iso3": "AGO",
+      "iso2": "AO",
+      "name": "Angola",
+      "population": null,
+      "featureId": 232,
+      "bounds": {
+        "west": 11.743066,
+        "south": -18.019727,
+        "east": 24.04668,
+        "north": -4.428906
+      }
+    },
+    {
+      "iso3": "AIA",
+      "iso2": "AI",
+      "name": "Anguilla",
+      "population": null,
+      "featureId": 22,
+      "bounds": {
+        "west": -63.16001,
+        "south": 18.171387,
+        "east": -62.97959,
+        "north": 18.269727
+      }
+    },
+    {
+      "iso3": "ALA",
+      "iso2": "AX",
+      "name": "Aland",
+      "population": null,
+      "featureId": 169,
+      "bounds": {
+        "west": 19.519043,
+        "south": 60.01167,
+        "east": 20.611328,
+        "north": 60.405811
+      }
+    },
+    {
+      "iso3": "ALB",
+      "iso2": "AL",
+      "name": "Albania",
+      "population": null,
+      "featureId": 235,
+      "bounds": {
+        "west": 19.280664,
+        "south": 39.653516,
+        "east": 21.031055,
+        "north": 42.647949
+      }
+    },
+    {
+      "iso3": "AND",
+      "iso2": "AD",
+      "name": "Andorra",
+      "population": null,
+      "featureId": 233,
+      "bounds": {
+        "west": 1.414844,
+        "south": 42.434473,
+        "east": 1.740234,
+        "north": 42.642725
+      }
+    },
+    {
+      "iso3": "ARE",
+      "iso2": "AE",
+      "name": "United Arab Emirates",
+      "population": null,
+      "featureId": 33,
+      "bounds": {
+        "west": 51.568359,
+        "south": 22.621484,
+        "east": 56.387988,
+        "north": 26.068164
+      }
+    },
+    {
+      "iso3": "ARG",
+      "iso2": "AR",
+      "name": "Argentina",
+      "population": null,
+      "featureId": 230,
+      "bounds": {
+        "west": -73.57627,
+        "south": -55.032129,
+        "east": -53.668555,
+        "north": -21.802539
+      }
+    },
+    {
+      "iso3": "ARM",
+      "iso2": "AM",
+      "name": "Armenia",
+      "population": null,
+      "featureId": 229,
+      "bounds": {
+        "west": 43.439453,
+        "south": 38.869043,
+        "east": 46.584766,
+        "north": 41.290967
+      }
+    },
+    {
+      "iso3": "ASM",
+      "iso2": "AS",
+      "name": "American Samoa",
+      "population": null,
+      "featureId": 15,
+      "bounds": {
+        "west": -170.820508,
+        "south": -14.359766,
+        "east": -170.568115,
+        "north": -14.257422
+      }
+    },
+    {
+      "iso3": "ATA",
+      "iso2": "AQ",
+      "name": "Antarctica",
+      "population": null,
+      "featureId": 238,
+      "bounds": {
+        "west": -178.59375,
+        "south": -89.998926,
+        "east": 180,
+        "north": -60.520898
+      }
+    },
+    {
+      "iso3": "ATF",
+      "iso2": "TF",
+      "name": "French Southern and Antarctic Lands",
+      "population": null,
+      "featureId": 168,
+      "bounds": {
+        "west": 51.659277,
+        "south": -49.709863,
+        "east": 70.555469,
+        "north": -46.326855
+      }
+    },
+    {
+      "iso3": "ATG",
+      "iso2": "AG",
+      "name": "Antigua and Barbuda",
+      "population": null,
+      "featureId": 231,
+      "bounds": {
+        "west": -61.887109,
+        "south": 16.997168,
+        "east": -61.686035,
+        "north": 17.714062
+      }
+    },
+    {
+      "iso3": "AUS",
+      "iso2": "AU",
+      "name": "Australia",
+      "population": null,
+      "featureId": 226,
+      "bounds": {
+        "west": 96.825879,
+        "south": -54.749219,
+        "east": 158.958887,
+        "north": -10.051758
+      }
+    },
+    {
+      "iso3": "AUT",
+      "iso2": "AT",
+      "name": "Austria",
+      "population": null,
+      "featureId": 225,
+      "bounds": {
+        "west": 9.524023,
+        "south": 46.399707,
+        "east": 17.147363,
+        "north": 49.001123
+      }
+    },
+    {
+      "iso3": "AZE",
+      "iso2": "AZ",
+      "name": "Azerbaijan",
+      "population": null,
+      "featureId": 224,
+      "bounds": {
+        "west": 44.768262,
+        "south": 38.39873,
+        "east": 50.365918,
+        "north": 41.890967
+      }
+    },
+    {
+      "iso3": "BDI",
+      "iso2": "BI",
+      "name": "Burundi",
+      "population": null,
+      "featureId": 207,
+      "bounds": {
+        "west": 29.01416,
+        "south": -4.455859,
+        "east": 30.811426,
+        "north": -2.312988
+      }
+    },
+    {
+      "iso3": "BEL",
+      "iso2": "BE",
+      "name": "Belgium",
+      "population": null,
+      "featureId": 218,
+      "bounds": {
+        "west": 2.524902,
+        "south": 49.510889,
+        "east": 6.364453,
+        "north": 51.491113
+      }
+    },
+    {
+      "iso3": "BEN",
+      "iso2": "BJ",
+      "name": "Benin",
+      "population": null,
+      "featureId": 216,
+      "bounds": {
+        "west": 0.763379,
+        "south": 6.216797,
+        "east": 3.834473,
+        "north": 12.383838
+      }
+    },
+    {
+      "iso3": "BFA",
+      "iso2": "BF",
+      "name": "Burkina Faso",
+      "population": null,
+      "featureId": 208,
+      "bounds": {
+        "west": -5.523535,
+        "south": 9.424707,
+        "east": 2.38916,
+        "north": 15.077881
+      }
+    },
+    {
+      "iso3": "BGD",
+      "iso2": "BD",
+      "name": "Bangladesh",
+      "population": null,
+      "featureId": 221,
+      "bounds": {
+        "west": 88.023438,
+        "south": 20.79043,
+        "east": 92.631641,
+        "north": 26.571533
+      }
+    },
+    {
+      "iso3": "BGR",
+      "iso2": "BG",
+      "name": "Bulgaria",
+      "population": null,
+      "featureId": 209,
+      "bounds": {
+        "west": 22.344043,
+        "south": 41.243555,
+        "east": 28.585352,
+        "north": 44.237793
+      }
+    },
+    {
+      "iso3": "BHR",
+      "iso2": "BH",
+      "name": "Bahrain",
+      "population": null,
+      "featureId": 222,
+      "bounds": {
+        "west": 50.452441,
+        "south": 25.806787,
+        "east": 50.61748,
+        "north": 26.246436
+      }
+    },
+    {
+      "iso3": "BHS",
+      "iso2": "BS",
+      "name": "Bahamas, The",
+      "population": null,
+      "featureId": 223,
+      "bounds": {
+        "west": -78.985645,
+        "south": 20.937402,
+        "east": -72.747266,
+        "north": 26.940088
+      }
+    },
+    {
+      "iso3": "BIH",
+      "iso2": "BA",
+      "name": "Bosnia and Herzegovina",
+      "population": null,
+      "featureId": 213,
+      "bounds": {
+        "west": 15.736621,
+        "south": 42.559717,
+        "east": 19.583789,
+        "north": 45.276562
+      }
+    },
+    {
+      "iso3": "BLM",
+      "iso2": "BL",
+      "name": "Saint Barthelemy",
+      "population": null,
+      "featureId": 165,
+      "bounds": {
+        "west": -62.875439,
+        "south": 17.875195,
+        "east": -62.799707,
+        "north": 17.922266
+      }
+    },
+    {
+      "iso3": "BLR",
+      "iso2": "BY",
+      "name": "Belarus",
+      "population": null,
+      "featureId": 219,
+      "bounds": {
+        "west": 23.175098,
+        "south": 51.265039,
+        "east": 32.710254,
+        "north": 56.145801
+      }
+    },
+    {
+      "iso3": "BLZ",
+      "iso2": "BZ",
+      "name": "Belize",
+      "population": null,
+      "featureId": 217,
+      "bounds": {
+        "west": -89.2375,
+        "south": 15.888672,
+        "east": -87.788623,
+        "north": 18.482324
+      }
+    },
+    {
+      "iso3": "BMU",
+      "iso2": "BM",
+      "name": "Bermuda",
+      "population": null,
+      "featureId": 25,
+      "bounds": {
+        "west": -64.862842,
+        "south": 32.259619,
+        "east": -64.668311,
+        "north": 32.386914
+      }
+    },
+    {
+      "iso3": "BOL",
+      "iso2": "BO",
+      "name": "Bolivia",
+      "population": null,
+      "featureId": 214,
+      "bounds": {
+        "west": -69.645703,
+        "south": -22.891699,
+        "east": -57.495654,
+        "north": -9.710449
+      }
+    },
+    {
+      "iso3": "BRA",
+      "iso2": "BR",
+      "name": "Brazil",
+      "population": null,
+      "featureId": 211,
+      "bounds": {
+        "west": -74.002051,
+        "south": -33.742188,
+        "east": -34.805469,
+        "north": 5.257959
+      }
+    },
+    {
+      "iso3": "BRB",
+      "iso2": "BB",
+      "name": "Barbados",
+      "population": null,
+      "featureId": 220,
+      "bounds": {
+        "west": -59.64668,
+        "south": 13.062207,
+        "east": -59.427637,
+        "north": 13.317676
+      }
+    },
+    {
+      "iso3": "BRN",
+      "iso2": "BN",
+      "name": "Brunei Darussalam",
+      "population": null,
+      "featureId": 210,
+      "bounds": {
+        "west": 114.063867,
+        "south": 4.023975,
+        "east": 115.326758,
+        "north": 5.022363
+      }
+    },
+    {
+      "iso3": "BTN",
+      "iso2": "BT",
+      "name": "Bhutan",
+      "population": null,
+      "featureId": 215,
+      "bounds": {
+        "west": 88.73877,
+        "south": 26.701563,
+        "east": 92.083398,
+        "north": 28.311182
+      }
+    },
+    {
+      "iso3": "BWA",
+      "iso2": "BW",
+      "name": "Botswana",
+      "population": null,
+      "featureId": 212,
+      "bounds": {
+        "west": 19.977344,
+        "south": -26.854199,
+        "east": 29.364844,
+        "north": -17.787598
+      }
+    },
+    {
+      "iso3": "CAF",
+      "iso2": "CF",
+      "name": "Central African Republic",
+      "population": null,
+      "featureId": 201,
+      "bounds": {
+        "west": 14.431152,
+        "south": 2.270068,
+        "east": 27.40332,
+        "north": 10.99624
+      }
+    },
+    {
+      "iso3": "CAN",
+      "iso2": "CA",
+      "name": "Canada",
+      "population": null,
+      "featureId": 203,
+      "bounds": {
+        "west": -141.002148,
+        "south": 41.674854,
+        "east": -52.653662,
+        "north": 83.116113
+      }
+    },
+    {
+      "iso3": "CHE",
+      "iso2": "CH",
+      "name": "Switzerland",
+      "population": null,
+      "featureId": 48,
+      "bounds": {
+        "west": 5.97002,
+        "south": 45.830029,
+        "east": 10.45459,
+        "north": 47.775635
+      }
+    },
+    {
+      "iso3": "CHI",
+      "iso2": "JG",
+      "name": "Channel Islands",
+      "population": null,
+      "featureId": null,
+      "bounds": null
+    },
+    {
+      "iso3": "CHL",
+      "iso2": "CL",
+      "name": "Chile",
+      "population": null,
+      "featureId": 199,
+      "bounds": {
+        "west": -109.434131,
+        "south": -55.891699,
+        "east": -66.435791,
+        "north": -17.506055
+      }
+    },
+    {
+      "iso3": "CHN",
+      "iso2": "CN",
+      "name": "China",
+      "population": null,
+      "featureId": 196,
+      "bounds": {
+        "west": 73.607324,
+        "south": 18.218262,
+        "east": 134.752344,
+        "north": 53.555615
+      }
+    },
+    {
+      "iso3": "CIV",
+      "iso2": "CI",
+      "name": "Cote d'Ivoire",
+      "population": null,
+      "featureId": 190,
+      "bounds": {
+        "west": -8.603564,
+        "south": 4.351318,
+        "east": -2.505859,
+        "north": 10.724072
+      }
+    },
+    {
+      "iso3": "CMR",
+      "iso2": "CM",
+      "name": "Cameroon",
+      "population": null,
+      "featureId": 204,
+      "bounds": {
+        "west": 8.532813,
+        "south": 1.676221,
+        "east": 16.183398,
+        "north": 13.078516
+      }
+    },
+    {
+      "iso3": "COD",
+      "iso2": "CD",
+      "name": "Congo, Dem. Rep.",
+      "population": null,
+      "featureId": 192,
+      "bounds": {
+        "west": 12.213672,
+        "south": -13.453809,
+        "east": 31.274023,
+        "north": 5.312109
+      }
+    },
+    {
+      "iso3": "COG",
+      "iso2": "CG",
+      "name": "Congo, Rep.",
+      "population": null,
+      "featureId": 193,
+      "bounds": {
+        "west": 11.130176,
+        "south": -5.004297,
+        "east": 18.622168,
+        "north": 3.687305
+      }
+    },
+    {
+      "iso3": "COK",
+      "iso2": "CK",
+      "name": "Cook Islands",
+      "population": null,
+      "featureId": 96,
+      "bounds": {
+        "west": -159.84248,
+        "south": -21.249512,
+        "east": -159.736865,
+        "north": -21.186426
+      }
+    },
+    {
+      "iso3": "COL",
+      "iso2": "CO",
+      "name": "Colombia",
+      "population": null,
+      "featureId": 195,
+      "bounds": {
+        "west": -79.025439,
+        "south": -4.235938,
+        "east": -66.876025,
+        "north": 12.434375
+      }
+    },
+    {
+      "iso3": "COM",
+      "iso2": "KM",
+      "name": "Comoros",
+      "population": null,
+      "featureId": 194,
+      "bounds": {
+        "west": 43.22666,
+        "south": -12.368262,
+        "east": 44.526758,
+        "north": -11.368457
+      }
+    },
+    {
+      "iso3": "CPV",
+      "iso2": "CV",
+      "name": "Cabo Verde",
+      "population": null,
+      "featureId": 202,
+      "bounds": {
+        "west": -25.341553,
+        "south": 14.818213,
+        "east": -22.681885,
+        "north": 17.193652
+      }
+    },
+    {
+      "iso3": "CRI",
+      "iso2": "CR",
+      "name": "Costa Rica",
+      "population": null,
+      "featureId": 191,
+      "bounds": {
+        "west": -85.908008,
+        "south": 8.070654,
+        "east": -82.563574,
+        "north": 11.189453
+      }
+    },
+    {
+      "iso3": "CUB",
+      "iso2": "CU",
+      "name": "Cuba",
+      "population": null,
+      "featureId": 188,
+      "bounds": {
+        "west": -84.887207,
+        "south": 19.855469,
+        "east": -74.136816,
+        "north": 23.19043
+      }
+    },
+    {
+      "iso3": "CUW",
+      "iso2": "CW",
+      "name": "Curacao",
+      "population": null,
+      "featureId": 99,
+      "bounds": {
+        "west": -69.158887,
+        "south": 12.045459,
+        "east": -68.751074,
+        "north": 12.380273
+      }
+    },
+    {
+      "iso3": "CYM",
+      "iso2": "KY",
+      "name": "Cayman Islands",
+      "population": null,
+      "featureId": 24,
+      "bounds": {
+        "west": -81.419092,
+        "south": 19.271875,
+        "east": -79.742285,
+        "north": 19.765723
+      }
+    },
+    {
+      "iso3": "CYN",
+      "iso2": null,
+      "name": "Northern Cyprus",
+      "population": null,
+      "featureId": 186,
+      "bounds": {
+        "west": 32.712695,
+        "south": 35.000342,
+        "east": 34.556055,
+        "north": 35.662061
+      }
+    },
+    {
+      "iso3": "CYP",
+      "iso2": "CY",
+      "name": "Cyprus",
+      "population": null,
+      "featureId": 187,
+      "bounds": {
+        "west": 32.300977,
+        "south": 34.56958,
+        "east": 34.050195,
+        "north": 35.182666
+      }
+    },
+    {
+      "iso3": "CZE",
+      "iso2": "CZ",
+      "name": "Czechia",
+      "population": null,
+      "featureId": 185,
+      "bounds": {
+        "west": 12.089746,
+        "south": 48.576221,
+        "east": 18.832227,
+        "north": 51.037793
+      }
+    },
+    {
+      "iso3": "DEU",
+      "iso2": "DE",
+      "name": "Germany",
+      "population": null,
+      "featureId": 157,
+      "bounds": {
+        "west": 5.85752,
+        "south": 47.278809,
+        "east": 15.016602,
+        "north": 55.05874
+      }
+    },
+    {
+      "iso3": "DJI",
+      "iso2": "DJ",
+      "name": "Djibouti",
+      "population": null,
+      "featureId": 181,
+      "bounds": {
+        "west": 41.764648,
+        "south": 10.941016,
+        "east": 43.409766,
+        "north": 12.708594
+      }
+    },
+    {
+      "iso3": "DMA",
+      "iso2": "DM",
+      "name": "Dominica",
+      "population": null,
+      "featureId": 180,
+      "bounds": {
+        "west": -61.481152,
+        "south": 15.227295,
+        "east": -61.251074,
+        "north": 15.633105
+      }
+    },
+    {
+      "iso3": "DNK",
+      "iso2": "DK",
+      "name": "Denmark",
+      "population": null,
+      "featureId": 184,
+      "bounds": {
+        "west": 8.121484,
+        "south": 54.628857,
+        "east": 15.137109,
+        "north": 57.736914
+      }
+    },
+    {
+      "iso3": "DOM",
+      "iso2": "DO",
+      "name": "Dominican Republic",
+      "population": null,
+      "featureId": 179,
+      "bounds": {
+        "west": -72.000391,
+        "south": 17.635596,
+        "east": -68.33916,
+        "north": 19.913965
+      }
+    },
+    {
+      "iso3": "DZA",
+      "iso2": "DZ",
+      "name": "Algeria",
+      "population": null,
+      "featureId": 234,
+      "bounds": {
+        "west": -8.68335,
+        "south": 18.986621,
+        "east": 11.967871,
+        "north": 37.092383
+      }
+    },
+    {
+      "iso3": "ECU",
+      "iso2": "EC",
+      "name": "Ecuador",
+      "population": null,
+      "featureId": 178,
+      "bounds": {
+        "west": -91.65415,
+        "south": -4.990625,
+        "east": -75.249609,
+        "north": 1.455371
+      }
+    },
+    {
+      "iso3": "EGY",
+      "iso2": "EG",
+      "name": "Egypt, Arab Rep.",
+      "population": null,
+      "featureId": 177,
+      "bounds": {
+        "west": 24.703223,
+        "south": 21.994873,
+        "east": 36.871387,
+        "north": 31.65498
+      }
+    },
+    {
+      "iso3": "ERI",
+      "iso2": "ER",
+      "name": "Eritrea",
+      "population": null,
+      "featureId": 174,
+      "bounds": {
+        "west": 36.426758,
+        "south": 12.376562,
+        "east": 43.116699,
+        "north": 18.005078
+      }
+    },
+    {
+      "iso3": "ESH",
+      "iso2": "EH",
+      "name": "Western Sahara",
+      "population": null,
+      "featureId": 105,
+      "bounds": {
+        "west": -17.098779,
+        "south": 20.806152,
+        "east": -8.682129,
+        "north": 27.656445
+      }
+    },
+    {
+      "iso3": "ESP",
+      "iso2": "ES",
+      "name": "Spain",
+      "population": null,
+      "featureId": 55,
+      "bounds": {
+        "west": -18.160547,
+        "south": 27.646387,
+        "east": 4.32207,
+        "north": 43.764551
+      }
+    },
+    {
+      "iso3": "EST",
+      "iso2": "EE",
+      "name": "Estonia",
+      "population": null,
+      "featureId": 173,
+      "bounds": {
+        "west": 21.854492,
+        "south": 57.525488,
+        "east": 28.151074,
+        "north": 59.639014
+      }
+    },
+    {
+      "iso3": "ETH",
+      "iso2": "ET",
+      "name": "Ethiopia",
+      "population": null,
+      "featureId": 172,
+      "bounds": {
+        "west": 32.998926,
+        "south": 3.456104,
+        "east": 47.978223,
+        "north": 14.852295
+      }
+    },
+    {
+      "iso3": "FIN",
+      "iso2": "FI",
+      "name": "Finland",
+      "population": null,
+      "featureId": 170,
+      "bounds": {
+        "west": 20.622168,
+        "south": 59.816016,
+        "east": 31.536523,
+        "north": 70.064844
+      }
+    },
+    {
+      "iso3": "FJI",
+      "iso2": "FJ",
+      "name": "Fiji",
+      "population": null,
+      "featureId": 171,
+      "bounds": {
+        "west": 174.587207,
+        "south": -21.705859,
+        "east": 181.748877,
+        "north": -12.476953
+      }
+    },
+    {
+      "iso3": "FLK",
+      "iso2": "FK",
+      "name": "Falkland Islands",
+      "population": null,
+      "featureId": 23,
+      "bounds": {
+        "west": -61.14502,
+        "south": -52.308008,
+        "east": -57.791797,
+        "north": -51.269922
+      }
+    },
+    {
+      "iso3": "FRA",
+      "iso2": "FR",
+      "name": "France",
+      "population": null,
+      "featureId": 161,
+      "bounds": {
+        "west": -61.794092,
+        "south": -21.369043,
+        "east": 55.839063,
+        "north": 51.097119
+      }
+    },
+    {
+      "iso3": "FRO",
+      "iso2": "FO",
+      "name": "Faroe Islands",
+      "population": null,
+      "featureId": 183,
+      "bounds": {
+        "west": -7.422607,
+        "south": 61.414307,
+        "east": -6.406055,
+        "north": 62.355664
+      }
+    },
+    {
+      "iso3": "FSM",
+      "iso2": "FM",
+      "name": "Micronesia, Fed. Sts.",
+      "population": null,
+      "featureId": 10,
+      "bounds": {
+        "west": 138.061914,
+        "south": 5.277246,
+        "east": 162.993457,
+        "north": 9.593311
+      }
+    },
+    {
+      "iso3": "GAB",
+      "iso2": "GA",
+      "name": "Gabon",
+      "population": null,
+      "featureId": 160,
+      "bounds": {
+        "west": 8.703125,
+        "south": -3.916309,
+        "east": 14.480566,
+        "north": 2.302197
+      }
+    },
+    {
+      "iso3": "GBR",
+      "iso2": "GB",
+      "name": "United Kingdom",
+      "population": null,
+      "featureId": 32,
+      "bounds": {
+        "west": -8.144824,
+        "south": 50.021387,
+        "east": 1.746582,
+        "north": 60.831885
+      }
+    },
+    {
+      "iso3": "GEO",
+      "iso2": "GE",
+      "name": "Georgia",
+      "population": null,
+      "featureId": 158,
+      "bounds": {
+        "west": 39.97832,
+        "south": 41.070215,
+        "east": 46.672559,
+        "north": 43.569775
+      }
+    },
+    {
+      "iso3": "GGY",
+      "iso2": "GG",
+      "name": "Guernsey",
+      "population": null,
+      "featureId": 30,
+      "bounds": {
+        "west": -2.646143,
+        "south": 49.428711,
+        "east": -2.512305,
+        "north": 49.506592
+      }
+    },
+    {
+      "iso3": "GHA",
+      "iso2": "GH",
+      "name": "Ghana",
+      "population": null,
+      "featureId": 156,
+      "bounds": {
+        "west": -3.243896,
+        "south": 4.762451,
+        "east": 1.187207,
+        "north": 11.166895
+      }
+    },
+    {
+      "iso3": "GIB",
+      "iso2": "GI",
+      "name": "Gibraltar",
+      "population": null,
+      "featureId": null,
+      "bounds": null
+    },
+    {
+      "iso3": "GIN",
+      "iso2": "GN",
+      "name": "Guinea",
+      "population": null,
+      "featureId": 152,
+      "bounds": {
+        "west": -15.051221,
+        "south": 7.215918,
+        "east": -7.681201,
+        "north": 12.673926
+      }
+    },
+    {
+      "iso3": "GMB",
+      "iso2": "GM",
+      "name": "Gambia, The",
+      "population": null,
+      "featureId": 159,
+      "bounds": {
+        "west": -16.824805,
+        "south": 13.06416,
+        "east": -13.826709,
+        "north": 13.812109
+      }
+    },
+    {
+      "iso3": "GNB",
+      "iso2": "GW",
+      "name": "Guinea-Bissau",
+      "population": null,
+      "featureId": 151,
+      "bounds": {
+        "west": -16.711816,
+        "south": 10.940137,
+        "east": -13.673535,
+        "north": 12.679932
+      }
+    },
+    {
+      "iso3": "GNQ",
+      "iso2": "GQ",
+      "name": "Equatorial Guinea",
+      "population": null,
+      "featureId": 175,
+      "bounds": {
+        "west": 8.434277,
+        "south": 0.960107,
+        "east": 11.335352,
+        "north": 3.758301
+      }
+    },
+    {
+      "iso3": "GRC",
+      "iso2": "GR",
+      "name": "Greece",
+      "population": null,
+      "featureId": 155,
+      "bounds": {
+        "west": 19.646484,
+        "south": 34.934473,
+        "east": 28.231836,
+        "north": 41.743799
+      }
+    },
+    {
+      "iso3": "GRD",
+      "iso2": "GD",
+      "name": "Grenada",
+      "population": null,
+      "featureId": 154,
+      "bounds": {
+        "west": -61.782178,
+        "south": 12.008447,
+        "east": -61.607031,
+        "north": 12.237012
+      }
+    },
+    {
+      "iso3": "GRL",
+      "iso2": "GL",
+      "name": "Greenland",
+      "population": null,
+      "featureId": 182,
+      "bounds": {
+        "west": -72.818066,
+        "south": 59.815479,
+        "east": -11.425537,
+        "north": 83.599609
+      }
+    },
+    {
+      "iso3": "GTM",
+      "iso2": "GT",
+      "name": "Guatemala",
+      "population": null,
+      "featureId": 153,
+      "bounds": {
+        "west": -92.235156,
+        "south": 13.736523,
+        "east": -88.22832,
+        "north": 17.816406
+      }
+    },
+    {
+      "iso3": "GUM",
+      "iso2": "GU",
+      "name": "Guam",
+      "population": null,
+      "featureId": 14,
+      "bounds": {
+        "west": 144.649316,
+        "south": 13.25752,
+        "east": 144.94082,
+        "north": 13.622363
+      }
+    },
+    {
+      "iso3": "GUY",
+      "iso2": "GY",
+      "name": "Guyana",
+      "population": null,
+      "featureId": 150,
+      "bounds": {
+        "west": -61.39082,
+        "south": 1.201221,
+        "east": -56.482812,
+        "north": 8.549316
+      }
+    },
+    {
+      "iso3": "HKG",
+      "iso2": "HK",
+      "name": "Hong Kong SAR, China",
+      "population": null,
+      "featureId": 198,
+      "bounds": {
+        "west": 113.838867,
+        "south": 22.195166,
+        "east": 114.335254,
+        "north": 22.56499
+      }
+    },
+    {
+      "iso3": "HMD",
+      "iso2": "HM",
+      "name": "Heard Island and McDonald Islands",
+      "population": null,
+      "featureId": 227,
+      "bounds": {
+        "west": 73.251172,
+        "south": -53.18457,
+        "east": 73.837793,
+        "north": -52.966309
+      }
+    },
+    {
+      "iso3": "HND",
+      "iso2": "HN",
+      "name": "Honduras",
+      "population": null,
+      "featureId": 148,
+      "bounds": {
+        "west": -89.362598,
+        "south": 12.979248,
+        "east": -83.15752,
+        "north": 16.513965
+      }
+    },
+    {
+      "iso3": "HRV",
+      "iso2": "HR",
+      "name": "Croatia",
+      "population": null,
+      "featureId": 189,
+      "bounds": {
+        "west": 13.517188,
+        "south": 42.43291,
+        "east": 19.400977,
+        "north": 46.534619
+      }
+    },
+    {
+      "iso3": "HTI",
+      "iso2": "HT",
+      "name": "Haiti",
+      "population": null,
+      "featureId": 149,
+      "bounds": {
+        "west": -74.478125,
+        "south": 18.03916,
+        "east": -71.645312,
+        "north": 20.093652
+      }
+    },
+    {
+      "iso3": "HUN",
+      "iso2": "HU",
+      "name": "Hungary",
+      "population": null,
+      "featureId": 147,
+      "bounds": {
+        "west": 16.093066,
+        "south": 45.753027,
+        "east": 22.87666,
+        "north": 48.553467
+      }
+    },
+    {
+      "iso3": "IDN",
+      "iso2": "ID",
+      "name": "Indonesia",
+      "population": null,
+      "featureId": 144,
+      "bounds": {
+        "west": 95.206641,
+        "south": -10.909668,
+        "east": 140.976172,
+        "north": 5.907031
+      }
+    },
+    {
+      "iso3": "IMN",
+      "iso2": "IM",
+      "name": "Isle of Man",
+      "population": null,
+      "featureId": 31,
+      "bounds": {
+        "west": -4.785352,
+        "south": 54.058691,
+        "east": -4.337988,
+        "north": 54.407178
+      }
+    },
+    {
+      "iso3": "IND",
+      "iso2": "IN",
+      "name": "India",
+      "population": null,
+      "featureId": 145,
+      "bounds": {
+        "west": 68.165039,
+        "south": 6.748682,
+        "east": 97.343555,
+        "north": 35.495898
+      }
+    },
+    {
+      "iso3": "IOT",
+      "iso2": "IO",
+      "name": "British Indian Ocean Territory",
+      "population": null,
+      "featureId": 19,
+      "bounds": {
+        "west": 72.349707,
+        "south": -7.435352,
+        "east": 72.498535,
+        "north": -7.22041
+      }
+    },
+    {
+      "iso3": "IRL",
+      "iso2": "IE",
+      "name": "Ireland",
+      "population": null,
+      "featureId": 141,
+      "bounds": {
+        "west": -10.390234,
+        "south": 51.47373,
+        "east": -6.027393,
+        "north": 55.36582
+      }
+    },
+    {
+      "iso3": "IRN",
+      "iso2": "IR",
+      "name": "Iran, Islamic Rep.",
+      "population": null,
+      "featureId": 143,
+      "bounds": {
+        "west": 44.023242,
+        "south": 25.1021,
+        "east": 63.305176,
+        "north": 39.768555
+      }
+    },
+    {
+      "iso3": "IRQ",
+      "iso2": "IQ",
+      "name": "Iraq",
+      "population": null,
+      "featureId": 142,
+      "bounds": {
+        "west": 38.773535,
+        "south": 29.063672,
+        "east": 48.546484,
+        "north": 37.371875
+      }
+    },
+    {
+      "iso3": "ISL",
+      "iso2": "IS",
+      "name": "Iceland",
+      "population": null,
+      "featureId": 146,
+      "bounds": {
+        "west": -24.475684,
+        "south": 63.406689,
+        "east": -13.556104,
+        "north": 66.526074
+      }
+    },
+    {
+      "iso3": "ISR",
+      "iso2": "IL",
+      "name": "Israel",
+      "population": null,
+      "featureId": 139,
+      "bounds": {
+        "west": 34.245313,
+        "south": 29.477344,
+        "east": 35.887977,
+        "north": 33.415674
+      }
+    },
+    {
+      "iso3": "ITA",
+      "iso2": "IT",
+      "name": "Italy",
+      "population": null,
+      "featureId": 138,
+      "bounds": {
+        "west": 6.627734,
+        "south": 36.687842,
+        "east": 18.48584,
+        "north": 47.082129
+      }
+    },
+    {
+      "iso3": "JAM",
+      "iso2": "JM",
+      "name": "Jamaica",
+      "population": null,
+      "featureId": 137,
+      "bounds": {
+        "west": -78.339502,
+        "south": 17.714941,
+        "east": -76.210791,
+        "north": 18.522217
+      }
+    },
+    {
+      "iso3": "JEY",
+      "iso2": "JE",
+      "name": "Jersey",
+      "population": null,
+      "featureId": 29,
+      "bounds": {
+        "west": -2.23584,
+        "south": 49.169824,
+        "east": -2.009912,
+        "north": 49.266357
+      }
+    },
+    {
+      "iso3": "JOR",
+      "iso2": "JO",
+      "name": "Jordan",
+      "population": null,
+      "featureId": 135,
+      "bounds": {
+        "west": 34.950781,
+        "south": 29.190479,
+        "east": 39.292773,
+        "north": 33.372217
+      }
+    },
+    {
+      "iso3": "JPN",
+      "iso2": "JP",
+      "name": "Japan",
+      "population": null,
+      "featureId": 136,
+      "bounds": {
+        "west": 123.679785,
+        "south": 24.266064,
+        "east": 145.833008,
+        "north": 45.509521
+      }
+    },
+    {
+      "iso3": "KAS",
+      "iso2": null,
+      "name": "Siachen Glacier",
+      "population": null,
+      "featureId": 237,
+      "bounds": {
+        "west": 76.766895,
+        "south": 35.109912,
+        "east": 77.799414,
+        "north": 35.661719
+      }
+    },
+    {
+      "iso3": "KAZ",
+      "iso2": "KZ",
+      "name": "Kazakhstan",
+      "population": null,
+      "featureId": 134,
+      "bounds": {
+        "west": 46.60918,
+        "south": 40.608643,
+        "east": 87.322852,
+        "north": 55.3896
+      }
+    },
+    {
+      "iso3": "KEN",
+      "iso2": "KE",
+      "name": "Kenya",
+      "population": null,
+      "featureId": 133,
+      "bounds": {
+        "west": 33.9,
+        "south": -4.692383,
+        "east": 41.883984,
+        "north": 5.492285
+      }
+    },
+    {
+      "iso3": "KGZ",
+      "iso2": "KG",
+      "name": "Kyrgyz Republic",
+      "population": null,
+      "featureId": 129,
+      "bounds": {
+        "west": 69.229102,
+        "south": 39.20752,
+        "east": 80.246191,
+        "north": 43.240381
+      }
+    },
+    {
+      "iso3": "KHM",
+      "iso2": "KH",
+      "name": "Cambodia",
+      "population": null,
+      "featureId": 205,
+      "bounds": {
+        "west": 102.319727,
+        "south": 10.41123,
+        "east": 107.605469,
+        "north": 14.705078
+      }
+    },
+    {
+      "iso3": "KIR",
+      "iso2": "KI",
+      "name": "Kiribati",
+      "population": null,
+      "featureId": 132,
+      "bounds": {
+        "west": 169.522949,
+        "south": -11.456836,
+        "east": 208.217383,
+        "north": 3.923535
+      }
+    },
+    {
+      "iso3": "KNA",
+      "iso2": "KN",
+      "name": "St. Kitts and Nevis",
+      "population": null,
+      "featureId": 74,
+      "bounds": {
+        "west": -62.840479,
+        "south": 17.100586,
+        "east": -62.532227,
+        "north": 17.402588
+      }
+    },
+    {
+      "iso3": "KOR",
+      "iso2": "KR",
+      "name": "Korea, Rep.",
+      "population": null,
+      "featureId": 56,
+      "bounds": {
+        "west": 126.00752,
+        "south": 33.201514,
+        "east": 130.934277,
+        "north": 38.623437
+      }
+    },
+    {
+      "iso3": "KWT",
+      "iso2": "KW",
+      "name": "Kuwait",
+      "population": null,
+      "featureId": 130,
+      "bounds": {
+        "west": 46.531445,
+        "south": 28.533154,
+        "east": 48.44248,
+        "north": 30.097314
+      }
+    },
+    {
+      "iso3": "LAO",
+      "iso2": "LA",
+      "name": "Lao PDR",
+      "population": null,
+      "featureId": 128,
+      "bounds": {
+        "west": 100.114941,
+        "south": 13.921191,
+        "east": 107.653125,
+        "north": 22.495264
+      }
+    },
+    {
+      "iso3": "LBN",
+      "iso2": "LB",
+      "name": "Lebanon",
+      "population": null,
+      "featureId": 126,
+      "bounds": {
+        "west": 35.108594,
+        "south": 33.075684,
+        "east": 36.584961,
+        "north": 34.678711
+      }
+    },
+    {
+      "iso3": "LBR",
+      "iso2": "LR",
+      "name": "Liberia",
+      "population": null,
+      "featureId": 124,
+      "bounds": {
+        "west": -11.50752,
+        "south": 4.351318,
+        "east": -7.399902,
+        "north": 8.537695
+      }
+    },
+    {
+      "iso3": "LBY",
+      "iso2": "LY",
+      "name": "Libya",
+      "population": null,
+      "featureId": 123,
+      "bounds": {
+        "west": 9.310254,
+        "south": 19.496631,
+        "east": 25.150488,
+        "north": 33.181934
+      }
+    },
+    {
+      "iso3": "LCA",
+      "iso2": "LC",
+      "name": "St. Lucia",
+      "population": null,
+      "featureId": 73,
+      "bounds": {
+        "west": -61.073145,
+        "south": 13.717578,
+        "east": -60.886768,
+        "north": 14.093359
+      }
+    },
+    {
+      "iso3": "LIE",
+      "iso2": "LI",
+      "name": "Liechtenstein",
+      "population": null,
+      "featureId": 122,
+      "bounds": {
+        "west": 9.479492,
+        "south": 47.057373,
+        "east": 9.610547,
+        "north": 47.270752
+      }
+    },
+    {
+      "iso3": "LKA",
+      "iso2": "LK",
+      "name": "Sri Lanka",
+      "population": null,
+      "featureId": 54,
+      "bounds": {
+        "west": 79.707812,
+        "south": 5.949365,
+        "east": 81.876953,
+        "north": 9.812695
+      }
+    },
+    {
+      "iso3": "LSO",
+      "iso2": "LS",
+      "name": "Lesotho",
+      "population": null,
+      "featureId": 125,
+      "bounds": {
+        "west": 27.051758,
+        "south": -30.642285,
+        "east": 29.390723,
+        "north": -28.581738
+      }
+    },
+    {
+      "iso3": "LTU",
+      "iso2": "LT",
+      "name": "Lithuania",
+      "population": null,
+      "featureId": 121,
+      "bounds": {
+        "west": 20.899805,
+        "south": 53.892969,
+        "east": 26.775684,
+        "north": 56.411182
+      }
+    },
+    {
+      "iso3": "LUX",
+      "iso2": "LU",
+      "name": "Luxembourg",
+      "population": null,
+      "featureId": 120,
+      "bounds": {
+        "west": 5.725,
+        "south": 49.445459,
+        "east": 6.49375,
+        "north": 50.167187
+      }
+    },
+    {
+      "iso3": "LVA",
+      "iso2": "LV",
+      "name": "Latvia",
+      "population": null,
+      "featureId": 127,
+      "bounds": {
+        "west": 21.014941,
+        "south": 55.667529,
+        "east": 28.202051,
+        "north": 58.063428
+      }
+    },
+    {
+      "iso3": "MAC",
+      "iso2": "MO",
+      "name": "Macao SAR, China",
+      "population": null,
+      "featureId": 197,
+      "bounds": {
+        "west": 113.478906,
+        "south": 22.195557,
+        "east": 113.548145,
+        "north": 22.245947
+      }
+    },
+    {
+      "iso3": "MAF",
+      "iso2": "MF",
+      "name": "St. Martin (French part)",
+      "population": null,
+      "featureId": 164,
+      "bounds": {
+        "west": -63.123047,
+        "south": 18.068945,
+        "east": -63.009424,
+        "north": 18.115332
+      }
+    },
+    {
+      "iso3": "MAR",
+      "iso2": "MA",
+      "name": "Morocco",
+      "population": null,
+      "featureId": 104,
+      "bounds": {
+        "west": -17.003076,
+        "south": 21.420703,
+        "east": -1.065527,
+        "north": 35.929883
+      }
+    },
+    {
+      "iso3": "MCO",
+      "iso2": "MC",
+      "name": "Monaco",
+      "population": null,
+      "featureId": 109,
+      "bounds": {
+        "west": 7.377734,
+        "south": 43.731738,
+        "east": 7.438672,
+        "north": 43.770898
+      }
+    },
+    {
+      "iso3": "MDA",
+      "iso2": "MD",
+      "name": "Moldova",
+      "population": null,
+      "featureId": 108,
+      "bounds": {
+        "west": 26.618945,
+        "south": 45.450439,
+        "east": 30.131055,
+        "north": 48.477734
+      }
+    },
+    {
+      "iso3": "MDG",
+      "iso2": "MG",
+      "name": "Madagascar",
+      "population": null,
+      "featureId": 118,
+      "bounds": {
+        "west": 43.257129,
+        "south": -25.570508,
+        "east": 50.482715,
+        "north": -12.07959
+      }
+    },
+    {
+      "iso3": "MDV",
+      "iso2": "MV",
+      "name": "Maldives",
+      "population": null,
+      "featureId": 115,
+      "bounds": {
+        "west": 73.382031,
+        "south": 3.229395,
+        "east": 73.52832,
+        "north": 4.247656
+      }
+    },
+    {
+      "iso3": "MEX",
+      "iso2": "MX",
+      "name": "Mexico",
+      "population": null,
+      "featureId": 110,
+      "bounds": {
+        "west": -118.401367,
+        "south": 14.54541,
+        "east": -86.696289,
+        "north": 32.715332
+      }
+    },
+    {
+      "iso3": "MHL",
+      "iso2": "MH",
+      "name": "Marshall Islands",
+      "population": null,
+      "featureId": 11,
+      "bounds": {
+        "west": 166.844727,
+        "south": 5.799805,
+        "east": 171.756836,
+        "north": 11.168652
+      }
+    },
+    {
+      "iso3": "MKD",
+      "iso2": "MK",
+      "name": "North Macedonia",
+      "population": null,
+      "featureId": 119,
+      "bounds": {
+        "west": 20.448633,
+        "south": 40.849902,
+        "east": 23.005664,
+        "north": 42.358154
+      }
+    },
+    {
+      "iso3": "MLI",
+      "iso2": "ML",
+      "name": "Mali",
+      "population": null,
+      "featureId": 114,
+      "bounds": {
+        "west": -12.280615,
+        "south": 10.143262,
+        "east": 4.234668,
+        "north": 24.995605
+      }
+    },
+    {
+      "iso3": "MLT",
+      "iso2": "MT",
+      "name": "Malta",
+      "population": null,
+      "featureId": 113,
+      "bounds": {
+        "west": 14.180371,
+        "south": 35.820215,
+        "east": 14.566211,
+        "north": 36.075781
+      }
+    },
+    {
+      "iso3": "MMR",
+      "iso2": "MM",
+      "name": "Myanmar",
+      "population": null,
+      "featureId": 206,
+      "bounds": {
+        "west": 92.17959,
+        "south": 9.875391,
+        "east": 101.147266,
+        "north": 28.517041
+      }
+    },
+    {
+      "iso3": "MNE",
+      "iso2": "ME",
+      "name": "Montenegro",
+      "population": null,
+      "featureId": 106,
+      "bounds": {
+        "west": 18.436328,
+        "south": 41.869092,
+        "east": 20.347656,
+        "north": 43.542334
+      }
+    },
+    {
+      "iso3": "MNG",
+      "iso2": "MN",
+      "name": "Mongolia",
+      "population": null,
+      "featureId": 107,
+      "bounds": {
+        "west": 87.743164,
+        "south": 41.595508,
+        "east": 119.897852,
+        "north": 52.117285
+      }
+    },
+    {
+      "iso3": "MNP",
+      "iso2": "MP",
+      "name": "Northern Mariana Islands",
+      "population": null,
+      "featureId": 12,
+      "bounds": {
+        "west": 145.152148,
+        "south": 14.111328,
+        "east": 145.835449,
+        "north": 18.806787
+      }
+    },
+    {
+      "iso3": "MOZ",
+      "iso2": "MZ",
+      "name": "Mozambique",
+      "population": null,
+      "featureId": 103,
+      "bounds": {
+        "west": 30.221777,
+        "south": -26.861621,
+        "east": 40.844531,
+        "north": -10.464355
+      }
+    },
+    {
+      "iso3": "MRT",
+      "iso2": "MR",
+      "name": "Mauritania",
+      "population": null,
+      "featureId": 112,
+      "bounds": {
+        "west": -17.063965,
+        "south": 14.745361,
+        "east": -4.822607,
+        "north": 27.285937
+      }
+    },
+    {
+      "iso3": "MSR",
+      "iso2": "MS",
+      "name": "Montserrat",
+      "population": null,
+      "featureId": 28,
+      "bounds": {
+        "west": -62.223047,
+        "south": 16.681201,
+        "east": -62.148438,
+        "north": 16.80957
+      }
+    },
+    {
+      "iso3": "MUS",
+      "iso2": "MU",
+      "name": "Mauritius",
+      "population": null,
+      "featureId": 111,
+      "bounds": {
+        "west": 57.317676,
+        "south": -20.513184,
+        "east": 57.791992,
+        "north": -19.989941
+      }
+    },
+    {
+      "iso3": "MWI",
+      "iso2": "MW",
+      "name": "Malawi",
+      "population": null,
+      "featureId": 117,
+      "bounds": {
+        "west": 32.67041,
+        "south": -17.131055,
+        "east": 35.892773,
+        "north": -9.39502
+      }
+    },
+    {
+      "iso3": "MYS",
+      "iso2": "MY",
+      "name": "Malaysia",
+      "population": null,
+      "featureId": 116,
+      "bounds": {
+        "west": 99.646289,
+        "south": 0.861963,
+        "east": 119.266309,
+        "north": 7.35166
+      }
+    },
+    {
+      "iso3": "NAM",
+      "iso2": "NA",
+      "name": "Namibia",
+      "population": null,
+      "featureId": 102,
+      "bounds": {
+        "west": 11.72168,
+        "south": -28.93877,
+        "east": 25.258789,
+        "north": -16.967676
+      }
+    },
+    {
+      "iso3": "NCL",
+      "iso2": "NC",
+      "name": "New Caledonia",
+      "population": null,
+      "featureId": 167,
+      "bounds": {
+        "west": 159.928223,
+        "south": -22.661133,
+        "east": 168.139063,
+        "north": -19.114648
+      }
+    },
+    {
+      "iso3": "NER",
+      "iso2": "NE",
+      "name": "Niger",
+      "population": null,
+      "featureId": 92,
+      "bounds": {
+        "west": 0.163867,
+        "south": 11.696289,
+        "east": 15.963184,
+        "north": 23.517871
+      }
+    },
+    {
+      "iso3": "NFK",
+      "iso2": "NF",
+      "name": "Norfolk Island",
+      "population": null,
+      "featureId": 228,
+      "bounds": {
+        "west": 167.906152,
+        "south": -29.096289,
+        "east": 167.99043,
+        "north": -29.013965
+      }
+    },
+    {
+      "iso3": "NGA",
+      "iso2": "NG",
+      "name": "Nigeria",
+      "population": null,
+      "featureId": 91,
+      "bounds": {
+        "west": 2.686035,
+        "south": 4.277393,
+        "east": 14.627148,
+        "north": 13.872852
+      }
+    },
+    {
+      "iso3": "NIC",
+      "iso2": "NI",
+      "name": "Nicaragua",
+      "population": null,
+      "featureId": 93,
+      "bounds": {
+        "west": -87.670166,
+        "south": 10.735352,
+        "east": -83.15752,
+        "north": 15.008057
+      }
+    },
+    {
+      "iso3": "NIU",
+      "iso2": "NU",
+      "name": "Niue",
+      "population": null,
+      "featureId": 95,
+      "bounds": {
+        "west": -169.94834,
+        "south": -19.137891,
+        "east": -169.793408,
+        "north": -18.966016
+      }
+    },
+    {
+      "iso3": "NLD",
+      "iso2": "NL",
+      "name": "Netherlands",
+      "population": null,
+      "featureId": 97,
+      "bounds": {
+        "west": -68.371094,
+        "south": 12.03208,
+        "east": 7.197266,
+        "north": 53.625488
+      }
+    },
+    {
+      "iso3": "NOR",
+      "iso2": "NO",
+      "name": "Norway",
+      "population": null,
+      "featureId": 89,
+      "bounds": {
+        "west": -9.098877,
+        "south": 58.020947,
+        "east": 33.629297,
+        "north": 80.477832
+      }
+    },
+    {
+      "iso3": "NPL",
+      "iso2": "NP",
+      "name": "Nepal",
+      "population": null,
+      "featureId": 100,
+      "bounds": {
+        "west": 80.05166,
+        "south": 26.360303,
+        "east": 88.161523,
+        "north": 30.3875
+      }
+    },
+    {
+      "iso3": "NRU",
+      "iso2": "NR",
+      "name": "Naoero",
+      "population": null,
+      "featureId": 101,
+      "bounds": {
+        "west": 166.907031,
+        "south": -0.550781,
+        "east": 166.958398,
+        "north": -0.489355
+      }
+    },
+    {
+      "iso3": "NZL",
+      "iso2": "NZ",
+      "name": "New Zealand",
+      "population": null,
+      "featureId": 94,
+      "bounds": {
+        "west": 165.88916,
+        "south": -52.570312,
+        "east": 188.813574,
+        "north": -8.546484
+      }
+    },
+    {
+      "iso3": "OMN",
+      "iso2": "OM",
+      "name": "Oman",
+      "population": null,
+      "featureId": 88,
+      "bounds": {
+        "west": 51.977637,
+        "south": 16.648389,
+        "east": 59.8375,
+        "north": 26.356348
+      }
+    },
+    {
+      "iso3": "PAK",
+      "iso2": "PK",
+      "name": "Pakistan",
+      "population": null,
+      "featureId": 87,
+      "bounds": {
+        "west": 60.843359,
+        "south": 23.753369,
+        "east": 77.048633,
+        "north": 37.03667
+      }
+    },
+    {
+      "iso3": "PAN",
+      "iso2": "PA",
+      "name": "Panama",
+      "population": null,
+      "featureId": 85,
+      "bounds": {
+        "west": -83.027344,
+        "south": 7.220068,
+        "east": -77.195996,
+        "north": 9.597852
+      }
+    },
+    {
+      "iso3": "PCN",
+      "iso2": "PN",
+      "name": "Pitcairn Islands",
+      "population": null,
+      "featureId": 21,
+      "bounds": {
+        "west": -128.350195,
+        "south": -24.412598,
+        "east": -128.290088,
+        "north": -24.323242
+      }
+    },
+    {
+      "iso3": "PER",
+      "iso2": "PE",
+      "name": "Peru",
+      "population": null,
+      "featureId": 82,
+      "bounds": {
+        "west": -81.336621,
+        "south": -18.345605,
+        "east": -68.685254,
+        "north": -0.041748
+      }
+    },
+    {
+      "iso3": "PHL",
+      "iso2": "PH",
+      "name": "Philippines",
+      "population": null,
+      "featureId": 81,
+      "bounds": {
+        "west": 116.969531,
+        "south": 5.060205,
+        "east": 126.593359,
+        "north": 20.84126
+      }
+    },
+    {
+      "iso3": "PLW",
+      "iso2": "PW",
+      "name": "Palau",
+      "population": null,
+      "featureId": 86,
+      "bounds": {
+        "west": 131.134961,
+        "south": 3.021875,
+        "east": 134.65957,
+        "north": 7.712109
+      }
+    },
+    {
+      "iso3": "PNG",
+      "iso2": "PG",
+      "name": "Papua New Guinea",
+      "population": null,
+      "featureId": 84,
+      "bounds": {
+        "west": 140.862305,
+        "south": -11.630566,
+        "east": 155.957617,
+        "north": -1.353223
+      }
+    },
+    {
+      "iso3": "POL",
+      "iso2": "PL",
+      "name": "Poland",
+      "population": null,
+      "featureId": 80,
+      "bounds": {
+        "west": 14.128613,
+        "south": 49.020752,
+        "east": 24.105762,
+        "north": 54.838184
+      }
+    },
+    {
+      "iso3": "PRI",
+      "iso2": "PR",
+      "name": "Puerto Rico (US)",
+      "population": null,
+      "featureId": 16,
+      "bounds": {
+        "west": -67.937061,
+        "south": 17.947266,
+        "east": -65.294873,
+        "north": 18.522168
+      }
+    },
+    {
+      "iso3": "PRK",
+      "iso2": "KP",
+      "name": "Korea, Dem. People's Rep.",
+      "population": null,
+      "featureId": 90,
+      "bounds": {
+        "west": 124.348633,
+        "south": 37.719043,
+        "east": 130.687305,
+        "north": 42.998145
+      }
+    },
+    {
+      "iso3": "PRT",
+      "iso2": "PT",
+      "name": "Portugal",
+      "population": null,
+      "featureId": 79,
+      "bounds": {
+        "west": -31.282959,
+        "south": 32.648291,
+        "east": -6.2125,
+        "north": 42.137402
+      }
+    },
+    {
+      "iso3": "PRY",
+      "iso2": "PY",
+      "name": "Paraguay",
+      "population": null,
+      "featureId": 83,
+      "bounds": {
+        "west": -62.650977,
+        "south": -27.553809,
+        "east": -54.241797,
+        "north": -19.28623
+      }
+    },
+    {
+      "iso3": "PSE",
+      "iso2": "PS",
+      "name": "West Bank and Gaza",
+      "population": null,
+      "featureId": 140,
+      "bounds": {
+        "west": 34.198145,
+        "south": 31.208301,
+        "east": 35.57207,
+        "north": 32.534424
+      }
+    },
+    {
+      "iso3": "PYF",
+      "iso2": "PF",
+      "name": "French Polynesia",
+      "population": null,
+      "featureId": 166,
+      "bounds": {
+        "west": -151.512402,
+        "south": -20.875879,
+        "east": -136.293896,
+        "north": -8.781543
+      }
+    },
+    {
+      "iso3": "QAT",
+      "iso2": "QA",
+      "name": "Qatar",
+      "population": null,
+      "featureId": 78,
+      "bounds": {
+        "west": 50.75459,
+        "south": 24.564648,
+        "east": 51.608887,
+        "north": 26.153271
+      }
+    },
+    {
+      "iso3": "ROU",
+      "iso2": "RO",
+      "name": "Romania",
+      "population": null,
+      "featureId": 77,
+      "bounds": {
+        "west": 20.241797,
+        "south": 43.670801,
+        "east": 29.705859,
+        "north": 48.263477
+      }
+    },
+    {
+      "iso3": "RUS",
+      "iso2": "RU",
+      "name": "Russian Federation",
+      "population": null,
+      "featureId": 76,
+      "bounds": {
+        "west": 19.604395,
+        "south": 41.199268,
+        "east": 190.27085,
+        "north": 81.854199
+      }
+    },
+    {
+      "iso3": "RWA",
+      "iso2": "RW",
+      "name": "Rwanda",
+      "population": null,
+      "featureId": 75,
+      "bounds": {
+        "west": 28.857617,
+        "south": -2.808594,
+        "east": 30.876563,
+        "north": -1.063086
+      }
+    },
+    {
+      "iso3": "SAU",
+      "iso2": "SA",
+      "name": "Saudi Arabia",
+      "population": null,
+      "featureId": 68,
+      "bounds": {
+        "west": 34.616211,
+        "south": 16.371777,
+        "east": 55.641016,
+        "north": 32.124512
+      }
+    },
+    {
+      "iso3": "SDN",
+      "iso2": "SD",
+      "name": "Sudan",
+      "population": null,
+      "featureId": 53,
+      "bounds": {
+        "west": 21.825293,
+        "south": 8.665625,
+        "east": 38.609473,
+        "north": 22.202441
+      }
+    },
+    {
+      "iso3": "SEN",
+      "iso2": "SN",
+      "name": "Senegal",
+      "population": null,
+      "featureId": 67,
+      "bounds": {
+        "west": -17.535645,
+        "south": 12.328027,
+        "east": -11.382422,
+        "north": 16.678906
+      }
+    },
+    {
+      "iso3": "SGP",
+      "iso2": "SG",
+      "name": "Singapore",
+      "population": null,
+      "featureId": 63,
+      "bounds": {
+        "west": 103.650195,
+        "south": 1.265381,
+        "east": 103.996387,
+        "north": 1.44707
+      }
+    },
+    {
+      "iso3": "SGS",
+      "iso2": "GS",
+      "name": "South Georgia and the Islands",
+      "population": null,
+      "featureId": 18,
+      "bounds": {
+        "west": -38.017432,
+        "south": -58.492285,
+        "east": -26.259863,
+        "north": -53.984082
+      }
+    },
+    {
+      "iso3": "SHN",
+      "iso2": "SH",
+      "name": "Saint Helena",
+      "population": null,
+      "featureId": 20,
+      "bounds": {
+        "west": -14.414941,
+        "south": -16.004004,
+        "east": -5.659717,
+        "north": -7.882617
+      }
+    },
+    {
+      "iso3": "SLB",
+      "iso2": "SB",
+      "name": "Solomon Islands",
+      "population": null,
+      "featureId": 60,
+      "bounds": {
+        "west": 155.677539,
+        "south": -11.832227,
+        "east": 166.929199,
+        "north": -6.608887
+      }
+    },
+    {
+      "iso3": "SLE",
+      "iso2": "SL",
+      "name": "Sierra Leone",
+      "population": null,
+      "featureId": 64,
+      "bounds": {
+        "west": -13.292676,
+        "south": 6.906543,
+        "east": -10.283203,
+        "north": 9.996533
+      }
+    },
+    {
+      "iso3": "SLV",
+      "iso2": "SV",
+      "name": "El Salvador",
+      "population": null,
+      "featureId": 176,
+      "bounds": {
+        "west": -90.105908,
+        "south": 13.164014,
+        "east": -87.715332,
+        "north": 14.431104
+      }
+    },
+    {
+      "iso3": "SMR",
+      "iso2": "SM",
+      "name": "San Marino",
+      "population": null,
+      "featureId": 70,
+      "bounds": {
+        "west": 12.396875,
+        "south": 43.894092,
+        "east": 12.514648,
+        "north": 43.989746
+      }
+    },
+    {
+      "iso3": "SOL",
+      "iso2": null,
+      "name": "Somaliland",
+      "population": null,
+      "featureId": 59,
+      "bounds": {
+        "west": 42.656445,
+        "south": 7.99707,
+        "east": 48.938574,
+        "north": 11.499805
+      }
+    },
+    {
+      "iso3": "SOM",
+      "iso2": "SO",
+      "name": "Somalia, Fed. Rep.",
+      "population": null,
+      "featureId": 58,
+      "bounds": {
+        "west": 40.964453,
+        "south": -1.695312,
+        "east": 51.390234,
+        "north": 11.983691
+      }
+    },
+    {
+      "iso3": "SPM",
+      "iso2": "PM",
+      "name": "Saint Pierre and Miquelon",
+      "population": null,
+      "featureId": 162,
+      "bounds": {
+        "west": -56.386914,
+        "south": 46.752832,
+        "east": -56.137354,
+        "north": 47.098975
+      }
+    },
+    {
+      "iso3": "SRB",
+      "iso2": "RS",
+      "name": "Serbia",
+      "population": null,
+      "featureId": 66,
+      "bounds": {
+        "west": 18.839063,
+        "south": 42.242139,
+        "east": 22.976855,
+        "north": 46.169189
+      }
+    },
+    {
+      "iso3": "SSD",
+      "iso2": "SS",
+      "name": "South Sudan",
+      "population": null,
+      "featureId": 52,
+      "bounds": {
+        "west": 24.147363,
+        "south": 3.490723,
+        "east": 35.268359,
+        "north": 12.223096
+      }
+    },
+    {
+      "iso3": "STP",
+      "iso2": "ST",
+      "name": "Sao Tome and Principe",
+      "population": null,
+      "featureId": 69,
+      "bounds": {
+        "west": 6.468164,
+        "south": 0.047363,
+        "east": 7.452344,
+        "north": 1.699121
+      }
+    },
+    {
+      "iso3": "SUR",
+      "iso2": "SR",
+      "name": "Suriname",
+      "population": null,
+      "featureId": 51,
+      "bounds": {
+        "west": -58.054492,
+        "south": 1.842236,
+        "east": -53.990479,
+        "north": 5.993457
+      }
+    },
+    {
+      "iso3": "SVK",
+      "iso2": "SK",
+      "name": "Slovak Republic",
+      "population": null,
+      "featureId": 61,
+      "bounds": {
+        "west": 16.862695,
+        "south": 47.763428,
+        "east": 22.538672,
+        "north": 49.597705
+      }
+    },
+    {
+      "iso3": "SVN",
+      "iso2": "SI",
+      "name": "Slovenia",
+      "population": null,
+      "featureId": 62,
+      "bounds": {
+        "west": 13.378223,
+        "south": 45.428369,
+        "east": 16.516211,
+        "north": 46.863281
+      }
+    },
+    {
+      "iso3": "SWE",
+      "iso2": "SE",
+      "name": "Sweden",
+      "population": null,
+      "featureId": 49,
+      "bounds": {
+        "west": 11.147168,
+        "south": 55.346387,
+        "east": 24.155469,
+        "north": 69.036865
+      }
+    },
+    {
+      "iso3": "SWZ",
+      "iso2": "SZ",
+      "name": "Eswatini",
+      "population": null,
+      "featureId": 50,
+      "bounds": {
+        "west": 30.7875,
+        "south": -27.309961,
+        "east": 32.112891,
+        "north": -25.742969
+      }
+    },
+    {
+      "iso3": "SXM",
+      "iso2": "SX",
+      "name": "Sint Maarten (Dutch part)",
+      "population": null,
+      "featureId": 239,
+      "bounds": {
+        "west": -63.124707,
+        "south": 18.019189,
+        "east": -63.011182,
+        "north": 18.068945
+      }
+    },
+    {
+      "iso3": "SYC",
+      "iso2": "SC",
+      "name": "Seychelles",
+      "population": null,
+      "featureId": 65,
+      "bounds": {
+        "west": 55.383398,
+        "south": -4.785547,
+        "east": 55.542969,
+        "north": -4.558789
+      }
+    },
+    {
+      "iso3": "SYR",
+      "iso2": "SY",
+      "name": "Syrian Arab Republic",
+      "population": null,
+      "featureId": 47,
+      "bounds": {
+        "west": 35.764453,
+        "south": 32.317285,
+        "east": 42.359082,
+        "north": 37.297266
+      }
+    },
+    {
+      "iso3": "TCA",
+      "iso2": "TC",
+      "name": "Turks and Caicos Islands",
+      "population": null,
+      "featureId": 27,
+      "bounds": {
+        "west": -72.342383,
+        "south": 21.751709,
+        "east": -71.636914,
+        "north": 21.951904
+      }
+    },
+    {
+      "iso3": "TCD",
+      "iso2": "TD",
+      "name": "Chad",
+      "population": null,
+      "featureId": 200,
+      "bounds": {
+        "west": 13.448242,
+        "south": 7.475293,
+        "east": 23.983398,
+        "north": 23.445215
+      }
+    },
+    {
+      "iso3": "TGO",
+      "iso2": "TG",
+      "name": "Togo",
+      "population": null,
+      "featureId": 41,
+      "bounds": {
+        "west": -0.090186,
+        "south": 6.089404,
+        "east": 1.77793,
+        "north": 11.115625
+      }
+    },
+    {
+      "iso3": "THA",
+      "iso2": "TH",
+      "name": "Thailand",
+      "population": null,
+      "featureId": 43,
+      "bounds": {
+        "west": 97.373926,
+        "south": 5.636768,
+        "east": 105.641016,
+        "north": 20.424414
+      }
+    },
+    {
+      "iso3": "TJK",
+      "iso2": "TJ",
+      "name": "Tajikistan",
+      "population": null,
+      "featureId": 45,
+      "bounds": {
+        "west": 67.349609,
+        "south": 36.684033,
+        "east": 75.11875,
+        "north": 41.035107
+      }
+    },
+    {
+      "iso3": "TKM",
+      "iso2": "TM",
+      "name": "Turkmenistan",
+      "population": null,
+      "featureId": 36,
+      "bounds": {
+        "west": 52.493848,
+        "south": 35.170801,
+        "east": 66.629297,
+        "north": 42.778467
+      }
+    },
+    {
+      "iso3": "TLS",
+      "iso2": "TL",
+      "name": "Timor-Leste",
+      "population": null,
+      "featureId": 42,
+      "bounds": {
+        "west": 124.036328,
+        "south": -9.511914,
+        "east": 127.296094,
+        "north": -8.139941
+      }
+    },
+    {
+      "iso3": "TON",
+      "iso2": "TO",
+      "name": "Tonga",
+      "population": null,
+      "featureId": 40,
+      "bounds": {
+        "west": -175.362354,
+        "south": -21.450586,
+        "east": -173.921875,
+        "north": -18.565332
+      }
+    },
+    {
+      "iso3": "TTO",
+      "iso2": "TT",
+      "name": "Trinidad and Tobago",
+      "population": null,
+      "featureId": 39,
+      "bounds": {
+        "west": -61.906104,
+        "south": 10.064648,
+        "east": -60.525488,
+        "north": 11.325391
+      }
+    },
+    {
+      "iso3": "TUN",
+      "iso2": "TN",
+      "name": "Tunisia",
+      "population": null,
+      "featureId": 38,
+      "bounds": {
+        "west": 7.495605,
+        "south": 30.229395,
+        "east": 11.535938,
+        "north": 37.340381
+      }
+    },
+    {
+      "iso3": "TUR",
+      "iso2": "TR",
+      "name": "Turkiye",
+      "population": null,
+      "featureId": 37,
+      "bounds": {
+        "west": 25.668945,
+        "south": 35.831445,
+        "east": 44.817188,
+        "north": 42.093262
+      }
+    },
+    {
+      "iso3": "TUV",
+      "iso2": "TV",
+      "name": "Tuvalu",
+      "population": null,
+      "featureId": 240,
+      "bounds": {
+        "west": 179.195703,
+        "south": -8.534961,
+        "east": 179.216602,
+        "north": -8.466309
+      }
+    },
+    {
+      "iso3": "TWN",
+      "iso2": "TW",
+      "name": "Taiwan",
+      "population": null,
+      "featureId": 46,
+      "bounds": {
+        "west": 118.287305,
+        "south": 21.925,
+        "east": 121.929004,
+        "north": 25.276904
+      }
+    },
+    {
+      "iso3": "TZA",
+      "iso2": "TZ",
+      "name": "Tanzania",
+      "population": null,
+      "featureId": 44,
+      "bounds": {
+        "west": 29.323438,
+        "south": -11.716211,
+        "east": 40.463574,
+        "north": -0.994922
+      }
+    },
+    {
+      "iso3": "UGA",
+      "iso2": "UG",
+      "name": "Uganda",
+      "population": null,
+      "featureId": 35,
+      "bounds": {
+        "west": 29.561914,
+        "south": -1.469922,
+        "east": 34.978223,
+        "north": 4.220215
+      }
+    },
+    {
+      "iso3": "UKR",
+      "iso2": "UA",
+      "name": "Ukraine",
+      "population": null,
+      "featureId": 34,
+      "bounds": {
+        "west": 22.131836,
+        "south": 45.234131,
+        "east": 40.12832,
+        "north": 52.353564
+      }
+    },
+    {
+      "iso3": "URY",
+      "iso2": "UY",
+      "name": "Uruguay",
+      "population": null,
+      "featureId": 9,
+      "bounds": {
+        "west": -58.438135,
+        "south": -34.932813,
+        "east": -53.125586,
+        "north": -30.101074
+      }
+    },
+    {
+      "iso3": "USA",
+      "iso2": "US",
+      "name": "United States",
+      "population": null,
+      "featureId": 17,
+      "bounds": {
+        "west": 172.494824,
+        "south": 18.963916,
+        "east": 293.012988,
+        "north": 71.407666
+      }
+    },
+    {
+      "iso3": "UZB",
+      "iso2": "UZ",
+      "name": "Uzbekistan",
+      "population": null,
+      "featureId": 8,
+      "bounds": {
+        "west": 55.975684,
+        "south": 37.172217,
+        "east": 73.136914,
+        "north": 45.555371
+      }
+    },
+    {
+      "iso3": "VAT",
+      "iso2": "VA",
+      "name": "Vatican",
+      "population": null,
+      "featureId": 6,
+      "bounds": {
+        "west": 12.427539,
+        "south": 41.897559,
+        "east": 12.43916,
+        "north": 41.906201
+      }
+    },
+    {
+      "iso3": "VCT",
+      "iso2": "VC",
+      "name": "St. Vincent and the Grenadines",
+      "population": null,
+      "featureId": 72,
+      "bounds": {
+        "west": -61.353516,
+        "south": 12.694727,
+        "east": -61.124023,
+        "north": 13.35874
+      }
+    },
+    {
+      "iso3": "VEN",
+      "iso2": "VE",
+      "name": "Venezuela, RB",
+      "population": null,
+      "featureId": 5,
+      "bounds": {
+        "west": -73.366211,
+        "south": 0.687988,
+        "east": -59.828906,
+        "north": 12.177881
+      }
+    },
+    {
+      "iso3": "VGB",
+      "iso2": "VG",
+      "name": "British Virgin Islands",
+      "population": null,
+      "featureId": 26,
+      "bounds": {
+        "west": -64.695117,
+        "south": 18.399121,
+        "east": -64.273584,
+        "north": 18.752686
+      }
+    },
+    {
+      "iso3": "VIR",
+      "iso2": "VI",
+      "name": "Virgin Islands (U.S.)",
+      "population": null,
+      "featureId": 13,
+      "bounds": {
+        "west": -65.023633,
+        "south": 17.701709,
+        "east": -64.580469,
+        "north": 18.385205
+      }
+    },
+    {
+      "iso3": "VNM",
+      "iso2": "VN",
+      "name": "Viet Nam",
+      "population": null,
+      "featureId": 4,
+      "bounds": {
+        "west": 102.127441,
+        "south": 8.583252,
+        "east": 109.444922,
+        "north": 23.345215
+      }
+    },
+    {
+      "iso3": "VUT",
+      "iso2": "VU",
+      "name": "Vanuatu",
+      "population": null,
+      "featureId": 7,
+      "bounds": {
+        "west": 166.526074,
+        "south": -20.241797,
+        "east": 169.896289,
+        "north": -13.709473
+      }
+    },
+    {
+      "iso3": "WLF",
+      "iso2": "WF",
+      "name": "Wallis and Futuna",
+      "population": null,
+      "featureId": 163,
+      "bounds": {
+        "west": -178.194385,
+        "south": -14.324902,
+        "east": -176.128076,
+        "north": -13.22168
+      }
+    },
+    {
+      "iso3": "WSM",
+      "iso2": "WS",
+      "name": "Samoa",
+      "population": null,
+      "featureId": 71,
+      "bounds": {
+        "west": -172.778516,
+        "south": -14.047266,
+        "east": -171.449561,
+        "north": -13.465234
+      }
+    },
+    {
+      "iso3": "XKX",
+      "iso2": "XK",
+      "name": "Kosovo",
+      "population": null,
+      "featureId": 131,
+      "bounds": {
+        "west": 20.029492,
+        "south": 41.853809,
+        "east": 21.75293,
+        "north": 43.261084
+      }
+    },
+    {
+      "iso3": "YEM",
+      "iso2": "YE",
+      "name": "Yemen, Rep.",
+      "population": null,
+      "featureId": 3,
+      "bounds": {
+        "west": 42.549023,
+        "south": 12.318994,
+        "east": 54.511133,
+        "north": 18.996143
+      }
+    },
+    {
+      "iso3": "ZAF",
+      "iso2": "ZA",
+      "name": "South Africa",
+      "population": null,
+      "featureId": 57,
+      "bounds": {
+        "west": 16.447559,
+        "south": -46.962891,
+        "east": 37.887695,
+        "north": -22.146289
+      }
+    },
+    {
+      "iso3": "ZMB",
+      "iso2": "ZM",
+      "name": "Zambia",
+      "population": null,
+      "featureId": 2,
+      "bounds": {
+        "west": 21.978906,
+        "south": -18.041504,
+        "east": 33.661523,
+        "north": -8.193652
+      }
+    },
+    {
+      "iso3": "ZWE",
+      "iso2": "ZW",
+      "name": "Zimbabwe",
+      "population": null,
+      "featureId": 1,
+      "bounds": {
+        "west": 25.224023,
+        "south": -22.402051,
+        "east": 33.006738,
+        "north": -15.643066
+      }
+    }
+  ]
+}

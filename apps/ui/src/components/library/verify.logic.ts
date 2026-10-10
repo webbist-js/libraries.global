@@ -8,13 +8,13 @@ import {
   type VerifySection,
 } from "@repo/shared-data"
 
-import { OPERATIONAL_STATUSES } from "@/app/[locale]/contribute/index/_components/wizard.constants"
 import {
   DAY_ORDER,
   DAY_SHORT,
   formatDayTimes,
   type OpeningTimesDay,
 } from "@/components/library/library-page.helpers"
+import { OPERATIONAL_STATUSES } from "@/components/library-editor/wizard.constants"
 
 /** The sections a verify can confirm, shared with Strapi and the index. */
 export { VERIFY_SECTIONS, type VerifySection }

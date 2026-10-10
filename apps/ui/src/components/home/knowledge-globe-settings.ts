@@ -52,6 +52,22 @@ export const GLOBE_SETTINGS: GlobeSettings = {
   starCount: 1200,
 }
 
+/** Shared appearance for the hero and the interactive Atlas preview.
+ * Each view only changes its framing and rotation controls. */
+export const HOMEPAGE_GLOBE_APPEARANCE = {
+  cameraY: 0,
+  dprMax: 1.25,
+  globeTilt: 22,
+  showArcs: true,
+  showDust: true,
+  showGlow: true,
+  showGraticule: true,
+  showHotspots: true,
+  showNodes: true,
+  showSatellites: false,
+  showStars: false,
+} as const
+
 export const GLOBE_QUALITY_TUNING: Record<
   GlobeQualityProfile,
   GlobeQualityTuning

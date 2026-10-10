@@ -8,6 +8,8 @@ import {
   DRIVE_LIFECYCLE_LOCK_KEY,
   withLeaderLock,
 } from "../src/utils/leader-lock"
+import { ingestLocalPopulation } from "../src/utils/local-population-ingest"
+import { ingestPopulation } from "../src/utils/population-ingest"
 import { resyncExpiredRoleGrants } from "../src/utils/role-grants"
 
 const DRIVE_UID = "api::drive.drive"
@@ -68,6 +70,24 @@ const driveLifecycleJob = {
 }
 
 export default {
+  population: {
+    task: async ({ strapi }: { strapi: any }) => {
+      if (process.env.POPULATION_SYNC_ENABLED !== "true") return
+      try {
+        const report = await ingestPopulation(strapi)
+        await ingestLocalPopulation(strapi)
+        strapi.log.info(
+          `[population] Imported ${report.observations} country observations for ${report.year}`
+        )
+      } catch (error) {
+        strapi.log.error(
+          "[population] Import failed; previous observations retained",
+          error
+        )
+      }
+    },
+    options: { rule: "23 3 * * 0" },
+  },
   resyncExpiredRoleGrants: resyncExpiredRoleGrantsJob,
   eventFeeds: eventFeedsJob,
   driveLifecycle: driveLifecycleJob,

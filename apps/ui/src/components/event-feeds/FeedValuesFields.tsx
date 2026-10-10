@@ -7,7 +7,7 @@ import {
   fieldHintStyle,
   fieldInputStyle,
   fieldLabelStyle,
-} from "@/app/[locale]/contribute/index/_components/wizard.constants"
+} from "@/components/library-editor/wizard.constants"
 import { T } from "@/lib/design-tokens"
 
 /** One provider's fields from the registry. Secrets are write-only inputs. */

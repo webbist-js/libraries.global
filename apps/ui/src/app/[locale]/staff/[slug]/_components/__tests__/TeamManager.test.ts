@@ -225,7 +225,12 @@ describe("TeamManager with Team cover", () => {
     expect(screen.getAllByRole("switch", { name: "Can go live" }).length).toBe(
       2
     )
-    expect(screen.getByRole("heading", { name: "Send invite" })).toBeTruthy()
+    const staffCard = screen
+      .getByRole("heading", { name: "Staff (2)" })
+      .closest("section")
+    expect(
+      staffCard?.contains(screen.getByRole("button", { name: "Send invite" }))
+    ).toBe(true)
     // Invitees are listed under the staff, with the seat they hold.
     const invitees = screen.getByRole("list", {
       name: "Invited, not yet accepted",

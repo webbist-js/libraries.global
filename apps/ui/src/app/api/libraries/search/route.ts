@@ -2,14 +2,10 @@ import { NextResponse } from "next/server"
 
 import { withSearchLocale } from "@/lib/meilisearch"
 
-const MEILI_HOST =
-  process.env.NEXT_PUBLIC_MEILISEARCH_HOST ?? "http://localhost:7700"
+const MEILI_HOST = process.env.MEILISEARCH_HOST ?? "http://localhost:7700"
 
 // Server-only key preferred; fall back to public key if only that is set
-const MEILI_KEY =
-  process.env.MEILISEARCH_SEARCH_API_KEY ??
-  process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY ??
-  ""
+const MEILI_KEY = process.env.MEILISEARCH_SEARCH_API_KEY ?? ""
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)

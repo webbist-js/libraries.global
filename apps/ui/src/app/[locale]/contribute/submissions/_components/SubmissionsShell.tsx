@@ -58,6 +58,11 @@ function continueHref(submission: Submission): string {
   )
     return `/contribute/index/${encodeURIComponent(targetSlug)}`
 
+  if (submissionType === "new_library")
+    return draftData?.staffCreation
+      ? "/staff/new"
+      : "/contribute/index/new?draft=contribute"
+
   return "/contribute/index/new"
 }
 

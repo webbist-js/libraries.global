@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import type { AtlasScope } from "@repo/shared-data"
 import type { Map as MapLibreMap } from "maplibre-gl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
@@ -8,6 +9,7 @@ import { parseBounds } from "@/components/map/map.helpers"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 
+import { AtlasRegionMap } from "./AtlasRegionMap"
 import {
   countNoun,
   formatCount,
@@ -69,6 +71,7 @@ export function LocationHeroMap({
   pins = [],
   bounds,
   childNoun,
+  atlasPlace,
 }: {
   /** Accessible name for the map region, e.g. "Map of libraries in Europe". */
   readonly label: string
@@ -76,6 +79,7 @@ export function LocationHeroMap({
   readonly caption: string
   readonly points?: HeroMapCountPoint[]
   readonly pins?: HeroMapLibraryPin[]
+  readonly atlasPlace?: NonNullable<AtlasScope["place"]>
   /** CMS bounding box ("lat,lng" strings); otherwise fits the data. */
   readonly bounds?: { ne?: string | null; sw?: string | null } | null
   /** Names a group circle, e.g. { singular: "country", plural: "countries" }. */
@@ -233,6 +237,8 @@ export function LocationHeroMap({
   }
 
   const nouns = childNoun ?? { singular: "place", plural: "places" }
+
+  if (atlasPlace) return <AtlasRegionMap label={label} place={atlasPlace} />
 
   return (
     <figure

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import type { Locale } from "next-intl"
 
-import { prefillLibrary } from "@/app/[locale]/contribute/index/_components/wizard.prefill"
 import { toCorrectionRecord } from "@/components/contribute/correction.logic"
+import { prefillLibrary } from "@/components/library-editor/wizard.prefill"
 import { fetchLibraryForEditing } from "@/lib/strapi-api/content/server"
 
 /**

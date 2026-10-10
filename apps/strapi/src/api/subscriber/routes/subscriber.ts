@@ -9,6 +9,12 @@
 export default {
   routes: [
     {
+      method: "GET",
+      path: "/subscribers/export",
+      handler: "subscriber.export",
+      config: { auth: false, policies: [], middlewares: [] },
+    },
+    {
       method: "POST",
       path: "/subscribers",
       handler: "subscriber.subscribe",

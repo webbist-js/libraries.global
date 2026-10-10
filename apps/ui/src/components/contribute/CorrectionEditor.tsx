@@ -4,16 +4,16 @@ import { Icon } from "@iconify/react"
 import { checkText } from "@repo/shared-data"
 import { useEffect, useId, useMemo, useState } from "react"
 
-import { ChangedFieldsContext } from "@/app/[locale]/contribute/index/_components/ChangedFieldsContext"
-import { OpeningTimesEditor } from "@/app/[locale]/contribute/index/_components/OpeningTimesEditor"
-import { OPERATIONAL_STATUSES } from "@/app/[locale]/contribute/index/_components/wizard.constants"
-import type { FormData } from "@/app/[locale]/contribute/index/_components/wizard.types"
+import { ChangedFieldsContext } from "@/components/library-editor/ChangedFieldsContext"
+import { OpeningTimesEditor } from "@/components/library-editor/OpeningTimesEditor"
+import { OPERATIONAL_STATUSES } from "@/components/library-editor/wizard.constants"
+import type { FormData } from "@/components/library-editor/wizard.types"
 import {
   Field,
   TagSelector,
   TextareaField,
   WizardSelect,
-} from "@/app/[locale]/contribute/index/_components/WizardFields"
+} from "@/components/library-editor/WizardFields"
 import { TimetableEditor } from "@/components/mobile/TimetableEditor"
 import { T } from "@/lib/design-tokens"
 

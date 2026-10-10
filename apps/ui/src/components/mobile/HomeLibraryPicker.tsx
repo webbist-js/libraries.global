@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useId, useState } from "react"
 
-import { fieldInputStyle } from "@/app/[locale]/contribute/index/_components/wizard.constants"
+import { fieldInputStyle } from "@/components/library-editor/wizard.constants"
 import { T } from "@/lib/design-tokens"
 
 export type HomeLibraryHit = {

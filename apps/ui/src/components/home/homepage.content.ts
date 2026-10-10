@@ -66,7 +66,7 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
       tone: "analyse",
       eyebrow: "For researchers and planners",
       title: "Analyse access",
-      text: "Map where libraries are, when they open and how step-free they are. Deeper analysis with Pro.",
+      text: "Map library locations, opening hours and accessibility features. Compare libraries with resident populations using Library access on Pro or Team.",
       ctaLabel: "Open the atlas",
       ctaHref: "/map",
     },
@@ -74,7 +74,7 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
 
   atlasBand: {
     title: "See how places *are served.*",
-    text: "Every library on one map. Filter by type, opening hours or services, then switch on layers for step-free access, events and record completeness.",
+    text: "Every library on one map. Filter by type, opening hours or services, then switch on layers for accessibility, events and record completeness.",
     primaryLabel: "Open the atlas",
     primaryHref: "/map",
     secondaryLabel: "What Pro adds",

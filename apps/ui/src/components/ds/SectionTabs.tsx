@@ -1,5 +1,7 @@
+"use client"
+
 import { Icon } from "@iconify/react"
-import type { ReactNode } from "react"
+import { useEffect, useRef, type ReactNode } from "react"
 
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -27,6 +29,7 @@ export function SectionTabs({
   label,
   scroll,
   className,
+  roomy = false,
 }: {
   readonly tabs: readonly SectionTab[]
   readonly activeId: string | null
@@ -35,11 +38,26 @@ export function SectionTabs({
   /** Pass false to keep the scroll position (tabs that filter in place). */
   readonly scroll?: boolean
   readonly className?: string
+  readonly roomy?: boolean
 }) {
+  const navRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    if (!roomy) return
+    const nav = navRef.current
+    const current = nav?.querySelector<HTMLElement>('[aria-current="page"]')
+    if (!nav || !current) return
+    const left = current.offsetLeft
+    const right = left + current.offsetWidth
+    if (left < nav.scrollLeft) nav.scrollLeft = left
+    else if (right > nav.scrollLeft + nav.clientWidth)
+      nav.scrollLeft = right - nav.clientWidth
+  }, [activeId, roomy])
+
   if (tabs.length < 2) return null
 
   return (
     <nav
+      ref={navRef}
       aria-label={label}
       className={[
         // A right-edge fade says the row scrolls on narrow screens.
@@ -56,7 +74,10 @@ export function SectionTabs({
           <Link
             aria-current={active ? "page" : undefined}
             className={[
-              "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-t-[14px] border border-b-0 px-4 py-2.5 text-[14px] font-semibold whitespace-nowrap transition-colors",
+              "inline-flex shrink-0 items-center gap-2 border border-b-0 font-semibold whitespace-nowrap transition-colors",
+              roomy
+                ? "min-h-14 rounded-t-[20px] px-4 py-3 text-[16px]"
+                : "min-h-11 rounded-t-[14px] px-4 py-2.5 text-[14px]",
               active
                 ? "border-(--t-border-line) bg-(--t-bg-void) text-(--t-ink-base)"
                 : "border-transparent text-(--t-ink-dim) hover:text-(--t-ink-base)",
@@ -66,20 +87,27 @@ export function SectionTabs({
             scroll={scroll}
           >
             {tab.icon ? (
-              <Icon
+              <span
                 aria-hidden="true"
-                height={15}
-                icon={tab.icon}
-                style={active ? { color: T.accent.primary } : undefined}
-                width={15}
-              />
+                className="inline-flex size-4 shrink-0 items-center justify-center"
+              >
+                <Icon
+                  height={15}
+                  icon={tab.icon}
+                  style={active ? { color: T.accent.primary } : undefined}
+                  width={15}
+                />
+              </span>
             ) : null}
             {tab.label}
             {tab.badge}
             {tab.count ? (
               <span
                 className="rounded-full px-2 text-[13px] font-bold tabular-nums"
-                style={{ background: T.bg.muted, color: T.ink.dim }}
+                style={{
+                  background: roomy ? T.accent.primary : T.bg.muted,
+                  color: roomy ? T.bg.deep : T.ink.dim,
+                }}
               >
                 {tab.count}
               </span>

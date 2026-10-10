@@ -38,6 +38,17 @@ export default async function StaffOverviewPage({
   const health = overview.health.map((row) => ({
     ...row,
     note: healthNote(row.note),
+    // Older API builds address staff pages by document ID. Keep the action's
+    // destination and step, but use the current slug-based staff route.
+    ...(row.action && {
+      action: {
+        ...row.action,
+        href: row.action.href.replace(
+          /^\/(?:contribute\/)?staff\/[^/?#]+/,
+          base
+        ),
+      },
+    }),
   }))
   const actions: QuickAction[] = [
     {
@@ -50,7 +61,7 @@ export default async function StaffOverviewPage({
           {
             icon: "mdi:calendar-clock",
             label: "Edit the timetable",
-            href: `${base}/timetable`,
+            href: `${base}/edit?step=timetable`,
             tag: "Mobile",
           },
           // The console itself for anyone allowed to go live; the settings
@@ -92,7 +103,7 @@ export default async function StaffOverviewPage({
   ]
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)] lg:items-start">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)] lg:items-start">
       <div className="flex flex-col gap-4">
         <StaffSuggestions
           libraryDocumentId={documentId}
@@ -119,34 +130,27 @@ export default async function StaffOverviewPage({
           }}
         />
         <section
-          className="rounded-[20px] border p-6"
+          className="rounded-[28px] border p-5 sm:p-6"
           style={{ background: T.bg.deep, borderColor: T.border.line }}
           aria-labelledby="traffic-card-heading"
         >
           <h2
             id="traffic-card-heading"
-            className="m-0 flex items-center gap-2 text-[16px] font-semibold"
+            className="m-0 text-[18px] font-semibold"
           >
-            <Icon
-              aria-hidden="true"
-              icon="mdi:chart-bar"
-              width={20}
-              height={20}
-              style={{ color: T.accent.primary }}
-            />
             Traffic
           </h2>
           <p className="my-2 text-[15px]" style={{ color: T.ink.dim }}>
             {trafficCovered
-              ? "Traffic reports are coming soon."
-              : "See who visits your page and what they search for, with the Team plan."}
+              ? "See traffic reports for your library’s page."
+              : "See visits to your library’s page with the Team plan. Traffic reports are coming soon."}
           </p>
           <Link
             href={`${base}/traffic`}
             className={LINK}
             style={{ color: T.accent.primary }}
           >
-            {trafficCovered ? "Preview with sample data" : "What’s in Team"}
+            {trafficCovered ? "View traffic" : "What’s in Team"}
             <Icon
               aria-hidden="true"
               icon="mdi:arrow-right"

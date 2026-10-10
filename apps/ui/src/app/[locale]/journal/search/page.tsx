@@ -8,8 +8,8 @@ import { T } from "@/lib/design-tokens"
 import { BlogSearchClient } from "./_components/SearchClient"
 
 export const metadata: Metadata = {
-  title: "Search the blog",
-  description: `Search articles on the ${SITE_NAME} blog.`,
+  title: "Search the Journal",
+  description: `Search articles in the ${SITE_NAME} Journal.`,
   robots: { index: false, follow: true },
 }
 

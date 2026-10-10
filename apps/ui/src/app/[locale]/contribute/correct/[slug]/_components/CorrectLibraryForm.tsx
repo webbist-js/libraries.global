@@ -5,16 +5,16 @@ import type React from "react"
 import { useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
-import { T } from "@/lib/design-tokens"
-import { primaryCtaSm } from "@/lib/styles"
-
-import { ContributeSectionHeader } from "../../../_components/ContributeSectionHeader"
 import {
   fieldHintStyle,
   fieldInputStyle,
   fieldLabelStyle,
-} from "../../../index/_components/wizard.constants"
-import { RequiredTag } from "../../../index/_components/WizardFields"
+} from "@/components/library-editor/wizard.constants"
+import { RequiredTag } from "@/components/library-editor/WizardFields"
+import { T } from "@/lib/design-tokens"
+import { primaryCtaSm } from "@/lib/styles"
+
+import { ContributeSectionHeader } from "../../../_components/ContributeSectionHeader"
 
 const CORRECTION_CATEGORIES = [
   { value: "opening_hours", label: "Opening hours" },

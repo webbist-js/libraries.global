@@ -11,12 +11,12 @@ import {
 import { useRouter } from "next/navigation"
 import { useRef, useState } from "react"
 
+import { ChoiceCard } from "@/components/ds/ChoiceCard"
+import { Notice } from "@/components/ds/Notice"
 import {
   fieldInputStyle,
   fieldLabelStyle,
-} from "@/app/[locale]/contribute/index/_components/wizard.constants"
-import { ChoiceCard } from "@/components/ds/ChoiceCard"
-import { Notice } from "@/components/ds/Notice"
+} from "@/components/library-editor/wizard.constants"
 import { T } from "@/lib/design-tokens"
 import { staffLibraryHref } from "@/lib/staff/paths"
 

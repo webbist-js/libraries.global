@@ -39,9 +39,12 @@ export type PlanCard = {
 
 export const PRICES_ARE_PLACEHOLDERS = true
 
+export const ATLAS_PER_CAPITA_LABEL =
+  "Library access: population comparisons for countries and supported local areas"
+
 /** Pro's price after the founding offer, for the placeholders footnote. */
 export const PRO_STANDARD_PRICE_NOTE =
-  "Pro’s standard price will be £8/month or £80/year once per-capita layers and Reach ship; founding members keep £5."
+  "Pro’s standard price will be £8/month or £80/year once Reach ships; founding members keep £5."
 
 /** What each feature does, and whether it's built. Only built ones are "live". */
 export const PRO_FEATURE_COPY: Record<
@@ -61,11 +64,12 @@ export const PRO_FEATURE_COPY: Record<
     status: "live",
   },
   "atlas.contextLayers": {
-    label: "Per-capita, deprivation and transit layers",
+    label: "Deprivation and transit layers",
     status: "soon",
   },
   "atlas.analysis": {
-    label: "Reach, draw-to-analyse and coverage gaps",
+    label:
+      "Travel-time reach, draw-to-analyse, coverage gaps and service coverage",
     status: "soon",
   },
   "atlas.compare": { label: "Compare two areas", status: "soon" },
@@ -138,6 +142,9 @@ function featureItems(features: readonly Feature[]): PlanInclude[] {
 
   return [
     ...copy.filter((c) => c.status === "live").map((c) => feature(c.label)),
+    ...(features.includes("atlas.analysis")
+      ? [feature(ATLAS_PER_CAPITA_LABEL)]
+      : []),
     ...copy.filter((c) => c.status === "soon").map((c) => soon(c.label)),
   ]
 }
@@ -323,13 +330,14 @@ export const PLAN_TEASERS: readonly {
   {
     key: "pro",
     tagline: "Free for regular contributors",
-    summary: "Atlas export today, with reach and coverage analysis on the way.",
+    summary:
+      "Library access compares libraries per resident across countries and UK local areas. Atlas export is included; Reach is on the way.",
   },
   {
     key: "team",
     tagline: "For library services",
     summary:
-      "Pro for every seat and a team organiser who assigns staff to your libraries, with traffic reports to come.",
+      "Library access and the other Pro tools for every seat, plus a team organiser who assigns staff to your libraries.",
   },
 ]
 

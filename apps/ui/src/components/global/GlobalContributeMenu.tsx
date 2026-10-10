@@ -424,7 +424,7 @@ export function GlobalContributeMenu({
       <PopoverContent
         ref={contentRef}
         align="end"
-        sideOffset={8}
+        sideOffset={20}
         collisionPadding={16}
         onOpenAutoFocus={(event) => {
           // Land on the first link rather than on the panel itself.

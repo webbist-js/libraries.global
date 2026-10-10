@@ -11,12 +11,12 @@ import {
   OpeningTimesEditor,
   emptyOpeningTimes,
   type OpeningTimesData,
-} from "@/app/[locale]/contribute/index/_components/OpeningTimesEditor"
+} from "@/components/library-editor/OpeningTimesEditor"
 import {
   fieldHintStyle,
   fieldInputStyle,
   fieldLabelStyle,
-} from "@/app/[locale]/contribute/index/_components/wizard.constants"
+} from "@/components/library-editor/wizard.constants"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import { primaryCtaSm } from "@/lib/styles"
 
@@ -29,6 +29,16 @@ const DAY_LABELS: Record<string, string> = {
   fri: "Friday",
   sat: "Saturday",
   sun: "Sunday",
+}
+
+const noticeInputStyle = {
+  ...fieldInputStyle,
+  minWidth: 0,
+  minHeight: "54px",
+  padding: "12px 16px",
+  background: T.bg.deep,
+  borderRadius: "16px",
+  fontSize: "16px",
 }
 
 function RequiredTag() {
@@ -145,7 +155,7 @@ export function LibraryNoticeForm({
       className={
         embedded
           ? "flex flex-col gap-5"
-          : "flex flex-col gap-5 self-start rounded-[20px] border p-6"
+          : "flex min-w-0 flex-col gap-5 self-start rounded-[28px] border p-5 sm:p-8"
       }
       style={
         embedded
@@ -158,7 +168,7 @@ export function LibraryNoticeForm({
         <div>
           <h2
             id={field("heading")}
-            className="m-0 text-[26px]"
+            className="m-0 text-[28px] leading-[1.1] sm:text-[32px]"
             style={{ fontFamily: T.font.serif, fontWeight: 500 }}
           >
             {initial ? "Edit notice" : "Post a notice"}
@@ -174,7 +184,7 @@ export function LibraryNoticeForm({
         </label>
         <select
           id={field("type")}
-          style={fieldInputStyle}
+          style={noticeInputStyle}
           value={type}
           onChange={(e) => {
             const next = e.target.value as LibraryNoticeType
@@ -198,7 +208,7 @@ export function LibraryNoticeForm({
             </label>
             <select
               id={field("scope")}
-              style={fieldInputStyle}
+              style={noticeInputStyle}
               value={scope}
               onChange={(e) =>
                 setScope(e.target.value as LibraryNotice["scope"])
@@ -220,7 +230,7 @@ export function LibraryNoticeForm({
                 </label>
                 <select
                   id={field("week")}
-                  style={fieldInputStyle}
+                  style={noticeInputStyle}
                   value={week}
                   onChange={(e) => setWeek(Number(e.target.value))}
                 >
@@ -237,7 +247,7 @@ export function LibraryNoticeForm({
                 </label>
                 <select
                   id={field("day")}
-                  style={fieldInputStyle}
+                  style={noticeInputStyle}
                   value={day}
                   onChange={(e) => setDay(e.target.value as typeof day)}
                 >
@@ -257,7 +267,7 @@ export function LibraryNoticeForm({
               </label>
               <select
                 id={field("stop")}
-                style={fieldInputStyle}
+                style={noticeInputStyle}
                 required
                 value={stopId}
                 onChange={(e) => setStopId(e.target.value)}
@@ -276,7 +286,7 @@ export function LibraryNoticeForm({
             </label>
             <select
               id={field("reason")}
-              style={fieldInputStyle}
+              style={noticeInputStyle}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
             >
@@ -306,7 +316,7 @@ export function LibraryNoticeForm({
           <input
             id={field("from")}
             type="date"
-            style={fieldInputStyle}
+            style={noticeInputStyle}
             required
             value={from}
             onChange={(e) => setFrom(e.target.value)}
@@ -322,7 +332,7 @@ export function LibraryNoticeForm({
           <input
             id={field("to")}
             type="date"
-            style={fieldInputStyle}
+            style={noticeInputStyle}
             min={from}
             value={to}
             onChange={(e) => setTo(e.target.value)}
@@ -344,8 +354,8 @@ export function LibraryNoticeForm({
           ref={messageRef}
           id={field("message")}
           style={{
-            ...fieldInputStyle,
-            minHeight: "112px",
+            ...noticeInputStyle,
+            minHeight: "120px",
             resize: "vertical",
             ...(messageMissing ? { borderColor: T.accent.danger } : {}),
           }}
@@ -399,7 +409,7 @@ export function LibraryNoticeForm({
         </p>
       )}
       <button
-        className={`${primaryCtaSm} min-h-12 w-full justify-center`}
+        className={`${primaryCtaSm} min-h-14 w-full justify-center text-[16px]`}
         disabled={busy}
         type="submit"
       >

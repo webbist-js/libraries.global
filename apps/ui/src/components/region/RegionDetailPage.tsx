@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react"
 import { type GapKey, PANEL_GAPS } from "@repo/shared-data"
+import { cookies } from "next/headers"
 import type { Locale } from "next-intl"
 
 import { DrivesHere } from "@/components/drives/DrivesHere"
@@ -38,6 +39,7 @@ import {
   NearbyRegions,
   RegionLibraryList,
 } from "@/components/region/RegionLibraryList"
+import { scalableAtlasEnabled, ATLAS_COHORT_COOKIE } from "@/lib/atlas-rollout"
 import { T } from "@/lib/design-tokens"
 import type { DriveView } from "@/lib/drives/drive-view"
 import { proposeHref } from "@/lib/drives/propose-link"
@@ -82,7 +84,7 @@ function QuickLinkCard({ link }: { link: QuickLink }) {
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
-export function RegionDetailPage({
+export async function RegionDetailPage({
   region,
   locale,
   slug,
@@ -194,7 +196,11 @@ export function RegionDetailPage({
     ne: region.mapConfig?.boundingBoxNE,
     sw: region.mapConfig?.boundingBoxSW,
   }
-  const hasMap = pins.length > 0 || Boolean(bounds.ne && bounds.sw)
+  const scalableMap = scalableAtlasEnabled(
+    (await cookies()).get(ATLAS_COHORT_COOKIE)?.value
+  )
+  const hasMap =
+    scalableMap || pins.length > 0 || Boolean(bounds.ne && bounds.sw)
 
   // ── Nearby ──────────────────────────────────────────────────────────────────
   const labels = placeLabels(region.country).region
@@ -244,6 +250,11 @@ export function RegionDetailPage({
           aside={
             hasMap ? (
               <LocationHeroMap
+                atlasPlace={
+                  scalableMap
+                    ? { level: "region", id: region.documentId }
+                    : undefined
+                }
                 label={`Map of libraries documented in ${name}`}
                 caption={
                   pins.length > 0

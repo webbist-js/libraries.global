@@ -153,6 +153,11 @@ export default factories.createCoreController(
      * for five minutes per locale (cleared by any library write).
      */
     async atlas(ctx) {
+      if (process.env.ATLAS_LEGACY_SOURCE_ENABLED === "false") {
+        ctx.status = 410
+        ctx.body = { error: "The bulk Atlas source has been retired" }
+        return
+      }
       const q = stringQuery(ctx.query as Record<string, unknown>, ["locale"])
       if (!q) return ctx.badRequest("Query parameters must be single strings")
       const locale = q.locale

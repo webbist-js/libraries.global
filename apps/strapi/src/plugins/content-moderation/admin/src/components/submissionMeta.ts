@@ -513,7 +513,11 @@ export function detailOf(sub: Submission): string | null {
   }
   if (sub.submissionType === "new_library")
     return (
-      [f.libraryType, f.city]
+      [
+        f.libraryType,
+        f.city,
+        sub.draftData?.staffCreation ? "Staff ownership requested" : null,
+      ]
         .filter((x) => typeof x === "string" && x)
         .join(" · ") || null
     )

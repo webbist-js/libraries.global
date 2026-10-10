@@ -131,6 +131,7 @@ describe("mobile stop index", () => {
       _geo: { lat: 51, lng: 0 },
       cancelled_dates: ["2026-10-05"],
       shares_live: true,
+      frequencies: ["weekly"],
       library_path: "/europe/united-kingdom/example/vehicle-one",
       visit_keys: expect.arrayContaining(["c1.0.mon"]),
     })

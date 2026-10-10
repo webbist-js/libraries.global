@@ -1,5 +1,11 @@
 // @vitest-environment happy-dom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react"
 import * as React from "react"
 import { createElement as h } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -14,6 +20,9 @@ const { Drawer } = await import("../Drawer")
 afterEach(() => {
   cleanup()
   document.documentElement.style.overflow = ""
+  document
+    .querySelectorAll("button[data-drawer-test-trigger]")
+    .forEach((el) => el.remove())
 })
 
 function open(
@@ -22,6 +31,7 @@ function open(
 ) {
   const trigger = document.createElement("button")
   trigger.textContent = "Open"
+  trigger.dataset.drawerTestTrigger = ""
   document.body.append(trigger)
   trigger.focus()
   const view = render(
@@ -51,11 +61,11 @@ describe("Drawer", () => {
     expect(screen.getByText("Nailsea Library · Nailsea")).toBeTruthy()
   })
 
-  it("starts on the first field, and gives focus back on close", () => {
+  it("starts on the first field, and gives focus back on close", async () => {
     const { trigger, view } = open()
     expect(document.activeElement).toBe(screen.getByLabelText("Field"))
     view.unmount()
-    expect(document.activeElement).toBe(trigger)
+    await waitFor(() => expect(document.activeElement).toBe(trigger))
     trigger.remove()
   })
 
@@ -72,8 +82,9 @@ describe("Drawer", () => {
   it("locks the page's scroll while open", () => {
     document.documentElement.style.overflow = "auto"
     const { view } = open()
-    expect(document.documentElement.style.overflow).toBe("hidden")
+    expect(Object.hasOwn(document.body.dataset, "scrollLocked")).toBe(true)
     view.unmount()
+    expect(Object.hasOwn(document.body.dataset, "scrollLocked")).toBe(false)
     expect(document.documentElement.style.overflow).toBe("auto")
   })
 
@@ -84,10 +95,10 @@ describe("Drawer", () => {
     fireEvent.click(screen.getByRole("button", { name: "Close" }))
     // The backdrop is a click target only: hidden from assistive tech and
     // out of the Tab order, so it never reads as a second "Close".
-    const backdrop = document.querySelector<HTMLButtonElement>(
-      'button[aria-hidden="true"]'
+    const backdrop = document.querySelector<HTMLElement>(
+      "[data-drawer-backdrop]"
     )!
-    expect(backdrop.tabIndex).toBe(-1)
+    expect(backdrop.hasAttribute("tabindex")).toBe(false)
     expect(screen.getAllByRole("button", { name: "Close" }).length).toBe(1)
     fireEvent.click(backdrop)
     expect(onClose).toHaveBeenCalledTimes(3)
@@ -99,9 +110,9 @@ describe("Drawer", () => {
     // The header's Close is the first stop; Send is the last.
     const close = screen.getByRole("button", { name: "Close" })
     send.focus()
-    fireEvent.keyDown(document, { key: "Tab" })
+    fireEvent.keyDown(send, { key: "Tab" })
     expect(document.activeElement).toBe(close)
-    fireEvent.keyDown(document, { key: "Tab", shiftKey: true })
+    fireEvent.keyDown(close, { key: "Tab", shiftKey: true })
     expect(document.activeElement).toBe(send)
   })
 })

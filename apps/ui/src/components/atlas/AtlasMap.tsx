@@ -1,6 +1,9 @@
 "use client"
 
-import type { PublicLiveState } from "@repo/shared-data"
+import type {
+  AtlasLibraryAccessResponse,
+  PublicLiveState,
+} from "@repo/shared-data"
 import type * as MapLibre from "maplibre-gl"
 import type { GeoJSONSource, Map as MapLibreMap, Marker } from "maplibre-gl"
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react"
@@ -9,25 +12,31 @@ import { T } from "@/lib/design-tokens"
 import type { PublicMobileTimetable } from "@/lib/mobile/types"
 import type { MobileStopHit } from "@/lib/mobile-stop-search"
 
+import type { AtlasGeneration } from "./atlas-data-client"
 import {
   addPinImages,
+  accessibilityClusterStyle,
   completenessColor,
   heatColor,
   INDIGO,
-  MUTED,
-  OK,
   RAMP,
 } from "./atlas-map.style"
+import { AtlasPerCapitaRenderer } from "./atlas-per-capita-renderer"
+import { atlasProtocol } from "./atlas-pmtiles"
+import { AtlasScalableRenderer } from "./atlas-scalable-renderer"
 import {
   type AtlasLibrary,
+  type AccessibilityView,
   type Bounds,
-  hasStepFree,
+  hasAccessibility,
   isOpenLateOrSunday,
   type LayerId,
   typeGroupOf,
 } from "./atlas.logic"
 import { mobileMapData } from "./mobile-map-data"
 import { BASEMAP_ATTRIBUTION } from "../map/map.helpers"
+
+let protocolRegistered = false
 
 // v2 is light-only — Voyager's warm tones sit well on the paper palette
 const BASEMAP =
@@ -41,6 +50,7 @@ export interface AtlasView {
 }
 
 export interface AtlasMapHandle {
+  fitBounds: (bounds: Bounds) => void
   flyTo: (lat: number, lng: number, zoom?: number) => void
   fitTo: (libs: AtlasLibrary[]) => void
   zoomBy: (delta: number) => void
@@ -48,9 +58,18 @@ export interface AtlasMapHandle {
 }
 
 interface AtlasMapProps {
+  perCapita?: AtlasLibraryAccessResponse | null
+  perCapitaOpacity?: number
+  selectedCountry?: string | null
+  onCountrySelect?: (iso3: string) => void
+  onPerCapitaGeometryError?: () => void
+  generation?: AtlasGeneration | null
+  onGeometryError?: () => void
   libraries: AtlasLibrary[]
   closures: AtlasLibrary[]
   layers: LayerId[]
+  accessibility?: string[]
+  accessibilityView?: AccessibilityView
   /** 0–1, applied to heat layers. */
   heatOpacity: number
   selected: AtlasLibrary | null
@@ -69,11 +88,13 @@ interface AtlasMapProps {
   mobileRoutes?: PublicMobileTimetable[]
   mobileLive?: Record<string, PublicLiveState>
   mobileZoomIn?: boolean
+  mobileRouteLines?: boolean
+  mobileOpacity?: number
   now?: Date
   onStopSelect?: (id: string) => void
 }
 
-function toGeoJSON(libs: AtlasLibrary[]) {
+function toGeoJSON(libs: AtlasLibrary[], accessibility: string[] = []) {
   return {
     type: "FeatureCollection" as const,
     features: libs.map((l) => ({
@@ -82,8 +103,8 @@ function toGeoJSON(libs: AtlasLibrary[]) {
       properties: {
         id: l.id,
         group: typeGroupOf(l.type),
-        late: isOpenLateOrSunday(l.hours),
-        stepFree: hasStepFree(l),
+        late: l.atlasLate ?? isOpenLateOrSunday(l.hours),
+        accessibility: hasAccessibility(l, accessibility),
         events: l.events,
         complete: l.complete,
       },
@@ -121,11 +142,33 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
     const selMarker = useRef<Marker | null>(null)
     const hoverMarker = useRef<Marker | null>(null)
     const meMarker = useRef<Marker | null>(null)
+    const scalableRenderer = useRef<AtlasScalableRenderer | null>(null)
+    const perCapitaRenderer = useRef<AtlasPerCapitaRenderer | null>(null)
     // Latest props for event handlers registered once.
     const latest = useRef(props)
     latest.current = props
 
     useImperativeHandle(ref, () => ({
+      fitBounds(bounds) {
+        const east = bounds.east < bounds.west ? bounds.east + 360 : bounds.east
+        const { left, right, bottom } = latest.current.padding
+        mapRef.current?.fitBounds(
+          [
+            [bounds.west, bounds.south],
+            [east, bounds.north],
+          ],
+          {
+            padding: {
+              top: 90,
+              left: left + 40,
+              right: right + 40,
+              bottom: bottom + 40,
+            },
+            maxZoom: 14,
+            duration: reducedMotion() ? 0 : 900,
+          }
+        )
+      },
       flyTo(lat, lng, zoom = 12) {
         mapRef.current?.flyTo({
           center: [lng, lat],
@@ -221,6 +264,10 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
       let observer: ResizeObserver | null = null
 
       import("maplibre-gl").then((maplibregl) => {
+        if (!protocolRegistered) {
+          maplibregl.addProtocol("pmtiles", atlasProtocol.tile)
+          protocolRegistered = true
+        }
         if (!alive || !containerRef.current) return
         libRef.current = maplibregl
         const v = latest.current.initialView
@@ -248,6 +295,19 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
         map.touchZoomRotate.disableRotation()
 
         map.on("error", (e) => {
+          if (
+            readyRef.current &&
+            (e as { sourceId?: string }).sourceId === "per-capita-countries"
+          ) {
+            perCapitaRenderer.current?.destroy()
+            perCapitaRenderer.current = null
+            latest.current.onPerCapitaGeometryError?.()
+          }
+          if (
+            readyRef.current &&
+            (e as { sourceId?: string }).sourceId?.startsWith("scalable-")
+          )
+            latest.current.onGeometryError?.()
           // Tile hiccups are recoverable; only a failed style load is fatal.
           if (!readyRef.current && (e as { error?: { status?: number } }).error)
             latest.current.onError("style")
@@ -269,6 +329,12 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
             cluster: true,
             clusterMaxZoom: 12,
             clusterRadius: 44,
+            clusterProperties: {
+              accessMatches: [
+                "+",
+                ["case", ["==", ["get", "accessibility"], true], 1, 0],
+              ],
+            },
           })
           map.addSource("atlas-raw", { type: "geojson", data: empty })
           map.addSource("atlas-closed", { type: "geojson", data: empty })
@@ -279,7 +345,13 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
             "mobile-vehicles",
             "mobile-rings",
           ])
-            map.addSource(source, { type: "geojson", data: empty })
+            map.addSource(source, {
+              type: "geojson",
+              data: empty,
+              ...(source === "mobile-stops"
+                ? { cluster: true, clusterMaxZoom: 12, clusterRadius: 44 }
+                : {}),
+            })
           const square = document.createElement("canvas")
           square.width = 40
           square.height = 40
@@ -304,7 +376,8 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
             paint: {
               "line-color": T.map.route,
               "line-width": 3,
-              "line-dasharray": [2, 2.67],
+              "line-opacity": 0.7,
+              "line-dasharray": [2, 2],
             },
           })
           map.addLayer({
@@ -325,6 +398,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
             id: "mobile-stop-squares",
             type: "symbol",
             source: "mobile-stops",
+            filter: ["!", ["has", "point_count"]],
             layout: {
               "icon-image": "atlas-stop-square",
               "icon-allow-overlap": true,
@@ -334,6 +408,17 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
             id: "mobile-cluster-squares",
             type: "symbol",
             source: "mobile-clusters",
+            layout: {
+              "icon-image": "atlas-stop-square",
+              "icon-size": 1.5,
+              "icon-allow-overlap": true,
+            },
+          })
+          map.addLayer({
+            id: "mobile-stop-clusters",
+            type: "symbol",
+            source: "mobile-stops",
+            filter: ["has", "point_count"],
             layout: {
               "icon-image": "atlas-stop-square",
               "icon-size": 1.5,
@@ -357,6 +442,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
               id: "mobile-stop-labels",
               type: "symbol",
               source: "mobile-stops",
+              filter: ["!", ["has", "point_count"]],
               minzoom: 12,
               layout: {
                 "text-field": [
@@ -374,6 +460,19 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
                 "text-halo-color": "#fff",
                 "text-halo-width": 2,
               },
+            })
+            map.addLayer({
+              id: "mobile-stop-cluster-count",
+              type: "symbol",
+              source: "mobile-stops",
+              filter: ["has", "point_count"],
+              layout: {
+                "text-field": ["to-string", ["get", "point_count"]],
+                "text-font": ["Montserrat Medium"],
+                "text-size": 12,
+                "text-allow-overlap": true,
+              },
+              paint: { "text-color": T.map.stopRing },
             })
             map.addLayer({
               id: "mobile-cluster-count",
@@ -543,11 +642,27 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
           const selectable = ["pins", "styled-pins", "closed-pins"]
           map.on("click", (e) => {
             const mobile = map.queryRenderedFeatures(e.point, {
-              layers: ["mobile-stop-squares", "mobile-cluster-squares"],
+              layers: [
+                "mobile-stop-squares",
+                "mobile-stop-clusters",
+                "mobile-cluster-squares",
+              ],
             })[0]
             if (mobile) {
               if (mobile.properties.id)
                 latest.current.onStopSelect?.(String(mobile.properties.id))
+              else if (mobile.properties.cluster_id !== undefined)
+                (map.getSource("mobile-stops") as GeoJSONSource)
+                  .getClusterExpansionZoom(Number(mobile.properties.cluster_id))
+                  .then((zoom) =>
+                    map.easeTo({
+                      center: (mobile.geometry as GeoJSON.Point)
+                        .coordinates as [number, number],
+                      zoom,
+                      duration: reducedMotion() ? 0 : 400,
+                    })
+                  )
+                  .catch(() => {})
               else
                 map.easeTo({
                   center: (mobile.geometry as GeoJSON.Point).coordinates as [
@@ -563,6 +678,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
             const cluster = map.queryRenderedFeatures(e.point, {
               layers: ["clusters"],
             })[0]
+            if (scalableRenderer.current?.click(e.point)) return
             if (cluster) {
               const src = map.getSource("atlas") as GeoJSONSource
               src
@@ -588,6 +704,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
                 (l) => map.getLayoutProperty(l, "visibility") !== "none"
               ),
             })[0]
+            if (!hit && perCapitaRenderer.current?.click(e.point)) return
             latest.current.onSelect(hit ? (hit.properties.id as string) : null)
           })
           for (const l of [
@@ -595,6 +712,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
             "clusters",
             "mobile-stop-squares",
             "mobile-cluster-squares",
+            "mobile-stop-clusters",
           ]) {
             map.on(
               "mouseenter",
@@ -626,6 +744,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
           syncMobileData()
           syncLayers()
           syncMarkers()
+          syncPerCapita()
           report()
           latest.current.onReady()
         })
@@ -637,6 +756,10 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
       return () => {
         alive = false
         observer?.disconnect()
+        scalableRenderer.current?.destroy()
+        scalableRenderer.current = null
+        perCapitaRenderer.current?.destroy()
+        perCapitaRenderer.current = null
         mapRef.current?.remove()
         mapRef.current = null
         readyRef.current = false
@@ -644,16 +767,44 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
     }, [])
 
     // ── Sync helpers (read latest props) ────────────────────────────────────
+    function syncPerCapita() {
+      const map = mapRef.current
+      if (!map || !readyRef.current) return
+      if (!perCapitaRenderer.current && !latest.current.perCapita) return
+      perCapitaRenderer.current ??= new AtlasPerCapitaRenderer(map, (iso3) =>
+        latest.current.onCountrySelect?.(iso3)
+      )
+      perCapitaRenderer.current.update(
+        latest.current.layers.includes("perCapita")
+          ? (latest.current.perCapita ?? null)
+          : null,
+        latest.current.perCapitaOpacity ?? 0.55,
+        latest.current.selectedCountry ?? null
+      )
+    }
     function syncData() {
       const map = mapRef.current
       if (!map || !readyRef.current) return
       const { libraries, closures } = latest.current
-      const data = toGeoJSON(libraries)
+      const data = toGeoJSON(
+        latest.current.generation ? [] : libraries,
+        latest.current.accessibility
+      )
       ;(map.getSource("atlas") as GeoJSONSource).setData(data)
       ;(map.getSource("atlas-raw") as GeoJSONSource).setData(data)
       ;(map.getSource("atlas-closed") as GeoJSONSource).setData(
-        toGeoJSON(closures)
+        toGeoJSON(latest.current.generation ? [] : closures)
       )
+      if (latest.current.generation) {
+        scalableRenderer.current ??= new AtlasScalableRenderer(map, (id) =>
+          latest.current.onSelect(id)
+        )
+        scalableRenderer.current.update(
+          latest.current.generation,
+          latest.current.layers,
+          latest.current.heatOpacity
+        )
+      }
     }
 
     // The mobile sources depend on the clock (vehicle position between
@@ -702,20 +853,66 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
         ])
       }
 
-      const pinStyle = on("complete") || on("access")
-      vis("styled-pins", pinStyle)
+      const pinStyle = on("complete")
+      const access = on("access")
+      const compare = access && latest.current.accessibilityView === "compare"
+      vis("styled-pins", pinStyle && on("pins"))
       if (on("complete"))
         map.setPaintProperty("styled-pins", "circle-color", completenessColor())
-      if (on("access"))
-        map.setPaintProperty("styled-pins", "circle-color", [
-          "case",
-          ["==", ["get", "stepFree"], true],
-          OK,
-          MUTED,
-        ])
-      // Styled pins replace type pins and clusters so every point is visible.
+      map.setLayoutProperty(
+        "pins",
+        "icon-image",
+        access
+          ? [
+              "case",
+              ["==", ["get", "accessibility"], true],
+              "pin-access-match",
+              "pin-access-gap",
+            ]
+          : ["concat", "pin-", ["get", "group"]]
+      )
+      const clusterRadius = [
+        "step",
+        ["get", "point_count"],
+        compare ? 26 : 15,
+        10,
+        compare ? 30 : 20,
+        100,
+        compare ? 36 : 26,
+        1000,
+        compare ? 42 : 32,
+      ]
+      const clusterStyle = access
+        ? accessibilityClusterStyle("point_count", "accessMatches", compare)
+        : {
+            circle: {
+              "circle-radius": clusterRadius,
+              "circle-color": "#fff",
+              "circle-stroke-color": INDIGO,
+              "circle-stroke-width": 2,
+            },
+            halo: {
+              "circle-radius": ["+", clusterRadius, 4],
+              "circle-color": "rgba(0,0,0,0)",
+              "circle-stroke-color": "rgba(67,56,202,.16)",
+              "circle-stroke-width": 4,
+              "circle-blur": 0,
+            },
+            text: { "text-color": "#17162B" },
+            label: ["get", "point_count_abbreviated"],
+          }
+      for (const [property, value] of Object.entries(clusterStyle.circle))
+        map.setPaintProperty("clusters", property, value)
+      for (const [property, value] of Object.entries(clusterStyle.halo))
+        map.setPaintProperty("cluster-halo", property, value)
+      if (map.getLayer("cluster-count")) {
+        for (const [property, value] of Object.entries(clusterStyle.text))
+          map.setPaintProperty("cluster-count", property, value)
+        map.setLayoutProperty("cluster-count", "text-field", clusterStyle.label)
+      }
+      // Completeness uses individual pins; accessibility keeps scalable clusters.
       for (const l of ["pins", "clusters", "cluster-halo", "cluster-count"]) {
-        if (map.getLayer(l)) vis(l, !pinStyle)
+        if (map.getLayer(l)) vis(l, on("pins") && !pinStyle)
       }
       // With heat on, points only appear once you've zoomed in.
       for (const l of [
@@ -730,17 +927,33 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
 
       vis("late-halo", on("openLate"))
       vis("closed-pins", on("closures"))
+      const mobileOpacity = latest.current.mobileOpacity ?? 1
+      for (const layer of ["mobile-route-lines", "mobile-live-lines"]) {
+        vis(layer, on("mobile") && latest.current.mobileRouteLines !== false)
+        map.setPaintProperty(layer, "line-opacity", mobileOpacity)
+      }
       for (const layer of [
-        "mobile-route-lines",
-        "mobile-live-lines",
         "mobile-coarse-rings",
         "mobile-stop-squares",
         "mobile-cluster-squares",
+        "mobile-stop-clusters",
+        "mobile-stop-cluster-count",
         "mobile-vehicle",
         "mobile-stop-labels",
         "mobile-cluster-count",
       ])
-        if (map.getLayer(layer)) vis(layer, on("mobile"))
+        if (map.getLayer(layer)) {
+          vis(layer, on("mobile"))
+          if (layer === "mobile-coarse-rings")
+            map.setPaintProperty(layer, "fill-opacity", 0.15 * mobileOpacity)
+          else if (layer === "mobile-vehicle") {
+            map.setPaintProperty(layer, "circle-opacity", mobileOpacity)
+            map.setPaintProperty(layer, "circle-stroke-opacity", mobileOpacity)
+          } else {
+            map.setPaintProperty(layer, "icon-opacity", mobileOpacity)
+            map.setPaintProperty(layer, "text-opacity", mobileOpacity)
+          }
+        }
     }
 
     function syncMarkers() {
@@ -750,7 +963,11 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
       const { selected, hovered } = latest.current
       selMarker.current?.remove()
       selMarker.current = null
-      if (selected) {
+      if (
+        selected &&
+        selected.mapped !== false &&
+        latest.current.layers.includes("pins")
+      ) {
         selMarker.current = new lib.Marker({
           element: selectionElement(selected.name, false),
           anchor: "top",
@@ -761,7 +978,12 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
       }
       hoverMarker.current?.remove()
       hoverMarker.current = null
-      if (hovered && hovered.id !== selected?.id) {
+      if (
+        hovered &&
+        hovered.id !== selected?.id &&
+        hovered.mapped !== false &&
+        latest.current.layers.includes("pins")
+      ) {
         hoverMarker.current = new lib.Marker({
           element: selectionElement(hovered.name, true),
         })
@@ -770,7 +992,20 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
       }
     }
 
-    useEffect(syncData, [props.libraries, props.closures])
+    useEffect(syncData, [
+      props.libraries,
+      props.accessibility,
+      props.closures,
+      props.generation,
+      props.layers,
+      props.heatOpacity,
+    ])
+    useEffect(syncPerCapita, [
+      props.perCapita,
+      props.perCapitaOpacity,
+      props.selectedCountry,
+      props.layers,
+    ])
     useEffect(syncMobileData, [
       props.mobileStops,
       props.mobileClusters,
@@ -779,8 +1014,14 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
       props.mobileZoomIn,
       props.now,
     ])
-    useEffect(syncLayers, [props.layers, props.heatOpacity])
-    useEffect(syncMarkers, [props.selected, props.hovered])
+    useEffect(syncLayers, [
+      props.mobileRouteLines,
+      props.mobileOpacity,
+      props.layers,
+      props.heatOpacity,
+      props.accessibilityView,
+    ])
+    useEffect(syncMarkers, [props.selected, props.hovered, props.layers])
     useEffect(() => {
       const map = mapRef.current
       if (!map || !readyRef.current) return

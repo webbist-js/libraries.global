@@ -14,7 +14,6 @@ import { Breadcrumb, type BreadcrumbItem } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
 import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
-import type { FacilityState } from "@/components/library/facility-rows"
 import {
   type LatLng,
   type OpeningTimesValue,
@@ -49,7 +48,6 @@ export function LibraryHero({
   wizardLibrary,
   coords,
   neighbours,
-  stepFree,
   hasPhoto,
   untranslatedLocale = null,
 }: {
@@ -58,8 +56,6 @@ export function LibraryHero({
   readonly wizardLibrary: WizardLibrary
   readonly coords: LatLng | null
   readonly neighbours: LibraryMapNeighbour[]
-  /** yes: documented; no: confirmed absent; unknown: not documented. */
-  readonly stepFree: FacilityState
   readonly hasPhoto: boolean
   /** Set when this is the default-locale stand-in for a missing translation. */
   readonly untranslatedLocale?: string | null
@@ -221,17 +217,20 @@ export function LibraryHero({
                     />
                   </>
                 ) : null}
-                <FactCard
-                  icon="mdi:wheelchair-accessibility"
-                  label="Step-free access"
-                  value={
-                    stepFree === "yes"
-                      ? "Yes"
-                      : stepFree === "no"
-                        ? "No"
+                <a
+                  href="#access"
+                  className="block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2"
+                >
+                  <FactCard
+                    icon="mdi:human"
+                    label="Accessibility"
+                    value={
+                      library.accessibility?.length
+                        ? `${library.accessibility.length} ${library.accessibility.length === 1 ? "feature" : "features"} recorded`
                         : "Not documented yet"
-                  }
-                />
+                    }
+                  />
+                </a>
               </div>
             )}
 

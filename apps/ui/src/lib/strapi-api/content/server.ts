@@ -9,11 +9,15 @@ import {
   computeCompleteness,
   type OpeningTimesValue,
 } from "@/components/library/library-page.helpers"
-import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
+import {
+  bridgeUserHeaders,
+  strapiServiceHeaders,
+} from "@/lib/bridge-user-headers"
 import { buildLibraryPath } from "@/lib/library-helpers"
 import { logNonBlockingError } from "@/lib/logging"
 import { routing } from "@/lib/navigation"
 import { PublicStrapiClient } from "@/lib/strapi-api"
+import type { AvatarMedia } from "@/lib/types/profile"
 import type {
   APIResponse,
   APIResponseCollection,
@@ -764,6 +768,9 @@ export async function fetchAllRegions(locale: Locale) {
 }
 
 export async function fetchCountry(slug: string, locale: Locale) {
+  // Missing static assets can match the dynamic location route. Reject that
+  // route's locale before it becomes a misleading Strapi populate failure.
+  if (!routing.locales.includes(locale)) return
   const dm = await draftMode()
   try {
     return (await PublicStrapiClient.fetchAPI(
@@ -971,6 +978,13 @@ export type BlogArticleSummary = {
 
 export type BlogArticleDetail = BlogArticleSummary & {
   body?: ArticleBodyBlock[] | null
+  /** The author's public profile, when the article is attributed to one. */
+  authorProfile?: {
+    username: string
+    firstName?: string | null
+    lastName?: string | null
+    avatar?: AvatarMedia | null
+  } | null
   relatedArticles?: BlogArticleSummary[] | null
   seo?: LibrarySeoData | null
 }
@@ -1710,7 +1724,7 @@ export async function fetchLibraryHistory(
       `${historyBase()}/libraries/${encodeURIComponent(documentId)}/history?${qs}`,
       withValues
         ? { headers: bridgeUserHeaders(user), cache: "no-store" }
-        : { next: { revalidate: 300 } }
+        : { headers: strapiServiceHeaders(), next: { revalidate: 300 } }
     )
     if (!res.ok) return null
     const json = (await res.json()) as { data?: unknown; meta?: unknown }
@@ -1738,7 +1752,7 @@ export async function fetchLibraryHistoryStats(
   try {
     const res = await fetch(
       `${historyBase()}/libraries/${encodeURIComponent(documentId)}/history/stats?months=24`,
-      { next: { revalidate: 300 } }
+      { headers: strapiServiceHeaders(), next: { revalidate: 300 } }
     )
     if (!res.ok) return null
     const json = (await res.json()) as unknown
@@ -1800,7 +1814,7 @@ export async function fetchArticleHistory(
   try {
     const res = await fetch(
       `${historyBase()}/articles/${kind}/${encodeURIComponent(documentId)}/history?page=1&pageSize=${HISTORY_PAGE_SIZE}`,
-      { next: { revalidate: 300 } }
+      { headers: strapiServiceHeaders(), next: { revalidate: 300 } }
     )
     if (!res.ok) return null
     const json = (await res.json()) as { data?: unknown; meta?: unknown }
@@ -1840,7 +1854,7 @@ export async function fetchLibraryFollowerCount(
   try {
     const res = await fetch(
       `${strapiUrl}/api/libraries/${encodeURIComponent(documentId)}/followers`,
-      { next: { revalidate: 300 } }
+      { headers: strapiServiceHeaders(), next: { revalidate: 300 } }
     )
     if (!res.ok) return null
     const json = (await res.json()) as { data?: { followers?: unknown } }
@@ -1874,6 +1888,7 @@ export async function fetchHomepageStats(): Promise<HomepageStats | null> {
   const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
   try {
     const res = await fetch(`${strapiUrl}/api/homepage/stats`, {
+      headers: strapiServiceHeaders(),
       next: { revalidate: 300 },
     })
     if (!res.ok) return null

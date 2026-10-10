@@ -1,0 +1,28 @@
+{
+  "name": "@repo/atlas-benchmarks",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "estimate:existing": "tsx estimate-existing.ts",
+    "browser:measure": "tsx browser/measure.ts",
+    "browser:serve": "tsx browser/server.ts",
+    "build:tiles": "tsx build.ts",
+    "generate": "tsx generate.ts",
+    "load": "tsx load.ts",
+    "query": "tsx query.ts",
+    "capacity": "tsx capacity.ts",
+    "pathological": "tsx pathological.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/shared-data": "workspace:*",
+    "maplibre-gl": "5.22.0",
+    "pmtiles": "4.4.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2",
+    "@types/node": "^22",
+    "tsx": "4.21.0",
+    "typescript": "^5"
+  }
+}

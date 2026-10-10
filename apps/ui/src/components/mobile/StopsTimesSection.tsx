@@ -291,7 +291,7 @@ export function StopsTimesSection({
             style={{ color: T.accent.primary }}
             href={
               staff.can("edit", id)
-                ? staffHref("/timetable")
+                ? staffHref("/edit?step=timetable")
                 : "/contribute/index"
             }
           >

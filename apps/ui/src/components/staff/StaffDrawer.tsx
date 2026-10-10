@@ -4,8 +4,12 @@ import { Icon } from "@iconify/react"
 import { useLocale } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 
-import { Badge } from "@/components/ds/Badge"
 import { Drawer } from "@/components/ds/Drawer"
+import {
+  DRAWER_CARD as CARD,
+  DrawerLinkCard,
+  DrawerTile as Tile,
+} from "@/components/ds/DrawerCards"
 import { TONES as NOTICE_TONES } from "@/components/ds/Notice"
 import { useFeaturedDrive } from "@/hooks/useContributeMenu"
 import { useEntitlements, useStaff } from "@/lib/access-client"
@@ -82,89 +86,6 @@ async function lookupPageLibrary(
   } catch {
     return null
   }
-}
-
-const CARD = "rounded-[20px] border"
-const TILE =
-  "flex min-h-[104px] flex-col justify-between gap-6 rounded-[20px] border p-3.5 text-[16px] font-semibold leading-snug no-underline transition-colors hover:bg-(--t-bg-surface)"
-
-function Tile({
-  href,
-  icon,
-  label,
-  tag,
-}: {
-  readonly href: string
-  readonly icon: string
-  readonly label: string
-  /** "Mobile": a green tag. "Team": a lock and an indigo tag (not covered). */
-  readonly tag?: "Mobile" | "Team"
-}) {
-  return (
-    <Link
-      aria-label={tag ? `${label} (${tag})` : label}
-      href={href}
-      className={TILE}
-      style={{
-        background: T.bg.deep,
-        borderColor: T.border.line,
-        color: T.ink.base,
-      }}
-    >
-      <span className="flex w-full items-start justify-between gap-2">
-        <Icon
-          aria-hidden="true"
-          className="shrink-0"
-          height={20}
-          icon={tag === "Team" ? "mdi:lock-outline" : icon}
-          style={{ color: T.accent.primary }}
-          width={20}
-        />
-        {tag ? (
-          <Badge label={tag} color={tag === "Mobile" ? "ok" : "aurora"} />
-        ) : null}
-      </span>
-      <span className="w-full">{label}</span>
-    </Link>
-  )
-}
-
-function DriveCard({
-  href,
-  title,
-  need,
-}: {
-  readonly href: string
-  readonly title: string
-  readonly need?: string | null
-}) {
-  return (
-    <Link
-      href={href}
-      className={`${CARD} flex flex-col gap-2 px-3.5 py-3.5 no-underline transition-colors hover:bg-(--t-bg-surface)`}
-      style={{ background: T.bg.deep, borderColor: T.border.line }}
-    >
-      <span
-        className="flex items-start gap-3 text-[16px] leading-snug font-semibold"
-        style={{ color: T.ink.base }}
-      >
-        <Icon
-          aria-hidden="true"
-          className="mt-0.5 shrink-0"
-          height={20}
-          icon="mdi:pin-outline"
-          style={{ color: T.accent.primary }}
-          width={20}
-        />
-        <span>{title}</span>
-      </span>
-      {need ? (
-        <span className="text-[14px]" style={{ color: T.ink.dim }}>
-          Your library needs: {need}
-        </span>
-      ) : null}
-    </Link>
-  )
 }
 
 /**
@@ -536,7 +457,7 @@ export function StaffDrawer() {
             {mobile ? (
               <>
                 <Tile
-                  href={`${base}/timetable`}
+                  href={`${base}/edit?step=timetable`}
                   icon="mdi:calendar-blank-outline"
                   label="Timetable"
                   tag="Mobile"
@@ -603,7 +524,7 @@ export function StaffDrawer() {
             >
               Featured drive
             </h3>
-            <DriveCard
+            <DrawerLinkCard
               href={driveHref(featuredDrive.slug)}
               title={featuredDrive.title}
             />
@@ -623,10 +544,14 @@ export function StaffDrawer() {
               <ul className="m-0 flex list-none flex-col gap-2 p-0">
                 {data.drives.map((drive) => (
                   <li key={drive.slug}>
-                    <DriveCard
+                    <DrawerLinkCard
                       href={`/community/drives/${drive.slug}`}
                       title={drive.title}
-                      need={drive.need}
+                      description={
+                        drive.need
+                          ? `Your library needs: ${drive.need}`
+                          : undefined
+                      }
                     />
                   </li>
                 ))}

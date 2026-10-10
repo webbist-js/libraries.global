@@ -2,6 +2,17 @@ import { headers } from "next/headers"
 import { z } from "zod"
 
 import { requireEntitlement } from "@/lib/access-server"
+import { createAtlasBackend } from "@/lib/atlas-backend"
+import {
+  AtlasExportConflict,
+  AtlasExportLimit,
+  fetchAtlasExport,
+  parseAtlasExport,
+} from "@/lib/atlas-export"
+import {
+  scalableAtlasEnabled,
+  atlasCohortFromHeaders,
+} from "@/lib/atlas-rollout"
 import { auth } from "@/lib/auth"
 import {
   DOCUMENT_ID_PATTERN,
@@ -19,6 +30,9 @@ import {
 import { fetchExportRows } from "@/lib/library-export-bridge"
 import { routing } from "@/lib/navigation"
 import { absoluteUrl } from "@/lib/seo/metadata"
+
+export const runtime = "nodejs"
+export const maxDuration = 120
 
 // Every id at the longest documentId, quoted and comma-separated, plus 1 KB
 // for the rest: about 1.75 MB, under Vercel's 4.5 MB request body limit.
@@ -91,12 +105,44 @@ export async function POST(req: Request) {
       },
       { status: raw.status }
     )
+  const cap = exportRowCap(session!.user)
+  if (scalableAtlasEnabled(atlasCohortFromHeaders(req.headers))) {
+    let parsed: ReturnType<typeof parseAtlasExport>
+    try {
+      parsed = parseAtlasExport(raw.body)
+    } catch {
+      return Response.json({ error: "Invalid Atlas scope" }, { status: 400 })
+    }
+    try {
+      const signal = AbortSignal.any([req.signal, AbortSignal.timeout(115000)])
+      const libraries = await fetchAtlasExport(
+        createAtlasBackend(signal),
+        parsed.request,
+        cap,
+        signal
+      )
+
+      return exportFile(
+        parsed.format,
+        libraries.map((lib) => atlasExportRow(lib, pageUrl))
+      )
+    } catch (error) {
+      if (error instanceof AtlasExportLimit)
+        return Response.json(
+          { error: error.message, limit: error.limit },
+          { status: 413 }
+        )
+      if (error instanceof AtlasExportConflict)
+        return Response.json({ error: error.message }, { status: 409 })
+
+      return Response.json(UNAVAILABLE, { status: 503 })
+    }
+  }
   const parsed = ExportBody.safeParse(raw.body)
   if (!parsed.success)
     return Response.json({ error: "Invalid request body" }, { status: 400 })
   const { format, ids } = parsed.data
 
-  const cap = exportRowCap(session!.user)
   if (ids.length > cap)
     return Response.json(
       { error: "Too many libraries for one export", limit: cap },
@@ -121,6 +167,13 @@ export async function POST(req: Request) {
     return lib ? [atlasExportRow(lib, pageUrl)] : []
   })
 
+  return exportFile(format, rows)
+}
+
+function exportFile(
+  format: "csv" | "geojson",
+  rows: ReturnType<typeof atlasExportRow>[]
+) {
   const chunks =
     format === "csv"
       ? csvChunks(rows, ATLAS_EXPORT_COLUMNS)
@@ -134,6 +187,7 @@ export async function POST(req: Request) {
       "Content-Type": FILE_TYPES[format],
       "Content-Disposition": `attachment; filename="libraries-global-atlas-${date}.${format}"`,
       "X-Data-Attribution": EXPORT_ATTRIBUTION,
+      "X-Exported-Rows": String(rows.length),
       "Cache-Control": "no-store",
     },
   })

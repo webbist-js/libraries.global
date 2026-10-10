@@ -39,12 +39,15 @@ export interface CreateSubmissionPayload {
   targetDocumentId?: string
   targetSlug?: string
   fields?: Record<string, unknown>
+  draftData?: Record<string, unknown>
   note?: string
   editSummary?: string
   evidenceType?: string
   evidenceUrl?: string
   /** When true, creates with status "draft" — invisible to the moderation queue until finalized */
   asDraft?: boolean
+  /** Staff creation intent; Strapi verifies access before storing it. */
+  staffCreation?: { teamDocumentId: string | null }
 }
 
 async function apiFetch(path: string, init?: RequestInit) {
@@ -137,11 +140,13 @@ export function resumeDraftUrl(
   type: string,
   targetSlug: string | undefined,
   locale: string | undefined,
-  origin: string
+  origin: string,
+  staffCreation = false
 ): string {
   const url = new URL(`/api/submissions/draft/${type}`, origin)
   if (targetSlug) url.searchParams.set("targetSlug", targetSlug)
   if (locale) url.searchParams.set("locale", locale)
+  if (staffCreation) url.searchParams.set("staffCreation", "true")
 
   return url.toString()
 }
@@ -149,13 +154,20 @@ export function resumeDraftUrl(
 export function useResumeDraft(
   type: string,
   targetSlug?: string,
-  locale?: string
+  locale?: string,
+  staffCreation = false
 ) {
   return useQuery({
-    queryKey: ["draft", type, targetSlug, locale ?? null],
+    queryKey: ["draft", type, targetSlug, locale ?? null, staffCreation],
     queryFn: async () => {
       const res = await fetch(
-        resumeDraftUrl(type, targetSlug, locale, window.location.origin)
+        resumeDraftUrl(
+          type,
+          targetSlug,
+          locale,
+          window.location.origin,
+          staffCreation
+        )
       )
       if (!res.ok) return null
       const json = await res.json()

@@ -197,6 +197,13 @@ describe("libraryOn mapper: taxonomy and contact data", () => {
     expect(data.sourceUrl).toBe(
       "https://libraryon.org/libraries/glasgow-city/pollokshields-library"
     )
+    expect(data.sourceRecords).toEqual([
+      {
+        dataset: "libraryon",
+        recordId: String(records.laRun.id),
+        url: data.sourceUrl,
+      },
+    ])
     expect(data.contentUpdatedAt).toBe(
       records.laRun.attributes.contentUpdatedAt
     )

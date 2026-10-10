@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react"
 
-import { LocationHierarchySelector } from "@/app/[locale]/contribute/index/_components/LocationHierarchySelector"
+import { Badge, Notice } from "@/components/ds"
+import { LocationHierarchySelector } from "@/components/library-editor/LocationHierarchySelector"
 import {
   EMPTY_FORM,
   type FormData,
-} from "@/app/[locale]/contribute/index/_components/wizard.types"
-import { Badge } from "@/components/ds"
+} from "@/components/library-editor/wizard.types"
 import { T } from "@/lib/design-tokens"
 import { useRouter } from "@/lib/navigation"
 import { formatStrapiMediaUrlForClient } from "@/lib/strapi-helpers"
@@ -265,9 +265,24 @@ export function NewLibraryPanel({
     !!place.continentDocumentId &&
     !!place.countryDocumentId &&
     !!place.regionDocumentId
+  const creation = asRecord(asRecord(draftData).staffCreation)
 
   return (
     <div className="flex flex-col gap-6">
+      {Object.keys(creation).length > 0 && (
+        <Notice
+          icon="mdi:shield-account-outline"
+          tone="warn"
+          title="Staff ownership requested"
+        >
+          <p className="m-0">
+            Approval also grants the submitter owner access to this library.
+            {typeof creation.teamName === "string" &&
+              ` It adds the library to ${creation.teamName}’s Team coverage.`}{" "}
+            Verify their staff relationship and service before approving.
+          </p>
+        </Notice>
+      )}
       <FieldsList fields={fields ?? {}} />
       <fieldset
         className="m-0 flex flex-col gap-3 rounded-[14px] p-4"

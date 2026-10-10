@@ -16,13 +16,31 @@ import {
   extractHeadings,
   formatDate,
 } from "@/lib/article-helpers"
+import { avatarSrc } from "@/lib/avatar"
 import { T } from "@/lib/design-tokens"
+import { isFounder } from "@/lib/founder"
 import { routing } from "@/lib/navigation"
 import type {
   BlogArticleDetail,
   BlogArticleSummary,
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
+
+/** "Founder" pill beside the author's name (`lib/founder.ts`). */
+function FounderTag() {
+  return (
+    <span
+      className="ml-2 inline-flex items-center rounded-full px-2.5 py-0.5 align-middle text-[12px] font-semibold"
+      style={{
+        fontFamily: T.font.sans,
+        background: "var(--tint-special-bg)",
+        color: "var(--tint-special-fg)",
+      }}
+    >
+      Founder
+    </span>
+  )
+}
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
@@ -72,7 +90,20 @@ export function BlogArticlePage({
     []
   ).slice(0, 3)
 
-  const authorInitial = (article.author ?? "?").charAt(0).toUpperCase()
+  const authorProfile = article.authorProfile ?? null
+  const authorName =
+    article.author ??
+    (authorProfile
+      ? [authorProfile.firstName, authorProfile.lastName]
+          .filter(Boolean)
+          .join(" ") || authorProfile.username
+      : null)
+  const authorHref = authorProfile
+    ? `/profile/${encodeURIComponent(authorProfile.username)}`
+    : null
+  const authorPhoto = avatarSrc(authorProfile?.avatar, "sm")
+  const authorIsFounder = isFounder(authorProfile?.username)
+  const authorInitial = (authorName ?? "?").charAt(0).toUpperCase()
 
   const metaRows = [
     { label: "Published", value: publishedDate },
@@ -160,20 +191,40 @@ export function BlogArticlePage({
                 <div className="flex items-center gap-3">
                   <span
                     aria-hidden="true"
-                    className="flex size-10 flex-none items-center justify-center rounded-full text-[15px] font-semibold"
+                    className="flex size-10 flex-none items-center justify-center overflow-hidden rounded-full text-[15px] font-semibold"
                     style={{
                       background: "var(--tint-national-bg)",
                       color: "var(--tint-national-fg)",
                     }}
                   >
-                    {authorInitial}
+                    {authorPhoto ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={authorPhoto}
+                        alt=""
+                        className="size-full object-cover"
+                      />
+                    ) : (
+                      authorInitial
+                    )}
                   </span>
                   <div>
                     <p
                       className="m-0 text-[15px] font-semibold"
                       style={{ color: T.ink.base }}
                     >
-                      {article.author ?? "The Journal"}
+                      {authorName && authorHref ? (
+                        <GlobalLink
+                          href={authorHref}
+                          className="underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+                          style={{ color: T.ink.base }}
+                        >
+                          {authorName}
+                        </GlobalLink>
+                      ) : (
+                        (authorName ?? "The Journal")
+                      )}
+                      {authorIsFounder ? <FounderTag /> : null}
                     </p>
                     {article.authorTitle ? (
                       <p
@@ -233,20 +284,29 @@ export function BlogArticlePage({
             />
 
             {/* Author bio */}
-            {article.author ? (
+            {authorName ? (
               <div
                 className="flex items-start gap-5 rounded-3xl border p-6 sm:p-7"
                 style={{ background: T.bg.deep, borderColor: T.border.line }}
               >
                 <span
                   aria-hidden="true"
-                  className="flex size-14 flex-none items-center justify-center rounded-full text-[20px] font-semibold"
+                  className="flex size-14 flex-none items-center justify-center overflow-hidden rounded-full text-[20px] font-semibold"
                   style={{
                     background: "var(--tint-national-bg)",
                     color: "var(--tint-national-fg)",
                   }}
                 >
-                  {authorInitial}
+                  {authorPhoto ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={authorPhoto}
+                      alt=""
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    authorInitial
+                  )}
                 </span>
                 <div className="min-w-0">
                   <p
@@ -263,7 +323,18 @@ export function BlogArticlePage({
                       color: T.ink.base,
                     }}
                   >
-                    {article.author}
+                    {authorHref ? (
+                      <GlobalLink
+                        href={authorHref}
+                        className="underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+                        style={{ color: T.ink.base }}
+                      >
+                        {authorName}
+                      </GlobalLink>
+                    ) : (
+                      authorName
+                    )}
+                    {authorIsFounder ? <FounderTag /> : null}
                   </p>
                   {article.authorTitle ? (
                     <p
@@ -280,6 +351,15 @@ export function BlogArticlePage({
                     >
                       {article.authorBio}
                     </p>
+                  ) : null}
+                  {authorHref ? (
+                    <GlobalLink
+                      href={authorHref}
+                      className="mt-3 inline-flex text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+                      style={{ color: T.accent.primary }}
+                    >
+                      View profile
+                    </GlobalLink>
                   ) : null}
                 </div>
               </div>

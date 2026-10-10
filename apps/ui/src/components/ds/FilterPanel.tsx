@@ -10,9 +10,11 @@
 
 import {
   Children,
+  createContext,
   isValidElement,
   type ReactNode,
   useCallback,
+  useContext,
   useEffect,
   useId,
   useRef,
@@ -20,6 +22,10 @@ import {
 } from "react"
 
 import { T } from "@/lib/design-tokens"
+
+import { Drawer } from "./Drawer"
+
+const FilterDrawerContext = createContext(false)
 
 const LEGEND_ICON_PROPS = {
   width: 18,
@@ -50,9 +56,13 @@ export function FilterPanelHeader({
   /** From useFilterSidebar: adds the desktop Hide control. */
   readonly sidebar?: FilterSidebarState
 }) {
+  const inDrawer = useContext(FilterDrawerContext)
+
   return (
-    <div className="flex min-h-11 items-center justify-between gap-2">
-      <h2 className="m-0 text-[20px] font-bold">{title}</h2>
+    <div
+      className={`flex min-h-11 items-center gap-2 ${inDrawer ? "justify-end" : "justify-between"}`}
+    >
+      {inDrawer ? null : <h2 className="m-0 text-[20px] font-bold">{title}</h2>}
       <div className="flex items-center gap-1">
         <button
           type="button"
@@ -484,44 +494,47 @@ export function FilterDrawer({
   readonly children: React.ReactNode
   readonly showLabel?: string
 }) {
-  if (!open) return null
+  const titleId = useId()
+  useEffect(() => {
+    if (!open) return
+    const desktop = window.matchMedia("(min-width: 1024px)")
+    const closeOnDesktop = () => {
+      if (desktop.matches) onClose()
+    }
+    closeOnDesktop()
+    desktop.addEventListener("change", closeOnDesktop)
+
+    return () => desktop.removeEventListener("change", closeOnDesktop)
+  }, [open, onClose])
 
   return (
-    <div className="fixed inset-0 z-[70] lg:hidden">
-      <button
-        type="button"
-        aria-label="Close filters"
-        onClick={onClose}
-        className="absolute inset-0 border-0"
-        style={{ background: T.overlay.scrim }}
-      />
-      <div
-        className="scrollbar-thin absolute inset-y-0 left-0 w-[min(340px,88vw)] overflow-y-auto p-5"
-        style={{ background: T.bg.void }}
-      >
-        <div className="mb-2 flex justify-end">
-          <button
-            type="button"
-            aria-label="Close filters"
-            onClick={onClose}
-            className="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 text-[18px]"
-            style={{ background: T.bg.muted2, color: T.ink.base }}
+    <Drawer
+      open={open}
+      onClose={onClose}
+      side="left"
+      size="md"
+      title="Filters"
+      titleId={titleId}
+      footer={
+        showLabel ? (
+          <div
+            className="shrink-0 border-t p-4"
+            style={{ borderColor: T.border.line }}
           >
-            ×
-          </button>
-        </div>
-        {children}
-        {showLabel ? (
-          <button
-            type="button"
-            onClick={onClose}
-            className="mt-4 w-full cursor-pointer rounded-full border-0 px-5 py-3 text-[16px] font-semibold text-white"
-            style={{ background: T.accent.primary }}
-          >
-            {showLabel}
-          </button>
-        ) : null}
-      </div>
-    </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="min-h-11 w-full rounded-full border-0 bg-(--t-accent-primary) px-5 py-3 text-[16px] font-semibold text-white hover:bg-(--t-accent-primary-hover)"
+            >
+              {showLabel}
+            </button>
+          </div>
+        ) : undefined
+      }
+    >
+      <FilterDrawerContext.Provider value>
+        <div className="px-5 py-4">{children}</div>
+      </FilterDrawerContext.Provider>
+    </Drawer>
   )
 }

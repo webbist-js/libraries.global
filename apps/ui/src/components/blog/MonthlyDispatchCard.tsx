@@ -4,7 +4,6 @@ import { useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
-import { PublicStrapiClient } from "@/lib/strapi-api"
 
 const CARD = "rounded-[20px] border p-5"
 
@@ -20,26 +19,12 @@ export function MonthlyDispatchCard() {
     if (!email.trim() || status === "saving") return
     setStatus("saving")
     try {
-      const path = PublicStrapiClient.getStrapiApiPathByUId(
-        "api::subscriber.subscriber"
-      )
-      await PublicStrapiClient.fetchAPI(
-        path,
-        undefined,
-        {
-          method: "POST",
-          // `message` plus the entry's createdAt is the consent record: what
-          // the person agreed to, and when.
-          body: JSON.stringify({
-            data: {
-              email: email.trim(),
-              message:
-                "Journal newsletter: agreed to receive new Journal articles by email, at most monthly",
-            },
-          }),
-        },
-        { useProxy: true }
-      )
+      const response = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), source: "journal" }),
+      })
+      if (!response.ok) throw new Error("Subscription could not be saved")
       setStatus("done")
     } catch {
       setStatus("error")

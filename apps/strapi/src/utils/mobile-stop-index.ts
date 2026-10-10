@@ -4,6 +4,7 @@ import {
   localDateTime,
   normalizeMobileTimetable,
   stopKeys,
+  stopFrequencies,
   type MobileTimetable,
   type TimetableNotice,
 } from "@repo/shared-data"
@@ -24,6 +25,7 @@ export const MOBILE_STOP_SETTINGS = {
     "country_slug",
     "kind",
     "shares_live",
+    "frequencies",
     "timezone",
     // Keyset paging for region and area stop lists: `id > last`, sorted by id.
     "id",
@@ -48,6 +50,7 @@ export const MOBILE_STOP_SETTINGS = {
     "cancelled_dates",
     "cycle",
     "visits",
+    "frequencies",
     "kind",
     "shares_live",
     "timezone",
@@ -113,6 +116,7 @@ export function mobileStopDocuments(
         cancelled_dates: cancelledDates(tt, notices, stop.id, today, 60),
         cycle: tt.cycle,
         visits,
+        frequencies: stopFrequencies(visits, tt.cycle),
         kind: "stop",
         shares_live: sharesLive,
         timezone: library.timezone ?? "UTC",

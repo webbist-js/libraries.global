@@ -57,6 +57,27 @@ describe("sitemap files", () => {
 })
 
 describe("sitemap xml", () => {
+  it("refuses URL and byte overflows instead of serving invalid XML", () => {
+    expect(() =>
+      urlsetXml(
+        Array.from({ length: 50_001 }, () => ({
+          url: "https://libraries.global/",
+        }))
+      )
+    ).toThrow("URL limit")
+    expect(() =>
+      sitemapIndexXml(
+        Array.from(
+          { length: 50_001 },
+          () => "https://libraries.global/sitemap.xml"
+        )
+      )
+    ).toThrow("index limit")
+    expect(() =>
+      urlsetXml([{ url: "https://libraries.global/" + "é".repeat(26_214_400) }])
+    ).toThrow("byte limit")
+  })
+
   it("escapes the five XML specials", () => {
     expect(escapeXml(`a&b<c>"d'`)).toBe("a&amp;b&lt;c&gt;&quot;d&apos;")
   })

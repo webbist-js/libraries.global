@@ -1,5 +1,5 @@
-import { resolveHierarchy } from "@/app/[locale]/contribute/index/_components/location.hierarchy"
-import { EMPTY_FORM } from "@/app/[locale]/contribute/index/_components/wizard.types"
+import { resolveHierarchy } from "@/components/library-editor/location.hierarchy"
+import { EMPTY_FORM } from "@/components/library-editor/wizard.types"
 import { placeNear } from "@/lib/geocode/client"
 import type { Place } from "@/lib/geocode/place"
 

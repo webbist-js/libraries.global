@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, permanentRedirect } from "next/navigation"
 import type { Locale } from "next-intl"
 import { use } from "react"
 
@@ -8,7 +8,6 @@ import { RegionDetailPage } from "@/components/region/RegionDetailPage"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { drivesHere } from "@/lib/drives/drives-here-server"
 import { placeGapCounts } from "@/lib/find-search"
-import { isDevelopment } from "@/lib/general-helpers"
 import { buildBreadcrumbSchema } from "@/lib/seo/json-ld"
 import {
   buildLibraryItemListSchema,
@@ -16,8 +15,8 @@ import {
   locationRobots,
   locationTitle,
 } from "@/lib/seo/location"
-import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
-import { fetchAllRegions, fetchRegion } from "@/lib/strapi-api/content/server"
+import { absoluteUrl, buildMetadata, localizedPath } from "@/lib/seo/metadata"
+import { fetchRegion } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 export const dynamic = "force-static"
@@ -50,6 +49,8 @@ export async function generateMetadata({
   const parentCountry = data.country?.slug ?? countrySlug
 
   return buildMetadata({
+    seo: data.seo,
+    alternateLocales: [locale],
     title: locationTitle(
       data.seo,
       countryName
@@ -57,7 +58,6 @@ export async function generateMetadata({
         : `Libraries in ${name}`
     ),
     description:
-      data.seo?.metaDescription ??
       data.summary ??
       buildLocationDescription({
         name: countryName ? `${name}, ${countryName}` : name,
@@ -78,25 +78,9 @@ export async function generateMetadata({
   })
 }
 
-export async function generateStaticParams({
-  params: { locale },
-}: {
-  params: { locale: string }
-}) {
-  if (isDevelopment()) {
-    return [
-      { continent: "europe", country: "england", region: "greater-london" },
-    ]
-  }
-  const results = await fetchAllRegions(locale as Locale)
-
-  return results.data
-    .filter((r) => r.continent?.slug && r.country?.slug && r.slug)
-    .map((r) => ({
-      continent: r.continent!.slug,
-      country: r.country!.slug,
-      region: r.slug,
-    }))
+/** Regions are cached on demand, so build cost doesn't grow with global coverage. */
+export function generateStaticParams() {
+  return []
 }
 
 export default function RegionPage(props: {
@@ -120,6 +104,16 @@ export default function RegionPage(props: {
   const regionData = use(regionPromise)?.data
 
   if (!regionData) notFound()
+  const realContinent =
+    regionData.continent?.slug ??
+    regionData.country?.continent?.slug ??
+    continentSlug
+  const realCountry = regionData.country?.slug ?? countrySlug
+  if (continentSlug !== realContinent || countrySlug !== realCountry) {
+    permanentRedirect(
+      localizedPath(`${realContinent}/${realCountry}/${slug}`, locale)
+    )
+  }
   const gapCounts = use(gapCountsPromise)
   const drives = use(drivesPromise)
   const parentContinent =

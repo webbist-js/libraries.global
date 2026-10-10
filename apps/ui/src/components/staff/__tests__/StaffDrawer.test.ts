@@ -230,7 +230,7 @@ describe("StaffDrawer", () => {
     expect(tiles).toContain(`/staff/${MOBILE.slug}/live`)
     expect(
       screen.getByRole("link", { name: /^Timetable/ }).getAttribute("href")
-    ).toBe(`/staff/${MOBILE.slug}/timetable`)
+    ).toBe(`/staff/${MOBILE.slug}/edit?step=timetable`)
     expect(screen.getAllByText("Mobile").length).toBe(2)
   })
 

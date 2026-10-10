@@ -15,7 +15,8 @@
       "type": "string"
     },
     "email": {
-      "type": "email"
+      "type": "email",
+      "required": true
     },
     "message": {
       "type": "text"
@@ -23,6 +24,40 @@
     "content": {
       "type": "customField",
       "customField": "plugin::tiptap-editor.RichText"
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": ["beta_waitlist", "newsletter"],
+      "required": true,
+      "default": "newsletter"
+    },
+    "state": {
+      "type": "enumeration",
+      "enum": ["active", "pending_confirmation", "unsubscribed", "suppressed"],
+      "default": "pending_confirmation",
+      "required": true
+    },
+    "source": {
+      "type": "enumeration",
+      "enum": ["beta_landing", "footer", "journal", "legacy"]
+    },
+    "communicationLocale": {
+      "type": "enumeration",
+      "enum": ["en", "cs"],
+      "default": "en"
+    },
+    "consentedAt": {
+      "type": "datetime"
+    },
+    "consentVersion": {
+      "type": "string"
+    },
+    "baUserId": {
+      "type": "string",
+      "private": true
+    },
+    "invitedAt": {
+      "type": "datetime"
     }
   }
 }

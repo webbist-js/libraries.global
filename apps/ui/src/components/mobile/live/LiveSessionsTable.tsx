@@ -66,7 +66,7 @@ export function LiveSessionsTable({
 
   return (
     <section
-      className="rounded-[20px] border p-6"
+      className="rounded-[24px] border p-5 sm:p-6"
       style={{ background: T.bg.deep, borderColor: T.border.line }}
       aria-labelledby="live-sessions-heading"
     >

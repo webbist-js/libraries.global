@@ -161,8 +161,6 @@ export function LibraryDetailPage({
 
   const facilities = facilityRows(library)
   const unanswered = facilities.filter((r) => r.state === "unknown")
-  const stepFree =
-    facilities.find((r) => r.label === "Step-free entrance")?.state ?? "yes"
   const hasFeed = Boolean(rec.hasActiveFeed)
   const collectionsFull = hasCollections(library)
   const mapNeighbours = area.neighbours.flatMap((n) =>
@@ -204,7 +202,6 @@ export function LibraryDetailPage({
             hasPhoto={Boolean(heroUrl)}
             library={library}
             neighbours={mapNeighbours}
-            stepFree={stepFree}
             untranslatedLocale={untranslatedLocale}
             wizardLibrary={wizardLibrary}
           />

@@ -5,11 +5,11 @@ import { StaffDrawerMenuItem } from "@/components/staff/StaffDrawerMenuItem"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { sessionTeamsOf } from "@/lib/access-server"
 import type { BetterAuthUser } from "@/lib/auth-server"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -132,14 +132,12 @@ export function GlobalLoggedUserMenu({
   const needsProfile = user.profileLoaded === true && !username
   // UI only: the routes behind these links re-check every capability.
   const caps = new Set<string>(user.capabilities)
-  const canModerate = caps.has("moderate.queue")
   const isStaff = caps.has("staff.area")
-  const teams = sessionTeamsOf(user)
-  const organises = teams.some((t) => t.role === "organiser")
-  const holdsEditorOrModerator =
-    canModerate || caps.has("docs.directEdit") || caps.has("journal.directEdit")
-  // Missing plan means free (missing session fields deny).
-  const hasPro = user.plan === "pro" || user.plan === "team"
+  const hasEditorialTools =
+    caps.has("docs.directEdit") ||
+    caps.has("journal.directEdit") ||
+    caps.has("moderate.queue") ||
+    caps.has("drives.manage")
   const planName = planShortName(user.plan)
 
   return (
@@ -147,6 +145,7 @@ export function GlobalLoggedUserMenu({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
+          aria-label={`Account menu for ${firstName}`}
           style={{
             display: "flex",
             alignItems: "center",
@@ -163,16 +162,24 @@ export function GlobalLoggedUserMenu({
             fontWeight: 600,
             color: T.ink.base,
           }}
-          className="hover:bg-(--t-bg-surface)"
+          className="group/profile hover:bg-(--t-bg-surface)"
         >
           <Avatar src={avatarSrc} initials={initials} size={32} />
           <span>{firstName}</span>
+          <Icon
+            icon="mdi:chevron-down"
+            width={18}
+            height={18}
+            aria-hidden="true"
+            className="shrink-0 transition-transform group-data-[state=open]/profile:rotate-180"
+          />
         </button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
+        aria-label="Account menu"
         align="end"
-        sideOffset={8}
+        sideOffset={20}
         className="w-[272px] rounded-[20px] border p-2 shadow-none"
         style={{ background: T.bg.deep, borderColor: T.border.hi }}
       >
@@ -198,64 +205,52 @@ export function GlobalLoggedUserMenu({
           </div>
         </div>
 
-        {username ? (
-          <>
+        <DropdownMenuGroup aria-label="Profile">
+          {needsProfile ? (
+            <MenuLink href="/profile/settings" icon="mdi:account-plus-outline">
+              Complete your profile
+            </MenuLink>
+          ) : (
             <MenuLink
-              href={`/profile/${username}`}
+              href={username ? `/profile/${username}` : "/profile"}
               icon="mdi:account-circle-outline"
             >
               My profile
             </MenuLink>
-            {/* Everything sent or started, drafts included. The accepted
-                ones, the public record, are a tab on My profile. */}
-            <MenuLink
-              href="/contribute/submissions"
-              icon="mdi:inbox-multiple-outline"
-            >
-              My submissions
-            </MenuLink>
-            <MenuLink
-              href={`/profile/${username}/badges`}
-              icon="mdi:medal-outline"
-            >
-              Badges & points
-            </MenuLink>
-          </>
-        ) : needsProfile ? (
-          /* No profile yet — prompt to complete setup */
-          <MenuLink href="/profile/settings" icon="mdi:account-plus-outline">
-            Complete your profile
-          </MenuLink>
-        ) : null}
+          )}
+          {username ? (
+            <>
+              <MenuLink
+                href={`/profile/${username}/following`}
+                icon="mdi:heart-outline"
+              >
+                Following
+              </MenuLink>
+              <MenuLink
+                href={`/profile/${username}/badges`}
+                icon="mdi:medal-outline"
+              >
+                Badges & points
+              </MenuLink>
+            </>
+          ) : null}
+        </DropdownMenuGroup>
 
-        {isStaff ? (
+        {/* Contribution pages live in Contribute. Keep only the drawer
+            controls here so they remain easy to open on smaller screens. */}
+        {isStaff || hasEditorialTools ? (
           <>
-            <MenuLink href="/staff" icon="mdi:shield-account-outline">
-              Staff area
-            </MenuLink>
-            <StaffDrawerMenuItem />
+            <DropdownMenuSeparator
+              className="mx-1 my-1.5"
+              style={{ background: T.border.divider }}
+            />
+            <DropdownMenuGroup aria-label="Tools">
+              {isStaff ? <StaffDrawerMenuItem /> : null}
+              {hasEditorialTools ? (
+                <StaffDrawerMenuItem drawer="editorial" />
+              ) : null}
+            </DropdownMenuGroup>
           </>
-        ) : null}
-        {teams.length > 0 ? (
-          <MenuLink href="/staff/team" icon="mdi:account-group-outline">
-            {organises ? "Your team (organiser)" : "Your team"}
-          </MenuLink>
-        ) : null}
-        {canModerate ? (
-          <MenuLink
-            href="/contribute/moderation"
-            icon="mdi:shield-check-outline"
-          >
-            Moderation
-          </MenuLink>
-        ) : null}
-        {!holdsEditorOrModerator && user.profileLoaded === true ? (
-          <MenuLink
-            href="/contribute/knowledge/apply"
-            icon="mdi:account-star-outline"
-          >
-            Apply for a role
-          </MenuLink>
         ) : null}
 
         <DropdownMenuSeparator
@@ -263,28 +258,36 @@ export function GlobalLoggedUserMenu({
           style={{ background: T.border.divider }}
         />
 
-        <MenuLink
-          href="/contribute/membership"
-          icon="mdi:star-circle-outline"
-          trailing={
-            hasPro ? (
+        <DropdownMenuGroup aria-label="Account">
+          <MenuLink
+            href="/contribute/membership"
+            icon="mdi:star-circle-outline"
+            trailing={
               <span
                 className="ml-auto rounded-full px-2 py-0.5 text-[12px] font-semibold"
                 style={{
-                  background: T.accent.chip,
-                  color: T.accent.primaryHover,
+                  background:
+                    planName === "Free" ? T.bg.surface : T.accent.chip,
+                  color:
+                    planName === "Free" ? T.ink.dim : T.accent.primaryHover,
                 }}
               >
-                Pro
+                {planName}
               </span>
-            ) : undefined
-          }
-        >
-          Plan: {planName}
-        </MenuLink>
-        <MenuLink href="/profile/settings" icon="mdi:cog-outline">
-          Settings
-        </MenuLink>
+            }
+          >
+            Membership
+          </MenuLink>
+          <MenuLink href="/profile/settings" icon="mdi:cog-outline">
+            Settings
+          </MenuLink>
+        </DropdownMenuGroup>
+
+        <DropdownMenuSeparator
+          className="mx-1 my-1.5"
+          style={{ background: T.border.divider }}
+        />
+
         <MenuLink href="/auth/signout" icon="mdi:logout">
           Sign out
         </MenuLink>

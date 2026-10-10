@@ -1,6 +1,8 @@
 import { completenessOf, gapsOf, type GapKey } from "@repo/shared-data"
 import type { Core } from "@strapi/strapi"
 
+import { withAtlasLibraryWrite } from "./atlas-outbox"
+
 const LIBRARY = "api::library.library"
 
 export type OpeningTimes = {
@@ -150,9 +152,11 @@ export async function refreshLibraryCompleteness(
       completeness !== row.completeness ||
       JSON.stringify(gaps) !== JSON.stringify(row.gaps ?? null)
     ) {
-      await strapi.db
-        .query(LIBRARY)
-        .update({ where: { id: row.id }, data: { completeness, gaps } })
+      await withAtlasLibraryWrite(strapi, [row.documentId], () =>
+        strapi.db
+          .query(LIBRARY)
+          .update({ where: { id: row.id }, data: { completeness, gaps } })
+      )
     }
 
     return completeness
@@ -204,13 +208,15 @@ export async function backfillLibraryCompleteness(
         })) as unknown as (LibraryRow & CompletenessSource)[]
         if (rows.length === 0) break
         for (const row of rows) {
-          await strapi.db.query(LIBRARY).update({
-            where: { id: row.id },
-            data: {
-              completeness: computeCompleteness(row),
-              gaps: computeGaps(row),
-            },
-          })
+          await withAtlasLibraryWrite(strapi, [row.documentId], () =>
+            strapi.db.query(LIBRARY).update({
+              where: { id: row.id },
+              data: {
+                completeness: computeCompleteness(row),
+                gaps: computeGaps(row),
+              },
+            })
+          )
           written++
         }
         if (rows.length < BACKFILL_PAGE) break

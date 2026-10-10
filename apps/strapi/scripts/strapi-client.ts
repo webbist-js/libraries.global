@@ -211,6 +211,7 @@ export class StrapiClient {
       "Content-Type": "application/json",
       Authorization: `Bearer ${STRAPI_API_TOKEN}`,
       "X-Service-Secret": STRAPI_BRIDGE_SECRET,
+      "X-Library-Ingest": "true",
     }
   }
 
@@ -549,7 +550,7 @@ export class StrapiClient {
   async createLibrary(data: LibraryCreateData): Promise<StrapiEntity> {
     const res = await this.post<{ data: StrapiEntity }>(
       "/libraries?status=draft",
-      { data }
+      { data: this.withSourceDates(data) }
     )
 
     return res.data
@@ -561,10 +562,23 @@ export class StrapiClient {
   ): Promise<StrapiEntity> {
     const res = await this.put<{ data: StrapiEntity }>(
       `/libraries/${documentId}`,
-      { data }
+      { data: this.withSourceDates(data) }
     )
 
     return res.data
+  }
+
+  private withSourceDates<T extends Partial<LibraryCreateData>>(data: T): T {
+    if (!data.sourceRecords) return data
+    const retrievedAt = new Date().toISOString().slice(0, 10)
+
+    return {
+      ...data,
+      sourceRecords: data.sourceRecords.map((source) => ({
+        ...source,
+        retrievedAt: source.retrievedAt ?? retrievedAt,
+      })),
+    }
   }
 
   async libraryExistsBySlug(slug: string): Promise<string | null> {

@@ -7,6 +7,8 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Bloom, EffectComposer } from "@react-three/postprocessing"
 import {
   Suspense,
+  type ComponentRef,
+  type RefObject,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -783,12 +785,12 @@ function createDustGeometry() {
   return geometry
 }
 
-function OrbitalDust() {
+function OrbitalDust({ animate }: { readonly animate: boolean }) {
   const geometry = useMemo(() => createDustGeometry(), [])
   const uniforms = useMemo(
     () => ({
       uColor: { value: new THREE.Color("#8a80ea") },
-      uOpacity: { value: 0.6 },
+      uOpacity: { value: 0.45 },
       uPlanetRadius: { value: EARTH_RADIUS },
       uSizeScale: { value: 0.9 },
       uTime: { value: 0 },
@@ -802,7 +804,7 @@ function OrbitalDust() {
 
   useFrame(({ clock }) => {
     const timeUniform = materialRef.current?.uniforms.uTime
-    if (timeUniform != null) timeUniform.value = clock.elapsedTime
+    if (timeUniform != null) timeUniform.value = animate ? clock.elapsedTime : 0
   })
 
   return (
@@ -1102,6 +1104,9 @@ export type GlobeOverrides = {
   cameraZ?: number
   dprMax?: number
   globePitch?: number
+  /** Centered globe radius as a fraction of the canvas's shorter edge.
+   * Keeps the full sphere visible in both square and tall preview panels. */
+  fitRadius?: number
   globeScale?: number
   globeTilt?: number
   globeY?: number
@@ -1193,6 +1198,29 @@ function useCornerPin(pin: GlobeCornerPin | undefined) {
   return frame?.scale ?? null
 }
 
+function useCenteredScale(fitRadius: number | undefined) {
+  const { width, height } = useThree((state) => state.size)
+  const camera = useThree((state) => state.camera)
+
+  return useMemo(() => {
+    if (
+      fitRadius === undefined ||
+      !(camera instanceof THREE.PerspectiveCamera) ||
+      width <= 0 ||
+      height <= 0
+    )
+      return null
+
+    const radiusPx = Math.min(width, height) * fitRadius
+    const focalPx =
+      height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2))
+    const sphereRadius =
+      camera.position.length() * Math.sin(Math.atan(radiusPx / focalPx))
+
+    return sphereRadius / EARTH_RADIUS
+  }, [fitRadius, width, height, camera])
+}
+
 function pickStartView(views: readonly GlobeView[] | undefined) {
   if (!views?.length) return null
 
@@ -1247,17 +1275,20 @@ function facingAngles(
 function GlobeScene({
   markers,
   overrides,
+  controlsRef,
 }: {
-  readonly markers?: LibraryMarker[]
+  readonly markers?: readonly LibraryMarker[]
   readonly overrides?: GlobeOverrides
+  readonly controlsRef: RefObject<ComponentRef<typeof OrbitControls> | null>
 }) {
   const pinned = overrides?.pin !== undefined
   const pinScale = useCornerPin(overrides?.pin)
+  const centeredScale = useCenteredScale(overrides?.fitRadius)
   // Picked once per mount, so a fresh visit opens on a different region.
   const [startView] = useState(() => pickStartView(overrides?.startViews))
   // Real records replace the illustrative dataset when available.
   const dataLayers = useMemo(() => {
-    if (!markers || markers.length === 0) return null
+    if (!markers) return null
     const { hubs, lights } = buildLibraryLights(markers)
     const arcs = buildLibraryArcs(markers)
 
@@ -1298,7 +1329,13 @@ function GlobeScene({
       : centroid
         ? 0
         : EARTH_TILT
-  const autoRotate = overrides?.autoRotate ?? true
+  const reducedMotion = useMemo(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    []
+  )
+  const autoRotate = (overrides?.autoRotate ?? true) && !reducedMotion
   const autoRotateSpeed =
     overrides?.autoRotateSpeed ?? GLOBE_SETTINGS.autoRotateSpeed
   const interactive = overrides?.interactive ?? true
@@ -1364,10 +1401,10 @@ function GlobeScene({
 
       <group
         position={pinned ? [0, 0, 0] : [-0.02, globeY, 0]}
-        scale={pinScale ?? globeScale}
+        scale={pinScale ?? centeredScale ?? globeScale}
       >
         {showSatellites ? <Satellites /> : null}
-        {showDust ? <OrbitalDust /> : null}
+        {showDust ? <OrbitalDust animate={!reducedMotion} /> : null}
 
         {/* Pitch/tilt applied outside, yaw inside — so yaw spins the sphere
             about its own poles and lng→front math stays exact. */}
@@ -1396,28 +1433,27 @@ function GlobeScene({
                   ))
                 : null}
 
-              {showNodes && dataLayers ? (
-                <LibraryPointsLayer lights={knowledgeLights} />
-              ) : null}
-
-              {showNodes && !dataLayers
-                ? knowledgeLights.map((light) => (
-                    <KnowledgeNode
-                      key={`${light.phase}-${light.size}`}
-                      light={light}
-                    />
-                  ))
-                : null}
-
-              {showNodes
-                ? hubMarkers.map((light) => (
+              {showNodes ? (
+                <>
+                  {dataLayers ? (
+                    <LibraryPointsLayer lights={knowledgeLights} />
+                  ) : (
+                    knowledgeLights.map((light) => (
+                      <KnowledgeNode
+                        key={`${light.phase}-${light.size}`}
+                        light={light}
+                      />
+                    ))
+                  )}
+                  {hubMarkers.map((light) => (
                     <KnowledgeNode
                       key={`hub-${light.phase}-${light.size}`}
                       light={light}
                       prominent
                     />
-                  ))
-                : null}
+                  ))}
+                </>
+              ) : null}
             </group>
           </PolarSpin>
         </group>
@@ -1425,6 +1461,7 @@ function GlobeScene({
 
       {pinned ? null : (
         <OrbitControls
+          ref={controlsRef}
           autoRotate={autoRotate}
           autoRotateSpeed={autoRotateSpeed}
           dampingFactor={0.08}
@@ -1455,11 +1492,14 @@ export function KnowledgeGlobeCanvas({
   className,
   markers,
   overrides,
+  active = true,
 }: {
   readonly className?: string
-  readonly markers?: LibraryMarker[]
+  readonly markers?: readonly LibraryMarker[]
   readonly overrides?: GlobeOverrides
+  readonly active?: boolean
 }) {
+  const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null)
   const fov = overrides?.cameraFov ?? GLOBE_SETTINGS.cameraFov
   const cameraZ = overrides?.cameraZ ?? GLOBE_SETTINGS.cameraZ
   const cameraY = overrides?.cameraY ?? 0.06
@@ -1467,7 +1507,44 @@ export function KnowledgeGlobeCanvas({
   const interactive = overrides?.interactive ?? true
 
   return (
-    <div className={cn("relative h-full w-full", className)}>
+    <div
+      className={cn(
+        "relative h-full w-full focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-[#B9B4F5]",
+        className
+      )}
+      role={interactive && !pinned ? "group" : undefined}
+      tabIndex={interactive && !pinned ? 0 : undefined}
+      aria-label={
+        interactive && !pinned
+          ? "Library locations globe. Drag or use the arrow keys to rotate."
+          : undefined
+      }
+      onKeyDown={(event) => {
+        const controls = controlsRef.current
+        if (
+          !controls ||
+          !interactive ||
+          pinned ||
+          event.target !== event.currentTarget
+        )
+          return
+
+        const step = Math.PI / 18
+        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+          controls.setAzimuthalAngle(
+            controls.getAzimuthalAngle() +
+              (event.key === "ArrowLeft" ? step : -step)
+          )
+        } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+          controls.setPolarAngle(
+            controls.getPolarAngle() + (event.key === "ArrowUp" ? -step : step)
+          )
+        } else {
+          return
+        }
+        event.preventDefault()
+      }}
+    >
       {/* Ambient canvas glow — a soft warm indigo wash behind the globe */}
       {pinned ? null : (
         <div
@@ -1480,6 +1557,7 @@ export function KnowledgeGlobeCanvas({
         />
       )}
       <Canvas
+        frameloop={active ? "always" : "never"}
         camera={{
           fov,
           position: [0, cameraY, cameraZ],
@@ -1500,7 +1578,11 @@ export function KnowledgeGlobeCanvas({
         performance={{ min: 0.75 }}
       >
         <Suspense fallback={null}>
-          <GlobeScene markers={markers} overrides={overrides} />
+          <GlobeScene
+            markers={markers}
+            overrides={overrides}
+            controlsRef={controlsRef}
+          />
         </Suspense>
       </Canvas>
     </div>

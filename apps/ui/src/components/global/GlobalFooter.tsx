@@ -3,7 +3,6 @@ import type { Data } from "@repo/strapi-types"
 import type { Locale } from "next-intl"
 
 import { Container } from "@/components/elementary/Container"
-import GlobalContributorShortcuts from "@/components/global/GlobalContributorShortcuts"
 import GlobalLink from "@/components/global/GlobalLink"
 import { getStrapiLinkHref } from "@/components/page-builder/components/utilities/StrapiLink"
 import { KOFI_URL, SITE_NAME } from "@/lib/constants"
@@ -123,9 +122,6 @@ export function GlobalFooter({
                 ))}
               </div>
             ) : null}
-
-            {/* Signed-in editors: the tools their role unlocks */}
-            <GlobalContributorShortcuts variant="footer" />
           </div>
         </div>
 

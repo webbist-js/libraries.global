@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, permanentRedirect } from "next/navigation"
 import type { Locale } from "next-intl"
 import { use } from "react"
 
@@ -15,7 +15,7 @@ import {
   locationRobots,
   locationTitle,
 } from "@/lib/seo/location"
-import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
+import { absoluteUrl, buildMetadata, localizedPath } from "@/lib/seo/metadata"
 import {
   fetchAllCountries,
   fetchCountry,
@@ -38,9 +38,10 @@ export async function generateMetadata({
   const name = data.name ?? "Country"
 
   return buildMetadata({
+    seo: data.seo,
+    alternateLocales: [locale],
     title: locationTitle(data.seo, `Libraries in ${name}`),
     description:
-      data.seo?.metaDescription ??
       data.summary ??
       buildLocationDescription({
         name,
@@ -91,6 +92,14 @@ export default function CountryPage(props: {
   const countryData = use(countryPromise)?.data
 
   if (!countryData) notFound()
+  if (
+    countryData.continent?.slug &&
+    countryData.continent.slug !== continentSlug
+  ) {
+    permanentRedirect(
+      localizedPath(`${countryData.continent.slug}/${slug}`, locale)
+    )
+  }
   const drives = use(drivesPromise)
   const parentSlug = countryData.continent?.slug ?? continentSlug
 

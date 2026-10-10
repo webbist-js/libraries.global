@@ -3,11 +3,11 @@
 import { Icon } from "@iconify/react"
 import { useLocale } from "next-intl"
 
-import { translateTargets } from "@/app/[locale]/contribute/index/_components/translation-mode"
 import { hubHref } from "@/components/contribute/wizard.logic"
 import type { ChecklistKey } from "@/components/library/library-page.helpers"
 import { useCorrectionDrawer } from "@/components/library/LibraryCorrection"
 import { LibraryDriveNote } from "@/components/library/LibraryDriveNote"
+import { translateTargets } from "@/components/library-editor/translation-mode"
 import { T } from "@/lib/design-tokens"
 import { Link, usePathname } from "@/lib/navigation"
 

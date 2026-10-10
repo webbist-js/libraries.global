@@ -1,15 +1,18 @@
 import type { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, permanentRedirect } from "next/navigation"
 import type { Locale } from "next-intl"
 import { use } from "react"
 
 import BlogArticlePage from "@/components/blog/BlogArticlePage"
 import { JsonLd } from "@/components/seo/JsonLd"
-import { isDevelopment } from "@/lib/general-helpers"
 import { buildArticleSchema, buildBreadcrumbSchema } from "@/lib/seo/json-ld"
-import { absoluteUrl, buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
 import {
-  fetchAllBlogArticleSlugs,
+  absoluteUrl,
+  buildMetadata,
+  localizedPath,
+  SITE_NAME,
+} from "@/lib/seo/metadata"
+import {
   fetchBlogArticle,
   fetchRecentBlogArticles,
 } from "@/lib/strapi-api/content/server"
@@ -19,20 +22,9 @@ export const dynamic = "force-static"
 export const revalidate = 300
 export const dynamicParams = true
 
-export async function generateStaticParams({
-  params: { locale },
-}: {
-  params: { locale: string }
-}) {
-  if (isDevelopment()) return []
-  const result = await fetchAllBlogArticleSlugs(locale as Locale)
-
-  return result.data
-    .filter((a) => a.slug)
-    .map((a) => ({
-      section: a.section?.slug ?? "general",
-      slug: a.slug as string,
-    }))
+/** Articles are cached on demand; builds never enumerate the whole Journal. */
+export function generateStaticParams() {
+  return []
 }
 
 function articleSection(
@@ -47,20 +39,21 @@ export async function generateMetadata({
 }: {
   params: Promise<{ locale: string; section: string; slug: string }>
 }): Promise<Metadata> {
-  const { locale, section, slug } = await params
+  const { locale, slug } = await params
   const res = await fetchBlogArticle(slug, locale as Locale)
   const data = res?.data
   if (!data) return { title: "Article not found", robots: { index: false } }
 
-  const title = data.seo?.metaTitle ?? data.title ?? "Article"
+  const title = data.title ?? "Article"
 
   return buildMetadata({
+    seo: data.seo,
+    alternateLocales: [locale],
     title,
     description:
-      data.seo?.metaDescription ??
       data.summary ??
-      `Read "${data.title ?? "this article"}" on the ${SITE_NAME} blog.`,
-    path: `blog/${articleSection(data, section)}/${slug}`,
+      `Read "${data.title ?? "this article"}" in the ${SITE_NAME} Journal.`,
+    path: `journal/${articleSection(data, "general")}/${slug}`,
     locale,
     type: "article",
     image: formatStrapiMediaUrl(
@@ -73,11 +66,7 @@ export async function generateMetadata({
     modifiedTime: data.updatedAt,
     authors: data.author ? [data.author] : undefined,
     // A default-locale stand-in for a missing translation isn't indexed.
-    robots: data.seo?.metaRobots?.replaceAll(" ", "").startsWith("noindex")
-      ? "noindex"
-      : res?.localeFallback
-        ? "noindex-follow"
-        : "index",
+    robots: res?.localeFallback ? "noindex-follow" : "index",
   })
 }
 
@@ -90,8 +79,14 @@ export default function BlogArticleRoute(props: {
   const articleRes = use(fetchBlogArticle(slug, locale))
   const article = articleRes?.data ?? null
   if (!article) notFound()
+  const canonicalSection = articleSection(article, "general")
+  if (section !== canonicalSection) {
+    permanentRedirect(
+      localizedPath(`journal/${canonicalSection}/${slug}`, locale)
+    )
+  }
   const related = use(fetchRecentBlogArticles(locale))?.data ?? []
-  const path = `blog/${articleSection(article, section)}/${slug}`
+  const path = `journal/${articleSection(article, "general")}/${slug}`
   const url = absoluteUrl(path, locale)
 
   return (

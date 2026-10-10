@@ -1,24 +1,27 @@
+import { noticeLocalDate } from "@repo/shared-data"
 import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import type { Locale } from "next-intl"
 
 import { computeCompleteness } from "@/components/library/library-page.helpers"
+import { IndexRecordWizard } from "@/components/library-editor/IndexRecordWizard"
+import {
+  resolveEditLocale,
+  translationMode,
+} from "@/components/library-editor/translation-mode"
+import { prefillLibrary } from "@/components/library-editor/wizard.prefill"
+import { wizardStepOf } from "@/components/library-editor/wizard.steps"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 import { languageName } from "@/lib/locale-fallback"
+import { fetchMobileTimetable } from "@/lib/mobile/server"
 import { routing } from "@/lib/navigation"
 import { privateMetadata } from "@/lib/seo/metadata"
 import { staffLibraryHref } from "@/lib/staff/paths"
 import { fetchLibraryForEditing } from "@/lib/strapi-api/content/server"
 
 import { ContributeSectionHeader } from "../../_components/ContributeSectionHeader"
-import { IndexRecordWizard } from "../_components/IndexRecordWizard"
-import {
-  resolveEditLocale,
-  translationMode,
-} from "../_components/translation-mode"
-import { prefillLibrary } from "../_components/wizard.prefill"
 
 export const metadata = privateMetadata("Improve a library record")
 
@@ -27,7 +30,10 @@ export default async function ImproveLibraryPage({
   searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>
-  searchParams: Promise<{ locale?: string | string[] }>
+  searchParams: Promise<{
+    locale?: string | string[]
+    step?: string | string[]
+  }>
 }) {
   const [{ slug }, query, locales] = await Promise.all([
     params,
@@ -63,8 +69,16 @@ export default async function ImproveLibraryPage({
   if (
     Array.isArray(staffLibraries) &&
     staffLibraries.some((entry) => entry?.id === library.documentId)
-  )
-    redirect(staffLibraryHref(slug, "/edit"))
+  ) {
+    const editQuery = new URLSearchParams()
+    if (translating) editQuery.set("locale", editLocale)
+    const stepParam = Array.isArray(query.step) ? query.step[0] : query.step
+    if (wizardStepOf(stepParam, library.libraryType === "Mobile"))
+      editQuery.set("step", stepParam!)
+    redirect(
+      staffLibraryHref(slug, `/edit${editQuery.size ? `?${editQuery}` : ""}`)
+    )
+  }
 
   const claimed = ((session.user as { claimedLibraryIds?: unknown })
     .claimedLibraryIds ?? []) as string[]
@@ -74,6 +88,14 @@ export default async function ImproveLibraryPage({
     library as Parameters<typeof computeCompleteness>[0]
   )
   const name = library.name || slug
+  const mobile =
+    library.libraryType === "Mobile"
+      ? await fetchMobileTimetable(library.documentId)
+      : null
+  const initialStep = wizardStepOf(
+    Array.isArray(query.step) ? query.step[0] : query.step,
+    library.libraryType === "Mobile"
+  )
 
   return (
     <div
@@ -91,6 +113,16 @@ export default async function ImproveLibraryPage({
       />
       <IndexRecordWizard
         mode="improve"
+        initialStep={initialStep}
+        timetableContext={
+          mobile
+            ? {
+                notices: mobile.notices,
+                timezone: mobile.timezone,
+                today: noticeLocalDate(new Date(), mobile.timezone),
+              }
+            : undefined
+        }
         locale={{
           code: editLocale,
           defaultCode: defaultLocale,

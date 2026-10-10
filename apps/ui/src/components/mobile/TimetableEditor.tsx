@@ -38,15 +38,9 @@ import {
   useState,
 } from "react"
 
-import { LocationLookup } from "@/app/[locale]/contribute/index/_components/LocationLookup"
-import { LocationPinMap } from "@/app/[locale]/contribute/index/_components/LocationPinMap"
-import {
-  EmptyState,
-  Notice,
-  SegmentedControl,
-  Sheet,
-  Switch,
-} from "@/components/ds"
+import { EmptyState, Sheet, Switch } from "@/components/ds"
+import { LocationLookup } from "@/components/library-editor/LocationLookup"
+import { LocationPinMap } from "@/components/library-editor/LocationPinMap"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import type { Place } from "@/lib/geocode/place"
 import { shortDate } from "@/lib/staff/format"
@@ -67,21 +61,21 @@ const labels = [
 ]
 const field = {
   border: `1px solid ${T.border.hi}`,
-  borderRadius: 14,
-  padding: "10px 14px",
+  borderRadius: 8,
+  padding: "7px 10px",
   background: T.bg.deep,
   color: T.ink.base,
-  minHeight: 44,
+  minHeight: 40,
   width: "100%",
-  fontSize: 15,
+  fontSize: 14,
 }
 const OUTLINED =
-  "inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
+  "inline-flex min-h-10 items-center gap-1.5 rounded-full border bg-white px-3 text-[13px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
 const PILL_ACTIVE =
-  "inline-flex min-h-11 items-center gap-1.5 rounded-full px-4 text-[14px] font-semibold"
+  "inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold"
 const ICON_BUTTON =
-  "inline-flex size-11 items-center justify-center rounded-full border bg-white transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-40"
-const labelStyle = { fontSize: 14, fontWeight: 600, color: T.ink.base }
+  "inline-flex size-7 items-center justify-center rounded-[8px] border bg-white transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-40"
+const labelStyle = { fontSize: 13, fontWeight: 600, color: T.ink.base }
 const EPOCH_MONDAY = "1970-01-05"
 
 /** The Monday of the week holding `date`; the epoch Monday without one. */
@@ -109,19 +103,53 @@ function Chip({
     tone === "danger"
       ? { bg: TYPE_TINT.special.bg, fg: T.accent.danger }
       : tone === "warn"
-        ? { bg: T.bg.muted, fg: T.accent.warn }
+        ? { bg: "#F5EEDC", fg: T.accent.warn }
         : tone === "info"
           ? { bg: T.accent.chip, fg: T.accent.primary }
           : { bg: T.bg.muted, fg: T.ink.dim }
 
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12.5px] font-semibold whitespace-nowrap"
+      className="inline-flex min-w-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] leading-tight font-semibold"
       style={{ background: tint.bg, color: tint.fg }}
     >
       {icon ? <Icon aria-hidden="true" icon={icon} width={13} /> : null}
       {children}
     </span>
+  )
+}
+
+function TimetableAlert({
+  tone,
+  icon = "mdi:alert-outline",
+  children,
+}: {
+  tone: "warn" | "info" | "danger"
+  icon?: string
+  children: ReactNode
+}) {
+  const tint =
+    tone === "danger"
+      ? { bg: TYPE_TINT.special.bg, border: T.edge.danger, fg: T.accent.danger }
+      : tone === "warn"
+        ? { bg: "#F5EEDC", border: T.edge.warn, fg: T.accent.warn }
+        : { bg: T.accent.chip, border: T.edge.info, fg: T.accent.primary }
+
+  return (
+    <div
+      role={tone === "danger" ? "alert" : "status"}
+      className="flex items-start gap-2 rounded-[10px] border px-3 py-2 text-[13px] leading-relaxed"
+      style={{ background: tint.bg, borderColor: tint.border }}
+    >
+      <Icon
+        aria-hidden="true"
+        icon={icon}
+        width={16}
+        className="mt-0.5 shrink-0"
+        style={{ color: tint.fg }}
+      />
+      <div className="min-w-0">{children}</div>
+    </div>
   )
 }
 
@@ -331,6 +359,9 @@ export function TimetableEditor({
     issues.some((i) => i.code === code && i.visitIds.includes(visitId))
   const errors = issues.filter((i) => i.level === "error"),
     warnings = issues.filter((i) => i.level === "warning")
+  const bannerWarnings = warnings.filter(
+    (issue) => allStops || issue.code !== "travel_time"
+  )
   const noticeFrom = today ?? monday
   const activeNotices = notices.filter(
     (n) =>
@@ -341,19 +372,19 @@ export function TimetableEditor({
   const dayLabel = `${labels[WEEKDAYS.indexOf(day)]}, Week ${week}`
 
   return (
-    <div className="space-y-6" style={{ color: T.ink.base }}>
+    <div className="space-y-4" style={{ color: T.ink.base }}>
       {/* Cycle bar */}
       <div
-        className="flex flex-wrap items-end gap-4 rounded-[20px] border p-4 sm:p-5"
+        className="flex flex-wrap items-end gap-3 rounded-[16px] border p-4"
         style={{ background: T.bg.deep, borderColor: T.border.line }}
       >
         <label className="flex flex-col gap-1.5" style={labelStyle}>
-          Repeat every
+          Timetable repeats every
           <select
             aria-label="Cycle length"
             disabled={disabled}
             value={tt.cycle.weeks}
-            style={{ ...field, width: "auto", minWidth: 150, fontWeight: 400 }}
+            style={{ ...field, width: "auto", minWidth: 140, fontWeight: 400 }}
             onChange={(e) => {
               const weeks = Number(e.target.value) as 1 | 2 | 3 | 4
               setWeek(1)
@@ -401,7 +432,7 @@ export function TimetableEditor({
           />
         </label>
         <p
-          className="m-0 min-h-11 flex-1 self-end py-2.5 text-[14px]"
+          className="m-0 min-h-10 min-w-32 flex-1 self-end py-2 text-[13px]"
           style={{ color: T.ink.dim }}
         >
           {tt.stops.length} {tt.stops.length === 1 ? "stop" : "stops"} ·{" "}
@@ -497,56 +528,95 @@ export function TimetableEditor({
         </button>
       </div>
 
-      {/* Banners */}
-      {activeNotices.map((n) => (
-        <Notice
-          key={n.id}
-          tone={n.type === "not_running" ? "warn" : "info"}
-          icon={
-            n.type === "not_running"
-              ? "mdi:bus-alert"
-              : "mdi:information-outline"
-          }
-          title={`${LIBRARY_NOTICE_LABELS[n.type]} · ${shortDate(n.from)}${n.to ? ` – ${shortDate(n.to)}` : ""}`}
-        >
-          <p className="m-0">{n.message}</p>
-        </Notice>
-      ))}
-      {errors.length > 0 && (
-        <div
-          role="alert"
-          className="flex items-start gap-3 rounded-[16px] px-4 py-3.5"
-          style={{ background: TYPE_TINT.special.bg, color: T.accent.danger }}
-        >
-          <Icon
-            aria-hidden="true"
-            icon="mdi:alert-circle-outline"
-            width={20}
-            className="mt-0.5 shrink-0"
-          />
-          <div className="text-[15px] leading-[1.55]">
-            <p className="m-0 font-semibold">Resolve these before publishing</p>
-            <ul className="m-0 mt-1 list-disc pl-5">
-              {errors.map((issue, i) => (
-                <li key={`${issue.code}-${i}`}>{issue.message}</li>
-              ))}
-            </ul>
+      {/* Day tabs span both the stop list and the map. */}
+      {!allStops ? (
+        <div className="space-y-1.5">
+          <fieldset
+            className="m-0 min-w-0 rounded-[12px] border-0 p-1"
+            style={{ background: T.bg.muted2 }}
+          >
+            <legend className="sr-only">Weekday</legend>
+            <div className="flex">
+              {shownDays.map((d) => {
+                const count = tt.visits.filter(
+                  (v) => v.day === d && inWeek(v)
+                ).length
+                const active = day === d
+
+                return (
+                  <label
+                    key={d}
+                    className="flex min-h-11 min-w-0 flex-1 cursor-pointer flex-col items-center justify-center rounded-[8px] px-1 text-[13px] font-semibold has-focus-visible:outline-[3px] has-focus-visible:outline-offset-2 has-focus-visible:outline-(--t-accent-primary) has-focus-visible:outline-solid"
+                    style={{ background: active ? T.bg.deep : undefined }}
+                  >
+                    <input
+                      type="radio"
+                      name={`${listId}-weekday`}
+                      value={d}
+                      checked={active}
+                      onChange={() => setDay(d)}
+                      className="sr-only"
+                    />
+                    {labels[WEEKDAYS.indexOf(d)]!.slice(0, 3)}
+                    <span
+                      className="text-[11px] leading-tight font-normal"
+                      style={{ color: T.ink.dim }}
+                    >
+                      {count} {count === 1 ? "stop" : "stops"}
+                    </span>
+                  </label>
+                )
+              })}
+            </div>
+          </fieldset>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              className="inline-flex min-h-6 items-center text-[12px] font-semibold underline underline-offset-[3px]"
+              style={{ color: T.accent.primary }}
+              onClick={() => setWeekends(!weekends)}
+            >
+              {weekends ? "Hide weekends" : "Show weekends"}
+            </button>
           </div>
         </div>
-      )}
-      {warnings.length > 0 && (
-        <Notice
-          tone="warn"
-          icon="mdi:alert-outline"
-          title="Check these before publishing"
-        >
-          <ul className="m-0 list-disc pl-5">
-            {warnings.map((issue, i) => (
-              <li key={`${issue.code}-${i}`}>{issue.message}</li>
-            ))}
-          </ul>
-        </Notice>
-      )}
+      ) : null}
+
+      {/* Banners */}
+      {activeNotices.length || errors.length || bannerWarnings.length ? (
+        <div className="space-y-2">
+          {activeNotices.map((n) => (
+            <TimetableAlert
+              key={n.id}
+              tone={n.type === "not_running" ? "warn" : "info"}
+              icon={
+                n.type === "not_running"
+                  ? "mdi:alert-outline"
+                  : "mdi:map-marker-outline"
+              }
+            >
+              <p className="m-0">
+                <strong>{LIBRARY_NOTICE_LABELS[n.type]}.</strong> {n.message}
+                <span className="text-[11px]" style={{ color: T.ink.dim }}>
+                  {" "}
+                  · {shortDate(n.from)}
+                  {n.to ? ` – ${shortDate(n.to)}` : ""}
+                </span>
+              </p>
+            </TimetableAlert>
+          ))}
+          {errors.map((issue, i) => (
+            <TimetableAlert key={`${issue.code}-${i}`} tone="danger">
+              {issue.message}
+            </TimetableAlert>
+          ))}
+          {bannerWarnings.map((issue, i) => (
+            <TimetableAlert key={`${issue.code}-${i}`} tone="warn">
+              {issue.message}
+            </TimetableAlert>
+          ))}
+        </div>
+      ) : null}
 
       {allStops ? (
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
@@ -610,44 +680,11 @@ export function TimetableEditor({
           )}
         </ul>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,1fr)]">
-          <div className="min-w-0 space-y-4">
-            {/* Day picker: the chosen day is the raised white segment */}
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-              <SegmentedControl
-                label="Weekday"
-                options={shownDays.map((d) => {
-                  const n = tt.visits.filter(
-                    (v) => v.day === d && inWeek(v)
-                  ).length
-
-                  return {
-                    value: d,
-                    label: labels[WEEKDAYS.indexOf(d)]!.slice(0, 3),
-                    sub: `${n} ${n === 1 ? "stop" : "stops"}`,
-                  }
-                })}
-                value={day}
-                onChange={setDay}
-              />
-              <button
-                type="button"
-                className="ml-auto inline-flex min-h-11 items-center text-[13.5px] font-semibold underline underline-offset-[3px]"
-                style={{ color: T.accent.primary }}
-                onClick={() => setWeekends(!weekends)}
-              >
-                {weekends ? "Hide weekends" : "Show weekends"}
-              </button>
-            </div>
-
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+          <div className="flex min-w-0 flex-col gap-3">
             <div className="flex items-baseline justify-between gap-3">
-              <h2
-                className="m-0 text-[20px]"
-                style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-              >
-                {dayLabel}
-              </h2>
-              <span className="text-[13.5px]" style={{ color: T.ink.dim }}>
+              <h2 className="m-0 text-[14px] font-semibold">{dayLabel}</h2>
+              <span className="text-[12px]" style={{ color: T.ink.dim }}>
                 In route order
               </span>
             </div>
@@ -665,7 +702,13 @@ export function TimetableEditor({
                   prevStop?.location && stop?.location
                     ? stopDistanceKm(prevStop.location, stop.location)
                     : null
-                const tight = issuesFor(v.id, "travel_time")
+                const travelWarning = issues.find(
+                  (issue) =>
+                    issue.code === "travel_time" &&
+                    issue.visitIds[0] === previous?.id &&
+                    issue.visitIds[1] === v.id
+                )
+                const overlaps = issuesFor(v.id, "overlap")
                 const open = editingStop === v.stopId
                 const stopVisits = tt.visits.filter(
                   (x) => x.stopId === v.stopId
@@ -675,42 +718,52 @@ export function TimetableEditor({
                   <li key={v.id} className="flex flex-col">
                     {previous ? (
                       <div
-                        className="ml-[18px] flex min-h-8 items-center gap-2 border-l-2 pl-5 text-[13px]"
+                        className="ml-4 flex min-h-9 flex-wrap items-center gap-x-2 gap-y-1 border-l border-dashed py-1 pl-2 text-[11px]"
                         style={{
-                          borderColor: T.border.hi,
+                          borderColor: T.map.route,
                           color: T.ink.dim,
                         }}
                       >
-                        <Icon
-                          aria-hidden="true"
-                          icon="mdi:arrow-down"
-                          width={14}
-                        />
                         {minutes !== null && minutes >= 0
                           ? `${minutes} min`
                           : "Overlapping times"}
                         {km !== null ? ` · ${km.toFixed(1)} km` : ""}
-                        {tight && (
-                          <Chip tone="warn" icon="mdi:timer-alert-outline">
-                            Is that enough time?
+                        {travelWarning && (
+                          <Chip tone="warn" icon="mdi:alert-outline">
+                            {travelWarning.message}
                           </Chip>
                         )}
                       </div>
                     ) : null}
                     <div
-                      className="rounded-[16px] border"
+                      className="overflow-hidden rounded-[12px] border"
                       style={{
-                        borderColor: open ? T.accent.primary : T.border.line,
+                        borderColor: overlaps
+                          ? T.accent.danger
+                          : open
+                            ? T.accent.primary
+                            : T.border.line,
                         background: T.bg.deep,
                       }}
                     >
-                      <div className="flex items-start gap-3 p-3.5">
+                      <div className="flex items-start gap-2.5 p-3">
                         <span
                           aria-hidden="true"
-                          className="flex size-9 shrink-0 items-center justify-center rounded-[10px] text-[15px] font-bold tabular-nums"
+                          className="mt-1 flex size-7 shrink-0 items-center justify-center rounded-[7px] border text-[12px] font-bold tabular-nums"
                           style={{
-                            background: open ? T.accent.primary : T.bg.muted2,
-                            color: open ? T.bg.deep : T.ink.base,
+                            borderColor: overlaps
+                              ? T.accent.danger
+                              : T.map.stopRing,
+                            background: open
+                              ? overlaps
+                                ? T.accent.danger
+                                : T.map.stopRing
+                              : T.bg.deep,
+                            color: open
+                              ? T.bg.deep
+                              : overlaps
+                                ? T.accent.danger
+                                : T.map.stopRing,
                           }}
                         >
                           {index + 1}
@@ -722,11 +775,11 @@ export function TimetableEditor({
                           onClick={() => setEditingStop(open ? null : v.stopId)}
                         >
                           <span className="flex flex-wrap items-baseline gap-x-2">
-                            <span className="text-[16px] font-semibold">
+                            <span className="text-[14px] font-semibold">
                               {stop?.name ?? "Unknown stop"}
                             </span>
                             <span
-                              className="text-[14px] tabular-nums"
+                              className="text-[12px] font-semibold tabular-nums"
                               style={{ color: T.ink.dim }}
                             >
                               {v.arrive}–{v.depart}
@@ -734,14 +787,14 @@ export function TimetableEditor({
                           </span>
                           {stop?.where ? (
                             <span
-                              className="mt-0.5 block text-[13.5px]"
+                              className="mt-0.5 block text-[12px] leading-tight"
                               style={{ color: T.ink.dim }}
                             >
                               {stop.where}
                             </span>
                           ) : null}
-                          <span className="mt-1.5 flex flex-wrap gap-1.5">
-                            <Chip icon="mdi:repeat">
+                          <span className="mt-1 flex flex-wrap gap-1">
+                            <Chip>
                               {describeRepeat(
                                 { ...v, termTimeOnly: false },
                                 tt.cycle
@@ -752,7 +805,7 @@ export function TimetableEditor({
                                 Term time only
                               </Chip>
                             )}
-                            {issuesFor(v.id, "overlap") && (
+                            {overlaps && (
                               <Chip
                                 tone="danger"
                                 icon="mdi:alert-circle-outline"
@@ -805,14 +858,14 @@ export function TimetableEditor({
                       {open && stop ? (
                         <fieldset
                           disabled={disabled}
-                          className="m-0 flex min-w-0 flex-col gap-4 border-t p-4"
+                          className="m-0 flex min-w-0 flex-col gap-3 border-0 p-3 pt-1"
                           style={{
                             borderColor: T.border.divider,
-                            background: T.bg.surface,
+                            background: T.bg.deep,
                           }}
                         >
                           <legend className="sr-only">Edit {stop.name}</legend>
-                          <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="grid grid-cols-2 gap-2">
                             <label
                               className="flex flex-col gap-1.5"
                               style={labelStyle}
@@ -1007,97 +1060,132 @@ export function TimetableEditor({
                                 return (
                                   <li
                                     key={sv.id}
-                                    className="rounded-[14px] border p-3"
+                                    className="rounded-[10px] border p-2.5"
                                     style={{
-                                      borderColor: T.border.line,
+                                      borderColor: T.edge.info,
                                       background: T.bg.deep,
                                     }}
                                   >
-                                    <div className="flex flex-wrap items-center gap-2">
-                                      <select
-                                        aria-label={`Day of the ${visitName} visit`}
-                                        style={{
-                                          ...field,
-                                          width: "auto",
-                                          minWidth: 124,
-                                        }}
-                                        value={sv.day}
-                                        onChange={(e) =>
-                                          updateVisit(sv.id, {
-                                            day: e.target.value as Weekday,
-                                          })
-                                        }
-                                      >
-                                        {WEEKDAYS.map((d) => (
-                                          <option key={d} value={d}>
-                                            {labels[WEEKDAYS.indexOf(d)]}
-                                          </option>
-                                        ))}
-                                      </select>
-                                      <span className="inline-flex items-center gap-1.5">
+                                    <div className="grid grid-cols-3 gap-2">
+                                      <label className="flex min-w-0 flex-col gap-1 text-[11px] font-semibold">
+                                        Day
+                                        <select
+                                          aria-label={`Day of the ${visitName} visit`}
+                                          style={{
+                                            ...field,
+                                            minWidth: 0,
+                                            fontWeight: 400,
+                                          }}
+                                          value={sv.day}
+                                          onChange={(e) =>
+                                            updateVisit(sv.id, {
+                                              day: e.target.value as Weekday,
+                                            })
+                                          }
+                                        >
+                                          {WEEKDAYS.map((d) => (
+                                            <option key={d} value={d}>
+                                              {labels[WEEKDAYS.indexOf(d)]}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </label>
+                                      <label className="flex min-w-0 flex-col gap-1 text-[11px] font-semibold">
+                                        Arrives
                                         <input
                                           aria-label={`Arrives, ${visitName} visit`}
                                           type="time"
                                           step={300}
                                           value={sv.arrive}
-                                          style={{ ...field, width: "auto" }}
+                                          style={{
+                                            ...field,
+                                            minWidth: 0,
+                                            fontWeight: 400,
+                                          }}
                                           onChange={(e) =>
                                             updateVisit(sv.id, {
                                               arrive: e.target.value,
                                             })
                                           }
                                         />
-                                        <span
-                                          aria-hidden="true"
-                                          style={{ color: T.ink.dim }}
-                                        >
-                                          –
-                                        </span>
+                                      </label>
+                                      <label className="flex min-w-0 flex-col gap-1 text-[11px] font-semibold">
+                                        Leaves
                                         <input
                                           aria-label={`Leaves, ${visitName} visit`}
                                           type="time"
                                           step={300}
                                           value={sv.depart}
-                                          style={{ ...field, width: "auto" }}
+                                          style={{
+                                            ...field,
+                                            minWidth: 0,
+                                            fontWeight: 400,
+                                          }}
                                           onChange={(e) =>
                                             updateVisit(sv.id, {
                                               depart: e.target.value,
                                             })
                                           }
                                         />
-                                      </span>
-                                      <select
-                                        aria-label={`Repeats, ${visitName} visit`}
-                                        value={svSelected}
-                                        style={{
-                                          ...field,
-                                          width: "auto",
-                                          minWidth: 150,
-                                          flex: "1 1 150px",
-                                        }}
-                                        onChange={(e) => {
-                                          const option = svOptions.find(
-                                            (o) => o.value === e.target.value
-                                          )
-                                          if (option)
-                                            updateVisit(sv.id, {
-                                              repeat: option.repeat,
-                                            })
-                                        }}
-                                      >
-                                        {svSelected === "custom" && (
-                                          <option value="custom">
-                                            {describeRepeat(sv, tt.cycle)}
-                                          </option>
-                                        )}
-                                        {svOptions.map((o) => (
-                                          <option key={o.value} value={o.value}>
-                                            {o.label}
-                                          </option>
-                                        ))}
-                                      </select>
+                                      </label>
+                                      <label className="col-span-3 flex min-w-0 flex-col gap-1 text-[11px] font-semibold sm:col-span-2">
+                                        Repeats
+                                        <select
+                                          aria-label={`Repeats, ${visitName} visit`}
+                                          value={svSelected}
+                                          style={{
+                                            ...field,
+                                            minWidth: 0,
+                                            fontWeight: 400,
+                                          }}
+                                          onChange={(e) => {
+                                            const option = svOptions.find(
+                                              (o) => o.value === e.target.value
+                                            )
+                                            if (option)
+                                              updateVisit(sv.id, {
+                                                repeat: option.repeat,
+                                              })
+                                          }}
+                                        >
+                                          {svSelected === "custom" && (
+                                            <option value="custom">
+                                              {describeRepeat(sv, tt.cycle)}
+                                            </option>
+                                          )}
+                                          {svOptions.map((o) => (
+                                            <option
+                                              key={o.value}
+                                              value={o.value}
+                                            >
+                                              {o.label}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </label>
+                                      <div className="flex items-end justify-end">
+                                        <button
+                                          type="button"
+                                          className={ICON_BUTTON}
+                                          style={{
+                                            borderColor: T.border.line,
+                                            color: T.accent.danger,
+                                          }}
+                                          aria-label={`Remove the ${visitName} visit`}
+                                          onClick={() => removeVisit(sv.id)}
+                                        >
+                                          <Icon
+                                            aria-hidden="true"
+                                            icon="mdi:close"
+                                            width={16}
+                                          />
+                                        </button>
+                                      </div>
+                                    </div>
+                                    <div className="mt-1 flex flex-wrap items-center gap-2">
                                       <Switch
                                         inline
+                                        controlFirst
                                         checked={sv.termTimeOnly}
                                         onChange={(termTimeOnly) =>
                                           updateVisit(sv.id, { termTimeOnly })
@@ -1105,22 +1193,6 @@ export function TimetableEditor({
                                         label="Term time only"
                                         disabled={disabled}
                                       />
-                                      <button
-                                        type="button"
-                                        className={`${ICON_BUTTON} ml-auto`}
-                                        style={{
-                                          borderColor: T.border.line,
-                                          color: T.accent.danger,
-                                        }}
-                                        aria-label={`Remove the ${visitName} visit`}
-                                        onClick={() => removeVisit(sv.id)}
-                                      >
-                                        <Icon
-                                          aria-hidden="true"
-                                          icon="mdi:close"
-                                          width={16}
-                                        />
-                                      </button>
                                     </div>
                                     {termDates ? (
                                       <div
@@ -1258,9 +1330,8 @@ export function TimetableEditor({
                             </button>
                             <button
                               type="button"
-                              className={OUTLINED}
+                              className="ml-auto inline-flex min-h-10 items-center text-[12px] font-semibold underline underline-offset-[3px]"
                               style={{
-                                borderColor: T.border.hi,
                                 color: T.accent.danger,
                               }}
                               onClick={() => removeStop(stop)}
@@ -1356,7 +1427,7 @@ export function TimetableEditor({
             ) : (
               <button
                 type="button"
-                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] border-2 border-dashed text-[14.5px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[12px] border border-dashed text-[13px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ borderColor: T.border.hi, color: T.accent.primary }}
                 disabled={disabled}
                 onClick={() => setAdding(true)}
@@ -1434,54 +1505,23 @@ export function TimetableEditor({
 
       {/* The next four weeks */}
       <section
-        className="rounded-[20px] border p-4 sm:p-5"
+        className="rounded-[16px] border p-4"
         style={{ background: T.bg.deep, borderColor: T.border.line }}
         aria-labelledby="timetable-weeks-heading"
       >
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <h2
             id="timetable-weeks-heading"
-            className="m-0 text-[20px]"
-            style={{ fontFamily: T.font.serif, fontWeight: 500 }}
+            className="m-0 text-[14px] font-semibold"
           >
             The next four weeks
           </h2>
-          <ul
-            className="m-0 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-[13px]"
-            style={{ color: T.ink.dim }}
-            aria-label="Calendar legend"
-          >
-            <li className="flex items-center gap-1.5">
-              <span
-                aria-hidden="true"
-                className="inline-block size-3 rounded-sm border"
-                style={{ borderColor: T.border.hi, background: T.bg.deep }}
-              />
-              Stops
-            </li>
-            <li className="flex items-center gap-1.5">
-              <span
-                aria-hidden="true"
-                className="inline-block size-3 rounded-sm"
-                style={{ background: TYPE_TINT.special.bg }}
-              />
-              Not running
-            </li>
-            <li className="flex items-center gap-1.5">
-              <span
-                aria-hidden="true"
-                className="inline-block size-3 rounded-sm border-2"
-                style={{
-                  borderColor: T.accent.primary,
-                  background: T.accent.chip,
-                }}
-              />
-              Selected day
-            </li>
-          </ul>
+          <span className="text-[12px]" style={{ color: T.ink.dim }}>
+            Select a day to edit it
+          </span>
         </div>
         <div className="mt-3 overflow-x-auto">
-          <table className="w-full border-separate border-spacing-1 text-center text-[13px]">
+          <table className="w-full table-fixed border-separate border-spacing-1 text-center text-[11px]">
             <caption className="sr-only">
               Stops per day for the next four weeks, starting{" "}
               {shortDate(monday)}
@@ -1490,10 +1530,10 @@ export function TimetableEditor({
               <tr>
                 <th
                   scope="col"
-                  className="text-left font-semibold"
+                  className="w-16 text-left font-semibold"
                   style={{ color: T.ink.dim }}
                 >
-                  Week
+                  Week of
                 </th>
                 {(weekends || anyWeekend ? WEEKDAYS : WEEKDAYS.slice(0, 5)).map(
                   (d) => (
@@ -1517,9 +1557,9 @@ export function TimetableEditor({
                     className="text-left font-semibold whitespace-nowrap"
                     style={{ color: T.ink.base }}
                   >
-                    {shortDate(addDays(monday, i * 7))}
+                    {shortDate(addDays(monday, i * 7)).slice(4)}
                     <span
-                      className="block text-[12px] font-normal"
+                      className="block text-[11px] font-normal"
                       style={{ color: T.ink.dim }}
                     >
                       Week {row[0]?.week ?? 1}
@@ -1532,20 +1572,20 @@ export function TimetableEditor({
                       <td key={cell.date} className="p-0">
                         <button
                           type="button"
-                          className="flex min-h-11 w-full items-center justify-center rounded-[10px] border px-1 text-[13px] font-semibold transition-colors hover:bg-(--t-bg-surface)"
+                          className="flex min-h-13 w-full flex-col items-center justify-center rounded-[10px] border px-1 py-1.5 font-semibold transition-colors hover:bg-(--t-bg-surface)"
                           style={{
                             background: cell.notRunning
-                              ? TYPE_TINT.special.bg
+                              ? "#F5EEDC"
                               : selected
                                 ? T.accent.chip
-                                : T.bg.deep,
+                                : T.bg.surface,
                             borderColor: selected
                               ? T.accent.primary
                               : cell.notRunning
-                                ? "transparent"
+                                ? T.edge.warn
                                 : T.border.line,
                             color: cell.notRunning
-                              ? T.accent.danger
+                              ? T.accent.warn
                               : selected
                                 ? T.accent.primary
                                 : cell.stops
@@ -1560,11 +1600,16 @@ export function TimetableEditor({
                             setAllStops(false)
                           }}
                         >
-                          {cell.notRunning
-                            ? "Not running"
-                            : cell.stops
-                              ? `${cell.stops} ${cell.stops === 1 ? "stop" : "stops"}`
-                              : "—"}
+                          <span className="text-[13px] tabular-nums">
+                            {Number(cell.date.slice(-2))}
+                          </span>
+                          <span className="text-[11px] font-normal">
+                            {cell.notRunning
+                              ? "Not running"
+                              : cell.stops
+                                ? `${cell.stops} ${cell.stops === 1 ? "stop" : "stops"}`
+                                : "—"}
+                          </span>
                         </button>
                       </td>
                     )
@@ -1574,6 +1619,31 @@ export function TimetableEditor({
             </tbody>
           </table>
         </div>
+        <ul
+          className="m-0 mt-2 flex list-none flex-wrap gap-x-3 gap-y-1 p-0 text-[11px]"
+          style={{ color: T.ink.dim }}
+          aria-label="Calendar legend"
+        >
+          <li className="flex items-center gap-1.5">
+            <span
+              aria-hidden="true"
+              className="inline-block size-3 rounded-sm border"
+              style={{ borderColor: T.edge.warn, background: "#F5EEDC" }}
+            />
+            Not running (notice)
+          </li>
+          <li className="flex items-center gap-1.5">
+            <span
+              aria-hidden="true"
+              className="inline-block size-3 rounded-sm border"
+              style={{
+                borderColor: T.accent.primary,
+                background: T.accent.chip,
+              }}
+            />
+            Selected day
+          </li>
+        </ul>
       </section>
 
       {noticesBlock}
@@ -1760,6 +1830,7 @@ export function TimetableEditor({
         onClose={() => setFindingPins(false)}
         side="right"
         title="Find stop pins"
+        size="md"
       >
         <p>
           Choose a stop and search for its village or landmark. Check the result
@@ -1773,8 +1844,8 @@ export function TimetableEditor({
                 type="button"
                 key={s.id}
                 disabled={disabled}
-                className={`${OUTLINED} w-full justify-between`}
-                style={{ borderColor: T.border.hi }}
+                className="flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition-colors hover:bg-(--t-bg-surface)"
+                style={{ borderColor: T.border.line, color: T.ink.base }}
                 onClick={() => {
                   setFindingPins(false)
                   const first = tt.visits.find((v) => v.stopId === s.id)
@@ -1787,11 +1858,24 @@ export function TimetableEditor({
                   setEditingStop(s.id)
                 }}
               >
-                <span>
-                  {s.name}
-                  {s.where ? ` · ${s.where}` : ""}
+                <span className="min-w-0 flex-1 break-words">
+                  <span className="block font-semibold">{s.name}</span>
+                  {s.where ? (
+                    <span
+                      className="mt-1 block text-sm"
+                      style={{ color: T.ink.dim }}
+                    >
+                      {s.where}
+                    </span>
+                  ) : null}
                 </span>
-                <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
+                <Icon
+                  aria-hidden="true"
+                  className="shrink-0"
+                  icon="mdi:arrow-right"
+                  width={20}
+                  style={{ color: T.accent.primary }}
+                />
               </button>
             ))}
           {tt.stops.every((s) => s.location) && <p>Every stop has a pin.</p>}

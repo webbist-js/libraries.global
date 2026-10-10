@@ -1,8 +1,5 @@
 import { T } from "@/lib/design-tokens"
-import type {
-  WikiArticleSummary,
-  WikiSection,
-} from "@/lib/strapi-api/content/server"
+import type { WikiSection } from "@/lib/strapi-api/content/server"
 
 export const DOCS_REPO_URL = "https://github.com/webbist-js/libraries.global"
 export const DOCS_VERSION = "v1.0.0"
@@ -89,7 +86,12 @@ export function toDocsSections(
     })
 }
 
-type SectionLike = Pick<WikiArticleSummary, "section" | "docsSections">
+type SectionLike = {
+  section?:
+    | ({ slug?: string | null } & Partial<Omit<WikiSection, "slug">>)
+    | null
+  docsSections?: string[] | null
+}
 
 /**
  * The section slugs an article is listed under: its home section (the

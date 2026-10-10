@@ -79,110 +79,115 @@ export function FeaturedLibrariesSection({
     <section
       id="featured"
       aria-labelledby="featured-title"
-      className="mx-auto w-full max-w-[1360px] px-4 pt-[clamp(80px,10vw,140px)] sm:px-8"
+      className="w-full bg-white"
     >
-      <SectionHeader
-        id="featured-title"
-        intro={intro}
-        action={
-          <GlobalLink
-            href="/libraries"
-            className="font-semibold underline underline-offset-[3px]"
-            style={{ color: T.accent.primary }}
-          >
-            {total
-              ? `Browse all ${total.toLocaleString("en-US")} libraries`
-              : "Browse all libraries"}
-          </GlobalLink>
-        }
-      />
+      <div className="mx-auto w-full max-w-[1360px] px-4 sm:px-8">
+        <SectionHeader
+          id="featured-title"
+          intro={intro}
+          action={
+            <GlobalLink
+              href="/libraries"
+              className="font-semibold underline underline-offset-[3px]"
+              style={{ color: T.accent.primary }}
+            >
+              {total
+                ? `Browse all ${total.toLocaleString("en-US")} libraries`
+                : "Browse all libraries"}
+            </GlobalLink>
+          }
+        />
 
-      <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-5 p-0">
-        {cards.map((library, i) => {
-          const ground = CARD_TINTS[i % CARD_TINTS.length]!
-          const typeTint = tintForLibraryType(library.libraryType)
-          const imgUrl = formatStrapiMediaUrl(library.heroImage?.url)
-          const location = locationLabel(library)
+        <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-5 p-0">
+          {cards.map((library, i) => {
+            const ground = CARD_TINTS[i % CARD_TINTS.length]!
+            const typeTint = tintForLibraryType(library.libraryType)
+            const imgUrl = formatStrapiMediaUrl(library.heroImage?.url)
+            const location = locationLabel(library)
 
-          return (
-            <li key={library.documentId}>
-              <GlobalLink
-                href={libraryHref(library)}
-                className="group relative flex h-[clamp(420px,36vw,520px)] flex-col overflow-hidden rounded-[24px] border no-underline transition-colors hover:border-(--t-accent-primary)"
-                style={{ background: ground.bg, borderColor: T.border.line }}
-              >
-                {imgUrl ? (
-                  <Image
-                    src={imgUrl}
-                    alt={
-                      library.heroImage?.alternativeText ?? library.name ?? ""
-                    }
-                    fill
-                    sizes="(min-width: 1024px) 440px, 100vw"
-                    className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                  />
-                ) : (
-                  <span
-                    className="flex flex-1 flex-col items-center justify-center gap-1.5 pb-28 text-[14px] font-medium"
-                    style={{ color: ground.fg }}
-                  >
-                    <ImageOff
-                      aria-hidden="true"
-                      className="size-5"
-                      strokeWidth={1.6}
+            return (
+              <li key={library.documentId}>
+                <GlobalLink
+                  href={libraryHref(library)}
+                  className="group relative flex h-[clamp(420px,36vw,520px)] flex-col overflow-hidden rounded-[24px] border no-underline transition-colors hover:border-(--t-accent-primary)"
+                  style={{ background: ground.bg, borderColor: T.border.line }}
+                >
+                  {imgUrl ? (
+                    <Image
+                      src={imgUrl}
+                      alt={
+                        library.heroImage?.alternativeText ?? library.name ?? ""
+                      }
+                      fill
+                      sizes="(min-width: 1024px) 440px, 100vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                     />
-                    No photo yet
-                  </span>
-                )}
+                  ) : (
+                    <span
+                      className="flex flex-1 flex-col items-center justify-center gap-1.5 pb-28 text-[14px] font-medium"
+                      style={{ color: ground.fg }}
+                    >
+                      <ImageOff
+                        aria-hidden="true"
+                        className="size-5"
+                        strokeWidth={1.6}
+                      />
+                      No photo yet
+                    </span>
+                  )}
 
-                <span className="absolute inset-x-2.5 bottom-2.5 flex flex-col gap-2 rounded-[18px] bg-white p-5">
-                  <span className="flex flex-wrap gap-1.5">
-                    {library.libraryType ? (
-                      <span
-                        className="rounded-full px-2.5 py-0.5 text-[13px] font-semibold"
-                        style={{ background: typeTint.bg, color: typeTint.fg }}
-                      >
-                        {library.libraryType} library
-                      </span>
-                    ) : null}
-                    {location ? (
-                      <span
-                        className="rounded-full px-2.5 py-0.5 text-[13px] font-semibold"
-                        style={{ background: T.bg.space, color: T.ink.base }}
-                      >
-                        {location}
-                      </span>
-                    ) : null}
-                  </span>
+                  <span className="absolute inset-x-2.5 bottom-2.5 flex flex-col gap-2 rounded-[18px] bg-white p-5">
+                    <span className="flex flex-wrap gap-1.5">
+                      {library.libraryType ? (
+                        <span
+                          className="rounded-full px-2.5 py-0.5 text-[13px] font-semibold"
+                          style={{
+                            background: typeTint.bg,
+                            color: typeTint.fg,
+                          }}
+                        >
+                          {library.libraryType} library
+                        </span>
+                      ) : null}
+                      {location ? (
+                        <span
+                          className="rounded-full px-2.5 py-0.5 text-[13px] font-semibold"
+                          style={{ background: T.bg.space, color: T.ink.base }}
+                        >
+                          {location}
+                        </span>
+                      ) : null}
+                    </span>
 
-                  <h3
-                    className="m-0 text-[clamp(24px,2.2vw,30px)] leading-[1.1] transition-colors group-hover:text-(--t-accent-primary)"
-                    style={{
-                      fontFamily: T.font.serif,
-                      fontWeight: 500,
-                      color: T.ink.base,
-                    }}
-                  >
-                    {library.name}
-                  </h3>
+                    <h3
+                      className="m-0 text-[clamp(24px,2.2vw,30px)] leading-[1.1] transition-colors group-hover:text-(--t-accent-primary)"
+                      style={{
+                        fontFamily: T.font.serif,
+                        fontWeight: 500,
+                        color: T.ink.base,
+                      }}
+                    >
+                      {library.name}
+                    </h3>
 
-                  <span
-                    className="flex items-center gap-1.5 text-[14px]"
-                    style={{ color: T.ink.dim }}
-                  >
-                    <Clock
-                      aria-hidden="true"
-                      className="size-3.5 shrink-0"
-                      strokeWidth={1.7}
-                    />
-                    {hoursLine(library)}
+                    <span
+                      className="flex items-center gap-1.5 text-[14px]"
+                      style={{ color: T.ink.dim }}
+                    >
+                      <Clock
+                        aria-hidden="true"
+                        className="size-3.5 shrink-0"
+                        strokeWidth={1.7}
+                      />
+                      {hoursLine(library)}
+                    </span>
                   </span>
-                </span>
-              </GlobalLink>
-            </li>
-          )
-        })}
-      </ul>
+                </GlobalLink>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
     </section>
   )
 }

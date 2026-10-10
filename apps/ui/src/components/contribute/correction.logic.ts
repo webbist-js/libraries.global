@@ -11,8 +11,8 @@ import {
   DAY_ORDER,
   emptyOpeningTimes,
   type OpeningTimesData,
-} from "@/app/[locale]/contribute/index/_components/opening-times.types"
-import { OPERATIONAL_STATUSES } from "@/app/[locale]/contribute/index/_components/wizard.constants"
+} from "@/components/library-editor/opening-times.types"
+import { OPERATIONAL_STATUSES } from "@/components/library-editor/wizard.constants"
 
 /**
  * Structured corrections: which editor each category opens, and the change

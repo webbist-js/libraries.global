@@ -697,6 +697,82 @@ export interface ApiAreaArea extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
+    population: Schema.Attribute.BigInteger &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0
+        },
+        number
+      >
+    populationCoverage: Schema.Attribute.JSON &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationEstimates: Schema.Attribute.JSON &
+      Schema.Attribute.Private &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationLicence: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationMethod: Schema.Attribute.Enumeration<
+      ["direct", "sum_complete_children"]
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationReportingCode: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationRetrievedAt: Schema.Attribute.DateTime &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationSource: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationSourceUrl: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationYear: Schema.Attribute.Integer &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 2100
+          min: 1900
+        },
+        number
+      >
     publishedAt: Schema.Attribute.DateTime
     region: Schema.Attribute.Relation<"manyToOne", "api::region.region"> &
       Schema.Attribute.SetPluginOptions<{
@@ -829,6 +905,15 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true
+        }
+      }>
+    authorProfile: Schema.Attribute.Relation<
+      "manyToOne",
+      "api::user-profile.user-profile"
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
         }
       }>
     authorTitle: Schema.Attribute.String &
@@ -1231,6 +1316,82 @@ export interface ApiContinentContinent extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
+    population: Schema.Attribute.BigInteger &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0
+        },
+        number
+      >
+    populationCoverage: Schema.Attribute.JSON &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationEstimates: Schema.Attribute.JSON &
+      Schema.Attribute.Private &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationLicence: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationMethod: Schema.Attribute.Enumeration<
+      ["direct", "sum_complete_children"]
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationReportingCode: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationRetrievedAt: Schema.Attribute.DateTime &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationSource: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationSourceUrl: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationYear: Schema.Attribute.Integer &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 2100
+          min: 1900
+        },
+        number
+      >
     publishedAt: Schema.Attribute.DateTime
     seo: Schema.Attribute.Component<"shared.seo", false> &
       Schema.Attribute.SetPluginOptions<{
@@ -1422,6 +1583,82 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
+    populationCount: Schema.Attribute.BigInteger &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0
+        },
+        number
+      >
+    populationCoverage: Schema.Attribute.JSON &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationEstimates: Schema.Attribute.JSON &
+      Schema.Attribute.Private &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationLicence: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationMethod: Schema.Attribute.Enumeration<
+      ["direct", "sum_complete_children"]
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationReportingCode: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationRetrievedAt: Schema.Attribute.DateTime &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationSource: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationSourceUrl: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationYear: Schema.Attribute.Integer &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 2100
+          min: 1900
+        },
+        number
+      >
     publishedAt: Schema.Attribute.DateTime
     regions: Schema.Attribute.Relation<"oneToMany", "api::region.region"> &
       Schema.Attribute.SetPluginOptions<{
@@ -2365,7 +2602,7 @@ export interface ApiLibraryNoticeLibraryNotice
   collectionName: "library_notices"
   info: {
     description: "Temporary service notices, published immediately."
-    displayName: "Library Notice"
+    displayName: "Notice"
     pluralName: "library-notices"
     singularName: "library-notice"
   }
@@ -3166,6 +3403,12 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    gssCode: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     heroImage: Schema.Attribute.Media<"images"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -3199,7 +3442,7 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
-    population: Schema.Attribute.Integer &
+    population: Schema.Attribute.BigInteger &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
@@ -3211,7 +3454,52 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
         },
         number
       >
+    populationCoverage: Schema.Attribute.JSON &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationEstimates: Schema.Attribute.JSON &
+      Schema.Attribute.Private &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationLicence: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationMethod: Schema.Attribute.Enumeration<
+      ["direct", "sum_complete_children"]
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationReportingCode: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationRetrievedAt: Schema.Attribute.DateTime &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     populationSource: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    populationSourceUrl: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
@@ -3493,6 +3781,7 @@ export interface ApiSiteConfigSiteConfig extends Struct.SingleTypeSchema {
         },
         number
       >
+    populationEstimates: Schema.Attribute.JSON & Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
     supportersLead: Schema.Attribute.Text &
       Schema.Attribute.DefaultTo<"Support helps cover the servers, maps and data behind Libraries Global. Library records, downloads and community contributions stay free for everyone.">
@@ -3515,12 +3804,18 @@ export interface ApiSubscriberSubscriber extends Struct.CollectionTypeSchema {
     draftAndPublish: false
   }
   attributes: {
+    baUserId: Schema.Attribute.String & Schema.Attribute.Private
+    communicationLocale: Schema.Attribute.Enumeration<["en", "cs"]> &
+      Schema.Attribute.DefaultTo<"en">
+    consentedAt: Schema.Attribute.DateTime
+    consentVersion: Schema.Attribute.String
     content: Schema.Attribute.Text &
       Schema.Attribute.CustomField<"plugin::tiptap-editor.RichText">
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
-    email: Schema.Attribute.Email
+    email: Schema.Attribute.Email & Schema.Attribute.Required
+    invitedAt: Schema.Attribute.DateTime
     locale: Schema.Attribute.String & Schema.Attribute.Private
     localizations: Schema.Attribute.Relation<
       "oneToMany",
@@ -3530,6 +3825,17 @@ export interface ApiSubscriberSubscriber extends Struct.CollectionTypeSchema {
     message: Schema.Attribute.Text
     name: Schema.Attribute.String
     publishedAt: Schema.Attribute.DateTime
+    source: Schema.Attribute.Enumeration<
+      ["beta_landing", "footer", "journal", "legacy"]
+    >
+    state: Schema.Attribute.Enumeration<
+      ["active", "pending_confirmation", "unsubscribed", "suppressed"]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"pending_confirmation">
+    type: Schema.Attribute.Enumeration<["beta_waitlist", "newsletter"]> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"newsletter">
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private

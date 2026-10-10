@@ -101,6 +101,16 @@
         }
       }
     },
+    "authorProfile": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::user-profile.user-profile",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
     "authorTitle": {
       "type": "string",
       "pluginOptions": {

@@ -66,6 +66,11 @@ import {
 } from "../utils/record-review"
 import { isSelfReview, type Reviewer } from "../utils/reviewer"
 import {
+  applyStaffLibraryCreation,
+  staffCreationOf,
+  type StaffLibraryCreation,
+} from "../utils/staff-library-creation"
+import {
   staffReviewHint,
   claimReview,
   preloadStaffReviewHints,
@@ -173,6 +178,7 @@ const MODERATOR_KEYS: readonly string[] = [
   // The "Staff request" queue chip: set only by the staff publish path
   // (`create({ requestedByStaff: true })`), never from a submitted body.
   "requestedByStaff",
+  "staffCreation",
 ]
 
 export function withoutModeratorKeys<T>(draftData: T): T {
@@ -546,6 +552,7 @@ export function splitSubmissionBody(body: unknown): {
   const fields: Record<string, unknown> = {}
   const extras: SubmissionExtras = {}
   for (const [key, value] of Object.entries(safe)) {
+    if (MODERATOR_KEYS.includes(key)) continue
     if ((SUBMISSION_EXTRA_KEYS as readonly string[]).includes(key))
       extras[key as keyof SubmissionExtras] = value
     else fields[key] = value
@@ -687,12 +694,15 @@ export default ({ strapi }: { strapi: any }) => ({
      * controller never forwards it, so a contributor cannot forge the chip.
      */
     requestedByStaff?: boolean
+    /** Internal: authenticated new-library staff intent, checked by the controller. */
+    staffCreation?: StaffLibraryCreation
   }) {
     const {
       asDraft,
       locale,
       notify = true,
       requestedByStaff = false,
+      staffCreation,
       ...fields
     } = data
     // An application is stored as validated: trimmed, de-duplicated, and
@@ -705,14 +715,16 @@ export default ({ strapi }: { strapi: any }) => ({
       if (parsed.ok) fields.fields = parsed.value
     }
     const status = asDraft ? "draft" : "pending"
-    const draftData = requestedByStaff
-      ? {
-          ...withoutModeratorKeys(fields.draftData ?? {}),
-          requestedByStaff: true,
-        }
-      : fields.draftData === undefined
-        ? undefined
-        : withoutModeratorKeys(fields.draftData)
+    const draftData = staffCreation
+      ? { ...withoutModeratorKeys(fields.draftData ?? {}), staffCreation }
+      : requestedByStaff
+        ? {
+            ...withoutModeratorKeys(fields.draftData ?? {}),
+            requestedByStaff: true,
+          }
+        : fields.draftData === undefined
+          ? undefined
+          : withoutModeratorKeys(fields.draftData)
     const rest = {
       ...fields,
       ...(draftData === undefined ? {} : { draftData }),
@@ -1214,18 +1226,25 @@ export default ({ strapi }: { strapi: any }) => ({
                 )
               }
 
-              // Record the proposer's affiliation with the new library. D-C5:
-              // proposing a library does not make you verified staff — a role
-              // change only comes from an approved Library Claim.
+              // Ordinary proposals grant no staff access. A staff creation
+              // includes a claim in the moderator's review, applied atomically.
               if (submission.submittedByUserId && newLibrary?.documentId) {
-                await upsertAffiliation(strapi, {
-                  baUserId: submission.submittedByUserId,
-                  libraryDocumentId: newLibrary.documentId,
-                  role: "proposer",
-                  verificationMethod: "contact_us",
-                })
+                const creation = staffCreationOf(submission.draftData)
+                await (creation
+                  ? applyStaffLibraryCreation(
+                      strapi,
+                      submission.submittedByUserId,
+                      newLibrary.documentId,
+                      creation
+                    )
+                  : upsertAffiliation(strapi, {
+                      baUserId: submission.submittedByUserId,
+                      libraryDocumentId: newLibrary.documentId,
+                      role: "proposer",
+                      verificationMethod: "contact_us",
+                    }))
                 strapi.log.info(
-                  `[content-moderation] Recorded proposer affiliation for library "${f.name}" (submitter ${submission.submittedByUserId})`
+                  `[content-moderation] Recorded ${creation ? "staff owner" : "proposer"} affiliation for library "${f.name}" (submitter ${submission.submittedByUserId})`
                 )
               }
 
@@ -1892,7 +1911,12 @@ export default ({ strapi }: { strapi: any }) => ({
     if (!checked.ok) return { error: "invalid", message: checked.message }
 
     const updateData: Record<string, unknown> = {
-      draftData: safeDraft,
+      draftData: {
+        ...safeDraft,
+        ...(staffCreationOf(existing.draftData)
+          ? { staffCreation: staffCreationOf(existing.draftData) }
+          : {}),
+      },
       stepCompleted,
       fields: libraryFields,
       draftRevision: (existing.draftRevision ?? 0) + 1,
@@ -2023,9 +2047,12 @@ export default ({ strapi }: { strapi: any }) => ({
       fields: hasFields ? libraryFields : (existing.fields ?? {}),
       contentLocale,
     }
-    // A draft is never moderated, so any Moderator key in it is the
-    // contributor's own (a row saved before saveDraft dropped them).
-    const draftData = withoutModeratorKeys(existing.draftData)
+    // Drop contributor-supplied Moderator keys, keeping only the creation
+    // intent already validated and stored by the authenticated controller.
+    const creation = staffCreationOf(existing.draftData)
+    const draftData = creation
+      ? { ...withoutModeratorKeys(existing.draftData), staffCreation: creation }
+      : withoutModeratorKeys(existing.draftData)
     if (draftData !== existing.draftData) updateData.draftData = draftData
     for (const [key, value] of Object.entries(checked.extras))
       if (value) updateData[key] = value
@@ -2223,7 +2250,8 @@ export default ({ strapi }: { strapi: any }) => ({
     userId: string,
     submissionType: string,
     targetSlug?: string,
-    locale?: unknown
+    locale?: unknown,
+    staffCreation = false
   ) {
     const wanted = await normaliseLocale(strapi, locale)
     const base = await defaultLocale(strapi)
@@ -2246,10 +2274,17 @@ export default ({ strapi }: { strapi: any }) => ({
       .findMany({
         filters,
         sort: { updatedAt: "desc" },
-        limit: 1,
+        limit: submissionType === "new_library" ? 50 : 1,
       })
 
-    return toContributor(results[0] ?? null)
+    const result =
+      submissionType === "new_library"
+        ? results.find(
+            (row: any) => !!staffCreationOf(row.draftData) === staffCreation
+          )
+        : results[0]
+
+    return toContributor(result ?? null)
   },
 
   /**

@@ -11,6 +11,7 @@ import { getSessionSSR } from "@/lib/auth-server"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 import { staffLibraryHref } from "@/lib/staff/paths"
+import { isActiveTeam } from "@/lib/staff/team-status"
 import type { StaffOverview, TeamSummary } from "@/lib/staff/types"
 import { fetchStaff } from "@/lib/staff-proxy"
 
@@ -83,20 +84,38 @@ export default async function StaffLibrariesPage({
         eyebrowIcon="mdi:shield-account-outline"
         lead="Publish record changes, answer suggestions and post notices for the libraries you run."
       >
-        <Link
-          href="/contribute/claim"
-          className="inline-flex min-h-11 w-fit items-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
-          style={{ borderColor: T.border.hi, color: T.ink.base }}
-        >
-          <Icon
-            aria-hidden="true"
-            height={16}
-            icon="mdi:plus"
-            width={16}
-            style={{ color: T.accent.primary }}
-          />
-          Claim another library
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/contribute/claim"
+            className="inline-flex min-h-11 w-fit items-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+            style={{ borderColor: T.border.hi, color: T.ink.base }}
+          >
+            <Icon
+              aria-hidden="true"
+              height={16}
+              icon="mdi:plus"
+              width={16}
+              style={{ color: T.accent.primary }}
+            />
+            Claim another library
+          </Link>
+          {(libraries.length > 0 ||
+            teamRows?.some((team) => team.verified && isActiveTeam(team))) && (
+            <Link
+              href="/staff/new"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+              style={{ borderColor: T.border.hi, color: T.ink.base }}
+            >
+              <Icon
+                icon="mdi:plus"
+                aria-hidden="true"
+                width={16}
+                style={{ color: T.accent.primary }}
+              />
+              Add a new library
+            </Link>
+          )}
+        </div>
       </PageHero>
       <Container className="py-10">
         {oauth ? (
@@ -253,7 +272,7 @@ export default async function StaffLibrariesPage({
                     </Link>
                     {mobile ? (
                       <Link
-                        href={`${base}/timetable`}
+                        href={`${base}/edit?step=timetable`}
                         className={QUICK_LINK}
                         style={{ borderColor: T.border.hi, color: T.ink.base }}
                       >

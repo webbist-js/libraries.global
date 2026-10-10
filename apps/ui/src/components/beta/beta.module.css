@@ -1,0 +1,364 @@
+.page {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--t-bg-muted-2);
+  color: var(--t-ink-base);
+  font-family: var(--font-figtree), sans-serif;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 30px 3%;
+}
+.wordmark {
+  font-family: var(--font-newsreader), Georgia, serif;
+  font-size: 28px;
+  font-weight: 500;
+  text-decoration: none;
+  color: inherit;
+}
+.wordmark em {
+  font-weight: 400;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: #fff;
+  border: 1px solid var(--t-border-line);
+  border-radius: 50px;
+  padding: 8px 15px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--t-accent-primary);
+}
+.main {
+  width: 94%;
+  max-width: 1584px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: clamp(40px, 6vw, 100px);
+  flex: 1;
+  padding: 90px 0 100px;
+}
+.introduction h1 {
+  font-family: var(--font-newsreader), Georgia, serif;
+  font-size: clamp(76px, 7.8vw, 132px);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+  margin: 0 0 40px;
+}
+.introduction h1 em {
+  color: var(--t-accent-primary);
+  font-weight: 400;
+}
+.lead {
+  color: var(--t-ink-dim);
+  font-size: clamp(18px, 1.45vw, 23px);
+  line-height: 1.65;
+  max-width: 660px;
+  margin: 0 0 30px;
+}
+.notes {
+  padding-left: 20px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.notes li + li {
+  margin-top: 10px;
+}
+.forms,
+.accepted {
+  width: 100%;
+  max-width: 532px;
+}
+.forms {
+  display: grid;
+  gap: 16px;
+}
+.card {
+  background: #fff;
+  border: 1px solid var(--t-border-line);
+  border-radius: 26px;
+  padding: 36px;
+}
+.card h2 {
+  font-family: var(--font-newsreader), Georgia, serif;
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1.15;
+  margin: 0 0 10px;
+}
+.card > p,
+.waitlist > p {
+  color: var(--t-ink-dim);
+  font-size: 16px;
+  line-height: 1.55;
+  margin: 0 0 22px;
+}
+.card label {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.passwordField {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--t-border-hi);
+  border-radius: 15px;
+  height: 58px;
+  background: #fff;
+}
+.passwordField:focus-within {
+  outline: 2px solid var(--t-accent-primary);
+  outline-offset: 3px;
+}
+.passwordField input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0 16px;
+  background: transparent;
+  border: 0;
+  border-radius: inherit;
+  font-size: 18px;
+  outline: none;
+}
+.passwordField button {
+  background: transparent;
+  border: 0;
+  color: var(--t-accent-primary);
+  padding: 15px 20px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.invalid {
+  border: 2px solid var(--t-accent-danger);
+}
+.primary,
+.secondary {
+  border-radius: 50px;
+  min-height: 56px;
+  padding: 14px 22px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.primary {
+  width: 100%;
+  margin-top: 12px;
+  background: var(--t-accent-primary);
+  border: 0;
+  color: white;
+}
+.primary:hover {
+  background: var(--t-accent-primary-hover);
+}
+.secondary {
+  background: transparent;
+  border: 1.5px solid var(--t-ink-base);
+  color: var(--t-ink-base);
+  white-space: nowrap;
+}
+.secondary:hover {
+  background: var(--t-bg-muted);
+}
+.primary:disabled,
+.secondary:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.page button:focus-visible,
+.page a:focus-visible,
+.waitlistForm input:focus-visible {
+  outline: 2px solid var(--t-accent-primary);
+  outline-offset: 4px;
+}
+.waitlist {
+  border: 1px solid var(--t-border-line);
+  border-radius: 26px;
+  padding: 32px;
+}
+.waitlist h2 {
+  font-family: var(--font-figtree), sans-serif;
+  font-weight: 700;
+  font-size: 19px;
+  margin: 0 0 5px;
+}
+.waitlist > p {
+  margin-bottom: 16px;
+}
+.waitlistForm {
+  position: relative;
+  display: flex;
+  gap: 8px;
+}
+.waitlistForm > input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--t-border-hi);
+  border-radius: 14px;
+  background: #fff;
+  height: 56px;
+  padding: 12px 16px;
+  font-size: 18px;
+}
+.waitlistForm > input::placeholder {
+  color: var(--t-ink-low);
+}
+.note {
+  color: var(--t-ink-dim) !important;
+  font-size: 13px !important;
+  margin: 8px 0 0 !important;
+}
+.error {
+  color: var(--t-accent-danger);
+  font-size: 15px;
+  line-height: 1.45;
+  margin: 12px 0 0;
+}
+.error:empty {
+  display: none;
+}
+.honeypot {
+  position: absolute;
+  left: -9999px;
+  height: 0;
+  width: 0;
+  overflow: hidden;
+}
+.waitlistSuccess {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-radius: 16px;
+  background: #e7f0e7;
+  padding: 20px;
+}
+.waitlistSuccess > svg {
+  flex-shrink: 0;
+  color: #365c40;
+}
+.waitlistSuccess p {
+  font-size: 17px;
+  line-height: 1.5;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.successIcon {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  color: #365c40;
+  background: #e7f0e7;
+  border-radius: 50%;
+  margin-bottom: 24px;
+}
+.accepted h2 {
+  font-size: 44px;
+}
+.accepted > p {
+  font-size: 18px;
+}
+.continue {
+  color: var(--t-accent-primary);
+  font-size: 19px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.footer {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-top: 1px solid var(--t-border-line);
+  padding: 20px 3%;
+  color: var(--t-ink-dim);
+  font-size: 14px;
+}
+.footer p {
+  margin: 0;
+}
+.footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.footer a {
+  color: var(--t-ink-base);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 900px) {
+  .main {
+    grid-template-columns: 1fr;
+    max-width: 660px;
+    gap: 40px;
+    padding: 60px 0;
+    width: 90%;
+  }
+  .forms,
+  .accepted {
+    max-width: none;
+  }
+  .introduction h1 {
+    font-size: clamp(76px, 12vw, 112px);
+  }
+  .header {
+    padding: 24px 5%;
+  }
+  .footer {
+    padding: 20px 5%;
+  }
+}
+@media (max-width: 480px) {
+  .wordmark {
+    font-size: 23px;
+  }
+  .badge {
+    font-size: 12px;
+    padding: 7px 11px;
+  }
+  .card {
+    padding: 25px;
+  }
+  .waitlist {
+    padding: 24px;
+  }
+  .card h2 {
+    font-size: 31px;
+  }
+  .waitlistForm {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .introduction h1 {
+    margin-bottom: 28px;
+  }
+  .footer {
+    flex-direction: column;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .primary,
+  .secondary {
+    transition: none;
+  }
+}

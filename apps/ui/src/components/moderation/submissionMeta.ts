@@ -547,7 +547,11 @@ export function detailOf(sub: SubmissionLike): string | null {
       return fieldCount(f)
     case "new_library":
       return (
-        [f.libraryType, f.city]
+        [
+          f.libraryType,
+          f.city,
+          sub.draftData?.staffCreation ? "Staff ownership requested" : null,
+        ]
           .filter((x) => typeof x === "string" && x)
           .join(" · ") || null
       )
