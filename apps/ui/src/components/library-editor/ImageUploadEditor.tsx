@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useRef, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -13,6 +14,8 @@ export function ImageUploadEditor({
   images: UploadedImage[]
   onChange: (imgs: UploadedImage[]) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -174,7 +177,7 @@ export function ImageUploadEditor({
                     fontWeight: 700,
                   }}
                 >
-                  Hero
+                  {tUi("hero")}{" "}
                 </div>
               )}
 
@@ -206,7 +209,7 @@ export function ImageUploadEditor({
                       cursor: "pointer",
                     }}
                   >
-                    Set hero
+                    {tUi("set_hero")}{" "}
                   </button>
                 )}
                 <button

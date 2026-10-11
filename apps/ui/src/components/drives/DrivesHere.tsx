@@ -1,3 +1,5 @@
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { DriveCard } from "@/components/drives/DriveCard"
 import { LocationSectionHeading } from "@/components/location/LocationHero"
 import { T } from "@/lib/design-tokens"
@@ -17,12 +19,14 @@ export function DrivesHere({
   readonly placeName: string
   readonly items: readonly { view: DriveView; here: number }[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   if (items.length === 0) return null
 
   return (
     <section id="drives-here" className="scroll-mt-24">
       <LocationSectionHeading
-        title="Drives here"
+        title={tUi("drives_here")}
         description={`Open drives with work to do in ${placeName}.`}
       />
       <ul

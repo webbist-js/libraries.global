@@ -1,6 +1,7 @@
 import { Icon } from "@iconify/react"
 import type { Metadata } from "next"
 import { headers } from "next/headers"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { SuggestionsWorkspace } from "@/components/community/SuggestionsWorkspace"
 import { getSessionSSR } from "@/lib/auth-server"
@@ -178,6 +179,8 @@ export default async function SuggestionsPage({
 }: {
   params: Promise<{ locale: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const { locale } = await params
   const [suggestions, optionNames, session, openDrives] = await Promise.all([
     fetchPublicSuggestions(),
@@ -194,7 +197,7 @@ export default async function SuggestionsPage({
       style={{ background: T.bg.void, color: T.ink.base }}
     >
       <CommunitySectionHeader
-        section="Suggestions"
+        section={tUi("suggestions")}
         title="What should the lists *include?*"
         lead="Name a feature or service the lists don’t have yet. Vote for the ones you’d use; the editorial board decides monthly."
         counts={{ noticeboard: openDrives, suggestions: votableCount }}

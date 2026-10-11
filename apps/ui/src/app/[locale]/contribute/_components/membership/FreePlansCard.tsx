@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
@@ -36,6 +37,8 @@ function Half({
   readonly plan: PlanCard
   readonly footer: React.ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   const look = LOOK[plan.key as keyof typeof LOOK]
 
   return (
@@ -63,7 +66,7 @@ function Half({
           className="m-0 text-[22px]"
           style={{ fontFamily: T.font.serif, fontWeight: 500 }}
         >
-          Free
+          {tUi("free")}
         </p>
       </div>
       <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
@@ -85,6 +88,8 @@ function Half({
 
 /** Public and Free account side by side: everything factual, no payment. */
 export function FreePlansCard({ signedIn }: { readonly signedIn: boolean }) {
+  const tUi = useUiTranslations("ui")
+
   const publicPlan = planCard("public")
   const freePlan = planCard("free")
 
@@ -92,7 +97,7 @@ export function FreePlansCard({ signedIn }: { readonly signedIn: boolean }) {
     <section aria-labelledby="free-plans-h">
       <PlanSectionHeader
         id="free-plans-h"
-        title="Free, for everyone"
+        title={tUi("free_for_everyone")}
         sub="Every library fact, with or without an account."
       />
       <div

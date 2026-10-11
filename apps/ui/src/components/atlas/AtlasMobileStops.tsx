@@ -1,4 +1,6 @@
 "use client"
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { T } from "@/lib/design-tokens"
 import type { MobileStopHit, MobileVisitFilter } from "@/lib/mobile-stop-search"
 
@@ -20,11 +22,13 @@ export function AtlasMobileFilters({
   readonly onChange: (value: MobileVisitFilter) => void
   readonly total?: number
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
       className="-mx-4 mb-5 border-b px-4 pt-1 pb-4 md:-mx-5 md:px-5"
       style={{ borderColor: T.border.line }}
-      aria-label="Mobile libraries"
+      aria-label={tUi("mobile_libraries")}
     >
       <div className="mb-2.5 flex items-center gap-2">
         <span
@@ -33,7 +37,9 @@ export function AtlasMobileFilters({
         >
           <Icon name="bus" size={16} />
         </span>
-        <h3 className="m-0 flex-1 text-[15px] font-bold">Mobile libraries</h3>
+        <h3 className="m-0 flex-1 text-[15px] font-bold">
+          {tUi("mobile_libraries")}
+        </h3>
         <span
           className="text-[13px] font-semibold"
           style={{ color: T.ink.dim }}
@@ -44,13 +50,13 @@ export function AtlasMobileFilters({
       </div>
       <Segmented
         className="w-full rounded-[16px] [&>button]:min-h-11 [&>button]:min-w-0 [&>button]:rounded-xl [&>button]:px-1.5 [&>button]:text-[13px]"
-        label="Mobile library visits"
+        label={tUi("mobile_library_visits")}
         value={value}
         onChange={onChange}
         options={[
           { value: "any", label: "All" },
           { value: "today", label: "Today" },
-          { value: "week", label: "This week" },
+          { value: "week", label: tUi("this_week") },
           {
             value: "live",
             label: (
@@ -86,11 +92,13 @@ export function AtlasMobileStops({
   readonly zoomIn: boolean
   readonly onPick: (stop: MobileStopHit) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
       className="max-h-80 overflow-auto border-t p-4"
       style={{ borderColor: T.border.line }}
-      aria-label="Mobile stops in view"
+      aria-label={tUi("mobile_stops_in_view")}
     >
       <h3 className="text-lg font-bold">
         Stops in view · {total.toLocaleString()}

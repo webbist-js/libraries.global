@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { notFound, permanentRedirect } from "next/navigation"
 import type { Locale } from "next-intl"
+import { setRequestLocale } from "next-intl/server"
 import { use } from "react"
 
 import {
@@ -141,6 +142,7 @@ export default function LibraryRoutePage(props: {
 }) {
   const params = use(props.params)
   const locale = params.locale as Locale
+  setRequestLocale(locale)
   const librarySlug = params.library
 
   const libraryRes = use(fetchLibrary(librarySlug, locale))

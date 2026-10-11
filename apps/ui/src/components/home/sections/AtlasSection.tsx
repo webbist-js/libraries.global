@@ -6,6 +6,7 @@ import {
   Map as MapIcon,
   Target,
 } from "lucide-react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import AtlasGlobePreview from "@/components/home/AtlasGlobePreview"
@@ -87,6 +88,8 @@ export function AtlasSection({
   readonly band: CtaBand
   readonly markers: readonly LibraryMarker[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   if (!band.title) return null
 
   return (
@@ -163,7 +166,7 @@ export function AtlasSection({
                         className="rounded-full border px-2.5 py-0.5 text-[13px] font-medium"
                         style={{ borderColor: OUTLINE, color: MUTED }}
                       >
-                        Soon
+                        {tUi("soon")}
                       </span>
                     )}
                   </span>

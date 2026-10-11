@@ -1,6 +1,10 @@
 import type { Metadata } from "next"
 import { notFound, permanentRedirect } from "next/navigation"
 import type { Locale } from "next-intl"
+import {
+  getTranslations as getUiTranslations,
+  setRequestLocale,
+} from "next-intl/server"
 
 import {
   docsArticlePath,
@@ -38,22 +42,25 @@ export async function generateMetadata({
   params: Promise<{ locale: string; section: string; slug: string }>
 }): Promise<Metadata> {
   const { slug, locale } = await params
-  const [res, sectionsRes] = await Promise.all([
+  const [res, sectionsRes, tUi, tArticle] = await Promise.all([
     fetchWikiArticle(slug, locale as Locale),
-    fetchWikiSections(),
+    fetchWikiSections(locale as Locale),
+    getUiTranslations({ locale: locale as Locale, namespace: "ui" }),
+    getUiTranslations({ locale: locale as Locale, namespace: "editorial" }),
   ])
   const article = res?.data
-  if (!article) return { title: "Page not found", robots: { index: false } }
+  if (!article)
+    return { title: tArticle("pageNotFound"), robots: { index: false } }
 
-  const title = article.title ?? "Knowledge"
+  const title = article.title ?? tUi("knowledge")
 
   return buildMetadata({
     seo: article.seo,
     alternateLocales: [locale],
-    title: `${title} / Knowledge`,
+    title: `${title} / ${tUi("knowledge")}`,
     description:
       article.summary ??
-      `${article.title ?? "Documentation"} — ${SITE_NAME} documentation.`,
+      tArticle("documentationDescription", { title, site: SITE_NAME }),
     // Canonical lives under the article's home section.
     path: docsArticlePath(article, toDocsSections(sectionsRes.data)),
     locale,
@@ -75,11 +82,13 @@ export default async function DocsArticleRoute({
 }) {
   const { locale: rawLocale, section, slug } = await params
   const locale = rawLocale as Locale
+  setRequestLocale(locale)
+  const tUi = await getUiTranslations("ui")
 
   const [articleRes, allRes, sectionsRes] = await Promise.all([
     fetchWikiArticle(slug, locale),
     fetchDocsWikiArticles(locale),
-    fetchWikiSections(),
+    fetchWikiSections(locale as Locale),
   ])
   const article = articleRes?.data
   if (!article) notFound()
@@ -110,8 +119,8 @@ export default async function DocsArticleRoute({
             sectionName: home.title,
           }),
           buildBreadcrumbSchema([
-            { name: "Home", url: absoluteUrl("", locale) },
-            { name: "Knowledge", url: absoluteUrl("knowledge", locale) },
+            { name: tUi("home"), url: absoluteUrl("", locale) },
+            { name: tUi("knowledge"), url: absoluteUrl("knowledge", locale) },
             { name: article.title ?? slug, url },
           ]),
         ]}

@@ -7,11 +7,13 @@ export function ToggleSwitch({
   value,
   onChange,
   label,
+  disabled = false,
 }: {
   value: boolean
   onChange: (v: boolean) => void
   /** Accessible name for the switch (row label). */
   label: string
+  disabled?: boolean
 }) {
   return (
     <span className="inline-flex shrink-0 items-center gap-2.5">
@@ -27,8 +29,9 @@ export function ToggleSwitch({
         role="switch"
         aria-checked={value}
         aria-label={label}
+        disabled={disabled}
         onClick={() => onChange(!value)}
-        className="relative h-[26px] w-[46px] cursor-pointer rounded-full border-0 transition-colors"
+        className="relative h-[26px] w-[46px] cursor-pointer rounded-full border-0 transition-colors disabled:cursor-wait disabled:opacity-50"
         style={{ background: value ? T.accent.primary : T.border.hi }}
       >
         <span

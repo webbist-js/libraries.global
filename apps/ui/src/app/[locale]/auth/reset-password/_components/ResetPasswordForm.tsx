@@ -7,6 +7,7 @@
 // attempt. A Google-only account that sets a password here gains one.
 
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
@@ -42,6 +43,8 @@ const LATER_ICONS = [
 const NEW_LINK_HREF = "/auth/forgot-password"
 
 export function ResetPasswordForm({ token }: { token: string | null }) {
+  const tUi = useUiTranslations("ui")
+
   usePreloadedIcons(LATER_ICONS)
   const [stage, setStage] = useState<Stage>(token ? "form" : "missing")
 
@@ -49,13 +52,14 @@ export function ResetPasswordForm({ token }: { token: string | null }) {
     return (
       <>
         <AuthHeading
+          layout="utility"
           icon="mdi:check-circle-outline"
           iconTone="ok"
-          title="Password"
+          title={tUi("password")}
           italic="saved."
           subtitle="You've been signed out on every device. Sign in with your new password."
         />
-        <AuthPrimaryLink href="/auth/signin">Sign in</AuthPrimaryLink>
+        <AuthPrimaryLink href="/auth/signin">{tUi("sign_in")}</AuthPrimaryLink>
       </>
     )
   }
@@ -66,6 +70,7 @@ export function ResetPasswordForm({ token }: { token: string | null }) {
     return (
       <>
         <AuthHeading
+          layout="utility"
           icon={expired ? "mdi:clock-alert-outline" : "mdi:link-variant-off"}
           iconTone="warn"
           title={expired ? "That link no longer" : "That link isn’t"}
@@ -106,6 +111,8 @@ function NewPasswordForm({
   onExpired: () => void
   onDone: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { resetPasswordMutation } = useUserMutations()
   const form = useForm<z.infer<typeof ResetPasswordSchema>>({
     resolver: zodResolver(ResetPasswordSchema),
@@ -152,6 +159,7 @@ function NewPasswordForm({
   return (
     <>
       <AuthHeading
+        layout="utility"
         title="Choose a new"
         italic="password."
         subtitle="You'll use it to sign in from now on."
@@ -168,7 +176,7 @@ function NewPasswordForm({
       >
         <AuthField
           id="password"
-          label="New password"
+          label={tUi("new_password")}
           error={errors.password?.message}
         >
           <PasswordInput
@@ -187,7 +195,7 @@ function NewPasswordForm({
         <AuthPrimaryButton
           disabled={resetPasswordMutation.isPending || isSubmitting}
         >
-          {resetPasswordMutation.isPending ? "Saving…" : "Save password"}
+          {resetPasswordMutation.isPending ? tUi("saving") : "Save password"}
         </AuthPrimaryButton>
       </form>
 

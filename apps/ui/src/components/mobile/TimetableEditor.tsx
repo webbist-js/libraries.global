@@ -29,6 +29,7 @@ import {
   type Weekday,
   type TimetableImportColumn,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import {
   type ReactNode,
   useEffect,
@@ -177,6 +178,8 @@ export function TimetableEditor({
   /** The staff Timetable tab's "Service notices" list and form. */
   readonly noticesBlock?: ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   // "Today" follows the library's clock, never the browser's UTC date, and
   // only once the clock has ticked: the first render (and the server's)
   // anchors on the timetable's own cycle start, so both sides agree.
@@ -381,7 +384,7 @@ export function TimetableEditor({
         <label className="flex flex-col gap-1.5" style={labelStyle}>
           Timetable repeats every
           <select
-            aria-label="Cycle length"
+            aria-label={tUi("cycle_length")}
             disabled={disabled}
             value={tt.cycle.weeks}
             style={{ ...field, width: "auto", minWidth: 140, fontWeight: 400 }}
@@ -415,9 +418,9 @@ export function TimetableEditor({
           </select>
         </label>
         <label className="flex flex-col gap-1.5" style={labelStyle}>
-          Week 1 starts
+          {tUi("week_1_starts")}
           <input
-            aria-label="Week 1 starts"
+            aria-label={tUi("week_1_starts")}
             type="date"
             value={tt.cycle.anchor}
             disabled={disabled}
@@ -479,7 +482,7 @@ export function TimetableEditor({
             onClick={() => setPaste(true)}
           >
             <Icon aria-hidden="true" icon="mdi:table-arrow-down" width={16} />
-            Paste from a spreadsheet
+            {tUi("paste_from_a_spreadsheet")}
           </button>
         </div>
       </div>
@@ -488,7 +491,7 @@ export function TimetableEditor({
       <div
         className="flex flex-wrap gap-2"
         role="group"
-        aria-label="Cycle weeks"
+        aria-label={tUi("cycle_weeks")}
       >
         {Array.from({ length: tt.cycle.weeks }, (_, i) => i + 1).map((w) => {
           const active = week === w && !allStops
@@ -802,7 +805,7 @@ export function TimetableEditor({
                             </Chip>
                             {v.termTimeOnly && (
                               <Chip tone="info" icon="mdi:school-outline">
-                                Term time only
+                                {tUi("term_time_only")}
                               </Chip>
                             )}
                             {overlaps && (
@@ -829,8 +832,10 @@ export function TimetableEditor({
                             className={ICON_BUTTON}
                             style={{ borderColor: T.border.line }}
                             disabled
-                            aria-label="Move up (order follows arrival time)"
-                            title="Order follows arrival time"
+                            aria-label={tUi(
+                              "move_up_order_follows_arrival_time"
+                            )}
+                            title={tUi("order_follows_arrival_time")}
                           >
                             <Icon
                               aria-hidden="true"
@@ -843,8 +848,10 @@ export function TimetableEditor({
                             className={ICON_BUTTON}
                             style={{ borderColor: T.border.line }}
                             disabled
-                            aria-label="Move down (order follows arrival time)"
-                            title="Order follows arrival time"
+                            aria-label={tUi(
+                              "move_down_order_follows_arrival_time"
+                            )}
+                            title={tUi("order_follows_arrival_time")}
                           >
                             <Icon
                               aria-hidden="true"
@@ -864,7 +871,9 @@ export function TimetableEditor({
                             background: T.bg.deep,
                           }}
                         >
-                          <legend className="sr-only">Edit {stop.name}</legend>
+                          <legend className="sr-only">
+                            {tUi("edit")} {stop.name}
+                          </legend>
                           <div className="grid grid-cols-2 gap-2">
                             <label
                               className="flex flex-col gap-1.5"
@@ -952,7 +961,7 @@ export function TimetableEditor({
                                   className="flex flex-col gap-1.5"
                                   style={labelStyle}
                                 >
-                                  Latitude
+                                  {tUi("latitude")}{" "}
                                   <input
                                     style={{
                                       ...field,
@@ -982,7 +991,7 @@ export function TimetableEditor({
                                   className="flex flex-col gap-1.5"
                                   style={labelStyle}
                                 >
-                                  Longitude
+                                  {tUi("longitude")}{" "}
                                   <input
                                     style={{
                                       ...field,
@@ -1190,7 +1199,7 @@ export function TimetableEditor({
                                         onChange={(termTimeOnly) =>
                                           updateVisit(sv.id, { termTimeOnly })
                                         }
-                                        label="Term time only"
+                                        label={tUi("term_time_only")}
                                         disabled={disabled}
                                       />
                                     </div>
@@ -1274,7 +1283,7 @@ export function TimetableEditor({
                                           </button>
                                         ))}
                                         <input
-                                          aria-label="Add date"
+                                          aria-label={tUi("add_date")}
                                           type="date"
                                           style={{
                                             ...field,
@@ -1410,7 +1419,7 @@ export function TimetableEditor({
                     setStopName("")
                   }}
                 >
-                  Cancel
+                  {tUi("cancel")}{" "}
                 </button>
                 {tt.stops.some(
                   (s) => s.name.toLowerCase() === stopName.trim().toLowerCase()
@@ -1455,7 +1464,7 @@ export function TimetableEditor({
                 <ul
                   className="m-0 mt-2 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-[13px]"
                   style={{ color: T.ink.dim }}
-                  aria-label="Map legend"
+                  aria-label={tUi("map_legend")}
                 >
                   <li className="flex items-center gap-1.5">
                     <span
@@ -1494,7 +1503,7 @@ export function TimetableEditor({
                 <EmptyState
                   compact
                   icon="mdi:map-outline"
-                  lead="No route map yet"
+                  lead={tUi("no_route_map_yet")}
                   detail="The map appears once a stop has a pin. Open a stop and place its pin."
                 />
               </div>
@@ -1622,7 +1631,7 @@ export function TimetableEditor({
         <ul
           className="m-0 mt-2 flex list-none flex-wrap gap-x-3 gap-y-1 p-0 text-[11px]"
           style={{ color: T.ink.dim }}
-          aria-label="Calendar legend"
+          aria-label={tUi("calendar_legend")}
         >
           <li className="flex items-center gap-1.5">
             <span
@@ -1652,7 +1661,7 @@ export function TimetableEditor({
         open={removing !== null}
         onClose={() => setRemoving(null)}
         side="bottom"
-        title="Remove this stop?"
+        title={tUi("remove_this_stop")}
         footer={
           <div className="flex flex-wrap justify-end gap-3">
             <button
@@ -1670,7 +1679,7 @@ export function TimetableEditor({
               onClick={confirmRemoveStop}
             >
               <Icon aria-hidden="true" icon="mdi:delete-outline" width={16} />
-              Remove {removing?.name ?? "the stop"}
+              {tUi("remove")} {removing?.name ?? "the stop"}
             </button>
           </div>
         }
@@ -1687,7 +1696,7 @@ export function TimetableEditor({
         open={paste}
         onClose={() => setPaste(false)}
         side="right"
-        title="Paste from a spreadsheet"
+        title={tUi("paste_from_a_spreadsheet")}
         footer={
           <button
             type="button"
@@ -1718,7 +1727,7 @@ export function TimetableEditor({
           Where, Weeks, Dates, Latitude and Longitude.
         </p>
         <textarea
-          aria-label="Spreadsheet rows"
+          aria-label={tUi("spreadsheet_rows")}
           rows={10}
           style={field}
           value={spreadsheet}
@@ -1745,8 +1754,8 @@ export function TimetableEditor({
                     weeks: "Weeks",
                     dates: "Dates",
                     frequency: "How often",
-                    lat: "Latitude",
-                    lng: "Longitude",
+                    lat: tUi("latitude"),
+                    lng: tUi("longitude"),
                   }[column]
                 }
                 <select
@@ -1829,7 +1838,7 @@ export function TimetableEditor({
         open={findingPins}
         onClose={() => setFindingPins(false)}
         side="right"
-        title="Find stop pins"
+        title={tUi("find_stop_pins")}
         size="md"
       >
         <p>

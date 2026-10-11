@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
@@ -132,6 +133,8 @@ export function ProfileHero({
   /** Section tabs (`ProfileTabNav`) on the band's bottom edge. */
   tabs?: ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   const initials = getInitials(profile)
   const avatar = avatarSrc(profile.avatar, "lg")
   const prefs = resolvePublicPrefs(profile.publicPrefs)
@@ -164,8 +167,8 @@ export function ProfileHero({
         <Breadcrumb
           className="mb-5"
           items={[
-            { label: "Home", href: "/" },
-            { label: "Community", href: "/community" },
+            { label: tUi("home"), href: "/" },
+            { label: tUi("community"), href: "/community" },
             { label: `@${profile.username}` },
           ]}
         />
@@ -242,7 +245,7 @@ export function ProfileHero({
                   icon="mdi:star-four-points-outline"
                   bg="var(--tint-special-bg)"
                   fg="var(--tint-special-fg)"
-                  title="Founder"
+                  title={tUi("founder")}
                   note="Started Libraries Global"
                 />
               ) : null}
@@ -260,7 +263,7 @@ export function ProfileHero({
                   icon="mdi:heart-outline"
                   bg="var(--tint-national-bg)"
                   fg="var(--tint-national-fg)"
-                  title="Supporter"
+                  title={tUi("supporter")}
                 />
               ) : null}
               {profile.isVerifiedLibrarian ? (
@@ -270,7 +273,7 @@ export function ProfileHero({
                   fg="var(--tint-public-fg)"
                   title={
                     <>
-                      Verified staff
+                      {tUi("verified_staff")}
                       {affiliationName && showAffiliation ? (
                         <>
                           <span aria-hidden="true"> · </span>
@@ -299,7 +302,7 @@ export function ProfileHero({
                 icon="mdi:account-group-outline"
                 bg="var(--tint-national-bg)"
                 fg="var(--tint-national-fg)"
-                title="Community contributor"
+                title={tUi("community_contributor")}
               />
             </div>
           </div>

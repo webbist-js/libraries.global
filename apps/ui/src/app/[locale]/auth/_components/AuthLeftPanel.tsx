@@ -1,5 +1,6 @@
 // apps/ui/src/app/[locale]/auth/_components/AuthLeftPanel.tsx
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -133,6 +134,8 @@ const ACTIVE_STEP: Partial<Record<AuthLeftPanelProps["mode"], 1 | 2>> = {
 }
 
 export function AuthLeftPanel({ mode, journal }: AuthLeftPanelProps) {
+  const tUi = useUiTranslations("ui")
+
   const copy = COPY[mode]
   const activeStep = ACTIVE_STEP[mode]
 
@@ -157,7 +160,7 @@ export function AuthLeftPanel({ mode, journal }: AuthLeftPanelProps) {
           color: T.ink.base,
         }}
       >
-        Libraries <em style={italic}>Global</em>
+        {tUi("libraries")} <em style={italic}>Global</em>
       </GlobalLink>
 
       <div className="my-auto flex flex-col pt-12">
@@ -279,8 +282,10 @@ function JournalCard({ journal }: { journal: JournalTeaser }) {
 }
 
 function StepCards({ activeStep }: { activeStep: 1 | 2 | 3 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
-    <ol aria-label="Getting started" className="grid grid-cols-3 gap-3">
+    <ol aria-label={tUi("getting_started")} className="grid grid-cols-3 gap-3">
       {STEPS.map((step, i) => {
         const number = i + 1
         const active = number === activeStep

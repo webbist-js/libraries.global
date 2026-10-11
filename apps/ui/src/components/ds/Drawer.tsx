@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import * as Dialog from "@radix-ui/react-dialog"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { type ReactNode, useRef } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -74,6 +75,8 @@ export function Drawer({
   readonly size?: "lg" | "md" | "xl"
   readonly children?: ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   const returnFocus = useRef<HTMLElement | null>(null)
   const heading = (
     <div className="min-w-0">
@@ -107,7 +110,7 @@ export function Drawer({
   )
   const closeButton = (
     <button
-      aria-label="Close"
+      aria-label={tUi("close")}
       className="flex size-11 shrink-0 items-center justify-center rounded-full border bg-white hover:bg-(--t-bg-surface)"
       onClick={onClose}
       style={{ borderColor: T.border.line, color: T.ink.base }}

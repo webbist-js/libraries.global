@@ -8,6 +8,7 @@ import {
   publicLiveState,
   toMinutes,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { Sheet } from "@/components/ds/Sheet"
@@ -61,6 +62,8 @@ export function LiveConsole({
   readonly role: string
   readonly canGoLive: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const id = initial.library.id,
     tt = initial.library.timetable
   const staffHref = useStaffLibraryHref(id)
@@ -562,7 +565,7 @@ export function LiveConsole({
             Menu
           </summary>
           <nav
-            aria-label="Console menu"
+            aria-label={tUi("console_menu")}
             className="absolute right-0 z-10 mt-2 w-56 rounded-[16px] border p-2"
             style={{ background: T.bg.deep, borderColor: T.border.line }}
           >
@@ -590,7 +593,7 @@ export function LiveConsole({
                   className="flex min-h-11 items-center rounded-[10px] px-3 py-2 no-underline hover:bg-(--t-bg-surface)"
                   href={staffHref()}
                 >
-                  Staff area
+                  {tUi("staff_area")}
                 </Link>
               </li>
               <li>
@@ -605,7 +608,7 @@ export function LiveConsole({
                     })
                   }}
                 >
-                  Sign out
+                  {tUi("sign_out")}{" "}
                 </button>
               </li>
             </ul>
@@ -641,7 +644,9 @@ export function LiveConsole({
       ) : finished ? (
         <FinishedScreen
           title={
-            live?.endReason === "breakdown" ? "Service stopped" : "Finished"
+            live?.endReason === "breakdown"
+              ? "Service stopped"
+              : tUi("finished")
           }
           summary={
             live?.endReason === "breakdown"

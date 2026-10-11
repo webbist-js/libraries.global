@@ -103,3 +103,38 @@ describe("GET /api/relations/areas", () => {
     expect(strapiUrl()).toContain("pagination[limit]=1000")
   })
 })
+
+describe("localized editorial relations", () => {
+  it.each(["wiki-sections", "blog-sections", "topics"])(
+    "requests %s in the article language",
+    async (type) => {
+      await GET(
+        new Request(`http://localhost/api/relations/${type}?locale=cs`),
+        {
+          params: Promise.resolve({ type }),
+        }
+      )
+      expect(strapiUrl()).toContain("locale=cs")
+    }
+  )
+
+  it.each(["fr", "en"])("preserves the requested %s locale", async (locale) => {
+    await GET(
+      new Request(
+        `http://localhost/api/relations/wiki-sections?locale=${locale}`
+      ),
+      { params: Promise.resolve({ type: "wiki-sections" }) }
+    )
+    expect(strapiUrl()).toContain(`locale=${locale}`)
+  })
+
+  it("defaults an unsupported language to English", async () => {
+    await GET(
+      new Request("http://localhost/api/relations/topics?locale=unknown"),
+      {
+        params: Promise.resolve({ type: "topics" }),
+      }
+    )
+    expect(strapiUrl()).toContain("locale=en")
+  })
+})

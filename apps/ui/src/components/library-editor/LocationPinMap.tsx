@@ -1,6 +1,7 @@
 "use client"
 
 import type { Map as MapLibreMap, Marker } from "maplibre-gl"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -61,6 +62,8 @@ export function LocationPinMap({
   /** The pin was dragged, or the map clicked. */
   readonly onMove: (lat: number, lng: number) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const captionId = useId()
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
@@ -182,7 +185,7 @@ export function LocationPinMap({
         <div
           ref={containerRef}
           role="region"
-          aria-label="Map for placing the library’s pin"
+          aria-label={tUi("map_for_placing_the_library_s_pin")}
           aria-describedby={captionId}
           // maplibre-gl.css makes the container position: relative, so size it
           // explicitly rather than with inset-0.
@@ -193,8 +196,9 @@ export function LocationPinMap({
             className="absolute inset-0 m-0 flex items-center justify-center px-8 text-center text-[14px]"
             style={{ color: T.ink.dim }}
           >
-            The map can’t load in this browser. Use the latitude and longitude
-            boxes above.
+            {tUi(
+              "the_map_can_t_load_in_this_browser_use_the_latitude_and_longitude_boxes_above"
+            )}{" "}
           </p>
         ) : null}
         {!failed && !hasPoint ? (
@@ -206,7 +210,9 @@ export function LocationPinMap({
               border: `1px solid ${T.border.line}`,
             }}
           >
-            Zoom in and click the map to drop a pin, or search above.
+            {tUi(
+              "zoom_in_and_click_the_map_to_drop_a_pin_or_search_above"
+            )}{" "}
           </p>
         ) : null}
       </div>

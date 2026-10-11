@@ -1,3 +1,4 @@
+import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { PageHero } from "@/components/ds"
@@ -20,11 +21,13 @@ export function ModerationHero({
   readonly leaf?: string
   readonly children?: ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <PageHero
       breadcrumb={[
-        { label: "Home", href: "/" },
-        { label: "Contribute", href: "/contribute" },
+        { label: tUi("home"), href: "/" },
+        { label: tUi("contribute"), href: "/contribute" },
         ...(leaf
           ? [
               { label: "Moderation", href: "/contribute/moderation" },

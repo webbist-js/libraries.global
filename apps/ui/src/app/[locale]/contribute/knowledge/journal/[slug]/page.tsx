@@ -1,6 +1,7 @@
 import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import type { Locale } from "next-intl"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { editingLocaleFrom } from "@/components/contribute/article-editor/article.types"
 import { ArticleEditorShell } from "@/components/contribute/article-editor/ArticleEditorShell"
@@ -34,6 +35,8 @@ export default async function EditJournalArticlePage({
   params: Promise<{ locale: string; slug: string }>
   searchParams: Promise<{ locale?: string | string[] }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const [{ locale, slug }, { locale: requested }, session] = await Promise.all([
     params,
     searchParams,
@@ -57,7 +60,7 @@ export default async function EditJournalArticlePage({
     >
       <ContributeSectionHeader
         compact
-        section="Knowledge editor"
+        section={tUi("knowledge_editor")}
         title={`Improve *${article.title}.*`}
         lead="Edit the story, or add a translation. Journal editors review every change before it’s published, and each contributor is credited."
       />

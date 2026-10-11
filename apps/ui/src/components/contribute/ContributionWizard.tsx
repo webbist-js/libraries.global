@@ -8,6 +8,7 @@ import {
   validateMobileTimetable,
 } from "@repo/shared-data"
 import { useRouter } from "next/navigation"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 
 import { useCapabilities } from "@/lib/access-client"
@@ -80,9 +81,11 @@ function Progress({
   readonly labels: readonly string[]
   readonly step: Step
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <ol
-      aria-label="Progress"
+      aria-label={tUi("progress")}
       className="m-0 grid list-none grid-cols-3 gap-2 p-0"
     >
       {labels.map((label, i) => {
@@ -143,6 +146,8 @@ function StepRail({
   readonly hints: readonly string[]
   readonly drawer?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { has } = useCapabilities()
   const meta = actionFor(action, has)
   // The panel collapses below lg, so it shows hints and lines only there;
@@ -158,7 +163,7 @@ function StepRail({
           className="m-0 text-[15px] font-semibold"
           style={{ color: T.ink.dim }}
         >
-          {done ? "Sent for review" : `Step ${step} of 3`}
+          {done ? tUi("sent_for_review") : `Step ${step} of 3`}
         </p>
       ) : (
         <div className="flex items-center gap-3.5">
@@ -188,14 +193,17 @@ function StepRail({
               {meta.handoff
                 ? (meta.note ?? "Opens a full editor")
                 : done
-                  ? "Sent for review"
+                  ? tUi("sent_for_review")
                   : `Step ${step} of 3`}
             </span>
           </span>
         </div>
       )}
 
-      <ol aria-label="Progress" className="m-0 flex list-none flex-col p-0">
+      <ol
+        aria-label={tUi("progress")}
+        className="m-0 flex list-none flex-col p-0"
+      >
         {labels.map((label, i) => {
           const n = (i + 1) as Step
           const complete = done || n < step
@@ -356,6 +364,8 @@ function CategoryCards({
 }
 
 function SignInPrompt({ returnTo }: { readonly returnTo: string }) {
+  const tUi = useUiTranslations("ui")
+
   const callback = encodeURIComponent(returnTo)
 
   return (
@@ -372,7 +382,7 @@ function SignInPrompt({ returnTo }: { readonly returnTo: string }) {
           className={`${PRIMARY} h-10 bg-(--t-accent-primary) px-5 text-[15px] text-white no-underline hover:bg-(--t-accent-primary-hover)`}
           href={`/auth/signin?callbackUrl=${callback}`}
         >
-          Sign in
+          {tUi("sign_in")}{" "}
         </Link>
         <Link
           className={`${SECONDARY} h-10 px-5 text-[15px] no-underline`}
@@ -423,6 +433,8 @@ export function ContributionWizard({
    */
   readonly layout?: "stacked" | "panel" | "drawer"
 }) {
+  const tUi = useUiTranslations("ui")
+
   const panel = layout === "panel"
   const drawer = layout === "drawer"
   const locked = drawer || lockLibrary
@@ -680,7 +692,7 @@ export function ContributionWizard({
           onClick={() => setStep((step - 1) as Step)}
           style={{ borderColor: T.border.hi, color: T.ink.base }}
         >
-          Back
+          {tUi("back")}{" "}
         </button>
       ) : null}
       {needsSignIn ? null : (
@@ -704,9 +716,9 @@ export function ContributionWizard({
             ? meta.handoff.cta
             : step === 3
               ? sending
-                ? "Sending…"
+                ? tUi("sending")
                 : "Send for review"
-              : "Continue"}
+              : tUi("continue")}
         </button>
       )}
       {blocker && !needsSignIn ? (
@@ -765,7 +777,7 @@ export function ContributionWizard({
           onNames={addNames}
         />
         <div>
-          <Label htmlFor={`${titleId}-text`} hint="Optional">
+          <Label htmlFor={`${titleId}-text`} hint={tUi("optional_59be71")}>
             Anything a reviewer should know?
           </Label>
           <textarea
@@ -915,7 +927,10 @@ export function ContributionWizard({
                     onChange={(photo) => patch({ photo })}
                   />
                   <div>
-                    <Label htmlFor={`${titleId}-caption`} hint="Optional">
+                    <Label
+                      htmlFor={`${titleId}-caption`}
+                      hint={tUi("optional_59be71")}
+                    >
                       What does it show?
                     </Label>
                     <input
@@ -1002,7 +1017,11 @@ export function ContributionWizard({
                   <div>
                     <Label
                       htmlFor={`${titleId}-text`}
-                      hint={action === "correction" ? "Required" : "Optional"}
+                      hint={
+                        action === "correction"
+                          ? tUi("required")
+                          : tUi("optional_59be71")
+                      }
                     >
                       {action === "correction"
                         ? "What’s correct?"
@@ -1068,13 +1087,13 @@ export function ContributionWizard({
                       htmlFor={`${titleId}-source`}
                       hint={
                         action === "source"
-                          ? "Required"
+                          ? tUi("required")
                           : drawer
-                            ? "Optional"
+                            ? tUi("optional_59be71")
                             : "Optional, but it helps reviewers accept changes faster"
                       }
                     >
-                      Source
+                      {tUi("source")}{" "}
                     </Label>
                     <input
                       className={FIELD}
@@ -1094,11 +1113,11 @@ export function ContributionWizard({
                     border: `1px solid ${T.border.line}`,
                   }}
                 >
-                  <dt style={{ color: T.ink.dim }}>Library</dt>
+                  <dt style={{ color: T.ink.dim }}>{tUi("library")}</dt>
                   <dd className="m-0 font-semibold">{library?.name}</dd>
                   {action === "photo" ? (
                     <>
-                      <dt style={{ color: T.ink.dim }}>Photo</dt>
+                      <dt style={{ color: T.ink.dim }}>{tUi("photo")}</dt>
                       <dd className="m-0">
                         {draft.photo ? "Uploaded" : "None yet"}
                       </dd>
@@ -1186,7 +1205,7 @@ export function ContributionWizard({
                   className="m-0 mb-3 text-[15px] font-semibold"
                   style={{ color: T.ink.dim }}
                 >
-                  {sent ? "Sent for review" : `Step ${step} of 3`}
+                  {sent ? tUi("sent_for_review") : `Step ${step} of 3`}
                 </p>
                 <Progress labels={labels} step={sent ? 3 : step} />
               </div>

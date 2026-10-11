@@ -1,5 +1,8 @@
 // @vitest-environment happy-dom
 import { emptyTimetable, type MobileTimetable } from "@repo/shared-data"
+import { useState, type ReactNode } from "react"
+import { afterEach, describe, expect, it, vi } from "vitest"
+
 import {
   cleanup,
   fireEvent,
@@ -8,9 +11,7 @@ import {
   waitFor,
   within,
   act,
-} from "@testing-library/react"
-import { useState, type ReactNode } from "react"
-import { afterEach, describe, expect, it, vi } from "vitest"
+} from "@/test/render"
 
 const { areaLookup } = vi.hoisted(() => ({ areaLookup: vi.fn() }))
 vi.mock("@iconify/react", () => ({ Icon: () => null }))

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { builderStateFromDrive } from "@/components/drives/builder.logic"
 import { DriveBuilder } from "@/components/drives/DriveBuilder"
@@ -26,6 +27,8 @@ type Params = Promise<{ locale: string; slug: string }>
  * its words and where to look can change.
  */
 export default async function EditDrivePage({ params }: { params: Params }) {
+  const tUi = await getUiTranslations("ui")
+
   const { locale, slug } = await params
   await requireBoardMember(locale, `/community/drives/${slug}/edit`)
 
@@ -49,9 +52,9 @@ export default async function EditDrivePage({ params }: { params: Params }) {
     >
       <CommunitySectionHeader
         crumbs={[
-          { label: "Drives", href: "/community#drives" },
+          { label: tUi("drives"), href: "/community#drives" },
           { label: title, href: driveHref(drive.slug) },
-          { label: "Edit" },
+          { label: tUi("edit") },
         ]}
         title={`Edit *${title}*`}
         lead="Changes show on the drive’s page and the Noticeboard as soon as they’re saved."

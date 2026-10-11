@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 
@@ -26,6 +27,8 @@ export function TranslationBanner({
   /** No version in this language yet: the form shows the original. */
   readonly missing?: boolean
 }) {
+  const t = useTranslations("translation")
+
   return (
     <div
       role="note"
@@ -42,7 +45,10 @@ export function TranslationBanner({
         aria-hidden="true"
         style={{ color: T.accent.primary, flexShrink: 0, marginTop: 2 }}
       />
-      <p className="m-0">{translationBannerText(languageName, missing)}</p>
+      <p className="m-0">
+        {t("translating", { language: languageName })}
+        {missing && <> {t("missingVersion", { language: languageName })}</>}
+      </p>
     </div>
   )
 }

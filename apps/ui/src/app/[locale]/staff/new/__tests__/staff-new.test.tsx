@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
-import { cleanup, render, screen } from "@testing-library/react"
 import type * as React from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+import { cleanup, render, screen } from "@/test/render"
 
 const mocks = vi.hoisted(() => ({
   session: vi.fn(),
@@ -153,4 +154,20 @@ describe("staff creation page", () => {
       "REDIRECT:/auth/signin?callbackUrl=/staff/new"
     )
   })
+})
+
+vi.mock("next-intl/server", async () => {
+  const { createTranslator } = await import("next-intl")
+  const messages = (await import("../../../../../../locales/en.json")).default
+
+  return {
+    getTranslations: async (config: string | { namespace?: string }) =>
+      createTranslator({
+        locale: "en",
+        messages,
+        namespace: (typeof config === "string" ? config : config.namespace) as
+          | keyof typeof messages
+          | undefined,
+      }),
+  }
 })

@@ -1,6 +1,8 @@
 // apps/ui/src/components/index-page/FindFilterSidebar.tsx
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import {
   FilterGroup,
   FilterHelper,
@@ -52,6 +54,8 @@ export function FindFilterSidebar({
   /** Adds the desktop Hide control to the header. */
   sidebar?: FilterSidebarState
 }) {
+  const tUi = useUiTranslations("ui")
+
   const groupCount = (key: TypeGroupKey) => {
     const group = TYPE_GROUPS.find((g) => g.key === key)
     if (!group) return 0
@@ -83,7 +87,7 @@ export function FindFilterSidebar({
       <FilterPanelHeader onReset={onReset} sidebar={sidebar} />
 
       <FilterGroup
-        title="Opening status"
+        title={tUi("opening_status")}
         icon={
           <>
             <circle cx="12" cy="12" r="9" />
@@ -99,14 +103,14 @@ export function FindFilterSidebar({
         <FilterOption
           type="radio"
           name="open-status"
-          label="Any time"
+          label={tUi("any_time")}
           checked={!state.openNow}
           onChange={() => onChange({ openNow: false, page: 0 })}
         />
         <FilterOption
           type="radio"
           name="open-status"
-          label="Open now"
+          label={tUi("open_now")}
           checked={state.openNow}
           count={facets.openNowCount}
           onChange={() => onChange({ openNow: true, page: 0 })}
@@ -114,7 +118,7 @@ export function FindFilterSidebar({
       </FilterGroup>
 
       <FilterGroup
-        title="Library type"
+        title={tUi("library_type")}
         icon={
           <>
             <path d="M4 19V5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2z" />
@@ -138,7 +142,7 @@ export function FindFilterSidebar({
 
       {accessOptions.length > 0 ? (
         <FilterGroup
-          title="Accessibility"
+          title={tUi("accessibility")}
           icon={
             <>
               <circle cx="12" cy="5" r="2" />
@@ -165,7 +169,7 @@ export function FindFilterSidebar({
 
       {serviceOptions.length > 0 ? (
         <FilterGroup
-          title="Facilities & services"
+          title={tUi("facilities_services")}
           defaultOpen={false}
           icon={
             <>
@@ -192,7 +196,7 @@ export function FindFilterSidebar({
       ) : null}
 
       <FilterGroup
-        title="Collections"
+        title={tUi("collections")}
         defaultOpen={false}
         icon={
           <>
@@ -205,7 +209,7 @@ export function FindFilterSidebar({
         <FilterOption
           type="checkbox"
           name="digital"
-          label="Has digital collections"
+          label={tUi("has_digital_collections")}
           checked={state.digital}
           count={facets.digitalCount}
           onChange={() => onChange({ digital: !state.digital, page: 0 })}
@@ -213,7 +217,7 @@ export function FindFilterSidebar({
       </FilterGroup>
 
       <FilterGroup
-        title="Needs contributions"
+        title={tUi("needs_contributions")}
         defaultOpen={false}
         icon={
           <>
@@ -244,7 +248,7 @@ export function FindFilterSidebar({
       </FilterGroup>
 
       <FilterGroup
-        title="Location"
+        title={tUi("location")}
         defaultOpen={false}
         activeCount={
           (state.place ? 1 : 0) +

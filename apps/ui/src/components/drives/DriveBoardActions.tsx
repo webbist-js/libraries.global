@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { useCapabilities } from "@/lib/access-client"
@@ -78,6 +79,8 @@ function JournalStoryForm({
 }: {
   readonly drive: Pick<Drive, "documentId" | "storySlug">
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const [value, setValue] = useState(drive.storySlug ?? "")
   const [busy, setBusy] = useState(false)
@@ -148,7 +151,7 @@ function JournalStoryForm({
           disabled={busy}
           onClick={save}
         >
-          {busy ? "Saving…" : "Save"}
+          {busy ? tUi("saving") : tUi("save")}
         </button>
       </div>
       {message ? (
@@ -190,6 +193,8 @@ export function DriveBoardActions({
     "documentId" | "slug" | "status" | "pinned" | "featured" | "storySlug"
   >
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { has, ready } = useCapabilities()
   const router = useRouter()
   const [busy, setBusy] = useState<BoardAction | null>(null)
@@ -287,10 +292,10 @@ export function DriveBoardActions({
           style={{ color: T.ink.base }}
         >
           <Icon aria-hidden="true" icon="mdi:pencil-outline" width={17} />
-          Edit
+          {tUi("edit")}{" "}
         </Link>
         {drive.status === "scheduled"
-          ? button("open", "Open now", "mdi:play-circle-outline")
+          ? button("open", tUi("open_now"), "mdi:play-circle-outline")
           : null}
         {settled
           ? null

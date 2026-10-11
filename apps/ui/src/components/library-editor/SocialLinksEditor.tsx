@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { T } from "@/lib/design-tokens"
 
 import { fieldInputStyle, SOCIAL_PLATFORMS } from "./wizard.constants"
@@ -12,6 +14,8 @@ export function SocialLinksEditor({
   value: SocialLink[]
   onChange: (links: SocialLink[]) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const addLink = () =>
     onChange([...value, { platform: "facebook", url: "", label: "" }])
 
@@ -58,7 +62,7 @@ export function SocialLinksEditor({
           <button
             type="button"
             onClick={() => removeLink(i)}
-            aria-label="Remove social link"
+            aria-label={tUi("remove_social_link")}
             style={{
               width: "34px",
               height: "34px",
@@ -93,7 +97,7 @@ export function SocialLinksEditor({
           alignSelf: "flex-start",
         }}
       >
-        + Add social link
+        {tUi("add_social_link")}{" "}
       </button>
     </div>
   )

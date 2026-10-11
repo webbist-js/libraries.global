@@ -5,6 +5,7 @@ import {
   type DrivePlaceLevel,
   type DriveScope,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import { DriveTitle } from "@/components/drives/DriveTitle"
@@ -89,6 +90,8 @@ function ProposerBlock({
 }: {
   readonly applicant: RoleApplicant | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   if (!applicant) {
     return (
       <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
@@ -119,7 +122,7 @@ function ProposerBlock({
       </p>
       {applicant.recentAccepted.length > 0 ? (
         <ul
-          aria-label="Recent accepted changes"
+          aria-label={tUi("recent_accepted_changes")}
           className="m-0 list-none overflow-hidden rounded-[14px] p-0"
           style={{
             border: `1px solid ${T.border.line}`,
@@ -175,6 +178,8 @@ function ChangeDatesForm({
   readonly startsAt: string
   readonly endsAt: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const opensId = useId()
   const endsId = useId()
@@ -233,7 +238,7 @@ function ChangeDatesForm({
             className="text-[14px] font-semibold"
             style={{ color: T.ink.base }}
           >
-            Opens
+            {tUi("opens")}
           </label>
           <input
             id={opensId}
@@ -254,7 +259,7 @@ function ChangeDatesForm({
             className="text-[14px] font-semibold"
             style={{ color: T.ink.base }}
           >
-            Ends
+            {tUi("ends")}
           </label>
           <input
             id={endsId}
@@ -276,7 +281,7 @@ function ChangeDatesForm({
           className="inline-flex items-center justify-center rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
           style={{ borderColor: T.border.hi, color: T.ink.base }}
         >
-          {busy ? "Saving…" : "Save dates"}
+          {busy ? tUi("saving") : "Save dates"}
         </button>
       </div>
       {errors ? (
@@ -317,6 +322,8 @@ export function DriveProposalPanel({
   readonly proposal: DriveProposalReview | null
   readonly applicant: RoleApplicant | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   if (!proposal) {
     return (
       <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
@@ -370,7 +377,7 @@ export function DriveProposalPanel({
 
       <div className="flex flex-col gap-2">
         <h3 className={heading} style={{ color: T.ink.base }}>
-          Focus
+          {tUi("focus")}
         </h3>
         <p className="m-0 text-[15px]" style={{ color: T.ink.base }}>
           {focusSummary(drive.focus)}
@@ -415,7 +422,7 @@ export function DriveProposalPanel({
               <Notice
                 tone="warn"
                 icon="mdi:alert-outline"
-                title="Nothing to do in this scope right now."
+                title={tUi("nothing_to_do_in_this_scope_right_now")}
               />
             ) : null}
           </>
@@ -461,7 +468,7 @@ export function DriveProposalPanel({
 
       <div className="flex flex-col gap-1.5">
         <h3 className={heading} style={{ color: T.ink.base }}>
-          Where to look
+          {tUi("where_to_look")}
         </h3>
         <p className="m-0 text-[15px]" style={{ color: T.ink.base }}>
           {drive.whereToLook.name}
@@ -496,7 +503,7 @@ export function DriveProposalPanel({
         <Notice
           tone="warn"
           icon="mdi:alert-circle-outline"
-          title="This drive isn’t valid as it stands"
+          title={tUi("this_drive_isnt_valid_as_it_stands")}
         >
           <ul className="m-0 flex list-none flex-col gap-1 p-0">
             {errors.map((e, i) => (

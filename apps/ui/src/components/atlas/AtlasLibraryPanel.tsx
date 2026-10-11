@@ -1,6 +1,7 @@
 "use client"
 
 import { effectiveLibraryHours, noticeLocalDate } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -76,6 +77,8 @@ export function AtlasLibraryPanel({
   /** Mobile sheet: no photo, fewer rows. */
   readonly compact?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [detail, setDetail] = useState<LibraryDetail | null>(
     detailCache.get(library.id) ?? null
   )
@@ -128,14 +131,14 @@ export function AtlasLibraryPanel({
           bg: "#E6EFE6",
           fg: T.accent.ok,
           icon: "check" as const,
-          text: "Open now",
+          text: tUi("open_now"),
         }
       : status.state === "closed"
         ? {
             bg: T.bg.muted,
             fg: T.ink.base,
             icon: "clock" as const,
-            text: "Closed",
+            text: tUi("closed"),
           }
         : {
             bg: T.bg.muted,
@@ -181,7 +184,7 @@ export function AtlasLibraryPanel({
           )}
           <button
             type="button"
-            aria-label="Close"
+            aria-label={tUi("close")}
             onClick={onClose}
             className="absolute top-2 right-2 flex size-10 items-center justify-center rounded-full bg-white"
             style={{ color: T.ink.base }}
@@ -207,7 +210,7 @@ export function AtlasLibraryPanel({
           {compact ? (
             <button
               type="button"
-              aria-label="Close"
+              aria-label={tUi("close")}
               onClick={onClose}
               className="-mr-2 ml-auto flex size-11 items-center justify-center rounded-full"
             >
@@ -266,7 +269,7 @@ export function AtlasLibraryPanel({
         <dl className="m-0 grid grid-cols-[24px_1fr] items-start gap-x-2.5 gap-y-1 text-[15px] leading-snug">
           <dt className="pt-0.5" style={{ color: T.ink.dim }}>
             <Icon name="pin" size={18} />
-            <span className="sr-only">Address</span>
+            <span className="sr-only">{tUi("address")}</span>
           </dt>
           <dd className="m-0">
             {address ||
@@ -286,7 +289,7 @@ export function AtlasLibraryPanel({
             <>
               <dt className="pt-0.5" style={{ color: T.ink.dim }}>
                 <Icon name="acc" size={18} />
-                <span className="sr-only">Accessibility</span>
+                <span className="sr-only">{tUi("accessibility")}</span>
               </dt>
               <dd className="m-0">{library.access.join(", ")}</dd>
             </>
@@ -359,6 +362,8 @@ function SecondaryLink({
   readonly icon: "ext" | "route"
   readonly children: React.ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   const cls =
     "inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-full border bg-white px-3.5 text-[14px] font-semibold whitespace-nowrap hover:border-(--t-accent-primary)"
   const style = { borderColor: T.border.hi, color: T.ink.base }
@@ -373,7 +378,7 @@ function SecondaryLink({
     >
       <Icon name={icon} size={15} />
       {children}
-      <span className="sr-only">(opens in a new tab)</span>
+      <span className="sr-only">{tUi("opens_in_a_new_tab")}</span>
     </a>
   ) : (
     <GlobalLink href={href} className={cls} style={style}>

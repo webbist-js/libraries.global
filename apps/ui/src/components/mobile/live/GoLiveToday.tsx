@@ -1,4 +1,5 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import {
   localDateTime,
@@ -6,6 +7,7 @@ import {
   type Occurrence,
   type PublicLiveState,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { QrCode } from "@/components/ds/QrCode"
@@ -45,6 +47,8 @@ export function GoLiveToday({
   /** "Going live from your phone" in Knowledge, when the page has it. */
   readonly learnMoreHref?: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [busy, setBusy] = useState(false),
     [note, setNote] = useState<{ tone: "ok" | "danger"; text: string } | null>(
       null
@@ -169,7 +173,7 @@ export function GoLiveToday({
                         icon="mdi:check-circle-outline"
                         width={13}
                       />
-                      Done
+                      {tUi("done")}{" "}
                     </span>
                   ) : here ? (
                     <span
@@ -294,7 +298,7 @@ export function GoLiveToday({
               }}
             >
               <Icon aria-hidden="true" icon="mdi:content-copy" width={16} />
-              Copy link
+              {tUi("copy_link")}{" "}
             </button>
           </div>
         )}
@@ -341,7 +345,7 @@ export function GoLiveToday({
         >
           <QrCode
             value={consoleUrl}
-            label="Open your live console on your phone"
+            label={tUi("open_your_live_console_on_your_phone")}
             size={144}
           />
         </div>

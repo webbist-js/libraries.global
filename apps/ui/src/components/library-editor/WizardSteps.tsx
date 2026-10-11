@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 
 import { TimetableEditor } from "@/components/mobile/TimetableEditor"
@@ -31,6 +32,8 @@ import {
 // ── Step 1 — Identity ─────────────────────────────────────────────────────────
 
 function StepBasics({ f, set }: StepProps) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <fieldset
       style={{
@@ -45,13 +48,13 @@ function StepBasics({ f, set }: StepProps) {
       <legend style={{ display: "contents" }}>
         <StepHeader
           n={1}
-          label="Identity"
-          title="What library is this?"
+          label={tUi("identity")}
+          title={tUi("what_library_is_this")}
           sub="Name, type and status drive the listing card and the search index. Use the name the library uses for itself."
         />
       </legend>
       <Field
-        label="Library name"
+        label={tUi("library_name")}
         id="name"
         value={f.name}
         onChange={set}
@@ -60,14 +63,14 @@ function StepBasics({ f, set }: StepProps) {
       />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
-          label="Short name / abbreviation"
+          label={tUi("short_name_abbreviation")}
           id="shortName"
           value={f.shortName}
           onChange={set}
           placeholder="BL, BnF, LOC"
         />
         <Field
-          label="Official / formal name (if different)"
+          label={tUi("official_formal_name_if_different")}
           id="officialName"
           value={f.officialName}
           onChange={set}
@@ -75,7 +78,7 @@ function StepBasics({ f, set }: StepProps) {
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <WizardSelect
-          label="Library type"
+          label={tUi("library_type")}
           id="libraryType"
           value={f.libraryType}
           onChange={set}
@@ -83,7 +86,7 @@ function StepBasics({ f, set }: StepProps) {
           required
         />
         <WizardSelect
-          label="Operator type"
+          label={tUi("operator_type")}
           id="operatorType"
           value={f.operatorType}
           onChange={set}
@@ -91,7 +94,7 @@ function StepBasics({ f, set }: StepProps) {
         />
       </div>
       <WizardSelect
-        label="Operational status"
+        label={tUi("operational_status")}
         id="operationalStatus"
         value={f.operationalStatus}
         onChange={set}
@@ -100,7 +103,7 @@ function StepBasics({ f, set }: StepProps) {
       />
       {f.libraryType === "Mobile" && (
         <Field
-          label="Run by"
+          label={tUi("run_by")}
           id="operatorName"
           value={f.operatorName}
           onChange={set}
@@ -108,7 +111,7 @@ function StepBasics({ f, set }: StepProps) {
         />
       )}
       <TextareaField
-        label="Summary / description"
+        label={tUi("summary_description")}
         id="summary"
         value={f.summary}
         onChange={set}
@@ -118,7 +121,7 @@ function StepBasics({ f, set }: StepProps) {
       {(f.operationalStatus === "permanently_closed" ||
         f.operationalStatus === "temporarily_closed") && (
         <TextareaField
-          label="Closure reason"
+          label={tUi("closure_reason")}
           id="closureReason"
           value={f.closureReason}
           onChange={set}
@@ -133,6 +136,8 @@ function StepBasics({ f, set }: StepProps) {
 // ── Stops & times — mobile libraries only ────────────────────────────────────
 
 function StepTimetable({ f, set, setFormData, timetableContext }: StepProps) {
+  const tUi = useUiTranslations("ui")
+
   const timetableReadOnly = useIsShared("mobileTimetable")
 
   return (
@@ -149,8 +154,8 @@ function StepTimetable({ f, set, setFormData, timetableContext }: StepProps) {
       <legend style={{ display: "contents" }}>
         <StepHeader
           n={3}
-          label="Stops & times"
-          title="Where does the vehicle stop?"
+          label={tUi("stops_times")}
+          title={tUi("where_does_the_vehicle_stop")}
           sub="Add the stops and visits for this vehicle. A timetable is optional; the base and area are required."
         />
       </legend>
@@ -171,7 +176,7 @@ function StepTimetable({ f, set, setFormData, timetableContext }: StepProps) {
         />
       </SharedBlock>
       <Field
-        label="Published timetable page or PDF"
+        label={tUi("published_timetable_page_or_pdf")}
         id="timetableUrl"
         value={f.timetableUrl}
         onChange={set}
@@ -184,6 +189,8 @@ function StepTimetable({ f, set, setFormData, timetableContext }: StepProps) {
 // ── Visit — shared contact, services and access fields ───────────────────────
 
 function StepVisit({ f, set, setFormData }: StepProps) {
+  const tUi = useUiTranslations("ui")
+
   const mobile = f.libraryType === "Mobile"
 
   return (
@@ -200,8 +207,8 @@ function StepVisit({ f, set, setFormData }: StepProps) {
       <legend style={{ display: "contents" }}>
         <StepHeader
           n={mobile ? 8 : 3}
-          label={mobile ? "Visit & access" : "Visit"}
-          title="How do people visit?"
+          label={mobile ? "Visit & access" : tUi("visit")}
+          title={tUi("how_do_people_visit")}
           sub={
             mobile
               ? "Links, contact details, services and vehicle access: what a visitor needs to know before setting off."
@@ -212,7 +219,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
-          label="Website URL"
+          label={tUi("website_url")}
           id="website"
           value={f.website}
           onChange={set}
@@ -220,7 +227,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
           type="url"
         />
         <Field
-          label="Plan your visit URL"
+          label={tUi("plan_your_visit_url")}
           id="planVisitUrl"
           value={f.planVisitUrl}
           onChange={set}
@@ -230,7 +237,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
-          label="Catalogue / OPAC URL"
+          label={tUi("catalogue_opac_url")}
           id="catalogueUrl"
           value={f.catalogueUrl}
           onChange={set}
@@ -239,7 +246,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
           hint="Counts as the contact link if there’s no website."
         />
         <Field
-          label="Membership / reader registration URL"
+          label={tUi("membership_reader_registration_url")}
           id="membershipUrl"
           value={f.membershipUrl}
           onChange={set}
@@ -249,7 +256,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
-          label="Booking URL"
+          label={tUi("booking_url")}
           id="bookingUrl"
           value={f.bookingUrl}
           onChange={set}
@@ -257,7 +264,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
           type="url"
         />
         <Field
-          label="Donation URL"
+          label={tUi("donation_url")}
           id="donationUrl"
           value={f.donationUrl}
           onChange={set}
@@ -267,7 +274,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
-          label="Virtual tour URL"
+          label={tUi("virtual_tour_url")}
           id="virtualTourUrl"
           value={f.virtualTourUrl}
           onChange={set}
@@ -275,7 +282,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
           type="url"
         />
         <Field
-          label="Virtual tour embed code"
+          label={tUi("virtual_tour_embed_code")}
           id="virtualTourEmbed"
           value={f.virtualTourEmbed}
           onChange={set}
@@ -285,7 +292,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
-          label="Phone"
+          label={tUi("phone")}
           id="phone"
           value={f.phone}
           onChange={set}
@@ -293,7 +300,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
           autoComplete="tel"
         />
         <Field
-          label="Public email"
+          label={tUi("public_email")}
           id="email"
           value={f.email}
           onChange={set}
@@ -302,28 +309,28 @@ function StepVisit({ f, set, setFormData }: StepProps) {
         />
       </div>
       <TextareaField
-        label="Admission policy"
+        label={tUi("admission_policy")}
         id="admissionInfo"
         value={f.admissionInfo}
         onChange={set}
         placeholder="Free general admission. Reader pass required for reading rooms…"
       />
       <Field
-        label="Languages served"
+        label={tUi("languages_served")}
         id="languagesServed"
         value={f.languagesServed}
         onChange={set}
         placeholder="English, Welsh"
       />
       <TextareaField
-        label="Getting there (transit info)"
+        label={tUi("getting_there_transit_info")}
         id="transitInfo"
         value={f.transitInfo}
         onChange={set}
         rows={2}
       />
       <TextareaField
-        label="Visitor notes"
+        label={tUi("visitor_notes")}
         id="visitNotes"
         value={f.visitNotes}
         onChange={set}
@@ -336,7 +343,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
         f.operationalStatus !== "temporarily_closed" && (
           <>
             <SubSection
-              label="Opening hours"
+              label={tUi("opening_hours")}
               sub="Weekly schedule shown on the library detail page. Leave slots empty for days you don't have data for."
             />
             <SharedBlock fields={["openingTimes"]}>
@@ -351,28 +358,28 @@ function StepVisit({ f, set, setFormData }: StepProps) {
         )}
 
       <SubSection
-        label="Services & amenities"
+        label={tUi("services_amenities")}
         sub="Select the services, amenities and access features visitors can use."
       />
       <SharedBlock fields={["services", "amenities", "accessibility"]}>
         <FacilityChecklistRows f={f} setFormData={setFormData} />
       </SharedBlock>
       <TagSelector
-        label="Services"
+        label={tUi("services")}
         endpoint="/api/relations/services"
         fieldKey="services"
         value={f.services}
         onChange={(ids) => setFormData((prev) => ({ ...prev, services: ids }))}
       />
       <TagSelector
-        label="Amenities"
+        label={tUi("amenities")}
         endpoint="/api/relations/amenities"
         fieldKey="amenities"
         value={f.amenities}
         onChange={(ids) => setFormData((prev) => ({ ...prev, amenities: ids }))}
       />
       <TagSelector
-        label="Accessibility features"
+        label={tUi("accessibility_features")}
         endpoint="/api/relations/accessibility"
         fieldKey="accessibility"
         value={f.accessibility}
@@ -382,7 +389,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
         hint="Use the access notes below for details about using these facilities."
       />
       <TextareaField
-        label="Accessibility notes"
+        label={tUi("accessibility_notes")}
         id="accessibilityNotes"
         value={f.accessibilityNotes}
         onChange={set}
@@ -395,7 +402,7 @@ function StepVisit({ f, set, setFormData }: StepProps) {
       />
 
       <SubSection
-        label="Social media"
+        label={tUi("social_media")}
         sub="Official social media accounts for this library."
       />
       <SharedBlock fields={["socialLinks"]}>
@@ -413,6 +420,8 @@ function StepVisit({ f, set, setFormData }: StepProps) {
 // ── Step 4 — Collections ──────────────────────────────────────────────────────
 
 function StepCollections({ f, set }: StepProps) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <fieldset
       style={{
@@ -427,41 +436,41 @@ function StepCollections({ f, set }: StepProps) {
       <legend style={{ display: "contents" }}>
         <StepHeader
           n={4}
-          label="Collections"
-          title="What does it hold?"
+          label={tUi("collections")}
+          title={tUi("what_does_it_hold")}
           sub="Holdings size, notable collections, classification system and any digital endpoints."
         />
       </legend>
       <Field
-        label="Collection size (volumes / items)"
+        label={tUi("collection_size_volumes_items")}
         id="collectionSize"
         value={f.collectionSize}
         onChange={set}
         hint="Approximate total — include unit (e.g. '170 million items', '2.4 million volumes')"
       />
       <Field
-        label="Collection types"
+        label={tUi("collection_types")}
         id="collectionTypes"
         value={f.collectionTypes}
         onChange={set}
         placeholder="Books, Manuscripts, Maps, Sound recordings"
       />
       <TextareaField
-        label="Special collections (notable holdings)"
+        label={tUi("special_collections_notable_holdings")}
         id="specialCollections"
         value={f.specialCollections}
         onChange={set}
       />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
-          label="Classification system"
+          label={tUi("classification_system")}
           id="classificationSystem"
           value={f.classificationSystem}
           onChange={set}
           placeholder="Dewey, LC, UDC, proprietary"
         />
         <Field
-          label="IIIF endpoint URL"
+          label={tUi("iiif_endpoint_url")}
           id="iiifEndpoint"
           value={f.iiifEndpoint}
           onChange={set}
@@ -476,6 +485,8 @@ function StepCollections({ f, set }: StepProps) {
 // ── Step 5 — Building ─────────────────────────────────────────────────────────
 
 function StepBuilding({ f, set }: StepProps) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <fieldset
       style={{
@@ -490,28 +501,28 @@ function StepBuilding({ f, set }: StepProps) {
       <legend style={{ display: "contents" }}>
         <StepHeader
           n={5}
-          label="History"
-          title="When did it begin?"
+          label={tUi("history")}
+          title={tUi("when_did_it_begin")}
           sub="Founding and opening dates, the building, and who designed it."
         />
       </legend>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Field
-          label="Founded year"
+          label={tUi("founded_year")}
           id="foundedYear"
           value={f.foundedYear}
           onChange={set}
           placeholder="YYYY"
         />
         <Field
-          label="Current building opened"
+          label={tUi("current_building_opened")}
           id="openedYear"
           value={f.openedYear}
           onChange={set}
           placeholder="YYYY"
         />
         <Field
-          label="Closed year (if applicable)"
+          label={tUi("closed_year_if_applicable")}
           id="closedYear"
           value={f.closedYear}
           onChange={set}
@@ -520,20 +531,20 @@ function StepBuilding({ f, set }: StepProps) {
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
-          label="Architect"
+          label={tUi("architect")}
           id="architect"
           value={f.architect}
           onChange={set}
         />
         <Field
-          label="Architectural style"
+          label={tUi("architectural_style")}
           id="architecturalStyle"
           value={f.architecturalStyle}
           onChange={set}
         />
       </div>
       <TextareaField
-        label="Building notes"
+        label={tUi("building_notes")}
         id="buildingInfo"
         value={f.buildingInfo}
         onChange={set}
@@ -545,6 +556,8 @@ function StepBuilding({ f, set }: StepProps) {
 // ── Step 6 — Imagery ──────────────────────────────────────────────────────────
 
 function StepImagery({ f, set, setFormData }: StepProps) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <fieldset
       style={{
@@ -559,8 +572,8 @@ function StepImagery({ f, set, setFormData }: StepProps) {
       <legend style={{ display: "contents" }}>
         <StepHeader
           n={6}
-          label="Photo"
-          title="Add a photo."
+          label={tUi("photo")}
+          title={tUi("add_a_photo")}
           sub="Upload images of the library and mark one as the hero. It appears at the top of the library page."
         />
       </legend>
@@ -573,7 +586,7 @@ function StepImagery({ f, set, setFormData }: StepProps) {
         />
       </SharedBlock>
       <Field
-        label="Image credit / attribution"
+        label={tUi("image_credit_attribution")}
         id="imageCredit"
         value={f.imageCredit}
         onChange={set}
@@ -581,7 +594,7 @@ function StepImagery({ f, set, setFormData }: StepProps) {
         hint="Optional. Applies to all uploaded images."
       />
       <TextareaField
-        label="Image notes"
+        label={tUi("image_notes")}
         id="imageNote"
         value={f.imageNote}
         onChange={set}
@@ -594,6 +607,8 @@ function StepImagery({ f, set, setFormData }: StepProps) {
 // ── Step 7 — Sources ──────────────────────────────────────────────────────────
 
 function StepSources({ f, set, improving }: StepProps) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <fieldset
       style={{
@@ -608,13 +623,13 @@ function StepSources({ f, set, improving }: StepProps) {
       <legend style={{ display: "contents" }}>
         <StepHeader
           n={7}
-          label="Sources & send"
-          title="Cite your sources."
+          label={tUi("sources_send")}
+          title={tUi("cite_your_sources")}
           sub="Tell reviewers how you know. Good evidence is the fastest route through editorial review."
         />
       </legend>
       <WizardSelect
-        label="Evidence type"
+        label={tUi("evidence_type")}
         id="evidenceType"
         value={f.evidenceType}
         onChange={set}
@@ -622,7 +637,7 @@ function StepSources({ f, set, improving }: StepProps) {
         required
       />
       <Field
-        label="Evidence URL"
+        label={tUi("evidence_url")}
         id="evidenceUrl"
         value={f.evidenceUrl}
         onChange={set}
@@ -632,13 +647,13 @@ function StepSources({ f, set, improving }: StepProps) {
       />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
-          label="Primary source (Wikidata, Wikipedia…)"
+          label={tUi("primary_source_wikidata_wikipedia")}
           id="source"
           value={f.source}
           onChange={set}
         />
         <Field
-          label="Source URL"
+          label={tUi("source_url")}
           id="sourceUrl"
           value={f.sourceUrl}
           onChange={set}
@@ -647,20 +662,22 @@ function StepSources({ f, set, improving }: StepProps) {
         />
       </div>
       <TextareaField
-        label="Submission summary"
+        label={tUi("submission_summary")}
         id="editSummary"
         value={f.editSummary}
         onChange={set}
-        placeholder="Briefly describe what you're adding and how you verified it."
+        placeholder={tUi(
+          "briefly_describe_what_you_re_adding_and_how_you_verified_it"
+        )}
         rows={2}
         required={improving}
       />
       <TextareaField
-        label="Note to reviewer (optional)"
+        label={tUi("note_to_reviewer_optional")}
         id="note"
         value={f.note}
         onChange={set}
-        placeholder="Additional context for the editorial team."
+        placeholder={tUi("additional_context_for_the_editorial_team")}
         rows={3}
       />
     </fieldset>

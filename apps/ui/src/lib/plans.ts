@@ -205,7 +205,7 @@ export const PLANS: readonly PlanCard[] = [
       feature("Apply for Knowledge or Journal editing roles"),
       feature("Claim your library and use the free staff tools"),
       soon("3 saved views and 3 saved searches"),
-      soon("A weekly digest of followed libraries"),
+      feature("An opt-in weekly digest of followed libraries"),
     ],
     cta: {
       kind: "signup",
@@ -296,8 +296,9 @@ export const FREE_FEATURE_SUMMARIES = [
   {
     title: "Weekly digest",
     icon: "mdi:email-outline",
-    description: "A weekly email about the libraries you follow.",
-    include: "A weekly digest",
+    description:
+      "An opt-in weekly email when libraries you follow have changed.",
+    include: "An opt-in weekly digest",
   },
 ].map(({ include, ...copy }) => ({
   ...copy,

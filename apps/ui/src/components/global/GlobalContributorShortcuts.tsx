@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -101,6 +102,8 @@ function MobileTile({
  * panel, one accordion each with the first open, then the Membership row.
  */
 function MobileShortcuts() {
+  const tUi = useUiTranslations("ui")
+
   const menu = useContributeMenu(true)
   const titleId = useId()
   const cards = [...menu.work, ...menu.common]
@@ -116,14 +119,14 @@ function MobileShortcuts() {
         className="m-0 mx-1 text-[24px] font-medium"
         style={{ fontFamily: T.font.serif, color: T.ink.base }}
       >
-        Contribute
+        {tUi("contribute")}{" "}
       </h2>
       {menu.status === "signedOut" ? (
         <GlobalLink
           href="/auth/signin"
           className="mx-1 mb-1 self-start rounded-full bg-(--t-accent-primary) px-4 py-2.5 text-[15px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
         >
-          Sign in to contribute
+          {tUi("sign_in_to_contribute")}{" "}
         </GlobalLink>
       ) : null}
       {menu.status === "loading" ? (
@@ -149,7 +152,7 @@ function MobileShortcuts() {
         className="flex min-h-[52px] items-center gap-2.5 rounded-[16px] border px-3 text-[16px] font-bold text-(--t-ink-base) no-underline"
         style={{ background: T.bg.deep, borderColor: T.border.line }}
       >
-        Membership
+        {tUi("membership")}{" "}
         {menu.plan ? (
           <span className="ml-auto">
             <PlanPill plan={menu.plan} />

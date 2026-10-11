@@ -1,7 +1,8 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import type { StaffRole } from "@repo/access"
-import { useLocale } from "next-intl"
+import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useState } from "react"
 
 import { Avatar, Badge, Notice, Sheet, Switch } from "@/components/ds"
@@ -114,6 +115,8 @@ export function TeamManager({
   readonly full: boolean
   readonly mobile: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const locale = useLocale()
   const date = (iso: string) => formatDate(iso, locale)
@@ -169,7 +172,11 @@ export function TeamManager({
         {status}
       </div>
       {error ? (
-        <Notice icon="mdi:alert-circle-outline" tone="warn" title="Not saved">
+        <Notice
+          icon="mdi:alert-circle-outline"
+          tone="warn"
+          title={tUi("not_saved")}
+        >
           <span role="alert">{error}</span>
         </Notice>
       ) : null}
@@ -310,7 +317,7 @@ export function TeamManager({
                   )}
                   {mobile ? (
                     <Switch
-                      label="Can go live"
+                      label={tUi("can_go_live")}
                       checked={member.canGoLive === true}
                       disabled={!owner || busy}
                       onChange={(canGoLive) => {
@@ -340,7 +347,7 @@ export function TeamManager({
                         })
                       }
                     >
-                      Remove
+                      {tUi("remove")}
                       <span className="sr-only">
                         {" "}
                         {member.name} from the staff
@@ -356,7 +363,7 @@ export function TeamManager({
           <ul
             className="m-0 list-none divide-y border-t p-0"
             style={{ borderColor: T.border.divider }}
-            aria-label="Invited, not yet accepted"
+            aria-label={tUi("invited_not_yet_accepted")}
           >
             {pendingInvites.map((invite) => (
               <li
@@ -386,7 +393,11 @@ export function TeamManager({
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <Badge label="Invited" color="dim" icon="mdi:clock-outline" />
+                  <Badge
+                    label={tUi("invited")}
+                    color="dim"
+                    icon="mdi:clock-outline"
+                  />
                   {organiser && team ? (
                     <button
                       type="button"
@@ -442,7 +453,7 @@ export function TeamManager({
                 }}
               >
                 <label className="flex min-w-0 flex-[1_1_240px] flex-col gap-2 text-[15px] font-semibold">
-                  Email
+                  {tUi("email")}{" "}
                   <input
                     name="email"
                     type="email"
@@ -499,7 +510,7 @@ export function TeamManager({
                     className="font-semibold underline"
                     style={{ color: T.accent.primary }}
                   >
-                    Team organiser
+                    {tUi("team_organiser")}
                   </Link>
                   .
                 </p>
@@ -528,7 +539,7 @@ export function TeamManager({
             <Notice
               icon="mdi:account-plus-outline"
               tone="info"
-              title="Need to add a colleague?"
+              title={tUi("need_to_add_a_colleague")}
             >
               <p className="m-0" style={{ color: T.ink.base }}>
                 Ask your team organiser
@@ -543,7 +554,7 @@ export function TeamManager({
       </Card>
 
       {full && data.audit.length ? (
-        <Card title="Recent changes">
+        <Card title={tUi("recent_changes")}>
           <ul
             className="m-0 list-none divide-y p-0"
             style={{ borderColor: T.border.divider }}
@@ -612,7 +623,7 @@ export function TeamManager({
             style={{ borderColor: T.border.hi }}
             onClick={() => setConfirm(null)}
           >
-            Cancel
+            {tUi("cancel")}{" "}
           </button>
         </div>
         {error ? (
@@ -625,7 +636,7 @@ export function TeamManager({
         open={report}
         onClose={() => setReport(false)}
         side="bottom"
-        title="Report a problem with staff access"
+        title={tUi("report_a_problem_with_staff_access")}
       >
         <form
           onSubmit={(event) => {

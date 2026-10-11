@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
@@ -49,6 +50,8 @@ const CARD_HEADING_STYLE = {
 } as const
 
 function Benefits({ items }: { readonly items: readonly StaffBenefit[] }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <ul className="m-0 flex list-none flex-col gap-3 p-0">
       {items.map((item) => (
@@ -74,10 +77,12 @@ function Benefits({ items }: { readonly items: readonly StaffBenefit[] }) {
                   color: TYPE_TINT.public.fg,
                 }}
               >
-                Mobile libraries
+                {tUi("mobile_libraries")}
               </span>
             ) : null}
-            {item.badge === "soon" ? <ComingSoonChip label="Soon" /> : null}
+            {item.badge === "soon" ? (
+              <ComingSoonChip label={tUi("soon")} />
+            ) : null}
           </span>
         </li>
       ))}
@@ -90,6 +95,8 @@ export function LibraryStaffSection({
 }: {
   readonly isStaff: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
       aria-labelledby="library-staff-h"
@@ -177,13 +184,13 @@ export function LibraryStaffSection({
         >
           <div className="flex items-baseline justify-between gap-3">
             <h3 className="m-0" style={CARD_HEADING_STYLE}>
-              Verified staff
+              {tUi("verified_staff")}
             </h3>
             <span
               className="text-[14px] font-bold"
               style={{ color: T.accent.ok }}
             >
-              Free
+              {tUi("free")}
             </span>
           </div>
           <p
@@ -231,7 +238,7 @@ export function LibraryStaffSection({
               className="shrink-0 text-[14px] font-bold"
               style={{ color: T.accent.primaryHover }}
             >
-              Team plan
+              {tUi("team_plan")}
             </span>
           </div>
           <p

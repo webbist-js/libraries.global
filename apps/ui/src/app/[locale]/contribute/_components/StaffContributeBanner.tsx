@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { useQuery } from "@tanstack/react-query"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import { Badge } from "@/components/ds/Badge"
@@ -115,6 +116,8 @@ export function StaffContributeBanner({
   readonly userId: string
   readonly initialMetrics: StaffBannerMetrics | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [selectedId, setSelectedId] = useState(libraries[0]?.id ?? "")
   const titleId = useId()
   const selectId = useId()
@@ -162,13 +165,13 @@ export function StaffContributeBanner({
       <div className="flex min-w-0 flex-col items-start">
         <div className="flex w-full flex-wrap items-center gap-2.5">
           <Badge
-            label="Verified staff"
+            label={tUi("verified_staff")}
             color="ok"
             icon="mdi:shield-check-outline"
             size="md"
           />
           <label htmlFor={selectId} className="sr-only">
-            Library
+            {tUi("library")}{" "}
           </label>
           <span className="relative max-w-full min-w-0">
             <select
@@ -263,7 +266,7 @@ export function StaffContributeBanner({
               className="cursor-pointer font-semibold underline underline-offset-4"
               style={{ color: T.accent.primary }}
             >
-              Try again
+              {tUi("try_again")}{" "}
             </button>
           </p>
         ) : null}
@@ -303,7 +306,7 @@ export function StaffContributeBanner({
         style={{ background: T.bg.space }}
       >
         <ActionCard
-          title="Review suggestions"
+          title={tUi("review_suggestions")}
           description={
             suggestions === 0
               ? "Nothing waiting for review."
@@ -314,7 +317,7 @@ export function StaffContributeBanner({
           count={suggestions}
         />
         <ActionCard
-          title="Edit the record"
+          title={tUi("edit_the_record")}
           description={
             library.libraryType === "Mobile"
               ? "Timetable, contacts, services and photos."
@@ -324,13 +327,13 @@ export function StaffContributeBanner({
           icon="mdi:pencil-outline"
         />
         <ActionCard
-          title="Post a notice"
+          title={tUi("post_a_notice")}
           description="Closures, changes and news."
           href={`${base}/notices#post-notice`}
           icon="mdi:bell-outline"
         />
         <ActionCard
-          title="Open the Staff area"
+          title={tUi("open_the_staff_area")}
           description="Everything for this library."
           href={base}
           icon="mdi:arrow-right"

@@ -1,4 +1,5 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import {
   addDays,
@@ -9,6 +10,7 @@ import {
   WEEKDAYS,
   type PublicLiveState,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { StatusBadge } from "@/components/ds/StatusBadge"
@@ -32,6 +34,8 @@ export function AtlasStopPanel({
   readonly now: Date
   readonly onClose: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [loaded, setLibrary] = useState<PublicMobileTimetable | null>(null)
   const [failedId, setFailedId] = useState<string | null>(null)
   const [drawer, setDrawer] = useState(false)
@@ -90,7 +94,7 @@ export function AtlasStopPanel({
   return (
     <section
       className="space-y-4 p-[18px] text-sm"
-      aria-label="Selected mobile library stop"
+      aria-label={tUi("selected_mobile_library_stop")}
       style={{ color: T.ink.base }}
     >
       <header className="relative">
@@ -106,7 +110,7 @@ export function AtlasStopPanel({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close stop panel"
+          aria-label={tUi("close_stop_panel")}
           className="absolute top-0 right-0 flex size-10 items-center justify-center rounded-full border bg-white hover:bg-(--t-bg-surface)"
           style={{ borderColor: T.border.line, color: T.ink.base }}
         >

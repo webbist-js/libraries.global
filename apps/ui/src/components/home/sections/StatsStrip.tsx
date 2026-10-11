@@ -1,3 +1,5 @@
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import type { HomepageStats } from "@/components/home/homepage.types"
 import { T } from "@/lib/design-tokens"
@@ -9,6 +11,8 @@ export function StatsStrip({
 }: {
   readonly stats: HomepageStats | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   if (!stats) return null
 
   const cells = [
@@ -40,7 +44,7 @@ export function StatsStrip({
 
   return (
     <section
-      aria-label="The index so far"
+      aria-label={tUi("the_index_so_far")}
       className="mt-6 border-t pt-5 sm:pt-6"
       style={{ borderColor: T.border.line }}
     >
@@ -49,7 +53,7 @@ export function StatsStrip({
           className="m-0 text-[11px] font-semibold tracking-[0.12em] uppercase"
           style={{ color: T.ink.dim }}
         >
-          The index so far
+          {tUi("the_index_so_far")}
         </p>
         <GlobalLink
           href="/knowledge/data-api/how-we-count"

@@ -1,3 +1,5 @@
+import { getTranslations as getUiTranslations } from "next-intl/server"
+
 import { builderStateFromPrefill } from "@/components/drives/builder.logic"
 import { DriveBuilder } from "@/components/drives/DriveBuilder"
 import { BOARD_FLOW, DriveFlowPills } from "@/components/drives/DriveFlowPills"
@@ -24,6 +26,8 @@ export default async function NewDrivePage({
   params: Promise<{ locale: string }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const [{ locale }, sp] = await Promise.all([params, searchParams])
   const prefill = prefillFromParams(sp)
   const user = await requireBoardMember(
@@ -43,8 +47,8 @@ export default async function NewDrivePage({
     >
       <CommunitySectionHeader
         crumbs={[
-          { label: "Drives", href: "/community#drives" },
-          { label: "New drive" },
+          { label: tUi("drives"), href: "/community#drives" },
+          { label: tUi("new_drive") },
         ]}
         title="New *drive*"
         lead="Create a drive for the community. Pick the job and the place, and the live preview shows what helpers will see."

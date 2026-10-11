@@ -1,5 +1,6 @@
 "use client"
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { T, TYPE_TINT } from "@/lib/design-tokens"
@@ -157,6 +158,8 @@ export function NextStopCard({
   readonly onAction: () => void
   readonly busy?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <div
       className="my-3.5 flex items-center justify-between gap-3 rounded-[20px] border px-4 py-3.5"
@@ -167,7 +170,7 @@ export function NextStopCard({
           className="m-0 text-[13px] font-semibold"
           style={{ color: T.ink.dim }}
         >
-          Next
+          {tUi("next")}{" "}
         </p>
         <p className="m-0 text-[18px] font-semibold break-words">{name}</p>
         <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
@@ -275,6 +278,8 @@ export function StopList({
   readonly title?: string
   readonly heading?: HeadingTag
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <>
       <Heading className="mt-6 mb-3 text-[17px] font-semibold">{title}</Heading>
@@ -314,7 +319,7 @@ export function StopList({
               >
                 <span className="sr-only">
                   {s.state === "done"
-                    ? "Done"
+                    ? tUi("done")
                     : s.state === "skipped"
                       ? "Skipped"
                       : `Stop ${i + 1}`}
@@ -347,7 +352,7 @@ export function StopList({
                   {s.state === "skipped"
                     ? "Not stopping today"
                     : s.state === "done"
-                      ? "Done"
+                      ? tUi("done")
                       : here
                         ? "Here now"
                         : s.expected && s.expected !== s.arrive
@@ -409,6 +414,8 @@ export function ConfirmIdentityLook({
   /** False when the sheet around it already carries the title. */
   readonly showTitle?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <div className="live-controls space-y-4">
       {showTitle ? (
@@ -416,7 +423,7 @@ export function ConfirmIdentityLook({
           className="m-0 text-[26px]"
           style={{ fontFamily: T.font.serif, fontWeight: 500 }}
         >
-          Confirm it’s you
+          {tUi("confirm_its_you")}
         </Heading>
       ) : null}
       <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>

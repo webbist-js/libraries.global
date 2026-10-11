@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { LIBRARY_NOTICE_LABELS, noticeEndDate } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Badge, Sheet } from "@/components/ds"
@@ -21,6 +22,8 @@ export function TimetableServiceNotices({
 }: {
   readonly context: WizardTimetableContext
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { notices, today, staff } = context
   const [posting, setPosting] = useState(false)
   const router = useRouter()
@@ -118,7 +121,7 @@ export function TimetableServiceNotices({
         open={posting}
         onClose={() => setPosting(false)}
         side="right"
-        title="Post a notice"
+        title={tUi("post_a_notice")}
       >
         {staff ? (
           <LibraryNoticeForm

@@ -1,3 +1,4 @@
+import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -46,6 +47,8 @@ export function DriveRules({
   /** The scope's Dataset, by name. */
   readonly source: string | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const where = drive.whereToLook
   const goal = drive.goalPercent ?? 100
 
@@ -69,9 +72,9 @@ export function DriveRules({
         Rules
       </h2>
       <dl className="m-0">
-        <Rule label="Focus">{focusSummary(drive.focus)}</Rule>
+        <Rule label={tUi("focus")}>{focusSummary(drive.focus)}</Rule>
         {where?.name || isWebUrl(where?.url) ? (
-          <Rule label="Where to look">
+          <Rule label={tUi("where_to_look")}>
             {isWebUrl(where?.url) ? (
               <a
                 href={where.url}
@@ -92,19 +95,21 @@ export function DriveRules({
             ) : null}
           </Rule>
         ) : null}
-        {source ? <Rule label="Records from">{source}</Rule> : null}
+        {source ? <Rule label={tUi("records_from")}>{source}</Rule> : null}
         {goal !== 100 ? (
-          <Rule label="Goal">
+          <Rule label={tUi("goal")}>
             {goal}% of the drive’s {unitNoun(drive.unit, 2)}
           </Rule>
         ) : null}
         {drive.status === "scheduled" ? (
-          <Rule label="Opens">{longDate(drive.startsAt)}</Rule>
+          <Rule label={tUi("opens")}>{longDate(drive.startsAt)}</Rule>
         ) : null}
         {drive.status === "closed" || drive.status === "cancelled" ? (
-          <Rule label="Closed">{longDate(drive.closedAt ?? drive.endsAt)}</Rule>
+          <Rule label={tUi("closed")}>
+            {longDate(drive.closedAt ?? drive.endsAt)}
+          </Rule>
         ) : (
-          <Rule label="Ends">{longDate(drive.endsAt)}</Rule>
+          <Rule label={tUi("ends")}>{longDate(drive.endsAt)}</Rule>
         )}
       </dl>
       <p

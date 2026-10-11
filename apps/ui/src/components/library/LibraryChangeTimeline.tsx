@@ -4,6 +4,7 @@
 // without values; a viewer with `library.history` gets page 1 again from
 // the history route, with previous → next, once their session has loaded.
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -232,6 +233,8 @@ export function LibraryChangeTimeline({
   /** The "Record created" row, shown last once every batch is listed. */
   readonly created?: React.ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { can, ready } = useEntitlements()
   const pro = ready && can("library.history")
   const [batches, setBatches] = useState(initial.data)
@@ -354,7 +357,7 @@ export function LibraryChangeTimeline({
           onClick={showMore}
         >
           {loading
-            ? "Loading…"
+            ? tUi("loading")
             : collapsed || entries - rows.length <= initial.meta.pageSize
               ? `Show all ${entries} entries`
               : "Show older entries"}

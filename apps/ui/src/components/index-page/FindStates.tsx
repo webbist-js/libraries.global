@@ -1,14 +1,18 @@
 // apps/ui/src/components/index-page/FindStates.tsx
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 
 export function FindSkeletonGrid({ count = 6 }: { count?: number }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <div
       aria-busy="true"
-      aria-label="Loading results"
+      aria-label={tUi("loading_results")}
       className="grid gap-[18px]"
       style={{
         gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 270px), 1fr))",
@@ -57,6 +61,8 @@ export function FindSkeletonGrid({ count = 6 }: { count?: number }) {
 }
 
 export function FindErrorState({ onRetry }: { onRetry: () => void }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <div
       role="alert"
@@ -93,13 +99,15 @@ export function FindErrorState({ onRetry }: { onRetry: () => void }) {
         className="cursor-pointer rounded-full border-0 px-5 py-2.5 text-[15px] font-semibold text-white"
         style={{ background: T.ink.base }}
       >
-        Try again
+        {tUi("try_again")}{" "}
       </button>
     </div>
   )
 }
 
 export function FindEmptyState({ onClear }: { onClear: () => void }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <div
       className="flex flex-col items-center gap-4 px-7 py-14 text-center"
@@ -144,7 +152,7 @@ export function FindEmptyState({ onClear }: { onClear: () => void }) {
           className="cursor-pointer rounded-full border-0 px-5 py-2.5 text-[15px] font-semibold text-white"
           style={{ background: T.ink.base }}
         >
-          Clear filters
+          {tUi("clear_filters")}{" "}
         </button>
         <Link
           href="/contribute"

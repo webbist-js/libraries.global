@@ -1,6 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 
@@ -23,11 +24,13 @@ export function GlobalNavLinks({
   /** "start" sits the nav beside the logo (the full-bleed app header). */
   readonly align?: "center" | "start"
 }) {
+  const tUi = useUiTranslations("ui")
+
   const pathname = normalizePathname(usePathname() ?? "/")
 
   return (
     <nav
-      aria-label="Main"
+      aria-label={tUi("main")}
       className={`hidden flex-1 items-center gap-0.5 lg:flex ${align === "start" ? "justify-start" : "justify-center"}`}
     >
       {links.map((link) => {

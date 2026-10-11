@@ -7,6 +7,7 @@ import {
   validateFeedValues,
 } from "@repo/shared-data"
 import { useRouter } from "next/navigation"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import { Notice } from "@/components/ds/Notice"
@@ -37,6 +38,8 @@ export function ReplaceFeedForm({
   readonly libraryDocumentId: string
   readonly librarySlug: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const [values, setValues] = useState<Record<string, string>>({})
   const [localError, setLocalError] = useState<string | null>(null)
@@ -122,7 +125,7 @@ export function ReplaceFeedForm({
         <Notice
           icon="mdi:check-circle-outline"
           tone="ok"
-          title="New details sent for review"
+          title={tUi("new_details_sent_for_review")}
         >
           <p className="m-0">
             Your current details keep working until a moderator approves the new
@@ -193,7 +196,7 @@ export function ReplaceFeedForm({
                 : "mdi:alert-circle-outline"
             }
             tone={test.result === "ok" ? "ok" : "warn"}
-            title="Test result"
+            title={tUi("test_result")}
           >
             <p className="m-0">{FEED_TEST_COPY[test.result]}</p>
           </Notice>
@@ -223,7 +226,7 @@ export function ReplaceFeedForm({
           disabled={!canSend || sending}
           onClick={send}
         >
-          {sending ? "Sending…" : "Send for review"}
+          {sending ? tUi("sending") : "Send for review"}
         </button>
         {!canSend ? (
           <span

@@ -6,6 +6,7 @@ import {
   type PublicLiveState,
   type AtlasScope,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { type ReactNode, useId, useMemo, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -128,6 +129,8 @@ export function AtlasSearchTab({
   readonly serverPresets?: Preset[]
   readonly onPickRecent?: (item: RecentItem) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const inputId = useId()
   const [mobileStatus, setMobileStatus] = useState<MobileSearchStatus | null>(
     null
@@ -168,7 +171,7 @@ export function AtlasSearchTab({
   const presets = useMemo(() => {
     if (serverPresets) return serverPresets
     const all: Preset[] = [
-      { label: "Open now", patch: { opening: "now" } },
+      { label: tUi("open_now"), patch: { opening: "now" } },
       {
         label: "Open on Sundays",
         patch: { opening: "at", atDay: 6, atMinutes: 12 * 60 },
@@ -182,7 +185,7 @@ export function AtlasSearchTab({
     return all
       .filter((p) => countWith(libraries, filters, p.patch, now) > 0)
       .slice(0, 5)
-  }, [libraries, filters, now, serverPresets])
+  }, [libraries, filters, now, serverPresets, tUi])
 
   const placeByKey = useMemo(
     () => new Map(places.map((p) => [p.key, p])),
@@ -211,7 +214,7 @@ export function AtlasSearchTab({
           type="search"
           value={query}
           onChange={(e) => onQuery(e.target.value)}
-          placeholder="Library, stop or place"
+          placeholder={tUi("library_stop_or_place")}
           autoComplete="off"
           className="h-full min-w-0 flex-1 bg-transparent text-[16px] outline-none placeholder:text-(--t-ink-dim)"
           style={{ color: T.ink.base }}
@@ -219,7 +222,7 @@ export function AtlasSearchTab({
         {query ? (
           <button
             type="button"
-            aria-label="Clear search"
+            aria-label={tUi("clear_search")}
             onClick={() => onQuery("")}
             className="flex size-8 items-center justify-center rounded-full"
             style={{ color: T.ink.dim }}
@@ -252,7 +255,7 @@ export function AtlasSearchTab({
             </p>
           ) : null}
           {results.placeHits.length > 0 ? (
-            <ResultGroup title="Places">
+            <ResultGroup title={tUi("places")}>
               {results.placeHits.map((p) => (
                 <ResultRow
                   key={p.key}
@@ -265,7 +268,7 @@ export function AtlasSearchTab({
             </ResultGroup>
           ) : null}
           {results.libHits.length > 0 ? (
-            <ResultGroup title="Libraries">
+            <ResultGroup title={tUi("libraries")}>
               {results.libHits.map((l) => (
                 <ResultRow
                   key={l.id}
@@ -286,7 +289,7 @@ export function AtlasSearchTab({
       ) : (
         <>
           {recent.length > 0 ? (
-            <ResultGroup title="Recent">
+            <ResultGroup title={tUi("recent")}>
               {recent.map((r) => {
                 const lib =
                   r.kind === "library" ? libById.get(r.key) : undefined
@@ -318,7 +321,7 @@ export function AtlasSearchTab({
                       sub={r.sub}
                       badge={
                         isFreshLive(mobileLive[stop.library_document_id])
-                          ? "Live now"
+                          ? tUi("live_now")
                           : visitsToday
                             ? "Visit today"
                             : undefined
@@ -355,7 +358,7 @@ export function AtlasSearchTab({
                     trailing="hist"
                     badge={
                       lib?.type === "Mobile" && isFreshLive(mobileLive[lib.id])
-                        ? "Live now"
+                        ? tUi("live_now")
                         : undefined
                     }
                     onClick={() =>
@@ -388,7 +391,7 @@ export function AtlasSearchTab({
                       style={{ borderColor: T.border.hi }}
                     >
                       <Icon name="bus" size={16} color={T.map.stopRing} />
-                      Live now
+                      {tUi("live_now")}
                     </button>
                   </>
                 ) : null}

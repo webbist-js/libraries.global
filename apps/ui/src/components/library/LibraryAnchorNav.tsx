@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { Container } from "@/components/elementary/Container"
@@ -12,6 +13,8 @@ import { T } from "@/lib/design-tokens"
  * colour. The tab for the section in view is marked as current.
  */
 export function LibraryAnchorNav({ items }: { readonly items: AnchorItem[] }) {
+  const tUi = useUiTranslations("ui")
+
   const [current, setCurrent] = useState<string | null>(null)
 
   useEffect(() => {
@@ -40,7 +43,7 @@ export function LibraryAnchorNav({ items }: { readonly items: AnchorItem[] }) {
 
   return (
     <nav
-      aria-label="On this page"
+      aria-label={tUi("on_this_page")}
       className="sticky top-14 z-5 border-b"
       style={{ background: T.bg.space, borderColor: T.border.line }}
     >

@@ -1,7 +1,7 @@
 "use client"
 
 import { Navigation, Search, X } from "lucide-react"
-import { useLocale } from "next-intl"
+import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { DEFAULT_FILTERS } from "@/components/library-index/types"
@@ -46,6 +46,8 @@ export function LibrarySearchBox({
   readonly strong?: boolean
   readonly className?: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const locale = useLocale()
   const router = useRouter()
   const listboxId = useId()
@@ -200,7 +202,7 @@ export function LibrarySearchBox({
           onClick={submit}
           className="shrink-0 rounded-full bg-(--t-accent-primary) px-5 py-3 text-[16px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) sm:px-6"
         >
-          Search
+          {tUi("search")}{" "}
         </button>
       </div>
 
@@ -208,7 +210,7 @@ export function LibrarySearchBox({
         <div
           id={listboxId}
           role="listbox"
-          aria-label="Search suggestions"
+          aria-label={tUi("search_suggestions")}
           className="absolute top-[calc(100%+8px)] right-0 left-0 z-30 rounded-2xl border bg-white p-2 shadow-[0_16px_40px_rgba(23,22,43,0.12)]"
           style={{ borderColor: T.border.line }}
         >
@@ -237,7 +239,7 @@ export function LibrarySearchBox({
                     color: "var(--tint-national-fg)",
                   }}
                 >
-                  Library
+                  {tUi("library")}{" "}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span

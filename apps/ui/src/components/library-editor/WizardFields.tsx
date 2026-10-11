@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { isModeratedLibraryChange } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 
@@ -25,13 +26,15 @@ import type { FormData } from "./wizard.types"
 // ── ChangedTag — improve mode marks fields that differ from the record ───────
 
 export function ChangedTag() {
+  const tUi = useUiTranslations("ui")
+
   return (
     <span
       className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12.5px] font-semibold"
       style={{ background: T.accent.chip, color: T.accent.primary }}
     >
       <Icon icon="mdi:pencil" width={12} aria-hidden="true" />
-      Changed
+      {tUi("changed")}{" "}
     </span>
   )
 }
@@ -84,6 +87,8 @@ export function useIsShared(key?: keyof FormData): boolean {
 }
 
 export function SharedTag({ id }: { id?: string }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <span
       id={id}
@@ -91,7 +96,7 @@ export function SharedTag({ id }: { id?: string }) {
       style={{ background: T.bg.muted, color: T.ink.dim }}
     >
       <Icon icon="mdi:earth" width={12} aria-hidden="true" />
-      Shared across languages
+      {tUi("shared_across_languages")}{" "}
     </span>
   )
 }
@@ -114,6 +119,8 @@ export function useIsModerated(key?: keyof FormData, value?: unknown): boolean {
 
 /** "Reviewed by a moderator": the per-field note in the staff editor. */
 export function ModeratedTag({ id }: { id?: string }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <span
       id={id}
@@ -121,7 +128,7 @@ export function ModeratedTag({ id }: { id?: string }) {
       style={{ background: T.bg.muted, color: T.ink.dim }}
     >
       <Icon icon="mdi:shield-check-outline" width={12} aria-hidden="true" />
-      Reviewed by a moderator
+      {tUi("reviewed_by_a_moderator")}{" "}
     </span>
   )
 }
@@ -143,6 +150,8 @@ export function SharedBlock({
   fields: readonly (keyof FormData)[]
   children: React.ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   const editable = useContext(EditableFieldsContext)
   const shared = !!editable && fields.every((f) => !editable.has(f))
   if (!shared) return <>{children}</>
@@ -161,7 +170,7 @@ export function SharedBlock({
         opacity: 0.75,
       }}
     >
-      <legend className="sr-only">Shared across languages</legend>
+      <legend className="sr-only">{tUi("shared_across_languages")}</legend>
       <div>
         <SharedTag />
       </div>
@@ -173,6 +182,8 @@ export function SharedBlock({
 // ── RequiredTag — subtle rust "required" marker next to a label ──────────────
 
 export function RequiredTag() {
+  const tUi = useUiTranslations("ui")
+
   return (
     <span
       style={{
@@ -182,7 +193,7 @@ export function RequiredTag() {
         color: "var(--tint-special-fg)",
       }}
     >
-      required
+      {tUi("required_d0a363")}{" "}
     </span>
   )
 }
@@ -321,6 +332,8 @@ export function WizardSelect({
   options: { value: string; label: string }[]
   required?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const changed = useIsChanged(id)
   const shared = useIsShared(id)
   const moderated = useIsModerated(id, value)
@@ -362,7 +375,7 @@ export function WizardSelect({
             ...(error.invalid ? invalidInputStyle : {}),
           }}
         >
-          <SelectValue placeholder="Select…" />
+          <SelectValue placeholder={tUi("select_731fe0")} />
         </SelectTrigger>
         <SelectContent
           style={{
@@ -389,7 +402,7 @@ export function WizardSelect({
         </SelectContent>
       </RadixSelect>
       {error.invalid && (
-        <FieldError id={error.id}>Choose one to continue.</FieldError>
+        <FieldError id={error.id}>{tUi("choose_one_to_continue")}</FieldError>
       )}
     </FieldFrame>
   )
@@ -416,6 +429,8 @@ export function TextareaField({
   hint?: string
   required?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const hintId = hint ? `${id}-hint` : undefined
   const changed = useIsChanged(id)
   const shared = useIsShared(id)
@@ -454,7 +469,7 @@ export function TextareaField({
         }}
       />
       {error.invalid && (
-        <FieldError id={error.id}>Fill this in to continue.</FieldError>
+        <FieldError id={error.id}>{tUi("fill_this_in_to_continue")}</FieldError>
       )}
       {hint && (
         <p id={hintId} style={fieldHintStyle}>
@@ -483,6 +498,8 @@ export function TagSelector({
   /** The form field this selects, for improve-mode change marking. */
   fieldKey?: keyof FormData
 }) {
+  const tUi = useUiTranslations("ui")
+
   const changed = useIsChanged(fieldKey ?? "services") && !!fieldKey
   const shared = useIsShared(fieldKey)
   const [options, setOptions] = useState<
@@ -628,7 +645,7 @@ export function TagSelector({
               fontWeight: 600,
             }}
           >
-            Show {overflow} more
+            {tUi("show")} {overflow} more
           </button>
         )}
       </fieldset>

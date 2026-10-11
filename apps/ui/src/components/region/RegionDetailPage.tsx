@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react"
 import { type GapKey, PANEL_GAPS } from "@repo/shared-data"
 import { cookies } from "next/headers"
 import type { Locale } from "next-intl"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { DrivesHere } from "@/components/drives/DrivesHere"
 import { Container } from "@/components/elementary/Container"
@@ -104,6 +105,8 @@ export async function RegionDetailPage({
   } | null
   drives?: readonly { view: DriveView; here: number }[]
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const name = region.name ?? ""
   const countryName = region.country?.name
   const continentName =
@@ -243,7 +246,7 @@ export async function RegionDetailPage({
                 Search libraries in {name}
               </LocationHeroAction>
               <LocationHeroAction href="/contribute/index/new" icon="mdi:plus">
-                Add a library
+                {tUi("add_a_library")}
               </LocationHeroAction>
             </>
           }
@@ -258,7 +261,7 @@ export async function RegionDetailPage({
                 label={`Map of libraries documented in ${name}`}
                 caption={
                   pins.length > 0
-                    ? `${countNoun(pins.length, "Library", "Libraries")} documented in ${name}`
+                    ? `${countNoun(pins.length, tUi("library"), tUi("libraries"))} documented in ${name}`
                     : `No libraries documented in ${name} yet.`
                 }
                 pins={pins}
@@ -307,7 +310,7 @@ export async function RegionDetailPage({
 
             {hasQuickLinks ? (
               <section className="scroll-mt-24">
-                <LocationSectionHeading title="Quick links" />
+                <LocationSectionHeading title={tUi("quick_links")} />
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {region.quickLinks!.map((link, i) => (
                     <QuickLinkCard

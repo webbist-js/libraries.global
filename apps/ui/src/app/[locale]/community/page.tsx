@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { headers } from "next/headers"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { StandingCard } from "@/components/community/StandingCard"
 import { TopThisMonthCard } from "@/components/community/TopThisMonthCard"
@@ -75,6 +76,8 @@ export default async function CommunityPage({
   params: Promise<{ locale: string }>
   searchParams: Promise<{ focus?: string | string[] }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const [{ locale }, { focus: focusParam }] = await Promise.all([
     params,
     searchParams,
@@ -169,7 +172,7 @@ export default async function CommunityPage({
         </div>
 
         <aside
-          aria-label="Sidebar"
+          aria-label={tUi("sidebar")}
           className="flex min-w-0 flex-col gap-3.5 min-[760px]:sticky min-[760px]:top-24 min-[760px]:max-w-[440px]"
           style={{ flex: "1 1 290px" }}
         >

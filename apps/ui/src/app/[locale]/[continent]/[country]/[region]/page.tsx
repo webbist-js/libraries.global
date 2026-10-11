@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { notFound, permanentRedirect } from "next/navigation"
 import type { Locale } from "next-intl"
+import { setRequestLocale } from "next-intl/server"
 import { use } from "react"
 
 import { placeLabels } from "@/components/location/location-page.helpers"
@@ -93,6 +94,7 @@ export default function RegionPage(props: {
 }) {
   const params = use(props.params)
   const locale = params.locale as Locale
+  setRequestLocale(locale)
   const continentSlug = params.continent
   const countrySlug = params.country
   const slug = params.region

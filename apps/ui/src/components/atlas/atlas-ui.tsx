@@ -2,6 +2,7 @@
 
 // Small presentational pieces shared by the Atlas Explorer panels.
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 
 import { T, TYPE_TINT } from "@/lib/design-tokens"
@@ -446,6 +447,8 @@ export function YearRange({
   readonly value: [number, number]
   readonly onChange: (v: [number, number]) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const pct = (v: number) => ((v - min) / Math.max(1, max - min)) * 100
   const thumb =
     "pointer-events-none absolute inset-0 w-full appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-(--t-accent-primary) [&::-webkit-slider-thumb]:bg-white [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-(--t-accent-primary) [&::-moz-range-thumb]:bg-white"
@@ -468,7 +471,7 @@ export function YearRange({
       />
       <input
         type="range"
-        aria-label="Founded from"
+        aria-label={tUi("founded_from")}
         min={min}
         max={max}
         value={value[0]}
@@ -479,7 +482,7 @@ export function YearRange({
       />
       <input
         type="range"
-        aria-label="Founded until"
+        aria-label={tUi("founded_until")}
         min={min}
         max={max}
         value={value[1]}

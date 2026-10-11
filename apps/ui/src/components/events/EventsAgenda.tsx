@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import {
   agendaGroupLabel,
@@ -39,6 +40,8 @@ function Chip({
 }
 
 function AgendaRow({ event }: { readonly event: EventSearchHit }) {
+  const tUi = useUiTranslations("ui")
+
   const meta = EVENT_TYPE_META[event.eventType] ?? EVENT_TYPE_META.other!
   const tint = eventTypeTint(event.eventType)
   const libraryPath = libraryPathOf(event)
@@ -101,7 +104,7 @@ function AgendaRow({ event }: { readonly event: EventSearchHit }) {
           </Chip>
           <Chip bg="var(--t-bg-muted)" fg="var(--t-ink-dim)">
             {event.isFree
-              ? "Free"
+              ? tUi("free")
               : event.priceMin != null
                 ? `£${event.priceMin}`
                 : "See website"}

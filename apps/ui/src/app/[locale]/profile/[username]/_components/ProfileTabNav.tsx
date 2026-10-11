@@ -1,6 +1,9 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { type SectionTab, SectionTabs } from "@/components/ds/SectionTabs"
+import { useNotifications } from "@/components/notifications/NotificationProvider"
 import { usePathname } from "@/lib/navigation"
 
 const TABS = [
@@ -42,7 +45,10 @@ export function ProfileTabNav({
   isOwnProfile?: boolean
   counts?: Partial<Record<Exclude<ProfileTabId, "overview">, number>>
 }) {
+  const tUi = useUiTranslations("ui")
+
   const pathname = usePathname()
+  const { unread } = useNotifications()
   const base = `/profile/${username}`
 
   function isActive(href: string) {
@@ -64,17 +70,26 @@ export function ProfileTabNav({
   })
 
   if (isOwnProfile) {
-    tabs.push({
-      id: "settings",
-      label: "Settings",
-      href: "/profile/settings",
-      icon: "mdi:cog-outline",
-    })
+    tabs.push(
+      {
+        id: "notifications",
+        label: tUi("notifications"),
+        href: "/profile/notifications",
+        icon: "mdi:bell-outline",
+        count: unread || undefined,
+      },
+      {
+        id: "settings",
+        label: tUi("settings"),
+        href: "/profile/settings",
+        icon: "mdi:cog-outline",
+      }
+    )
   }
 
   return (
     <SectionTabs
-      label="Profile sections"
+      label={tUi("profile_sections")}
       tabs={tabs}
       activeId={tabs.find((tab) => isActive(tab.href))?.id ?? null}
     />

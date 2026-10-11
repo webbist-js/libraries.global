@@ -1,10 +1,11 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useLocale } from "next-intl"
+import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
+import { languageName } from "@/lib/locale-fallback"
 import { searchLibraryNames } from "@/lib/meilisearch"
 import { Link } from "@/lib/navigation"
 
@@ -110,27 +111,30 @@ export function StatusCard({
   publishesDirectly: boolean
   onSubmit: () => void
 }) {
-  let saveLabel = "Not saved yet"
+  const tUi = useUiTranslations("ui")
+  const tLanguage = useUiTranslations("translation")
+
+  let saveLabel = tUi("not_saved_yet")
   let saveIcon = "mdi:circle-outline"
   let saveColor: string = T.ink.dim
   if (saveState === "saving") {
-    saveLabel = "Saving…"
+    saveLabel = tUi("saving")
     saveIcon = "mdi:loading"
   } else if (saveState === "saved" || lastSavedAt) {
-    saveLabel = "Draft saved"
+    saveLabel = tUi("draft_saved")
     saveIcon = "mdi:check"
     saveColor = T.accent.ok
   }
   if (saveState === "error") {
-    saveLabel = "Couldn’t save"
+    saveLabel = tUi("couldnt_save")
     saveIcon = "mdi:alert-circle-outline"
     saveColor = T.accent.danger
   }
   const title = translating
-    ? `Translating into ${localeName}`
+    ? tLanguage("title", { language: localeName })
     : mode === "new"
-      ? "New draft"
-      : "Editing"
+      ? tUi("new_draft")
+      : tUi("editing")
   const submitted = submitState === "submitted"
 
   return (
@@ -150,10 +154,12 @@ export function StatusCard({
       </div>
       <p style={cardHint}>
         {submitted
-          ? "In review. You can’t edit it until an editor replies."
+          ? tUi("in_review_you_cant_edit_it_until_an_editor_replies")
           : publishesDirectly
-            ? "Not published. Approved changes from editors publish straight away."
-            : "Not published. Only you and the editors can see drafts."}
+            ? tUi(
+                "not_published_approved_changes_from_editors_publish_straight_away"
+              )
+            : tUi("not_published_only_you_and_the_editors_can_see_drafts")}
       </p>
       <button
         type="button"
@@ -168,10 +174,10 @@ export function StatusCard({
         }}
       >
         {submitState === "submitting"
-          ? "Sending…"
+          ? tUi("sending")
           : submitted
-            ? "Sent for review"
-            : "Submit for review"}
+            ? tUi("sent_for_review")
+            : tUi("submit_for_review")}
       </button>
       {submitted && (
         <p
@@ -188,13 +194,13 @@ export function StatusCard({
             style={{ flexShrink: 0, marginTop: 2 }}
           />
           <span>
-            Sent to the editors. Track it in{" "}
+            {tUi("sent_to_the_editors_track_it_in")}{" "}
             <Link
               href="/contribute/submissions"
               className="font-semibold underline underline-offset-[3px]"
               style={{ color: "inherit" }}
             >
-              My submissions
+              {tUi("my_submissions")}{" "}
             </Link>
             .
           </span>
@@ -210,7 +216,7 @@ export function StatusCard({
         </p>
       )}
       <p className="mt-3 mb-0 text-[13.5px]" style={{ color: T.ink.low }}>
-        {kind === "journal" ? "Journal" : "Knowledge"} · {localeName}
+        {kind === "journal" ? tUi("journal") : tUi("knowledge")} · {localeName}
       </p>
     </section>
   )
@@ -220,22 +226,25 @@ export function StatusCard({
 
 export function SectionsCard({
   kind,
+  locale,
   sections,
   onChange,
   disabled,
 }: {
   kind: ArticleKind
+  locale: string
   sections: string[]
   onChange: (next: string[]) => void
   disabled?: boolean
 }) {
-  // Both taxonomies live in Strapi: Wiki Sections and Journal sections. The
-  // editor shell remounts when the kind changes, so no reset is needed here.
+  const tUi = useUiTranslations("ui")
+
+  // Section keys stay stable while their labels follow the article language.
   const [options, setOptions] = useState<{ key: string; label: string }[]>([])
   useEffect(() => {
     let cancelled = false
     fetch(
-      `/api/relations/${kind === "knowledge" ? "wiki-sections" : "blog-sections"}`
+      `/api/relations/${kind === "knowledge" ? "wiki-sections" : "blog-sections"}?locale=${encodeURIComponent(locale)}`
     )
       .then((r) => r.json())
       .then((j: { data?: { slug?: string; name?: string }[] }) => {
@@ -251,7 +260,7 @@ export function SectionsCard({
     return () => {
       cancelled = true
     }
-  }, [kind])
+  }, [kind, locale])
 
   const multi = kind === "knowledge"
 
@@ -272,26 +281,32 @@ export function SectionsCard({
   return (
     <section aria-labelledby="sections-heading" style={card}>
       <h2 id="sections-heading" style={cardTitle}>
-        {kind === "knowledge" ? "Knowledge sections" : "Journal section"}{" "}
+        {kind === "knowledge"
+          ? tUi("knowledge_sections")
+          : tUi("journal_section")}{" "}
         <span style={{ color: "var(--tint-special-fg)", fontWeight: 500 }}>
-          Required
+          {tUi("required")}{" "}
         </span>
       </h2>
       <p style={cardHint}>
         {kind === "knowledge"
-          ? "Where this article appears. The first one you pick is its home section."
-          : "Where this story appears in the Journal."}
+          ? tUi(
+              "where_this_article_appears_the_first_one_you_pick_is_its_home_section"
+            )
+          : tUi("where_this_story_appears_in_the_journal")}
       </p>
       <div
         className="mt-4 flex flex-wrap gap-2"
         role="group"
         aria-label={
-          kind === "knowledge" ? "Knowledge sections" : "Journal section"
+          kind === "knowledge"
+            ? tUi("knowledge_sections")
+            : tUi("journal_section")
         }
       >
         {options.length === 0 && (
           <p className="m-0 text-[14px]" style={{ color: T.ink.faint }}>
-            Loading sections…
+            {tUi("loading_sections")}{" "}
           </p>
         )}
         {options.map((o) => {
@@ -303,7 +318,7 @@ export function SectionsCard({
               key={o.key}
               on={on}
               onClick={() => toggle(o.key)}
-              badge={home ? "Home" : undefined}
+              badge={home ? tUi("home_section") : undefined}
             >
               {o.label}
             </Chip>
@@ -329,13 +344,18 @@ function tagKey(t: ArticleTag) {
 
 export function TagsCard({
   tags,
+  locale: contentLocale,
   onChange,
   disabled,
 }: {
   tags: ArticleTag[]
+  locale: string
   onChange: (next: ArticleTag[]) => void
   disabled?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+  const tEditor = useUiTranslations("articleEditor")
+
   const locale = useLocale()
   const [query, setQuery] = useState("")
   const [topics, setTopics] = useState<ArticleTag[]>([])
@@ -343,12 +363,14 @@ export function TagsCard({
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    fetch("/api/relations/topics")
+    let cancelled = false
+    fetch(`/api/relations/topics?locale=${encodeURIComponent(contentLocale)}`)
       .then((r) => r.json())
       .then(
         (j: {
           data?: { name?: string; slug?: string; documentId?: string }[]
-        }) =>
+        }) => {
+          if (cancelled) return
           setTopics(
             (j.data ?? []).flatMap((t) =>
               t.name && t.slug
@@ -363,9 +385,14 @@ export function TagsCard({
                 : []
             )
           )
+        }
       )
       .catch(() => {})
-  }, [])
+
+    return () => {
+      cancelled = true
+    }
+  }, [contentLocale])
 
   useEffect(() => {
     if (debounce.current) clearTimeout(debounce.current)
@@ -406,6 +433,11 @@ export function TagsCard({
   }, [query, locale])
 
   const chosen = useMemo(() => new Set(tags.map(tagKey)), [tags])
+  const displayTag = (tag: ArticleTag) =>
+    tag.kind === "topic"
+      ? (topics.find((topic) => tagKey(topic) === tagKey(tag))?.label ??
+        tag.label)
+      : tag.label
   const q = query.trim().toLowerCase()
   const topicMatches = topics.filter(
     (t) => !chosen.has(tagKey(t)) && (!q || t.label.toLowerCase().includes(q))
@@ -436,9 +468,9 @@ export function TagsCard({
   return (
     <section aria-labelledby="tags-heading" style={card}>
       <h2 id="tags-heading" style={cardTitle}>
-        Tags
+        {tUi("tags")}{" "}
       </h2>
-      <p style={cardHint}>Topics, places and libraries this is about.</p>
+      <p style={cardHint}>{tUi("topics_places_and_libraries_this_is_about")}</p>
       {tags.length > 0 && (
         <ul className="m-0 mt-4 flex list-none flex-wrap gap-2 p-0">
           {tags.map((tag) => (
@@ -452,11 +484,11 @@ export function TagsCard({
                 }}
               >
                 <Icon icon={TAG_ICON[tag.kind]} width={15} aria-hidden="true" />
-                {tag.label}
+                {displayTag(tag)}
                 {!disabled && (
                   <button
                     type="button"
-                    aria-label={`Remove ${tag.label}`}
+                    aria-label={tEditor("removeTag", { tag: displayTag(tag) })}
                     onClick={() => remove(tag)}
                     className="ml-0.5 inline-flex size-5 items-center justify-center rounded-full hover:bg-white/60"
                     style={{
@@ -478,7 +510,7 @@ export function TagsCard({
         <>
           <div className="mt-4 flex gap-2">
             <label htmlFor="tag-query" className="sr-only">
-              Add a topic, place or library
+              {tUi("add_a_topic_place_or_library")}{" "}
             </label>
             <input
               id="tag-query"
@@ -491,7 +523,7 @@ export function TagsCard({
                   else addFree()
                 }
               }}
-              placeholder="Add a topic, place or library"
+              placeholder={tUi("add_a_topic_place_or_library")}
               autoComplete="off"
               style={{
                 flex: 1,
@@ -519,20 +551,20 @@ export function TagsCard({
                 fontFamily: T.font.sans,
               }}
             >
-              Add
+              {tUi("add")}{" "}
             </button>
           </div>
           {suggestions.length > 0 && (
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <span className="text-[14px]" style={{ color: T.ink.dim }}>
-                Suggested:
+                {tUi("suggested")}{" "}
               </span>
               {suggestions.map((s) => (
                 <Chip
                   key={tagKey(s)}
                   dashed
                   onClick={() => add(s)}
-                  ariaLabel={`Add ${s.label}`}
+                  ariaLabel={tEditor("addTag", { tag: s.label })}
                 >
                   <Icon icon="mdi:plus" width={14} aria-hidden="true" />
                   {s.label}
@@ -554,6 +586,7 @@ export function LanguageCard({
   locales,
   sourceLocale,
   availableLocales,
+  allowedLocales,
   onChange,
   disabled,
 }: {
@@ -562,28 +595,32 @@ export function LanguageCard({
   locales: ArticleLocale[]
   sourceLocale: string
   availableLocales: string[]
+  allowedLocales?: readonly string[]
   onChange: (code: string) => void
   disabled?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+  const tLanguage = useUiTranslations("translation")
+  const displayLocale = useLocale()
+
   if (locales.length < 2) return null
   const translating = locale !== sourceLocale
-  const nameOf = (code: string) =>
-    locales.find((l) => l.code === code)?.name ?? code
+  const nameOf = (code: string) => languageName(code, locales, displayLocale)
 
   return (
     <section aria-labelledby="language-heading" style={card}>
       <h2 id="language-heading" style={cardTitle}>
-        Language
+        {tUi("language")}{" "}
       </h2>
       <p style={cardHint}>
         {mode === "new"
-          ? "The language you’re writing in."
+          ? tLanguage("writingLanguage")
           : translating
-            ? `You’re translating the ${nameOf(sourceLocale)} original. The source shows beside your draft.`
-            : "Edit the original, or pick another language to add a translation."}
+            ? tLanguage("translateSource", { language: nameOf(sourceLocale) })
+            : tLanguage("chooseLanguage")}
       </p>
       <label htmlFor="article-locale" className="sr-only">
-        Language
+        {tUi("language")}{" "}
       </label>
       <select
         id="article-locale"
@@ -603,14 +640,20 @@ export function LanguageCard({
         }}
       >
         {locales.map((l) => (
-          <option key={l.code} value={l.code}>
-            {l.name}
+          <option
+            key={l.code}
+            value={l.code}
+            disabled={
+              allowedLocales !== undefined && !allowedLocales.includes(l.code)
+            }
+          >
+            {nameOf(l.code)}
             {mode === "edit" && l.code === sourceLocale
-              ? " · original"
+              ? ` · ${tLanguage("original")}`
               : mode === "edit" && availableLocales.includes(l.code)
-                ? " · translated"
+                ? ` · ${tLanguage("translated")}`
                 : mode === "edit"
-                  ? " · add a translation"
+                  ? ` · ${tLanguage("addTranslation")}`
                   : ""}
           </option>
         ))}
@@ -630,26 +673,28 @@ export function EditSummaryCard({
   onChange: (v: string) => void
   disabled?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section aria-labelledby="summary-heading" style={card}>
       <h2 id="summary-heading" style={cardTitle}>
-        What changed{" "}
+        {tUi("what_changed")}{" "}
         <span style={{ color: "var(--tint-special-fg)", fontWeight: 500 }}>
-          Required
+          {tUi("required")}{" "}
         </span>
       </h2>
       <p style={cardHint}>
-        One line for the reviewer and the article’s history.
+        {tUi("one_line_for_the_reviewer_and_the_article_s_history")}{" "}
       </p>
       <label htmlFor="edit-summary" className="sr-only">
-        Edit summary
+        {tUi("edit_summary")}{" "}
       </label>
       <input
         id="edit-summary"
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="e.g. Updated the opening-hours guidance"
+        placeholder={tUi("eg_updated_the_openinghours_guidance")}
         maxLength={200}
         className="mt-4 w-full"
         style={{
@@ -675,9 +720,11 @@ export function HowEditingWorks({
 }: {
   publishesDirectly: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <aside
-      aria-label="How editing works"
+      aria-label={tUi("how_editing_works")}
       className="rounded-[20px] px-6 py-5"
       style={{ background: "var(--tint-national-bg)" }}
     >
@@ -685,16 +732,20 @@ export function HowEditingWorks({
         className="m-0 mb-2 text-[16px] font-bold"
         style={{ color: "var(--tint-national-fg)" }}
       >
-        How editing works
+        {tUi("how_editing_works")}{" "}
       </p>
       <p
         className="m-0 text-[15px] leading-[1.6]"
         style={{ color: T.ink.base }}
       >
         {publishesDirectly
-          ? "Editors review every change before it’s published. As an editor, your approved changes go live at once."
-          : "Editors review every change before it’s published. Approved changes are staged for an editor to publish, and each contributor is credited."}{" "}
-        Published articles keep their revision history.
+          ? tUi(
+              "editors_review_every_change_before_its_published_as_an_editor_your_approved_changes_go_live_at_once"
+            )
+          : tUi(
+              "editors_review_every_change_before_its_published_approved_changes_are_staged_for_an_editor_to_publish_and_each_contributor_is_credited"
+            )}{" "}
+        {tUi("published_articles_keep_their_revision_history")}{" "}
       </p>
     </aside>
   )

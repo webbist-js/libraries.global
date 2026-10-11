@@ -6,12 +6,6 @@ export const JOURNAL_PAGE_SIZE = 9
 export const JOURNAL_SORTS = ["newest", "oldest", "title"] as const
 export type JournalSort = (typeof JOURNAL_SORTS)[number]
 
-export const JOURNAL_SORT_LABELS: Record<JournalSort, string> = {
-  newest: "Newest",
-  oldest: "Oldest",
-  title: "Title A–Z",
-}
-
 export type JournalView = "grid" | "list"
 
 /** The landing's list state, kept in the URL so it survives reloads and shares. */

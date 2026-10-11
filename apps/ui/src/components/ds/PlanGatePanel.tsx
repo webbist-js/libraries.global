@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -33,6 +34,8 @@ export function PlanGatePanel({
   readonly contactHref: string
   readonly freeNote?: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
       className={[
@@ -43,8 +46,12 @@ export function PlanGatePanel({
     >
       <div className="flex flex-col gap-5 lg:self-center">
         <p className="m-0 flex flex-wrap items-center gap-2">
-          <Badge label="Team plan" color="aurora" icon="mdi:lock-outline" />
-          {comingSoon ? <Badge label="Coming soon" color="dim" /> : null}
+          <Badge
+            label={tUi("team_plan")}
+            color="aurora"
+            icon="mdi:lock-outline"
+          />
+          {comingSoon ? <Badge label={tUi("coming_soon")} color="dim" /> : null}
         </p>
         <h2
           className="m-0 text-balance"

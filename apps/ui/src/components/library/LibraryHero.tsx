@@ -4,6 +4,7 @@ import {
   type LibraryNotice,
   type TimetableNotice,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import {
   hubHref,
@@ -60,6 +61,8 @@ export function LibraryHero({
   /** Set when this is the default-locale stand-in for a missing translation. */
   readonly untranslatedLocale?: string | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const rec = library as unknown as Record<string, unknown>
   const mobile = library.libraryType === "Mobile"
   const timetable = normalizeMobileTimetable(rec.mobileTimetable)
@@ -212,7 +215,7 @@ export function LibraryHero({
                     />
                     <FactCard
                       icon="mdi:white-balance-sunny"
-                      label="Sundays"
+                      label={tUi("sundays")}
                       value={hours.sunday}
                     />
                   </>
@@ -223,7 +226,7 @@ export function LibraryHero({
                 >
                   <FactCard
                     icon="mdi:human"
-                    label="Accessibility"
+                    label={tUi("accessibility")}
                     value={
                       library.accessibility?.length
                         ? `${library.accessibility.length} ${library.accessibility.length === 1 ? "feature" : "features"} recorded`

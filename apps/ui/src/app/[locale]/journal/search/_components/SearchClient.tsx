@@ -1,7 +1,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import { useLocale } from "next-intl"
+import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { Suspense, useEffect, useRef, useState } from "react"
 
 import { PageHero, SearchField } from "@/components/ds"
@@ -140,6 +140,8 @@ function BlogSearchResults({ query }: { query: string }) {
 }
 
 function SearchPageInner() {
+  const tUi = useUiTranslations("ui")
+
   const searchParams = useSearchParams()
   const query = searchParams.get("q") ?? ""
 
@@ -147,9 +149,9 @@ function SearchPageInner() {
     <main className="relative z-10 flex-1">
       <PageHero
         breadcrumb={[
-          { label: "Home", href: "/" },
-          { label: "Journal", href: "/journal" },
-          { label: "Search" },
+          { label: tUi("home"), href: "/" },
+          { label: tUi("journal"), href: "/journal" },
+          { label: tUi("search") },
         ]}
         compact
         eyebrow="The Library Journal"
@@ -163,7 +165,7 @@ function SearchPageInner() {
         <form method="get">
           <SearchField
             id="journal-search"
-            placeholder="Search articles, authors or topics"
+            placeholder={tUi("search_articles_authors_or_topics")}
             inputProps={{ name: "q", defaultValue: query, autoComplete: "off" }}
           />
         </form>

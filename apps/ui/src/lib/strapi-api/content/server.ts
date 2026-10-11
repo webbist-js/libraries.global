@@ -1215,9 +1215,10 @@ export async function countJournalArticles(
   }
 }
 
-export async function fetchBlogSections() {
+export async function fetchBlogSections(locale: Locale) {
   try {
     return (await PublicStrapiClient.fetchAPI("/blog-sections", {
+      locale,
       fields: ["name", "slug", "description", "icon", "tint"] as any,
       sort: ["name:asc"] as any,
       pagination: { pageSize: 50 } as any,
@@ -1321,15 +1322,42 @@ export type WikiArticleDetail = WikiArticleSummary & {
   seo?: LibrarySeoData | null
 }
 
+export type WikiLandingData = {
+  quickStartCards?: WikiArticleSummary[] | null
+  heroEyebrow?: string | null
+  heroTitle?: string | null
+  heroText?: string | null
+  version?: string | null
+}
+
+/** The CMS-selected entry articles, in the editor's display order. */
+export async function fetchWikiLanding(locale: Locale) {
+  try {
+    return (await PublicStrapiClient.fetchAPI("/wiki-landing", {
+      locale,
+      status: (await isDraftRequest()) ? "draft" : "published",
+    })) as APIResponse<WikiLandingData>
+  } catch (e: unknown) {
+    logNonBlockingError({
+      message: `Error fetching wiki landing for locale '${locale}'`,
+      error: {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+    })
+  }
+}
+
 /**
  * The Knowledge taxonomy: every Wiki Section in display order (`order`,
  * then name). The Knowledge pages, the sitemap and the editor's section
  * picker all read it from here, so a section added in Strapi appears
  * everywhere at once.
  */
-export async function fetchWikiSections() {
+export async function fetchWikiSections(locale: Locale) {
   try {
     return (await PublicStrapiClient.fetchAPI("/wiki-sections", {
+      locale,
       fields: ["name", "label", "slug", "description", "order", "icon"] as any,
       sort: ["order:asc", "name:asc"] as any,
       pagination: { pageSize: 50 } as any,

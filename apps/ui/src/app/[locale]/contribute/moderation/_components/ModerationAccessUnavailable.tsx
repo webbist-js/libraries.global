@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { Notice } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
@@ -24,6 +25,8 @@ export function ModerationAccessUnavailable({
   /** The page's path, without a locale: where "Try again" goes. */
   readonly path: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <>
       <ModerationHero title={title} leaf={leaf} />
@@ -31,7 +34,7 @@ export function ModerationAccessUnavailable({
         <Notice
           icon="mdi:alert-circle-outline"
           tone="warn"
-          title="Couldn’t check your access"
+          title={tUi("couldnt_check_your_access")}
         >
           <p className="m-0" style={{ color: T.ink.base }}>
             Your roles didn’t load in time, so this page can’t tell whether you
@@ -49,7 +52,7 @@ export function ModerationAccessUnavailable({
                 width={16}
                 height={16}
               />
-              Try again
+              {tUi("try_again")}{" "}
             </button>
           </form>
         </Notice>

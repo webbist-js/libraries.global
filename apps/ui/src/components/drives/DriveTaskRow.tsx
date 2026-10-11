@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -39,6 +40,8 @@ export function DriveTaskRow({
   readonly heldByOther?: boolean
   readonly onSelect: (task: DriveTask) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const id = useId()
   const place = taskPlace(task)
   const disabled = inReview || heldByOther
@@ -105,7 +108,7 @@ export function DriveTaskRow({
               icon="mdi:clock-check-outline"
               width={15}
             />
-            <span id={statusId}>In review</span>
+            <span id={statusId}>{tUi("in_review")}</span>
           </span>
         ) : heldByOther ? (
           <span

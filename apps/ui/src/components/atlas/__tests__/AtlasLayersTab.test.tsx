@@ -1,12 +1,4 @@
 // @vitest-environment happy-dom
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  within,
-  waitFor,
-} from "@testing-library/react"
 import { useState } from "react"
 import { afterEach, expect, it, vi } from "vitest"
 
@@ -20,6 +12,14 @@ import {
 import { AccessibilityControls } from "@/components/atlas/AtlasAccessibility"
 import { AtlasAccessibilityAnalysis } from "@/components/atlas/AtlasAccessibilityAnalysis"
 import { AtlasLayersTab } from "@/components/atlas/AtlasLayersTab"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+  waitFor,
+} from "@/test/render"
 
 afterEach(() => {
   cleanup()

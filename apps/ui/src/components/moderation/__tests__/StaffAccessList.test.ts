@@ -1,4 +1,9 @@
 // @vitest-environment happy-dom
+import type * as NextIntl from "next-intl"
+import * as React from "react"
+import { createElement } from "react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
 import {
   cleanup,
   fireEvent,
@@ -6,16 +11,16 @@ import {
   screen,
   waitFor,
   within,
-} from "@testing-library/react"
-import * as React from "react"
-import { createElement } from "react"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+} from "@/test/render"
 
 Object.assign(globalThis, { React })
 
 const mocks = vi.hoisted(() => ({ refresh: vi.fn() }))
 
-vi.mock("next-intl", () => ({ useLocale: () => "en-GB" }))
+vi.mock("next-intl", async (importOriginal) => ({
+  ...(await importOriginal<typeof NextIntl>()),
+  useLocale: () => "en-GB",
+}))
 vi.mock("@/lib/env-vars", () => ({ getEnvVar: () => {} }))
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("@/lib/navigation", () => ({

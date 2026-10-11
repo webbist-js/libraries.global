@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { OK } from "@/components/atlas/atlas-map.style"
 import { Icon } from "@/components/atlas/atlas-ui"
 import { T } from "@/lib/design-tokens"
@@ -23,6 +25,8 @@ export function AtlasAnalysisHeader({
   readonly onSettings?: () => void
   readonly badgeTone?: "area" | "pin"
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <header
       className="flex shrink-0 flex-col gap-2 border-b px-5 py-4"
@@ -58,7 +62,7 @@ export function AtlasAnalysisHeader({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close analysis"
+            aria-label={tUi("close_analysis")}
             className="flex size-11 items-center justify-center rounded-full border"
             style={{ borderColor: T.border.divider }}
           >

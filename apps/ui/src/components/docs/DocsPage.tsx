@@ -1,8 +1,9 @@
 import { Icon } from "@iconify/react"
-import type { Locale } from "next-intl"
+import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { EditorOnly } from "@/components/contribute/EditorOnly"
 import {
+  DEFAULT_SECTION_ICON,
   DOCS_REPO_URL,
   DOCS_VERSION,
   docsArticlePath,
@@ -22,17 +23,22 @@ import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
+import { formatDate } from "@/lib/article-helpers"
 import { T } from "@/lib/design-tokens"
 import { editorApplyHref } from "@/lib/editor-gate"
-import type { DocsWikiArticle } from "@/lib/strapi-api/content/server"
+import type {
+  DocsWikiArticle,
+  WikiArticleSummary,
+  WikiLandingData,
+} from "@/lib/strapi-api/content/server"
 
 // Contributors with enough accepted changes apply in the app; a moderator decides.
 const WIKI_EDITOR_APPLY_HREF = editorApplyHref("knowledge")
 
 const ENTRY_CARDS = [
   {
-    title: "Improve library records",
-    description: "No coding needed. Add libraries, fix details, cite sources.",
+    title: "improveRecords",
+    description: "improveRecordsLead",
     href: "/contribute",
     icon: "mdi:pencil-outline",
     bg: "#F5EEDC",
@@ -40,8 +46,8 @@ const ENTRY_CARDS = [
     external: false,
   },
   {
-    title: "Run or develop the platform",
-    description: "Set it up locally and ship a change.",
+    title: "runPlatform",
+    description: "runPlatformLead",
     href: DOCS_REPO_URL,
     icon: "mdi:code-tags",
     bg: "var(--tint-academic-bg)",
@@ -49,8 +55,8 @@ const ENTRY_CARDS = [
     external: true,
   },
   {
-    title: "Use the open data",
-    description: "Licensing, exports and the public API.",
+    title: "useOpenData",
+    description: "useOpenDataLead",
     href: "#data-api",
     icon: "mdi:database-outline",
     bg: "var(--tint-public-bg)",
@@ -59,26 +65,18 @@ const ENTRY_CARDS = [
   },
 ] as const
 
-function formatDate(iso: string | null | undefined): string | null {
-  if (!iso) return null
-
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  })
-}
-
 function toRow(
   article: DocsWikiArticle,
-  sections: readonly DocsSection[]
+  sections: readonly DocsSection[],
+  locale: string,
+  untitled: string
 ): DocsPageRow {
   return {
     documentId: article.documentId,
-    title: article.title ?? article.slug ?? "Untitled",
+    title: article.title ?? article.slug ?? untitled,
     href: docsArticlePath(article, sections),
     summary: article.summary ?? null,
-    updatedLabel: formatDate(article.updatedAt),
+    updatedLabel: formatDate(article.updatedAt, "short", locale),
     readMinutes: readingTimeMinutes(article.body),
   }
 }
@@ -87,12 +85,41 @@ export function DocsPage({
   articles,
   sections,
   locale,
+  quickStartCards,
+  landing,
 }: {
   readonly articles: DocsWikiArticle[]
   /** The Knowledge taxonomy from Strapi, in display order. */
   readonly sections: DocsSection[]
   readonly locale: Locale
+  readonly quickStartCards?: readonly WikiArticleSummary[] | null
+  readonly landing?: WikiLandingData | null
 }) {
+  const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("editorial")
+
+  const entryCards =
+    (landing?.quickStartCards ?? quickStartCards)
+      ?.filter((article) => Boolean(article.slug))
+      .map((article) => {
+        const section = homeSectionOf(article, sections)
+
+        return {
+          title: article.title ?? article.slug ?? t("untitled"),
+          description: article.summary ?? "",
+          href: docsArticlePath(article, sections),
+          icon: section?.icon ?? DEFAULT_SECTION_ICON,
+          bg: section?.tintBg ?? T.bg.muted,
+          fg: section?.tintFg ?? T.ink.dim,
+          external: false,
+        }
+      }) ??
+    ENTRY_CARDS.map((card) => ({
+      ...card,
+      title: t(card.title),
+      description: t(card.description),
+    }))
+
   const rowsBySection = new Map(
     sections.map((section) => [section.slug, [] as DocsPageRow[]])
   )
@@ -101,7 +128,7 @@ export function DocsPage({
     // and listed again under any other section the editor tagged.
     const home = homeSectionOf(article, sections)
     if (!home) return
-    const row = toRow(article, sections)
+    const row = toRow(article, sections, locale, t("untitled"))
     new Set([home.slug, ...docsSectionSlugsOf(article)]).forEach((slug) =>
       rowsBySection.get(slug)?.push(row)
     )
@@ -134,19 +161,24 @@ export function DocsPage({
 
       <main className="relative z-10 flex-1">
         <PageHero
-          breadcrumb={[{ label: "Home", href: "/" }, { label: "Knowledge" }]}
-          eyebrow="Knowledge base"
-          eyebrowAccent={DOCS_VERSION}
+          breadcrumb={[
+            { label: tUi("home"), href: "/" },
+            { label: tUi("knowledge") },
+          ]}
+          eyebrow={landing?.heroEyebrow ?? tUi("knowledge")}
+          eyebrowAccent={landing?.version ?? DOCS_VERSION}
           eyebrowIcon="mdi:book-open-outline"
-          lead="How to improve library records, run the platform locally, use the open data, and build on our design system."
-          title="Build, contribute, *extend the index.*"
+          lead={landing?.heroText ?? t("knowledgeHeroLead")}
+          title={landing?.heroTitle ?? t("knowledgeHeroTitle")}
           tabs={<DocsSectionTabs counts={counts} sections={sections} />}
         >
           <form action={`/${locale}/knowledge/search`} method="get">
             <SearchField
               id="docs-search"
-              label="Search the knowledge base"
-              placeholder="Search the knowledge base — e.g. contribute, API, run locally"
+              label={tUi("search_the_knowledge_base")}
+              placeholder={tUi(
+                "search_the_knowledge_base_eg_contribute_api_run_locally"
+              )}
               inputProps={{ name: "q" }}
             />
           </form>
@@ -154,53 +186,58 @@ export function DocsPage({
 
         <Container className="pt-8 pb-20">
           {/* Entry cards */}
-          <nav aria-label="Start here" className="grid gap-4 md:grid-cols-3">
-            {ENTRY_CARDS.map((card) => (
-              <GlobalLink
-                className="group rounded-[18px] p-5 transition-transform hover:-translate-y-0.5"
-                href={card.href}
-                key={card.title}
-                style={{ background: card.bg }}
-                {...(card.external
-                  ? { rel: "noopener noreferrer", target: "_blank" }
-                  : {})}
-              >
-                <span className="flex items-start gap-3.5">
-                  <span
-                    aria-hidden="true"
-                    className="flex size-10 shrink-0 items-center justify-center rounded-full"
-                    style={{ background: T.bg.deep, color: card.fg }}
-                  >
-                    <Icon height={19} icon={card.icon} width={19} />
-                  </span>
-                  <span>
+          {entryCards.length > 0 ? (
+            <nav
+              aria-label={tUi("start_here")}
+              className="grid gap-4 md:grid-cols-3"
+            >
+              {entryCards.map((card) => (
+                <GlobalLink
+                  className="group rounded-[18px] p-5 transition-transform hover:-translate-y-0.5"
+                  href={card.href}
+                  key={card.href}
+                  style={{ background: card.bg }}
+                  {...(card.external
+                    ? { rel: "noopener noreferrer", target: "_blank" }
+                    : {})}
+                >
+                  <span className="flex items-start gap-3.5">
                     <span
-                      className="block text-[19px]"
-                      style={{
-                        fontFamily: T.font.serif,
-                        fontWeight: 500,
-                        color: T.ink.base,
-                      }}
+                      aria-hidden="true"
+                      className="flex size-10 shrink-0 items-center justify-center rounded-full"
+                      style={{ background: T.bg.deep, color: card.fg }}
                     >
-                      {card.title}{" "}
+                      <Icon height={19} icon={card.icon} width={19} />
+                    </span>
+                    <span>
                       <span
-                        aria-hidden="true"
-                        className="inline-block transition-transform group-hover:translate-x-0.5"
+                        className="block text-[19px]"
+                        style={{
+                          fontFamily: T.font.serif,
+                          fontWeight: 500,
+                          color: T.ink.base,
+                        }}
                       >
-                        →
+                        {card.title}{" "}
+                        <span
+                          aria-hidden="true"
+                          className="inline-block transition-transform group-hover:translate-x-0.5"
+                        >
+                          →
+                        </span>
+                      </span>
+                      <span
+                        className="mt-1 block text-[14px] leading-[1.5]"
+                        style={{ color: T.ink.dim }}
+                      >
+                        {card.description}
                       </span>
                     </span>
-                    <span
-                      className="mt-1 block text-[14px] leading-[1.5]"
-                      style={{ color: T.ink.dim }}
-                    >
-                      {card.description}
-                    </span>
                   </span>
-                </span>
-              </GlobalLink>
-            ))}
-          </nav>
+                </GlobalLink>
+              ))}
+            </nav>
+          ) : null}
 
           {/* Sections + sidebar */}
           <div className="mt-10 flex flex-col gap-8 lg:flex-row">
@@ -230,11 +267,11 @@ export function DocsPage({
                     style={{ color: T.accent.primary }}
                     width={17}
                   />
-                  Recent changes
+                  {tUi("recent_changes")}
                 </h2>
                 <ul className="m-0 mt-3 flex list-none flex-col gap-3 p-0">
                   {recent.map((article) => {
-                    const row = toRow(article, sections)
+                    const row = toRow(article, sections, locale, t("untitled"))
                     const sectionTitle = homeSectionOf(article, sections)?.title
 
                     return (
@@ -262,7 +299,7 @@ export function DocsPage({
                     className="m-0 mt-3 text-[13px] leading-[1.5]"
                     style={{ color: T.ink.low }}
                   >
-                    No edits by other contributors this month.
+                    {t("noEditsThisMonth")}
                   </p>
                 ) : null}
               </section>
@@ -277,15 +314,13 @@ export function DocsPage({
                   id="docs-write-with-us"
                   style={{ fontFamily: T.font.serif, fontWeight: 500 }}
                 >
-                  Help write these articles
+                  {t("helpWrite")}
                 </h2>
                 <p
                   className="mt-2 mb-0 text-[14px] leading-[1.55]"
                   style={{ color: "rgba(255,255,255,.75)" }}
                 >
-                  Spot a mistake? Anyone with an account can report an issue on
-                  any page. To write, edit and translate articles yourself,
-                  apply to become a Knowledge editor.
+                  {t("helpWriteLead")}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <EditorOnly
@@ -296,7 +331,7 @@ export function DocsPage({
                         href={WIKI_EDITOR_APPLY_HREF}
                         style={{ background: "#fff", color: T.ink.base }}
                       >
-                        Apply to edit
+                        {t("applyEdit")}
                       </GlobalLink>
                     }
                   >
@@ -305,7 +340,7 @@ export function DocsPage({
                       href="/contribute/knowledge"
                       style={{ background: "#fff", color: T.ink.base }}
                     >
-                      Open the Knowledge editor
+                      {t("openKnowledgeEditor")}
                     </GlobalLink>
                   </EditorOnly>
                 </div>

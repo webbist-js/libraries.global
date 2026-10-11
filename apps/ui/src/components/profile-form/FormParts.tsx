@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 
 import { Badge } from "@/components/ds"
@@ -96,6 +97,8 @@ export function SectionCard({
   readonly lead?: React.ReactNode
   readonly children: React.ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
       id={id}
@@ -118,9 +121,9 @@ export function SectionCard({
           {title}
         </h2>
         {requirement === "required" ? (
-          <Badge label="Required" color="aurora" />
+          <Badge label={tUi("required")} color="aurora" />
         ) : requirement === "optional" ? (
-          <Badge label="Optional" color="dim" />
+          <Badge label={tUi("optional_59be71")} color="dim" />
         ) : null}
       </div>
       {lead ? (

@@ -1,5 +1,4 @@
 // @vitest-environment happy-dom
-import { cleanup, render, screen, within } from "@testing-library/react"
 import * as React from "react"
 import { createElement } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -7,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import type { StaffLibrarySummary } from "@/lib/access-server"
 import type { StaffLibraryMeta } from "@/lib/staff/server"
 import type { StaffOverview } from "@/lib/staff/types"
+import { cleanup, render, screen, within } from "@/test/render"
 
 Object.assign(globalThis, { React })
 

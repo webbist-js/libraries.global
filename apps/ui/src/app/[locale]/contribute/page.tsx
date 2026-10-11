@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { headers } from "next/headers"
 import type { Locale } from "next-intl"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { VoteOnAdditionsCard } from "@/components/community/VoteOnAdditionsCard"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -233,6 +234,8 @@ export default async function ContributePage({
 }: {
   params: Promise<{ locale: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const { locale } = await params
   const session = await getSessionSSR(await headers())
   // UI only; staff endpoints re-check the selected library's access.
@@ -402,24 +405,24 @@ export default async function ContributePage({
       <section className="mx-auto w-full max-w-[1360px] px-4 pt-2 pb-14 sm:px-8">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <BottomLinkCard
-            title="Contribution guide"
+            title={tUi("contribution_guide")}
             copy="What makes a good source, and how to write clear changes."
             href="/knowledge"
           />
           <BottomLinkCard
-            title="Code of conduct"
+            title={tUi("code_of_conduct")}
             copy="How we treat each other in reviews and discussions."
             href={`${GITHUB_REPO}/blob/main/CODE_OF_CONDUCT.md`}
             external
           />
           <BottomLinkCard
-            title="Contribute code"
+            title={tUi("contribute_code")}
             copy="The platform is open source. Issues and pull requests welcome."
             href={GITHUB_REPO}
             external
           />
           <BottomLinkCard
-            title="Support the project"
+            title={tUi("support_the_project")}
             copy="No time to edit? A coffee on Ko-fi helps keep the index online and open."
             href={KOFI_URL}
             external

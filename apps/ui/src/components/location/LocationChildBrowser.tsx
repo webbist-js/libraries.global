@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useMemo, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -47,6 +48,8 @@ export function LocationChildBrowser({
   readonly noun: { singular: string; plural: string }
   readonly addHref: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const inputId = useId()
   const [query, setQuery] = useState("")
   const [sort, setSort] = useState<SortMode>("count")
@@ -115,7 +118,7 @@ export function LocationChildBrowser({
           <div className="flex flex-wrap items-center gap-2.5">
             <div className="relative">
               <label htmlFor={inputId} className="sr-only">
-                Filter {noun.plural}
+                {tUi("filter")} {noun.plural}
               </label>
               <Icon
                 aria-hidden="true"

@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import Link from "next/link"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { EventTypeChip } from "@/components/events/EventTypeChip"
@@ -28,6 +29,8 @@ export function LocationEventsStrip({
   regionSlug,
   locationLabel,
 }: LocationEventsStripProps) {
+  const tUi = useUiTranslations("ui")
+
   const [events, setEvents] = useState<StripEvent[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -117,7 +120,7 @@ export function LocationEventsStrip({
                   color: T.ink.faint,
                 }}
               >
-                {event.isFree ? "Free" : "Ticketed"}
+                {event.isFree ? tUi("free") : "Ticketed"}
               </span>
             </div>
             <p

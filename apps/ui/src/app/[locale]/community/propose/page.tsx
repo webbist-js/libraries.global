@@ -1,6 +1,7 @@
 import { DRIVE_PROPOSAL_MIN_ACCEPTED } from "@repo/access"
 import { headers } from "next/headers"
 import type { Locale } from "next-intl"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 import type { ReactNode } from "react"
 
 import { builderStateFromPrefill } from "@/components/drives/builder.logic"
@@ -52,6 +53,8 @@ export default async function ProposeDrivePage({
   params: Promise<{ locale: string }>
   searchParams: SearchParams
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const [{ locale }, sp] = await Promise.all([params, searchParams])
   const prefill = prefillFromParams(sp)
   const session = await getSessionSSR(await headers())
@@ -93,7 +96,7 @@ export default async function ProposeDrivePage({
             <Notice
               icon="mdi:information-outline"
               tone="info"
-              title="Sign in to propose a drive"
+              title={tUi("sign_in_to_propose_a_drive")}
             >
               <p className="m-0" style={{ color: T.ink.base }}>
                 <GlobalLink
@@ -101,7 +104,7 @@ export default async function ProposeDrivePage({
                   className={LINK}
                   style={{ color: T.accent.primary }}
                 >
-                  Sign in
+                  {tUi("sign_in")}{" "}
                 </GlobalLink>{" "}
                 to choose what a drive does and where.
               </p>

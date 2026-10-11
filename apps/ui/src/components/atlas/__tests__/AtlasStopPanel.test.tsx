@@ -1,16 +1,10 @@
 // @vitest-environment happy-dom
 import type { PublicLiveState } from "@repo/shared-data"
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  within,
-} from "@testing-library/react"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
 import type { PublicMobileTimetable } from "@/lib/mobile/types"
 import { loadStopTimetable, type MobileStopHit } from "@/lib/mobile-stop-search"
+import { cleanup, fireEvent, render, screen, within } from "@/test/render"
 
 import { AtlasStopPanel } from "../AtlasStopPanel"
 

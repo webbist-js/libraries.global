@@ -6,6 +6,16 @@
 
 import { Icon, loadIcons } from "@iconify/react"
 import {
+  CircleAlert,
+  CircleCheck,
+  Clock,
+  Link2Off,
+  Mail,
+  MailWarning,
+  UserRound,
+} from "lucide-react"
+import { useTranslations as useUiTranslations } from "next-intl"
+import {
   type ButtonHTMLAttributes,
   type CSSProperties,
   type InputHTMLAttributes,
@@ -16,6 +26,7 @@ import {
 } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
+import { UtilityHeading } from "@/components/utility/UtilityPage"
 import { useMounted } from "@/hooks/useMounted"
 import { PASSWORD_MIN_LENGTH, SITE_NAME } from "@/lib/constants"
 import { T } from "@/lib/design-tokens"
@@ -67,12 +78,23 @@ const HEADING_ICON_TONES = {
   warn: { bg: "#F5EEDC", fg: T.accent.warn },
 } as const
 
+const UTILITY_ICONS = {
+  "mdi:email-fast-outline": Mail,
+  "mdi:email-alert-outline": MailWarning,
+  "mdi:clock-alert-outline": Clock,
+  "mdi:link-variant-off": Link2Off,
+  "mdi:check-circle-outline": CircleCheck,
+  "mdi:alert-circle-outline": CircleAlert,
+  "mdi:account-question-outline": UserRound,
+} as const
+
 export function AuthHeading({
   title,
   italic,
   subtitle,
   icon,
   iconTone = "info",
+  layout = "form",
 }: {
   title: string
   italic: string
@@ -80,7 +102,26 @@ export function AuthHeading({
   /** Iconify id for a status page's icon above the title. */
   icon?: string
   iconTone?: keyof typeof HEADING_ICON_TONES
+  layout?: "form" | "utility"
 }) {
+  const UtilityIcon = UTILITY_ICONS[icon as keyof typeof UTILITY_ICONS]
+  if (layout === "utility")
+    return (
+      <UtilityHeading
+        title={title}
+        italic={italic}
+        description={subtitle}
+        tone={iconTone}
+        icon={
+          UtilityIcon ? (
+            <UtilityIcon size={30} />
+          ) : icon ? (
+            <Icon icon={icon} width={30} />
+          ) : undefined
+        }
+      />
+    )
+
   return (
     <div style={{ textAlign: "center", marginBottom: "28px" }}>
       {icon && (
@@ -201,6 +242,8 @@ export function PasswordInput({
 }: Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
   ref?: Ref<HTMLInputElement>
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [visible, setVisible] = useState(false)
 
   return (
@@ -214,7 +257,7 @@ export function PasswordInput({
       />
       <button
         type="button"
-        aria-label="Show password"
+        aria-label={tUi("show_password")}
         aria-pressed={visible}
         aria-controls={props.id}
         onClick={() => setVisible((v) => !v)}
@@ -577,7 +620,7 @@ export function AuthInboxHint({
             color: T.accent.primary,
           }}
         >
-          <Icon icon="mdi:email-outline" width={22} />
+          <Mail size={22} />
         </span>
         <div className="min-w-0" style={{ lineHeight: 1.45 }}>
           <p style={{ fontSize: "14px", color: T.ink.dim }}>From {SITE_NAME}</p>

@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -19,6 +20,8 @@ export function PhotoUpload({
   readonly photo: WizardDraft["photo"]
   readonly onChange: (photo: WizardDraft["photo"]) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const id = useId()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -51,14 +54,14 @@ export function PhotoUpload({
 
   return (
     <div>
-      <Label htmlFor={id} hint="JPEG, PNG or WebP, up to 10 MB">
-        Photo
+      <Label htmlFor={id} hint={tUi("jpeg_png_or_webp_up_to_10_mb")}>
+        {tUi("photo")}{" "}
       </Label>
       {photo ? (
         <div className="flex flex-wrap items-end gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element -- a just-uploaded preview */}
           <img
-            alt="Your photo"
+            alt={tUi("your_photo")}
             className="h-40 w-auto max-w-full rounded-[14px] border object-cover"
             src={photo.url}
             style={{ borderColor: T.border.line }}

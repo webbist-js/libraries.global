@@ -1,5 +1,6 @@
 "use client"
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { Card } from "@/components/ds"
@@ -64,6 +65,8 @@ export function MobilePlaceStops({
   slug: string
   name: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   // Keyset paging: `cursors[n]` is the cursor that opens page n (null for
   // the first); the total comes with the first page. The paging state is
   // keyed by the place, so a different place starts again at page one.
@@ -170,7 +173,10 @@ export function MobilePlaceStops({
             ))}
           </div>
           {(page > 0 || data.next) && (
-            <nav aria-label="Mobile stops pages" className="mt-5 flex gap-3">
+            <nav
+              aria-label={tUi("mobile_stops_pages")}
+              className="mt-5 flex gap-3"
+            >
               <button
                 type="button"
                 className="inline-flex min-h-11 items-center rounded-full border bg-white px-4 font-semibold hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
@@ -178,7 +184,7 @@ export function MobilePlaceStops({
                 disabled={!page}
                 onClick={() => setPaging({ key, page: page - 1, cursors })}
               >
-                Previous
+                {tUi("previous")}{" "}
               </button>
               <button
                 type="button"
@@ -194,7 +200,7 @@ export function MobilePlaceStops({
                   })
                 }}
               >
-                Next
+                {tUi("next")}{" "}
               </button>
             </nav>
           )}

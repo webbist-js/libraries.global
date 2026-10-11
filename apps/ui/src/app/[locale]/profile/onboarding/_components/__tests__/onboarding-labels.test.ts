@@ -4,16 +4,11 @@
 // Every onboarding control is named by its visible label (WCAG 1.3.1 and
 // 4.1.2), each group of options is labelled and says what's selected, and
 // the username status is the field's live description, not part of its name.
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  within,
-} from "@testing-library/react"
 import * as React from "react"
 import { createElement } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+import { cleanup, fireEvent, render, screen, within } from "@/test/render"
 
 // vitest.config has no JSX runtime, so .tsx compiles to React.createElement.
 Object.assign(globalThis, { React })

@@ -1,6 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { type SectionTab, SectionTabs } from "@/components/ds"
 
@@ -68,12 +69,14 @@ export function CommunityNavBar({
 }: {
   readonly counts?: CommunityTabCounts
 }) {
+  const tUi = useUiTranslations("ui")
+
   const pathname = usePathname() ?? ""
 
   return (
     <SectionTabs
       activeId={activeCommunityTab(pathname)}
-      label="Community"
+      label={tUi("community")}
       tabs={communityTabs(counts)}
     />
   )

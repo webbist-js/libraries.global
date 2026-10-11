@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { facilityChecklistFor, type FacilityCheck } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 import { useEffect, useState } from "react"
 
@@ -43,6 +44,8 @@ export function FacilityChecklistRows({
   readonly f: FormData
   readonly setFormData: React.Dispatch<React.SetStateAction<FormData>>
 }) {
+  const tUi = useUiTranslations("ui")
+
   const checks = facilityChecklistFor(f.libraryType)
   const [options, setOptions] = useState<
     Record<FacilityCheck["collection"], Option[]>
@@ -102,7 +105,7 @@ export function FacilityChecklistRows({
   return (
     <fieldset className="m-0 flex min-w-0 flex-col gap-3 border-0 p-0">
       <legend className="p-0" style={fieldLabelStyle}>
-        Facility checklist
+        {tUi("facility_checklist")}{" "}
       </legend>
       <p className="m-0" style={fieldHintStyle}>
         The questions readers ask on your page. &ldquo;Yes&rdquo; adds the

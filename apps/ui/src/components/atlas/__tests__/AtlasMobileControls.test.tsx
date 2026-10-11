@@ -1,23 +1,20 @@
 // @vitest-environment happy-dom
-import {
-  cleanup,
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react"
+import type * as NextIntl from "next-intl"
 import { useState } from "react"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
 import type { MobileStopHit } from "@/lib/mobile-stop-search"
+import { cleanup, act, fireEvent, render, screen, waitFor } from "@/test/render"
 
 import { type AtlasFilters, EMPTY_FILTERS } from "../atlas.logic"
 import { AtlasFiltersTab } from "../AtlasFiltersTab"
 import { AtlasSearchTab } from "../AtlasSearchTab"
 
 const { multiSearch } = vi.hoisted(() => ({ multiSearch: vi.fn() }))
-vi.mock("next-intl", () => ({ useLocale: () => "en" }))
+vi.mock("next-intl", async (importOriginal) => ({
+  ...(await importOriginal<typeof NextIntl>()),
+  useLocale: () => "en",
+}))
 vi.mock("@/components/global/GlobalLink", () => ({
   default: ({
     href,

@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 import { usePathname } from "@/lib/navigation"
@@ -78,6 +80,8 @@ export function Breadcrumb({
   root,
   className,
 }: BreadcrumbProps) {
+  const tUi = useUiTranslations("ui")
+
   const pathname = usePathname()
 
   const items = explicitItems ?? itemsFromPath(pathname, labels, root)
@@ -85,7 +89,7 @@ export function Breadcrumb({
   if (items.length === 0) return null
 
   return (
-    <nav aria-label="Breadcrumb" className={className}>
+    <nav aria-label={tUi("breadcrumb")} className={className}>
       <ol
         className="m-0 flex list-none flex-wrap items-center gap-x-1.5 gap-y-1 p-0 text-[15px]"
         style={{ fontFamily: T.font.sans }}

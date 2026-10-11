@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -164,8 +165,10 @@ export function WizardStepNav({
   staff = false,
   mobile = false,
 }: WizardStepNavProps) {
+  const tUi = useUiTranslations("ui")
+
   return (
-    <nav aria-label="Wizard steps">
+    <nav aria-label={tUi("wizard_steps")}>
       <ol className="-mx-4 my-0 flex list-none gap-1 overflow-x-auto px-4 pb-2 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
         {wizardSteps(mobile).map((step, position) => {
           if (step.n === 0) {
@@ -237,6 +240,8 @@ export function RecordProgress({
   improving: boolean
   changedCount: number
 }) {
+  const tUi = useUiTranslations("ui")
+
   const total = progress.length
   const doneCount = progress.filter((s) => s.done).length
   const requiredLeft = progress.filter((s) => s.required && !s.done).length
@@ -254,7 +259,7 @@ export function RecordProgress({
         style={{ color: T.accent.ok, fontWeight: 600 }}
       >
         <Icon icon="mdi:check-circle-outline" width={16} aria-hidden="true" />
-        Ready to send.
+        {tUi("ready_to_send")}{" "}
       </span>
     )
   }
@@ -272,7 +277,7 @@ export function RecordProgress({
             margin: 0,
           }}
         >
-          Record completeness
+          {tUi("record_completeness")}{" "}
         </h3>
         <p
           aria-live="polite"
@@ -305,7 +310,7 @@ export function RecordProgress({
         aria-valuemin={0}
         aria-valuemax={total}
         aria-valuetext={`${doneCount} of ${total} steps complete`}
-        aria-label="Record completeness"
+        aria-label={tUi("record_completeness")}
         style={{
           height: "6px",
           marginTop: "8px",

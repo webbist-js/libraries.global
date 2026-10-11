@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -78,6 +79,8 @@ const pillButton = {
 }
 
 export function SignInSecuritySection() {
+  const tUi = useUiTranslations("ui")
+
   const [sessions, setSessions] = useState<SessionEntry[]>([])
   const [accounts, setAccounts] = useState<Account[]>([])
   const [loading, setLoading] = useState(true)
@@ -153,7 +156,7 @@ export function SignInSecuritySection() {
   return (
     <SectionCard
       id="security"
-      title="Sign-in & security"
+      title={tUi("signin_security")}
       lead="How you sign in, and where you’re signed in right now."
     >
       <div>
@@ -180,7 +183,7 @@ export function SignInSecuritySection() {
               color: "var(--tint-special-fg)",
             }}
           >
-            Coming soon
+            {tUi("coming_soon")}
           </span>
         </div>
 
@@ -334,7 +337,7 @@ export function SignInSecuritySection() {
                     opacity: revoking === s.id ? 0.5 : 1,
                   }}
                 >
-                  Sign out
+                  {tUi("sign_out")}{" "}
                 </button>
               )}
             </div>

@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 
 import type { EarnedBadge } from "@/app/api/profile/[username]/badges/route"
@@ -50,6 +51,8 @@ export function BadgesSection({
   streak?: number | null
   pointsThisMonth?: number | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [earnedBadges, setEarnedBadges] = useState<EarnedBadge[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -101,14 +104,14 @@ export function BadgesSection({
       <h2 className="sr-only">Recognition summary</h2>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-live="polite">
         <StatCard
-          label="Total points"
+          label={tUi("total_points")}
           value={points != null ? points.toLocaleString() : "0"}
           bg="var(--tint-national-bg)"
           fg="var(--tint-national-fg)"
           icon="mdi:star-four-points-outline"
         />
         <StatCard
-          label="Tier"
+          label={tUi("tier")}
           value={tier ?? "—"}
           bg="var(--tint-academic-bg)"
           fg="var(--tint-academic-fg)"
@@ -116,14 +119,14 @@ export function BadgesSection({
           compactValue
         />
         <StatCard
-          label="Day streak"
+          label={tUi("day_streak")}
           value={String(streak ?? 0)}
           bg="var(--tint-special-bg)"
           fg="var(--tint-special-fg)"
           icon="mdi:fire"
         />
         <StatCard
-          label="Badges earned"
+          label={tUi("badges_earned")}
           value={loading ? "—" : `${earnedCount}/${BADGE_CATALOG.length}`}
           bg="var(--tint-public-bg)"
           fg="var(--tint-public-fg)"
@@ -139,7 +142,7 @@ export function BadgesSection({
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <SectionTitle as="h2" id="rc-progress">
-            Progress
+            {tUi("progress")}
           </SectionTitle>
           <TextLink href="/community/leaderboard">View leaderboard</TextLink>
         </div>
@@ -229,7 +232,7 @@ export function BadgesSection({
             aria-live="polite"
           >
             {loading
-              ? "Loading…"
+              ? tUi("loading")
               : `${earnedCount} ${earnedCount === 1 ? "badge" : "badges"}`}
           </span>
         </div>

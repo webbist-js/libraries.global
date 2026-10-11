@@ -1,6 +1,7 @@
 "use client"
 
 import type { AtlasExportRequest } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import {
@@ -128,6 +129,8 @@ export function AtlasExportButton({
   readonly request?: AtlasExportRequest
   readonly total?: number
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { can, ready } = useEntitlements()
   const { busy, outcome, run } = useAtlasExport(onSeePlans)
   const [open, setOpen] = useState(false)
@@ -139,7 +142,7 @@ export function AtlasExportButton({
     return (
       <button type="button" disabled className={BUTTON} style={style}>
         <Icon name="download" size={16} />
-        Export
+        {tUi("export")}{" "}
       </button>
     )
 
@@ -180,7 +183,7 @@ export function AtlasExportButton({
             style={style}
           >
             <Icon name="download" size={16} />
-            {busy ? "Exporting…" : "Export"}
+            {busy ? "Exporting…" : tUi("export")}
             <Icon name="chevD" size={14} />
           </button>
         </DropdownMenuTrigger>

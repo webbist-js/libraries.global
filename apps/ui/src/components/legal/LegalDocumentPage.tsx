@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react"
-import type { Locale } from "next-intl"
+import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import { parseHeroText } from "@/components/ds/PageHero"
@@ -37,10 +37,12 @@ function LegalTabs({
   readonly documents: LegalDocumentNavItem[]
   readonly activeSlug: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <SectionTabs
       activeId={activeSlug}
-      label="Legal documents"
+      label={tUi("legal_documents")}
       tabs={documents.map((doc) => ({
         id: doc.slug ?? doc.documentId,
         label: doc.navLabel || doc.title,
@@ -60,6 +62,8 @@ export function LegalDocumentPage({
   readonly documents: LegalDocumentNavItem[]
   readonly locale: Locale
 }) {
+  const tUi = useUiTranslations("ui")
+
   const title = doc.title ?? "Legal"
   const sections = doc.sections ?? []
   const anchors = sectionAnchors(sections)
@@ -100,7 +104,7 @@ export function LegalDocumentPage({
           <Container className="pt-6 sm:pt-10">
             <Breadcrumb
               items={[
-                { label: "Home", href: "/" },
+                { label: tUi("home"), href: "/" },
                 { label: "Legal" },
                 { label: title },
               ]}
@@ -170,7 +174,7 @@ export function LegalDocumentPage({
               <div className="flex flex-col items-start gap-3 lg:sticky lg:top-[80px]">
                 {sections.length > 0 ? (
                   <nav
-                    aria-label="On this page"
+                    aria-label={tUi("on_this_page")}
                     className="w-full rounded-[20px] border p-5"
                     style={{
                       background: T.bg.deep,
@@ -181,7 +185,7 @@ export function LegalDocumentPage({
                       className="m-0 mb-2 text-[14px] font-semibold"
                       style={{ color: T.ink.base }}
                     >
-                      On this page
+                      {tUi("on_this_page")}
                     </p>
                     <ol className="m-0 flex list-none flex-col p-0">
                       {sections.map((section, index) => (
@@ -380,7 +384,7 @@ export function LegalDocumentPage({
                         <tr>
                           <th scope="col">Version</th>
                           <th scope="col">Date</th>
-                          <th scope="col">What changed</th>
+                          <th scope="col">{tUi("what_changed")}</th>
                           <th scope="col">Details</th>
                         </tr>
                       </thead>
@@ -468,8 +472,9 @@ export function LegalDocumentPage({
                   <a
                     className="inline-flex items-center rounded-full bg-(--t-accent-primary) px-4 py-2 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
                     href={`mailto:${LEGAL_CONTACT_EMAIL}`}
+                    data-contact-type="privacy"
                   >
-                    Email {LEGAL_CONTACT_EMAIL}
+                    {tUi("email")} {LEGAL_CONTACT_EMAIL}
                   </a>
                   <GlobalLink
                     className="inline-flex items-center rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-2 text-[14px] font-semibold text-(--t-ink-base) transition-colors hover:bg-(--t-bg-muted)"

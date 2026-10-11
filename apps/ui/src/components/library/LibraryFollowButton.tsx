@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import Link from "next/link"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -16,6 +17,8 @@ export function LibraryFollowButton({
   libraryDocumentId: string
   libraryName: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { data: session, isPending } = authClient.useSession()
   const [following, setFollowing] = useState<boolean | null>(null)
   const [loading, setLoading] = useState(false)
@@ -131,7 +134,11 @@ export function LibraryFollowButton({
         width={13}
         height={13}
       />
-      {following === null ? "…" : isFollowing ? "Following" : "Follow"}
+      {following === null
+        ? "…"
+        : isFollowing
+          ? tUi("following")
+          : tUi("follow")}
     </button>
   )
 }

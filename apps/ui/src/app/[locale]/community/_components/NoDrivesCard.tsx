@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
@@ -25,6 +26,8 @@ const DRIVE_STEPS = [
  * propose a drive), and how drives work.
  */
 export function NoDrivesCard({ hasGaps }: { readonly hasGaps: boolean }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
       id="drives"
@@ -88,7 +91,7 @@ export function NoDrivesCard({ hasGaps }: { readonly hasGaps: boolean }) {
       </div>
 
       <ol
-        aria-label="How a drive works"
+        aria-label={tUi("how_a_drive_works")}
         className="m-0 flex min-w-0 list-none flex-col gap-3"
         style={{
           flex: "1 1 260px",

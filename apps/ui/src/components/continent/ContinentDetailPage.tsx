@@ -1,4 +1,5 @@
 import type { Locale } from "next-intl"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { DrivesHere } from "@/components/drives/DrivesHere"
 import { Container } from "@/components/elementary/Container"
@@ -51,6 +52,8 @@ export async function ContinentDetailPage({
   readonly slug: string
   readonly drives?: readonly { view: DriveView; here: number }[]
 }) {
+  const tUi = await getUiTranslations("ui")
+
   if (!continent) {
     return (
       <div
@@ -125,7 +128,7 @@ export async function ContinentDetailPage({
           stats={[
             {
               value: formatCount(libraryCount),
-              label: `${countNoun(libraryCount, "Library", "Libraries")} documented`,
+              label: `${countNoun(libraryCount, tUi("library"), tUi("libraries"))} documented`,
             },
             ...(countries.length > 0
               ? [
@@ -152,7 +155,7 @@ export async function ContinentDetailPage({
                 Search libraries in {name}
               </LocationHeroAction>
               <LocationHeroAction href="/contribute/index/new" icon="mdi:plus">
-                Add a library
+                {tUi("add_a_library")}
               </LocationHeroAction>
             </>
           }
@@ -178,7 +181,7 @@ export async function ContinentDetailPage({
             {countries.length > 0 ? (
               <LocationChildBrowser
                 id="countries"
-                title="Countries"
+                title={tUi("countries")}
                 description={countriesNote}
                 noun={{ singular: "country", plural: "countries" }}
                 addHref="/contribute/index/new"
@@ -195,7 +198,7 @@ export async function ContinentDetailPage({
             {hasFeaturedLibraries ? (
               <section id="institutions" className="scroll-mt-24">
                 <LocationSectionHeading
-                  title="Libraries worth knowing"
+                  title={tUi("libraries_worth_knowing")}
                   description={`The most significant institutions across ${name}.`}
                 />
                 <LocationFeaturedLibraries

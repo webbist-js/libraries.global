@@ -1,5 +1,6 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { IndexRecordWizard } from "@/components/library-editor/IndexRecordWizard"
 import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
@@ -19,6 +20,8 @@ export default async function AddLibraryPage({
 }: {
   searchParams: Promise<{ name?: string; draft?: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const session = await getSessionSSR(await headers())
   if (!session?.user) redirect("/auth/signin?callbackUrl=/contribute/index/new")
   const { name, draft } = await searchParams
@@ -56,7 +59,7 @@ export default async function AddLibraryPage({
     >
       <ContributeSectionHeader
         compact
-        section="Index editor"
+        section={tUi("index_editor")}
         title="Add a library *to the index.*"
         lead="Fill in what you know. Your draft saves as you go, and an editor reviews it before it goes live."
       />

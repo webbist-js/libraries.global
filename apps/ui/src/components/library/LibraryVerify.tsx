@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { type FormEvent, useEffect, useId, useRef, useState } from "react"
 
 import type { WizardLibrary } from "@/components/contribute/wizard.logic"
@@ -45,6 +46,8 @@ export function LibraryVerify({
   /** Where sign-in brings the reader back to; defaults to this page. */
   readonly returnTo?: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const id = useId()
   const { data: session, isPending } = authClient.useSession()
   const available = availableSections(library)
@@ -151,7 +154,7 @@ export function LibraryVerify({
               style={{ borderColor: T.border.hi, color: T.ink.base }}
               type="button"
             >
-              Close
+              {tUi("close")}{" "}
             </button>
             <Link className={CTA} href="/contribute/submissions">
               See my submissions
@@ -226,7 +229,7 @@ export function LibraryVerify({
             }
             type="submit"
           >
-            {sending ? "Sending…" : "Send"}
+            {sending ? tUi("sending") : tUi("send")}
           </button>
         )}
         <button
@@ -235,7 +238,7 @@ export function LibraryVerify({
           style={{ borderColor: T.border.hi, color: T.ink.base }}
           type="button"
         >
-          Cancel
+          {tUi("cancel")}{" "}
         </button>
       </div>
     </form>

@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react"
 import type { Data } from "@repo/strapi-types"
-import type { Locale } from "next-intl"
+import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -21,6 +21,8 @@ export function GlobalFooter({
   /** Published legal documents — always listed in the bottom bar. */
   readonly legalDocuments?: LegalDocumentNavItem[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   const sections = Array.isArray(footer?.sections) ? footer.sections : []
   const year = new Date().getFullYear()
 
@@ -86,8 +88,8 @@ export function GlobalFooter({
               style={{ borderColor: T.border.hi }}
             >
               <Icon icon="simple-icons:kofi" className="size-4" aria-hidden />
-              Support us on Ko-fi
-              <span className="sr-only"> (opens in a new tab)</span>
+              {tUi("support_us_on_ko_fi")}{" "}
+              <span className="sr-only"> {tUi("opens_in_a_new_tab")}</span>
             </GlobalLink>
           </div>
 

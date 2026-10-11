@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useMemo } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -16,6 +17,8 @@ export function DraftResumeBanner({
   onResume: () => void
   onDiscard: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const relTime = useMemo(() => {
     // eslint-disable-next-line react-hooks/purity
     const diff = Date.now() - new Date(savedAt).getTime()
@@ -31,7 +34,7 @@ export function DraftResumeBanner({
   return (
     <div
       role="region"
-      aria-label="Saved draft"
+      aria-label={tUi("saved_draft")}
       className="flex flex-wrap items-center justify-between gap-4"
       style={{
         border: `1px solid ${T.border.line}`,
@@ -61,7 +64,7 @@ export function DraftResumeBanner({
             margin: 0,
           }}
         >
-          You have unsaved progress. Resume where you left off?
+          {tUi("you_have_unsaved_progress_resume_where_you_left_off")}{" "}
         </p>
       </div>
       <div className="flex shrink-0 gap-2">
@@ -71,7 +74,7 @@ export function DraftResumeBanner({
           className={primaryCtaSm}
           style={{ border: "none", cursor: "pointer" }}
         >
-          Continue
+          {tUi("continue")}{" "}
         </button>
         <button
           type="button"
@@ -85,7 +88,7 @@ export function DraftResumeBanner({
             cursor: "pointer",
           }}
         >
-          Start fresh
+          {tUi("start_fresh")}{" "}
         </button>
       </div>
     </div>

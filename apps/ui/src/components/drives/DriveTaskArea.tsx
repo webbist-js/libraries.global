@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { Drawer } from "@/components/ds/Drawer"
@@ -65,6 +66,8 @@ const nameOf = (panel: HTMLElement) =>
  * (ADR-0004).
  */
 export function DriveTaskArea({ drive }: { readonly drive: Drive }) {
+  const tUi = useUiTranslations("ui")
+
   const { data: session, isPending } = authClient.useSession()
   const signedIn = Boolean(session?.user)
   const { claimedLibraryIds } = useCapabilities()
@@ -375,7 +378,7 @@ export function DriveTaskArea({ drive }: { readonly drive: Drive }) {
         </div>
 
         <div
-          aria-label="Drive updates"
+          aria-label={tUi("drive_updates")}
           className="min-h-0"
           role="status"
           style={{ color: T.accent.ok }}

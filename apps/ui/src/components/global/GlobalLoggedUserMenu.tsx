@@ -1,6 +1,10 @@
+"use client"
+
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 
+import { useNotifications } from "@/components/notifications/NotificationProvider"
 import { StaffDrawerMenuItem } from "@/components/staff/StaffDrawerMenuItem"
 import {
   DropdownMenu,
@@ -120,6 +124,9 @@ export function GlobalLoggedUserMenu({
     isVerifiedLibrarian?: boolean | null
   } | null
 }) {
+  const tUi = useUiTranslations("ui")
+
+  const { unread } = useNotifications()
   const initials = getInitials(user.name || user.email)
   const firstName = user.name
     ? getFirstName(user.name)
@@ -145,7 +152,7 @@ export function GlobalLoggedUserMenu({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label={`Account menu for ${firstName}`}
+          aria-label={`Account menu for ${firstName}${unread ? `, ${unread} unread notifications` : ""}`}
           style={{
             display: "flex",
             alignItems: "center",
@@ -164,7 +171,15 @@ export function GlobalLoggedUserMenu({
           }}
           className="group/profile hover:bg-(--t-bg-surface)"
         >
-          <Avatar src={avatarSrc} initials={initials} size={32} />
+          <span className="relative inline-flex">
+            <Avatar src={avatarSrc} initials={initials} size={32} />
+            {unread > 0 ? (
+              <span
+                aria-hidden="true"
+                className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2 border-(--t-bg-deep) bg-(--t-accent-primary)"
+              />
+            ) : null}
+          </span>
           <span>{firstName}</span>
           <Icon
             icon="mdi:chevron-down"
@@ -177,7 +192,7 @@ export function GlobalLoggedUserMenu({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        aria-label="Account menu"
+        aria-label={tUi("account_menu")}
         align="end"
         sideOffset={20}
         className="w-[272px] rounded-[20px] border p-2 shadow-none"
@@ -205,17 +220,17 @@ export function GlobalLoggedUserMenu({
           </div>
         </div>
 
-        <DropdownMenuGroup aria-label="Profile">
+        <DropdownMenuGroup aria-label={tUi("profile")}>
           {needsProfile ? (
             <MenuLink href="/profile/settings" icon="mdi:account-plus-outline">
-              Complete your profile
+              {tUi("complete_your_profile")}{" "}
             </MenuLink>
           ) : (
             <MenuLink
               href={username ? `/profile/${username}` : "/profile"}
               icon="mdi:account-circle-outline"
             >
-              My profile
+              {tUi("my_profile")}{" "}
             </MenuLink>
           )}
           {username ? (
@@ -224,13 +239,13 @@ export function GlobalLoggedUserMenu({
                 href={`/profile/${username}/following`}
                 icon="mdi:heart-outline"
               >
-                Following
+                {tUi("following")}{" "}
               </MenuLink>
               <MenuLink
                 href={`/profile/${username}/badges`}
                 icon="mdi:medal-outline"
               >
-                Badges & points
+                {tUi("badges_points")}{" "}
               </MenuLink>
             </>
           ) : null}
@@ -244,7 +259,7 @@ export function GlobalLoggedUserMenu({
               className="mx-1 my-1.5"
               style={{ background: T.border.divider }}
             />
-            <DropdownMenuGroup aria-label="Tools">
+            <DropdownMenuGroup aria-label={tUi("tools")}>
               {isStaff ? <StaffDrawerMenuItem /> : null}
               {hasEditorialTools ? (
                 <StaffDrawerMenuItem drawer="editorial" />
@@ -258,7 +273,21 @@ export function GlobalLoggedUserMenu({
           style={{ background: T.border.divider }}
         />
 
-        <DropdownMenuGroup aria-label="Account">
+        <DropdownMenuGroup aria-label={tUi("account")}>
+          <MenuLink
+            href="/profile/notifications"
+            icon="mdi:bell-outline"
+            trailing={
+              <span
+                className="ml-auto rounded-full bg-(--t-accent-chip) px-2 py-0.5 text-xs font-semibold"
+                aria-label={`${unread} unread`}
+              >
+                {unread > 99 ? "99+" : unread}
+              </span>
+            }
+          >
+            {tUi("notifications")}{" "}
+          </MenuLink>
           <MenuLink
             href="/contribute/membership"
             icon="mdi:star-circle-outline"
@@ -276,10 +305,10 @@ export function GlobalLoggedUserMenu({
               </span>
             }
           >
-            Membership
+            {tUi("membership")}{" "}
           </MenuLink>
           <MenuLink href="/profile/settings" icon="mdi:cog-outline">
-            Settings
+            {tUi("settings")}{" "}
           </MenuLink>
         </DropdownMenuGroup>
 
@@ -289,7 +318,7 @@ export function GlobalLoggedUserMenu({
         />
 
         <MenuLink href="/auth/signout" icon="mdi:logout">
-          Sign out
+          {tUi("sign_out")}{" "}
         </MenuLink>
       </DropdownMenuContent>
     </DropdownMenu>

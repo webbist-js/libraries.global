@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 import { useContext, useState } from "react"
 
@@ -35,6 +36,8 @@ function NearestAddress({
   readonly place: Place
   readonly onUse: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { streetAddress, city } = place.address
   const where = [streetAddress, city].filter(Boolean).join(", ") || place.label
 
@@ -45,7 +48,9 @@ function NearestAddress({
       style={{ background: T.accent.chip }}
     >
       <p className="m-0 text-[15px]" style={{ color: T.ink.base }}>
-        <span className="font-semibold">Nearest address to the pin:</span>{" "}
+        <span className="font-semibold">
+          {tUi("nearest_address_to_the_pin")}
+        </span>{" "}
         {where}
       </p>
       <button
@@ -53,13 +58,15 @@ function NearestAddress({
         onClick={onUse}
         className="rounded-full bg-(--t-accent-primary) px-4 py-2 text-[14px] font-semibold text-white hover:bg-(--t-accent-primary-hover)"
       >
-        Use this address
+        {tUi("use_this_address")}{" "}
       </button>
     </div>
   )
 }
 
 function HierarchyNote() {
+  const tUi = useUiTranslations("ui")
+
   return (
     <p
       role="status"
@@ -72,12 +79,14 @@ function HierarchyNote() {
         width={16}
         height={16}
       />
-      Set from the address. Check these.
+      {tUi("set_from_the_address_check_these")}{" "}
     </p>
   )
 }
 
 export function StepLocation({ f, set, setFormData, improving }: StepProps) {
+  const tUi = useUiTranslations("ui")
+
   // Translation mode: the coordinates are shared, and Photon answers in English.
   const translating = useIsShared("lat")
   const staff = useContext(ModeratedFieldsContext)
@@ -114,7 +123,7 @@ export function StepLocation({ f, set, setFormData, improving }: StepProps) {
       <legend style={{ display: "contents" }}>
         <StepHeader
           n={2}
-          label={f.libraryType === "Mobile" ? "Base & area" : "Location"}
+          label={f.libraryType === "Mobile" ? "Base & area" : tUi("location")}
           title={
             f.libraryType === "Mobile"
               ? "Where is the vehicle based?"
@@ -165,7 +174,7 @@ export function StepLocation({ f, set, setFormData, improving }: StepProps) {
         />
       )}
       <Field
-        label="Street address"
+        label={tUi("street_address")}
         id="streetAddress"
         value={f.streetAddress}
         onChange={set}
@@ -173,7 +182,7 @@ export function StepLocation({ f, set, setFormData, improving }: StepProps) {
       />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
-          label="City / Town"
+          label={tUi("city_town")}
           id="city"
           value={f.city}
           onChange={set}
@@ -181,7 +190,7 @@ export function StepLocation({ f, set, setFormData, improving }: StepProps) {
           autoComplete="address-level2"
         />
         <Field
-          label="District / Borough"
+          label={tUi("district_borough")}
           id="district"
           value={f.district}
           onChange={set}
@@ -189,7 +198,7 @@ export function StepLocation({ f, set, setFormData, improving }: StepProps) {
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
-          label="Country"
+          label={tUi("country")}
           id="country"
           value={f.country}
           onChange={set}
@@ -197,7 +206,7 @@ export function StepLocation({ f, set, setFormData, improving }: StepProps) {
           autoComplete="country-name"
         />
         <Field
-          label="Postal code"
+          label={tUi("postal_code")}
           id="postalCode"
           value={f.postalCode}
           onChange={set}
@@ -206,7 +215,7 @@ export function StepLocation({ f, set, setFormData, improving }: StepProps) {
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
-          label="Latitude"
+          label={tUi("latitude")}
           id="lat"
           value={f.lat}
           onChange={set}
@@ -216,7 +225,7 @@ export function StepLocation({ f, set, setFormData, improving }: StepProps) {
           errorText="Latitude is a number between -90 and 90."
         />
         <Field
-          label="Longitude"
+          label={tUi("longitude")}
           id="lng"
           value={f.lng}
           onChange={set}
@@ -238,7 +247,7 @@ export function StepLocation({ f, set, setFormData, improving }: StepProps) {
       ) : null}
 
       <SubSection
-        label="Content hierarchy"
+        label={tUi("content_hierarchy")}
         sub="Link this library to its place in the atlas — used for breadcrumbs and location browsing."
       />
       {fill.hierarchyFilled ? <HierarchyNote /> : null}

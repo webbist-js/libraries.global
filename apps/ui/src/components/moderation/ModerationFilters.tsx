@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { SearchField } from "@/components/ds"
@@ -50,6 +51,8 @@ export function ModerationFilters({
   readonly counts: Partial<Record<Segment, number>>
   readonly onChange: (patch: Partial<QueueFilters>) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const ids = { queue: useId(), locale: useId(), search: useId() }
   const [q, setQ] = useState(value.q)
   const searchRef = useRef<HTMLInputElement>(null)
@@ -79,7 +82,7 @@ export function ModerationFilters({
     <div className="flex flex-col gap-5">
       <div
         role="group"
-        aria-label="Status"
+        aria-label={tUi("status")}
         className="inline-flex w-fit flex-wrap gap-1 rounded-full p-1"
         style={{ background: T.bg.muted2 }}
       >
@@ -158,7 +161,7 @@ export function ModerationFilters({
               className="text-[14px] font-semibold"
               style={{ color: T.ink.dim }}
             >
-              Language
+              {tUi("language")}{" "}
             </label>
             <select
               id={ids.locale}
@@ -180,8 +183,8 @@ export function ModerationFilters({
           id={ids.search}
           className="min-w-[16rem] flex-1"
           size="sm"
-          placeholder="Search contributor, record or note"
-          label="Search submissions"
+          placeholder={tUi("search_contributor_record_or_note")}
+          label={tUi("search_submissions")}
           inputRef={searchRef}
           onClear={() => {
             setQ("")

@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode, Ref } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -39,6 +40,8 @@ export function SearchField({
   readonly inputRef?: Ref<HTMLInputElement>
   readonly inputProps?: React.InputHTMLAttributes<HTMLInputElement>
 }) {
+  const tUi = useUiTranslations("ui")
+
   const hasValue = String(inputProps?.value ?? "").length > 0
 
   return (
@@ -75,7 +78,7 @@ export function SearchField({
       {onClear && hasValue ? (
         <button
           type="button"
-          aria-label="Clear search"
+          aria-label={tUi("clear_search")}
           onClick={onClear}
           className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 text-[15px] leading-none"
           style={{ background: T.bg.muted, color: T.ink.dim }}

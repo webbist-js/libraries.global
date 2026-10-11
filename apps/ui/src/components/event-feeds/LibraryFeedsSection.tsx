@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useRef } from "react"
 
 import { EmptyState } from "@/components/ds"
@@ -30,6 +31,8 @@ export function LibraryFeedsSection({
   /** One line under the heading. */
   readonly intro?: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const ref = useRef<HTMLElement>(null)
   const { library, feeds } = entry
 
@@ -94,7 +97,7 @@ export function LibraryFeedsSection({
         <EmptyState
           compact
           icon="mdi:calendar-sync-outline"
-          lead="Nothing connected yet"
+          lead={tUi("nothing_connected_yet")}
           detail="Connect your events platform and its events appear on this library’s page after a moderator checks the connection."
           action={
             <GlobalLink

@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import {
   FilterGroup,
   FilterHelper,
@@ -52,6 +54,8 @@ export function EventsFilterPanel({
   readonly timeCounts: Map<TimeSlot, number>
   readonly freeCount: number
 }) {
+  const tUi = useUiTranslations("ui")
+
   const toggleType = (type: string) => {
     const types = filters.types.includes(type)
       ? filters.types.filter((t) => t !== type)
@@ -81,7 +85,7 @@ export function EventsFilterPanel({
       />
 
       <FilterGroup
-        title="When"
+        title={tUi("when")}
         icon={
           <>
             <rect x="3" y="5" width="18" height="16" rx="2" />
@@ -102,7 +106,7 @@ export function EventsFilterPanel({
       </FilterGroup>
 
       <FilterGroup
-        title="Type"
+        title={tUi("type")}
         icon={<path d="M4 5h7v7H4zM13 5h7v7h-7zM4 14h7v5H4zM13 14h7v5h-7z" />}
       >
         {typeOptions.length === 0 ? (
@@ -123,7 +127,7 @@ export function EventsFilterPanel({
       </FilterGroup>
 
       <FilterGroup
-        title="Time of day"
+        title={tUi("time_of_day")}
         icon={
           <>
             <circle cx="12" cy="12" r="9" />
@@ -145,7 +149,7 @@ export function EventsFilterPanel({
       </FilterGroup>
 
       <FilterGroup
-        title="Price"
+        title={tUi("price")}
         icon={
           <>
             <path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z" />
@@ -156,7 +160,7 @@ export function EventsFilterPanel({
         <FilterOption
           type="checkbox"
           name="events-price"
-          label="Free"
+          label={tUi("free")}
           count={freeCount}
           checked={filters.freeOnly}
           onChange={() => onChange({ ...filters, freeOnly: !filters.freeOnly })}

@@ -5,6 +5,7 @@
 // A sign-in link that failed lands here (its errorCallbackURL) with Better
 // Auth's code in `?error=`. A working link never does: it goes to post-signin.
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { type FormEvent, useState } from "react"
 import * as z from "zod"
 
@@ -97,6 +98,7 @@ export function MagicLinkErrorContent({ error }: { error: string }) {
   return (
     <>
       <AuthHeading
+        layout="utility"
         icon={copy.icon}
         iconTone="warn"
         title={copy.title}
@@ -130,6 +132,8 @@ export function MagicLinkErrorContent({ error }: { error: string }) {
 }
 
 function NewLinkForm() {
+  const tUi = useUiTranslations("ui")
+
   usePreloadedIcons(STATUS_ICONS)
   const knownEmail = usePendingEmail()
   // null until edited, so the field starts with the address from this tab.
@@ -190,7 +194,7 @@ function NewLinkForm() {
       noValidate
       style={{ display: "flex", flexDirection: "column", gap: "20px" }}
     >
-      <AuthField id="email" label="Email address" error={fieldError}>
+      <AuthField id="email" label={tUi("email_address")} error={fieldError}>
         <input
           id="email"
           name="email"
@@ -206,7 +210,7 @@ function NewLinkForm() {
       </AuthField>
       <div>
         <AuthPrimaryButton disabled={pending}>
-          {pending ? "Sending…" : "Email me a new link"}
+          {pending ? tUi("sending") : "Email me a new link"}
         </AuthPrimaryButton>
         <AuthStatusMessage status={status} />
       </div>

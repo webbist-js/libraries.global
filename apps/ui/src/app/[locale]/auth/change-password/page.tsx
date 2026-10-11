@@ -1,7 +1,10 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import type { Locale } from "next-intl"
-import { setRequestLocale } from "next-intl/server"
+import {
+  getTranslations as getUiTranslations,
+  setRequestLocale,
+} from "next-intl/server"
 
 import { getSessionSSR, hasPasswordSignIn } from "@/lib/auth-server"
 import { privateMetadata } from "@/lib/seo/metadata"
@@ -15,6 +18,8 @@ export const metadata = privateMetadata("Change password")
 export default async function ChangePasswordPage({
   params,
 }: PageProps<"/[locale]/auth/change-password">) {
+  const tUi = await getUiTranslations("ui")
+
   const { locale } = (await params) as { locale: Locale }
   setRequestLocale(locale)
 
@@ -32,7 +37,7 @@ export default async function ChangePasswordPage({
       locale={locale}
       aside={<AuthLeftPanel mode="account" />}
       footnote="Passwords are stored hashed: nobody here can read yours."
-      back={{ href: "/profile/settings", label: "Back to settings" }}
+      back={{ href: "/profile/settings", label: tUi("back_to_settings") }}
     >
       <ChangePasswordForm
         hasPassword={hasPassword}

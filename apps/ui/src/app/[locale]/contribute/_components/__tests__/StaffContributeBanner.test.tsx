@@ -1,13 +1,8 @@
 // @vitest-environment happy-dom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+
+import { cleanup, fireEvent, render, screen, waitFor } from "@/test/render"
 
 import { StaffContributeBanner } from "../StaffContributeBanner"
 

@@ -7,6 +7,7 @@ import {
   type MobileTimetable,
   type TimetableNotice,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 import { weekdayCopy } from "@/lib/staff/format"
@@ -22,6 +23,8 @@ export function MobileHeroFacts({
   readonly notices: TimetableNotice[]
   readonly timezone: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const now = useMobileClock(),
     local = now && localDateTime(now, timezone),
     today =
@@ -57,7 +60,7 @@ export function MobileHeroFacts({
         style={{ borderColor: T.border.line, background: T.bg.deep }}
       >
         <dt className="m-0 text-sm" style={{ color: T.ink.dim }}>
-          Timetable
+          {tUi("timetable")}
         </dt>
         <dd className="m-0 mt-1 font-semibold">
           {tt

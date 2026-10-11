@@ -1,3 +1,5 @@
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { PromptDismissButton } from "@/components/ds/DismissiblePrompt"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
@@ -19,6 +21,8 @@ export function AtlasContributeCard({
 }: {
   readonly signedIn: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
       aria-labelledby="atlas-contribute-title"
@@ -26,7 +30,7 @@ export function AtlasContributeCard({
       style={{ background: T.bg.surface, borderColor: T.border.hi }}
     >
       <PromptDismissButton
-        label="Hide this"
+        label={tUi("hide_this")}
         className="absolute top-2 right-2 flex size-8 cursor-pointer items-center justify-center rounded-full hover:bg-(--t-bg-muted)"
         style={{ color: T.ink.dim }}
       />
@@ -51,7 +55,7 @@ export function AtlasContributeCard({
         {signedIn ? (
           <>
             <GlobalLink href="/contribute/index/new" className={PRIMARY}>
-              Add a library
+              {tUi("add_a_library")}
             </GlobalLink>
             <GlobalLink
               href="/contribute/index"

@@ -1,7 +1,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import { useLocale } from "next-intl"
+import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { Suspense, useEffect, useRef, useState } from "react"
 
 import {
@@ -175,6 +175,8 @@ function DocsSearchResults({ query }: { query: string }) {
 }
 
 function SearchPageInner() {
+  const tUi = useUiTranslations("ui")
+
   const searchParams = useSearchParams()
   const query = searchParams.get("q") ?? ""
 
@@ -182,9 +184,9 @@ function SearchPageInner() {
     <main className="relative z-10 flex-1">
       <PageHero
         breadcrumb={[
-          { label: "Home", href: "/" },
-          { label: "Knowledge", href: "/knowledge" },
-          { label: "Search" },
+          { label: tUi("home"), href: "/" },
+          { label: tUi("knowledge"), href: "/knowledge" },
+          { label: tUi("search") },
         ]}
         compact
         eyebrow="Knowledge base"
@@ -199,8 +201,10 @@ function SearchPageInner() {
         <form method="get">
           <SearchField
             id="docs-search"
-            label="Search the knowledge base"
-            placeholder="Search the knowledge base — e.g. contribute, API, run locally"
+            label={tUi("search_the_knowledge_base")}
+            placeholder={tUi(
+              "search_the_knowledge_base_eg_contribute_api_run_locally"
+            )}
             inputProps={{ name: "q", defaultValue: query, autoComplete: "off" }}
           />
         </form>

@@ -1,25 +1,27 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 export function ArticleShareButtons({
   title,
-  slug,
+  url,
 }: {
   readonly title?: string | null
-  readonly slug?: string | null
+  readonly url: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [copied, setCopied] = useState(false)
 
   function copyLink() {
-    const href = window.location.href
-    navigator.clipboard.writeText(href).then(() => {
+    navigator.clipboard.writeText(url).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
   }
 
-  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title ?? "")}&url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : `/journal/${slug ?? ""}`)}`
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title ?? "")}&url=${encodeURIComponent(url)}`
 
   return (
     <div className="flex items-center gap-2">
@@ -27,7 +29,7 @@ export function ArticleShareButtons({
         href={twitterUrl}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Share on X / Twitter"
+        aria-label={tUi("share_on_x_twitter")}
         className="flex h-8 w-8 items-center justify-center rounded-full border border-(--t-border-line) bg-(--t-bg-surface) text-(--t-ink-faint) transition-colors hover:border-(--t-border-hi) hover:text-(--t-ink-base)"
       >
         <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
@@ -38,7 +40,7 @@ export function ArticleShareButtons({
       <button
         type="button"
         onClick={copyLink}
-        aria-label="Copy link"
+        aria-label={tUi("copy_link")}
         className="flex h-8 w-8 items-center justify-center rounded-full border border-(--t-border-line) bg-(--t-bg-surface) text-(--t-ink-faint) transition-colors hover:border-(--t-border-hi) hover:text-(--t-ink-base)"
       >
         {copied ? (

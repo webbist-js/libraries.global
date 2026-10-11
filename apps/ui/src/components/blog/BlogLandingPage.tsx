@@ -1,4 +1,4 @@
-import type { Locale } from "next-intl"
+import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
@@ -21,6 +21,9 @@ export function BlogLandingPage({
   readonly data: JournalLandingData
   readonly locale: Locale
 }) {
+  const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("editorial")
+
   const {
     landing,
     query,
@@ -42,21 +45,21 @@ export function BlogLandingPage({
 
       <main className="relative z-10 flex-1">
         <PageHero
-          breadcrumb={[{ label: "Home", href: "/" }, { label: "Journal" }]}
-          eyebrow={landing?.heroEyebrow ?? "The Library Journal · since 2024"}
+          breadcrumb={[
+            { label: tUi("home"), href: "/" },
+            { label: tUi("journal") },
+          ]}
+          eyebrow={landing?.heroEyebrow ?? t("journalEyebrow")}
           eyebrowIcon="mdi:notebook-outline"
-          lead={
-            landing?.heroText ??
-            "Stories, histories and notes from librarians, archivists and researchers about the world’s libraries and the people in them."
-          }
-          title={landing?.heroTitle ?? "Field notes *from the stacks.*"}
+          lead={landing?.heroText ?? t("journalHeroLead")}
+          title={landing?.heroTitle ?? t("journalHeroTitle")}
         >
           <BlogSearchBar inputId="journal-search" />
         </PageHero>
 
         <Container className="pt-10 pb-20">
           {featured ? (
-            <section aria-label="Top stories">
+            <section aria-label={tUi("top_stories")}>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
                 <JournalFeatureCard
                   article={featured}
@@ -88,7 +91,7 @@ export function BlogLandingPage({
             <JournalAllArticles {...data} />
 
             <aside
-              aria-label="More from the Journal"
+              aria-label={tUi("more_from_the_journal")}
               className="flex flex-col gap-5"
             >
               <MostReadCard articles={mostRead} locale={linkLocale} />

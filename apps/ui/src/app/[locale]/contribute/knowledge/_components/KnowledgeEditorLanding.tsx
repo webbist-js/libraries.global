@@ -1,7 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useLocale } from "next-intl"
+import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
@@ -59,6 +59,8 @@ function formatDate(iso: string | null) {
 }
 
 function KindBadge({ kind }: { kind: ArticleKind }) {
+  const tUi = useUiTranslations("ui")
+
   const meta = ARTICLE_KIND_META[kind]
 
   return (
@@ -66,7 +68,7 @@ function KindBadge({ kind }: { kind: ArticleKind }) {
       className="rounded-full px-2.5 py-1 text-[12.5px] font-semibold"
       style={{ background: meta.tintBg, color: meta.tintFg }}
     >
-      {kind === "journal" ? "Journal" : "Knowledge"}
+      {kind === "journal" ? tUi("journal") : tUi("knowledge")}
     </span>
   )
 }
@@ -142,6 +144,8 @@ export function KnowledgeEditorLanding({
   /** The kinds this editor may write and edit (their editor roles). */
   readonly kinds: readonly ArticleKind[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   const locale = useLocale()
   const [kind, setKind] = useState<ArticleKind>(initialKind)
   const [query, setQuery] = useState("")
@@ -261,7 +265,7 @@ export function KnowledgeEditorLanding({
 
           <div
             role="radiogroup"
-            aria-label="Article type"
+            aria-label={tUi("article_type")}
             className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2"
           >
             {KINDS.filter((option) => kinds.includes(option.id)).map(
@@ -407,7 +411,7 @@ export function KnowledgeEditorLanding({
           </h2>
           <SearchField
             id="article-search"
-            placeholder="Search knowledge and journal"
+            placeholder={tUi("search_knowledge_and_journal")}
             loading={loading}
             inputRef={inputRef}
             onClear={() => setQuery("")}
@@ -445,7 +449,7 @@ export function KnowledgeEditorLanding({
                     fontFamily: T.font.sans,
                   }}
                 >
-                  Show {hidden} more
+                  {tUi("show")} {hidden} more
                   <Icon icon="mdi:chevron-down" width={16} aria-hidden="true" />
                 </button>
               )}

@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { ProfileProgress } from "@/components/profile-form/ProfileProgress"
@@ -45,6 +46,8 @@ export function SettingsShell({
   /** The browser-safe avatar URL (`avatarSrc`), or null. */
   avatarUrl: string | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const mounted = useMounted()
   const { saving, updateProfile } = useProfile()
@@ -93,11 +96,11 @@ export function SettingsShell({
 
         {/* ── Aside: progress, save, other sections (sticky) ── */}
         <aside
-          aria-label="Your profile"
+          aria-label={tUi("your_profile")}
           className="flex flex-col gap-4 self-start lg:sticky lg:top-24"
         >
           <ProfileProgress
-            title="Your profile"
+            title={tUi("your_profile")}
             steps={form.steps("privacy")}
             links={ACCOUNT_LINKS}
           >
@@ -108,7 +111,7 @@ export function SettingsShell({
               className="inline-flex w-full items-center justify-center rounded-full bg-(--t-accent-primary) px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
               style={{ border: "none", fontFamily: T.font.sans }}
             >
-              {saving ? "Saving…" : "Save profile"}
+              {saving ? tUi("saving") : "Save profile"}
             </button>
             <p
               className="m-0 text-[13.5px] leading-[1.55]"

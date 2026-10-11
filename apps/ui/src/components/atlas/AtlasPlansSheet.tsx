@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { Drawer } from "@/components/ds/Drawer"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
@@ -86,6 +88,8 @@ const ROWS = sheetRows()
 
 /** A tick, a "Soon" chip or a dash, each with a text label. */
 function SheetCell({ cell }: { readonly cell: CompareCell }) {
+  const tUi = useUiTranslations("ui")
+
   if (cell === "yes")
     return (
       <span className="inline-flex" style={{ color: T.accent.ok }}>
@@ -100,7 +104,7 @@ function SheetCell({ cell }: { readonly cell: CompareCell }) {
         style={{ background: T.accent.chip, color: T.accent.primaryHover }}
       >
         <Icon name="clock" size={12} />
-        Soon
+        {tUi("soon")}
         <span className="sr-only">: coming soon</span>
       </span>
     )
@@ -139,6 +143,8 @@ function PlanCta({
   readonly tier: Tier
   readonly signInHref: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   if (plan.key === current)
     return (
       <span className="inline-flex flex-col items-start gap-1">
@@ -161,7 +167,7 @@ function PlanCta({
         className={OUTLINE_PILL}
         style={{ borderColor: T.border.hi, color: T.ink.base }}
       >
-        Sign in
+        {tUi("sign_in")}{" "}
       </GlobalLink>
     )
 

@@ -1,5 +1,4 @@
 // @vitest-environment happy-dom
-import { cleanup, render, screen, within } from "@testing-library/react"
 import * as React from "react"
 import { createElement } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -7,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import type { DriveView } from "@/lib/drives/drive-view"
 import type { Drive } from "@/lib/drives/types"
 import type { FollowedLibrary } from "@/lib/types/profile"
+import { cleanup, render, screen, within } from "@/test/render"
 
 Object.assign(globalThis, { React })
 

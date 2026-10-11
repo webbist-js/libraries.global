@@ -1,7 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useLocale } from "next-intl"
+import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 
 import { hubHref } from "@/components/contribute/wizard.logic"
 import type { ChecklistKey } from "@/components/library/library-page.helpers"
@@ -169,6 +169,8 @@ function TranslateRecord({
   /** Rule it off from tasks above it. */
   readonly divided: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [first, ...rest] = locales
   if (!first) return null
 
@@ -188,7 +190,7 @@ function TranslateRecord({
       >
         <TaskBody
           task={{
-            title: "Translate this record",
+            title: tUi("translate_this_record"),
             meta: rest.length > 0 ? `Into ${first.name}` : first.name,
             icon: "mdi:translate",
             tint: INDIGO,
@@ -196,7 +198,7 @@ function TranslateRecord({
         />
       </Link>
       {rest.length > 0 ? (
-        <nav aria-label="Translate into another language">
+        <nav aria-label={tUi("translate_into_another_language")}>
           <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
             {rest.map((l) => (
               <li key={l.code}>

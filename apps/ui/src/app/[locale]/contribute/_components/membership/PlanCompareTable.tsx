@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -91,6 +92,8 @@ function GroupHeader({
 
 /** Every plan against every feature, in collapsible groups, with a "built only" filter. */
 export function PlanCompareTable() {
+  const tUi = useUiTranslations("ui")
+
   const [nowOnly, setNowOnly] = useState(false)
   const [open, setOpen] = useState<ReadonlySet<string>>(
     () => new Set(OPEN_BY_DEFAULT)
@@ -146,7 +149,7 @@ export function PlanCompareTable() {
             </button>
           </>
         }
-        title="Compare every plan"
+        title={tUi("compare_every_plan")}
       />
       <p aria-live="polite" className="sr-only">
         Showing {rowCount} features

@@ -1,6 +1,7 @@
 "use client"
 
 import type { AtlasExportRequest } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useId, useState } from "react"
 
 import { ACCESS_GAP, ACCESS_MATCH } from "@/components/atlas/atlas-map.style"
@@ -73,6 +74,8 @@ export function AtlasAccessibilityAnalysis({
   readonly onCollapse: () => void
   readonly onClose: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [catalogue, setCatalogue] = useState<string[]>([]),
     [query, setQuery] = useState(""),
     [catalogueState, setCatalogueState] = useState<
@@ -152,21 +155,21 @@ export function AtlasAccessibilityAnalysis({
       style={{ color: T.ink.base }}
     >
       <AtlasAnalysisHeader
-        title="Accessibility"
+        title={tUi("accessibility")}
         badge="Pin layer"
         badgeTone="pin"
-        description="Which libraries record the features you need"
+        description={tUi("which_libraries_record_the_features_you_need")}
         {...{ collapsed, onCollapse, onClose }}
       />
       {!collapsed ? (
         <div
           role="region"
-          aria-label="Accessibility analysis controls"
+          aria-label={tUi("accessibility_analysis_controls")}
           tabIndex={0}
           className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto overscroll-contain p-5 focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
         >
           <section
-            aria-label="Choose accessibility features"
+            aria-label={tUi("choose_accessibility_features")}
             className="flex flex-col gap-3"
           >
             <div className="flex items-start justify-between gap-3">
@@ -233,7 +236,7 @@ export function AtlasAccessibilityAnalysis({
               <fieldset className="m-0 min-w-0 border-0 p-0">
                 <legend className="sr-only">All accessibility features</legend>
                 <label className="mb-3 flex flex-col gap-1 text-sm font-semibold">
-                  Find a feature
+                  {tUi("find_a_feature")}
                   <input
                     type="search"
                     value={query}
@@ -332,7 +335,7 @@ export function AtlasAccessibilityAnalysis({
             </h3>
             <div
               role="group"
-              aria-label="Accessibility map view"
+              aria-label={tUi("accessibility_map_view")}
               className="grid grid-cols-3 gap-1 rounded-2xl p-1"
               style={{ background: T.bg.muted }}
             >
@@ -507,6 +510,8 @@ function AccessibilityHeadline({
   readonly scope: string
   readonly enabled: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const share =
     coverage && coverage.total > 0
       ? (100 * coverage.matches) / coverage.total
@@ -514,7 +519,7 @@ function AccessibilityHeadline({
 
   return (
     <section
-      aria-label="Accessibility coverage"
+      aria-label={tUi("accessibility_coverage")}
       className="flex flex-col gap-3 border-t pt-4"
       style={{ borderColor: T.border.divider }}
     >

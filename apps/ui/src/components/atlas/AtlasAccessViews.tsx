@@ -7,6 +7,7 @@ import {
   type AtlasLibraryAccessArea,
   type AtlasLibraryAccessResponse,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { accessValue } from "@/components/atlas/atlas-access-analysis"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -19,6 +20,8 @@ function AccessKey({
   readonly areas: readonly AtlasLibraryAccessArea[]
   readonly metric: AtlasAccessMetric
 }) {
+  const tUi = useUiTranslations("ui")
+
   const histogram = ATLAS_ACCESS_BINS.map(
     (bin, index) =>
       areas.filter(
@@ -33,7 +36,7 @@ function AccessKey({
 
   return (
     <section
-      aria-label="Library access colour key"
+      aria-label={tUi("library_access_colour_key")}
       className="flex flex-col gap-3"
     >
       <div
@@ -116,9 +119,11 @@ function AreaDetails({
   readonly onFit: (id: string) => void
   readonly compact?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
-      aria-label="Selected analysis area"
+      aria-label={tUi("selected_analysis_area")}
       className="flex flex-col gap-3"
     >
       <div>
@@ -289,6 +294,8 @@ export function AccessExplore({
   readonly onSelect: (id: string) => void
   readonly onFit: (id: string) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <>
       <label className="flex flex-col gap-2 text-sm font-semibold">
@@ -296,7 +303,7 @@ export function AccessExplore({
         <input
           type="search"
           value={areaQuery}
-          placeholder="Try Leeds or Glasgow"
+          placeholder={tUi("try_leeds_or_glasgow")}
           onChange={(event) => setAreaQuery(event.target.value)}
           className="min-h-12 w-full rounded-2xl border bg-white px-3 font-normal"
           style={{ borderColor: T.border.hi }}
@@ -304,7 +311,7 @@ export function AccessExplore({
       </label>
       {areaQuery.trim() ? (
         <section
-          aria-label="Area search results"
+          aria-label={tUi("area_search_results")}
           className="overflow-hidden rounded-2xl border"
           style={{ borderColor: T.border.hi }}
         >
@@ -412,9 +419,11 @@ export function AccessData({
   readonly response: AtlasLibraryAccessResponse
   readonly area?: AtlasLibraryAccessArea
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
-      aria-label="Library access methodology"
+      aria-label={tUi("library_access_methodology")}
       className="text-sm leading-relaxed"
     >
       <details

@@ -1,5 +1,6 @@
 import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { PageHero } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
@@ -20,6 +21,8 @@ export default async function TeamJoinPage({
 }: {
   readonly params: Promise<{ token: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const { token } = await params
   if (!/^[a-f0-9]{64}$/.test(token)) notFound()
   const session = await getSessionSSR(await headers())
@@ -40,7 +43,7 @@ export default async function TeamJoinPage({
       <PageHero
         compact
         breadcrumb={[
-          { label: "Staff area", href: "/staff" },
+          { label: tUi("staff_area"), href: "/staff" },
           { label: "Join a team" },
         ]}
         eyebrow="Team invite"

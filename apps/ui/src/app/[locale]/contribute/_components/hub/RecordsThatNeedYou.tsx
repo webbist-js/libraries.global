@@ -1,3 +1,5 @@
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { hubHref } from "@/components/contribute/wizard.logic"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
@@ -33,6 +35,8 @@ export function RecordsThatNeedYou({
   readonly continents: ContinentCount[]
   readonly totalPublished: number
 }) {
+  const tUi = useUiTranslations("ui")
+
   const populated = continents.filter((c) => c.count > 0)
   const singleContinent = populated.length === 1 ? populated[0] : null
 
@@ -202,7 +206,7 @@ export function RecordsThatNeedYou({
           >
             {singleContinent
               ? `Add a library outside ${singleContinent.name}`
-              : "Add a library"}
+              : tUi("add_a_library")}
           </GlobalLink>
         </div>
       </div>

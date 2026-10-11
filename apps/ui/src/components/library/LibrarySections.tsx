@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { hasOpeningHours, type LibraryNotice } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { NOTICE_TONES } from "@/components/ds"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -78,6 +79,8 @@ function ExternalLink({
   readonly href: string
   readonly children: React.ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <a
       href={href}
@@ -86,7 +89,7 @@ function ExternalLink({
       className={LINK}
       style={{ color: T.accent.primary }}
     >
-      {children} ↗<span className="sr-only"> (opens in a new tab)</span>
+      {children} ↗<span className="sr-only"> {tUi("opens_in_a_new_tab")}</span>
     </a>
   )
 }
@@ -169,6 +172,8 @@ function HoursNote({
 }
 
 export function LibraryVisitSection({ library }: { readonly library: Lib }) {
+  const tUi = useUiTranslations("ui")
+
   const rec = asRecord(library)
   const coords = formatCoordinates(
     library.location as { lat?: unknown; lng?: unknown } | null
@@ -194,14 +199,18 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
   const hasHours = hasOpeningHours(openingTimes)
 
   return (
-    <LibrarySectionCard id="visit" title="Visit" iconPath={LIB_ICONS.pin}>
+    <LibrarySectionCard
+      id="visit"
+      title={tUi("visit")}
+      iconPath={LIB_ICONS.pin}
+    >
       <div className="grid gap-x-8 gap-y-7 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
         <div>
           <h3
             className="m-0 mb-2 text-[15px] font-bold"
             style={{ color: T.ink.base }}
           >
-            Address
+            {tUi("address")}{" "}
           </h3>
           {addressLines.length > 0 ? (
             <address
@@ -270,7 +279,7 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
             className="m-0 mb-1 text-[15px] font-bold"
             style={{ color: T.ink.base }}
           >
-            Opening hours{" "}
+            {tUi("opening_hours")}{" "}
             {timezone ? (
               <span className="font-normal" style={{ color: T.ink.dim }}>
                 {timezone}
@@ -304,6 +313,8 @@ export function LibraryFacilitiesSection({
   readonly library: Lib
   readonly path: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const rows = facilityRows(library)
   const unknown = rows.filter((r) => r.state === "unknown").length
   const known = rows.length - unknown
@@ -316,7 +327,7 @@ export function LibraryFacilitiesSection({
       <>
         Spotted something wrong?{" "}
         <OpenCorrectionLink category="Accessibility" className={LINK}>
-          Suggest a correction
+          {tUi("suggest_a_correction")}
         </OpenCorrectionLink>
         .
       </>
@@ -325,7 +336,7 @@ export function LibraryFacilitiesSection({
   return (
     <LibrarySectionCard
       id="access"
-      title="Accessibility and facilities"
+      title={tUi("accessibility_and_facilities")}
       iconPath={LIB_ICONS.access}
       intro={intro}
     >
@@ -384,12 +395,14 @@ function CardAction({ children }: { readonly children: React.ReactNode }) {
 }
 
 export function LibraryHistorySection({ library }: { readonly library: Lib }) {
+  const tUi = useUiTranslations("ui")
+
   const entries = historyEntries(library)
 
   return (
     <LibrarySectionCard
       id="history"
-      title="History"
+      title={tUi("history")}
       iconPath={LIB_ICONS.clock}
       tone="special"
       compact
@@ -469,13 +482,15 @@ export function LibraryCollectionsSection({
 }: {
   readonly library: Lib
 }) {
+  const tUi = useUiTranslations("ui")
+
   const rec = asRecord(library)
 
   if (!hasCollections(library))
     return (
       <LibrarySectionCard
         id="collections"
-        title="Collections"
+        title={tUi("collections")}
         iconPath={LIB_ICONS.book}
         tone="neutral"
         compact
@@ -509,7 +524,7 @@ export function LibraryCollectionsSection({
   return (
     <LibrarySectionCard
       id="collections"
-      title="Collections"
+      title={tUi("collections")}
       iconPath={LIB_ICONS.book}
       tone="neutral"
     >
@@ -583,10 +598,12 @@ export function LibraryEventsEmpty({
   readonly librarySlug: string
   readonly libraryName: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <LibrarySectionCard
       id="events"
-      title="Events"
+      title={tUi("events")}
       iconPath={LIB_ICONS.calendar}
       tone="neutral"
       compact
@@ -715,6 +732,8 @@ export function LibraryChangesSection({
   /** The dataset the record was imported from, from the dataset registry. */
   readonly dataset?: DatasetRecord | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const rec = asRecord(library)
   const source = rec.source as string | null
   const sourceUrl = rec.sourceUrl as string | null
@@ -763,7 +782,7 @@ export function LibraryChangesSection({
     <TimelineRow
       icon={LIB_ICONS.download}
       tone="import"
-      title="Record created"
+      title={tUi("record_created")}
       lead={
         <>
           from{" "}
@@ -801,7 +820,7 @@ export function LibraryChangesSection({
     <TimelineRow
       icon={LIB_ICONS.plus}
       tone="indigo"
-      title="Record created"
+      title={tUi("record_created")}
       lead="by a contributor."
       meta={[fmtDate(createdAt)]}
     />
@@ -813,7 +832,7 @@ export function LibraryChangesSection({
   return (
     <LibrarySectionCard
       id="changes"
-      title="History and sources"
+      title={tUi("history_and_sources")}
       iconPath={LIB_ICONS.clock}
       tone="neutral"
       intro="Where this record came from, and everything that’s changed since."
@@ -829,12 +848,12 @@ export function LibraryChangesSection({
           }
         />
         <HistoryStat
-          label="Changes since"
+          label={tUi("changes_since")}
           value={changes == null ? "Unavailable" : changes || "None yet"}
           sub={changes ? `By ${changedBy(batches) ?? "contributors"}` : added}
         />
         <HistoryStat
-          label="Checked by a person"
+          label={tUi("checked_by_a_person")}
           value={lastVerifiedAt ? fmtDate(lastVerifiedAt) : "Not yet"}
           color={lastVerifiedAt ? T.accent.ok : TYPE_TINT.special.fg}
           sub={
@@ -870,7 +889,7 @@ export function LibraryChangesSection({
             </p>
           </div>
           <OpenCorrectionLink className="shrink-0 self-start rounded-full bg-(--t-accent-primary) px-5 py-2.5 text-[15px] font-semibold text-white! hover:bg-(--t-accent-primary-hover) sm:self-center">
-            Suggest a correction
+            {tUi("suggest_a_correction")}
           </OpenCorrectionLink>
         </div>
       ) : null}
@@ -951,6 +970,8 @@ export function LibraryReuseSection({
   /** The record's canonical, absolute URL. */
   readonly url: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const rec = asRecord(library)
   const citation = buildCitation({
     name: library.name ?? "Library",
@@ -1031,7 +1052,7 @@ export function LibraryReuseSection({
           {citation}
         </blockquote>
         <figcaption className="mt-3">
-          <LibraryCopyButton label="Copy citation" text={citation} />
+          <LibraryCopyButton label={tUi("copy_citation")} text={citation} />
         </figcaption>
       </figure>
     </section>

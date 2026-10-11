@@ -2,6 +2,7 @@
 "use client"
 
 import { noticeLocalDate } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import type { LibrarySearchHitV2 } from "@/lib/find-search"
@@ -123,6 +124,8 @@ export function LibraryResultCard({
   distanceKmValue?: number
   now?: Date
 }) {
+  const tUi = useUiTranslations("ui")
+
   const tint = TYPE_TINT[groupForLibraryType(hit.libraryType)]
   const status = hit.closed_dates?.includes(
     noticeLocalDate(now ?? new Date(), hit.timezone)
@@ -186,7 +189,7 @@ export function LibraryResultCard({
             className="rounded-full px-2.5 py-1 text-[13px] font-semibold"
             style={{ background: tint.bg, color: tint.fg }}
           >
-            {hit.libraryType ?? "Library"}
+            {hit.libraryType ?? tUi("library")}
           </span>
           <span
             className="rounded-full px-2.5 py-1 text-[13px] font-semibold"
@@ -222,6 +225,8 @@ export function LibraryResultRow({
   distanceKmValue?: number
   now?: Date
 }) {
+  const tUi = useUiTranslations("ui")
+
   const tint = TYPE_TINT[groupForLibraryType(hit.libraryType)]
   const status = hit.closed_dates?.includes(
     noticeLocalDate(now ?? new Date(), hit.timezone)
@@ -270,7 +275,7 @@ export function LibraryResultRow({
         className="hidden rounded-full px-2.5 py-1 text-[13px] font-semibold sm:inline"
         style={{ background: tint.bg, color: tint.fg }}
       >
-        {hit.libraryType ?? "Library"}
+        {hit.libraryType ?? tUi("library")}
       </span>
       <span
         className="hidden rounded-full px-2.5 py-1 text-[13px] font-semibold md:inline"

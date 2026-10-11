@@ -1,5 +1,6 @@
 "use client"
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import { Notice } from "@/components/ds"
@@ -37,6 +38,8 @@ export function TeamJoin({
   readonly invite: TeamInvitePreview
   readonly emailVerified: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const doneRef = useRef<HTMLDivElement>(null)
   const [busy, setBusy] = useState(false)
@@ -95,7 +98,7 @@ export function TeamJoin({
         <div className="mt-5 flex flex-wrap gap-3">
           {preassign ? (
             <Link href={`${staffBase}`} className={PRIMARY}>
-              Open {libraryLabel}
+              {tUi("open_library", { library: libraryLabel ?? "" })}
               <Icon
                 aria-hidden="true"
                 icon="mdi:arrow-right"
@@ -140,7 +143,7 @@ export function TeamJoin({
             className="text-[13px] font-semibold"
             style={{ color: T.ink.dim }}
           >
-            Team
+            {tUi("team")}
           </dt>
           <dd className="m-0 text-[22px]" style={{ fontFamily: T.font.serif }}>
             {invite.teamName}
@@ -200,7 +203,7 @@ export function TeamJoin({
           <Notice
             icon="mdi:clock-alert-outline"
             tone="warn"
-            title="This invite has expired"
+            title={tUi("this_invite_has_expired")}
           >
             <span style={{ color: T.ink.base }}>
               Ask {invite.invitedByName} to send a new one.
@@ -211,7 +214,7 @@ export function TeamJoin({
           <Notice
             icon="mdi:pause-circle-outline"
             tone="warn"
-            title="This team isn’t active"
+            title={tUi("this_team_isnt_active_2")}
           >
             <span style={{ color: T.ink.base }}>
               Its plan has lapsed or expired. Ask {invite.invitedByName} to
@@ -223,7 +226,7 @@ export function TeamJoin({
           <Notice
             icon="mdi:account-alert-outline"
             tone="warn"
-            title="Sign in with the invited email"
+            title={tUi("sign_in_with_the_invited_email")}
           >
             <span style={{ color: T.ink.base }}>
               This invite went to {invite.emailMasked}. Sign out, sign in with
@@ -235,7 +238,7 @@ export function TeamJoin({
                 className={INLINE}
                 style={{ color: T.accent.primary }}
               >
-                Sign out
+                {tUi("sign_out")}{" "}
                 <Icon
                   aria-hidden="true"
                   icon="mdi:logout"
@@ -250,7 +253,7 @@ export function TeamJoin({
           <Notice
             icon="mdi:email-alert-outline"
             tone="warn"
-            title="Verify your email first"
+            title={tUi("verify_your_email_first")}
           >
             <span style={{ color: T.ink.base }}>
               Confirm your email address from your account settings, then come

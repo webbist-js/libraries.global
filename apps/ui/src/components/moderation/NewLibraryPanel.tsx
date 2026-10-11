@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { Badge, Notice } from "@/components/ds"
@@ -74,6 +75,8 @@ function RelationNames({ type, ids }: { type: string; ids: string[] }) {
 type Image = { url?: unknown; isHero?: unknown }
 
 function Photos({ images }: { images: Image[] }) {
+  const tUi = useUiTranslations("ui")
+
   const shown = images.flatMap((img, i) => {
     const raw = typeof img.url === "string" ? img.url.trim() : ""
     const ok = isHttpUrl(raw) || /^\/uploads\/[^\s]+$/.test(raw)
@@ -98,7 +101,7 @@ function Photos({ images }: { images: Image[] }) {
                 style={{ border: `1px solid ${T.border.line}` }}
               />
             </a>
-            {p.hero ? <Badge label="Main image" color="aurora" /> : null}
+            {p.hero ? <Badge label={tUi("main_image")} color="aurora" /> : null}
           </li>
         ))}
       </ul>
@@ -212,6 +215,8 @@ export function NewLibraryPanel({
   readonly fields: Record<string, unknown> | null
   readonly draftData: Record<string, unknown> | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const editable = status === "pending" || status === "needs_info"
   const [place, setPlace] = useState<FormData>(() =>
@@ -273,7 +278,7 @@ export function NewLibraryPanel({
         <Notice
           icon="mdi:shield-account-outline"
           tone="warn"
-          title="Staff ownership requested"
+          title={tUi("staff_ownership_requested")}
         >
           <p className="m-0">
             Approval also grants the submitter owner access to this library.
@@ -307,7 +312,7 @@ export function NewLibraryPanel({
               style={{ color: T.ink.base }}
               onClick={() => void save()}
             >
-              {busy ? "Saving…" : "Save location"}
+              {busy ? tUi("saving") : "Save location"}
             </button>
             {!complete ? (
               <span className="text-[14px]" style={{ color: T.ink.dim }}>

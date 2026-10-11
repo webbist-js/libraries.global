@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { useRouter } from "next/navigation"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -40,6 +41,8 @@ export function OnboardingShell({
   /** The browser-safe avatar URL (`avatarSrc`), or null. */
   avatarUrl: string | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   // The primary and "finish later" buttons stay disabled until mounted: see
@@ -99,10 +102,10 @@ export function OnboardingShell({
 
         {/* ── Aside: progress + actions (sticky) ── */}
         <aside
-          aria-label="Profile setup"
+          aria-label={tUi("profile_setup")}
           className="flex flex-col gap-4 self-start lg:sticky lg:top-24"
         >
-          <ProfileProgress title="Profile setup" steps={form.steps()}>
+          <ProfileProgress title={tUi("profile_setup")} steps={form.steps()}>
             <button
               type="button"
               disabled={primaryDisabled}
@@ -111,7 +114,7 @@ export function OnboardingShell({
               style={{ border: "none", fontFamily: T.font.sans }}
             >
               {saving ? (
-                "Saving…"
+                tUi("saving")
               ) : (
                 <>
                   Enter your profile
@@ -146,7 +149,7 @@ export function OnboardingShell({
                 style={linkStyle}
               >
                 Contributor Covenant
-                <span className="sr-only"> (opens in a new tab)</span>
+                <span className="sr-only"> {tUi("opens_in_a_new_tab")}</span>
               </a>{" "}
               and acknowledge that your profile data is processed as described
               in the{" "}
@@ -163,7 +166,7 @@ export function OnboardingShell({
                 className={linkClass}
                 style={linkStyle}
               >
-                Settings
+                {tUi("settings")}{" "}
               </Link>
               .
             </p>

@@ -2,6 +2,7 @@ import { noticeLocalDate } from "@repo/shared-data"
 import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import type { Locale } from "next-intl"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { computeCompleteness } from "@/components/library/library-page.helpers"
 import { IndexRecordWizard } from "@/components/library-editor/IndexRecordWizard"
@@ -35,6 +36,8 @@ export default async function ImproveLibraryPage({
     step?: string | string[]
   }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const [{ slug }, query, locales] = await Promise.all([
     params,
     searchParams,
@@ -103,7 +106,7 @@ export default async function ImproveLibraryPage({
     >
       <ContributeSectionHeader
         compact
-        section="Index editor"
+        section={tUi("index_editor")}
         title={translating ? `Translate *${name}.*` : `Improve *${name}.*`}
         lead={
           isClaimed

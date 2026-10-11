@@ -1,3 +1,5 @@
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 import type { BlogArticleSummary } from "@/lib/strapi-api/content/server"
@@ -18,6 +20,9 @@ function Pagination({
   pageCount: number
   baseUrl: string
 }) {
+  const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("editorial")
+
   if (pageCount <= 1) return null
 
   const prev = page > 1 ? `${baseUrl}?page=${page - 1}` : null
@@ -25,7 +30,7 @@ function Pagination({
 
   return (
     <nav
-      aria-label="Pagination"
+      aria-label={tUi("pagination")}
       className="mt-12 flex items-center justify-center gap-4 border-t pt-10"
       style={{ borderColor: T.border.line }}
     >
@@ -39,12 +44,12 @@ function Pagination({
             color: T.ink.base,
           }}
         >
-          ← Previous
+          ← {tUi("previous")}
         </GlobalLink>
       ) : null}
 
       <span className="text-[14px]" style={{ color: T.ink.dim }}>
-        Page {page} of {pageCount}
+        {t("pageOf", { page, total: pageCount })}
       </span>
 
       {next ? (
@@ -57,7 +62,7 @@ function Pagination({
             color: T.ink.base,
           }}
         >
-          Next →
+          {tUi("next")} →
         </GlobalLink>
       ) : null}
     </nav>
@@ -77,6 +82,7 @@ export function BlogArticleGrid({
   readonly pageCount: number
   readonly baseUrl: string
 }) {
+  const t = useUiTranslations("editorial")
   if (articles.length === 0) {
     return (
       <div
@@ -91,10 +97,10 @@ export function BlogArticleGrid({
             color: T.ink.base,
           }}
         >
-          No articles in this section yet
+          {t("emptySection")}
         </p>
         <p className="m-0 mt-2 text-[15px]" style={{ color: T.ink.dim }}>
-          New dispatches land here as they&rsquo;re published.
+          {t("newDispatches")}
         </p>
       </div>
     )

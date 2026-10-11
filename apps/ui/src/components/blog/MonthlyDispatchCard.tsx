@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -9,6 +10,9 @@ const CARD = "rounded-[20px] border p-5"
 
 /** "The monthly dispatch": the Journal newsletter sign-up. */
 export function MonthlyDispatchCard() {
+  const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("editorial")
+
   const [email, setEmail] = useState("")
   const [status, setStatus] = useState<"idle" | "saving" | "done" | "error">(
     "idle"
@@ -42,13 +46,13 @@ export function MonthlyDispatchCard() {
         id="journal-dispatch"
         style={{ fontFamily: T.font.serif, fontWeight: 500, color: T.ink.base }}
       >
-        The monthly dispatch
+        {t("dispatchTitle")}
       </h2>
       <p
         className="mt-1.5 mb-4 text-[14px] leading-[1.5]"
         style={{ color: T.ink.dim }}
       >
-        New Journal articles in your inbox, at most once a month.
+        {t("dispatchIntro")}
       </p>
 
       {status === "done" ? (
@@ -57,7 +61,7 @@ export function MonthlyDispatchCard() {
           role="status"
           style={{ color: T.accent.ok }}
         >
-          You&rsquo;re on the list — thank you.
+          {t("dispatchDone")}
         </p>
       ) : (
         <form onSubmit={subscribe}>
@@ -66,7 +70,7 @@ export function MonthlyDispatchCard() {
             htmlFor="journal-subscribe"
             style={{ color: T.ink.base }}
           >
-            Email address
+            {tUi("email_address")}{" "}
           </label>
           <input
             aria-describedby="journal-subscribe-note"
@@ -90,7 +94,7 @@ export function MonthlyDispatchCard() {
             style={{ background: T.accent.primary }}
             type="submit"
           >
-            {status === "saving" ? "Subscribing…" : "Subscribe"}
+            {status === "saving" ? t("subscribing") : tUi("subscribe")}
           </button>
           {status === "error" ? (
             <p
@@ -98,7 +102,7 @@ export function MonthlyDispatchCard() {
               role="alert"
               style={{ color: T.accent.danger }}
             >
-              Couldn&rsquo;t subscribe — please try again.
+              {t("subscribeError")}
             </p>
           ) : null}
         </form>
@@ -109,17 +113,18 @@ export function MonthlyDispatchCard() {
         id="journal-subscribe-note"
         style={{ color: T.ink.dim }}
       >
-        Monthly at most. We only use your email to send new Journal articles.
-        Unsubscribe at any time by replying to an email or writing to
-        legal@libraries.global. See our{" "}
-        <GlobalLink
-          className="underline underline-offset-[3px]"
-          href="/legal/privacy"
-          style={{ color: T.accent.primary }}
-        >
-          privacy notice
-        </GlobalLink>
-        .
+        {t.rich("dispatchNote", {
+          email: "legal@libraries.global",
+          privacy: (chunks) => (
+            <GlobalLink
+              className="underline underline-offset-[3px]"
+              href="/legal/privacy"
+              style={{ color: T.accent.primary }}
+            >
+              {chunks}
+            </GlobalLink>
+          ),
+        })}
       </p>
     </section>
   )

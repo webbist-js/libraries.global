@@ -1,6 +1,7 @@
 "use client"
 
 import type { AtlasCountsResponse } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -73,6 +74,8 @@ export function AtlasFiltersTab({
   readonly onFacilitySearch?: (query: string) => void
   readonly onMoreFacilities?: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [allFacilities, setAllFacilities] = useState(false)
   const set = (patch: Partial<AtlasFilters>) =>
     onChange({ ...filters, ...patch })
@@ -211,13 +214,13 @@ export function AtlasFiltersTab({
 
       <Group legend="Opening">
         <Segmented
-          label="Opening"
+          label={tUi("opening")}
           value={filters.opening}
           onChange={(opening) => set({ opening })}
           className="w-full rounded-[16px] [&>button]:min-h-11 [&>button]:px-2"
           options={[
-            { value: "any", label: "Any time" },
-            { value: "now", label: "Open now", icon: "clock" },
+            { value: "any", label: tUi("any_time") },
+            { value: "now", label: tUi("open_now"), icon: "clock" },
             { value: "at", label: "Open at…" },
           ]}
         />
@@ -274,7 +277,7 @@ export function AtlasFiltersTab({
       >
         <legend className="flex items-center gap-2 px-2 text-[15px] font-bold">
           <Icon name="bus" size={18} color={T.map.stopRing} />
-          Mobile library stops
+          {tUi("mobile_library_stops")}
         </legend>
         <div className="flex flex-wrap gap-2">
           {(
@@ -310,7 +313,7 @@ export function AtlasFiltersTab({
           <span className="ml-auto text-[12px]">Not recorded yet</span>
         </label>
         <Check
-          label="Shares live updates"
+          label={tUi("shares_live_updates")}
           checked={filters.mobileSharesLive ?? false}
           count={mobileSharesLiveCount}
           onChange={() => {
@@ -355,8 +358,8 @@ export function AtlasFiltersTab({
         {onFacilitySearch ? (
           <input
             type="search"
-            aria-label="Search services and accessibility"
-            placeholder="Find a feature"
+            aria-label={tUi("search_services_and_accessibility")}
+            placeholder={tUi("find_a_feature")}
             maxLength={80}
             onChange={(event) => {
               onFacilitySearch(event.target.value)
@@ -378,7 +381,7 @@ export function AtlasFiltersTab({
             />
           ))}
           <Check
-            label="Has upcoming events"
+            label={tUi("has_upcoming_events")}
             checked={filters.events}
             count={
               serverCounts?.events ??
@@ -387,7 +390,7 @@ export function AtlasFiltersTab({
             onChange={() => set({ events: !filters.events })}
           />
           <Check
-            label="Live catalogue link"
+            label={tUi("live_catalogue_link")}
             checked={filters.catalogue}
             count={
               serverCounts?.catalogue ??

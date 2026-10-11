@@ -1,6 +1,7 @@
 "use client"
 
 import { ATLAS_ACCESS_BINS, type AtlasAccessMetric } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useRef, type ReactNode } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -30,6 +31,8 @@ export function AtlasLegends({
   readonly accessMetric?: AtlasAccessMetric
   readonly perCapitaYear?: number
 }) {
+  const tUi = useUiTranslations("ui")
+
   const on = (id: LayerId) => layers.includes(id)
   const items: React.ReactNode[] = []
 
@@ -37,7 +40,7 @@ export function AtlasLegends({
     items.push(
       <KeyLegend
         key="pins"
-        title="Libraries"
+        title={tUi("libraries")}
         source="Community records · live"
         items={TYPE_GROUPS.filter((g) => groups.includes(g.key)).map((g) => ({
           key: g.key,
@@ -50,7 +53,7 @@ export function AtlasLegends({
     items.push(
       <RampLegend
         key="density"
-        title="Library density"
+        title={tUi("library_density")}
         source="Relative · community records"
         ramp="heat"
         ticks={["Low", "", "", "High"]}
@@ -61,7 +64,7 @@ export function AtlasLegends({
     items.push(
       <RampLegend
         key="events"
-        title="Events density"
+        title={tUi("events_density")}
         source="Libraries with an events feed"
         ramp="heat"
         ticks={["Low", "", "", "High"]}
@@ -72,7 +75,7 @@ export function AtlasLegends({
     items.push(
       <RampLegend
         key="complete"
-        title="Record completeness"
+        title={tUi("record_completeness")}
         source="Share of 8 sections filled in"
         ramp="seq"
         ticks={["0%", "50%", "100%"]}
@@ -129,7 +132,7 @@ export function AtlasLegends({
     items.push(
       <KeyLegend
         key="access-area"
-        title="Library access"
+        title={tUi("library_access")}
         source={
           accessMetric === "per100k"
             ? "Recorded libraries / 100k residents"
@@ -179,7 +182,7 @@ export function AtlasLegends({
     items.push(
       <KeyLegend
         key="late"
-        title="Open late or Sundays"
+        title={tUi("open_late_or_sundays")}
         source="From recorded hours"
         items={[
           {
@@ -203,12 +206,12 @@ export function AtlasLegends({
     items.push(
       <KeyLegend
         key="closures"
-        title="Closures"
+        title={tUi("closures")}
         source="Recorded as permanently closed"
         items={[
           {
             key: "x",
-            label: "Closed",
+            label: tUi("closed"),
             swatch: (
               <i
                 aria-hidden="true"
@@ -271,9 +274,11 @@ export function ViewToggle({
   readonly list: boolean
   readonly onChange: (list: boolean) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <Segmented
-      label="View"
+      label={tUi("view")}
       value={list ? "list" : "map"}
       onChange={(v) => onChange(v === "list")}
       options={[
@@ -296,6 +301,8 @@ export function AtlasMapLegend({
   readonly accessibilityView: AccessibilityView
   readonly children: ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   const disclosure = useRef<HTMLDetailsElement>(null)
   const area = layers.includes("perCapita"),
     access = layers.includes("access")
@@ -321,7 +328,7 @@ export function AtlasMapLegend({
         </summary>
         <div
           role="region"
-          aria-label="Active map key"
+          aria-label={tUi("active_map_key")}
           className="absolute bottom-[calc(100%+16px)] left-0 flex max-h-[45vh] w-[min(380px,calc(100vw-48px))] flex-col gap-4 overflow-auto rounded-2xl border bg-white p-4 shadow-lg"
           style={{ borderColor: T.border.hi }}
         >
@@ -337,7 +344,7 @@ export function AtlasMapLegend({
           }
           className="flex w-[150px] flex-col gap-1 text-xs"
         >
-          <strong>Library access</strong>
+          <strong>{tUi("library_access")}</strong>
           <span
             aria-hidden="true"
             className="flex h-2.5 overflow-hidden rounded"
@@ -357,7 +364,7 @@ export function AtlasMapLegend({
         </div>
       ) : access ? (
         <div className="flex flex-col gap-1 text-xs">
-          <strong>Accessibility</strong>
+          <strong>{tUi("accessibility")}</strong>
           <span className="flex items-center gap-2">
             {accessibilityView !== "gaps" ? (
               <AccessibilitySwatch confirmed />
@@ -375,7 +382,9 @@ export function AtlasMapLegend({
       ) : heat ? (
         <RampLegend
           title={
-            layers.includes("events") ? "Events density" : "Library density"
+            layers.includes("events")
+              ? tUi("events_density")
+              : tUi("library_density")
           }
           source="Recorded libraries"
           ramp="heat"

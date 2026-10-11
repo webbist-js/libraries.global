@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 
@@ -10,9 +11,11 @@ import { T } from "@/lib/design-tokens"
  * Hidden below `lg`, where the menu items open the drawer instead.
  */
 export function StaffDrawerTab({ onOpen }: { readonly onOpen: () => void }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <button
-      aria-label="Open the staff drawer"
+      aria-label={tUi("open_the_staff_drawer")}
       className="fixed right-0 z-[60] hidden w-11 flex-col items-center gap-2 border border-r-0 pt-2 pb-3 transition-colors hover:bg-(--t-bg-surface) lg:flex"
       onClick={onOpen}
       style={{
@@ -23,7 +26,7 @@ export function StaffDrawerTab({ onOpen }: { readonly onOpen: () => void }) {
         borderRadius: "20px 0 0 20px",
         color: T.ink.base,
       }}
-      title="Staff drawer (Alt+S)"
+      title={tUi("staff_drawer_alts")}
       type="button"
     >
       <span

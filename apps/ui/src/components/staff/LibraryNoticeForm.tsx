@@ -1,10 +1,12 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import {
   LIBRARY_NOTICE_LABELS,
   type LibraryNoticeType,
   type LibraryNotice,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useRef, useState } from "react"
 
 import {
@@ -42,12 +44,14 @@ const noticeInputStyle = {
 }
 
 function RequiredTag() {
+  const tUi = useUiTranslations("ui")
+
   return (
     <span
       className="text-[13px] font-medium"
       style={{ color: TYPE_TINT.special.fg }}
     >
-      required
+      {tUi("required_d0a363")}{" "}
     </span>
   )
 }
@@ -76,6 +80,8 @@ export function LibraryNoticeForm({
   onSaved?: () => void
   embedded?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const uid = useId()
   const messageRef = useRef<HTMLTextAreaElement>(null)
   const [type, setType] = useState<LibraryNoticeType>(
@@ -171,7 +177,7 @@ export function LibraryNoticeForm({
             className="m-0 text-[28px] leading-[1.1] sm:text-[32px]"
             style={{ fontFamily: T.font.serif, fontWeight: 500 }}
           >
-            {initial ? "Edit notice" : "Post a notice"}
+            {initial ? tUi("edit_notice") : tUi("post_a_notice")}
           </h2>
           <p className="m-0 mt-1 text-[14px]" style={{ color: T.ink.dim }}>
             Publishes straight away. Dates use the library’s timezone.
@@ -180,7 +186,7 @@ export function LibraryNoticeForm({
       )}
       <div className="flex flex-col gap-1.5">
         <label htmlFor={field("type")} style={fieldLabelStyle}>
-          Type
+          {tUi("type")}
         </label>
         <select
           id={field("type")}
@@ -326,7 +332,7 @@ export function LibraryNoticeForm({
           <label htmlFor={field("to")} style={fieldLabelStyle}>
             Until{" "}
             <span style={{ color: T.ink.dim, fontWeight: 400 }}>
-              (optional)
+              {tUi("optional")}{" "}
             </span>
           </label>
           <input

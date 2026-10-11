@@ -1,4 +1,5 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import {
   cycleWeekOf,
@@ -8,6 +9,7 @@ import {
   toMinutes,
   type PublicLiveState,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import { StatusBadge } from "@/components/ds"
@@ -76,6 +78,8 @@ export function ConsolePreview({
   readonly publicPath: string
   readonly firstName: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const staffHref = useStaffLibraryHref(initial.library.id)
   const [screen, setScreen] = useState<Screen>("live")
   const [simulate, setSimulate] = useState<Simulation>(null)
@@ -228,7 +232,7 @@ export function ConsolePreview({
         <div
           className="relative mx-auto flex aspect-[410/864] w-[410px] max-w-full min-w-0 flex-col overflow-hidden rounded-[44px] border-[10px]"
           style={{ background: T.bg.void, borderColor: T.ink.base }}
-          aria-label="Console preview"
+          aria-label={tUi("console_preview")}
           role="group"
         >
           <div
@@ -282,7 +286,7 @@ export function ConsolePreview({
                         width={10}
                         className="mr-2"
                       />
-                      Go live
+                      {tUi("go_live")}
                     </button>
                   }
                 />
@@ -387,7 +391,7 @@ export function ConsolePreview({
             ) : (
               <FinishedScreen
                 heading="p"
-                title="Finished"
+                title={tUi("finished")}
                 summary="This is the finished screen. No live session was started or published."
                 note="In a real session, this shows the route’s check-ins and when sharing stopped."
                 backHref={staffHref()}
@@ -455,13 +459,13 @@ export function ConsolePreview({
                       className="live-button rounded-full"
                       onClick={() => setAction(null)}
                     >
-                      Cancel
+                      {tUi("cancel")}{" "}
                     </button>
                   </div>
                 ) : (
                   <ConfirmIdentityLook heading="p">
                     <label className="block text-[15px] font-semibold">
-                      Password{" "}
+                      {tUi("password")}{" "}
                       <span
                         className="font-normal"
                         style={{ color: T.ink.dim }}
@@ -474,7 +478,7 @@ export function ConsolePreview({
                         autoComplete="off"
                         readOnly
                         value="example"
-                        aria-label="Password (preview)"
+                        aria-label={tUi("password_preview")}
                       />
                     </label>
                     <button
@@ -497,7 +501,7 @@ export function ConsolePreview({
                       style={{ color: T.ink.dim }}
                       onClick={() => setScreen("entry")}
                     >
-                      Cancel
+                      {tUi("cancel")}{" "}
                     </button>
                   </ConfirmIdentityLook>
                 )}
@@ -530,7 +534,7 @@ export function ConsolePreview({
             <div
               className="mt-3 flex flex-wrap gap-2"
               role="group"
-              aria-label="Screen"
+              aria-label={tUi("screen")}
             >
               {SCREENS.map((s) => {
                 const active = screen === s.key
@@ -565,11 +569,13 @@ export function ConsolePreview({
                 )
               })}
             </div>
-            <p className="mt-4 mb-2 text-[14px] font-semibold">Simulate</p>
+            <p className="mt-4 mb-2 text-[14px] font-semibold">
+              {tUi("simulate")}
+            </p>
             <div
               className="flex flex-wrap gap-2"
               role="group"
-              aria-label="Simulate"
+              aria-label={tUi("simulate")}
             >
               {SIMULATIONS.map((s) => {
                 const active = simulate === s.key

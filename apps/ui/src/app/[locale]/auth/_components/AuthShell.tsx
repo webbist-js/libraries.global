@@ -4,7 +4,7 @@
 // and a white form card on the right with a top bar and a footnote strip.
 
 import { Icon } from "@iconify/react"
-import type { Locale } from "next-intl"
+import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 import type { ReactNode } from "react"
 
 import LocaleSwitcher from "@/components/elementary/LocaleSwitcher"
@@ -34,6 +34,8 @@ export function AuthShell({
   back?: { href: string; label: string }
   children: ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <div
       className="flex min-h-dvh w-full gap-4 p-3 sm:p-4"
@@ -94,7 +96,7 @@ export function AuthShell({
             />
             {footnote}
           </p>
-          <nav aria-label="Legal and help" className="flex gap-5">
+          <nav aria-label={tUi("legal_and_help")} className="flex gap-5">
             {LEGAL_LINKS.map((link) => (
               <GlobalLink
                 key={link.href}

@@ -11,6 +11,7 @@ import {
   VERIFY_SECTIONS,
   type VerifySection,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import {
   type FormEvent,
   Fragment,
@@ -302,6 +303,8 @@ function refusalMessage(json: unknown, status: number): string {
  * notice, a heading focused on arrival, and where to go next.
  */
 function ProposalSent() {
+  const tUi = useUiTranslations("ui")
+
   const ref = useRef<HTMLHeadingElement>(null)
   useEffect(() => {
     ref.current?.focus()
@@ -313,7 +316,11 @@ function ProposalSent() {
       className={`${card} flex flex-col items-start gap-3`}
       style={cardStyle}
     >
-      <Notice icon="mdi:check-circle-outline" tone="ok" title="Proposal sent" />
+      <Notice
+        icon="mdi:check-circle-outline"
+        tone="ok"
+        title={tUi("proposal_sent")}
+      />
       <h2
         id="drive-sent"
         ref={ref}
@@ -340,7 +347,7 @@ function ProposalSent() {
           className={SECONDARY_LINK}
           style={secondaryStyle}
         >
-          My submissions
+          {tUi("my_submissions")}{" "}
         </Link>
       </div>
     </section>
@@ -456,6 +463,8 @@ export function DriveBuilder({
   readonly userId?: string | null
   readonly restoreDraft?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const proposing = mode === "propose"
   const editing = Boolean(drive)
@@ -770,7 +779,7 @@ export function DriveBuilder({
   // Announces the send; it stays mounted while the form gives way.
   const announcement = proposing ? (
     <p aria-live="polite" className="sr-only">
-      {sent ? "Proposal sent" : ""}
+      {sent ? tUi("proposal_sent") : ""}
     </p>
   ) : null
 
@@ -836,7 +845,7 @@ export function DriveBuilder({
           <Notice
             icon="mdi:content-save-outline"
             tone="info"
-            title="We restored your draft."
+            title={tUi("we_restored_your_draft")}
           >
             <p className="m-0" style={{ color: T.ink.base }}>
               <button
@@ -858,7 +867,7 @@ export function DriveBuilder({
           </Notice>
           <button
             type="button"
-            aria-label="Dismiss"
+            aria-label={tUi("dismiss")}
             onClick={() => setRestored(false)}
             className="absolute top-2 right-2 flex size-9 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-white"
             style={{
@@ -984,7 +993,7 @@ export function DriveBuilder({
             </fieldset>
             <Field
               id={fieldId("verifyBefore")}
-              label="Not confirmed since"
+              label={tUi("not_confirmed_since")}
               tag="Required"
               hint="Details nobody has ever confirmed count too."
               hintId="drive-verify-before-hint"
@@ -1046,7 +1055,7 @@ export function DriveBuilder({
 
       <Step
         n={2}
-        title="Where?"
+        title={tUi("where")}
         hint="Add one or more places at any level. Closed libraries are always left out."
         done={done[1]!}
         disabled={locked}
@@ -1062,7 +1071,7 @@ export function DriveBuilder({
           />
           {state.places.length > 0 ? (
             <ul
-              aria-label="Places in this drive"
+              aria-label={tUi("places_in_this_drive")}
               className="m-0 flex list-none flex-wrap gap-2 p-0"
             >
               {state.places.map((p) => {
@@ -1154,13 +1163,13 @@ export function DriveBuilder({
           open={narrowShown}
           onToggle={() => setNarrowOpen(!narrowShown)}
           icon="mdi:filter-variant"
-          title="Narrow it further"
+          title={tUi("narrow_it_further")}
           hint="Dataset, completeness or a list"
           tinted
         >
           <Field
             id={fieldId("source")}
-            label="Dataset"
+            label={tUi("dataset")}
             tag="Optional"
             hint={
               <>
@@ -1220,7 +1229,7 @@ export function DriveBuilder({
 
           <Field
             id={fieldId("libraries")}
-            label="Or list the libraries"
+            label={tUi("or_list_the_libraries")}
             tag="Optional"
             hint={
               <>
@@ -1314,7 +1323,7 @@ export function DriveBuilder({
                   <div className="flex flex-col gap-6 px-1 pt-2 pb-3">
                     <Field
                       id={fieldId("whereName")}
-                      label="Source name"
+                      label={tUi("source_name")}
                       tag="Required"
                     >
                       <input
@@ -1334,7 +1343,11 @@ export function DriveBuilder({
                         message={errorOf("whereName")}
                       />
                     </Field>
-                    <Field id={fieldId("whereUrl")} label="Link" tag="Optional">
+                    <Field
+                      id={fieldId("whereUrl")}
+                      label={tUi("link")}
+                      tag="Optional"
+                    >
                       <input
                         id={fieldId("whereUrl")}
                         type="url"
@@ -1353,7 +1366,7 @@ export function DriveBuilder({
                     </Field>
                     <Field
                       id={fieldId("whereLicence")}
-                      label="Licence note"
+                      label={tUi("licence_note")}
                       tag="Optional"
                       hint="On what terms the answers can be used, as helpers will read it."
                       hintId="drive-licence-hint"
@@ -1399,7 +1412,7 @@ export function DriveBuilder({
       >
         <Field
           id={fieldId("title")}
-          label="Title"
+          label={tUi("title")}
           tag="Required"
           count={
             <CharCount
@@ -1433,7 +1446,7 @@ export function DriveBuilder({
         </Field>
         <Field
           id={fieldId("summary")}
-          label="Summary"
+          label={tUi("summary")}
           tag="Required"
           count={
             <CharCount
@@ -1558,7 +1571,7 @@ export function DriveBuilder({
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)]">
           <Field
             id={fieldId("startsOn")}
-            label="Opens on"
+            label={tUi("opens_on")}
             hint={
               proposing
                 ? "At least a week away, for review."
@@ -1642,7 +1655,7 @@ export function DriveBuilder({
           </Segments>
           <Field
             id={fieldId("unit")}
-            label="Count progress in"
+            label={tUi("count_progress_in")}
             hint={
               todo == null
                 ? `Shown on the card as “4 of 25 ${unitNoun(state.unit, 25)}”.`
@@ -1676,12 +1689,12 @@ export function DriveBuilder({
               id="drive-note-panel"
               open={noteOpen}
               onToggle={() => setNoteOpen(!noteOpen)}
-              title="Anything the moderator should know?"
-              hint="Optional"
+              title={tUi("anything_the_moderator_should_know")}
+              hint={tUi("optional_59be71")}
             >
               <Field
                 id="drive-note"
-                label="Note for the moderator"
+                label={tUi("note_for_the_moderator")}
                 tag="Optional"
                 count={
                   <CharCount
@@ -1717,7 +1730,7 @@ export function DriveBuilder({
           <Notice
             icon="mdi:alert-outline"
             tone="warn"
-            title="The proposal wasn’t sent"
+            title={tUi("the_proposal_wasnt_sent")}
           >
             <p className="m-0" style={{ color: T.ink.base }}>
               {refusal}
@@ -1778,7 +1791,7 @@ export function DriveBuilder({
       </div>
 
       <aside
-        aria-label="About this drive"
+        aria-label={tUi("about_this_drive")}
         className="flex min-w-0 flex-col gap-4 self-start lg:sticky lg:top-24"
       >
         {sent ? null : <PreviewCard view={view} />}

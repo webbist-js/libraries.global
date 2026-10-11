@@ -1,6 +1,7 @@
 import { Icon } from "@iconify/react"
 import type { Metadata } from "next"
 import { headers } from "next/headers"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -42,6 +43,8 @@ const PROMISES = [
 ]
 
 export default async function MembershipPage() {
+  const tUi = await getUiTranslations("ui")
+
   const session = await getSessionSSR(await headers())
   const user = session?.user
   // A signed-in session missing its plan counts as free (missing means deny).
@@ -53,7 +56,7 @@ export default async function MembershipPage() {
   return (
     <div style={{ background: T.bg.void, color: T.ink.base }}>
       <ContributeSectionHeader
-        section="Membership"
+        section={tUi("membership")}
         title="Plans and *Pro*"
         lead="Library facts are free, always. Membership keeps the index running; Pro and Team add Library access population comparisons and other analysis tools."
       >

@@ -1,5 +1,6 @@
 import { fromMinutes, localDateTime, scheduleState } from "@repo/shared-data"
 import { headers } from "next/headers"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { SignInForm } from "@/app/[locale]/auth/signin/_components/SignInForm"
 import { staffLibrariesOf } from "@/lib/access-server"
@@ -16,6 +17,8 @@ export default async function LiveEntry({
 }: {
   params: Promise<{ locale: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const { locale } = await params
   const session = await getSessionSSR(await headers())
   if (!session?.user)
@@ -144,7 +147,7 @@ export default async function LiveEntry({
                 {result.body?.activeSession
                   ? "Take over"
                   : l.canGoLive && result.body?.settings.enabled
-                    ? "Go live"
+                    ? tUi("go_live")
                     : "Go to settings"}
               </Link>
             </section>
@@ -155,7 +158,7 @@ export default async function LiveEntry({
         Also on the library page, in the “You run this mobile library” card.
       </p>
       <Link className="live-button mt-4 rounded-full" href="/staff">
-        Staff area
+        {tUi("staff_area")}
       </Link>
     </>
   )

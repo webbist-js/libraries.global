@@ -1,6 +1,7 @@
 // Sticky sidebar for the library detail page (v2): record, tasks and links.
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import {
   type OpeningTimesValue,
@@ -65,6 +66,8 @@ export function LibraryRecordPanel({
   /** People following the library; null leaves the count out. */
   readonly followers?: number | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const rec = asRecord(library)
   const { done, total, items } = libraryChecklist(library)
   const reviewed =
@@ -77,7 +80,7 @@ export function LibraryRecordPanel({
         className="m-0 mb-3 text-[15px] font-bold"
         style={{ color: T.ink.base }}
       >
-        About this record
+        {tUi("about_this_record")}
       </h2>
       <div
         className="flex gap-2.5 rounded-2xl px-3 py-2.5 text-[13.5px] leading-normal"
@@ -213,6 +216,8 @@ const hostname = (url: string) => {
 }
 
 export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
+  const tUi = useUiTranslations("ui")
+
   const rec = asRecord(library)
   const website = (rec.website as string | null) ?? null
   const catalogueUrl = (rec.catalogueUrl as string | null) ?? null
@@ -253,7 +258,7 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
           category="Something else"
           className="underline underline-offset-2"
         >
-          Add
+          {tUi("add")}{" "}
         </OpenCorrectionLink>
       </span>
     </li>
@@ -271,7 +276,7 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
         className="min-w-0 truncate font-semibold underline underline-offset-2"
         style={{ color: T.accent.primary }}
       >
-        {label} ↗<span className="sr-only"> (opens in a new tab)</span>
+        {label} ↗<span className="sr-only"> {tUi("opens_in_a_new_tab")}</span>
       </a>
     </li>
   )

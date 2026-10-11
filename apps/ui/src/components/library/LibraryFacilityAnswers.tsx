@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import {
@@ -67,6 +68,8 @@ export function LibraryFacilityAnswers({
   /** Called once the answers are with a reviewer. */
   readonly onSent?: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { data: session, isPending } = authClient.useSession()
   const [answers, setAnswers] = useState<Record<string, Answer>>({})
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">(
@@ -189,7 +192,7 @@ export function LibraryFacilityAnswers({
                     icon={known === "yes" ? "mdi:check" : "mdi:close"}
                     width={16}
                   />
-                  {known === "yes" ? "Yes" : "No"}
+                  {known === "yes" ? tUi("yes") : tUi("no")}
                 </span>
               ) : (
                 <span
@@ -214,7 +217,7 @@ export function LibraryFacilityAnswers({
                           color: on ? "#fff" : T.ink.base,
                         }}
                       >
-                        {a === "yes" ? "Yes" : "No"}
+                        {a === "yes" ? tUi("yes") : tUi("no")}
                       </button>
                     )
                   })}
@@ -257,7 +260,7 @@ export function LibraryFacilityAnswers({
                 disabled={state === "sending"}
                 className="rounded-full bg-(--t-accent-primary) px-4 py-2 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:opacity-70"
               >
-                {state === "sending" ? "Sending…" : "Send for review"}
+                {state === "sending" ? tUi("sending") : "Send for review"}
               </button>
             ) : (
               <Link

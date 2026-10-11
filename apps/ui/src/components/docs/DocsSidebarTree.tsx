@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { SearchField } from "@/components/ds"
@@ -30,6 +31,9 @@ export function DocsSidebarTree({
   readonly sections: readonly DocsSection[]
   readonly tree: DocsTree
 }) {
+  const tUi = useUiTranslations("ui")
+  const tArticle = useUiTranslations("editorial")
+
   const [filter, setFilter] = useState("")
   const [open, setOpen] = useState<ReadonlySet<string>>(() =>
     openSectionsByDefault(tree)
@@ -47,10 +51,10 @@ export function DocsSidebarTree({
     })
 
   return (
-    <nav aria-label="Knowledge" className="flex flex-col gap-5">
+    <nav aria-label={tUi("knowledge")} className="flex flex-col gap-5">
       <SearchField
         id="docs-filter"
-        placeholder="Filter articles"
+        placeholder={tUi("filter_articles")}
         size="sm"
         onClear={() => setFilter("")}
         inputProps={{
@@ -66,7 +70,7 @@ export function DocsSidebarTree({
           href="/knowledge"
           style={{ color: T.ink.dim }}
         >
-          ← All articles
+          ← {tArticle("allArticles")}
         </GlobalLink>
         {query ? null : (
           <button
@@ -79,7 +83,7 @@ export function DocsSidebarTree({
               )
             }
           >
-            {allOpen ? "Collapse all" : "Expand all"}
+            {allOpen ? tArticle("collapseAll") : tArticle("expandAll")}
           </button>
         )}
       </div>
@@ -120,9 +124,9 @@ export function DocsSidebarTree({
                   className="text-[13px] font-medium"
                   style={{ color: T.ink.faint }}
                 >
-                  {visiblePages.length}
+                  <span aria-hidden="true">{visiblePages.length}</span>
                   <span className="sr-only">
-                    {visiblePages.length === 1 ? " article" : " articles"}
+                    {tArticle("articleCount", { count: visiblePages.length })}
                   </span>
                 </span>
                 <Icon
@@ -149,7 +153,7 @@ export function DocsSidebarTree({
                       className="px-2.5 py-1.5 text-[13px]"
                       style={{ color: T.ink.faint }}
                     >
-                      No pages yet
+                      {tArticle("noPages")}
                     </li>
                   ) : (
                     visiblePages.map((page) => (

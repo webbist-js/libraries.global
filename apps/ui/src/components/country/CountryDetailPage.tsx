@@ -1,4 +1,4 @@
-import type { Locale } from "next-intl"
+import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { DrivesHere } from "@/components/drives/DrivesHere"
 import { Container } from "@/components/elementary/Container"
@@ -55,6 +55,8 @@ export function CountryDetailPage({
   continentSlug: string
   drives?: readonly { view: DriveView; here: number }[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   const name = country.name ?? ""
   const regions = country.regions ?? []
   const labels = placeLabels(country).region
@@ -170,7 +172,7 @@ export function CountryDetailPage({
                 Search libraries in {name}
               </LocationHeroAction>
               <LocationHeroAction href="/contribute/index/new" icon="mdi:plus">
-                Add a library
+                {tUi("add_a_library")}
               </LocationHeroAction>
             </>
           }
@@ -236,7 +238,7 @@ export function CountryDetailPage({
             {hasFeaturedLibraries ? (
               <section id="institutions" className="scroll-mt-24">
                 <LocationSectionHeading
-                  title="Libraries worth knowing"
+                  title={tUi("libraries_worth_knowing")}
                   description={`The most significant institutions across ${name}.`}
                 />
                 <LocationFeaturedLibraries

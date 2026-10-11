@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -46,6 +47,8 @@ export function RoleApplicationPanel({
   /** Locale code → name, for the languages asked for. */
   readonly localeNames: Record<string, string>
 }) {
+  const tUi = useUiTranslations("ui")
+
   const f = (raw && typeof raw === "object" ? raw : {}) as Record<
     string,
     unknown
@@ -152,7 +155,7 @@ export function RoleApplicationPanel({
             </p>
             {applicant.recentAccepted.length > 0 ? (
               <ul
-                aria-label="Recent accepted changes"
+                aria-label={tUi("recent_accepted_changes")}
                 className="m-0 list-none overflow-hidden rounded-[14px] p-0"
                 style={{
                   border: `1px solid ${T.border.line}`,

@@ -1,7 +1,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import type { Locale } from "next-intl"
+import { type Locale, useTranslations } from "next-intl"
 import React, { useTransition } from "react"
 
 import { UseSearchParamsWrapper } from "@/components/helpers/UseSearchParamsWrapper"
@@ -15,10 +15,7 @@ import {
 } from "@/components/ui/select"
 import { routing, usePathname, useRouter } from "@/lib/navigation"
 
-const localeTranslation = {
-  cs: "Czech",
-  en: "English",
-}
+const localeTranslation = { cs: "Čeština", en: "English", fr: "Français" }
 
 function LocaleSwitcher({
   locale,
@@ -45,6 +42,7 @@ function SuspensedLocaleSwitcher({
 }) {
   // prevent the locale switch from blocking the UI thread
   const [, startTransition] = useTransition()
+  const t = useTranslations("translation")
 
   const pathname = usePathname()
   const router = useRouter()
@@ -64,7 +62,10 @@ function SuspensedLocaleSwitcher({
 
   return (
     <Select value={locale} onValueChange={handleLocaleChange}>
-      <SelectTrigger className={triggerClassName ?? "w-18 font-bold uppercase"}>
+      <SelectTrigger
+        aria-label={t("language")}
+        className={triggerClassName ?? "w-18 font-bold uppercase"}
+      >
         <SelectValue>{locale}</SelectValue>
       </SelectTrigger>
       <SelectContent

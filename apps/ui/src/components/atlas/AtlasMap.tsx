@@ -6,6 +6,7 @@ import type {
 } from "@repo/shared-data"
 import type * as MapLibre from "maplibre-gl"
 import type { GeoJSONSource, Map as MapLibreMap, Marker } from "maplibre-gl"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -135,6 +136,8 @@ function selectionElement(name: string, small: boolean): HTMLElement {
 
 export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
   function AtlasMap(props, ref) {
+    const tUi = useUiTranslations("ui")
+
     const containerRef = useRef<HTMLDivElement>(null)
     const mapRef = useRef<MapLibreMap | null>(null)
     const libRef = useRef<typeof MapLibre | null>(null)
@@ -1038,7 +1041,9 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
           ref={containerRef}
           className="h-full w-full"
           role="application"
-          aria-label="Map of libraries. Use the list view for a keyboard-friendly alternative."
+          aria-label={tUi(
+            "map_of_libraries_use_the_list_view_for_a_keyboardfriendly_alternative"
+          )}
         />
       </div>
     )

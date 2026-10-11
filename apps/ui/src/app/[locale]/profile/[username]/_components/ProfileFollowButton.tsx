@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -12,6 +13,8 @@ export function ProfileFollowButton({
   targetUsername: string
   isSignedIn: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const [following, setFollowing] = useState(false)
   const [loading, setLoading] = useState(isSignedIn)
@@ -83,7 +86,7 @@ export function ProfileFollowButton({
         >
           <path d="M12 5v14M5 12h14" strokeLinecap="round" />
         </svg>
-        Follow
+        {tUi("follow")}{" "}
       </Link>
     )
   }
@@ -129,7 +132,7 @@ export function ProfileFollowButton({
               strokeLinejoin="round"
             />
           </svg>
-          Following
+          {tUi("following")}{" "}
         </>
       ) : (
         <>
@@ -143,7 +146,7 @@ export function ProfileFollowButton({
           >
             <path d="M12 5v14M5 12h14" strokeLinecap="round" />
           </svg>
-          Follow
+          {tUi("follow")}{" "}
         </>
       )}
     </button>

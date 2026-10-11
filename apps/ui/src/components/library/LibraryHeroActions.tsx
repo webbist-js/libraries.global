@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { hubHref } from "@/components/contribute/wizard.logic"
@@ -36,6 +37,8 @@ export function LibraryHeroActions({
   readonly libraryName: string
   readonly libraryDocumentId: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { open } = useCorrectionDrawer()
 
   return (
@@ -71,7 +74,7 @@ export function LibraryHeroActions({
         className="transition-colors hover:!bg-(--t-accent-primary-hover)"
       >
         <LibIcon d={LIB_ICONS.pencil} />
-        Suggest a correction
+        {tUi("suggest_a_correction")}
       </button>
     </div>
   )
@@ -85,6 +88,8 @@ function FollowPill({
   readonly libraryDocumentId: string
   readonly libraryName: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { data: session, isPending } = authClient.useSession()
   const [following, setFollowing] = useState<boolean | null>(null)
   const [loading, setLoading] = useState(false)
@@ -143,7 +148,7 @@ function FollowPill({
         className="transition-colors hover:!bg-(--t-bg-surface)"
       >
         <LibIcon d={LIB_ICONS.bookmark} />
-        Follow
+        {tUi("follow")}{" "}
       </Link>
     )
   }
@@ -165,7 +170,11 @@ function FollowPill({
       }}
     >
       <LibIcon d={LIB_ICONS.bookmark} />
-      {following === null ? "Follow" : isFollowing ? "Following" : "Follow"}
+      {following === null
+        ? tUi("follow")
+        : isFollowing
+          ? tUi("following")
+          : tUi("follow")}
     </button>
   )
 }

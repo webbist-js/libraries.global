@@ -1,6 +1,7 @@
 import { Icon } from "@iconify/react"
 import type { Metadata } from "next"
 import { headers } from "next/headers"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { ProFaq } from "@/app/[locale]/contribute/_components/membership/ProFaq"
 import { SupporterBadge } from "@/components/community/SupporterBadge"
@@ -84,6 +85,8 @@ export default async function SupportersPage({
   params: Promise<{ locale: string }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const [{ locale }, raw, session] = await Promise.all([
     params,
     searchParams,
@@ -106,7 +109,7 @@ export default async function SupportersPage({
   return (
     <div style={{ color: T.ink.base }}>
       <CommunitySectionHeader
-        section="Supporters"
+        section={tUi("supporters")}
         title={
           title === "The people who *keep it open.*"
             ? "The people\nwho *keep it open.*"
@@ -154,14 +157,17 @@ export default async function SupportersPage({
             >
               <StatBlock
                 value={data.total.toLocaleString(locale)}
-                label="Supporters"
+                label={tUi("supporters")}
               />
             </div>
             <div
               className="rounded-2xl border p-4"
               style={{ background: T.bg.deep, borderColor: T.border.line }}
             >
-              <StatBlock value={data.countries.length} label="Countries" />
+              <StatBlock
+                value={data.countries.length}
+                label={tUi("countries")}
+              />
             </div>
             <div className="col-span-2">
               <RunningCosts costs={data.costs} locale={locale} />
@@ -173,7 +179,7 @@ export default async function SupportersPage({
       <Container className="flex flex-col gap-14 py-10 sm:gap-16 sm:py-14">
         {profile?.isSupporter ? (
           <section
-            aria-label="Your supporter visibility"
+            aria-label={tUi("your_supporter_visibility")}
             className="flex flex-wrap items-center justify-between gap-5 rounded-[28px] border px-5 py-6 sm:px-7"
             style={{ background: T.bg.deep, borderColor: T.border.line }}
           >
@@ -321,7 +327,7 @@ export default async function SupportersPage({
                 <div className="flex flex-wrap gap-1.5">
                   <SupporterBadge />
                   <Badge
-                    label="Trusted contributor"
+                    label={tUi("trusted_contributor")}
                     color="ok"
                     icon="mdi:check"
                   />
@@ -386,7 +392,7 @@ export default async function SupportersPage({
                   <p className="m-0 flex flex-wrap items-center gap-1.5 text-[15px] leading-snug font-semibold">
                     {feature.title}
                     {feature.planned ? (
-                      <Badge label="Planned" color="dim" />
+                      <Badge label={tUi("planned")} color="dim" />
                     ) : null}
                   </p>
                   <p

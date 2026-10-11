@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -13,6 +14,8 @@ export function LibraryCopyButton({
   readonly text: string
   readonly label?: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [copied, setCopied] = useState(false)
 
   return (
@@ -36,7 +39,7 @@ export function LibraryCopyButton({
         icon={copied ? "mdi:check" : "mdi:content-copy"}
         width={15}
       />
-      <span aria-live="polite">{copied ? "Copied" : label}</span>
+      <span aria-live="polite">{copied ? tUi("copied") : label}</span>
     </button>
   )
 }

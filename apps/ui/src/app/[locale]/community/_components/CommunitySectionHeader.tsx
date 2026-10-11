@@ -1,3 +1,4 @@
+import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { type BreadcrumbItem, PageHero } from "@/components/ds"
@@ -39,6 +40,8 @@ export function CommunitySectionHeader({
   readonly showEyebrow?: boolean
   readonly showTabs?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const trail = crumbs?.length ? crumbs : section ? [{ label: section }] : []
 
   return (
@@ -46,13 +49,13 @@ export function CommunitySectionHeader({
       breadcrumb={
         trail.length > 0
           ? [
-              { label: "Home", href: "/" },
-              { label: "Community", href: "/community" },
+              { label: tUi("home"), href: "/" },
+              { label: tUi("community"), href: "/community" },
               ...trail,
             ]
-          : [{ label: "Home", href: "/" }, { label: "Community" }]
+          : [{ label: tUi("home"), href: "/" }, { label: tUi("community") }]
       }
-      eyebrow={showEyebrow ? "Community" : undefined}
+      eyebrow={showEyebrow ? tUi("community") : undefined}
       eyebrowIcon="mdi:account-group-outline"
       title={title}
       lead={lead}

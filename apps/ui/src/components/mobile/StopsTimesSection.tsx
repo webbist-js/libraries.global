@@ -11,6 +11,7 @@ import {
   type LibraryNotice,
   type TimetableNotice,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { SegmentedControl } from "@/components/ds"
@@ -88,6 +89,8 @@ export function StopsTimesSection({
   /** The library's slug, for "Suggest a correction for this stop". */
   readonly slug?: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const tt = normalizeMobileTimetable(value)
   const [view, setView] = useState<"day" | "place">("day")
   const [chosenWeek, setChosenWeek] = useState<number | null>(null)
@@ -137,17 +140,17 @@ export function StopsTimesSection({
           <NearestStopFinder stops={tt.stops} onSelect={setStopId} />
           <div className="flex flex-wrap gap-3">
             <SegmentedControl
-              label="Show timetable"
+              label={tUi("show_timetable")}
               options={[
                 { value: "day", label: "By day" },
-                { value: "place", label: "By place" },
+                { value: "place", label: tUi("by_place") },
               ]}
               value={view}
               onChange={setView}
             />
             {view === "day" && tt.cycle.weeks > 1 ? (
               <SegmentedControl
-                label="Cycle week"
+                label={tUi("cycle_week")}
                 value={String(week)}
                 onChange={(value) => setChosenWeek(Number(value))}
                 options={Array.from({ length: tt.cycle.weeks }, (_, index) => ({

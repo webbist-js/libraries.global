@@ -7,6 +7,7 @@ import {
   type AtlasLibraryAccessResponse,
   type AtlasQueryRequest,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import {
   type ReactNode,
   useCallback,
@@ -136,6 +137,8 @@ export function AtlasExplorer({
   readonly contributePrompt?: ReactNode
   readonly scalable?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const mapRef = useRef<AtlasMapHandle>(null)
   const isMobile = useIsMobile()
   const { tier, ready: entitlementsReady } = useTier()
@@ -925,11 +928,15 @@ export function AtlasExplorer({
   )
 
   const tabs = (
-    <div role="tablist" aria-label="Explore" className="flex flex-1 gap-1">
+    <div
+      role="tablist"
+      aria-label={tUi("explore")}
+      className="flex flex-1 gap-1"
+    >
       {(
         [
-          ["search", "Search", "search"],
-          ["filter", "Filters", "filter"],
+          ["search", tUi("search"), "search"],
+          ["filter", tUi("filters"), "filter"],
           ["layers", "Layers", "layers"],
         ] as [Tab, string, IconName][]
       ).map(([key, label, icon]) => {
@@ -1009,7 +1016,7 @@ export function AtlasExplorer({
       {!online ? (
         <AtlasBanner
           tone="danger"
-          title="You’re offline."
+          title={tUi("youre_offline")}
           body={
             all
               ? `Showing ${(resultCount ?? listed.length).toLocaleString()} libraries loaded earlier. The basemap and new data need a connection.`
@@ -1020,24 +1027,27 @@ export function AtlasExplorer({
       {loadError || data.error ? (
         <AtlasBanner
           tone="danger"
-          title="We couldn’t load the libraries."
+          title={tUi("we_couldnt_load_the_libraries")}
           body={data.error ?? "The map will fill in once they arrive."}
-          action={{ label: "Try again", onClick: scalable ? data.retry : load }}
+          action={{
+            label: tUi("try_again"),
+            onClick: scalable ? data.retry : load,
+          }}
         />
       ) : null}
       {mapError === "webgl" ? (
         <AtlasBanner
           tone="info"
-          title="This browser can’t draw the map."
+          title={tUi("this_browser_cant_draw_the_map")}
           body="It needs WebGL, which is turned off or unavailable here. Every library is still in the list."
         />
       ) : null}
       {perCapitaError ? (
         <AtlasBanner
           tone="danger"
-          title="Library access couldn’t load."
+          title={tUi("library_access_couldnt_load")}
           body={perCapitaError}
-          action={{ label: "Try again", onClick: retryPerCapita }}
+          action={{ label: tUi("try_again"), onClick: retryPerCapita }}
         />
       ) : null}
     </>
@@ -1054,7 +1064,7 @@ export function AtlasExplorer({
       accessibilityCoverage.matches === 0 ? (
         <AtlasBanner
           tone="info"
-          title="No confirmed matches in this map area."
+          title={tUi("no_confirmed_matches_in_this_map_area")}
           body="Other libraries may offer these features; their records do not confirm them yet. Change the selection or compare the records."
           action={{
             label: "Compare records",
@@ -1074,7 +1084,7 @@ export function AtlasExplorer({
         <AtlasToast
           onDismiss={() => setReplaced(null)}
           action={{
-            label: "Undo",
+            label: tUi("undo"),
             onClick: () => {
               setLayers(replaced.prev)
               setReplaced(null)
@@ -1300,7 +1310,7 @@ export function AtlasExplorer({
           </div>
         ) : null}
         <section
-          aria-label="Explore panel"
+          aria-label={tUi("explore_panel")}
           className="absolute inset-x-0 bottom-0 z-30 flex flex-col rounded-t-3xl border-t bg-white transition-[height] motion-reduce:transition-none"
           style={{ height: heights[size], borderColor: T.border.hi }}
         >
@@ -1374,7 +1384,7 @@ export function AtlasExplorer({
                   style={{ borderColor: T.border.hi, color: T.ink.dim }}
                 >
                   <Icon name="search" size={20} color={T.ink.base} />
-                  Library, stop or place
+                  {tUi("library_stop_or_place")}
                 </button>
                 <div className="flex items-center justify-between">
                   <AtlasCount
@@ -1428,14 +1438,14 @@ export function AtlasExplorer({
 
       {collapsed ? (
         <nav
-          aria-label="Explore panel"
+          aria-label={tUi("explore_panel")}
           className="absolute top-4 bottom-4 left-4 z-20 flex w-[72px] flex-col items-center gap-1.5 rounded-[22px] pt-3.5"
           style={PANEL_STYLE}
         >
           {(
             [
-              ["search", "Search"],
-              ["filter", "Filters"],
+              ["search", tUi("search")],
+              ["filter", tUi("filters")],
               ["layers", "Layers"],
             ] as [Tab, string][]
           ).map(([key, label]) => (
@@ -1460,7 +1470,7 @@ export function AtlasExplorer({
         </nav>
       ) : (
         <section
-          aria-label="Explore panel"
+          aria-label={tUi("explore_panel")}
           className="absolute top-4 bottom-4 left-4 z-20 flex flex-col overflow-hidden rounded-[22px]"
           style={{ ...PANEL_STYLE, width: LEFT_W }}
         >
@@ -1471,7 +1481,7 @@ export function AtlasExplorer({
             {tabs}
             <button
               type="button"
-              aria-label="Collapse panel"
+              aria-label={tUi("collapse_panel")}
               onClick={() => setCollapsed(true)}
               className="flex size-9 shrink-0 items-center justify-center rounded-full border"
               style={{ color: T.ink.base, borderColor: T.border.hi }}
@@ -1506,7 +1516,7 @@ export function AtlasExplorer({
       ) : null}
       {selectedStop && !list ? (
         <aside
-          aria-label="Selected mobile stop"
+          aria-label={tUi("selected_mobile_stop")}
           className="absolute top-4 right-4 bottom-4 z-20 overflow-auto rounded-[22px]"
           style={{ ...PANEL_STYLE, width: RIGHT_W }}
         >
@@ -1521,7 +1531,7 @@ export function AtlasExplorer({
       ) : null}
       {selected && !list ? (
         <aside
-          aria-label="Selected library"
+          aria-label={tUi("selected_library")}
           className="absolute top-4 right-4 bottom-4 z-20 flex flex-col overflow-auto rounded-[22px]"
           style={{ ...PANEL_STYLE, width: RIGHT_W }}
         >
@@ -1545,7 +1555,7 @@ export function AtlasExplorer({
           />
           <div
             role="radiogroup"
-            aria-label="Projection"
+            aria-label={tUi("projection")}
             className="flex flex-col gap-0.5 rounded-[14px] p-[3px]"
             style={PANEL_STYLE}
           >
@@ -1669,6 +1679,8 @@ function MapButtons({
   readonly onZoomOut?: () => void
   readonly onLocate: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const btn = "flex size-11 items-center justify-center bg-white"
 
   return (
@@ -1678,7 +1690,7 @@ function MapButtons({
     >
       <button
         type="button"
-        aria-label="Zoom in"
+        aria-label={tUi("zoom_in")}
         onClick={onZoomIn}
         className={btn}
       >
@@ -1687,7 +1699,7 @@ function MapButtons({
       {onZoomOut ? (
         <button
           type="button"
-          aria-label="Zoom out"
+          aria-label={tUi("zoom_out")}
           onClick={onZoomOut}
           className={cn(btn, "border-t")}
           style={{ borderColor: T.border.divider }}
@@ -1697,7 +1709,7 @@ function MapButtons({
       ) : null}
       <button
         type="button"
-        aria-label="Show my location"
+        aria-label={tUi("show_my_location")}
         onClick={onLocate}
         className={cn(btn, "border-t")}
         style={{ borderColor: T.border.divider }}

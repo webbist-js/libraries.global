@@ -1,4 +1,5 @@
 import type { Locale } from "next-intl"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { staffPathname } from "@/app/[locale]/staff/_lib/staff-pathname"
 import { Notice, PlanGatePanel } from "@/components/ds"
@@ -70,6 +71,8 @@ export default async function TeamPage({
 }: {
   readonly params: Promise<{ locale: string; slug: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const { locale, slug } = await params
   const { user, overview, documentId } = await loadStaffPage(
     slug,
@@ -114,7 +117,7 @@ export default async function TeamPage({
       ) : !full ? (
         <>
           <PlanGatePanel
-            title="Manage your library’s staff"
+            title={tUi("manage_your_librarys_staff")}
             lead="Invite colleagues, give them roles, and choose who can edit or go live. Your Team organiser manages access. Without Team, each staff member claims access on their own."
             points={[
               "Invite colleagues through your Team organiser",

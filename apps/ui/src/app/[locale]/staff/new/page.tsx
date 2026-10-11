@@ -1,5 +1,6 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { Notice } from "@/components/ds/Notice"
 import { PageHero } from "@/components/ds/PageHero"
@@ -20,6 +21,8 @@ export default async function StaffNewLibraryPage({
 }: {
   readonly searchParams: Promise<{ name?: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const session = await getSessionSSR(await headers())
   if (!session?.user) redirect("/auth/signin?callbackUrl=/staff/new")
   const libraries = staffLibrariesOf(session.user)
@@ -42,7 +45,7 @@ export default async function StaffNewLibraryPage({
         <Notice
           icon="mdi:alert-outline"
           tone="warn"
-          title="Team coverage couldn’t be loaded"
+          title={tUi("team_coverage_couldnt_be_loaded")}
         >
           Reload this page to choose the Team for your new library.
         </Notice>
@@ -57,8 +60,8 @@ export default async function StaffNewLibraryPage({
       <PageHero
         compact
         breadcrumb={[
-          { label: "Staff area", href: "/staff" },
-          { label: "Add a library" },
+          { label: tUi("staff_area"), href: "/staff" },
+          { label: tUi("add_a_library") },
         ]}
         eyebrow="Library staff"
         eyebrowIcon="mdi:shield-account-outline"

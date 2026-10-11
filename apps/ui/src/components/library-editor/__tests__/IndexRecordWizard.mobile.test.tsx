@@ -1,5 +1,7 @@
 // @vitest-environment happy-dom
 import { timetableHash, type MobileTimetable } from "@repo/shared-data"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
 import {
   cleanup,
   fireEvent,
@@ -7,8 +9,7 @@ import {
   screen,
   waitFor,
   within,
-} from "@testing-library/react"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+} from "@/test/render"
 
 const mocks = vi.hoisted(() => ({
   create: vi.fn(),

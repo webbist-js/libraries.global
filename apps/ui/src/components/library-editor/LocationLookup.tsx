@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 import { useEffect, useId, useState, useSyncExternalStore } from "react"
 
@@ -97,21 +98,23 @@ function Alert({
 }
 
 function GeoStatus({ note }: { readonly note: GeoNote }) {
+  const tUi = useUiTranslations("ui")
+
   if (note.kind === "refused")
     return (
-      <Alert title="Location access is off">
-        Search or drop a pin instead.
+      <Alert title={tUi("location_access_is_off")}>
+        {tUi("search_or_drop_a_pin_instead")}
       </Alert>
     )
   if (note.kind === "failed")
     return (
-      <Alert title="Couldn’t get your location">
-        Search or drop a pin instead.
+      <Alert title={tUi("couldn_t_get_your_location")}>
+        {tUi("search_or_drop_a_pin_instead")}
       </Alert>
     )
   if (note.metres > APPROXIMATE_M)
     return (
-      <Alert title="Your location is approximate">
+      <Alert title={tUi("your_location_is_approximate")}>
         {`Your device puts you within ${note.metres} m. Drag the pin onto the building.`}
       </Alert>
     )
@@ -137,6 +140,8 @@ export function LocationLookup({
   /** The device reported where it is. */
   readonly onLocate: (lat: number, lng: number) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const id = useId()
   const inputId = `${id}-input`
   const listId = `${id}-list`
@@ -249,7 +254,7 @@ export function LocationLookup({
   return (
     <div className="flex flex-col gap-2.5">
       <label htmlFor={inputId} style={fieldLabelStyle}>
-        Find the library or its address
+        {tUi("find_the_library_or_its_address")}
       </label>
       <div className="flex flex-col gap-2.5 sm:flex-row">
         <div className="relative min-w-0 flex-1">
@@ -289,7 +294,7 @@ export function LocationLookup({
             value={query}
           />
           <ul
-            aria-label="Places"
+            aria-label={tUi("places")}
             className="absolute top-[calc(100%+6px)] right-0 left-0 z-20 m-0 max-h-[340px] list-none overflow-y-auto rounded-[14px] border bg-white p-1.5"
             hidden={!showList}
             id={listId}
@@ -387,17 +392,17 @@ export function LocationLookup({
       </p>
       {picked ? (
         <StatusLine tone="ok">
-          Filled in from OpenStreetMap. Check the details below.
+          {tUi("filled_in_from_openstreetmap_check_the_details_below")}
         </StatusLine>
       ) : null}
       {noMatches ? (
         <StatusLine tone="info">
-          No matches. Try the street and town, or enter the address below.
+          {tUi("no_matches_try_the_street_and_town_or_enter_the_address_below")}
         </StatusLine>
       ) : null}
       {search === "error" ? (
-        <Alert title="Search isn’t available right now">
-          Enter the address below.
+        <Alert title={tUi("search_isn_t_available_right_now")}>
+          {tUi("enter_the_address_below")}
         </Alert>
       ) : null}
       {geo ? <GeoStatus note={geo} /> : null}

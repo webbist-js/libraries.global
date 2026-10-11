@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react"
 import Image from "next/image"
-import type { Locale } from "next-intl"
+import { useTranslations, type Locale } from "next-intl"
 import type { ReactNode } from "react"
 
 import { formatDate } from "@/lib/article-helpers"
@@ -46,12 +46,20 @@ function ArticleLink({
 /** "Alex Bennett · 20 Apr 2026 · 9 min read" */
 export function articleMeta(
   article: JournalCardData,
-  { withAuthor = true }: { withAuthor?: boolean } = {}
+  {
+    withAuthor = true,
+    locale,
+    readingTime,
+  }: {
+    withAuthor?: boolean
+    locale: string
+    readingTime: string
+  }
 ) {
   return [
     withAuthor ? article.author : null,
-    formatDate(article.publishedAt ?? article.updatedAt, "short"),
-    `${article.readMinutes} min read`,
+    formatDate(article.publishedAt ?? article.updatedAt, "short", locale),
+    readingTime,
   ]
     .filter(Boolean)
     .join(" · ")
@@ -147,6 +155,7 @@ export function JournalFeatureCard({
   readonly editorsPick: boolean
   readonly locale: Locale
 }) {
+  const t = useTranslations("editorial")
   const imgUrl = article.heroImage?.url
     ? formatStrapiMediaUrl(article.heroImage.url)
     : null
@@ -183,7 +192,7 @@ export function JournalFeatureCard({
               width={26}
             />
             <span className="text-[13px]" style={{ color: T.ink.low }}>
-              No cover photo yet
+              {t("noCover")}
             </span>
           </div>
         )}
@@ -199,7 +208,7 @@ export function JournalFeatureCard({
                 color: T.accent.primaryHover,
               }}
             >
-              Editor&rsquo;s pick
+              {t("editorPick")}
             </span>
           ) : null}
           <SectionTag section={article.section} />
@@ -248,7 +257,11 @@ export function JournalFeatureCard({
               <span aria-hidden="true">·</span>
             </>
           ) : null}
-          {articleMeta(article, { withAuthor: false })}
+          {articleMeta(article, {
+            withAuthor: false,
+            locale,
+            readingTime: t("readingTime", { minutes: article.readMinutes }),
+          })}
         </p>
       </div>
     </ArticleLink>
@@ -263,6 +276,8 @@ export function JournalSideCard({
   readonly article: JournalCardData
   readonly locale: Locale
 }) {
+  const t = useTranslations("editorial")
+
   return (
     <ArticleLink
       article={article}
@@ -282,7 +297,10 @@ export function JournalSideCard({
         {article.title}
       </h3>
       <p className="m-0 mt-auto text-[13px]" style={{ color: T.ink.dim }}>
-        {articleMeta(article)}
+        {articleMeta(article, {
+          locale,
+          readingTime: t("readingTime", { minutes: article.readMinutes }),
+        })}
       </p>
     </ArticleLink>
   )
@@ -313,6 +331,8 @@ export function JournalArticleCard({
   readonly article: JournalCardData
   readonly locale: Locale
 }) {
+  const t = useTranslations("editorial")
+
   return (
     <ArticleLink
       article={article}
@@ -351,7 +371,10 @@ export function JournalArticleCard({
           className="m-0 mt-auto pt-4 text-[13px]"
           style={{ color: T.ink.dim }}
         >
-          {articleMeta(article)}
+          {articleMeta(article, {
+            locale,
+            readingTime: t("readingTime", { minutes: article.readMinutes }),
+          })}
         </p>
       </div>
     </ArticleLink>
@@ -366,6 +389,8 @@ export function JournalArticleRow({
   readonly article: JournalCardData
   readonly locale: Locale
 }) {
+  const t = useTranslations("editorial")
+
   return (
     <ArticleLink
       article={article}
@@ -404,7 +429,15 @@ export function JournalArticleRow({
           className="m-0 mt-auto pt-2 text-[13px]"
           style={{ color: T.ink.dim }}
         >
-          {[articleMeta(article), article.place].filter(Boolean).join(" · ")}
+          {[
+            articleMeta(article, {
+              locale,
+              readingTime: t("readingTime", { minutes: article.readMinutes }),
+            }),
+            article.place,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
         </p>
       </div>
     </ArticleLink>

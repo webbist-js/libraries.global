@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
@@ -65,14 +66,16 @@ export function DriveFocusFilter({
   readonly total: number
   readonly active: FocusFilterKey | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   if (options.length < 2) return null
 
   return (
-    <nav aria-label="Filter drives by focus">
+    <nav aria-label={tUi("filter_drives_by_focus")}>
       <ul className="m-0 flex list-none gap-2 overflow-x-auto p-0 pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
         <FilterLink
           href="/community#drives"
-          label="All drives"
+          label={tUi("all_drives")}
           count={total}
           current={active === null}
         />

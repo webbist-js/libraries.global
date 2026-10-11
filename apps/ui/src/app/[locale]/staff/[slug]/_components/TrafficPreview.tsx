@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { BarSeries, KpiTile } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
@@ -50,6 +51,8 @@ export function TrafficPreview({
   readonly locale?: string
   readonly ghost?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const period = `${summary.range} days`
   const number = new Intl.NumberFormat(locale)
   const panel = {
@@ -63,7 +66,7 @@ export function TrafficPreview({
       {ghost ? null : (
         <div className="flex flex-wrap items-center justify-between gap-4">
           <nav
-            aria-label="Report period"
+            aria-label={tUi("report_period")}
             className="inline-flex rounded-full p-1"
             style={{ background: T.bg.muted2 }}
           >
@@ -118,7 +121,7 @@ export function TrafficPreview({
       </div>
       <section className={card} style={panel}>
         <BarSeries
-          title="Page views per day"
+          title={tUi("page_views_per_day")}
           heading={ghost ? "p" : "h2"}
           ghost={ghost}
           points={summary.viewsPerDay.map((p) => ({
@@ -203,7 +206,7 @@ export function TrafficPreview({
                 <thead>
                   <tr style={{ color: T.ink.dim }}>
                     <th scope="col" className="pb-2 font-semibold">
-                      Search
+                      {tUi("search")}{" "}
                     </th>
                     <th scope="col" className="pb-2 text-right font-semibold">
                       Visits

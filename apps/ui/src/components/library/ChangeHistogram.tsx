@@ -1,6 +1,8 @@
 // Changes per month as an inline SVG bar chart (no chart library). The
 // numbers are repeated in the aria-label and in a visually hidden table.
 
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { T } from "@/lib/design-tokens"
 import type { LibraryHistoryStats } from "@/lib/strapi-api/content/server"
 
@@ -32,6 +34,8 @@ export function ChangeHistogram({
   readonly months: readonly Month[]
   readonly verificationEvents: readonly string[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   const checked = new Set(verificationEvents)
   const max = Math.max(1, ...months.map((m) => m.batches))
   const width = months.length * (BAR + GAP) - GAP
@@ -117,7 +121,7 @@ export function ChangeHistogram({
               <td>{m.batches}</td>
               <td>{m.fields}</td>
               <td>{m.contributors}</td>
-              <td>{checked.has(m.month) ? "Yes" : "No"}</td>
+              <td>{checked.has(m.month) ? tUi("yes") : tUi("no")}</td>
             </tr>
           ))}
         </tbody>

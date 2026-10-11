@@ -1,7 +1,8 @@
 import * as React from "react"
 import { createElement } from "react"
-import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
+
+import { renderToStaticMarkup } from "@/test/server-render"
 
 // vitest.config has no JSX runtime, so .tsx compiles to React.createElement.
 Object.assign(globalThis, { React })

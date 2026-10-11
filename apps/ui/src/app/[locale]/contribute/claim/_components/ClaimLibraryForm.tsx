@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { useRouter } from "next/navigation"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -68,6 +69,8 @@ export function ClaimLibraryForm({
   libraryName,
   libraryEntityRef,
 }: ClaimLibraryFormProps) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const [role, setRole] = useState("")
   const [department, setDepartment] = useState("")
@@ -109,7 +112,7 @@ export function ClaimLibraryForm({
     >
       <ContributeSectionHeader
         compact
-        section="Claim a library"
+        section={tUi("claim_a_library")}
         title={`Claim *${libraryName}.*`}
         lead="Tell us your role at this library. A moderator checks and approves your claim before you can look after its record."
       />
@@ -241,7 +244,7 @@ export function ClaimLibraryForm({
                   onClick={handleSubmit}
                   className={`${primaryCtaSm} text-[15px] disabled:cursor-not-allowed disabled:opacity-45`}
                 >
-                  {isPending ? "Submitting…" : "Submit claim"}
+                  {isPending ? tUi("submitting") : "Submit claim"}
                   {!isPending && (
                     <Icon
                       icon="mdi:arrow-right"
@@ -261,7 +264,7 @@ export function ClaimLibraryForm({
                     color: T.ink.base,
                   }}
                 >
-                  Cancel
+                  {tUi("cancel")}{" "}
                 </button>
               </div>
             </div>

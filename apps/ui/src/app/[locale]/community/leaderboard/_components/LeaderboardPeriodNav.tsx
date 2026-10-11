@@ -1,3 +1,5 @@
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import {
   LEADERBOARD_PERIODS,
   type LeaderboardPeriod,
@@ -15,9 +17,11 @@ export function LeaderboardPeriodNav({
 }: {
   readonly period: LeaderboardPeriod
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <nav
-      aria-label="Leaderboard period"
+      aria-label={tUi("leaderboard_period")}
       className="flex w-full gap-[2px] rounded-full p-[4px] sm:w-auto"
       style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
     >

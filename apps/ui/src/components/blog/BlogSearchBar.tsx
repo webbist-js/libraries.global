@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useLocale } from "next-intl"
+import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import { SearchField } from "@/components/ds"
@@ -13,6 +13,8 @@ import {
 } from "@/lib/meilisearch"
 
 export function BlogSearchBar({ inputId }: { readonly inputId?: string }) {
+  const tUi = useUiTranslations("ui")
+
   const locale = useLocale()
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<BlogArticleSearchHit[]>([])
@@ -72,7 +74,7 @@ export function BlogSearchBar({ inputId }: { readonly inputId?: string }) {
     <div ref={containerRef} style={{ position: "relative" }}>
       <SearchField
         id={inputId ?? "blog-search"}
-        placeholder="Search articles, authors or topics"
+        placeholder={tUi("search_articles_authors_or_topics")}
         loading={loading}
         inputRef={inputRef}
         onClear={() => {

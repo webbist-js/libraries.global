@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import type { Capability } from "@repo/access"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { Drawer } from "@/components/ds/Drawer"
 import {
@@ -73,6 +74,8 @@ function SectionHeading({
  * every route behind these links re-checks access.
  */
 export function EditorialDrawer() {
+  const tUi = useUiTranslations("ui")
+
   const { data } = useHydratedSession()
   const c = sessionCapabilities(data?.user)
   const has = (cap: Capability) => c.set.has(cap)
@@ -100,7 +103,7 @@ export function EditorialDrawer() {
     <Drawer
       size="md"
       titleId="editorial-drawer-title"
-      title="Editorial"
+      title={tUi("editorial")}
       eyebrow={
         <span
           className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[14px] font-semibold"
@@ -188,7 +191,7 @@ export function EditorialDrawer() {
                     className="min-w-0 flex-1 text-[15px] leading-snug font-semibold"
                     style={{ color: T.ink.base }}
                   >
-                    {waiting} {waiting === 1 ? "submission" : "submissions"}{" "}
+                    {waiting} {waiting === 1 ? "submission" : "submissions"}
                     waiting for review
                   </span>
                   <Icon
@@ -216,7 +219,7 @@ export function EditorialDrawer() {
                     width={15}
                   />
                   {waiting === 0
-                    ? "Nothing waiting for review"
+                    ? tUi("nothing_waiting_for_review")
                     : "Checking the queue…"}
                 </p>
               )}
@@ -225,13 +228,13 @@ export function EditorialDrawer() {
               <Tile
                 href="/contribute/moderation"
                 icon="mdi:shield-check-outline"
-                label="Moderation queue"
+                label={tUi("moderation_queue")}
               />
               {board ? (
                 <Tile
                   href="/contribute/moderation/suggestions"
                   icon="mdi:lightbulb-on-outline"
-                  label="Option suggestions"
+                  label={tUi("option_suggestions")}
                 />
               ) : null}
             </div>
@@ -244,23 +247,23 @@ export function EditorialDrawer() {
               id="editorial-drawer-knowledge-h"
               sub={languagesOf(c.editorLocales.docs)}
             >
-              Knowledge
+              {tUi("knowledge")}
             </SectionHeading>
             <div className="grid grid-cols-2 gap-2.5">
               <Tile
                 href="/contribute/knowledge/new?type=knowledge"
                 icon="mdi:file-document-plus-outline"
-                label="Write an article"
+                label={tUi("write_an_article")}
               />
               <Tile
                 href="/contribute/knowledge"
                 icon="mdi:pencil-outline"
-                label="Edit articles"
+                label={tUi("edit_articles")}
               />
               <Tile
                 href="/knowledge"
                 icon="mdi:book-open-page-variant-outline"
-                label="Knowledge"
+                label={tUi("knowledge")}
               />
             </div>
           </section>
@@ -272,23 +275,23 @@ export function EditorialDrawer() {
               id="editorial-drawer-journal-h"
               sub={languagesOf(c.editorLocales.journal)}
             >
-              Journal
+              {tUi("journal")}
             </SectionHeading>
             <div className="grid grid-cols-2 gap-2.5">
               <Tile
                 href="/contribute/knowledge/new?type=journal"
                 icon="mdi:file-document-plus-outline"
-                label="Write an article"
+                label={tUi("write_an_article")}
               />
               <Tile
                 href="/contribute/knowledge?type=journal"
                 icon="mdi:pencil-outline"
-                label="Edit articles"
+                label={tUi("edit_articles")}
               />
               <Tile
                 href="/journal"
                 icon="mdi:newspaper-variant-outline"
-                label="Journal"
+                label={tUi("journal")}
               />
             </div>
           </section>
@@ -297,18 +300,18 @@ export function EditorialDrawer() {
         {board ? (
           <section aria-labelledby="editorial-drawer-drives-h">
             <SectionHeading id="editorial-drawer-drives-h">
-              Drives
+              {tUi("drives")}
             </SectionHeading>
             <div className="grid grid-cols-2 gap-2.5">
               <Tile
                 href="/community/drives/new"
                 icon="mdi:flag-plus-outline"
-                label="New drive"
+                label={tUi("new_drive")}
               />
               <Tile
                 href="/community"
                 icon="mdi:flag-outline"
-                label="All drives"
+                label={tUi("all_drives")}
               />
             </div>
             {featuredDrive ? (

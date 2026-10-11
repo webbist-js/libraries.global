@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useId, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -35,6 +36,8 @@ export function LibraryPicker({
   readonly publishedCount?: number
   readonly suggestions?: readonly LibrarySuggestion[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   const id = useId()
   const [query, setQuery] = useState("")
   const [hits, setHits] = useState<SearchHit[]>([])
@@ -294,7 +297,7 @@ export function LibraryPicker({
                           color: "var(--tint-special-fg)",
                         }}
                       >
-                        No {m.toLowerCase()}
+                        {tUi("no")} {m.toLowerCase()}
                       </span>
                     ))}
                   </span>

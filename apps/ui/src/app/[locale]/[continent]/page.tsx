@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
+import { setRequestLocale } from "next-intl/server"
 import { use } from "react"
 
 import ContinentDetailPage from "@/components/continent/ContinentDetailPage"
@@ -73,6 +74,7 @@ export default function ContinentPage(props: {
 }) {
   const params = use(props.params)
   const locale = params.locale as Locale
+  setRequestLocale(locale)
   const slug = params.continent
 
   const continentPromise = fetchContinent(slug, locale)

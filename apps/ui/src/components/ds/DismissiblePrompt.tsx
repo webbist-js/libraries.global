@@ -2,6 +2,7 @@
 
 import type { DismissiblePrompt as PromptKey } from "@repo/shared-data"
 import { X } from "lucide-react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import {
   type CSSProperties,
   type ReactNode,
@@ -41,6 +42,8 @@ export function DismissiblePrompt({
   readonly className?: string
   readonly children: ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [hidden, setHidden] = useState<"session" | "settings" | null>(null)
   const statusRef = useRef<HTMLParagraphElement>(null)
   const wasHidden = hidden !== null
@@ -87,7 +90,7 @@ export function DismissiblePrompt({
               className="font-semibold underline underline-offset-2"
               style={{ color: T.accent.primary }}
             >
-              Settings
+              {tUi("settings")}{" "}
             </GlobalLink>
             .
           </>

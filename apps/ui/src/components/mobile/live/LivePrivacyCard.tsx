@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -21,6 +22,8 @@ export function LivePrivacyCard({
 }: {
   readonly libraryDocumentId: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const staffHref = useStaffLibraryHref(libraryDocumentId)
 
   return (
@@ -40,7 +43,7 @@ export function LivePrivacyCard({
           width={20}
           style={{ color: T.accent.primary }}
         />
-        Privacy
+        {tUi("privacy")}
       </h3>
       <ul className="m-0 mt-4 flex list-none flex-col gap-3 p-0 text-[14.5px]">
         {POINTS.map((point) => (

@@ -1,4 +1,5 @@
 import type { Locale } from "next-intl"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { staffPathname } from "@/app/[locale]/staff/_lib/staff-pathname"
 import { PlanGatePanel } from "@/components/ds"
@@ -51,6 +52,8 @@ export default async function TrafficPage({
 }: {
   readonly params: Promise<{ locale: string; slug: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const { locale, slug } = await params
   const { user, documentId } = await loadStaffPage(slug, await staffPathname())
   const covered =
@@ -92,7 +95,7 @@ export default async function TrafficPage({
         </section>
       ) : (
         <PlanGatePanel
-          title="See how people find your library"
+          title={tUi("see_how_people_find_your_library")}
           lead="Understand visits to your library’s page with the Team plan. Traffic reports are coming soon."
           points={[
             "Page views and visitors",

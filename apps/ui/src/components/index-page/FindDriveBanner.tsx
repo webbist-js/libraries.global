@@ -1,6 +1,7 @@
 "use client"
 
 import { PANEL_GAPS } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { Notice } from "@/components/ds/Notice"
 import type { FindState } from "@/components/index-page/find-helpers"
@@ -25,6 +26,8 @@ export function FindDriveBanner({
   readonly drives?: readonly FindDrive[]
   readonly state: FindState
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { has, ready } = useCapabilities()
   const match = matchDriveForFind(drives ?? [], state)
 
@@ -33,7 +36,7 @@ export function FindDriveBanner({
       <div role="status">
         <Notice
           icon="mdi:pin-outline"
-          title="There’s a drive for this search"
+          title={tUi("theres_a_drive_for_this_search")}
           tone="info"
         >
           <p className="m-0" style={{ color: T.ink.base }}>

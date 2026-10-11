@@ -7,6 +7,7 @@
 // either way the reader can send themselves a new one.
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { type FormEvent, useEffect, useState } from "react"
 import * as z from "zod"
 
@@ -119,6 +120,8 @@ function subtitleFor(state: VerifyEmailState, email: string | null) {
 }
 
 export function VerifyEmailContent({ state }: { state: VerifyEmailState }) {
+  const tUi = useUiTranslations("ui")
+
   usePreloadedIcons(STATUS_ICONS)
   const mounted = useMounted()
   const knownEmail = usePendingEmail()
@@ -217,6 +220,7 @@ export function VerifyEmailContent({ state }: { state: VerifyEmailState }) {
   return (
     <>
       <AuthHeading
+        layout="utility"
         icon={heading.icon}
         iconTone={heading.tone}
         title={heading.title}
@@ -242,7 +246,11 @@ export function VerifyEmailContent({ state }: { state: VerifyEmailState }) {
         >
           {askForEmail && (
             <div style={{ marginBottom: "16px" }}>
-              <AuthField id="email" label="Email address" error={fieldError}>
+              <AuthField
+                id="email"
+                label={tUi("email_address")}
+                error={fieldError}
+              >
                 <input
                   id="email"
                   name="email"
@@ -302,7 +310,9 @@ export function VerifyEmailContent({ state }: { state: VerifyEmailState }) {
               ? "Used a different address?"
               : "Already confirmed?"
           }
-          linkLabel={state === "unverified" ? "Back to sign in" : "Sign in"}
+          linkLabel={
+            state === "unverified" ? "Back to sign in" : tUi("sign_in")
+          }
           href="/auth/signin"
         />
       )}

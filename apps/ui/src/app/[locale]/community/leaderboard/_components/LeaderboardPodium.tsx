@@ -1,3 +1,5 @@
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 import {
@@ -196,9 +198,11 @@ export function LeaderboardPodium({
   /** The period as it reads in a sentence: "this month", "ever". */
   readonly periodPhrase: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <ol
-      aria-label="Top three"
+      aria-label={tUi("top_three")}
       className="m-0 grid list-none grid-cols-1 gap-2.5 p-0 sm:grid-cols-3 sm:items-end"
     >
       {[1, 2, 3].map((rank) => {

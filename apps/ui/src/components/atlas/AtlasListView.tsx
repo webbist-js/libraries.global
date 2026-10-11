@@ -1,6 +1,7 @@
 "use client"
 
 import type { AtlasListResponse, AtlasScope } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -53,6 +54,8 @@ export function AtlasListView({
   readonly accessibility?: string[]
   readonly remoteScope?: AtlasScope
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [sort, setSort] = useState<SortKey>("distance")
   const [page, setPage] = useState(0)
   const [cursor, setCursor] = useState<string | undefined>(),
@@ -132,7 +135,7 @@ export function AtlasListView({
 
   return (
     <section
-      aria-label="Libraries in view"
+      aria-label={tUi("libraries_in_view")}
       className="flex h-full min-h-0 flex-col"
     >
       <div
@@ -151,7 +154,7 @@ export function AtlasListView({
             style={{ borderColor: T.border.hi }}
           >
             <option value="distance">Nearest the centre</option>
-            <option value="name">Name</option>
+            <option value="name">{tUi("name")}</option>
             <option value="place">Place</option>
           </select>
         </label>
@@ -221,7 +224,7 @@ export function AtlasListView({
                   className="border-b px-3.5 py-3 text-left text-[13px] whitespace-nowrap"
                   style={{ borderColor: T.border.hi }}
                 >
-                  {sortButton("name", "Name")}
+                  {sortButton("name", tUi("name"))}
                 </th>
                 {!compact ? (
                   <th
@@ -229,7 +232,7 @@ export function AtlasListView({
                     className="border-b px-3.5 py-3 text-left text-[13px] font-bold"
                     style={{ borderColor: T.border.hi }}
                   >
-                    Type
+                    {tUi("type")}
                   </th>
                 ) : null}
                 <th
@@ -245,7 +248,7 @@ export function AtlasListView({
                     className="border-b px-3.5 py-3 text-left text-[13px] font-bold"
                     style={{ borderColor: T.border.hi }}
                   >
-                    Accessibility
+                    {tUi("accessibility")}{" "}
                   </th>
                 ) : null}
                 <th
@@ -412,7 +415,7 @@ export function AtlasListView({
                 }
               }}
             >
-              Previous
+              {tUi("previous")}{" "}
             </PagerButton>
             <PagerButton
               disabled={
@@ -426,7 +429,7 @@ export function AtlasListView({
                 }
               }}
             >
-              Next
+              {tUi("next")}{" "}
             </PagerButton>
           </div>
         </div>
@@ -440,6 +443,8 @@ function OpenState({
 }: {
   readonly state: "open" | "closed" | "unknown"
 }) {
+  const tUi = useUiTranslations("ui")
+
   if (state === "open")
     return (
       <span
@@ -447,7 +452,7 @@ function OpenState({
         style={{ color: T.accent.ok }}
       >
         <Icon name="check" size={16} stroke={2.4} />
-        Open
+        {tUi("open")}
       </span>
     )
   if (state === "closed")
@@ -457,7 +462,7 @@ function OpenState({
         style={{ color: T.accent.danger }}
       >
         <Icon name="x" size={16} stroke={2.4} />
-        Closed
+        {tUi("closed")}
       </span>
     )
 
@@ -467,7 +472,7 @@ function OpenState({
       style={{ color: T.ink.dim }}
     >
       <Icon name="info" size={16} />
-      Unknown
+      {tUi("unknown")}{" "}
     </span>
   )
 }

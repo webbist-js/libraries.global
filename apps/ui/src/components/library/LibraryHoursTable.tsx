@@ -8,6 +8,7 @@ import {
   noticeAddDays,
   type LibraryNotice,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { Fragment, useEffect, useState } from "react"
 
 import {
@@ -120,6 +121,8 @@ export function LibraryHoursTable({
   readonly timezone: string | null
   readonly notices?: readonly LibraryNotice[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   const today = useToday(timezone)
   openingTimes = useNoticeWeekHours(openingTimes, timezone, notices)
   const days = openingTimes?.days
@@ -154,7 +157,7 @@ export function LibraryHoursTable({
             className="h-2 w-3.5 rounded-full"
             style={{ background: STAFFED }}
           />
-          {staffing ? "Staffed" : "Open"}
+          {staffing ? "Staffed" : tUi("open")}
         </span>
         {staffing ? (
           <span className="flex items-center gap-1.5">
@@ -170,7 +173,7 @@ export function LibraryHoursTable({
             className="h-2 w-3.5 rounded-full"
             style={{ background: T.bg.muted2 }}
           />
-          Closed
+          {tUi("closed")}
         </span>
       </div>
 
@@ -253,7 +256,7 @@ export function LibraryHoursTable({
                     }}
                   >
                     {frames.length === 0
-                      ? "Closed"
+                      ? tUi("closed")
                       : frames.map((tf, i) => (
                           <Fragment key={`${tf.startTime}-${tf.endTime}`}>
                             {i > 0 ? ", " : ""}

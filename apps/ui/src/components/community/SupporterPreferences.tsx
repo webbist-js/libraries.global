@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -20,6 +21,8 @@ export function SupporterPreferences({
   readonly visibility: string
   readonly compact?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const [prefs, setPrefs] = useState({
     supporterListed: listed,
@@ -86,7 +89,7 @@ export function SupporterPreferences({
         </GlobalLink>
       ) : (
         <Switch
-          label="Show the Supporter mark on my profile"
+          label={tUi("show_the_supporter_mark_on_my_profile")}
           checked={prefs.supporterBadgeVisible}
           disabled={saving}
           onChange={(next) => void save("supporterBadgeVisible", next)}

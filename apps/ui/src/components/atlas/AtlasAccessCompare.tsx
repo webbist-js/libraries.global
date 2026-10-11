@@ -4,6 +4,7 @@ import type {
   AtlasAccessMetric,
   AtlasLibraryAccessArea,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import {
   accessValue,
@@ -50,6 +51,8 @@ export function AccessCompare({
   readonly rows: readonly AtlasLibraryAccessArea[]
   readonly currentPage: number
 }) {
+  const tUi = useUiTranslations("ui")
+
   const start = showAllAreas ? currentPage * ACCESS_COMPARE_PAGE_SIZE : 0
   const visibleRows = rows.slice(
     start,
@@ -59,7 +62,7 @@ export function AccessCompare({
 
   return (
     <section
-      aria-label="Library access area comparison"
+      aria-label={tUi("library_access_area_comparison")}
       className="flex flex-col gap-5"
     >
       <div
@@ -70,7 +73,7 @@ export function AccessCompare({
         }}
       >
         <label className="flex min-w-0 flex-col gap-2 text-[14px] font-bold">
-          Sort by
+          {tUi("sort_by")}{" "}
           <select
             value={sort}
             onChange={(event) => {
@@ -143,7 +146,7 @@ export function AccessCompare({
           className="overflow-x-auto"
           tabIndex={0}
           role="region"
-          aria-label="Area comparison table"
+          aria-label={tUi("area_comparison_table")}
         >
           <table className="w-full border-collapse text-left text-[14px]">
             <caption className="sr-only">
@@ -163,7 +166,7 @@ export function AccessCompare({
                   Area
                 </th>
                 <th scope="col" className="px-1 pb-2 text-right font-semibold">
-                  Libraries
+                  {tUi("libraries")}{" "}
                 </th>
                 <th scope="col" className="px-1 pb-2 text-right font-semibold">
                   Residents
@@ -297,24 +300,27 @@ export function AccessCompareFooter({
   readonly currentPage: number
   readonly setPage: (page: number) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   if (total <= ACCESS_COMPARE_PREVIEW_SIZE) return null
 
   return showAllAreas ? (
     <div className="flex flex-col gap-1 text-xs">
       {total > ACCESS_COMPARE_PAGE_SIZE ? (
         <nav
-          aria-label="Area comparison pages"
+          aria-label={tUi("area_comparison_pages")}
           className="flex items-center justify-between gap-2"
         >
           <button
             type="button"
-            aria-label="Previous area page"
+            aria-label={tUi("previous_area_page")}
             disabled={currentPage === 0}
             onClick={() => setPage(currentPage - 1)}
             className="flex min-h-11 items-center gap-1 font-semibold disabled:opacity-40"
             style={{ color: T.accent.primary }}
           >
-            <Icon name="chev" size={14} className="rotate-180" /> Previous
+            <Icon name="chev" size={14} className="rotate-180" />{" "}
+            {tUi("previous")}{" "}
           </button>
           <span
             role="status"
@@ -330,13 +336,13 @@ export function AccessCompareFooter({
           </span>
           <button
             type="button"
-            aria-label="Next area page"
+            aria-label={tUi("next_area_page")}
             disabled={(currentPage + 1) * ACCESS_COMPARE_PAGE_SIZE >= total}
             onClick={() => setPage(currentPage + 1)}
             className="flex min-h-11 items-center gap-1 font-semibold disabled:opacity-40"
             style={{ color: T.accent.primary }}
           >
-            Next <Icon name="chev" size={14} />
+            {tUi("next")} <Icon name="chev" size={14} />
           </button>
         </nav>
       ) : null}

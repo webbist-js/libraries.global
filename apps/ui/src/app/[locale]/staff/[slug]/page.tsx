@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react"
 import type { Locale } from "next-intl"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { staffPathname } from "@/app/[locale]/staff/_lib/staff-pathname"
 import { HealthList } from "@/components/ds"
@@ -24,6 +25,8 @@ export default async function StaffOverviewPage({
 }: {
   readonly params: Promise<{ locale: string; slug: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const { locale, slug } = await params
   const { overview, user, libraries, documentId } = await loadStaffPage(
     slug,
@@ -70,7 +73,7 @@ export default async function StaffOverviewPage({
             ? [
                 {
                   icon: "mdi:broadcast",
-                  label: "Go live",
+                  label: tUi("go_live"),
                   href: `/live/${documentId}`,
                   tag: "Mobile",
                 },
@@ -92,7 +95,7 @@ export default async function StaffOverviewPage({
         ]),
     {
       icon: "mdi:pencil-outline",
-      label: "Edit the record",
+      label: tUi("edit_the_record"),
       href: `${base}/edit`,
     },
     {
@@ -117,7 +120,7 @@ export default async function StaffOverviewPage({
       </div>
       <aside className="flex flex-col gap-5">
         <HealthList
-          title="Record health"
+          title={tUi("record_health")}
           rows={health}
           renderAction={(row) =>
             row.key === "hours" && row.status === "ok" ? (
@@ -138,7 +141,7 @@ export default async function StaffOverviewPage({
             id="traffic-card-heading"
             className="m-0 text-[18px] font-semibold"
           >
-            Traffic
+            {tUi("traffic")}
           </h2>
           <p className="my-2 text-[15px]" style={{ color: T.ink.dim }}>
             {trafficCovered

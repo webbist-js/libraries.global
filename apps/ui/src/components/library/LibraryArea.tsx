@@ -1,6 +1,8 @@
 // "In the area": counted figures, the numbered nearby list and the Pro
 // reach teaser. Every figure here comes from the index (library-area.ts).
 
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { formatDistance } from "@/components/library/library-page.helpers"
 import { LibraryReachTeaser } from "@/components/library/LibraryReachTeaser"
 import {
@@ -67,6 +69,8 @@ export function LibraryAreaSection({
   readonly regionName?: string | null
   readonly area: LibraryAreaData
 }) {
+  const tUi = useUiTranslations("ui")
+
   const place = regionName ?? "the region"
   const nearest = area.neighbours[0]
   const stats: Stat[] = []
@@ -102,7 +106,7 @@ export function LibraryAreaSection({
   return (
     <LibrarySectionCard
       id="area"
-      title="In the area"
+      title={tUi("in_the_area")}
       iconPath={LIB_ICONS.map}
       tone="public"
       intro={`How ${libraryName} fits into ${place}, counted from the libraries in the index.`}

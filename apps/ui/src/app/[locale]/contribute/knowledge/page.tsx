@@ -1,6 +1,7 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import type { Locale } from "next-intl"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import {
   type ArticleKind,
@@ -92,6 +93,8 @@ export default async function KnowledgeEditorPage({
   params: Promise<{ locale: string }>
   searchParams: Promise<{ type?: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const [{ locale }, { type }, session] = await Promise.all([
     params,
     searchParams,
@@ -110,7 +113,9 @@ export default async function KnowledgeEditorPage({
     kinds.includes("knowledge")
       ? fetchDocsWikiArticles(locale as Locale)
       : Promise.resolve(null),
-    kinds.includes("knowledge") ? fetchWikiSections() : Promise.resolve(null),
+    kinds.includes("knowledge")
+      ? fetchWikiSections(locale as Locale)
+      : Promise.resolve(null),
     kinds.includes("journal")
       ? fetchRecentBlogArticles(locale as Locale)
       : Promise.resolve(null),
@@ -154,7 +159,7 @@ export default async function KnowledgeEditorPage({
       style={{ background: T.bg.void, minHeight: "100vh", color: T.ink.base }}
     >
       <ContributeSectionHeader
-        section="Knowledge editor"
+        section={tUi("knowledge_editor")}
         title="Write for *the knowledge base.*"
         lead="Add or improve Knowledge articles and Journal stories, or translate them. Tag them to sections so readers can find them."
       />

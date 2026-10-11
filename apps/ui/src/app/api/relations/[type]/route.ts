@@ -1,5 +1,7 @@
+import { DEFAULT_LOCALE, isSupportedLocale } from "@repo/shared-data"
 import { NextResponse } from "next/server"
 
+import { strapiServiceHeaders } from "@/lib/bridge-user-headers"
 import { cacheTagsFor } from "@/lib/strapi-api/cache-tags"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
@@ -22,9 +24,10 @@ const TYPE_MAP: Record<string, string> = {
 const SECTION_TYPES = new Set(["blog-sections", "wiki-sections"])
 
 /** Curated, approved topics from the topics plugin (its own route shape). */
-async function approvedTopics() {
-  const res = await fetch(`${STRAPI}/api/topics/approved`, {
-    next: { revalidate: 300 },
+async function approvedTopics(locale: string) {
+  const res = await fetch(`${STRAPI}/api/topics/approved?locale=${locale}`, {
+    headers: strapiServiceHeaders(),
+    next: { revalidate: 300, tags: cacheTagsFor("/topics", {}) },
   })
   if (!res.ok) return NextResponse.json({ data: [] })
   const json = (await res.json()) as {
@@ -41,6 +44,7 @@ async function approvedTopics() {
 /** Strapi's configured locales, for the article editor's language picker. */
 async function locales() {
   const res = await fetch(`${STRAPI}/api/content-moderation/locales`, {
+    headers: strapiServiceHeaders(),
     next: { revalidate: 3600 },
   })
   if (!res.ok) return NextResponse.json({ data: [] })
@@ -109,9 +113,13 @@ export async function GET(
   { params }: { params: Promise<{ type: string }> }
 ) {
   const { type } = await params
-  if (type === "topics") return approvedTopics()
-  if (type === "locales") return locales()
   const searchParams = new URL(req.url).searchParams
+  const requestedLocale = searchParams.get("locale")
+  const locale = isSupportedLocale(requestedLocale)
+    ? requestedLocale
+    : DEFAULT_LOCALE
+  if (type === "topics") return approvedTopics(locale)
+  if (type === "locales") return locales()
   const iso2 = searchParams.get("iso2")
   if (type === "countries" && iso2) return countriesByCode(iso2)
   const strapiPlural = TYPE_MAP[type]
@@ -139,7 +147,7 @@ export async function GET(
     type === "wiki-sections"
       ? "sort[0]=order:asc&sort[1]=name:asc"
       : "sort=name:asc"
-  const url = `${STRAPI}/api/${strapiPlural}?${sort}&pagination[limit]=${limit}${status}&fields[0]=name&fields[1]=documentId${extraFields}${filterParam}`
+  const url = `${STRAPI}/api/${strapiPlural}?locale=${locale}&${sort}&pagination[limit]=${limit}${status}&fields[0]=name&fields[1]=documentId${extraFields}${filterParam}`
 
   // The world place import adds Regions and Areas and sets each Country's
   // Place Labels (the wizard's select labels), so those lists refresh within

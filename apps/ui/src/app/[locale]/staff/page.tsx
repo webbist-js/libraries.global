@@ -1,6 +1,7 @@
 import { Icon } from "@iconify/react"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { Badge, Notice, PageHero } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
@@ -44,6 +45,8 @@ export default async function StaffLibrariesPage({
 }: {
   readonly searchParams: Promise<{ oauth?: string | string[] }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const [session, query] = await Promise.all([
     getSessionSSR(await headers()),
     searchParams,
@@ -253,7 +256,7 @@ export default async function StaffLibrariesPage({
                           width={11}
                           style={{ color: T.accent.ok }}
                         />
-                        Go live
+                        {tUi("go_live")}
                       </Link>
                     ) : null}
                     <Link
@@ -261,14 +264,14 @@ export default async function StaffLibrariesPage({
                       className={QUICK_LINK}
                       style={{ borderColor: T.border.hi, color: T.ink.base }}
                     >
-                      Edit record
+                      {tUi("edit_record")}
                     </Link>
                     <Link
                       href={`${base}/notices#post-notice`}
                       className={QUICK_LINK}
                       style={{ borderColor: T.border.hi, color: T.ink.base }}
                     >
-                      Post a notice
+                      {tUi("post_a_notice")}
                     </Link>
                     {mobile ? (
                       <Link
@@ -284,7 +287,7 @@ export default async function StaffLibrariesPage({
                       className={QUICK_LINK}
                       style={{ borderColor: T.border.hi, color: T.ink.base }}
                     >
-                      Event feeds
+                      {tUi("event_feeds")}
                     </Link>
                   </div>
                 </li>

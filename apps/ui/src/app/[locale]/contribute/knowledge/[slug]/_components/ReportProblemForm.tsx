@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -45,6 +46,8 @@ export function ReportProblemForm({
   /** The viewer holds the Knowledge editor role (`docs.directEdit`). */
   readonly canEdit: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [category, setCategory] = useState<string>(CATEGORIES[0])
   const [proposal, setProposal] = useState("")
   const [evidenceUrl, setEvidenceUrl] = useState("")
@@ -89,7 +92,7 @@ export function ReportProblemForm({
           className="m-0"
           style={{ fontFamily: T.font.serif, fontSize: 28, fontWeight: 500 }}
         >
-          Sent for review
+          {tUi("sent_for_review")}
         </h2>
         <p className="mt-2 mb-0 text-[16px]" style={{ color: T.ink.dim }}>
           A reviewer will check your report. Follow it in{" "}
@@ -98,7 +101,7 @@ export function ReportProblemForm({
             className="underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
-            My submissions
+            {tUi("my_submissions")}{" "}
           </Link>
           .
         </p>
@@ -168,7 +171,7 @@ export function ReportProblemForm({
         />
       </label>
       <label className="flex flex-col gap-2 text-[15px] font-semibold">
-        Source URL{" "}
+        {tUi("source_url")}{" "}
         <span className="font-normal" style={{ color: T.ink.dim }}>
           · Recommended
         </span>
@@ -201,14 +204,14 @@ export function ReportProblemForm({
             fontFamily: T.font.sans,
           }}
         >
-          {state === "saving" ? "Sending…" : "Send for review"}
+          {state === "saving" ? tUi("sending") : "Send for review"}
         </button>
         <Link
           href="/knowledge"
           className="text-[15px] underline underline-offset-[3px]"
           style={{ color: T.ink.dim }}
         >
-          Cancel
+          {tUi("cancel")}{" "}
         </Link>
       </div>
     </form>

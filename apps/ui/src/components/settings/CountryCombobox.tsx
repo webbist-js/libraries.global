@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState, useRef, useEffect, useId } from "react"
 
 import { COUNTRIES } from "@/lib/data/countries"
@@ -45,6 +46,8 @@ export function CountryCombobox({
   /** Overrides for the trigger button, e.g. a page's own field style. */
   triggerStyle?: React.CSSProperties
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const containerRef = useRef<HTMLDivElement>(null)
@@ -116,8 +119,8 @@ export function CountryCombobox({
           <input
             ref={inputRef}
             type="text"
-            aria-label="Search countries"
-            placeholder="Search countries…"
+            aria-label={tUi("search_countries")}
+            placeholder={tUi("search_countries_2")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             style={{
@@ -142,7 +145,7 @@ export function CountryCombobox({
                   fontSize: "13px",
                 }}
               >
-                No results
+                {tUi("no_results")}{" "}
               </div>
             )}
             {filtered.map((c) => (

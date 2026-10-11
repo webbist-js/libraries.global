@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import * as React from "react"
 import { createElement as h } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { DriveTask } from "@/lib/drives/types"
+import { act, cleanup, fireEvent, render, screen } from "@/test/render"
 
 Object.assign(globalThis, { React })
 

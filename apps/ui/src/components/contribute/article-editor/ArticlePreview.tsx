@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
 import { T } from "@/lib/design-tokens"
 import type { ArticleBodyBlock } from "@/lib/strapi-api/content/server"
@@ -19,17 +21,20 @@ export function ArticlePreview({
   readonly summary: string
   readonly doc: TiptapDoc
 }) {
+  const tUi = useUiTranslations("ui")
+
   const blocks = tiptapToDynamicZone(doc, { preview: true }).map(
     (block, i) => ({ id: i, ...block })
   ) as unknown as ArticleBodyBlock[]
 
   return (
-    <article aria-label="Preview" className="px-6 py-8 sm:px-10">
+    <article aria-label={tUi("preview")} className="px-6 py-8 sm:px-10">
       <p
         className="m-0 mb-3 text-[13px] font-semibold tracking-wide uppercase"
         style={{ color: T.ink.dim }}
       >
-        {kind === "journal" ? "Journal" : "Knowledge"} · preview
+        {kind === "journal" ? tUi("journal") : tUi("knowledge")} ·{" "}
+        {tUi("preview")}
       </p>
       <h1
         className="m-0"
@@ -42,7 +47,7 @@ export function ArticlePreview({
           color: title ? T.ink.base : T.ink.faint,
         }}
       >
-        {title || "Untitled"}
+        {title || tUi("untitled")}
       </h1>
       {summary ? (
         <p
@@ -60,7 +65,7 @@ export function ArticlePreview({
         <ArticleBodyBlocks blocks={blocks} />
       ) : (
         <p className="m-0 text-[16px]" style={{ color: T.ink.faint }}>
-          Nothing written yet.
+          {tUi("nothing_written_yet")}{" "}
         </p>
       )}
     </article>

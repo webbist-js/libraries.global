@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Icon } from "@iconify/react"
 import { useSearchParams } from "next/navigation"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -52,6 +53,8 @@ export function SignInForm({ returnTo }: { readonly returnTo?: string } = {}) {
 }
 
 function SuspensedSignInForm({ returnTo }: { readonly returnTo?: string }) {
+  const tUi = useUiTranslations("ui")
+
   const searchParams = useSearchParams()
   const callbackUrl = safeRedirectPath(
     returnTo ?? searchParams.get("callbackUrl")
@@ -120,7 +123,7 @@ function SuspensedSignInForm({ returnTo }: { readonly returnTo?: string }) {
   return (
     <>
       <AuthHeading
-        title="Welcome"
+        title={tUi("welcome")}
         italic="back."
         subtitle="Sign in to suggest edits, add and follow libraries."
       />
@@ -136,7 +139,7 @@ function SuspensedSignInForm({ returnTo }: { readonly returnTo?: string }) {
       >
         <AuthField
           id="email"
-          label="Email address"
+          label={tUi("email_address")}
           error={errors.email?.message}
         >
           <input
@@ -153,7 +156,7 @@ function SuspensedSignInForm({ returnTo }: { readonly returnTo?: string }) {
 
         <AuthField
           id="password"
-          label="Password"
+          label={tUi("password")}
           error={errors.password?.message}
           aside={
             <AuthInlineLink href="/auth/forgot-password">
@@ -170,7 +173,7 @@ function SuspensedSignInForm({ returnTo }: { readonly returnTo?: string }) {
         </AuthField>
 
         <AuthPrimaryButton disabled={submitting}>
-          {signInMutation.isPending ? "Signing in…" : "Sign in"}
+          {signInMutation.isPending ? "Signing in…" : tUi("sign_in")}
         </AuthPrimaryButton>
       </form>
 
@@ -191,7 +194,7 @@ function SuspensedSignInForm({ returnTo }: { readonly returnTo?: string }) {
             aria-hidden="true"
             style={{ color: T.accent.primary }}
           />
-          {magicPending ? "Sending…" : "Email me a sign-in link"}
+          {magicPending ? tUi("sending") : "Email me a sign-in link"}
         </AuthSecondaryButton>
       </div>
     </>

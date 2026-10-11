@@ -5,6 +5,7 @@ import type {
   AtlasBounds,
   AtlasLibraryAccessResponse,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 
 import {
@@ -70,6 +71,8 @@ export function AtlasAccessAnalysis({
   readonly tab?: AnalysisTab
   readonly onTab?: (tab: AnalysisTab) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [localTab, setLocalTab] = useState<AnalysisTab>("overview"),
     [showAllAreas, setShowAllAreas] = useState(false),
     [query, setQuery] = useState(""),
@@ -149,7 +152,7 @@ export function AtlasAccessAnalysis({
 
   return (
     <AtlasAnalysisWorkspace
-      title="Library access"
+      title={tUi("library_access")}
       badge="Pro"
       description={`${metric === "per100k" ? "Libraries per 100k people" : "People per library"} · ${areaKind}`}
       {...{ collapsed, onCollapse, onClose, onSettings }}
@@ -162,7 +165,7 @@ export function AtlasAccessAnalysis({
               <label className="flex items-center gap-2 font-semibold">
                 Scope
                 <select
-                  aria-label="Analysis scope"
+                  aria-label={tUi("analysis_scope")}
                   value={viewBounds ? analysisScope : "all"}
                   onChange={(event) => {
                     setAnalysisScope(event.target.value as "view" | "all")
@@ -183,7 +186,7 @@ export function AtlasAccessAnalysis({
             </div>
             {area && tab !== "compare" ? (
               <div
-                aria-label="Selected area context"
+                aria-label={tUi("selected_area_context")}
                 className="flex items-center justify-between gap-2"
               >
                 <button
@@ -252,7 +255,7 @@ export function AtlasAccessAnalysis({
             onClick={onRetry}
             className="min-h-11 font-semibold underline"
           >
-            Try again
+            {tUi("try_again")}{" "}
           </button>
         </div>
       ) : !response ? (

@@ -1,6 +1,7 @@
 import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import type { Locale } from "next-intl"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { PageHero } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
@@ -26,6 +27,8 @@ export default async function TeamOrganiserPage({
   readonly params: Promise<{ locale: string }>
   readonly searchParams: Promise<{ team?: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const [{ locale }, session] = await Promise.all([
     params,
     getSessionSSR(await headers()),
@@ -55,7 +58,7 @@ export default async function TeamOrganiserPage({
       <PageHero
         compact
         breadcrumb={[
-          { label: "Staff area", href: "/staff" },
+          { label: tUi("staff_area"), href: "/staff" },
           { label: team?.name ?? chosen.name },
         ]}
         eyebrow={organiser ? "Team organiser" : "Your team"}

@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -28,6 +29,8 @@ export function HealthList({
   readonly score?: { done: number; total: number }
   readonly renderAction?: (row: HealthRow) => ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
       className="rounded-[28px] border p-5 sm:p-6"
@@ -70,7 +73,7 @@ export function HealthList({
                   background: ok ? TONES.ok.bg : TONES.warn.bg,
                   color: ok ? TONES.ok.fg : TONES.warn.fg,
                 }}
-                title={ok ? "Done" : "To do"}
+                title={ok ? tUi("done") : "To do"}
               >
                 <Icon
                   aria-hidden="true"
@@ -78,7 +81,7 @@ export function HealthList({
                   width={18}
                   height={18}
                 />
-                <span className="sr-only">{ok ? "Done" : "To do"}</span>
+                <span className="sr-only">{ok ? tUi("done") : "To do"}</span>
               </span>
               <span className="flex min-w-0 flex-1 flex-col">
                 <span

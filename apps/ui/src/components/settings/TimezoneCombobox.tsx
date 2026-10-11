@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState, useRef, useEffect, useId, useMemo } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -61,6 +62,8 @@ export function TimezoneCombobox({
   /** Overrides for the trigger button, e.g. a page's own field style. */
   triggerStyle?: React.CSSProperties
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const containerRef = useRef<HTMLDivElement>(null)
@@ -139,8 +142,8 @@ export function TimezoneCombobox({
           <input
             ref={inputRef}
             type="text"
-            aria-label="Search timezones"
-            placeholder="Search timezones… (e.g. London, Paris)"
+            aria-label={tUi("search_timezones")}
+            placeholder={tUi("search_timezones_eg_london_paris")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             style={{
@@ -165,7 +168,7 @@ export function TimezoneCombobox({
                   fontSize: "13px",
                 }}
               >
-                No results
+                {tUi("no_results")}{" "}
               </div>
             )}
             {filtered.slice(0, 100).map((tz) => (

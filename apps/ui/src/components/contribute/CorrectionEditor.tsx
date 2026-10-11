@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { checkText } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useId, useMemo, useState } from "react"
 
 import { ChangedFieldsContext } from "@/components/library-editor/ChangedFieldsContext"
@@ -74,6 +75,8 @@ function SuggestOption({
   readonly onSuggest: (names: string[]) => void
   readonly onNames: (names: Record<string, string>) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const id = useId()
   const [options, setOptions] = useState<OptionRef[]>([])
   const [draft, setDraft] = useState("")
@@ -174,7 +177,7 @@ function SuggestOption({
           style={{ borderColor: T.border.hi, color: T.ink.base }}
           type="button"
         >
-          Add
+          {tUi("add")}{" "}
         </button>
       </div>
       {message ? (

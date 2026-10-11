@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { useSearchParams } from "next/navigation"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { Suspense } from "react"
 
 import { EditorOnly } from "@/components/contribute/EditorOnly"
@@ -31,13 +32,16 @@ export type DocsSectionData = {
 }[]
 
 function SectionChip({ count }: { readonly count: number }) {
+  const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("editorial")
+
   if (count === 0) {
     return (
       <span
         className="shrink-0 rounded-full px-3 py-1 text-[13px] font-semibold"
         style={{ background: "#F5EEDC", color: "#6B5420" }}
       >
-        Planned
+        {tUi("planned")}
       </span>
     )
   }
@@ -47,7 +51,7 @@ function SectionChip({ count }: { readonly count: number }) {
       className="shrink-0 rounded-full px-3 py-1 text-[13px] font-semibold"
       style={{ background: T.bg.muted, color: T.ink.dim }}
     >
-      {count} page{count === 1 ? "" : "s"}
+      {t("pageCount", { count })}
     </span>
   )
 }
@@ -81,6 +85,8 @@ function SectionsFromUrl({ sections }: { readonly sections: DocsSectionData }) {
 }
 
 function PageRow({ row }: { readonly row: DocsPageRow }) {
+  const t = useUiTranslations("editorial")
+
   return (
     <li className="border-t" style={{ borderColor: T.border.divider }}>
       <GlobalLink
@@ -115,10 +121,12 @@ function PageRow({ row }: { readonly row: DocsPageRow }) {
                 icon="mdi:clock-outline"
                 width={14}
               />
-              {row.readMinutes} min read
+              {t("readingTime", { minutes: row.readMinutes })}
             </span>
           ) : null}
-          {row.updatedLabel ? <span>Updated {row.updatedLabel}</span> : null}
+          {row.updatedLabel ? (
+            <span>{t("updatedOn", { date: row.updatedLabel })}</span>
+          ) : null}
         </span>
       </GlobalLink>
     </li>
@@ -134,6 +142,7 @@ function SectionCard({
   readonly rows: DocsPageRow[]
   readonly showAll: boolean
 }) {
+  const t = useUiTranslations("editorial")
   const preview = sectionPreview(rows, showAll)
 
   return (
@@ -181,7 +190,7 @@ function SectionCard({
           style={{ borderColor: T.border.divider }}
         >
           <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
-            No pages written yet.
+            {t("noWrittenPages")}
           </p>
           <EditorOnly kind="knowledge">
             <GlobalLink
@@ -189,7 +198,7 @@ function SectionCard({
               href={`/contribute/knowledge/new?type=knowledge&section=${section.slug}`}
               style={{ color: T.accent.primary }}
             >
-              Write the first page
+              {t("writeFirstPage")}
               <Icon
                 aria-hidden="true"
                 height={14}
@@ -216,8 +225,10 @@ function SectionCard({
                 href={`/knowledge?section=${section.slug}`}
                 style={{ color: T.accent.primary }}
               >
-                Show all {rows.length} pages
-                <span className="sr-only"> in {section.title}</span>
+                {t("showAllPages", { count: rows.length })}
+                <span className="sr-only">
+                  {t("inSection", { section: section.title })}
+                </span>
                 <Icon
                   aria-hidden="true"
                   height={14}
@@ -241,6 +252,7 @@ function SectionsBody({
   /** A section slug, or "all". */
   readonly active: string
 }) {
+  const t = useUiTranslations("editorial")
   const showAll = active !== ALL_SECTIONS
   const totalPages = sections.reduce((sum, s) => sum + s.rows.length, 0)
   const visibleSections = showAll
@@ -250,13 +262,12 @@ function SectionsBody({
   return (
     <div>
       <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
-        {totalPages} page{totalPages === 1 ? "" : "s"} so far. Most sections
-        still need writing.
+        {t("pagesSoFar", { pages: t("pageCount", { count: totalPages }) })}
       </p>
 
       {sections.length === 0 ? (
         <p className="mt-5 mb-0 text-[15px]" style={{ color: T.ink.dim }}>
-          No sections set up yet.
+          {t("noSections")}
         </p>
       ) : (
         <div className="mt-5 flex flex-col gap-5">

@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
-import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+
+import { cleanup, render, screen } from "@/test/render"
 
 const access = vi.hoisted(() => ({ covered: false }))
 vi.mock("@/lib/env-vars", () => ({ getEnvVar: () => {} }))
@@ -69,4 +70,21 @@ describe("Traffic page without a connected analytics provider", () => {
       screen.queryByRole("navigation", { name: "Report period" })
     ).toBeNull()
   })
+})
+
+vi.mock("next-intl/server", async () => {
+  const { createTranslator } = await import("next-intl")
+  const messages = (await import("../../../../../../../locales/en.json"))
+    .default
+
+  return {
+    getTranslations: async (config: string | { namespace?: string }) =>
+      createTranslator({
+        locale: "en",
+        messages,
+        namespace: (typeof config === "string" ? config : config.namespace) as
+          | keyof typeof messages
+          | undefined,
+      }),
+  }
 })

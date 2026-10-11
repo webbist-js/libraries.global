@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect } from "react"
 
 import { useCapabilities, useStaff } from "@/lib/access-client"
@@ -41,9 +42,11 @@ const isTyping = (target: EventTarget | null) => {
  * when the viewer has both.
  */
 function EditorialDrawerTab({ belowStaff }: { readonly belowStaff: boolean }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <button
-      aria-label="Open the editorial drawer"
+      aria-label={tUi("open_the_editorial_drawer")}
       className="fixed right-0 z-[60] hidden w-11 flex-col items-center gap-2 border border-r-0 pt-2 pb-3 transition-colors hover:bg-(--t-bg-surface) lg:flex"
       onClick={openEditorialDrawer}
       style={{
@@ -54,7 +57,7 @@ function EditorialDrawerTab({ belowStaff }: { readonly belowStaff: boolean }) {
         borderRadius: "20px 0 0 20px",
         color: T.ink.base,
       }}
-      title="Editorial drawer (Alt+E)"
+      title={tUi("editorial_drawer_alte")}
       type="button"
     >
       <span
@@ -69,7 +72,7 @@ function EditorialDrawerTab({ belowStaff }: { readonly belowStaff: boolean }) {
         className="text-[13px] font-semibold tracking-wide"
         style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
       >
-        Editorial
+        {tUi("editorial")}
       </span>
     </button>
   )

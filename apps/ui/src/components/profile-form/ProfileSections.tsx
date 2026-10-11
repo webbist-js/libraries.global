@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import { ChoiceCard, Notice } from "@/components/ds"
@@ -69,6 +70,8 @@ function UsernameStatusText({
 }
 
 export function IdentitySection({ form }: { form: ProfileForm }) {
+  const tUi = useUiTranslations("ui")
+
   const uid = useId()
   const ids = {
     firstName: `${uid}-first-name`,
@@ -91,7 +94,7 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
   return (
     <SectionCard
       id="identity"
-      title="Identity"
+      title={tUi("identity")}
       requirement="required"
       lead="How you appear on the records you contribute to and on your profile page."
     >
@@ -104,7 +107,8 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
       <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
         <div>
           <label htmlFor={ids.firstName} style={fieldLabel}>
-            Display name<Tag>Required</Tag>
+            {tUi("display_name")}
+            <Tag>{tUi("required")}</Tag>
           </label>
           <input
             id={ids.firstName}
@@ -119,7 +123,7 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
         </div>
         <div>
           <label htmlFor={ids.lastName} style={fieldLabel}>
-            Last name<Tag>Optional</Tag>
+            Last name<Tag>{tUi("optional_59be71")}</Tag>
           </label>
           <input
             id={ids.lastName}
@@ -138,7 +142,7 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
             live description, not part of its name. */}
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
           <label htmlFor={ids.username} style={{ ...fieldLabel, margin: 0 }}>
-            Username<Tag>Required</Tag>
+            Username<Tag>{tUi("required")}</Tag>
           </label>
           <span
             id={ids.usernameStatus}
@@ -181,7 +185,7 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
       <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
         <div>
           <label htmlFor={ids.pronouns} style={fieldLabel}>
-            Pronouns<Tag>Required</Tag>
+            Pronouns<Tag>{tUi("required")}</Tag>
           </label>
           <Select
             id={ids.pronouns}
@@ -198,7 +202,7 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
         </div>
         <div>
           <label htmlFor={ids.city} style={fieldLabel}>
-            City<Tag>Optional</Tag>
+            City<Tag>{tUi("optional_59be71")}</Tag>
           </label>
           <input
             id={ids.city}
@@ -212,7 +216,8 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
         </div>
         <div>
           <label id={ids.countryLabel} htmlFor={ids.country} style={fieldLabel}>
-            Country<Tag>Optional</Tag>
+            {tUi("country")}
+            <Tag>{tUi("optional_59be71")}</Tag>
           </label>
           <CountryCombobox
             id={ids.country}
@@ -228,7 +233,7 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
             htmlFor={ids.timezone}
             style={fieldLabel}
           >
-            Timezone<Tag>Optional</Tag>
+            Timezone<Tag>{tUi("optional_59be71")}</Tag>
           </label>
           <TimezoneCombobox
             id={ids.timezone}
@@ -243,7 +248,7 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
       <div>
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
           <label htmlFor={ids.bio} style={{ ...fieldLabel, margin: 0 }}>
-            Short bio<Tag>Optional</Tag>
+            Short bio<Tag>{tUi("optional_59be71")}</Tag>
           </label>
           <span
             id={ids.bioCount}
@@ -311,6 +316,8 @@ export function AffiliationSection({
   claimedLibraries?: readonly ClaimedLibrary[]
   isVerifiedLibrarian?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const uid = useId()
   const jobTitleId = `${uid}-job-title`
   const claimed = claimedLibraries.filter((l) => l.name)
@@ -324,7 +331,7 @@ export function AffiliationSection({
   return (
     <SectionCard
       id="affiliation"
-      title="Affiliation"
+      title={tUi("affiliation")}
       requirement="required"
       lead="How are you connected to libraries? This shapes which review queues you fast-track and what badges you can earn."
     >
@@ -352,7 +359,7 @@ export function AffiliationSection({
 
       <div className="sm:max-w-[calc(50%-6px)]">
         <label htmlFor={jobTitleId} style={fieldLabel}>
-          Job title<Tag>Optional</Tag>
+          Job title<Tag>{tUi("optional_59be71")}</Tag>
         </label>
         <input
           id={jobTitleId}
@@ -441,6 +448,8 @@ export function AffiliationSection({
 // ── Interests & languages ─────────────────────────────────────────────────────
 
 export function InterestsSection({ form }: { form: ProfileForm }) {
+  const tUi = useUiTranslations("ui")
+
   const uid = useId()
   const languageId = `${uid}-language`
   const proficiencyId = `${uid}-proficiency`
@@ -461,7 +470,7 @@ export function InterestsSection({ form }: { form: ProfileForm }) {
   return (
     <SectionCard
       id="interests"
-      title="Interests & languages"
+      title={tUi("interests_languages")}
       requirement="optional"
       lead="We use these to suggest contribution paths and route translation requests in your direction."
     >
@@ -520,7 +529,7 @@ export function InterestsSection({ form }: { form: ProfileForm }) {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,200px)_auto] sm:items-end">
           <div>
             <label htmlFor={languageId} style={fieldLabel}>
-              Language
+              {tUi("language")}{" "}
             </label>
             <Select
               id={languageId}
@@ -566,7 +575,8 @@ export function InterestsSection({ form }: { form: ProfileForm }) {
             }}
           >
             <Icon aria-hidden="true" icon="mdi:plus" width={16} />
-            Add<span className="sr-only"> language</span>
+            {tUi("add")}
+            <span className="sr-only"> language</span>
           </button>
         </div>
       </fieldset>
@@ -577,6 +587,8 @@ export function InterestsSection({ form }: { form: ProfileForm }) {
 // ── External links ────────────────────────────────────────────────────────────
 
 export function LinksSection({ form }: { form: ProfileForm }) {
+  const tUi = useUiTranslations("ui")
+
   const uid = useId()
   const fields = [
     {
@@ -616,7 +628,7 @@ export function LinksSection({ form }: { form: ProfileForm }) {
   return (
     <SectionCard
       id="links"
-      title="External links"
+      title={tUi("external_links")}
       requirement="optional"
       lead="Shown on your public profile. Add only the ones you’re happy to share."
     >
@@ -672,10 +684,12 @@ export function VisibilityChoice({
 }
 
 export function VisibilitySection({ form }: { form: ProfileForm }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <SectionCard
       id="visibility"
-      title="Profile visibility"
+      title={tUi("profile_visibility")}
       lead="You can change this any time in Settings. A verified affiliation badge shows either way."
     >
       <VisibilityChoice

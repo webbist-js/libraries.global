@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { T } from "@/lib/design-tokens"
 
 import { ACCESS_GAP, ACCESS_MATCH } from "./atlas-map.style"
@@ -62,11 +64,13 @@ export function AccessibilityControls({
   readonly scope: string
   readonly enabled?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <div className="mb-3 flex flex-col gap-2.5">
       <div
         role="group"
-        aria-label="Accessibility map view"
+        aria-label={tUi("accessibility_map_view")}
         className="grid grid-cols-3 gap-1 rounded-xl p-1"
         style={{ background: T.bg.muted }}
       >
@@ -116,9 +120,11 @@ export function AccessibilityCoverage({
   readonly scope: string
   readonly enabled?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
-      aria-label="Accessibility coverage"
+      aria-label={tUi("accessibility_coverage")}
       className="flex flex-col gap-3"
     >
       <p className="m-0 text-xs font-semibold" style={{ color: T.ink.dim }}>
@@ -194,9 +200,11 @@ export function AccessibilityMapKey({
 }: {
   readonly view: AccessibilityView
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
-      aria-label="Accessibility map key"
+      aria-label={tUi("accessibility_map_key")}
       className="flex flex-col gap-2 text-sm"
     >
       <h3 className="m-0 text-sm font-bold">On the map</h3>

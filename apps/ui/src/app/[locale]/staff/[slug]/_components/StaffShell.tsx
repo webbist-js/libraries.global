@@ -1,7 +1,9 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import type { PlanKey } from "@repo/access"
 import { usePathname } from "next/navigation"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import {
   Badge,
@@ -59,6 +61,8 @@ export function StaffShell({
   readonly plan: PlanKey
   readonly teamCovered: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { library, counts } = overview
   const base = staffLibraryHref(library.slug)
   const pathname = usePathname()
@@ -75,7 +79,7 @@ export function StaffShell({
     },
     {
       id: "edit",
-      label: "Edit record",
+      label: tUi("edit_record"),
       href: `${base}/edit`,
       icon: "mdi:pencil-outline",
     },
@@ -83,7 +87,7 @@ export function StaffShell({
       ? [
           {
             id: "live",
-            label: "Go live",
+            label: tUi("go_live"),
             href: `${base}/live`,
             icon: "mdi:bus-side",
             badge: MOBILE_TAG,
@@ -92,26 +96,26 @@ export function StaffShell({
       : []),
     {
       id: "notices",
-      label: "Notices",
+      label: tUi("notices"),
       href: `${base}/notices`,
       icon: "mdi:bell-outline",
     },
     {
       id: "events",
-      label: "Event feeds",
+      label: tUi("event_feeds"),
       href: `${base}/events`,
       icon: "mdi:calendar-sync-outline",
     },
     {
       id: "traffic",
-      label: "Traffic",
+      label: tUi("traffic"),
       href: `${base}/traffic`,
       icon: "mdi:chart-bar",
       badge: teamCovered ? undefined : TEAM_TAG,
     },
     {
       id: "team",
-      label: "Team",
+      label: tUi("team"),
       href: `${base}/team`,
       icon: "mdi:account-group-outline",
       badge: teamCovered ? undefined : TEAM_TAG,
@@ -122,7 +126,7 @@ export function StaffShell({
     <PageHero
       staff
       breadcrumb={[
-        { label: "Staff area", href: "/staff" },
+        { label: tUi("staff_area"), href: "/staff" },
         { label: library.name },
       ]}
       eyebrow="Library staff"
@@ -166,7 +170,7 @@ export function StaffShell({
             className="inline-flex min-h-11 items-center gap-1 font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
-            View public page
+            {tUi("view_public_page")}{" "}
             <Icon
               aria-hidden="true"
               height={15}
@@ -178,7 +182,12 @@ export function StaffShell({
         </>
       }
       tabs={
-        <SectionTabs tabs={tabs} activeId={segment} label="Staff area" roomy />
+        <SectionTabs
+          tabs={tabs}
+          activeId={segment}
+          label={tUi("staff_area")}
+          roomy
+        />
       }
     >
       <div className="flex w-full max-w-[440px] flex-col gap-1 lg:ml-auto">

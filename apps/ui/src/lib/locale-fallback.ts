@@ -8,18 +8,23 @@
  */
 
 /**
- * A locale's English name: from Strapi's configured locales when given,
- * else `Intl.DisplayNames`, else the code itself.
+ * A language's name in the requested interface language. English can use
+ * Strapi's configured name; other languages use `Intl.DisplayNames`.
  */
 export function languageName(
   code: string,
-  locales: readonly { code: string; name: string }[] = []
+  locales: readonly { code: string; name: string }[] = [],
+  displayLocale = "en"
 ): string {
   const configured = locales.find((l) => l.code === code)?.name
   // "Czech (cs)" → "Czech"
-  if (configured) return configured.split(" (")[0]!.trim()
+  if (configured && displayLocale === "en")
+    return configured.split(" (")[0]!.trim()
   try {
-    return new Intl.DisplayNames(["en"], { type: "language" }).of(code) ?? code
+    return (
+      new Intl.DisplayNames([displayLocale], { type: "language" }).of(code) ??
+      code
+    )
   } catch {
     return code
   }

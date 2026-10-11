@@ -1,8 +1,9 @@
 // @vitest-environment happy-dom
-import { render, screen } from "@testing-library/react"
 import * as React from "react"
 import { createElement } from "react"
 import { describe, expect, it, vi } from "vitest"
+
+import { render, screen } from "@/test/render"
 
 // vitest.config has no JSX runtime, so .tsx compiles to React.createElement.
 Object.assign(globalThis, { React })

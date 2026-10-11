@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import type { DriveRibbon } from "@/app/api/profile/[username]/drives/route"
@@ -12,12 +13,18 @@ import { CARD, SectionTitle } from "../ProfileSectionUI"
 
 /** A drive's status, as "Finished" / "Open" / "Closed" — icon + text, never colour alone. */
 function StatusPill({ drive }: { readonly drive: DriveRibbon }) {
-  if (drive.goalMet)
-    return <Badge label="Finished" color="ok" icon="mdi:flag-checkered" />
-  if (drive.status === "open")
-    return <Badge label="Open" color="aurora" icon="mdi:progress-check" />
+  const tUi = useUiTranslations("ui")
 
-  return <Badge label="Closed" color="dim" icon="mdi:check" />
+  if (drive.goalMet)
+    return (
+      <Badge label={tUi("finished")} color="ok" icon="mdi:flag-checkered" />
+    )
+  if (drive.status === "open")
+    return (
+      <Badge label={tUi("open")} color="aurora" icon="mdi:progress-check" />
+    )
+
+  return <Badge label={tUi("closed")} color="dim" icon="mdi:check" />
 }
 
 /**
@@ -27,6 +34,8 @@ function StatusPill({ drive }: { readonly drive: DriveRibbon }) {
  * public.
  */
 export function DriveRibbons({ username }: { readonly username: string }) {
+  const tUi = useUiTranslations("ui")
+
   const [drives, setDrives] = useState<DriveRibbon[]>([])
   const [loaded, setLoaded] = useState(false)
 
@@ -49,7 +58,7 @@ export function DriveRibbons({ username }: { readonly username: string }) {
     >
       <div className="flex items-baseline justify-between gap-2 pb-4">
         <SectionTitle as="h2" id="rc-drives">
-          Drives
+          {tUi("drives")}
         </SectionTitle>
         <span className="text-[15px]" style={{ color: T.ink.dim }}>
           {drives.length} {drives.length === 1 ? "drive" : "drives"}

@@ -1,4 +1,4 @@
-import type { Locale } from "next-intl"
+import { useTranslations, type Locale } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 import type { JournalCardData } from "@/lib/journal-landing"
@@ -15,6 +15,8 @@ export function MostReadCard({
   readonly articles: JournalCardData[]
   readonly locale: Locale
 }) {
+  const t = useTranslations("editorial")
+
   return (
     <section
       aria-labelledby="journal-most-read"
@@ -26,7 +28,7 @@ export function MostReadCard({
         id="journal-most-read"
         style={{ color: T.ink.base }}
       >
-        Most read this month
+        {t("mostRead")}
       </h2>
 
       {articles.length === 0 ? (
@@ -34,7 +36,7 @@ export function MostReadCard({
           className="m-0 mt-2 text-[14px] leading-[1.5]"
           style={{ color: T.ink.low }}
         >
-          Coming soon: the month&rsquo;s most-read articles.
+          {t("mostReadSoon")}
         </p>
       ) : (
         <ol className="m-0 mt-2 list-none p-0">
@@ -64,7 +66,10 @@ export function MostReadCard({
                   className="mt-0.5 block text-[13px]"
                   style={{ color: T.ink.dim }}
                 >
-                  {[article.section?.name, `${article.readMinutes} min read`]
+                  {[
+                    article.section?.name,
+                    t("readingTime", { minutes: article.readMinutes }),
+                  ]
                     .filter(Boolean)
                     .join(" · ")}
                 </span>

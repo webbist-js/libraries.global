@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useRef, useState, type ReactNode } from "react"
 
 import { Icon, MutedChip, ProChip, Switch } from "@/components/atlas/atlas-ui"
@@ -93,6 +94,8 @@ export function AtlasLayersTab({
   readonly onSettings?: (layer: LayerId | null) => void
   readonly onEventsFilter?: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [upsell, setUpsell] = useState<LayerId | null>(null),
     [localSettings, setLocalSettings] = useState<LayerId | null>(null)
   const settingsRef = useRef<HTMLElement>(null),
@@ -170,7 +173,7 @@ export function AtlasLayersTab({
         <button
           type="button"
           onClick={() => changeSettings(null)}
-          aria-label="Close layer settings"
+          aria-label={tUi("close_layer_settings")}
           className="flex size-11 items-center justify-center rounded-full border"
           style={{ borderColor: T.border.hi, color: T.accent.primary }}
         >
@@ -203,7 +206,7 @@ export function AtlasLayersTab({
       {configured.id === "mobile" ? (
         <>
           <div
-            aria-label="Mobile route key"
+            aria-label={tUi("mobile_route_key")}
             className="grid grid-cols-2 gap-2 text-xs"
             style={{ color: T.ink.dim }}
           >
@@ -219,7 +222,7 @@ export function AtlasLayersTab({
                 className="w-5 border-t-2 border-dashed"
                 style={{ borderColor: T.map.route }}
               />
-              Timetable
+              {tUi("timetable")}
             </span>
             <span className="flex items-center gap-2">
               <i
@@ -249,7 +252,7 @@ export function AtlasLayersTab({
             Opacity · {Math.round(mobileOpacity * 100)}%
             <input
               type="range"
-              aria-label="Mobile layer opacity"
+              aria-label={tUi("mobile_layer_opacity")}
               min={0}
               max={100}
               step={5}
@@ -470,7 +473,7 @@ export function AtlasLayersTab({
                   className="shrink-0 rounded-full border px-3 py-2 text-xs font-semibold"
                   style={{ color: T.accent.primary, borderColor: T.border.hi }}
                 >
-                  Filters <span aria-hidden="true">→</span>
+                  {tUi("filters")} <span aria-hidden="true">→</span>
                 </span>
               </button>
             ) : null}
@@ -545,6 +548,8 @@ function LayerRow({
   readonly settingsOpen?: boolean
   readonly children?: ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [about, setAbout] = useState(false)
   const expandable =
     !def.ready || def.id === "perCapita" || Boolean(onConfigure)
@@ -582,7 +587,7 @@ function LayerRow({
               className="mt-2 flex flex-wrap items-center gap-1.5"
               aria-label={`${def.name} availability`}
             >
-              <MutedChip>Coming soon</MutedChip>
+              <MutedChip>{tUi("coming_soon")}</MutedChip>
             </div>
           ) : null}
         </div>

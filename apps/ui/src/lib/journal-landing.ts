@@ -150,7 +150,7 @@ export async function loadJournalLanding(
 ): Promise<JournalLandingData> {
   const [configuredLocales, sectionsRes] = await Promise.all([
     fetchArticleLocales(),
-    fetchBlogSections(),
+    fetchBlogSections(routeLocale),
   ])
 
   // Languages with at least one article; a handful of locales at most.

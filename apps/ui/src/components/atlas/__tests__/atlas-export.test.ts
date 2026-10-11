@@ -1,4 +1,9 @@
 // @vitest-environment happy-dom
+import * as React from "react"
+import { createElement } from "react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+import { MAX_EXPORT_IDS } from "@/lib/export-format"
 import {
   act,
   cleanup,
@@ -6,12 +11,7 @@ import {
   render,
   renderHook,
   screen,
-} from "@testing-library/react"
-import * as React from "react"
-import { createElement } from "react"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-
-import { MAX_EXPORT_IDS } from "@/lib/export-format"
+} from "@/test/render"
 
 import type { AtlasLibrary } from "../atlas.logic"
 

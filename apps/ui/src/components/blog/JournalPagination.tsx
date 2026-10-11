@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
@@ -28,6 +29,9 @@ export function JournalPagination({
   readonly pageSize: number
   readonly total: number
 }) {
+  const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("editorial")
+
   const { from, to } = showingRange(page, pageSize, total)
   const href = (p: number) => journalHref(query, { page: p }, "all-articles")
   const idle = {
@@ -44,22 +48,24 @@ export function JournalPagination({
   return (
     <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
       <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
-        {from > 0 ? `Showing ${from}–${to} of ${total}` : `${total} articles`}
+        {from > 0
+          ? t("showingRange", { from, to, total })
+          : t("articleCount", { count: total })}
       </p>
 
       {pageCount > 1 ? (
-        <nav aria-label="Pagination">
+        <nav aria-label={tUi("pagination")}>
           <ul className="m-0 flex list-none flex-wrap items-center gap-1.5 p-0">
             <li>
               {page > 1 ? (
                 <GlobalLink className={PILL} href={href(page - 1)} style={idle}>
                   <Icon aria-hidden="true" icon="mdi:chevron-left" width={16} />
-                  Previous
+                  {tUi("previous")}{" "}
                 </GlobalLink>
               ) : (
                 <span aria-disabled="true" className={PILL} style={disabled}>
                   <Icon aria-hidden="true" icon="mdi:chevron-left" width={16} />
-                  Previous
+                  {tUi("previous")}{" "}
                 </span>
               )}
             </li>
@@ -77,7 +83,7 @@ export function JournalPagination({
                 <li key={p}>
                   <GlobalLink
                     aria-current={p === page ? "page" : undefined}
-                    aria-label={`Page ${p}`}
+                    aria-label={t("pageLabel", { page: p })}
                     className={CIRCLE}
                     href={href(p)}
                     style={
@@ -98,7 +104,7 @@ export function JournalPagination({
             <li>
               {page < pageCount ? (
                 <GlobalLink className={PILL} href={href(page + 1)} style={idle}>
-                  Next
+                  {tUi("next")}{" "}
                   <Icon
                     aria-hidden="true"
                     icon="mdi:chevron-right"
@@ -107,7 +113,7 @@ export function JournalPagination({
                 </GlobalLink>
               ) : (
                 <span aria-disabled="true" className={PILL} style={disabled}>
-                  Next
+                  {tUi("next")}{" "}
                   <Icon
                     aria-hidden="true"
                     icon="mdi:chevron-right"

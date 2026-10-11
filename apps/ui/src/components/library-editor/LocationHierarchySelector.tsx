@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 import { useEffect, useState } from "react"
 
@@ -29,6 +30,8 @@ export function LocationHierarchySelector({
   f: FormData
   setFormData: React.Dispatch<React.SetStateAction<FormData>>
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [continents, setContinents] = useState<RelationOption[]>([])
   const [countries, setCountries] = useState<CountryOption[]>([])
   const [regions, setRegions] = useState<RegionOption[]>([])
@@ -129,7 +132,7 @@ export function LocationHierarchySelector({
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           <label style={fieldLabelStyle} htmlFor="hier-continent">
-            Continent
+            {tUi("continent")}{" "}
           </label>
           <select
             id="hier-continent"
@@ -146,7 +149,7 @@ export function LocationHierarchySelector({
             }}
             style={selectStyle}
           >
-            <option value="">— select —</option>
+            <option value="">{tUi("select")}</option>
             {continents.map((c) => (
               <option key={c.documentId} value={c.documentId}>
                 {c.name}
@@ -156,7 +159,7 @@ export function LocationHierarchySelector({
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           <label style={fieldLabelStyle} htmlFor="hier-country">
-            Country
+            {tUi("country")}{" "}
           </label>
           <select
             id="hier-country"
@@ -176,7 +179,7 @@ export function LocationHierarchySelector({
               opacity: f.continentDocumentId ? 1 : 0.4,
             }}
           >
-            <option value="">— select —</option>
+            <option value="">{tUi("select")}</option>
             {countries.map((c) => (
               <option key={c.documentId} value={c.documentId}>
                 {c.name}
@@ -205,7 +208,7 @@ export function LocationHierarchySelector({
               opacity: f.countryDocumentId ? 1 : 0.4,
             }}
           >
-            <option value="">— select —</option>
+            <option value="">{tUi("select")}</option>
             {regions.map((r) => (
               <option key={r.documentId} value={r.documentId}>
                 {r.name}
@@ -217,7 +220,7 @@ export function LocationHierarchySelector({
           <label style={fieldLabelStyle} htmlFor="hier-area">
             {labels.area.name}{" "}
             <span style={{ color: T.ink.faint, fontWeight: 400 }}>
-              (optional)
+              {tUi("optional")}{" "}
             </span>
           </label>
           <select
@@ -236,7 +239,7 @@ export function LocationHierarchySelector({
             <option value="">
               {noAreas
                 ? `No ${lowerFirst(labels.area.plural)} listed`
-                : "— select —"}
+                : tUi("select")}
             </option>
             {areas.map((a) => (
               <option key={a.documentId} value={a.documentId}>

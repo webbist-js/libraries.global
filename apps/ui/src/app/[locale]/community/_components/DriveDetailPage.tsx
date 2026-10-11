@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { DriveDates } from "@/components/drives/DriveDates"
@@ -113,6 +114,8 @@ function finalSentence(final: NonNullable<Drive["final"]>): string {
 
 /** The notice at the top of a drive that isn't open: finished, cancelled or scheduled. */
 function DriveStateNotice({ drive }: { readonly drive: Drive }) {
+  const tUi = useUiTranslations("ui")
+
   if (drive.status === "closed") {
     const final = drive.final
 
@@ -120,7 +123,7 @@ function DriveStateNotice({ drive }: { readonly drive: Drive }) {
       <Notice
         icon="mdi:check-circle-outline"
         tone="ok"
-        title="This drive has finished. Thank you"
+        title={tUi("this_drive_has_finished_thank_you")}
       >
         <p className="m-0" style={{ color: T.ink.base }}>
           {drive.closedReason === "goal"
@@ -133,7 +136,11 @@ function DriveStateNotice({ drive }: { readonly drive: Drive }) {
   }
   if (drive.status === "cancelled") {
     return (
-      <Notice icon="mdi:cancel" tone="warn" title="This drive was cancelled">
+      <Notice
+        icon="mdi:cancel"
+        tone="warn"
+        title={tUi("this_drive_was_cancelled")}
+      >
         <p className="m-0" style={{ color: T.ink.base }}>
           Anything already sent for it is still reviewed on its own.
         </p>
@@ -145,7 +152,7 @@ function DriveStateNotice({ drive }: { readonly drive: Drive }) {
       <Notice
         icon="mdi:calendar-clock-outline"
         tone="info"
-        title="This drive hasn’t opened yet"
+        title={tUi("this_drive_hasnt_opened_yet")}
       >
         <p className="m-0" style={{ color: T.ink.base }}>
           Its tasks appear here when it opens. The counts below are today’s.
@@ -216,6 +223,8 @@ export function DriveDetailPage({
   /** The Journal article `drive.storySlug` names, when it exists. */
   readonly story?: Pick<BlogArticleSummary, "title" | "slug" | "section"> | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const credited = drive.status === "open" || drive.status === "closed"
   const title = plainDriveTitle(drive.title)
   const progress = view?.progress ?? null
@@ -230,7 +239,7 @@ export function DriveDetailPage({
     >
       <CommunitySectionHeader
         crumbs={[
-          { label: "Drives", href: "/community#drives" },
+          { label: tUi("drives"), href: "/community#drives" },
           { label: title },
         ]}
         title={drive.title}
@@ -288,7 +297,7 @@ export function DriveDetailPage({
               className="m-0"
               style={SECTION_HEADING}
             >
-              {finished ? "Final numbers" : "Progress"}
+              {finished ? "Final numbers" : tUi("progress")}
             </h2>
             {progress ? (
               <DriveProgress
@@ -353,7 +362,7 @@ export function DriveDetailPage({
         </div>
 
         <aside
-          aria-label="About this drive"
+          aria-label={tUi("about_this_drive")}
           className="flex min-w-0 flex-col gap-3.5 min-[760px]:sticky min-[760px]:top-24 min-[760px]:max-w-[440px]"
           style={{ flex: "1 1 290px" }}
         >

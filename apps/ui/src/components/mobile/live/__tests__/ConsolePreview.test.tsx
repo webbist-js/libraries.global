@@ -1,14 +1,8 @@
 // @vitest-environment happy-dom
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  within,
-} from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { LiveSettingsResponse } from "@/lib/mobile-live/types"
+import { cleanup, fireEvent, render, screen, within } from "@/test/render"
 
 vi.mock("@iconify/react", () => ({ Icon: () => null, addCollection: () => {} }))
 vi.mock("@/components/ds", () => ({

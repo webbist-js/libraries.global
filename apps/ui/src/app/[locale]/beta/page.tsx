@@ -2,7 +2,10 @@ import type { Metadata } from "next"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import type { Locale } from "next-intl"
-import { getTranslations, setRequestLocale } from "next-intl/server"
+import {
+  getTranslations as getUiTranslations,
+  setRequestLocale,
+} from "next-intl/server"
 
 import styles from "@/components/beta/beta.module.css"
 import { BetaForms } from "@/components/beta/BetaForms"
@@ -27,35 +30,38 @@ export default async function BetaPage({
   params: Promise<{ locale: Locale }>
   searchParams: Promise<{ next?: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const { locale } = await params
   setRequestLocale(locale)
-  const fallback = locale === "cs" ? "/cs" : "/"
+  const prefix = locale === "en" ? "" : `/${locale}`
+  const fallback = prefix || "/"
   const next = betaDestination((await searchParams).next, fallback)
   if (
     !betaEnabled() ||
     validBetaPass((await cookies()).get(BETA_COOKIE)?.value)
   )
     redirect(next)
-  const t = await getTranslations("beta")
+  const t = await getUiTranslations("beta")
   const email = process.env.BETA_CONTACT_EMAIL ?? "hello@libraries.global"
   const source =
     process.env.BETA_SOURCE_URL ??
     "https://github.com/webbist-js/libraries.global"
-  const privacy = locale === "cs" ? "/cs/legal/privacy" : "/legal/privacy"
+  const privacy = `${prefix}/legal/privacy`
 
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         <a
           className={styles.wordmark}
-          href={locale === "cs" ? "/cs/beta" : "/beta"}
+          href={`${prefix}/beta`}
           aria-label="Libraries Global"
         >
-          Libraries <em>Global</em>
+          {tUi("libraries")} <em>Global</em>
         </a>
         <span className={styles.badge}>{t("badge")}</span>
       </header>
-      <div className={styles.main}>
+      <main className={styles.main}>
         <section className={styles.introduction}>
           <h1>
             {t("headlineFirst")}
@@ -72,7 +78,7 @@ export default async function BetaPage({
           </ul>
         </section>
         <BetaForms next={next} locale={locale} available={betaConfigured()} />
-      </div>
+      </main>
       <footer className={styles.footer}>
         <p>{t("independent")}</p>
         <nav aria-label={t("footerLabel")}>

@@ -1,5 +1,6 @@
 import "server-only"
 
+import { SUPPORTED_LOCALES } from "@repo/shared-data"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -28,7 +29,7 @@ const schema = z
   .object({
     email: z.string().trim().toLowerCase().pipe(z.email().max(254)),
     website: z.string().max(0).optional(),
-    locale: z.enum(["en", "cs"]).optional(),
+    locale: z.enum(SUPPORTED_LOCALES).optional(),
     source: z.enum(["footer", "journal"]).optional(),
   })
   .strict()

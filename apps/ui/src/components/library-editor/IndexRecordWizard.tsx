@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useLocale, useTranslations as useUiTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -64,8 +65,8 @@ export const INDEX_EDITOR_PATH = "/contribute/index"
 
 const LAST_STEP = 7
 
-function formatSavedTime(date: Date): string {
-  return date.toLocaleTimeString("en-GB", {
+function formatSavedTime(date: Date, locale: string): string {
+  return date.toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
     timeZoneName: "short",
@@ -134,6 +135,9 @@ export function IndexRecordWizard({
   creationTeams = [],
   timetableContext,
 }: IndexRecordWizardProps) {
+  const tUi = useUiTranslations("ui")
+  const displayLocale = useLocale()
+
   const staff = mode === "staff"
   const staffNew = mode === "staff-new"
   const inStaffArea = staff || staffNew
@@ -511,19 +515,19 @@ export function IndexRecordWizard({
                 }}
                 title={improve ? target.name : undefined}
               >
-                {improve ? target.name : "Your record"}
+                {improve ? target.name : tUi("your_record")}
               </h2>
               {improve ? (
                 changed.length === 0 ? (
                   <RailStatus icon="mdi:pencil-outline" color={T.ink.dim}>
-                    No changes yet
+                    {tUi("no_changes_yet")}{" "}
                   </RailStatus>
                 ) : (
                   <RailStatus icon="mdi:pencil" color={T.accent.primary}>
                     {changed.length} field{changed.length === 1 ? "" : "s"}{" "}
                     changed
                     {lastSavedAt
-                      ? ` · saved ${formatSavedTime(lastSavedAt)}`
+                      ? ` · ${tUi("draft_saved")} ${formatSavedTime(lastSavedAt, displayLocale)}`
                       : ""}
                   </RailStatus>
                 )
@@ -537,8 +541,8 @@ export function IndexRecordWizard({
                   color={lastSavedAt ? T.accent.ok : T.ink.dim}
                 >
                   {lastSavedAt
-                    ? `Draft saved · ${formatSavedTime(lastSavedAt)}`
-                    : "Draft not yet saved"}
+                    ? `${tUi("draft_saved")} · ${formatSavedTime(lastSavedAt, displayLocale)}`
+                    : tUi("draft_not_yet_saved")}
                 </RailStatus>
               )}
               <div className="mt-5">
@@ -563,7 +567,7 @@ export function IndexRecordWizard({
 
             {/* Right — step form */}
             <section
-              aria-label="Library record form"
+              aria-label={tUi("library_record_form")}
               className="min-w-0 rounded-[28px] border p-5 sm:p-8"
               style={{ background: T.bg.deep, borderColor: T.border.line }}
             >
@@ -591,10 +595,11 @@ export function IndexRecordWizard({
                     />
                     <span>
                       <strong style={{ color: T.ink.base }}>
-                        Improving an existing record.
+                        {tUi("improving_an_existing_record")}{" "}
                       </strong>{" "}
-                      Change only what you can source. Changed fields are
-                      marked.
+                      {tUi(
+                        "change_only_what_you_can_source_changed_fields_are_marked"
+                      )}{" "}
                       {target.isClaimed
                         ? " You look after this library, so your edit goes straight to review as a stewarded change."
                         : ""}
@@ -609,7 +614,7 @@ export function IndexRecordWizard({
                       color: T.ink.base,
                     }}
                   >
-                    Choose a different library
+                    {tUi("choose_a_different_library")}{" "}
                   </Link>
                 </div>
               )}
@@ -619,7 +624,7 @@ export function IndexRecordWizard({
                   <Notice
                     icon="mdi:account-check-outline"
                     tone="info"
-                    title="You’re editing as staff"
+                    title={tUi("you_re_editing_as_staff")}
                   >
                     <p className="m-0">
                       Changes publish straight away and show in the record’s
@@ -662,14 +667,16 @@ export function IndexRecordWizard({
                   <Notice
                     icon="mdi:account-check-outline"
                     tone="info"
-                    title="Adding a library as staff"
+                    title={tUi("adding_a_library_as_staff")}
                   >
                     <p className="m-0">
                       An editor reviews the new record and your staff access
                       together. Approval makes you an owner of this library.{" "}
                       {creationTeamId
-                        ? "It will also be covered by the Team selected below."
-                        : "Everyday staff tools stay free."}
+                        ? tUi(
+                            "it_will_also_be_covered_by_the_team_selected_below"
+                          )
+                        : tUi("everyday_staff_tools_stay_free")}
                     </p>
                   </Notice>
                   {creationTeams.length > 0 && (
@@ -677,9 +684,9 @@ export function IndexRecordWizard({
                       className="flex flex-col gap-2"
                       style={fieldLabelStyle}
                     >
-                      Team coverage
+                      {tUi("team_coverage")}{" "}
                       <select
-                        aria-label="Team coverage"
+                        aria-label={tUi("team_coverage")}
                         value={creationTeamId}
                         disabled={!!draftId}
                         onChange={(event) =>
@@ -687,7 +694,9 @@ export function IndexRecordWizard({
                         }
                         style={fieldInputStyle}
                       >
-                        <option value="">No Team · free staff access</option>
+                        <option value="">
+                          {tUi("no_team_free_staff_access")}
+                        </option>
                         {creationTeams.map((team) => (
                           <option key={team.id} value={team.id}>
                             {team.name}
@@ -702,8 +711,10 @@ export function IndexRecordWizard({
                         }}
                       >
                         {draftId
-                          ? "Team coverage is saved with this draft."
-                          : "Choose the library service this new record belongs to."}
+                          ? tUi("team_coverage_is_saved_with_this_draft")
+                          : tUi(
+                              "choose_the_library_service_this_new_record_belongs_to"
+                            )}
                       </span>
                     </label>
                   )}
@@ -760,7 +771,7 @@ export function IndexRecordWizard({
 
               <div
                 role="group"
-                aria-label="Step navigation"
+                aria-label={tUi("step_navigation")}
                 className="flex flex-wrap items-center gap-3"
                 style={{
                   marginTop: "40px",
@@ -782,7 +793,7 @@ export function IndexRecordWizard({
                     }}
                   >
                     <Icon icon="mdi:arrow-left" width={18} aria-hidden="true" />
-                    Back
+                    {tUi("back")}{" "}
                   </button>
                 ) : (
                   <Link
@@ -796,7 +807,7 @@ export function IndexRecordWizard({
                     }}
                   >
                     <Icon icon="mdi:arrow-left" width={18} aria-hidden="true" />
-                    Back
+                    {tUi("back")}{" "}
                   </Link>
                 )}
 
@@ -816,7 +827,7 @@ export function IndexRecordWizard({
                       fontFamily: T.font.sans,
                     }}
                   >
-                    Skip to sources
+                    {tUi("skip_to_sources")}{" "}
                   </button>
                 )}
 
@@ -847,7 +858,7 @@ export function IndexRecordWizard({
                       opacity: isPending ? 0.6 : 1,
                     }}
                   >
-                    {isPending ? "Submitting…" : "Submit for review"}
+                    {isPending ? tUi("submitting") : tUi("submit_for_review")}
                     {!isPending && (
                       <Icon
                         icon="mdi:arrow-right"

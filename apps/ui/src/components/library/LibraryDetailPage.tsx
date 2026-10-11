@@ -1,6 +1,6 @@
 import type { LibraryNotice } from "@repo/shared-data"
 import Image from "next/image"
-import type { Locale } from "next-intl"
+import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import type { BreadcrumbItem } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
@@ -91,6 +91,8 @@ export function LibraryDetailPage({
   untranslatedLocale = null,
   translateLocales = [],
 }: LibraryDetailPageProps) {
+  const tUi = useUiTranslations("ui")
+
   if (library) library = { ...library, notices } as PopulatedLibraryData
   if (!library) {
     return (
@@ -131,7 +133,7 @@ export function LibraryDetailPage({
   }
 
   const crumbs: BreadcrumbItem[] = [
-    { href: "/", label: "Home" },
+    { href: "/", label: tUi("home") },
     ...(library.continent?.slug
       ? [
           {
@@ -284,7 +286,7 @@ export function LibraryDetailPage({
                 {hasFeed ? (
                   <LibrarySectionCard
                     id="events"
-                    title="Events"
+                    title={tUi("events")}
                     iconPath={LIB_ICONS.calendar}
                     tone="neutral"
                   >
@@ -313,7 +315,7 @@ export function LibraryDetailPage({
               </div>
 
               <aside
-                aria-label="About this record"
+                aria-label={tUi("about_this_record")}
                 className="top-32 flex flex-[1_1_280px] flex-col gap-4 lg:sticky lg:max-h-[calc(100dvh-9rem)] lg:overflow-y-auto lg:overscroll-contain"
               >
                 <LibraryRecordPanel followers={followers} library={library} />

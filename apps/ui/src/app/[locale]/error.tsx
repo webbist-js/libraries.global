@@ -1,50 +1,68 @@
 "use client"
 
-// Error boundaries must be Client Components - https://nextjs.org/docs/app/api-reference/file-conventions/error#error
 import * as Sentry from "@sentry/nextjs"
+import { TriangleAlert } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
-import { isDevelopment } from "@/lib/general-helpers"
+import {
+  utilityButtonClass,
+  UtilityHeading,
+  UtilityLink,
+  UtilityPage,
+} from "@/components/utility/UtilityPage"
+import { T } from "@/lib/design-tokens"
 
 interface Props {
-  readonly error: Error
+  readonly error: Error & { digest?: string }
   readonly reset: () => void
 }
 
 export default function ErrorPage({ error, reset }: Props) {
   const t = useTranslations("errors.global")
-
   useEffect(() => {
     Sentry.captureException(error)
   }, [error])
 
-  const handleTryAgain = () => {
-    // Attempt to recover by trying to re-render the segment
-    reset()
-  }
-
-  const isDev = isDevelopment()
-
   return (
-    <div className="w-full overflow-x-hidden">
-      <h1 className="text-xl font-semibold tracking-tight">
-        {t("somethingWentWrong")}
-      </h1>
-      <p className="mt-1 text-sm text-gray-600">
-        {t("invalidContent")}
-        {isDev ? `: ${error.message}` : null}
+    <UtilityPage>
+      <UtilityHeading
+        title={t("heading")}
+        italic={t("headingItalic")}
+        description={t("recovery")}
+        icon={<TriangleAlert size={28} />}
+        tone="warn"
+      />
+      <div className="flex flex-wrap gap-3">
+        <Button type="button" className={utilityButtonClass} onClick={reset}>
+          {t("tryAgain")}
+        </Button>
+        <Button asChild variant="outline" className={utilityButtonClass}>
+          <UtilityLink href="/">{t("homepage")}</UtilityLink>
+        </Button>
+      </div>
+      <p
+        className="mt-6 text-sm leading-relaxed [overflow-wrap:anywhere]"
+        style={{ color: T.ink.dim }}
+      >
+        {t("support")}{" "}
+        <a
+          href="mailto:info@libraries.global"
+          data-contact-type="report_issue"
+          className="underline underline-offset-4"
+          style={{ color: T.accent.primary }}
+        >
+          info@libraries.global
+        </a>
+        .
+        {error.digest && (
+          <>
+            {" "}
+            {t("reference")}: <strong>{error.digest}</strong>.
+          </>
+        )}
       </p>
-      {isDev && (
-        <p className="mt-2 w-full overflow-x-auto bg-gray-100 p-3 text-xs">
-          <pre>{error.stack?.split("\n").slice(0, 7).join("\n")}</pre>
-        </p>
-      )}
-
-      <Button type="button" size="sm" onClick={handleTryAgain} className="mt-2">
-        {t("tryAgain")}
-      </Button>
-    </div>
+    </UtilityPage>
   )
 }

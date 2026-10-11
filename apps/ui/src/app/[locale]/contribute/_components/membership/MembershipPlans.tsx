@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -38,6 +39,8 @@ function BillingToggle({
   readonly onChange: (b: Billing) => void
   readonly savingMonths: number | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const options: [Billing, string][] = [
     ["monthly", "Monthly"],
     ["yearly", "Yearly"],
@@ -45,7 +48,7 @@ function BillingToggle({
 
   return (
     <div
-      aria-label="Billing period"
+      aria-label={tUi("billing_period")}
       className="inline-flex rounded-full border p-1"
       role="radiogroup"
       style={{ background: T.bg.deep, borderColor: T.border.line }}
@@ -367,6 +370,8 @@ export function MembershipPlans({
 }: {
   readonly currentPlan: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [billing, setBilling] = useState<Billing>("monthly")
   const plans = MEMBERSHIP.map(planCard)
   // The toggle's chip claims a saving only if every monthly plan has it.
@@ -390,7 +395,7 @@ export function MembershipPlans({
         }
         id="membership-h"
         sub="Support the project, or add analysis and export on top of the free index."
-        title="Membership"
+        title={tUi("membership")}
       />
       <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-3">
         {plans.map((plan) => (

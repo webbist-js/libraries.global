@@ -8,6 +8,7 @@
 // a left slide-in drawer + toggle button for mobile.
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import {
   Children,
   createContext,
@@ -56,6 +57,8 @@ export function FilterPanelHeader({
   /** From useFilterSidebar: adds the desktop Hide control. */
   readonly sidebar?: FilterSidebarState
 }) {
+  const tUi = useUiTranslations("ui")
+
   const inDrawer = useContext(FilterDrawerContext)
 
   return (
@@ -83,7 +86,7 @@ export function FilterPanelHeader({
             style={{ color: T.ink.dim }}
           >
             <PanelIcon />
-            Hide
+            {tUi("hide")}{" "}
           </button>
         ) : null}
       </div>
@@ -325,6 +328,8 @@ export function FilterShowButton({
   readonly sidebar: FilterSidebarState
   readonly activeCount?: number
 }) {
+  const tUi = useUiTranslations("ui")
+
   if (!sidebar.collapsed) return null
 
   return (
@@ -334,7 +339,7 @@ export function FilterShowButton({
       activeCount={activeCount}
       expanded={false}
       controls={sidebar.sidebarId}
-      label="Filters"
+      label={tUi("filters")}
       icon
       className="hidden lg:flex"
     />
@@ -463,10 +468,12 @@ export function FilterSidebar({
   readonly sidebar: FilterSidebarState
   readonly children: ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <aside
       id={sidebar.sidebarId}
-      aria-label="Filters"
+      aria-label={tUi("filters")}
       className={[
         "scrollbar-thin sticky top-[90px] w-[290px] shrink-0 overflow-x-hidden overflow-y-auto overscroll-contain",
         // Inner padding keeps focus rings clear of the scroll box's edge.
@@ -494,6 +501,8 @@ export function FilterDrawer({
   readonly children: React.ReactNode
   readonly showLabel?: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const titleId = useId()
   useEffect(() => {
     if (!open) return
@@ -513,7 +522,7 @@ export function FilterDrawer({
       onClose={onClose}
       side="left"
       size="md"
-      title="Filters"
+      title={tUi("filters")}
       titleId={titleId}
       footer={
         showLabel ? (

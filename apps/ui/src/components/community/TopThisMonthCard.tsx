@@ -1,3 +1,5 @@
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import {
@@ -23,6 +25,8 @@ export function TopThisMonthCard({
 }: {
   readonly entries: readonly LeaderboardEntry[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
       aria-labelledby="top-month-heading"
@@ -47,7 +51,7 @@ export function TopThisMonthCard({
           className="text-[15px] font-semibold underline underline-offset-[3px]"
           style={{ color: T.accent.primary }}
         >
-          Leaderboard
+          {tUi("leaderboard")}
         </GlobalLink>
       </div>
       <ol className="m-0 list-none p-0">

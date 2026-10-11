@@ -3,6 +3,7 @@
 import { Icon } from "@iconify/react"
 import type { Editor } from "@tiptap/core"
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -80,6 +81,8 @@ const smallPill =
 
 /** The toolbar's context row: link, quote, code and callout details. */
 function ContextRow({ editor }: { editor: Editor }) {
+  const tUi = useUiTranslations("ui")
+
   const state = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
@@ -111,9 +114,9 @@ function ContextRow({ editor }: { editor: Editor }) {
   if (state.link)
     rows.push(
       <div key="link" className="flex flex-wrap items-center gap-2">
-        <span style={labelStyle}>Link</span>
+        <span style={labelStyle}>{tUi("link")}</span>
         <input
-          aria-label="Link URL"
+          aria-label={tUi("link_url")}
           value={state.href}
           onChange={(e) =>
             editor
@@ -136,18 +139,18 @@ function ContextRow({ editor }: { editor: Editor }) {
           }}
           onClick={() => editor.chain().focus().unsetLink().run()}
         >
-          Remove link
+          {tUi("remove_link")}{" "}
         </button>
       </div>
     )
   if (state.quote)
     rows.push(
       <div key="quote" className="flex flex-wrap items-center gap-2">
-        <span style={labelStyle}>Quote</span>
+        <span style={labelStyle}>{tUi("quote")}</span>
         <input
-          aria-label="Attribution"
+          aria-label={tUi("attribution")}
           value={state.attribution}
-          placeholder="Who said it"
+          placeholder={tUi("who_said_it")}
           onChange={(e) =>
             editor.commands.updateAttributes("blockquote", {
               attribution: e.target.value || null,
@@ -156,9 +159,9 @@ function ContextRow({ editor }: { editor: Editor }) {
           style={{ ...smallInput, flex: 1 }}
         />
         <input
-          aria-label="Source"
+          aria-label={tUi("source")}
           value={state.source}
-          placeholder="Source, e.g. a book or page"
+          placeholder={tUi("source_e_g_a_book_or_page")}
           onChange={(e) =>
             editor.commands.updateAttributes("blockquote", {
               source: e.target.value || null,
@@ -171,11 +174,11 @@ function ContextRow({ editor }: { editor: Editor }) {
   if (state.code)
     rows.push(
       <div key="code" className="flex flex-wrap items-center gap-2">
-        <span style={labelStyle}>Code</span>
+        <span style={labelStyle}>{tUi("code")}</span>
         <input
-          aria-label="Language"
+          aria-label={tUi("language")}
           value={state.language}
-          placeholder="Language, e.g. bash"
+          placeholder={tUi("language_e_g_bash")}
           onChange={(e) =>
             editor.commands.updateAttributes("codeBlock", {
               language: e.target.value || null,
@@ -188,9 +191,9 @@ function ContextRow({ editor }: { editor: Editor }) {
   if (state.callout)
     rows.push(
       <div key="callout" className="flex flex-wrap items-center gap-2">
-        <span style={labelStyle}>Callout</span>
+        <span style={labelStyle}>{tUi("callout")}</span>
         <select
-          aria-label="Callout kind"
+          aria-label={tUi("callout_kind")}
           value={state.calloutKind}
           onChange={(e) =>
             editor.commands.setCalloutKind(
@@ -206,9 +209,9 @@ function ContextRow({ editor }: { editor: Editor }) {
           ))}
         </select>
         <input
-          aria-label="Callout title"
+          aria-label={tUi("callout_title")}
           value={state.calloutTitle}
-          placeholder="Title (optional)"
+          placeholder={tUi("title_optional")}
           onChange={(e) =>
             editor.commands.updateAttributes("callout", {
               title: e.target.value || null,
@@ -221,11 +224,11 @@ function ContextRow({ editor }: { editor: Editor }) {
   if (state.image)
     rows.push(
       <div key="image" className="flex flex-wrap items-center gap-2">
-        <span style={labelStyle}>Image</span>
+        <span style={labelStyle}>{tUi("image")}</span>
         <input
-          aria-label="Alt text"
+          aria-label={tUi("alt_text")}
           value={state.alt}
-          placeholder="Describe the image for screen readers"
+          placeholder={tUi("describe_the_image_for_screen_readers")}
           onChange={(e) =>
             editor.commands.updateAttributes("image", {
               alt: e.target.value || null,
@@ -234,9 +237,9 @@ function ContextRow({ editor }: { editor: Editor }) {
           style={{ ...smallInput, flex: 1 }}
         />
         <input
-          aria-label="Caption"
+          aria-label={tUi("caption")}
           value={state.caption}
-          placeholder="Caption (optional)"
+          placeholder={tUi("caption_optional")}
           onChange={(e) =>
             editor.commands.updateAttributes("image", {
               caption: e.target.value || null,
@@ -270,6 +273,8 @@ function Toolbar({
   onPickImage: () => void
   uploading: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const s = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
@@ -294,7 +299,7 @@ function Toolbar({
   return (
     <div
       role="toolbar"
-      aria-label="Formatting"
+      aria-label={tUi("formatting")}
       className="flex flex-wrap items-center gap-0.5 px-3 py-2"
       style={{
         borderBottom: `1px solid ${T.border.line}`,
@@ -304,38 +309,38 @@ function Toolbar({
     >
       <ToolButton
         text="H2"
-        label="Heading 2"
+        label={tUi("heading_2")}
         active={s.h2}
         onClick={() => c().toggleHeading({ level: 2 }).run()}
       />
       <ToolButton
         text="H3"
-        label="Heading 3"
+        label={tUi("heading_3")}
         active={s.h3}
         onClick={() => c().toggleHeading({ level: 3 }).run()}
       />
       <ToolButton
         icon="mdi:format-paragraph"
-        label="Paragraph"
+        label={tUi("paragraph")}
         active={s.p && !s.quote && !s.callout}
         onClick={() => c().setParagraph().run()}
       />
       <Divider />
       <ToolButton
         icon="mdi:format-bold"
-        label="Bold"
+        label={tUi("bold")}
         active={s.bold}
         onClick={() => c().toggleBold().run()}
       />
       <ToolButton
         icon="mdi:format-italic"
-        label="Italic"
+        label={tUi("italic")}
         active={s.italic}
         onClick={() => c().toggleItalic().run()}
       />
       <ToolButton
         icon="mdi:link-variant"
-        label={s.link ? "Edit link" : "Add link"}
+        label={s.link ? tUi("edit_link") : tUi("add_link")}
         active={s.link}
         onClick={() => {
           if (s.link) editor.chain().focus().extendMarkRange("link").run()
@@ -345,51 +350,51 @@ function Toolbar({
       <Divider />
       <ToolButton
         icon="mdi:format-list-bulleted"
-        label="Bulleted list"
+        label={tUi("bulleted_list")}
         active={s.bullet}
         onClick={() => c().toggleBulletList().run()}
       />
       <ToolButton
         icon="mdi:format-list-numbered"
-        label="Numbered list"
+        label={tUi("numbered_list")}
         active={s.ordered}
         onClick={() => c().toggleOrderedList().run()}
       />
       <ToolButton
         icon="mdi:format-quote-close"
-        label="Quote"
+        label={tUi("quote")}
         active={s.quote}
         onClick={() => c().toggleBlockquote().run()}
       />
       <ToolButton
         icon="mdi:code-tags"
-        label="Code block"
+        label={tUi("code_block")}
         active={s.code}
         onClick={() => c().toggleCodeBlock().run()}
       />
       <ToolButton
         icon="mdi:information-outline"
-        label="Callout"
+        label={tUi("callout")}
         active={s.callout}
         onClick={() => c().toggleCallout().run()}
       />
       <Divider />
       <ToolButton
         icon={uploading ? "mdi:loading" : "mdi:image-outline"}
-        label="Insert image"
+        label={tUi("insert_image")}
         disabled={uploading}
         onClick={onPickImage}
       />
       <Divider />
       <ToolButton
         icon="mdi:undo"
-        label="Undo"
+        label={tUi("undo")}
         disabled={!s.canUndo}
         onClick={() => c().undo().run()}
       />
       <ToolButton
         icon="mdi:redo"
-        label="Redo"
+        label={tUi("redo")}
         disabled={!s.canRedo}
         onClick={() => c().redo().run()}
       />
@@ -445,6 +450,9 @@ export function ArticleEditor({
   readonly onDocChange: (doc: TiptapDoc) => void
   readonly uploadImage: (file: File) => Promise<UploadedImage | null>
 }) {
+  const tUi = useUiTranslations("ui")
+  const tEditor = useUiTranslations("articleEditor")
+
   const meta = ARTICLE_KIND_META[kind]
   const fileInputId = useId()
   const fileRef = useRef<HTMLInputElement>(null)
@@ -452,11 +460,11 @@ export function ArticleEditor({
   const titleRef = useRef<HTMLTextAreaElement>(null)
 
   const editor = useEditor({
-    extensions: articleExtensions("Start writing…"),
+    extensions: articleExtensions(tUi("start_writing")),
     content: doc,
     immediatelyRender: false,
     editorProps: {
-      attributes: { "aria-label": "Article body", spellcheck: "true" },
+      attributes: { "aria-label": tUi("article_body"), spellcheck: "true" },
     },
     onUpdate: ({ editor: e }) => onDocChange(e.getJSON() as TiptapDoc),
   })
@@ -529,7 +537,7 @@ export function ArticleEditor({
         type="file"
         accept="image/jpeg,image/png,image/webp"
         className="sr-only"
-        aria-label="Choose an image to insert"
+        aria-label={tUi("choose_an_image_to_insert")}
         onChange={(e) => void handleFile(e.target.files?.[0])}
       />
 
@@ -538,10 +546,10 @@ export function ArticleEditor({
           className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold"
           style={{ background: meta.tintBg, color: meta.tintFg }}
         >
-          {meta.label}
+          {tEditor(kind === "knowledge" ? "kindKnowledge" : "kindJournal")}
         </span>
         <label htmlFor="article-title" className="sr-only">
-          Title
+          {tUi("title")}{" "}
         </label>
         <textarea
           id="article-title"
@@ -550,7 +558,7 @@ export function ArticleEditor({
           value={title}
           readOnly={readOnly}
           onChange={(e) => onTitleChange(e.target.value.replaceAll("\n", " "))}
-          placeholder="Title"
+          placeholder={tUi("title")}
           maxLength={200}
           className="mt-4 block w-full resize-none border-0 bg-transparent p-0 outline-none"
           style={{
@@ -563,7 +571,7 @@ export function ArticleEditor({
           }}
         />
         <label htmlFor="article-summary" className="sr-only">
-          Summary
+          {tUi("summary")}{" "}
         </label>
         <textarea
           id="article-summary"
@@ -571,7 +579,7 @@ export function ArticleEditor({
           value={summary}
           readOnly={readOnly}
           onChange={(e) => onSummaryChange(e.target.value)}
-          placeholder="One or two sentences shown in search and on cards"
+          placeholder={tUi("one_or_two_sentences_shown_in_search_and_on_cards")}
           maxLength={600}
           className="mt-5 block w-full resize-none border-0 bg-transparent p-0 outline-none"
           style={{

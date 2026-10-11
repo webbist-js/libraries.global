@@ -7,6 +7,7 @@ import {
   type MobileTimetable,
   type MobileVisit,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { DiffCard } from "@/components/ds/DiffCard"
 import { Notice } from "@/components/ds/Notice"
@@ -35,6 +36,8 @@ export function TimetableReviewPanel({
   readonly previousHash?: string
   readonly timezone?: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const diff = diffTimetable(before, after),
     stale = previousHash !== undefined && previousHash !== timetableHash(before)
   const visitText = (visit: MobileVisit, tt: MobileTimetable | null) =>
@@ -96,7 +99,7 @@ export function TimetableReviewPanel({
           <Notice
             icon="mdi:alert-outline"
             tone="warn"
-            title="The timetable changed after this was suggested"
+            title={tUi("the_timetable_changed_after_this_was_suggested")}
           >
             <p className="m-0" style={{ color: T.ink.base }}>
               Decline this suggestion; it cannot be applied to the current

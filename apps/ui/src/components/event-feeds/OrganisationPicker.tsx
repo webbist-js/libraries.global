@@ -2,6 +2,7 @@
 
 import { FEED_TEST_COPY } from "@repo/shared-data"
 import { useRouter } from "next/navigation"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { ChoiceCard } from "@/components/ds/ChoiceCard"
@@ -28,6 +29,8 @@ export function OrganisationPicker({
   readonly librarySlug: string
   readonly organizations: { id: string; name: string }[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const [organizationId, setOrganizationId] = useState(
     organizations[0]?.id ?? ""
@@ -104,7 +107,11 @@ export function OrganisationPicker({
       </fieldset>
 
       {error && (
-        <Notice icon="mdi:alert-circle-outline" tone="warn" title="Test result">
+        <Notice
+          icon="mdi:alert-circle-outline"
+          tone="warn"
+          title={tUi("test_result")}
+        >
           <p className="m-0">{error}</p>
         </Notice>
       )}
@@ -116,7 +123,7 @@ export function OrganisationPicker({
           disabled={!organizationId || sending}
           onClick={send}
         >
-          {sending ? "Sending…" : "Send for review"}
+          {sending ? tUi("sending") : "Send for review"}
         </button>
       </div>
     </div>

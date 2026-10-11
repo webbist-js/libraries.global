@@ -2,6 +2,7 @@
 
 import { DRIVE_PROPOSAL_MIN_ACCEPTED } from "@repo/access"
 import { DRIVE_MAX_TASKS } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { Badge, Notice } from "@/components/ds"
@@ -156,12 +157,14 @@ function ScopeNotice({
   readonly todo: number
   readonly focusKind: FocusKind
 }) {
+  const tUi = useUiTranslations("ui")
+
   if (total === 0) {
     return (
       <Notice
         icon="mdi:information-outline"
         tone="info"
-        title="No libraries in scope. Try a wider place or fewer filters."
+        title={tUi("no_libraries_in_scope_try_a_wider_place_or_fewer_filters")}
       />
     )
   }
@@ -210,6 +213,8 @@ export function ScopeCard({
   readonly focusKind: FocusKind
   readonly locked: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   let body: ReactNode
   if (locked) {
     body = (
@@ -259,7 +264,7 @@ export function ScopeCard({
         ) : null}
         {ready && ready.places.length > 0 ? (
           <ul
-            aria-label="By place"
+            aria-label={tUi("by_place")}
             className="m-0 flex list-none flex-col p-0 text-[14px]"
           >
             {ready.places.map((p) => (
@@ -317,6 +322,8 @@ export function StandingCard({
 }: {
   readonly standing: ProposalStanding
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { accepted, open } = standing
   const needed = DRIVE_PROPOSAL_MIN_ACCEPTED
   const eligible = accepted >= needed
@@ -339,7 +346,7 @@ export function StandingCard({
         {eligible ? (
           <Badge label="You can" color="ok" icon="mdi:check" />
         ) : (
-          <Badge label="Not yet" color="dim" icon="mdi:progress-clock" />
+          <Badge label={tUi("not_yet")} color="dim" icon="mdi:progress-clock" />
         )}
       </div>
       <p
@@ -353,7 +360,7 @@ export function StandingCard({
         <>
           <div
             role="progressbar"
-            aria-label="Accepted changes"
+            aria-label={tUi("accepted_changes")}
             aria-valuemin={0}
             aria-valuemax={needed}
             aria-valuenow={shown}
@@ -400,7 +407,7 @@ export function StandingCard({
               className={linkClass}
               style={linkStyle}
             >
-              My submissions
+              {tUi("my_submissions")}{" "}
             </Link>
             .
           </p>
@@ -412,6 +419,8 @@ export function StandingCard({
 
 /** The board's card in place of "Who can propose": no review, and where it's run. */
 export function BoardCard({ editing }: { readonly editing: boolean }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
       aria-labelledby="drive-board"
@@ -426,7 +435,7 @@ export function BoardCard({ editing }: { readonly editing: boolean }) {
         >
           Editorial board
         </h2>
-        <Badge label="No review needed" color="ok" icon="mdi:check" />
+        <Badge label={tUi("no_review_needed")} color="ok" icon="mdi:check" />
       </div>
       <p
         className="mt-2 mb-0 text-[15px] leading-[1.6]"

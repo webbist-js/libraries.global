@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { staffPathname } from "@/app/[locale]/staff/_lib/staff-pathname"
 import { ReplaceFeedForm } from "@/components/event-feeds/ReplaceFeedForm"
@@ -19,6 +20,8 @@ export default async function ReplaceEventFeedPage({
 }: {
   params: Promise<{ slug: string; feedId: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const { slug, feedId } = await params
   if (!isDocumentIdParam(feedId)) notFound()
   const { user, overview, documentId } = await loadStaffPage(
@@ -43,7 +46,7 @@ export default async function ReplaceEventFeedPage({
     <div className="mx-auto w-full max-w-[820px]">
       <StaffBackLink
         href={staffLibraryHref(overview.library.slug, "/events")}
-        label="Event feeds"
+        label={tUi("event_feeds")}
       />
       <h2
         className="m-0 mb-6"

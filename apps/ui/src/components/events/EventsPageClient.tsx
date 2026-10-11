@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 
 import {
@@ -90,6 +91,8 @@ function SourceStep({
 }
 
 export function EventsPageClient() {
+  const tUi = useUiTranslations("ui")
+
   const [upcoming, setUpcoming] = useState<EventSearchHit[]>([])
   const [state, setState] = useState<LoadState>("loading")
   const [filters, setFilters] = useState<EventsFilters>(DEFAULT_EVENTS_FILTERS)
@@ -180,7 +183,10 @@ export function EventsPageClient() {
   return (
     <main className="relative z-10 flex-1">
       <PageHero
-        breadcrumb={[{ label: "Home", href: "/" }, { label: "Events" }]}
+        breadcrumb={[
+          { label: tUi("home"), href: "/" },
+          { label: tUi("events") },
+        ]}
         eyebrow="Events"
         eyebrowIcon="mdi:calendar-blank-outline"
         lead="Author talks, exhibitions, classes, storytime and archive tours, gathered from library calendars and ticketing sites."
@@ -188,8 +194,8 @@ export function EventsPageClient() {
       >
         <SearchField
           id="events-search"
-          label="Search events by title, library or topic"
-          placeholder="Search events by title, library or topic"
+          label={tUi("search_events_by_title_library_or_topic")}
+          placeholder={tUi("search_events_by_title_library_or_topic")}
           onClear={() => setFilters({ ...filters, search: "" })}
           inputProps={{
             value: filters.search,
@@ -240,7 +246,7 @@ export function EventsPageClient() {
             {filterPanel(false)}
           </FilterDrawer>
 
-          <section aria-label="Events" className="min-w-0 flex-1">
+          <section aria-label={tUi("events")} className="min-w-0 flex-1">
             <div className="mb-4 flex min-h-11 flex-wrap items-center gap-3">
               <FilterToggleButton
                 onClick={() => setFiltersOpen(true)}
@@ -323,15 +329,15 @@ export function EventsPageClient() {
           </p>
 
           <div className="mt-7 grid grid-cols-1 gap-7 md:grid-cols-3">
-            <SourceStep index={1} title="Collect">
+            <SourceStep index={1} title={tUi("collect")}>
               We check library calendars and ticketing sites like Eventbrite and
               TicketSource every 30 minutes.
             </SourceStep>
-            <SourceStep index={2} title="Match">
+            <SourceStep index={2} title={tUi("match")}>
               Duplicates are merged. When sources disagree, the library&rsquo;s
               own calendar wins.
             </SourceStep>
-            <SourceStep index={3} title="Publish">
+            <SourceStep index={3} title={tUi("publish")}>
               Events appear here and in the open API, each labelled with its
               source.
             </SourceStep>

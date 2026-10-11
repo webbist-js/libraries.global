@@ -24,6 +24,7 @@ export function MagicLinkSentContent() {
   return (
     <>
       <AuthHeading
+        layout="utility"
         icon="mdi:email-fast-outline"
         title="Check your"
         italic="inbox."

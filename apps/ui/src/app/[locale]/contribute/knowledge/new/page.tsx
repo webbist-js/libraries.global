@@ -1,5 +1,6 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { isArticleKind } from "@/components/contribute/article-editor/article.types"
 import { ArticleEditorShell } from "@/components/contribute/article-editor/ArticleEditorShell"
@@ -22,6 +23,8 @@ export default async function NewArticlePage({
   params: Promise<{ locale: string }>
   searchParams: Promise<{ type?: string; draft?: string; section?: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const [{ locale }, query, session] = await Promise.all([
     params,
     searchParams,
@@ -43,7 +46,7 @@ export default async function NewArticlePage({
     >
       <ContributeSectionHeader
         compact
-        section="Knowledge editor"
+        section={tUi("knowledge_editor")}
         title={
           kind === "journal"
             ? "Write for *the Journal.*"

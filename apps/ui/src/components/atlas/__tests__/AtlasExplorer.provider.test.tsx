@@ -1,8 +1,9 @@
 // @vitest-environment happy-dom
 import { emptyAtlasFilters, parseAtlasQueryRequest } from "@repo/shared-data"
-import { act, cleanup, render } from "@testing-library/react"
 import { useEffect } from "react"
 import { afterEach, expect, it, vi } from "vitest"
+
+import { act, cleanup, render } from "@/test/render"
 
 const observed = vi.hoisted(() => ({ map: null as any, list: null as any }))
 vi.mock("@/lib/access-client", () => ({

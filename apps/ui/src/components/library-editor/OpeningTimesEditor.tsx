@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 import { useMemo } from "react"
 
@@ -152,6 +153,8 @@ function DayToggle({
   open: boolean
   onChange: (open: boolean) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <button
       type="button"
@@ -187,7 +190,7 @@ function DayToggle({
           userSelect: "none",
         }}
       >
-        {open ? "Open" : "Closed"}
+        {open ? tUi("open") : tUi("closed")}
       </span>
       <span
         style={{
@@ -217,6 +220,8 @@ function CopyDaySelect({
   sourceDay: OpeningTimesDayKey
   onCopy: (targets: OpeningTimesDayKey[]) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const otherDays = DAY_ORDER.filter((d) => d !== sourceDay)
   const weekdays: OpeningTimesDayKey[] = [
     "monday",
@@ -269,22 +274,22 @@ function CopyDaySelect({
         disabled
         style={{ background: "#0d1020", color: T.ink.dim }}
       >
-        Copy to…
+        {tUi("copy_to")}{" "}
       </option>
       <option
         value="weekdays"
         style={{ background: "#0d1020", color: T.ink.base }}
       >
-        Mon–Fri
+        {tUi("mon_fri")}{" "}
       </option>
       <option
         value="weekend"
         style={{ background: "#0d1020", color: T.ink.base }}
       >
-        Sat–Sun
+        {tUi("sat_sun")}{" "}
       </option>
       <option value="all" style={{ background: "#0d1020", color: T.ink.base }}>
-        All days
+        {tUi("all_days")}{" "}
       </option>
       {otherDays.map((d) => (
         <option
@@ -320,6 +325,8 @@ function TimeframeRow({
   onEndTimeChange: (v: string) => void
   onRemove: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const invalidRange = hasInvalidRange(timeframe)
   const hasError = isOverlapping || invalidRange
   const minFromMins = minFrom ? toMins(minFrom) : 0
@@ -341,7 +348,7 @@ function TimeframeRow({
         style={selectStyle(hasError)}
         aria-label={`Slot ${index + 1} open from`}
       >
-        {!timeframe.startTime && <option value="">From…</option>}
+        {!timeframe.startTime && <option value="">{tUi("from")}</option>}
         {FROM_OPTIONS.map((t) => (
           <option key={t} value={t} disabled={toMins(t) < minFromMins}>
             {t}
@@ -358,7 +365,7 @@ function TimeframeRow({
         style={selectStyle(hasError)}
         aria-label={`Slot ${index + 1} close at`}
       >
-        {!timeframe.endTime && <option value="">Until…</option>}
+        {!timeframe.endTime && <option value="">{tUi("until")}</option>}
         {TO_OPTIONS.map((t) => (
           <option key={t} value={t} disabled={toMins(t) < minToMins}>
             {displayTime(t)}
@@ -387,7 +394,7 @@ function TimeframeRow({
       <button
         type="button"
         onClick={onRemove}
-        aria-label="Remove slot"
+        aria-label={tUi("remove_slot")}
         style={{
           background: "none",
           border: "none",
@@ -438,6 +445,8 @@ export function OpeningTimesEditor({
   value,
   onChange,
 }: OpeningTimesEditorProps) {
+  const tUi = useUiTranslations("ui")
+
   const overlapMap = useMemo(() => {
     const map: Record<string, Set<number>> = {}
     for (const day of value.days) {
@@ -639,7 +648,7 @@ export function OpeningTimesEditor({
                     padding: "3px 0",
                   }}
                 >
-                  + Add time slot
+                  {tUi("add_time_slot")}{" "}
                 </button>
               </div>
             )}

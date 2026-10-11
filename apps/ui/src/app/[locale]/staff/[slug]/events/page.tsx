@@ -3,6 +3,7 @@ import {
   FEED_TEST_COPY,
   type FeedTestCode,
 } from "@repo/shared-data"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { staffPathname } from "@/app/[locale]/staff/_lib/staff-pathname"
 import { Notice, type NoticeTone } from "@/components/ds"
@@ -53,6 +54,8 @@ export default async function StaffEventFeedsPage({
   params: Promise<{ slug: string }>
   searchParams: Promise<{ oauth?: string; result?: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const [{ slug }, { oauth, result: testResult }] = await Promise.all([
     params,
     searchParams,
@@ -107,7 +110,7 @@ export default async function StaffEventFeedsPage({
         ) : (
           <LibraryFeedsSection
             entry={entry}
-            heading="Connected feeds"
+            heading={tUi("connected_feeds")}
             intro="Connect the platform your library publishes events on. Every new connection is reviewed before we sync it."
           />
         )}

@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react"
 import { FACILITY_CHECKLIST } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 
@@ -10,6 +11,8 @@ import { T } from "@/lib/design-tokens"
  * unlinks it and records it as absent.
  */
 export function FacilitiesPanel({ fields }: { readonly fields: unknown }) {
+  const tUi = useUiTranslations("ui")
+
   const answers = ((fields as { answers?: unknown } | null)?.answers ??
     {}) as Record<string, unknown>
   const rows = FACILITY_CHECKLIST.flatMap((check) => {
@@ -84,7 +87,7 @@ export function FacilitiesPanel({ fields }: { readonly fields: unknown }) {
                     width={18}
                     height={18}
                   />
-                  {r.yes ? "Yes" : "No"}
+                  {r.yes ? tUi("yes") : tUi("no")}
                 </span>
               </td>
             </tr>

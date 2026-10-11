@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import {
@@ -111,6 +112,8 @@ export function SuggestionsBoard({
   readonly optionNames: Record<SuggestionList, string[]>
   readonly now: Date
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [sort, setSort] = useState<SortMode>("top")
   const [announcement, setAnnouncement] = useState("")
   const shown = sortSuggestions(boardSuggestions(items, filter), sort)
@@ -130,11 +133,11 @@ export function SuggestionsBoard({
 
   return (
     <>
-      <h2 className="sr-only">Suggestions</h2>
+      <h2 className="sr-only">{tUi("suggestions")}</h2>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div
           role="group"
-          aria-label="Filter by list"
+          aria-label={tUi("filter_by_list")}
           className="flex flex-wrap gap-1.5"
         >
           {FILTERS.map((f) => {

@@ -1,10 +1,12 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import {
   isModeratedLibraryChange,
   timetableHash,
   normalizeMobileTimetable,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Sheet, PublishBar } from "@/components/ds"
@@ -59,6 +61,8 @@ export function StaffPublishControls({
   onStale?: (fresh: Partial<FormData>) => void
   publicPath?: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [open, setOpen] = useState(false),
     [busy, setBusy] = useState(false),
     [note, setNote] = useState(""),
@@ -172,7 +176,7 @@ export function StaffPublishControls({
                   className="inline-flex min-h-11 items-center gap-1 font-semibold underline underline-offset-[3px]"
                   style={{ color: T.accent.primary }}
                 >
-                  View public page
+                  {tUi("view_public_page")}{" "}
                   <Icon
                     aria-hidden="true"
                     icon="mdi:arrow-top-right"
@@ -198,7 +202,7 @@ export function StaffPublishControls({
         open={open}
         onClose={() => !busy && setOpen(false)}
         side="right"
-        title="Publish your changes"
+        title={tUi("publish_your_changes")}
         footer={
           <button
             type="button"
@@ -211,8 +215,9 @@ export function StaffPublishControls({
         }
       >
         <p>
-          These changes appear immediately, with your name in the record’s
-          history.
+          {tUi(
+            "these_changes_appear_immediately_with_your_name_in_the_record_s_history"
+          )}{" "}
         </p>
         {wizardSteps(mobile)
           .filter((step) => step.n > 0)
@@ -234,7 +239,7 @@ export function StaffPublishControls({
           })}
         {requested.length > 0 && (
           <section>
-            <h3>Sent to a moderator</h3>
+            <h3>{tUi("sent_to_a_moderator")}</h3>
             <ul>
               {requested.map((key) => (
                 <li key={key}>{label(key)}</li>
@@ -243,7 +248,7 @@ export function StaffPublishControls({
           </section>
         )}
         <label className="block text-[15px] font-semibold">
-          Note (optional)
+          {tUi("note_optional")}{" "}
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -287,7 +292,7 @@ export function StaffPublishControls({
                     width={16}
                     height={16}
                   />
-                  Reload record
+                  {tUi("reload_record")}{" "}
                 </button>
               </p>
             )}

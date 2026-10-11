@@ -2,7 +2,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import { useLocale } from "next-intl"
+import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import {
   type ReactNode,
   useCallback,
@@ -64,6 +64,8 @@ export function FindLibraryPage({
   /** Open drives, for "There's a drive for this search". */
   drives?: readonly FindDrive[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
@@ -210,7 +212,10 @@ export function FindLibraryPage({
   return (
     <>
       <PageHero
-        breadcrumb={[{ label: "Home", href: "/" }, { label: "Find libraries" }]}
+        breadcrumb={[
+          { label: tUi("home"), href: "/" },
+          { label: tUi("find_libraries") },
+        ]}
         eyebrow="Library index"
         eyebrowIcon="mdi:map-search-outline"
         lead={`Search ${statsTotal.toLocaleString("en-GB")} published records by name, place, type and facilities. The index grows as contributors document more libraries.`}
@@ -218,7 +223,7 @@ export function FindLibraryPage({
       >
         <LibrarySearchBox
           id="find-q"
-          placeholder="Library, town or country"
+          placeholder={tUi("library_town_or_country")}
           defaultQuery={state.q}
           onSubmit={(q) => patch({ q, page: 0 })}
           onClear={() => patch({ q: "", page: 0 })}
@@ -258,7 +263,7 @@ export function FindLibraryPage({
         </FilterDrawer>
 
         {/* Results */}
-        <section aria-label="Results" className="min-w-0 flex-1">
+        <section aria-label={tUi("results")} className="min-w-0 flex-1">
           <FindResultsControls
             state={state}
             total={total}
@@ -380,7 +385,7 @@ export function FindLibraryPage({
           {/* Pager */}
           {pageCount > 1 ? (
             <nav
-              aria-label="Results pages"
+              aria-label={tUi("results_pages")}
               className="mt-7 flex items-center justify-center gap-4"
             >
               <button

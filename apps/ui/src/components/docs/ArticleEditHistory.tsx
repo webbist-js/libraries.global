@@ -2,14 +2,13 @@
 // changed it, when, in which language and how. No values are ever shown.
 
 import { Icon } from "@iconify/react"
+import { useLocale, useTranslations } from "next-intl"
 import { Suspense } from "react"
 
 import { Badge } from "@/components/ds/Badge"
 import GlobalLink from "@/components/global/GlobalLink"
-import {
-  actorLabel,
-  dayName,
-} from "@/components/library/change-history.helpers"
+import { actorLabel } from "@/components/library/change-history.helpers"
+import { formatDate } from "@/lib/article-helpers"
 import { T } from "@/lib/design-tokens"
 import { languageName } from "@/lib/locale-fallback"
 import {
@@ -17,20 +16,33 @@ import {
   fetchArticleHistory,
 } from "@/lib/strapi-api/content/server"
 
-const KIND: Record<string, { text: string; icon: string }> = {
-  created: { text: "Created", icon: "mdi:plus-circle-outline" },
-  edited: { text: "Edited", icon: "mdi:pencil-outline" },
-  translated: { text: "Translated", icon: "mdi:translate" },
-  published: { text: "Published", icon: "mdi:earth" },
-  unpublished: { text: "Unpublished", icon: "mdi:eye-off-outline" },
-  deleted: { text: "Deleted", icon: "mdi:delete-outline" },
+const KIND = {
+  created: "mdi:plus-circle-outline",
+  edited: "mdi:pencil-outline",
+  translated: "mdi:translate",
+  published: "mdi:earth",
+  unpublished: "mdi:eye-off-outline",
+  deleted: "mdi:delete-outline",
+}
+type HistoryKind = keyof typeof KIND
+
+function historyKind(kind: string): HistoryKind {
+  return Object.hasOwn(KIND, kind) ? (kind as HistoryKind) : "edited"
 }
 
 /** "Edited", or "Translated into French" for a translation. */
-export function articleChangeText(kind: string, locale: string): string {
-  if (kind === "translated") return `Translated into ${languageName(locale)}`
+export function articleChangeText(
+  kind: string,
+  locale: string,
+  translate: (key: HistoryKind, values?: { language: string }) => string,
+  displayLocale: string
+): string {
+  if (kind === "translated")
+    return translate("translated", {
+      language: languageName(locale, [], displayLocale),
+    })
 
-  return KIND[kind]?.text ?? "Edited"
+  return translate(historyKind(kind))
 }
 
 export function ArticleEditHistory({
@@ -45,6 +57,8 @@ export function ArticleEditHistory({
   readonly locale: string
   readonly className?: string
 }) {
+  const t = useTranslations("editorial")
+  const displayLocale = useLocale()
   if (items.length === 0) return null
 
   return (
@@ -57,15 +71,23 @@ export function ArticleEditHistory({
         style={{ color: T.ink.base }}
       >
         <Icon aria-hidden="true" height={18} icon="mdi:history" width={18} />
-        Edit history
+        {t("editHistory")}
         <span className="text-[14px] font-normal" style={{ color: T.ink.dim }}>
-          ({total} {total === 1 ? "change" : "changes"})
+          ({t("changeCount", { count: total })})
         </span>
       </summary>
       <ul className="m-0 mt-3 list-none p-0">
         {items.map((item) => {
           const actor = actorLabel(item)
-          const icon = KIND[item.kind]?.icon ?? KIND.edited!.icon
+          const actorText =
+            item.actor.kind === "admin"
+              ? t("staff")
+              : item.actor.kind === "token"
+                ? t("dataImport")
+                : item.actor.kind === "contributor" && !item.actor.username
+                  ? t("anonymousContributor")
+                  : actor.text
+          const icon = KIND[historyKind(item.kind)]
           const otherLocale = item.locale !== locale
 
           return (
@@ -87,14 +109,29 @@ export function ArticleEditHistory({
                   className="m-0 flex flex-wrap items-center gap-2"
                   style={{ color: T.ink.base }}
                 >
-                  <strong>{articleChangeText(item.kind, item.locale)}</strong>
+                  <strong>
+                    {articleChangeText(
+                      item.kind,
+                      item.locale,
+                      t,
+                      displayLocale
+                    )}
+                  </strong>
                   {otherLocale ? (
                     <>
                       <span data-locale aria-hidden="true">
                         <Badge label={item.locale.toUpperCase()} color="dim" />
                       </span>
                       <span className="sr-only">
-                        ({languageName(item.locale)} version)
+                        (
+                        {t("languageVersion", {
+                          language: languageName(
+                            item.locale,
+                            [],
+                            displayLocale
+                          ),
+                        })}
+                        )
                       </span>
                     </>
                   ) : null}
@@ -113,14 +150,14 @@ export function ArticleEditHistory({
                       href={actor.href}
                       className="underline underline-offset-2"
                     >
-                      {actor.text}
+                      {actorText}
                     </GlobalLink>
                   ) : (
-                    actor.text
+                    actorText
                   )}
                   {" · "}
                   <time dateTime={item.changedAt}>
-                    {dayName(item.changedAt)}
+                    {formatDate(item.changedAt, "long", displayLocale)}
                   </time>
                 </p>
               </div>
@@ -130,7 +167,7 @@ export function ArticleEditHistory({
       </ul>
       {total > items.length ? (
         <p className="m-0 mt-2 text-[13px]" style={{ color: T.ink.dim }}>
-          Showing the latest {items.length} of {total} changes.
+          {t("latestChanges", { shown: items.length, total })}
         </p>
       ) : null}
     </details>

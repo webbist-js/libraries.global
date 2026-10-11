@@ -1,8 +1,20 @@
 // @vitest-environment happy-dom
-import { cleanup, render, screen } from "@testing-library/react"
 import * as React from "react"
 import { createElement as h } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+import { cleanup, render, screen } from "@/test/render"
+
+vi.mock("next-intl/server", async () => {
+  const { createTranslator } = await import("next-intl")
+  const { default: messages } =
+    await import("../../../../../../locales/en.json")
+
+  return {
+    getTranslations: async (namespace: "ui") =>
+      createTranslator({ locale: "en", messages, namespace }),
+  }
+})
 
 Object.assign(globalThis, { React })
 

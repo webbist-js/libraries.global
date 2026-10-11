@@ -5,6 +5,7 @@ import type {
   AtlasAccessMetric,
   AtlasPerCapitaResponse,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 
@@ -93,18 +94,20 @@ export function AtlasPerCapitaControls({
   onAnalysis,
   showAnalysisLink = true,
 }: LibraryAccessControlsProps) {
+  const tUi = useUiTranslations("ui")
+
   const counted = types.length ? types : TYPE_GROUPS.map((group) => group.key)
 
   return (
     <section
-      aria-label="Library access settings"
+      aria-label={tUi("library_access_settings")}
       className="flex flex-col gap-4 text-sm"
     >
       <div className="flex items-center justify-between">
         <strong>Show as</strong>
       </div>
       <Segmented
-        label="Library access measure"
+        label={tUi("library_access_measure")}
         value={metric}
         onChange={onMetric}
         options={[
@@ -119,12 +122,12 @@ export function AtlasPerCapitaControls({
         </span>
       </div>
       <Segmented
-        label="Library access areas"
+        label={tUi("library_access_areas")}
         value={level}
         onChange={onLevel}
         options={[
           { value: "auto", label: "Auto" },
-          { value: "countries", label: "Countries" },
+          { value: "countries", label: tUi("countries") },
           { value: "local", label: "Local areas" },
         ]}
       />
@@ -189,7 +192,7 @@ export function AtlasPerCapitaControls({
           step={5}
           value={Math.round(opacity * 100)}
           onChange={(event) => onOpacity(Number(event.target.value) / 100)}
-          aria-label="Library access opacity"
+          aria-label={tUi("library_access_opacity")}
         />
       </label>
       {showAnalysisLink ? (

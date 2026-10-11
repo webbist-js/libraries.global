@@ -2,8 +2,8 @@ import { routing } from "@/lib/navigation"
 
 /**
  * Locales whose content is actually published. `routing.locales` also lists
- * `cs` (starter-template scaffolding), but only English content exists, so we
- * don't emit hreflang alternates or sitemap entries for other locales, and
+ * `cs` and `fr`, whose UI catalogues exist but whose CMS content is incomplete.
+ * We don't emit hreflang alternates or sitemap entries for those locales, and
  * search (lib/meilisearch.ts) maps any other route locale to the default.
  * Add a locale here once its content is live.
  *

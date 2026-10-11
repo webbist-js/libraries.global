@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { Drawer } from "@/components/ds/Drawer"
@@ -55,6 +56,8 @@ function formatDateTime(iso: string, allDay: boolean): string {
 }
 
 export function EventModal() {
+  const tUi = useUiTranslations("ui")
+
   const { activeDocumentId, closeModal } = useEventModal()
   const [event, setEvent] = useState<ModalEvent | null>(null)
   const [loading, setLoading] = useState(false)
@@ -125,7 +128,7 @@ export function EventModal() {
                 color: T.ink.faint,
               }}
             >
-              Loading…
+              {tUi("loading")}{" "}
             </span>
           </div>
         ) : event ? (

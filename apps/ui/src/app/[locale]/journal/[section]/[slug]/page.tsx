@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { notFound, permanentRedirect } from "next/navigation"
-import type { Locale } from "next-intl"
+import { useTranslations as useUiTranslations, type Locale } from "next-intl"
+import { getTranslations, setRequestLocale } from "next-intl/server"
 import { use } from "react"
 
 import BlogArticlePage from "@/components/blog/BlogArticlePage"
@@ -40,19 +41,21 @@ export async function generateMetadata({
   params: Promise<{ locale: string; section: string; slug: string }>
 }): Promise<Metadata> {
   const { locale, slug } = await params
-  const res = await fetchBlogArticle(slug, locale as Locale)
+  const [res, t] = await Promise.all([
+    fetchBlogArticle(slug, locale as Locale),
+    getTranslations({ locale: locale as Locale, namespace: "editorial" }),
+  ])
   const data = res?.data
-  if (!data) return { title: "Article not found", robots: { index: false } }
+  if (!data) return { title: t("articleNotFound"), robots: { index: false } }
 
-  const title = data.title ?? "Article"
+  const title = data.title ?? t("untitled")
 
   return buildMetadata({
     seo: data.seo,
     alternateLocales: [locale],
     title,
     description:
-      data.summary ??
-      `Read "${data.title ?? "this article"}" in the ${SITE_NAME} Journal.`,
+      data.summary ?? t("journalDescription", { title, site: SITE_NAME }),
     path: `journal/${articleSection(data, "general")}/${slug}`,
     locale,
     type: "article",
@@ -75,6 +78,8 @@ export default function BlogArticleRoute(props: {
 }) {
   const { locale: localeStr, section, slug } = use(props.params)
   const locale = localeStr as Locale
+  setRequestLocale(locale)
+  const tUi = useUiTranslations("ui")
 
   const articleRes = use(fetchBlogArticle(slug, locale))
   const article = articleRes?.data ?? null
@@ -106,7 +111,7 @@ export default function BlogArticleRoute(props: {
           }),
           buildBreadcrumbSchema([
             { name: "Home", url: absoluteUrl("", locale) },
-            { name: "Journal", url: absoluteUrl("journal", locale) },
+            { name: tUi("journal"), url: absoluteUrl("journal", locale) },
             { name: article.title ?? slug, url },
           ]),
         ]}
