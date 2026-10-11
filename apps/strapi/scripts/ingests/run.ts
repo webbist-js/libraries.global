@@ -10,7 +10,7 @@ async function run() {
   const args = parseArgs()
   if (flag(args, "help") || !args.dataset) {
     console.log(
-      "pnpm ingest --dataset=kirjastot-fi|wikidata|imls-pls|libraryon|gazetteer [--dry-run] [--check-cms] [--apply] [--limit=N]\nDefaults to a dry run. Wikidata: --country=SE|NO|DK. Finland: --year=2025. These adapters support --concurrency=1..4 (default 1). Use --refresh or --snapshot=directory. Legacy adapters keep their own dataset flags."
+      "pnpm ingest --dataset=kirjastot-fi|wikidata|au-public-libraries|slq-directory|fr-culture-libraries|nkp-cadr|imls-pls|libraryon|gazetteer [--dry-run] [--check-cms] [--apply] [--limit=N]\nDefaults to a dry run. Wikidata: --country=SE|NO|DK. Finland: --year=2025. New adapters support --concurrency=1..4 (default 1). Use --refresh or --snapshot=directory. Legacy adapters keep their own dataset flags."
     )
 
     return
@@ -26,6 +26,24 @@ async function run() {
   if (args.dataset === "wikidata") {
     const { runNordic } = await import("./nordics/ingest")
     await runNordic(args)
+
+    return
+  }
+  if (["au-public-libraries", "slq-directory"].includes(args.dataset)) {
+    const { runAustralia } = await import("./australia/libraries/ingest")
+    await runAustralia(args)
+
+    return
+  }
+  if (args.dataset === "fr-culture-libraries") {
+    const { runFrance } = await import("./france/culture/ingest")
+    await runFrance(args)
+
+    return
+  }
+  if (args.dataset === "nkp-cadr") {
+    const { runCzechia } = await import("./czechia/nkp-cadr/ingest")
+    await runCzechia(args)
 
     return
   }

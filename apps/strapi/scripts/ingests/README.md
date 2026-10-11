@@ -7,6 +7,9 @@ ingests/
   _shared/     Sources, validation, place planning, population storage, draft writes, resume
   finland/     Kirkanta libraries, current municipalities and official population
   nordics/     Wikidata libraries with Swedish, Norwegian and Danish population
+  australia/   Historical public libraries plus Queensland's 2026 directory
+  france/      Culture ministry public-library addresses
+  czechia/     National Library CADR directory
   usa/         states.ts (every US ingest), plus one folder per dataset
     imls-pls/
 ```
@@ -25,6 +28,10 @@ pnpm ingest --dataset=kirjastot-fi --apply
 pnpm ingest --dataset=wikidata --country=SE --check-cms
 pnpm ingest --dataset=wikidata --country=NO --apply
 pnpm ingest --dataset=wikidata --country=DK --apply
+pnpm ingest --dataset=au-public-libraries --check-cms
+pnpm ingest --dataset=slq-directory --check-cms
+pnpm ingest --dataset=fr-culture-libraries --check-cms
+pnpm ingest --dataset=nkp-cadr --check-cms
 
 # Existing adapters retain their own flags and mapping rules
 pnpm ingest --dataset=imls-pls --state=NY
@@ -34,11 +41,13 @@ pnpm ingest --dataset=gazetteer --country=CH
 
 Finland and the [Scandinavian adapters](nordics/README.md) run the full sequence through `_shared/execute.ts`: snapshot → validate geography and population → map every Library → compare with the CMS → create missing place drafts → enrich population → create missing Library drafts. The existing adapters are dispatched by the same runner; their write loops have not been migrated.
 
+Australia, France and Czechia use `_shared/directory.ts` when the existing place hierarchy is sufficient. It validates country and region parents, quarantines conflicting area assignments and reuses the same source identities and draft writer. These directories create no geographic places and change no population data. Each adapter README records the source vintage, licence, omissions and known conflicts.
+
 The shared helpers cover cached JSON snapshots with request metadata and SHA-256 checksums, complete paginated downloads, duplicate and slug checks, checkpoints after each Library write, and population storage on explicitly matched geographic documents. Existing Source Records are skipped, including when their Libraries have been edited by contributors. A failed create stops the run: re-running reconciles with the CMS instead of retrying a request that may already have committed. A Dataset lock prevents concurrent writes from the same Dataset; run the three Wikidata countries sequentially.
 
-Use `--snapshot=<saved-cache-directory>` to replay Finland or a Scandinavian country offline and `--refresh` to fetch new snapshots. Keep the cache and the `.runs/` report for every import that is published. `--limit` counts new Library drafts; it does not truncate the country's geography or population validation.
+Use `--snapshot=<saved-cache-directory>` to replay Finland, a Scandinavian country or a directory adapter offline and `--refresh` to fetch new snapshots. Keep the cache and the `.runs/` report for every import that is published. `--limit` counts new Library drafts; it does not truncate the country's geography or population validation.
 
-Library creates default to one request at a time. `--concurrency=1..4` enables bounded parallel writes for Finland and Wikidata. On a failure, new dispatch stops and in-flight requests settle and checkpoint before the run exits. Resume with the same inputs to reconcile any response lost after a commit.
+Library creates default to one request at a time. `--concurrency=1..4` enables bounded parallel writes for Finland, Wikidata and the directory adapters. On a failure, new dispatch stops and in-flight requests settle and checkpoint before the run exits. Resume with the same inputs to reconcile any response lost after a commit.
 
 Before launch, review and publish new drafts, then run the existing Meilisearch reseed. The report lists legacy places that need editorial review. Finland's old provinces and Lapland subregions remain untouched; the adapter creates the current Regions and Municipalities alongside them and uses only the current hierarchy for new Libraries. The general GeoNames importer still uses its existing Finland profile and should not be used to refresh Finland's current hierarchy.
 

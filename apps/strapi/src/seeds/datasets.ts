@@ -34,6 +34,81 @@ export type DatasetSeed = {
 export const DATASET_SEED: DatasetSeed[] = [
   openStreetMap as DatasetSeed,
   {
+    key: "au-public-libraries",
+    name: "Australian public lending library locations (2016–2018)",
+    publisher: "Carl Higgs / RMIT University",
+    sourceUrl: "https://doi.org/10.25439/rmt.21944840.v1",
+    licence: "CC BY-SA 4.0",
+    licenceUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted_with_attribution",
+    attribution:
+      "Library locations adapted from Carl Higgs, Australian public lending library locations (2016–2018), RMIT University, DOI 10.25439/rmt.21944840.v1, CC BY-SA 4.0. Original data credited to Libraries ACT, State Library of NSW, Libraries Tasmania, Department of Premier and Cabinet (Victoria), and State Library of Western Australia.",
+    coverage:
+      "Historical public libraries in ACT, NSW, Tasmania, Victoria and Western Australia. Queensland is imported from its separate 2026 directory. South Australian and Northern Territory rows are excluded because upstream republication terms are not established.",
+    importMechanism:
+      "pnpm ingest --dataset=au-public-libraries; cached versioned CSV and publisher metadata, existing state/territory relations, resumable draft writes.",
+    notes:
+      "Locations describe 2016–2018 and do not establish present operation; every operational status is unknown. Individual source_licence values must explicitly state CC BY. Bookmobile base pins are omitted. Older Queensland rows are excluded to avoid duplicating the current directory. No opening schedules or personal contacts are imported.",
+  },
+  {
+    key: "slq-directory",
+    name: "Queensland public libraries directory (2026)",
+    publisher: "State Library of Queensland",
+    sourceUrl: "https://www.data.qld.gov.au/dataset/public-libraries",
+    licence: "CC BY 4.0",
+    licenceUrl: "https://creativecommons.org/licenses/by/4.0/",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted_with_attribution",
+    attribution:
+      "Library directory information from the State Library of Queensland, Queensland Public Libraries 2026, CC BY 4.0. Libraries Global normalizes repeated URL prefixes and omits unsupported schedules and mobile base pins.",
+    coverage:
+      "Public-library branches in Queensland, from the 2026 published resource.",
+    importMechanism:
+      "pnpm ingest --dataset=slq-directory; complete CKAN datastore pagination, cached snapshot, stable directory paths as identities, existing Queensland placement.",
+    notes:
+      "The published CSV download currently returns no bytes, so the adapter reads the same resource through CKAN's structured API and verifies its total and unique row IDs. Directory paths identify records; datastore row numbers do not. Free-text hours are not interpreted as daily schedules; operational status remains unknown.",
+  },
+  {
+    key: "fr-culture-libraries",
+    name: "French public libraries: addresses and activity data",
+    publisher: "Ministère de la Culture, Service du Livre et de la Lecture",
+    sourceUrl:
+      "https://www.data.gouv.fr/datasets/adresses-des-bibliotheques-publiques-2",
+    licence: "Licence Ouverte / Open Licence 2.0",
+    licenceUrl: "https://www.data.gouv.fr/pages/legal/licences/etalab-2.0",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted_with_attribution",
+    attribution:
+      "Source: Ministère de la Culture, Les bibliothèques des collectivités territoriales : adresses et données d’activité, addresses at 5 June 2025 and activity data for 2023, Licence Ouverte 2.0. Libraries Global maps visitor buildings and bookmobiles to existing regions and departments.",
+    coverage:
+      "Metropolitan France. Administrative-only sites, closed-to-public reserves, unspecified sites and overseas atlas countries are excluded from this adapter.",
+    importMechanism:
+      "pnpm ingest --dataset=fr-culture-libraries; versioned complete JSON snapshot, stable code_bib IDs, existing region/department matching and resumable draft writes.",
+    notes:
+      "The dataset has 15,704 rows, including locations that are not visitor libraries. Only type_adresse Bâtiment ouvert and Bibliobus are imported. Status stays unknown because the address snapshot does not establish present operation. Weekly opening totals are not daily hours; activity statistics and commune populations are not transferred onto library records. Mobile base coordinates are omitted.",
+  },
+  {
+    key: "nkp-cadr",
+    name: "Central Directory of Libraries and Information Institutions in Czechia (CADR)",
+    publisher: "Národní knihovna České republiky",
+    sourceUrl:
+      "https://www.nkp.cz/en/about-us/professional-activities/open-data",
+    licence: "CC0 1.0",
+    licenceUrl:
+      "https://www.nkp.cz/en/about-us/professional-activities/open-data",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted",
+    attribution:
+      "Institutional facts from the National Library of the Czech Republic, Central Directory of Libraries and Information Institutions (CADR), CC0 1.0. Libraries Global maps SIGLA identities, types, addresses and geographic fields; personal contacts and free-text schedules are omitted.",
+    coverage:
+      "Active directory institutions in Czechia with a SIGLA identity, readable name and region. Entries marked closed or missing in STT are excluded.",
+    importMechanism:
+      "pnpm ingest --dataset=nkp-cadr; complete weekly MARC XML export parsed using Python 3's standard XML parser, cached institutional fields, region/district matching and resumable draft writes.",
+    notes:
+      "The publisher explicitly dedicates CADR to CC0. SIGLA, rather than an address or institution name, identifies each source record. Academic and other institutions may have separate departments or services at one address; full hierarchical names are retained. Multiple-address institutions have no inferred map pin. Existing contributor edits are preserved on replay, and present operational status remains unknown.",
+  },
+  {
     key: "wikidata",
     name: "Wikidata library institutions",
     publisher: "Wikidata contributors",
