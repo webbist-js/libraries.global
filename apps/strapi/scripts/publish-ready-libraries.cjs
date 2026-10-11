@@ -164,11 +164,45 @@ function verifyLibrary(expected, actual) {
       `${field} changed on ${expected.document_id}`
     )
 }
-module.exports = { planPublication, libraryFacts, verifyLibrary }
+/** Stop dispatch on failure and settle every request before allowing a safe resume. */
+async function forEachBounded(rows, concurrency, visit) {
+  if (!Number.isSafeInteger(concurrency) || concurrency < 1 || concurrency > 4)
+    throw new Error("Concurrency must be an integer from 1 to 4")
+  let cursor = 0,
+    failed = false,
+    failure
+  const worker = async () => {
+    while (!failed) {
+      const row = rows[cursor++]
+      if (!row) return
+      try {
+        await visit(row)
+      } catch (error) {
+        if (!failed) failure = error
+        failed = true
+      }
+    }
+  }
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, rows.length) }, () => worker())
+  )
+  if (failed) throw failure
+}
+module.exports = {
+  planPublication,
+  libraryFacts,
+  verifyLibrary,
+  forEachBounded,
+}
 
 async function main() {
   const args = process.argv.slice(2),
     apply = args.includes("--apply")
+  const concurrency = args.includes("--concurrency")
+    ? Number(args[args.indexOf("--concurrency") + 1])
+    : 1
+  if (!Number.isSafeInteger(concurrency) || concurrency < 1 || concurrency > 4)
+    throw new Error("--concurrency must be an integer from 1 to 4")
   const backup = args.includes("--backup")
     ? args[args.indexOf("--backup") + 1]
     : null
@@ -218,6 +252,7 @@ async function main() {
     }
     const summary = {
       mode: apply ? "apply" : "dry-run",
+      concurrency,
       libraries: plan.libraries.length,
       places: Object.fromEntries(
         Object.entries(plan.places).map(([key, rows]) => [key, rows.length])
@@ -295,7 +330,7 @@ async function main() {
         progress.places++
         if (progress.places % 25 === 0) console.log(JSON.stringify(progress))
       }
-    for (const row of plan.libraries) {
+    await forEachBounded(plan.libraries, concurrency, async (row) => {
       await publish("libraries", row)
       const live = await published("libraries", row)
       verifyLibrary(
@@ -312,7 +347,7 @@ async function main() {
         save("publication-progress.json", progress)
         console.log(JSON.stringify(progress))
       }
-    }
+    })
     const liveHash = createHash("sha256")
       .update(JSON.stringify(await libraryFacts(client, plan.liveIds)))
       .digest("hex")

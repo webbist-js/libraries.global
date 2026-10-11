@@ -28,6 +28,10 @@ Strapi routes. It publishes parents first, checks the entityRef against location
 links, and verifies each published library's sources, identity and creation date.
 Existing published libraries are not republished. Publication events reach the
 normal audit, search and Atlas outbox hooks.
+Library publication defaults to one request at a time; `--concurrency 1..4`
+permits bounded parallel requests. Geography remains sequential in parent order.
+If a request fails, new dispatch stops and all in-flight requests settle before
+the run exits. Resume the same manifest to verify already-published records.
 
 Publication reports are written under `.scratch/audit-history/`. An apply run
 creates `publication-manifest.json`; rerunning resumes that manifest and verifies
