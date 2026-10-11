@@ -1,18 +1,25 @@
 "use client"
 
 import { type DismissiblePrompt, DISMISSIBLE_PROMPTS } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 
+import { NewsletterPreference } from "@/components/notifications/NewsletterPreference"
+import { useNotifications } from "@/components/notifications/NotificationProvider"
 import { SectionCard } from "@/components/profile-form/FormParts"
 import { ToggleSwitch } from "@/components/settings/ToggleSwitch"
+import { Button } from "@/components/ui/button"
 import { useProfile } from "@/hooks/useProfile"
 import { T } from "@/lib/design-tokens"
 import { clearPromptCookie, savePromptSetting } from "@/lib/dismissed-prompts"
+import { Link } from "@/lib/navigation"
 import type { UserProfile } from "@/lib/types/profile"
 
 type NotifKey =
   | "weeklyDigest"
+  | "weeklyReport"
+  | "recognition"
   | "editsReviewed"
   | "drives"
   | "newFollowers"
@@ -30,14 +37,19 @@ type NotificationItem = ToggleItem<NotifKey>
 
 const EMAIL_NOTIFS: NotificationItem[] = [
   {
+    key: "weeklyReport",
+    label: "Weekly community report",
+    desc: "A Monday summary of new libraries, public articles and your contributions. No email in quiet weeks.",
+  },
+  {
     key: "weeklyDigest",
-    label: "Weekly digest (coming soon)",
-    desc: "Save your preference for a weekly email about libraries you follow. Delivery is not available yet.",
+    label: "Weekly digest",
+    desc: "A Monday email when libraries you follow have public updates. No email in quiet weeks.",
   },
   {
     key: "editsReviewed",
     label: "Your edits are reviewed",
-    desc: "When a change is accepted, returned or commented on.",
+    desc: "When a change is accepted, returned for more information or rejected.",
   },
   {
     key: "drives",
@@ -51,8 +63,18 @@ const EMAIL_NOTIFS: NotificationItem[] = [
   },
   {
     key: "editorialMessages",
-    label: "Announcements from project stewards",
-    desc: "Important project news. Recommended.",
+    label: "Project notices",
+    desc: "Operational updates from project stewards. Essential account and security emails are always sent.",
+  },
+  {
+    key: "recognition",
+    label: "Badges earned",
+    desc: "An email when you earn a new badge. Your badges also appear in the notification inbox.",
+  },
+  {
+    key: "marketing",
+    label: "Product updates",
+    desc: "Occasional emails about new features. Separate from the newsletter and weekly reports.",
   },
 ]
 
@@ -60,12 +82,7 @@ const SITE_NOTIFS: NotificationItem[] = [
   {
     key: "soundOn",
     label: "Play a sound for new notifications",
-    desc: "A short chime.",
-  },
-  {
-    key: "marketing",
-    label: "Product updates",
-    desc: "New features and project milestones.",
+    desc: "A quiet, short chime while the site is open, after you interact with it. No sound for existing unread updates.",
   },
 ]
 
@@ -90,11 +107,13 @@ function NotifGroup<K extends string>({
   items,
   prefs,
   onToggle,
+  disabled = false,
 }: {
   title: string
   items: ToggleItem<K>[]
   prefs: Record<K, boolean>
   onToggle: (key: K) => void
+  disabled?: boolean
 }) {
   return (
     <div>
@@ -130,6 +149,7 @@ function NotifGroup<K extends string>({
             value={prefs[item.key]}
             onChange={() => onToggle(item.key)}
             label={item.label}
+            disabled={disabled}
           />
         </div>
       ))}
@@ -142,17 +162,29 @@ export function NotificationsSection({
 }: {
   profile: UserProfile | null
 }) {
-  const { updateNotifications } = useProfile()
+  const tUi = useUiTranslations("ui")
+
+  const { updateNotifications, saving } = useProfile()
+  const { refresh, previewSound } = useNotifications()
 
   const defaults: NotificationPrefs = {
-    weeklyDigest: true,
     editsReviewed: true,
     drives: true,
     newFollowers: false,
     editorialMessages: true,
     soundOn: false,
-    marketing: false,
+    recognition: false,
     ...profile?.notifPrefs,
+    // Old "coming soon" values are not consent to a newly launched digest.
+    weeklyDigest:
+      profile?.notifPrefs?.weeklyDigest === true &&
+      Boolean(profile?.notifPrefs?.digestConsentedAt),
+    weeklyReport:
+      profile?.notifPrefs?.weeklyReport === true &&
+      Boolean(profile?.notifPrefs?.reportConsentedAt),
+    marketing:
+      profile?.notifPrefs?.marketing === true &&
+      Boolean(profile?.notifPrefs?.productConsentedAt),
   }
 
   const [prefs, setPrefs] = useState<NotificationPrefs>(defaults)
@@ -166,11 +198,14 @@ export function NotificationsSection({
       ) as Record<DismissiblePrompt, boolean>
   )
 
-  const toggle = (key: NotifKey) => {
+  const toggle = async (key: NotifKey) => {
+    if (saving) return
+    const previous = prefs
     const next = { ...prefs, [key]: !prefs[key] }
 
     setPrefs(next)
-    void updateNotifications(next)
+    if (!(await updateNotifications({ [key]: next[key] }))) setPrefs(previous)
+    else await refresh()
   }
 
   const savePrompt = async (key: DismissiblePrompt, show: boolean) => {
@@ -191,25 +226,47 @@ export function NotificationsSection({
   return (
     <SectionCard
       id="notifications"
-      title="Notifications"
+      title={tUi("notifications")}
       lead="Choose what you hear about libraries, your contributions and the people you follow."
     >
       <NotifGroup
-        title="By email"
+        title={tUi("by_email")}
         items={EMAIL_NOTIFS}
         prefs={prefs}
         onToggle={toggle}
+        disabled={saving}
       />
+      <NewsletterPreference />
 
       <NotifGroup
-        title="On the site"
+        title={tUi("on_the_site")}
         items={SITE_NOTIFS}
         prefs={prefs}
         onToggle={toggle}
+        disabled={saving}
       />
+      <div className="flex flex-wrap gap-3">
+        <Button asChild variant="outline" className="rounded-full">
+          <Link href="/profile/notifications">Open notification inbox</Link>
+        </Button>
+        {prefs.soundOn && (
+          <Button
+            type="button"
+            variant="secondary"
+            className="rounded-full"
+            onClick={previewSound}
+          >
+            Preview notification sound
+          </Button>
+        )}
+      </div>
+      <p className="text-sm" style={{ color: T.ink.dim }}>
+        Email preferences do not hide updates on the site. Newsletter emails
+        have their own confirmation and unsubscribe links.
+      </p>
 
       <NotifGroup
-        title="Prompts"
+        title={tUi("prompts")}
         items={Object.values(PROMPTS)}
         prefs={shownPrompts}
         onToggle={togglePrompt}

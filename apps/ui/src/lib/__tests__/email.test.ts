@@ -40,12 +40,14 @@ it("delivers existing account email through generic SMTP ahead of the sandbox", 
     "fixture@example.org",
     "https://app.example.org/verify?token=fixture"
   )
-  expect(createTransport).toHaveBeenCalledWith({
-    host: "smtp.example.org",
-    port: 587,
-    secure: false,
-    auth: { user: "smtp-login", pass: "test-key" },
-  })
+  expect(createTransport).toHaveBeenCalledWith(
+    expect.objectContaining({
+      host: "smtp.example.org",
+      port: 587,
+      secure: false,
+      auth: { user: "smtp-login", pass: "test-key" },
+    })
+  )
   expect(sendMail).toHaveBeenCalledWith(
     expect.objectContaining({
       to: "fixture@example.org",

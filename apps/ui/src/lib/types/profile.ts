@@ -116,7 +116,12 @@ export type LanguageEntry = {
 }
 
 export type NotifPrefs = {
+  digestConsentedAt?: string | null
+  reportConsentedAt?: string | null
+  productConsentedAt?: string | null
   weeklyDigest: boolean
+  weeklyReport?: boolean
+  recognition?: boolean
   editsReviewed: boolean
   drives?: boolean
   newFollowers: boolean
