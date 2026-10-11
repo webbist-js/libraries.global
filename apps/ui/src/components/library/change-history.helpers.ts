@@ -80,6 +80,7 @@ export const FIELD_LABELS: Record<string, string> = {
   imageCredit: "Photo credit",
   source: "Source",
   sourceUrl: "Source link",
+  sourceRecords: "Sources",
   lastVerifiedAt: "Last checked",
   featured: "Pillar institution",
   wikidataId: "Wikidata ID",

@@ -311,6 +311,7 @@ describe("atlasExportRow", () => {
       phone: "01508 520 745",
       email: "loddon.lib@norfolk.gov.uk",
       url: "https://libraries.global/europe/england/norfolk/loddon-library",
+      sourceRecords: "[]",
     })
   })
 

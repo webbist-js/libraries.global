@@ -1115,7 +1115,13 @@
     "open_library": "Ouvrir {library}",
     "topic_suggestion_submitted": "« {name} » a été soumis à la vérification",
     "topic_suggestion_failed": "Impossible d’envoyer la suggestion",
-    "suggest": "Proposer"
+    "suggest": "Proposer",
+    "public_source_references": "Références publiques",
+    "public_source_references_help": "Ces liens apparaîtront sur la fiche de la bibliothèque. Ajoutez des pages publiques qui étayent vos modifications. Gardez les preuves privées dans les champs destinés aux réviseurs ci-dessus. Les sources existantes sont conservées.",
+    "source_reference_number": "Référence {number}",
+    "source_reference_label": "Nom de la source (facultatif)",
+    "remove_source_reference": "Supprimer la référence",
+    "add_source_reference": "Ajouter une référence"
   },
   "translation": {
     "language": "Langue",

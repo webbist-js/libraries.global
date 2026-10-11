@@ -39,6 +39,7 @@ export const ATLAS_EXPORT_COLUMNS = [
   "phone",
   "email",
   "url",
+  "sourceRecords",
 ] as const
 
 export type AtlasExportColumn = (typeof ATLAS_EXPORT_COLUMNS)[number]
@@ -62,6 +63,7 @@ export type LibraryExportSource = {
   continentSlug: string | null
   countrySlug: string | null
   regionSlug: string | null
+  sourceRecords?: unknown[]
 }
 
 /**
@@ -95,6 +97,7 @@ export function atlasExportRow(
     phone: lib.phone,
     email: lib.email,
     url: path ? pageUrl(path) : null,
+    sourceRecords: JSON.stringify(lib.sourceRecords ?? []),
   }
 }
 

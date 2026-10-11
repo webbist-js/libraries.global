@@ -1,4 +1,8 @@
-import { hasErrors, validateMobileTimetable } from "@repo/shared-data"
+import {
+  hasErrors,
+  validateMobileTimetable,
+  submittedSourceRecords,
+} from "@repo/shared-data"
 
 import { coordIsValid } from "@/lib/geocode/coordinates"
 
@@ -64,12 +68,20 @@ export function missingFields(
 ): (keyof FormData)[] {
   const { record, editable } = scope
   const required = requiredFields(step, !!record, form.libraryType === "Mobile")
+  const publicReferences = submittedSourceRecords(form.sourceRecords).length > 0
   const empty = required.filter((key) => {
+    if (publicReferences && (key === "evidenceType" || key === "evidenceUrl"))
+      return false
     if (editable && !editable.has(key)) return false
     if (record && !META.has(key) && blank(record[key])) return false
 
     return blank(form[key])
   })
+  if (
+    step === 7 &&
+    form.sourceRecords.some((r) => !submittedSourceRecords([r]).length)
+  )
+    empty.push("sourceRecords")
   const malformed = (FORMATTED_BY_STEP[step] ?? []).filter(
     (key) => (!editable || editable.has(key)) && !coordIsValid(key, form[key])
   )

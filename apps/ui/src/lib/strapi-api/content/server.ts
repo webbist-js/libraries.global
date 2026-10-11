@@ -1,5 +1,9 @@
 import "server-only"
 
+import {
+  submittedSourceRecords,
+  type LibrarySourceRecord,
+} from "@repo/shared-data"
 import type { Data, UID } from "@repo/strapi-types"
 import { draftMode } from "next/headers"
 import type { Locale } from "next-intl"
@@ -1605,6 +1609,7 @@ export interface LibraryHistoryBatch {
   actor: HistoryActor
   fields: LibraryHistoryField[]
   submissionDocumentId: string | null
+  references?: LibrarySourceRecord[]
 }
 
 export interface HistoryMeta {
@@ -1709,6 +1714,7 @@ function toBatch(v: unknown, values: boolean): LibraryHistoryBatch | null {
     actor: toActor(v.actor),
     fields,
     submissionDocumentId: str(v.submissionDocumentId),
+    references: submittedSourceRecords(v.references),
   }
 }
 

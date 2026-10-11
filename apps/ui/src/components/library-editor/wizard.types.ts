@@ -1,4 +1,8 @@
-import type { MobileTimetable, TimetableNotice } from "@repo/shared-data"
+import type {
+  LibrarySourceRecord,
+  MobileTimetable,
+  TimetableNotice,
+} from "@repo/shared-data"
 import type React from "react"
 
 import { emptyOpeningTimes, type OpeningTimesData } from "./opening-times.types"
@@ -86,8 +90,7 @@ export interface FormData {
   // Step 7 – Sources
   evidenceType: string
   evidenceUrl: string
-  source: string
-  sourceUrl: string
+  sourceRecords: LibrarySourceRecord[]
   editSummary: string
   note: string
 }
@@ -152,8 +155,7 @@ export const EMPTY_FORM: FormData = {
   imageNote: "",
   evidenceType: "",
   evidenceUrl: "",
-  source: "",
-  sourceUrl: "",
+  sourceRecords: [],
   editSummary: "",
   note: "",
 }

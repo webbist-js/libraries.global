@@ -176,6 +176,25 @@ function BatchRow({ batch }: { readonly batch: LibraryHistoryBatch }) {
         </time>,
       ]}
     >
+      {batch.references?.length ? (
+        <ul className="mt-2 pl-5">
+          {batch.references.map((reference, index) => (
+            <li key={index}>
+              <a
+                href={reference.url!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                {reference.label || reference.url}
+              </a>
+              {reference.fields?.length ? (
+                <span> · {reference.fields.map(fieldLabel).join(", ")}</span>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {row.count ? (
         <DetailsDisclosure label={row.count}>
           {shown.length > 0 ? (

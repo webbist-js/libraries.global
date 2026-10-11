@@ -156,6 +156,13 @@ describe("the payload for each gap carries the drive", () => {
       category: "Website or catalogue",
       libraryName: target.name,
       phone: "614-807-2626",
+      sourceRecords: [
+        {
+          url: "https://worthingtonlibraries.org/contact",
+          role: "reference",
+          fields: ["phone"],
+        },
+      ],
       previous: { phone: "" },
     })
     expect(body.driveDocumentId).toBe(DRIVE)

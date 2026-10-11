@@ -67,7 +67,7 @@ interface LibraryDetailPageProps {
   /** The record's change counts for the last 24 months. */
   readonly historyStats?: LibraryHistoryStats | null
   /** The dataset this record was imported from, if any. */
-  readonly dataset?: DatasetRecord | null
+  readonly datasets?: DatasetRecord[]
   /** The record's canonical, absolute URL (for the citation). */
   readonly canonicalUrl?: string
   /** People following the library; null leaves the count out. */
@@ -85,7 +85,7 @@ export function LibraryDetailPage({
   area = NO_AREA,
   history = null,
   historyStats = null,
-  dataset = null,
+  datasets = [],
   canonicalUrl,
   followers = null,
   untranslatedLocale = null,
@@ -306,7 +306,7 @@ export function LibraryDetailPage({
                   library={library}
                   history={history}
                   stats={historyStats}
-                  dataset={dataset}
+                  datasets={datasets}
                 />
                 <LibraryReuseSection
                   library={library}

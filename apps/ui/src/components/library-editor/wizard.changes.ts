@@ -50,6 +50,13 @@ export function recordChangesPayload(
     fields[key] = current[key]
     previous[key] = initial[key]
   }
+  if (Array.isArray(fields.sourceRecords))
+    fields.sourceRecords = current.sourceRecords.map((r) => ({
+      ...r,
+      fields: r.fields?.length
+        ? r.fields
+        : changed.filter((k) => k !== "sourceRecords"),
+    }))
   fields.previous = previous
   if (changed.includes("mobileTimetable"))
     fields.previousHash = timetableHash(initial.mobileTimetable)
@@ -124,14 +131,7 @@ export const STEP_FIELDS: Record<number, readonly (keyof FormData)[]> = {
     "buildingInfo",
   ],
   6: ["uploadedImages", "imageCredit", "imageNote"],
-  7: [
-    "evidenceType",
-    "evidenceUrl",
-    "source",
-    "sourceUrl",
-    "editSummary",
-    "note",
-  ],
+  7: ["evidenceType", "evidenceUrl", "sourceRecords", "editSummary", "note"],
 }
 
 const TIMETABLE_FIELDS: readonly (keyof FormData)[] = [

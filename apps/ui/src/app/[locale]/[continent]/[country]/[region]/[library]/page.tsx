@@ -178,7 +178,15 @@ export default function LibraryRoutePage(props: {
     values: false,
   })
   const historyStatsPromise = fetchLibraryHistoryStats(library.documentId)
-  const datasetPromise = fetchDataset(library.source)
+  const datasetPromise = Promise.all(
+    [
+      ...new Set(
+        (library.sourceRecords ?? []).flatMap((r) =>
+          r.dataset ? [r.dataset] : []
+        )
+      ),
+    ].map(fetchDataset)
+  )
   const followersPromise = fetchLibraryFollowerCount(library.documentId)
   const localesPromise = fetchArticleLocales()
 
@@ -186,7 +194,7 @@ export default function LibraryRoutePage(props: {
   const area = use(areaPromise)
   const history = use(historyPromise)
   const historyStats = use(historyStatsPromise)
-  const dataset = use(datasetPromise)
+  const datasets = use(datasetPromise).filter((d) => d != null)
   const followers = use(followersPromise)
   const locales = use(localesPromise)
 
@@ -250,7 +258,7 @@ export default function LibraryRoutePage(props: {
         area={area}
         history={history}
         historyStats={historyStats}
-        dataset={dataset}
+        datasets={datasets}
         canonicalUrl={url}
         followers={followers}
         untranslatedLocale={libraryRes?.localeFallback ? locale : null}

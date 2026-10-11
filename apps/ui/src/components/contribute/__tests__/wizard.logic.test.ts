@@ -88,7 +88,7 @@ describe("blockerFor", () => {
     const filled = draft({ text: "Closes at 6pm" })
     expect(blockerFor("correction", 3, library, filled)).toBeNull()
     expect(blockerFor("source", 3, library, filled)).toBe(
-      "Add a link or reference to send."
+      "Add a public http or https source link to send."
     )
     expect(
       blockerFor(
@@ -134,7 +134,9 @@ describe("buildSubmission", () => {
       fields: {
         category: "Opening hours",
         libraryName: "Epworth Library",
-        sourceUrl: "https://epworth.example/hours",
+        sourceRecords: [
+          { url: "https://epworth.example/hours", role: "reference" },
+        ],
       },
       note: "Open until 8pm on Thursdays",
       evidenceType: "other",

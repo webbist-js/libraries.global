@@ -10,6 +10,7 @@ import { FacilityChecklistRows } from "./FacilityChecklistRows"
 import { ImageUploadEditor } from "./ImageUploadEditor"
 import { OpeningTimesEditor } from "./OpeningTimesEditor"
 import { SocialLinksEditor } from "./SocialLinksEditor"
+import { SourceRecordsEditor } from "./SourceRecordsEditor"
 import { StepLocation } from "./StepLocation"
 import {
   EVIDENCE_TYPES,
@@ -606,7 +607,7 @@ function StepImagery({ f, set, setFormData }: StepProps) {
 
 // ── Step 7 — Sources ──────────────────────────────────────────────────────────
 
-function StepSources({ f, set, improving }: StepProps) {
+function StepSources({ f, set, setFormData, improving }: StepProps) {
   const tUi = useUiTranslations("ui")
 
   return (
@@ -634,7 +635,7 @@ function StepSources({ f, set, improving }: StepProps) {
         value={f.evidenceType}
         onChange={set}
         options={EVIDENCE_TYPES}
-        required
+        required={!f.sourceRecords.length}
       />
       <Field
         label={tUi("evidence_url")}
@@ -643,24 +644,14 @@ function StepSources({ f, set, improving }: StepProps) {
         onChange={set}
         placeholder="https://"
         type="url"
-        required
+        required={!f.sourceRecords.length}
       />
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field
-          label={tUi("primary_source_wikidata_wikipedia")}
-          id="source"
-          value={f.source}
-          onChange={set}
-        />
-        <Field
-          label={tUi("source_url")}
-          id="sourceUrl"
-          value={f.sourceUrl}
-          onChange={set}
-          placeholder="https://"
-          type="url"
-        />
-      </div>
+      <SourceRecordsEditor
+        value={f.sourceRecords}
+        onChange={(value) =>
+          setFormData((current) => ({ ...current, sourceRecords: value }))
+        }
+      />
       <TextareaField
         label={tUi("submission_summary")}
         id="editSummary"

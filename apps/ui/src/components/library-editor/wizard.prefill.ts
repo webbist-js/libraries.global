@@ -75,7 +75,6 @@ export function prefillLibrary(lib: LibraryForEditing): Partial<FormData> {
     closedYear: str(lib.closedYear),
     architect: str(lib.architect),
     buildingInfo: str(lib.buildingInfo),
-    source: str(lib.source),
-    sourceUrl: str(lib.sourceUrl),
+    sourceRecords: [],
   }
 }

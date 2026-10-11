@@ -8,6 +8,7 @@ import {
 import { type Cell, csvChunks } from "@/lib/export-format"
 import { buildLibraryPath } from "@/lib/library-helpers"
 import { absoluteUrl } from "@/lib/seo/metadata"
+import { fetchDataset } from "@/lib/strapi-api/content/datasets"
 import { fetchLibrary } from "@/lib/strapi-api/content/server"
 
 export const revalidate = 300
@@ -38,7 +39,7 @@ const CSV_COLUMNS = [
   "url",
   "licence",
   "attribution",
-  "source",
+  "sourceRecords",
   "updatedAt",
 ] as const
 
@@ -73,6 +74,33 @@ export async function GET(
   const openingTimes = library.openingTimes as OpeningTimesValue | null
   const str = (key: string) => (rec[key] as string | null | undefined) ?? null
 
+  const datasets = await Promise.all(
+    [
+      ...new Set(
+        (library.sourceRecords ?? []).flatMap((r) =>
+          r.dataset ? [r.dataset] : []
+        )
+      ),
+    ].map(fetchDataset)
+  )
+  const sourceRecords = (library.sourceRecords ?? []).map((r) => {
+    const { id, ...reference } = r
+    const dataset = datasets.find((d) => d?.key === r.dataset)
+
+    return {
+      ...reference,
+      ...(dataset
+        ? {
+            publisher: dataset.publisher,
+            licence: dataset.licence,
+            licenceUrl: dataset.licenceUrl,
+            attribution: dataset.attribution,
+            redistribution: dataset.redistribution,
+            licenceStatus: dataset.licenceStatus,
+          }
+        : {}),
+    }
+  })
   const record = {
     entityRef: library.entityRef ?? null,
     name: library.name ?? null,
@@ -116,7 +144,7 @@ export async function GET(
     accessibility: names(library.accessibility),
     services: names(library.services),
     amenities: names(library.amenities),
-    source: str("source"),
+    sourceRecords,
     lastVerifiedAt: str("lastVerifiedAt"),
     updatedAt: str("updatedAt"),
     licence: LICENCE,
@@ -160,7 +188,7 @@ export async function GET(
     url: pageUrl,
     licence: LICENCE,
     attribution: ATTRIBUTION,
-    source: record.source,
+    sourceRecords: JSON.stringify(record.sourceRecords),
     updatedAt: record.updatedAt,
   }
 

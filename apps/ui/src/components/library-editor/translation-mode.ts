@@ -10,7 +10,7 @@ import { type FormData, SUBMISSION_META_KEYS } from "./wizard.types"
 export { LOCALIZED_LIBRARY_FIELDS }
 
 const LOCALIZED = new Set<string>(LOCALIZED_LIBRARY_FIELDS)
-const META = new Set<string>(SUBMISSION_META_KEYS)
+const META = new Set<string>([...SUBMISSION_META_KEYS, "sourceRecords"])
 
 /** Editing a locale other than the default one is translating. */
 export function translationMode(

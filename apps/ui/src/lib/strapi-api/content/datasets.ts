@@ -6,7 +6,7 @@ import type { APIResponse } from "@/types/api"
 
 /**
  * A dataset imported into Libraries Global, from the `dataset` registry
- * in Strapi. A record's `source` string is the registry key.
+ * in Strapi. A library's `sourceRecords[].dataset` is the registry key.
  */
 export interface DatasetRecord {
   documentId: string

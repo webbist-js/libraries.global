@@ -224,6 +224,13 @@ export function verifyPayload({
       kind: "verify",
       sections: toSections(sections),
       libraryName: name,
+      ...(!inPerson && s && isWebAddress(s)
+        ? {
+            sourceRecords: [
+              { url: s, role: "reference", fields: toSections(sections) },
+            ],
+          }
+        : {}),
     },
     evidenceType: inPerson ? "on_site_visit" : "other",
     ...(s && isWebAddress(s) ? { evidenceUrl: s } : {}),

@@ -1115,7 +1115,13 @@
     "open_library": "Otevřít {library}",
     "topic_suggestion_submitted": "Návrh „{name}“ byl odeslán ke kontrole",
     "topic_suggestion_failed": "Návrh se nepodařilo odeslat",
-    "suggest": "Navrhnout"
+    "suggest": "Navrhnout",
+    "public_source_references": "Veřejné zdroje",
+    "public_source_references_help": "Tyto odkazy se zobrazí v záznamu knihovny. Přidejte veřejné stránky dokládající změny. Soukromé důkazy ponechte v polích pro recenzenty výše. Stávající zdroje se zachovají.",
+    "source_reference_number": "Zdroj {number}",
+    "source_reference_label": "Název zdroje (volitelné)",
+    "remove_source_reference": "Odebrat zdroj",
+    "add_source_reference": "Přidat další zdroj"
   },
   "translation": {
     "language": "Jazyk",

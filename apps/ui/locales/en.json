@@ -1115,7 +1115,13 @@
     "open_library": "Open {library}",
     "topic_suggestion_submitted": "“{name}” submitted for review",
     "topic_suggestion_failed": "Failed to submit suggestion",
-    "suggest": "Suggest"
+    "suggest": "Suggest",
+    "public_source_references": "Public source references",
+    "public_source_references_help": "These links will appear on the library record. Add published pages supporting your changes. Keep private evidence in the reviewer fields above. Existing sources are retained.",
+    "source_reference_number": "Reference {number}",
+    "source_reference_label": "Source label (optional)",
+    "remove_source_reference": "Remove reference",
+    "add_source_reference": "Add another reference"
   },
   "translation": {
     "language": "Language",

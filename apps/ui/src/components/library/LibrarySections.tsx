@@ -1,7 +1,13 @@
 // Server-rendered content sections for the library detail page (v2).
 
 import { Icon } from "@iconify/react"
-import { hasOpeningHours, type LibraryNotice } from "@repo/shared-data"
+import {
+  librarySourceKey,
+  publicSourceUrl,
+  type LibrarySourceRecord,
+  hasOpeningHours,
+  type LibraryNotice,
+} from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
 
 import { NOTICE_TONES } from "@/components/ds"
@@ -10,6 +16,7 @@ import {
   actorLabel,
   detailCount,
   fieldNames,
+  fieldLabel,
   isImportCreate,
   topFields,
 } from "@/components/library/change-history.helpers"
@@ -722,7 +729,7 @@ export function LibraryChangesSection({
   library,
   history = null,
   stats = null,
-  dataset = null,
+  datasets = [],
 }: {
   readonly library: Lib
   /** Page 1 of the Change Batches; null when Strapi couldn't answer. */
@@ -730,13 +737,17 @@ export function LibraryChangesSection({
   /** Change counts for the last 24 months; null when unavailable. */
   readonly stats?: LibraryHistoryStats | null
   /** The dataset the record was imported from, from the dataset registry. */
-  readonly dataset?: DatasetRecord | null
+  readonly datasets?: DatasetRecord[]
 }) {
   const tUi = useUiTranslations("ui")
 
   const rec = asRecord(library)
-  const source = rec.source as string | null
-  const sourceUrl = rec.sourceUrl as string | null
+  const references = (rec.sourceRecords ?? []) as LibrarySourceRecord[]
+  const source = librarySourceKey(references)
+  const sourceUrl = publicSourceUrl(
+    references.find((r) => r.role === "origin")?.url
+  )
+  const dataset = datasets.find((d) => d.key === source) ?? null
   const lastVerifiedAt = rec.lastVerifiedAt as string | null
   const createdAt = rec.createdAt as string | null
   const months = stats?.months.slice(-12) ?? []
@@ -762,7 +773,7 @@ export function LibraryChangesSection({
     dataset?.name ?? (source ? (SOURCE_NAMES[source] ?? source) : null)
   const publisher =
     dataset?.publisher ?? (source ? (PUBLISHERS[source] ?? null) : null)
-  const datasetLink = sourceUrl || dataset?.sourceUrl || null
+  const datasetLink = sourceUrl || publicSourceUrl(dataset?.sourceUrl)
   const licence = dataset?.licence ? (
     dataset.licenceUrl ? (
       <a
@@ -866,6 +877,73 @@ export function LibraryChangesSection({
         />
       </div>
 
+      {references.length > 0 ? (
+        <ul className="mt-5 grid gap-3 pl-5">
+          {references.map((reference, index) => {
+            const credit = datasets.find((d) => d.key === reference.dataset)
+            const url =
+              publicSourceUrl(reference.url) ??
+              publicSourceUrl(credit?.sourceUrl)
+            const title =
+              reference.label ||
+              credit?.name ||
+              reference.dataset ||
+              reference.url ||
+              "Source reference"
+
+            return (
+              <li key={index}>
+                {url ? (
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-2"
+                  >
+                    {title}
+                  </a>
+                ) : (
+                  title
+                )}
+                {credit?.publisher ? <span> · {credit.publisher}</span> : null}
+                {credit?.licence ? (
+                  <span>
+                    {" "}
+                    ·{" "}
+                    {publicSourceUrl(credit.licenceUrl) ? (
+                      <a
+                        href={credit.licenceUrl!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline"
+                      >
+                        {credit.licence}
+                      </a>
+                    ) : (
+                      credit.licence
+                    )}
+                  </span>
+                ) : null}
+                {reference.recordId ? (
+                  <span> · {reference.recordId}</span>
+                ) : null}
+                {reference.retrievedAt ? (
+                  <span> · {fmtDate(reference.retrievedAt)}</span>
+                ) : null}
+                {Array.isArray(reference.fields) && reference.fields.length ? (
+                  <span className="block text-sm">
+                    {reference.fields.map(fieldLabel).join(", ")}
+                  </span>
+                ) : null}
+                {credit?.attribution ? (
+                  <span className="block text-sm">{credit.attribution}</span>
+                ) : null}
+              </li>
+            )
+          })}
+        </ul>
+      ) : null}
+
       {unchecked ? (
         <div
           className="mt-5 flex flex-col gap-4 rounded-[20px] px-5 py-4 sm:flex-row sm:items-center"
@@ -884,8 +962,8 @@ export function LibraryChangesSection({
               Imported, not checked by a person yet
             </p>
             <p className="m-0 mt-0.5" style={{ color: T.ink.dim }}>
-              Everything here came from one dataset. If you know this library,
-              confirm what’s right or fix what isn’t.
+              This record was imported from published sources. If you know this
+              library, confirm what’s right or fix what isn’t.
             </p>
           </div>
           <OpenCorrectionLink className="shrink-0 self-start rounded-full bg-(--t-accent-primary) px-5 py-2.5 text-[15px] font-semibold text-white! hover:bg-(--t-accent-primary-hover) sm:self-center">

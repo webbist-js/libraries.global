@@ -480,9 +480,9 @@ describe("POST /api/export/atlas: the file", () => {
       "libraries.global contributors; see /knowledge for licences"
     )
     expect(await csvLines(res)).toEqual([
-      "name,slug,libraryType,operationalStatus,streetAddress,city,region,country,lat,lng,website,phone,email,url",
-      "'=Gamma,c-library,Public,open,,Leeds,West Yorkshire,England,53.6,-1.4,,,,https://libraries.global/europe/england/west-yorkshire/c-library",
-      "Alpha,a-library,Public,open,,Leeds,West Yorkshire,England,53.8,-1.55,,,,https://libraries.global/europe/england/west-yorkshire/a-library",
+      "name,slug,libraryType,operationalStatus,streetAddress,city,region,country,lat,lng,website,phone,email,url,sourceRecords",
+      "'=Gamma,c-library,Public,open,,Leeds,West Yorkshire,England,53.6,-1.4,,,,https://libraries.global/europe/england/west-yorkshire/c-library,[]",
+      "Alpha,a-library,Public,open,,Leeds,West Yorkshire,England,53.8,-1.55,,,,https://libraries.global/europe/england/west-yorkshire/a-library,[]",
     ])
   })
 
