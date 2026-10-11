@@ -8,6 +8,7 @@ import {
   splitSubmissionBody,
 } from "../services/submission"
 import { acceptedCount as countAccepted } from "../services/submission-policy"
+import { defaultLocale } from "../utils/locales"
 import {
   isDirectJournalEdit,
   isDirectWikiEdit,
@@ -90,11 +91,12 @@ export default ({ strapi }: { strapi: any }) => ({
   async locales(ctx: any) {
     const locales: { code: string; name: string; isDefault?: boolean }[] =
       await strapi.plugin("i18n").service("locales").find()
+    const defaultCode = await defaultLocale(strapi)
     ctx.body = {
       data: locales.map((l) => ({
         code: l.code,
         name: l.name,
-        isDefault: !!l.isDefault,
+        isDefault: l.code === defaultCode,
       })),
     }
   },

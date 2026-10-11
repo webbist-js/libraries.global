@@ -1,5 +1,7 @@
 import { factories } from "@strapi/strapi"
 
+import { readLocale } from "../../../utils/read-status"
+
 export default factories.createCoreController(
   "api::wiki-section.wiki-section",
   ({ strapi }) => ({
@@ -9,6 +11,7 @@ export default factories.createCoreController(
       const sections = (await strapi
         .documents("api::wiki-section.wiki-section")
         .findMany({
+          locale: readLocale(ctx),
           fields: ["name", "label", "slug", "description", "order", "icon"],
           status: "published",
           // eslint-disable-next-line @typescript-eslint/no-explicit-any

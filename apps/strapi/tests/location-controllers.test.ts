@@ -171,6 +171,14 @@ describe("region.detail (E5)", () => {
 })
 
 describe("category.nav and wiki-section.nav (E5)", () => {
+  it.each(["cs", "fr"])("reads Knowledge navigation in %s", async (locale) => {
+    const ws = build("api::wiki-section.wiki-section", wikiSectionFactory, {
+      "api::wiki-section.wiki-section": [],
+    })
+    await ws.controller.nav({ query: { locale } })
+    expect(ws.paramsOf("api::wiki-section.wiki-section")[0].locale).toBe(locale)
+  })
+
   it("read published entries only", async () => {
     const cat = build("api::category.category", categoryFactory, {
       "api::category.category": [{ documentId: "c1", name: "A", slug: "a" }],

@@ -18,32 +18,60 @@
   "attributes": {
     "heroEyebrow": {
       "type": "string",
-      "pluginOptions": { "i18n": { "localized": true } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "heroTitle": {
       "type": "string",
-      "pluginOptions": { "i18n": { "localized": true } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "heroText": {
       "type": "text",
-      "pluginOptions": { "i18n": { "localized": true } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "featuredArticle": {
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::blog-article.blog-article",
-      "pluginOptions": { "i18n": { "localized": false } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "sections": {
       "type": "dynamiczone",
-      "components": ["sections.editorial-block", "sections.cta-banner", "sections.quick-links"],
-      "pluginOptions": { "i18n": { "localized": true } }
+      "components": [
+        "sections.editorial-block",
+        "sections.cta-banner",
+        "sections.quick-links"
+      ],
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "seo": {
       "type": "component",
       "component": "shared.seo",
       "repeatable": false,
-      "pluginOptions": { "i18n": { "localized": true } }
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     }
   }
 }

@@ -136,6 +136,27 @@ const editorCaps = {
 }
 
 describe("utils/locales", () => {
+  it("marks the default locale from the i18n store when find() has no isDefault flag", async () => {
+    const strapi = {
+      plugin: () => ({
+        service: () => ({
+          find: async () => [
+            { code: "en", name: "English" },
+            { code: "cs", name: "Czech" },
+            { code: "fr", name: "French" },
+          ],
+          getDefaultLocale: async () => "en",
+        }),
+      }),
+    }
+    const ctx: any = {}
+    await createController({ strapi }).locales(ctx)
+    expect(ctx.body.data).toEqual([
+      { code: "en", name: "English", isDefault: true },
+      { code: "cs", name: "Czech", isDefault: false },
+      { code: "fr", name: "French", isDefault: false },
+    ])
+  })
   it("reads the configured locales and the default", async () => {
     const { strapi } = setup()
     expect(await configuredLocales(strapi)).toEqual(["en", "cs"])

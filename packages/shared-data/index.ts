@@ -153,6 +153,7 @@ export const normalizePageFullPath = (
 export * from "./facility-checklist"
 export * from "./content-safety"
 export * from "./localized-library-fields"
+export * from "./locales"
 export * from "./dismissible-prompts"
 export * from "./gaps"
 export * from "./verify"

@@ -630,6 +630,53 @@ export interface ApiAmenityAmenity extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface ApiAnnouncementAnnouncement
+  extends Struct.CollectionTypeSchema {
+  collectionName: "notification_announcements"
+  info: {
+    description: "Publish an operational project notice or an opt-in product update. Publication queues notifications; unpublish before delivery to cancel unsent emails."
+    displayName: "Notification announcement"
+    pluralName: "announcements"
+    singularName: "announcement"
+  }
+  options: {
+    draftAndPublish: true
+  }
+  attributes: {
+    body: Schema.Attribute.Text &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 3000
+      }>
+    channel: Schema.Attribute.Enumeration<
+      ["editorialMessages", "marketing", "transactional"]
+    > &
+      Schema.Attribute.Required
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    href: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 500
+      }>
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::announcement.announcement"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    title: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 180
+      }>
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface ApiAreaArea extends Struct.CollectionTypeSchema {
   collectionName: "areas"
   info: {
@@ -919,7 +966,7 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
     authorTitle: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
-          localized: false
+          localized: true
         }
       }>
     body: Schema.Attribute.DynamicZone<
@@ -939,7 +986,7 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
     category: Schema.Attribute.Relation<"manyToOne", "api::category.category"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
-          localized: false
+          localized: true
         }
       }>
     contributors: Schema.Attribute.Relation<
@@ -986,7 +1033,7 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
       Schema.Attribute.Configurable &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
-          localized: false
+          localized: true
         }
       }>
     section: Schema.Attribute.Relation<
@@ -995,7 +1042,7 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
-          localized: false
+          localized: true
         }
       }>
     seo: Schema.Attribute.Component<"shared.seo", false> &
@@ -1027,7 +1074,7 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
     topics: Schema.Attribute.Relation<"manyToMany", "api::topic.topic"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
-          localized: false
+          localized: true
         }
       }>
     updatedAt: Schema.Attribute.DateTime
@@ -1062,7 +1109,7 @@ export interface ApiBlogLandingBlogLanding extends Struct.SingleTypeSchema {
     > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
-          localized: false
+          localized: true
         }
       }>
     heroEyebrow: Schema.Attribute.String &
@@ -1126,34 +1173,65 @@ export interface ApiBlogSectionBlogSection extends Struct.CollectionTypeSchema {
   }
   pluginOptions: {
     i18n: {
-      localized: false
+      localized: true
     }
   }
   attributes: {
     articles: Schema.Attribute.Relation<
       "oneToMany",
       "api::blog-article.blog-article"
-    >
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
-    description: Schema.Attribute.Text
+    description: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     icon: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 80
       }>
-    locale: Schema.Attribute.String & Schema.Attribute.Private
+    locale: Schema.Attribute.String
     localizations: Schema.Attribute.Relation<
       "oneToMany",
       "api::blog-section.blog-section"
-    > &
-      Schema.Attribute.Private
-    name: Schema.Attribute.String & Schema.Attribute.Required
+    >
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     publishedAt: Schema.Attribute.DateTime
-    slug: Schema.Attribute.UID<"name"> & Schema.Attribute.Required
+    slug: Schema.Attribute.UID<"name"> &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     tint: Schema.Attribute.Enumeration<
       ["purple", "green", "blue", "rust", "neutral"]
     > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
       Schema.Attribute.DefaultTo<"neutral">
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
@@ -1232,7 +1310,7 @@ export interface ApiCategoryCategory extends Struct.CollectionTypeSchema {
     tagLabel: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
-          localized: false
+          localized: true
         }
       }>
     updatedAt: Schema.Attribute.DateTime
@@ -3204,6 +3282,71 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface ApiNotificationNotification
+  extends Struct.CollectionTypeSchema {
+  collectionName: "notifications"
+  info: {
+    displayName: "Notification"
+    pluralName: "notifications"
+    singularName: "notification"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  attributes: {
+    attempts: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
+    baUserId: Schema.Attribute.String & Schema.Attribute.Private
+    body: Schema.Attribute.Text & Schema.Attribute.Required
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    emailPayload: Schema.Attribute.JSON & Schema.Attribute.Private
+    emailPreference: Schema.Attribute.String & Schema.Attribute.Private
+    emailState: Schema.Attribute.Enumeration<
+      ["none", "pending", "sent", "skipped", "failed"]
+    > &
+      Schema.Attribute.DefaultTo<"none">
+    eventKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    href: Schema.Attribute.String
+    inApp: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>
+    kind: Schema.Attribute.Enumeration<
+      [
+        "new_follower",
+        "library_update",
+        "submission_review",
+        "drive_closed",
+        "weekly_digest",
+        "weekly_report",
+        "recognition",
+        "announcement",
+        "newsletter_confirmation",
+        "staff_update",
+        "feed_update",
+      ]
+    > &
+      Schema.Attribute.Required
+    lastError: Schema.Attribute.String & Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::notification.notification"
+    > &
+      Schema.Attribute.Private
+    nextAttemptAt: Schema.Attribute.DateTime & Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    readAt: Schema.Attribute.DateTime
+    recipientEmail: Schema.Attribute.Email & Schema.Attribute.Private
+    sentAt: Schema.Attribute.DateTime
+    title: Schema.Attribute.String & Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface ApiPagePage extends Struct.CollectionTypeSchema {
   collectionName: "pages"
   info: {
@@ -3805,8 +3948,10 @@ export interface ApiSubscriberSubscriber extends Struct.CollectionTypeSchema {
   }
   attributes: {
     baUserId: Schema.Attribute.String & Schema.Attribute.Private
-    communicationLocale: Schema.Attribute.Enumeration<["en", "cs"]> &
+    communicationLocale: Schema.Attribute.Enumeration<["en", "cs", "fr"]> &
       Schema.Attribute.DefaultTo<"en">
+    confirmationSentAt: Schema.Attribute.DateTime & Schema.Attribute.Private
+    confirmedAt: Schema.Attribute.DateTime
     consentedAt: Schema.Attribute.DateTime
     consentVersion: Schema.Attribute.String
     content: Schema.Attribute.Text &
@@ -3852,22 +3997,52 @@ export interface ApiTopicTopic extends Struct.CollectionTypeSchema {
   options: {
     draftAndPublish: false
   }
+  pluginOptions: {
+    i18n: {
+      localized: true
+    }
+  }
   attributes: {
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
-    locale: Schema.Attribute.String & Schema.Attribute.Private
-    localizations: Schema.Attribute.Relation<"oneToMany", "api::topic.topic"> &
-      Schema.Attribute.Private
+    locale: Schema.Attribute.String
+    localizations: Schema.Attribute.Relation<"oneToMany", "api::topic.topic">
     name: Schema.Attribute.String &
       Schema.Attribute.Required &
-      Schema.Attribute.Unique
+      Schema.Attribute.Unique &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     publishedAt: Schema.Attribute.DateTime
-    slug: Schema.Attribute.UID<"name"> & Schema.Attribute.Required
+    slug: Schema.Attribute.UID<"name"> &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     status: Schema.Attribute.Enumeration<["approved", "pending", "rejected"]> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
       Schema.Attribute.DefaultTo<"pending">
-    suggestedByEmail: Schema.Attribute.String
-    suggestedByUserId: Schema.Attribute.String
+    suggestedByEmail: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    suggestedByUserId: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -3949,7 +4124,7 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
         marketing: false
         newFollowers: false
         soundOn: false
-        weeklyDigest: true
+        weeklyDigest: false
       }>
     orcid: Schema.Attribute.String
     points: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
@@ -4031,7 +4206,7 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
     category: Schema.Attribute.Relation<"manyToOne", "api::category.category"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
-          localized: false
+          localized: true
         }
       }>
     contributors: Schema.Attribute.Relation<
@@ -4089,7 +4264,7 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
-          localized: false
+          localized: true
         }
       }>
     section: Schema.Attribute.Relation<
@@ -4098,7 +4273,7 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
-          localized: false
+          localized: true
         }
       }>
     seo: Schema.Attribute.Component<"shared.seo", false> &
@@ -4130,7 +4305,7 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
     topics: Schema.Attribute.Relation<"manyToMany", "api::topic.topic"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
-          localized: false
+          localized: true
         }
       }>
     updatedAt: Schema.Attribute.DateTime
@@ -4189,7 +4364,7 @@ export interface ApiWikiLandingWikiLanding extends Struct.SingleTypeSchema {
     > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
-          localized: false
+          localized: true
         }
       }>
     seo: Schema.Attribute.Component<"shared.seo", false> &
@@ -4221,27 +4396,68 @@ export interface ApiWikiSectionWikiSection extends Struct.CollectionTypeSchema {
   options: {
     draftAndPublish: false
   }
+  pluginOptions: {
+    i18n: {
+      localized: true
+    }
+  }
   attributes: {
     articles: Schema.Attribute.Relation<
       "oneToMany",
       "api::wiki-article.wiki-article"
-    >
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
-    description: Schema.Attribute.Text
-    icon: Schema.Attribute.String
-    label: Schema.Attribute.String
-    locale: Schema.Attribute.String & Schema.Attribute.Private
+    description: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    icon: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    label: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    locale: Schema.Attribute.String
     localizations: Schema.Attribute.Relation<
       "oneToMany",
       "api::wiki-section.wiki-section"
-    > &
-      Schema.Attribute.Private
-    name: Schema.Attribute.String & Schema.Attribute.Required
-    order: Schema.Attribute.Integer
+    >
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    order: Schema.Attribute.Integer &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     publishedAt: Schema.Attribute.DateTime
-    slug: Schema.Attribute.UID<"name"> & Schema.Attribute.Required
+    slug: Schema.Attribute.UID<"name"> &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -5921,6 +6137,7 @@ declare module "@strapi/strapi" {
       "admin::user": AdminUser
       "api::accessibility.accessibility": ApiAccessibilityAccessibility
       "api::amenity.amenity": ApiAmenityAmenity
+      "api::announcement.announcement": ApiAnnouncementAnnouncement
       "api::area.area": ApiAreaArea
       "api::article-change.article-change": ApiArticleChangeArticleChange
       "api::blog-article.blog-article": ApiBlogArticleBlogArticle
@@ -5941,6 +6158,7 @@ declare module "@strapi/strapi" {
       "api::library-change.library-change": ApiLibraryChangeLibraryChange
       "api::library-notice.library-notice": ApiLibraryNoticeLibraryNotice
       "api::library.library": ApiLibraryLibrary
+      "api::notification.notification": ApiNotificationNotification
       "api::page.page": ApiPagePage
       "api::pro-verification.pro-verification": ApiProVerificationProVerification
       "api::redirect.redirect": ApiRedirectRedirect
