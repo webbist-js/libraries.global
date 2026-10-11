@@ -31,6 +31,116 @@ export type DatasetSeed = {
 
 export const DATASET_SEED: DatasetSeed[] = [
   {
+    key: "wikidata",
+    name: "Wikidata library institutions",
+    publisher: "Wikidata contributors",
+    sourceUrl: "https://www.wikidata.org/wiki/Wikidata:WikiProject_Libraries",
+    licence: "CC0 1.0",
+    licenceUrl: "https://www.wikidata.org/wiki/Wikidata:Licensing",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted",
+    attribution:
+      "Library facts from Wikidata contributors, CC0 1.0. Libraries Global maps institution names, types, coordinates, addresses and current municipality codes; each library links to its original Wikidata entity.",
+    coverage:
+      "Partial baseline for Sweden, Norway and Denmark. Physical libraries with a readable name and either a current municipality code or usable coordinates; known dissolved institutions, digital libraries and library networks are excluded.",
+    importMechanism:
+      "pnpm ingest --dataset=wikidata --country=SE|NO|DK in apps/strapi. Cached SPARQL snapshots, official geographic and population validation, shared draft-write pipeline.",
+    notes:
+      "Wikidata structured data is CC0. This import does not use Wikipedia prose, images, personal contacts or data from unlicensed national directories. Wikidata is a knowledge graph, not a complete live national directory; all operational statuses remain unknown. Multiple rows are grouped by Q identifier; ambiguous current municipalities are reported and skipped. Geographic placement uses current official codes, without interpreting historical library identifiers as municipality codes.",
+  },
+  {
+    key: "scb-population",
+    name: "Statistics Sweden population and regional codes",
+    publisher: "Statistics Sweden (SCB)",
+    sourceUrl: "https://www.scb.se/en/services/open-data-api/",
+    licence: "CC0 1.0",
+    licenceUrl: "https://www.scb.se/en/services/open-data-api/",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted",
+    attribution:
+      "Source: Statistics Sweden. Population table BefolkningCKM, CC0 1.0. Published country, county and municipality totals are retained; municipality name aliases come from Wikidata under CC0 1.0.",
+    coverage:
+      "Sweden, 21 counties and 290 municipalities. Population at 31 December 2025, with the table's current geographic codes.",
+    importMechanism:
+      "Swedish Wikidata ingest reads SCB PxWeb JSON-stat2, selecting total marital status, all ages, both sexes and Population only.",
+    notes:
+      "From 2025 SCB applies Cell Key Method disclosure control. Published totals can differ from component sums. The ingest verifies complete dimensions and geography, retains the source's published values, records discrepancies and carries the CKM note in population coverage. Existing document text, publication state and older observations are preserved.",
+  },
+  {
+    key: "ssb-population",
+    name: "Statistics Norway population and administrative classifications",
+    publisher: "Statistics Norway (SSB)",
+    sourceUrl: "https://www.ssb.no/en/statbank/table/07459/",
+    licence: "CC BY 4.0",
+    licenceUrl: "https://www.ssb.no/en/api/pxwebapiv2",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted_with_attribution",
+    attribution:
+      "Source: Statistics Norway (SSB), table 07459 and Klass classifications 104 and 131, CC BY 4.0. Libraries Global sums all disjoint age categories for both sexes to calculate each geographic total.",
+    coverage:
+      "Norway's 15 current counties and 357 municipalities. Population on 1 January 2026; historic counties are retained separately for review.",
+    importMechanism:
+      "Norwegian Wikidata ingest reads SSB PxWeb and Klass codesAt snapshots dated 2026-01-01, then reconciles municipality, county and national totals.",
+    notes:
+      "Uses current four-digit municipality codes and their two-digit county prefixes. Expired or unspecified codes are not imported. All 106 age categories and both sexes must be present without suppressed cells; every geographic sum must reconcile before writes. This coverage excludes separately catalogued Svalbard and Jan Mayen.",
+  },
+  {
+    key: "dst-population",
+    name: "Statistics Denmark population and reporting areas",
+    publisher: "Statistics Denmark",
+    sourceUrl: "https://www.statbank.dk/FOLK1A",
+    licence: "CC BY 4.0",
+    licenceUrl:
+      "https://www.dst.dk/en/Statistik/hjaelp-til-statistikbanken/api",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted_with_attribution",
+    attribution:
+      "Source: Statistics Denmark – https://www.statbank.dk/FOLK1A, CC BY 4.0. Municipality-to-region links from Wikidata contributors, CC0 1.0; Libraries Global validates the links against the published population totals.",
+    coverage:
+      "Denmark's five regions, 98 municipalities and Christiansø reporting area. Population on 1 January 2026 (2026Q1). Greenland and the Faroe Islands are separate atlas countries.",
+    importMechanism:
+      "Danish Wikidata ingest reads StatBank FOLK1A JSON-stat and the current CC0 municipal hierarchy, requiring all regional and national totals to reconcile.",
+    notes:
+      "Christiansø is outside the 98 municipalities and is retained as an administrative reporting area within Hovedstaden. Published totals are selected for all ages, sexes and marital statuses. The 2027 regional reform is not applied to the 2026 hierarchy. Source links and calculation coverage are retained on population observations.",
+  },
+  {
+    key: "kirjastot-fi",
+    name: "Finnish library directory (Kirkanta)",
+    publisher: "Kirjastot.fi",
+    sourceUrl: "https://api.kirjastot.fi/",
+    licence: "CC BY 4.0",
+    licenceUrl: "https://creativecommons.org/licenses/by/4.0/",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted_with_attribution",
+    attribution:
+      "Contains data from Kirjastot.fi, licensed under CC BY 4.0. API documentation: https://api.kirjastot.fi/. Libraries Global maps names, contact details, types and geographic placement from the original records.",
+    coverage:
+      "Libraries in Finland and Åland: municipal, mobile, university, educational and special libraries. Home delivery services are excluded.",
+    importMechanism:
+      "pnpm ingest --dataset=kirjastot-fi in apps/strapi; reads complete paginated Kirkanta API v4 snapshots and matches official Statistics Finland municipality classifications.",
+    notes:
+      "The API documentation explicitly permits adaptation and redistribution under CC BY 4.0 and requires credit to Kirjastot.fi, the licence and a link to its API documentation. Finnish institution names are preserved. Records have source kirjastot-fi and the numeric Kirkanta library ID as their Source Record. Operational status is unknown because live opening status is not permanent operational status. Photos, descriptions, staff details and dated schedules are not imported.",
+  },
+  {
+    key: "statfin-population",
+    name: "Statistics Finland population and administrative classifications",
+    publisher: "Statistics Finland",
+    sourceUrl: "https://stat.fi/en/Statistics/Vaerak",
+    licence: "CC BY 4.0",
+    licenceUrl:
+      "https://stat.fi/en/about-us/get-to-know-statistics-finland/legislation/terms-of-use",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted_with_attribution",
+    attribution:
+      "Source: Statistics Finland, population structure (table 11ra) and administrative classifications. CC BY 4.0. Libraries Global assigns municipalities to the atlas hierarchy; mainland Finland totals exclude separately catalogued Åland.",
+    coverage:
+      "Finland's current regions and municipalities; Åland's subregions and municipalities; population on 31 December of the selected year using the table's stated boundary vintage.",
+    importMechanism:
+      "Finland ingest: official municipality-to-region and municipality-to-subregion classification APIs, with PxWeb JSON-stat2 table 11ra. Population estimates are stored on geographic documents through the shared population storage.",
+    notes:
+      "The publisher's open-data terms permit copying, adapting and redistribution with attribution. Annual population and boundary vintage are recorded separately. Each region's municipality total and both country totals must reconcile before writes. Finland's atlas population is the complete sum of its mainland regions; Åland is a separate ISO country entry. Existing geographic text, draft edits and publication states are preserved.",
+  },
+  {
     key: "libraryon",
     name: "LibraryOn",
     publisher: "The British Library",

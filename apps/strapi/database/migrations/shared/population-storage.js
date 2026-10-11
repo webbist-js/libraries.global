@@ -205,6 +205,7 @@ function derivedFields(observation, table) {
     population_method: observation.method,
     population_coverage: JSON.stringify({
       complete: observation.population !== null,
+      ...observation.coverage,
       ...(observation.boundaryVersion
         ? { boundaryVersion: observation.boundaryVersion }
         : {}),
@@ -289,7 +290,10 @@ async function storePopulationPlan(knex, plan) {
     const data = { population_estimates: JSON.stringify(values) }
     if (!parent && table !== "site_configs")
       Object.assign(data, derivedFields(latest, table))
-    if (["areas", "regions"].includes(table))
+    if (
+      ["areas", "regions"].includes(table) &&
+      /^[ESWN]\d{8}$/.test(latest.reportingCode)
+    )
       data.gss_code = latest.reportingCode
     await knex(table).where({ document_id: place.document_id }).update(data)
   }

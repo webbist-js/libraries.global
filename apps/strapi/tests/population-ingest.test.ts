@@ -128,6 +128,10 @@ it("atomically stores observations and derived fields without publishing pending
   })
   expect(france.data).not.toHaveProperty("population")
   expect(france.data).not.toHaveProperty("publishedAt")
+  expect(france.where.$or).toEqual([
+    { populationYear: { $null: true } },
+    { populationYear: { $lte: 2024 } },
+  ])
   const england = f.updates.find((row) => row.where.documentId === "eng")!
   expect(england.data).not.toHaveProperty("populationCount")
   expect(england.data.populationCoverage).toMatchObject({

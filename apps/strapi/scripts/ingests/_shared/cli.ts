@@ -25,7 +25,21 @@ export function flag(args: IngestArgs, name: string): boolean {
 }
 
 export function limitOf(args: IngestArgs): number {
-  return args.limit ? Number.parseInt(args.limit, 10) : Infinity
+  if (!args.limit) return Infinity
+  const limit = Number(args.limit)
+  if (!Number.isSafeInteger(limit) || limit < 1)
+    throw new Error("--limit must be a positive integer")
+
+  return limit
+}
+
+export function concurrencyOf(args: IngestArgs): number {
+  const concurrency =
+    args.concurrency === undefined ? 1 : Number(args.concurrency)
+  if (!Number.isSafeInteger(concurrency) || concurrency < 1 || concurrency > 4)
+    throw new Error("--concurrency must be an integer from 1 to 4")
+
+  return concurrency
 }
 
 /** Comma-separated upper-case list, e.g. --state=NY,NJ → ["NY", "NJ"]. */

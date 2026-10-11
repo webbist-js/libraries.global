@@ -223,7 +223,10 @@ export class StrapiClient {
   ): Promise<T> {
     const url = new URL(`${this.baseUrl}${path}`)
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
-    const res = await fetch(url.toString(), { headers: this.headers })
+    const res = await fetch(url.toString(), {
+      headers: this.headers,
+      signal: AbortSignal.timeout(30000),
+    })
     if (!res.ok)
       throw new Error(`GET ${path} → ${res.status}: ${await res.text()}`)
 
@@ -233,6 +236,7 @@ export class StrapiClient {
   async post<T = unknown>(path: string, body: unknown): Promise<T> {
     const res = await fetch(`${this.baseUrl}${path}`, {
       method: "POST",
+      signal: AbortSignal.timeout(30000),
       headers: this.headers,
       body: JSON.stringify(body),
     })
@@ -245,6 +249,7 @@ export class StrapiClient {
   async put<T = unknown>(path: string, body: unknown): Promise<T> {
     const res = await fetch(`${this.baseUrl}${path}`, {
       method: "PUT",
+      signal: AbortSignal.timeout(30000),
       headers: this.headers,
       body: JSON.stringify(body),
     })
@@ -609,8 +614,16 @@ export class StrapiClient {
     const byRecordId = new Map<string, string>()
     for (const lib of libraries) {
       for (const record of lib.sourceRecords ?? []) {
-        if (record.dataset === dataset)
+        if (record.dataset === dataset) {
+          if (
+            byRecordId.has(record.recordId) &&
+            byRecordId.get(record.recordId) !== lib.documentId
+          )
+            throw new Error(
+              `Source Record ${dataset}/${record.recordId} belongs to multiple Libraries`
+            )
           byRecordId.set(record.recordId, lib.documentId)
+        }
       }
     }
 
@@ -805,7 +818,7 @@ function flattenFilters(
   const result: Record<string, string> = {}
   for (const [k, v] of Object.entries(filters)) {
     const key = `${prefix}[${k}]`
-    if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+    if (typeof v === "object" && v !== null) {
       Object.assign(result, flattenFilters(v as Record<string, unknown>, key))
     } else {
       result[key] = String(v)

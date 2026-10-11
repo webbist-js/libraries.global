@@ -17,6 +17,7 @@
     "generate": "strapi generate",
     "generate:types": "strapi ts:generate-types",
     "import": "strapi import -f strapi-export.tar.gz",
+    "ingest": "tsx scripts/ingests/run.ts",
     "postinstall": "pnpm run build:plugins",
     "lint": "eslint -c ../../eslint.config.mjs './**/*.{js,ts,jsx,tsx,cjs,mjs}'",
     "lint:fix": "pnpm lint --fix",

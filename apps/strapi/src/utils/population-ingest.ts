@@ -75,7 +75,21 @@ async function updateDerivedPopulation(
   documentId: string,
   data: Record<string, unknown>
 ) {
-  await strapi.db.query(uid).updateMany({ where: { documentId }, data })
+  await strapi.db.query(uid).updateMany({
+    where: {
+      documentId,
+      // The scheduled World Bank run must not replace a newer national estimate.
+      ...(Number.isInteger(data.populationYear)
+        ? {
+            $or: [
+              { populationYear: { $null: true } },
+              { populationYear: { $lte: data.populationYear } },
+            ],
+          }
+        : {}),
+    },
+    data,
+  })
 }
 
 export async function ingestPopulation(
