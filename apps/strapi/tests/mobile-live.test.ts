@@ -176,6 +176,44 @@ const start = (
   live.start(user, { libraryDocumentId: id, mode }, proof(user), "ba-session")
 
 describe("live identity and library gates", () => {
+  it.each(["en", "cs", "fr"])(
+    "sends the requested %s console link with branded HTML and requires a provider",
+    async (locale) => {
+      const { live, services } = setup()
+      const send = vi.fn().mockResolvedValue({})
+      services["email.email"] = { send }
+      vi.stubEnv("APP_PUBLIC_URL", "https://libraries.global")
+      vi.stubEnv("SMTP_HOST", "smtp.fixture.test")
+      vi.stubEnv("SMTP_USER", "fixture")
+      vi.stubEnv("SMTP_PASS", "fixture")
+      await live.emailLink("owner", id, "owner@example.org", locale)
+      expect(send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: "owner@example.org",
+          subject: "Your mobile library live console",
+          html: expect.stringContaining("Open live console"),
+          text: expect.stringContaining("Sign in on your phone"),
+        })
+      )
+      expect(send.mock.calls[0]![0].html).toContain(
+        `https://libraries.global/${locale}/live/${id}`
+      )
+      for (const key of [
+        "SMTP_HOST",
+        "SMTP_USER",
+        "SMTP_PASS",
+        "MAILTRAP_USER",
+        "MAILTRAP_PASS",
+        "MAILGUN_API_KEY",
+        "MAILGUN_DOMAIN",
+      ])
+        vi.stubEnv(key, "")
+      await expect(
+        live.emailLink("owner", id, "owner@example.org", locale)
+      ).rejects.toMatchObject({ status: 503, code: "email_unavailable" })
+      expect(send).toHaveBeenCalledOnce()
+    }
+  )
   it("binds the HMAC proof to user, active BA session and twelve-hour expiry", () => {
     expect(verifyLiveProof(proof(), "owner", "ba-session")).toBe(true)
     expect(verifyLiveProof(proof(), "editor", "ba-session")).toBe(false)

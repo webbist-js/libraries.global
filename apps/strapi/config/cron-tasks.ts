@@ -70,6 +70,68 @@ const driveLifecycleJob = {
 }
 
 export default {
+  notificationAnnouncements: {
+    task: async ({ strapi }: { strapi: any }) => {
+      try {
+        await strapi.service("api::notification.notification").announcements()
+      } catch {
+        strapi.log.warn("[notifications] Announcement job failed")
+      }
+    },
+    options: { rule: "*/5 * * * *", tz: "Etc/UTC" },
+  },
+  notificationRetention: {
+    task: async ({ strapi }: { strapi: any }) => {
+      try {
+        await strapi.service("api::notification.notification").purge()
+      } catch {
+        strapi.log.warn("[notifications] Retention job failed")
+      }
+    },
+    options: { rule: "30 3 * * *", tz: "Etc/UTC" },
+  },
+  weeklyCommunityReport: {
+    task: async ({ strapi }: { strapi: any }) => {
+      try {
+        await strapi.service("api::notification.notification").weeklyReport()
+      } catch {
+        strapi.log.warn("[email] Weekly community report failed")
+      }
+    },
+    options: { rule: "5 9 * * 1", tz: "Etc/UTC" },
+  },
+  followedLibraryUpdates: {
+    task: async ({ strapi }: { strapi: any }) => {
+      try {
+        await strapi
+          .service("api::notification.notification")
+          .followedLibraryUpdates()
+      } catch {
+        strapi.log.warn("[notifications] Followed-library updates failed")
+      }
+    },
+    options: { rule: "17 * * * *", tz: "Etc/UTC" },
+  },
+  notificationDelivery: {
+    task: async ({ strapi }: { strapi: any }) => {
+      try {
+        await strapi.service("api::notification.notification").deliver()
+      } catch {
+        strapi.log.warn("[email] Notification worker failed")
+      }
+    },
+    options: { rule: "* * * * *", tz: "Etc/UTC" },
+  },
+  weeklyDigest: {
+    task: async ({ strapi }: { strapi: any }) => {
+      try {
+        await strapi.service("api::notification.notification").weeklyDigest()
+      } catch {
+        strapi.log.warn("[email] Weekly digest failed")
+      }
+    },
+    options: { rule: "0 9 * * 1", tz: "Etc/UTC" },
+  },
   population: {
     task: async ({ strapi }: { strapi: any }) => {
       if (process.env.POPULATION_SYNC_ENABLED !== "true") return

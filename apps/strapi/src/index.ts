@@ -10,11 +10,11 @@ import { registerMobileTimetableMiddleware } from "./documentMiddlewares/mobile-
 import { registerAdminUserSubscriber } from "./lifeCycles/adminUser"
 import { registerEntityRefSubscriber } from "./lifeCycles/entityRef"
 import { registerRoleGrantSubscriber } from "./lifeCycles/roleGrant"
-import { registerUserSubscriber } from "./lifeCycles/user"
 import { seedDatasets } from "./seeds/datasets"
 import { seedLegalDocuments } from "./seeds/legal-documents"
 import { seedMobileFacilities } from "./seeds/mobile-facilities"
 import { ensureHotPathIndexes } from "./utils/ensure-hot-path-indexes"
+import { ensureNotificationIndexes } from "./utils/ensure-notification-indexes"
 import { ensureSubscriberIndex } from "./utils/ensure-subscriber-index"
 import { ensureUniqueIndexes } from "./utils/ensure-unique-indexes"
 import { backfillLibraryCompleteness } from "./utils/library-completeness"
@@ -97,7 +97,6 @@ export default {
    */
   async bootstrap({ strapi }: { strapi: Core.Strapi }) {
     registerAdminUserSubscriber({ strapi })
-    registerUserSubscriber({ strapi })
     registerEntityRefSubscriber({ strapi })
     registerRoleGrantSubscriber({ strapi })
     registerAtlasOutboxMiddleware({ strapi })
@@ -122,6 +121,7 @@ export default {
     // before schema sync created the tables. See ensure-unique-indexes.ts.
     await ensureUniqueIndexes(strapi)
     await ensureSubscriberIndex(strapi)
+    await ensureNotificationIndexes(strapi)
 
     // E1 fresh-DB follow-up for the hot-path indexes migration, same reason.
     await ensureHotPathIndexes(strapi)

@@ -1,4 +1,5 @@
 import {
+  emailTemplate,
   findUnsafeContent,
   normalizeMobileTimetable,
   sectionCheckedAt,
@@ -8,13 +9,17 @@ import {
   noticeLocalDate,
 } from "@repo/shared-data"
 
+import { emailConfigured } from "../../../plugins/content-moderation/server/utils/email-config"
 import { noticesForLibrary } from "../../../utils/library-notices"
 import {
   AFFILIATION_UID,
   listStaff,
   requireStaffMember,
 } from "../../../utils/staff"
-import { notifyStaffChange } from "../../../utils/staff-notifications"
+import {
+  afterStaffCommit,
+  notifyStaffChange,
+} from "../../../utils/staff-notifications"
 import { hasLibraryFeature } from "../../../utils/team-access"
 
 export const AUDIT = "plugin::library-staff.staff-audit"
@@ -140,7 +145,20 @@ export default ({ strapi }: { strapi: any }) => ({
     })
   },
   async mail(to: string | string[], subject: string, text: string) {
-    await strapi.plugin("email").service("email").send({ to, subject, text })
+    if (!emailConfigured())
+      throw new StaffError(503, "email_provider_not_configured")
+    await strapi
+      .plugin("email")
+      .service("email")
+      .send({
+        to,
+        ...emailTemplate({
+          postalAddress: process.env.EMAIL_POSTAL_ADDRESS,
+          siteUrl: process.env.APP_PUBLIC_URL,
+          title: subject,
+          body: text,
+        }),
+      })
   },
   async joined(user: string, id: string) {
     await this.audit(id, user, "joined", user)
@@ -419,6 +437,9 @@ export default ({ strapi }: { strapi: any }) => ({
         }
         if (Object.keys(data).length === 0)
           throw new StaffError(400, "empty_change")
+        const permissionsChanged = Object.keys(data).some(
+          (key) => data[key] !== (member as any)[key]
+        )
         await strapi
           .documents(AFFILIATION_UID)
           .update({ documentId: member.affiliationDocumentId, data })
@@ -429,6 +450,27 @@ export default ({ strapi }: { strapi: any }) => ({
             key === "staffRole" ? "level_changed" : "can_go_live_changed",
             member.baUserId,
             { previous: (member as any)[key], next: data[key] }
+          )
+        if (permissionsChanged)
+          await afterStaffCommit(
+            strapi,
+            `staff permissions for ${member.baUserId}`,
+            async () => {
+              const library = await strapi.documents(LIBRARY).findOne({
+                documentId: id,
+                status: "published",
+                fields: ["name", "slug"],
+              })
+              await strapi.service("api::notification.notification").enqueue({
+                baUserId: member.baUserId,
+                kind: "staff_update",
+                eventKey: `staff-permissions:${id}:${member.baUserId}:${JSON.stringify(data)}:${Date.now()}`,
+                title: `Your staff permissions for ${library?.name ?? "a library"} changed`,
+                body: "An owner changed your staff level or permission to go live. Check the Team tab for your current access.",
+                href: library?.slug ? `/staff/${library.slug}/team` : "/staff",
+                emailPreference: "transactional",
+              })
+            }
           )
       }
       // Membership effects (hasStaff, live sessions, search, the removal

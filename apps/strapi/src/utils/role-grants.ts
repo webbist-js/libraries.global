@@ -281,6 +281,7 @@ export async function resyncExpiredRoleGrants(
 ): Promise<{ users: number }> {
   const since = new Date(now.getTime() - 48 * 60 * 60 * 1000)
   const users = new Set<string>()
+  const expired: { baUserId: string; documentId: string }[] = []
   for (let start = 0; ; start += MIGRATION_PAGE) {
     const rows = (await strapi.documents(ROLE_GRANT as any).findMany({
       filters: {
@@ -289,13 +290,33 @@ export async function resyncExpiredRoleGrants(
           { expiresAt: { $lte: now.toISOString() } },
         ],
       },
-      fields: ["baUserId"],
+      fields: ["baUserId", "documentId"],
       sort: "id:asc",
       start,
       limit: MIGRATION_PAGE,
-    })) as { baUserId?: string | null }[]
-    for (const row of rows) if (row.baUserId) users.add(row.baUserId)
+    })) as { baUserId?: string | null; documentId: string }[]
+    for (const row of rows)
+      if (row.baUserId) {
+        users.add(row.baUserId)
+        expired.push({ baUserId: row.baUserId, documentId: row.documentId })
+      }
     if (rows.length < MIGRATION_PAGE) break
+  }
+
+  for (const row of expired) {
+    try {
+      await strapi.service("api::notification.notification").enqueue({
+        baUserId: row.baUserId,
+        kind: "staff_update",
+        eventKey: `role-expiry:${row.documentId}`,
+        title: "A role grant has expired",
+        body: "One of your time-limited project roles has expired. Other active grants still apply. Check your current permissions, or contact a project steward if you need the grant renewed.",
+        href: "/contribute/membership",
+        emailPreference: "transactional",
+      })
+    } catch (err) {
+      strapi.log.warn("[role-grants] Expiry notification failed", err)
+    }
   }
 
   for (const baUserId of users) {

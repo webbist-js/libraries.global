@@ -43,7 +43,7 @@
     },
     "communicationLocale": {
       "type": "enumeration",
-      "enum": ["en", "cs"],
+      "enum": ["en", "cs", "fr"],
       "default": "en"
     },
     "consentedAt": {
@@ -58,6 +58,13 @@
     },
     "invitedAt": {
       "type": "datetime"
+    },
+    "confirmedAt": {
+      "type": "datetime"
+    },
+    "confirmationSentAt": {
+      "type": "datetime",
+      "private": true
     }
   }
 }

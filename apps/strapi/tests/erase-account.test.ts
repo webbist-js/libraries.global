@@ -248,6 +248,22 @@ describe("eraseAccount", () => {
     expect(store[UP_USER]).toEqual([])
   })
 
+  it("erases owned notifications and guest newsletter delivery records for the deleted address", async () => {
+    const { strapi, store } = seed()
+    const notifications = "api::notification.notification"
+    store[notifications] = [
+      { documentId: "owned", baUserId: "u1" },
+      { documentId: "confirmation", recipientEmail: "alice@example.org" },
+      {
+        documentId: "other",
+        baUserId: "u2",
+        recipientEmail: "bob@example.org",
+      },
+    ]
+    await eraseAccount(strapi, { baUserId: "u1", email: "Alice@Example.org" })
+    expect(store[notifications].map((n) => n.documentId)).toEqual(["other"])
+  })
+
   it("deletes every role grant the user holds, and only theirs", async () => {
     const { strapi, store } = seed()
     await eraseAccount(strapi, { baUserId: "u1", email: "alice@example.org" })

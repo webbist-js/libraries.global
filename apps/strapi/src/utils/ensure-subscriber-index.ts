@@ -15,6 +15,10 @@ export async function ensureSubscriberIndex(
     await trx("subscribers")
       .whereNull("state")
       .update({ state: "pending_confirmation" })
+    await trx("subscribers")
+      .where({ type: "newsletter", state: "active" })
+      .whereNull("confirmed_at")
+      .update({ state: "pending_confirmation" })
     // Legacy rows keep their evidence and are excluded from sendable exports.
     // Never delete ambiguous duplicates: retain them for an operator to inspect.
     const dialect = String(strapi.db.dialect.client)

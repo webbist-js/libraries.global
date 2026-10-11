@@ -42,10 +42,14 @@ describe("POST /subscribers (E6)", () => {
           email: "Existing@Example.org",
           type: "newsletter",
           state: "active",
+          confirmedAt: "2026-10-01T12:00:00.000Z",
           consentedAt: "2026-10-01T12:00:00.000Z",
         },
       ],
     })
+    fake.services["api::subscriber.email-preferences"] = {
+      confirmRequest: vi.fn(async () => {}),
+    }
     controller = factory({
       strapi: { ...fake.strapi, contentType: () => ({ uid: SUBSCRIBER }) },
     } as any)
@@ -76,6 +80,10 @@ describe("POST /subscribers (E6)", () => {
       /^Signed up via the website footer on \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/
     )
     expect(row.name).toBeUndefined()
+    expect(row.state).toBe("pending_confirmation")
+    expect(
+      fake.services["api::subscriber.email-preferences"].confirmRequest
+    ).toHaveBeenCalledOnce()
     expect(row.content).toBeUndefined()
   })
 
@@ -141,29 +149,32 @@ describe("POST /subscribers (E6)", () => {
     expect(sixth.status).toBe(429)
   })
 
-  it("keeps beta and newsletter consent separate for the same address", async () => {
-    await controller.subscribe(
-      ctx({
-        email: "existing@example.org",
+  it.each(["en", "cs", "fr"])(
+    "keeps beta and newsletter consent separate for the same address in %s",
+    async (locale) => {
+      await controller.subscribe(
+        ctx({
+          email: "existing@example.org",
+          type: "beta_waitlist",
+          locale,
+        })
+      )
+      await controller.subscribe(
+        ctx({ email: "EXISTING@example.org", type: "beta_waitlist" })
+      )
+      const rows = fake.store[SUBSCRIBER]
+      expect(rows).toHaveLength(2)
+      expect(rows[1]).toMatchObject({
         type: "beta_waitlist",
-        locale: "cs",
+        source: "beta_landing",
+        state: "active",
+        communicationLocale: locale,
+        baUserId: null,
       })
-    )
-    await controller.subscribe(
-      ctx({ email: "EXISTING@example.org", type: "beta_waitlist" })
-    )
-    const rows = fake.store[SUBSCRIBER]
-    expect(rows).toHaveLength(2)
-    expect(rows[1]).toMatchObject({
-      type: "beta_waitlist",
-      source: "beta_landing",
-      state: "active",
-      communicationLocale: "cs",
-      baUserId: null,
-    })
-    expect(rows[1].consentedAt).toBeTruthy()
-    expect(rows[1].message).toContain("No newsletter")
-  })
+      expect(rows[1].consentedAt).toBeTruthy()
+      expect(rows[1].message).toContain("No newsletter")
+    }
+  )
 
   it("attributes only matching newsletters to the authenticated bridge user", async () => {
     for (const [type, email] of [
@@ -181,7 +192,7 @@ describe("POST /subscribers (E6)", () => {
     ).toEqual([null, "account-id", null])
   })
 
-  it.each(["unsubscribed", "suppressed"])(
+  it.each(["suppressed"])(
     "preserves %s records on repeated collection",
     async (state) => {
       fake.store[SUBSCRIBER][0].state = state
@@ -200,7 +211,7 @@ describe("POST /subscribers (E6)", () => {
       ctx({ email: "existing@example.org", source: "journal" })
     )
     expect(fake.store[SUBSCRIBER][0]).toMatchObject({
-      state: "active",
+      state: "pending_confirmation",
       source: "journal",
       message: "Old evidence",
     })

@@ -1,5 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+vi.mock("../../src/utils/email-recipients", () => ({
+  verifiedEmailMap: vi.fn(
+    async (_strapi: unknown, ids: string[]) =>
+      new Map(ids.map((id) => [id, `${id}@example.org`]))
+  ),
+}))
+
+import createActivityNotifications from "../../src/api/notification/services/notification"
 import createNotifications, {
   setNotificationScheduler,
 } from "../../src/plugins/content-moderation/server/services/notifications"
@@ -74,6 +82,13 @@ function setup(
     get: (key: string) =>
       key === "plugin::email.provider" ? "sendmail" : undefined,
   }
+  const activity = createActivityNotifications({ strapi: f.strapi })
+  f.services["api::notification.notification"] = {
+    enqueue: vi.fn(async (input) => {
+      await activity.enqueue(input)
+      await activity.deliver(new Date(Date.now() + 1000))
+    }),
+  }
   f.services["email.email"] = { send }
   f.services["rewards.points"] = { award: vi.fn(async () => {}) }
   f.services["content-moderation.notifications"] = createNotifications({
@@ -93,6 +108,8 @@ const MAIL_ENV = [
 ]
 beforeEach(() => {
   process.env.APP_PUBLIC_URL = "https://app.example.org/"
+  process.env.EMAIL_SEND_INTERVAL_MS = "0"
+  process.env.EMAIL_LINK_SECRET = "a".repeat(64)
   for (const k of MAIL_ENV) delete process.env[k]
   queued = []
   setNotificationScheduler((task) => {
@@ -126,15 +143,16 @@ describe("decision emails", () => {
   })
 
   it("respects editsReviewed: false", async () => {
-    const { svc, send, strapi } = setup({
+    const { svc, send, store } = setup({
       notifPrefs: { editsReviewed: false },
     })
     await svc.updateStatus(CORRECTION_ID, "rejected", REVIEWER)
     await flush()
     expect(send).not.toHaveBeenCalled()
-    expect(strapi.log.info).toHaveBeenCalledWith(
-      expect.stringContaining("[notifications]")
-    )
+    expect(store["api::notification.notification"]![0]).toMatchObject({
+      inApp: true,
+      emailState: "skipped",
+    })
   })
 
   it("never fails the approval when sending throws", async () => {
@@ -148,20 +166,20 @@ describe("decision emails", () => {
     expect(store[SUB]![0]!.status).toBe("approved")
     await flush()
     expect(strapi.log.warn).toHaveBeenCalledWith(
-      expect.stringContaining("[notifications]"),
-      expect.anything()
+      expect.stringContaining("[email]")
     )
   })
 
   it("logs and skips when no email provider is configured", async () => {
-    const { svc, send, strapi } = setup({ configured: false })
+    const { svc, send, store } = setup({ configured: false })
     const res = await svc.updateStatus(CORRECTION_ID, "approved", REVIEWER)
     expect("data" in res).toBe(true)
     await flush()
     expect(send).not.toHaveBeenCalled()
-    expect(strapi.log.info).toHaveBeenCalledWith(
-      expect.stringContaining("no email provider")
-    )
+    expect(store["api::notification.notification"]![0]).toMatchObject({
+      inApp: true,
+      emailState: "pending",
+    })
   })
 
   it("always emails an applicant about their application", async () => {

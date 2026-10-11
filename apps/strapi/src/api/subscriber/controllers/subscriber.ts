@@ -6,6 +6,7 @@
  * for newsletters. Core CRUD routes are not exposed.
  */
 
+import { isSupportedLocale } from "@repo/shared-data"
 import { factories } from "@strapi/strapi"
 
 import {
@@ -49,6 +50,61 @@ function clientIp(ctx: any): string {
 }
 
 export default factories.createCoreController(SUBSCRIBER, ({ strapi }) => ({
+  async account(ctx: any) {
+    const id = bridgeBaUserId(ctx)
+    const email = ctx.request.headers["x-ba-user-email"]
+    if (!id || typeof email !== "string" || !EMAIL.test(email))
+      return ctx.unauthorized()
+    const rows = await strapi.documents(SUBSCRIBER).findMany({
+      filters: { type: "newsletter", email: { $eqi: email } },
+      limit: 20,
+    } as never)
+    ctx.set?.("Cache-Control", "private, no-store")
+
+    return ctx.send({
+      subscribed: rows.some((row) => row.state === "active" && row.confirmedAt),
+      suppressed: rows.some((row) => row.state === "suppressed"),
+    })
+  },
+  async accountUpdate(ctx: any) {
+    const id = bridgeBaUserId(ctx)
+    const email = ctx.request.headers["x-ba-user-email"]
+    if (!id || typeof email !== "string" || !EMAIL.test(email))
+      return ctx.unauthorized()
+    const enabled = ctx.request.body?.enabled
+    if (typeof enabled !== "boolean")
+      return ctx.badRequest("Invalid preference")
+    if (enabled) {
+      ctx.request.body = { email, type: "newsletter", source: "footer" }
+
+      return this.subscribe(ctx, async () => {})
+    }
+    const rows = await strapi.documents(SUBSCRIBER).findMany({
+      filters: { type: "newsletter", email: { $eqi: email } },
+      limit: 100,
+    } as never)
+    for (const row of rows)
+      if (row.state !== "suppressed")
+        await strapi.documents(SUBSCRIBER).update({
+          documentId: row.documentId,
+          data: { state: "unsubscribed", baUserId: id } as never,
+        })
+
+    return ctx.send({ ok: true })
+  },
+  async emailAction(ctx: any) {
+    if (!isValidServiceSecret(ctx.request?.headers?.["x-service-secret"]))
+      return ctx.unauthorized()
+    const { token, apply } = ctx.request.body ?? {}
+    if (typeof apply !== "boolean") return ctx.badRequest("Invalid action")
+    const result = await strapi
+      .service("api::subscriber.email-preferences")
+      .action(token, apply)
+    ctx.set?.("Cache-Control", "private, no-store")
+    if (!result) return ctx.badRequest("This link is invalid or expired")
+
+    return ctx.send(result)
+  },
   async subscribe(ctx: any) {
     const headers = ctx.request?.headers ?? ctx.request?.header ?? {}
     if (!isValidServiceSecret(headers["x-service-secret"])) {
@@ -72,14 +128,16 @@ export default factories.createCoreController(SUBSCRIBER, ({ strapi }) => ({
     )
       return ctx.badRequest("Invalid source")
     const locale = ctx.request.body.locale ?? "en"
-    if (!["en", "cs"].includes(locale)) return ctx.badRequest("Invalid locale")
+    if (!isSupportedLocale(locale)) return ctx.badRequest("Invalid locale")
     const baUserId =
       type === "newsletter" &&
       headers["x-ba-user-email"]?.toLowerCase() === email
         ? bridgeBaUserId(ctx)
         : null
 
-    if (!subscriberRateLimiter.take(clientIp(ctx))) {
+    if (
+      !subscriberRateLimiter.take(baUserId ? `user:${baUserId}` : clientIp(ctx))
+    ) {
       ctx.set?.("Retry-After", "3600")
 
       return ctx.tooManyRequests(
@@ -96,59 +154,82 @@ export default factories.createCoreController(SUBSCRIBER, ({ strapi }) => ({
       (await strapi
         .documents(SUBSCRIBER)
         .findFirst({ filters: filters as never }))
-    if (!existing) {
-      try {
-        await strapi.documents(SUBSCRIBER).create({
-          data: {
-            email,
-            type,
-            source,
-            state: "active",
-            communicationLocale: locale,
-            baUserId,
-            consentedAt: new Date().toISOString(),
-            consentVersion: `${type}-${source}-2026-10-10`,
-            message:
-              type === "beta_waitlist"
-                ? "Requested beta access only. No newsletter."
-                : source === "journal"
-                  ? "Agreed to receive new Journal articles by email, at most monthly."
-                  : `Signed up via the website footer on ${new Date().toISOString()}`,
-          } as never,
-        })
-      } catch (error: any) {
-        if (error?.code !== "23505" && error?.cause?.code !== "23505")
-          throw error
-        // A concurrent collection already saved this purpose. Other write failures propagate.
-      }
-    } else if (
-      !existing.consentedAt &&
-      existing.state !== "unsubscribed" &&
-      existing.state !== "suppressed"
-    ) {
-      // This explicit submission supplies new consent; the old message remains evidence.
-      try {
-        await strapi.documents(SUBSCRIBER).update({
-          documentId: existing.documentId,
-          data: {
-            type,
-            source,
-            state: "active",
-            communicationLocale: locale,
-            baUserId,
-            consentedAt: new Date().toISOString(),
-            consentVersion: `${type}-${source}-2026-10-10`,
-          } as never,
-        })
-      } catch (error: any) {
-        if (error?.code !== "23505" && error?.cause?.code !== "23505")
-          throw error
-      }
-    } else if (baUserId && existing.state === "active" && !existing.baUserId) {
-      await strapi.documents(SUBSCRIBER).update({
-        documentId: existing.documentId,
-        data: { baUserId } as never,
+    let saved = existing
+    try {
+      await strapi.db.transaction(async () => {
+        if (!existing) {
+          saved = await strapi.documents(SUBSCRIBER).create({
+            data: {
+              email,
+              type,
+              source,
+              state:
+                type === "newsletter" && !baUserId
+                  ? "pending_confirmation"
+                  : "active",
+              confirmedAt:
+                type === "newsletter" && baUserId
+                  ? new Date().toISOString()
+                  : null,
+              communicationLocale: locale,
+              baUserId,
+              consentedAt: new Date().toISOString(),
+              consentVersion: `${type}-${source}-2026-10-10`,
+              message:
+                type === "beta_waitlist"
+                  ? "Requested beta access only. No newsletter."
+                  : source === "journal"
+                    ? "Agreed to receive new Journal articles by email, at most monthly."
+                    : `Signed up via the website footer on ${new Date().toISOString()}`,
+            } as never,
+          })
+        } else if (
+          (!existing.consentedAt || existing.state === "unsubscribed") &&
+          existing.state !== "suppressed"
+        ) {
+          // This explicit submission supplies new consent; the old message remains evidence.
+          saved = await strapi.documents(SUBSCRIBER).update({
+            documentId: existing.documentId,
+            data: {
+              type,
+              source,
+              state:
+                type === "newsletter" && !baUserId
+                  ? "pending_confirmation"
+                  : "active",
+              confirmedAt:
+                type === "newsletter" && baUserId
+                  ? new Date().toISOString()
+                  : null,
+              confirmationSentAt: null,
+              communicationLocale: locale,
+              baUserId,
+              consentedAt: new Date().toISOString(),
+              consentVersion: `${type}-${source}-2026-10-10`,
+            } as never,
+          })
+        } else if (
+          baUserId &&
+          ["active", "pending_confirmation"].includes(existing.state) &&
+          (!existing.baUserId || !existing.confirmedAt)
+        ) {
+          saved = await strapi.documents(SUBSCRIBER).update({
+            documentId: existing.documentId,
+            data: {
+              baUserId,
+              state: "active",
+              confirmedAt: new Date().toISOString(),
+            } as never,
+          })
+        }
+        if (type === "newsletter" && saved?.state === "pending_confirmation")
+          await strapi
+            .service("api::subscriber.email-preferences")
+            .confirmRequest(saved)
       })
+    } catch (error: any) {
+      // Handle a winning concurrent transaction only after ours has rolled back.
+      if (error?.code !== "23505" && error?.cause?.code !== "23505") throw error
     }
 
     // The same answer whether or not the address was already known.
@@ -170,6 +251,7 @@ export default factories.createCoreController(SUBSCRIBER, ({ strapi }) => ({
         type,
         state: "active",
         consentedAt: { $notNull: true },
+        ...(type === "newsletter" ? { confirmedAt: { $notNull: true } } : {}),
         ...(type === "beta_waitlist" ? { invitedAt: { $null: true } } : {}),
       } as never,
       // documentId is an implicit Strapi field omitted from schema sort types.

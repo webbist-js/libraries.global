@@ -50,6 +50,7 @@ function fakeStrapi(opts: {
     streak: opts.profileStreak ?? 0,
   }))
   const strapi: any = {
+    service: vi.fn(() => ({ enqueue: vi.fn(async () => {}) })),
     db: {
       connection,
       query: vi.fn((uid: string) =>
@@ -72,8 +73,18 @@ function fakeStrapi(opts: {
 describe("badges.checkAndAward", () => {
   it("awards streak badges from the profile's current streak", async () => {
     const { strapi, created } = fakeStrapi({})
+    const enqueue = vi.fn().mockResolvedValue({})
+    strapi.service.mockReturnValue({ enqueue })
     await createBadges({ strapi }).checkAndAward("u1", { streak: 7 })
     expect(created).toEqual(["dawn_shift"])
+    expect(enqueue).toHaveBeenCalledOnce()
+    expect(enqueue).toHaveBeenCalledWith(
+      expect.objectContaining({
+        baUserId: "u1",
+        kind: "recognition",
+        emailPreference: "recognition",
+      })
+    )
   })
 
   it("reads the streak from the profile when not given one", async () => {
@@ -99,11 +110,14 @@ describe("badges.checkAndAward", () => {
           ? Object.assign(new Error("duplicate key"), { code: "23505" })
           : null,
     })
+    const enqueue = vi.fn().mockResolvedValue({})
+    strapi.service.mockReturnValue({ enqueue })
     await expect(
       createBadges({ strapi }).checkAndAward("u1", { streak: 0 })
     ).resolves.toBeUndefined()
     expect(create).toHaveBeenCalledTimes(2)
     expect(created).toEqual(["overdue_fine"])
+    expect(enqueue).toHaveBeenCalledOnce()
   })
 
   it("still throws other insert errors", async () => {

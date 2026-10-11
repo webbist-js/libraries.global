@@ -604,8 +604,12 @@ const prepareEmailConfig = (env) => {
       provider: "nodemailer",
       providerOptions: {
         host: env("SMTP_HOST"),
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 20000,
         port: Number.parseInt(env("SMTP_PORT", "587"), 10),
         secure: env("SMTP_SECURE", "false") === "true",
+        requireTLS: env("SMTP_SECURE", "false") !== "true",
         auth: { user: env("SMTP_USER"), pass: env("SMTP_PASS") },
       },
       settings: {
@@ -640,6 +644,10 @@ const prepareEmailConfig = (env) => {
       provider: "nodemailer",
       providerOptions: {
         host: env("MAILTRAP_HOST", "sandbox.smtp.mailtrap.io"),
+        requireTLS: true,
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 20000,
         port: Number.parseInt(env("MAILTRAP_PORT", "2525"), 10),
         auth: {
           user: env("MAILTRAP_USER"),
@@ -647,8 +655,14 @@ const prepareEmailConfig = (env) => {
         },
       },
       settings: {
-        defaultFrom: env("MAILTRAP_EMAIL") || "noreply@libraries.global",
-        defaultReplyTo: env("MAILTRAP_EMAIL") || "info@libraries.global",
+        defaultFrom:
+          env("EMAIL_FROM") ||
+          env("MAILTRAP_EMAIL") ||
+          "noreply@libraries.global",
+        defaultReplyTo:
+          env("EMAIL_REPLY_TO") ||
+          env("MAILTRAP_EMAIL") ||
+          "hello@libraries.global",
       },
     }
   }

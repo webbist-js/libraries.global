@@ -1,3 +1,4 @@
+import { adminResetEmailTemplate } from "@repo/shared-data"
 import type { UID } from "@strapi/strapi"
 
 import type { StrapiPreviewConfig } from "../types/internals"
@@ -11,6 +12,14 @@ export default ({ env }) => {
   }
 
   return {
+    forgotPassword: {
+      from: env("EMAIL_FROM"),
+      replyTo: env("EMAIL_REPLY_TO"),
+      emailTemplate: adminResetEmailTemplate({
+        siteUrl: env("APP_PUBLIC_URL"),
+        postalAddress: env("EMAIL_POSTAL_ADDRESS"),
+      }),
+    },
     auth: {
       secret: env("ADMIN_JWT_SECRET"),
     },

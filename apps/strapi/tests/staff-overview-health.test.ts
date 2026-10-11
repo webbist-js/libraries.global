@@ -345,6 +345,8 @@ describe("staff team tab", () => {
 
 describe("staff access report", () => {
   it("links the Moderators to the library's staff list on the site", async () => {
+    vi.stubEnv("MAILTRAP_USER", "fixture")
+    vi.stubEnv("MAILTRAP_PASS", "fixture")
     vi.stubEnv("MODERATORS_EMAIL", "mods@example.org")
     vi.stubEnv("APP_PUBLIC_URL", "https://libraries.example")
     const { staff, services, store } = setup()
@@ -373,6 +375,8 @@ describe("staff access report", () => {
     await expect(
       staff.report("owner", ID, "Someone I don't recognise has joined.")
     ).rejects.toMatchObject({ status: 503 })
+    vi.stubEnv("MAILTRAP_USER", "fixture")
+    vi.stubEnv("MAILTRAP_PASS", "fixture")
     vi.stubEnv("MODERATORS_EMAIL", "mods@example.org")
     await expect(staff.report("owner", ID, "short")).rejects.toMatchObject({
       status: 400,

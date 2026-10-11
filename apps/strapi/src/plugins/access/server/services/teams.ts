@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "node:crypto"
 
 import type { StaffRole } from "@repo/access"
+import { emailTemplate } from "@repo/shared-data"
 
 import {
   grantVerifiedLibrarian,
@@ -573,7 +574,17 @@ export default ({ strapi }: { strapi: any }) => {
 
         return false
       }
-      await email.send({ to, subject, text })
+      await email.send({
+        to,
+        ...emailTemplate({
+          postalAddress: process.env.EMAIL_POSTAL_ADDRESS,
+          siteUrl: process.env.APP_PUBLIC_URL,
+          title: subject,
+          body: text,
+          url: text.match(/https?:\/\/\S+/)?.[0],
+          action: "Open invitation",
+        }),
+      })
 
       return true
     } catch (err) {

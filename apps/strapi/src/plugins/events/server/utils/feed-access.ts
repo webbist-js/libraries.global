@@ -1,5 +1,3 @@
-import { emailConfigured } from "../../../content-moderation/server/utils/email-config"
-
 const LIBRARY_AFFILIATION_UID = "api::library-affiliation.library-affiliation"
 const CLAIMANTS_MAX = 100
 /**
@@ -56,17 +54,16 @@ export async function notifyOtherClaimants(
     const ids = [...new Set(affiliations.map((a) => a.baUserId))].filter(
       (id) => id !== exceptBaUserId
     )
-    if (ids.length === 0 || !emailConfigured()) return
-
-    const emails: string[] =
-      (await strapi
-        .plugin("content-moderation")
-        .service("notifications")
-        .emailsOf?.(ids)) ?? []
-    const email = strapi.plugin?.("email")?.service?.("email")
-    if (typeof email?.send !== "function") return
-    for (const to of emails) {
-      await email.send({ to, subject: message.subject, text: message.text })
+    for (const baUserId of ids) {
+      await strapi.service("api::notification.notification").enqueue({
+        baUserId,
+        kind: "feed_update",
+        eventKey: `feed:${libraryDocumentIds.slice().sort().join(",")}:${message.subject}:${baUserId}:${Math.floor(Date.now() / 60000)}`,
+        title: message.subject,
+        body: message.text,
+        href: "/staff",
+        emailPreference: "transactional",
+      })
     }
   } catch (err) {
     strapi.log.warn("[events] claimant notification failed", err)

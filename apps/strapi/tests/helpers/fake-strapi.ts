@@ -319,6 +319,8 @@ export function makeFakeStrapi(
   // midway leaves no partial writes. Nested calls join the outer one, like
   // the real AsyncLocalStorage-backed implementation.
   let txDepth = 0
+  let commitCallbacks: (() => void)[] = []
+  let rollbackCallbacks: (() => void)[] = []
   const restore = (snap: Record<string, Doc[]>) => {
     for (const k of Object.keys(store)) {
       if (!(k in snap)) delete store[k]
@@ -340,8 +342,10 @@ export function makeFakeStrapi(
     ) => {
       const nested = txDepth > 0
       const snap = nested ? null : structuredClone(store)
-      const commitCallbacks: (() => void)[] = []
-      const rollbackCallbacks: (() => void)[] = []
+      if (!nested) {
+        commitCallbacks = []
+        rollbackCallbacks = []
+      }
       txDepth += 1
       try {
         const res = await cb({

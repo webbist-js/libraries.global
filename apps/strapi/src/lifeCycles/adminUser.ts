@@ -1,5 +1,8 @@
+import { emailTemplate } from "@repo/shared-data"
 import type { Event } from "@strapi/database/dist/lifecycles"
 import type { Core } from "@strapi/strapi"
+
+import { emailConfigured } from "../plugins/content-moderation/server/utils/email-config"
 
 export const registerAdminUserSubscriber = async ({
   strapi,
@@ -24,18 +27,31 @@ const sendEmail = async (strapi: Core.Strapi, event: Event) => {
   const { email, registrationToken } = event.result ?? {}
 
   if (registrationToken && email) {
-    const html = `<h2>Welcome to our team!</h2> <h3>We have created an administrator account for you</h3><p>
-           To access the administration panel, click <a href="${process.env.APP_URL}/admin/auth/register?registrationToken=${registrationToken}" target="_blank">here</a>.
-         </p>`
+    if (!emailConfigured()) {
+      strapi.log.warn("[email] Admin invitation not sent: provider missing")
+
+      return
+    }
+    const url = new URL(
+      "/admin/auth/register",
+      process.env.APP_URL || "http://localhost:1337"
+    )
+    url.searchParams.set("registrationToken", registrationToken)
 
     try {
       await strapi.plugins["email"].services.email.send({
         to: email,
-        subject: "Strapi invitation to the administration panel",
-        html,
+        ...emailTemplate({
+          postalAddress: process.env.EMAIL_POSTAL_ADDRESS,
+          siteUrl: process.env.APP_PUBLIC_URL,
+          title: "Your Libraries Global admin invitation",
+          body: "You have been invited to the Libraries Global content administration team. Set up your administrator account using the link below.",
+          url: url.toString(),
+          action: "Accept admin invitation",
+        }),
       })
-    } catch (e) {
-      console.error("Failed to send admin invitation email:", e)
+    } catch {
+      strapi.log.warn("[email] Admin invitation failed; resend it from Strapi")
     }
   }
 }

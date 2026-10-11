@@ -76,6 +76,13 @@ export async function eraseAccount(
   const filesToRemove: unknown[] = []
 
   await strapi.db.transaction(async () => {
+    await strapi.db.query("api::notification.notification").deleteMany({
+      where: email
+        ? {
+            $or: [{ baUserId }, { recipientEmail: email.trim().toLowerCase() }],
+          }
+        : { baUserId },
+    })
     await strapi.plugin("mobile-libraries")?.service("live")?.eraseFor(baUserId)
     await strapi.db.query("api::library-notice.library-notice").updateMany({
       where: { createdByBaUserId: baUserId },

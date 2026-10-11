@@ -5,6 +5,7 @@ import {
   type FeedTestCode,
 } from "@repo/shared-data"
 
+import { verifiedEmailMap } from "../../../../utils/email-recipients"
 import { emailConfigured } from "../utils/email-config"
 import {
   applicationDecidedEmail,
@@ -33,7 +34,6 @@ export type SubmissionRow = {
 type Decision = "approved" | "rejected" | "needs_info"
 
 const PROFILE = "api::user-profile.user-profile"
-const SUBMISSION_UID = "plugin::content-moderation.submission"
 const DEFAULT_MODERATORS_EMAIL = "moderators@libraries.global"
 const DEFAULT_APP_URL = "https://libraries.global"
 /** Only these reaching `pending` alert the moderators (spec §6.3). */
@@ -42,9 +42,6 @@ const ALERT_TYPES = new Set([
   "event_feed",
   "drive_proposal",
 ])
-/** Matches `people.ts`'s own lookup: no user-profile carries an email, so
- * the one each person's submissions were filed with is the best we know. */
-const EMAIL_ROWS_MAX = 500
 /** Chunk size for an `$in` lookup over an arbitrary number of baUserIds. */
 const ID_CHUNK = 200
 /** `drive.unit` (spec's Drive Scope/Unit) → the plural a thank-you email reads naturally with. */
@@ -146,9 +143,35 @@ export default ({ strapi }: { strapi: any }) => {
   /** Sends one email, or logs why it didn't. Never throws. */
   async function send(
     what: string,
-    msg: { to: string; subject: string; text: string; html: string }
+    msg: { to: string; subject: string; text: string; html: string },
+    activity?: {
+      baUserId: string
+      eventKey: string
+      kind: "submission_review" | "drive_closed"
+      preference: "editsReviewed" | "drives" | "transactional"
+      href: string
+    }
   ): Promise<void> {
     try {
+      if (activity) {
+        const emailPayload = {
+          subject: msg.subject,
+          text: msg.text,
+          html: msg.html,
+        }
+        await strapi.service("api::notification.notification").enqueue({
+          baUserId: activity.baUserId,
+          eventKey: activity.eventKey,
+          kind: activity.kind,
+          title: msg.subject,
+          body: msg.text,
+          href: activity.href,
+          emailPreference: activity.preference,
+          emailPayload,
+        })
+
+        return
+      }
       const email = strapi.plugin?.("email")?.service?.("email")
       if (!emailConfigured() || typeof email?.send !== "function") {
         strapi.log.info(
@@ -161,17 +184,6 @@ export default ({ strapi }: { strapi: any }) => {
     } catch (err) {
       strapi.log.warn(`[notifications] could not send ${what}`, err)
     }
-  }
-
-  /** `notifPrefs.editsReviewed`, true unless the submitter turned it off. */
-  async function wantsDecisionEmails(baUserId: string): Promise<boolean> {
-    const [profile] = (await strapi.documents(PROFILE).findMany({
-      filters: { baUserId: { $eq: baUserId } },
-      fields: ["notifPrefs"],
-      limit: 1,
-    })) as { notifPrefs?: Record<string, unknown> | null }[]
-
-    return profile?.notifPrefs?.editsReviewed !== false
   }
 
   return {
@@ -202,8 +214,8 @@ export default ({ strapi }: { strapi: any }) => {
     async submissionDecided(s: SubmissionRow, status: Decision): Promise<void> {
       const what = `the ${status} email for ${s.documentId}`
       try {
-        const to = text(s.submittedByEmail, 320)
-        if (!to) {
+        const to = text(s.submittedByEmail, 320) ?? ""
+        if (!to && !s.submittedByUserId) {
           strapi.log.info(`[notifications] no submitter email; skipped ${what}`)
 
           return
@@ -211,21 +223,34 @@ export default ({ strapi }: { strapi: any }) => {
         const url = appUrl("/contribute/submissions")
         const name = text(s.submittedByName)
         const note = s.reviewNote?.trim() || null
+        const activity = s.submittedByUserId
+          ? {
+              baUserId: s.submittedByUserId,
+              eventKey: `decision:${s.documentId}:${status}:${note ?? ""}`,
+              kind: "submission_review" as const,
+              preference: "editsReviewed" as "editsReviewed" | "transactional",
+              href: "/contribute/submissions",
+            }
+          : undefined
 
         if (s.submissionType === "role_application") {
           const { role, queue, locales } = roleApplicationFields(s.fields)
-          await send(what, {
-            to,
-            ...applicationDecidedEmail({
-              name,
-              role: role ?? "",
-              queue,
-              locales,
-              status,
-              note,
-              url,
-            }),
-          })
+          await send(
+            what,
+            {
+              to,
+              ...applicationDecidedEmail({
+                name,
+                role: role ?? "",
+                queue,
+                locales,
+                status,
+                note,
+                url,
+              }),
+            },
+            activity ? { ...activity, preference: "transactional" } : undefined
+          )
 
           return
         }
@@ -241,43 +266,41 @@ export default ({ strapi }: { strapi: any }) => {
                 fields: ["slug"],
               })
             : null
-          await send(what, {
-            to,
-            ...claimApprovedEmail({
-              name,
-              libraryName: text(
-                (s.fields as Record<string, unknown> | null)?.libraryName
-              ),
-              url: library?.slug
-                ? appUrl(`/staff/${library.slug}`)
-                : appUrl("/staff"),
-              note,
-            }),
-          })
-
-          return
-        }
-
-        if (
-          s.submittedByUserId &&
-          !(await wantsDecisionEmails(s.submittedByUserId))
-        ) {
-          strapi.log.info(
-            `[notifications] submitter turned off review emails; skipped ${what}`
+          await send(
+            what,
+            {
+              to,
+              ...claimApprovedEmail({
+                name,
+                libraryName: text(
+                  (s.fields as Record<string, unknown> | null)?.libraryName
+                ),
+                url: library?.slug
+                  ? appUrl(`/staff/${library.slug}`)
+                  : appUrl("/staff"),
+                note,
+              }),
+            },
+            activity ? { ...activity, preference: "transactional" } : undefined
           )
 
           return
         }
-        await send(what, {
-          to,
-          ...decidedEmail({
-            name,
-            type: s.submissionType,
-            status,
-            note,
-            url,
-          }),
-        })
+
+        await send(
+          what,
+          {
+            to,
+            ...decidedEmail({
+              name,
+              type: s.submissionType,
+              status,
+              note,
+              url,
+            }),
+          },
+          activity
+        )
       } catch (err) {
         strapi.log.warn(`[notifications] could not prepare ${what}`, err)
       }
@@ -304,55 +327,16 @@ export default ({ strapi }: { strapi: any }) => {
       }
     },
 
-    /**
-     * The latest email each Better Auth user's submissions were filed with
-     * (no user-profile carries one). Used only to reach a librarian outside
-     * a submission's own flow, e.g. another claimant of a feed that was
-     * changed; never a credential value.
-     */
+    /** Current verified Better Auth addresses, never a historical submission address. */
     async emailsOf(baUserIds: string[]): Promise<string[]> {
       if (baUserIds.length === 0) return []
-      const rows = (await strapi.documents(SUBMISSION_UID).findMany({
-        filters: { submittedByUserId: { $in: baUserIds } },
-        fields: ["submittedByUserId", "submittedByEmail"],
-        sort: [{ createdAt: "desc" }, { id: "desc" }],
-        limit: EMAIL_ROWS_MAX,
-      })) as { submittedByUserId?: string; submittedByEmail?: string }[]
-      const out = new Map<string, string>()
-      for (const r of rows) {
-        const email = text(r.submittedByEmail, 320)
-        if (r.submittedByUserId && email && !out.has(r.submittedByUserId))
-          out.set(r.submittedByUserId, email)
-      }
 
-      return [...out.values()]
+      return [...(await verifiedEmailMap(strapi, baUserIds)).values()]
     },
 
-    /**
-     * The latest email each Better Auth user's submissions were filed with,
-     * keyed by baUserId — `emailsOf`'s own query, chunked for an arbitrary
-     * number of ids (`driveThanks` can ask for far more than
-     * `EMAIL_ROWS_MAX` helpers at once).
-     */
+    /** The same verified lookup keyed by Better Auth id. */
     async emailMapOf(baUserIds: string[]): Promise<Map<string, string>> {
-      const out = new Map<string, string>()
-      for (let i = 0; i < baUserIds.length; i += ID_CHUNK) {
-        const chunk = baUserIds.slice(i, i + ID_CHUNK)
-        if (chunk.length === 0) continue
-        const rows = (await strapi.documents(SUBMISSION_UID).findMany({
-          filters: { submittedByUserId: { $in: chunk } },
-          fields: ["submittedByUserId", "submittedByEmail"],
-          sort: [{ createdAt: "desc" }, { id: "desc" }],
-          limit: 2000,
-        })) as { submittedByUserId?: string; submittedByEmail?: string }[]
-        for (const r of rows) {
-          const email = text(r.submittedByEmail, 320)
-          if (r.submittedByUserId && email && !out.has(r.submittedByUserId))
-            out.set(r.submittedByUserId, email)
-        }
-      }
-
-      return out
+      return verifiedEmailMap(strapi, baUserIds)
     },
 
     /**
@@ -404,38 +388,45 @@ export default ({ strapi }: { strapi: any }) => {
             }[]
             for (const p of profiles) {
               names.set(p.baUserId, text(p.firstName) ?? p.username ?? null)
-              if (p.notifPrefs?.drives === false) continue
               eligible.add(p.baUserId)
             }
           }
           if (eligible.size === 0) return
 
-          const emailMap = await (this as any).emailMapOf([...eligible])
           const url = appUrl(`/community/drives/${drive.slug}`)
           const title = drive.title.replaceAll("*", "")
           const unitPlural = DRIVE_UNIT_PLURAL[drive.unit] ?? "libraries"
 
           for (const baUserId of eligible) {
-            const to = emailMap.get(baUserId)
-            if (!to) continue
+            const to = ""
             const helper = byId.get(baUserId)
             if (!helper) continue
-            await send(`drive thanks for ${drive.documentId} to ${baUserId}`, {
-              to,
-              ...driveThanksEmail({
-                name: names.get(baUserId) ?? null,
-                title,
-                url,
-                goalMet: drive.goalMet,
-                done: drive.final.done,
-                total: drive.final.total,
-                unitPlural,
-                closedGaps: drive.final.closedGaps,
-                helpers: drive.final.helpers,
-                yours: helper.tasks,
-                bonus: helper.bonus,
-              }),
-            })
+            await send(
+              `drive thanks for ${drive.documentId} to ${baUserId}`,
+              {
+                to,
+                ...driveThanksEmail({
+                  name: names.get(baUserId) ?? null,
+                  title,
+                  url,
+                  goalMet: drive.goalMet,
+                  done: drive.final.done,
+                  total: drive.final.total,
+                  unitPlural,
+                  closedGaps: drive.final.closedGaps,
+                  helpers: drive.final.helpers,
+                  yours: helper.tasks,
+                  bonus: helper.bonus,
+                }),
+              },
+              {
+                baUserId,
+                eventKey: `drive:${drive.documentId}:${baUserId}`,
+                kind: "drive_closed",
+                preference: "drives",
+                href: `/community/drives/${drive.slug}`,
+              }
+            )
           }
         }
       )

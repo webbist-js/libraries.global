@@ -425,14 +425,13 @@ export default ({ strapi }: { strapi: any }) => ({
 
     // Streak badges read the profile's current streak, not a count of
     // daily_streak events (those accumulate across broken streaks).
-    if (typeof opts.streak === "number") {
-      counts.__streak = opts.streak
-    } else {
-      const profile = await strapi.db
-        .query("api::user-profile.user-profile")
-        .findOne({ where: { baUserId }, select: ["streak"] })
-      counts.__streak = Number(profile?.streak ?? 0)
-    }
+    const profile = await strapi.db
+      .query("api::user-profile.user-profile")
+      .findOne({ where: { baUserId }, select: ["streak", "username"] })
+    counts.__streak =
+      typeof opts.streak === "number"
+        ? opts.streak
+        : Number(profile?.streak ?? 0)
 
     // Drive counts (spec §8), zeroed on failure — e.g. a test app without
     // the drives tables. Read from `drive_credits`/`drives` directly, not
@@ -500,6 +499,21 @@ export default ({ strapi }: { strapi: any }) => ({
         throw err
       }
       strapi.log.info(`[rewards] Awarded badge "${def.id}" to user ${baUserId}`)
+      try {
+        await strapi.service("api::notification.notification").enqueue({
+          baUserId,
+          kind: "recognition",
+          eventKey: `badge:${baUserId}:${def.id}`,
+          title: `You earned ${def.name}`,
+          body: def.description,
+          href: profile?.username
+            ? `/profile/${encodeURIComponent(profile.username)}/badges`
+            : "/profile",
+          emailPreference: "recognition",
+        })
+      } catch (err) {
+        strapi.log.warn("[rewards] Badge notification could not be queued", err)
+      }
     }
   },
 })

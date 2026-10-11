@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { makeFakeStrapi } from "./helpers/fake-strapi"
 import controller from "../src/api/auth-bridge/controllers/auth-bridge"
@@ -17,6 +17,7 @@ function ctx(
     send: (b: unknown) => ((c.status = 200), (c.body = b)),
     unauthorized: (m: string) => ((c.status = 401), (c.body = m)),
     badRequest: (m: string) => ((c.status = 400), (c.body = m)),
+    forbidden: (m: string) => ((c.status = 403), (c.body = m)),
     notFound: (m: string) => ((c.status = 404), (c.body = m)),
   }
 
@@ -224,5 +225,78 @@ describe("auth-bridge follows for drives", () => {
     const missing = ctx({}, { baUserId: "u1" })
     await controller.followStatus(missing)
     expect(missing.status).toBe(400)
+  })
+})
+
+describe("account follower notifications", () => {
+  let fake: ReturnType<typeof makeFakeStrapi>
+  let enqueue: ReturnType<typeof vi.fn>
+  beforeEach(() => {
+    process.env.STRAPI_BRIDGE_SECRET = "s3cret"
+    fake = makeFakeStrapi({
+      [PROFILE]: [
+        {
+          id: 1,
+          documentId: "p1",
+          baUserId: "reader",
+          username: "reader",
+          profileVisibility: "public",
+          followedProfiles: [],
+        },
+        {
+          id: 2,
+          documentId: "p2",
+          baUserId: "owner",
+          username: "owner",
+          profileVisibility: "public",
+        },
+      ],
+    })
+    enqueue = vi.fn(async () => ({}))
+    fake.services["api::notification.notification"] = { enqueue }
+    ;(globalThis as any).strapi = fake.strapi
+  })
+  afterEach(() => {
+    delete (globalThis as any).strapi
+  })
+  const request = (action = "follow", targetUsername = "owner") =>
+    ctx({ baUserId: "reader", targetUsername, action })
+
+  it("records an anonymous alert once for repeated follows", async () => {
+    await controller.toggleFollowUser(request())
+    // The fake stores connect instructions rather than resolving relations.
+    fake.store[PROFILE][0].followedProfiles = [{ id: 2 }]
+    await controller.toggleFollowUser(request())
+    expect(enqueue).toHaveBeenCalledTimes(1)
+    expect(enqueue).toHaveBeenCalledWith(
+      expect.objectContaining({
+        baUserId: "owner",
+        kind: "new_follower",
+        emailPreference: "newFollowers",
+      })
+    )
+    expect(enqueue.mock.calls[0][0].body).not.toContain("reader")
+  })
+
+  it("keeps the relation unchanged if notification persistence fails", async () => {
+    enqueue.mockRejectedValueOnce(new Error("Queue unavailable"))
+    await expect(controller.toggleFollowUser(request())).rejects.toThrow(
+      "Queue unavailable"
+    )
+    expect(fake.store[PROFILE][0].followedProfiles).toEqual([])
+  })
+
+  it("rejects malformed actions, private targets and self-follow", async () => {
+    const malformed = request("unexpected")
+    await controller.toggleFollowUser(malformed)
+    expect(malformed.status).toBe(400)
+    const self = request("follow", "reader")
+    await controller.toggleFollowUser(self)
+    expect(self.status).toBe(400)
+    fake.store[PROFILE][1].profileVisibility = "private"
+    const privateTarget = request()
+    await controller.toggleFollowUser(privateTarget)
+    expect(privateTarget.status).toBe(403)
+    expect(enqueue).not.toHaveBeenCalled()
   })
 })
