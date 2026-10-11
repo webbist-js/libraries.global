@@ -278,6 +278,7 @@ export default ({ strapi }: { strapi: any }) => ({
       knex(TABLE)
         .where("library_document_id", documentId)
         .where("version_status", "published")
+        .where("action", "<>", "create")
         .where("changed_at", ">=", windowStart(months, now).toISOString())
 
     const [perMonth, perField, perAction, verified] = (await Promise.all([
@@ -291,7 +292,11 @@ export default ({ strapi }: { strapi: any }) => ({
           )
         )
         .groupBy(knex.raw(month)),
-      scoped().select("field").count({ count: "*" }).groupBy("field"),
+      scoped()
+        .where("field", "<>", "*")
+        .select("field")
+        .count({ count: "*" })
+        .groupBy("field"),
       scoped()
         .select("action")
         .countDistinct({ count: "batch_id" })
