@@ -33,11 +33,11 @@ The stored, encrypted values (tokens, keys, feed URLs) a Source Provider needs, 
 _Avoid_: secret (alone — too generic), token (only one of several value shapes)
 
 **Dataset**:
-An external body of data imported into the index — a published list of libraries — registered in Strapi with its publisher, source address, licence and licence URL, whether that licence has been confirmed in writing, whether redistribution is permitted, the credit it requires, its coverage, the import mechanism, dates and notes. A record points at the Dataset it came from through its `source` field, which equals the Dataset's `key`. Distinct from a Source Provider, which supplies Events, not records.
+An external body of data imported into the index — a published list of libraries — registered in Strapi with its publisher, source address, licence and licence URL, whether that licence has been confirmed in writing, whether redistribution is permitted, the credit it requires, its coverage, the import mechanism, dates and notes. A library points at each Dataset through `sourceRecords[].dataset`, which equals the Dataset's `key`. Distinct from a Source Provider, which supplies Events, not records.
 _Avoid_: data source, feed, import (for the registry entry itself)
 
 **Source Record**:
-The row in a Dataset that a library corresponds to, stored on the library as the Dataset's `key` and that row's own ID (for the IMLS survey, `FSCSKEY-FSCS_SEQ`). A library can have one from each Dataset that describes it. Re-running an import matches libraries by Source Record, not by name or slug, and a second Dataset uses it to add to a record that already exists.
+An entry in the library's repeatable `sourceRecords` component. An imported entry keeps the Dataset's key, its own record ID (for IMLS, `FSCSKEY-FSCS_SEQ`), retrieval date and URL. A public reference has a URL, optional label and the fact fields it supports; it needs no Dataset or invented import ID. `role: origin` identifies original provenance for Drive scope and search; `reference` identifies supporting citations. Approved references append without replacing imports. Ingests match by Dataset and record ID; the shared runner skips known matches. Dataset credit and licence metadata stay in the registry.
 _Avoid_: external ID, foreign key
 
 **Wiki**:
@@ -177,7 +177,7 @@ One Submission State transition: from, to, reviewer, note and when. Append-only;
 _Avoid_: comment, history (alone — too generic)
 
 **Change Record**:
-One field of one Library changing once: previous value, next value, who, when, why (which Submission, if any) and from which source (a Submission, an admin, an API token, an import or the system). Recorded for every write, including admin edits and imports, and never edited or deleted. The Change Records from one write form a **Change Batch**. A Library's public Changes section names the fields; their values are a Pro Entitlement (`library.history`).
+One field of one Library changing once: previous value, next value, who, when, why (which Submission, if any) and from which source (a Submission, an admin, an API token, an import or the system). Recorded for every write, including admin edits and imports, and retained as audit history. Account erasure clears actor and reviewer identifiers without deleting the public changes. The Change Records from one write form a **Change Batch**. A Library's public Changes section names the fields; their values are a Pro Entitlement (`library.history`).
 _Avoid_: revision, audit log entry
 
 **Article Change**:
