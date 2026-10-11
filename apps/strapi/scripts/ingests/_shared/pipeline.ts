@@ -84,9 +84,11 @@ export async function importLibraryDrafts<T extends PreparedLibrary>(options: {
         const entity = await client.createLibrary({
           ...record.data,
           ...options.relations(record),
+          source: dataset,
           sourceRecords: [
             {
               dataset,
+              role: "origin",
               recordId: record.recordId,
               retrievedAt: options.retrievedAt.slice(0, 10),
               url: record.data.sourceUrl,

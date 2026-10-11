@@ -179,6 +179,7 @@ describe("resumable draft pipeline", () => {
         sourceRecords: [
           {
             dataset: "example",
+            role: "origin",
             recordId: "2",
             retrievedAt: "2026-10-10",
             url: undefined,
