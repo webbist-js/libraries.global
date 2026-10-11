@@ -320,23 +320,34 @@ async function ensurePopulationColumns(knex) {
 async function readPopulationEstimates(knex, tables, predicate) {
   const estimates = new Map()
   for (const table of tables) {
-    const rows = await knex(table)
-      .where({ locale: "en" })
-      .whereNotNull("published_at")
-      .whereNotNull("population_estimates")
-      .select("population_estimates")
-      .limit(1025)
-    if (rows.length > 1024)
-      throw new Error("Population place catalogue exceeds budget")
-    for (const row of rows)
-      for (const value of json(row.population_estimates) ?? []) {
-        if (!predicate(value)) continue
-        const estimate = normalizeObservation(value)
-        const prior = estimates.get(estimate.key)
-        if (prior && JSON.stringify(prior) !== JSON.stringify(estimate))
-          throw new Error(`Conflicting population estimate ${estimate.key}`)
-        estimates.set(estimate.key, estimate)
-      }
+    // The caller's observation budget applies after filtering. Nordic place
+    // publication must not exhaust the UK's population catalogue budget.
+    let after = 0,
+      scanned = 0
+    while (true) {
+      const rows = await knex(table)
+        .where({ locale: "en" })
+        .whereNotNull("published_at")
+        .whereNotNull("population_estimates")
+        .where("id", ">", after)
+        .orderBy("id")
+        .select("id", "population_estimates")
+        .limit(1024)
+      scanned += rows.length
+      if (scanned > 100000)
+        throw new Error("Population place catalogue exceeds budget")
+      for (const row of rows)
+        for (const value of json(row.population_estimates) ?? []) {
+          if (!predicate(value)) continue
+          const estimate = normalizeObservation(value)
+          const prior = estimates.get(estimate.key)
+          if (prior && JSON.stringify(prior) !== JSON.stringify(estimate))
+            throw new Error(`Conflicting population estimate ${estimate.key}`)
+          estimates.set(estimate.key, estimate)
+        }
+      if (rows.length < 1024) break
+      after = rows.at(-1).id
+    }
   }
 
   return [...estimates.values()].sort((a, b) => a.key.localeCompare(b.key))
