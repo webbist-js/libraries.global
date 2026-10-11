@@ -11,7 +11,7 @@ import { betaPath, betaPublicRequest, betaPublicShell } from "@/lib/beta/scope"
 export function betaShellRequest(req: NextRequest): NextRequest {
   const headers = new Headers(req.headers)
   headers.delete("x-beta-public-shell")
-  if (betaPublicShell(req.nextUrl.pathname))
+  if (betaEnabled() && betaPublicShell(req.nextUrl.pathname))
     headers.set("x-beta-public-shell", "true")
 
   return new NextRequest(req, { headers })

@@ -1,5 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto"
 
+import { betaPath } from "@/lib/beta/scope"
+
 export const BETA_COOKIE = "lg-beta-access"
 export const BETA_MAX_AGE = 30 * 24 * 60 * 60
 export const betaEnabled = () => process.env.BETA_GATE_ENABLED === "true"
@@ -90,7 +92,7 @@ export function betaDestination(value: unknown, fallback = "/"): string {
       decoded.startsWith("//") ||
       decoded.includes("\\") ||
       Array.from(decoded).some((char) => char.codePointAt(0)! <= 32) ||
-      /^\/(?:cs\/|en\/)?beta(?:\/|$)/.test(decoded) ||
+      /^\/beta(?:\/|$)/.test(betaPath(decoded)) ||
       /^\/(?:api|_next)(?:\/|$)/.test(decoded)
     )
       return fallback

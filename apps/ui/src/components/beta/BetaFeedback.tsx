@@ -1,25 +1,23 @@
 "use client"
 
 import { MessageSquare } from "lucide-react"
-import { usePathname } from "next/navigation"
 
-export function BetaFeedback({
-  email,
-  label,
-}: {
-  readonly email: string
-  readonly label: string
-}) {
-  const pathname = usePathname()
-  const href = `mailto:${email}?subject=${encodeURIComponent("Libraries Global beta feedback")}&body=${encodeURIComponent(`Page: ${pathname}\n\n`)}`
+import { useContactModal } from "@/components/contact/ContactModalProvider"
+
+export function BetaFeedback({ label }: { readonly label: string }) {
+  const { openFeedback } = useContactModal()
 
   return (
-    <a
-      href={href}
-      className="fixed right-4 bottom-4 z-40 inline-flex items-center gap-2 rounded-full border border-(--t-border-line) bg-white px-4 py-2.5 text-sm font-semibold text-(--t-ink-base) shadow-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary)"
+    <button
+      type="button"
+      onClick={openFeedback}
+      aria-haspopup="dialog"
+      className="fixed top-1/2 left-0 z-40 inline-flex min-h-11 w-11 -translate-y-1/2 flex-col items-center gap-2 rounded-r-[20px] border border-l-0 border-(--t-border-line) bg-white py-3 text-sm font-semibold text-(--t-ink-base) shadow-sm transition-colors hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary)"
     >
       <MessageSquare aria-hidden="true" size={16} />
-      {label}
-    </a>
+      <span className="rotate-180 whitespace-nowrap [writing-mode:vertical-rl]">
+        {label}
+      </span>
+    </button>
   )
 }

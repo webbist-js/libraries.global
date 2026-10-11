@@ -1,5 +1,6 @@
 import { headers } from "next/headers"
-import type { Locale } from "next-intl"
+import { useTranslations as useUiTranslations, type Locale } from "next-intl"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import LocaleSwitcher from "@/components/elementary/LocaleSwitcher"
 import GlobalContributeMenu from "@/components/global/GlobalContributeMenu"
@@ -14,14 +15,14 @@ import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 import { fetchOwnProfileSnippet } from "@/lib/own-profile-server"
 
-const NAV_LINKS: NavLink[] = [
-  { label: "Atlas", href: "/map" },
-  { label: "Find libraries", href: "/libraries" },
-  { label: "Community", href: "/community" },
-  { label: "Journal", href: "/journal" },
-  { label: "Events", href: "/events" },
-  { label: "Knowledge", href: "/knowledge" },
-]
+const NAV_LINKS = [
+  { label: "atlas", href: "/map" },
+  { label: "find_libraries", href: "/libraries" },
+  { label: "community", href: "/community" },
+  { label: "journal", href: "/journal" },
+  { label: "events", href: "/events" },
+  { label: "knowledge", href: "/knowledge" },
+] as const
 
 export async function GlobalHeader({
   locale,
@@ -34,7 +35,17 @@ export async function GlobalHeader({
    */
   readonly variant?: "site" | "app"
 }) {
-  const sessionSSR = await getSessionSSR(await headers())
+  const tUi = await getUiTranslations({ locale, namespace: "ui" })
+  const links: NavLink[] = NAV_LINKS.map((link) => ({
+    ...link,
+    label: tUi(link.label),
+  }))
+  const requestHeaders = await headers()
+  // Public beta/legal pages deliberately have no application query providers.
+  if (requestHeaders.get("x-beta-public-shell") === "true")
+    return <PublicBetaHeader locale={locale} />
+
+  const sessionSSR = await getSessionSSR(requestHeaders)
   // The username comes from the session (buildSessionAccess); avatar and
   // librarian flag from the owner-scoped bridge read. `baUserId` is private,
   // so the public REST filter on it no longer works.
@@ -79,13 +90,13 @@ export async function GlobalHeader({
               className="text-[1.2rem] leading-none font-medium whitespace-nowrap text-(--t-ink-base)"
               style={{ fontFamily: T.font.serif }}
             >
-              Libraries <em className="font-normal italic">Global</em>
+              {tUi("libraries")} <em className="font-normal italic">Global</em>
             </span>
           </GlobalLink>
         </div>
 
         {/* Centre (or beside the logo in the app header): main nav, lg and up */}
-        <GlobalNavLinks links={NAV_LINKS} align={app ? "start" : "center"} />
+        <GlobalNavLinks links={links} align={app ? "start" : "center"} />
 
         {/* Pushes the actions right when the nav is collapsed */}
         <span className="flex-1 lg:hidden" aria-hidden="true" />
@@ -105,7 +116,7 @@ export async function GlobalHeader({
         <div className="flex shrink-0 items-center gap-2 lg:hidden">
           <GlobalContributeMenu className="hidden sm:inline-flex" />
           <GlobalMobileMenu
-            links={NAV_LINKS}
+            links={links}
             shortcuts={<GlobalContributorShortcuts />}
             actions={
               <>
@@ -114,6 +125,36 @@ export async function GlobalHeader({
               </>
             }
           />
+        </div>
+      </div>
+    </header>
+  )
+}
+
+function PublicBetaHeader({ locale }: { locale: Locale }) {
+  const tUi = useUiTranslations("ui")
+
+  return (
+    <header
+      className="border-b border-(--t-border-hi)"
+      style={{ background: T.bg.void }}
+    >
+      <div className="mx-auto flex min-h-16 max-w-[1360px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-8">
+        <GlobalLink
+          href="/beta"
+          className="text-[1.2rem] text-(--t-ink-base)"
+          style={{ fontFamily: T.font.serif }}
+        >
+          {tUi("libraries")} <em className="font-normal">Global</em>
+        </GlobalLink>
+        <div className="flex items-center gap-4">
+          <LocaleSwitcher locale={locale} />
+          <GlobalLink
+            href="/beta"
+            className="text-sm font-medium text-(--t-accent-primary) underline underline-offset-4"
+          >
+            {tUi("back_to_the_beta")}
+          </GlobalLink>
         </div>
       </div>
     </header>

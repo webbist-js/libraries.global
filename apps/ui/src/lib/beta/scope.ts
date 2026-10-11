@@ -1,9 +1,15 @@
+import { SUPPORTED_LOCALES } from "@repo/shared-data"
+
+const LOCALE_PREFIX = new RegExp(`^/(?:${SUPPORTED_LOCALES.join("|")})(?=/|$)`)
+
 const MACHINE_PATHS = new Set([
   "/api/health",
   "/api/cron/retention",
   "/api/revalidate",
   "/api/preview",
   "/api/internal/session/invalidate",
+  "/api/internal/notifications/recipients",
+  "/api/email/preferences",
 ])
 const AUTH_CALLBACKS = new Set([
   "/api/auth/verify-email",
@@ -17,7 +23,7 @@ const ASSETS = new Set([
 ])
 
 export function betaPath(pathname: string): string {
-  return pathname.replace(/^\/(?:cs|en)(?=\/|$)/, "") || "/"
+  return pathname.replace(LOCALE_PREFIX, "") || "/"
 }
 
 export function betaPublicShell(pathname: string): boolean {
@@ -27,7 +33,10 @@ export function betaPublicShell(pathname: string): boolean {
     path === "/beta" ||
     path === "/beta/" ||
     path === "/legal/privacy" ||
-    path === "/legal/cookies"
+    path === "/privacy" ||
+    path === "/legal/terms" ||
+    path === "/legal/cookies" ||
+    path === "/email/preferences"
   )
 }
 
@@ -37,7 +46,11 @@ export function betaPublicRequest(pathname: string, method: string): boolean {
     return method === "GET" || method === "HEAD"
   if (betaPublicShell(pathname) || pathname === "/robots.txt")
     return method === "GET" || method === "HEAD"
-  if (pathname === "/api/beta/access" || pathname === "/api/beta/waitlist")
+  if (
+    pathname === "/api/beta/access" ||
+    pathname === "/api/beta/waitlist" ||
+    pathname === "/api/contact"
+  )
     return method === "POST"
   if (MACHINE_PATHS.has(pathname)) return true // Each handler retains its own service authentication.
 

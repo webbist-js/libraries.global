@@ -47,10 +47,24 @@ describe("beta routing", () => {
     ).toBeNull()
     vi.stubEnv("BETA_GATE_ENABLED", "false")
     expect(betaGate(request("/map"))).toBeNull()
+    expect(
+      betaShellRequest(request("/legal/terms")).headers.has(
+        "x-beta-public-shell"
+      )
+    ).toBe(false)
   })
   it("keeps exceptions exact and method-specific", () => {
+    expect(betaPublicRequest("/privacy", "GET")).toBe(true)
+    expect(betaPublicRequest("/privacy", "POST")).toBe(false)
+    expect(betaPublicRequest("/legal/terms", "GET")).toBe(true)
+    expect(betaPublicRequest("/cs/legal/terms", "GET")).toBe(true)
+    expect(betaPublicRequest("/legal/terms", "POST")).toBe(false)
+    expect(betaPublicRequest("/legal/terms/other", "GET")).toBe(false)
     expect(betaPublicRequest("/api/beta/access", "POST")).toBe(true)
     expect(betaPublicRequest("/api/beta/access", "GET")).toBe(false)
+    expect(betaPublicRequest("/api/contact", "POST")).toBe(true)
+    expect(betaPublicRequest("/api/contact", "GET")).toBe(false)
+    expect(betaPublicRequest("/api/contact/other", "POST")).toBe(false)
     expect(betaPublicRequest("/api/cron/retention", "GET")).toBe(true)
     expect(betaPublicRequest("/api/cron/other", "GET")).toBe(false)
     expect(betaPublicRequest("/api/auth/sign-up/email", "POST")).toBe(false)
