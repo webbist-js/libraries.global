@@ -178,6 +178,25 @@ describe("LibraryChangeTimeline", () => {
     )
   })
 
+  it("does not repeat the source list's initial import or offer Pro for it", () => {
+    const { queryByText } = render(
+      createElement(LibraryChangeTimeline, {
+        documentId: DOC,
+        initial: page([
+          batch({
+            action: "create",
+            source: "import",
+            fields: [{ field: "*" }],
+          }),
+        ]),
+      })
+    )
+    expect(queryByText("Record created")).toBeNull()
+    expect(
+      queryByText("See what changed, field by field, with Pro.")
+    ).toBeNull()
+  })
+
   it("says so honestly when nothing has been recorded", () => {
     const { getByText } = render(
       createElement(LibraryChangeTimeline, {

@@ -300,7 +300,7 @@ export function batchRow(
   }
 }
 
-/** The import that created the record: shown as the "Record created" row. */
+/** Initial import; its origin and date are already shown in the source list. */
 export const isImportCreate = (
   b: Pick<LibraryHistoryBatch, "action" | "source">
 ) => b.source === "import" && b.action === "create"

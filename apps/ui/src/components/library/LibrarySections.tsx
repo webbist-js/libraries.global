@@ -8,14 +8,10 @@ import {
   hasOpeningHours,
   type LibraryNotice,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useFormatter, useTranslations as useUiTranslations } from "next-intl"
 
-import { NOTICE_TONES } from "@/components/ds"
 import GlobalLink from "@/components/global/GlobalLink"
 import {
-  actorLabel,
-  detailCount,
-  fieldNames,
   fieldLabel,
   isImportCreate,
   topFields,
@@ -28,11 +24,7 @@ import {
   hasStaffingDetail,
   type OpeningTimesValue,
 } from "@/components/library/library-page.helpers"
-import {
-  DetailsDisclosure,
-  LibraryChangeTimeline,
-  TimelineRow,
-} from "@/components/library/LibraryChangeTimeline"
+import { LibraryChangeTimeline } from "@/components/library/LibraryChangeTimeline"
 import { LibraryCopyButton } from "@/components/library/LibraryCopyButton"
 import {
   OpenCorrectionLink,
@@ -52,10 +44,9 @@ import {
   sectionCheckedAt,
   verifyRecordOf,
 } from "@/components/library/verify.logic"
-import { T, TYPE_TINT } from "@/lib/design-tokens"
+import { T } from "@/lib/design-tokens"
 import type { DatasetRecord } from "@/lib/strapi-api/content/datasets"
 import type {
-  LibraryHistoryBatch,
   LibraryHistoryPage,
   LibraryHistoryStats,
   PopulatedLibraryData,
@@ -634,95 +625,12 @@ export function LibraryEventsEmpty({
   )
 }
 
-// ── Changes (history, histogram, sources) ───────────────────────────────────
+// ── History and sources ────────────────────────────────────────────────────
 
 const SOURCE_NAMES: Record<string, string> = {
   libraryon: "LibraryOn",
   wikidata: "Wikidata",
   manual: "A contributor",
-}
-
-const PUBLISHERS: Record<string, string> = {
-  libraryon: "the British Library",
-}
-
-function HistoryStat({
-  label,
-  value,
-  sub,
-  color = T.ink.base,
-}: {
-  readonly label: string
-  readonly value: React.ReactNode
-  readonly sub: React.ReactNode
-  readonly color?: string
-}) {
-  return (
-    <div
-      className="min-w-0 rounded-[20px] px-5 py-4"
-      style={{ background: T.bg.surface, border: `1px solid ${T.border.line}` }}
-    >
-      <p className="m-0 text-[15px] font-semibold" style={{ color: T.ink.dim }}>
-        {label}
-      </p>
-      <p
-        className="m-0 mt-0.5 text-[30px] leading-tight break-words"
-        style={{ fontFamily: T.font.serif, fontWeight: 500, color }}
-      >
-        {value}
-      </p>
-      <p className="m-0 mt-1 text-[15px]" style={{ color: T.ink.dim }}>
-        {sub}
-      </p>
-    </div>
-  )
-}
-
-/** "3 people and library staff", from the batches on page 1. */
-function changedBy(batches: readonly LibraryHistoryBatch[]): string | null {
-  const people = new Set<string>()
-  let staff = false
-  let team = false
-  for (const b of batches) {
-    if (b.source === "import") continue
-    if (b.source === "staff") staff = true
-    else if (b.actor.kind === "contributor")
-      people.add(b.actor.username ?? b.batchId)
-    else if (b.actor.kind === "admin") team = true
-  }
-  const parts = [
-    people.size
-      ? `${people.size} ${people.size === 1 ? "person" : "people"}`
-      : "",
-    staff ? "library staff" : "",
-    team ? "Libraries Global" : "",
-  ].filter(Boolean)
-  if (parts.length === 0) return null
-
-  return parts.length === 1
-    ? parts[0]!
-    : `${parts.slice(0, -1).join(", ")} and ${parts.at(-1)}`
-}
-
-/** "5 changes in the last 5 months." and "Most recent in September." */
-function activitySummary(months: LibraryHistoryStats["months"]) {
-  const busy = months.flatMap((m, i) => (m.batches > 0 ? [i] : []))
-  if (busy.length === 0) return null
-  const n = months.reduce((sum, m) => sum + m.batches, 0)
-  const span = months.length - busy[0]!
-  const [y, mo] = (months[busy.at(-1)!]?.month ?? "").split("-").map(Number)
-  const latest =
-    y && mo
-      ? new Date(Date.UTC(y, mo - 1, 1)).toLocaleDateString("en-GB", {
-          month: "long",
-          timeZone: "UTC",
-        })
-      : null
-
-  return {
-    lead: `${n} ${n === 1 ? "change" : "changes"} in the last ${span === 1 ? "month" : `${span} months`}.`,
-    latest: latest ? `Most recent in ${latest}.` : null,
-  }
 }
 
 export function LibraryChangesSection({
@@ -734,111 +642,63 @@ export function LibraryChangesSection({
   readonly library: Lib
   /** Page 1 of the Change Batches; null when Strapi couldn't answer. */
   readonly history?: LibraryHistoryPage | null
-  /** Change counts for the last 24 months; null when unavailable. */
+  /** Changes after creation, over the last 24 months. */
   readonly stats?: LibraryHistoryStats | null
-  /** The dataset the record was imported from, from the dataset registry. */
   readonly datasets?: DatasetRecord[]
 }) {
   const tUi = useUiTranslations("ui")
-
+  const formatter = useFormatter()
   const rec = asRecord(library)
-  const references = (rec.sourceRecords ?? []) as LibrarySourceRecord[]
+  const sourceRecords = (rec.sourceRecords ?? []) as LibrarySourceRecord[]
+  const references = [
+    ...sourceRecords.filter((record) => record.role === "origin"),
+    ...sourceRecords.filter((record) => record.role !== "origin"),
+  ]
   const source = librarySourceKey(references)
-  const sourceUrl = publicSourceUrl(
-    references.find((r) => r.role === "origin")?.url
-  )
-  const dataset = datasets.find((d) => d.key === source) ?? null
   const lastVerifiedAt = rec.lastVerifiedAt as string | null
   const createdAt = rec.createdAt as string | null
-  const months = stats?.months.slice(-12) ?? []
-  const activity = activitySummary(months)
-  const most = stats
-    ? topFields(
-        stats.byField.filter((f) => f.field !== "lastVerifiedAt"),
-        3
+  const formatDate = (value: string | null | undefined) => {
+    if (!value) return null
+    const date = new Date(value)
+
+    return Number.isNaN(date.getTime())
+      ? null
+      : formatter.dateTime(date, {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+  }
+  const checkedDate = formatDate(lastVerifiedAt)
+  const addedDate = formatDate(createdAt)
+  const added = addedDate
+    ? tUi(
+        source && source !== "manual"
+          ? "history_imported_on"
+          : "history_added_on",
+        { date: addedDate }
       )
-    : []
-
-  const batches = history?.data ?? []
-  const imported = batches.find(isImportCreate) ?? null
-  const changes = history
-    ? history.meta.total - batches.filter(isImportCreate).length
     : null
-  const checkedBy = batches.find((b) =>
-    b.fields.some((f) => f.field === "lastVerifiedAt")
+  const batches = history?.data ?? []
+  const hasChanges =
+    batches.some((batch) => !isImportCreate(batch)) ||
+    Boolean(history && history.meta.total > batches.length)
+  const months = stats?.months.slice(-12) ?? []
+  // A quiet record needs its timeline, not a mostly empty chart.
+  const showActivity =
+    hasChanges &&
+    months.reduce((sum, month) => sum + month.batches, 0) >= 3 &&
+    months.filter((month) => month.batches > 0).length >= 2
+  const most = topFields(
+    (stats?.byField ?? []).filter(
+      (field) => field.field !== "*" && field.field !== "lastVerifiedAt"
+    ),
+    3
   )
-  const unchecked = Boolean(source) && !lastVerifiedAt && changes === 0
-
-  const sourceName =
-    dataset?.name ?? (source ? (SOURCE_NAMES[source] ?? source) : null)
-  const publisher =
-    dataset?.publisher ?? (source ? (PUBLISHERS[source] ?? null) : null)
-  const datasetLink = sourceUrl || publicSourceUrl(dataset?.sourceUrl)
-  const licence = dataset?.licence ? (
-    dataset.licenceUrl ? (
-      <a
-        href={dataset.licenceUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="underline underline-offset-[3px]"
-      >
-        {dataset.licence}
-      </a>
-    ) : (
-      dataset.licence
-    )
-  ) : null
-
-  const created = source ? (
-    <TimelineRow
-      icon={LIB_ICONS.download}
-      tone="import"
-      title={tUi("record_created")}
-      lead={
-        <>
-          from{" "}
-          {datasetLink ? (
-            <a
-              href={datasetLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline underline-offset-2"
-            >
-              {sourceName}
-            </a>
-          ) : (
-            sourceName
-          )}
-          {publisher ? `, published by ${publisher}` : ""}.
-          {dataset?.attribution ? (
-            <span className="block text-[13px]">{dataset.attribution}</span>
-          ) : null}
-        </>
-      }
-      meta={["Data import", fmtDate(createdAt), licence]}
-    >
-      {imported && imported.fields.length > 0 ? (
-        <DetailsDisclosure
-          label={detailCount(imported.fields.length, "imported")}
-        >
-          <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
-            {fieldNames(imported.fields, 12)}
-          </p>
-        </DetailsDisclosure>
-      ) : null}
-    </TimelineRow>
-  ) : (
-    <TimelineRow
-      icon={LIB_ICONS.plus}
-      tone="indigo"
-      title={tUi("record_created")}
-      lead="by a contributor."
-      meta={[fmtDate(createdAt)]}
-    />
+  const datasetByKey = new Map(
+    datasets.map((dataset) => [dataset.key, dataset])
   )
-
-  const added =
-    `${source ? "Imported" : "Added"} ${fmtDate(createdAt) ?? ""}`.trim()
+  const creditedDatasets = new Set<string>()
 
   return (
     <LibrarySectionCard
@@ -846,190 +706,233 @@ export function LibraryChangesSection({
       title={tUi("history_and_sources")}
       iconPath={LIB_ICONS.clock}
       tone="neutral"
-      intro="Where this record came from, and everything that’s changed since."
     >
-      <div className="grid gap-3 sm:grid-cols-3">
-        <HistoryStat
-          label="Came from"
-          value={sourceName ?? "A contributor"}
-          sub={
-            [publisher?.replace(/^the /, ""), dataset?.licence]
-              .filter(Boolean)
-              .join(" · ") || added
-          }
-        />
-        <HistoryStat
-          label={tUi("changes_since")}
-          value={changes == null ? "Unavailable" : changes || "None yet"}
-          sub={changes ? `By ${changedBy(batches) ?? "contributors"}` : added}
-        />
-        <HistoryStat
-          label={tUi("checked_by_a_person")}
-          value={lastVerifiedAt ? fmtDate(lastVerifiedAt) : "Not yet"}
-          color={lastVerifiedAt ? T.accent.ok : TYPE_TINT.special.fg}
-          sub={
-            lastVerifiedAt
-              ? checkedBy
-                ? `By ${actorLabel(checkedBy).text}`
-                : "Most recent check"
-              : "Be the first"
-          }
-        />
-      </div>
-
-      {references.length > 0 ? (
-        <ul className="mt-5 grid gap-3 pl-5">
+      {references.length ? (
+        <ul className="m-0 grid list-none gap-4 p-0">
           {references.map((reference, index) => {
-            const credit = datasets.find((d) => d.key === reference.dataset)
+            const credit = reference.dataset
+              ? datasetByKey.get(reference.dataset)
+              : undefined
+            const showCredit = Boolean(
+              credit && !creditedDatasets.has(credit.key)
+            )
+            if (credit) creditedDatasets.add(credit.key)
             const url =
               publicSourceUrl(reference.url) ??
               publicSourceUrl(credit?.sourceUrl)
             const title =
               reference.label ||
               credit?.name ||
-              reference.dataset ||
-              reference.url ||
-              "Source reference"
-
-            return (
-              <li key={index}>
-                {url ? (
+              (reference.dataset
+                ? (SOURCE_NAMES[reference.dataset] ?? reference.dataset)
+                : null) ||
+              url ||
+              tUi("history_source_reference")
+            const retrieved = formatDate(reference.retrievedAt)
+            const licenceUrl = publicSourceUrl(credit?.licenceUrl)
+            const licence =
+              showCredit && credit?.licence ? (
+                licenceUrl ? (
                   <a
-                    href={url}
+                    href={licenceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="underline underline-offset-2"
                   >
-                    {title}
+                    {credit.licence}
                   </a>
                 ) : (
-                  title
-                )}
-                {credit?.publisher ? <span> · {credit.publisher}</span> : null}
-                {credit?.licence ? (
-                  <span>
-                    {" "}
-                    ·{" "}
-                    {publicSourceUrl(credit.licenceUrl) ? (
+                  credit.licence
+                )
+              ) : null
+            const supportedFields = Array.isArray(reference.fields)
+              ? reference.fields.filter((field) => typeof field === "string")
+              : []
+            const details = Boolean(
+              reference.recordId ||
+              retrieved ||
+              supportedFields.length ||
+              (showCredit && credit?.attribution && licence)
+            )
+
+            return (
+              <li key={index} className="min-w-0">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                  <p
+                    className="m-0 text-[16px] font-semibold"
+                    style={{ color: T.ink.base }}
+                  >
+                    {url ? (
                       <a
-                        href={credit.licenceUrl!}
+                        href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="underline"
+                        className="underline underline-offset-[3px]"
                       >
-                        {credit.licence}
+                        {title}
                       </a>
                     ) : (
-                      credit.licence
+                      title
                     )}
-                  </span>
+                  </p>
+                  {index === 0 && added ? (
+                    <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
+                      {added}
+                    </p>
+                  ) : null}
+                </div>
+                {showCredit && credit?.attribution ? (
+                  <p
+                    className="m-0 mt-1 text-[14px] leading-normal"
+                    style={{ color: T.ink.dim }}
+                  >
+                    {credit.attribution}
+                  </p>
+                ) : showCredit && (credit?.publisher || licence) ? (
+                  <p
+                    className="m-0 mt-1 text-[14px]"
+                    style={{ color: T.ink.dim }}
+                  >
+                    {credit?.publisher}
+                    {credit?.publisher && licence ? " · " : null}
+                    {licence}
+                  </p>
                 ) : null}
-                {reference.recordId ? (
-                  <span> · {reference.recordId}</span>
-                ) : null}
-                {reference.retrievedAt ? (
-                  <span> · {fmtDate(reference.retrievedAt)}</span>
-                ) : null}
-                {Array.isArray(reference.fields) && reference.fields.length ? (
-                  <span className="block text-sm">
-                    {reference.fields.map(fieldLabel).join(", ")}
-                  </span>
-                ) : null}
-                {credit?.attribution ? (
-                  <span className="block text-sm">{credit.attribution}</span>
+                {details ? (
+                  <details
+                    className="mt-1.5 text-[13px]"
+                    style={{ color: T.ink.dim }}
+                  >
+                    <summary className="w-fit cursor-pointer underline underline-offset-2">
+                      {tUi("history_source_details")}
+                    </summary>
+                    <dl className="m-0 mt-2 grid gap-1">
+                      {showCredit && credit?.attribution && licence ? (
+                        <div className="flex flex-wrap gap-x-2">
+                          <dt>{tUi("history_source_licence")}</dt>
+                          <dd className="m-0">{licence}</dd>
+                        </div>
+                      ) : null}
+                      {reference.recordId ? (
+                        <div className="flex flex-wrap gap-x-2">
+                          <dt>{tUi("history_source_record_id")}</dt>
+                          <dd className="m-0 break-all">
+                            {reference.recordId}
+                          </dd>
+                        </div>
+                      ) : null}
+                      {retrieved ? (
+                        <div className="flex flex-wrap gap-x-2">
+                          <dt>{tUi("history_source_retrieved")}</dt>
+                          <dd className="m-0">{retrieved}</dd>
+                        </div>
+                      ) : null}
+                      {supportedFields.length ? (
+                        <div className="flex flex-wrap gap-x-2">
+                          <dt>{tUi("history_source_supports")}</dt>
+                          <dd className="m-0">
+                            {supportedFields.map(fieldLabel).join(", ")}
+                          </dd>
+                        </div>
+                      ) : null}
+                    </dl>
+                  </details>
                 ) : null}
               </li>
             )
           })}
         </ul>
-      ) : null}
+      ) : (
+        <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+          {[added, tUi("history_source_missing")].filter(Boolean).join(" · ")}
+        </p>
+      )}
 
-      {unchecked ? (
-        <div
-          className="mt-5 flex flex-col gap-4 rounded-[20px] px-5 py-4 sm:flex-row sm:items-center"
-          style={{ background: NOTICE_TONES.warn.bg }}
-        >
-          <Icon
-            aria-hidden="true"
-            icon="lucide:triangle-alert"
-            width={22}
-            height={22}
-            className="hidden shrink-0 self-start sm:mt-0.5 sm:block"
-            style={{ color: T.ink.base }}
-          />
-          <div className="min-w-0 flex-1 text-[15px] leading-normal">
-            <p className="m-0 font-semibold" style={{ color: T.ink.base }}>
-              Imported, not checked by a person yet
+      <div
+        className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3"
+        style={{ background: T.bg.surface }}
+      >
+        <div className="min-w-0">
+          <p
+            className="m-0 text-[14px] font-semibold"
+            style={{ color: checkedDate ? T.accent.ok : T.ink.base }}
+          >
+            {checkedDate
+              ? tUi("history_last_checked_on", { date: checkedDate })
+              : tUi("history_not_checked")}
+          </p>
+          {!checkedDate ? (
+            <p className="m-0 mt-0.5 text-[13px]" style={{ color: T.ink.dim }}>
+              {tUi("history_check_help")}
             </p>
-            <p className="m-0 mt-0.5" style={{ color: T.ink.dim }}>
-              This record was imported from published sources. If you know this
-              library, confirm what’s right or fix what isn’t.
-            </p>
-          </div>
-          <OpenCorrectionLink className="shrink-0 self-start rounded-full bg-(--t-accent-primary) px-5 py-2.5 text-[15px] font-semibold text-white! hover:bg-(--t-accent-primary-hover) sm:self-center">
-            {tUi("suggest_a_correction")}
-          </OpenCorrectionLink>
+          ) : null}
         </div>
-      ) : null}
+        <OpenCorrectionLink className="shrink-0 rounded-full bg-(--t-accent-primary) px-4 py-2 text-[14px] font-semibold text-white! hover:bg-(--t-accent-primary-hover)">
+          {tUi("suggest_a_correction")}
+        </OpenCorrectionLink>
+      </div>
 
-      {activity ? (
-        <div className="mt-6 grid gap-6 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] md:items-end">
-          <div className="min-w-0">
-            <p className="m-0 mb-3 text-[15px]" style={{ color: T.ink.dim }}>
-              <strong style={{ color: T.ink.base }}>{activity.lead}</strong>
-              {activity.latest ? ` ${activity.latest}` : null}
-            </p>
+      {showActivity ? (
+        <details className="mt-5">
+          <summary
+            className="w-fit cursor-pointer text-[14px] font-semibold"
+            style={{ color: T.ink.dim }}
+          >
+            {tUi("history_activity")}
+          </summary>
+          <div className="mt-3 grid gap-4 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] md:items-end">
             <ChangeHistogram
               months={months}
               verificationEvents={stats?.verificationEvents ?? []}
             />
+            {most.length ? (
+              <div className="md:pb-8">
+                <h3
+                  className="m-0 text-[14px] font-semibold"
+                  style={{ color: T.ink.base }}
+                >
+                  {tUi("history_most_updated")}
+                </h3>
+                <ul className="m-0 mt-2 flex list-none flex-wrap gap-2 p-0">
+                  {most.map((field) => (
+                    <li
+                      key={field.field}
+                      className="rounded-full px-3 py-1 text-[13px]"
+                      style={{ background: T.bg.muted, color: T.ink.base }}
+                    >
+                      {field.label} · {field.count}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </div>
-          {most.length > 0 ? (
-            <div className="md:pb-8">
-              <h3
-                className="m-0 text-[15px] font-semibold"
-                style={{ color: T.ink.base }}
-              >
-                Most often updated
-              </h3>
-              <ul className="m-0 mt-2 flex list-none flex-wrap gap-2 p-0">
-                {most.map((f) => (
-                  <li
-                    key={f.field}
-                    className="rounded-full px-3.5 py-1.5 text-[14px] font-semibold"
-                    style={{ background: T.bg.muted, color: T.ink.base }}
-                  >
-                    {f.label}{" "}
-                    <span className="font-normal" style={{ color: T.ink.dim }}>
-                      {f.count}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-        </div>
+        </details>
       ) : null}
 
-      <h3
-        className="mt-6 mb-0 pb-3 text-[16px] font-semibold"
-        style={{ color: T.ink.base }}
-      >
-        Timeline
-      </h3>
-      {history ? (
-        <LibraryChangeTimeline
-          documentId={library.documentId}
-          initial={history}
-          created={created}
-        />
+      {history && hasChanges ? (
+        <div className="mt-5">
+          <h3
+            className="m-0 pb-2 text-[15px] font-semibold"
+            style={{ color: T.ink.base }}
+          >
+            {tUi("history_recent_changes")}
+          </h3>
+          <LibraryChangeTimeline
+            documentId={library.documentId}
+            initial={history}
+          />
+        </div>
       ) : (
-        <>
-          <p className="m-0 mb-3 text-[15px]" style={{ color: T.ink.dim }}>
-            Change history is unavailable right now. Try again later.
-          </p>
-          <ul className="m-0 list-none p-0">{created}</ul>
-        </>
+        <p className="m-0 mt-4 text-[13px]" style={{ color: T.ink.dim }}>
+          {tUi(
+            !history
+              ? "history_changes_unavailable"
+              : source && source !== "manual"
+                ? "history_no_changes_since_import"
+                : "no_changes_yet"
+          )}
+        </p>
       )}
     </LibrarySectionCard>
   )
