@@ -207,6 +207,7 @@ export default ({ env }) => {
             fields: LIBRARY_FIELDS,
             locale: ALL_LOCALES,
             populate: {
+              sourceRecords: { fields: ["dataset", "role"] },
               continent: { fields: ["slug", "name"] },
               country: {
                 fields: [
@@ -438,7 +439,6 @@ const LIBRARY_FIELDS = [
   "completeness",
   "location",
   "gaps",
-  "source",
   "createdAt",
   "lastVerifiedAt",
   "verifiedSections",
@@ -457,6 +457,7 @@ const DERIVE_ONLY = new Set([
 ])
 const LIBRARY_DOC_KEYS = [
   "id",
+  "source",
   ...LIBRARY_FIELDS.filter((f) => !DERIVE_ONLY.has(f)),
 ]
 /** Derived by librarySearchFields; completeness is a document key and is filterable too. */

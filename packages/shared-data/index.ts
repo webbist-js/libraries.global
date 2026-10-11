@@ -181,3 +181,5 @@ export * from "./atlas/library-access"
 export * from "./local-population"
 export * from "./email"
 export * from "./notification-preferences"
+
+export * from "./library-sources"

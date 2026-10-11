@@ -103,6 +103,7 @@ describe("librarySearchFields", () => {
         -0.127
       )
     ).toEqual({
+      source: null,
       completeness: 63,
       has_hours: true,
       has_staff: false,
@@ -123,6 +124,7 @@ describe("librarySearchFields", () => {
 
   it("marks a bare record with every gap", () => {
     expect(librarySearchFields({}, null, null)).toEqual({
+      source: null,
       completeness: 0,
       has_hours: false,
       has_staff: false,

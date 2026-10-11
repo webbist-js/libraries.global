@@ -1,4 +1,8 @@
-import { proposedDrive, validateDrive } from "@repo/shared-data"
+import {
+  submittedSourceRecords,
+  proposedDrive,
+  validateDrive,
+} from "@repo/shared-data"
 
 import createNotifications, { scheduleNotification } from "./notifications"
 import { isActivityPublic } from "../../../../utils/activity-visibility"
@@ -1128,8 +1132,7 @@ export default ({ strapi }: { strapi: any }) => ({
                 iiifEndpoint: link(f.iiifEndpoint),
                 classificationSystem:
                   (f.classificationSystem as string) || undefined,
-                source: (f.source as string) || undefined,
-                sourceUrl: link(f.sourceUrl),
+                sourceRecords: submittedSourceRecords(f.sourceRecords),
                 closureReason: (f.closureReason as string) || undefined,
                 openingTimes: f.openingTimes || undefined,
                 ...(f.libraryType === "Mobile"
@@ -1397,7 +1400,8 @@ export default ({ strapi }: { strapi: any }) => ({
             // record correction (C-L1).
             const outcome: ApplyRecordOutcome =
               submission.submissionType === "library_edit" ||
-              isRecordCorrection(submission.fields)
+              isRecordCorrection(submission.fields) ||
+              (submission.fields as any)?.kind === "source"
                 ? await (this as any).applyLibraryRecord(
                     submission,
                     recordChange
@@ -1652,7 +1656,9 @@ export default ({ strapi }: { strapi: any }) => ({
       // 8pts, a source 3pts, anything else 2pts.
       if (
         status === "approved" &&
-        submission?.submissionType === "correction"
+        submission?.submissionType === "correction" &&
+        ((submission.fields as any)?.kind !== "source" ||
+          recordChange.changed.includes("sourceRecords"))
       ) {
         try {
           const fields = submission.fields as Record<string, unknown>

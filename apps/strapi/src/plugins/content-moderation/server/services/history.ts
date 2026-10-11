@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto"
 
 import {
   diffTimetable,
+  submittedSourceRecords,
+  type LibrarySourceRecord,
   normalizeMobileTimetable,
   summarizeDiff,
 } from "@repo/shared-data"
@@ -41,6 +43,7 @@ export type LibraryHistoryBatch = {
     next?: unknown
   }[]
   submissionDocumentId: string | null
+  references?: LibrarySourceRecord[]
 }
 
 export type HistoryMeta = { page: number; pageSize: number; total: number }
@@ -230,6 +233,23 @@ export default ({ strapi }: { strapi: any }) => ({
             ...(o.values ? { previous: r.previous, next: r.next } : {}),
           })),
           submissionDocumentId: head.submissionDocumentId ?? null,
+          references: group.flatMap((r) => {
+            const value =
+              r.field === "sourceRecords"
+                ? r.next
+                : r.field === "*"
+                  ? (r.next as any)?.sourceRecords
+                  : null
+            const records = Array.isArray(value)
+              ? value.filter(
+                  (s) =>
+                    s?.submissionDocumentId === head.submissionDocumentId &&
+                    head.submissionDocumentId
+                )
+              : []
+
+            return submittedSourceRecords(records)
+          }),
         },
       ]
     })

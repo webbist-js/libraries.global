@@ -129,6 +129,7 @@ export default ({ strapi }: { strapi: any }) => {
   ) {
     const conflict: string[] = []
     for (const key of Object.keys(fields)) {
+      if (key === "sourceRecords") continue
       if (!(key in previous))
         throw new StaffSubmissionError(
           400,

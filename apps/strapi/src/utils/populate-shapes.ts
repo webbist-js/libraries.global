@@ -117,7 +117,6 @@ const LIBRARY_LIST_FIELDS = [
   "verifiedSections",
   "contentUpdatedAt",
   "iiifEndpoint",
-  "source",
   "updatedAt",
   "createdAt",
   "publishedAt",
@@ -135,7 +134,18 @@ const LIBRARY_LIST_POPULATE = {
   services: optionRef,
   amenities: optionRef,
   collectionStats: { fields: ["value", "category", "description"] },
-  sourceRecords: { fields: ["dataset", "recordId", "retrievedAt", "url"] },
+  sourceRecords: {
+    fields: [
+      "dataset",
+      "recordId",
+      "retrievedAt",
+      "url",
+      "label",
+      "role",
+      "fields",
+      "submissionDocumentId",
+    ],
+  },
 }
 
 export const LIBRARY_SHAPES: ShapeSet = {
@@ -167,7 +177,6 @@ export const LIBRARY_SHAPES: ShapeSet = {
       "transitInfo",
       "nearestStation",
       "wikidataId",
-      "sourceUrl",
     ],
     populate: {
       ...LIBRARY_LIST_POPULATE,

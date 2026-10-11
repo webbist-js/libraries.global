@@ -27,6 +27,12 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
 
 import {
+  appendSourceRecords,
+  librarySourceKey,
+  type LibrarySourceRecord,
+} from "@repo/shared-data"
+
+import {
   ACCESSIBILITY_TAXONOMY,
   AMENITY_TAXONOMY,
   SERVICE_TAXONOMY,
@@ -35,6 +41,7 @@ import {
   type MappedLibrary,
   type TaxonomyEntry,
 } from "./field-mapper"
+import { withLibrarySources } from "./library-source-data"
 import {
   districtsFor,
   placeLibrary,
@@ -121,7 +128,7 @@ interface Doc {
   name: string
   slug?: string
   entityRef?: string
-  source?: string
+  sourceRecords?: LibrarySourceRecord[]
   summary?: string | null
   gssCode?: string | null
 }
@@ -188,7 +195,9 @@ class Refs {
       this.slugs.set(a.documentId, a.slug!)
     }
 
-    for (const l of await this.mcp.listAll<Doc>("library"))
+    for (const l of await this.mcp.listAll<Doc>("library", {
+      populate: { sourceRecords: true },
+    }))
       this.libraries.set(l.slug!, l)
 
     for (const kind of ["accessibility", "amenity", "service"] as const)
@@ -288,7 +297,7 @@ async function importLibrary(
   // a library from another source by suffixing the authority.
   let slug = data.slug ?? meta.librarySlug!
   let existing = refs.libraries.get(slug)
-  if (existing && existing.source !== "libraryon") {
+  if (existing && librarySourceKey(existing.sourceRecords) !== "libraryon") {
     slug = `${slug}-${meta.areaSlug ?? meta.regionSlug}`
     existing = refs.libraries.get(slug)
   }
@@ -309,7 +318,7 @@ async function importLibrary(
   const services = refs.taxonomyIds("service", meta.serviceNames)
 
   const payload: Record<string, unknown> = {
-    ...data,
+    ...withLibrarySources(data),
     slug,
     entityRef: `europe:${geoPath}`, // recomputed by the entityRef lifecycle
     continent: refs.continentId,
@@ -323,6 +332,15 @@ async function importLibrary(
   let documentId: string
   let status: LogEntry["status"]
   if (existing) {
+    const current = await mcp.call<{ data: Doc }>("get_library", {
+      documentId: existing.documentId,
+      status: "draft",
+      populate: { sourceRecords: true },
+    })
+    payload.sourceRecords = appendSourceRecords(
+      current.data.sourceRecords,
+      payload.sourceRecords as LibrarySourceRecord[]
+    )
     const rel = (ids: string[]) => ({ set: ids })
     await mcp.call("update_library", {
       documentId: existing.documentId,
@@ -352,7 +370,7 @@ async function importLibrary(
       documentId,
       name: data.name,
       slug,
-      source: "libraryon",
+      sourceRecords: payload.sourceRecords as LibrarySourceRecord[],
     })
   }
 

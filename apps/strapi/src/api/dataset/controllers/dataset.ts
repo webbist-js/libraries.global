@@ -25,7 +25,7 @@ const PUBLIC_FIELDS = [
 
 export default factories.createCoreController(UID, ({ strapi }) => ({
   // ── /datasets/by-key/:key ─────────────────────────────────────────────────
-  // The dataset a record's `source` string points at, for the credit on its page.
+  // The Dataset a library's sourceRecords entry points at, for its public credit.
   async byKey(ctx) {
     const { key } = ctx.params as { key: string }
     const results = await strapi.documents(UID).findMany({

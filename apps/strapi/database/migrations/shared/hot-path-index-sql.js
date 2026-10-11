@@ -74,7 +74,7 @@ const HOT_PATH_INDEXES = [
   // Drives and Find libraries filter or sort on these (also in Meilisearch).
   index("libraries", ["completeness"]),
   index("libraries", ["last_verified_at"]),
-  index("libraries", ["source"]),
+  index("components_library_source_records", ["dataset", "record_id"]),
 
   // Profiles: bridge reads by ba_user_id; leaderboard and country boards.
   index("user_profiles", ["ba_user_id"]),

@@ -260,13 +260,16 @@ export async function applyCleanup(knex: any, email: string) {
     await trx("libraries").update({ created_by_id: null, updated_by_id: null })
 
     await trx("library_changes").delete()
+    const provenance = (await trx.schema.hasColumn("libraries", "source"))
+      ? "jsonb_build_object('name',name,'slug',slug,'source',source,'sourceUrl',source_url)"
+      : "jsonb_build_object('name',name,'slug',slug,'sourceRecords',coalesce((select jsonb_agg(jsonb_build_object('dataset',c.dataset,'recordId',c.record_id,'url',c.url,'retrievedAt',c.retrieved_at,'role',c.role,'label',c.label,'fields',c.fields) order by j.\"order\") from libraries_cmps j join components_library_source_records c on c.id=j.cmp_id where j.entity_id=libraries.id and j.field='sourceRecords' and j.component_type='library.source-record'),'[]'::jsonb))"
     const result = await trx.raw(
       `
       INSERT INTO library_changes
         (document_id,batch_id,library_document_id,entity_ref,content_locale,version_status,action,field,previous,next,source,actor_kind,actor_id,actor_name,changed_at,created_at,updated_at,published_at)
       SELECT substr(md5('initial:' || id::text),1,24), md5('initial:' || id::text), document_id,entity_ref,locale,
         CASE WHEN published_at IS NULL THEN 'draft' ELSE 'published' END,
-        'create','*',NULL,jsonb_build_object('name',name,'slug',slug,'source',source,'sourceUrl',source_url),
+        'create','*',NULL,${provenance},
         'import','system',?,?,coalesce(created_at,now()),now(),now(),now()
       FROM libraries RETURNING id`,
       [LIBRARIES_GLOBAL_BOT.actorId, LIBRARIES_GLOBAL_BOT.actorName]

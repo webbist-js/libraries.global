@@ -7,6 +7,8 @@
 
 import {
   addDays,
+  librarySourceKey,
+  type LibrarySourceRecord,
   ATLAS_OPEN_FRAMES_PER_DAY as OPEN_FRAMES_PER_DAY,
   atlasOpenFields as openFields,
   closedNoticeDates,
@@ -148,6 +150,9 @@ export function librarySearchFields(
   const summary = summarizeTimetable(tt)
 
   return {
+    source: librarySourceKey(
+      entry.sourceRecords as LibrarySourceRecord[] | undefined
+    ),
     completeness:
       typeof entry.completeness === "number" ? entry.completeness : 0,
     has_hours: tt ? tt.visits.length > 0 : days(entry.openingTimes).length > 0,

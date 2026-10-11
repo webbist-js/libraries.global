@@ -3,7 +3,7 @@ import type { Core } from "@strapi/strapi"
 /**
  * The datasets Libraries Global imports, so every imported record can be
  * traced to a publisher and a licence. A record points at its dataset through
- * its `source` string (library.source), which must equal a
+ * its `sourceRecords[].dataset` key, which must equal a
  * dataset's `key`.
  *
  * Created only when the key is missing, so anything edited in the admin
@@ -156,7 +156,7 @@ export const DATASET_SEED: DatasetSeed[] = [
     importMechanism:
       "apps/strapi/scripts/libraryon-ingest.ts, reading the public LibraryOn API (https://libraryon.org/cms/api) and mapping each record with scripts/field-mapper.ts",
     notes:
-      'The licence is the one stated in the libraryon.org site footer ("Except where otherwise noted, content on this site is licensed under a Creative Commons Attribution 4.0 International license"). Written confirmation that it covers the API has been requested but not yet received. Imported records carry source "libraryon" and a sourceUrl pointing at the LibraryOn page they came from.',
+      'The licence is the one stated in the libraryon.org site footer ("Except where otherwise noted, content on this site is licensed under a Creative Commons Attribution 4.0 International license"). Written confirmation that it covers the API has been requested but not yet received. Imported records carry a sourceRecords entry with dataset "libraryon", role "origin" and the URL of their original LibraryOn page.',
   },
   {
     key: "imls-pls",

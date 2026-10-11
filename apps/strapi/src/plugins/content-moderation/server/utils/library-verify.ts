@@ -1,5 +1,6 @@
 import {
   isValidStamp,
+  submittedSourceRecords,
   SECTION_FIELDS,
   VERIFY_SECTIONS,
   type VerifySection,
@@ -141,7 +142,22 @@ export async function applyVerification(
     strapi,
     LIBRARY,
     library.documentId,
-    { verifiedSections, lastVerifiedAt: latestStamp(verifiedSections) },
+    {
+      verifiedSections,
+      lastVerifiedAt: latestStamp(verifiedSections),
+      ...(submittedSourceRecords((submission.fields as any)?.sourceRecords)
+        .length
+        ? {
+            sourceRecords: submittedSourceRecords(
+              (submission.fields as any).sourceRecords
+            ).map((r) => ({
+              ...r,
+              submissionDocumentId: submission.documentId,
+              retrievedAt: new Date().toISOString().slice(0, 10),
+            })),
+          }
+        : {}),
+    },
     { locale: base }
   )
 

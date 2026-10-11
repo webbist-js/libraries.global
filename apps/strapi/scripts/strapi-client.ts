@@ -1,3 +1,9 @@
+import {
+  appendSourceRecords,
+  type LibrarySourceRecord,
+} from "@repo/shared-data"
+
+import { withLibrarySources } from "./library-source-data"
 /**
  * Authenticated Strapi REST API client for libraries.global data operations.
  *
@@ -129,12 +135,7 @@ export interface AmenityCreateData {
 }
 
 /** The record a library matches in an imported dataset (library.source-record). */
-export interface SourceRecordData {
-  dataset: string
-  recordId: string
-  retrievedAt?: string
-  url?: string
-}
+export interface SourceRecordData extends LibrarySourceRecord {}
 
 export interface LibraryCreateData {
   name: string
@@ -555,7 +556,7 @@ export class StrapiClient {
   async createLibrary(data: LibraryCreateData): Promise<StrapiEntity> {
     const res = await this.post<{ data: StrapiEntity }>(
       "/libraries?status=draft",
-      { data: this.withSourceDates(data) }
+      { data: withLibrarySources(data) }
     )
 
     return res.data
@@ -565,25 +566,29 @@ export class StrapiClient {
     documentId: string,
     data: Partial<LibraryCreateData>
   ): Promise<StrapiEntity> {
+    let canonical = withLibrarySources(data)
+    if (data.sourceRecords || data.source || data.sourceUrl) {
+      const existing = await this.get<{
+        data: StrapiEntity & { sourceRecords?: SourceRecordData[] }
+      }>(`/libraries/${documentId}`, {
+        status: "draft",
+        populate: "sourceRecords",
+        "fields[0]": "documentId",
+      })
+      canonical = {
+        ...canonical,
+        sourceRecords: appendSourceRecords(
+          existing.data.sourceRecords,
+          canonical.sourceRecords ?? []
+        ),
+      }
+    }
     const res = await this.put<{ data: StrapiEntity }>(
       `/libraries/${documentId}`,
-      { data: this.withSourceDates(data) }
+      { data: canonical }
     )
 
     return res.data
-  }
-
-  private withSourceDates<T extends Partial<LibraryCreateData>>(data: T): T {
-    if (!data.sourceRecords) return data
-    const retrievedAt = new Date().toISOString().slice(0, 10)
-
-    return {
-      ...data,
-      sourceRecords: data.sourceRecords.map((source) => ({
-        ...source,
-        retrievedAt: source.retrievedAt ?? retrievedAt,
-      })),
-    }
   }
 
   async libraryExistsBySlug(slug: string): Promise<string | null> {
@@ -614,7 +619,7 @@ export class StrapiClient {
     const byRecordId = new Map<string, string>()
     for (const lib of libraries) {
       for (const record of lib.sourceRecords ?? []) {
-        if (record.dataset === dataset) {
+        if (record.dataset === dataset && record.recordId) {
           if (
             byRecordId.has(record.recordId) &&
             byRecordId.get(record.recordId) !== lib.documentId
